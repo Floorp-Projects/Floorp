@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=209275
   <svg width="5cm" height="3cm" viewBox="0 0 5 3" version="1.1"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
-  <a xlink:href="" id="ellipselink">
+  <a xlink:href="http://www.w3.org" id="ellipselink">
     <ellipse cx="2.5" cy="1.5" rx="2" ry="1" id="ellipse" />
   </a>
   </svg>
@@ -91,10 +91,6 @@ function setXlinkHref(elem, href) {
   elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
 }
 
-function continueTest() {
-  gGen.next();
-}
-
 var iframe = document.getElementById("iframe");
 var iframeCw = iframe.contentWindow;
 
@@ -102,13 +98,29 @@ function run() {
   var iframe = document.getElementById("iframe");
   var iframeCw = iframe.contentWindow;
 
-  // First, set the visited/unvisited link/ellipse colors.
-  const unvisitedColor = "rgb(0, 0, 238)";
-  const visitedColor = "rgb(85, 26, 139)";
-  const unvisitedFill = "rgb(0, 0, 255)";
-  const visitedFill = "rgb(128, 0, 128)";
+  // First, get the visited/unvisited link/ellipse colors.
+  var unvisitedColor;
+  var visitedColor;
+  var unvisitedFill;
+  var visitedFill;
 
-  const rand = Date.now() + "-" + Math.random();
+  var rand = Date.now() + "-" + Math.random();
+  // Set colorlink and ellipselink's hrefs
+  $("colorlink").href = rand;
+  setXlinkHref($("ellipselink"), rand);
+  unvisitedColor = getColor($("colorlink"));
+  unvisitedFill = getFill($("ellipse"));
+
+  // Set the link's href to our current location so we can get the visited link
+  // color.
+  $("colorlink").href = document.location;
+  setXlinkHref($("ellipselink"), document.location);
+  visitedColor = getColor($("colorlink"));
+  visitedFill = getFill($("ellipse"));
+  isnot(visitedColor, unvisitedColor,
+        "visited/unvisited link colors are the same?");
+  isnot(visitedFill, unvisitedFill,
+        "visited/unvisited ellipse fill colors are the same?");
 
   // Now we can start the tests in earnest.
 
@@ -119,11 +131,11 @@ function run() {
   // Set colorlink's href so we can check that it changes colors after we
   // change the base href.
   $('colorlink').href = "http://example.com/" + rand;
-  setXlinkHref($("ellipselink"), "http://example.com/" + rand);
+  setXlinkHref($("ellipse"), "http://example.com/" + rand);
 
   // Load http://example.com/${rand} into an iframe so we can test that changing
   // the document's base changes the visitedness of our links.
-  iframe.onload = continueTest;
+  iframe.onload = function() { gGen.next(); };
   iframeCw.location = "http://example.com/" + rand;
   yield; // wait for onload to fire.
 
@@ -145,20 +157,10 @@ function run() {
   is(link5.href, "http://example.com/#", "link 5 test 2");
 
   // Were colorlink's color and ellipse's fill updated appropriately?
-  // Because link coloring is asynchronous, we wait until it is updated (or we
-  // timeout and fail anyway).
-  while (getColor($('colorlink')) != visitedColor) {
-    setTimeout(continueTest, 10);
-    yield;
-  }
   is(getColor($('colorlink')), visitedColor,
      "Wrong link color after base change.");
-  while (getFill($('ellipselink')) != visitedFill) {
-    setTimeout(continueTest, 10);
-    yield;
-  }
-  is(getFill($('ellipselink')), visitedFill,
-          "Wrong ellipse fill after base change.");
+  is(getFill($('ellipse')), visitedFill,
+     "Wrong ellipse fill after base change.");
 
   $('base1').href = "foo/";
   // Should be interpreted relative to current URI (not the current base), so
