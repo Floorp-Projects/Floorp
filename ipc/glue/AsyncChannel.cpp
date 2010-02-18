@@ -294,6 +294,15 @@ AsyncChannel::NotifyChannelClosed()
 void
 AsyncChannel::NotifyMaybeChannelError()
 {
+    // OnChannelError holds mMutex when it posts this task and this task cannot
+    // be allowed to run until OnChannelError has exited. We enforce that order
+    // by grabbing the mutex here which should only continue once OnChannelError
+    // has completed.
+    {
+        MutexAutoLock lock(mMutex);
+        // Nothing to do!
+    }
+
     // TODO sort out Close() on this side racing with Close() on the
     // other side
     if (ChannelClosing == mChannelState) {
