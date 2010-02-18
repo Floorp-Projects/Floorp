@@ -132,8 +132,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual void DropCachedHref();
-
-  virtual PRInt32 IntrinsicState() const;
 };
 
 
@@ -492,10 +490,4 @@ void
 nsHTMLAnchorElement::DropCachedHref()
 {
   Link::ResetLinkState();
-}
-
-PRInt32
-nsHTMLAnchorElement::IntrinsicState() const
-{
-  return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
