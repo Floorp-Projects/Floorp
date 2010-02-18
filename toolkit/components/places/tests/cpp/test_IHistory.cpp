@@ -248,121 +248,6 @@ test_RegisterVisitedCallback_returns_before_notifying()
   run_next_test();
 }
 
-namespace test_observer_topic_dispatched_helpers {
-  #define URI_VISITED "visited"
-  #define URI_NOT_VISITED "not visited"
-  #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
-  class statusObserver : public nsIObserver
-  {
-  public:
-    NS_DECL_ISUPPORTS
-
-    statusObserver(nsIURI* aURI,
-                   const bool aExpectVisit,
-                   bool& _notified)
-    : mURI(aURI)
-    , mExpectVisit(aExpectVisit)
-    , mNotified(_notified)
-    {
-      nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      do_check_true(observerService);
-      (void)observerService->AddObserver(this,
-                                         URI_VISITED_RESOLUTION_TOPIC,
-                                         PR_FALSE);
-    }
-
-    NS_IMETHOD Observe(nsISupports* aSubject,
-                       const char* aTopic,
-                       const PRUnichar* aData)
-    {
-      // Make sure we got notified of the right topic.
-      do_check_false(strcmp(aTopic, URI_VISITED_RESOLUTION_TOPIC));
-
-      // If this isn't for our URI, do not do anything.
-      nsCOMPtr<nsIURI> notifiedURI(do_QueryInterface(aSubject));
-      do_check_true(notifiedURI);
-      PRBool isOurURI;
-      nsresult rv = notifiedURI->Equals(mURI, &isOurURI);
-      do_check_success(rv);
-      if (!isOurURI) {
-        return NS_OK;
-      }
-
-      // Check that we have either the visited or not visited string.
-      bool visited = !!NS_LITERAL_STRING(URI_VISITED).Equals(aData);
-      bool notVisited = !!NS_LITERAL_STRING(URI_NOT_VISITED).Equals(aData);
-      do_check_true(visited || notVisited);
-
-      // Check to make sure we got the state we expected.
-      do_check_eq(mExpectVisit, visited);
-
-      // Indicate that we've been notified.
-      mNotified = true;
-
-      // Remove ourselves as an observer.
-      nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      (void)observerService->RemoveObserver(this,
-                                            URI_VISITED_RESOLUTION_TOPIC);
-      return NS_OK;
-    }
-  private:
-    nsCOMPtr<nsIURI> mURI;
-    const bool mExpectVisit;
-    bool& mNotified;
-  };
-  NS_IMPL_ISUPPORTS1(
-    statusObserver,
-    nsIObserver
-  )
-}
-void
-test_observer_topic_dispatched()
-{
-  using namespace test_observer_topic_dispatched_helpers;
-
-  // Create two URIs, making sure only one is in history.
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-  nsCOMPtr<nsIURI> notVisitedURI(new_test_uri());
-  PRBool urisEqual;
-  nsresult rv = visitedURI->Equals(notVisitedURI, &urisEqual);
-  do_check_success(rv);
-  do_check_false(urisEqual);
-  addURI(visitedURI);
-
-  // Need two Link objects as well - one for each URI.
-  nsCOMPtr<Link> visitedLink(new mock_Link(expect_visit, false));
-  NS_ADDREF(visitedLink); // It will release itself when notified.
-  nsCOMPtr<Link> notVisitedLink(new mock_Link(expect_no_visit));
-
-  // Add the right observers for the URIs to check results.
-  bool visitedNotified = false;
-  nsCOMPtr<nsIObserver> vistedObs =
-    new statusObserver(visitedURI, true, visitedNotified);
-  bool notVisitedNotified = false;
-  nsCOMPtr<nsIObserver> unvistedObs =
-    new statusObserver(notVisitedURI, false, notVisitedNotified);
-
-  // Register our Links to be notified.
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  rv = history->RegisterVisitedCallback(visitedURI, visitedLink);
-  do_check_success(rv);
-  rv = history->RegisterVisitedCallback(notVisitedURI, notVisitedLink);
-  do_check_success(rv);
-
-  // Spin the event loop as long as we have not been properly notified.
-  while (!visitedNotified || !notVisitedNotified) {
-    (void)NS_ProcessNextEvent();
-  }
-
-  // Unregister our observer that would not have been released.
-  rv = history->UnregisterVisitedCallback(notVisitedURI, notVisitedLink);
-  do_check_success(rv);
-
-  run_next_test();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
 
@@ -377,7 +262,6 @@ Test gTests[] = {
   TEST(test_unregistered_visited_does_not_notify), // Order Important!
   TEST(test_new_visit_notifies_waiting_Link),
   TEST(test_RegisterVisitedCallback_returns_before_notifying),
-  TEST(test_observer_topic_dispatched),
 };
 
 const char* file = __FILE__;
