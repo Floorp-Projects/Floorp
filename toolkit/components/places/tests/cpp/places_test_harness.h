@@ -76,9 +76,6 @@ static size_t gPassedTests = 0;
 #define do_check_success(aResult) \
   do_check_true(NS_SUCCEEDED(aResult))
 
-#define do_check_eq(aFirst, aSecond) \
-  do_check_true(aFirst == aSecond)
-
 struct Test
 {
   void (*func)(void);
