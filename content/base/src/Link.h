@@ -64,11 +64,6 @@ public:
    */
   PRInt32 LinkState() const;
 
-  /**
-   * @return the URI this link is for, if available.
-   */
-  already_AddRefed<nsIURI> GetURI() const;
-
 protected:
   /**
    * Invalidates any link caching, and resets the state to the default.
@@ -76,9 +71,6 @@ protected:
   virtual void ResetLinkState();
 
   nsLinkState mLinkState;
-
-private:
-  mutable nsCOMPtr<nsIURI> mCachedURI;
 };
 
 } // namespace dom
