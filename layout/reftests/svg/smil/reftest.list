@@ -91,6 +91,10 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 # animate some boolean attributes:
 == anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
 
+# animate some viewBox attributes
+== anim-svg-viewBox-01.svg lime.svg
+== anim-svg-viewBox-02.svg lime.svg
+
 # animate some preserveAspectRatio attributes
 == anim-feImage-preserveAspectRatio-01.svg lime.svg
 == anim-svg-preserveAspectRatio-01.svg lime.svg

@@ -1515,6 +1515,18 @@ nsSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
   SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, newStr, PR_TRUE);
 }
 
+void
+nsSVGElement::DidAnimateViewBox()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None,
+                            nsGkAtoms::viewBox,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGPreserveAspectRatio *
 nsSVGElement::GetPreserveAspectRatio()
 {
@@ -1782,6 +1794,12 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
         return info.mAngles[i].ToSMILAttr(this);
       }
     }
+  }
+
+  // viewBox:
+  if (aName == nsGkAtoms::viewBox) {
+    nsSVGViewBox *viewBox = GetViewBox();
+    return viewBox ? viewBox->ToSMILAttr(this) : nsnull;
   }
 
   // preserveAspectRatio:

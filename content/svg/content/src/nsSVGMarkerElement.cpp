@@ -405,7 +405,7 @@ nsSVGMarkerElement::GetViewBoxTransform()
     float viewportHeight = 
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
    
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(); 
+    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(this); 
 
     if (viewbox.width <= 0.0f || viewbox.height <= 0.0f) {
       return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // invalid - don't paint element

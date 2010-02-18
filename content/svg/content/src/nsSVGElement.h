@@ -160,6 +160,7 @@ public:
   virtual void DidAnimateAngle(PRUint8 aAttrEnum);
   virtual void DidAnimateBoolean(PRUint8 aAttrEnum);
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
+  virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
 
   void GetAnimatedLengthValues(float *aFirst, ...);
