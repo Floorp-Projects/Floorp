@@ -1016,15 +1016,14 @@ DeferredSettingChangeMessage::DeferredSettingChangeMessage(HWND aHWnd,
     lParam = reinterpret_cast<LPARAM>(lParamString);
   }
   else {
+    lParamString = NULL;
     lParam = NULL;
   }
 }
 
 DeferredSettingChangeMessage::~DeferredSettingChangeMessage()
 {
-  if (lParamString) {
-    free(lParamString);
-  }
+  free(lParamString);
 }
 
 DeferredWindowPosMessage::DeferredWindowPosMessage(HWND aHWnd,
