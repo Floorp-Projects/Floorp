@@ -132,6 +132,9 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual void DropCachedHref();
+
+protected:
+  void ResetLinkCacheState();
 };
 
 
@@ -219,9 +222,9 @@ nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
-    Link::ResetLinkState();
+    ResetLinkCacheState();
   }
-
+    
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -436,7 +439,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsAutoString val;
     GetHref(val);
     if (!val.Equals(aValue)) {
-      Link::ResetLinkState();
+      ResetLinkCacheState();
     }
   }
 
@@ -460,7 +463,7 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
   if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    Link::ResetLinkState();
+    ResetLinkCacheState();
   }
 
   if (aAttribute == nsGkAtoms::accesskey &&
@@ -473,10 +476,14 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
 PRBool
 nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
-                                    nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsAttrValue& aResult)
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
+  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::href) {
+    return aResult.ParseLazyURIValue(aValue);
+  }
+
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
 }
@@ -484,5 +491,24 @@ nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
 void
 nsHTMLAnchorElement::DropCachedHref()
 {
+  nsAttrValue* attr =
+    const_cast<nsAttrValue*>(mAttrsAndChildren.GetAttr(nsGkAtoms::href));
+
+  if (!attr || attr->Type() != nsAttrValue::eLazyURIValue)
+    return;
+
+  attr->DropCachedURI();
+}
+
+void
+nsHTMLAnchorElement::ResetLinkCacheState()
+{
   Link::ResetLinkState();
+
+  // Clear our cached URI _after_ we ForgetLink(), since ForgetLink()
+  // wants that URI.
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::href);
+  if (attr && attr->Type() == nsAttrValue::eLazyURIValue) {
+    const_cast<nsAttrValue*>(attr)->DropCachedURI();
+  }
 }
