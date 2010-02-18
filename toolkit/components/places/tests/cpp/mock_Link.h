@@ -94,10 +94,6 @@ Link::Link()
 {
 }
 
-Link::~Link()
-{
-}
-
 nsLinkState
 Link::GetLinkState() const
 {
