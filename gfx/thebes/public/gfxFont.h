@@ -221,7 +221,7 @@ public:
 
     const nsString& FamilyName();
 
-    already_AddRefed<gfxFont> GetOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold);
+    already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold);
 
     nsString         mName;
 

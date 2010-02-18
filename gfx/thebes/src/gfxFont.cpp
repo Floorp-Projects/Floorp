@@ -111,7 +111,7 @@ const nsString& gfxFontEntry::FamilyName()
 }
 
 already_AddRefed<gfxFont>
-gfxFontEntry::GetOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
+gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(Name(), aStyle);
@@ -1428,7 +1428,7 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyl
             gfxPlatformFontList::PlatformFontList()->GetDefaultFont(aStyle, needsBold);
         NS_ASSERTION(defaultFont, "invalid default font returned by GetDefaultFont");
 
-        nsRefPtr<gfxFont> font = defaultFont->GetOrMakeFont(aStyle, needsBold);
+        nsRefPtr<gfxFont> font = defaultFont->FindOrMakeFont(aStyle, needsBold);
         if (font) {
             mFonts.AppendElement(font);
         }
@@ -1476,7 +1476,7 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
 
     // add to the font group, unless it's already there
     if (fe && !fontGroup->HasFont(fe)) {
-        nsRefPtr<gfxFont> font = fe->GetOrMakeFont(fontStyle, needsBold);
+        nsRefPtr<gfxFont> font = fe->FindOrMakeFont(fontStyle, needsBold);
         if (font) {
             fontGroup->mFonts.AppendElement(font);
         }
@@ -2086,7 +2086,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
 
             // if a pref font is used, it's likely to be used again in the same text run.
             // the style doesn't change so the face lookup can be cached rather than calling
-            // GetOrMakeFont repeatedly.  speeds up FindFontForChar lookup times for subsequent
+            // FindOrMakeFont repeatedly.  speeds up FindFontForChar lookup times for subsequent
             // pref font lookups
             if (family == mLastPrefFamily && mLastPrefFont->HasCharacter(aCh)) {
                 font = mLastPrefFont;
@@ -2098,7 +2098,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
             gfxFontEntry *fe = family->FindFontForStyle(mStyle, needsBold);
             // if ch in cmap, create and return a gfxFont
             if (fe && fe->TestCharacterMap(aCh)) {
-                nsRefPtr<gfxFont> prefFont = fe->GetOrMakeFont(&mStyle, needsBold);
+                nsRefPtr<gfxFont> prefFont = fe->FindOrMakeFont(&mStyle, needsBold);
                 if (!prefFont) continue;
                 mLastPrefFamily = family;
                 mLastPrefFont = prefFont;
@@ -2119,7 +2119,7 @@ gfxFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
     gfxFontEntry *fe = 
         gfxPlatformFontList::PlatformFontList()->FindFontForChar(aCh, GetFontAt(0));
     if (fe) {
-        nsRefPtr<gfxFont> font = fe->GetOrMakeFont(&mStyle, PR_FALSE); // ignore bolder considerations in system fallback case...
+        nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, PR_FALSE); // ignore bolder considerations in system fallback case...
         return font.forget();
     }
 
