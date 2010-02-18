@@ -1898,7 +1898,7 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
     mIsProcessing = PR_FALSE;
   }
   return NS_OK;
-}
+}      
 
 nsresult
 nsTextControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
@@ -1910,7 +1910,7 @@ nsTextControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
     GetValue(aValue, PR_FALSE);
   }
   return NS_OK;
-}
+}  
 
 
 
@@ -1918,10 +1918,6 @@ NS_IMETHODIMP
 nsTextControlFrame::GetEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
-
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   *aEditor = mEditor;
   NS_IF_ADDREF(*aEditor);
   return NS_OK;
@@ -1981,8 +1977,6 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
 nsresult
 nsTextControlFrame::SelectAllOrCollapseToEndOfText(PRBool aSelect)
 {
-  EnsureEditorInitialized();
-
   if (!mEditor)
     return NS_OK;
 
@@ -2053,9 +2047,8 @@ nsTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
+  
   if (aSelStart > aSelEnd) {
     // Simulate what we'd see SetSelectionStart() was called, followed
     // by a SetSelectionEnd().
@@ -2070,12 +2063,11 @@ nsTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
 
   PRInt32 selStart = 0, selEnd = 0; 
 
-  rv = GetSelectionRange(&selStart, &selEnd);
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aSelectionStart > selEnd) {
@@ -2091,12 +2083,11 @@ nsTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
+  
   PRInt32 selStart = 0, selEnd = 0; 
 
-  rv = GetSelectionRange(&selStart, &selEnd);
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aSelectionEnd < selStart) {
@@ -2118,9 +2109,6 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
 
   *aResult = 0;
 
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIDOMElement> rootElement;
   mEditor->GetRootElement(getter_AddRefs(rootElement));
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
@@ -2129,7 +2117,7 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
 
-  rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
+  nsresult rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
@@ -2198,9 +2186,6 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
   *aResult = nsnull;
   *aPosition = 0;
 
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIDOMElement> rootElement;
   mEditor->GetRootElement(getter_AddRefs(rootElement));
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
@@ -2209,7 +2194,7 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
 
-  rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
+  nsresult rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
@@ -2289,14 +2274,13 @@ NS_IMETHODIMP
 nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
 {
   // make sure we have an editor
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
 
   *aSelectionStart = 0;
   *aSelectionEnd = 0;
 
   nsCOMPtr<nsISelection> selection;
-  rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
+  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
@@ -2451,10 +2435,8 @@ nsresult
 nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
 {
   aPhonetic.Truncate(0); 
-
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
   if (imeSupport) {
     nsCOMPtr<nsIPhonetic> phonetic = do_QueryInterface(imeSupport);
