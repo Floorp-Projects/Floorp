@@ -93,8 +93,6 @@ protected:
    */
   virtual void ResetLinkState();
 
-  virtual ~Link();
-
 private:
   /**
    * Unregisters from History so this node no longer gets notifications about
