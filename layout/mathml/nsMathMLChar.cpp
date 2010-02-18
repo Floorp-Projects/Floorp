@@ -721,8 +721,8 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
   nsCAutoString alternateKey;
   alternateKey.AssignASCII(kMathFontPrefix);
   NS_ConvertUTF16toUTF8 tmp(&aChar, 1);
-  key.Append(tmp);
-  key.Append(extension);
+  alternateKey.Append(tmp);
+  alternateKey.Append(extension);
 
   return GetPrefValue(aPrefBranch, key.get(), aValue) ||
     GetPrefValue(aPrefBranch, alternateKey.get(), aValue);
