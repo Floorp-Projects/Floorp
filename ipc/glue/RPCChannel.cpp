@@ -616,13 +616,18 @@ RPCChannel::OnChannelError()
 {
     AssertIOThread();
 
-    AsyncChannel::OnChannelError();
+    MutexAutoLock lock(mMutex);
+
+    // NB: this can race with the `Goodbye' event being processed by
+    // the worker thread
+    if (ChannelClosing != mChannelState)
+        mChannelState = ChannelError;
 
     // skip SyncChannel::OnError(); we subsume its duties
-    MutexAutoLock lock(mMutex);
-    if (AwaitingSyncReply()
-        || 0 < StackDepth())
+    if (AwaitingSyncReply() || 0 < StackDepth())
         NotifyWorkerThread();
+
+    AsyncChannel::OnChannelError();
 }
 
 

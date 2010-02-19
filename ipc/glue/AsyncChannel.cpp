@@ -451,6 +451,7 @@ AsyncChannel::OnChannelError()
 
     NS_ASSERTION(!mChannelErrorTask, "OnChannelError called twice?");
 
+    // This must be the last code that runs on this thread!
     mChannelErrorTask =
         NewRunnableMethod(this, &AsyncChannel::NotifyMaybeChannelError);
     mWorkerLoop->PostTask(FROM_HERE, mChannelErrorTask);
