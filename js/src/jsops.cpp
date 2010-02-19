@@ -1596,19 +1596,19 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (!JSVAL_IS_PRIMITIVE(lval)) {
         obj = JSVAL_TO_OBJECT(lval);
     } else {
+        JSProtoKey protoKey;
         if (JSVAL_IS_STRING(lval)) {
-            i = JSProto_String;
+            protoKey = JSProto_String;
         } else if (JSVAL_IS_NUMBER(lval)) {
-            i = JSProto_Number;
+            protoKey = JSProto_Number;
         } else if (JSVAL_IS_BOOLEAN(lval)) {
-            i = JSProto_Boolean;
+            protoKey = JSProto_Boolean;
         } else {
             JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
             goto error;
         }
-
-        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
+        if (!js_GetClassPrototype(cx, NULL, protoKey, &obj))
             goto error;
     }
 
@@ -2441,22 +2441,26 @@ BEGIN_CASE(JSOP_OBJECT)
     PUSH_OPND(OBJECT_TO_JSVAL(obj));
 END_CASE(JSOP_OBJECT)
 
-BEGIN_CASE(JSOP_REGEXP)
+BEGIN_CASE(JSOP_REGEXP) {
     /*
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
      * flouted by many browser-based implementations.
      *
-     * XXX This code is specific to regular expression objects.  If we need a
-     * similar op for other kinds of object literals, we should push cloning
-     * down under JSObjectOps and reuse code here.
+     * We avoid the js_GetScopeChain call here and pass fp->scopeChain as
+     * js_GetClassPrototype uses the latter only to locate the global.
      */
     index = GET_FULL_INDEX(0);
-    obj = js_CloneRegExpObject(cx, script->getRegExp(index));
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, fp->scopeChain, JSProto_RegExp, &proto))
+        goto error;
+    JS_ASSERT(proto);
+    obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
     if (!obj)
         goto error;
     rval = OBJECT_TO_JSVAL(obj);
     PUSH_OPND(rval);
+}
 END_CASE(JSOP_REGEXP)
 
 BEGIN_CASE(JSOP_ZERO)
@@ -2942,7 +2946,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * requests in server-side JS.
      */
     if (OBJ_GET_PARENT(cx, obj) != obj2) {
-        obj = js_CloneFunctionObject(cx, fun, obj2);
+        obj = CloneFunctionObject(cx, fun, obj2);
         if (!obj)
             goto error;
     }
@@ -3105,7 +3109,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = js_CloneFunctionObject(cx, fun, fp->scopeChain);
+        obj = CloneFunctionObject(cx, fun, fp->scopeChain);
         if (!obj)
             goto error;
     } else {
@@ -3118,7 +3122,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
 #endif
-            obj = js_CloneFunctionObject(cx, fun, parent);
+            obj = CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
         }
@@ -3198,7 +3202,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                 goto error;
         }
 
-        obj = js_CloneFunctionObject(cx, fun, parent);
+        obj = CloneFunctionObject(cx, fun, parent);
         if (!obj)
             goto error;
     } while (0);

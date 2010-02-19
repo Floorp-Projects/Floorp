@@ -683,6 +683,24 @@ DumpFunctionMeter(JSContext *cx)
 # define DUMP_FUNCTION_METER(cx)   ((void) 0)
 #endif
 
+#ifdef JS_PROTO_CACHE_METERING
+static void
+DumpProtoCacheMeter(JSContext *cx)
+{
+    JSClassProtoCache::Stats *stats = &cx->runtime->classProtoCacheStats;
+    FILE *fp = fopen("/tmp/protocache.stats", "a");
+    fprintf(fp,
+            "hit ratio %g%%\n",
+            double(stats->hit) * 100.0 / double(stats->probe));
+    fclose(fp);
+}
+
+# define DUMP_PROTO_CACHE_METER(cx) DumpProtoCacheMeter(cx)
+#else
+# define DUMP_PROTO_CACHE_METER(cx) ((void) 0)
+#endif
+
+
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
@@ -789,6 +807,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
+            DUMP_PROTO_CACHE_METER(cx);
 
             /* Take the runtime down, now that it has no contexts or atoms. */
             JS_LOCK_GC(rt);
@@ -1948,4 +1967,27 @@ JSContext::isConstructing()
 #endif
     JSStackFrame *fp = js_GetTopStackFrame(this);
     return fp && (fp->flags & JSFRAME_CONSTRUCTING);
+}
+
+/*
+ * Release pool's arenas if the stackPool has existed for longer than the
+ * limit specified by gcEmptyArenaPoolLifespan.
+ */
+inline void
+FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
+{
+    JSArena *a = pool->current;
+    if (a == pool->first.next && a->avail == a->base + sizeof(int64)) {
+        int64 age = JS_Now() - *(int64 *) a->base;
+        if (age > int64(rt->gcEmptyArenaPoolLifespan) * 1000)
+            JS_FreeArenaPool(pool);
+    }
+}
+
+void
+JSContext::purge()
+{
+    FreeOldArenas(runtime, &stackPool);
+    FreeOldArenas(runtime, &regexpPool);
+    classProtoCache.purge();
 }

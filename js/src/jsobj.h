@@ -716,9 +716,6 @@ extern const char js_defineSetter_str[];
 extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
 
-extern JSBool
-js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
-
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,
              JSObject *parent, size_t objectSize = 0);
@@ -756,8 +753,13 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 extern JSBool
 js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj);
 
+/*
+ * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
+ * JSProto_Null, clasp must non-null.
+ */
 extern JSBool
-js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp);
+js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key, jsval *vp,
+                   JSClass *clasp = NULL);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
@@ -1015,9 +1017,13 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
 extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
+/*
+ * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
+ * JSProto_Null, clasp must non-null.
+ */
 extern JSBool
-js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
-                     JSObject **protop);
+js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
+                     JSObject **protop,  JSClass *clasp = NULL);
 
 extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,

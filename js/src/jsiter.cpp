@@ -291,7 +291,7 @@ js_ThrowStopIteration(JSContext *cx)
     jsval v;
 
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    if (js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_StopIteration), &v))
+    if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
         JS_SetPendingException(cx, v);
     return JS_FALSE;
 }
