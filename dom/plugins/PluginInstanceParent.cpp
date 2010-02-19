@@ -134,10 +134,8 @@ NPError
 PluginInstanceParent::Destroy()
 {
     NPError retval;
-    if (!CallNPP_Destroy(&retval)) {
-        NS_WARNING("Failed to send message!");
-        return NPERR_GENERIC_ERROR;
-    }
+    if (!CallNPP_Destroy(&retval))
+        retval = NPERR_GENERIC_ERROR;
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
