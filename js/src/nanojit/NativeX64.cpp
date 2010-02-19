@@ -465,7 +465,7 @@ namespace nanojit
     void Assembler::MOVQRX(  R l, R r)  { emitprr(X64_movqrx,  r,l); asm_output("movq %s, %s",    RQ(l),RQ(r)); } // Nb: r and l are deliberately reversed within the emitprr() call.
     void Assembler::MOVQXR(  R l, R r)  { emitprr(X64_movqxr,  l,r); asm_output("movq %s, %s",    RQ(l),RQ(r)); }
 
-// MOVI must not affect condition codes!
+    // MOVI must not affect condition codes!
     void Assembler::MOVI(  R r, I32 i32)    { emitr_imm(X64_movi,  r,i32); asm_output("movl %s, %d",RL(r),i32); }
     void Assembler::ADDLRI(R r, I32 i32)    { emitr_imm(X64_addlri,r,i32); asm_output("addl %s, %d",RL(r),i32); }
     void Assembler::SUBLRI(R r, I32 i32)    { emitr_imm(X64_sublri,r,i32); asm_output("subl %s, %d",RL(r),i32); }
@@ -896,7 +896,7 @@ namespace nanojit
             } else {
                 // can't reach target from here, load imm64 and do an indirect jump
                 CALLRAX();
-                asm_quad(RAX, (uint64_t)target);
+                asm_quad(RAX, (uint64_t)target, /*canClobberCCs*/true);
             }
         } else {
             // Indirect call: we assign the address arg to RAX since it's not
@@ -949,7 +949,7 @@ namespace nanojit
         if (sz == ARGSIZE_I) {
             NanoAssert(p->isI32());
             if (p->isconst()) {
-                asm_quad(r, int64_t(p->imm32()));
+                asm_quad(r, int64_t(p->imm32()), /*canClobberCCs*/true);
                 return;
             }
             // sign extend int32 to int64
@@ -957,7 +957,7 @@ namespace nanojit
         } else if (sz == ARGSIZE_U) {
             NanoAssert(p->isI32());
             if (p->isconst()) {
-                asm_quad(r, uint64_t(uint32_t(p->imm32())));
+                asm_quad(r, uint64_t(uint32_t(p->imm32())), /*canClobberCCs*/true);
                 return;
             }
             // zero extend with 32bit mov, auto-zeros upper 32bits
@@ -1328,13 +1328,11 @@ namespace nanojit
         }
         else if (ins->isconst()) {
             ins->clearReg();
-            // unsafe to use xor r,r for zero because it changes cc's
-            MOVI(r, ins->imm32());
+            asm_int(r, ins->imm32(), /*canClobberCCs*/false);
         }
         else if (ins->isconstq() && IsGpReg(r)) {
             ins->clearReg();
-            // unsafe to use xor r,r for zero because it changes cc's
-            asm_quad(r, ins->imm64());
+            asm_quad(r, ins->imm64(), /*canClobberCCs*/false);
         }
         else {
             int d = findMemFor(ins);
@@ -1548,11 +1546,41 @@ namespace nanojit
 
     }
 
-    // generate a 64bit constant, must not affect condition codes!
-    void Assembler::asm_quad(Register r, uint64_t v) {
-        NanoAssert(IsGpReg(r));
+    void Assembler::asm_int(LIns *ins) {
+        Register rr = prepareResultReg(ins, GpRegs);
+
+        asm_int(rr, ins->imm32(), /*canClobberCCs*/true);
+
+        freeResourcesOf(ins);
+    }
+
+    void Assembler::asm_int(Register r, int32_t v, bool canClobberCCs) {
+        if (v == 0 && canClobberCCs) {
+            if (IsGpReg(r)) {
+                XORRR(r, r);
+            } else {
+                XORPS(r);
+            }
+        } else {
+            NanoAssert(!IsFpReg(r));
+            MOVI(r, v);
+        }
+    }
+
+    void Assembler::asm_quad(LIns *ins) {
+        uint64_t v = ins->imm64();
+        RegisterMask allow = v == 0 ? GpRegs|FpRegs : GpRegs;
+        Register rr = prepareResultReg(ins, allow);
+
+        asm_quad(rr, v, /*canClobberCCs*/true);
+
+        freeResourcesOf(ins);
+    }
+
+    void Assembler::asm_quad(Register r, uint64_t v, bool canClobberCCs) {
+        NanoAssert(v == 0 || IsGpReg(r));
         if (isU32(v)) {
-            MOVI(r, int32_t(v));
+            asm_int(r, int32_t(v), canClobberCCs);
         } else if (isS32(v)) {
             // safe for sign-extension 32->64
             MOVQI32(r, int32_t(v));
@@ -1562,34 +1590,6 @@ namespace nanojit
             LEARIP(r, d);
         } else {
             MOVQI(r, v);
-        }
-    }
-
-    void Assembler::asm_int(LIns *ins) {
-        Register r = deprecated_prepResultReg(ins, GpRegs);
-        int32_t v = ins->imm32();
-        if (v == 0) {
-            // special case for zero
-            XORRR(r, r);
-        } else {
-            MOVI(r, v);
-        }
-    }
-
-    void Assembler::asm_quad(LIns *ins) {
-        uint64_t v = ins->imm64();
-        RegisterMask allow = v == 0 ? GpRegs|FpRegs : GpRegs;
-        Register r = deprecated_prepResultReg(ins, allow);
-        if (v == 0) {
-            if (IsGpReg(r)) {
-                // special case for zero
-                XORRR(r, r);
-            } else {
-                // xorps for xmm
-                XORPS(r);
-            }
-        } else {
-            asm_quad(r, v);
         }
     }
 
@@ -1650,8 +1650,8 @@ namespace nanojit
             // so do it all in a GPR.  hrmph.
             rr = deprecated_prepResultReg(ins, GpRegs);
             ra = findRegFor(ins->oprnd1(), GpRegs & ~rmask(rr));
-            XORQRR(rr, ra);                     // xor rr, ra
-            asm_quad(rr, negateMask[0]);        // mov rr, 0x8000000000000000
+            XORQRR(rr, ra);                                     // xor rr, ra
+            asm_quad(rr, negateMask[0], /*canClobberCCs*/true); // mov rr, 0x8000000000000000
         }
     }
 
@@ -1798,7 +1798,7 @@ namespace nanojit
         MR(RSP, RBP);
 
         // return value is GuardRecord*
-        asm_quad(RAX, uintptr_t(lr));
+        asm_quad(RAX, uintptr_t(lr), /*canClobberCCs*/true);
     }
 
     void Assembler::nInit(AvmCore*) {
@@ -1873,10 +1873,10 @@ namespace nanojit
         // it on the stack.  This assumes that the scratch area at
         // -8(%rsp) .. -1(%esp) isn't being used for anything else
         // at this point.
-        emitr(X64_popr, RAX);             // popq    %rax
-        emit(X64_inclmRAX);               // incl    (%rax)
-        asm_quad(RAX, (uint64_t)pCtr);    // movabsq $pCtr, %rax
-        emitr(X64_pushr, RAX);            // pushq   %rax
+        emitr(X64_popr, RAX);                                   // popq    %rax
+        emit(X64_inclmRAX);                                     // incl    (%rax)
+        asm_quad(RAX, (uint64_t)pCtr, /*canClobberCCs*/true);   // movabsq $pCtr, %rax
+        emitr(X64_pushr, RAX);                                  // pushq   %rax
     }
     )
 
@@ -1895,7 +1895,7 @@ namespace nanojit
             // jmp [indexreg*8 + tablereg]
             JMPXB(indexreg, tablereg);
             // tablereg <- #table
-            asm_quad(tablereg, (uint64_t)table);
+            asm_quad(tablereg, (uint64_t)table, /*canClobberCCs*/true);
         }
     }
 
