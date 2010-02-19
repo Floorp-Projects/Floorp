@@ -255,6 +255,11 @@ namespace nanojit
         return ins2(op, c, (LIns*)gr);
     }
 
+    LInsp LirBufWriter::insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr)
+    {
+        return ins3(op, a, b, (LIns*)gr);
+    }
+
     LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
     {
         NanoAssert((op == LIR_j && !condition) ||
@@ -815,6 +820,60 @@ namespace nanojit
             }
         }
         return out->insGuard(v, c, gr);
+    }
+
+    LIns* ExprFilter::insGuardXov(LOpcode op, LInsp oprnd1, LInsp oprnd2, GuardRecord *gr)
+    {
+        if (oprnd1->isconst() && oprnd2->isconst()) {
+            int32_t c1 = oprnd1->imm32();
+            int32_t c2 = oprnd2->imm32();
+            double d;
+
+            switch (op) {
+            case LIR_addxov:    d = double(c1) + double(c2);    break;
+            case LIR_subxov:    d = double(c1) - double(c2);    break;
+            case LIR_mulxov:    d = double(c1) * double(c2);    break;
+            default:            NanoAssert(0);                  break;
+            }
+            int32_t r = int32_t(d);
+            if (r == d)
+                return insImm(r);
+
+        } else if (oprnd1->isconst() && !oprnd2->isconst()) {
+            switch (op) {
+            case LIR_addxov:
+            case LIR_mulxov: {
+                // move const to rhs
+                LIns* t = oprnd2;
+                oprnd2 = oprnd1;
+                oprnd1 = t;
+                break;
+            }
+            case LIR_subxov:
+                break;
+            default:
+                NanoAssert(0);
+            }
+        }
+
+        if (oprnd2->isconst()) {
+            int c = oprnd2->imm32();
+            if (c == 0) {
+                switch (op) {
+                case LIR_addxov:
+                case LIR_subxov:
+                    return oprnd1;
+                case LIR_mulxov:
+                    return oprnd2;
+                default:
+                    ;
+                }
+            } else if (c == 1 && op == LIR_mulxov) {
+                return oprnd1;
+            }
+        }
+
+        return out->insGuardXov(op, oprnd1, oprnd2, gr);
     }
 
     LIns* ExprFilter::insBranch(LOpcode v, LIns *c, LIns *t)
@@ -1546,7 +1605,6 @@ namespace nanojit
                 case LIR_not:
                 CASESF(LIR_qlo:)
                 CASESF(LIR_qhi:)
-                case LIR_ov:
                 CASE64(LIR_i2q:)
                 CASE64(LIR_u2q:)
                 case LIR_i2f:
@@ -1596,6 +1654,9 @@ namespace nanojit
                 case LIR_add:
                 case LIR_sub:
                 case LIR_mul:
+                case LIR_addxov:
+                case LIR_subxov:
+                case LIR_mulxov:
                 CASE86(LIR_div:)
                 case LIR_fadd:
                 case LIR_fsub:
@@ -1877,7 +1938,6 @@ namespace nanojit
             case LIR_u2f:
             CASESF(LIR_qlo:)
             CASESF(LIR_qhi:)
-            case LIR_ov:
             case LIR_not:
             CASE86(LIR_mod:)
             CASE64(LIR_i2q:)
@@ -1893,6 +1953,12 @@ namespace nanojit
             case LIR_xbarrier:
             case LIR_xtbl:
                 formatGuard(i, s);
+                break;
+
+            case LIR_addxov:
+            case LIR_subxov:
+            case LIR_mulxov:
+                formatGuardXov(i, s);
                 break;
 
             case LIR_add:       CASE64(LIR_qiadd:)
@@ -2139,6 +2205,20 @@ namespace nanojit
             return exprs->add(LIns1, ins, k);
         }
         return out->insGuard(v, c, gr);
+    }
+
+    LInsp CseFilter::insGuardXov(LOpcode v, LInsp a, LInsp b, GuardRecord *gr)
+    {
+        // LIR_*xov are CSEable.  See CseFilter::insGuard() for details.
+        NanoAssert(isCseOpcode(v));
+        // conditional guard
+        uint32_t k;
+        LInsp ins = exprs->find2(v, a, b, k);
+        if (ins)
+            return ins;
+        ins = out->insGuardXov(v, a, b, gr);
+        NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b);
+        return exprs->add(LIns2, ins, k);
     }
 
     LInsp CseFilter::insCall(const CallInfo *ci, LInsp args[])
@@ -2464,7 +2544,7 @@ namespace nanojit
         // bit weird because its representation is identical to LTy_I32.  It's
         // easier to just do this check structurally.  Also, optimization can
         // cause the condition to become a LIR_int.
-        if (!ins->isCond() && !ins->isconst())
+        if (!ins->isCmp() && !ins->isconst())
             errorStructureShouldBe(op, "argument", argN, ins, "a condition or 32-bit constant");
     }
 
@@ -2472,29 +2552,6 @@ namespace nanojit
     {
         if (ins)
             errorStructureShouldBe(op, "argument", argN, ins, NULL);
-    }
-
-    void ValidateWriter::checkLInsIsOverflowable(LOpcode op, int argN, LIns* ins)
-    {
-        if (!ins->isOverflowable())
-            errorStructureShouldBe(op, "argument", argN, ins,
-                                   "an overflowable 32-bit arithmetic operation");
-    }
-
-    void ValidateWriter::checkOprnd1ImmediatelyPrecedes(LIns* ins)
-    {
-        // The operand must be immediately prior to 'ins' (but there could be
-        // intervening skips).  We find the previous one with a short-lived
-        // LirReader.
-        LIns* oprnd1 = ins->oprnd1();
-        LirReader reader(ins);
-        reader.read();                  // returns 'ins'
-        LIns* prev = reader.read();     // returns the LIns before 'ins'
-        NanoAssert(prev);
-        if (prev != oprnd1) {
-            errorStructureShouldBe(ins->opcode(), "argument", 1, oprnd1,
-                                   "located immediately prior, but isn't");
-        }
     }
 
     void ValidateWriter::checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2)
@@ -2594,7 +2651,6 @@ namespace nanojit
         int nArgs = 1;
         LTy formals[1];
         LIns* args[1] = { a };
-        bool is_ov = false;
 
         switch (op) {
         case LIR_neg:
@@ -2625,14 +2681,6 @@ namespace nanojit
             formals[0] = LTy_I32;
             break;
 #endif
-
-        case LIR_ov:
-            checkLInsIsOverflowable(op, 1, a);
-            // We can only check the position after the LIns is created in a
-            // LirBuffer.
-            is_ov = true;
-            formals[0] = LTy_I32;
-            break;
 
 #if NJ_SOFTFLOAT_SUPPORTED
         case LIR_qlo:
@@ -2667,15 +2715,7 @@ namespace nanojit
 
         typeCheckArgs(op, nArgs, formals, args);
 
-        LIns* ins = out->ins1(op, a);
-
-        if (is_ov) {
-            NanoAssert(ins->isop(LIR_ov));
-            checkOprnd1ImmediatelyPrecedes(ins);
-        } else {
-            NanoAssert(!ins->isop(LIR_ov));
-        }
-        return ins;
+        return out->ins1(op, a);
     }
 
     LIns* ValidateWriter::ins2(LOpcode op, LIns* a, LIns* b)
@@ -2883,7 +2923,30 @@ namespace nanojit
             NanoAssert(0);
         }
 
+        typeCheckArgs(op, nArgs, formals, args);
+
         return out->insGuard(op, cond, gr);
+    }
+
+    LIns* ValidateWriter::insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord* gr)
+    {
+        int nArgs = 2;
+        LTy formals[2] = { LTy_I32, LTy_I32 };
+        LIns* args[2] = { a, b };
+
+        switch (op) {
+        case LIR_addxov:
+        case LIR_subxov:
+        case LIR_mulxov:
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->insGuardXov(op, a, b, gr);
     }
 
     LIns* ValidateWriter::insBranch(LOpcode op, LIns* cond, LIns* to)

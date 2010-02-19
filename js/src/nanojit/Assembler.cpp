@@ -1703,6 +1703,18 @@ namespace nanojit
                     JMP( exit );
                     break;
                 }
+                case LIR_addxov:
+                case LIR_subxov:
+                case LIR_mulxov:
+                {
+                    verbose_only( _thisfrag->nStaticExits++; )
+                    countlir_xcc();
+                    countlir_alu();
+                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
+                    asm_branch_xov(op, exit);
+                    asm_arith(ins);
+                    break;
+                }
 
                 case LIR_feq:
                 case LIR_fle:
@@ -1715,7 +1727,6 @@ namespace nanojit
                     break;
                 }
                 case LIR_eq:
-                case LIR_ov:
                 case LIR_le:
                 case LIR_lt:
                 case LIR_gt:
@@ -1791,7 +1802,7 @@ namespace nanojit
             if (_logc->lcbits & LC_Assembly) {
                 LirNameMap* names = _thisfrag->lirbuf->names;
                 outputf("    %s", names->formatIns(ins));
-                if (ins->isGuard() && ins->oprnd1()) {
+                if (ins->isGuard() && ins->oprnd1() && ins->oprnd1()->isCmp()) {
                     // Special case: code is generated for guard conditions at
                     // the same time that code is generated for the guard
                     // itself.  If the condition is only used by the guard, we

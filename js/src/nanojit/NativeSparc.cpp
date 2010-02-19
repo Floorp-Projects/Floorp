@@ -457,7 +457,7 @@ namespace nanojit
     {
         NIns* at = 0;
         LOpcode condop = cond->opcode();
-        NanoAssert(cond->isCond());
+        NanoAssert(cond->isCmp());
         if (condop >= LIR_feq && condop <= LIR_fge)
             {
                 return asm_fbranch(branchOnFalse, cond, targ);
@@ -475,14 +475,11 @@ namespace nanojit
         }
         NOP();
 
-
         // produce the branch
         if (branchOnFalse)
             {
                 if (condop == LIR_eq)
                     BNE(0, tt);
-                else if (condop == LIR_ov)
-                    BVC(0, tt);
                 else if (condop == LIR_lt)
                     BGE(0, tt);
                 else if (condop == LIR_le)
@@ -504,8 +501,6 @@ namespace nanojit
             {
                 if (condop == LIR_eq)
                     BE(0, tt);
-                else if (condop == LIR_ov)
-                    BVS(0, tt);
                 else if (condop == LIR_lt)
                     BL(0, tt);
                 else if (condop == LIR_le)
@@ -527,14 +522,25 @@ namespace nanojit
         return at;
     }
 
+    void Assembler::asm_branch_xov(LOpcode, NIns* targ)
+    {
+        underrunProtect(32);
+        intptr_t tt = ((intptr_t)targ - (intptr_t)_nIns + 8) >> 2;
+        // !targ means that it needs patch.
+        if( !(isIMM22((int32_t)tt)) || !targ ) {
+            JMP_long_nocheck((intptr_t)targ);
+            NOP();
+            BA(0, 5);
+            tt = 4;
+        }
+        NOP();
+
+        BVS(0, tt);
+    }
+
     void Assembler::asm_cmp(LIns *cond)
     {
         underrunProtect(12);
-        LOpcode condop = cond->opcode();
-
-        // LIR_ov recycles the flags set by arithmetic ops
-        if (condop == LIR_ov)
-            return;
 
         LInsp lhs = cond->oprnd1();
         LInsp rhs = cond->oprnd2();
@@ -592,8 +598,6 @@ namespace nanojit
 
         if (op == LIR_eq)
             MOVEI(1, 1, 0, 0, r);
-        else if (op == LIR_ov)
-            MOVVSI(1, 1, 0, 0, r);
         else if (op == LIR_lt)
             MOVLI(1, 1, 0, 0, r);
         else if (op == LIR_le)
@@ -623,7 +627,7 @@ namespace nanojit
 
         Register rb = deprecated_UnknownReg;
         RegisterMask allow = GpRegs;
-        bool forceReg = (op == LIR_mul || !rhs->isconst());
+        bool forceReg = (op == LIR_mul || op == LIR_mulxov || !rhs->isconst());
 
         if (lhs != rhs && forceReg)
             {
@@ -632,7 +636,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+        else if ((op == LIR_add||op == LIR_iaddp||op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
@@ -652,11 +656,11 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_iaddp)
+                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov)
                     ADDCC(rr, rb, rr);
-                else if (op == LIR_sub)
+                else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, rb, rr);
-                else if (op == LIR_mul)
+                else if (op == LIR_mul || op == LIR_mulxov)
                     MULX(rr, rb, rr);
                 else if (op == LIR_and)
                     AND(rr, rb, rr);
@@ -676,9 +680,9 @@ namespace nanojit
         else
             {
                 int c = rhs->imm32();
-                if (op == LIR_add || op == LIR_iaddp) {
+                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov) {
                     ADDCC(rr, L2, rr);
-                } else if (op == LIR_sub) {
+                } else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, L2, rr);
                 } else if (op == LIR_and)
                     AND(rr, L2, rr);
@@ -776,7 +780,6 @@ namespace nanojit
             switch (condval->opcode()) {
                 // note that these are all opposites...
             case LIR_eq:  MOVNE (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_ov:  MOVVC (iffalsereg, 1, 0, 0, rr); break;
             case LIR_lt:  MOVGE (iffalsereg, 1, 0, 0, rr); break;
             case LIR_le:  MOVG  (iffalsereg, 1, 0, 0, rr); break;
             case LIR_gt:  MOVLE (iffalsereg, 1, 0, 0, rr); break;

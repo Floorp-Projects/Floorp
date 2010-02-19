@@ -453,6 +453,7 @@ namespace nanojit
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);
             NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
+            void        asm_branch_xov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        emitJumpTable(SwitchInfo* si, NIns* target);
