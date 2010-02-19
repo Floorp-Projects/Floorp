@@ -175,13 +175,6 @@ public:
 
   nsresult GetPhonetic(nsAString& aPhonetic);
 
-  /**
-   * Ensure mEditor is initialized with the proper flags and the default value.
-   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
-   * @throws various and sundry other things
-   */
-  virtual nsresult EnsureEditorInitialized();
-
 //==== END NSITEXTCONTROLFRAME
 //==== OVERLOAD of nsIFrame
   virtual nsIAtom* GetType() const;
@@ -255,7 +248,7 @@ protected:
           mWeakFrame.GetFrame()->PresContext()->GetPresShell();
         PRBool observes = shell->ObservesNativeAnonMutationsForPrint();
         shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
-        mFrame->EnsureEditorInitialized();
+        mFrame->DelayedEditorInit();
         shell->ObserveNativeAnonMutationsForPrint(observes);
       }
       return NS_OK;
@@ -266,6 +259,10 @@ protected:
     nsTextControlFrame* mFrame;
   };
 
+  // Init our editor and then make sure to focus our text input
+  // listener if our content node has focus.
+  void DelayedEditorInit();
+
   nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
@@ -275,6 +272,12 @@ protected:
    * @return whether this control is scrollable
    */
   PRBool IsScrollable() const;
+  /**
+   * Initialize mEditor with the proper flags and the default value.
+   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
+   * @throws various and sundry other things
+   */
+  nsresult InitEditor();
   /**
    * Strip all \n, \r and nulls from the given string
    * @param aString the string to remove newlines from [in/out]
