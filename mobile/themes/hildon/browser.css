@@ -529,7 +529,7 @@ placeitem[ui="manage"] > .bookmark-manage > image {
   border: none;
   margin: 0;
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/close-40.png");
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
 }
 
 .close-button:hover:active {
@@ -730,7 +730,7 @@ box[type="documenttab"][selected="true"] .documenttab-canvas {
 box[type="documenttab"] .documenttab-close {
   width: 40px;
   height: 40px;
-  list-style-image: url("chrome://browser/skin/images/close-40.png");
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
 }
 
 box[type="documenttab"] hbox:hover:active .documenttab-close {
