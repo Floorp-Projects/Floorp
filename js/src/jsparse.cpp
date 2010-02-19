@@ -1993,7 +1993,8 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
 
                 if (!lexdep->isFreeVar() &&
                     !lexdep->isFunArg() &&
-                    lexdep->kind() == JSDefinition::FUNCTION) {
+                    (lexdep->kind() == JSDefinition::FUNCTION ||
+                     PN_OP(lexdep) == JSOP_CALLEE)) {
                     /*
                      * Mark this formerly-Algol-like function as an escaping
                      * function (i.e., as a funarg), because it is used from a
@@ -2006,7 +2007,26 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                      */
                     lexdep->setFunArg();
 
-                    JSFunctionBox *afunbox = lexdep->pn_funbox;
+                    JSFunctionBox *afunbox;
+                    if (PN_OP(lexdep) == JSOP_CALLEE) {
+                        /*
+                         * A named function expression will not appear to be a
+                         * funarg if it is immediately applied. However, if its
+                         * name is used in an escaping function nested within
+                         * it, then it must become flagged as a funarg again.
+                         * See bug 545980. 
+                         */
+                        afunbox = funbox;
+                        uintN calleeLevel = UPVAR_FRAME_SKIP(lexdep->pn_cookie);
+                        uintN staticLevel = afunbox->level + 1U;
+                        while (staticLevel != calleeLevel) {
+                            afunbox = afunbox->parent;
+                            --staticLevel;
+                        }
+                        afunbox->node->setFunArg();
+                    } else {
+                       afunbox = lexdep->pn_funbox;
+                    }
                     queue.push(afunbox);
 
                     /*
