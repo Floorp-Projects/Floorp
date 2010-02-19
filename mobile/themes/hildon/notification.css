@@ -7,9 +7,13 @@ notification, notification[type="warning"] {
 }
 
 notification .messageCloseButton {
-  list-style-image: url("chrome://browser/skin/images/close-40.png");
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
   -moz-image-region: -moz-initial;
   -moz-box-align: start;
+}
+
+notification .messageCloseButton:hover:active {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
 notification .outset {

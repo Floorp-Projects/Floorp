@@ -532,6 +532,10 @@ placeitem[ui="manage"] > .bookmark-manage > image {
   list-style-image: url("chrome://browser/skin/images/close-40.png");
 }
 
+.close-button:hover:active {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
+}
+
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
   margin-right: 8px;
@@ -727,6 +731,10 @@ box[type="documenttab"] .documenttab-close {
   width: 40px;
   height: 40px;
   list-style-image: url("chrome://browser/skin/images/close-40.png");
+}
+
+box[type="documenttab"] hbox:hover:active .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
 box[type="documenttab"]:only-child .documenttab-close {
