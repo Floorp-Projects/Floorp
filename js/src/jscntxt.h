@@ -691,7 +691,7 @@ struct JSClassProtoCache {
         int32       probe, hit;
     };
 # define PROTO_CACHE_METER(cx, x)                                             \
-    ((void) (PR_ATOMIC_INCREMENT(&(cx)->runtime->classProtoCacheStats.x)))
+    ((void) (JS_ATOMIC_INCREMENT(&(cx)->runtime->classProtoCacheStats.x)))
 #else
 # define PROTO_CACHE_METER(cx, x)  ((void) 0)
 #endif
