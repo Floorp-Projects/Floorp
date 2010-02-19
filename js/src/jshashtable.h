@@ -59,8 +59,10 @@ class HashTable : AllocPolicy
     typedef typename HashPolicy::KeyType Key;
     typedef typename HashPolicy::Lookup Lookup;
 
+  public:
     class Entry {
         HashNumber keyHash;
+
       public:
         Entry() : keyHash(0), t() {}
         typename tl::StripConst<T>::result t;
@@ -79,7 +81,6 @@ class HashTable : AllocPolicy
         HashNumber getKeyHash() const { JS_ASSERT(!hasCollision()); return keyHash; }
     };
 
-  public:
     /*
      * A nullable pointer to a hash table element. A Ptr |p| can be tested
      * either explicitly |if (p.found()) p->...| or using boolean conversion
@@ -682,6 +683,7 @@ class HashMap
     class Entry
     {
         template <class, class, class> friend class detail::HashTable;
+        template <class K1, class V1, class H1> friend class detail::HashTable<K1,V1,H1>::Entry;
         void operator=(const Entry &rhs) {
             const_cast<Key &>(key) = rhs.key;
             value = rhs.value;
