@@ -268,7 +268,7 @@ TileManager.prototype = {
       this.criticalRectPaint();
   },
 
-  dirtyRects: function dirtyRects(rects, doCriticalRender) {
+  dirtyRects: function dirtyRects(rects, doCriticalRender, keepTileInDom) {
     let outsideIsDirty = false;
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
@@ -282,7 +282,8 @@ TileManager.prototype = {
 
       if (!tile.boundRect.intersects(criticalRect)) {
         // Dirty tile outside of viewport. Just remove and redraw later.
-        this._removeTileSafe(tile);
+        if (!keepTileInDom)
+          this._removeTileSafe(tile);
         crawler.enqueue(tile.i, tile.j);
         outsideIsDirty = true;
       } else {
