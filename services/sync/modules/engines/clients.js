@@ -159,7 +159,10 @@ ClientEngine.prototype = {
     return true;
   },
 
-  _resetClient: function ClientEngine__resetClient() {
+  // Treat reset the same as wiping for locally cached clients
+  _resetClient: function _resetClient() this._wipeClient(),
+
+  _wipeClient: function _wipeClient() {
     SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
 
