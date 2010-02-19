@@ -141,6 +141,10 @@ template <class T> struct UnsafeRangeSizeMask {
     static const size_t result = MulOverflowMask<2 * sizeof(T)>::result;
 };
 
+/* Return T stripped of any const-ness. */
+template <class T> struct StripConst          { typedef T result; };
+template <class T> struct StripConst<const T> { typedef T result; };
+
 /*
  * Traits class for identifying POD types. Until C++0x, there is no automatic
  * way to detect PODs, so for the moment it is done manually.
