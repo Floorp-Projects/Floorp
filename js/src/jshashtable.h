@@ -56,8 +56,16 @@ namespace detail {
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable : AllocPolicy
 {
+    typedef typename tl::StripConst<T>::result NonConstT;
     typedef typename HashPolicy::KeyType Key;
     typedef typename HashPolicy::Lookup Lookup;
+
+    /*
+     * T::operator= is a private operation for HashMap::Entry. HashMap::Entry
+     * makes HashTable a friend, but MSVC does not allow HashMap::Entry to make
+     * HashTable::Entry a friend. So do assignment here:
+     */
+    static void assignT(NonConstT &dst, const T &src) { dst = src; }
 
   public:
     class Entry {
@@ -65,7 +73,9 @@ class HashTable : AllocPolicy
 
       public:
         Entry() : keyHash(0), t() {}
-        typename tl::StripConst<T>::result t;
+        void operator=(const Entry &rhs) { keyHash = rhs.keyHash; assignT(t, rhs.t); }
+
+        NonConstT t;
 
         bool isFree() const           { return keyHash == 0; }
         void setFree()                { keyHash = 0; t = T(); }
@@ -683,7 +693,6 @@ class HashMap
     class Entry
     {
         template <class, class, class> friend class detail::HashTable;
-        template <class K1, class V1, class H1> friend class detail::HashTable<K1,V1,H1>::Entry;
         void operator=(const Entry &rhs) {
             const_cast<Key &>(key) = rhs.key;
             value = rhs.value;
