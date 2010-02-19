@@ -1061,6 +1061,15 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 extern void
 js_Clear(JSContext *cx, JSObject *obj);
 
+#ifdef JS_THREADSAFE
+#define NATIVE_DROP_PROPERTY js_DropProperty
+
+extern void
+js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
+#else
+#define NATIVE_DROP_PROPERTY NULL
+#endif
+
 extern bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 

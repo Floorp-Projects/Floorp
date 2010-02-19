@@ -824,7 +824,23 @@ slowarray_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSObjectOps js_SlowArrayObjectOps;
+static JSBool
+slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                    jsval *statep, jsid *idp);
+
+/* The same as js_ObjectOps except for the .enumerate and .call hooks. */
+static JSObjectOps js_SlowArrayObjectOps = {
+    NULL,
+    js_LookupProperty,      js_DefineProperty,
+    js_GetProperty,         js_SetProperty,
+    js_GetAttributes,       js_SetAttributes,
+    js_DeleteProperty,      js_DefaultValue,
+    slowarray_enumerate,    js_CheckAccess,
+    NULL,                   NATIVE_DROP_PROPERTY,
+    NULL,                   js_Construct,
+    js_HasInstance,         js_TraceObject,
+    js_Clear
+};
 
 static JSObjectOps *
 slowarray_getObjectOps(JSContext *cx, JSClass *clasp)
@@ -3430,15 +3446,8 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
-    /* Initialize the ops structure used by slow arrays */
-    memcpy(&js_SlowArrayObjectOps, &js_ObjectOps, sizeof(JSObjectOps));
-    js_SlowArrayObjectOps.enumerate = slowarray_enumerate;
-    js_SlowArrayObjectOps.call = NULL;
-
-    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
-                         array_props, array_methods, NULL, array_static_methods);
+    JSObject *proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
+                                   array_props, array_methods, NULL, array_static_methods);
 
     /* Initialize the Array prototype object so it gets a length property. */
     if (!proto || !InitArrayObject(cx, proto, 0, NULL))
