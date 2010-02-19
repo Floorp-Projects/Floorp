@@ -104,15 +104,6 @@
 
 using namespace js;
 
-#ifdef JS_THREADSAFE
-#define NATIVE_DROP_PROPERTY js_DropProperty
-
-extern void
-js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
-#else
-#define NATIVE_DROP_PROPERTY NULL
-#endif
-
 JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     NULL,
     js_LookupProperty,      js_DefineProperty,
