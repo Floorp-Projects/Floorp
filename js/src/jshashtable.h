@@ -92,8 +92,10 @@ class HashTable : AllocPolicy
         typedef void (Ptr::* ConvertibleToBool)();
         void nonNull() {}
 
-        Ptr(Entry &entry) : entry(&entry) {}
         Entry *entry;
+
+      protected:
+        Ptr(Entry &entry) : entry(&entry) {}
 
       public:
         bool found() const           { return entry->isLive(); }
