@@ -63,7 +63,7 @@ class HashTable : AllocPolicy
         HashNumber keyHash;
       public:
         Entry() : keyHash(0), t() {}
-        T t;
+        typename tl::StripConst<T>::result t;
 
         bool isFree() const           { return keyHash == 0; }
         void setFree()                { keyHash = 0; t = T(); }
@@ -101,8 +101,8 @@ class HashTable : AllocPolicy
         bool found() const           { return entry->isLive(); }
         operator ConvertibleToBool() { return found() ? &Ptr::nonNull : 0; }
 
-        const T &operator*() const         { return entry->t; }
-        const T *operator->() const        { return &entry->t; }
+        T &operator*() const         { return entry->t; }
+        T *operator->() const        { return &entry->t; }
     };
 
     /* A Ptr that can be used to add a key after a failed lookup. */
@@ -151,8 +151,8 @@ class HashTable : AllocPolicy
      * A Range whose lifetime delimits a mutating enumeration of a hash table.
      * Since rehashing when elements were removed during enumeration would be
      * bad, it is postponed until |endEnumeration()| is called. If
-     * |endEnumeration()| is not called before an Enum's constructor, it
-     * will be called automatically. Since |endEnumeration()| touches the hash
+     * |endEnumeration()| is not called before an Enum's constructor, it will
+     * be called automatically. Since |endEnumeration()| touches the hash
      * table, the user must ensure that the hash table is still alive when this
      * happens.
      */
@@ -198,7 +198,7 @@ class HashTable : AllocPolicy
                 table.checkUnderloaded();
         }
 
-        /* Can be used to endEnumeration before the destructor. */
+        /* Can be used to end the enumeration before the destructor. */
         void endEnumeration() {
             if (removed) {
                 table.checkUnderloaded();
@@ -614,9 +614,9 @@ class HashTable : AllocPolicy
  *
  *    to use to test equality of key and lookup values.
  *
- * Normally, Lookup = Key. In the general, though, different values and types
- * of values can be used to lookup and store. If a Lookup value |l| is != to
- * the added Key value |k|, the user must ensure that |P::match(k,l)|. E.g.:
+ * Normally, Lookup = Key. In general, though, different values and types of
+ * values can be used to lookup and store. If a Lookup value |l| is != to the
+ * added Key value |k|, the user must ensure that |P::match(k,l)|. E.g.:
  *
  *   js::HashSet<Key, P>::AddPtr p = h.lookup(l);
  *   if (!p) {
@@ -679,20 +679,21 @@ class HashMap
   public:
     typedef typename HashPolicy::Lookup Lookup;
 
-    /*
-     * The type of an entry in a HashMap. Internally, the |key| is not const
-     * since it gets overwritten on add/remove operations. To the caller,
-     * though, it is const, hence Entry_ is used internally and Entry is
-     * returned to callers.
-     */
-    typedef struct Entry_
+    class Entry
     {
-        Entry_() : key(), value() {}
-        Entry_(const Key &k, const Value &v) : key(k), value(v) {}
+        template <class, class, class> friend class detail::HashTable;
+        void operator=(const Entry &rhs) {
+            const_cast<Key &>(key) = rhs.key;
+            value = rhs.value;
+        }
 
-        Key key;
-        mutable Value value;
-    } const Entry;
+      public:
+        Entry() : key(), value() {}
+        Entry(const Key &k, const Value &v) : key(k), value(v) {}
+
+        const Key key;
+        Value value;
+    };
 
   private:
     /* Implement HashMap using HashTable. Lift |Key| operations to |Entry|. */
@@ -701,7 +702,7 @@ class HashMap
         typedef Key KeyType;
         static const Key &getKey(Entry &e) { return e.key; }
     };
-    typedef detail::HashTable<Entry_, MapHashPolicy, AllocPolicy> Impl;
+    typedef detail::HashTable<Entry, MapHashPolicy, AllocPolicy> Impl;
 
     /* Not implicitly copyable (expensive). May add explicit |clone| later. */
     HashMap(const HashMap &);
@@ -739,7 +740,7 @@ class HashMap
     /*
      * Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
      * insertion of Key |k| (where |HashPolicy::match(k,l) == true|) using
-     * |add(p,k,v)|.  After |add(p,k,v)|, |p| points to the new Entry. E.g.:
+     * |add(p,k,v)|. After |add(p,k,v)|, |p| points to the new Entry. E.g.:
      *
      *   typedef HashMap<int,char> HM;
      *   HM h;
@@ -847,7 +848,7 @@ class HashSet
         typedef T KeyType;
         static const KeyType &getKey(const T &t) { return t; }
     };
-    typedef detail::HashTable<T, SetOps, AllocPolicy> Impl;
+    typedef detail::HashTable<const T, SetOps, AllocPolicy> Impl;
 
     /* Not implicitly copyable (expensive). May add explicit |clone| later. */
     HashSet(const HashSet &);
@@ -883,7 +884,7 @@ class HashSet
     /*
      * Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
      * insertion of T value |t| (where |HashPolicy::match(t,l) == true|) using
-     * |add(p,t)|.  After |add(p,t)|, |p| points to the new element. E.g.:
+     * |add(p,t)|. After |add(p,t)|, |p| points to the new element. E.g.:
      *
      *   typedef HashSet<int> HS;
      *   HS h;
