@@ -284,7 +284,19 @@ extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
 extern JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto = NULL);
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto);
+
+inline JSObject *
+CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
+{
+    JS_ASSERT(parent);
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
+        return NULL;
+    JS_ASSERT(proto);
+    return js_CloneFunctionObject(cx, fun, parent, proto);
+}
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);

@@ -1142,8 +1142,7 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Initialize the function class first so constructors can be made. */
-    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Function),
-                              &fun_proto)) {
+    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto)) {
         fun_proto = NULL;
         goto out;
     }
@@ -1164,8 +1163,7 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Initialize the object class next so Object.prototype works. */
-    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Object),
-                              &obj_proto)) {
+    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto)) {
         fun_proto = NULL;
         goto out;
     }
@@ -4132,6 +4130,14 @@ JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    if (!parent) {
+        if (cx->fp)
+            parent = js_GetScopeChain(cx, cx->fp);
+        if (!parent)
+            parent = cx->globalObject;
+        JS_ASSERT(parent);
+    }
+
     if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
         /*
          * We cannot clone this object, so fail (we used to return funobj, bad
@@ -4143,7 +4149,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    JSObject *clone = js_CloneFunctionObject(cx, fun, parent);
+    JSObject *clone = CloneFunctionObject(cx, fun, parent);
     if (!clone)
         return NULL;
 

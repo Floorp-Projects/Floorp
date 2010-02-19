@@ -43,6 +43,8 @@
 /*
  * JS execution context.
  */
+#include <string.h>
+
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsclist.h"
 #include "jslong.h"
@@ -678,6 +680,35 @@ struct JSSetSlotRequest {
     JSSetSlotRequest    *next;          /* next request in GC worklist */
 };
 
+#define JS_PROTO_CACHE_METERING
+
+/* Caching Class.prototype lookups for the standard classes. */
+struct JSClassProtoCache {
+    void purge() { memset(entries, 0, sizeof(entries)); }
+
+#ifdef JS_PROTO_CACHE_METERING
+    struct Stats {
+        int32       probe, hit;
+    };
+# define PROTO_CACHE_METER(cx, x)                                             \
+    ((void) (PR_ATOMIC_INCREMENT(&(cx)->runtime->classProtoCacheStats.x)))
+#else
+# define PROTO_CACHE_METER(cx, x)  ((void) 0)
+#endif
+
+  private:
+    struct GlobalAndProto {
+        JSObject    *global;
+        JSObject    *proto;
+    };
+
+    GlobalAndProto  entries[JSProto_LIMIT - JSProto_Object];
+
+    friend JSBool js_GetClassPrototype(JSContext *cx, JSObject *scope,
+                                       JSProtoKey protoKey, JSObject **protop,
+                                       JSClass *clasp);
+};
+
 struct JSRuntime {
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -1028,6 +1059,10 @@ struct JSRuntime {
     char                lastScriptFilename[1024];
 #endif
 
+#ifdef JS_PROTO_CACHE_METERING
+    JSClassProtoCache::Stats classProtoCacheStats;
+#endif
+
     JSRuntime();
     ~JSRuntime();
 
@@ -1220,8 +1255,7 @@ extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
  * Wraps a stack frame which has been temporarily popped from its call stack
  * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
  */
-struct JSGCReachableFrame
-{
+struct JSGCReachableFrame {
     JSGCReachableFrame  *next;
     JSStackFrame        *frame;
 };
@@ -1464,6 +1498,8 @@ struct JSContext
     bool                 jitEnabled;
 #endif
 
+    JSClassProtoCache    classProtoCache;
+
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled() {
 #ifdef JS_TRACER
@@ -1621,6 +1657,8 @@ struct JSContext
     }
 
     bool isConstructing();
+
+    void purge();
 
 private:
 

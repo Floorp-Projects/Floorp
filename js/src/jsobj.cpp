@@ -2061,7 +2061,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_Array), &proto))
+    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto))
         return JS_FALSE;
     vp[1] = OBJECT_TO_JSVAL(proto);
 
@@ -2960,21 +2960,28 @@ out:
     return obj;
 }
 
+inline JSProtoKey
+GetClassProtoKey(JSClass *clasp)
+{
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
+    if (key != JSProto_Null)
+        return key;
+    if (clasp->flags & JSCLASS_IS_ANONYMOUS)
+        return JSProto_Object;
+    return JSProto_Null;
+}
+
 JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,
              JSObject *parent, size_t objectSize)
 {
-    jsid id;
-
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
-        if (!js_GetClassId(cx, clasp, &id))
-            return NULL;
-        if (!js_GetClassPrototype(cx, parent, id, &proto))
+        JSProtoKey protoKey = GetClassProtoKey(clasp);
+        if (!js_GetClassPrototype(cx, parent, protoKey, &proto, clasp))
             return NULL;
         if (!proto &&
-            !js_GetClassPrototype(cx, parent, INT_TO_JSID(JSProto_Object),
-                                  &proto)) {
+            !js_GetClassPrototype(cx, parent, JSProto_Object, &proto)) {
             return NULL;
         }
     }
@@ -3104,7 +3111,7 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
     } else {
         /* Primitive value in .prototype means we use Object.prototype for proto. */
         if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
-                                  INT_TO_JSID(JSProto_Object), &proto)) {
+                                  JSProto_Object, &proto)) {
             return NULL;
         }
     }
@@ -3721,8 +3728,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null &&
         !parent_proto &&
-        !js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Object),
-                              &parent_proto)) {
+        !js_GetClassPrototype(cx, obj, JSProto_Object, &parent_proto)) {
         return NULL;
     }
 
@@ -3961,26 +3967,6 @@ js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
     return true;
 }
 
-extern JSBool
-js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
-{
-    JSProtoKey key;
-    JSAtom *atom;
-
-    key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    if (key != JSProto_Null) {
-        *idp = INT_TO_JSID(key);
-    } else if (clasp->flags & JSCLASS_IS_ANONYMOUS) {
-        *idp = INT_TO_JSID(JSProto_Object);
-    } else {
-        atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
-        if (!atom)
-            return JS_FALSE;
-        *idp = ATOM_TO_JSID(atom);
-    }
-    return JS_TRUE;
-}
-
 JS_BEGIN_EXTERN_C
 
 static JSObject *
@@ -4068,11 +4054,12 @@ js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj)
 }
 
 JSBool
-js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
+js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
+                   jsval *vp, JSClass *clasp)
 {
     JSStackFrame *fp;
     JSObject *obj, *cobj, *pobj;
-    JSProtoKey key;
+    jsid id;
     JSProperty *prop;
     jsval v;
     JSScopeProperty *sprop;
@@ -4104,16 +4091,21 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
     if (!obj)
         return JS_FALSE;
 
-    if (JSID_IS_INT(id)) {
-        key = (JSProtoKey) JSID_TO_INT(id);
-        JS_ASSERT(key != JSProto_Null);
-        if (!js_GetClassObject(cx, obj, key, &cobj))
+    if (protoKey != JSProto_Null) {
+        JS_ASSERT(JSProto_Null < protoKey);
+        JS_ASSERT(protoKey < JSProto_LIMIT);
+        if (!js_GetClassObject(cx, obj, protoKey, &cobj))
             return JS_FALSE;
         if (cobj) {
             *vp = OBJECT_TO_JSVAL(cobj);
             return JS_TRUE;
         }
-        id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+        id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
+    } else {
+        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+        if (!atom)
+            return false;
+        id = ATOM_TO_JSID(atom);
     }
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
@@ -4141,16 +4133,14 @@ JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, jsval *argv)
 {
-    jsid id;
     jsval cval, rval;
     JSObject *obj, *ctor;
 
     JSAutoTempValueRooter argtvr(cx, argc, argv);
 
-    if (!js_GetClassId(cx, clasp, &id) ||
-        !js_FindClassObject(cx, parent, id, &cval)) {
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
+    if (!js_FindClassObject(cx, parent, protoKey, &cval, clasp))
         return NULL;
-    }
 
     if (JSVAL_IS_PRIMITIVE(cval)) {
         js_ReportIsNotFunction(cx, &cval, JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
@@ -6191,16 +6181,48 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 }
 
 JSBool
-js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
-                     JSObject **protop)
+js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
+                     JSObject **protop, JSClass *clasp)
 {
-    jsval v;
-    JSObject *ctor;
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    JS_ASSERT(JSProto_Null <= protoKey);
+    JS_ASSERT(protoKey < JSProto_LIMIT);
 
-    if (!js_FindClassObject(cx, scope, id, &v))
+    /* Query cache. */
+    JSClassProtoCache::GlobalAndProto *cacheEntry = NULL;
+    if (protoKey != JSProto_Null) {
+        if (!scope) {
+            if (cx->fp)
+                scope = cx->fp->scopeChain;
+            if (!scope) {
+                scope = cx->globalObject;
+                if (!scope) {
+                    *protop = NULL;
+                    return true;
+                }
+            }
+        }
+        while (JSObject *tmp = scope->getParent())
+            scope = tmp;
+
+        JS_STATIC_ASSERT(JSProto_Null == 0);
+        JS_STATIC_ASSERT(JSProto_Object == 1);
+        cacheEntry = &cx->classProtoCache.entries[protoKey - JSProto_Object];
+
+        PROTO_CACHE_METER(cx, probe);
+        if (cacheEntry->global == scope) {
+            JS_ASSERT(cacheEntry->proto);
+            PROTO_CACHE_METER(cx, hit);
+            *protop = cacheEntry->proto;
+            return true;
+        }
+    }
+
+    jsval v;
+    if (!js_FindClassObject(cx, scope, protoKey, &v, clasp))
         return JS_FALSE;
     if (VALUE_IS_FUNCTION(cx, v)) {
-        ctor = JSVAL_TO_OBJECT(v);
+        JSObject *ctor = JSVAL_TO_OBJECT(v);
         if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
@@ -6215,6 +6237,10 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
              */
             cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] =
                 JSVAL_TO_OBJECT(v);
+            if (cacheEntry) {
+                cacheEntry->global = scope;
+                cacheEntry->proto = JSVAL_TO_OBJECT(v);
+            }
         }
     }
     *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
@@ -6397,7 +6423,6 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     JSClass *clasp;
     uint32 classId, classDef;
     JSProtoKey protoKey;
-    jsid classKey;
     JSObject *proto;
 
     cx = xdr->cx;
@@ -6443,10 +6468,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
         if (classDef) {
             /* NB: we know that JSProto_Null is 0 here, for backward compat. */
             protoKey = (JSProtoKey) (classDef >> 1);
-            classKey = (protoKey != JSProto_Null)
-                       ? INT_TO_JSID(protoKey)
-                       : ATOM_TO_JSID(atom);
-            if (!js_GetClassPrototype(cx, NULL, classKey, &proto))
+            if (!js_GetClassPrototype(cx, NULL, protoKey, &proto, clasp))
                 return JS_FALSE;
             clasp = OBJ_GET_CLASS(cx, proto);
             if (!JS_XDRRegisterClass(xdr, clasp, &classId))

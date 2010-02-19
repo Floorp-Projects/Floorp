@@ -10383,7 +10383,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 #endif
 
     JSObject* proto;
-    if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(key), &proto))
+    if (!js_GetClassPrototype(cx, globalObj, key, &proto))
         RETURN_ERROR("error in js_GetClassPrototype");
 
     // This should not have reentered.
@@ -14528,26 +14528,26 @@ TraceRecorder::record_JSOP_CALLPROP()
         obj_ins = get(&l);
         this_ins = obj_ins; // |this| for subsequent call
     } else {
-        jsint i;
+        JSProtoKey protoKey;
         debug_only_stmt(const char* protoname = NULL;)
         if (JSVAL_IS_STRING(l)) {
-            i = JSProto_String;
+            protoKey = JSProto_String;
             debug_only_stmt(protoname = "String.prototype";)
         } else if (JSVAL_IS_NUMBER(l)) {
-            i = JSProto_Number;
+            protoKey = JSProto_Number;
             debug_only_stmt(protoname = "Number.prototype";)
         } else if (JSVAL_IS_SPECIAL(l)) {
             if (l == JSVAL_VOID)
                 RETURN_STOP_A("callprop on void");
             guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_SPECIAL(JSVAL_VOID)), MISMATCH_EXIT);
-            i = JSProto_Boolean;
+            protoKey = JSProto_Boolean;
             debug_only_stmt(protoname = "Boolean.prototype";)
         } else {
             JS_ASSERT(JSVAL_IS_NULL(l) || JSVAL_IS_VOID(l));
             RETURN_STOP_A("callprop on null or void");
         }
 
-        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
+        if (!js_GetClassPrototype(cx, NULL, protoKey, &obj))
             RETURN_ERROR_A("GetClassPrototype failed!");
 
         obj_ins = INS_CONSTOBJ(obj);
