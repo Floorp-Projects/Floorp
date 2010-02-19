@@ -1082,6 +1082,8 @@ class TraceRecorder
 
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
+                                               nanojit::LIns* d1, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpInt32Slot(nanojit::LIns* val_ins, jsval* vp,
                                                     VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, jsval* vp,
