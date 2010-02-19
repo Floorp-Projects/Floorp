@@ -456,10 +456,7 @@ struct JSParseNode {
         return UPVAR_FRAME_SLOT(pn_cookie);
     }
 
-    bool test(uintN flag) const {
-        JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
-        return !!(pn_dflags & flag);
-    }
+    inline bool test(uintN flag) const;
 
     bool isLet() const          { return test(PND_LET); }
     bool isConst() const        { return test(PND_CONST); }
@@ -468,10 +465,10 @@ struct JSParseNode {
     bool isBlockChild() const   { return test(PND_BLOCKCHILD); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
+    bool isAssigned() const     { return test(PND_ASSIGNED); }
+    bool isFunArg() const       { return test(PND_FUNARG); }
 
     /* Defined below, see after struct JSDefinition. */
-    bool isAssigned() const;
-    bool isFunArg() const;
     void setFunArg();
 
     void become(JSParseNode *pn2);
@@ -692,27 +689,6 @@ struct JSDefinition : public JSParseNode
         return (JSDefinition *) pn;
     }
 
-    bool test(uintN flag) const {
-        JS_ASSERT(pn_defn);
-        if (pn_dflags & flag)
-            return true;
-#ifdef DEBUG
-        for (JSParseNode *pn = dn_uses; pn; pn = pn->pn_link) {
-            JS_ASSERT(!pn->pn_defn);
-            JS_ASSERT(!(pn->pn_dflags & flag));
-        }
-#endif
-        return false;
-    }
-
-    bool isAssigned() const {
-        return test(PND_ASSIGNED);
-    }
-
-    bool isFunArg() const {
-        return test(PND_FUNARG);
-    }
-
     bool isFreeVar() const {
         JS_ASSERT(pn_defn);
         return pn_cookie == FREE_UPVAR_COOKIE || test(PND_GVAR);
@@ -744,28 +720,19 @@ struct JSDefinition : public JSParseNode
     }
 };
 
-/*
- * These two are overridden by JSDefinition and we cannot afford virtual
- * methods -- so we use the mighty 'if' statement!
- */
 inline bool
-JSParseNode::isAssigned() const
+JSParseNode::test(uintN flag) const
 {
+    JS_ASSERT(pn_defn || pn_arity == PN_FUNC || pn_arity == PN_NAME);
 #ifdef DEBUG
-    if (pn_defn)
-        return ((JSDefinition *)this)->isAssigned();
+    if ((flag & (PND_ASSIGNED | PND_FUNARG)) && pn_defn && !(pn_dflags & flag)) {
+        for (JSParseNode *pn = ((JSDefinition *) this)->dn_uses; pn; pn = pn->pn_link) {
+            JS_ASSERT(!pn->pn_defn);
+            JS_ASSERT(!(pn->pn_dflags & flag));
+        }
+    }
 #endif
-    return test(PND_ASSIGNED);
-}
-
-inline bool
-JSParseNode::isFunArg() const
-{
-#ifdef DEBUG
-    if (pn_defn)
-        return ((JSDefinition *)this)->isFunArg();
-#endif
-    return test(PND_FUNARG);
+    return !!(pn_dflags & flag);
 }
 
 inline void
