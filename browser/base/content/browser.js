@@ -6202,12 +6202,12 @@ var gMissingPluginInstaller = {
 
 #ifdef MOZ_CRASHREPORTER
     let minidumpID = subject.getPropertyAsAString("minidumpID");
-    let submitReports = gCrashReporter.submitReports;
+    let submitted = gCrashReporter.submitReports && minidumpID.length;
     // The crash reporter wants a DOM element it can append an IFRAME to,
     // which it uses to submit a form. Let's just give it gBrowser.
-    if (submitReports)
-      gMissingPluginInstaller.CrashSubmit.submit(minidumpID, gBrowser, null, null);
-    propertyBag.setPropertyAsBool("submittedCrashReport", submitReports);
+    if (submitted)
+      submitted = gMissingPluginInstaller.CrashSubmit.submit(minidumpID, gBrowser, null, null);
+    propertyBag.setPropertyAsBool("submittedCrashReport", submitted);
 #endif
   },
 
@@ -6244,12 +6244,26 @@ var gMissingPluginInstaller = {
     overlay.removeAttribute("role");
 
 #ifdef MOZ_CRASHREPORTER
-    let helpClass = submittedReport ? "submitLink" : "notSubmitLink";
-    let helpLink = doc.getAnonymousElementByAttribute(plugin, "class", helpClass);
-    helpLink.href = gMissingPluginInstaller.crashReportHelpURL;
-    let showClass = submittedReport ? "msg msgSubmitted" : "msg msgNotSubmitted";
-    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
-    textToShow.style.display = "block";
+    let helpClass, showClass;
+
+    // If we didn't submit a report but don't have submission disabled,
+    // we probably just didn't collect a crash report; don't put up any 
+    // special crashing text.
+    if (submittedReport) {
+      helpClass = "submitLink";
+      showClass = "msg msgSubmitted";
+    }
+    else if (!gCrashReporter.submitReports) {
+      helpClass = "notSubmitLink";
+      showClass = "msg msgNotSubmitted";
+    }
+
+    if (helpClass) {
+      let helpLink = doc.getAnonymousElementByAttribute(plugin, "class", helpClass);
+      helpLink.href = gMissingPluginInstaller.crashReportHelpURL;
+      let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
+      textToShow.style.display = "block";
+    }
 #endif
 
     let crashText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgCrashed");
