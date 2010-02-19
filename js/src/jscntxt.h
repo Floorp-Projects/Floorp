@@ -680,8 +680,6 @@ struct JSSetSlotRequest {
     JSSetSlotRequest    *next;          /* next request in GC worklist */
 };
 
-#define JS_PROTO_CACHE_METERING
-
 /* Caching Class.prototype lookups for the standard classes. */
 struct JSClassProtoCache {
     void purge() { memset(entries, 0, sizeof(entries)); }
