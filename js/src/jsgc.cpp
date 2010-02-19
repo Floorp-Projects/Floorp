@@ -2379,34 +2379,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
 
-    if (IS_GC_MARKING_TRACER(trc)) {
-
-#define FREE_OLD_ARENAS(pool)                                                 \
-        JS_BEGIN_MACRO                                                        \
-            int64 _age;                                                       \
-            JSArena * _a = (pool).current;                                    \
-            if (_a == (pool).first.next &&                                    \
-                _a->avail == _a->base + sizeof(int64)) {                      \
-                _age = JS_Now() - *(int64 *) _a->base;                        \
-                if (_age > (int64) acx->runtime->gcEmptyArenaPoolLifespan *   \
-                           1000)                                              \
-                    JS_FreeArenaPool(&(pool));                                \
-            }                                                                 \
-        JS_END_MACRO
-
-        /*
-         * Release the stackPool's arenas if the stackPool has existed for
-         * longer than the limit specified by gcEmptyArenaPoolLifespan.
-         */
-        FREE_OLD_ARENAS(acx->stackPool);
-
-        /*
-         * Release the regexpPool's arenas based on the same criterion as for
-         * the stackPool.
-         */
-        FREE_OLD_ARENAS(acx->regexpPool);
-    }
-
     /*
      * Trace active and suspended callstacks.
      *
@@ -3140,6 +3112,12 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     js_PurgeThreads(cx);
+    {
+        JSContext *iter = NULL, *acx;
+        while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
+            acx->purge();
+    }
+
 
 #ifdef JS_TRACER
     if (gckind == GC_LAST_CONTEXT) {

@@ -2448,20 +2448,28 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 }
 
 JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto)
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto)
 {
+    JS_ASSERT(parent);
+    JS_ASSERT(proto);
+
     /*
      * The cloned function object does not need the extra JSFunction members
      * beyond JSObject as it points to fun via the private slot.
      */
-    JSObject *clone = js_NewObject(cx, &js_FunctionClass, proto, parent, sizeof(JSObject));
+    JSObject *clone = js_NewObjectWithGivenProto(cx, &js_FunctionClass, proto,
+                                                 parent, sizeof(JSObject));
     if (!clone)
         return NULL;
     clone->setPrivate(fun);
     return clone;
 }
 
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+#ifdef JS_TRACER
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject,
+                     CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+#endif
 
 /*
  * Create a new flat closure, but don't initialize the imported upvar
@@ -2476,7 +2484,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
                ? fun->u.i.script->upvars()->length
                : 0) == fun->u.i.nupvars);
 
-    JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
+    JSObject *closure = CloneFunctionObject(cx, fun, scopeChain);
     if (!closure)
         return closure;
 
