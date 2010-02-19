@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 @media all and (min-device-width: 401px) {
-	
+
 /* main toolbar (URL bar) -------------------------------------------------- */
 #tool-app-close {
   visibility: hidden;
@@ -259,7 +259,11 @@ placeitem[type="folder"] > .bookmark-manage > image {
   border: none;
   margin: 0;
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/close-40.png");
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
+}
+
+.close-button:hover:active {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
 .tool-search {
@@ -307,7 +311,11 @@ box[type="documenttab"][selected="true"] .documenttab-canvas {
 box[type="documenttab"] .documenttab-close {
   width: 40px;
   height: 40px;
-  list-style-image: url("chrome://browser/skin/images/close-40.png");
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
+}
+
+box[type="documenttab"] hbox:hover:active .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
 #newtab-button {
