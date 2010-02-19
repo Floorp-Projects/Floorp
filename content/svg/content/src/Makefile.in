@@ -120,7 +120,6 @@ CPPSRCS		= \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
 		nsSVGViewBox.cpp \
-		SVGViewBoxSMILType.cpp \
 		$(NULL)
 
 ifdef MOZ_SMIL
@@ -131,6 +130,7 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGTransformSMILType.cpp \
            nsSVGTransformSMILAttr.cpp \
            SVGOrientSMILType.cpp \
+           SVGViewBoxSMILType.cpp \
            $(NULL)
 endif
 
