@@ -87,13 +87,6 @@ public:
   virtual nsFrameSelection* GetOwnedFrameSelection() = 0;
 
   virtual nsresult GetPhonetic(nsAString& aPhonetic) = 0;
-
-  /**
-   * Ensure editor is initialized with the proper flags and the default value.
-   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
-   * @throws various and sundry other things
-   */
-  virtual nsresult EnsureEditorInitialized() = 0;
 };
 
 #endif
