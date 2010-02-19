@@ -2182,7 +2182,7 @@ NIns*
 Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 {
     LOpcode condop = cond->opcode();
-    NanoAssert(cond->isCond());
+    NanoAssert(cond->isCmp());
     NanoAssert(_config.arm_vfp || ((condop < LIR_feq) || (condop > LIR_fge)));
 
     // The old "never" condition code has special meaning on newer ARM cores,
@@ -2191,14 +2191,6 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 
     // Detect whether or not this is a floating-point comparison.
     bool    fp_cond;
-
-    // Because MUL can't set the V flag, we use SMULL and CMP to set the Z flag
-    // to detect overflow on multiply. Thus, if cond points to a LIR_ov which
-    // in turn points to a LIR_mul, we must be conditional on !Z, not V.
-    if ((condop == LIR_ov) && (cond->oprnd1()->isop(LIR_mul))) {
-        condop = LIR_eq;
-        branchOnFalse = !branchOnFalse;
-    }
 
     // Select the appropriate ARM condition code to match the LIR instruction.
     switch (condop)
@@ -2214,7 +2206,6 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 
         // Standard signed and unsigned integer comparisons.
         case LIR_eq:    cc = EQ;    fp_cond = false;    break;
-        case LIR_ov:    cc = VS;    fp_cond = false;    break;
         case LIR_lt:    cc = LT;    fp_cond = false;    break;
         case LIR_le:    cc = LE;    fp_cond = false;    break;
         case LIR_gt:    cc = GT;    fp_cond = false;    break;
@@ -2253,15 +2244,20 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     return at;
 }
 
+void Assembler::asm_branch_xov(LOpcode op, NIns* target)
+{
+    // Because MUL can't set the V flag, we use SMULL and CMP to set the Z flag
+    // to detect overflow on multiply. Thus, if we have a LIR_mulxov, we must
+    // be conditional on !Z, not V.
+    ConditionCode cc = ( op == LIR_mulxov ? NE : VS );
+
+    // Emit a suitable branch instruction.
+    B_cond(cc, target);
+}
+
 void
 Assembler::asm_cmp(LIns *cond)
 {
-    LOpcode condop = cond->opcode();
-
-    // LIR_ov recycles the flags set by arithmetic ops
-    if ((condop == LIR_ov))
-        return;
-
     LInsp lhs = cond->oprnd1();
     LInsp rhs = cond->oprnd2();
 
@@ -2340,17 +2336,6 @@ Assembler::asm_cond(LInsp ins)
         case LIR_ule: SETLS(r); break;
         case LIR_ugt: SETHI(r); break;
         case LIR_uge: SETHS(r); break;
-        case LIR_ov:
-            // Because MUL can't set the V flag, we use SMULL and CMP to set
-            // the Z flag to detect overflow on multiply. Thus, if ins points
-            // to a LIR_ov which in turn points to a LIR_mul, we must be
-            // conditional on !Z, not V.
-            if (!ins->oprnd1()->isop(LIR_mul)) {
-                SETVS(r);
-            } else {
-                SETNE(r);
-            }
-            break;
         default:      NanoAssert(0);  break;
     }
     asm_cmp(ins);
@@ -2391,9 +2376,9 @@ Assembler::asm_arith(LInsp ins)
     // basic arithmetic instructions to generate constant multiplications.
     // However, LIR_mul is never invoked with a constant during
     // trace-tests.js so it is very unlikely to be worthwhile implementing it.
-    if (rhs->isconst() && op != LIR_mul)
+    if (rhs->isconst() && op != LIR_mul && op != LIR_mulxov)
     {
-        if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_ialloc)) {
+        if ((op == LIR_add || op == LIR_iaddp || op == LIR_addxov) && lhs->isop(LIR_ialloc)) {
             // Add alloc+const. The result should be the address of the
             // allocated space plus a constant.
             Register    rs = deprecated_prepResultReg(ins, allow);
@@ -2407,15 +2392,17 @@ Assembler::asm_arith(LInsp ins)
 
         switch (op)
         {
-            case LIR_iaddp: asm_add_imm(rr, ra, imm32);     break;
-            case LIR_add:   asm_add_imm(rr, ra, imm32, 1);  break;
-            case LIR_sub:   asm_sub_imm(rr, ra, imm32, 1);  break;
-            case LIR_and:   asm_and_imm(rr, ra, imm32);     break;
-            case LIR_or:    asm_orr_imm(rr, ra, imm32);     break;
-            case LIR_xor:   asm_eor_imm(rr, ra, imm32);     break;
-            case LIR_lsh:   LSLi(rr, ra, imm32);            break;
-            case LIR_rsh:   ASRi(rr, ra, imm32);            break;
-            case LIR_ush:   LSRi(rr, ra, imm32);            break;
+            case LIR_iaddp:
+            case LIR_add:       asm_add_imm(rr, ra, imm32);     break;
+            case LIR_addxov:    asm_add_imm(rr, ra, imm32, 1);  break;
+            case LIR_sub:       asm_sub_imm(rr, ra, imm32);     break;
+            case LIR_subxov:    asm_sub_imm(rr, ra, imm32, 1);  break;
+            case LIR_and:       asm_and_imm(rr, ra, imm32);     break;
+            case LIR_or:        asm_orr_imm(rr, ra, imm32);     break;
+            case LIR_xor:       asm_eor_imm(rr, ra, imm32);     break;
+            case LIR_lsh:       LSLi(rr, ra, imm32);            break;
+            case LIR_rsh:       ASRi(rr, ra, imm32);            break;
+            case LIR_ush:       LSRi(rr, ra, imm32);            break;
 
             default:
                 NanoAssertMsg(0, "Unsupported");
@@ -2442,14 +2429,18 @@ Assembler::asm_arith(LInsp ins)
     const Register SBZ = (Register)0;
     switch (op)
     {
-        case LIR_iaddp: ADDs(rr, ra, rb, 0);    break;
-        case LIR_add:   ADDs(rr, ra, rb, 1);    break;
-        case LIR_sub:   SUBs(rr, ra, rb, 1);    break;
-        case LIR_and:   ANDs(rr, ra, rb, 0);    break;
-        case LIR_or:    ORRs(rr, ra, rb, 0);    break;
-        case LIR_xor:   EORs(rr, ra, rb, 0);    break;
+        case LIR_iaddp:
+        case LIR_add:       ADDs(rr, ra, rb, 0);    break;
+        case LIR_addxov:    ADDs(rr, ra, rb, 1);    break;
+        case LIR_sub:       SUBs(rr, ra, rb, 0);    break;
+        case LIR_subxov:    SUBs(rr, ra, rb, 1);    break;
+        case LIR_and:       ANDs(rr, ra, rb, 0);    break;
+        case LIR_or:        ORRs(rr, ra, rb, 0);    break;
+        case LIR_xor:       EORs(rr, ra, rb, 0);    break;
 
+        // XXX: LIR_mul can be done more efficiently than LIR_mulxov.  See bug 542629.
         case LIR_mul:
+        case LIR_mulxov:
             // ARMv5 and earlier cores cannot do a MUL where the first operand
             // is also the result, so we need a special case to handle that.
             //
@@ -2505,7 +2496,7 @@ Assembler::asm_arith(LInsp ins)
 
                     NanoAssert(rr != IP);
 
-                    ALUr_shi(AL, cmp, 1, SBZ, rr, rr, ASR_imm, 31);
+                    ALUr_shi(AL, cmp, 1, SBZ, IP, rr, ASR_imm, 31);
                     ALUr_shi(AL, mov, 1, IP, SBZ, IP, LSR_imm, 16);
                     MUL(rr, IP, IP);
                     ALUi(MI, rsb, 0, IP, IP, 0);
@@ -2646,17 +2637,6 @@ Assembler::asm_cmov(LInsp ins)
         case LIR_ule:   MOVHI(rr, iffalsereg);  break;
         case LIR_ugt:   MOVLS(rr, iffalsereg);  break;
         case LIR_uge:   MOVLO(rr, iffalsereg);  break;
-        case LIR_ov:
-            // Because MUL can't set the V flag, we use SMULL and CMP to set
-            // the Z flag to detect overflow on multiply. Thus, if ins points
-            // to a LIR_ov which in turn points to a LIR_mul, we must be
-            // conditional on !Z, not V.
-            if (!condval->oprnd1()->isop(LIR_mul)) {
-                MOVVC(rr, iffalsereg);
-            } else {
-                MOVEQ(rr, iffalsereg);
-            }
-            break;
         default: debug_only( NanoAssert(0) );   break;
     }
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);

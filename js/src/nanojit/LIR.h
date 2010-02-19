@@ -577,12 +577,6 @@ namespace nanojit
         bool isop(LOpcode o) const {
             return opcode() == o;
         }
-        bool isCond() const {
-            return isop(LIR_ov) || isCmp();
-        }
-        bool isOverflowable() const {
-            return isop(LIR_neg) || isop(LIR_add) || isop(LIR_sub) || isop(LIR_mul);
-        }
         bool isCmp() const {
             LOpcode op = opcode();
             return (op >= LIR_eq  && op <= LIR_uge) ||
@@ -609,7 +603,8 @@ namespace nanojit
         }
         bool isGuard() const {
             return isop(LIR_x) || isop(LIR_xf) || isop(LIR_xt) ||
-                   isop(LIR_xbarrier) || isop(LIR_xtbl);
+                   isop(LIR_xbarrier) || isop(LIR_xtbl) ||
+                   isop(LIR_addxov) || isop(LIR_subxov) || isop(LIR_mulxov);
         }
         // True if the instruction is a 32-bit or smaller constant integer.
         bool isconst() const {
@@ -721,8 +716,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // 1-operand form.  Used for LIR_ret, LIR_ov, unary arithmetic/logic ops,
-    // etc.
+    // 1-operand form.  Used for LIR_ret, unary arithmetic/logic ops, etc.
     class LInsOp1
     {
     private:
@@ -753,7 +747,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // 3-operand form.  Used for conditional moves.
+    // 3-operand form.  Used for conditional moves and xov guards.
     class LInsOp3
     {
     private:
@@ -1055,7 +1049,23 @@ namespace nanojit
 
     GuardRecord *LIns::record() const {
         NanoAssert(isGuard());
-        return (GuardRecord*)oprnd2();
+        switch (opcode()) {
+        case LIR_x:
+        case LIR_xt:
+        case LIR_xf:
+        case LIR_xtbl:
+        case LIR_xbarrier:
+            return (GuardRecord*)oprnd2();
+
+        case LIR_addxov:
+        case LIR_subxov:
+        case LIR_mulxov:
+            return (GuardRecord*)oprnd3();
+
+        default:
+            NanoAssert(0);
+            return NULL;
+        }
     }
 
     int32_t LIns::disp() const {
@@ -1156,6 +1166,9 @@ namespace nanojit
         }
         virtual LInsp insGuard(LOpcode v, LIns *c, GuardRecord *gr) {
             return out->insGuard(v, c, gr);
+        }
+        virtual LInsp insGuardXov(LOpcode v, LIns *a, LIns* b, GuardRecord *gr) {
+            return out->insGuardXov(v, a, b, gr);
         }
         virtual LInsp insBranch(LOpcode v, LInsp condition, LInsp to) {
             return out->insBranch(v, condition, to);
@@ -1293,6 +1306,7 @@ namespace nanojit
         const char *formatRef(LIns *ref);
         const char *formatIns(LInsp i);
         void formatGuard(LInsp i, char *buf);
+        void formatGuardXov(LInsp i, char *buf);
     };
 
 
@@ -1340,6 +1354,10 @@ namespace nanojit
 
         LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr) {
             return add_flush(out->insGuard(op,cond,gr));
+        }
+
+        LIns* insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr) {
+            return add_flush(out->insGuardXov(op,a,b,gr));
         }
 
         LIns* insBranch(LOpcode v, LInsp condition, LInsp to) {
@@ -1404,6 +1422,7 @@ namespace nanojit
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
         LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
         LIns* insGuard(LOpcode, LIns *cond, GuardRecord *);
+        LIns* insGuardXov(LOpcode, LIns* a, LIns* b, GuardRecord *);
         LIns* insBranch(LOpcode, LIns *cond, LIns *target);
         LIns* insLoad(LOpcode op, LInsp base, int32_t off);
     };
@@ -1512,6 +1531,7 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp cond, int32_t d);
         LIns* insCall(const CallInfo *call, LInsp args[]);
         LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
+        LIns* insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
     };
 
     class LirBuffer
@@ -1580,6 +1600,7 @@ namespace nanojit
             LInsp   insImmf(double d);
             LInsp   insCall(const CallInfo *call, LInsp args[]);
             LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
+            LInsp   insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
             LInsp   insBranch(LOpcode v, LInsp condition, LInsp to);
             LInsp   insAlloc(int32_t size);
             LInsp   insJtbl(LIns* index, uint32_t size);
@@ -1730,8 +1751,6 @@ namespace nanojit
         void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
         void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
         void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
-        void checkLInsIsOverflowable(LOpcode op, int argN, LIns* ins);
-        void checkOprnd1ImmediatelyPrecedes(LIns* ins);
 
     public:
         ValidateWriter(LirWriter* out, const char* stageName);
@@ -1749,6 +1768,7 @@ namespace nanojit
         LIns* insImmf(double d);
         LIns* insCall(const CallInfo *call, LIns* args[]);
         LIns* insGuard(LOpcode v, LIns *c, GuardRecord *gr);
+        LIns* insGuardXov(LOpcode v, LIns* a, LIns* b, GuardRecord* gr);
         LIns* insBranch(LOpcode v, LIns* condition, LIns* to);
         LIns* insAlloc(int32_t size);
         LIns* insJtbl(LIns* index, uint32_t size);

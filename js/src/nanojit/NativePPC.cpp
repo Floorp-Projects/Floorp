@@ -412,7 +412,7 @@ namespace nanojit
 
     NIns* Assembler::asm_branch(bool onfalse, LIns *cond, NIns * const targ) {
         LOpcode condop = cond->opcode();
-        NanoAssert(cond->isCond());
+        NanoAssert(cond->isCmp());
 
         // powerpc offsets are based on the address of the branch instruction
         NIns *patch;
@@ -533,6 +533,10 @@ namespace nanojit
         }
     #endif
         return _nIns;
+    }
+
+    void Assembler::asm_branch_xov(LOpcode, NIns*) {
+        TODO(asm_branch_xov);
     }
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, ConditionRegister cr) {
