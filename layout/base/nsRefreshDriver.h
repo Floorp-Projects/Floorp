@@ -133,6 +133,14 @@ public:
    */
   void Thaw();
 
+#ifdef DEBUG
+  /**
+   * Check whether the given observer is an observer for the given flush type
+   */
+  PRBool IsRefreshObserver(nsARefreshObserver *aObserver,
+			   mozFlushType aFlushType);
+#endif
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
 
