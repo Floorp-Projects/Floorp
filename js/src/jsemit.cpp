@@ -2024,9 +2024,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
         dn = pn->pn_lexdef;
         JS_ASSERT(dn->pn_defn);
-        pn->pn_dflags |= (dn->pn_dflags & PND_CONST);
         if (pn->isDeoptimized())
             return JS_TRUE;
+        pn->pn_dflags |= (dn->pn_dflags & PND_CONST);
     } else {
         if (!pn->pn_defn)
             return JS_TRUE;
