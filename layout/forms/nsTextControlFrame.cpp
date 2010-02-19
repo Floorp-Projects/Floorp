@@ -1306,6 +1306,38 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   return NS_OK;
 }
 
+void
+nsTextControlFrame::DelayedEditorInit()
+{
+  nsIDocument* doc = mContent->GetCurrentDoc();
+  if (!doc) {
+    return;
+  }
+  
+  nsWeakFrame weakFrame(this);
+
+  // Flush out content on our document.  Have to do this, because script
+  // blockers don't prevent the sink flushing out content and notifying in the
+  // process, which can destroy frames.
+  doc->FlushPendingNotifications(Flush_ContentAndNotify);
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+  
+  // Make sure that editor init doesn't do things that would kill us off
+  // (especially off the script blockers it'll create for its DOM mutations).
+  nsAutoScriptBlocker scriptBlocker;
+
+  // Time to mess with our security context... See comments in GetValue()
+  // for why this is needed.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
+  InitEditor();
+  if (IsFocusedContent(GetContent()))
+    SetFocus(PR_TRUE, PR_FALSE);
+}
+
 PRInt32
 nsTextControlFrame::GetWrapCols()
 {
@@ -1327,57 +1359,22 @@ nsTextControlFrame::GetWrapCols()
 }
 
 nsresult
-nsTextControlFrame::EnsureEditorInitialized()
+nsTextControlFrame::InitEditor()
 {
   // This method initializes our editor, if needed.
-
+  
   // This code used to be called from CreateAnonymousContent(), but
   // when the editor set the initial string, it would trigger a
   // PresShell listener which called FlushPendingNotifications()
   // during frame construction. This was causing other form controls
-  // to display wrong values.  Additionally, calling this every time
-  // a text frame control is instantiated means that we're effectively
-  // instantiating the editor for all text fields, even if they
-  // never get used.
+  // to display wrong values.  So we call this from a script runner
+  // now.
 
   // Check if this method has been called already.
   // If so, just return early.
+
   if (mUseEditor)
     return NS_OK;
-
-  nsIDocument* doc = mContent->GetCurrentDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsWeakFrame weakFrame(this);
-
-  // Flush out content on our document.  Have to do this, because script
-  // blockers don't prevent the sink flushing out content and notifying in the
-  // process, which can destroy frames.
-  doc->FlushPendingNotifications(Flush_ContentAndNotify);
-  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_ERROR_FAILURE);
-
-  // Make sure that editor init doesn't do things that would kill us off
-  // (especially off the script blockers it'll create for its DOM mutations).
-  nsAutoScriptBlocker scriptBlocker;
-
-  // Time to mess with our security context... See comments in GetValue()
-  // for why this is needed.
-  nsCxPusher pusher;
-  pusher.PushNull();
-
-  // Make sure that we try to focus the content even if the method fails
-  class EnsureSetFocus {
-  public:
-    explicit EnsureSetFocus(nsTextControlFrame* aFrame)
-      : mFrame(aFrame) {}
-    ~EnsureSetFocus() {
-      if (IsFocusedContent(mFrame->GetContent()))
-        mFrame->SetFocus(PR_TRUE, PR_FALSE);
-    }
-  private:
-    nsTextControlFrame *mFrame;
-  };
-  EnsureSetFocus makeSureSetFocusHappens(this);
 
   // Create an editor
 
@@ -1509,38 +1506,43 @@ nsTextControlFrame::EnsureEditorInitialized()
   // editor.
   mUseEditor = PR_TRUE;
 
-  // Set the editor's contents to our default value. We have to be
-  // sure to use the editor so that '*' characters get displayed for
-  // password fields, etc. SetValue() will call the editor for us.  We
-  // want to call this even if defaultValue is empty, since empty text
-  // inputs have a single non-breaking space in the textnode under
-  // mAnonymousDiv, and this space needs to go away as we init the
-  // editor.
+  // If we have a default value, insert it under the div we created
+  // above, but be sure to use the editor so that '*' characters get
+  // displayed for password fields, etc. SetValue() will call the
+  // editor for us.
 
-  // Avoid causing reentrant painting and reflowing by telling the editor
-  // that we don't want it to force immediate view refreshes or force
-  // immediate reflows during any editor calls.
+  if (!defaultValue.IsEmpty()) {
+    // Avoid causing reentrant painting and reflowing by telling the editor
+    // that we don't want it to force immediate view refreshes or force
+    // immediate reflows during any editor calls.
 
-  rv = mEditor->SetFlags(editorFlags |
-                         nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEditor->SetFlags(editorFlags |
+                           nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
 
-  // Now call SetValue() which will make the necessary editor calls to set
-  // the default value.  Make sure to turn off undo before setting the default
-  // value, and turn it back on afterwards. This will make sure we can't undo
-  // past the default value.
+    if (NS_FAILED(rv))
+      return rv;
 
-  rv = mEditor->EnableUndo(PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Now call SetValue() which will make the necessary editor calls to set
+    // the default value.  Make sure to turn off undo before setting the default
+    // value, and turn it back on afterwards. This will make sure we can't undo
+    // past the default value.
 
-  SetValue(defaultValue);
+    rv = mEditor->EnableUndo(PR_FALSE);
 
-  rv = mEditor->EnableUndo(PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
+    if (NS_FAILED(rv))
+      return rv;
 
-  // Now restore the original editor flags.
-  rv = mEditor->SetFlags(editorFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
+    SetValue(defaultValue);
+
+    rv = mEditor->EnableUndo(PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
+
+    // Now restore the original editor flags.
+    rv = mEditor->SetFlags(editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   nsCOMPtr<nsITransactionManager> transMgr;
   mEditor->GetTransactionManager(getter_AddRefs(transMgr));
@@ -1570,7 +1572,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
   mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
-  nsIPresShell *shell = PresContext()->GetPresShell();
+  nsIPresShell* shell = PresContext()->GetPresShell();
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -2382,7 +2384,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
       if (!(flags & nsIPlaintextEditor::eEditorDisabledMask) &&
           IsFocusedContent(mContent))
         mSelCon->SetCaretEnabled(PR_TRUE);
-    }
+    }    
     mEditor->SetFlags(flags);
   }
   else if (nsGkAtoms::disabled == aAttribute) 
