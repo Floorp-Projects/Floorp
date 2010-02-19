@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <tchar.h>
-
 #include "nsPluginDirServiceProvider.h"
 
 #include "nsCRT.h"
@@ -68,14 +66,14 @@ ClearVersion(verBlock *ver)
 }
 
 static BOOL
-FileExists(LPTSTR szFile)
+FileExists(LPCWSTR szFile)
 {
-  return GetFileAttributes(szFile) != 0xFFFFFFFF;
+  return GetFileAttributesW(szFile) != 0xFFFFFFFF;
 }
 
 // Get file version information from a file
 static BOOL
-GetFileVersion(LPTSTR szFile, verBlock *vbVersion)
+GetFileVersion(LPCWSTR szFile, verBlock *vbVersion)
 {
   UINT              uLen;
   UINT              dwLen;
@@ -88,11 +86,11 @@ GetFileVersion(LPTSTR szFile, verBlock *vbVersion)
   ClearVersion(vbVersion);
   if (FileExists(szFile)) {
     bRv    = TRUE;
-    dwLen  = GetFileVersionInfoSize(szFile, &dwHandle);
+    dwLen  = GetFileVersionInfoSizeW(szFile, &dwHandle);
     lpData = (LPVOID)malloc(dwLen);
     uLen   = 0;
 
-    if (lpData && GetFileVersionInfo(szFile, dwHandle, dwLen, lpData) != 0) {
+    if (lpData && GetFileVersionInfoW(szFile, dwHandle, dwLen, lpData) != 0) {
       if (VerQueryValueW(lpData, L"\\", &lpBuffer, &uLen) != 0) {
         lpBuffer2 = (VS_FIXEDFILEINFO *)lpBuffer;
 
@@ -126,11 +124,11 @@ CopyVersion(verBlock *ver1, verBlock *ver2)
 static void
 TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
 {
-  LPTSTR szNum1 = NULL;
-  LPTSTR szNum2 = NULL;
-  LPTSTR szNum3 = NULL;
-  LPTSTR szNum4 = NULL;
-  LPTSTR szJavaBuild = NULL;
+  WCHAR* szNum1 = NULL;
+  WCHAR* szNum2 = NULL;
+  WCHAR* szNum3 = NULL;
+  WCHAR* szNum4 = NULL;
+  WCHAR* szJavaBuild = NULL;
 
   WCHAR *strVer = nsnull;
   if (szVersion) {
@@ -154,10 +152,10 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
   szNum3 = wcstok(NULL,   L".");
   szNum4 = wcstok(NULL,   L".");
 
-  vbVersion->wMajor   = szNum1 ? (WORD) _ttoi(szNum1) : 0;
-  vbVersion->wMinor   = szNum2 ? (WORD) _ttoi(szNum2) : 0;
-  vbVersion->wRelease = szNum3 ? (WORD) _ttoi(szNum3) : 0;
-  vbVersion->wBuild   = szNum4 ? (WORD) _ttoi(szNum4) : 0;
+  vbVersion->wMajor   = szNum1 ? (WORD) _wtoi(szNum1) : 0;
+  vbVersion->wMinor   = szNum2 ? (WORD) _wtoi(szNum2) : 0;
+  vbVersion->wRelease = szNum3 ? (WORD) _wtoi(szNum3) : 0;
+  vbVersion->wBuild   = szNum4 ? (WORD) _wtoi(szNum4) : 0;
 
   free(strVer);
 }
@@ -324,8 +322,8 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       path[0] = 0;
       numChars = _MAX_PATH;
       pathlen = NS_ARRAY_LENGTH(path);
-      result = ::RegEnumKeyEx(baseloc, index, curKey, &numChars, NULL, NULL,
-                              NULL, &modTime);
+      result = ::RegEnumKeyExW(baseloc, index, curKey, &numChars, NULL, NULL,
+                               NULL, &modTime);
       index++;
 
       // Skip major.minor as it always points to latest in its family
@@ -372,10 +370,10 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     // If nothing is found, then don't add \bin dir and don't set
     // CurrentVersion for Mozilla
     if (newestPath[0] != 0) {
-      if (ERROR_SUCCESS == ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, mozPath, 0,
-                                            NULL, REG_OPTION_NON_VOLATILE,
-                                            KEY_SET_VALUE|KEY_QUERY_VALUE,
-                                            NULL, &entryloc, NULL)) {
+      if (ERROR_SUCCESS == ::RegCreateKeyExW(HKEY_LOCAL_MACHINE, mozPath, 0,
+                                             NULL, REG_OPTION_NON_VOLATILE,
+                                             KEY_SET_VALUE|KEY_QUERY_VALUE,
+                                             NULL, &entryloc, NULL)) {
         if (ERROR_SUCCESS != ::RegQueryValueExW(entryloc, L"CurrentVersion", 0,
                                                NULL, NULL, NULL)) {
           ::RegSetValueExW(entryloc, L"CurrentVersion", 0, REG_SZ,
@@ -534,8 +532,8 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       path[0] = 0;
       numChars = _MAX_PATH;
       pathlen = NS_ARRAY_LENGTH(path);
-      result = ::RegEnumKeyEx(baseloc, index, curKey, &numChars, NULL, NULL,
-                              NULL, &modTime);
+      result = ::RegEnumKeyExW(baseloc, index, curKey, &numChars, NULL, NULL,
+                               NULL, &modTime);
       index++;
 
       if (ERROR_SUCCESS == result) {
@@ -601,8 +599,8 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithHKEY(HKEY aKey, nsCOMArray<nsI
   DWORD index = 0;
   DWORD subkeylen = _MAX_PATH;
   FILETIME modTime;
-  while (ERROR_SUCCESS == ::RegEnumKeyEx(baseloc, index++, subkey, &subkeylen,
-                                         NULL, NULL, NULL, &modTime)) {
+  while (ERROR_SUCCESS == ::RegEnumKeyExW(baseloc, index++, subkey, &subkeylen,
+                                          NULL, NULL, NULL, &modTime)) {
     subkeylen = _MAX_PATH;
     HKEY keyloc;
 
