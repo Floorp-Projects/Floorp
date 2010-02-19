@@ -155,14 +155,15 @@ OP___(ldcb,     32, Ld,   I32)  // non-volatile  8-bit integer load, zero-extend
 OP___(ldcs,     33, Ld,   I32)  // non-volatile 16-bit integer load, zero-extended to 32-bit
 OP___(ldc,      34, Ld,   I32)  // non-volatile 32-bit integer load, zero-extended to 32-bit
 
-OP___(neg,      35, Op1,  I32)  // integer negation
-OP___(add,      36, Op2,  I32)  // integer addition
-OP___(sub,      37, Op2,  I32)  // integer subtraction
-OP___(mul,      38, Op2,  I32)  // integer multiplication
-OP_86(div,      39, Op2,  I32)  // integer division
-// LIR_mod is a hack.  The operand is the result of a LIR_div because on
-// i386/X64 div and mod results are computed by the same instruction.
-OP_86(mod,      40, Op1,  I32)  // integer modulus
+OP___(neg,      35, Op1,  I32)  // 32-bit integer negation
+OP___(add,      36, Op2,  I32)  // 32-bit integer addition
+OP___(sub,      37, Op2,  I32)  // 32-bit integer subtraction
+OP___(mul,      38, Op2,  I32)  // 32-bit integer multiplication
+OP_86(div,      39, Op2,  I32)  // 32-bit integer division
+// LIR_mod is a hack.  It's only used on i386/X64.  The operand is the result
+// of a LIR_div because on i386/X64 div and mod results are computed by the
+// same instruction.
+OP_86(mod,      40, Op1,  I32)  // 32-bit integer modulus
 
 OP___(and,      41, Op2,  I32)  // 32-bit bitwise AND
 OP___(or,       42, Op2,  I32)  // 32-bit bitwise OR
@@ -183,45 +184,36 @@ OP_SF(qhi,      51, Op1,  I32)  // get the high 32 bits of a 64-bit value
 OP___(ldcsb,    52, Ld,   I32)  // non-volatile  8-bit integer load, sign-extended to 32-bit
 OP___(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extended to 32-bit
 
-// This is an overflow test.  The operand is the result of an 32-bit integer
-// operation that may have overflowed (eg. a LIR_add).  It's a nasty hack
-// because this is a lie -- the true operand is not the result of the LIR_add
-// but rather an overflow condition code that is set implicitly as a result of
-// the LIR_add.  But there's no way to model multiple outputs from an
-// instruction in LIR.  So we rely on the LIR_ov always being right after the
-// LIR_add so that the back-ends can generate code in such a way that the
-// machine condition codes can be checked immediately after the addition is
-// performed.
-OP___(ov,       54, Op1,  I32)
+OP___(addxov,   54, Op3,  I32)  // 32-bit integer addition;       exit if overflow occurred, result is valid on either path
+OP___(subxov,   55, Op3,  I32)  // 32-bit integer subtraction;    exit if overflow occurred, result is valid on either path
+OP___(mulxov,   56, Op3,  I32)  // 32-bit integer multiplication; exit if overflow occurred, result is valid on either path
 
 // Integer (32-bit) relational operators.  (op ^ 1) is the op which flips the
 // left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
-// "<" is xored with 1 to get ">".  Similarly, (op ^ 3) is the complement of
-// op, so (lt ^ 1) == ge, or the complement of the operator "<" is ">=" xored
-// with 3.  'u' prefix indicates the unsigned integer variant.
+// "<" is xored with 1 to get ">".  'u' prefix indicates the unsigned integer
+// variant.
 // NB: These opcodes must remain continuous so that comparison-opcode detection
 // works correctly.
-OP___(eq,       55, Op2,  I32)  //          integer equality
-OP___(lt,       56, Op2,  I32)  //   signed integer less-than             (0x38 0011 1000)
-OP___(gt,       57, Op2,  I32)  //   signed integer greater-than          (0x39 0011 1001)
-OP___(le,       58, Op2,  I32)  //   signed integer less-than-or-equal    (0x3A 0011 1010)
-OP___(ge,       59, Op2,  I32)  //   signed integer greater-than-or-equal (0x3B 0011 1011)
-OP___(ult,      60, Op2,  I32)  // unsigned integer less-than             (0x3C 0011 1100)
-OP___(ugt,      61, Op2,  I32)  // unsigned integer greater-than          (0x3D 0011 1101)
-OP___(ule,      62, Op2,  I32)  // unsigned integer less-than-or-equal    (0x3E 0011 1110)
-OP___(uge,      63, Op2,  I32)  // unsigned integer greater-than-or-equal (0x3F 0011 1111)
+OP___(eq,       57, Op2,  I32)  //          integer equality
+OP___(lt,       58, Op2,  I32)  //   signed integer less-than             (0x38 0011 1000)
+OP___(gt,       59, Op2,  I32)  //   signed integer greater-than          (0x39 0011 1001)
+OP___(le,       60, Op2,  I32)  //   signed integer less-than-or-equal    (0x3A 0011 1010)
+OP___(ge,       61, Op2,  I32)  //   signed integer greater-than-or-equal (0x3B 0011 1011)
+OP___(ult,      62, Op2,  I32)  // unsigned integer less-than             (0x3C 0011 1100)
+OP___(ugt,      63, Op2,  I32)  // unsigned integer greater-than          (0x3D 0011 1101)
+OP___(ule,      64, Op2,  I32)  // unsigned integer less-than-or-equal    (0x3E 0011 1110)
+OP___(uge,      65, Op2,  I32)  // unsigned integer greater-than-or-equal (0x3F 0011 1111)
 
-OP___(__64,     64, None, Void)
+OP___(file,     66, Op1,  Void) // source filename for debug symbols
+OP___(line,     67, Op1,  Void) // source line number for debug symbols
 
-OP___(file,     65, Op1,  Void) // source filename for debug symbols
-OP___(line,     66, Op1,  Void) // source line number for debug symbols
-OP___(xbarrier, 67, Op2,  Void) // memory barrier;  doesn't exit, but flushes all values to the stack
-OP___(xtbl,     68, Op2,  Void) // exit via indirect jump
+OP___(xbarrier, 68, Op2,  Void) // memory barrier;  doesn't exit, but flushes all values to the stack
+OP___(xtbl,     69, Op2,  Void) // exit via indirect jump
 
-OP_64(qlive,    69, Op1,  Void) // extend live range of a 64-bit integer
-OP___(__70,     70, None, Void)
-OP_64(qaddp,    71, Op2,  I64)  // 64-bit integer addition for temporary pointer calculations
-OP_64(qparam,   72, P,    I64)  // load a parameter (64-bit register or stack location)
+OP_64(qlive,    70, Op1,  Void) // extend live range of a 64-bit integer
+
+OP_64(qaddp,    71, Op2,  I64)  // 64-bit integer addition for temp pointer calculations
+OP_64(qparam,   72, P,    I64)  // load a parameter (64bit register or stack location)
 
 OP___(ldf,      73, Ld,   F64)  // 64-bit float load
 OP_64(ldq,      74, Ld,   I64)  // 64-bit integer load
@@ -240,6 +232,7 @@ OP___(stfi,     81, Sti,  Void) // 64-bit float store
 
 OP___(fret,     82, Op1,  Void) // return a 64-bit float
 OP_64(qret,     83, Op1,  Void) // return a 64-bit integer
+
 OP___(__84,     84, None, Void)
 OP___(__85,     85, None, Void)
 OP___(__86,     86, None, Void)

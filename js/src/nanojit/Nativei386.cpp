@@ -650,7 +650,7 @@ namespace nanojit
     NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     {
         LOpcode condop = cond->opcode();
-        NanoAssert(cond->isCond());
+        NanoAssert(cond->isCmp());
 
         // Handle float conditions separately.
         if (condop >= LIR_feq && condop <= LIR_fge) {
@@ -660,7 +660,6 @@ namespace nanojit
         if (branchOnFalse) {
             // op == LIR_xf
             switch (condop) {
-            case LIR_ov:    JNO(targ);      break;
             case LIR_eq:    JNE(targ);      break;
             case LIR_lt:    JNL(targ);      break;
             case LIR_le:    JNLE(targ);     break;
@@ -675,7 +674,6 @@ namespace nanojit
         } else {
             // op == LIR_xt
             switch (condop) {
-            case LIR_ov:    JO(targ);       break;
             case LIR_eq:    JE(targ);       break;
             case LIR_lt:    JL(targ);       break;
             case LIR_le:    JLE(targ);      break;
@@ -691,6 +689,11 @@ namespace nanojit
         NIns* at = _nIns;
         asm_cmp(cond);
         return at;
+    }
+
+    void Assembler::asm_branch_xov(LOpcode, NIns* target)
+    {
+        JO(target);
     }
 
     void Assembler::asm_switch(LIns* ins, NIns* exit)
@@ -747,12 +750,6 @@ namespace nanojit
     //
     void Assembler::asm_cmp(LIns *cond)
     {
-        LOpcode condop = cond->opcode();
-
-        // LIR_ov recycles the flags set by arithmetic ops
-        if (condop == LIR_ov)
-            return;
-
         LInsp lhs = cond->oprnd1();
         LInsp rhs = cond->oprnd2();
 
@@ -815,7 +812,6 @@ namespace nanojit
         // SETcc only sets low 8 bits, so extend
         MOVZX8(r,r);
         switch (op) {
-        case LIR_ov:    SETO(r);        break;
         case LIR_eq:    SETE(r);        break;
         case LIR_lt:    SETL(r);        break;
         case LIR_le:    SETLE(r);       break;
@@ -865,6 +861,7 @@ namespace nanojit
         LInsp rhs = ins->oprnd2();
 
         // Second special case.
+        // XXX: bug 547125: don't need this once LEA is used for LIR_add/LIR_addp in all cases below
         if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // LIR_add(LIR_alloc, LIR_int) or LIR_addp(LIR_alloc, LIR_int) -- use lea.
             Register rr = prepareResultReg(ins, GpRegs);
@@ -891,6 +888,7 @@ namespace nanojit
             evictIfActive(EDX);
             break;
         case LIR_mul:
+        case LIR_mulxov:
             isConstRhs = false;
             if (lhs != rhs) {
                 rb = findRegFor(rhs, allow);
@@ -927,39 +925,44 @@ namespace nanojit
 
             switch (op) {
             case LIR_add:
-            case LIR_addp:  ADD(rr, rb); break;
-            case LIR_sub:   SUB(rr, rb); break;
-            case LIR_mul:   MUL(rr, rb); break;
-            case LIR_and:   AND(rr, rb); break;
-            case LIR_or:    OR( rr, rb); break;
-            case LIR_xor:   XOR(rr, rb); break;
-            case LIR_lsh:   SHL(rr, rb); break;
-            case LIR_rsh:   SAR(rr, rb); break;
-            case LIR_ush:   SHR(rr, rb); break;
+            case LIR_addp:
+            case LIR_addxov:    ADD(rr, rb); break;     // XXX: bug 547125: could use LEA for LIR_add
+            case LIR_sub:
+            case LIR_subxov:    SUB(rr, rb); break;
+            case LIR_mul:
+            case LIR_mulxov:    MUL(rr, rb); break;
+            case LIR_and:       AND(rr, rb); break;
+            case LIR_or:        OR( rr, rb); break;
+            case LIR_xor:       XOR(rr, rb); break;
+            case LIR_lsh:       SHL(rr, rb); break;
+            case LIR_rsh:       SAR(rr, rb); break;
+            case LIR_ush:       SHR(rr, rb); break;
             case LIR_div:
                 DIV(rb);
                 CDQ(); // sign-extend EAX into EDX:EAX
                 break;
-            default:        NanoAssert(0);  break;
+            default:            NanoAssert(0);  break;
             }
 
         } else {
             int c = rhs->imm32();
             switch (op) {
             case LIR_addp:
+            case LIR_add:
                 // this doesn't set cc's, only use it when cc's not required.
                 LEA(rr, c, ra);
                 ra = rr; // suppress mov
                 break;
-            case LIR_add:   ADDi(rr, c);    break;
-            case LIR_sub:   SUBi(rr, c);    break;
-            case LIR_and:   ANDi(rr, c);    break;
-            case LIR_or:    ORi( rr, c);    break;
-            case LIR_xor:   XORi(rr, c);    break;
-            case LIR_lsh:   SHLi(rr, c);    break;
-            case LIR_rsh:   SARi(rr, c);    break;
-            case LIR_ush:   SHRi(rr, c);    break;
-            default:        NanoAssert(0);  break;
+            case LIR_addxov:    ADDi(rr, c);    break;
+            case LIR_sub:
+            case LIR_subxov:    SUBi(rr, c);    break;
+            case LIR_and:       ANDi(rr, c);    break;
+            case LIR_or:        ORi( rr, c);    break;
+            case LIR_xor:       XORi(rr, c);    break;
+            case LIR_lsh:       SHLi(rr, c);    break;
+            case LIR_rsh:       SARi(rr, c);    break;
+            case LIR_ush:       SHRi(rr, c);    break;
+            default:            NanoAssert(0);  break;
             }
         }
 
@@ -1186,15 +1189,14 @@ namespace nanojit
         switch (condval->opcode()) {
             // note that these are all opposites...
             case LIR_eq:    MRNE(rr, iffalsereg);   break;
-            case LIR_ov:    MRNO(rr, iffalsereg);   break;
             case LIR_lt:    MRGE(rr, iffalsereg);   break;
-            case LIR_le:    MRG(rr, iffalsereg);    break;
+            case LIR_le:    MRG( rr, iffalsereg);   break;
             case LIR_gt:    MRLE(rr, iffalsereg);   break;
-            case LIR_ge:    MRL(rr, iffalsereg);    break;
+            case LIR_ge:    MRL( rr, iffalsereg);   break;
             case LIR_ult:   MRAE(rr, iffalsereg);   break;
-            case LIR_ule:   MRA(rr, iffalsereg);    break;
+            case LIR_ule:   MRA( rr, iffalsereg);   break;
             case LIR_ugt:   MRBE(rr, iffalsereg);   break;
-            case LIR_uge:   MRB(rr, iffalsereg);    break;
+            case LIR_uge:   MRB( rr, iffalsereg);   break;
             default: NanoAssert(0); break;
         }
         /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
