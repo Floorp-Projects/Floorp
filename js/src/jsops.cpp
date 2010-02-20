@@ -1016,56 +1016,30 @@ BEGIN_CASE(JSOP_ADD)
     }
 END_CASE(JSOP_ADD)
 
+BEGIN_CASE(JSOP_OBJTOSTR)
+    rval = FETCH_OPND(-1);
+    if (!JSVAL_IS_PRIMITIVE(rval)) {
+        str = js_ValueToString(cx, rval);
+        if (!str)
+            goto error;
+        STORE_OPND(-1, STRING_TO_JSVAL(str));
+    }
+END_CASE(JSOP_OBJTOSTR)
+
 BEGIN_CASE(JSOP_CONCATN)
 {
-#ifdef JS_TRACER
-    JS_ASSERT_IF(fp->imacpc,
-                 *fp->imacpc == JSOP_CONCATN && *regs.pc == JSOP_IMACOP);
-
-    /*
-     * This instruction can be executed in three contexts. (1) is normal
-     * execution. (2) is while recording, during an imacro 'imacop'.  (3) is
-     * during a failed recording or when trace execution aborts during a
-     * recorded imacro.
-     *  1. !imacro              : N args on stack,   pc is regs.pc
-     *  2. imacro && recording  : N args on stack,   pc is fp->imacpc
-     *  3. imacro && !recording : N+2 args on stack, pc is fp->imacpc
-     */
-    bool imacro = fp->imacpc != NULL;
-    bool recording = TRACE_RECORDER(cx) != NULL;
-    if (imacro) {
-        argc = GET_ARGC(fp->imacpc);
-        if (!recording)
-            ConcatPostImacroStackCleanup(argc, regs, NULL);
-    } else {
-#endif  /* JS_TRACER */
-        argc = GET_ARGC(regs.pc);
-#ifdef JS_TRACER
-    }
-#endif  /* JS_TRACER */
-
     JSCharBuffer buf(cx);
+    argc = GET_ARGC(regs.pc);
     for (vp = regs.sp - argc; vp < regs.sp; vp++) {
-        if ((!JSVAL_IS_PRIMITIVE(*vp) &&
-             !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_VOID, vp)) ||
-            !js_ValueToCharBuffer(cx, *vp, buf)) {
+        JS_ASSERT(JSVAL_IS_PRIMITIVE(*vp));
+        if (!js_ValueToCharBuffer(cx, *vp, buf))
             goto error;
-        }
     }
-
     str = js_NewStringFromCharBuffer(cx, buf);
     if (!str)
         goto error;
-
     regs.sp -= argc - 1;
     STORE_OPND(-1, STRING_TO_JSVAL(str));
-
-#ifdef JS_TRACER
-    if (imacro) {
-        /* END_CASE does pc += CONCATN_LENGTH. (IMACOP YOU IDIOT!) */
-        regs.pc -= JSOP_CONCATN_LENGTH - JSOP_IMACOP_LENGTH;
-    }
-#endif  /* JS_TRACER */
 }
 END_CASE(JSOP_CONCATN)
 

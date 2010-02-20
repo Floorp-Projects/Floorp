@@ -8270,14 +8270,9 @@ TraceRecorder::call_imacro(jsbytecode* imacro)
     JSStackFrame* fp = cx->fp;
     JSFrameRegs* regs = fp->regs;
 
-    /* We cannot nest imacros, only tail-call. */
-    if (fp->imacpc) {
-        /* Dereference is safe since imacros are JSOP_STOP-terminated. */
-        if (regs->pc[js_CodeSpec[*regs->pc].length] != JSOP_STOP)
-            return RECORD_STOP;
-        regs->pc = imacro;
-        return RECORD_IMACRO;
-    }
+    /* We cannot nest imacros. */
+    if (fp->imacpc)
+        return RECORD_STOP;
 
     fp->imacpc = regs->pc;
     regs->pc = imacro;
@@ -15060,118 +15055,45 @@ TraceRecorder::record_JSOP_TRACE()
 
 static const uint32 sMaxConcatNSize = 32;
 
-/*
- * Copy the result of defvalue.string back into concatn's arguments, clean the
- * stack, and return a pointer to the argument that was just overwritten.
- */
-JS_REQUIRES_STACK jsval *
-ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
-                             TraceRecorder *recorder)
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_OBJTOSTR()
 {
-    JS_ASSERT(*regs.pc == JSOP_IMACOP);
-
-    /* Pop the argument offset and imacro return value. */
-    jsint offset = JSVAL_TO_INT(*--regs.sp);
-    jsval *imacroResult = --regs.sp;
-
-    /* Replace non-primitive argument with new primitive argument. */
-    jsval *vp = regs.sp - offset;
-    JS_ASSERT(regs.sp - argc <= vp && vp < regs.sp);
-    if (recorder)
-        recorder->set(vp, recorder->get(imacroResult));
-    *vp = *imacroResult;
-
-    return vp;
+    jsval &v = stackval(-1);
+    JS_ASSERT_IF(cx->fp->imacpc, JSVAL_IS_PRIMITIVE(v) &&
+                                 *cx->fp->imacpc == JSOP_OBJTOSTR);
+    if (JSVAL_IS_PRIMITIVE(v))
+        return ARECORD_CONTINUE;
+    return InjectStatus(call_imacro(objtostr_imacros.toString));
 }
 
-/*
- * Initially, concatn takes N arguments on the stack, where N is immediate
- * operand.  To convert these arguments to primitives, we must repeatedly call
- * the defvalue.string imacro.  To achieve this iteration, defvalue.string ends
- * with imacop.  Hence, this function is called multiple times, each time with
- * one less non-primitive.  To keep track of where we are in the loop, we must
- * push an additional index value on the stack.  Hence, on all subsequent
- * entries, the stack is organized as follows (bottom to top):
- *
- *   prim[1]
- *   ...
- *   prim[i-1]
- *   nonprim[i]     argument to imacro
- *   arg[i+1]
- *   ...
- *   arg[N]
- *   primarg[i]     nonprim[i] converted to primitive
- *   i
- *
- * Hence, the stack setup on entry to this function (and JSOP_CONCATN in the
- * interpreter, on trace abort) is dependent on whether an imacro is in
- * progress.  When all of concatn's arguments are primitive, it emits a builtin
- * call and allows the actual JSOP_CONCATN to be executed by the interpreter.
- */
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CONCATN()
 {
     JSStackFrame *fp = cx->fp;
     JSFrameRegs &regs = *fp->regs;
+    uint32 argc = GET_ARGC(regs.pc);
+    jsval *argBase = regs.sp - argc;
 
-    /*
-     * If we are in an imacro, we must have just finished a call to
-     * defvalue.string.  Continue where we left off last time.
-     */
-    uint32 argc;
-    jsval *loopStart;
-    if (fp->imacpc) {
-        JS_ASSERT(*fp->imacpc == JSOP_CONCATN);
-        argc = GET_ARGC(fp->imacpc);
-        loopStart = ConcatPostImacroStackCleanup(argc, regs, this) + 1;
-    } else {
-        argc = GET_ARGC(regs.pc);
-        JS_ASSERT(argc > 0);
-        loopStart = regs.sp - argc;
-
-        /* Prevent code/alloca explosion. */
-        if (argc > sMaxConcatNSize)
-            return ARECORD_STOP;
-    }
-
-    /* Convert non-primitives to primitives using defvalue.string. */
-    for (jsval *vp = loopStart; vp != regs.sp; ++vp) {
-        if (!JSVAL_IS_PRIMITIVE(*vp)) {
-            /*
-             * In addition to the jsval we want the imacro to convert to
-             * primitive, pass through the offset of the argument on the stack.
-             */
-            jsint offset = regs.sp - vp;
-
-            /* Push the non-primitive to convert. */
-            set(regs.sp, get(vp), true);
-            *regs.sp++ = *vp;
-
-            /* Push the argument index. */
-            set(regs.sp, lir->insImm(offset), true);
-            *regs.sp++ = INT_TO_JSVAL(offset);
-
-            /* Nested imacro call OK because this is a tail call. */
-            return InjectStatus(call_imacro(defvalue_imacros.string));
-        }
-    }
+    /* Prevent code/alloca explosion. */
+    if (argc > sMaxConcatNSize)
+        return ARECORD_STOP;
 
     /* Build an array of the stringified primitives. */
     int32_t bufSize = argc * sizeof(JSString *);
     LIns *buf_ins = lir->insAlloc(bufSize);
     int32_t d = 0;
-    for (jsval *vp = regs.sp - argc; vp != regs.sp; ++vp, d += sizeof(void *))
+    for (jsval *vp = argBase; vp != regs.sp; ++vp, d += sizeof(void *)) {
+        JS_ASSERT(JSVAL_IS_PRIMITIVE(*vp));
         lir->insStorei(stringify(*vp), buf_ins, d);
+    }
 
     /* Perform concatenation using a builtin. */
     LIns *args[] = { lir->insImm(argc), buf_ins, cx_ins };
-    LIns *concat = lir->insCall(&js_ConcatN_ci, args);
-    guard(false, lir->ins_peq0(concat), OOM_EXIT);
+    LIns *result_ins = lir->insCall(&js_ConcatN_ci, args);
+    guard(false, lir->ins_peq0(result_ins), OOM_EXIT);
 
     /* Update tracker with result. */
-    jsval *afterPop = regs.sp - (argc - 1);
-    set(afterPop - 1, concat);
-
+    set(argBase, result_ins);
     return ARECORD_CONTINUE;
 }
 
