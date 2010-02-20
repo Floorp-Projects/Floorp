@@ -88,6 +88,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEnumerator.h"
 #include "nsIDocShellTreeItem.h"
@@ -150,7 +151,6 @@
 #ifdef MOZ_XUL
 #include "nsTreeBodyFrame.h"
 #endif
-#include "nsIFocusController.h"
 #include "nsIController.h"
 #include "nsICommandParams.h"
 
@@ -4360,10 +4360,11 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
 {
   EnsureDocument(mPresContext);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->GetWindow()));
+  nsCOMPtr<nsPIDOMWindow> window(mDocument->GetWindow());
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  nsIFocusController* fc = window->GetRootFocusController();
-  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
   const char* cmd;
   switch (aEvent->message) {
     case NS_CONTENT_COMMAND_CUT:
@@ -4391,7 +4392,7 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
       return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsCOMPtr<nsIController> controller;
-  nsresult rv = fc->GetControllerForCommand(window, cmd, getter_AddRefs(controller));
+  nsresult rv = root->GetControllerForCommand(cmd, getter_AddRefs(controller));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!controller) {
     // When GetControllerForCommand succeeded but there is no controller, the

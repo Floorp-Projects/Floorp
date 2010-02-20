@@ -67,7 +67,6 @@ enum PopupControlState {
 };
 
 class nsIDocShell;
-class nsIFocusController;
 class nsIContent;
 class nsIDocument;
 class nsIScriptTimeoutHandler;
@@ -76,10 +75,11 @@ struct nsTimeout;
 class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 class nsIArray;
+class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xeee92d9a, 0xae9f, 0x41e5, \
-  { 0x95, 0x5f, 0xaf, 0x1c, 0xe7, 0x66, 0x42, 0xe6 } }
+{ 0x2962cfa4, 0x13f9, 0x4606, \
+  { 0x84, 0x64, 0xef, 0x4c, 0xfa, 0x33, 0xcc, 0xce } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -89,6 +89,9 @@ public:
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
   virtual void ActivateOrDeactivate(PRBool aActivate) = 0;
+
+  // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow2::GetWindowRoot
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
   nsPIDOMEventTarget* GetChromeEventHandler() const
   {
@@ -146,8 +149,6 @@ public:
 
     win->mMutationBits |= aType;
   }
-
-  virtual nsIFocusController* GetRootFocusController() = 0;
 
   // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
   nsIDOMDocument* GetExtantDocument() const
