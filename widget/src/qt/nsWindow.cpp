@@ -89,7 +89,19 @@
 #include "gfxXlibSurface.h"
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
+#include "gfxSharedImageSurface.h"
 
+// Buffered Pixmap stuff
+static QPixmap *gBufferPixmap = nsnull;
+static int gBufferPixmapUsageCount = 0;
+
+// Buffered shared image + pixmap
+static gfxSharedImageSurface *gBufferImage = nsnull;
+static gfxSharedImageSurface *gBufferImageTemp = nsnull;
+PRBool gNeedColorConversion = PR_FALSE;
+extern "C" {
+#include "pixman.h"
+}
 
 /* For PrepareNativeWidget */
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
@@ -175,6 +187,90 @@ nsWindow::nsWindow()
     mIsTransparent = PR_FALSE;
 
     mCursor = eCursor_standard;
+
+    gBufferPixmapUsageCount++;
+}
+
+static inline gfxASurface::gfxImageFormat
+_depth_to_gfximage_format(PRInt32 aDepth)
+{
+    switch (aDepth) {
+    case 32:
+        return gfxASurface::ImageFormatARGB32;
+    case 24:
+        return gfxASurface::ImageFormatRGB24;
+    default:
+        return gfxASurface::ImageFormatUnknown;
+    }
+}
+
+static void
+FreeOffScreenBuffers(void)
+{
+    delete gBufferImage;
+    delete gBufferImageTemp;
+    delete gBufferPixmap;
+    gBufferImage = nsnull;
+    gBufferImageTemp = nsnull;
+    gBufferPixmap = nsnull;
+}
+
+static bool
+UpdateOffScreenBuffers(QSize aSize, int aDepth)
+{
+    gfxIntSize size(aSize.width(), aSize.height());
+    if (gBufferPixmap) {
+        if (gBufferPixmap->size().width() < size.width ||
+            gBufferPixmap->size().height() < size.height) {
+            FreeOffScreenBuffers();
+        } else
+            return true;
+    }
+
+    gBufferPixmap = new QPixmap(size.width, size.height);
+    if (!gBufferPixmap)
+        return false;
+
+    if (gfxQtPlatform::GetPlatform()->GetRenderMode() == gfxQtPlatform::RENDER_XLIB)
+        return true;
+
+    // Check if system depth has related gfxImage format
+    gfxASurface::gfxImageFormat format =
+        _depth_to_gfximage_format(gBufferPixmap->x11Info().depth());
+
+    gNeedColorConversion = (format == gfxASurface::ImageFormatUnknown);
+
+    gBufferImage = new gfxSharedImageSurface();
+    if (!gBufferImage) {
+        FreeOffScreenBuffers();
+        return false;
+    }
+
+    if (!gBufferImage->Init(gfxIntSize(gBufferPixmap->size().width(),
+                            gBufferPixmap->size().height()),
+                            _depth_to_gfximage_format(gBufferPixmap->x11Info().depth()))) {
+        FreeOffScreenBuffers();
+        return false;
+    }
+
+    // gfxImageSurface does not support system color depth format
+    // we have to paint it with temp surface and color conversion
+    if (!gNeedColorConversion)
+        return true;
+
+    gBufferImageTemp = new gfxSharedImageSurface();
+    if (!gBufferImageTemp) {
+        FreeOffScreenBuffers();
+        return false;
+    }
+
+    if (!gBufferImageTemp->Init(gfxIntSize(gBufferPixmap->size().width(),
+                                gBufferPixmap->size().height()),
+                                gfxASurface::ImageFormatRGB24)) {
+        FreeOffScreenBuffers();
+        return false;
+    }
+    return true;
 }
 
 nsWindow::~nsWindow()
@@ -220,6 +316,12 @@ nsWindow::Destroy(void)
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
+
+    if (gBufferPixmapUsageCount &&
+        --gBufferPixmapUsageCount == 0) {
+
+        FreeOffScreenBuffers();
+    }
 
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
     if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
@@ -830,6 +932,20 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef MOZ_X11
+static already_AddRefed<gfxASurface>
+GetSurfaceForQWidget(QPixmap* aDrawable)
+{
+    gfxASurface* result =
+        new gfxXlibSurface(aDrawable->x11Info().display(),
+                           aDrawable->handle(),
+                           (Visual*)aDrawable->x11Info().visual(),
+                           gfxIntSize(aDrawable->size().width(), aDrawable->size().height()));
+    NS_IF_ADDREF(result);
+    return result;
+}
+#endif
+
 nsEventStatus
 nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 {
@@ -857,7 +973,25 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     updateRegion->SetTo( (int)r.x(), (int)r.y(), (int)r.width(), (int)r.height() );
 
-    nsRefPtr<gfxASurface> targetSurface = new gfxQPainterSurface(aPainter);
+    gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
+    // Prepare offscreen buffers if RenderMode Xlib or Image
+    if (renderMode != gfxQtPlatform::RENDER_QPAINTER)
+        if (!UpdateOffScreenBuffers(r.size().toSize(), QX11Info().depth()))
+            return nsEventStatus_eIgnore;
+
+    nsRefPtr<gfxASurface> targetSurface = nsnull;
+    if (renderMode == gfxQtPlatform::RENDER_XLIB) {
+        targetSurface = GetSurfaceForQWidget(gBufferPixmap);
+    } else if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE) {
+        targetSurface = gNeedColorConversion ? gBufferImageTemp->getASurface()
+                                             : gBufferImage->getASurface();
+    } else if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
+        targetSurface = new gfxQPainterSurface(aPainter);
+    }
+
+    if (NS_UNLIKELY(!targetSurface))
+        return nsEventStatus_eIgnore;
+
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
     nsCOMPtr<nsIRenderingContext> rc;
@@ -887,6 +1021,46 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         return status;
 
     LOGDRAW(("[%p] draw done\n", this));
+
+    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE) {
+        if (gNeedColorConversion) {
+            pixman_image_t *src_image = NULL;
+            pixman_image_t *dst_image = NULL;
+            src_image = pixman_image_create_bits(PIXMAN_x8r8g8b8,
+                                                 gBufferImageTemp->GetSize().width,
+                                                 gBufferImageTemp->GetSize().height,
+                                                 (uint32_t*)gBufferImageTemp->Data(),
+                                                 gBufferImageTemp->Stride());
+            dst_image = pixman_image_create_bits(PIXMAN_r5g6b5,
+                                                 gBufferImage->GetSize().width,
+                                                 gBufferImage->GetSize().height,
+                                                 (uint32_t*)gBufferImage->Data(),
+                                                 gBufferImage->Stride());
+            pixman_image_composite(PIXMAN_OP_SRC,
+                                   src_image,
+                                   NULL,
+                                   dst_image,
+                                   0, 0,
+                                   0, 0,
+                                   0, 0,
+                                   gBufferImageTemp->GetSize().width,
+                                   gBufferImageTemp->GetSize().height);
+            pixman_image_unref(src_image);
+            pixman_image_unref(dst_image);
+        }
+
+        Display *disp = gBufferPixmap->x11Info().display();
+        XGCValues gcv;
+        gcv.graphics_exposures = False;
+        GC gc = XCreateGC (disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
+        XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
+                     0, 0, 0, 0, gBufferImage->GetSize().width, gBufferImage->GetSize().height,
+                     False);
+        XFreeGC (disp, gc);
+    }
+
+    if (renderMode != gfxQtPlatform::RENDER_QPAINTER)
+        aPainter->drawPixmap(QPoint(0, 0), *gBufferPixmap);
 
     ctx = nsnull;
     targetSurface = nsnull;
@@ -1804,8 +1978,21 @@ nsWindow::GetThebesSurface()
     /* This is really a dummy surface; this is only used when doing reflow, because
      * we need a RenderingContext to measure text against.
      */
-    if (!mThebesSurface)
-        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5), gfxASurface::CONTENT_COLOR);
+    if (mThebesSurface)
+        return mThebesSurface;
+
+    gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
+    if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
+    } else if (renderMode == gfxQtPlatform::RENDER_XLIB) {
+        mThebesSurface = new gfxXlibSurface(QX11Info().display(),
+                                            (Visual*)QX11Info().visual(),
+                                            gfxIntSize(1, 1), QX11Info().depth());
+    }
+    if (!mThebesSurface) {
+        gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatRGB24;
+        mThebesSurface = new gfxImageSurface(gfxIntSize(1, 1), imageFormat);
+    }
 
     return mThebesSurface;
 }
