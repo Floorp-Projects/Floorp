@@ -554,15 +554,15 @@
              context="toolbar-context-menu">
       <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
-        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+        <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>
 
-        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+        <toolbarbutton id="restore-button"
                        tooltiptext="&fullScreenRestore.tooltip;"
                        oncommand="BrowserFullScreen();"/>
 
-        <toolbarbutton id="close-button" class="toolbarbutton-1"
+        <toolbarbutton id="close-button"
                        tooltiptext="&fullScreenClose.tooltip;"
                        oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
