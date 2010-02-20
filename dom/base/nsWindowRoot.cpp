@@ -75,7 +75,8 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(nsWindowRoot, mListenerManager, mFocusController)
+NS_IMPL_CYCLE_COLLECTION_3(nsWindowRoot, mListenerManager, mFocusController,
+                           mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
@@ -232,6 +233,7 @@ nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
   // To keep mWindow alive
   aVisitor.mItemData = mWindow;
+  aVisitor.mParentTarget = mParent;
   return NS_OK;
 }
 

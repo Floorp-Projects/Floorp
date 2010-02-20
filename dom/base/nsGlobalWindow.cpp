@@ -290,6 +290,17 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
   }                                                                           \
   PR_END_MACRO
 
+#define FORWARD_TO_INNER_CHROME(method, args, err_rval)                       \
+  PR_BEGIN_MACRO                                                              \
+  if (IsOuterWindow()) {                                                      \
+    if (!mInnerWindow) {                                                      \
+      NS_WARNING("No inner window available!");                               \
+      return err_rval;                                                        \
+    }                                                                         \
+    return ((nsGlobalChromeWindow *)mInnerWindow)->method args;               \
+  }                                                                           \
+  PR_END_MACRO
+
 #define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
@@ -9190,6 +9201,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsGlobalChromeWindow
@@ -9418,6 +9430,32 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
+{
+#ifdef MOZ_IPC
+  FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_FAILURE);
+  if (!mMessageManager) {
+    nsIScriptContext* scx = GetContextInternal();
+    NS_ENSURE_STATE(scx);
+    JSContext* cx = (JSContext *)scx->GetNativeContext();
+    NS_ENSURE_STATE(cx);
+    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                cx);
+    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
+  }
+  NS_ADDREF(*aManager = mMessageManager);
+#else
+  *aManager = nsnull;
+#endif
+  return NS_OK;
 }
 
 // nsGlobalModalWindow implementation

@@ -2800,6 +2800,12 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (!scx) {
+    // The target may have a special JS context for event handlers.
+    JSContext* cx = aCurrentTarget->GetJSContextForEventHandlers();
+    if (cx) {
+      DoPush(cx);
+    }
+
     // Nothing to do here, I guess.  Have to return true so that event firing
     // will still work correctly even if there is no associated JSContext
     return PR_TRUE;
@@ -2849,7 +2855,7 @@ nsCxPusher::RePush(nsPIDOMEventTarget *aCurrentTarget)
 }
 
 PRBool
-nsCxPusher::Push(JSContext *cx)
+nsCxPusher::Push(JSContext *cx, PRBool aRequiresScriptContext)
 {
   if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
@@ -2865,7 +2871,7 @@ nsCxPusher::Push(JSContext *cx)
   // XXXbz do we really need to?  If we don't get one of these in Pop(), is
   // that really a problem?  Or do we need to do this to effectively root |cx|?
   mScx = GetScriptContextFromJSContext(cx);
-  if (!mScx) {
+  if (!mScx && aRequiresScriptContext) {
     // Should probably return PR_FALSE. See bug 416916.
     return PR_TRUE;
   }

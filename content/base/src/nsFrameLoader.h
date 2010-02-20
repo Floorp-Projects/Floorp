@@ -50,6 +50,7 @@
 #include "nsSize.h"
 #include "nsIURI.h"
 #include "nsAutoPtr.h"
+#include "nsFrameMessageManager.h"
 
 class nsIContent;
 class nsIURI;
@@ -83,6 +84,7 @@ protected:
     mNeedsAsyncDestroy(PR_FALSE),
     mInSwap(PR_FALSE)
 #ifdef MOZ_IPC
+    , mRemoteWidgetCreated(PR_FALSE)
     , mRemoteFrame(false)
     , mChildProcess(nsnull)
 #ifdef MOZ_WIDGET_GTK2
@@ -94,6 +96,9 @@ protected:
 public:
   ~nsFrameLoader() {
     mNeedsAsyncDestroy = PR_TRUE;
+    if (mMessageManager) {
+      mMessageManager->Disconnect();
+    }
     nsFrameLoader::Destroy();
   }
 
@@ -137,6 +142,8 @@ public:
   mozilla::dom::PIFrameEmbeddingParent* GetChildProcess();
 #endif
 
+  nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
+
 private:
 
 #ifdef MOZ_IPC
@@ -177,6 +184,7 @@ private:
   PRPackedBool mInSwap : 1;
 
 #ifdef MOZ_IPC
+  PRPackedBool mRemoteWidgetCreated : 1;
   bool mRemoteFrame;
   // XXX leaking
   mozilla::dom::TabParent* mChildProcess;
@@ -187,6 +195,7 @@ private:
   QX11EmbedContainer* mRemoteSocket;
 #endif
 #endif
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
 };
 
 #endif
