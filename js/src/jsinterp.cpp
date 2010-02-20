@@ -1146,26 +1146,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         /* Function is inlined, all other classes use object ops. */
         ops = funobj->map->ops;
 
-        /*
-         * XXX this makes no sense -- why convert to function if clasp->call?
-         * XXX better to call that hook without converting
-         *
-         * FIXME bug 408416: try converting to function, for API compatibility
-         * if there is a call op defined.
-         */
-        if ((ops == &js_ObjectOps) ? clasp->call : ops->call) {
-            ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
-            if (!ok)
-                goto out2;
-
-            if (VALUE_IS_FUNCTION(cx, v)) {
-                /* Make vp refer to funobj to keep it available as argv[-2]. */
-                *vp = v;
-                funobj = JSVAL_TO_OBJECT(v);
-                parent = OBJ_GET_PARENT(cx, funobj);
-                goto have_fun;
-            }
-        }
         fun = NULL;
         script = NULL;
         nslots = 0;
