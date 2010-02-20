@@ -558,8 +558,8 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
   nsISMILAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable)
 {
   // Add a compositor to the hash table if there's not already one there
-  nsSMILCompositorKey key;
-  if (!GetCompositorKeyForAnimation(aElement, key))
+  nsSMILTargetIdentifier key;
+  if (!GetTargetIdentifierForAnimation(aElement, key))
     // Something's wrong/missing about animation's target; skip this animation
     return;
 
@@ -578,11 +578,11 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
 }
 
 // Helper function that, given a nsISMILAnimationElement, looks up its target
-// element & target attribute and returns a newly-constructed nsSMILCompositor
+// element & target attribute and populates a nsSMILTargetIdentifier
 // for this target.
 /*static*/ PRBool
-nsSMILAnimationController::GetCompositorKeyForAnimation(
-    nsISMILAnimationElement* aAnimElem, nsSMILCompositorKey& aResult)
+nsSMILAnimationController::GetTargetIdentifierForAnimation(
+    nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult)
 {
   // Look up target (animated) element
   nsIContent* targetElem = aAnimElem->GetTargetElementContent();

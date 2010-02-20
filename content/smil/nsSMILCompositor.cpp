@@ -40,15 +40,6 @@
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
 
-// nsSMILCompositorKey methods
-inline PRBool
-nsSMILCompositorKey::Equals(const nsSMILCompositorKey &aOther) const
-{
-  return (aOther.mElement       == mElement &&
-          aOther.mAttributeName == mAttributeName &&
-          aOther.mIsCSS         == mIsCSS);
-}
-
 // PLDHashEntryHdr methods
 PRBool
 nsSMILCompositor::KeyEquals(KeyTypePointer aKey) const
