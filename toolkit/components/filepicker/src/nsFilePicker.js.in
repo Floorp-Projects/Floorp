@@ -72,13 +72,16 @@ const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
 const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
 const nsIBaseWindow         = Components.interfaces.nsIBaseWindow;
 
-var   bundle                = null;
+var   titleBundle           = null;
+var   filterBundle          = null;
 var   lastDirectory         = null;
 
 function nsFilePicker()
 {
-  if (!bundle)
-    bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
+  if (!titleBundle)
+    titleBundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
+  if (!filterBundle)
+    filterBundle = srGetStrBundle("chrome://global/content/filepicker.properties");
 
   /* attributes */
   this.mDefaultString = "";
@@ -156,34 +159,34 @@ nsFilePicker.prototype = {
 
   appendFilters: function(filterMask) {
     if (filterMask & nsIFilePicker.filterHTML) {
-      this.appendFilter(bundle.GetStringFromName("htmlTitle"),
-                   bundle.GetStringFromName("htmlFilter"));
+      this.appendFilter(titleBundle.GetStringFromName("htmlTitle"),
+                        filterBundle.GetStringFromName("htmlFilter"));
     }
     if (filterMask & nsIFilePicker.filterText) {
-      this.appendFilter(bundle.GetStringFromName("textTitle"),
-                   bundle.GetStringFromName("textFilter"));
+      this.appendFilter(titleBundle.GetStringFromName("textTitle"),
+                        filterBundle.GetStringFromName("textFilter"));
     }
     if (filterMask & nsIFilePicker.filterImages) {
-      this.appendFilter(bundle.GetStringFromName("imageTitle"),
-                   "*.jpg; *.jpeg; *.gif; *.png; *.bmp; *.ico"); // XXX 528755
+      this.appendFilter(titleBundle.GetStringFromName("imageTitle"),
+                        filterBundle.GetStringFromName("imageFilter"));
     }
     if (filterMask & nsIFilePicker.filterXML) {
-      this.appendFilter(bundle.GetStringFromName("xmlTitle"),
-                   bundle.GetStringFromName("xmlFilter"));
+      this.appendFilter(titleBundle.GetStringFromName("xmlTitle"),
+                        filterBundle.GetStringFromName("xmlFilter"));
     }
     if (filterMask & nsIFilePicker.filterXUL) {
-      this.appendFilter(bundle.GetStringFromName("xulTitle"),
-                   bundle.GetStringFromName("xulFilter"));
+      this.appendFilter(titleBundle.GetStringFromName("xulTitle"),
+                        filterBundle.GetStringFromName("xulFilter"));
     }
     this.mAllowURLs = !!(filterMask & nsIFilePicker.filterAllowURLs);
     if (filterMask & nsIFilePicker.filterApps) {
       // We use "..apps" as a special filter for executable files
-      this.appendFilter(bundle.GetStringFromName("appsTitle"),
+      this.appendFilter(titleBundle.GetStringFromName("appsTitle"),
                         "..apps");
     }
     if (filterMask & nsIFilePicker.filterAll) {
-      this.appendFilter(bundle.GetStringFromName("allTitle"),
-                   bundle.GetStringFromName("allFilter"));
+      this.appendFilter(titleBundle.GetStringFromName("allTitle"),
+                        filterBundle.GetStringFromName("allFilter"));
     }
   },
 
