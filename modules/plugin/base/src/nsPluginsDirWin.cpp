@@ -274,14 +274,21 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   if (NS_FAILED(rv = mPlugin->GetLeafName(fileName)))
     return rv;
 
-  versionsize = ::GetFileVersionInfoSizeW(fullPath.get(), &zerome);
+#ifdef WINCE
+    // WinCe takes a non const file path string, while desktop take a const
+  LPWSTR lpFilepath = const_cast<LPWSTR>(fullPath.get());
+#else
+  LPCWSTR lpFilepath = fullPath.get();
+#endif
+
+  versionsize = ::GetFileVersionInfoSizeW(lpFilepath, &zerome);
 
   if (versionsize > 0)
     verbuf = (WCHAR*)PR_Malloc(versionsize);
   if (!verbuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (::GetFileVersionInfoW(fullPath.get(), NULL, versionsize, verbuf))
+  if (::GetFileVersionInfoW(lpFilepath, NULL, versionsize, verbuf))
   {
     info.fName = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\ProductName");
     info.fDescription = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\FileDescription");
