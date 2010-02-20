@@ -38,31 +38,12 @@
 #ifndef NS_SMILCOMPOSITOR_H_
 #define NS_SMILCOMPOSITOR_H_
 
-#include "nsIContent.h"
 #include "nsTHashtable.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsSMILAnimationFunction.h"
+#include "nsSMILTargetIdentifier.h"
 #include "nsSMILCompositorTable.h"
 #include "pldhash.h"
-
-//----------------------------------------------------------------------
-// nsSMILCompositorKey
-//
-// Hash Key: Animated Element, Attribute Name & Type (CSS vs. XML)
-//
-// NOTE: Need a nsRefPtr to the element, because nsSMILCompositors are kept
-// around for 1 sample after they're used, and they need to make sure their
-// target isn't deleted.
-
-struct nsSMILCompositorKey
-{
-  PRBool    Equals(const nsSMILCompositorKey &aOther) const;
-
-  nsRefPtr<nsIContent> mElement;
-  nsRefPtr<nsIAtom>    mAttributeName; // XXX need to consider namespaces here
-  PRPackedBool         mIsCSS;
-};
 
 //----------------------------------------------------------------------
 // nsSMILCompositor
@@ -74,8 +55,9 @@ struct nsSMILCompositorKey
 class nsSMILCompositor : public PLDHashEntryHdr
 {
 public:
-  typedef const nsSMILCompositorKey& KeyType;
-  typedef const nsSMILCompositorKey* KeyTypePointer;
+  typedef nsSMILTargetIdentifier KeyType;
+  typedef const KeyType& KeyTypeRef;
+  typedef const KeyType* KeyTypePointer;
 
   explicit nsSMILCompositor(KeyTypePointer aKey) : mKey(*aKey) { }
   nsSMILCompositor(const nsSMILCompositor& toCopy)
@@ -85,9 +67,9 @@ public:
   ~nsSMILCompositor() { }
 
   // PLDHashEntryHdr methods
-  KeyType GetKey() const { return mKey; }
+  KeyTypeRef GetKey() const { return mKey; }
   PRBool KeyEquals(KeyTypePointer aKey) const;
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static KeyTypePointer KeyToPointer(KeyTypeRef aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey);
   enum { ALLOW_MEMMOVE = PR_FALSE };
 
@@ -114,8 +96,8 @@ public:
   PR_STATIC_CALLBACK(PLDHashOperator) DoComposeAttribute(
       nsSMILCompositor* aCompositor, void *aData);
 
-  // The hash key (element, attribute name, isCSS)
-  nsSMILCompositorKey  mKey;
+  // The hash key (tuple of element/attributeName/attributeType)
+  KeyType mKey;
 
   // Hash Value: List of animation functions that animate the specified
   // attribute
