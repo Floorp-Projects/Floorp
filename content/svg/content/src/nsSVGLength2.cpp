@@ -519,7 +519,8 @@ nsSVGLength2::ToSMILAttr(nsSVGElement *aSVGElement)
 nsresult
 nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
                                  const nsISMILAnimationElement* /*aSrcElement*/,
-                                 nsSMILValue& aValue) const
+                                 nsSMILValue& aValue,
+                                 PRBool& aCanCache) const
 {
   float value;
   PRUint16 unitType;
@@ -532,7 +533,10 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&nsSMILFloatType::sSingleton);
   val.mU.mDouble = value / mVal->GetUnitScaleFactor(mSVGElement, unitType);
   aValue = val;
-  
+  aCanCache = (unitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE &&
+               unitType != nsIDOMSVGLength::SVG_LENGTHTYPE_EMS &&
+               unitType != nsIDOMSVGLength::SVG_LENGTHTYPE_EXS);
+
   return NS_OK;
 }
 
