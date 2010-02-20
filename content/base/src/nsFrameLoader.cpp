@@ -703,6 +703,9 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
 #endif
 
   mChildProcess->Move(0, 0, size.width, size.height);
+  mRemoteWidgetCreated = PR_TRUE;
+  nsCOMPtr<nsIChromeFrameMessageManager> dummy;
+  GetMessageManager(getter_AddRefs(dummy)); // Initialize message manager.
 
   return true;
 }
@@ -1555,4 +1558,66 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 
   viewer->SetDOMDocument(clonedDOMDoc);
   return NS_OK;
+}
+
+#ifdef MOZ_IPC
+bool LoadScript(void* aCallbackData, const nsAString& aURL)
+{
+  mozilla::dom::PIFrameEmbeddingParent* tabParent =
+    static_cast<nsFrameLoader*>(aCallbackData)->GetChildProcess();
+  if (tabParent) {
+    return tabParent->SendloadRemoteScript(nsString(aURL));
+  }
+  return false;
+}
+
+bool SendAsyncMessageToChild(void* aCallbackData,
+                             const nsAString& aMessage,
+                             const nsAString& aJSON)
+{
+  mozilla::dom::PIFrameEmbeddingParent* tabParent =
+    static_cast<nsFrameLoader*>(aCallbackData)->GetChildProcess();
+  if (tabParent) {
+    return tabParent->SendsendAsyncMessageToChild(nsString(aMessage),
+                                                  nsString(aJSON));
+  }
+  return false;
+}
+#endif
+
+NS_IMETHODIMP
+nsFrameLoader::GetMessageManager(nsIChromeFrameMessageManager** aManager)
+{
+#ifdef MOZ_IPC
+  NS_ENSURE_STATE(mOwnerContent);
+  if (!mMessageManager) {
+    nsresult rv;
+    nsIScriptContext* sctx = mOwnerContent->GetContextForEventHandlers(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(sctx);
+    JSContext* cx = static_cast<JSContext*>(sctx->GetNativeContext());
+    NS_ENSURE_STATE(cx);
+
+    nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
+      do_QueryInterface(mOwnerContent->GetOwnerDoc()->GetWindow());
+    NS_ENSURE_STATE(chromeWindow);
+    nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
+    chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+
+    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+                                                nsnull,
+                                                SendAsyncMessageToChild,
+                                                LoadScript,
+                                                mRemoteWidgetCreated ? this : nsnull,
+                                                static_cast<nsFrameMessageManager*>(parentManager.get()),
+                                                cx);
+    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
+  } else {
+    mMessageManager->SetCallbackData(mRemoteWidgetCreated ? this : nsnull);
+  }
+  return CallQueryInterface(mMessageManager.get(), aManager);
+#else
+  *aManager = nsnull;
+  return NS_OK;
+#endif
 }

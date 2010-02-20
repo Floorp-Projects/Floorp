@@ -76,6 +76,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/base/src \
+		-I$(srcdir)/../../content/events/src \
 		$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

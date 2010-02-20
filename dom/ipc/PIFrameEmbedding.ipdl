@@ -67,6 +67,9 @@ parent:
     sendEvent(RemoteDOMEvent aEvent);
 
     rpc createWindow() returns (PIFrameEmbedding window);
+
+    sync sendSyncMessageToParent(nsString aMessage, nsString aJSON) returns (nsString[] retval);
+    sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
 child:
     createWidget(MagicWindowHandle parentWidget);
 
@@ -97,6 +100,10 @@ child:
      * Activate event forwarding from client to parent.
      */
     activateFrameEvent(nsString aType, bool capture);
+
+    loadRemoteScript(nsString aURL);
+
+    sendAsyncMessageToChild(nsString aMessage, nsString aJSON);
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 };

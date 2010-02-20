@@ -42,8 +42,9 @@
 interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
+interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(8f94788d-ec69-4220-971c-0fd68d47b80f)]
+[scriptable, uuid(25b7a7e9-9507-4649-bba9-86852d72c5d3)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -104,6 +105,8 @@ interface nsIFrameLoader : nsISupports
    * Activate event forwarding from client (remote frame) to parent.
    */
   void activateFrameEvent(in AString aType, in boolean capture);
+
+  readonly attribute nsIChromeFrameMessageManager messageManager;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);

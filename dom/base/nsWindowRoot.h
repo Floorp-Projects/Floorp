@@ -93,6 +93,11 @@ public:
 
   virtual nsIDOMWindow* GetWindow();
 
+  virtual void SetParentTarget(nsPIDOMEventTarget* aTarget)
+  {
+    mParent = aTarget;
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 
 protected:
@@ -101,6 +106,8 @@ protected:
   nsCOMPtr<nsIEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
                                                       // to us.
   nsCOMPtr<nsIFocusController> mFocusController; // The focus controller for the root.
+
+  nsCOMPtr<nsPIDOMEventTarget> mParent;
 };
 
 extern nsresult

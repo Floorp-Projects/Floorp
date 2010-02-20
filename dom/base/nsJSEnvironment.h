@@ -63,6 +63,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
+  virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
+
   virtual PRUint32 GetScriptTypeID()
     { return nsIProgrammingLanguage::JAVASCRIPT; }
 

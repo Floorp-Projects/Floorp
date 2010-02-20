@@ -114,6 +114,7 @@ XPIDLSRCS	= \
 		nsIFrameLoader.idl \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
+		nsIFrameMessageManager.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

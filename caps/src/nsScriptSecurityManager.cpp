@@ -2061,15 +2061,15 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
 {
     *result = nsnull;
 
-    nsIScriptContext *scriptContext = GetScriptContext(cx);
+    nsIScriptContextPrincipal* scp =
+        GetScriptContextPrincipalFromJSContext(cx);
 
-    if (!scriptContext)
+    if (!scp)
     {
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIScriptObjectPrincipal> globalData =
-        do_QueryInterface(scriptContext->GetGlobalObject());
+    nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
     if (globalData)
         NS_IF_ADDREF(*result = globalData->GetPrincipal());
 
@@ -2254,11 +2254,11 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             return targetPrincipal;
         }
 
-        nsIScriptContext *scriptContext = GetScriptContext(cx);
-        if (scriptContext)
+        nsIScriptContextPrincipal* scp =
+            GetScriptContextPrincipalFromJSContext(cx);
+        if (scp)
         {
-            nsCOMPtr<nsIScriptObjectPrincipal> globalData =
-                do_QueryInterface(scriptContext->GetGlobalObject());
+            nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
             if (!globalData)
             {
                 *rv = NS_ERROR_FAILURE;
