@@ -219,6 +219,7 @@ nsSMILAnimationFunction::Activate(nsSMILTime aBeginTime)
   mIsActive = PR_TRUE;
   mIsFrozen = PR_FALSE;
   mFrozenValue = nsSMILValue();
+  mHasChanged = PR_TRUE;
 }
 
 void

@@ -217,6 +217,23 @@ public:
   PRBool HasChanged() const;
 
   /**
+   * This method lets us clear the 'HasChanged' flag for inactive animations
+   * after we've reacted to their change to the 'inactive' state, so that we
+   * won't needlessly recompose their targets in every sample.
+   *
+   * This should only be called on an animation function that is inactive and
+   * that returns PR_TRUE from HasChanged().
+   */
+  void ClearHasChanged()
+  {
+    NS_ABORT_IF_FALSE(HasChanged(),
+                      "clearing mHasChanged flag, when it's already PR_FALSE");
+    NS_ABORT_IF_FALSE(!IsActiveOrFrozen(),
+                      "clearing mHasChanged flag for active animation");
+    mHasChanged = PR_FALSE;
+  }
+
+  /**
    * Updates the cached record of our animation target, and returns a boolean
    * that indicates whether the target has changed since the last call to this
    * function. (This lets nsSMILCompositor check whether its animation
