@@ -557,6 +557,10 @@ DOMWorkerOperationCallback(JSContext* aCx)
       extraThreadAllowed =
         NS_SUCCEEDED(gDOMThreadService->ChangeThreadPoolMaxThreads(1));
 
+      // Flush JIT caches now before suspending to avoid holding memory that we
+      // are not going to use.
+      JS_FlushCaches(aCx);
+
       // Only do all this setup once.
       wasSuspended = PR_TRUE;
     }
