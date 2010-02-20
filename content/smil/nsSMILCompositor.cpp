@@ -114,24 +114,15 @@ nsSMILCompositor::ComposeAttribute()
 
   // THIRD: Step backwards through animation functions to find out
   // which ones we actually care about.
-  //  PRBool changed = PR_FALSE; // XXXdholbert removing until we have
-                                 //  HasChangedTarget
+  PRBool changed = PR_FALSE;
   PRUint32 length = mAnimationFunctions.Length();
   PRUint32 i;
   for (i = length; i > 0; --i) {
     nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
-    // XXXdholbert we need to add another function
-    // nsSMILAnimationFunction::HasChangedTarget(elem, smilAttr, isCSS) that
-    // we call here (in addition to HasChanged(), because even if function
-    // value hasn't changed, its target might have.
-    // For this to work, the nsSMILAnimationFunction needs to cache its last
-    // elem/smilAttr/isCSS values, and then check them against the new values
-    // here.
-    /*
-    if (!changed && curAnimFunc->HasChanged()) {
+    if (curAnimFunc->UpdateCachedTarget(mKey) ||
+        (!changed && curAnimFunc->HasChanged())) {
       changed = PR_TRUE;
     }
-    */
 
     if (curAnimFunc->WillReplace()) {
       --i;
@@ -141,7 +132,7 @@ nsSMILCompositor::ComposeAttribute()
   // NOTE: 'i' is now the index of the first animation function that we need
   // to use in compositing.
 
-  // if (!changed) // XXXdholbert removing until we have HasChangedTarget
+  // if (!changed) // XXXdholbert Still need to enable this optimization
   //  return;
 
   // FOURTH: Compose animation functions (starting with base value)
