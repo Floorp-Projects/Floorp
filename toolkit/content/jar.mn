@@ -34,6 +34,7 @@ toolkit.jar:
 *+ content/global/finddialog.js               (finddialog.js)
 *+ content/global/finddialog.xul              (finddialog.xul)
 *+ content/global/findUtils.js                (findUtils.js)
+   content/global/filepicker.properties       (filepicker.properties)
 *+ content/global/globalOverlay.js            (globalOverlay.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
 *+ content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
