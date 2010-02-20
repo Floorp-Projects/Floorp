@@ -107,6 +107,7 @@ var oldtreefirstrow, oldtreecfirstrow;
 
 function nextDataSource()
 {
+  document.documentElement.getBoundingClientRect();
   var tree = document.getElementById('t');
   var treec = document.getElementById('tc');
   tree.treeBoxObject.scrollToRow(10);
