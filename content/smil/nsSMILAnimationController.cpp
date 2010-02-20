@@ -256,6 +256,22 @@ nsSMILAnimationController::StopTimer()
 // Sample-related methods and callbacks
 
 PR_CALLBACK PLDHashOperator
+TransferCachedBaseValue(nsSMILCompositor* aCompositor,
+                        void* aData)
+{
+  nsSMILCompositorTable* lastCompositorTable =
+    static_cast<nsSMILCompositorTable*>(aData);
+  nsSMILCompositor* lastCompositor =
+    lastCompositorTable->GetEntry(aCompositor->GetKey());
+
+  if (lastCompositor) {
+    aCompositor->StealCachedBaseValue(lastCompositor);
+  }
+
+  return PL_DHASH_NEXT;  
+}
+
+PR_CALLBACK PLDHashOperator
 RemoveCompositorFromTable(nsSMILCompositor* aCompositor,
                           void* aData)
 {
@@ -339,8 +355,14 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
                                           &saParams);
   activeContainers.Clear();
 
-  // STEP 4: Remove animation effects from any no-longer-animated elems/attrs
+  // STEP 4: Compare previous sample's compositors against this sample's.
+  // (Transfer cached base values across, & remove animation effects from 
+  // no-longer-animated targets.)
   if (mLastCompositorTable) {
+    // * Transfer over cached base values, from last sample's compositors
+    currentCompositorTable->EnumerateEntries(TransferCachedBaseValue,
+                                             mLastCompositorTable);
+
     // * For each compositor in current sample's hash table, remove entry from
     // prev sample's hash table -- we don't need to clear animation
     // effects of those compositors, since they're still being animated.

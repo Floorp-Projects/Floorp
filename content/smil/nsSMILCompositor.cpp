@@ -78,22 +78,6 @@ nsSMILCompositor::AddAnimationFunction(nsSMILAnimationFunction* aFunc)
   }
 }
 
-nsISMILAttr*
-nsSMILCompositor::CreateSMILAttr()
-{
-  if (mKey.mIsCSS) {
-    nsAutoString name;
-    mKey.mAttributeName->ToString(name);
-    nsCSSProperty propId = nsCSSProps::LookupProperty(name);
-    if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
-      return new nsSMILCSSProperty(propId, mKey.mElement.get());
-    }
-  } else {
-    return mKey.mElement->GetAnimatedAttr(mKey.mAttributeName);
-  }
-  return nsnull;
-}
-
 void
 nsSMILCompositor::ComposeAttribute()
 {
@@ -120,42 +104,29 @@ nsSMILCompositor::ComposeAttribute()
 
   // THIRD: Step backwards through animation functions to find out
   // which ones we actually care about.
-  PRBool changed = mForceCompositing;
-  PRUint32 length = mAnimationFunctions.Length();
-  PRUint32 i;
-  for (i = length; i > 0; --i) {
-    nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
-    if (curAnimFunc->UpdateCachedTarget(mKey) ||
-        (!changed && curAnimFunc->HasChanged())) {
-      changed = PR_TRUE;
-    }
+  PRUint32 firstFuncToCompose = GetFirstFuncToAffectSandwich();
 
-    if (curAnimFunc->WillReplace()) {
-      --i;
-      break;
-    }
-  }
-  // NOTE: 'i' is now the index of the first animation function that we need
-  // to use in compositing.
-
-  // if (!changed) // XXXdholbert Still need to enable this optimization
-  //  return;
-
-  // FOURTH: Compose animation functions (starting with base value)
-  nsSMILValue resultValue = smilAttr->GetBaseValue();
-  if (resultValue.IsNull()) {
+  // FOURTH: Get & cache base value
+  nsSMILValue sandwichResultValue = smilAttr->GetBaseValue();
+  if (sandwichResultValue.IsNull()) {
     NS_WARNING("nsISMILAttr::GetBaseValue failed");
     return;
   }
-  for (; i < length; ++i) {
-    nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i];
-    if (curAnimFunc) {
-      curAnimFunc->ComposeResult(*smilAttr, resultValue);
-    }
+  UpdateCachedBaseValue(sandwichResultValue);
+
+  // if (!mForceCompositing) {
+  //   XXXdholbert Still need to enable this optimization
+  //   return;
+  // }
+
+  // FIFTH: Compose animation functions
+  PRUint32 length = mAnimationFunctions.Length();
+  for (PRUint32 i = firstFuncToCompose; i < length; ++i) {
+    mAnimationFunctions[i]->ComposeResult(*smilAttr, sandwichResultValue);
   }
 
-  // FIFTH: Set the animated value to the final composited result.
-  nsresult rv = smilAttr->SetAnimValue(resultValue);
+  // SIXTH: Set the animated value to the final composited result.
+  nsresult rv = smilAttr->SetAnimValue(sandwichResultValue);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsISMILAttr::SetAnimValue failed");
   }
@@ -175,3 +146,54 @@ nsSMILCompositor::ClearAnimationEffects()
   smilAttr->ClearAnimValue();
 }
 
+// Protected Helper Functions
+// --------------------------
+nsISMILAttr*
+nsSMILCompositor::CreateSMILAttr()
+{
+  if (mKey.mIsCSS) {
+    nsAutoString name;
+    mKey.mAttributeName->ToString(name);
+    nsCSSProperty propId = nsCSSProps::LookupProperty(name);
+    if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
+      return new nsSMILCSSProperty(propId, mKey.mElement.get());
+    }
+  } else {
+    return mKey.mElement->GetAnimatedAttr(mKey.mAttributeName);
+  }
+  return nsnull;
+}
+
+PRUint32
+nsSMILCompositor::GetFirstFuncToAffectSandwich()
+{
+  PRUint32 i;
+  for (i = mAnimationFunctions.Length(); i > 0; --i) {
+    nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
+    if (curAnimFunc->UpdateCachedTarget(mKey) ||
+        (!mForceCompositing && curAnimFunc->HasChanged())) {
+      mForceCompositing = PR_TRUE;
+    }
+
+    if (curAnimFunc->WillReplace()) {
+      --i;
+      break;
+    }
+  }
+  return i;
+}
+
+void
+nsSMILCompositor::UpdateCachedBaseValue(const nsSMILValue& aBaseValue)
+{
+  if (!mCachedBaseValue) {
+    // We don't have last sample's base value cached. Assume it's changed.
+    mCachedBaseValue = new nsSMILValue(aBaseValue);
+    NS_WARN_IF_FALSE(mCachedBaseValue, "failed to cache base value (OOM?)");
+    mForceCompositing = PR_TRUE;
+  } else if (*mCachedBaseValue != aBaseValue) {
+    // Base value has changed since last sample.
+    *mCachedBaseValue = aBaseValue;
+    mForceCompositing = PR_TRUE;
+  }
+}
