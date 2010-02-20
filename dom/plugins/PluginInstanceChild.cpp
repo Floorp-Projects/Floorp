@@ -74,7 +74,9 @@ using mozilla::gfx::SharedDIB;
 #endif // defined(OS_WIN)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-    mPluginIface(aPluginIface)
+    mPluginIface(aPluginIface),
+    mCachedWindowActor(nsnull),
+    mCachedElementActor(nsnull)
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -109,6 +111,85 @@ PluginInstanceChild::~PluginInstanceChild()
 #if defined(OS_WIN)
   DestroyPluginWindow();
 #endif
+}
+
+NPError
+PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
+                                                 NPObject** aObject)
+{
+    PluginScriptableObjectChild* actor;
+    NPError result = NPERR_NO_ERROR;
+
+    switch (aValue) {
+        case NPNVWindowNPObject:
+            if (!(actor = mCachedWindowActor)) {
+                PPluginScriptableObjectChild* actorProtocol;
+                CallNPN_GetValue_NPNVWindowNPObject(&actorProtocol, &result);
+                if (result == NPERR_NO_ERROR) {
+                    actor = mCachedWindowActor =
+                        static_cast<PluginScriptableObjectChild*>(actorProtocol);
+                    NS_ASSERTION(actor, "Null actor!");
+                    PluginModuleChild::sBrowserFuncs.retainobject(
+                        actor->GetObject(false));
+                }
+            }
+            break;
+
+        case NPNVPluginElementNPObject:
+            if (!(actor = mCachedElementActor)) {
+                PPluginScriptableObjectChild* actorProtocol;
+                CallNPN_GetValue_NPNVPluginElementNPObject(&actorProtocol,
+                                                           &result);
+                if (result == NPERR_NO_ERROR) {
+                    actor = mCachedElementActor =
+                        static_cast<PluginScriptableObjectChild*>(actorProtocol);
+                    NS_ASSERTION(actor, "Null actor!");
+                    PluginModuleChild::sBrowserFuncs.retainobject(
+                        actor->GetObject(false));
+                }
+            }
+            break;
+
+        default:
+            NS_NOTREACHED("Don't know what to do with this value type!");
+    }
+
+#ifdef DEBUG
+    {
+        NPError currentResult;
+        PPluginScriptableObjectChild* currentActor;
+
+        switch (aValue) {
+            case NPNVWindowNPObject:
+                CallNPN_GetValue_NPNVWindowNPObject(&currentActor,
+                                                    &currentResult);
+                break;
+            case NPNVPluginElementNPObject:
+                CallNPN_GetValue_NPNVPluginElementNPObject(&currentActor,
+                                                           &currentResult);
+                break;
+            default:
+                NS_NOTREACHED("Don't know what to do with this value type!");
+        }
+
+        // Make sure that the current actor returned by the parent matches our
+        // cached actor!
+        NS_ASSERTION(static_cast<PluginScriptableObjectChild*>(currentActor) ==
+                     actor, "Cached actor is out of date!");
+        NS_ASSERTION(currentResult == result, "Results don't match?!");
+    }
+#endif
+
+    if (result != NPERR_NO_ERROR) {
+        return result;
+    }
+
+    NPObject* object = actor->GetObject(false);
+    NS_ASSERTION(object, "Null object?!");
+
+    *aObject = PluginModuleChild::sBrowserFuncs.retainobject(object);
+    return NPERR_NO_ERROR;
+
 }
 
 NPError
@@ -171,50 +252,14 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return result;
     }
 
-    case NPNVWindowNPObject: {
-        PPluginScriptableObjectChild* actor;
-        NPError result;
-        if (!CallNPN_GetValue_NPNVWindowNPObject(&actor, &result)) {
-            NS_WARNING("Failed to send message!");
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (result != NPERR_NO_ERROR) {
-            return result;
-        }
-
-        NS_ASSERTION(actor, "Null actor!");
-
-        NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
-        NS_ASSERTION(object, "Null object?!");
-
-        PluginModuleChild::sBrowserFuncs.retainobject(object);
-        *((NPObject**)aValue) = object;
-        return NPERR_NO_ERROR;
-    }
-
+    case NPNVWindowNPObject: // Intentional fall-through
     case NPNVPluginElementNPObject: {
-        PPluginScriptableObjectChild* actor;
-        NPError result;
-        if (!CallNPN_GetValue_NPNVPluginElementNPObject(&actor, &result)) {
-            NS_WARNING("Failed to send message!");
-            return NPERR_GENERIC_ERROR;
+        NPObject* object;
+        NPError result = InternalGetNPObjectForValue(aVar, &object);
+        if (result == NPERR_NO_ERROR) {
+            *((NPObject**)aValue) = object;
         }
-
-        if (result != NPERR_NO_ERROR) {
-            return result;
-        }
-
-        NS_ASSERTION(actor, "Null actor!");
-
-        NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
-        NS_ASSERTION(object, "Null object?!");
-
-        PluginModuleChild::sBrowserFuncs.retainobject(object);
-        *((NPObject**)aValue) = object;
-        return NPERR_NO_ERROR;
+        return result;
     }
 
     case NPNVnetscapeWindow: {
@@ -1364,6 +1409,11 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 
     PluginModuleChild* module = PluginModuleChild::current();
     bool retval = module->PluginInstanceDestroyed(this, aResult);
+
+    // Null out our cached actors as they should have been killed in the
+    // PluginInstanceDestroyed call above.
+    mCachedWindowActor = nsnull;
+    mCachedElementActor = nsnull;
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
