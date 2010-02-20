@@ -6395,9 +6395,9 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     id = ATOM_TO_JSID(atom);
     fval = JSVAL_VOID;
     ok = js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval);
-    JS_SetErrorReporter(cx, older);
     if (!ok)
-        return false;
+        JS_ClearPendingException(cx);
+    JS_SetErrorReporter(cx, older);
 
     if (JSVAL_IS_PRIMITIVE(fval))
         return JS_TRUE;
