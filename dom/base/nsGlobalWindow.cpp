@@ -3748,10 +3748,10 @@ nsGlobalWindow::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
   nsRect scrollRange = sf->GetScrollRange();
 
   if (aScrollMaxX)
-    *aScrollMaxX = PR_MAX(0,
+    *aScrollMaxX = NS_MAX(0,
       (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.XMost())));
   if (aScrollMaxY)
-    *aScrollMaxY = PR_MAX(0,
+    *aScrollMaxY = NS_MAX(0,
       (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.YMost())));
 
   return NS_OK;
@@ -9096,8 +9096,8 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
       // likely to always be positive here, but cast anyways for
       // consistency).
       PRUint32 delay =
-        PR_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
-                DOM_MIN_TIMEOUT_VALUE);
+        NS_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
+               (PRUint32)DOM_MIN_TIMEOUT_VALUE);
 
       // Set mWhen back to the time when the timer is supposed to
       // fire.
