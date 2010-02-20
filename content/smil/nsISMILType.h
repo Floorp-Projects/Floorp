@@ -134,8 +134,7 @@ protected:
    * @pre aDest.mType == aSrc.mType == this
    */
   virtual PRBool IsEqual(const nsSMILValue& aLeft,
-                         const nsSMILValue& aRight) const
-  { return PR_FALSE; }
+                         const nsSMILValue& aRight) const = 0;
 
   /**
    * Adds two values.

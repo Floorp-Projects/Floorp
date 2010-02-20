@@ -78,6 +78,20 @@ SVGViewBoxSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
+PRBool
+SVGViewBoxSMILType::IsEqual(const nsSMILValue& aLeft,
+                            const nsSMILValue& aRight) const
+{
+  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+
+  const nsSVGViewBoxRect* leftBox =
+    static_cast<const nsSVGViewBoxRect*>(aLeft.mU.mPtr);
+  const nsSVGViewBoxRect* rightBox =
+    static_cast<nsSVGViewBoxRect*>(aRight.mU.mPtr);
+  return *leftBox == *rightBox;
+}
+
 nsresult
 SVGViewBoxSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                         PRUint32 aCount) const

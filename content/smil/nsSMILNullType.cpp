@@ -52,6 +52,16 @@ nsSMILNullType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
+PRBool
+nsSMILNullType::IsEqual(const nsSMILValue& aLeft,
+                        const nsSMILValue& aRight) const
+{
+  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+
+  return PR_TRUE;  // All null-typed values are equivalent.
+}
+
 nsresult
 nsSMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                     PRUint32 aCount) const

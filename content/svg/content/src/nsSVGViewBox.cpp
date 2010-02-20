@@ -46,6 +46,22 @@
 
 using namespace mozilla;
 
+/* Implementation of nsSVGViewBoxRect methods */
+
+PRBool
+nsSVGViewBoxRect::operator==(const nsSVGViewBoxRect& aOther) const
+{
+  if (&aOther == this)
+    return PR_TRUE;
+
+  return x == aOther.x &&
+    y == aOther.y &&
+    width == aOther.width &&
+    height == aOther.height;
+}
+
+/* Cycle collection macros for nsSVGViewBox */
+
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGViewBox::DOMBaseVal, mSVGElement)
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGViewBox::DOMAnimVal, mSVGElement)
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGViewBox::DOMAnimatedRect, mSVGElement)
@@ -77,7 +93,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGViewBox::DOMAnimatedRect)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedRect)
 NS_INTERFACE_MAP_END
 
-/* Implementation */
+/* Implementation of nsSVGViewBox methods */
 
 void
 nsSVGViewBox::Init()
