@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,47 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <shlobj.h>
+
 #include "nsDataObjCollection.h"
-#include "nsITransferable.h"
 #include "nsClipboard.h"
 #include "IEnumFE.h"
 
 #include <ole2.h>
 
-#if 0
-#define PRNTDEBUG(_x) printf(_x);
-#define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
-#else
-#define PRNTDEBUG(_x) // printf(_x);
-#define PRNTDEBUG2(_x1, _x2) // printf(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
-#endif
-
-EXTERN_C GUID CDECL CLSID_nsDataObjCollection =
-{ 0x2d851b91, 0xd4c, 0x11d3, { 0x96, 0xd4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } };
-
 /*
  * Class nsDataObjCollection
  */
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
 nsDataObjCollection::nsDataObjCollection()
-  : m_cRef(0), mTransferable(nsnull)
+  : m_cRef(0), mIsAsyncMode(FALSE), mIsInOperation(FALSE)
 {
   m_enumFE = new CEnumFormatEtc();
   m_enumFE->AddRef();
 }
 
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
 nsDataObjCollection::~nsDataObjCollection()
 {
-  NS_IF_RELEASE(mTransferable);
-
   mDataFlavors.Clear();
   mDataObjects.Clear();
 
@@ -83,103 +64,93 @@ nsDataObjCollection::~nsDataObjCollection()
 }
 
 
-//-----------------------------------------------------
-// IUnknown interface methods - see inknown.h for documentation
-//-----------------------------------------------------
+// IUnknown interface methods - see iunknown.h for documentation
 STDMETHODIMP nsDataObjCollection::QueryInterface(REFIID riid, void** ppv)
 {
-	*ppv=NULL;
+  *ppv=NULL;
 
-	if ( (IID_IUnknown == riid) || (IID_IDataObject	== riid) ) {
-		*ppv = static_cast<IDataObject*>(this); 
-		AddRef();
-		return NOERROR;
-	}
-
-	if ( IID_IDataObjCollection	== riid ) {
-		*ppv = static_cast<nsIDataObjCollection*>(this); 
-		AddRef();
-		return NOERROR;
-	}
-
-	return ResultFromScode(E_NOINTERFACE);
-}
-
-//-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsDataObjCollection::AddRef()
-{
-  //PRNTDEBUG3("nsDataObjCollection::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
-	return ++m_cRef;
-}
-
-
-//-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsDataObjCollection::Release()
-{
-  //PRNTDEBUG3("nsDataObjCollection::Release >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
-
-	if (0 != --m_cRef)
-		return m_cRef;
-
-	delete this;
-
-	return 0;
-}
-
-//-----------------------------------------------------
-BOOL nsDataObjCollection::FormatsMatch(const FORMATETC& source, const FORMATETC& target) const
-{
-	if ((source.cfFormat == target.cfFormat) &&
-		 (source.dwAspect  & target.dwAspect)  &&
-		 (source.tymed     & target.tymed))       {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
-
-//-----------------------------------------------------
-// IDataObject methods
-//-----------------------------------------------------
-STDMETHODIMP nsDataObjCollection::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
-{
-  PRNTDEBUG("nsDataObjCollection::GetData\n");
-  PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
-
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
-    IDataObject * dataObj = mDataObjects.ElementAt(i);
-    if (S_OK == dataObj->GetData(pFE, pSTM)) {
-      return S_OK;
-    }
+  if ( (IID_IUnknown == riid) || (IID_IDataObject  == riid) ) {
+    *ppv = static_cast<IDataObject*>(this); 
+    AddRef();
+    return NOERROR;
   }
 
-	return ResultFromScode(DATA_E_FORMATETC);
+  if ( IID_IDataObjCollection  == riid ) {
+    *ppv = static_cast<nsIDataObjCollection*>(this); 
+    AddRef();
+    return NOERROR;
+  }
+
+  return E_NOINTERFACE;
 }
 
+STDMETHODIMP_(ULONG) nsDataObjCollection::AddRef()
+{
+  return ++m_cRef;
+}
 
-//-----------------------------------------------------
+STDMETHODIMP_(ULONG) nsDataObjCollection::Release()
+{
+  if (0 != --m_cRef)
+    return m_cRef;
+
+  delete this;
+
+  return 0;
+}
+
+BOOL nsDataObjCollection::FormatsMatch(const FORMATETC& source,
+                                       const FORMATETC& target) const
+{
+  if ((source.cfFormat == target.cfFormat) &&
+      (source.dwAspect & target.dwAspect)  &&
+      (source.tymed    & target.tymed)) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+// IDataObject methods
+STDMETHODIMP nsDataObjCollection::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
+{
+  static CLIPFORMAT fileDescriptorFlavorA =
+                               ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA);
+  static CLIPFORMAT fileDescriptorFlavorW =
+                               ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW);
+  static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat(CFSTR_FILECONTENTS);
+
+  switch (pFE->cfFormat) {
+  case CF_TEXT:
+  case CF_UNICODETEXT:
+    return GetText(pFE, pSTM);
+  case CF_HDROP:
+    return GetFile(pFE, pSTM);
+  default:
+    if (pFE->cfFormat == fileDescriptorFlavorA ||
+        pFE->cfFormat == fileDescriptorFlavorW) {
+      return GetFileDescriptors(pFE, pSTM);
+    }
+    if (pFE->cfFormat == fileFlavor) {
+      return GetFileContents(pFE, pSTM);
+    }
+  }
+  return GetFirstSupporting(pFE, pSTM);
+}
+
 STDMETHODIMP nsDataObjCollection::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  PRNTDEBUG("nsDataObjCollection::GetDataHere\n");
-		return ResultFromScode(E_FAIL);
+  return E_FAIL;
 }
 
-
-//-----------------------------------------------------
-// Other objects querying to see if we support a 
-// particular format
-//-----------------------------------------------------
+// Other objects querying to see if we support a particular format
 STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
 {
   UINT format = nsClipboard::GetFormat(MULTI_MIME);
-  PRNTDEBUG("nsDataObjCollection::QueryGetData  ");
-
-  PRNTDEBUG3("format: %d  Mulitple: %d\n", pFE->cfFormat, format);
 
   if (format == pFE->cfFormat) {
     return S_OK;
   }
-
 
   for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
     IDataObject * dataObj = mDataObjects.ElementAt(i);
@@ -188,142 +159,379 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
     }
   }
 
-  PRNTDEBUG2("***** nsDataObjCollection::QueryGetData - Unknown format %d\n", pFE->cfFormat);
-	return ResultFromScode(E_FAIL);
+  return DV_E_FORMATETC;
 }
 
-//-----------------------------------------------------
-STDMETHODIMP nsDataObjCollection::GetCanonicalFormatEtc
-	 (LPFORMATETC pFEIn, LPFORMATETC pFEOut)
+STDMETHODIMP nsDataObjCollection::GetCanonicalFormatEtc(LPFORMATETC pFEIn,
+                                                        LPFORMATETC pFEOut)
 {
-  PRNTDEBUG("nsDataObjCollection::GetCanonicalFormatEtc\n");
-		return ResultFromScode(E_FAIL);
+  return E_NOTIMPL;
 }
 
-
-//-----------------------------------------------------
-STDMETHODIMP nsDataObjCollection::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
+STDMETHODIMP nsDataObjCollection::SetData(LPFORMATETC pFE,
+                                          LPSTGMEDIUM pSTM,
+                                          BOOL fRelease)
 {
-  PRNTDEBUG("nsDataObjCollection::SetData\n");
-
-  return ResultFromScode(E_FAIL);
+  // Set arbitrary data formats on the first object in the collection and let
+  // it handle the heavy lifting
+  if (mDataObjects.Length() == 0)
+    return E_FAIL;
+  return mDataObjects.ElementAt(0)->SetData(pFE, pSTM, fRelease);
 }
 
-
-//-----------------------------------------------------
-STDMETHODIMP nsDataObjCollection::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
+STDMETHODIMP nsDataObjCollection::EnumFormatEtc(DWORD dwDir,
+                                                LPENUMFORMATETC *ppEnum)
 {
-  PRNTDEBUG("nsDataObjCollection::EnumFormatEtc\n");
-
   if (dwDir == DATADIR_GET) {
     // Clone addref's the new enumerator.
-    return m_enumFE->Clone(ppEnum);
+    m_enumFE->Clone(ppEnum);
+    if (!(*ppEnum))
+      return E_FAIL;
+    (*ppEnum)->Reset();
+    return S_OK;
   }
 
   return E_NOTIMPL;
 }
 
-//-----------------------------------------------------
-STDMETHODIMP nsDataObjCollection::DAdvise(LPFORMATETC pFE, DWORD dwFlags,
-										                      LPADVISESINK pIAdviseSink, DWORD* pdwConn)
+STDMETHODIMP nsDataObjCollection::DAdvise(LPFORMATETC pFE,
+                                          DWORD dwFlags,
+                                          LPADVISESINK pIAdviseSink,
+                                          DWORD* pdwConn)
 {
-  PRNTDEBUG("nsDataObjCollection::DAdvise\n");
-	return ResultFromScode(E_FAIL);
+  return OLE_E_ADVISENOTSUPPORTED;
 }
 
-
-//-----------------------------------------------------
 STDMETHODIMP nsDataObjCollection::DUnadvise(DWORD dwConn)
 {
-  PRNTDEBUG("nsDataObjCollection::DUnadvise\n");
-	return ResultFromScode(E_FAIL);
+  return OLE_E_ADVISENOTSUPPORTED;
 }
 
-//-----------------------------------------------------
 STDMETHODIMP nsDataObjCollection::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 {
-  PRNTDEBUG("nsDataObjCollection::EnumDAdvise\n");
-	return ResultFromScode(E_FAIL);
+  return OLE_E_ADVISENOTSUPPORTED;
 }
 
-//-----------------------------------------------------
 // GetData and SetData helper functions
-//-----------------------------------------------------
 HRESULT nsDataObjCollection::AddSetFormat(FORMATETC& aFE)
 {
-  PRNTDEBUG("nsDataObjCollection::AddSetFormat\n");
-	return ResultFromScode(S_OK);
+  return S_OK;
 }
 
-//-----------------------------------------------------
 HRESULT nsDataObjCollection::AddGetFormat(FORMATETC& aFE)
 {
-  PRNTDEBUG("nsDataObjCollection::AddGetFormat\n");
-	return ResultFromScode(S_OK);
+  return S_OK;
 }
 
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::GetBitmap(FORMATETC&, STGMEDIUM&)
+// Registers a DataFlavor/FE pair
+void nsDataObjCollection::AddDataFlavor(const char * aDataFlavor,
+                                        LPFORMATETC aFE)
 {
-  PRNTDEBUG("nsDataObjCollection::GetBitmap\n");
-	return ResultFromScode(E_NOTIMPL);
-}
-
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::GetDib(FORMATETC&, STGMEDIUM&)
-{
-  PRNTDEBUG("nsDataObjCollection::GetDib\n");
-	return ResultFromScode(E_NOTIMPL);
-}
-
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::GetMetafilePict(FORMATETC&, STGMEDIUM&)
-{
-	return ResultFromScode(E_NOTIMPL);
-}
-
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::SetBitmap(FORMATETC&, STGMEDIUM&)
-{
-	return ResultFromScode(E_NOTIMPL);
-}
-
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::SetDib   (FORMATETC&, STGMEDIUM&)
-{
-	return ResultFromScode(E_FAIL);
-}
-
-//-----------------------------------------------------
-HRESULT nsDataObjCollection::SetMetafilePict (FORMATETC&, STGMEDIUM&)
-{
-	return ResultFromScode(E_FAIL);
-}
-
-//-----------------------------------------------------
-//-----------------------------------------------------
-CLSID nsDataObjCollection::GetClassID() const
-{
-	return CLSID_nsDataObjCollection;
-}
-
-//-----------------------------------------------------
-// Registers a the DataFlavor/FE pair
-//-----------------------------------------------------
-void nsDataObjCollection::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
-{
-  // These two lists are the mapping to and from data flavors and FEs
-  // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
-  // so we will look up data flavor that corresponds to the FE
-  // and then ask the transferable for that type of data
-  mDataFlavors.AppendElement(*aDataFlavor);
+  // Add the FormatEtc to our list if it's not already there.  We don't care
+  // about the internal aDataFlavor because nsDataObj handles that.
+  IEnumFORMATETC * ifEtc;
+  FORMATETC fEtc;
+  ULONG num;
+  if (S_OK != this->EnumFormatEtc(DATADIR_GET, &ifEtc))
+    return;
+  while (S_OK == ifEtc->Next(1, &fEtc, &num)) {
+    NS_ASSERTION(1 == num,
+         "Bit off more than we can chew in nsDataObjCollection::AddDataFlavor");
+    if (FormatsMatch(fEtc, *aFE)) {
+      ifEtc->Release();
+      return;
+    }
+  } // If we didn't find a matching format, add this one
+  ifEtc->Release();
   m_enumFE->AddFormatEtc(aFE);
 }
 
-//-----------------------------------------------------
-// Registers a the DataFlavor/FE pair
-//-----------------------------------------------------
+// We accept ownership of the nsDataObj which we free on destruction
 void nsDataObjCollection::AddDataObject(IDataObject * aDataObj)
 {
-  mDataObjects.AppendElement(aDataObj);
+  nsDataObj* dataObj = reinterpret_cast<nsDataObj*>(aDataObj);
+  mDataObjects.AppendElement(dataObj);
+}
+
+// IAsyncOperation methods
+STDMETHODIMP nsDataObjCollection::EndOperation(HRESULT hResult,
+                                               IBindCtx *pbcReserved,
+                                               DWORD dwEffects)
+{
+  mIsInOperation = FALSE;
+  Release();
+  return S_OK;
+}
+
+STDMETHODIMP nsDataObjCollection::GetAsyncMode(BOOL *pfIsOpAsync)
+{
+  if (!pfIsOpAsync)
+    return E_FAIL;
+
+  *pfIsOpAsync = mIsAsyncMode;
+
+  return S_OK;
+}
+
+STDMETHODIMP nsDataObjCollection::InOperation(BOOL *pfInAsyncOp)
+{
+  if (!pfInAsyncOp)
+    return E_FAIL;
+
+  *pfInAsyncOp = mIsInOperation;
+
+  return S_OK;
+}
+
+STDMETHODIMP nsDataObjCollection::SetAsyncMode(BOOL fDoOpAsync)
+{
+  mIsAsyncMode = fDoOpAsync;
+  return S_OK;
+}
+
+STDMETHODIMP nsDataObjCollection::StartOperation(IBindCtx *pbcReserved)
+{
+  mIsInOperation = TRUE;
+  return S_OK;
+}
+
+// Methods for getting data
+HRESULT nsDataObjCollection::GetFile(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
+{
+  STGMEDIUM workingmedium;
+  FORMATETC fe = *pFE;
+  HGLOBAL hGlobalMemory;
+  HRESULT hr;
+  // Make enough space for the header and the trailing null
+  PRUint32 buffersize = sizeof(DROPFILES) + sizeof(PRUnichar);
+  PRUint32 alloclen = 0;
+  PRUnichar* realbuffer;
+  nsAutoString filename;
+  
+  hGlobalMemory = GlobalAlloc(GHND, buffersize);
+
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    nsDataObj* dataObj = mDataObjects.ElementAt(i);
+    hr = dataObj->GetData(&fe, &workingmedium);
+    if (hr != S_OK) {
+      switch (hr) {
+      case DV_E_FORMATETC:
+        continue;
+      default:
+        return hr;
+      }
+    }
+    // Now we need to pull out the filename
+    PRUnichar* buffer = (PRUnichar*)GlobalLock(workingmedium.hGlobal);
+    if (buffer == NULL)
+      return E_FAIL;
+    buffer += sizeof(DROPFILES)/sizeof(PRUnichar);
+    filename = buffer;
+    GlobalUnlock(workingmedium.hGlobal);
+    ReleaseStgMedium(&workingmedium);
+    // Now put the filename into our buffer
+    alloclen = (filename.Length() + 1) * sizeof(PRUnichar);
+    hGlobalMemory = ::GlobalReAlloc(hGlobalMemory, buffersize + alloclen, GHND);
+    if (hGlobalMemory == NULL)
+      return E_FAIL;
+    realbuffer = (PRUnichar*)((char*)GlobalLock(hGlobalMemory) + buffersize);
+    if (!realbuffer)
+      return E_FAIL;
+    realbuffer--; // Overwrite the preceding null
+    memcpy(realbuffer, filename.get(), alloclen);
+    GlobalUnlock(hGlobalMemory);
+    buffersize += alloclen;
+  }
+  // We get the last null (on the double null terminator) for free since we used
+  // the zero memory flag when we allocated.  All we need to do is fill the
+  // DROPFILES structure
+  DROPFILES* df = (DROPFILES*)GlobalLock(hGlobalMemory);
+  if (!df)
+    return E_FAIL;
+  df->pFiles = sizeof(DROPFILES); //Offset to start of file name string
+  df->fNC    = 0;
+  df->pt.x   = 0;
+  df->pt.y   = 0;
+  df->fWide  = TRUE; // utf-16 chars
+  GlobalUnlock(hGlobalMemory);
+  // Finally fill out the STGMEDIUM struct
+  pSTM->tymed = TYMED_HGLOBAL;
+  pSTM->pUnkForRelease = NULL; // Caller gets to free the data
+  pSTM->hGlobal = hGlobalMemory;
+  return S_OK;
+}
+
+HRESULT nsDataObjCollection::GetText(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
+{
+  STGMEDIUM workingmedium;
+  FORMATETC fe = *pFE;
+  HGLOBAL hGlobalMemory;
+  HRESULT hr;
+  PRUint32 buffersize = 1;
+  PRUint32 alloclen = 0;
+
+  hGlobalMemory = GlobalAlloc(GHND, buffersize);
+
+  if (pFE->cfFormat == CF_TEXT) {
+    nsCAutoString text;
+    for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+      nsDataObj* dataObj = mDataObjects.ElementAt(i);
+      hr = dataObj->GetData(&fe, &workingmedium);
+      if (hr != S_OK) {
+        switch (hr) {
+        case DV_E_FORMATETC:
+          continue;
+        default:
+          return hr;
+        }
+      }
+      // Now we need to pull out the text
+      char* buffer = (char*)GlobalLock(workingmedium.hGlobal);
+      if (buffer == NULL)
+        return E_FAIL;
+      text = buffer;
+      GlobalUnlock(workingmedium.hGlobal);
+      ReleaseStgMedium(&workingmedium);
+      // Now put the text into our buffer
+      alloclen = text.Length();
+      hGlobalMemory = ::GlobalReAlloc(hGlobalMemory, buffersize + alloclen,
+                                      GHND);
+      if (hGlobalMemory == NULL)
+        return E_FAIL;
+      buffer = ((char*)GlobalLock(hGlobalMemory) + buffersize);
+      if (!buffer)
+        return E_FAIL;
+      buffer--; // Overwrite the preceding null
+      memcpy(buffer, text.get(), alloclen);
+      GlobalUnlock(hGlobalMemory);
+      buffersize += alloclen;
+    }
+    pSTM->tymed = TYMED_HGLOBAL;
+    pSTM->pUnkForRelease = NULL; // Caller gets to free the data
+    pSTM->hGlobal = hGlobalMemory;
+    return S_OK;
+  }
+  if (pFE->cfFormat == CF_UNICODETEXT) {
+    buffersize = sizeof(PRUnichar);
+    nsAutoString text;
+    for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+      nsDataObj* dataObj = mDataObjects.ElementAt(i);
+      hr = dataObj->GetData(&fe, &workingmedium);
+      if (hr != S_OK) {
+        switch (hr) {
+        case DV_E_FORMATETC:
+          continue;
+        default:
+          return hr;
+        }
+      }
+      // Now we need to pull out the text
+      PRUnichar* buffer = (PRUnichar*)GlobalLock(workingmedium.hGlobal);
+      if (buffer == NULL)
+        return E_FAIL;
+      text = buffer;
+      GlobalUnlock(workingmedium.hGlobal);
+      ReleaseStgMedium(&workingmedium);
+      // Now put the text into our buffer
+      alloclen = text.Length() * sizeof(PRUnichar);
+      hGlobalMemory = ::GlobalReAlloc(hGlobalMemory, buffersize + alloclen,
+                                      GHND);
+      if (hGlobalMemory == NULL)
+        return E_FAIL;
+      buffer = (PRUnichar*)((char*)GlobalLock(hGlobalMemory) + buffersize);
+      if (!buffer)
+        return E_FAIL;
+      buffer--; // Overwrite the preceding null
+      memcpy(buffer, text.get(), alloclen);
+      GlobalUnlock(hGlobalMemory);
+      buffersize += alloclen;
+    }
+    pSTM->tymed = TYMED_HGLOBAL;
+    pSTM->pUnkForRelease = NULL; // Caller gets to free the data
+    pSTM->hGlobal = hGlobalMemory;
+    return S_OK;
+  }
+
+  return E_FAIL;
+}
+
+HRESULT nsDataObjCollection::GetFileDescriptors(LPFORMATETC pFE,
+                                                LPSTGMEDIUM pSTM)
+{
+  STGMEDIUM workingmedium;
+  FORMATETC fe = *pFE;
+  HGLOBAL hGlobalMemory;
+  HRESULT hr;
+  PRUint32 buffersize = sizeof(FILEGROUPDESCRIPTOR);
+  PRUint32 alloclen = sizeof(FILEDESCRIPTOR);
+
+  hGlobalMemory = GlobalAlloc(GHND, buffersize);
+
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    nsDataObj* dataObj = mDataObjects.ElementAt(i);
+    hr = dataObj->GetData(&fe, &workingmedium);
+    if (hr != S_OK) {
+      switch (hr) {
+      case DV_E_FORMATETC:
+        continue;
+      default:
+        return hr;
+      }
+    }
+    // Now we need to pull out the filedescriptor
+    FILEDESCRIPTOR* buffer =
+     (FILEDESCRIPTOR*)((char*)GlobalLock(workingmedium.hGlobal) + sizeof(UINT));
+    if (buffer == NULL)
+      return E_FAIL;
+    hGlobalMemory = ::GlobalReAlloc(hGlobalMemory, buffersize + alloclen, GHND);
+    if (hGlobalMemory == NULL)
+      return E_FAIL;
+    FILEGROUPDESCRIPTOR* realbuffer =
+                                (FILEGROUPDESCRIPTOR*)GlobalLock(hGlobalMemory);
+    if (!realbuffer)
+      return E_FAIL;
+    FILEDESCRIPTOR* copyloc = (FILEDESCRIPTOR*)((char*)realbuffer + buffersize);
+    memcpy(copyloc, buffer, sizeof(FILEDESCRIPTOR));
+    realbuffer->cItems++;
+    GlobalUnlock(hGlobalMemory);
+    GlobalUnlock(workingmedium.hGlobal);
+    ReleaseStgMedium(&workingmedium);
+    buffersize += alloclen;
+  }
+  pSTM->tymed = TYMED_HGLOBAL;
+  pSTM->pUnkForRelease = NULL; // Caller gets to free the data
+  pSTM->hGlobal = hGlobalMemory;
+  return S_OK;
+}
+
+HRESULT nsDataObjCollection::GetFileContents(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
+{
+  ULONG num = 0;
+  ULONG numwanted = (pFE->lindex == -1) ? 0 : pFE->lindex;
+  FORMATETC fEtc = *pFE;
+  fEtc.lindex = -1;  // We're lying to the data object so it thinks it's alone
+
+  // The key for this data type is to figure out which data object the index
+  // corresponds to and then just pass it along
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    nsDataObj* dataObj = mDataObjects.ElementAt(i);
+    if (dataObj->QueryGetData(&fEtc) != S_OK)
+      continue;
+    if (num == numwanted)
+      return dataObj->GetData(pFE, pSTM);
+    numwanted++;
+  }
+  return DV_E_LINDEX;
+}
+
+HRESULT nsDataObjCollection::GetFirstSupporting(LPFORMATETC pFE,
+                                                LPSTGMEDIUM pSTM)
+{
+  // There is no way to pass more than one of this, so just find the first data
+  // object that supports it and pass it along
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    if (mDataObjects.ElementAt(i)->QueryGetData(pFE) == S_OK)
+      return mDataObjects.ElementAt(i)->GetData(pFE, pSTM);
+  }
+  return DV_E_FORMATETC;
 }
