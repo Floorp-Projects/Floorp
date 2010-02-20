@@ -117,7 +117,7 @@ ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif
 
 ifdef MOZ_DFB
@@ -133,7 +133,7 @@ CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 #CSRCS = cairo-xlib-utils.c
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
