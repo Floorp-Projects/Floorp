@@ -12,7 +12,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=506856
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=506856">Mozilla Bug 506856</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg"
+     width="100px" height="100px" viewBox="0 0 100 100">
+  <!-- Note: Need a viewBox on the SVG element, or else our percent-length
+       basis will be '0' (based off of the viewport width, which is 0 in this
+       case since we're in a display:none iframe. We use viewport width because
+       the lack of a viewbox forces us into the not-mViewBox::IsValid() case of
+       nsSVGSVGElement::GetLength).
+
+       And we don't want a percent-length basis of 0, because then when we call
+       convertToSpecifiedUnits to convert out of percent units, we divide by 0
+       and get unexpected results.
+    -->
   <circle cx="-100" cy="-100" r="15" fill="blue" id="circle">
     <animate attributeName="cx" from="0" to="100" dur="4s" begin="1s; 10s"
       fill="freeze" id="animate"/>

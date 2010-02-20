@@ -114,10 +114,9 @@ nsSMILCompositor::ComposeAttribute()
   }
   UpdateCachedBaseValue(sandwichResultValue);
 
-  // if (!mForceCompositing) {
-  //   XXXdholbert Still need to enable this optimization
-  //   return;
-  // }
+  if (!mForceCompositing) {
+    return;
+  }
 
   // FIFTH: Compose animation functions
   PRUint32 length = mAnimationFunctions.Length();

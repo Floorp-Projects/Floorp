@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+       document.documentElement.pauseAnimations();
+       document.documentElement.setCurrentTime(1);
+       setTimeAndSnapshot(2, false);">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!--
+    Same as in inactivate-with-active-unchanged-1.svg, but with a frozen
+    animation.
+  -->
+  <rect x="15" y="15" width="200" height="200" fill="orange">
+    <set attributeName="fill" to="blue" begin="0s" dur="0.5s" fill="freeze"/>
+    <set attributeName="fill" to="red"  begin="1s" dur="0.5s"/>
+  </rect>
+</svg>
