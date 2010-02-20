@@ -67,16 +67,16 @@ LINE: while (<>) {
         delete($classes{$obj});
     }
     elsif ($op eq 'Ctor') {
-	# Example: <PStreamNotifyParent> 0x08880BD0 8 Ctor (20)
+        # Example: <PStreamNotifyParent> 0x08880BD0 8 Ctor (20)
 
-	$allocs{$obj} = ++$counter{$class};
-	$classes{$obj} = $class;
+        $allocs{$obj} = ++$counter{$class};
+        $classes{$obj} = $class;
     }
     elsif ($op eq 'Dtor') {
-	# Example: <PStreamNotifyParent> 0x08880BD0 8 Dtor (20)
+        # Example: <PStreamNotifyParent> 0x08880BD0 8 Dtor (20)
 
-	delete($allocs{$obj});
-	delete($classes{$obj});
+        delete($allocs{$obj});
+        delete($classes{$obj});
     }
 }
 
