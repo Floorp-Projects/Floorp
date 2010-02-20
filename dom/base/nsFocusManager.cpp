@@ -712,6 +712,9 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   if (mActiveWindow != window)
     return NS_OK;
 
+  // clear the mouse capture as the active window has changed
+  nsIPresShell::SetCapturingContent(nsnull, 0);
+
   // inform the DOM window that it has deactivated, so that the active
   // attribute is updated on the window
   window->ActivateOrDeactivate(PR_FALSE);

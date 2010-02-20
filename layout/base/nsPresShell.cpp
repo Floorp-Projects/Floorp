@@ -6125,31 +6125,44 @@ PresShell::HandleEvent(nsIView         *aView,
 
     PRBool captureRetarget = PR_FALSE;
     if (capturingContent) {
-      captureRetarget = gCaptureInfo.mRetargetToElement;
-      if (!captureRetarget) {
-        // A check was already done above to ensure that capturingContent is
-        // in this presshell, so GetPrimaryFrame can just be called directly.
-        NS_ASSERTION(capturingContent->GetCurrentDoc() == GetDocument(),
-                     "Unexpected document");
-        nsIFrame* captureFrame = capturingContent->GetPrimaryFrame();
-        if (captureFrame) {
-          if (capturingContent->Tag() == nsGkAtoms::select &&
-              capturingContent->IsHTML()) {
-            // a dropdown <select> has a child in its selectPopupList and we should
-            // capture on that instead.
-            nsIFrame* childFrame = captureFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
-            if (childFrame) {
-              captureFrame = childFrame;
+      // If a capture is active, determine if the docshell is visible. If not,
+      // clear the capture and target the mouse event normally instead. This
+      // would occur if the mouse button is held down while a tab change occurs.
+      // If the docshell is visible, look for a scrolling container.
+      PRBool vis;
+      nsCOMPtr<nsISupports> supports = mPresContext->GetContainer();
+      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(supports));
+      if (baseWin && NS_SUCCEEDED(baseWin->GetVisibility(&vis)) && vis) {
+        captureRetarget = gCaptureInfo.mRetargetToElement;
+        if (!captureRetarget) {
+          // A check was already done above to ensure that capturingContent is
+          // in this presshell.
+          NS_ASSERTION(capturingContent->GetCurrentDoc() == GetDocument(),
+                       "Unexpected document");
+          nsIFrame* captureFrame = capturingContent->GetPrimaryFrame();
+          if (captureFrame) {
+            if (capturingContent->Tag() == nsGkAtoms::select &&
+                capturingContent->IsHTML()) {
+              // a dropdown <select> has a child in its selectPopupList and we should
+              // capture on that instead.
+              nsIFrame* childFrame = captureFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
+              if (childFrame) {
+                captureFrame = childFrame;
+              }
+            }
+
+            // scrollable frames should use the scrolling container as
+            // the root instead of the document
+            nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
+            if (scrollFrame) {
+              frame = scrollFrame->GetScrolledFrame();
             }
           }
-
-          // scrollable frames should use the scrolling container as
-          // the root instead of the document
-          nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
-          if (scrollFrame) {
-            frame = scrollFrame->GetScrolledFrame();
-          }
         }
+      }
+      else {
+        ClearMouseCapture(nsnull);
+        capturingContent = nsnull;
       }
     }
 
@@ -6181,7 +6194,7 @@ PresShell::HandleEvent(nsIView         *aView,
          !nsContentUtils::ContentIsCrossDocDescendantOf(targetFrame->GetContent(),
                                                         capturingContent))) {
       // A check was already done above to ensure that capturingContent is
-      // in this presshell, so GetPrimaryFrame can just be called directly.
+      // in this presshell.
       NS_ASSERTION(capturingContent->GetCurrentDoc() == GetDocument(),
                    "Unexpected document");
       nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
