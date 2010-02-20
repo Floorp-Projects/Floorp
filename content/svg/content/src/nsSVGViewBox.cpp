@@ -284,7 +284,8 @@ nsresult
 nsSVGViewBox::SMILViewBox
             ::ValueFromString(const nsAString& aStr,
                               const nsISMILAnimationElement* /*aSrcElement*/,
-                              nsSMILValue& aValue) const
+                              nsSMILValue& aValue,
+                              PRBool& aCanCache) const
 {
   nsSVGViewBoxRect viewBox;
   nsresult res = ToSVGViewBoxRect(aStr, &viewBox);
@@ -298,6 +299,7 @@ nsSVGViewBox::SMILViewBox
   }
   *static_cast<nsSVGViewBoxRect*>(val.mU.mPtr) = viewBox;
   aValue = val;
+  aCanCache = PR_TRUE;
   
   return NS_OK;
 }

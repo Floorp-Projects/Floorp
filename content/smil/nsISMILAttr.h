@@ -67,12 +67,17 @@ public:
    *                    provided additional context data such as for
    *                    animateTransform where the 'type' attribute is needed to
    *                    parse the value.
-   * @param aValue      Outparam for storing the parsed value.
+   * @param[out] aValue Outparam for storing the parsed value.
+   * @param[out] aCanCache Outparam for indicating whether the parsed value
+   *                       can be reused in future samples -- i.e. whether the
+   *                       given string is always guaranteed to compute
+   *                       to the same nsSMILValue.
    * @return NS_OK on success or an error code if creation failed.
    */
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
-                                   nsSMILValue& aValue) const = 0;
+                                   nsSMILValue& aValue,
+                                   PRBool& aCanCache) const = 0;
 
   /**
    * Gets the underlying value of this attribute.

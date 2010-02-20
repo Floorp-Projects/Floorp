@@ -345,7 +345,8 @@ nsresult
 nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
                         ::ValueFromString(const nsAString& aStr,
                                           const nsISMILAnimationElement* /*aSrcElement*/,
-                                          nsSMILValue& aValue) const
+                                          nsSMILValue& aValue,
+                                          PRBool& aCanCache) const
 {
   PreserveAspectRatio par;
   nsresult res = ToPreserveAspectRatio(aStr, &par);
@@ -354,6 +355,7 @@ nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
   nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
+  aCanCache = PR_TRUE;
   return NS_OK;
 }
 
