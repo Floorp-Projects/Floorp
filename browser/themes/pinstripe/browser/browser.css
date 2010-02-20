@@ -357,6 +357,7 @@ toolbarbutton.bookmark-item-microsummarized {
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-1,
+#restore-button,
 #back-forward-dropmarker {
   min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
@@ -372,7 +373,8 @@ toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text {
   margin: 4px;
 }
 
-#nav-bar .toolbarbutton-1 {
+#nav-bar .toolbarbutton-1,
+#restore-button {
   padding-top: 0;
   padding-bottom: 0;
 }
