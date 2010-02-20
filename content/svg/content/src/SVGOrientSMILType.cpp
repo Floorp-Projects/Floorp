@@ -78,6 +78,19 @@ SVGOrientSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
+PRBool
+SVGOrientSMILType::IsEqual(const nsSMILValue& aLeft,
+                           const nsSMILValue& aRight) const
+{
+  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+
+  return
+    aLeft.mU.mOrient.mAngle == aRight.mU.mOrient.mAngle &&
+    aLeft.mU.mOrient.mUnit == aRight.mU.mOrient.mUnit &&
+    aLeft.mU.mOrient.mOrientType == aRight.mU.mOrient.mOrientType;
+}
+
 nsresult
 SVGOrientSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        PRUint32 aCount) const

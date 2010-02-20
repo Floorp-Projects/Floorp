@@ -70,6 +70,16 @@ nsSMILFloatType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
+PRBool
+nsSMILFloatType::IsEqual(const nsSMILValue& aLeft,
+                         const nsSMILValue& aRight) const
+{
+  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+
+  return aLeft.mU.mDouble == aRight.mU.mDouble;
+}
+
 nsresult
 nsSMILFloatType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                      PRUint32 aCount) const

@@ -54,6 +54,7 @@ struct nsSVGViewBoxRect
     x(aX), y(aY), width(aWidth), height(aHeight) {}
   nsSVGViewBoxRect(const nsSVGViewBoxRect& rhs) :
     x(rhs.x), y(rhs.y), width(rhs.width), height(rhs.height) {}
+  PRBool operator==(const nsSVGViewBoxRect& aOther) const;
 };
 
 class nsSVGViewBox

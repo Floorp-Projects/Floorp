@@ -49,6 +49,7 @@
 #include "nsSVGElement.h"
 #include "nsISVGValue.h"
 #include "prdtoa.h"
+#include "prlog.h"
 
 nsresult
 nsSVGTransformSMILAttr::ValueFromString(const nsAString& aStr,
@@ -138,6 +139,9 @@ nsSVGTransformSMILAttr::ParseValue(const nsAString& aSpec,
                                    nsSMILValue& aResult)
 {
   NS_ASSERTION(aResult.IsNull(), "Unexpected type for SMIL value");
+
+  // nsSVGSMILTransform constructor should be expecting array with 3 params
+  PR_STATIC_ASSERT(nsSVGSMILTransform::NUM_SIMPLE_PARAMS == 3);
 
   float params[3] = { 0.f };
   PRInt32 numParsed = ParseParameterList(aSpec, params, 3);
@@ -253,6 +257,8 @@ nsSVGTransformSMILAttr::AppendSVGTransformToSMILValue(
   if (NS_FAILED(rv) || !matrix)
     return NS_ERROR_FAILURE;
 
+  // nsSVGSMILTransform constructor should be expecting array with 3 params
+  PR_STATIC_ASSERT(nsSVGSMILTransform::NUM_SIMPLE_PARAMS == 3);
   float params[3] = { 0.f };
   nsSVGSMILTransform::TransformType transformType;
 
@@ -304,6 +310,9 @@ nsSVGTransformSMILAttr::AppendSVGTransformToSMILValue(
 
     case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX:
       {
+        // nsSVGSMILTransform constructor for TRANSFORM_MATRIX type should be
+        // expecting array with 6 params
+        PR_STATIC_ASSERT(nsSVGSMILTransform::NUM_STORED_PARAMS == 6);
         float mx[6];
         matrix->GetA(&mx[0]);
         matrix->GetB(&mx[1]);

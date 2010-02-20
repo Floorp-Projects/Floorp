@@ -90,6 +90,35 @@ nsSVGTransformSMILType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
+PRBool
+nsSVGTransformSMILType::IsEqual(const nsSMILValue& aLeft,
+                                const nsSMILValue& aRight) const
+{
+  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aLeft.mType == this, "Unexpected SMIL type");
+
+  const TransformArray& leftArr
+    (*static_cast<const TransformArray*>(aLeft.mU.mPtr));
+  const TransformArray& rightArr
+    (*static_cast<const TransformArray*>(aRight.mU.mPtr));
+
+  // If array-lengths don't match, we're trivially non-equal.
+  if (leftArr.Length() != rightArr.Length()) {
+    return PR_FALSE;
+  }
+
+  // Array-lengths match -- check each array-entry for equality.
+  PRUint32 length = leftArr.Length(); // == rightArr->Length(), if we get here
+  for (PRUint32 i = 0; i < length; ++i) {
+    if (leftArr[i] != rightArr[i]) {
+      return PR_FALSE;
+    }
+  }
+  
+  // Found no differences.
+  return PR_TRUE;
+}
+
 nsresult
 nsSVGTransformSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                             PRUint32 aCount) const
