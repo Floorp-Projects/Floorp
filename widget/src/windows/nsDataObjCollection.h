@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,7 @@
 #ifndef _NSDATAOBJCOLLECTION_H_
 #define _NSDATAOBJCOLLECTION_H_
 
-#define INITGUID // needed for initializing the IID_IDataObjCollection GUID
+#include <initguid.h>
 
 #ifdef __MINGW32__
 #include <unknwn.h>
@@ -50,28 +51,11 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsDataObj.h"
 
 class CEnumFormatEtc;
-class nsITransferable;
 
 #define MULTI_MIME "Mozilla/IDataObjectCollectionFormat"
-
-#if NOT_YET
-// {6e99c280-d820-11d3-bb6f-bbf26bfe623c}
-EXTERN_C GUID CDECL IID_DATA_OBJ_COLLECTION = 
-    { 0x6e99c280, 0xd820, 0x11d3, { 0xbb, 0x6f, 0xbb, 0xf2, 0x6b, 0xfe, 0x62, 0x3c } };
-
-
-class nsPIDataObjCollection : IUnknown
-{
-public:
-
-  STDMETHODIMP AddDataObject(IDataObject * aDataObj) = 0;
-  STDMETHODIMP GetNumDataObjects(PRInt32* outNum) = 0;
-  STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) = 0;
-
-};
-#endif
 
 // {25589C3E-1FAC-47b9-BF43-CAEA89B79533}
 DEFINE_GUID(IID_IDataObjCollection, 
@@ -90,118 +74,111 @@ public:
  * associated with instances via SetDragDrop().
  */
  
-class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, public nsPIDataObjCollection
+class nsDataObjCollection : public nsIDataObjCollection, public nsDataObj
 {
-	public: // construction, destruction
-		nsDataObjCollection();
-		~nsDataObjCollection();
+  public:
+    nsDataObjCollection();
+    ~nsDataObjCollection();
 
-	public: // IUnknown methods - see iunknown.h for documentation
-		STDMETHODIMP_(ULONG) AddRef        ();
-		STDMETHODIMP 			QueryInterface(REFIID, void**);
-		STDMETHODIMP_(ULONG) Release       ();
+  public: // IUnknown methods - see iunknown.h for documentation
+    STDMETHODIMP_(ULONG) AddRef        ();
+    STDMETHODIMP       QueryInterface(REFIID, void**);
+    STDMETHODIMP_(ULONG) Release       ();
 
-	public: // DataGet and DataSet helper methods
-		virtual HRESULT AddSetFormat(FORMATETC&  FE);
-		virtual HRESULT AddGetFormat(FORMATETC&  FE);
+  public: // DataGet and DataSet helper methods
+    virtual HRESULT AddSetFormat(FORMATETC&  FE);
+    virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
-		virtual HRESULT GetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
-
-		virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
+    virtual HRESULT GetFile(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    virtual HRESULT GetText(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    virtual HRESULT GetFileDescriptors(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    virtual HRESULT GetFileContents(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    virtual HRESULT GetFirstSupporting(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
 
     // support for clipboard
-    void AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE);
-    void SetTransferable(nsITransferable * aTransferable);
-
-#if NOT_YET
-    // from nsPIDataObjCollection
-    STDMETHODIMP AddDataObject(IDataObject * aDataObj);
-    STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects.Length(); }
-    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = mDataObjects.SafeElementAt(aItem, nsRefPtr<IDataObject>()); }
-#endif
+    void AddDataFlavor(const char * aDataFlavor, LPFORMATETC aFE);
 
     // from nsPIDataObjCollection
     void AddDataObject(IDataObject * aDataObj);
     PRInt32 GetNumDataObjects() { return mDataObjects.Length(); }
-    IDataObject* GetDataObjectAt(PRUint32 aItem) { return mDataObjects.SafeElementAt(aItem, nsRefPtr<IDataObject>()); }
+    nsDataObj* GetDataObjectAt(PRUint32 aItem)
+            { return mDataObjects.SafeElementAt(aItem, nsRefPtr<nsDataObj>()); }
 
-		// Return the registered OLE class ID of this object's CfDataObj.
-		CLSID GetClassID() const;
+    // Return the registered OLE class ID of this object's CfDataObj.
+    CLSID GetClassID() const;
 
-	public: // IDataObject methods - these are general comments. see CfDragDrop
-			  // for overriding behavior
+  public:
+    // Store data in pSTM according to the format specified by pFE, if the
+    // format is supported (supported formats are specified in CfDragDrop::
+    // GetFormats) and return NOERROR; otherwise return DATA_E_FORMATETC. It
+    // is the callers responsibility to free pSTM if NOERROR is returned.
+    STDMETHODIMP GetData  (LPFORMATETC pFE, LPSTGMEDIUM pSTM);
 
-		// Store data in pSTM according to the format specified by pFE, if the
-		// format is supported (supported formats are specified in CfDragDrop::
-		// GetFormats) and return NOERROR; otherwise return DATA_E_FORMATETC. It
-		// is the callers responsibility to free pSTM if NOERROR is returned.
-		STDMETHODIMP GetData	(LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    // Similar to GetData except that the caller allocates the structure
+    // referenced by pSTM.
+    STDMETHODIMP GetDataHere (LPFORMATETC pFE, LPSTGMEDIUM pSTM);
 
-		// Similar to GetData except that the caller allocates the structure
-		// referenced by pSTM.
-		STDMETHODIMP GetDataHere (LPFORMATETC pFE, LPSTGMEDIUM pSTM);
+    // Returns S_TRUE if this object supports the format specified by pSTM,
+    // S_FALSE otherwise.
+    STDMETHODIMP QueryGetData (LPFORMATETC pFE);
 
-		// Returns S_TRUE if this object supports the format specified by pSTM,
-		// S_FALSE otherwise.
-		STDMETHODIMP QueryGetData (LPFORMATETC pFE);
+    // Set pCanonFE to the canonical format of pFE if one exists and return
+    // NOERROR, otherwise return DATA_S_SAMEFORMATETC. A canonical format
+    // implies an identical rendering.
+    STDMETHODIMP GetCanonicalFormatEtc (LPFORMATETC pFE, LPFORMATETC pCanonFE);
 
-		// Set pCanonFE to the canonical format of pFE if one exists and return
-		// NOERROR, otherwise return DATA_S_SAMEFORMATETC. A canonical format
-		// implies an identical rendering.
-		STDMETHODIMP GetCanonicalFormatEtc (LPFORMATETC pFE, LPFORMATETC pCanonFE);
+    // Set this objects data according to the format specified by pFE and
+    // the storage medium specified by pSTM and return NOERROR, if the format
+    // is supported. If release is TRUE this object must release the storage
+    // associated with pSTM.
+    STDMETHODIMP SetData  (LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL release);
 
-		// Set this objects data according to the format specified by pFE and
-		// the storage medium specified by pSTM and return NOERROR, if the format
-		// is supported. If release is TRUE this object must release the storage
-		// associated with pSTM.
-		STDMETHODIMP SetData	(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL release);
+    // Set ppEnum to an IEnumFORMATETC object which will iterate all of the
+    // data formats that this object supports. direction is either DATADIR_GET
+    // or DATADIR_SET.
+    STDMETHODIMP EnumFormatEtc  (DWORD direction, LPENUMFORMATETC* ppEnum);
 
-		// Set ppEnum to an IEnumFORMATETC object which will iterate all of the
-		// data formats that this object supports. direction is either DATADIR_GET
-		// or DATADIR_SET.
-		STDMETHODIMP EnumFormatEtc	(DWORD direction, LPENUMFORMATETC* ppEnum);
+    // Set up an advisory connection to this object based on the format specified
+    // by pFE, flags, and the pAdvise. Set pConn to the established advise
+    // connection.
+    STDMETHODIMP DAdvise  (LPFORMATETC pFE, DWORD flags, LPADVISESINK pAdvise,
+                   DWORD* pConn);
 
-		// Set up an advisory connection to this object based on the format specified
-		// by pFE, flags, and the pAdvise. Set pConn to the established advise
-		// connection.
-		STDMETHODIMP DAdvise	(LPFORMATETC pFE, DWORD flags, LPADVISESINK pAdvise,
-									 DWORD* pConn);
+    // Turn off advising of a previous call to DAdvise which set pConn.
+    STDMETHODIMP DUnadvise (DWORD pConn);
 
-		// Turn off advising of a previous call to DAdvise which set pConn.
-		STDMETHODIMP DUnadvise (DWORD pConn);
-
-		// Set ppEnum to an IEnumSTATDATA object which will iterate over the
-		// existing objects which have established advisory connections to this
+    // Set ppEnum to an IEnumSTATDATA object which will iterate over the
+    // existing objects which have established advisory connections to this
       // object.
-		STDMETHODIMP EnumDAdvise (LPENUMSTATDATA *ppEnum);
+    STDMETHODIMP EnumDAdvise (LPENUMSTATDATA *ppEnum);
 
-	public: // other methods
+  public:
+    // Set the adapter to dragDrop 
+    //void SetDragDrop(CfDragDrop& dragDrop);
 
-		// Set the adapter to dragDrop 
-		//void SetDragDrop(CfDragDrop& dragDrop);
+    // Return the adapter
+    //CfDragDrop& GetDragDrop() const;
+        
+    // IAsyncOperation methods
+    STDMETHOD(EndOperation)(HRESULT hResult, IBindCtx *pbcReserved,
+                            DWORD dwEffects);
+    STDMETHOD(GetAsyncMode)(BOOL *pfIsOpAsync);
+    STDMETHOD(InOperation)(BOOL *pfInAsyncOp);
+    STDMETHOD(SetAsyncMode)(BOOL fDoOpAsync);
+    STDMETHOD(StartOperation)(IBindCtx *pbcReserved);
 
-		// Return the adapter
-		//CfDragDrop& GetDragDrop() const;
-
-	protected:
+  protected:
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;
 
-		ULONG        m_cRef;              // the reference count
+    ULONG m_cRef;              // the reference count
 
-    nsTArray<nsString> mDataFlavors;
+    // nsDataObjCollection owns and ref counts CEnumFormatEtc
+    CEnumFormatEtc   * m_enumFE;
 
-    nsITransferable  * mTransferable; // nsDataObjCollection owns and ref counts nsITransferable, 
-                                      // the nsITransferable does know anything about the nsDataObjCollection
-
-    CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
-                                      // nsDataObjCollection owns and ref counts CEnumFormatEtc,
-
-    nsTArray<nsRefPtr<IDataObject> > mDataObjects;
+    nsTArray<nsRefPtr<nsDataObj> > mDataObjects;
+    
+    BOOL mIsAsyncMode;
+    BOOL mIsInOperation;
 };
-
 
 #endif  //
