@@ -172,7 +172,8 @@ nsSVGNumber2::ToSMILAttr(nsSVGElement *aSVGElement)
 nsresult
 nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
                                           const nsISMILAnimationElement* /*aSrcElement*/,
-                                          nsSMILValue& aValue) const
+                                          nsSMILValue& aValue,
+                                          PRBool& aCanCache) const
 {
   float value;
 
@@ -184,6 +185,7 @@ nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&nsSMILFloatType::sSingleton);
   val.mU.mDouble = value;
   aValue = val;
+  aCanCache = PR_TRUE;
 
   return NS_OK;
 }

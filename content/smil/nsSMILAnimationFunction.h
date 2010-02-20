@@ -321,7 +321,7 @@ protected:
                                      nsAString& aResult) const;
 
   PRBool   ParseAttr(nsIAtom* aAttName, const nsISMILAttr& aSMILAttr,
-                     nsSMILValue& aResult) const;
+                     nsSMILValue& aResult, PRBool& aCanCacheSoFar) const;
   nsresult GetValues(const nsISMILAttr& aSMILAttr,
                      nsSMILValueArray& aResult);
   void     UpdateValuesArray();
@@ -372,6 +372,7 @@ protected:
   PRUint32                      mRepeatIteration;
   PRPackedBool                  mLastValue;
   PRPackedBool                  mHasChanged;
+  PRPackedBool                  mValueNeedsReparsingEverySample;
 
   nsSMILTime                    mBeginTime; // document time
 
