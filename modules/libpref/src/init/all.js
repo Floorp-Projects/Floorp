@@ -1226,6 +1226,14 @@ pref("dom.ipc.plugins.timeoutSecs", 10);
 pref("dom.ipc.plugins.timeoutSecs", 0);
 #endif
 
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+// Linux plugins using Xt instead of Xembed don't work out-of-process yet.
+pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
+pref("dom.ipc.plugins.enabled.nppdf.so", false);
+#endif
+#endif
+
 pref("svg.enabled", true);
 pref("svg.smil.enabled", true);
 
