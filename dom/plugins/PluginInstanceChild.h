@@ -182,6 +182,10 @@ public:
 
 private:
 
+    NPError
+    InternalGetNPObjectForValue(NPNVariable aValue,
+                                NPObject** aObject);
+
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
     bool CreatePluginWindow();
@@ -217,6 +221,10 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+
+    // Cached scriptable actors to avoid IPC churn
+    PluginScriptableObjectChild* mCachedWindowActor;
+    PluginScriptableObjectChild* mCachedElementActor;
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
