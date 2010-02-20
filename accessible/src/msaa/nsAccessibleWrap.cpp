@@ -1605,7 +1605,7 @@ nsAccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
   *ppTInfo = NULL;
 
   if (iTInfo != 0)
-    return ResultFromScode(DISP_E_BADINDEX);
+    return DISP_E_BADINDEX;
 
   ITypeInfo * typeInfo = GetTI(lcid);
   if (!typeInfo)
