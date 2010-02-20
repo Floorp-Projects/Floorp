@@ -107,6 +107,12 @@ nsSMILCompositor::ComposeAttribute()
     // Target attribute not found (or, out of memory)
     return;
   }
+  if (mAnimationFunctions.IsEmpty()) {
+    // No active animation functions. (We can still have a nsSMILCompositor in
+    // that case if an animation function has *just* become inactive)
+    smilAttr->ClearAnimValue();
+    return;
+  }
 
   // SECOND: Sort the animationFunctions, to prepare for compositing.
   nsSMILAnimationFunction::Comparator comparator;
@@ -114,7 +120,7 @@ nsSMILCompositor::ComposeAttribute()
 
   // THIRD: Step backwards through animation functions to find out
   // which ones we actually care about.
-  PRBool changed = PR_FALSE;
+  PRBool changed = mForceCompositing;
   PRUint32 length = mAnimationFunctions.Length();
   PRUint32 i;
   for (i = length; i > 0; --i) {

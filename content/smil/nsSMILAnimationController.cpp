@@ -566,14 +566,27 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
   nsSMILAnimationFunction& func = aElement->AnimationFunction();
 
   // Only add active animation functions. If there are no active animations
-  // targetting an attribute, no compositor will be created and any previously
+  // targeting an attribute, no compositor will be created and any previously
   // applied animations will be cleared.
   if (func.IsActiveOrFrozen()) {
+    // Look up the compositor for our target, & add our animation function
+    // to its list of animation functions.
     nsSMILCompositor* result = aCompositorTable->PutEntry(key);
-
-    // Add this animationElement's animation function to the compositor's list
-    // of animation functions.
     result->AddAnimationFunction(&func);
+
+  } else if (func.HasChanged()) {
+    // Look up the compositor for our target, and force it to skip the
+    // "nothing's changed so don't bother compositing" optimization for this
+    // sample. |func| is inactive, but it's probably *newly* inactive (since
+    // it's got HasChanged() == PR_TRUE), so we need to make sure to recompose
+    // its target.
+    nsSMILCompositor* result = aCompositorTable->PutEntry(key);
+    result->ToggleForceCompositing();
+
+    // We've now made sure that |func|'s inactivity will be reflected as of
+    // this sample. We need to clear its HasChanged() flag so that it won't
+    // trigger this same clause in future samples (until it changes again).
+    func.ClearHasChanged();
   }
 }
 

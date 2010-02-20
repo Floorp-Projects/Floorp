@@ -59,10 +59,14 @@ public:
   typedef const KeyType& KeyTypeRef;
   typedef const KeyType* KeyTypePointer;
 
-  explicit nsSMILCompositor(KeyTypePointer aKey) : mKey(*aKey) { }
+  explicit nsSMILCompositor(KeyTypePointer aKey)
+   : mKey(*aKey),
+     mForceCompositing(PR_FALSE)
+  { }
   nsSMILCompositor(const nsSMILCompositor& toCopy)
     : mKey(toCopy.mKey),
-      mAnimationFunctions(toCopy.mAnimationFunctions)
+      mAnimationFunctions(toCopy.mAnimationFunctions),
+      mForceCompositing(PR_FALSE)
   { }
   ~nsSMILCompositor() { }
 
@@ -87,6 +91,10 @@ public:
   // Cycle-collection support
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
+  // Toggles a bit that will force us to composite (bypassing early-return
+  // optimizations) when we hit ComposeAttribute.
+  void ToggleForceCompositing() { mForceCompositing = PR_TRUE; }
+
  private:
   // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
   // for deallocating the returned object.
@@ -103,6 +111,7 @@ public:
   // attribute
   // ---------------------------------------------------------------
   nsTArray<nsSMILAnimationFunction*> mAnimationFunctions;
+  PRPackedBool mForceCompositing;
 };
 
 #endif // NS_SMILCOMPOSITOR_H_
