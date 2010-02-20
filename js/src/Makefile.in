@@ -375,7 +375,6 @@ check-valgrind::
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
-   config/myrules.mk config/myconfig.mk \
    unallmakefiles js-config js-config.h js-confdefs.h
 
 distclean::
