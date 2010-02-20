@@ -45,11 +45,12 @@
 
 class nsIDOMWindow;
 class nsIFocusController;
+struct JSContext;
 
-// 440f8d32-818d-468a-ac75-5916fa1ea198
+// a9f58a8b-55cd-47fb-aeaa-f54010ffd154
 #define NS_IWINDOWROOT_IID \
-{ 0x440f8d32, 0x818d, 0x468a, \
-  { 0xac, 0x75, 0x59, 0x16, 0xfa, 0x1e, 0xa1, 0x98 } }
+{ 0xa9f58a8b, 0x55cd, 0x47fb, \
+  { 0xae, 0xaa, 0xf5, 0x40, 0x10, 0xff, 0xd1, 0x54 } }
 
 class nsPIWindowRoot : public nsPIDOMEventTarget {
 public:
@@ -58,6 +59,8 @@ public:
   NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
 
   virtual nsIDOMWindow* GetWindow()=0;
+
+  virtual void SetParentTarget(nsPIDOMEventTarget* aTarget) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

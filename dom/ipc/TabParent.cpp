@@ -164,5 +164,45 @@ TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
                      aModifiers, aIgnoreRootScrollFrame);
 }
 
+bool
+TabParent::RecvsendSyncMessageToParent(const nsString& aMessage,
+                                       const nsString& aJSON,
+                                       nsTArray<nsString>* aJSONRetVal)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
+    do_QueryInterface(mFrameElement);
+  if (frameLoaderOwner) {
+    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (frameLoader && frameLoader->GetFrameMessageManager()) {
+      frameLoader->GetFrameMessageManager()->ReceiveMessage(mFrameElement,
+                                                            aMessage,
+                                                            PR_TRUE,
+                                                            aJSON,
+                                                            aJSONRetVal);
+    }
+  }
+  return true;
+}
+
+bool
+TabParent::RecvsendAsyncMessageToParent(const nsString& aMessage,
+                                        const nsString& aJSON)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
+    do_QueryInterface(mFrameElement);
+  if (frameLoaderOwner) {
+    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (frameLoader && frameLoader->GetFrameMessageManager()) {
+      nsTArray<nsString> dummy;
+      frameLoader->GetFrameMessageManager()->ReceiveMessage(mFrameElement,
+                                                            aMessage,
+                                                            PR_FALSE,
+                                                            aJSON,
+                                                            nsnull);
+    }
+  }
+  return true;
+}
+
 } // namespace tabs
 } // namespace mozilla

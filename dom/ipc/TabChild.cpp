@@ -58,6 +58,18 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsIJSRuntimeService.h"
+#include "nsContentUtils.h"
+#include "nsIDOMClassInfo.h"
+#include "nsIXPCSecurityManager.h"
+#include "nsIJSContextStack.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsScriptLoader.h"
+#include "nsPIWindowRoot.h"
+#include "nsIScriptContext.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
@@ -319,7 +331,7 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
     baseWindow->SetVisibility(PR_TRUE);
 #endif
 
-    return true;
+    return InitTabChildGlobal();
 }
 
 bool
@@ -343,6 +355,14 @@ TabChild::~TabChild()
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
+    }
+    if (mCx) {
+      nsIXPConnect* xpc = nsContentUtils::XPConnect();
+      if (xpc) {
+         xpc->ReleaseJSContext(mCx, PR_FALSE);
+      } else {
+        JS_DestroyContext(mCx);
+      }
     }
 }
 
@@ -465,4 +485,227 @@ TabChild::RecvactivateFrameEvent(const nsString& aType, const bool& capture)
   NS_ENSURE_TRUE(listener, true);
   chromeHandler->AddEventListener(aType, listener, capture);
   return true;
+}
+
+bool
+TabChild::RecvloadRemoteScript(const nsString& aURL)
+{
+  nsCString url = NS_ConvertUTF16toUTF8(aURL);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
+  NS_ENSURE_SUCCESS(rv, true);
+  NS_NewChannel(getter_AddRefs(mChannel), uri);
+  NS_ENSURE_TRUE(mChannel, true);
+
+  nsCOMPtr<nsIInputStream> input;
+  mChannel->Open(getter_AddRefs(input));
+  nsString dataString;
+  if (input) {
+    const PRUint32 bufferSize = 256;
+    char buffer[bufferSize];
+    nsCString data;
+    PRUint32 avail = 0;
+    input->Available(&avail);
+    PRUint32 read = 0;
+    if (avail) {
+      while (NS_SUCCEEDED(input->Read(buffer, bufferSize, &read)) && read) {
+        data.Append(buffer, read);
+        read = 0;
+      }
+    }
+    nsScriptLoader::ConvertToUTF16(mChannel, (PRUint8*)data.get(), data.Length(),
+                                   EmptyString(), nsnull, dataString);
+  }
+
+  if (!dataString.IsEmpty()) {
+    JSAutoRequest ar(mCx);
+    nsCOMPtr<nsPIDOMWindow> w = do_GetInterface(mWebNav);
+    jsval retval;
+    JSObject* global = nsnull;
+    rv = mRootGlobal->GetJSObject(&global);
+    NS_ENSURE_SUCCESS(rv, false);
+    JSPrincipals* jsprin = nsnull;
+    mPrincipal->GetJSPrincipals(mCx, &jsprin);
+
+    nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
+
+    nsContentUtils::ThreadJSContextStack()->Push(mCx);
+    JSBool ret = JS_EvaluateUCScriptForPrincipals(mCx, global, jsprin,
+                                                  (jschar*)dataString.get(),
+                                                  dataString.Length(),
+                                                  url.get(), 1, &retval);
+    JSContext *unused;
+    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
+    NS_ENSURE_TRUE(ret, true); // This gives us a useful warning!
+  }
+  return true;
+}
+
+bool
+TabChild::RecvsendAsyncMessageToChild(const nsString& aMessage,
+                                      const nsString& aJSON)
+{
+  if (mTabChildGlobal) {
+    nsTArray<nsString> dummy;
+    static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get())->
+      ReceiveMessage(static_cast<nsPIDOMEventTarget*>(mTabChildGlobal),
+                     aMessage, PR_FALSE, aJSON, nsnull);
+  }
+  return true;
+}
+
+
+bool
+TabChild::InitTabChildGlobal()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+  NS_ENSURE_TRUE(window, false);
+  nsCOMPtr<nsIDOMEventTarget> chromeHandler =
+    do_QueryInterface(window->GetChromeEventHandler());
+  NS_ENSURE_TRUE(chromeHandler, false);
+
+  nsCOMPtr<nsIJSRuntimeService> runtimeSvc = 
+    do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+  NS_ENSURE_TRUE(runtimeSvc, false);
+
+  JSRuntime* rt = nsnull;
+  runtimeSvc->GetRuntime(&rt);
+  NS_ENSURE_TRUE(rt, false);
+
+  JSContext* cx = JS_NewContext(rt, 8192);
+  NS_ENSURE_TRUE(cx, false);
+
+  mCx = cx;
+
+  nsContentUtils::XPConnect()->SetSecurityManagerForJSContext(cx, nsContentUtils::GetSecurityManager(), 0);
+  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
+
+  PRUint32 stackDummy;
+  jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
+
+  // 256k stack space.
+  const jsuword kStackSize = 0x40000;
+
+#if JS_STACK_GROWTH_DIRECTION < 0
+  stackLimit = (currentStackAddr > kStackSize) ?
+               currentStackAddr - kStackSize :
+               0;
+#else
+  stackLimit = (currentStackAddr + kStackSize > currentStackAddr) ?
+               currentStackAddr + kStackSize :
+               (jsuword) -1;
+#endif
+
+  JS_SetThreadStackLimit(cx, stackLimit);
+  JS_SetScriptStackQuota(cx, 100*1024*1024);
+
+  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
+  JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 1 * 1024 * 1024);
+
+  
+  JSAutoRequest ar(cx);
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
+                         /*nsIXPConnect::OMIT_COMPONENTS_OBJECT ?  |*/
+                         nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
+
+  nsRefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
+  NS_ENSURE_TRUE(scope, false);
+
+  mTabChildGlobal = scope;
+
+  nsISupports* scopeSupports =
+    NS_ISUPPORTS_CAST(nsPIDOMEventTarget*, scope);
+  JS_SetContextPrivate(cx, scopeSupports);
+
+  nsresult rv =
+    xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
+                                         NS_GET_IID(nsISupports), flags,
+                                         getter_AddRefs(mRootGlobal));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
+  NS_ENSURE_TRUE(root, false);
+  root->SetParentTarget(scope);
+  
+  JSObject* global = nsnull;
+  rv = mRootGlobal->GetJSObject(&global);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  JS_SetGlobalObject(cx, global);
+
+  return true;
+}
+
+bool SendSyncMessageToParent(void* aCallbackData,
+                             const nsAString& aMessage,
+                             const nsAString& aJSON,
+                             nsTArray<nsString>* aJSONRetVal)
+{
+  return static_cast<TabChild*>(aCallbackData)->
+    SendsendSyncMessageToParent(nsString(aMessage), nsString(aJSON), aJSONRetVal);
+}
+
+bool SendAsyncMessageToParent(void* aCallbackData,
+                              const nsAString& aMessage,
+                              const nsAString& aJSON)
+{
+  return static_cast<TabChild*>(aCallbackData)->
+    SendsendAsyncMessageToParent(nsString(aMessage), nsString(aJSON));
+}
+
+TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
+: mTabChild(aTabChild)
+{
+  mMessageManager = new nsFrameMessageManager(PR_FALSE,
+                                              SendSyncMessageToParent,
+                                              SendAsyncMessageToParent,
+                                              nsnull,
+                                              mTabChild,
+                                              nsnull,
+                                              aTabChild->GetJSContext());
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChildGlobal,
+                                                nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMessageManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChildGlobal,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameMessageManager)
+  NS_INTERFACE_MAP_ENTRY(nsIContentFrameMessageManager)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptContextPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ContentFrameMessageManager)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
+
+NS_IMETHODIMP
+TabChildGlobal::GetContent(nsIDOMWindow** aContent)
+{
+  *aContent = nsnull;
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mTabChild->WebNavigation());
+  window.swap(*aContent);
+  return NS_OK;
+}
+
+JSContext*
+TabChildGlobal::GetJSContextForEventHandlers()
+{
+  return mTabChild->GetJSContext();
+}
+
+nsIPrincipal* 
+TabChildGlobal::GetPrincipal()
+{
+  return mTabChild->GetPrincipal();
 }

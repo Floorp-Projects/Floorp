@@ -65,6 +65,11 @@ public:
     virtual bool RecvmoveFocus(const bool& aForward);
     virtual bool RecvsendEvent(const RemoteDOMEvent& aEvent);
     virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
+    virtual bool RecvsendSyncMessageToParent(const nsString& aMessage,
+                                             const nsString& aJSON,
+                                             nsTArray<nsString>* aJSONRetVal);
+    virtual bool RecvsendAsyncMessageToParent(const nsString& aMessage,
+                                              const nsString& aJSON);
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);

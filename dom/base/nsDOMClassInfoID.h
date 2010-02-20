@@ -479,6 +479,8 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_TransitionEvent_id,
 
+  eDOMClassInfo_ContentFrameMessageManager_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

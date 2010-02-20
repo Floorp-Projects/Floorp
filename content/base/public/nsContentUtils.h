@@ -1606,7 +1606,7 @@ public:
   PRBool RePush(nsPIDOMEventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
-  PRBool Push(JSContext *cx);
+  PRBool Push(JSContext *cx, PRBool aRequiresScriptContext = PR_TRUE);
   // Explicitly push a null JSContext on the the stack
   PRBool PushNull();
 
