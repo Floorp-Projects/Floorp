@@ -95,10 +95,24 @@ public:
   // optimizations) when we hit ComposeAttribute.
   void ToggleForceCompositing() { mForceCompositing = PR_TRUE; }
 
+  // Transfers |aOther|'s mCachedBaseValue to |this|
+  void StealCachedBaseValue(nsSMILCompositor* aOther) {
+    mCachedBaseValue = aOther->mCachedBaseValue;
+  }
+
  private:
   // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
   // for deallocating the returned object.
   nsISMILAttr* CreateSMILAttr();
+  
+  // Finds the index of the first function that will affect our animation
+  // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any
+  // (used) functions have changed.
+  PRUint32 GetFirstFuncToAffectSandwich();
+
+  // If the passed-in base value differs from our cached base value, this
+  // method updates the cached value (and toggles the 'mForceCompositing' flag)
+  void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
 
   // Static callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) DoComposeAttribute(
@@ -107,11 +121,19 @@ public:
   // The hash key (tuple of element/attributeName/attributeType)
   KeyType mKey;
 
-  // Hash Value: List of animation functions that animate the specified
-  // attribute
-  // ---------------------------------------------------------------
+  // Hash Value: List of animation functions that animate the specified attr
   nsTArray<nsSMILAnimationFunction*> mAnimationFunctions;
+
+  // Member data for detecting when we need to force-recompose
+  // ---------------------------------------------------------
+  // Flag for tracking whether we need to compose. Initialized to PR_FALSE, but
+  // gets flipped to PR_TRUE if we detect that something has changed.
   PRPackedBool mForceCompositing;
+
+  // Cached base value, so we can detect & force-recompose when it changes
+  // from one sample to the next.  (nsSMILAnimationController copies this
+  // forward from the previous sample's compositor.)
+  nsAutoPtr<nsSMILValue> mCachedBaseValue;
 };
 
 #endif // NS_SMILCOMPOSITOR_H_

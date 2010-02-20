@@ -351,8 +351,8 @@ nsSMILAnimationFunction::WillReplace() const
    * here we return false for to animation as it builds on the underlying value
    * unless its a frozen to animation.
    */
-  return !(IsAdditive() || IsToAnimation()) ||
-    (IsToAnimation() && mIsFrozen && !mHasChanged);
+  return !mErrorFlags && (!(IsAdditive() || IsToAnimation()) ||
+                          (IsToAnimation() && mIsFrozen && !mHasChanged));
 }
 
 PRBool
