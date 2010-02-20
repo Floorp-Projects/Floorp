@@ -6046,6 +6046,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             for (index = 0; pn2; pn2 = pn2->pn_next, index++) {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
+                if (!pn2->isLiteral() &&
+                    js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0) {
+                    return JS_FALSE;
+                }
             }
 
             if (index != 0) {
