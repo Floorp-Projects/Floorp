@@ -605,3 +605,8 @@ OPDEF(JSOP_UNBRAND,       237,"unbrand",       NULL,  1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_UNBRANDTHIS,   238,"unbrandthis",   NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_SHARPINIT,     239,"sharpinit",     NULL,  3,  0,  0,  0,  JOF_UINT16|JOF_SHARPSLOT)
+
+/*
+ * If the argument is an object, perform toString conversion (E-262-3 section 9.8).
+ */
+OPDEF(JSOP_OBJTOSTR,      240,"objtostr",      NULL,  1,  1,  1,  0,  JOF_BYTE)
