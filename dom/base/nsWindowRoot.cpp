@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsWindowRoot.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -50,22 +51,27 @@
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsFocusController.h"
 #include "nsString.h"
 #include "nsEventDispatcher.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsGUIEvent.h"
+#include "nsGlobalWindow.h"
+#include "nsFocusManager.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIControllers.h"
 
 #include "nsCycleCollectionParticipant.h"
 
+#ifdef MOZ_XUL
+#include "nsIDOMXULElement.h"
+#endif
+
 static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 
-nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
+nsWindowRoot::nsWindowRoot(nsPIDOMWindow* aWindow)
 {
   mWindow = aWindow;
-
-  // Create and init our focus controller.
-  nsFocusController::Create(getter_AddRefs(mFocusController));
 }
 
 nsWindowRoot::~nsWindowRoot()
@@ -75,7 +81,7 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(nsWindowRoot, mListenerManager, mFocusController)
+NS_IMPL_CYCLE_COLLECTION_2(nsWindowRoot, mListenerManager, mPopupNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
@@ -231,7 +237,7 @@ nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mCanHandle = PR_TRUE;
   aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
   // To keep mWindow alive
-  aVisitor.mItemData = mWindow;
+  aVisitor.mItemData = static_cast<nsISupports *>(mWindow);
   return NS_OK;
 }
 
@@ -241,15 +247,7 @@ nsWindowRoot::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindowRoot::GetFocusController(nsIFocusController** aResult)
-{
-  *aResult = mFocusController;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-nsIDOMWindow*
+nsPIDOMWindow*
 nsWindowRoot::GetWindow()
 {
   return mWindow;
@@ -269,10 +267,109 @@ nsWindowRoot::SetScriptTypeID(PRUint32 aScriptType)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult
+nsWindowRoot::GetControllers(nsIControllers** aResult)
+{
+  *aResult = nsnull;
+
+  // XXX: we should fix this so there's a generic interface that
+  // describes controllers, so this code would have no special
+  // knowledge of what object might have controllers.
+
+  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsIContent* focusedContent =
+    nsFocusManager::GetFocusedDescendant(mWindow, PR_TRUE, getter_AddRefs(focusedWindow));
+  if (focusedContent) {
+#ifdef MOZ_XUL
+    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedContent));
+    if (xulElement)
+      return xulElement->GetControllers(aResult);
+#endif
+
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea =
+      do_QueryInterface(focusedContent);
+    if (htmlTextArea)
+      return htmlTextArea->GetControllers(aResult);
+
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement =
+      do_QueryInterface(focusedContent);
+    if (htmlInputElement)
+      return htmlInputElement->GetControllers(aResult);
+
+    if (focusedContent->IsEditable() && focusedWindow)
+      return focusedWindow->GetControllers(aResult);
+  }
+  else {
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(focusedWindow);
+    if (domWindow)
+      return domWindow->GetControllers(aResult);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsWindowRoot::GetControllerForCommand(const char * aCommand,
+                                      nsIController** _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIController> controller;
+
+  GetControllers(getter_AddRefs(controllers));
+  if (controllers) {
+    controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
+    if (controller) {
+      controller.swap(*_retval);
+      return NS_OK;
+    }
+  }
+
+  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsFocusManager::GetFocusedDescendant(mWindow, PR_TRUE, getter_AddRefs(focusedWindow));
+  while (focusedWindow) {
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(focusedWindow));
+
+    nsCOMPtr<nsIControllers> controllers2;
+    domWindow->GetControllers(getter_AddRefs(controllers2));
+    if (controllers2) {
+      controllers2->GetControllerForCommand(aCommand,
+                                            getter_AddRefs(controller));
+      if (controller) {
+        controller.swap(*_retval);
+        return NS_OK;
+      }
+    }
+
+    // XXXndeakin P3 is this casting safe?
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(focusedWindow); 
+    nsGlobalWindow *win =
+      static_cast<nsGlobalWindow *>
+                 (static_cast<nsIDOMWindowInternal *>(piWindow));
+    focusedWindow = win->GetPrivateParent();
+  }
+  
+  return NS_OK;
+}
+
+void
+nsWindowRoot::GetPopupNode(nsIDOMNode** aNode)
+{
+  NS_IF_ADDREF(*aNode = mPopupNode);
+}
+
+void
+nsWindowRoot::SetPopupNode(nsIDOMNode* aNode)
+{
+  mPopupNode = aNode;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewWindowRoot(nsIDOMWindow* aWindow, nsPIDOMEventTarget** aResult)
+NS_NewWindowRoot(nsPIDOMWindow* aWindow, nsPIDOMEventTarget** aResult)
 {
   *aResult = new nsWindowRoot(aWindow);
   if (!*aResult)
