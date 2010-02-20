@@ -56,6 +56,13 @@ public:
 
   const nsSMILValue& operator=(const nsSMILValue& aVal);
 
+  // Equality operators. These are allowed to be conservative (return PR_FALSE
+  // more than you'd expect) - see comment above nsISMILType::IsEqual.
+  PRBool operator==(const nsSMILValue& aVal) const;
+  PRBool operator!=(const nsSMILValue& aVal) const {
+    return !(*this == aVal);
+  }
+
   PRBool IsNull() const
   {
     return (mType == &nsSMILNullType::sSingleton);
