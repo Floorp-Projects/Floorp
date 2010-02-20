@@ -360,6 +360,16 @@ nsSMILAnimationFunction::HasChanged() const
   return mHasChanged;
 }
 
+PRBool
+nsSMILAnimationFunction::UpdateCachedTarget(const nsSMILTargetIdentifier& aNewTarget)
+{
+  if (!mLastTarget.Equals(aNewTarget)) {
+    mLastTarget = aNewTarget;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 // Implementation helpers
 
