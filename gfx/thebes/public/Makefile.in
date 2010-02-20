@@ -32,6 +32,10 @@ EXPORTS		= 	gfxASurface.h \
 			gfxUserFontSet.h \
 			$(NULL)
 
+EXPORTS		+= \
+			gfxSharedImageSurface.h \
+			$(NULL)
+
 EXPORTS += gfxFontTest.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

@@ -106,6 +106,13 @@ public:
 
 private:
 
+  inline nsresult DrawWidgetBackground(QPainter *qPainter,
+                                       nsIRenderingContext* aContext,
+                                       nsIFrame* aFrame,
+                                       PRUint8 aWidgetType,
+                                       const nsRect& aRect,
+                                       const nsRect& aClipRect);
+
   inline PRInt32 GetAppUnitsPerDevPixel(nsIRenderingContext* aContext){
     nsCOMPtr<nsIDeviceContext> dctx = nsnull;
     aContext->GetDeviceContext(*getter_AddRefs(dctx));
