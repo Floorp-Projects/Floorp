@@ -81,7 +81,7 @@ public:
   void ReloadChildFrames();
 
   nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  void GetAnonymousContent(nsBaseContentList& aElements);
+  void AppendAnonymousContentTo(nsBaseContentList& aElements);
   nsresult FireScrollPortEvent();
   void PostOverflowEvent();
   void Destroy();
@@ -373,7 +373,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual void GetAnonymousContent(nsBaseContentList& aElements);
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
 
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const {
@@ -568,7 +568,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual void GetAnonymousContent(nsBaseContentList& aElements);
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
 
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
