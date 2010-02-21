@@ -291,8 +291,6 @@ nsLayoutStatics::Initialize()
 
   NS_SealStaticAtomTable();
 
-  nsFileControlFrame::InitUploadLastDir();
-
   return NS_OK;
 }
 
