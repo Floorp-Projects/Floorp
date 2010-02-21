@@ -365,8 +365,7 @@ nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
   nsAccTreeWalker walker(weakShell, content, PR_FALSE);
-
-  nsCOMPtr<nsIAccessible> accessible = walker.GetNextChild();
+  nsRefPtr<nsAccessible> accessible = walker.GetNextChild();
   return accessible ? PR_TRUE : PR_FALSE;
 }
 

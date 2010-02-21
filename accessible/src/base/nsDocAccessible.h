@@ -167,8 +167,10 @@ public:
    *
    * @param  aUniquID     [in] the unique identifier of accessible
    * @param  aAccessNode  [in] accessible to cache
+   *
+   * @return true if node beign cached, otherwise false
    */
-  void CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode);
+  PRBool CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode);
 
   /**
    * Remove the given access node from document cache.
