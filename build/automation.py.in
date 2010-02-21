@@ -580,26 +580,30 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
+    stackFixerModule = None
     didTimeout = False
     if proc.stdout is None:
       self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
     else:
       logsource = proc.stdout
-      if self.IS_DEBUG_BUILD:
-        stackFixerCommand = None
-        if self.IS_MAC:
-          stackFixerCommand = "fix-macosx-stack.pl"
-        elif self.IS_LINUX:
-          stackFixerCommand = "fix-linux-stack.pl"
-        if stackFixerCommand is not None:
-          stackFixerProcess = self.Process([self.PERL, os.path.join(utilityPath, stackFixerCommand)], 
-                                           stdin=logsource, 
-                                           stdout=subprocess.PIPE)
-          logsource = stackFixerProcess.stdout
+      if self.IS_DEBUG_BUILD and self.IS_LINUX:
+        # Run logsource through fix-linux-stack.pl
+        stackFixerProcess = self.Process([self.PERL, os.path.join(utilityPath, "fix-linux-stack.pl")],
+                                         stdin=logsource,
+                                         stdout=subprocess.PIPE)
+        logsource = stackFixerProcess.stdout
+
+      if self.IS_DEBUG_BUILD and self.IS_MAC:
+        # Import fix_macosx_stack.py from utilityPath
+        sys.path.insert(0, utilityPath)
+        import fix_macosx_stack as stackFixerModule
+        del sys.path[0]
 
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
       hitMaxTime = False
       while line != "" and not didTimeout:
+        if stackFixerModule:
+          line = stackFixerModule.fixSymbols(line)
         self.log.info(line.rstrip())
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
