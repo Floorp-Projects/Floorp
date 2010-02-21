@@ -154,25 +154,40 @@ public:
 
   enum {
     /**
-     * All children will be returned.
+     * All XBL flattened tree children of the node, as well as :before and
+     * :after anonymous content and native anonymous children.
      *
      * @note the result children order is
-     *   1. :before generated contnent
-     *   2. explicit children and XBL anonymous children
-     *   3. native anonymous content
-     *   4. :after generated content
+     *   1. :before generated node
+     *   2. XBL flattened tree children of this node
+     *   3. native anonymous nodes
+     *   4. :after generated node
      */
     eAllChildren = 0,
 
     /**
-     * All children but XBL anonymous children will be returned.
+     * All XBL explicit children of the node (see
+     * http://www.w3.org/TR/xbl/#explicit3 ), as well as :before and :after
+     * anonymous content and native anonymous children.
+     *
+     * @note the result children order is
+     *   1. :before generated node
+     *   2. XBL explicit children of the node
+     *   3. native anonymous nodes
+     *   4. :after generated node
      */
     eAllButXBL = 1
   };
 
   /**
-   * Return children of the node, including explict, native anonymous, XBL
-   * anonymous and genererated nodes until the child type is given (see above).
+   * Return either the XBL explicit children of the node or the XBL flattened
+   * tree children of the node, depending on the child type, as well as any
+   * native anonymous children.
+   *
+   * @note calling this method with eAllButXBL will return children that are
+   *  also in the eAllButXBL and eAllChildren child lists of other descendants
+   *  of this node in the tree, but those other nodes cannot be reached from the
+   *  eAllButXBL child list.
    */
   virtual already_AddRefed<nsINodeList> GetChildren(PRInt32 aChildType) = 0;
 
