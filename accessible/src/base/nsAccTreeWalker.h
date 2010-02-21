@@ -40,10 +40,11 @@
 #ifndef _nsAccTreeWalker_H_
 #define _nsAccTreeWalker_H_
 
-#include "nsIAccessible.h"
+#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsIWeakReference.h"
 
+class nsAccessible;
 struct WalkState;
 
 /**
@@ -59,7 +60,7 @@ public:
   /**
    * Return the next child accessible.
    */
-  already_AddRefed<nsIAccessible> GetNextChild()
+  already_AddRefed<nsAccessible> GetNextChild()
   {
     return GetNextChildInternal(PR_FALSE);
   }
@@ -73,7 +74,7 @@ private:
    *                     shouldn't go up through the tree if we failed find
    *                     accessible children.
    */
-  already_AddRefed<nsIAccessible>
+  already_AddRefed<nsAccessible>
     GetNextChildInternal(PRBool aNoWalkUp = PR_FALSE);
 
   /**

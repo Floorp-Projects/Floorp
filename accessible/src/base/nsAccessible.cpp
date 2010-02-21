@@ -2990,14 +2990,10 @@ nsAccessible::CacheChildren()
   nsAccTreeWalker walker(mWeakShell, nsCoreUtils::GetRoleContent(mDOMNode),
                          GetAllowsAnonChildAccessibles());
 
-  nsCOMPtr<nsIAccessible> child;
+  nsRefPtr<nsAccessible> child;
   while ((child = walker.GetNextChild())) {
-    nsRefPtr<nsAccessible> acc =
-      nsAccUtils::QueryObject<nsAccessible>(child);
-
-    mChildren.AppendElement(acc);
-
-    acc->SetParent(this);
+    mChildren.AppendElement(child);
+    child->SetParent(this);
   }
 }
 

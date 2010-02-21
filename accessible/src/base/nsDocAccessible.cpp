@@ -572,7 +572,7 @@ nsDocAccessible::GetCachedAccessNode(void *aUniqueID)
 }
 
 // nsDocAccessible public method
-void
+PRBool
 nsDocAccessible::CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode)
 {
   // If there is already an access node with the given unique ID, shut it down
@@ -581,7 +581,7 @@ nsDocAccessible::CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode)
   if (accessNode)
     accessNode->Shutdown();
 
-  mAccessNodeCache.Put(aUniqueID, aAccessNode);
+  return mAccessNodeCache.Put(aUniqueID, aAccessNode);
 }
 
 // nsDocAccessible public method
@@ -602,20 +602,26 @@ nsDocAccessible::RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode)
 nsresult
 nsDocAccessible::Init()
 {
-  gGlobalDocAccessibleCache.Put(static_cast<void*>(mDocument), this);
-
-  AddEventListeners();
-
-  GetParent(); // Ensure outer doc mParent accessible.
+  // Put the document into the global cache.
+  if (!gGlobalDocAccessibleCache.Put(static_cast<void*>(mDocument), this))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Initialize event queue.
   mEventQueue = new nsAccEventQueue(this);
+  if (!mEventQueue)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  AddEventListeners();
+
+  // Ensure outer doc mParent accessible.
+  GetParent();
 
   // Fire reorder event to notify new accessible document has been created and
   // attached to the tree.
   nsRefPtr<nsAccEvent> reorderEvent =
     new nsAccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDOMNode);
-  NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+  if (!reorderEvent)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   FireDelayedAccessibleEvent(reorderEvent);
   return NS_OK;
