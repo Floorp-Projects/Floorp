@@ -40,7 +40,6 @@
 #include "nsHyperTextAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
-#include "nsAccessibleTreeWalker.h"
 #include "nsTextAttrs.h"
 
 #include "nsIClipboard.h"

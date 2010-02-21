@@ -61,7 +61,7 @@ CPPSRCS = \
   nsAccessibilityService.cpp \
   nsAccessible.cpp \
   nsAccessibleRelation.cpp \
-  nsAccessibleTreeWalker.cpp \
+  nsAccTreeWalker.cpp \
   nsBaseWidgetAccessible.cpp \
   nsEventShell.cpp \
   nsFormControlAccessible.cpp \

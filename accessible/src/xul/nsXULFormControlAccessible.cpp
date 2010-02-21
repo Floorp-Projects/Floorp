@@ -41,7 +41,7 @@
 #include "nsXULFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibleTreeWalker.h"
+#include "nsAccTreeWalker.h"
 #include "nsXULMenuAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"
@@ -207,24 +207,22 @@ nsXULButtonAccessible::CacheChildren()
   nsCOMPtr<nsIAccessible> buttonAccessible;
   nsCOMPtr<nsIAccessible> menupopupAccessible;
 
-  nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
-  walker.GetFirstChild();
+  nsAccTreeWalker walker(mWeakShell, content, PR_TRUE);
 
-  while (walker.mState.accessible) {
-    PRUint32 role = nsAccUtils::Role(walker.mState.accessible);
+  nsCOMPtr<nsIAccessible> child;
+  while ((child = walker.GetNextChild())) {
+    PRUint32 role = nsAccUtils::Role(child);
 
     if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       // Get an accessbile for menupopup or panel elements.
-      menupopupAccessible = walker.mState.accessible;
+      child.swap(menupopupAccessible);
 
     } else if (isMenuButton && role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       // Button type="menu-button" contains a real button. Get an accessible
       // for it. Ignore dropmarker button what is placed as a last child.
-      buttonAccessible = walker.mState.accessible;
+      child.swap(buttonAccessible);
       break;
     }
-
-    walker.GetNextSibling();
   }
 
   if (!menupopupAccessible)
@@ -1080,18 +1078,15 @@ nsXULTextFieldAccessible::CacheChildren()
   if (!inputContent)
     return;
 
-  nsAccessibleTreeWalker walker(mWeakShell, inputNode, PR_FALSE);
-  walker.mState.frame = inputContent->GetPrimaryFrame();
+  nsAccTreeWalker walker(mWeakShell, inputContent, PR_FALSE);
 
-  walker.GetFirstChild();
-  while (walker.mState.accessible) {
+  nsCOMPtr<nsIAccessible> child;
+  while ((child = walker.GetNextChild())) {
     nsRefPtr<nsAccessible> acc =
-      nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+      nsAccUtils::QueryObject<nsAccessible>(child);
 
     mChildren.AppendElement(acc);
 
     acc->SetParent(this);
-
-    walker.GetNextSibling();
   }
 }
