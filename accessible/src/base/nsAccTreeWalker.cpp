@@ -39,6 +39,7 @@
 
 #include "nsAccTreeWalker.h"
 
+#include "nsAccessible.h"
 #include "nsAccessibilityService.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,7 @@ nsAccTreeWalker::~nsAccTreeWalker()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccTreeWalker: private
 
-already_AddRefed<nsIAccessible>
+already_AddRefed<nsAccessible>
 nsAccTreeWalker::GetNextChildInternal(PRBool aNoWalkUp)
 {
   if (!mState || !mState->content)
@@ -108,10 +109,10 @@ nsAccTreeWalker::GetNextChildInternal(PRBool aNoWalkUp)
     mState->childIdx++;
 
     PRBool isHidden = PR_FALSE;
-    nsCOMPtr<nsIAccessible> accessible;
     nsCOMPtr<nsIDOMNode> childDOMNode(do_QueryInterface(childNode));
-    GetAccService()->GetAccessible(childDOMNode, presShell, mWeakShell, nsnull,
-                                   &isHidden, getter_AddRefs(accessible));
+    nsRefPtr<nsAccessible> accessible =
+      GetAccService()->GetAccessible(childDOMNode, presShell, mWeakShell,
+                                     &isHidden);
 
     if (accessible)
       return accessible.forget();
