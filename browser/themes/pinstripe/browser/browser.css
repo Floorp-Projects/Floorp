@@ -43,6 +43,8 @@
 
 @import url("chrome://global/skin/");
 
+%include shared.inc
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
@@ -707,48 +709,103 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 /* ::::: nav-bar-inner ::::: */
 
 #urlbar {
-  -moz-appearance: none;
   direction: ltr !important;
-  border: none;
-  background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
-  margin: 0 3px 1px;
-  -moz-padding-end: 11px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
-  height: 28px;
+  -moz-appearance: none;
+  -moz-background-clip: padding;
+  -moz-border-radius: 100%;
+  border: 1px solid;
+  -moz-border-top-colors: #666;
+  -moz-border-right-colors: #777;
+  -moz-border-bottom-colors: #888;
+  -moz-border-left-colors: #777;
+  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
+                   0 1px 0 rgba(255,255,255,.3);
+  margin-top: 0;
+  margin-bottom: 1px;
+  -moz-padding-end: 6px;
 }
 
 #urlbar[focused="true"] {
-  background: url("chrome://browser/skin/urlbar/endcap-focused.png") transparent right center no-repeat;
+  -moz-border-top-colors: rgba(0,0,0,.3);
+  -moz-border-right-colors: rgba(0,0,0,.2);
+  -moz-border-bottom-colors: rgba(0,0,0,.15);
+  -moz-border-left-colors: rgba(0,0,0,.2);
+  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
+                   @focusRingShadow@;
 }
 
-#urlbar[focused="true"]:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite.png");
+#identity-box {
+  background: #fff url(navbar-textbox-button.png) bottom repeat-x;
+  -moz-background-clip: padding;
+  color: black;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 16px;
+  -moz-border-radius: 100%;
+  border-top: 1px solid rgba(0,0,0,.35);
+  -moz-border-start: 1px solid rgba(0,0,0,.25);
+  border-bottom: 1px solid rgba(0,0,0,.2);
+  margin-top: -1px;
+  margin-bottom: -1px;
+  -moz-margin-start: -1px;
 }
 
-#urlbar .textbox-input-box,
-#urlbar-icons {
-  margin: 0;
-  background: url("chrome://browser/skin/urlbar/textfield-mid.png") transparent left center  repeat-x;
+#identity-box:focus:not(:active):not([open="true"]) #page-proxy-stack {
+  -moz-border-radius: 4px;
+  -moz-box-shadow: 0 0 3px 1px -moz-mac-focusring inset,
+                   0 0 3px 2px -moz-mac-focusring;
 }
 
-#urlbar[focused="true"] .textbox-input-box,
-#urlbar[focused="true"] #urlbar-icons {
-  background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
-}
-
-#urlbar[focused="true"] .textbox-input-box:-moz-system-metric(mac-graphite-theme),
-#urlbar[focused="true"] #urlbar-icons:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused-graphite.png");
-}
-
-#urlbar .textbox-input-box {
+#identity-box[open="true"],
+#identity-box:hover:active {
+  border-style: none;
   padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 7px;
+  -moz-box-shadow: 0 0 50px rgba(0,0,0,.3) inset,
+                   0 3px 3px rgba(0,0,0,.6) inset,
+                   2px 0 2px rgba(0,0,0,.3) inset,
+                   0 -2px 2px rgba(0,0,0,.1) inset;
 }
 
-.autocomplete-textbox {
-  background-image: inherit !important;
+#identity-box.verifiedDomain {
+  background-image: url(navbar-textbox-button-verifiedDomain.png);
+}
+
+#identity-box.verifiedIdentity {
+  background-image: url(navbar-textbox-button-verifiedIdentity.png);
+}
+
+#identity-icon-label {
+  margin: 0 4px;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
+  display: none;
+}
+
+#urlbar > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-border-radius-topleft: 100%;
+  -moz-border-radius-bottomleft: 100%;
+  -moz-margin-end: 0;
+  -moz-margin-start: -16px;
+  background-color: -moz-field;
+  -moz-padding-start: 10px;
+  -moz-box-shadow: 1px 1px 1px rgba(0,0,0,.3) inset,
+                   1px 0 0 rgba(0,0,0,.2) inset;
+}
+
+#urlbar[focused="true"] > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-box-shadow: 1px 1px 1px rgba(0,0,0,.3) inset,
+                   1px 0 0 rgba(0,0,0,.2) inset,
+                   2px 0 0 -moz-field inset,
+                   1px 0 1px -moz-mac-focusring inset;
+}
+
+#urlbar[focused="true"] > #identity-box {
+  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset;
 }
 
 #urlbar-icons {
@@ -756,41 +813,16 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #urlbar-search-splitter {
-  /* This is a bit of a mess, because the location bar and the search bar are bigger
-     than they look. For example, -moz-margin-start: -6px should really be -4px.
-     Bug 482086 and bug 482105 will solve this. */
   min-width: 8px;
   width: 8px;
   background-image: none;
-  -moz-margin-start: -6px;
+  -moz-margin-start: -4px;
 }
 
 #urlbar-search-splitter + #urlbar-container > #urlbar,
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
   -moz-margin-start: 0;
 }
-
-#wrapper-urlbar-container > #urlbar-container > #urlbar,
-#urlbar[readonly="true"] {
-  -moz-padding-end: 12px;
-}
-
-#wrapper-urlbar-container[place="palette"] {
-  max-width: 20em;
-}
-
-#wrapper-urlbar-container > #urlbar-container > #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
-/* Keep the URL bar LTR */
-
-#PopupAutoCompleteRichResult {
-  direction: ltr !important;
-  margin-top: -2px;
-}
-
-/* ----- PAGE PROXY ICON ----- */
 
 #page-proxy-favicon,
 #urlbar-throbber {
@@ -801,11 +833,14 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #page-proxy-stack {
-  -moz-margin-start: 10px;
   width: 24px;
   height: 20px;
   padding: 2px 4px;
-  opacity: 1.0;
+}
+
+#identity-box.verifiedIdentity > hbox > #page-proxy-stack,
+#identity-box.verifiedDomain > hbox > #page-proxy-stack {
+  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
@@ -820,6 +855,19 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
+#wrapper-urlbar-container[place="palette"] {
+  max-width: 20em;
+}
+
+#wrapper-urlbar-container #identity-icon-label,
+#wrapper-urlbar-container .autocomplete-history-dropmarker {
+  display: none;
+}
+
+#PopupAutoCompleteRichResult {
+  direction: ltr !important;
+  margin-top: 2px;
+}
 
 statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
@@ -1497,11 +1545,7 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab:focus > .tab-text {
-  -moz-box-shadow: 0 0 4px -moz-mac-focusring,
-                   0 0 4px -moz-mac-focusring,
-                   0 0 3px -moz-mac-focusring,
-                   0 0 2px -moz-mac-focusring inset,
-                   0 0 3px -moz-mac-focusring inset;
+  -moz-box-shadow: @focusRingShadow@;
 }
 
 .tabbrowser-tab[selected="true"],
@@ -1753,179 +1797,6 @@ tabbrowser > tabbox {
   -moz-window-shadow: sheet;
 }
 
-/* ::::: Identity Indicator Styling ::::: */
-/* Location bar visuals*/
-
-#identity-box {
-  background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  min-width: 45px;
-}
-
-#urlbar[focused="true"] > #identity-box {
-  background-image: url("chrome://browser/skin/urlbar/startcap-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite.png");
-}
-
-#identity-box:focus > #identity-box-inner > #page-proxy-deck {
-  outline: 2px solid #4F8EC9;
-  -moz-outline-radius: 2px;
-}
-
-#identity-box:hover:active,
-#identity-box[open="true"] {
-  background-image: url("chrome://browser/skin/urlbar/startcap-active.png");
-}
-
-#identity-icon-label {
-  margin: 0;
-  color: black;
-  padding: 4px 6px 3px;
-  -moz-padding-end: 14px;
-}
-
-#identity-box.unknownIdentity > #identity-box-inner > #identity-icon-label {
-  display: none;
-}
-
-
-/* Verified domain */
-/* - Normal state */
-#identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png");
-  -moz-padding-start: 13px;
-}
-
-#identity-box.verifiedDomain > #identity-box-inner {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-secure-mid.png") repeat-x center center;
-  -moz-box-pack: center;
-}
-
-#identity-box.verifiedDomain > #identity-box-inner > #identity-icon-label {
-  background: url("chrome://browser/skin/urlbar/startcap-secure-end.png") no-repeat center right;
-}
-
-/* - Active state */
-#identity-box.verifiedDomain[open="true"],
-#identity-box.verifiedDomain:hover:active {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-active.png");
-}
-
-#identity-box.verifiedDomain[open="true"] > #identity-box-inner,
-#identity-box.verifiedDomain:hover:active > #identity-box-inner {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-secure-mid-active.png") repeat-x center center;
-  -moz-box-pack: center;
-}
-
-#identity-box.verifiedDomain[open="true"] > #identity-box-inner > #identity-icon-label,
-#identity-box.verifiedDomain:hover:active > #identity-box-inner > #identity-icon-label {
-  background: url("chrome://browser/skin/urlbar/startcap-secure-end-active.png") no-repeat center right;
-}
-
-/* - Focus state */
-#urlbar[focused="true"] > #identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > #identity-box-inner {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > #identity-box-inner > #identity-icon-label {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused-graphite.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > #identity-box-inner:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused-graphite.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > #identity-box-inner > #identity-icon-label:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused-graphite.png");
-}
-
-#identity-box.verifiedDomain > #identity-box-inner > #identity-icon-label[value=""] {
-  -moz-padding-start: 3px !important;
-  -moz-padding-end: 8px !important;
-}
-
-
-/* Verified Identity */
-/* - Normal state */
-#identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png");
-  -moz-padding-start: 13px;
-}
-
-#identity-box.verifiedIdentity > #identity-box-inner {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-verified-mid.png") repeat-x center center;
-  -moz-box-pack: center;
-}
-
-#identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-label {
-  background: url("chrome://browser/skin/urlbar/startcap-verified-end.png") no-repeat center right;
-}
-
-/* - Active state */
-#identity-box.verifiedIdentity[open="true"],
-#identity-box.verifiedIdentity:hover:active {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-active.png");
-}
-
-#identity-box.verifiedIdentity[open="true"] > #identity-box-inner,
-#identity-box.verifiedIdentity:hover:active > #identity-box-inner {
-  background: url("chrome://browser/skin/urlbar/startcap-verified-mid-active.png") repeat-x center center;
-}
-
-#identity-box.verifiedIdentity[open="true"] > #identity-box-inner > #identity-icon-label,
-#identity-box.verifiedIdentity:hover:active > #identity-box-inner > #identity-icon-label {
-  background: url("chrome://browser/skin/urlbar/startcap-verified-end-active.png") no-repeat center right;
-}
-
-/* - Focus state */
-#urlbar[focused="true"] > #identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > #identity-box-inner {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-label {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused-graphite.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > #identity-box-inner:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused-graphite.png");
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-label:-moz-system-metric(mac-graphite-theme) {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused-graphite.png");
-}
-
-/* Favicon Glow */
-#identity-box.verifiedIdentity > #identity-box-inner > #page-proxy-stack,
-#identity-box.verifiedDomain > #identity-box-inner > #page-proxy-stack {
-  -moz-margin-start: -3px;
-  width: 24px;
-  height: 20px;
-  padding: 2px 4px;
-  background: url("chrome://browser/skin/urlbar/urlbar-favicon-glow.png") center center no-repeat;
-}
-
-
 /* Popup Icons */
 #identity-popup-icon {
   height: 64px;
@@ -1994,7 +1865,7 @@ tabbrowser > tabbox {
   -moz-window-shadow: none;
   background-color: transparent;
   margin-top: -4px;
-  margin-left: -13px;
+  margin-left: -15px;
   min-width: 280px;
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat; 
 }
