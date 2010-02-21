@@ -36,13 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 html {
-  background: -moz-dialog;
+  background: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
 body {
   margin: 0;
   padding: 0 1em;
-  color: -moz-FieldText;
   font: message-box;
 }
 
@@ -63,10 +63,11 @@ h2 {
 
 .memBox {
     max-width: 30em;
-    background: white;
+    background: -moz-Field;
+    color: -moz-FieldText;
     margin-top: 25px;
     padding: 5px;
-    border: 1px solid black;
+    border: 1px solid -moz-FieldText;
     -moz-border-radius: 10px 10px;
 }
 
