@@ -936,11 +936,13 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
         if (!ok)
             return NULL;
 
-        thisp = JSVAL_IS_VOID(v)
-                ? OBJ_GET_PARENT(cx, thisp)
-                : JSVAL_TO_OBJECT(v);
-        while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
-            thisp = parent;
+        if (v != JSVAL_NULL) {
+            thisp = JSVAL_IS_VOID(v)
+                    ? OBJ_GET_PARENT(cx, thisp)
+                    : JSVAL_TO_OBJECT(v);
+            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+                thisp = parent;
+        }
     }
 
     return CallThisObjectHook(cx, thisp, argv);
