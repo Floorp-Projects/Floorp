@@ -165,6 +165,9 @@ nsFileControlFrame::Init(nsIContent* aContent,
   mMouseListener = new MouseListener(this);
   NS_ENSURE_TRUE(mMouseListener, NS_ERROR_OUT_OF_MEMORY);
 
+  if (!gUploadLastDir)
+    nsFileControlFrame::InitUploadLastDir();
+
   return rv;
 }
 
@@ -498,7 +501,8 @@ void nsFileControlFrame::InitUploadLastDir() {
 }
 
 void nsFileControlFrame::DestroyUploadLastDir() {
-  NS_RELEASE(gUploadLastDir);
+  if (gUploadLastDir)
+    NS_RELEASE(gUploadLastDir);
 }
 
 UploadLastDir::UploadLastDir():
