@@ -44,7 +44,7 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleHyperText.h"
 #include "nsIXBLAccessible.h"
-#include "nsAccessibleTreeWalker.h"
+#include "nsAccTreeWalker.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -2987,25 +2987,17 @@ nsAccessible::GetCachedFirstChild()
 void
 nsAccessible::CacheChildren()
 {
-  PRBool allowsAnonChildren = GetAllowsAnonChildAccessibles();
-  nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
+  nsAccTreeWalker walker(mWeakShell, nsCoreUtils::GetRoleContent(mDOMNode),
+                         GetAllowsAnonChildAccessibles());
 
-  // Seed the frame hint early while we're still on a container node.
-  // This is better than doing the GetPrimaryFrameFor() later on
-  // a text node, because text nodes aren't in the frame map.
-  // XXXbz is this code still needed?
-  walker.mState.frame = GetFrame();
-
-  walker.GetFirstChild();
-  while (walker.mState.accessible) {
+  nsCOMPtr<nsIAccessible> child;
+  while ((child = walker.GetNextChild())) {
     nsRefPtr<nsAccessible> acc =
-      nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+      nsAccUtils::QueryObject<nsAccessible>(child);
 
     mChildren.AppendElement(acc);
 
     acc->SetParent(this);
-
-    walker.GetNextSibling();
   }
 }
 
