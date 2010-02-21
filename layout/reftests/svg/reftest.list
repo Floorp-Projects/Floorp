@@ -13,6 +13,9 @@ include smil/reftest.list
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
 
+# svg-integration tests (using svg effects in e.g. HTML)
+include svg-integration/reftest.list
+
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
