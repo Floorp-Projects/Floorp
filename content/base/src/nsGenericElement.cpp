@@ -2711,10 +2711,7 @@ nsGenericElement::GetChildren(PRInt32 aChildType)
   if (frame) {
     nsIFrame *beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
     if (beforeFrame) {
-      nsIContent* beforeContent = beforeFrame->GetContent();
-      if (beforeFrame) {
-        list->AppendElement(beforeContent);
-      }
+      list->AppendElement(beforeFrame->GetContent());
     }
   }
 
@@ -2752,16 +2749,13 @@ nsGenericElement::GetChildren(PRInt32 aChildType)
     // Append native anonymous content to the end.
     nsIAnonymousContentCreator* creator = do_QueryFrame(frame);
     if (creator) {
-      creator->GetAnonymousContent(*list);
+      creator->AppendAnonymousContentTo(*list);
     }
 
     // Append :after generated content.
     nsIFrame *afterFrame = nsLayoutUtils::GetAfterFrame(frame);
     if (afterFrame) {
-      nsIContent* afterContent = afterFrame->GetContent();
-      if (afterFrame) {
-        list->AppendElement(afterContent);
-      }
+      list->AppendElement(afterFrame->GetContent());
     }
   }
 

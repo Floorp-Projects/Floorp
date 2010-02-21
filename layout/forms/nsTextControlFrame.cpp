@@ -1671,7 +1671,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsTextControlFrame::GetAnonymousContent(nsBaseContentList& aElements)
+nsTextControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
 {
   aElements.MaybeAppendElement(mAnonymousDiv);
 }

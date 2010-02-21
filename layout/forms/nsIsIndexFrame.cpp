@@ -239,7 +239,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsIsIndexFrame::GetAnonymousContent(nsBaseContentList& aElements)
+nsIsIndexFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
 {
   aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mInputContent);
