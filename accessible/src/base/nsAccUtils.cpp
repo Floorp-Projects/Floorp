@@ -47,7 +47,7 @@
 #include "nsHTMLTableAccessible.h"
 #include "nsDocAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibleTreeWalker.h"
+#include "nsAccTreeWalker.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
 #include "nsXULTreeGridAccessible.h"
@@ -362,14 +362,12 @@ nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
   nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)
     return PR_FALSE;
-  
+
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsAccessibleTreeWalker walker(weakShell, aNode, PR_FALSE);
+  nsAccTreeWalker walker(weakShell, content, PR_FALSE);
 
-  walker.mState.frame = frame;
-
-  walker.GetFirstChild();
-  return walker.mState.accessible ? PR_TRUE : PR_FALSE;
+  nsCOMPtr<nsIAccessible> accessible = walker.GetNextChild();
+  return accessible ? PR_TRUE : PR_FALSE;
 }
 
 already_AddRefed<nsIAccessible>
