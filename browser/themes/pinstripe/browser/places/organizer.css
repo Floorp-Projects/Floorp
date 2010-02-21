@@ -124,6 +124,7 @@ window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) 
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
+  -moz-image-region: rect(0, 7px, 5px, 0);
   padding: 0;
   margin-top: 1px;
   -moz-margin-end: 3px;
