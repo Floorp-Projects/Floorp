@@ -104,7 +104,7 @@ nsAccTreeWalker::GetNextChildInternal(PRBool aNoWalkUp)
   if (mState->childList)
     mState->childList->GetLength(&length);
 
-  while (mState->childIdx < length;) {
+  while (mState->childIdx < length) {
     nsIContent* childNode = mState->childList->GetNodeAt(mState->childIdx);
     mState->childIdx++;
 
