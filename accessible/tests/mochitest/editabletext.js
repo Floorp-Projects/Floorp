@@ -31,7 +31,21 @@ function nsEditableText(aElmOrID)
          "', value '" + this.getValue() + "', exception " + e);
     }
   }
-  
+
+  this.copyText = function copyText(aStartPos, aEndPos, aClipboardStr)
+  {
+    var msg = "copyText from " + aStartPos + " to " + aEndPos +
+      " for element " + prettyName(this.mID) + ": ";
+
+    try {
+      this.mAcc.copyText(aStartPos, aEndPos);
+      is(this.pasteFromClipboard(), aClipboardStr, msg);
+
+    } catch(e) {
+      ok(false, msg + e);
+    }
+  }
+
   this.copyNPasteText = function copyNPasteText(aStartPos, aEndPos,
                                                 aPos, aResStr)
   {
@@ -51,7 +65,24 @@ function nsEditableText(aElmOrID)
          "', value '" + this.getValue() + "', exception " + e);
     }
   }
-  
+
+  this.cutText = function cutText(aStartPos, aEndPos, aClipboardStr, aResStr)
+  {
+    var msg = "cutText from " + aStartPos + " to " + aEndPos +
+      " for element " + prettyName(this.mID) + ": ";
+
+    try {
+      this.mAcc.cutText(aStartPos, aEndPos);
+
+      is(this.pasteFromClipboard(), aClipboardStr,
+         msg + "wrong clipboard value");
+      is(this.getValue(), aResStr, msg + "wrong control value");
+
+    } catch(e) {
+      ok(false, msg + e);
+    }
+  }
+
   this.cutNPasteText = function copyNPasteText(aStartPos, aEndPos,
                                                aPos, aResStr)
   {
@@ -71,12 +102,27 @@ function nsEditableText(aElmOrID)
          "', value '" + this.getValue() + "', exception " + e);
     }
   }
-  
+
+  this.pasteText = function pasteText(aPos, aResStr)
+  {
+    var msg = "pasteText to " + aPos + " position for element " +
+      prettyName(this.mID) + ": ";
+
+    try {
+      this.mAcc.pasteText(aPos);
+
+      is(this.getValue(), aResStr, msg + "wrong control value");
+
+    } catch(e) {
+      ok(false, msg + e);
+    }
+  }
+
   this.deleteText = function deleteText(aStartPos, aEndPos, aResStr)
   {
     try {
       this.mAcc.deleteText(aStartPos, aEndPos);
-      
+
       is(this.getValue(), aResStr,
          "deleteText: Can't delete text from " + aStartPos +
          " to " + aEndPos + " for element with ID '" + this.mID + "'");
@@ -95,6 +141,33 @@ function nsEditableText(aElmOrID)
     if (this.mElm instanceof Components.interfaces.nsIDOMHTMLDocument)
       return this.mElm.body.textContent;
     return this.mElm.textContent;
+  }
+
+  this.pasteFromClipboard = function pasteFromClipboard()
+  {
+    var clip = Components.classes["@mozilla.org/widget/clipboard;1"].
+      getService(Components.interfaces.nsIClipboard);
+    if (!clip)
+      return;
+
+    var trans = Components.classes["@mozilla.org/widget/transferable;1"].
+    createInstance(Components.interfaces.nsITransferable);
+    if (!trans)
+      return;
+
+    trans.addDataFlavor("text/unicode");
+    clip.getData(trans, clip.kGlobalClipboard);
+
+    var str = new Object();
+    var strLength = new Object();
+    trans.getTransferData("text/unicode", str, strLength);
+
+    if (str)
+      str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+    if (str)
+      return str.data.substring(0, strLength.value / 2);
+
+    return "";
   }
 
   var elmObj = { value: null };
