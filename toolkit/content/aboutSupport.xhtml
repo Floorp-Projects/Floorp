@@ -16,7 +16,7 @@
 # The Original Code is aboutSupport.xhtml.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Corporation
+# Mozilla Foundation
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -41,7 +41,7 @@
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-  <!ENTITY % aboutSupportDTD SYSTEM "chrome://browser/locale/aboutSupport.dtd"> %aboutSupportDTD;
+  <!ENTITY % aboutSupportDTD SYSTEM "chrome://global/locale/aboutSupport.dtd"> %aboutSupportDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -178,10 +178,6 @@ const PREFS_BLACKLIST = [
 ];
 
 window.onload = function () {
-  // Get the FUEL Application object.
-  let Application = Cc["@mozilla.org/fuel/application;1"]
-                      .getService(Ci.fuelIApplication);
-
   // Get the support URL.
   let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                        .getService(Ci.nsIURLFormatter);
