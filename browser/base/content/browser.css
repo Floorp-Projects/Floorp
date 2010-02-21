@@ -76,9 +76,16 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   visibility: collapse;
 }
 
-#identity-box-inner {
-  max-width: 22em;
-  min-width: 1px;
+#identity-icon-labels {
+  max-width: 18em;
+}
+
+#identity-icon-country-label {
+  direction: ltr;
+}
+
+#identity-box.verifiedIdentity > hbox > #identity-icon-labels > #identity-icon-label {
+  -moz-margin-end: 0.25em !important;
 }
 
 #wrapper-search-container > #search-container > #searchbar > .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input {
