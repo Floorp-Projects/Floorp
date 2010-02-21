@@ -709,8 +709,12 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 /* ::::: nav-bar-inner ::::: */
 
 #urlbar {
-  direction: ltr !important;
-  font: icon !important;
+  direction: ltr;
+}
+
+.searchbar-textbox,
+#urlbar {
+  font: icon;
   width: 7em;
   min-width: 7em;
   -moz-appearance: none;
@@ -728,6 +732,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   -moz-padding-end: 6px;
 }
 
+.searchbar-textbox[focused="true"],
 #urlbar[focused="true"] {
   -moz-border-top-colors: rgba(0,0,0,.3);
   -moz-border-right-colors: rgba(0,0,0,.2);
@@ -737,6 +742,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
                    @focusRingShadow@;
 }
 
+.searchbar-engine-button,
 #identity-box {
   background: #fff url(navbar-textbox-button.png) bottom repeat-x;
   -moz-background-clip: padding;
@@ -750,6 +756,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   margin-top: -1px;
   margin-bottom: -1px;
   -moz-margin-start: -1px;
+  -moz-margin-end: 0;
 }
 
 #identity-box:focus:not(:active):not([open="true"]) #page-proxy-stack {
@@ -758,6 +765,13 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
                    0 0 3px 2px -moz-mac-focusring;
 }
 
+.searchbar-textbox[focused="true"] .searchbar-engine-button,
+#urlbar[focused="true"] > #identity-box {
+  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset;
+}
+
+.searchbar-engine-button[open="true"],
+.searchbar-engine-button:hover:active,
 #identity-box[open="true"],
 #identity-box:hover:active {
   border-style: none;
@@ -767,7 +781,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   -moz-box-shadow: 0 0 50px rgba(0,0,0,.3) inset,
                    0 3px 3px rgba(0,0,0,.6) inset,
                    2px 0 2px rgba(0,0,0,.3) inset,
-                   0 -2px 2px rgba(0,0,0,.1) inset;
+                   0 -2px 2px rgba(0,0,0,.1) inset !important;
 }
 
 #identity-box.verifiedDomain {
@@ -786,17 +800,31 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   display: none;
 }
 
+.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box,
 #urlbar > .autocomplete-textbox-container > .textbox-input-box {
-  -moz-border-radius-topleft: 100%;
-  -moz-border-radius-bottomleft: 100%;
   -moz-margin-end: 0;
   -moz-margin-start: -16px;
   background-color: -moz-field;
   -moz-padding-start: 10px;
+  height: 20px;
+}
+
+.searchbar-textbox:-moz-locale-dir(ltr) > .autocomplete-textbox-container > .textbox-input-box,
+#urlbar > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-border-radius-topleft: 100%;
+  -moz-border-radius-bottomleft: 100%;
   -moz-box-shadow: 1px 1px 1px rgba(0,0,0,.3) inset,
                    1px 0 0 rgba(0,0,0,.2) inset;
 }
 
+.searchbar-textbox:-moz-locale-dir(rtl) > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-border-radius-topright: 100%;
+  -moz-border-radius-bottomright: 100%;
+  -moz-box-shadow: -1px 1px 1px rgba(0,0,0,.3) inset,
+                   -1px 0 0 rgba(0,0,0,.2) inset;
+}
+
+.searchbar-textbox[focused="true"]:-moz-locale-dir(ltr) > .autocomplete-textbox-container > .textbox-input-box,
 #urlbar[focused="true"] > .autocomplete-textbox-container > .textbox-input-box {
   -moz-box-shadow: 1px 1px 1px rgba(0,0,0,.3) inset,
                    1px 0 0 rgba(0,0,0,.2) inset,
@@ -804,8 +832,11 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
                    1px 0 1px -moz-mac-focusring inset;
 }
 
-#urlbar[focused="true"] > #identity-box {
-  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset;
+.searchbar-textbox[focused="true"]:-moz-locale-dir(rtl) > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-box-shadow: -1px 1px 1px rgba(0,0,0,.3) inset,
+                   -1px 0 0 rgba(0,0,0,.2) inset,
+                   -2px 0 0 -moz-field inset,
+                   -1px 0 1px -moz-mac-focusring inset;
 }
 
 #urlbar-icons {
