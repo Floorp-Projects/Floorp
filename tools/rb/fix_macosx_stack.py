@@ -134,7 +134,8 @@ def cxxfilt(sym):
 
 line_re = re.compile("^([ \|0-9-]*)(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$")
 atos_sym_re = re.compile("^(\S+) \(in ([^)]+)\) \((.+)\)$")
-for line in sys.stdin:
+
+def fixSymbols(line):
     result = line_re.match(line)
     if result is not None:
         # before allows preservation of balance trees
@@ -157,9 +158,13 @@ for line in sys.stdin:
                 symbol = cxxfilt(symbol)
                 info = "%s (%s, in %s)" % (symbol, fileline, library)
 
-            sys.stdout.write(before + info + after + "\n")
+            return before + info + after + "\n"
         else:
             sys.stderr.write("Warning: File \"" + file + "\" does not exist.\n")
-            sys.stdout.write(line)
+            return line
     else:
-        sys.stdout.write(line)
+        return line
+
+if __name__ == "__main__":
+    for line in sys.stdin:
+        sys.stdout.write(fixSymbols(line))
