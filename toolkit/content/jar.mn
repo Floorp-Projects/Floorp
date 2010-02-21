@@ -14,6 +14,7 @@ toolkit.jar:
 *  content/global/aboutAbout.xhtml            (aboutAbout.xhtml)
 *  content/global/aboutRights.xhtml           (aboutRights.xhtml)
 *  content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
+*  content/global/aboutSupport.xhtml
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
