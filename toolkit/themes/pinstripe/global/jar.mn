@@ -4,6 +4,7 @@ toolkit.jar:
   skin/classic/global/50pct_transparent_grey.png
   skin/classic/global/about.css                                      (../../winstripe/global/about.css)
   skin/classic/global/aboutMemory.css                                (../../winstripe/global/aboutMemory.css)
+  skin/classic/global/aboutSupport.css                               (../../winstripe/global/aboutSupport.css)
   skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
   skin/classic/global/arrow.css
   skin/classic/global/autocomplete.css
