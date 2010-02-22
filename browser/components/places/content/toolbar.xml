@@ -483,8 +483,8 @@
             else {
               // In all other cases the insertion point is before that node.
               container = selectedNode.parent;
-              index = container.getChildIndex(selectedNode);
-              isTag = PlacesUtils.nodeIsTagQuery(container);
+              index = PlacesUtils.getIndexOfNode(selectedNode);
+              isTag = PlacesUtils.nodeIsTagQuery(selectedNode.parent);
             }
           }
 
