@@ -94,7 +94,7 @@
 
 #help-back-button > .toolbarbutton-menubutton-dropmarker {
   margin-top: 3px;
-  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
+  list-style-image: url("chrome://help/skin/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
 
@@ -103,7 +103,7 @@
 }
 
 #help-back-button[disabled="true"] > .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
+  list-style-image: url("chrome://help/skin/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
 
@@ -115,14 +115,14 @@
 
 #help-forward-button > .toolbarbutton-menubutton-dropmarker {
   margin-top: 3px;
-  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
+  list-style-image: url("chrome://help/skin/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
 #help-forward-button:hover > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(24px, 14px, 48px, 0px);
 }
 #help-forward-button[disabled="true"] > .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
+  list-style-image: url("chrome://help/skin/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
 #help-forward-button:hover:active > .toolbarbutton-menubutton-dropmarker {
