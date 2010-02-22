@@ -20,7 +20,11 @@ html|applet:not([height]), html|applet[height=""] {
     overflow: hidden;
     text-align: center;
 
-    background-image: url(chrome://mozapps/skin/plugins/backgroundStripes.png);
+    background-image: -moz-repeating-linear-gradient(-45deg,
+                                                     rgba(65, 65, 65, 0.8),
+                                                     rgba(65, 65, 65, 0.8) 20px,
+                                                     rgba(69, 69, 69, 0.8) 20px,
+                                                     rgba(69, 69, 69, 0.8) 40px);
     -moz-border-radius: 12px;
     /* recessed effect with dark inner shadow and lightened bottom */
     -moz-box-shadow: inset 0 1px 5px rgba(0,0,0,0.8),
