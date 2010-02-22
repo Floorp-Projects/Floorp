@@ -2,29 +2,14 @@
 
 /* These styles affect only the bound element, not other page content. */
 
-html|object:not([width]), html|object[width=""],
-html|embed:not([width]), html|embed[width=""],
-html|applet:not([width]), html|applet[width=""] {
-    width: 240px;
-}
-
-html|object:not([height]), html|object[height=""],
-html|embed:not([height]), html|embed[height=""],
-html|applet:not([height]), html|applet[height=""] {
-    height: 200px;
-}
-
 .mainBox {
-    width: inherit;
-    height: inherit;
-    overflow: hidden;
     text-align: center;
-
     background-image: -moz-repeating-linear-gradient(-45deg,
                                                      rgba(65, 65, 65, 0.8),
                                                      rgba(65, 65, 65, 0.8) 20px,
                                                      rgba(69, 69, 69, 0.8) 20px,
                                                      rgba(69, 69, 69, 0.8) 40px);
+    color: white;
     -moz-border-radius: 12px;
     /* recessed effect with dark inner shadow and lightened bottom */
     -moz-box-shadow: inset 0 1px 5px rgba(0,0,0,0.8),
@@ -32,15 +17,9 @@ html|applet:not([height]), html|applet[height=""] {
     padding: 5px;
     -moz-user-select: none;
 }
-:-moz-type-unsupported .mainBox,
-:-moz-handler-disabled .mainBox,
-:-moz-handler-blocked .mainBox {
-    -moz-user-focus: normal;
-}
-:-moz-type-unsupported .mainBox:focus,
-:-moz-handler-disabled .mainBox:focus,
-:-moz-handler-blocked .mainBox:focus {
-    outline: 1px dotted;
+
+html|a {
+  color: white;
 }
 
 .icon {
@@ -63,21 +42,8 @@ html|applet:not([height]), html|applet[height=""] {
 }
 
 .msg {
-    display: none;
-    color: white;
     font: 12px sans-serif;
     font-weight: bold;
     cursor: default;
     text-shadow: rgba(0,0,0,0.8) 0 0 5px;
-}
-:-moz-type-unsupported .msgUnsupported,
-:-moz-handler-disabled .msgDisabled,
-:-moz-handler-blocked .msgBlocked,
-:-moz-handler-crashed .msgCrashed,
-:-moz-handler-crashed .msgReload {
-    display: block;
-}
-
-html|A {
-    color: white;
 }
