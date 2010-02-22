@@ -80,7 +80,8 @@ nsDOMWorkerTimeout::FunctionCallback::FunctionCallback(PRUint32 aArgc,
 
   JSRuntime* rt;
   *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
-  NS_ENSURE_SUCCESS(*aRv,);
+  if (NS_FAILED(*aRv))
+    return;
 
   JSBool ok = mCallback.Hold(rt);
   CONSTRUCTOR_ENSURE_TRUE(ok, *aRv);
@@ -153,11 +154,13 @@ nsDOMWorkerTimeout::ExpressionCallback::ExpressionCallback(PRUint32 aArgc,
 
   JSString* expr = JS_ValueToString(aCx, aArgv[0]);
   *aRv = expr ? NS_OK : NS_ERROR_FAILURE;
-  NS_ENSURE_SUCCESS(*aRv,);
+  if (NS_FAILED(*aRv))
+    return;
 
   JSRuntime* rt;
   *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
-  NS_ENSURE_SUCCESS(*aRv,);
+  if (NS_FAILED(*aRv))
+    return;
 
   JSBool ok = mExpression.Hold(rt);
   CONSTRUCTOR_ENSURE_TRUE(ok, *aRv);

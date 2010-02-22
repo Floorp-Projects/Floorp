@@ -609,7 +609,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
     JSAutoSuspendRequest ar(aCx);
 
     scriptError = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,);
+    if (NS_FAILED(rv))
+      return;
   }
 
   const PRUnichar* message =
@@ -625,7 +626,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
 
   rv = scriptError->Init(message, filename.get(), line, aReport->lineno,
                          column, aReport->flags, "DOM Worker javascript");
-  NS_ENSURE_SUCCESS(rv,);
+  if (NS_FAILED(rv))
+    return;
 
   // Don't call the error handler if we're out of stack space.
   if (aReport->errorNumber != JSMSG_SCRIPT_STACK_QUOTA &&
@@ -674,7 +676,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
   // top-level worker and we send the message to the main thread.
   rv = parent ? nsDOMThreadService::get()->Dispatch(parent, runnable)
               : NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv,);
+  if (NS_FAILED(rv))
+    return;
 }
 
 /*******************************************************************************
