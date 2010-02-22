@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=42976
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="runTest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=42976">Mozilla Bug 42976</a>
 <p id="display"></p>
 <div id="content">
@@ -22,50 +22,57 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=42976
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var iframes = document.getElementsByTagName("iframe");
-for (var i = 1; i < iframes.length; i++) {
-  var doc = iframes[i].contentDocument;
-  var clonefalse = doc.cloneNode(false);
-  // doc.compatMode
-  ok(doc.compatMode == clonefalse.compatMode, "compatMode not preserved correctly; " + iframes[i].id);
 
-  // doc.contentType
-  ok(doc.contentType == clonefalse.contentType, "contentType not preserved correctly; " + iframes[i].id);
+SimpleTest.waitForExplicitFinish();
 
-  // doc.xmlStandalone
-  ok(doc.xmlStandalone == clonefalse.xmlStandalone, "xmlStandalone not preserved correctly; " + iframes[i].id);
+function runTest() {
 
-  // doc.xmlEncoding
-  ok(doc.xmlEncoding == clonefalse.xmlEncoding, "xmlEncoding not preserved correctly; " + iframes[i].id);
+  var iframes = document.getElementsByTagName("iframe");
+  for (var i = 1; i < iframes.length; i++) {
+    var doc = iframes[i].contentDocument;
+    var clonefalse = doc.cloneNode(false);
+    // doc.compatMode
+    ok(doc.compatMode == clonefalse.compatMode, "compatMode not preserved correctly; " + iframes[i].id);
+  
+    // doc.contentType
+    ok(doc.contentType == clonefalse.contentType, "contentType not preserved correctly; " + iframes[i].id);
+  
+    // doc.xmlStandalone
+    ok(doc.xmlStandalone == clonefalse.xmlStandalone, "xmlStandalone not preserved correctly; " + iframes[i].id);
+  
+    // doc.xmlEncoding
+    ok(doc.xmlEncoding == clonefalse.xmlEncoding, "xmlEncoding not preserved correctly; " + iframes[i].id);
+  
+    // doc.characterSet
+    ok(doc.characterSet == clonefalse.characterSet, "charset not preserved correctly; " + iframes[i].id);
+  
+    // innerHTML+tag case test
+    var clonetrue = doc.cloneNode(true);
+    doc.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
+    clonetrue.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
+    ok(doc.documentElement.innerHTML == clonetrue.documentElement.innerHTML,
+       "innerHTML not preserved correctly; " + iframes[i].id);
+  
+  }
+  
+  // A couple of tests that don't quite fit in the framework.
+  var doc = iframes[0].contentDocument;
+  doc.dir="rtl";
+  var docclone = doc.cloneNode(false);
+  
+  // doc.dir
+  ok(docclone.dir == "rtl", "dir not preserved correctly");
+  
+  // document.querySelectorAll(":lang(ja)")
+  docclone.appendChild(docclone.createElement("html"));
+  ok(docclone.querySelectorAll(":lang(ja)").length == 1, "lang not preserved correctly");
+  
+  docclone.documentElement.innerHTML="<body><p><a href='a.html' id=a>asf</a></body>";
+  ok(docclone.getElementById('a').href == "http://www.mozilla.org/a.html",
+     "base not preserved correctly");
 
-  // doc.characterSet
-  ok(doc.characterSet == clonefalse.characterSet, "charset not preserved correctly; " + iframes[i].id);
-
-  // innerHTML+tag case test
-  var clonetrue = doc.cloneNode(true);
-  doc.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
-  clonetrue.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
-  ok(doc.documentElement.innerHTML == clonetrue.documentElement.innerHTML,
-     "innerHTML not preserved correctly; " + iframes[i].id);
-
+  SimpleTest.finish();
 }
-
-// A couple of tests that don't quite fit in the framework.
-var doc = iframes[0].contentDocument;
-doc.dir="rtl";
-var docclone = doc.cloneNode(false);
-
-// doc.dir
-ok(docclone.dir == "rtl", "dir not preserved correctly");
-
-// document.querySelectorAll(":lang(ja)")
-docclone.appendChild(docclone.createElement("html"));
-ok(docclone.querySelectorAll(":lang(ja)").length == 1, "lang not preserved correctly");
-
-docclone.documentElement.innerHTML="<body><p><a href='a.html' id=a>asf</a></body>";
-ok(docclone.getElementById('a').href == "http://www.mozilla.org/a.html",
-   "base not preserved correctly");
-
 </script>
 </pre>
 </body>
