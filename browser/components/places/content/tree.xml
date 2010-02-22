@@ -449,7 +449,7 @@
           //          you must not, since the tree is nested and as your tree 
           //          index may change when folders before you are opened and
           //          closed. You must convert your tree index to a node, and
-          //          then use getIndexOfNode to find your absolute index in
+          //          then use getChildIndex to find your absolute index in
           //          the parent container instead. 
           //
           var resultView = this.view;
@@ -481,7 +481,7 @@
       <method name="_getInsertionPoint">
         <parameter name="index"/>
         <parameter name="orientation"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           var result = this.getResult();
           var resultview = this.view;
           var container = result.root;
@@ -507,12 +507,14 @@
              index = 0;
             }
             else {
-              // Use the last-selected node's container unless the root node
-              // is selected, in which case we use the root node itself as the
-              // insertion point.
-              container = lastSelected.parent || container;
+              // Use the last-selected node's container.
+              container = lastSelected.parent;
 
-              // avoid the potentially expensive call to getIndexOfNode() 
+              // See comment in the treeView.js's copy of this method
+              if (!container || !container.containerOpen)
+                return null;
+
+              // Avoid the potentially expensive call to getChildIndex
               // if we know this container doesn't allow insertion
               if (PlacesControllerDragHelper.disallowInsertion(container))
                 return null;
@@ -533,7 +535,7 @@
                 dropNearItemId = lastSelected.itemId;
               }
               else {
-                var lsi = PlacesUtils.getIndexOfNode(lastSelected);
+                var lsi = container.getChildIndex(lastSelected);
                 index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
               }
             }
