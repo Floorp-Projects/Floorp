@@ -338,15 +338,6 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeeds
     }
 #endif
 #endif
-    if (!newFont) {
-        return nsnull;
-    }
-    if (!newFont->Valid()) {
-        delete newFont;
-        return nsnull;
-    }
-    nsRefPtr<gfxFont> font = newFont;
-    gfxFontCache::GetCache()->AddNew(font);
     return newFont;
 }
 
@@ -652,7 +643,7 @@ gfxMacPlatformFontList::InitFontList()
         mFontFamilies.Put(availableFamilyName, familyEntry);
 
         // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.GetEntry(availableFamilyName))
+        if (mBadUnderlineFamilyNames.Contains(availableFamilyName))
             familyEntry->SetBadUnderlineFamily();
     }
 

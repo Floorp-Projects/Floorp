@@ -36,31 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// nsPopupSetFrame
-//
-
 #ifndef nsPopupSetFrame_h__
 #define nsPopupSetFrame_h__
 
 #include "nsIAtom.h"
-
 #include "nsBoxFrame.h"
-#include "nsMenuPopupFrame.h"
-
-class nsCSSFrameConstructor;
 
 nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-struct nsPopupFrameList {
-  nsPopupFrameList* mNextPopup;  // The next popup in the list.
-  nsMenuPopupFrame* mPopupFrame; // Our popup.
-  nsIContent* mPopupContent;     // The content element for the <popup> itself.
-
-public:
-  nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* aNext);
-  void Destroy(nsIFrame* aDestructRoot = nsnull);
-};
 
 class nsPopupSetFrame : public nsBoxFrame
 {
@@ -85,7 +67,7 @@ public:
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsFrameList&    aChildList);
 
-    // nsIBox
+  // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   // Used to destroy our popup frames.
@@ -102,13 +84,10 @@ public:
 #endif
 
 protected:
-
-  nsresult AddPopupFrameList(nsFrameList& aPopupFrameList);
-  nsresult AddPopupFrame(nsIFrame* aPopup);
-  nsresult RemovePopupFrame(nsIFrame* aPopup);
+  void AddPopupFrameList(nsFrameList& aPopupFrameList);
+  void RemovePopupFrame(nsIFrame* aPopup);
   
-  nsPopupFrameList* mPopupList;
-
-}; // class nsPopupSetFrame
+  nsFrameList mPopupList;
+};
 
 #endif

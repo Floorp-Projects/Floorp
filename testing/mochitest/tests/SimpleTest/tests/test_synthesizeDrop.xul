@@ -60,6 +60,7 @@ _tests\testing\mochitest\chrome\testing\mochitest\tests\SimpleTest\tests\test_sy
 
   /** Test for Bug 462172 synthesizeDrop**/
 
+var gSetDropEffect = true;
 var gData;
 var gEnter = false;
 var gOver  = false;
@@ -85,7 +86,8 @@ function doOnDragEnter(aEvent)
 function doOnDragOver(aEvent)
 {
   gOver = true;
-  aEvent.dataTransfer.dropEffect = "copy";
+  if (gSetDropEffect)
+    aEvent.dataTransfer.dropEffect = "copy";
   aEvent.preventDefault();
 }
 
@@ -95,11 +97,15 @@ function test() {
 
   var result;
   // Now we can run our tests
-  result = synthesizeDrop($("drag1"), drag1, window);
+  result = synthesizeDrop($("drag1"), drag1, null, window);
   ok(gEnter, "Fired dragenter");
   ok(gOver,  "Fired dragover");
   is(result, "copy", "copy is dropEffect");
   is(gData, drag1[0][0].data, "Received valid drop data");
+
+  gSetDropEffect = false;
+  result = synthesizeDrop($("drag1"), drag1, "link", window);
+  is(result, "link", "link is dropEffect");
 
   SimpleTest.finish();
 

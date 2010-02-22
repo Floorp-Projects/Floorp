@@ -403,28 +403,28 @@ else
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
-        HOST_CC="$CC"
+        HOST_CC='$(CC)'
     fi
     if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
+        HOST_CFLAGS='$(CFLAGS)'
     fi
     if test -z "$HOST_CXX"; then
-        HOST_CXX="$CXX"
+        HOST_CXX='$(CXX)'
     fi
     if test -z "$HOST_CXXFLAGS"; then
-        HOST_CXXFLAGS="$CXXFLAGS"
+        HOST_CXXFLAGS='$(CXXFLAGS)'
     fi
     if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
+        HOST_LDFLAGS='$(LDFLAGS)'
     fi
     if test -z "$HOST_RANLIB"; then
-        HOST_RANLIB="$RANLIB"
+        HOST_RANLIB='$(RANLIB)'
     fi
     if test -z "$HOST_AR"; then
-        HOST_AR="$AR"
+        HOST_AR='$(AR)'
     fi
     if test -z "$HOST_AR_FLAGS"; then
-        HOST_AR_FLAGS="$AR_FLAGS"
+        HOST_AR_FLAGS='$(AR_FLAGS)'
     fi
 fi
 
@@ -1730,7 +1730,6 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
     ;;
 
 *-linux*|*-kfreebsd*-gnu)
@@ -1916,6 +1915,7 @@ case "$target" in
         
         LDFLAGS=$_SAVE_LDFLAGS
     fi
+    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
     ;;
 
 *-freebsd*)
@@ -4366,7 +4366,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.12.0, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
+    AM_PATH_NSS(3.12.6, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -4901,10 +4901,10 @@ cairo-cocoa)
     AC_DEFINE(XP_MACOSX)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -framework Cocoa"
+    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL -lobjc'
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     ;;
@@ -6272,8 +6272,9 @@ else
               int i;
               int rc;
               char *zBuf;
+              const int bufSize = 1024*3;
 
-              zBuf = malloc(1024*3*sizeof(char));
+              zBuf = malloc(bufSize*sizeof(char));
               assert( zBuf );
               rc = sqlite3_open(":memory:", &db);
               assert( rc==SQLITE_OK );
@@ -6294,12 +6295,12 @@ else
               sqlite3_close(db);
               in = fopen(zFilename, "r");
               assert( in!=0 );
-              rc = fread(zBuf, 1, sizeof(zBuf), in);
-              assert( rc==sizeof(zBuf) );
+              rc = fread(zBuf, 1, bufSize, in);
+              assert( rc==bufSize );
               fclose(in);
               unlink(zFilename);
               free( zBuf );
-              for(i=0; i<sizeof(zBuf)-11; i++){
+              for(i=0; i<bufSize-11; i++){
                 if( *(zBuf+i)=='h' && memcmp(zBuf+i, "hijklmnopq", 10)==0 ){
                   return 1;
                 }
@@ -6408,47 +6409,78 @@ AC_SUBST(LIBCONIC_CFLAGS)
 AC_SUBST(LIBCONIC_LIBS)
  
 dnl ========================================================
-dnl = Hildon and OSSO checks
+dnl = Maemo checks
 dnl ========================================================
-PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
-                  MOZ_PLATFORM_HILDON=1,
-                  MOZ_PLATFORM_HILDON=)
-if test $MOZ_PLATFORM_HILDON; then
-   AC_DEFINE(MOZ_PLATFORM_HILDON)
-   X11_COMPOSITED_PLUGINS="yes"
+
+MAEMO_SDK_TARGET_VER=-1
+
+MOZ_ARG_WITH_STRING(maemo-version,
+[  --with-maemo-version=MAEMO_SDK_TARGET_VER
+                        Maemo SDK Version],
+  MAEMO_SDK_TARGET_VER=$withval)
+
+case "$MAEMO_SDK_TARGET_VER" in
+5)
+    MOZ_PLATFORM_MAEMO=5
+    ;;
+
+6)
+    MOZ_PLATFORM_MAEMO=6
+    ;;
+
+-1)
+    dnl We aren't compiling for Maemo, move on.
+    ;;
+*)
+    AC_MSG_ERROR([Unknown Maemo Version.  Try setting --with-maemo-version to 5 or 6.])
+    ;;
+esac
+
+if test $MOZ_PLATFORM_MAEMO; then
+   AC_DEFINE_UNQUOTED([MOZ_PLATFORM_MAEMO], $MOZ_PLATFORM_MAEMO)
+
+   if test -z "$MOZ_ENABLE_DBUS"; then
+       AC_MSG_ERROR([DBus is required when building for Maemo])
+   fi
+   
+   MOZ_GFX_OPTIMIZE_MOBILE=1
+   MOZ_WEBGL_GLX=
+
+   if test $MOZ_PLATFORM_MAEMO = 5; then
+      dnl if we have Xcomposite we should also have Xdamage and Xfixes
+      AC_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
+                       [AC_MSG_ERROR([Couldn't find X11/extensions/Xdamage.h which is required for composited plugins.])])
+      AC_CHECK_LIB(Xcomposite, XCompositeRedirectWindow, [XCOMPOSITE_LIBS="-lXcomposite -lXdamage -lXfixes"],
+                   [MISSING_X="$MISSING_X -lXcomposite"], $XLIBS)
+
+      AC_SUBST(XCOMPOSITE_LIBS)
+
+      PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime, _LIB_FOUND=1, _LIB_FOUND=)
+      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBHILDONMIME_LIBS"
+      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBHILDONMIME_CFLAGS"
+      if test -z "$_LIB_FOUND"; then
+         AC_MSG_ERROR([Hildon Mime is required when building for Maemo])
+      fi
+
+
+      PKG_CHECK_MODULES(LIBOSSO,libosso, _LIB_FOUND=1, _LIB_FOUND=)
+      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBOSSO_LIBS"
+      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBOSSO_CFLAGS"
+      if test -z "$_LIB_FOUND"; then
+         AC_MSG_ERROR([LibOSSO is required when building for Maemo])
+      fi
+
+      PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2, _LIB_FOUND=1, _LIB_FOUND=)
+      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBHILDONFM_LIBS"
+      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBHILDONFM_CFLAGS"
+      if test -z "$_LIB_FOUND"; then
+         AC_MSG_ERROR([Hildon FM-2 is required when building for Maemo])
+      fi
+   fi
+
+   AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
+   AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
 fi
-AC_SUBST(LIBHILDONMIME_CFLAGS)
-AC_SUBST(LIBHILDONMIME_LIBS)
-
-if test "$X11_COMPOSITED_PLUGINS" = "yes"; then
-    dnl if we have Xcomposite we should also have Xdamage and Xfixes
-    AC_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
-                     [AC_MSG_ERROR([Couldn't find X11/extentsions/Xdamage.h which is required for composited plugins.])])
-    AC_CHECK_LIB(Xcomposite, XCompositeRedirectWindow, [XCOMPOSITE_LIBS="-lXcomposite -lXdamage -lXfixes"],
-                 [MISSING_X="$MISSING_X -lXcomposite"], $XLIBS)
-fi
-AC_SUBST(XCOMPOSITE_LIBS)
-
-PKG_CHECK_MODULES(LIBOSSO,libosso,
-                  NS_OSSO=1,
-                  NS_OSSO=)
-
-if test $NS_OSSO; then
-    if test -z "$MOZ_ENABLE_DBUS"; then
-        AC_MSG_ERROR([DBus is required when building for OSSO])
-    fi
-    AC_DEFINE(NS_OSSO)
-    MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_WEBGL_GLX=
-fi
-AC_SUBST(LIBOSSO_CFLAGS)
-AC_SUBST(LIBOSSO_LIBS)
-
-PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2,
-                  NS_HILDONFM=1,
-                  NS_HILDONFM=)
-AC_SUBST(LIBHILDONFM_CFLAGS)
-AC_SUBST(LIBHILDONFM_LIBS)
 
 dnl ========================================================
 dnl = faststripe theme
@@ -8018,9 +8050,7 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
-AC_SUBST(MOZ_PLATFORM_HILDON)
-AC_SUBST(NS_OSSO)
-AC_SUBST(NS_MAEMO_LOCATION)
+AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)

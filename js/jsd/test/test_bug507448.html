@@ -56,7 +56,6 @@ if (!jsdOn) {
   assertArraysEqual(jsd.wrapValue(h).script.getParameterNames(), ["me", "too", "here"]);
   assertArraysEqual(jsd.wrapValue(annoying).script.getParameterNames(),
                     ["a", "b", "a", "b", "b", "a"]);
-  dump('aa');
   assertArraysEqual(jsd.wrapValue(manyLocals).script.getParameterNames(),
                     "abcdefghijklm".split(""));
 

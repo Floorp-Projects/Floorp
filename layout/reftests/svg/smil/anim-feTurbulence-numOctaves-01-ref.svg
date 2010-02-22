@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="filter_1" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1"/>
+  </filter>
+  <filter id="filter_2" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="2"/>
+  </filter>
+  <filter id="filter_3" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="3"/>
+  </filter>
+  <filter id="filter_4" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4"/>
+  </filter>
+  <rect x="0" y="0" width="20" height="20" filter="url(#filter_3)"/>
+  <rect x="20" y="0" width="20" height="20" filter="url(#filter_4)"/>
+  <rect x="0" y="20" width="20" height="20" filter="url(#filter_2)"/>
+  <rect x="20" y="20" width="20" height="20" filter="url(#filter_1)"/>
+  <rect x="0" y="40" width="20" height="20" filter="url(#filter_3)"/>
+  <rect x="20" y="40" width="20" height="20" filter="url(#filter_4)"/>
+  <rect x="0" y="60" width="20" height="20" filter="url(#filter_2)"/>
+  <rect x="20" y="60" width="20" height="20" filter="url(#filter_1)"/>
+  <rect x="0" y="80" width="20" height="20" filter="url(#filter_1)"/>
+  <rect x="20" y="80" width="20" height="20" filter="url(#filter_4)"/>
+  <rect x="0" y="100" width="20" height="20" filter="url(#filter_4)"/>
+  <rect x="20" y="100" width="20" height="20" filter="url(#filter_1)"/>
+</svg>

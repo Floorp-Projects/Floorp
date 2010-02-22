@@ -38,14 +38,12 @@
 #define nsGfxCheckboxControlFrame_h___
 
 #include "nsFormControlFrame.h"
-#include "nsICheckboxControlFrame.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
 
-class nsGfxCheckboxControlFrame : public nsFormControlFrame,
-                                  public nsICheckboxControlFrame
+class nsGfxCheckboxControlFrame : public nsFormControlFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -66,11 +64,6 @@ public:
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
-
-  //nsICheckboxControlFrame methods
-  NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked);
-
-  NS_DECL_QUERYFRAME
 
 protected:
 

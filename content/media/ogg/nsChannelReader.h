@@ -54,7 +54,7 @@ public:
   ~nsChannelReader();
 
   /**
-   * Initialize the reader with the edia stream.
+   * Initialize the reader with the media stream.
    * This takes ownership of aStream.
    */
   void Init(nsMediaStream* aStream);

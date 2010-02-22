@@ -64,6 +64,8 @@ protected:
   NS_OVERRIDE virtual void     Destroy(nsSMILValue&) const;
   NS_OVERRIDE virtual nsresult Assign(nsSMILValue& aDest,
                                       const nsSMILValue& aSrc) const;
+  NS_OVERRIDE virtual PRBool   IsEqual(const nsSMILValue& aLeft,
+                                       const nsSMILValue& aRight) const;
   NS_OVERRIDE virtual nsresult Add(nsSMILValue& aDest,
                                    const nsSMILValue& aValueToAdd,
                                    PRUint32 aCount) const;

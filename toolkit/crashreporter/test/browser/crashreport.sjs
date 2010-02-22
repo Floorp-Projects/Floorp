@@ -145,7 +145,7 @@ function handleRequest(request, response)
   else if (request.method == "POST") {
     let formData = parseMultipartForm(request);
 
-    if ('upload_file_minidump' in formData) {
+    if (formData && 'upload_file_minidump' in formData) {
       response.setHeader("Content-Type", "text/plain", false);
 
       let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
@@ -161,6 +161,7 @@ function handleRequest(request, response)
       response.write("CrashID=" + uuid + "\n");
     }
     else {
+      dump('*** crashreport.sjs: Malformed request?\n');
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
       response.write("Missing minidump file");
     }

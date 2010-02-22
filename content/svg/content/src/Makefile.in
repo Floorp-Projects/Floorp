@@ -129,6 +129,8 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGSetElement.cpp \
            nsSVGTransformSMILType.cpp \
            nsSVGTransformSMILAttr.cpp \
+           SVGOrientSMILType.cpp \
+           SVGViewBoxSMILType.cpp \
            $(NULL)
 endif
 

@@ -67,7 +67,7 @@ pref("browser.cache.disk.capacity",         20000);
 pref("browser.cache.memory.enable",         true);
 //pref("browser.cache.memory.capacity",     -1);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
-pref("browser.cache.disk_cache_ssl",        false);
+pref("browser.cache.disk_cache_ssl",        true);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
 
@@ -1214,6 +1214,17 @@ pref("editor.positioning.offset",            0);
 
 pref("dom.max_chrome_script_run_time", 20);
 pref("dom.max_script_run_time", 10);
+
+// How long a plugin is allowed to process a synchronous IPC message
+// before we consider it "hung".
+//
+// NB: chosen to match dom.max_script_run_time by default
+#ifndef DEBUG
+pref("dom.ipc.plugins.timeoutSecs", 10);
+#else
+// No timeout in DEBUG builds
+pref("dom.ipc.plugins.timeoutSecs", 0);
+#endif
 
 pref("svg.enabled", true);
 pref("svg.smil.enabled", true);

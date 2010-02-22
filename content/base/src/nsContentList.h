@@ -55,6 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsCRT.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -96,6 +97,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsINodeList)
 
   void AppendElement(nsIContent *aContent);
+  void MaybeAppendElement(nsIContent* aContent)
+  {
+    if (aContent)
+      AppendElement(aContent);
+  }
 
   /**
    * Insert the element at a given index, shifting the objects at
@@ -113,8 +119,6 @@ public:
 
 
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
-
-  static void Shutdown();
 
 protected:
   nsCOMArray<nsIContent> mElements;
@@ -286,8 +290,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
   
-  static void OnDocumentDestroy(nsIDocument *aDocument);
-
   static nsContentList* FromSupports(nsISupports* aSupports)
   {
     nsINodeList* list = static_cast<nsINodeList*>(aSupports);
@@ -397,6 +399,15 @@ protected:
   }
 
   /**
+   * To be called from non-destructor locations that want to remove from caches.
+   * Needed because if subclasses want to have cache behavior they can't just
+   * override RemoveFromHashtable(), since we call that in our destructor.
+   */
+  virtual void RemoveFromCaches() {
+    RemoveFromHashtable();
+  }
+
+  /**
    * Function to use to determine whether a piece of content matches
    * our criterion
    */
@@ -434,8 +445,69 @@ protected:
 #endif
 };
 
+/**
+ * A class of cacheable content list; cached on the combination of aRootNode + aFunc + aDataString
+ */
+class nsCacheableFuncStringContentList;
+
+class NS_STACK_CLASS nsFuncStringCacheKey {
+public:
+  nsFuncStringCacheKey(nsINode* aRootNode,
+                       nsContentListMatchFunc aFunc,
+                       const nsAString& aString) :
+    mRootNode(aRootNode),
+    mFunc(aFunc),
+    mString(aString)
+    {}
+
+  PRUint32 GetHash(void) const
+  {
+    return NS_PTR_TO_INT32(mRootNode) ^ (NS_PTR_TO_INT32(mFunc) << 12) ^
+      nsCRT::HashCode(PromiseFlatString(mString).get());
+  }
+
+private:
+  friend class nsCacheableFuncStringContentList;
+
+  nsINode* const mRootNode;
+  const nsContentListMatchFunc mFunc;
+  const nsAString& mString;
+};
+
+class nsCacheableFuncStringContentList : public nsContentList {
+public:
+  nsCacheableFuncStringContentList(nsINode* aRootNode,
+                                   nsContentListMatchFunc aFunc,
+                                   nsContentListDestroyFunc aDestroyFunc,
+                                   void* aData,
+                                   const nsAString& aString) :
+    nsContentList(aRootNode, aFunc, aDestroyFunc, aData),
+    mString(aString)
+  {}
+
+  virtual ~nsCacheableFuncStringContentList();
+
+  PRBool Equals(const nsFuncStringCacheKey* aKey) {
+    return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
+      mString == aKey->mString;
+  }
+protected:
+  virtual void RemoveFromCaches() {
+    RemoveFromFuncStringHashtable();
+  }
+  void RemoveFromFuncStringHashtable();
+
+  nsString mString;
+};
+
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode, nsIAtom* aMatchAtom,
                   PRInt32 aMatchNameSpaceId);
 
+already_AddRefed<nsContentList>
+NS_GetFuncStringContentList(nsINode* aRootNode,
+                            nsContentListMatchFunc aFunc,
+                            nsContentListDestroyFunc aDestroyFunc,
+                            void* aData,
+                            const nsAString& aString);
 #endif // nsContentList_h___

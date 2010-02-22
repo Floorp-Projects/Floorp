@@ -20,7 +20,12 @@
 #include "base/message_pump_libevent.h"
 #endif
 #if defined(OS_LINUX)
+#ifdef MOZ_WIDGET_GTK2
 #include "base/message_pump_glib.h"
+#endif
+#ifdef MOZ_WIDGET_QT
+#include "base/message_pump_qt.h"
+#endif
 #endif
 
 #ifdef CHROMIUM_MOZILLA_BUILD
@@ -309,6 +314,11 @@ void MessageLoop::SetNestableTasksAllowed(bool allowed) {
     // Start the native pump if we are not already pumping.
     pump_->ScheduleWork();
   }
+}
+
+void MessageLoop::ScheduleWork() {
+  // Start the native pump if we are not already pumping.
+  pump_->ScheduleWork();
 }
 
 bool MessageLoop::NestableTasksAllowed() const {

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test linear animation of the "viewBox" attribute on the "svg" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- 50% through animation simple duration -
+       the red rect should only be half the width of the viewport -->
+  <svg width="100" height="50" viewBox="0 0 0 50">
+    <animate attributeName="viewBox"
+             calcMode="linear"
+             begin="0s" dur="2s"
+             to="0 0 100 50"
+             fill="freeze"/>
+    <rect width="100%" height="100%" fill="red"/>
+  </svg>
+  <rect x="25" width="50" height="50" fill="lime"/>
+
+  <!-- 100% through animation simple duration -
+       the lime rect should stretch the entire width of the viewport -->
+  <rect y="50" width="100" height="50" fill="red"/>
+  <svg y="50" width="100" height="50" viewBox="0 0 0 50">
+    <animate attributeName="viewBox"
+             calcMode="linear"
+             begin="0s" dur="1s"
+             to="0 0 100 50"
+             fill="freeze"/>
+    <rect width="100%" height="100%" fill="lime"/>
+  </svg>
+</svg>

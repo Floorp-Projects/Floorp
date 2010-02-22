@@ -69,6 +69,7 @@ function next() {
     var rv;
     do {
       step = pickOne(allTabs.isOpen ? whenOpen : whenClosed);
+      info(step.name);
       rv = step();
     } while (rv === false);
     history.push(step.name + (rv !== true && rv !== undefined ? " " + rv : ""));

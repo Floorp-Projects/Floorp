@@ -98,12 +98,11 @@
 #include "nsIHTMLDocument.h"
 #include "nsEventDispatcher.h"
 #include "mozAutoDocUpdate.h"
+#include "nsMimeTypes.h"
 
 #ifdef MOZ_SVG
 #include "nsGUIEvent.h"
 #endif
-
-#define kXSLType "text/xsl"
 
 // XXX Open Issues:
 // 1) what's not allowed - We need to figure out which HTML tags
@@ -745,9 +744,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK; // Do not load stylesheets when loading as data
 
   NS_ConvertUTF16toUTF8 type(aType);
-  if (type.EqualsIgnoreCase(kXSLType) ||
-      type.EqualsIgnoreCase(kXMLTextContentType) ||
-      type.EqualsIgnoreCase(kXMLApplicationContentType)) {
+  if (type.EqualsIgnoreCase(TEXT_XSL) ||
+      type.EqualsIgnoreCase(TEXT_XML) ||
+      type.EqualsIgnoreCase(APPLICATION_XML)) {
     if (aAlternate) {
       // don't load alternate XSLT
       return NS_OK;

@@ -89,8 +89,8 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIFocusController.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -1802,16 +1802,15 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
   res = mWebBrowser->GetContentDOMWindow(getter_AddRefs(win));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
-  // get the private dom window
-  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(win, &res));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
-  // get the focus controller
-  nsIFocusController *focusController = privateWin->GetRootFocusController();
-  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
-  // set the focus controller's popup node to the event target
-  res = focusController->SetPopupNode(targetDOMnode);
-  NS_ENSURE_SUCCESS(res, res);
+
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(win));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
+  if (root) {
+    // set the window root's popup node to the event target
+    root->SetPopupNode(targetDOMnode);
+  }
 
   // Tell the listener all about the event
   if ( menuListener2 ) {

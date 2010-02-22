@@ -67,9 +67,6 @@
 // For seting scrollbar visibilty
 #include "nsIDOMBarProp.h"
 
-// for the focus hacking we need to do
-#include "nsIFocusController.h"
-
 // app component registration
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"

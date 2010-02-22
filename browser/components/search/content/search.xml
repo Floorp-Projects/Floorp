@@ -76,20 +76,22 @@
                    showcommentcolumn="true"
                    tabscrolling="true"
                    xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
-        <xul:button class="searchbar-engine-button"
-                    type="menu"
-                    anonid="searchbar-engine-button">
-          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-          <xul:image class="searchbar-dropmarker-image"/>
-          <xul:menupopup class="searchbar-popup"
-                         anonid="searchbar-popup">
-            <xul:menuseparator/>
-            <xul:menuitem class="open-engine-manager"
-                          anonid="open-engine-manager"
-                          label="&cmd_engineManager.label;"
-                          oncommand="openManager(event);"/>
-          </xul:menupopup>
-        </xul:button>
+        <xul:box>
+          <xul:button class="searchbar-engine-button"
+                      type="menu"
+                      anonid="searchbar-engine-button">
+            <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
+            <xul:image class="searchbar-dropmarker-image"/>
+            <xul:menupopup class="searchbar-popup"
+                           anonid="searchbar-popup">
+              <xul:menuseparator/>
+              <xul:menuitem class="open-engine-manager"
+                            anonid="open-engine-manager"
+                            label="&cmd_engineManager.label;"
+                            oncommand="openManager(event);"/>
+            </xul:menupopup>
+          </xul:button>
+        </xul:box>
         <xul:hbox class="search-go-container">
           <xul:image class="search-go-button"
                      anonid="search-go-button"
@@ -432,7 +434,7 @@
           else {
             setTimeout(function () {
               openDialog("chrome://browser/content/search/engineManager.xul",
-                         "_blank", "chrome,dialog,modal,centerscreen");
+                         "_blank", "chrome,dialog,modal,centerscreen,resizable");
             }, 0);
           }
         ]]></body>

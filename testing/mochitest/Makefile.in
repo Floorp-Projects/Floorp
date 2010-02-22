@@ -106,7 +106,7 @@ TEST_HARNESS_BINS += \
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-TEST_HARNESS_BINS += fix-macosx-stack.pl
+TEST_HARNESS_BINS += fix_macosx_stack.py
 endif
 
 ifeq ($(OS_ARCH),Linux)

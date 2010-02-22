@@ -68,8 +68,10 @@ ifeq ($(OS_ARCH),OS2)
 TOOL_DIRS += default/os2
 endif
 
+ifdef PBBUILD_BIN
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 TOOL_DIRS += default/mac
+endif
 endif
 
 ifdef ENABLE_TESTS

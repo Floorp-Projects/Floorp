@@ -45,68 +45,71 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _MOCHITEST_FILES = \
-		test_getauthenticationinfo.html \
-		test_npobject_getters.html \
-		test_npruntime_npnevaluate.html \
-		test_npruntime_npninvoke.html \
-		test_npruntime_npninvokedefault.html \
-		loremipsum.txt \
-		loremipsum_file.txt \
-		post.sjs \
-		pluginstream.js \
-		plugin_window.html \
-		test_painting.html \
-		test_pluginstream_err.html \
-		test_pluginstream_src.html \
-		test_pluginstream_geturl.html \
-		test_pluginstream_geturlnotify.html \
-		test_pluginstream_asfile.html \
-		test_pluginstream_asfileonly.html \
-		test_pluginstream_post.html \
-		test_pluginstream_poststream.html \
-		test_pluginstream_seek.html \
-		test_pluginstream_newstream.html \
-		test_multipleinstanceobjects.html \
-		test_streamNotify.html \
-		test_instantiation.html \
-		test_cookies.html \
-		test_npn_timers.html \
-		test_npn_asynccall.html \
-		$(NULL)
+  test_getauthenticationinfo.html \
+  test_npobject_getters.html \
+  test_npruntime_npnevaluate.html \
+  test_npruntime_npninvoke.html \
+  test_npruntime_npninvokedefault.html \
+  loremipsum.txt \
+  loremipsum_file.txt \
+  post.sjs \
+  pluginstream.js \
+  plugin_window.html \
+  test_painting.html \
+  test_pluginstream_err.html \
+  test_pluginstream_src.html \
+  test_pluginstream_geturl.html \
+  test_pluginstream_geturlnotify.html \
+  test_pluginstream_asfile.html \
+  test_pluginstream_asfileonly.html \
+  test_pluginstream_post.html \
+  test_pluginstream_poststream.html \
+  test_pluginstream_seek.html \
+  test_pluginstream_newstream.html \
+  test_multipleinstanceobjects.html \
+  test_streamNotify.html \
+  test_instantiation.html \
+  test_cookies.html \
+  test_npn_timers.html \
+  test_npn_asynccall.html \
+  $(NULL)
 
-#		test_npruntime_npnsetexception.html \ Disabled for e10s
+#  test_npruntime_npnsetexception.html \ Disabled for e10s
 
 ifdef MOZ_IPC
 _MOCHITEST_FILES += \
-		test_crashing.html \
-		test_crashing2.html \
-		crashing_subpage.html \
-		$(NULL)
+  test_crashing.html \
+  test_crashing2.html \
+  test_hanging.html \
+  crashing_subpage.html \
+  test_GCrace.html \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \
- 		test_windowed_invalidate.html \
-        $(NULL)
+  test_windowed_invalidate.html \
+  $(NULL)
 endif
 
 _MOCHICHROME_FILES = \
-		test_bug479979.xul \
-		test_npruntime.xul   \
-		test_privatemode.xul \
-		test_wmode.xul \
-		$(NULL)
+  test_bug479979.xul \
+  test_npruntime.xul   \
+  test_privatemode.xul \
+  test_wmode.xul \
+  $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _MOCHICHROME_FILES += \
-		test_convertpoint.xul \
-		$(NULL)
+  test_convertpoint.xul \
+  $(NULL)
 endif
 
 ifdef MOZ_IPC
 _MOCHICHROME_FILES += \
-		test_crash_notify.xul \
-		$(NULL)
+  test_crash_notify.xul \
+  test_crash_notify_no_report.xul \
+  $(NULL)
 endif
 
 libs:: $(_MOCHICHROME_FILES)

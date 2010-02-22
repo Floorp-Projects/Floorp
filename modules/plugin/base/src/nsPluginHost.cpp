@@ -89,6 +89,7 @@
 #include "nsVersionComparator.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsIWritablePropertyBag2.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -2743,18 +2744,18 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 #if defined(XP_WIN) && !defined(WINCE)
     static BOOL firstJavaPlugin = FALSE;
     BOOL restoreOrigDir = FALSE;
-    char origDir[_MAX_PATH];
+    WCHAR origDir[_MAX_PATH];
     if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
-      DWORD dw = GetCurrentDirectoryA(_MAX_PATH, origDir);
+      DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
       NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
       nsCOMPtr<nsIFile> binDirectory;
       result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                       getter_AddRefs(binDirectory));
 
       if (NS_SUCCEEDED(result)) {
-        nsCAutoString path;
-        binDirectory->GetNativePath(path);
-        restoreOrigDir = SetCurrentDirectoryA(path.get());
+        nsAutoString path;
+        binDirectory->GetPath(path);
+        restoreOrigDir = SetCurrentDirectoryW(path.get());
       }
     }
 #endif
@@ -2762,7 +2763,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
 #if defined(XP_WIN) && !defined(WINCE)
     if (!firstJavaPlugin && restoreOrigDir) {
-      BOOL bCheck = SetCurrentDirectoryA(origDir);
+      BOOL bCheck = SetCurrentDirectoryW(origDir);
       NS_ASSERTION(bCheck, "Error restoring directory");
       firstJavaPlugin = TRUE;
     }
@@ -5207,12 +5208,23 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
 
 #ifdef MOZ_IPC
 void
-nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
+nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin, const nsAString& dumpID)
 {
   nsPluginTag* pluginTag = FindTagForPlugin(aPlugin);
   if (!pluginTag) {
     NS_WARNING("nsPluginTag not found in nsPluginHost::PluginCrashed");
     return;
+  }
+
+  // Notify the app's observer that a plugin crashed so it can submit a crashreport.
+  PRBool submittedCrashReport = PR_FALSE;
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIWritablePropertyBag2> propbag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  if (obsService && propbag) {
+    propbag->SetPropertyAsAString(NS_LITERAL_STRING("minidumpID"), dumpID);
+    obsService->NotifyObservers(propbag, "plugin-crashed", nsnull);
+    // see if an observer submitted a crash report.
+    propbag->GetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"), &submittedCrashReport);
   }
 
   // Invalidate each nsPluginInstanceTag for the crashed plugin
@@ -5225,7 +5237,8 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
       instanceTag->mInstance->GetDOMElement(getter_AddRefs(domElement));
       nsCOMPtr<nsIObjectLoadingContent> objectContent(do_QueryInterface(domElement));
       if (objectContent) {
-        objectContent->PluginCrashed();
+        objectContent->PluginCrashed(NS_ConvertUTF8toUTF16(pluginTag->mName),
+                                     submittedCrashReport);
       }
       
       instanceTag->mInstance->Stop();
@@ -5343,7 +5356,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   if (owner) {
     NPWindow* window = nsnull;
     owner->GetWindow(window);
-#if defined (MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
     // Should call GetPluginPort() here.
     // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
     nsCOMPtr<nsIWidget> widget;

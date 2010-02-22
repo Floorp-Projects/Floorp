@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
@@ -58,6 +59,33 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
     static void ReleaseCallee(mozilla::ipc::RPCChannel* obj) { }
 };
 
+
+namespace
+{
+
+// Async (from the sending side's perspective)
+class BlockChildMessage : public IPC::Message
+{
+public:
+    enum { ID = BLOCK_CHILD_MESSAGE_TYPE };
+    BlockChildMessage() :
+        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
+    { }
+};
+
+// Async
+class UnblockChildMessage : public IPC::Message
+{
+public:
+    enum { ID = UNBLOCK_CHILD_MESSAGE_TYPE };
+    UnblockChildMessage() :
+        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
+    { }
+};
+
+} // namespace <anon>
+
+
 namespace mozilla {
 namespace ipc {
 
@@ -69,7 +97,8 @@ RPCChannel::RPCChannel(RPCListener* aListener,
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mRacePolicy(aPolicy)
+    mRacePolicy(aPolicy),
+    mBlockedOnParent(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 }
@@ -78,6 +107,25 @@ RPCChannel::~RPCChannel()
 {
     MOZ_COUNT_DTOR(RPCChannel);
     // FIXME/cjones: impl
+}
+
+#ifdef OS_WIN
+// static
+int RPCChannel::sInnerEventLoopDepth = 0;
+#endif
+
+bool
+RPCChannel::EventOccurred()
+{
+    AssertWorkerThread();
+    mMutex.AssertCurrentThreadOwns();
+    RPC_ASSERT(StackDepth() > 0, "not in wait loop");
+
+    return (!Connected() ||
+            !mPending.empty() ||
+            (!mOutOfTurnReplies.empty() &&
+             mOutOfTurnReplies.find(mStack.top().seqno())
+             != mOutOfTurnReplies.end()));
 }
 
 bool
@@ -112,10 +160,14 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
-        while (Connected() && mPending.empty() &&
-               (mOutOfTurnReplies.empty() ||
-                mOutOfTurnReplies.top().seqno() < mStack.top().seqno())) {
-            WaitForNotify();
+        while (!EventOccurred()) {
+            bool maybeTimedOut = !RPCChannel::WaitForNotify();
+
+            if (EventOccurred())
+                break;
+
+            if (maybeTimedOut && !ShouldContinueFromTimeout())
+                return false;
         }
 
         if (!Connected()) {
@@ -124,10 +176,12 @@ RPCChannel::Call(Message* msg, Message* reply)
         }
 
         Message recvd;
+        MessageMap::iterator it;
         if (!mOutOfTurnReplies.empty() &&
-            mOutOfTurnReplies.top().seqno() == mStack.top().seqno()) {
-            recvd = mOutOfTurnReplies.top();
-            mOutOfTurnReplies.pop();
+            ((it = mOutOfTurnReplies.find(mStack.top().seqno())) !=
+            mOutOfTurnReplies.end())) {
+            recvd = it->second;
+            mOutOfTurnReplies.erase(it);
         }
         else {
             recvd = mPending.front();
@@ -156,7 +210,7 @@ RPCChannel::Call(Message* msg, Message* reply)
             const Message& outcall = mStack.top();
 
             if (recvd.seqno() < outcall.seqno()) {
-                mOutOfTurnReplies.push(recvd);
+                mOutOfTurnReplies[recvd.seqno()] = recvd;
                 continue;
             }
 
@@ -246,10 +300,8 @@ RPCChannel::EnqueuePendingMessages()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items");
 
-    if (!mDeferred.empty())
+    for (size_t i = 0; i < mDeferred.size(); ++i)
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
@@ -271,8 +323,6 @@ RPCChannel::OnMaybeDequeueOne()
 
     AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items, but it has %lu");
 
     Message recvd;
     {
@@ -307,15 +357,18 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
     // mRemoteStackDepthGuess in RPCChannel.h.  "Remote" stack depth
     // means our side, and "local" means other side.
     if (call.rpc_remote_stack_depth_guess() != stackDepth) {
-        NS_WARNING("RPC in-calls have raced!");
-
+        //NS_WARNING("RPC in-calls have raced!");
+#ifndef OS_WIN
         RPC_ASSERT(call.rpc_remote_stack_depth_guess() < stackDepth,
                    "fatal logic error");
         RPC_ASSERT(1 == (stackDepth - call.rpc_remote_stack_depth_guess()),
                    "got more than 1 RPC message out of sync???");
-        RPC_ASSERT(1 == (call.rpc_local_stack_depth() -mRemoteStackDepthGuess),
+        RPC_ASSERT(1 == (call.rpc_local_stack_depth() - mRemoteStackDepthGuess),
                    "RPC unexpected not symmetric");
-
+#else
+        // See WindowsEventLoop, windows can race heavily when modal ui
+        // loops are displayed by plugins.
+#endif
         // the "winner", if there is one, gets to defer processing of
         // the other side's in-call
         bool defer;
@@ -382,11 +435,115 @@ RPCChannel::DispatchIncall(const Message& call)
 
     reply->set_seqno(call.seqno());
 
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &RPCChannel::OnSend, reply));
+    {
+        MutexAutoLock lock(mMutex);
+        if (ChannelConnected == mChannelState)
+            mIOLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this, &RPCChannel::OnSend, reply));
+    }
 }
 
+bool
+RPCChannel::BlockChild()
+{
+    AssertWorkerThread();
+
+    if (mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+    SendSpecialMessage(new BlockChildMessage());
+    return true;
+}
+
+bool
+RPCChannel::UnblockChild()
+{
+    AssertWorkerThread();
+
+    if (mChild)
+        NS_RUNTIMEABORT("child tried to unblock parent");
+    SendSpecialMessage(new UnblockChildMessage());
+    return true;
+}
+
+bool
+RPCChannel::OnSpecialMessage(uint16 id, const Message& msg)
+{
+    AssertWorkerThread();
+
+    switch (id) {
+    case BLOCK_CHILD_MESSAGE_TYPE:
+        BlockOnParent();
+        return true;
+
+    case UNBLOCK_CHILD_MESSAGE_TYPE:
+        UnblockFromParent();
+        return true;
+
+    default:
+        return SyncChannel::OnSpecialMessage(id, msg);
+    }
+}
+
+void
+RPCChannel::BlockOnParent()
+{
+    AssertWorkerThread();
+
+    if (!mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+
+    MutexAutoLock lock(mMutex);
+
+    if (mBlockedOnParent || AwaitingSyncReply() || 0 < StackDepth())
+        NS_RUNTIMEABORT("attempt to block child when it's already blocked");
+
+    mBlockedOnParent = true;
+    do {
+        // XXX this dispatch loop shares some similarities with the
+        // one in Call(), but the logic is simpler and different
+        // enough IMHO to warrant its own dispatch loop
+        while (Connected() && mPending.empty() && mBlockedOnParent) {
+            WaitForNotify();
+        }
+
+        if (!Connected()) {
+            mBlockedOnParent = false;
+            ReportConnectionError("RPCChannel");
+            break;
+        }
+
+        if (!mPending.empty()) {
+            Message recvd = mPending.front();
+            mPending.pop();
+
+            MutexAutoUnlock unlock(mMutex);
+            if (recvd.is_rpc()) {
+                // stack depth must be 0 here
+                Incall(recvd, 0);
+            }
+            else if (recvd.is_sync()) {
+                SyncChannel::OnDispatchMessage(recvd);
+            }
+            else {
+                AsyncChannel::OnDispatchMessage(recvd);
+            }
+        }
+    } while (mBlockedOnParent);
+
+    EnqueuePendingMessages();
+}
+
+void
+RPCChannel::UnblockFromParent()
+{
+    AssertWorkerThread();
+
+    if (!mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+    MutexAutoLock lock(mMutex);
+    mBlockedOnParent = false;
+}
 
 void
 RPCChannel::DebugAbort(const char* file, int line, const char* cond,
@@ -444,12 +601,12 @@ RPCChannel::OnMessageReceived(const Message& msg)
 
     mPending.push(msg);
 
-    if (0 == StackDepth())
+    if (0 == StackDepth() && !mBlockedOnParent)
         // the worker thread might be idle, make sure it wakes up
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
-    else
+    else if (!AwaitingSyncReply())
         NotifyWorkerThread();
 }
 
@@ -459,13 +616,20 @@ RPCChannel::OnChannelError()
 {
     AssertIOThread();
 
-    AsyncChannel::OnChannelError();
+    {
+        MutexAutoLock lock(mMutex);
 
-    // skip SyncChannel::OnError(); we subsume its duties
-    MutexAutoLock lock(mMutex);
-    if (AwaitingSyncReply()
-        || 0 < StackDepth())
-        NotifyWorkerThread();
+        // NB: this can race with the `Goodbye' event being processed by
+        // the worker thread
+        if (ChannelClosing != mChannelState)
+            mChannelState = ChannelError;
+
+        // skip SyncChannel::OnError(); we subsume its duties
+        if (AwaitingSyncReply() || 0 < StackDepth())
+            NotifyWorkerThread();
+    }
+
+    AsyncChannel::OnChannelError();
 }
 
 

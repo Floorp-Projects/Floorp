@@ -839,7 +839,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 	else if( !strcmp( option, "bIgnoreDocumentAttributes" ) ) {
 		PRBool val;
 		pref->GetBoolPref( "browser.display.use_document_colors", &val );
-		sprintf( value, "%s", val == PR_TRUE ? "FALSE" : "TRUE" );
+		sprintf( value, "%s", val ? "FALSE" : "TRUE" );
 		}
 	else if( !strcmp( option, "disable_new_windows" ) ) {
 		sprintf( value, "%s", (moz->disable_new_windows == 1) ? "TRUE" : "FALSE" );
@@ -850,7 +850,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 	else if( !strcmp( option, "bUnderlineLinks" ) ) {
 		PRBool val;
 		pref->GetBoolPref( "browser.underline_anchors", &val );
-		sprintf( value, "%s", val == PR_TRUE ? "TRUE" : "FALSE" );
+		sprintf( value, "%s", val ? "TRUE" : "FALSE" );
 		}
 	else if( !strcmp( option, "iUserTextSize" ) ) {
 		sprintf( value, "%d", moz->text_zoom );
@@ -942,7 +942,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
   else if( !strcmp( option, "enable_disk_cache" ) ) {
 		PRBool val;
 		pref->GetBoolPref( "browser.cache.disk.enable", &val );
-		sprintf( value, "%s", val == PR_TRUE ? "TRUE" : "FALSE" );
+		sprintf( value, "%s", val ? "TRUE" : "FALSE" );
 		}
   else if( !strcmp( option, "dcache_verify_policy" ) ) {
 		int n, voyager_value = 0;

@@ -54,7 +54,8 @@ class nsSMILRepeatCount
 {
 public:
   nsSMILRepeatCount() : mCount(kNotSet) {}
-  nsSMILRepeatCount(double aCount) : mCount(kNotSet) { SetCount(aCount); }
+  explicit nsSMILRepeatCount(double aCount)
+    : mCount(kNotSet) { SetCount(aCount); }
 
   operator double() const { return mCount; }
   PRBool IsDefinite() const {

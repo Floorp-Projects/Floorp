@@ -1163,8 +1163,8 @@ void qcms_profile_precache_output_transform(qcms_profile *profile)
 		profile->output_table_b = precache_create();
 		if (profile->output_table_b &&
 				!compute_precache(profile->blueTRC, profile->output_table_b->data)) {
-			precache_release(profile->output_table_g);
-			profile->output_table_g = NULL;
+			precache_release(profile->output_table_b);
+			profile->output_table_b = NULL;
 		}
 	}
 }

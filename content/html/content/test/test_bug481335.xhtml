@@ -51,7 +51,6 @@ function afterSecondLoad() {
   $("t").pathname = rand;
   is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
        "Should still be visited after setting pathname to its existing value");
-  dump('aaa');
   $("t").pathname += "x";
   isnot(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
        "Should not be visited after changing pathname");

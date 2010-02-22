@@ -2727,11 +2727,12 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
 
   void *mark = JS_ARENA_MARK(&mContext->tempPool);
   jsval *argv;
-  JS_ARENA_ALLOCATE_CAST(argv, jsval *, &mContext->tempPool,
-                         argCount * sizeof(jsval));
+  size_t nbytes = argCount * sizeof(jsval);
+  JS_ARENA_ALLOCATE_CAST(argv, jsval *, &mContext->tempPool, nbytes);
   NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+  memset(argv, 0, nbytes);  /* initialize so GC-able */
 
-  /* Use the caller's auto guards to release and unroot. */
+  // Use the caller's auto guards to release and unroot.
   aPoolRelease.construct(&mContext->tempPool, mark);
   aRooter.construct(mContext, argCount, argv);
 

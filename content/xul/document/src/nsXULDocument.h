@@ -61,7 +61,7 @@
 class nsIRDFResource;
 class nsIRDFService;
 class nsIXULPrototypeCache;
-class nsIFocusController;
+class nsPIWindowRoot;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -245,7 +245,7 @@ protected:
                                  nsIDOMElement* aListener,
                                  nsIAtom* aAttr);
 
-    void GetFocusController(nsIFocusController** aFocusController);
+    already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
     PRInt32 GetDefaultNamespaceID() const
     {
@@ -325,12 +325,6 @@ protected:
      * disappeared by the time you click on a popup item or do whatever
      * with a tooltip. These were owning references (no cycles, as pinkerton
      * pointed out, since we're still parent-child).
-     *
-     * We still have mTooltipNode, but mPopupNode has moved to the
-     * FocusController. The APIs (IDL attributes popupNode and tooltipNode)
-     * are still here for compatibility and ease of use, but we should
-     * probably move the mTooltipNode over to FocusController at some point
-     * as well, for consistency.
      */
 
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip

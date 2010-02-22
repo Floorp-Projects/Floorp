@@ -52,6 +52,8 @@
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
 enum {
+    UNBLOCK_CHILD_MESSAGE_TYPE = kuint16max - 4,
+    BLOCK_CHILD_MESSAGE_TYPE   = kuint16max - 3,
     SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 2,
     GOODBYE_MESSAGE_TYPE       = kuint16max - 1,
 };
@@ -86,6 +88,7 @@ public:
     virtual int32 RegisterID(ListenerT*, int32) = 0;
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
+    virtual void RemoveManagee(int32, ListenerT*) = 0;
     // XXX odd duck, acknowledged
     virtual ProcessHandle OtherProcess() const = 0;
 };

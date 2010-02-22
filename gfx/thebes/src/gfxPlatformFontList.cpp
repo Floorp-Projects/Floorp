@@ -247,7 +247,7 @@ gfxPlatformFontList::LoadBadUnderlineList()
     for (PRUint32 i = 0; i < numFonts; i++) {
         nsAutoString key;
         GenerateFontListKey(blacklist[i], key);
-        mBadUnderlineFamilyNames.PutEntry(key);
+        mBadUnderlineFamilyNames.Put(key);
     }
 }
 
@@ -466,7 +466,7 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
         PR_LOG(gFontListLog, PR_LOG_DEBUG, ("(fontlist-otherfamily) canonical family: %s, other family: %s\n", 
                                             NS_ConvertUTF16toUTF8(aFamilyEntry->Name()).get(), 
                                             NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
-        if (mBadUnderlineFamilyNames.GetEntry(key))
+        if (mBadUnderlineFamilyNames.Contains(key))
             aFamilyEntry->SetBadUnderlineFamily();
     }
 }
@@ -524,6 +524,13 @@ gfxPlatformFontList::RunLoader()
 
         // find all faces that are members of this family
         familyEntry->FindStyleVariations();
+        if (familyEntry->GetFontList().Length() == 0) {
+            // failed to load any faces for this family, so discard it
+            nsAutoString key;
+            GenerateFontListKey(familyEntry->Name(), key);
+            mFontFamilies.Remove(key);
+            continue;
+        }
 
         // load the cmaps
         familyEntry->ReadCMAP();
@@ -535,10 +542,9 @@ gfxPlatformFontList::RunLoader()
         familyEntry->CheckForSimpleFamily();
     }
 
-    mStartIndex += mIncrement;
-    if (mStartIndex < mNumFamilies)
-        return PR_FALSE;
-    return PR_TRUE;
+    mStartIndex = endIndex;
+
+    return (mStartIndex >= mNumFamilies);
 }
 
 void 
