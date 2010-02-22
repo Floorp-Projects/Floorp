@@ -20,6 +20,7 @@ toolkit.jar:
   content/mozapps/plugins/pluginInstallerDatasource.js          (plugins/content/pluginInstallerDatasource.js)
   content/mozapps/plugins/pluginInstallerService.js             (plugins/content/pluginInstallerService.js)
   content/mozapps/plugins/pluginProblem.xml                     (plugins/content/pluginProblem.xml)
+  content/mozapps/plugins/pluginProblemContent.css              (plugins/content/pluginProblemContent.css)
   content/mozapps/plugins/pluginProblemBinding.css              (plugins/content/pluginProblemBinding.css)
   content/mozapps/plugins/pluginFinderBinding.css               (plugins/content/pluginFinderBinding.css)
   content/mozapps/handling/handler.css                          (handling/content/handler.css)
