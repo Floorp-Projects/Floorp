@@ -840,7 +840,7 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
 
     // XXX cache results for this count,offset pair!
     for (PRUint32 i = 0; i < count; ++i)
-        maxindex = PR_MAX(maxindex, *ubuf++);
+        maxindex = NS_MAX(maxindex, *ubuf++);
 
     gl->fUnmapBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER);
 
