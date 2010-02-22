@@ -1866,57 +1866,6 @@ nsNavHistoryContainerResultNode::GetChild(PRUint32 aIndex,
 }
 
 
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::GetChildIndex(nsINavHistoryResultNode* aNode,
-                                               PRUint32* _retval)
-{
-  if (!mExpanded)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  *_retval = FindChild(static_cast<nsNavHistoryResultNode*>(aNode));
-  if (*_retval == -1)
-    return NS_ERROR_INVALID_ARG;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::FindNodeByDetails(const nsACString& aURIString,
-                                                   PRTime aTime,
-                                                   PRInt64 aItemId,
-                                                   PRBool aRecursive,
-                                                   nsINavHistoryResultNode** _retval) {
-  if (!mExpanded)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  *_retval = nsnull;
-  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
-    if (mChildren[i]->mURI.Equals(aURIString) &&
-        mChildren[i]->mTime == aTime &&
-        mChildren[i]->mItemId == aItemId) {
-      *_retval = mChildren[i];
-      break;
-    }
-
-    if (aRecursive && mChildren[i]->IsContainer()) {
-      nsNavHistoryContainerResultNode* asContainer =
-        mChildren[i]->GetAsContainer();
-      if (asContainer->mExpanded) {
-        nsresult rv = asContainer->FindNodeByDetails(aURIString, aTime,
-                                                     aItemId,
-                                                     aRecursive,
-                                                     _retval);
-                                                      
-        if (NS_SUCCEEDED(rv) && _retval)
-          break;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
 // nsNavHistoryContainerResultNode::GetChildrenReadOnly
 //
 //    Overridden for folders to query the bookmarks service directly.
