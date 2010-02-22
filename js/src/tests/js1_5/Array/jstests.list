@@ -30,6 +30,7 @@ script regress-451906.js
 script regress-456845.js
 script regress-465980-01.js
 skip script regress-465980-02.js # slow
+script regress-474529.js
 script regress-94257.js
 random script regress-99120-01.js # BigO
 random script regress-99120-02.js # BigO
