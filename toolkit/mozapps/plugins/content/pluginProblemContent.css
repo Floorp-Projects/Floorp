@@ -1,3 +1,5 @@
+@namespace html url(http://www.w3.org/1999/xhtml);
+
 html|object:not([width]), html|object[width=""],
 html|embed:not([width]), html|embed[width=""],
 html|applet:not([width]), html|applet[width=""] {
