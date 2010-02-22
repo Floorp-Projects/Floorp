@@ -471,6 +471,18 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
 void
 nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent** aElement)
 {
+  NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
+  NS_ASSERTION(aName, "Element doesn't have local name!");
+  NS_ASSERTION(aElement, "No element!");
+  if (aNamespace != kNameSpaceID_XHTML) {
+    return;
+  }
+  if (aName == nsHtml5Atoms::body || aName == nsHtml5Atoms::frameset) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    NS_ASSERTION(treeOp, "Tree op allocation failed.");
+    treeOp->Init(eTreeOpStartLayout);
+    return;
+  }
 }
 
 void
@@ -585,12 +597,6 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpProcessMeta, aElement);
-    return;
-  }
-  if (aName == nsHtml5Atoms::head) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpStartLayout);
     return;
   }
   return;

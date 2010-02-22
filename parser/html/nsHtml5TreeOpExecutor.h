@@ -310,13 +310,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       }
     }
 
-    void StartLayout() {
-      nsIDocument* doc = GetDocument();
-      if (doc) {
-        FlushPendingAppendNotifications();
-        nsContentSink::StartLayout(PR_FALSE);
-      }
-    }
+    void StartLayout();
     
     void DocumentMode(nsHtml5DocumentMode m);
 
