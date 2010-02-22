@@ -2175,7 +2175,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(JSVAL_TO_OBJECT(v), cx)) &&
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(cx, v)) &&
             v != JSVAL_VOID) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_GETTER_OR_SETTER,
@@ -2191,7 +2191,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(JSVAL_TO_OBJECT(v), cx)) &&
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(cx, v)) &&
             v != JSVAL_VOID) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_GETTER_OR_SETTER,
@@ -6762,17 +6762,17 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-JSBool
-js_IsCallable(JSObject *obj, JSContext *cx)
+bool
+JSObject::isCallable(JSContext *cx)
 {
-    if (!OBJ_IS_NATIVE(obj))
-        return obj->map->ops->call != NULL;
+    if (!isNative())
+        return map->ops->call;
 
-    JS_LOCK_OBJ(cx, obj);
-    JSBool callable = (obj->map->ops == &js_ObjectOps)
-                      ? HAS_FUNCTION_CLASS(obj) || STOBJ_GET_CLASS(obj)->call
-                      : obj->map->ops->call != NULL;
-    JS_UNLOCK_OBJ(cx, obj);
+    JS_LOCK_OBJ(cx, this);
+    JSBool callable = (map->ops == &js_ObjectOps)
+                      ? isFunction() || getClass()->call
+                      : map->ops->call != NULL;
+    JS_UNLOCK_OBJ(cx, this);
     return callable;
 }
 

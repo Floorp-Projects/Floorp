@@ -1947,7 +1947,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     fval = vp[1];
 
-    if (!VALUE_IS_FUNCTION(cx, fval)) {
+    if (!js_IsCallable(cx, fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             const char *bytes = js_GetStringBytes(cx, str);
@@ -2015,7 +2015,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     fval = vp[1];
 
-    if (!VALUE_IS_FUNCTION(cx, fval)) {
+    if (!js_IsCallable(cx, fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             const char *bytes = js_GetStringBytes(cx, str);
@@ -2627,7 +2627,7 @@ js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 {
     JSObject *callable = JSVAL_IS_OBJECT(*vp) ? JSVAL_TO_OBJECT(*vp) : NULL;
 
-    if (callable && js_IsCallable(callable, cx)) {
+    if (callable && callable->isCallable(cx)) {
         *vp = OBJECT_TO_JSVAL(callable);
         return callable;
     }
