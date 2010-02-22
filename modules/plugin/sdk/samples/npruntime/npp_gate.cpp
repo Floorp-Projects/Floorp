@@ -141,15 +141,6 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
   return rv;
 }
 
-// ==============================
-// ! Scriptability related code !
-// ==============================
-//
-// here the plugin is asked by Mozilla to tell if it is scriptable
-// we should return a valid interface id and a pointer to 
-// nsScriptablePeer interface which we should have implemented
-// and which should be defined in the corressponding *.xpt file
-// in the bin/components folder
 NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
   if(instance == NULL)
@@ -171,6 +162,9 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
   case NPPVpluginDescriptionString:
     *((char **)value) = "NPRuntime scriptability API test plugin";
     break;
+
+  // Here we indicate that the plugin is scriptable. See this page for details:
+  // https://developer.mozilla.org/en/Gecko_Plugin_API_Reference/Scripting_plugins
   case NPPVpluginScriptableNPObject:
     *(NPObject **)value = plugin->GetScriptableObject();
     break;
