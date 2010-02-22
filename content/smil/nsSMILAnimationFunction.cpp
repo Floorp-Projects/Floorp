@@ -288,8 +288,11 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   } else {
 
     // Interpolation
-    NS_ENSURE_SUCCESS(InterpolateResult(values, result, aResult),);
-    NS_ENSURE_SUCCESS(AccumulateResult(values, result),);
+    if (NS_FAILED(InterpolateResult(values, result, aResult)))
+      return;
+
+    if (NS_FAILED(AccumulateResult(values, result)))
+      return;
 
     if (IsToAnimation() && mIsFrozen) {
       mFrozenValue = result;

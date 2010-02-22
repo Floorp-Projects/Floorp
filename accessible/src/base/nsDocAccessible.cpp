@@ -2002,7 +2002,8 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     nsresult rv = FireShowHideEvents(childNode, PR_FALSE,
                                      nsIAccessibleEvent::EVENT_HIDE,
                                      eDelayedEvent, isAsynch);
-    NS_ENSURE_SUCCESS(rv,);
+    if (NS_FAILED(rv))
+      return;
 
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
       // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
