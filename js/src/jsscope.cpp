@@ -1468,8 +1468,8 @@ JSScope::changeProperty(JSContext *cx, JSScopeProperty *sprop,
     JS_ASSERT(!((attrs ^ sprop->attrs) & JSPROP_SHARED) ||
               !(attrs & JSPROP_SHARED));
 
-    /* Don't allow method properties to be changed to accessor properties. */
-    JS_ASSERT(!sprop->isMethod());
+    /* Don't allow method properties to be changed to have a getter. */
+    JS_ASSERT_IF(getter != sprop->getter, !sprop->isMethod());
 
     if (getter == JS_PropertyStub)
         getter = NULL;
