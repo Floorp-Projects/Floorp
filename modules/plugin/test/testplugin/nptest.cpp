@@ -67,8 +67,8 @@
 
 int gCrashCount = 0;
 
-void
-IntentionalCrash()
+static void
+NoteIntentionalCrash()
 {
   char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
   if (bloatLog) {
@@ -85,6 +85,13 @@ IntentionalCrash()
     fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
     fclose(processfd);
   }
+}
+
+static void
+IntentionalCrash()
+{
+  NoteIntentionalCrash();
+
   int *pi = NULL;
   *pi = 55; // Crash dereferencing null pointer
   ++gCrashCount;
@@ -146,6 +153,7 @@ static bool getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 static bool getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -184,6 +192,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getAuthInfo",
   "asyncCallbackTest",
   "checkGCRace",
+  "hang",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -223,6 +232,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getAuthInfo,
   asyncCallbackTest,
   checkGCRace,
+  hangPlugin,
 };
 
 struct URLNotifyData
@@ -2550,5 +2560,23 @@ checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   NPN_PluginThreadAsyncCall(npp, FinishGCRace, rd);
 
   OBJECT_TO_NPVARIANT(localFunc, *result);
+  return true;
+}
+
+bool
+hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+           NPVariant* result)
+{
+  NoteIntentionalCrash();
+
+#ifdef XP_WIN
+  Sleep(100000000);
+#else
+  pause();
+#endif
+  // NB: returning true here means that we weren't terminated, and
+  // thus the hang detection/handling didn't work correctly.  The
+  // test harness will succeed in calling this function, and the
+  // test will fail.
   return true;
 }

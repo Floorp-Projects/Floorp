@@ -78,12 +78,18 @@ nsSVGEnum::SetBaseValueString(const nsAString& aValue,
   while (mapping && mapping->mKey) {
     if (valAtom == *(mapping->mKey)) {
       if (mBaseVal != mapping->mVal) {
-        mBaseVal = mAnimVal = mapping->mVal;
+        mBaseVal = mapping->mVal;
+        if (!mIsAnimated) {
+          mAnimVal = mBaseVal;
+        }
 #ifdef MOZ_SMIL
-        if (mIsAnimated) {
+        else {
           aSVGElement->AnimationNeedsResample();
         }
 #endif
+        // We don't need to call DidChange* here - we're only called by
+        // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+        // which takes care of notifying.
       }
       return NS_OK;
     }
@@ -120,13 +126,16 @@ nsSVGEnum::SetBaseValue(PRUint16 aValue,
   while (mapping && mapping->mKey) {
     if (mapping->mVal == aValue) {
       if (mBaseVal != PRUint8(aValue)) {
-        mBaseVal = mAnimVal = PRUint8(aValue);
-        aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
+        mBaseVal = PRUint8(aValue);
+        if (!mIsAnimated) {
+          mAnimVal = mBaseVal;
+        }
 #ifdef MOZ_SMIL
-        if (mIsAnimated) {
+        else {
           aSVGElement->AnimationNeedsResample();
         }
 #endif
+        aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
       }
       return NS_OK;
     }
@@ -165,7 +174,8 @@ nsSVGEnum::ToSMILAttr(nsSVGElement *aSVGElement)
 nsresult
 nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* /*aSrcElement*/,
-                                     nsSMILValue& aValue) const
+                                     nsSMILValue& aValue,
+                                     PRBool& aCanCache) const
 {
   nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aStr);
   nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);
@@ -175,6 +185,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
       nsSMILValue val(&SMILEnumType::sSingleton);
       val.mU.mUint = mapping->mVal;
       aValue = val;
+      aCanCache = PR_TRUE;
       return NS_OK;
     }
     mapping++;

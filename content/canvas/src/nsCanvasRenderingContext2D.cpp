@@ -339,6 +339,23 @@ public:
     };
 
 protected:
+
+    /**
+     * The number of living nsCanvasRenderingContexts.  When this goes down to
+     * 0, we free the premultiply and unpremultiply tables, if they exist.
+     */
+    static PRUint32 sNumLivingContexts;
+
+    /**
+     * Lookup table used to speed up GetImageData().
+     */
+    static PRUint8 (*sUnpremultiplyTable)[256];
+
+    /**
+     * Lookup table used to speed up PutImageData().
+     */
+    static PRUint8 (*sPremultiplyTable)[256];
+
     // destroy thebes/image stuff, in preparation for possibly recreating
     void Destroy();
 
@@ -353,6 +370,16 @@ protected:
      * by global alpha, and is ignored otherwise.
      */
     void ApplyStyle(Style aWhichStyle, PRBool aUseGlobalAlpha = PR_TRUE);
+
+    /**
+     * Creates the unpremultiply lookup table, if it doesn't exist.
+     */
+    void EnsureUnpremultiplyTable();
+
+    /**
+     * Creates the premultiply lookup table, if it doesn't exist.
+     */
+    void EnsurePremultiplyTable();
 
     // Member vars
     PRInt32 mWidth, mHeight;
@@ -636,6 +663,12 @@ NS_INTERFACE_MAP_END
  ** CanvasRenderingContext2D impl
  **/
 
+
+// Initialize our static variables.
+PRUint32 nsCanvasRenderingContext2D::sNumLivingContexts = 0;
+PRUint8 (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nsnull;
+PRUint8 (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nsnull;
+
 nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
@@ -652,11 +685,20 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
       mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE), mInvalidateCount(0),
       mLastStyle(STYLE_MAX), mStyleStack(20)
 {
+    sNumLivingContexts++;
 }
 
 nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
     Destroy();
+
+    sNumLivingContexts--;
+    if (!sNumLivingContexts) {
+        delete sUnpremultiplyTable;
+        delete sPremultiplyTable;
+        sUnpremultiplyTable = nsnull;
+        sPremultiplyTable = nsnull;
+    }
 }
 
 void
@@ -3298,6 +3340,32 @@ JS_FRIEND_API(JSObject *)
 js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector);
 }
 
+void
+nsCanvasRenderingContext2D::EnsureUnpremultiplyTable() {
+  if (sUnpremultiplyTable)
+    return;
+
+  // Infallably alloc the unpremultiply table.
+  sUnpremultiplyTable = new PRUint8[256][256];
+
+  // It's important that the array be indexed first by alpha and then by rgb
+  // value.  When we unpremultiply a pixel, we're guaranteed to do three
+  // lookups with the same alpha; indexing by alpha first makes it likely that
+  // those three lookups will be close to one another in memory, thus
+  // increasing the chance of a cache hit.
+
+  // a == 0 case
+  for (PRUint32 c = 0; c <= 255; c++) {
+    sUnpremultiplyTable[0][c] = c;
+  }
+
+  for (int a = 1; a <= 255; a++) {
+    for (int c = 0; c <= 255; c++) {
+      sUnpremultiplyTable[a][c] = (PRUint8)((c * 255) / a);
+    }
+  }
+}
+
 
 // ImageData getImageData (in float x, in float y, in float width, in float height);
 NS_IMETHODIMP
@@ -3377,12 +3445,12 @@ nsCanvasRenderingContext2D::GetImageData()
     nsAutoGCRoot arrayGCRoot(&dataArray, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    EnsureUnpremultiplyTable();
+
     PRUint8 *row;
     for (int j = 0; j < h; j++) {
         row = surfaceData + surfaceDataOffset + (surfaceDataStride * j);
         for (int i = 0; i < w; i++) {
-            // XXX Is there some useful swizzle MMX we can use here?
-            // I guess we have to INT_TO_JSVAL still
 #ifdef IS_LITTLE_ENDIAN
             PRUint8 b = *row++;
             PRUint8 g = *row++;
@@ -3395,15 +3463,10 @@ nsCanvasRenderingContext2D::GetImageData()
             PRUint8 b = *row++;
 #endif
             // Convert to non-premultiplied color
-            if (a != 0) {
-                r = (r * 255) / a;
-                g = (g * 255) / a;
-                b = (b * 255) / a;
-            }
 
-            *dest++ = INT_TO_JSVAL(r);
-            *dest++ = INT_TO_JSVAL(g);
-            *dest++ = INT_TO_JSVAL(b);
+            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][r]);
+            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][g]);
+            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][b]);
             *dest++ = INT_TO_JSVAL(a);
         }
     }
@@ -3458,6 +3521,25 @@ static inline PRUint8 ToUint8(double aInput)
     }
 
     return retval;
+}
+
+void
+nsCanvasRenderingContext2D::EnsurePremultiplyTable() {
+  if (sPremultiplyTable)
+    return;
+
+  // Infallably alloc the premultiply table.
+  sPremultiplyTable = new PRUint8[256][256];
+
+  // Like the unpremultiply table, it's important that we index the premultiply
+  // table with the alpha value as the first index to ensure good cache
+  // performance.
+
+  for (int a = 0; a <= 255; a++) {
+    for (int c = 0; c <= 255; c++) {
+      sPremultiplyTable[a][c] = (a * c + 254) / 255;
+    }
+  }
 }
 
 // void putImageData (in ImageData d, in float x, in float y);
@@ -3531,6 +3613,8 @@ nsCanvasRenderingContext2D::PutImageData()
 
     PRUint8 *imgPtr = imageBuffer.get();
 
+    EnsurePremultiplyTable();
+
     JSBool canFastPath =
         js_CoerceArrayToCanvasImageData(dataArray, 0, w*h*4, imageBuffer);
 
@@ -3570,9 +3654,9 @@ nsCanvasRenderingContext2D::PutImageData()
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
                 // Convert to premultiplied color (losslessly if the input came from getImageData)
-                ir = (ir*ia + 254) / 255;
-                ig = (ig*ia + 254) / 255;
-                ib = (ib*ia + 254) / 255;
+                ir = sPremultiplyTable[ia][ir];
+                ig = sPremultiplyTable[ia][ig];
+                ib = sPremultiplyTable[ia][ib];
 
 #ifdef IS_LITTLE_ENDIAN
                 *imgPtr++ = ib;
@@ -3589,7 +3673,6 @@ nsCanvasRenderingContext2D::PutImageData()
         }
     } else {
         /* Walk through and premultiply and swap rgba */
-        /* XXX SSE me */
         PRUint8 ir, ig, ib, ia;
         PRUint8 *ptr = imgPtr;
         for (int32 i = 0; i < w*h; i++) {
@@ -3599,14 +3682,14 @@ nsCanvasRenderingContext2D::PutImageData()
             ia = ptr[3];
 
 #ifdef IS_LITTLE_ENDIAN
-            ptr[0] = (ib*ia + 254) / 255;
-            ptr[1] = (ig*ia + 254) / 255;
-            ptr[2] = (ir*ia + 254) / 255;
+            ptr[0] = sPremultiplyTable[ia][ib];
+            ptr[1] = sPremultiplyTable[ia][ig];
+            ptr[2] = sPremultiplyTable[ia][ir];
 #else
             ptr[0] = ia;
-            ptr[1] = (ir*ia + 254) / 255;
-            ptr[2] = (ig*ia + 254) / 255;
-            ptr[3] = (ib*ia + 254) / 255;
+            ptr[1] = sPremultiplyTable[ia][ir];
+            ptr[2] = sPremultiplyTable[ia][ig];
+            ptr[3] = sPremultiplyTable[ia][ib];
 #endif
             ptr += 4;
         }

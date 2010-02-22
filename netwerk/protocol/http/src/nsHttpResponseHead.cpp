@@ -488,7 +488,6 @@ nsHttpResponseHead::Reset()
     mContentLength = LL_MAXUINT;
     mCacheControlNoStore = PR_FALSE;
     mCacheControlNoCache = PR_FALSE;
-    mCacheControlPublic = PR_FALSE;
     mPragmaNoCache = PR_FALSE;
     mStatusText.Truncate();
     mContentType.Truncate();
@@ -638,7 +637,6 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
         // clear flags
         mCacheControlNoCache = PR_FALSE;
         mCacheControlNoStore = PR_FALSE;
-        mCacheControlPublic = PR_FALSE;
         return;
     }
 
@@ -650,10 +648,6 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
     // search header value for occurrence of "no-store" 
     if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoStore = PR_TRUE;
-
-    // search header value for occurrence of "public" 
-    if (nsHttp::FindToken(val, "public", HTTP_HEADER_VALUE_SEPS))
-        mCacheControlPublic = PR_TRUE;
 }
 
 void

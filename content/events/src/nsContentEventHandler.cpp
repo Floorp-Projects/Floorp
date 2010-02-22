@@ -873,7 +873,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
     brContent = node->GetChildAt(--offset - 1);
   }
   *aNode = node;
-  *aOffset = PR_MAX(offset, 0);
+  *aOffset = NS_MAX(offset, 0);
 }
 
 nsresult

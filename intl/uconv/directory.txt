@@ -1,57 +1,35 @@
 Directory Structure :
 ================================
-public  - public header file
-src     - source directory of charset converter manager and utility
-tests   - tests program and application for charset converter 
 
-The following directory are used to put different charset converter 
+idl        - public .idl files
+native     - support for native platform charset conversion
+public     - public header file
+src        - source directory of charset converter manager and utilities, and
+             charset converters for ISO-8859-1, CP1252, MacRoman and UTF-8
+tests      - tests program and application for charset converter 
+tests/unit - xpcshell tests
+tools      - tools to build the tables used by the converters
+util       - utility functions used by the converters
 
-ucvam    - Armenian charsets
-ucvar    - Arabic charsets
-ucvcn    - Simplified chinese charsets- GB2312, HZ, ISO-2022-CN
-ucvcy    - Cyrillic charsets - ISO-8859-5, CP1251, KOI8-R, KOI8-U, Mac Cyrillic 
-ucvgr    - Greek charsets - ISO-8859-7, CP1253
-ucvhr    - Hebrew charsets 
-ucvja    - Japanese charsets Set 1 - Shift-JIS 
-ucvja2   - Japanese charsets Set 2 - ISO-2022-JP , EUC-JP
-ucvko    - Korean charsets - ISO-2022-KR, EUC-KR
-ucvlatin - Latin charsets - ISO-8859-1,2,3,4,9,14,15, CP1250,1252,1254, 
-                            Mac Roman, Central European, Romanian, Icelandic, 
-                            etc
-ucvmath  - Mathematical charsets (symbols for MathML/scientific documents)
-ucvth    - Thai charsets
+The following directories contain different charset converters:
+
+ucvcn    - Simplified Chinese charsets - GB2312, HZ, ISO-2022-CN, CP936
+ucvibm   - IBM charsets - CP850, 852, 855, 857, 862, 864, 869, 1125, 1131
+ucvja    - Japanese charsets - Shift-JIS, ISO-2022-JP, EUC-JP
+ucvko    - Korean charsets - ISO-2022-KR, EUC-KR, CP949
+ucvlatin - Latin charsets and others - ISO-8859-x, CP1250-1258
+                            CP866, 874, GEOSTD8, ARMSCII, ISO-IR-111, KOI8,
+                            Mac charsets, T61, TIS620, TCVN, VISCII, VPS
+                            UTF7, UTF16, UTF32.
 ucvtw    - Traditional Chinese charsets Set 1 - Big5
-ucvtw2   - Traditional Chinese charsets Set 2 - EUC-TW, ISO-2022-CN,  
-ucvutf   - UTF-8, UTF-7
-ucvvt    - Vietnamese charsets
+ucvtw2   - Traditional Chinese charsets Set 2 - EUC-TW
 
-The following directory are obsolete and should not be used:
+Within the directories containing charset converters:
 
-ufromam
-ufromar
-ufromcn
-ufromcy
-ufromgr
-ufromhr
-ufromja
-ufromja2
-ufromko
-ufroml
-ufromtw
-ufromtw2
-ufromutf
-ufromvt
-utoam
-utoar
-utocn
-utocy
-utogr
-utohr
-utoja
-utoja2
-utoko
-utol
-utotw
-utotw2
-utoutf
-utovt
+*.ut - tables used to convert to Unicode from a charset
+*.uf - tables used to convert to a charset from Unicode
+
+The following directories are obsolete and should not be used:
+
+ucvth
+ucvvt

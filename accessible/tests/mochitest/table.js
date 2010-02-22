@@ -13,7 +13,7 @@
  */
 const kDataCell = 1; // Indicates the cell is origin data cell
 const kRowHeaderCell = 2; // Indicates the cell is row header cell
-const kColHeaderCell = 4; // Indicated teh cell is column header cell
+const kColHeaderCell = 4; // Indicated the cell is column header cell
 const kOrigin = kDataCell | kRowHeaderCell | kColHeaderCell;
 
 const kRowSpanned = 8; // Indicates the cell is not origin and row spanned 

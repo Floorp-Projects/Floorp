@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(b7ae45bd-21e9-4ed5-a67e-86448b25d56b)]
+[scriptable, uuid(427597a3-1737-4743-bf43-2311a1ed5fbd)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -101,15 +101,6 @@ interface nsIAccessibleDocument : nsISupports
    * For example, in Windows you can static cast it to an HWND.
    */
   [noscript] readonly attribute voidPtr windowHandle;
-
-  /**
-   * Returns the access node cached by this document
-   * @param aUniqueID The unique ID used to cache the node.
-   *                  This matches up with the uniqueID attribute on
-   *                  nsIAccessNode.
-   * @return The nsIAccessNode cached for this particular unique ID.
-   */
-  [noscript] nsIAccessNode getCachedAccessNode(in voidPtr aUniqueID);
 
   /**
    * Returns the first accessible parent of a DOM node.

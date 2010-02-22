@@ -278,24 +278,25 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
 
 struct nsSearchAccessibleInCacheArg
 {
-  nsCOMPtr<nsIAccessNode> mAccessNode;
+  nsRefPtr<nsAccessNode> mAccessNode;
   void *mUniqueID;
 };
 
 static PLDHashOperator
-SearchAccessibleInCache(const void* aKey, nsIAccessNode* aAccessNode,
+SearchAccessibleInCache(const void* aKey, nsAccessNode* aAccessNode,
                         void* aUserArg)
 {
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(do_QueryInterface(aAccessNode));
-  NS_ASSERTION(docAccessible,
+  nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(aAccessNode));
+  NS_ASSERTION(accessibleDoc,
                "No doc accessible for the object in doc accessible cache!");
 
+  nsRefPtr<nsDocAccessible> docAccessible =
+    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
   if (docAccessible) {
     nsSearchAccessibleInCacheArg* arg =
       static_cast<nsSearchAccessibleInCacheArg*>(aUserArg);
-    nsCOMPtr<nsIAccessNode> accessNode;
-    docAccessible->GetCachedAccessNode(arg->mUniqueID,
-                                       getter_AddRefs(accessNode));
+    nsAccessNode* accessNode =
+      docAccessible->GetCachedAccessNode(arg->mUniqueID);
     if (accessNode) {
       arg->mAccessNode = accessNode;
       return PL_DHASH_STOP;
@@ -323,5 +324,5 @@ nsDocAccessibleWrap::GetXPAccessibleForChildID(const VARIANT& aVarChild,
   gGlobalDocAccessibleCache.EnumerateRead(SearchAccessibleInCache,
                                           static_cast<void*>(&arg));
   if (arg.mAccessNode)
-    CallQueryInterface(arg.mAccessNode, aAccessible);
+    CallQueryInterface(arg.mAccessNode.get(), aAccessible);
 }

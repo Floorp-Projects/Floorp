@@ -64,6 +64,12 @@ EXPORTS		= \
 		mozAutoDocUpdate.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+  Link.h \
+  $(NULL)
+
 CPPSRCS		= \
 		mozSanitizingSerializer.cpp \
 		nsAtomListUtils.cpp \

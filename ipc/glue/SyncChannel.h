@@ -52,6 +52,8 @@ protected:
     typedef uint16 MessageId;
 
 public:
+    static const int32 kNoTimeout;
+
     class /*NS_INTERFACE_CLASS*/ SyncListener : 
         public AsyncChannel::AsyncListener
     {
@@ -61,6 +63,7 @@ public:
         virtual void OnChannelClose() = 0;
         virtual void OnChannelError() = 0;
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
+        virtual bool OnReplyTimeout() = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
     };
@@ -74,6 +77,11 @@ public:
 
     // Synchronously send |msg| (i.e., wait for |reply|)
     bool Send(Message* msg, Message* reply);
+
+    void SetReplyTimeoutMs(int32 aTimeoutMs) {
+        AssertWorkerThread();
+        mTimeoutMs = (aTimeoutMs <= 0) ? kNoTimeout : aTimeoutMs;
+    }
 
     // Override the AsyncChannel handler so we can dispatch sync messages
     NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
@@ -93,7 +101,31 @@ protected:
     }
 
     void OnDispatchMessage(const Message& aMsg);
-    void WaitForNotify();
+
+    NS_OVERRIDE
+    bool OnSpecialMessage(uint16 id, const Message& msg)
+    {
+        // SyncChannel doesn't care about any special messages yet
+        return AsyncChannel::OnSpecialMessage(id, msg);
+    }
+
+    //
+    // Return true if the wait ended because a notification was
+    // received.  That is, true => event received.
+    //
+    // Return false if the time elapsed from when we started the
+    // process of waiting until afterwards exceeded the currently
+    // allotted timeout.  That *DOES NOT* mean false => "no event" (==
+    // timeout); there are many circumstances that could cause the
+    // measured elapsed time to exceed the timeout EVEN WHEN we were
+    // notified.
+    //
+    // So in sum: true is a meaningful return value; false isn't,
+    // necessarily.
+    //
+    bool WaitForNotify();
+
+    bool ShouldContinueFromTimeout();
 
     // Executed on the IO thread.
     void OnSendReply(Message* msg);
@@ -118,6 +150,11 @@ protected:
     int32 mNextSeqno;
 
     static bool sIsPumpingMessages;
+
+    int32 mTimeoutMs;
+
+private:
+    bool EventOccurred();
 };
 
 

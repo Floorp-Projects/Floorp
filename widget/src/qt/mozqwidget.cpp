@@ -1,13 +1,26 @@
 #include "mozqwidget.h"
 #include "nsWindow.h"
-#include <qevent.h>
 
-MozQWidget::MozQWidget(nsWindow *receiver, QWidget *parent,
-                       const char *name, int f)
-    : QWidget(parent, (Qt::WindowFlags)f),
-      mReceiver(receiver)
+#include <QtGui/QApplication>
+#include <QtGui/QCursor>
+#include <QtGui/QInputContext>
+#include <QtGui/QGraphicsSceneContextMenuEvent>
+#include <QtGui/QGraphicsSceneDragDropEvent>
+#include <QtGui/QGraphicsSceneMouseEvent>
+#include <QtGui/QGraphicsSceneHoverEvent>
+#include <QtGui/QGraphicsSceneWheelEvent>
+
+#include <QtCore/QEvent>
+#include <QtCore/QVariant>
+
+
+MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
+    : QGraphicsWidget(aParent),
+      mReceiver(aReceiver)
 {
-    setAttribute(Qt::WA_QuitOnClose, false);
+    setFlag(QGraphicsItem::ItemIsFocusable);
+
+    setFocusPolicy(Qt::WheelFocus);
 }
 
 MozQWidget::~MozQWidget()
@@ -16,206 +29,128 @@ MozQWidget::~MozQWidget()
         mReceiver->QWidgetDestroyed();
 }
 
-bool MozQWidget::event(QEvent *e)
+void MozQWidget::paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget /*= 0*/)
 {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    bool handled = true;
-
-    // always handle (delayed) delete requests triggered by
-    // calling deleteLater() on this widget:
-    if (e->type() == QEvent::DeferredDelete)
-        return QObject::event(e);
-
-    if (!mReceiver)
-        return false;
-
-    switch(e->type()) {
-/*
-    case QEvent::Accessibility:
-    {
-        qDebug("accessibility event received");
-    }
-    break;
-*/
-    case QEvent::MouseButtonPress:
-    {
-        QMouseEvent *ms = (QMouseEvent*)(e);
-        status = mReceiver->OnButtonPressEvent(ms);
-    }
-    break;
-    case QEvent::MouseButtonRelease:
-    {
-        QMouseEvent *ms = (QMouseEvent*)(e);
-        status = mReceiver->OnButtonReleaseEvent(ms);
-    }
-    break;
-    case QEvent::MouseButtonDblClick:
-    {
-        QMouseEvent *ms = (QMouseEvent*)(e);
-        status = mReceiver->mouseDoubleClickEvent(ms);
-    }
-    break;
-    case QEvent::MouseMove:
-    {
-        QMouseEvent *ms = (QMouseEvent*)(e);
-        status = mReceiver->OnMotionNotifyEvent(ms);
-    }
-    break;
-    case QEvent::KeyPress:
-    {
-        QKeyEvent *kev = (QKeyEvent*)(e);
-        status = mReceiver->OnKeyPressEvent(kev);
-    }
-    break;
-    case QEvent::KeyRelease:
-    {
-        QKeyEvent *kev = (QKeyEvent*)(e);
-        status = mReceiver->OnKeyReleaseEvent(kev);
-    }
-    break;
-/*
-    case QEvent::IMStart:
-    {
-        QIMEvent *iev = (QIMEvent*)(e);
-        status = mReceiver->imStartEvent(iev);
-    }
-    break;
-    case QEvent::IMCompose:
-    {
-        QIMEvent *iev = (QIMEvent*)(e);
-        status = mReceiver->imComposeEvent(iev);
-    }
-    break;
-    case QEvent::IMEnd:
-    {
-        QIMEvent *iev = (QIMEvent*)(e);
-        status = mReceiver->imEndEvent(iev);
-    }
-    break;
-*/
-    case QEvent::WindowActivate:
-    {
-        QFocusEvent *fev = (QFocusEvent*)(e);
-        mReceiver->OnFocusInEvent(fev);
-        return TRUE;
-    }
-    break;
-    case QEvent::WindowDeactivate:
-    {
-        QFocusEvent *fev = (QFocusEvent*)(e);
-        mReceiver->OnFocusOutEvent(fev);
-        return TRUE;
-    }
-    break;
-    case QEvent::Enter:
-    {
-        status = mReceiver->OnEnterNotifyEvent(e);
-    }
-    break;
-    case QEvent::Leave:
-    {
-        status = mReceiver->OnLeaveNotifyEvent(e);
-    }
-    break;
-    case QEvent::Paint:
-    {
-        QPaintEvent *ev = (QPaintEvent*)(e);
-        status = mReceiver->OnPaintEvent(ev);
-    }
-    break;
-    case QEvent::Move:
-    {
-        QMoveEvent *mev = (QMoveEvent*)(e);
-        status = mReceiver->OnMoveEvent(mev);
-    }
-    break;
-    case QEvent::Resize:
-    {
-        QResizeEvent *rev = (QResizeEvent*)(e);
-        status = mReceiver->OnResizeEvent(rev);
-    }
-        break;
-    case QEvent::Show:
-    {
-        QShowEvent *sev = (QShowEvent*)(e);
-        mReceiver->showEvent(sev);
-    }
-    break;
-    case QEvent::Hide:
-    {
-        QHideEvent *hev = (QHideEvent*)(e);
-        status = mReceiver->hideEvent(hev);
-    }
-        break;
-    case QEvent::Close:
-    {
-        QCloseEvent *cev = (QCloseEvent*)(e);
-        status = mReceiver->OnCloseEvent(cev);
-    }
-    break;
-    case QEvent::Wheel:
-    {
-        QWheelEvent *wev = (QWheelEvent*)(e);
-        status = mReceiver->OnScrollEvent(wev);
-    }
-    break;
-    case QEvent::ContextMenu:
-    {
-        QContextMenuEvent *cev = (QContextMenuEvent*)(e);
-        status = mReceiver->contextMenuEvent(cev);
-    }
-    break;
-    case QEvent::DragEnter:
-    {
-        QDragEnterEvent *dev = (QDragEnterEvent*)(e);
-        status = mReceiver->OnDragEnter(dev);
-    }
-        break;
-    case QEvent::DragMove:
-    {
-        QDragMoveEvent *dev = (QDragMoveEvent*)(e);
-        status = mReceiver->OnDragMotionEvent(dev);
-    }
-    break;
-    case QEvent::DragLeave:
-    {
-        QDragLeaveEvent *dev = (QDragLeaveEvent*)(e);
-        status = mReceiver->OnDragLeaveEvent(dev);
-    }
-    break;
-    case QEvent::Drop:
-    {
-        QDropEvent *dev = (QDropEvent*)(e);
-        status = mReceiver->OnDragDropEvent(dev);
-    }
-    break;
-    default:
-        handled = false;
-        break;
-    }
-
-    if (handled)
-        return true;
-
-    return QWidget::event(e);
-
-#if 0
-    // If we were going to ignore this event, pass it up to the parent
-    // and return its value
-    if (status == nsEventStatus_eIgnore)
-        return QWidget::event(e);
-
-    // Otherwise, we know we already consumed it -- we just need to know
-    // whether we want default handling or not
-    if (status == nsEventStatus_eConsumeDoDefault)
-        QWidget::event(e);
-
-    return true;
-#endif
+    mReceiver->DoPaint(aPainter, aOption);
 }
 
-bool
-MozQWidget::SetCursor(nsCursor aCursor)
+void MozQWidget::resizeEvent(QGraphicsSceneResizeEvent* aEvent)
+{
+    mReceiver->OnResizeEvent(aEvent);
+}
+
+void MozQWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent* aEvent)
+{
+    mReceiver->contextMenuEvent(aEvent);
+}
+
+void MozQWidget::dragEnterEvent(QGraphicsSceneDragDropEvent* aEvent)
+{
+    mReceiver->OnDragEnter(aEvent);
+}
+
+void MozQWidget::dragLeaveEvent(QGraphicsSceneDragDropEvent* aEvent)
+{
+    mReceiver->OnDragLeaveEvent(aEvent);
+}
+
+void MozQWidget::dragMoveEvent(QGraphicsSceneDragDropEvent* aEvent)
+{
+    mReceiver->OnDragMotionEvent(aEvent);
+}
+
+void MozQWidget::dropEvent(QGraphicsSceneDragDropEvent* aEvent)
+{
+    mReceiver->OnDragDropEvent(aEvent);
+}
+
+void MozQWidget::focusInEvent(QFocusEvent* aEvent)
+{
+    mReceiver->OnFocusInEvent(aEvent);
+}
+
+void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
+{
+    mReceiver->OnFocusOutEvent(aEvent);
+}
+
+void MozQWidget::hoverEnterEvent(QGraphicsSceneHoverEvent* aEvent)
+{
+    mReceiver->OnEnterNotifyEvent(aEvent);
+}
+
+void MozQWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent* aEvent)
+{
+    mReceiver->OnLeaveNotifyEvent(aEvent);
+}
+
+void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
+{
+    mReceiver->OnMoveEvent(aEvent);
+}
+
+void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
+{
+    mReceiver->OnKeyPressEvent(aEvent);
+}
+
+void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
+{
+    mReceiver->OnKeyReleaseEvent(aEvent);
+}
+
+void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
+{
+    mReceiver->mouseDoubleClickEvent(aEvent);
+}
+
+void MozQWidget::mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent)
+{
+    mReceiver->OnMotionNotifyEvent(aEvent);
+}
+
+void MozQWidget::mousePressEvent(QGraphicsSceneMouseEvent* aEvent)
+{
+    mReceiver->OnButtonPressEvent(aEvent);
+}
+
+void MozQWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent)
+{
+    mReceiver->OnButtonReleaseEvent(aEvent);
+}
+
+bool MozQWidget::sceneEvent(QEvent* aEvent)
+{
+    if (QEvent::WindowActivate == aEvent->type()) {
+        mReceiver->OnFocusInEvent(aEvent);
+    } else if (QEvent::WindowDeactivate == aEvent->type()) {
+        mReceiver->OnFocusOutEvent(aEvent);
+    }
+
+    return QGraphicsWidget::sceneEvent(aEvent);
+}
+
+void MozQWidget::wheelEvent(QGraphicsSceneWheelEvent* aEvent)
+{
+    mReceiver->OnScrollEvent(aEvent);
+}
+
+void MozQWidget::closeEvent(QCloseEvent* aEvent)
+{
+    mReceiver->OnCloseEvent(aEvent);
+}
+
+void MozQWidget::hideEvent(QHideEvent* aEvent)
+{
+    mReceiver->hideEvent(aEvent);
+}
+
+void MozQWidget::showEvent(QShowEvent* aEvent)
+{
+    mReceiver->showEvent(aEvent);
+}
+
+bool MozQWidget::SetCursor(nsCursor aCursor)
 {
     Qt::CursorShape cursor = Qt::ArrowCursor;
     switch(aCursor) {
@@ -267,18 +202,24 @@ MozQWidget::SetCursor(nsCursor aCursor)
         break;
     }
 
-    // qDebug("FIXME:>>>>>>Func:%s::%d, cursor:%i, aCursor:%i\n", __PRETTY_FUNCTION__, __LINE__, cursor, aCursor);
-    // FIXME after reimplementation of whole nsWindow SetCursor cause lot of errors
     setCursor(cursor);
+
+    return NS_OK;
+}
+
+bool MozQWidget::SetCursor(const QPixmap& aCursor, int aHotX, int aHotY)
+{
+    QCursor bitmapCursor(aCursor, aHotX, aHotY);
+    setCursor(bitmapCursor);
 
     return NS_OK;
 }
 
 void MozQWidget::setModal(bool modal)
 {
-    if (modal)
-        setWindowModality(Qt::ApplicationModal);
-    else
-        setWindowModality(Qt::NonModal);
+#if QT_VERSION >= 0x040600
+    setPanelModality(modal ? QGraphicsItem::SceneModal : QGraphicsItem::NonModal);
+#else
+    LOG(("Modal QGraphicsWidgets not supported in Qt < 4.6\n"));
+#endif
 }
-

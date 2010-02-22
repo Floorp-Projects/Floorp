@@ -112,6 +112,18 @@ public:
      */
     static PluginLibrary* LoadModule(const char* aFilePath);
 
+    const NPNetscapeFuncs* GetNetscapeFuncs() {
+        return mNPNIface;
+    }
+
+    base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
+
+    bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
+
+protected:
+    NS_OVERRIDE
+    virtual bool ShouldContinueFromReplyTimeout();
+
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
 
@@ -142,16 +154,9 @@ public:
                                       NPError* aError,
                                       bool* aBoolVal);
 
-    const NPNetscapeFuncs* GetNetscapeFuncs() {
-        return mNPNIface;
-    }
-
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
-    bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
-
-    base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 private:
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
@@ -215,6 +220,9 @@ private:
     void WriteExtraDataEntry(nsIFileOutputStream* stream,
                              const char* key,
                              const char* value);
+    void CleanupFromTimeout();
+    static int TimeoutChanged(const char* aPref, void* aModule);
+
     PluginProcessParent* mSubprocess;
     bool mShutdown;
     const NPNetscapeFuncs* mNPNIface;

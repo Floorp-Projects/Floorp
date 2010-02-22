@@ -91,6 +91,17 @@ static void serve_client_write(void *arg);
 #define TCP_SERVER_PORT            		10000
 #define SERVER_MAX_BIND_COUNT        	100
 
+#ifdef WINCE
+char *getcwd(char *buf, size_t size)
+{
+    wchar_t wpath[MAX_PATH];
+    _wgetcwd(wpath, MAX_PATH);
+    WideCharToMultiByte(CP_ACP, 0, wpath, -1, buf, size, 0, 0);
+}
+ 
+#define perror(s)
+#endif
+
 static PRInt32 num_tcp_clients = NUM_TCP_CLIENTS;
 static PRInt32 num_tcp_connections_per_client = NUM_TCP_CONNECTIONS_PER_CLIENT;
 static PRInt32 tcp_mesg_size = TCP_MESG_SIZE;

@@ -1,3 +1,6 @@
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
 const MANDATORY = ["id", "name", "headerURL"];
 const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
                   "previewURL", "author", "description", "homepageURL",
@@ -247,4 +250,87 @@ function run_test() {
   }, function (after, prop) {
     do_check_eq(typeof after[prop], "undefined");
   });
+
+  do_check_eq(ltm.usedThemes.length, 0);
+  do_check_eq(ltm.currentTheme, null);
+
+  data = dummy();
+  delete data.name;
+  try {
+    ltm.currentTheme = data;
+    do_throw("Should have rejected a theme with no name");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  data = dummy();
+  data.headerURL = "foo";
+  try {
+    ltm.currentTheme = data;
+    do_throw("Should have rejected a theme with a bad headerURL");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  data = dummy();
+  data.headerURL = "ftp://lwtest.invalid/test.png";
+  try {
+    ltm.currentTheme = data;
+    do_throw("Should have rejected a theme with a bad headerURL");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  data = dummy();
+  delete data.id;
+  try {
+    ltm.currentTheme = data;
+    do_throw("Should have rejected a theme with no ID");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  do_check_eq(ltm.usedThemes.length, 0);
+  do_check_eq(ltm.currentTheme, null);
+
+  // Force the theme into the prefs anyway
+  let prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  let themes = [data];
+  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  do_check_eq(ltm.usedThemes.length, 1);
+
+  // This should silently drop the bad theme.
+  ltm.currentTheme = dummy();
+  do_check_eq(ltm.usedThemes.length, 1);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  do_check_eq(ltm.usedThemes.length, 0);
+  do_check_eq(ltm.currentTheme, null);
+
+  // Add one broken and some working.
+  themes = [data, dummy("x1"), dummy("x2")];
+  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  do_check_eq(ltm.usedThemes.length, 3);
+
+  // Switching to an existing theme should drop the bad theme.
+  ltm.currentTheme = ltm.getUsedTheme("x1");
+  do_check_eq(ltm.usedThemes.length, 2);
+  ltm.forgetUsedTheme("x1");
+  ltm.forgetUsedTheme("x2");
+  do_check_eq(ltm.usedThemes.length, 0);
+  do_check_eq(ltm.currentTheme, null);
+
+  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  do_check_eq(ltm.usedThemes.length, 3);
+
+  // Forgetting an existing theme should drop the bad theme.
+  ltm.forgetUsedTheme("x1");
+  do_check_eq(ltm.usedThemes.length, 1);
+  ltm.forgetUsedTheme("x2");
+  do_check_eq(ltm.usedThemes.length, 0);
+  do_check_eq(ltm.currentTheme, null);
 }

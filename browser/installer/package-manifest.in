@@ -339,6 +339,7 @@
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
+@BINPATH@/components/nsINIProcessor.js
 
 ; Modules
 @BINPATH@/modules/*

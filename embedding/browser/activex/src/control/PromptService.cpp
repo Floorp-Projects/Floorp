@@ -202,7 +202,7 @@ nsresult PromptDlg::ConfirmEx(
     {
         NS_ENSURE_ARG_POINTER(checkValue);
         mCheckMessage = _tcsdup(W2T(checkMsg));
-        mCheckValue = (*checkValue == PR_TRUE) ? TRUE : FALSE;
+        mCheckValue = *checkValue ? TRUE : FALSE;
     }
 
     // Turn the button flags into strings. The nsIPromptService flags
@@ -284,7 +284,7 @@ PromptDlg::Prompt(HWND hwndParent, const PRUnichar *dialogTitle,
     {
         NS_ENSURE_ARG_POINTER(checkValue);
         mCheckMessage = _tcsdup(W2T(checkMsg));
-        mCheckValue = (*checkValue == PR_TRUE) ? TRUE : FALSE;
+        mCheckValue = *checkValue ? TRUE : FALSE;
     }
     if (value)
     {
@@ -342,7 +342,7 @@ PromptDlg::PromptUsernameAndPassword(HWND hwndParent,
     {
         NS_ENSURE_ARG_POINTER(checkValue);
         mCheckMessage = _tcsdup(W2T(checkMsg));
-        mCheckValue = (*checkValue == PR_TRUE) ? TRUE : FALSE;
+        mCheckValue = *checkValue ? TRUE : FALSE;
     }
     if (username)
     {
@@ -411,7 +411,7 @@ PromptDlg::PromptPassword(HWND hwndParent,
     {
         NS_ENSURE_ARG_POINTER(checkValue);
         mCheckMessage = _tcsdup(W2T(checkMsg));
-        mCheckValue = (*checkValue == PR_TRUE) ? TRUE : FALSE;
+        mCheckValue = *checkValue ? TRUE : FALSE;
     }
     if (password)
     {

@@ -177,7 +177,7 @@ EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS	+= $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += \
+OS_LIBS += \
 	-framework SystemConfiguration \
 	-framework QuickTime \
 	-framework IOKit \
@@ -197,16 +197,12 @@ EXTRA_DSO_LDOPTS += \
 endif
 endif
 
-ifdef MOZ_PLATFORM_HILDON
-EXTRA_DSO_LDOPTS += $(LIBHILDONMIME_LIBS) $(LIBHILDONFM_LIBS)
+ifdef MOZ_PLATFORM_MAEMO
+EXTRA_DSO_LDOPTS += $(MOZ_PLATFORM_MAEMO_LIBS)
 endif 
 
 ifdef MOZ_ENABLE_LIBCONIC
 EXTRA_DSO_LDOPTS += $(LIBCONIC_LIBS)
-endif
-
-ifdef NS_OSSO
-EXTRA_DSO_LDOPTS += $(LIBOSSO_LIBS)
 endif
 
 ifdef MOZ_ENABLE_DBUS
@@ -261,7 +257,7 @@ EXTRA_DSO_LDOPTS += -ljprof
 endif
 
 ifdef MOZ_ENABLE_QT
-EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk

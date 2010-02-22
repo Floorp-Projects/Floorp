@@ -68,6 +68,8 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "plstr.h" // PL_strcasestr(...)
+#include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
 
 static PRBool gDecodeOnDraw = PR_FALSE;
 static PRBool gDiscardable = PR_FALSE;
@@ -1196,6 +1198,18 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
   if (mKeyURI)
     mKeyURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
+
+  // make sure we have a protocol that returns data rather than opens
+  // an external application, e.g. mailto:
+  nsCOMPtr<nsIURI> uri;
+  newChannel->GetURI(getter_AddRefs(uri));
+  PRBool doesNotReturnData = PR_FALSE;
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                           &doesNotReturnData);
+  if (NS_FAILED(rv))
+    return rv;
+  if (doesNotReturnData)
+    return NS_ERROR_ABORT;
 
   nsCOMPtr<nsIURI> newURI;
   newChannel->GetOriginalURI(getter_AddRefs(newURI));

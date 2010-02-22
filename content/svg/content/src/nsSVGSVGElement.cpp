@@ -989,7 +989,7 @@ nsSVGSVGElement::GetViewBoxTransform()
 
   nsSVGViewBoxRect viewBox;
   if (mViewBox.IsValid()) {
-    viewBox = mViewBox.GetAnimValue();
+    viewBox = mViewBox.GetAnimValue(this);
   } else {
     viewBox.x = viewBox.y = 0.0f;
     viewBox.width  = viewportWidth;
@@ -1114,7 +1114,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
   float h, w;
 
   if (mViewBox.IsValid()) {
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
+    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(this);
     w = viewbox.width;
     h = viewbox.height;
   } else {
@@ -1209,6 +1209,14 @@ nsSVGSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangeViewBox(aDoSetAttr);
 
+  InvalidateTransformNotifyFrame();
+}
+
+void
+nsSVGSVGElement::DidAnimateViewBox()
+{
+  nsSVGSVGElementBase::DidAnimateViewBox();
+  
   InvalidateTransformNotifyFrame();
 }
 

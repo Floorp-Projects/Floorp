@@ -1887,6 +1887,9 @@ extern void _PR_MD_INTERVAL_INIT(void);
 NSPR_API(void) _PR_MD_FINAL_INIT(void);
 #define    _PR_MD_FINAL_INIT _MD_FINAL_INIT
 
+extern void _PR_MD_EARLY_CLEANUP(void);
+#define    _PR_MD_EARLY_CLEANUP _MD_EARLY_CLEANUP
+
 /* Process control */
 
 extern PRProcess * _PR_MD_CREATE_PROCESS(

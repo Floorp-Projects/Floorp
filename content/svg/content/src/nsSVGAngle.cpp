@@ -38,7 +38,22 @@
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #include "nsSVGUtils.h"
+#include "nsSVGMarkerElement.h"
+#ifdef MOZ_SMIL
+#include "nsSMILValue.h"
+#include "SVGOrientSMILType.h"
+#endif // MOZ_SMIL
 
+using namespace mozilla;
+
+/**
+ * Mutable SVGAngle class for SVGSVGElement.createSVGAngle().
+ *
+ * Note that this class holds its own nsSVGAngle, which therefore can't be
+ * animated. This means SVGMarkerElement::setOrientToAngle(angle) must copy
+ * any DOMSVGAngle passed in. Perhaps this is wrong and inconsistent with
+ * other parts of SVG, but it's how the code works for now.
+ */
 class DOMSVGAngle : public nsIDOMSVGAngle
 {
 public:
@@ -48,7 +63,7 @@ public:
     { mVal.Init(); }
     
   NS_IMETHOD GetUnitType(PRUint16* aResult)
-    { *aResult = mVal.mSpecifiedUnitType; return NS_OK; }
+    { *aResult = mVal.mBaseValUnit; return NS_OK; }
 
   NS_IMETHOD GetValue(float* aResult)
     { *aResult = mVal.GetBaseValue(); return NS_OK; }
@@ -217,17 +232,17 @@ GetValueFromString(const nsAString &aValueAsString,
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
-float
-nsSVGAngle::GetUnitScaleFactor() const
+/* static */ float
+nsSVGAngle::GetDegreesPerUnit(PRUint8 aUnit)
 {
-  switch (mSpecifiedUnitType) {
+  switch (aUnit) {
   case nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED:
   case nsIDOMSVGAngle::SVG_ANGLETYPE_DEG:
     return 1;
   case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
-    return static_cast<float>(M_PI / 180.0);
+    return static_cast<float>(180.0 / M_PI);
   case nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD:
-    return 100.0f / 180.0f;
+    return 180.0f / 100.0f;
   default:
     NS_NOTREACHED("Unknown unit type");
     return 0;
@@ -239,6 +254,14 @@ nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
                                          nsSVGElement *aSVGElement)
 {
   mBaseVal = aValue;
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
+#ifdef MOZ_SMIL
+  else {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
   aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
 }
 
@@ -249,8 +272,8 @@ nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  float valueInUserUnits = mBaseVal / GetUnitScaleFactor();
-  mSpecifiedUnitType = PRUint8(unitType);
+  float valueInUserUnits = mBaseVal * GetDegreesPerUnit(mBaseValUnit);
+  mBaseValUnit = PRUint8(unitType);
   SetBaseValue(valueInUserUnits, aSVGElement);
   return NS_OK;
 }
@@ -265,11 +288,18 @@ nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  mBaseVal = mAnimVal = valueInSpecifiedUnits;
-  mSpecifiedUnitType = PRUint8(unitType);
-  if (aSVGElement) {
-    aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+  mBaseVal = valueInSpecifiedUnits;
+  mBaseValUnit = PRUint8(unitType);
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+    mAnimValUnit = mBaseValUnit;
   }
+#ifdef MOZ_SMIL
+  else {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
+  aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
   return NS_OK;
 }
 
@@ -310,34 +340,60 @@ nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
     return rv;
   }
 
-  mBaseVal = mAnimVal = value;
-  mSpecifiedUnitType = PRUint8(unitType);
-  if (aSVGElement) {
-    aSVGElement->DidChangeAngle(mAttrEnum, aDoSetAttr);
+  mBaseVal = value;
+  mBaseValUnit = PRUint8(unitType);
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+    mAnimValUnit = mBaseValUnit;
   }
+#ifdef MOZ_SMIL
+  else {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
 
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
 void
 nsSVGAngle::GetBaseValueString(nsAString & aValueAsString)
 {
-  GetValueString(aValueAsString, mBaseVal, mSpecifiedUnitType);
+  GetValueString(aValueAsString, mBaseVal, mBaseValUnit);
 }
 
 void
 nsSVGAngle::GetAnimValueString(nsAString & aValueAsString)
 {
-  GetValueString(aValueAsString, mAnimVal, mSpecifiedUnitType);
+  GetValueString(aValueAsString, mAnimVal, mAnimValUnit);
 }
 
 void
 nsSVGAngle::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mAnimVal = mBaseVal = aValue * GetUnitScaleFactor();
+  mBaseVal = aValue / GetDegreesPerUnit(mBaseValUnit);
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
+#ifdef MOZ_SMIL
+  else if (aSVGElement) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
   if (aSVGElement) {
     aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
   }
+}
+
+void
+nsSVGAngle::SetAnimValue(float aValue, PRUint8 aUnit, nsSVGElement *aSVGElement)
+{
+  mAnimVal = aValue;
+  mAnimValUnit = aUnit;
+  mIsAnimated = PR_TRUE;
+  aSVGElement->DidAnimateAngle(mAttrEnum);
 }
 
 nsresult
@@ -362,3 +418,81 @@ NS_NewDOMSVGAngle(nsIDOMSVGAngle** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+#ifdef MOZ_SMIL
+nsISMILAttr*
+nsSVGAngle::ToSMILAttr(nsSVGElement *aSVGElement)
+{
+  if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
+    nsSVGMarkerElement *marker = static_cast<nsSVGMarkerElement*>(aSVGElement);
+    return new SMILOrient(marker->GetOrientType(), this, aSVGElement);
+  }
+  // SMILOrient would not be useful for general angle attributes (also,
+  // "orient" is the only animatable <angle>-valued attribute in SVG 1.1).
+  NS_NOTREACHED("Trying to animate unknown angle attribute.");
+  return nsnull;
+}
+
+nsresult
+nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
+                                        const nsISMILAnimationElement* /*aSrcElement*/,
+                                        nsSMILValue& aValue,
+                                        PRBool& aCanCache) const
+{
+  nsSMILValue val(&SVGOrientSMILType::sSingleton);
+  if (aStr.EqualsLiteral("auto")) {
+    val.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO;
+  } else {
+    float value;
+    PRUint16 unitType;
+    nsresult rv = GetValueFromString(aStr, &value, &unitType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    val.mU.mOrient.mAngle = value;
+    val.mU.mOrient.mUnit = unitType;
+    val.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE;
+  }
+  aValue = val;
+  aCanCache = PR_TRUE;
+
+  return NS_OK;
+}
+
+nsSMILValue
+nsSVGAngle::SMILOrient::GetBaseValue() const
+{
+  nsSMILValue val(&SVGOrientSMILType::sSingleton);
+  val.mU.mOrient.mAngle = mAngle->GetBaseValInSpecifiedUnits();
+  val.mU.mOrient.mUnit = mAngle->GetBaseValueUnit();
+  val.mU.mOrient.mOrientType = mOrientType->GetBaseValue();
+  return val;
+}
+
+void
+nsSVGAngle::SMILOrient::ClearAnimValue()
+{
+  if (mAngle->mIsAnimated) {
+    mOrientType->SetAnimValue(mOrientType->GetBaseValue());
+    mAngle->SetAnimValue(mAngle->mBaseVal, mAngle->mBaseValUnit, mSVGElement);
+    mAngle->mIsAnimated = PR_FALSE;
+  }
+}
+
+nsresult
+nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue)
+{
+  NS_ASSERTION(aValue.mType == &SVGOrientSMILType::sSingleton,
+               "Unexpected type to assign animated value");
+
+  if (aValue.mType == &SVGOrientSMILType::sSingleton) {
+    mOrientType->SetAnimValue(aValue.mU.mOrient.mOrientType);
+    if (aValue.mU.mOrient.mOrientType == nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO) {
+      mAngle->SetAnimValue(0.0f, nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED, mSVGElement);
+    } else {
+      mAngle->SetAnimValue(aValue.mU.mOrient.mAngle, aValue.mU.mOrient.mUnit, mSVGElement);
+    }
+  }
+  return NS_OK;
+}
+#endif // MOZ_SMIL

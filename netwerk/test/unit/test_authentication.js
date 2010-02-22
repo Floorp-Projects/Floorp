@@ -1,9 +1,12 @@
 // This file tests authentication prompt callbacks
+// TODO NIT use do_check_eq(expected, actual) consistently, not sometimes eq(actual, expected)
 
 do_load_httpd_js();
 
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
+const FLAG_BOGUS_USER = 1 << 2;
+const FLAG_PREVIOUS_FAILED = 1 << 3;
 
 const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
@@ -46,6 +49,9 @@ AuthPrompt1.prototype = {
 
     if (this.flags & FLAG_RETURN_FALSE)
       return false;
+
+    if (this.flags & FLAG_BOGUS_USER)
+      this.user = "foo\nbar";
 
     user.value = this.user;
     if (this.flags & FLAG_WRONG_PASSWORD) {
@@ -99,10 +105,14 @@ AuthPrompt2.prototype = {
 
     var expectedFlags = nsIAuthInformation.AUTH_HOST;
 
+    if (this.flags & FLAG_PREVIOUS_FAILED)
+      expectedFlags |= nsIAuthInformation.PREVIOUS_FAILED;
+
     if (isNTLM)
       expectedFlags |= nsIAuthInformation.NEED_DOMAIN;
 
-    do_check_eq(expectedFlags, authInfo.flags);
+    const kAllKnownFlags = 31; // Don't fail test for newly added flags
+    do_check_eq(expectedFlags, authInfo.flags & kAllKnownFlags);
 
     var expectedScheme = isNTLM ? "ntlm" : isDigest ? "digest" : "basic";
     do_check_eq(expectedScheme, authInfo.authenticationScheme);
@@ -113,28 +123,35 @@ AuthPrompt2.prototype = {
     do_check_eq(authInfo.domain, "");
 
     if (this.flags & FLAG_RETURN_FALSE)
+    {
+      this.flags |= FLAG_PREVIOUS_FAILED;
       return false;
+    }
+
+    if (this.flags & FLAG_BOGUS_USER)
+      this.user = "foo\nbar";
 
     authInfo.username = this.user;
     if (this.flags & FLAG_WRONG_PASSWORD) {
       authInfo.password = this.pass + ".wrong";
+      this.flags |= FLAG_PREVIOUS_FAILED;
       // Now clear the flag to avoid an infinite loop
       this.flags &= ~FLAG_WRONG_PASSWORD;
     } else {
       authInfo.password = this.pass;
+      this.flags &= ~FLAG_PREVIOUS_FAILED;
     }
     return true;
   },
 
   asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
-    throw 0x80004001;
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   }
 };
 
-function Requestor(flags, versions, username) {
+function Requestor(flags, versions) {
   this.flags = flags;
   this.versions = versions;
-  this.username = username;
 }
 
 Requestor.prototype = {
@@ -150,7 +167,7 @@ Requestor.prototype = {
         iid.equals(Components.interfaces.nsIAuthPrompt)) {
       // Allow the prompt to store state by caching it here
       if (!this.prompt1)
-        this.prompt1 = new AuthPrompt1(this.flags); 
+        this.prompt1 = new AuthPrompt1(this.flags);
       return this.prompt1;
     }
     if (this.versions & 2 &&
@@ -158,8 +175,6 @@ Requestor.prototype = {
       // Allow the prompt to store state by caching it here
       if (!this.prompt2)
         this.prompt2 = new AuthPrompt2(this.flags);
-      if (this.username)
-        this.prompt2.user = this.username;
       return this.prompt2;
     }
 
@@ -195,12 +210,12 @@ RealmTestRequestor.prototype = {
   },
 
   asyncPromptAuth: function realmtest_async(chan, cb, ctx, lvl, info) {
-    throw 0x80004001;
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   }
 };
 
 var listener = {
-  expectedCode: 401, // Unauthorized
+  expectedCode: -1, // Uninitialized
 
   onStartRequest: function test_onStartR(request, ctx) {
     try {
@@ -387,7 +402,7 @@ function test_digest() {
 
 function test_digest_bogus_user() {
   var chan = makeChan("http://localhost:4444/auth/digest");
-  chan.notificationCallbacks =  new Requestor(0, 2, "foo\nbar");
+  chan.notificationCallbacks =  new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
   chan.asyncOpen(listener, null);
 

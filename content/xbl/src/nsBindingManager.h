@@ -109,6 +109,11 @@ public:
   nsresult GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
   /**
+   * Non-COMy version of GetContentListFor.
+   */
+  nsINodeList* GetContentListFor(nsIContent* aContent);
+
+  /**
    * Set the insertion point children for the specified element.
    * The binding manager assumes ownership of aList.
    */

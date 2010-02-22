@@ -1,4 +1,4 @@
-
+%include shared.inc
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -66,11 +66,25 @@
 
 #configTree 
 {  
-  margin-top: 5px !important;
-  margin-bottom: 5px !important;
+  margin: 0;
+  border: 0;
+  -moz-appearance: none;
 }
 
 #filterRow
 {
-  margin-top: 5px;
+  background: @scopeBarBackground@;
+  border-bottom: @scopeBarSeparatorBorder@;
+  padding: 1px 2px 0;
+}
+
+#filterRow > label {
+  margin: 0 4px;
+  color: @scopeBarTitleColor@;
+  text-shadow: @loweredShadow@;
+  font-weight: bold;
+}
+
+#textbox {
+  width: 20em;
 }

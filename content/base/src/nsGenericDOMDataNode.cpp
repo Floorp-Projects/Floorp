@@ -619,6 +619,12 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsNodeUtils::ParentChainChanged(this);
 }
 
+already_AddRefed<nsINodeList>
+nsGenericDOMDataNode::GetChildren(PRInt32 aChildType)
+{
+  return nsnull;
+}
+
 nsIAtom *
 nsGenericDOMDataNode::GetIDAttributeName() const
 {

@@ -37,8 +37,6 @@
 
 /* Platform specific code to invoke XPCOM methods on native objects */
 
-#include "prlog.h"
-
 #include "xptcprivate.h"
 
 #if !defined(LINUX) || !defined(__arm__)

@@ -56,9 +56,20 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              const PRUint32 aFlags, nsStyleContext** aStyles,
                              PRBool aOwnsFactory)
 {
-  return new (aLength, aFlags)
-    nsTransformedTextRun(aParams, aFactory, aFontGroup, aString, aLength,
-                         aFlags, aStyles, aOwnsFactory);
+  NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
+               "didn't expect text to be marked as 8-bit here");
+
+  // Note that AllocateStorage MAY modify the textPtr parameter,
+  // if the text is not persistent and therefore a private copy is created
+  const void *textPtr = aString;
+  CompressedGlyph *glyphStorage = AllocateStorage(textPtr, aLength, aFlags);
+  if (!glyphStorage) {
+    return nsnull;
+  }
+
+  return new nsTransformedTextRun(aParams, aFactory, aFontGroup,
+                                  static_cast<const PRUnichar*>(textPtr), aLength,
+                                  aFlags, aStyles, aOwnsFactory, glyphStorage);
 }
 
 void

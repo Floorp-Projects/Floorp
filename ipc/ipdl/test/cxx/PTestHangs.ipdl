@@ -1,0 +1,28 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestHangs {
+both:
+    rpc StackFrame();
+
+child:
+    rpc Hang();
+    __delete__();
+
+
+state START:
+    call StackFrame goto FRAME2;
+
+// So as to test unwinding the RPC stack
+state FRAME2: answer StackFrame goto FRAME3;
+state FRAME3: call StackFrame goto FRAME4;
+state FRAME4: answer StackFrame goto HANG;
+state HANG:   call Hang goto DEATH;
+
+state DEATH:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

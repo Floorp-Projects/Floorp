@@ -790,7 +790,7 @@ PRBool
 PREF_PrefIsLocked(const char *pref_name)
 {
     PRBool result = PR_FALSE;
-    if (gIsAnyPrefLocked) {
+    if (gIsAnyPrefLocked && gHashTable.ops) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
             result = PR_TRUE;

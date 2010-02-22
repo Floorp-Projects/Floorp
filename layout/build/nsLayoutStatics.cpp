@@ -88,6 +88,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameList.h"
 #include "nsListControlFrame.h"
+#include "nsFileControlFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -305,7 +306,6 @@ nsLayoutStatics::Shutdown()
   nsDOMAttribute::Shutdown();
   nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
-  nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
   nsCSSRuleProcessor::FreeSystemMetrics();
@@ -384,6 +384,8 @@ nsLayoutStatics::Shutdown()
   NS_ShutdownChainItemPool();
 
   nsFrameList::Shutdown();
+
+  nsFileControlFrame::DestroyUploadLastDir();
 }
 
 void

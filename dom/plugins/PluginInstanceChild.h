@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 #include "ChildAsyncCall.h"
 #include "ChildTimer.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace plugins {
@@ -73,10 +74,6 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
 
-    virtual bool
-    AnswerNPP_GetValue_NPPVpluginWindow(bool* windowed, NPError* rv);
-    virtual bool
-    AnswerNPP_GetValue_NPPVpluginTransparent(bool* transparent, NPError* rv);
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
     virtual bool
@@ -185,12 +182,22 @@ public:
 
 private:
 
+    NPError
+    InternalGetNPObjectForValue(NPNVariable aValue,
+                                NPObject** aObject);
+
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
     bool CreatePluginWindow();
     void DestroyPluginWindow();
     void ReparentPluginWindow(HWND hWndParent);
     void SizePluginWindow(int width, int height);
+    int16_t WinlessHandleEvent(NPEvent& event);
+    void SetNestedInputEventHook();
+    void ResetNestedEventHook();
+    void SetNestedInputPumpHook();
+    void ResetPumpHooks();
+    void InternalCallSetNestedEventState(bool aState);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
                                             WPARAM wParam,
@@ -199,11 +206,25 @@ private:
                                              UINT message,
                                              WPARAM wParam,
                                              LPARAM lParam);
+    static VOID CALLBACK PumpTimerProc(HWND hwnd,
+                                       UINT uMsg,
+                                       UINT_PTR idEvent,
+                                       DWORD dwTime);
+    static LRESULT CALLBACK NestedInputEventHook(int code,
+                                                 WPARAM wParam,
+                                                 LPARAM lParam);
+    static LRESULT CALLBACK NestedInputPumpHook(int code,
+                                                WPARAM wParam,
+                                                LPARAM lParam);
 #endif
 
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+
+    // Cached scriptable actors to avoid IPC churn
+    PluginScriptableObjectChild* mCachedWindowActor;
+    PluginScriptableObjectChild* mCachedElementActor;
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
@@ -211,6 +232,13 @@ private:
     HWND mPluginWindowHWND;
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
+    HHOOK mNestedEventHook;
+    HHOOK mNestedPumpHook;
+    int mNestedEventLevelDepth;
+    bool mNestedEventState;
+    HWND mCachedWinlessPluginHWND;
+    UINT_PTR mEventPumpTimer;
+    nsIntPoint mPluginSize;
 #endif
 
     friend class ChildAsyncCall;
