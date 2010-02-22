@@ -231,7 +231,7 @@ interface nsINavHistoryFullVisitResultNode : nsINavHistoryVisitResultNode
  * Bookmark folders and places queries will be QueryResultNodes which extends
  * these items.
  */
-[scriptable, uuid(f9c8e1c1-e701-44ad-893c-8504c3956929)]
+[scriptable, uuid(9e3f2f78-53ae-469a-9fb3-b0ef74b24a31)]
 interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 {
 
@@ -267,6 +267,41 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    */
   readonly attribute unsigned long childCount;
   nsINavHistoryResultNode getChild(in unsigned long aIndex);
+
+  /**
+   * Get the index of a direct child in this container.
+   *
+   * @param aNode
+   *        a result node.
+   *
+   * @return aNode's index in this container.
+   * @throws NS_ERROR_NOT_AVAILABLE if containerOpen is false.
+   * @throws NS_ERROR_INVALID_ARG if aNode isn't a direct child of this
+   * container.
+   */
+  unsigned long getChildIndex(in nsINavHistoryResultNode aNode);
+
+  /**
+   * Look for a node in the container by some of its details.  Does not search
+   * closed containers.
+   *
+   * @param aURI
+   *        the node's uri attribute value
+   * @param aTime
+   *        the node's time attribute value.
+   * @param aItemId
+   *        the node's itemId attribute value.
+   * @param aRecursive
+   *        whether or not to search recursively.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if this container is closed.
+   * @return a result node that matches the given details if any, null
+   *         otherwise.
+   */
+  nsINavHistoryResultNode findNodeByDetails(in AUTF8String aURIString,
+                                            in PRTime aTime,
+                                            in long long aItemId,
+                                            in boolean aRecursive);
 
   /**
    * Returns false if this node's list of children can be modified

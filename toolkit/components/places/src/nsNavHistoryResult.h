@@ -474,6 +474,13 @@ public:
     { return nsNavHistoryContainerResultNode::GetChildCount(aChildCount); } \
   NS_IMETHOD GetChild(PRUint32 index, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
+  NS_IMETHOD GetChildIndex(nsINavHistoryResultNode* aNode, PRUint32* _retval) \
+    { return nsNavHistoryContainerResultNode::GetChildIndex(aNode, _retval); } \
+  NS_IMETHOD FindNodeByDetails(const nsACString& aURIString, PRTime aTime, \
+                               PRInt64 aItemId, PRBool aRecursive, \
+                               nsINavHistoryResultNode** _retval) \
+    { return nsNavHistoryContainerResultNode::FindNodeByDetails(aURIString, aTime, aItemId, \
+                                                                aRecursive, _retval); } \
   NS_IMETHOD GetDynamicContainerType(nsACString& aDynamicContainerType) \
     { return nsNavHistoryContainerResultNode::GetDynamicContainerType(aDynamicContainerType); } \
   NS_IMETHOD AppendURINode(const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode **_retval) \
