@@ -61,6 +61,7 @@ script regress-467495-04.js
 script regress-467495-05.js
 script regress-467495-06.js
 script regress-468711.js
+script regress-469547.js
 script regress-469625-02.js
 script regress-469625-03.js
 script regress-471373.js # bug xxx No test results reported

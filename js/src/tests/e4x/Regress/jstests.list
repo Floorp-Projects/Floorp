@@ -88,6 +88,7 @@ script regress-458679-01.js
 script regress-458679-02.js
 script regress-460180.js
 script regress-465063.js
+script regress-470619.js
 script regress-473709.js
 script regress-474319.js
 script regress-477053.js
