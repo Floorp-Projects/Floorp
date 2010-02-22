@@ -4585,12 +4585,10 @@ nsGlobalWindow::Print()
       webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
       webBrowserPrint->Print(printSettings, nsnull);
     }
-  } 
+  }
+#endif //NS_PRINTING
 
   return NS_OK;
-#else
-  return NS_ERROR_NOT_AVAILABLE;
-#endif
 }
 
 NS_IMETHODIMP
