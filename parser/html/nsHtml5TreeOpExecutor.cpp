@@ -150,10 +150,29 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
   
   static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
 
-  // This is comes from nsXMLContentSink
+  // This is comes from nsXMLContentSink and nsHTMLContentSink
   DidBuildModelImpl(aTerminated);
-  mDocument->ScriptLoader()->RemoveObserver(this);
+
+  if (!mLayoutStarted) {
+    // We never saw the body, and layout never got started. Force
+    // layout *now*, to get an initial reflow.
+
+    // NOTE: only force the layout if we are NOT destroying the
+    // docshell. If we are destroying it, then starting layout will
+    // likely cause us to crash, or at best waste a lot of time as we
+    // are just going to tear it down anyway.
+    PRBool destroying = PR_TRUE;
+    if (mDocShell) {
+      mDocShell->IsBeingDestroyed(&destroying);
+    }
+
+    if (!destroying) {
+      nsContentSink::StartLayout(PR_FALSE);
+    }
+  }
+
   ScrollToRef();
+  mDocument->ScriptLoader()->RemoveObserver(this);
   mDocument->RemoveObserver(this);
   if (!mParser) {
     // DidBuildModelImpl may cause mParser to be nulled out
@@ -524,6 +543,24 @@ nsHtml5TreeOpExecutor::DocumentMode(nsHtml5DocumentMode m)
   nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
   NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
   htmlDocument->SetCompatibilityMode(mode);
+}
+
+void
+nsHtml5TreeOpExecutor::StartLayout() {
+  if (mLayoutStarted || !mDocument) {
+    return;
+  }
+
+  EndDocUpdate();
+
+  if(NS_UNLIKELY(!mParser)) {
+    // got terminate
+    return;
+  }
+
+  nsContentSink::StartLayout(PR_FALSE);
+
+  BeginDocUpdate();
 }
 
 /**
