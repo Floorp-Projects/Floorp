@@ -769,10 +769,10 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   }
 
   // Clamp the time to [0, duration] as required by the spec
-  float clampedTime = PR_MAX(0, aCurrentTime);
+  float clampedTime = NS_MAX(0.0f, aCurrentTime);
   float duration = mDecoder->GetDuration();
   if (duration >= 0) {
-    clampedTime = PR_MIN(clampedTime, duration);
+    clampedTime = NS_MIN(clampedTime, duration);
   }
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
