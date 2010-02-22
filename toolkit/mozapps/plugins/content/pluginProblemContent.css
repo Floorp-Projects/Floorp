@@ -1,0 +1,40 @@
+html|object:not([width]), html|object[width=""],
+html|embed:not([width]), html|embed[width=""],
+html|applet:not([width]), html|applet[width=""] {
+  width: 240px;
+}
+
+html|object:not([height]), html|object[height=""],
+html|embed:not([height]), html|embed[height=""],
+html|applet:not([height]), html|applet[height=""] {
+  height: 200px;
+}
+
+:-moz-type-unsupported .mainBox,
+:-moz-handler-disabled .mainBox,
+:-moz-handler-blocked .mainBox {
+  -moz-user-focus: normal;
+}
+:-moz-type-unsupported .mainBox:focus,
+:-moz-handler-disabled .mainBox:focus,
+:-moz-handler-blocked .mainBox:focus {
+  outline: 1px dotted;
+}
+
+.mainBox {
+  width: inherit;
+  height: inherit;
+  overflow: hidden;
+}
+
+.msg {
+  display: none;
+}
+
+:-moz-type-unsupported .msgUnsupported,
+:-moz-handler-disabled .msgDisabled,
+:-moz-handler-blocked .msgBlocked,
+:-moz-handler-crashed .msgCrashed,
+:-moz-handler-crashed .msgReload {
+  display: block;
+}
