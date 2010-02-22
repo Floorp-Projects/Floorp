@@ -1,5 +1,6 @@
 toolkit.jar:
 % skin help classic/1.0 %skin/classic/help/
+  skin/classic/help/dropmark-nav.png
   skin/classic/help/help.css
   skin/classic/help/Toolbar.png
   skin/classic/help/helpFileLayout.css
