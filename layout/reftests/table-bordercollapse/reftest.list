@@ -74,4 +74,4 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == bc_borderoffset2.html bc_borderoffset2_
 == borderhandling-7.xhtml borderhandling-ref.html
 == borderhandling-8.html borderhandling-ref.html
 == borderhandling-frame-border.html borderhandling-frame-border-ref.html
-== borderhandling-rules-border.html borderhandling-rules-border-ref.html
+random == borderhandling-rules-border.html borderhandling-rules-border-ref.html # bug 540360 (depends on bug 540256)

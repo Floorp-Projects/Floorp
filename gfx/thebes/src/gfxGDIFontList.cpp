@@ -221,18 +221,7 @@ GDIFontEntry::ReadCMAP()
 gfxFont *
 GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool /*aNeedsBold*/)
 {
-    gfxFont *newFont;
-    newFont = new gfxWindowsFont(this, aFontStyle);
-    if (!newFont) {
-        return nsnull;
-    }
-    if (!newFont->Valid()) {
-        delete newFont;
-        return nsnull;
-    }
-    nsRefPtr<gfxFont> font = newFont;
-    gfxFontCache::GetCache()->AddNew(font);
-    return newFont;
+    return new gfxWindowsFont(this, aFontStyle);
 }
 
 nsresult
@@ -503,12 +492,9 @@ GDIFontFamily::FindStyleVariations()
     EnumFontFamiliesExW(hdc, &logFont,
                         (FONTENUMPROCW)GDIFontFamily::FamilyAddStylesProc,
                         (LPARAM)this, 0);
-#ifdef DEBUG
-    if (mAvailableFonts.Length() == 0) {
-        char msgBuf[256];
-        (void)sprintf(msgBuf, "no styles available in family \"%s\"",
-                      NS_ConvertUTF16toUTF8(mName).get());
-        NS_ASSERTION(mAvailableFonts.Length() != 0, msgBuf);
+#ifdef PR_LOGGING
+    if (LOG_ENABLED() && mAvailableFonts.Length() == 0) {
+        LOG(("no styles available in family \"%s\"", NS_ConvertUTF16toUTF8(mName).get()));
     }
 #endif
 
@@ -634,7 +620,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
         nsDependentString faceName(lf.lfFaceName);
         nsRefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
-        if (fontList->mBadUnderlineFamilyNames.GetEntry(name))
+        if (fontList->mBadUnderlineFamilyNames.Contains(name))
             family->SetBadUnderlineFamily();
     }
 

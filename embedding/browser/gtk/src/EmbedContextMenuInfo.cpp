@@ -416,7 +416,7 @@ EmbedContextMenuInfo::CheckDomHtmlNode(nsIDOMNode *aNode)
     if (NS_SUCCEEDED(rv) && area) {
       PRBool aNoHref = PR_FALSE;
       rv = area->GetNoHref(&aNoHref);
-      if (aNoHref == PR_FALSE)
+      if (!aNoHref)
         rv = area->GetHref(mCtxHref);
       else
         rv = area->GetTarget(mCtxHref);

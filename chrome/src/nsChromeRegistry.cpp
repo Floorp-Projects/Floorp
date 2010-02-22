@@ -1285,10 +1285,11 @@ nsresult
 nsChromeRegistry::SelectLocaleFromPref(nsIPrefBranch* prefs)
 {
   nsresult rv;
-  PRBool matchOSLocale = PR_FALSE;
+  PRBool matchOSLocale = PR_FALSE, userLocaleOverride = PR_FALSE;
+  prefs->PrefHasUserValue(SELECTED_LOCALE_PREF, &userLocaleOverride);
   rv = prefs->GetBoolPref(MATCH_OS_LOCALE_PREF, &matchOSLocale);
 
-  if (NS_SUCCEEDED(rv) && matchOSLocale) {
+  if (NS_SUCCEEDED(rv) && matchOSLocale && !userLocaleOverride) {
     // compute lang and region code only when needed!
     nsCAutoString uiLocale;
     rv = getUILangCountry(uiLocale);

@@ -324,13 +324,19 @@ nsSVGFE::DidAnimateNumber(PRUint8 aAttrEnum)
 }
 
 void
+nsSVGFE::DidAnimateInteger(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
+}
+
+void
 nsSVGFE::DidAnimateEnum(PRUint8 aAttrEnum)
 {
   DidAnimateAttr(this);
 }
 
 void
-nsSVGFE::DidAnimatePreserveAspectRatio(PRUint8 aAttrEnum)
+nsSVGFE::DidAnimatePreserveAspectRatio()
 {
   DidAnimateAttr(this);
 }
@@ -3203,7 +3209,7 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
 #endif
 
   float fX, fY, seed;
-  PRInt32 octaves = mIntegerAttributes[OCTAVES].GetAnimValue();
+  PRInt32 octaves = mIntegerAttributes[OCTAVES].GetAnimValue(this);
   PRUint16 type = mEnumAttributes[TYPE].GetAnimValue(this);
   PRUint16 stitch = mEnumAttributes[STITCHTILES].GetAnimValue(this);
 

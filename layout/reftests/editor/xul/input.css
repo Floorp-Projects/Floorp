@@ -1,0 +1,69 @@
+@namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
+@namespace html url('http://www.w3.org/1999/xhtml');
+
+#mac html|input, #mac html|textarea {
+  margin: 4px;
+  padding: 0;
+}
+
+#win html|input, #win html|textarea {
+  margin: 2px 4px;
+  padding: 2px 2px 3px;
+  -moz-padding-start: 4px;
+}
+
+#win html|input:-moz-system-metric(windows-default-theme) {
+  padding: 1px 1px 2px;
+  -moz-padding-start: 3px;
+}
+
+#linux html|input, #linux html|textarea {
+  margin: 2px 4px;
+  padding: 2px 4px 3px;
+}
+
+textbox[multiline="true"], html|textarea {
+  border: none !important;
+  -moz-appearance: none !important;
+  -moz-border-radius-topright: 0;
+  -moz-border-radius-bottomleft: 0;
+}
+
+html|input, html|textarea {
+  font: inherit;
+}
+
+html|input.ac {
+  padding:  0 3px !important;
+}
+
+html|input.empty {
+  color: graytext;
+}
+
+html|input.empty:-moz-system-metric(windows-default-theme) {
+  font-style: italic;
+}
+
+html|input.num {
+  text-align: end;
+}
+
+#mac html|input.num {
+  -moz-margin-end: 8px;
+}
+
+#win html|input.num {
+  padding: 0 !important;
+}
+
+#linux html|input.num {
+  -moz-margin-end: 3px;
+  padding: 3px;
+}
+
+html|div.plainfield {
+  -moz-margin-start: 1px;
+  color: -moz-fieldtext;
+}
+

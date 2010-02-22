@@ -398,28 +398,6 @@ const PRUnichar  kLeftSquareBracket  = '[';
 const PRUnichar  kRightSquareBracket = ']';
 const PRUnichar kNullCh           = '\0';
 
-// XXXbz these type defines should really just go away....  Until they
-// do, changes here should be reflected in nsContentDLF.cpp
-#define kHTMLTextContentType  "text/html"
-#define kXMLTextContentType   "text/xml"
-#define kXMLApplicationContentType "application/xml"
-#define kXHTMLApplicationContentType "application/xhtml+xml"
-#define kXULTextContentType   "application/vnd.mozilla.xul+xml"
-#define kRDFTextContentType   "text/rdf"
-#define kRDFApplicationContentType "application/rdf+xml"
-#define kXIFTextContentType   "text/xif"
-#define kPlainTextContentType "text/plain"
-#define kViewSourceCommand    "view-source"
-#define kViewFragmentCommand  "view-fragment"
-#define kTextCSSContentType   "text/css"
-#define kApplicationJSContentType "application/javascript"
-#define kApplicationXJSContentType "application/x-javascript"
-#define kTextECMAScriptContentType "text/ecmascript"
-#define kApplicationECMAScriptContentType "application/ecmascript"
-#define kTextJSContentType    "text/javascript"
-#define kSGMLTextContentType   "text/sgml"
-#define kSVGTextContentType   "image/svg+xml"
-
 #define NS_IPARSER_FLAG_UNKNOWN_MODE         0x00000000
 #define NS_IPARSER_FLAG_QUIRKS_MODE          0x00000002
 #define NS_IPARSER_FLAG_STRICT_MODE          0x00000004

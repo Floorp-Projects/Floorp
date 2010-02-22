@@ -426,6 +426,7 @@ run_strsclnt()
 			"Tstclnt produced a returncode of ${ret} - FAILED"
 	fi
 	
+	sleep 20
 	kill $(jobs -p) 2> /dev/null
 }
 

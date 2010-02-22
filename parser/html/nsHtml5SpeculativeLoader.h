@@ -42,13 +42,13 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "nsHtml5TreeOpExecutor.h"
 #include "nsHashSets.h"
 
 class nsHtml5SpeculativeLoader
 {
   public:
-    nsHtml5SpeculativeLoader(nsIDocument* aDocument);
+    nsHtml5SpeculativeLoader(nsHtml5TreeOpExecutor* aExecutor);
     ~nsHtml5SpeculativeLoader();
 
     NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -62,6 +62,8 @@ class nsHtml5SpeculativeLoader
 
     void PreloadImage(const nsAString& aURL);
 
+    void ProcessManifest(const nsAString& aURL);
+
   private:
     
     /**
@@ -72,9 +74,9 @@ class nsHtml5SpeculativeLoader
     nsAutoRefCnt   mRefCnt;
     
     /**
-     * The document to use as the context for preloading.
+     * The executor to use as the context for preloading.
      */
-    nsCOMPtr<nsIDocument> mDocument;
+    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
     
     /**
      * URLs already preloaded/preloading.

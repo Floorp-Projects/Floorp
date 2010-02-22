@@ -45,7 +45,6 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
-#include "nsAccessibleTreeWalker.h"
 
 class nsIMutableArray;
 

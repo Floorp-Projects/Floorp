@@ -105,7 +105,7 @@ public:
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
     PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     
-    PRBool         CanCacheAllSSLContent()   { return mEnablePersistentHttpsCaching; }
+    PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
     PRBool         PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -203,6 +203,12 @@ public:
     {
         NotifyObservers(chan, NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC);
     }
+
+    // Generates the host:port string for use in the Host: header as well as the
+    // CONNECT line for proxies. This handles IPv6 literals correctly.
+    static nsresult GenerateHostPort(const nsCString& host, PRInt32 port,
+                                     nsCString& hostLine);
+
 private:
 
     //

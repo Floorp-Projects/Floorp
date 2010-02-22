@@ -130,6 +130,10 @@ char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
 #define UDP_SERVER_PORT            TCP_SERVER_PORT
 #define SERVER_MAX_BIND_COUNT        100
 
+#ifdef WINCE
+#define perror(s)
+#endif
+
 static PRInt32 num_tcp_clients = NUM_TCP_CLIENTS;
 static PRInt32 num_udp_clients = NUM_UDP_CLIENTS;
 static PRInt32 num_transmitfile_clients = NUM_TRANSMITFILE_CLIENTS;

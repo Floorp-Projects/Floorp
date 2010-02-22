@@ -1336,7 +1336,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     double contextScale = nsSVGUtils::ComputeNormalizedHypotenuse(p.x, p.y);
 
     nsCAutoString langGroup;
-    nsIAtom *langGroupAtom = presContext->GetLangGroup();
+    nsIAtom *langGroupAtom = mStyleContext->GetStyleVisibility()->mLangGroup;
     if (langGroupAtom) {
       const char* lg;
       langGroupAtom->GetUTF8String(&lg);

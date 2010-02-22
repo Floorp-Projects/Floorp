@@ -114,8 +114,6 @@ public:
 
     NS_IMETHOD GetDepth(PRUint32& aDepth);
 
-    NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32& aPixel);
-
     NS_IMETHOD GetDeviceSurfaceDimensions(nscoord& aWidth, nscoord& aHeight);
     NS_IMETHOD GetRect(nsRect& aRect);
     NS_IMETHOD GetClientRect(nsRect& aRect);
@@ -134,8 +132,6 @@ public:
     NS_IMETHOD BeginPage(void);
     NS_IMETHOD EndPage(void);
     /* end printing goop */
-
-    static void DebugShowCairoSurface (const char *aName, cairo_surface_t *aSurface);
 
     virtual PRBool CheckDPIChange();
 

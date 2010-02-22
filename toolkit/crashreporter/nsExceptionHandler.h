@@ -70,6 +70,8 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
 #ifdef XP_MACOSX
   nsresult AppendObjCExceptionInfoToAppNotes(void *inException);
 #endif
+nsresult GetSubmitReports(PRBool* aSubmitReport);
+nsresult SetSubmitReports(PRBool aSubmitReport);
 
 #ifdef MOZ_IPC
 // Out-of-process crash reporter API.

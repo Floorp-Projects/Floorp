@@ -52,6 +52,7 @@ _TEST_FILES =\
 		test_filectrl.html \
 		test_formctrl.html \
 		test_formctrl.xul \
+		test_gencontent.html \
 		test_groupbox.xul \
 		test_iframe.html \
 		test_img.html \

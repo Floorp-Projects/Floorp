@@ -218,11 +218,10 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       // FIXME: Maybe we should only flush if the WillRefresh calls did
       // something?  It's probably ok as-is, though, especially as we
       // hook up more things here (or to the replacement of this class).
-      // FIXME: We should probably flush for other sets of observers
-      // too.  But we should only flush layout once nsRefreshDriver is
-      // the driver for the interruptible layout timer (and we should
-      // then Flush_InterruptibleLayout).
       presShell->FlushPendingNotifications(Flush_Style);
+    } else if  (i == 1) {
+      // This is the Flush_Layout case.
+      presShell->FlushPendingNotifications(Flush_InterruptibleLayout);
     }
   }
 
@@ -257,3 +256,13 @@ nsRefreshDriver::DoRefresh()
     Notify(nsnull);
   }
 }
+
+#ifdef DEBUG
+PRBool
+nsRefreshDriver::IsRefreshObserver(nsARefreshObserver *aObserver,
+                                   mozFlushType aFlushType)
+{
+  ObserverArray& array = ArrayFor(aFlushType);
+  return array.Contains(aObserver);
+}
+#endif

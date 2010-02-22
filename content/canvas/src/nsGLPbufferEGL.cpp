@@ -163,7 +163,7 @@ nsGLPbufferEGL::Init(mozilla::WebGLContext *priv)
 {
     mPriv = priv;
 
-#ifdef NS_OSSO
+#ifdef MOZ_PLATFORM_MAEMO
     // Maemo has missing DSO dependencies on their OpenGL libraries;
     // so ensure that the prerequisite libs are loaded in the process
     // before loading GL.  An alternate approach is to use LD_PRELOAD.
@@ -199,7 +199,7 @@ nsGLPbufferEGL::Init(mozilla::WebGLContext *priv)
 
     gEGLWrap.fBindAPI (EGL_OPENGL_ES_API);
 
-#if defined(MOZ_X11) && defined(NS_OSSO)
+#if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
     EGLint attribs[] = {
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_SURFACE_TYPE, EGL_PIXMAP_BIT,
@@ -477,7 +477,7 @@ nsGLPbufferEGL::SwapBuffers()
 gfxASurface*
 nsGLPbufferEGL::ThebesSurface()
 {
-#if defined(MOZ_X11) && defined(NS_OSSO)
+#if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
     if (getenv("IMAGE"))
         return mThebesSurface;
     return mXlibSurface;

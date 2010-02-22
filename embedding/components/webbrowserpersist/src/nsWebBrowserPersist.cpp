@@ -851,7 +851,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         while (!cancel && bytesRemaining)
         {
             readError = PR_TRUE;
-            rv = aIStream->Read(buffer, PR_MIN(sizeof(buffer), bytesRemaining), &bytesRead);
+            rv = aIStream->Read(buffer, NS_MIN(sizeof(buffer), bytesRemaining), &bytesRead);
             if (NS_SUCCEEDED(rv))
             {
                 readError = PR_FALSE;

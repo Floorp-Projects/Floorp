@@ -287,6 +287,38 @@ function testSubsDifferentChunks() {
   doTest([subUpdate1, subUpdate2, addUpdate], assertions);
 }
 
+// for bug 534079
+function testSubsDifferentChunksSameHostId() {
+  var subUrls1 = [ "1:foo.com/a" ];
+  var subUrls2 = [ "1:foo.com/b", "2:foo.com/c" ];
+
+  var addUrls = [ "foo.com/a", "foo.com/b" ];
+  var addUrls2 = [ "foo.com/c" ];
+
+  var subUpdate1 = buildPhishingUpdate(
+    [{ "chunkNum" : 1,
+       "chunkType" : "s",
+       "urls": subUrls1 }]);
+  var subUpdate2 = buildPhishingUpdate(
+    [{ "chunkNum" : 2,
+       "chunkType" : "s",
+       "urls" : subUrls2 }]);
+
+  var addUpdate = buildPhishingUpdate(
+    [{ "chunkNum" : 1,
+       "urls" : addUrls }]);
+  var addUpdate2 = buildPhishingUpdate(
+    [{ "chunkNum" : 2,
+       "urls" : addUrls2 }]);
+
+  var assertions = {
+    "tableData" : "test-phish-simple;a:1-2:s:1-2",
+    "urlsDontExist" : [ "foo.com/c", "foo.com/b", "foo.com/a", ],
+  };
+
+  doTest([addUpdate, addUpdate2, subUpdate1, subUpdate2], assertions);
+}
+
 // Test lists of expired chunks
 function testExpireLists() {
   var addUpdate = buildPhishingUpdate(
@@ -446,6 +478,7 @@ function run_test()
     testSubPartiallyMatches,
     testSubPartiallyMatches2,
     testSubsDifferentChunks,
+    testSubsDifferentChunksSameHostId,
     testExpireLists,
     testDuplicateAddChunks,
     testExpireWholeSub,

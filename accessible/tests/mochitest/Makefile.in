@@ -55,6 +55,7 @@ _TEST_FILES =\
 		actions.js \
 		attributes.js \
 		common.js \
+		editabletext.js \
 		events.js \
 		events_scroll.html \
 		grid.js \
@@ -65,7 +66,6 @@ _TEST_FILES =\
 		name_nsRootAcc_wnd.xul \
 		namerules.xml \
  		nsIAccessible_selects.js \
-		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
 		states.js \
@@ -81,6 +81,8 @@ _TEST_FILES =\
 	$(warning   test_childAtPoint.html temporarily disabled) \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_descr.html \
+		test_editabletext_1.html \
+		test_editabletext_2.html \
 		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_plugin.html \
@@ -96,7 +98,6 @@ _TEST_FILES =\
  		test_nsIAccessible_selects.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
-		test_nsIAccessibleEditableText.html \
 		test_nsIAccessibleHyperLink.html \
 		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
@@ -127,6 +128,7 @@ _TEST_FILES =\
 		test_table_struct_ariatreegrid.html \
 		test_table_struct_listbox.xul \
 		test_table_struct_tree.xul \
+		test_text_caret.html \
 		test_textboxes.html \
 		test_textboxes.xul \
 		test_value.html \

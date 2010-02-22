@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.22 2008/02/28 04:27:36 nelson%bolyard.com Exp $ */
+/* $Id: secvfy.c,v 1.23 2010/02/10 00:49:43 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -721,8 +721,8 @@ VFY_VerifyDataDirect(const unsigned char *buf, int len,
 }
 
 SECStatus
-VFY_VerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
-	       SECItem *sig, SECOidTag algid, void *wincx)
+VFY_VerifyData(const unsigned char *buf, int len, const SECKEYPublicKey *key,
+	       const SECItem *sig, SECOidTag algid, void *wincx)
 {
     SECOidTag encAlg, hashAlg;
     SECStatus rv = sec_DecodeSigAlg(key, algid, NULL, &encAlg, &hashAlg);

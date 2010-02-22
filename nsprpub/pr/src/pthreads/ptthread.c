@@ -1046,6 +1046,8 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
             pt_book.user -= 1;
         PR_Unlock(pt_book.ml);
 
+        _PR_MD_EARLY_CLEANUP();
+
         _PR_CleanupMW();
         _PR_CleanupTime();
         _PR_CleanupDtoa();

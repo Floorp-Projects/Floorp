@@ -693,9 +693,10 @@ nsHttpConnection::SetupSSLProxyConnect()
     NS_ENSURE_TRUE(!mSSLProxyConnectStream, NS_ERROR_ALREADY_INITIALIZED);
 
     nsCAutoString buf;
-    buf.Assign(mConnInfo->Host());
-    buf.Append(':');
-    buf.AppendInt(mConnInfo->Port());
+    nsresult rv = nsHttpHandler::GenerateHostPort(
+            nsDependentCString(mConnInfo->Host()), mConnInfo->Port(), buf);
+    if (NS_FAILED(rv))
+        return rv;
 
     // CONNECT host:port HTTP/1.1
     nsHttpRequestHead request;

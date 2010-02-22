@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Textbox tests"
+        class="reftest-wait">
+
+  <script type="text/javascript" src="platform.js"/>
+
+  <script type="text/javascript">
+  <![CDATA[
+    // Wait for one second so that the emptytext attribute kicks in
+    window.setTimeout(function() {
+      document.documentElement.removeAttribute("class");
+    }, 1000);
+  ]]>
+  </script>
+
+  <textbox emptytext="test"/>
+      
+</window>

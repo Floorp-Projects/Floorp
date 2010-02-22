@@ -172,6 +172,35 @@ nsSMILCSSValueType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
+PRBool
+nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
+                            const nsSMILValue& aRight) const
+{
+  NS_ABORT_IF_FALSE(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  NS_ABORT_IF_FALSE(aLeft.mType == this, "Unexpected SMIL value");
+  const ValueWrapper* leftWrapper = ExtractValueWrapper(aLeft);
+  const ValueWrapper* rightWrapper = ExtractValueWrapper(aRight);
+
+  if (leftWrapper) {
+    if (rightWrapper) {
+      // Both non-null
+      NS_WARN_IF_FALSE(leftWrapper != rightWrapper,
+                       "Two nsSMILValues with matching ValueWrapper ptr");
+      // mPresContext doesn't really matter for equality comparison
+      return (leftWrapper->mPropID == rightWrapper->mPropID &&
+              leftWrapper->mCSSValue == rightWrapper->mCSSValue);
+    }
+    // Left non-null, right null
+    return PR_FALSE;
+  }
+  if (rightWrapper) {
+    // Left null, right non-null
+    return PR_FALSE;
+  }
+  // Both null
+  return PR_TRUE;
+}
+
 nsresult
 nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                         PRUint32 aCount) const

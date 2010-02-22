@@ -43,21 +43,27 @@
 #include "nsISupports.h"
 #include "nsPIDOMEventTarget.h"
 
-class nsIDOMWindow;
-class nsIFocusController;
+class nsPIDOMWindow;
+class nsIControllers;
+class nsIController;
 
-// 440f8d32-818d-468a-ac75-5916fa1ea198
+// 313C1D52-88F1-46C7-B35C-4E71EC1B01F3
 #define NS_IWINDOWROOT_IID \
-{ 0x440f8d32, 0x818d, 0x468a, \
-  { 0xac, 0x75, 0x59, 0x16, 0xfa, 0x1e, 0xa1, 0x98 } }
+{ 0x313c1d52, 0x88f1, 0x46c7, \
+  { 0xb3, 0x5c, 0x4e, 0x71, 0xec, 0x1b, 0x01, 0xf3 } }
 
 class nsPIWindowRoot : public nsPIDOMEventTarget {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
 
-  NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
+  virtual nsPIDOMWindow* GetWindow()=0;
 
-  virtual nsIDOMWindow* GetWindow()=0;
+  virtual void GetPopupNode(nsIDOMNode** aNode) = 0;
+  virtual void SetPopupNode(nsIDOMNode* aNode) = 0;
+
+  virtual nsresult GetControllerForCommand(const char *aCommand,
+                                           nsIController** aResult) = 0;
+  virtual nsresult GetControllers(nsIControllers** aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

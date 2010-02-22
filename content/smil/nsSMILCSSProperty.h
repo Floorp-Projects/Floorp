@@ -66,7 +66,8 @@ public:
   // nsISMILAttr methods
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
-                                   nsSMILValue& aValue) const;
+                                   nsSMILValue& aValue,
+                                   PRBool& aCanCache) const;
   virtual nsSMILValue GetBaseValue() const;
   virtual nsresult    SetAnimValue(const nsSMILValue& aValue);
   virtual void        ClearAnimValue();

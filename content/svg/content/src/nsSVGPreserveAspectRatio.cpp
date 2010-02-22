@@ -224,13 +224,19 @@ nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
     return res;
   }
 
-  mAnimVal = mBaseVal = val;
-  aSVGElement->DidChangePreserveAspectRatio(aDoSetAttr);
+  mBaseVal = val;
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
+
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
@@ -339,7 +345,8 @@ nsresult
 nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
                         ::ValueFromString(const nsAString& aStr,
                                           const nsISMILAnimationElement* /*aSrcElement*/,
-                                          nsSMILValue& aValue) const
+                                          nsSMILValue& aValue,
+                                          PRBool& aCanCache) const
 {
   PreserveAspectRatio par;
   nsresult res = ToPreserveAspectRatio(aStr, &par);
@@ -348,6 +355,7 @@ nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
   nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
+  aCanCache = PR_TRUE;
   return NS_OK;
 }
 

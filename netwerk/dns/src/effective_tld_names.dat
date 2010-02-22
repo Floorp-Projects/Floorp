@@ -1825,7 +1825,15 @@ inf.mk
 name.mk
 
 // ml : http://www.gobin.info/domainname/ml-template.doc
-*.ml
+// see also: http://en.wikipedia.org/wiki/.ml
+ml
+com.ml
+edu.ml
+gouv.ml
+gov.ml
+net.ml
+org.ml
+presse.ml
 
 // mm : http://en.wikipedia.org/wiki/.mm
 *.mm

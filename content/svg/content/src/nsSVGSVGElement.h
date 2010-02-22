@@ -197,6 +197,7 @@ public:
   virtual void DidChangeViewBox(PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
 
+  virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
   
   // nsSVGSVGElement methods:

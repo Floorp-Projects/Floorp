@@ -93,11 +93,11 @@
 
 #if defined(PR_LOGGING)
 //
-// Log module for nsSecureBroswerUI logging...
+// Log module for nsSecureBrowserUI logging...
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsSecureBroswerUI:5
+//    set NSPR_LOG_MODULES=nsSecureBrowserUI:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
@@ -618,7 +618,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
 
     Redirects are evil, well, some of them.
-    There are mutliple forms of redirects.
+    There are multiple forms of redirects.
 
     Redirects caused by http refresh content are ok, because experiments show,
     with those redirects, the old page contents and their requests will come to STOP

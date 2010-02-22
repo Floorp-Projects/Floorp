@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.60 $ $Date: 2008/10/06 02:56:00 $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.61 $ $Date: 2010/02/10 02:04:32 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1048,7 +1048,7 @@ NSSTrustDomain_TraverseCertificates (
     certList = nssList_Create(NULL, PR_FALSE);
     if (!certList) 
     	return NULL;
-    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    (void)nssTrustDomain_GetCertsFromCache(td, certList);
     cached = get_certs_from_list(certList);
     collection = nssCertificateCollection_Create(td, cached);
     nssCertificateArray_Destroy(cached);

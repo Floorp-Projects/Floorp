@@ -1134,6 +1134,12 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 
 	    for (; *index; index++) {
 		SECMODModule *child;
+		if (0 == PORT_Strcmp(*index, modulespec)) {
+		    /* avoid trivial infinite recursion */
+		    PORT_SetError(SEC_ERROR_NO_MODULE);
+		    rv = SECFailure;
+		    break;
+		}
 		child = SECMOD_LoadModule(*index,module,PR_TRUE);
 		if (!child) break;
 		if (child->isCritical && !child->loaded) {

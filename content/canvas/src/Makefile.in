@@ -59,16 +59,15 @@ CPPSRCS	= \
 
 ifdef MOZ_WEBGL
 
-ifeq (1_1,$(MOZ_X11)_$(NS_OSSO))
+ifdef MOZ_X11
+ifdef MOZ_PLATFORM_MAEMO
 WEBGL_PLATFORM = EGL
 DEFINES += -DUSE_GLES2
-endif
-
-ifeq (1_,$(MOZ_X11)_$(NS_OSSO))
+else
 WEBGL_PLATFORM = GLX
 EXTRA_DSO_LIBS += X11
 endif
-
+endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 ifdef WINCE

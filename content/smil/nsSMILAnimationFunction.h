@@ -42,6 +42,7 @@
 #include "nsISMILAttr.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
+#include "nsSMILTargetIdentifier.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILKeySpline.h"
 #include "nsSMILValue.h"
@@ -207,13 +208,44 @@ public:
    * time it was composited. This allows rendering to be performed only when
    * necessary, particularly when no animations are active.
    *
-   * Note that the caller is responsible for determining if the animation target
-   * has changed.
+   * Note that the caller is responsible for determining if the animation
+   * target has changed (with help from my UpdateCachedTarget() method).
    *
    * @return  PR_TRUE if the animation parameters have changed, PR_FALSE
    *          otherwise.
    */
   PRBool HasChanged() const;
+
+  /**
+   * This method lets us clear the 'HasChanged' flag for inactive animations
+   * after we've reacted to their change to the 'inactive' state, so that we
+   * won't needlessly recompose their targets in every sample.
+   *
+   * This should only be called on an animation function that is inactive and
+   * that returns PR_TRUE from HasChanged().
+   */
+  void ClearHasChanged()
+  {
+    NS_ABORT_IF_FALSE(HasChanged(),
+                      "clearing mHasChanged flag, when it's already PR_FALSE");
+    NS_ABORT_IF_FALSE(!IsActiveOrFrozen(),
+                      "clearing mHasChanged flag for active animation");
+    mHasChanged = PR_FALSE;
+  }
+
+  /**
+   * Updates the cached record of our animation target, and returns a boolean
+   * that indicates whether the target has changed since the last call to this
+   * function. (This lets nsSMILCompositor check whether its animation
+   * functions have changed value or target since the last sample.  If none of
+   * them have, then the compositor doesn't need to do anything.)
+   *
+   * @param aNewTarget A nsSMILTargetIdentifier representing the animation
+   *                   target of this function for this sample.
+   * @return  PR_TRUE if |aNewTarget| is different from the old cached value;
+   *          otherwise, PR_FALSE.
+   */
+  PRBool UpdateCachedTarget(const nsSMILTargetIdentifier& aNewTarget);
 
   // Comparator utility class, used for sorting nsSMILAnimationFunctions
   class Comparator {
@@ -289,7 +321,7 @@ protected:
                                      nsAString& aResult) const;
 
   PRBool   ParseAttr(nsIAtom* aAttName, const nsISMILAttr& aSMILAttr,
-                     nsSMILValue& aResult) const;
+                     nsSMILValue& aResult, PRBool& aCanCacheSoFar) const;
   nsresult GetValues(const nsISMILAttr& aSMILAttr,
                      nsSMILValueArray& aResult);
   void     UpdateValuesArray();
@@ -340,6 +372,7 @@ protected:
   PRUint32                      mRepeatIteration;
   PRPackedBool                  mLastValue;
   PRPackedBool                  mHasChanged;
+  PRPackedBool                  mValueNeedsReparsingEverySample;
 
   nsSMILTime                    mBeginTime; // document time
 
@@ -378,6 +411,11 @@ protected:
   // @see
   // http://www.w3.org/TR/2001/REC-smil-animation-20010904/#FromToByAndAdditive
   nsSMILValue                   mFrozenValue;
+
+  // Allows us to check whether an animation function has changed target from
+  // sample to sample (because if neither target nor animated value have
+  // changed, we don't have to do anything).
+  nsSMILWeakTargetIdentifier    mLastTarget;
 };
 
 #endif // NS_SMILANIMATIONFUNCTION_H_

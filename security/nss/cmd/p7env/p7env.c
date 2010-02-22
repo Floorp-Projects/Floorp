@@ -37,7 +37,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.9 2008/08/08 23:47:56 julien.pierre.boogz%sun.com Exp $
+ * $Id: p7env.c,v 1.10 2010/02/11 02:39:47 wtc%google.com Exp $
  */
 
 #include "nspr.h"
@@ -60,8 +60,6 @@ extern int fread(char *, size_t, size_t, FILE*);
 extern int fwrite(char *, size_t, size_t, FILE*);
 extern int fprintf(FILE *, char *, ...);
 #endif
-
-extern void SEC_Init(void);		/* XXX */
 
 
 static void

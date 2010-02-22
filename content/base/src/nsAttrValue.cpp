@@ -1048,7 +1048,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString,
     return PR_FALSE;
   }
 
-  PRInt32 val = PR_MAX(originalVal, 0);
+  PRInt32 val = NS_MAX(originalVal, 0);
 
   // % (percent)
   // XXX RFindChar means that 5%x will be parsed!
@@ -1082,8 +1082,8 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
     return PR_FALSE;
   }
 
-  PRInt32 val = PR_MAX(originalVal, aMin);
-  val = PR_MIN(val, aMax);
+  PRInt32 val = NS_MAX(originalVal, aMin);
+  val = NS_MIN(val, aMax);
   strict = strict && (originalVal == val);
   SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
 

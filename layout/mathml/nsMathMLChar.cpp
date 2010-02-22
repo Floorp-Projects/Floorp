@@ -699,10 +699,13 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
   {
     case eExtension_base:
       extension.AssignLiteral(".base");
+      break;
     case eExtension_variants:
       extension.AssignLiteral(".variants");
+      break;
     case eExtension_parts:
       extension.AssignLiteral(".parts");
+      break;
     default:
       return PR_FALSE;
   }
@@ -718,8 +721,8 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
   nsCAutoString alternateKey;
   alternateKey.AssignASCII(kMathFontPrefix);
   NS_ConvertUTF16toUTF8 tmp(&aChar, 1);
-  key.Append(tmp);
-  key.Append(extension);
+  alternateKey.Append(tmp);
+  alternateKey.Append(extension);
 
   return GetPrefValue(aPrefBranch, key.get(), aValue) ||
     GetPrefValue(aPrefBranch, alternateKey.get(), aValue);
