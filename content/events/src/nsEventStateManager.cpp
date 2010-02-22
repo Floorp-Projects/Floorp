@@ -3344,7 +3344,7 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
       aContainer->GetWidth(&imgWidth);
       aContainer->GetHeight(&imgHeight);
 
-      // XXX PR_MAX(NS_lround(x), 0)?
+      // XXX NS_MAX(NS_lround(x), 0)?
       hotspotX = aHotspotX > 0.0f
                    ? PRUint32(aHotspotX + 0.5f) : PRUint32(0);
       if (hotspotX >= PRUint32(imgWidth))
