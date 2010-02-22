@@ -1486,12 +1486,8 @@ tabbrowser > tabbox {
 .tab-icon-image {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/tree/item-grayscale.png");
-  margin-top: 2px;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-icon-image {
   list-style-image: url("chrome://global/skin/tree/item.png");
+  margin-top: 2px;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {
