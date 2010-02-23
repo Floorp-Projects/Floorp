@@ -432,7 +432,7 @@ nsAppShell::Init()
                               @selector(nsAppShell_NSApplication_beginModalSessionForWindow:));
     nsToolkit::SwizzleMethods([NSApplication class], @selector(endModalSession:),
                               @selector(nsAppShell_NSApplication_endModalSession:));
-    if (nsToolkit::OnLeopardOrLater() && !nsToolkit::OnSnowLeopardOrLater()) {
+    if (!nsToolkit::OnSnowLeopardOrLater()) {
       dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/Print.framework/Versions/Current/Plugins/PrintCocoaUI.bundle/Contents/MacOS/PrintCocoaUI",
              RTLD_LAZY);
       Class PDEPluginCallbackClass = ::NSClassFromString(@"PDEPluginCallback");
@@ -1051,8 +1051,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   // to worry about getting an NSInternalInconsistencyException here.
   NSEvent* currentEvent = [NSApp currentEvent];
   if (currentEvent) {
-    gLastModifierState =
-      nsCocoaUtils::GetCocoaEventModifierFlags(currentEvent) & NSDeviceIndependentModifierFlagsMask;
+    gLastModifierState = [currentEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
