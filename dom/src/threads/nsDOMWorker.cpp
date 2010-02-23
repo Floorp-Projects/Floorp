@@ -422,6 +422,10 @@ GetStringForArgument(JSContext* aCx,
   NS_ASSERTION(aIsJSON && aIsPrimitive, "Null pointer!");
 
   if (JSVAL_IS_STRING(aVal)) {
+    if (!JS_MakeStringImmutable(aCx, JSVAL_TO_STRING(aVal))) {
+      return NS_ERROR_FAILURE;
+    }
+
     *aIsJSON = *aIsPrimitive = PR_FALSE;
     _retval = aVal;
     return NS_OK;
