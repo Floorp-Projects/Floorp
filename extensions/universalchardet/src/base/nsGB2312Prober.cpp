@@ -46,7 +46,7 @@ void  nsGB18030Prober::Reset(void)
 {
   mCodingSM->Reset(); 
   mState = eDetecting;
-  mDistributionAnalyser.Reset();
+  mDistributionAnalyser.Reset(mIsPreferredLanguage);
   //mContextAnalyser.Reset();
 }
 
@@ -89,7 +89,7 @@ nsProbingState nsGB18030Prober::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsGB18030Prober::GetConfidence(void)
 {
-  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
+  float distribCf = mDistributionAnalyser.GetConfidence();
 
   return (float)distribCf;
 }
