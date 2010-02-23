@@ -255,7 +255,7 @@ script regress-449627.js
 script regress-449666.js
 script regress-450369.js
 script regress-450833.js
-script regress-451322.js
+skip script regress-451322.js # slow
 script regress-451884.js
 script regress-451946.js
 script regress-452008.js
