@@ -43,43 +43,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-#if defined(MAC_OS_X_VERSION_10_5) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
-#define NS_LEOPARD_AND_LATER 1
-#endif
-
 #include "nsRect.h"
 #include "nsObjCExceptions.h"
 
 class nsIWidget;
-
-// "Borrowed" in part from the QTKit framework's QTKitDefines.h.  This is
-// needed when building on OS X Tiger (10.4.X) or with a 10.4 SDK.  It won't
-// be used when building on Leopard (10.5.X) or higher (or with a 10.5 or
-// higher SDK).
-//
-// These definitions for NSInteger and NSUInteger are the 32-bit ones -- since
-// we assume we'll always be building 32-bit binaries when building on Tiger
-// (or with a 10.4 SDK).
-#ifndef NSINTEGER_DEFINED
-
-typedef int NSInteger;
-typedef unsigned int NSUInteger;
-
-#define NSIntegerMax    LONG_MAX
-#define NSIntegerMin    LONG_MIN
-#define NSUIntegerMax   ULONG_MAX
-
-#define NSINTEGER_DEFINED 1
-
-#endif  /* NSINTEGER_DEFINED */
-
-#ifndef CGFLOAT_DEFINED
-typedef float CGFloat;
-# define CGFLOAT_MIN FLT_MIN
-# define CGFLOAT_MAX FLT_MAX
-# define CGFLOAT_IS_DOUBLE 0
-# define CGFLOAT_DEFINED 1
-#endif
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {
@@ -163,12 +130,6 @@ class nsCocoaUtils
 
   static void PrepareForNativeAppModalDialog();
   static void CleanUpAfterNativeAppModalDialog();
-
-  // Wrap calls to [theEvent keyCode] and [theEvent modifierFlags].  Needed to
-  // work around an Apple bug (on OS X 10.4.X) that causes ctrl-ESC key events
-  // sent via performKeyEquivalent: to return 0 on these calls.
-  static unsigned short GetCocoaEventKeyCode(NSEvent *theEvent);
-  static NSUInteger GetCocoaEventModifierFlags(NSEvent *theEvent);
 };
 
 #endif // nsCocoaUtils_h_

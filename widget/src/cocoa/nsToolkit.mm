@@ -199,9 +199,7 @@ static OSStatus EventMonitorHandler(EventHandlerCallRef aCaller, EventRef aEvent
   // event handler like this one caused the OS to post the equivalent Cocoa
   // events to [NSApp sendEvent:]. When using the 10.5 SDK, this doesn't happen
   // any more, so we need to do it manually.
-#ifdef NS_LEOPARD_AND_LATER
   [NSApp sendEvent:[NSEvent eventWithEventRef:aEvent]];
-#endif // NS_LEOPARD_AND_LATER
 
   return eventNotHandledErr;
 }
@@ -387,18 +385,13 @@ PRInt32 nsToolkit::OSXVersion()
     OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
     if (err != noErr) {
       // This should probably be changed when our minimum version changes
-      NS_ERROR("Couldn't determine OS X version, assuming 10.4");
-      gOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
+      NS_ERROR("Couldn't determine OS X version, assuming 10.5");
+      gOSXVersion = MAC_OS_X_VERSION_10_5_HEX;
     }
   }
   return gOSXVersion;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-}
-
-PRBool nsToolkit::OnLeopardOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX);
 }
 
 PRBool nsToolkit::OnSnowLeopardOrLater()
