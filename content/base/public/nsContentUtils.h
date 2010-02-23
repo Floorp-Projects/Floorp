@@ -1584,6 +1584,18 @@ public:
   static nsresult ReparentClonedObjectToScope(JSContext* cx, JSObject* obj,
                                               JSObject* scope);
 
+  /**
+   * Strip all \n, \r and nulls from the given string
+   * @param aString the string to remove newlines from [in/out]
+   */
+  static void RemoveNewlines(nsString &aString);
+
+  /**
+   * Convert Windows and Mac platform linebreaks to \n.
+   * @param aString the string to convert the newlines inside [in/out]
+   */
+  static void PlatformToDOMLineBreaks(nsString &aString);
+
 private:
 
   static PRBool InitializeEventTable();
