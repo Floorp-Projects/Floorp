@@ -387,7 +387,7 @@ protected:
 
 #ifdef MOZ_IPC
   static bool             IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
-  static void             IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lParam);
+  void                    IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 #endif // MOZ_IPC
 
   /**
