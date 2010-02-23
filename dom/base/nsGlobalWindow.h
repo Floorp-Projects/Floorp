@@ -453,12 +453,10 @@ public:
 
   static PRBool DOMWindowDumpEnabled();
 
-  void MaybeForgiveSpamCount();
-
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
-  void CleanUp(PRBool aIgnoreModalDialog);
+  void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
 
@@ -795,8 +793,6 @@ protected:
   nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
-
-  PRBool mCleanedUp, mCallCleanUpAfterModalDialogCloses;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
