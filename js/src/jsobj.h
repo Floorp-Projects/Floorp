@@ -154,6 +154,8 @@ struct JSObjectOps {
     JSConvertOp         defaultValue;
     JSNewEnumerateOp    enumerate;
     JSCheckAccessIdOp   checkAccess;
+    JSTypeOfOp          typeOf;
+    JSTraceOp           trace;
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
@@ -161,7 +163,6 @@ struct JSObjectOps {
     JSNative            call;
     JSNative            construct;
     JSHasInstanceOp     hasInstance;
-    JSTraceOp           trace;
     JSFinalizeOp        clear;
 
     bool inline isNative() const;
@@ -412,6 +413,10 @@ struct JSObject {
     JSBool checkAccess(JSContext *cx, jsid id, JSAccessMode mode, jsval *vp,
                        uintN *attrsp) {
         return map->ops->checkAccess(cx, this, id, mode, vp, attrsp);
+    }
+
+    JSType typeOf(JSContext *cx) {
+        return map->ops->typeOf(cx, this);
     }
 
     /* These four are time-optimized to avoid stub calls. */
@@ -1001,6 +1006,9 @@ js_PurgeCachedNativeEnumerators(JSContext *cx, JSThreadData *data);
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
+
+extern JSType
+js_TypeOf(JSContext *cx, JSObject *obj);
 
 extern JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
