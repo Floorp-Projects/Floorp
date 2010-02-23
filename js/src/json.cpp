@@ -429,7 +429,7 @@ JA(JSContext *cx, jsval *vp, StringifyContext *scx)
 static JSBool
 CallReplacerFunction(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp)
 {
-    if (scx->replacer && scx->replacer->isCallable(cx)) {
+    if (scx->replacer && scx->replacer->isCallable()) {
         jsval vec[2] = {ID_TO_VALUE(id), *vp};
         if (!JS_CallFunctionValue(cx, holder, OBJECT_TO_JSVAL(scx->replacer), 2, vec, vp))
             return JS_FALSE;
@@ -586,7 +586,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 
     JSObject *obj;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) && !(obj = JSVAL_TO_OBJECT(*vp))->isCallable(cx)) {
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !(obj = JSVAL_TO_OBJECT(*vp))->isCallable()) {
         jsval propValue = JSVAL_NULL;
         JSAutoTempValueRooter tvr(cx, 1, &propValue);
 
@@ -731,7 +731,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
         return JS_FALSE;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(reviver) && js_IsCallable(cx, reviver))
+    if (!JSVAL_IS_PRIMITIVE(reviver) && js_IsCallable(reviver))
         ok = Revive(cx, reviver, vp);
 
     return ok;

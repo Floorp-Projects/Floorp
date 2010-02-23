@@ -636,7 +636,7 @@ public:
     jsval getterValue() const {
         JS_ASSERT(attrs & JSPROP_GETTER);
         jsval getterVal = getter ? js_CastAsObjectJSVal(getter) : JSVAL_VOID;
-        JS_ASSERT_IF(getter, HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(getterVal)));
+        JS_ASSERT_IF(getter, JSVAL_TO_OBJECT(getterVal)->isCallable());
         return getterVal;
     }
 
@@ -647,7 +647,7 @@ public:
     jsval setterValue() const {
         JS_ASSERT(attrs & JSPROP_SETTER);
         jsval setterVal = setter ? js_CastAsObjectJSVal(setter) : JSVAL_VOID;
-        JS_ASSERT_IF(setter, HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(setterVal)));
+        JS_ASSERT_IF(setter, JSVAL_TO_OBJECT(setterVal)->isCallable());
         return setterVal;
     }
 

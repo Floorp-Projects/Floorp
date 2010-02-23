@@ -333,7 +333,7 @@ struct JSObject {
                : JSVAL_VOID;
     }
 
-    bool isCallable(JSContext *cx);
+    bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSClass *clasp, JSObject *proto, JSObject *parent,
@@ -1110,8 +1110,8 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
 static inline bool
-js_IsCallable(JSContext *cx, jsval v) {
-    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable(cx);
+js_IsCallable(jsval v) {
+    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
 }
 
 extern JSBool
