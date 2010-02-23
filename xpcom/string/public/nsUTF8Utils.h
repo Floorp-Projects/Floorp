@@ -76,16 +76,16 @@ class UTF8CharEnumerator
 {
 public:
   static PRUint32 NextChar(const char **buffer, const char *end,
-                           PRBool *err = nsnull, PRBool* overlong = nsnull)
+                           PRBool *err)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
 
     const char *p = *buffer;
+    *err = PR_FALSE;
 
     if (p >= end)
       {
-        if (err)
-          *err = PR_TRUE;
+        *err = PR_TRUE;
 
         return 0;
       }
@@ -94,10 +94,6 @@ public:
 
     if ( UTF8traits::isASCII(c) )
       {
-        if (err)
-          *err = PR_FALSE;
-        if (overlong)
-          *overlong = PR_FALSE;
         *buffer = p;
         return c;
       }
@@ -108,8 +104,8 @@ public:
 
     if (!CalcState(c, ucs4, minUcs4, state)) {
         NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-        if (err)
-          *err = PR_TRUE;
+        *err = PR_TRUE;
+
         return 0;
     }
 
@@ -117,8 +113,7 @@ public:
       {
         if (p == end)
           {
-            if (err)
-              *err = PR_TRUE;
+            *err = PR_TRUE;
 
             return 0;
           }
@@ -127,87 +122,28 @@ public:
 
         if (!AddByte(c, state, ucs4))
           {
-            NS_ERROR("not a UTF8 string");
-            if (err)
-              *err = PR_TRUE;
+            *err = PR_TRUE;
+
             return 0;
           }
       }
 
-    if (err)
-      *err = PR_FALSE;
-    if (overlong)
-      *overlong = ucs4 < minUcs4;
+      if ( ucs4 < minUcs4 )
+        {
+          // Overlong sequence
+          ucs4 = UCS2_REPLACEMENT_CHAR;
+        }
+      else if ( ucs4 >= 0xD800 &&
+                (ucs4 <= 0xDFFF || ucs4 == 0xFFFE || ucs4 == 0xFFFF ||
+                 ucs4 >= UCS_END))
+        {
+          // Surrogates and prohibited characters
+          ucs4 = UCS2_REPLACEMENT_CHAR;
+        }
+
     *buffer = p;
     return ucs4;
   }
-
-#ifdef MOZILLA_INTERNAL_API
-
-  static PRUint32 NextChar(nsACString::const_iterator& iter,
-                           const nsACString::const_iterator& end,
-                           PRBool *err = nsnull, PRBool *overlong = nsnull)
-  {
-    if ( iter == end )
-      {
-        NS_ERROR("No input to work with");
-        if (err)
-          *err = PR_TRUE;
-
-        return 0;
-      }
-
-    char c = *iter++;
-
-    if ( UTF8traits::isASCII(c) )
-      {
-        if (err)
-          *err = PR_FALSE;
-        if (overlong)
-          *overlong = PR_FALSE;
-        return c;
-      }
-
-    PRUint32 ucs4;
-    PRUint32 minUcs4;
-    PRInt32 state = 0;
-
-    if (!CalcState(c, ucs4, minUcs4, state)) {
-        NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-        if (err)
-          *err = PR_TRUE;
-        return 0;
-    }
-
-    while ( state-- )
-      {
-        if (iter == end)
-          {
-            NS_ERROR("Buffer ended in the middle of a multibyte sequence");
-            if (err)
-              *err = PR_TRUE;
-
-            return 0;
-          }
-
-        c = *iter++;
-
-        if (!AddByte(c, state, ucs4))
-          {
-            NS_ERROR("not a UTF8 string");
-            if (err)
-              *err = PR_TRUE;
-            return 0;
-          }
-      }
-
-    if (err)
-      *err = PR_FALSE;
-    if (overlong)
-      *overlong = ucs4 < minUcs4;
-    return ucs4;
-  }
-#endif // MOZILLA_INTERNAL_API
 
 private:
   static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
@@ -401,9 +337,8 @@ class ConvertUTF8toUTF16
         buffer_type* out = mBuffer;
         for ( ; p != end /* && *p */; )
           {
-            PRBool overlong, err;
-            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err,
-                                                         &overlong);
+            PRBool err;
+            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err);
 
             if ( err )
               {
@@ -412,33 +347,10 @@ class ConvertUTF8toUTF16
                 return;
               }
 
-            if ( overlong )
+            if ( ucs4 >= PLANE1_BASE )
               {
-                // Overlong sequence
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 <= 0xD7FF )
-              {
-                *out++ = ucs4;
-              }
-            else if ( /* ucs4 >= 0xD800 && */ ucs4 <= 0xDFFF )
-              {
-                // Surrogates
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 == 0xFFFE || ucs4 == 0xFFFF )
-              {
-                // Prohibited characters
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 >= PLANE1_BASE )
-              {
-                if ( ucs4 >= UCS_END )
-                  *out++ = UCS2_REPLACEMENT_CHAR;
-                else {
-                  *out++ = (buffer_type)H_SURROGATE(ucs4);
-                  *out++ = (buffer_type)L_SURROGATE(ucs4);
-                }
+                *out++ = (buffer_type)H_SURROGATE(ucs4);
+                *out++ = (buffer_type)L_SURROGATE(ucs4);
               }
             else
               {
