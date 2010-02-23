@@ -44,7 +44,6 @@
  */
 
 #include "nsIContent.h"
-#include "nsIFocusController.h"
 #include "nsFocusManager.h"
 #include "nsIControllers.h"
 #include "nsIDOMDocument.h"
@@ -60,6 +59,7 @@
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
 #include "prlog.h"
@@ -129,15 +129,17 @@ nsXULCommandDispatcher::Disconnect()
   mDocument = nsnull;
 }
 
-nsIFocusController*
-nsXULCommandDispatcher::GetFocusController()
+already_AddRefed<nsPIWindowRoot>
+nsXULCommandDispatcher::GetWindowRoot()
 {
-  if (!mDocument) {
-    return nsnull;
+  if (mDocument) {
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+    if (window) {
+      return window->GetTopWindowRoot();
+    }
   }
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-  return win ? win->GetRootFocusController() : nsnull;
+  return nsnull;
 }
 
 nsIContent*
@@ -391,9 +393,6 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 {
-  nsIFocusController* fc = GetFocusController();
-  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
-
   nsAutoString id;
   nsCOMPtr<nsIDOMElement> element;
   GetFocusedElement(getter_AddRefs(element));
@@ -482,19 +481,19 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 {
-  nsIFocusController* fc = GetFocusController();
-  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIWindowRoot> root = GetWindowRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  return fc->GetControllers(mDocument->GetWindow(), aResult);
+  return root->GetControllers(aResult);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
-  nsIFocusController* fc = GetFocusController();
-  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIWindowRoot> root = GetWindowRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  return fc->GetControllerForCommand(mDocument->GetWindow(), aCommand, _retval);
+  return root->GetControllerForCommand(aCommand, _retval);
 }
 
 NS_IMETHODIMP

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.35 2010/02/04 03:21:11 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.36 2010/02/10 18:07:21 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -61,8 +61,14 @@ SEC_BEGIN_PROTOS
 /* constant table enumerating all implemented SSL 2 and 3 cipher suites. */
 SSL_IMPORT const PRUint16 SSL_ImplementedCiphers[];
 
+/* the same as the above, but is a function */
+SSL_IMPORT const PRUint16 *SSL_GetImplementedCiphers(void);
+
 /* number of entries in the above table. */
 SSL_IMPORT const PRUint16 SSL_NumImplementedCiphers;
+
+/* the same as the above, but is a function */
+SSL_IMPORT PRUint16 SSL_GetNumImplementedCiphers(void);
 
 /* Macro to tell which ciphers in table are SSL2 vs SSL3/TLS. */
 #define SSL_IS_SSL2_CIPHER(which) (((which) & 0xfff0) == 0xff00)

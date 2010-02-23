@@ -67,9 +67,6 @@ NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 #define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
-
-static nsContentList *gCachedContentList;
-
 nsBaseContentList::~nsBaseContentList()
 {
 }
@@ -157,11 +154,6 @@ void nsBaseContentList::InsertElementAt(nsIContent* aContent, PRInt32 aIndex)
 {
   NS_ASSERTION(aContent, "Element to insert must not be null");
   mElements.InsertObjectAt(aContent, aIndex);
-}
-
-//static
-void nsBaseContentList::Shutdown() {
-  NS_IF_RELEASE(gCachedContentList);
 }
 
 // nsFormContentList
@@ -280,18 +272,6 @@ NS_GetContentList(nsINode* aRootNode, nsIAtom* aMatchAtom,
   }
 
   NS_ADDREF(list);
-
-  // Hold on to the last requested content list to avoid having it be
-  // removed from the cache immediately when it's released. Avoid
-  // bumping the refcount on the list if the requested list is the one
-  // that's already cached.
-
-  if (gCachedContentList != list) {
-    NS_IF_RELEASE(gCachedContentList);
-
-    gCachedContentList = list;
-    NS_ADDREF(gCachedContentList);
-  }
 
   return list;
 }
@@ -559,21 +539,6 @@ nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
   // We will get no more updates, so we can never know we're up to
   // date
   SetDirty();
-}
-
-// static
-void
-nsContentList::OnDocumentDestroy(nsIDocument *aDocument)
-{
-  // If our content list cache holds a list used for a document that's
-  // now being destroyed, free the cache to prevent the list from
-  // staying around until the next use of content lists ends up
-  // replacing what's in the cache.
-
-  if (gCachedContentList && gCachedContentList->mRootNode &&
-      gCachedContentList->mRootNode->GetOwnerDoc() == aDocument) {
-    NS_RELEASE(gCachedContentList);
-  }
 }
 
 NS_IMETHODIMP

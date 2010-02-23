@@ -69,7 +69,11 @@
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxQtPlatform.h"
 #include "gfxQPainterSurface.h"
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
 #include "nsIRenderingContext.h"
 
 nsNativeThemeQt::nsNativeThemeQt()
@@ -93,6 +97,29 @@ static inline QRect qRectInPixels(const nsRect &aRect,
                  NSAppUnitsToIntPixels(aRect.height, p2a));
 }
 
+static inline QImage::Format
+_qimage_from_gfximage_format (gfxASurface::gfxImageFormat aFormat)
+{
+    switch (aFormat) {
+    case gfxASurface::ImageFormatARGB32:
+        return QImage::Format_ARGB32_Premultiplied;
+    case gfxASurface::ImageFormatRGB24:
+        return QImage::Format_RGB32;
+    case gfxASurface::ImageFormatA8:
+        return QImage::Format_Indexed8;
+    case gfxASurface::ImageFormatA1:
+#ifdef WORDS_BIGENDIAN
+        return QImage::Format_Mono;
+#else
+        return QImage::Format_MonoLSB;
+#endif
+    default:
+        return QImage::Format_Invalid;
+    }
+
+    return QImage::Format_Mono;
+}
+
 NS_IMETHODIMP
 nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
                                       nsIFrame* aFrame,
@@ -103,18 +130,55 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     gfxContext* context = aContext->ThebesContext();
     nsRefPtr<gfxASurface> surface = context->CurrentSurface();
 
+    if (surface->GetType() == gfxASurface::SurfaceTypeQPainter) {
+        gfxQPainterSurface* qSurface = (gfxQPainterSurface*) (surface.get());
+        QPainter *painter = qSurface->GetQPainter();
+        NS_ASSERTION(painter, "Where'd my QPainter go?");
+        if (!painter)
+            return NS_ERROR_FAILURE;
+        return DrawWidgetBackground(painter, aContext,
+                                    aFrame, aWidgetType,
+                                    aRect, aClipRect);
+    }
+    else if (surface->GetType() == gfxASurface::SurfaceTypeImage) {
+        gfxImageSurface* qSurface = (gfxImageSurface*) (surface.get());
+        QImage tempQImage(qSurface->Data(),
+                          qSurface->Width(),
+                          qSurface->Height(),
+                          qSurface->Stride(),
+                          _qimage_from_gfximage_format(qSurface->Format()));
+        QPainter painter(&tempQImage);
+        return DrawWidgetBackground(&painter, aContext,
+                                    aFrame, aWidgetType,
+                                    aRect, aClipRect);
+    }
+#ifdef MOZ_X11
+    else if (surface->GetType() == gfxASurface::SurfaceTypeXlib) {
+        gfxXlibSurface* qSurface = (gfxXlibSurface*) (surface.get());
+        QPixmap pixmap(QPixmap::fromX11Pixmap(qSurface->XDrawable()));
+        QPainter painter(&pixmap);
+        return DrawWidgetBackground(&painter, aContext,
+                                    aFrame, aWidgetType,
+                                    aRect, aClipRect);
+    }
+#endif
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
+                                      nsIRenderingContext* aContext,
+                                      nsIFrame* aFrame,
+                                      PRUint8 aWidgetType,
+                                      const nsRect& aRect,
+                                      const nsRect& aClipRect)
+
+{
+    gfxContext* context = aContext->ThebesContext();
+    nsRefPtr<gfxASurface> surface = context->CurrentSurface();
+
     context->UpdateSurfaceClip();
-
-    if (surface->GetType() != gfxASurface::SurfaceTypeQPainter)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    gfxQPainterSurface* qSurface = (gfxQPainterSurface*) (surface.get());
-    QPainter* qPainter = qSurface->GetQPainter();
-
-    NS_ASSERTION(qPainter, "Where'd my QPainter go?");
-
-    if (qPainter == nsnull)
-        return NS_OK;
 
     QStyle* style = qApp->style();
 

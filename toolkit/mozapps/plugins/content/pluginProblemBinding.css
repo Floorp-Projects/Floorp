@@ -38,15 +38,12 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-embed:-moz-type-unsupported,
 embed:-moz-handler-disabled,
 embed:-moz-handler-blocked,
 embed:-moz-handler-crashed,
-applet:-moz-type-unsupported,
 applet:-moz-handler-disabled,
 applet:-moz-handler-blocked,
 applet:-moz-handler-crashed,
-object:-moz-has-handlerref:-moz-type-unsupported,
 object:-moz-has-handlerref:-moz-handler-disabled,
 object:-moz-has-handlerref:-moz-handler-blocked,
 object:-moz-has-handlerref:-moz-handler-crashed {

@@ -360,7 +360,7 @@ notder:
 	while ( cl >= NS_CERT_TRAILER_LEN ) {
 	    if ( !PORT_Strncasecmp((char *)cp, NS_CERT_TRAILER,
 				   NS_CERT_TRAILER_LEN) ) {
-		certend = (unsigned char *)cp;
+		certend = cp;
 		break;
 	    }
 
@@ -383,7 +383,7 @@ notder:
 
 	*certend = 0;
 	/* convert to binary */
-	bincert = ATOB_AsciiToData(certbegin, &binLen);
+	bincert = ATOB_AsciiToData((char *)certbegin, &binLen);
 	if (!bincert) {
 	    rv = SECFailure;
 	    goto loser;

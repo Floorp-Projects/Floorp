@@ -24,14 +24,21 @@
   <![CDATA[
     // var gA11yEventDumpID = "eventdump"; // debug stuff
 
-    SimpleTest.waitForExplicitFinish();
-    var w = window.openDialog("chrome://mochikit/content/a11y/accessible/name_nsRootAcc_wnd.xul",
-                              "nsRootAcc_name_test", 
-                              "chrome,width=600,height=600");
-    if (LINUX) {
-      w.focus();
+    function doTest()
+    {
+      if (LINUX) {
+        todo(false, "Enable test on Linux - see bug 525175.");
+        SimpleTest.finish();
+        return;
+      }
+
+      var w = window.openDialog("chrome://mochikit/content/a11y/accessible/name_nsRootAcc_wnd.xul",
+                                "nsRootAcc_name_test", 
+                                "chrome,width=600,height=600");
     }
-    
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
   ]]>
   </script>
 

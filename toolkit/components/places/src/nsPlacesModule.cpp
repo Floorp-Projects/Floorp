@@ -6,7 +6,10 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
+#include "History.h"
 #include "nsDocShellCID.h"
+
+using namespace mozilla::places;
 
 #define NS_NAVHISTORY_CLASSINFO \
   nsnull, nsnull, nsnull, \
@@ -25,6 +28,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNavBookmarks,
                                          nsNavBookmarks::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFaviconService,
                                          nsFaviconService::GetSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(History, History::GetSingleton)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
 
@@ -73,6 +77,11 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
     nsNavHistoryConstructor,
     NS_NAVHISTORY_CLASSINFO },
+
+  { "Browser History",
+    NS_HISTORYSERVICE_CID,
+    NS_IHISTORY_CONTRACTID,
+    HistoryConstructor },
 
 };
 

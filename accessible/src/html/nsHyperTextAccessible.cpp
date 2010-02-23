@@ -40,7 +40,6 @@
 #include "nsHyperTextAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
-#include "nsAccessibleTreeWalker.h"
 #include "nsTextAttrs.h"
 
 #include "nsIClipboard.h"
@@ -1413,56 +1412,71 @@ NS_IMETHODIMP nsHyperTextAccessible::SetTextContents(const nsAString &aText)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
-{
-  if (NS_SUCCEEDED(SetCaretOffset(aPosition))) {
-    nsCOMPtr<nsIEditor> editor;
-    GetAssociatedEditor(getter_AddRefs(editor));
-    nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
-    return peditor ? peditor->InsertText(aText) : NS_ERROR_FAILURE;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
+NS_IMETHODIMP
+nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 {
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
-  if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return editor->Copy();
 
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
+  NS_ENSURE_STATE(peditor);
+
+  nsresult rv = SetSelectionRange(aPosition, aPosition);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return peditor->InsertText(aText);
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
+NS_IMETHODIMP
+nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
-  if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return editor->Cut();
+  NS_ENSURE_STATE(editor);
 
-  return NS_ERROR_FAILURE;
+  nsresult rv = SetSelectionRange(aStartPos, aEndPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return editor->Copy();
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
+NS_IMETHODIMP
+nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
-  if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return editor->DeleteSelection(nsIEditor::eNone);
+  NS_ENSURE_STATE(editor);
 
-  return NS_ERROR_FAILURE;
+  nsresult rv = SetSelectionRange(aStartPos, aEndPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return editor->Cut();
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::PasteText(PRInt32 aPosition)
+NS_IMETHODIMP
+nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
-  if (editor && NS_SUCCEEDED(SetCaretOffset(aPosition)))
-    return editor->Paste(nsIClipboard::kGlobalClipboard);
+  NS_ENSURE_STATE(editor);
 
-  return NS_ERROR_FAILURE;
+  nsresult rv = SetSelectionRange(aStartPos, aEndPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return editor->DeleteSelection(nsIEditor::eNone);
+}
+
+NS_IMETHODIMP
+nsHyperTextAccessible::PasteText(PRInt32 aPosition)
+{
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
+  NS_ENSURE_STATE(editor);
+
+  nsresult rv = SetSelectionRange(aPosition, aPosition);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return editor->Paste(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
@@ -1511,10 +1525,14 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   * =================== Caret & Selection ======================
   */
 
-nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
+nsresult
+nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
 {
+  nsresult rv = TakeFocus();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Set the selection
-  nsresult rv = SetSelectionBounds(0, aStartPos, aEndPos);
+  SetSelectionBounds(0, aStartPos, aEndPos);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If range 0 was successfully set, clear any additional selection 
@@ -1544,7 +1562,8 @@ nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEn
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::SetCaretOffset(PRInt32 aCaretOffset)
+NS_IMETHODIMP
+nsHyperTextAccessible::SetCaretOffset(PRInt32 aCaretOffset)
 {
   return SetSelectionRange(aCaretOffset, aCaretOffset);
 }

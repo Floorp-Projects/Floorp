@@ -2893,6 +2893,18 @@ void _PR_UnixInit(void)
     _PR_InitIOV();  /* one last hack */
 }
 
+void _PR_UnixCleanup(void)
+{
+    if (_pr_rename_lock) {
+        PR_DestroyLock(_pr_rename_lock);
+        _pr_rename_lock = NULL;
+    }
+    if (_pr_Xfe_mon) {
+        PR_DestroyMonitor(_pr_Xfe_mon);
+        _pr_Xfe_mon = NULL;
+    }
+}
+
 #if !defined(_PR_PTHREADS)
 
 /*

@@ -146,12 +146,26 @@ nsSMILCSSProperty::GetBaseValue() const
 nsresult
 nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
-                                   nsSMILValue& aValue) const
+                                   nsSMILValue& aValue,
+                                   PRBool& aCanCache) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
   nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
-  return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
+  if (aValue.IsNull()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXXdholbert: For simplicity, just assume that all CSS values have to
+  // reparsed every sample. This prevents us from doing the "nothing's changed
+  // so don't recompose" optimization (bug 533291) for CSS properties & mapped
+  // attributes.  If it ends up being expensive to always recompose those, we
+  // can be a little smarter here.  We really only need to disable aCanCache
+  // for "inherit" & "currentColor" (whose values could change at any time), as
+  // well as for length-valued types (particularly those with em/ex/percent
+  // units, since their conversion ratios can change at any time).
+  aCanCache = PR_FALSE;
+  return NS_OK;
 }
 
 nsresult

@@ -150,52 +150,54 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 
-#define NS_EVENT_STATE_ACTIVE        0x00000001 // mouse is down on content
-#define NS_EVENT_STATE_FOCUS         0x00000002 // content has focus
-#define NS_EVENT_STATE_HOVER         0x00000004 // mouse is hovering over content
-#define NS_EVENT_STATE_DRAGOVER      0x00000008 // drag  is hovering over content
-#define NS_EVENT_STATE_URLTARGET     0x00000010 // content is URL's target (ref)
+#define NS_EVENT_STATE_ACTIVE        (1 << 0)  // mouse is down on content
+#define NS_EVENT_STATE_FOCUS         (1 << 1)  // content has focus
+#define NS_EVENT_STATE_HOVER         (1 << 2)  // mouse is hovering over content
+#define NS_EVENT_STATE_DRAGOVER      (1 << 3)  // drag  is hovering over content
+#define NS_EVENT_STATE_URLTARGET     (1 << 4)  // content is URL's target (ref)
 
 // The following states are used only for ContentStatesChanged
 
-#define NS_EVENT_STATE_CHECKED       0x00000020 // CSS3-Selectors
-#define NS_EVENT_STATE_ENABLED       0x00000040 // CSS3-Selectors
-#define NS_EVENT_STATE_DISABLED      0x00000080 // CSS3-Selectors
-#define NS_EVENT_STATE_REQUIRED      0x00000100 // CSS3-UI
-#define NS_EVENT_STATE_OPTIONAL      0x00000200 // CSS3-UI
-#define NS_EVENT_STATE_VISITED       0x00000400 // CSS2
-#define NS_EVENT_STATE_VALID         0x00000800 // CSS3-UI
-#define NS_EVENT_STATE_INVALID       0x00001000 // CSS3-UI
-#define NS_EVENT_STATE_INRANGE       0x00002000 // CSS3-UI
-#define NS_EVENT_STATE_OUTOFRANGE    0x00004000 // CSS3-UI
+#define NS_EVENT_STATE_CHECKED       (1 << 5)  // CSS3-Selectors
+#define NS_EVENT_STATE_ENABLED       (1 << 6)  // CSS3-Selectors
+#define NS_EVENT_STATE_DISABLED      (1 << 7)  // CSS3-Selectors
+#define NS_EVENT_STATE_REQUIRED      (1 << 8)  // CSS3-UI
+#define NS_EVENT_STATE_OPTIONAL      (1 << 9)  // CSS3-UI
+#define NS_EVENT_STATE_VISITED       (1 << 10) // CSS2
+#define NS_EVENT_STATE_UNVISITED     (1 << 11)
+#define NS_EVENT_STATE_VALID         (1 << 12) // CSS3-UI
+#define NS_EVENT_STATE_INVALID       (1 << 13) // CSS3-UI
+#define NS_EVENT_STATE_INRANGE       (1 << 14) // CSS3-UI
+#define NS_EVENT_STATE_OUTOFRANGE    (1 << 15) // CSS3-UI
 // these two are temporary (see bug 302188)
-#define NS_EVENT_STATE_MOZ_READONLY  0x00008000 // CSS3-UI
-#define NS_EVENT_STATE_MOZ_READWRITE 0x00010000 // CSS3-UI
-#define NS_EVENT_STATE_DEFAULT       0x00020000 // CSS3-UI
+#define NS_EVENT_STATE_MOZ_READONLY  (1 << 16) // CSS3-UI
+#define NS_EVENT_STATE_MOZ_READWRITE (1 << 17) // CSS3-UI
+#define NS_EVENT_STATE_DEFAULT       (1 << 18) // CSS3-UI
 
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN        0x00040000
+#define NS_EVENT_STATE_BROKEN        (1 << 19)
 // Content disabled by the user (images turned off, say)
-#define NS_EVENT_STATE_USERDISABLED  0x00080000
+#define NS_EVENT_STATE_USERDISABLED  (1 << 20)
 // Content suppressed by the user (ad blocking, etc)
-#define NS_EVENT_STATE_SUPPRESSED    0x00100000
+#define NS_EVENT_STATE_SUPPRESSED    (1 << 21)
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet)
-#define NS_EVENT_STATE_LOADING       0x00200000
+#define NS_EVENT_STATE_LOADING       (1 << 22)
 // Content is of a type that gecko can't handle
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED \
-                                     0x00400000
+                                     (1 << 23)
 #ifdef MOZ_MATHML
-#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL 0x00800000
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL \
+                                     (1 << 24)
 #endif
 // Handler for the content has been blocked
 #define NS_EVENT_STATE_HANDLER_BLOCKED \
-                                     0x01000000
+                                     (1 << 25)
 // Handler for the content has been disabled
 #define NS_EVENT_STATE_HANDLER_DISABLED \
-                                     0x02000000
+                                     (1 << 26)
 
-#define NS_EVENT_STATE_INDETERMINATE 0x04000000 // CSS3-Selectors
+#define NS_EVENT_STATE_INDETERMINATE (1 << 27) // CSS3-Selectors
 
 // Handler for the content has crashed
 #define NS_EVENT_STATE_HANDLER_CRASHED \

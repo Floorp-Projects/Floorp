@@ -80,6 +80,15 @@ nsSMILValue::operator=(const nsSMILValue& aVal)
   return *this;
 }
 
+PRBool
+nsSMILValue::operator==(const nsSMILValue& aVal) const
+{
+  if (&aVal == this)
+    return PR_TRUE;
+
+  return mType == aVal.mType && mType->IsEqual(*this, aVal);
+}
+
 nsresult
 nsSMILValue::Add(const nsSMILValue& aValueToAdd, PRUint32 aCount)
 {

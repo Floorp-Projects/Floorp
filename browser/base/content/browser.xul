@@ -423,7 +423,10 @@
                        ondragstart="proxyIconDNDObserver.onDragStart(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
-              <label id="identity-icon-label" crop="center" flex="1"/>
+              <hbox id="identity-icon-labels">
+                <label id="identity-icon-label" class="plain" flex="1"/>
+                <label id="identity-icon-country-label" class="plain"/>
+              </hbox>
             </hbox>
           </box>
           <hbox id="urlbar-icons">
@@ -554,15 +557,15 @@
              context="toolbar-context-menu">
       <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
-        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+        <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>
 
-        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+        <toolbarbutton id="restore-button"
                        tooltiptext="&fullScreenRestore.tooltip;"
                        oncommand="BrowserFullScreen();"/>
 
-        <toolbarbutton id="close-button" class="toolbarbutton-1"
+        <toolbarbutton id="close-button"
                        tooltiptext="&fullScreenClose.tooltip;"
                        oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
@@ -636,4 +639,12 @@
       </statusbarpanel>
     </statusbar>
   </vbox>
+#ifndef XP_UNIX
+  <svg:svg height="0">
+    <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
+      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
+      <svg:circle cx="-0.42" cy="0.5" r="0.63" id="circle"/>
+    </svg:mask>
+  </svg:svg>
+#endif
 </window>

@@ -2237,24 +2237,14 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
 
   // check for expires attribute
   } else if (!aCookieAttributes.expires.IsEmpty()) {
-    PRTime tempExpires;
-    PRInt64 expires;
-
-    // For Expires, we trim leading and trailing " characters to maximize
-    // the compatibility of our date parsing.  In principle, this processsing
-    // should be done in our date parser.
-    nsCString& expiresAttr = aCookieAttributes.expires;
-    if (!expiresAttr.IsEmpty() && expiresAttr.First() == '"' && expiresAttr.Last() == '"')
-      expiresAttr = Substring(expiresAttr.BeginReading() + 1, expiresAttr.EndReading() - 1);
+    PRTime expires;
 
     // parse expiry time
-    if (PR_ParseTimeString(expiresAttr.get(), PR_TRUE, &tempExpires) == PR_SUCCESS) {
-      expires = tempExpires / PR_USEC_PER_SEC;
-    } else {
+    if (PR_ParseTimeString(aCookieAttributes.expires.get(), PR_TRUE, &expires) != PR_SUCCESS) {
       return PR_TRUE;
     }
 
-    delta = expires - aServerTime;
+    delta = expires / PR_USEC_PER_SEC - aServerTime;
 
   // default to session cookie if no attributes found
   } else {

@@ -285,8 +285,13 @@ nsPluginElement::~nsPluginElement()
   NS_IF_RELEASE(mPlugin);
 
   if (mMimeTypeArray != nsnull) {
-    for (PRUint32 i = 0; i < mMimeTypeCount; i++)
-      NS_IF_RELEASE(mMimeTypeArray[i]);
+    for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+      nsMimeType* mt = static_cast<nsMimeType*>(mMimeTypeArray[i]);
+      if (mt) {
+        mt->DetachPlugin();
+        NS_RELEASE(mt);
+      }
+    }
     delete[] mMimeTypeArray;
   }
 }

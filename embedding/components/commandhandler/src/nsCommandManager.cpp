@@ -50,9 +50,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIFocusController.h"
 #include "nsIFocusManager.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsCOMArray.h"
 
@@ -336,17 +337,12 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
     return controllers->GetControllerForCommand(aCommand, outController);
   }
 
-
-  // else we're not targeted to a particular window so use focus
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);
-  if (!window)
-    return NS_ERROR_FAILURE;
-
-  nsIFocusController *focusController = window->GetRootFocusController();
-  if (!focusController)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
   // no target window; send command to focus controller
-  return focusController->GetControllerForCommand(window, aCommand, outController);
+  return root->GetControllerForCommand(aCommand, outController);
 }
 

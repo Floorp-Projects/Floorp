@@ -68,6 +68,10 @@ DIRS = \
 	browser \
 	$(NULL)
 
+TOOL_DIRS = \
+  cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(MOCHI_TESTS)

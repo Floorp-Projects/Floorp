@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+       document.documentElement.pauseAnimations();
+       document.documentElement.setCurrentTime(1);
+       setTimeAndSnapshot(2, false);">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!--
+    Test that we correctly handle "HasChanged()" flags when an animation becomes
+    inactive while its siblings haven't changed.
+    In this test case, we take our first sample at 1s, and both animations are
+    active. We take our second sample at 2s, and the first animation is the only
+    active animation. It hasn't changed, so we might think that we don't need to
+    recompose its target - BUT we *do* need to recompose, because the other
+    animation is newly inactive, and we need to reevaluate the animation
+    sandwich now that it's gone.
+  -->
+  <rect x="15" y="15" width="200" height="200" fill="orange">
+    <set attributeName="fill" to="blue" begin="0s" dur="indefinite"/>
+    <set attributeName="fill" to="red"  begin="1s" dur="0.5s"/>
+  </rect>
+</svg>

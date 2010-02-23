@@ -20,7 +20,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
   skin/classic/mozapps/passwordmgr/key.png                        (passwordmgr/key.png)
   skin/classic/mozapps/plugins/pluginProblem.css                  (plugins/pluginProblem.css)
-  skin/classic/mozapps/plugins/backgroundStripes.png              (plugins/backgroundStripes.png)
   skin/classic/mozapps/plugins/pluginGeneric.png                  (plugins/pluginGeneric.png)
   skin/classic/mozapps/plugins/pluginDisabled.png                 (plugins/pluginDisabled.png)
   skin/classic/mozapps/plugins/pluginBlocked.png                  (plugins/pluginBlocked.png)

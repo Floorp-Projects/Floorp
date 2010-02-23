@@ -86,7 +86,11 @@
       { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
 #define NS_DOCSHELL_CONTRACTID "@mozilla.org/docshell/html;1"
 
-
+/**
+ * Contract ID to obtain the IHistory interface.  This is a non-scriptable
+ * interface used to interact with history in an asynchronous manner.
+ */
+#define NS_IHISTORY_CONTRACTID "@mozilla.org/browser/history;1"
 
 /**
  * An observer service topic that can be listened to to catch creation

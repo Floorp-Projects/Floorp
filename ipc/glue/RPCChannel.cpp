@@ -317,10 +317,8 @@ RPCChannel::EnqueuePendingMessages()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items");
 
-    if (!mDeferred.empty())
+    for (size_t i = 0; i < mDeferred.size(); ++i)
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
@@ -342,8 +340,6 @@ RPCChannel::OnMaybeDequeueOne()
 
     AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items, but it has %lu");
 
     Message recvd;
     {
@@ -639,13 +635,20 @@ RPCChannel::OnChannelError()
 {
     AssertIOThread();
 
-    AsyncChannel::OnChannelError();
+    {
+        MutexAutoLock lock(mMutex);
 
-    // skip SyncChannel::OnError(); we subsume its duties
-    MutexAutoLock lock(mMutex);
-    if (AwaitingSyncReply()
-        || 0 < StackDepth())
-        NotifyWorkerThread();
+        // NB: this can race with the `Goodbye' event being processed by
+        // the worker thread
+        if (ChannelClosing != mChannelState)
+            mChannelState = ChannelError;
+
+        // skip SyncChannel::OnError(); we subsume its duties
+        if (AwaitingSyncReply() || 0 < StackDepth())
+            NotifyWorkerThread();
+    }
+
+    AsyncChannel::OnChannelError();
 }
 
 

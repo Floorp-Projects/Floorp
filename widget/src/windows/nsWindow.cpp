@@ -283,6 +283,12 @@ LPFNLRESULTFROMOBJECT
 const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 PRUint32        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
+// Used in OOPP hang detection.
+const PRUnichar* kOOPPGetBaseMessageEventId   = L"Get Base Widget Event Message";
+PRUint32        nsWindow::sOOPPGetBaseMessageEvent =
+                  RegisterWindowMessage(kOOPPGetBaseMessageEventId);
+PRInt32         nsWindow::sCallDepth              = 0;
+UINT            nsWindow::sBaseMsg                = 0;
 #endif
 
 /**************************************************************
@@ -3655,12 +3661,20 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
   return false;
 }
 
-// static
 void
-nsWindow::IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lParam)
+nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
   NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                "Failed to prevent a nonqueued message from running!");
+
+  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
+  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
+      ::GetPropW(mWnd, L"PluginInstanceParentProperty")) {
+      ::ReplyMessage(0);
+      return;
+  }
+
+  // Modal UI being displayed in windowless plugins.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() &&
       (::InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     LRESULT res;
@@ -3695,8 +3709,12 @@ nsWindow::IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lP
 // The WndProc procedure for all nsWindows in this toolkit
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  // Get the window which caused the event and ask it to process the message
+  nsWindow *someWindow = GetNSWindowPtr(hWnd);
+
 #ifdef MOZ_IPC
-  IPCWindowProcHandler(hWnd, msg, wParam, lParam);
+  if (someWindow)
+    someWindow->IPCWindowProcHandler(msg, wParam, lParam);
 #endif
 
   // create this here so that we store the last rolled up popup until after
@@ -3704,11 +3722,8 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   nsAutoRollup autoRollup;
 
   LRESULT popupHandlingResult;
-  if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
+  if (DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult))
     return popupHandlingResult;
-
-  // Get the window which caused the event and ask it to process the message
-  nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
   // XXX This fixes 50208 and we are leaving 51174 open to further investigate
   // why we are hitting this assert
@@ -3733,16 +3748,30 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
+#ifdef MOZ_IPC
+  // Track the base event, used in focus hang detection for OOPP.
+  NS_ASSERTION(nsWindow::sCallDepth >= 0, "Call depth out of sync.");
+  if (++nsWindow::sCallDepth == 1)
+    nsWindow::sBaseMsg = msg;
+#endif
+
   // Call ProcessMessage
-  if (nsnull != someWindow) {
-    LRESULT retValue;
-    if (PR_TRUE == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
-      return retValue;
-    }
+  LRESULT retValue;
+  if (PR_TRUE == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
+#ifdef MOZ_IPC
+    nsWindow::sCallDepth--;
+#endif
+    return retValue;
   }
 
-  return ::CallWindowProcW(someWindow->GetPrevWindowProc(),
-                           hWnd, msg, wParam, lParam);
+  LRESULT res = ::CallWindowProcW(someWindow->GetPrevWindowProc(),
+                                  hWnd, msg, wParam, lParam);
+
+#ifdef MOZ_IPC
+  nsWindow::sCallDepth--;
+#endif
+
+  return res;
 }
 
 // The main windows message processing method for plugins.
@@ -4693,13 +4722,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         SetHasTaskbarIconBeenCreated();
 #endif
 #ifdef MOZ_IPC
-    if (msg == sOOPPPluginFocusEvent) {
-      // With OOPP, the plugin window exists in another process and is a child of
-      // this window. This window is a placeholder plugin window for the dom. We
-      // receive this event when the child window receives focus. (sent from
-      // PluginInstanceParent.cpp)
-      ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
-    } 
+      if (msg == sOOPPPluginFocusEvent) {
+        // With OOPP, the plugin window exists in another process and is a child of
+        // this window. This window is a placeholder plugin window for the dom. We
+        // receive this event when the child window receives focus. (sent from
+        // PluginInstanceParent.cpp)
+        ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
+      }
+      else if (msg == sOOPPGetBaseMessageEvent && wParam) {
+        // PluginInstanceParent uses this to retreive the base event for a nested
+        // event it receives. Used in preventing hangs on events forwared from
+        // child.
+        NS_ASSERTION(nsWindow::sCallDepth > 0,
+                     "Call depth not 0 when requesting base message?");
+        *(reinterpret_cast<UINT*>(wParam)) = sBaseMsg;
+        *aRetValue = 1;
+        return PR_TRUE;
+      }
 #endif
     }
     break;

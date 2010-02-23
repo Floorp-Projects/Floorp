@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleEditableText chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/editabletext.js"></script>
+
+  <script type="application/javascript">
+    var gParagraphAcc;
+
+    function doTest()
+    {
+      var et = new nsEditableText("input");
+
+      et.insertText("ee", 1, "heeello");
+      et.copyText(1, 3, "ee");
+      et.cutText(1, 3, "ee", "hello");
+      et.deleteText(1, 3, "hlo");
+      et.pasteText(1, "heelo");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="HyperText accessible should get focus when the caret is positioned inside of it, text is changed or copied into clipboard by ATs"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=524115">
+    Mozilla Bug 524115
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input" value="hello"/>
+
+</body>
+</html>

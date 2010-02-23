@@ -35,16 +35,14 @@
 
       testAccessibleTree("radio", accTree);
 
-      // input@type="button" and button
+      // input@type="button" and input@type="submit"
       accTree = {
         role: ROLE_PUSHBUTTON,
         children: [ ]
       };
 
       testAccessibleTree("btn1", accTree);
-
       testAccessibleTree("submit", accTree);
-      testAccessibleTree("image_submit", accTree);
 
       // button
       accTree = {
@@ -57,6 +55,17 @@
       };
 
       testAccessibleTree("btn2", accTree);
+
+      // input@type="image"
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        children: [
+          {
+            role: ROLE_STATICTEXT
+          }
+        ]
+      };
+      testAccessibleTree("image_submit", accTree);
 
       SimpleTest.finish();
     }

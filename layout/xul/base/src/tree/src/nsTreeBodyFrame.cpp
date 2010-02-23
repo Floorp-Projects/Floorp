@@ -3939,7 +3939,7 @@ nsTreeBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
 
 nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow)
 {
-  if (!mView)
+  if (!mView || !mPageLength)
     return NS_OK;
 
   if (mTopRowIndex <= aRow && mTopRowIndex+mPageLength > aRow)

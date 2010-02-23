@@ -79,6 +79,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_datepicker.xul \
 		test_timepicker.xul \
 		test_tree.xul \
+		test_tree_view.xul \
 		test_tree_single.xul \
 		test_tree_hier.xul \
 		test_tree_hier_cell.xul \

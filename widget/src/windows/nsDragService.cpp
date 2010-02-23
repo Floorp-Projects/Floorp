@@ -230,6 +230,9 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
         rv = nsClipboard::CreateNativeDataObject(trans,
                                                  getter_AddRefs(dataObj), uri);
         NS_ENSURE_SUCCESS(rv, rv);
+        // Add the flavors to the collection object too
+        rv = nsClipboard::SetupNativeDataObject(trans, dataObjCollection);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         dataObjCollection->AddDataObject(dataObj);
       }

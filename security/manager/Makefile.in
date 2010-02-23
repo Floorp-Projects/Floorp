@@ -243,9 +243,9 @@ ifeq ($(OS_ARCH),Linux)
 DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=1
 endif
 
-# Turn off TLS compression support because NSS 3.12.5 Beta can't be built
+# Turn off TLS compression support because NSS 3.12.6 can't be built
 # with Mozilla's zlib.h.  See bug 527659 comment 10.
-DEFAULT_GMAKE_FLAGS += USE_SYSTEM_ZLIB=
+DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ZLIB=
 
 # Disable building of the test programs in security/nss/lib/zlib
 DEFAULT_GMAKE_FLAGS += PROGRAMS=
