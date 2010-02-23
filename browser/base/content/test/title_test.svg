@@ -42,4 +42,8 @@
       This link contains xlink:title attr.
     </text>
   </a>
+  <text id="text5" x="10px" y="160px" font-size="24px"
+        xlink:title="This is an xlink:title attribute but it isn't on a link" >
+    This contains nothing.
+  </text>
 </svg>
