@@ -84,7 +84,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   direction: ltr;
 }
 
-#identity-box.verifiedIdentity > hbox > #identity-icon-labels > #identity-icon-label {
+#identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-labels > #identity-icon-label {
   -moz-margin-end: 0.25em !important;
 }
 
