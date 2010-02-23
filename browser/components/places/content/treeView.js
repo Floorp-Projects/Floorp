@@ -951,16 +951,16 @@ PlacesTreeView.prototype = {
            Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
   },
 
-  canDrop: function PTV_canDrop(aRow, aOrientation) {
+  canDrop: function PTV_canDrop(aRow, aOrientation, aDataTransfer) {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
 
-    // drop position into a sorted treeview would be wrong
+    // Drop position into a sorted treeview would be wrong.
     if (this.isSorted())
       return false;
 
-    var ip = this._getInsertionPoint(aRow, aOrientation);
-    return ip && PlacesControllerDragHelper.canDrop(ip);
+    let ip = this._getInsertionPoint(aRow, aOrientation);
+    return ip && PlacesControllerDragHelper.canDrop(ip, aDataTransfer);
   },
 
   _getInsertionPoint: function PTV__getInsertionPoint(index, orientation) {
@@ -1027,14 +1027,15 @@ PlacesTreeView.prototype = {
                               dropNearItemId);
   },
 
-  drop: function PTV_drop(aRow, aOrientation) {
+  drop: function PTV_drop(aRow, aOrientation, aDataTransfer) {
     // We are responsible for translating the |index| and |orientation| 
     // parameters into a container id and index within the container, 
     // since this information is specific to the tree view.
-    var ip = this._getInsertionPoint(aRow, aOrientation);
-    if (!ip)
-      return;
-    PlacesControllerDragHelper.onDrop(ip);
+    let ip = this._getInsertionPoint(aRow, aOrientation);
+    if (ip)
+      PlacesControllerDragHelper.onDrop(ip, aDataTransfer);
+
+    PlacesControllerDragHelper.currentDropTarget = null;
   },
 
   getParentIndex: function PTV_getParentIndex(aRow) {

@@ -1043,6 +1043,18 @@
           }
         ]]></body>
       </method>
+
+      <method name="_cleanupDragDetails">
+        <body><![CDATA[
+          // Called on dragend and drop.
+          PlacesControllerDragHelper.currentDropTarget = null;
+          this._draggedNode = null;
+          if (this._ibTimer)
+            this._ibTimer.cancel();
+          this._dropIndicator.collapsed = true;
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -1058,8 +1070,8 @@
       ]]></handler>
 
       <handler event="dragstart"><![CDATA[
-        // sub menus have their own d&d handlers
-        var draggedDOMNode = event.target;
+        // Sub menus have their own d&d handlers.
+        let draggedDOMNode = event.target;
         if (draggedDOMNode.parentNode != this || !draggedDOMNode.node)
           return;
 
@@ -1071,23 +1083,23 @@
             this._mouseDownTimer.cancel();
             this._mouseDownTimer = null;
           }
-          var translateY = this._cachedMouseMoveEvent.clientY - event.clientY;
-          var translateX = this._cachedMouseMoveEvent.clientX - event.clientX;
+          let translateY = this._cachedMouseMoveEvent.clientY - event.clientY;
+          let translateX = this._cachedMouseMoveEvent.clientX - event.clientX;
           if ((translateY) >= Math.abs(translateX/2)) {
-            // Don't start the drag
+            // Don't start the drag.
             event.preventDefault();
             // Open the menu
             draggedDOMNode.open = true;
             return;
           }
-          // if the menu is open, close it
+          // If the menu is open, close it.
           if (draggedDOMNode.open) {
             draggedDOMNode.firstChild.hidePopup();
             draggedDOMNode.open = false;
           }
         }
 
-        // activate the view and cache the dragged node
+        // Activate the view and cache the dragged node.
         this._draggedNode = draggedDOMNode.node;
         this.focus();
 
@@ -1096,30 +1108,26 @@
       ]]></handler>
 
       <handler event="dragover"><![CDATA[
-        // Cache the dataTransfer
-        var dt = PlacesControllerDragHelper.currentDataTransfer =
-                 event.dataTransfer;
+        PlacesControllerDragHelper.currentDropTarget = event.target;
+        let dt = event.dataTransfer;
 
-        var ip = this.insertionPoint;
-        if (!ip || !PlacesControllerDragHelper.canDrop(ip)) {
+        let dropPoint = this._getDropPoint(event);
+        if (!dropPoint || !dropPoint.ip ||
+            !PlacesControllerDragHelper.canDrop(dropPoint.ip, dt)) {
           this._dropIndicator.collapsed = true;
-          PlacesControllerDragHelper.currentDataTransfer = null;
+          event.stopPropagation();
           return;
         }
-
-        PlacesControllerDragHelper.currentDropTarget = event.target;
-        var dropPoint = this._getDropPoint(event);
 
         if (this._ibTimer) {
           this._ibTimer.cancel();
           this._ibTimer = null;
         }
 
-        if (dropPoint.folderNode ||
-            event.originalTarget == this._chevron) {
-          // Dropping over a menubutton or chevron button
-          // set styles and timer to open relative menupopup
-          var overNode = dropPoint.folderNode || this._chevron;
+        if (dropPoint.folderNode || event.originalTarget == this._chevron) {
+          // Dropping over a menubutton or chevron button.
+          // Set styles and timer to open relative menupopup.
+          let overNode = dropPoint.folderNode || this._chevron;
           if (this._overFolder.node != overNode) {
             this._clearOverFolder();
             this._overFolder.node = overNode;
@@ -1131,8 +1139,8 @@
           this._dropIndicator.collapsed = true;
         }
         else {
-          // Dragging over a normal toolbarbutton,
-          // show indicator bar and move it to the appropriate drop point.
+          // Dragging over a normal toolbarbutton.
+          // Show indicator bar and move it to the appropriate drop point.
           let ind = this._dropIndicator;
           let halfInd = ind.clientWidth / 2;
           let translateX;
@@ -1167,49 +1175,44 @@
           ind.style.MozMarginStart = (-ind.clientWidth) + "px";
           ind.collapsed = false;
 
-          // Clear out old folder information
+          // Clear out old folder information.
           this._clearOverFolder();
         }
 
-        dt.effectAllowed = "all";
         event.preventDefault();
         event.stopPropagation();
       ]]></handler>
 
       <handler event="drop"><![CDATA[
-        PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
         PlacesControllerDragHelper.currentDropTarget = event.target;
 
-        var ip = this.insertionPoint;
-        if (!ip || !PlacesControllerDragHelper.canDrop(ip))
-          return;
+        let dropPoint = this._getDropPoint(event);
+        if (dropPoint && dropPoint.ip) {
+          PlacesControllerDragHelper.onDrop(dropPoint.ip, event.dataTransfer);
+          event.preventDefault();
+        }
 
-        var dropPoint = this._getDropPoint(event);
-        if (!dropPoint)
-          return;
-
-        PlacesControllerDragHelper.onDrop(dropPoint.ip);
+        this._cleanupDragDetails();
         event.stopPropagation();
       ]]></handler>
 
       <handler event="dragleave"><![CDATA[
         PlacesControllerDragHelper.currentDropTarget = null;
-        PlacesControllerDragHelper.currentDataTransfer = null;
 
         // Set timer to turn off indicator bar (if we turn it off
         // here, dragenter might be called immediately after, creating
-        // flicker.)
+        // flicker).
         if (this._ibTimer)
           this._ibTimer.cancel();
         this._ibTimer = this._setTimer(10);
 
-        // If we hovered over a folder, close it now
+        // If we hovered over a folder, close it now.
         if (this._overFolder.node)
             this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
       ]]></handler>
 
       <handler event="dragend"><![CDATA[
-        this._draggedNode = null;
+        this._cleanupDragDetails();
       ]]></handler>
 
       <handler event="popupshowing" phase="capturing"><![CDATA[
