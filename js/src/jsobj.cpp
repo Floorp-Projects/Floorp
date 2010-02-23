@@ -111,10 +111,10 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_GetAttributes,       js_SetAttributes,
     js_DeleteProperty,      js_DefaultValue,
     js_Enumerate,           js_CheckAccess,
+    js_TypeOf,              js_TraceObject,
     NULL,                   NATIVE_DROP_PROPERTY,
     js_Call,                js_Construct,
-    js_HasInstance,         js_TraceObject,
-    js_Clear
+    js_HasInstance,         js_Clear
 };
 
 JSClass js_ObjectClass = {
@@ -1821,7 +1821,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    if (argc <= 1 || JS_TypeOfValue(cx, vp[3]) != JSTYPE_FUNCTION) {
+    if (argc <= 1 || !js_IsCallable(cx, vp[3])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
@@ -1854,7 +1854,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    if (argc <= 1 || JS_TypeOfValue(cx, vp[3]) != JSTYPE_FUNCTION) {
+    if (argc <= 1 || !js_IsCallable(cx, vp[3])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
@@ -3319,6 +3319,12 @@ with_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return proto->checkAccess(cx, id, mode, vp, attrsp);
 }
 
+static JSType
+with_TypeOf(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_OBJECT;
+}
+
 static JSObject *
 with_ThisObject(JSContext *cx, JSObject *obj)
 {
@@ -3335,10 +3341,10 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_GetAttributes,     with_SetAttributes,
     with_DeleteProperty,    with_DefaultValue,
     with_Enumerate,         with_CheckAccess,
+    with_TypeOf,            js_TraceObject,
     with_ThisObject,        NATIVE_DROP_PROPERTY,
     NULL,                   NULL,
-    NULL,                   js_TraceObject,
-    js_Clear
+    NULL,                   js_Clear
 };
 
 static JSObjectOps *
@@ -6015,6 +6021,38 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         check = callbacks ? callbacks->checkObjectAccess : NULL;
     }
     return !check || check(cx, pobj, ID_TO_VALUE(id), mode, vp);
+}
+
+JSType
+js_TypeOf(JSContext *cx, JSObject *obj)
+{
+    /*
+     * Wrappers should also intercept js_TypeOf and answer accordingly.
+     */
+    JS_ASSERT(js_GetWrappedObject(cx, obj) == obj);
+
+    /*
+     * ECMA 262, 11.4.3 says that any native object that implements
+     * [[Call]] should be of type "function". However, RegExp is of
+     * type "object", not "function", for Web compatibility.
+     */
+    if (obj->isCallable(cx)) {
+        return (obj->getClass() != &js_RegExpClass)
+               ? JSTYPE_FUNCTION
+               : JSTYPE_OBJECT;
+    }
+
+#ifdef NARCISSUS
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
+        JS_ClearPendingException(cx);
+    } else if (VALUE_IS_FUNCTION(cx, v)) {
+        return JSTYPE_FUNCTION;
+    }
+#endif
+
+    return JSTYPE_OBJECT;
 }
 
 #ifdef JS_THREADSAFE

@@ -329,8 +329,7 @@ JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, IN
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
-    JSType type = JS_TypeOfValue(cx, OBJECT_TO_JSVAL(obj));
-    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
+    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[obj->typeOf(cx)]);
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, 1)
 

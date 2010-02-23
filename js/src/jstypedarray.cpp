@@ -599,6 +599,12 @@ class TypedArrayTemplate
         return true;
     }
 
+    static JSType
+    obj_typeOf(JSContext *cx, JSObject *obj)
+    {
+        return JSTYPE_OBJECT;
+    }
+
     /*
      * new [Type]Array(length)
      * new [Type]Array(otherTypedArray)
@@ -1186,10 +1192,11 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
     js_CheckAccess,                                                            \
+    _typedArray::obj_typeOf,                                                   \
+    _typedArray::obj_trace,                                                    \
     NULL,                                                                      \
     _typedArray::obj_dropProperty,                                             \
     NULL, NULL, NULL,                                                          \
-    TypedArray::obj_trace,                                                     \
     NULL                                                                       \
 };                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
