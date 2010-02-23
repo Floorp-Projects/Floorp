@@ -186,7 +186,7 @@ menuitem.bookmark-item {
 .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1 {
   -moz-appearance: none;
-  padding: 1px 2px;
+  padding: 1px 4px;
   background: rgba(85%,85%,85%,.1)
               -moz-linear-gradient(top, rgba(255,255,255,.7), rgba(255,255,255,.39) 48%,
                                         rgba(95%,95%,95%,.33) 52%, rgba(95%,95%,95%,.15));
@@ -198,6 +198,13 @@ menuitem.bookmark-item {
                    0 1px 0 rgba(0,0,0,.08);
   color: black;
   text-shadow: 0 0 3px white;
+}
+
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-menubutton-button,
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-menubutton-dropmarker,
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 .toolbarbutton-1 {
@@ -220,6 +227,12 @@ toolbarbutton[type="menu-button"] {
 .toolbarbutton-1,
 toolbarbutton[type="menu-button"] {
   margin: 1px 3px;
+}
+
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1,
+toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .toolbarbutton-menubutton-dropmarker {
@@ -348,6 +361,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask);
   -moz-margin-start: -6px;
   padding-left: 6px;
+  padding-right: 2px;
 }
 
 #back-forward-dropmarker {
