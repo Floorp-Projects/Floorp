@@ -202,19 +202,6 @@ AsyncChannel::SynchronouslyClose()
         mCvar.Wait();
 }
 
-void 
-AsyncChannel::SynchronouslyClose()
-{
-    AssertWorkerThread();
-    mMutex.AssertCurrentThreadOwns();
-
-    mIOLoop->PostTask(
-        FROM_HERE, NewRunnableMethod(this, &AsyncChannel::OnCloseChannel));
-
-    while (ChannelClosed != mChannelState)
-        mCvar.Wait();
-}
-
 bool
 AsyncChannel::Send(Message* msg)
 {

@@ -81,7 +81,7 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_3(nsWindowRoot, mListenerManager, mFocusController,
+NS_IMPL_CYCLE_COLLECTION_3(nsWindowRoot, mListenerManager, mPopupNode,
                            mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
