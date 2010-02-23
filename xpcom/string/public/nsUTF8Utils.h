@@ -134,10 +134,9 @@ public:
           ucs4 = UCS2_REPLACEMENT_CHAR;
         }
       else if ( ucs4 >= 0xD800 &&
-                (ucs4 <= 0xDFFF || ucs4 == 0xFFFE || ucs4 == 0xFFFF ||
-                 ucs4 >= UCS_END))
+                (ucs4 <= 0xDFFF || ucs4 >= UCS_END))
         {
-          // Surrogates and prohibited characters
+          // Surrogates and code points outside the Unicode range.
           ucs4 = UCS2_REPLACEMENT_CHAR;
         }
 
