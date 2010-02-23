@@ -1,5 +1,6 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Robert Sayre <sayrer@gmail.com> (original author)
+ *  Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,42 +36,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-function test_BrokenFile(path, shouldThrow, expectedName) {
-  var didThrow = false;
-  try {
-    Components.utils.import(path);
-  } catch (ex) {
-    var exceptionName = ex.name;
-    print("ex: " + ex + "; name = " + ex.name);
-    didThrow = true;
-  }
 
-  do_check_eq(didThrow, shouldThrow);
-  if (didThrow)
-    do_check_eq(exceptionName, expectedName);
-}
+/**
+ * Ensures that tests can import a module in the same folder through:
+ * Components.utils.import("resource://test/module.jsm");
+ */
 
 function run_test() {
-  test_BrokenFile("resource://test/bogus_exports_type.jsm", true, "Error");
-
-  test_BrokenFile("resource://test/bogus_element_type.jsm", true, "Error");
-
-  test_BrokenFile("resource://test/non_existing.jsm",
-                  true,
-                  "NS_ERROR_FILE_NOT_FOUND");
-
-  test_BrokenFile("chrome://test/content/test.jsm",
-                  true,
-                  "NS_ERROR_ILLEGAL_VALUE");
-
-  // check that we can access modules' global objects even if
-  // EXPORTED_SYMBOLS is missing or ill-formed:
-  do_check_eq(typeof(Components.utils.import("resource://test/bogus_exports_type.jsm",
-                                             null)),
-              "object");
-
-  do_check_eq(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
-                                             null)),
-              "object");
+  do_check_true(typeof(this['MODULE_IMPORTED']) == "undefined");
+  Components.utils.import("resource://test/import_module.jsm");
+  do_check_true(MODULE_IMPORTED);
 }
