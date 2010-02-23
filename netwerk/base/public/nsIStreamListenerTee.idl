@@ -39,12 +39,13 @@
 
 interface nsIOutputStream;
 interface nsIRequestObserver;
+interface nsIEventTarget;
 
 /**
  * As data "flows" into a stream listener tee, it is copied to the output stream
  * and then forwarded to the real listener.
  */
-[scriptable, uuid(8e86c460-2f6b-4595-a6ba-d5444827cd57)]
+[scriptable, uuid(62b27fc1-6e8c-4225-8ad0-b9d44252973a)]
 interface nsIStreamListenerTee : nsIStreamListener
 {
     /** 
@@ -66,4 +67,17 @@ interface nsIStreamListenerTee : nsIStreamListener
     void init(in nsIStreamListener listener,
               in nsIOutputStream sink,
               [optional] in nsIRequestObserver requestObserver);
+
+    /** 
+     * Initalize the tee like above, but with the extra parameter to make it
+     * possible to copy the output asynchronously
+     * @param anEventTarget
+     *    if set, this event-target is used to copy data to the output stream,
+     *    giving an asynchronous tee
+    */
+    void initAsync(in nsIStreamListener listener,
+                   in nsIEventTarget eventTarget,
+                   in nsIOutputStream sink,
+                   [optional] in nsIRequestObserver requestObserver);
+    
 };
