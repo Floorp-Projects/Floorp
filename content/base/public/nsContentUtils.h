@@ -1433,7 +1433,16 @@ public:
 
   static JSContext *GetCurrentJSContext();
 
-                                             
+  /**
+   * Convert ASCII A-Z to a-z.
+   */
+  static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
+
+  /**
+   * Convert ASCII a-z to A-Z.
+   */
+  static void ASCIIToUpper(nsAString& aStr);
+
   static nsIInterfaceRequestor* GetSameOriginChecker();
 
   static nsIThreadJSContextStack* ThreadJSContextStack()
