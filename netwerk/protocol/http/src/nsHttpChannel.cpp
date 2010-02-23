@@ -2383,7 +2383,8 @@ nsHttpChannel::CloseCacheEntry(PRBool doomOnFailure)
     if (!mCacheEntry)
         return;
 
-    LOG(("nsHttpChannel::CloseCacheEntry [this=%x]", this));
+    LOG(("nsHttpChannel::CloseCacheEntry [this=%x] mStatus=%x mCacheAccess=%x",
+            this, mStatus, mCacheAccess));
 
     // If we have begun to create or replace a cache entry, and that cache
     // entry is not complete and not resumable, then it needs to be doomed.
@@ -2659,9 +2660,21 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out, nsnull);
-    if (NS_FAILED(rv)) return rv;
+    nsCacheStoragePolicy policy;
+    rv = mCacheEntry->GetStoragePolicy(&policy);
 
+    if (!gHttpHandler->mCacheWriteThread ||
+         NS_FAILED(rv) ||
+         policy == nsICache::STORE_ON_DISK_AS_FILE) {
+        LOG(("nsHttpChannel::InstallCacheListener sync tee %p\n", tee.get()));
+        rv = tee->Init(mListener, out, nsnull);
+    } else {
+        LOG(("nsHttpChannel::InstallCacheListener async tee %p\n",
+                tee.get()));
+        rv = tee->InitAsync(mListener, gHttpHandler->mCacheWriteThread, out, nsnull);
+    }
+   
+    if (NS_FAILED(rv)) return rv;
     mListener = tee;
     return NS_OK;
 }
