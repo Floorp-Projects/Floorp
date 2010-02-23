@@ -78,6 +78,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsIContentSecurityPolicy.h"
 
 static NS_DEFINE_CID(kJSURICID, NS_JSURI_CID);
 
@@ -190,6 +191,24 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
+    nsresult rv;
+
+    // CSP check: javascript: URIs disabled unless "inline" scripts are
+    // allowed.
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = principal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if(csp) {
+      PRBool allowsInline;
+      // this call will send violation reports as warranted (and return true if
+      // reportOnly is set).
+      rv = csp->GetAllowsInlineScript(&allowsInline);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // TODO: log that we're blocking this javascript: uri
+      if (!allowsInline)
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
 
     // Get the global object we should be running on.
     nsIScriptGlobalObject* global = GetGlobalObject(aChannel);
@@ -213,7 +232,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     JSObject *globalJSObject = innerGlobal->GetGlobalJSObject();
 
-    nsresult rv;
     nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
