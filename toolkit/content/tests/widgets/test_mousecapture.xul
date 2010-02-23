@@ -17,6 +17,7 @@ SimpleTest.waitForExplicitFinish();
 var captureRetargetMode = false;
 var cachedMouseDown = null;
 var previousWidth = 0, originalWidth = 0;
+var loadInWindow = false;
 
 function splitterCallback(adjustment)
 {
@@ -60,10 +61,6 @@ function selectionScrollCheck()
 {
   var element = otherWindow.document.documentElement;
 
-  disableNonTestMouseEvents(true);
-  synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
-  synthesizeMouse(element, 4, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
-
   var count = 0;
   function selectionScrollDone() {
     // wait for 6 scroll events to occur
@@ -80,10 +77,27 @@ function selectionScrollCheck()
     synthesizeMouse(element, 4, otherWindow.innerHeight + 25, { type: "mouseup" }, otherWindow);
     disableNonTestMouseEvents(false);
     otherWindow.close();
-    SimpleTest.finish();
+
+    if (loadInWindow) {
+      SimpleTest.finish();
+    }
+    else {
+      // now try again, but open the page in a new window
+      loadInWindow = true;
+      synthesizeMouse(document.getElementById("custom"), 2, 2, { type: "mousedown" });
+
+      // check to ensure that selection dragging scrolls the right scrollable area
+      otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
+      SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
+    }
   }
 
-  otherWindow.addEventListener("scroll", selectionScrollDone, false);
+  SimpleTest.executeSoon(function () {
+    disableNonTestMouseEvents(true);
+    synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
+    synthesizeMouse(element, 4, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
+    otherWindow.addEventListener("scroll", selectionScrollDone, false);
+  });
 }
 
 function runTests()
@@ -167,7 +181,10 @@ function runTests()
   is(select.selectedIndex, 9, "scroll select");
   synthesizeMouse(document.getElementById("select"), 2, 2, { type: "mouseup" });
 
-  // check to ensure that selection dragging scrolls the right scrollable area
+  synthesizeMouse(custom, 2, 2, { type: "mousedown" });
+
+  // check to ensure that selection dragging scrolls the right scrollable area.
+  // This should open the page in a new tab.
   otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
   SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
 }

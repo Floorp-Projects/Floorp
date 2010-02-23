@@ -26,6 +26,7 @@ function runTest()
   var text1 = doc.getElementById("text1");
   var text2 = doc.getElementById("text2");
   var text3 = doc.getElementById("text3");
+  var text4 = doc.getElementById("text4");
 
   var charWidth = text1.getSubStringLength(0, 1);
 
@@ -160,6 +161,14 @@ function runTest()
   // character 25 should be beyond the end of the path
   // Not sure what should happen here. Currently we throw, which seems wrong
   // is(text3.getStartPositionOfChar(25).x, 0, "text3 char 25 start offset");
+
+  // Display:none string
+
+  is(text4.getNumberOfChars(), 0, "text4 length");
+  is(text4.getComputedTextLength(), 0, "text4 measured length");
+  is(text4.getSubStringLength(0, 3), 0, "text4 substring length");
+  p = text1.getStartPositionOfChar(0);
+  is(text4.getCharNumAtPosition(p), -1, "text4 shouldn't find rendered char");
 }
 
 function runTests() {

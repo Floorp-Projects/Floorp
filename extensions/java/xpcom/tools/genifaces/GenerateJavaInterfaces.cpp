@@ -367,7 +367,7 @@ public:
     searchTerm.Append(NS_LITERAL_CSTRING("interface+"));
     searchTerm.Append(aIfaceName);
     // LXR limits to 29 chars
-    rv = out->Write(searchTerm.get(), PR_MIN(29, searchTerm.Length()), &count);
+    rv = out->Write(searchTerm.get(), NS_MIN(29U, searchTerm.Length()), &count);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = out->Write(kHeader2, sizeof(kHeader2) - 1, &count);

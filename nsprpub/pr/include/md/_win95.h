@@ -444,6 +444,7 @@ extern PROsfd _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                _PR_MD_EARLY_INIT
 #define _MD_FINAL_INIT()
+#define _MD_EARLY_CLEANUP()
 #define _MD_INIT_CPUS()
 #define _MD_INIT_RUNNING_CPU(cpu)
 

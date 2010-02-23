@@ -217,6 +217,7 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
 
   float f;
   angle->GetValue(&f);
+  NS_ENSURE_FINITE(f, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
   mAngleAttributes[ORIENT].SetBaseValue(f, this);
 
   return NS_OK;
@@ -379,19 +380,19 @@ nsSVGMarkerElement::GetPreserveAspectRatio()
 
 gfxMatrix
 nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
-                                       float aX, float aY, float aAngle)
+                                       float aX, float aY, float aAutoAngle)
 {
   float scale = 1.0;
   if (mEnumAttributes[MARKERUNITS].GetAnimValue(this) ==
       SVG_MARKERUNITS_STROKEWIDTH)
     scale = aStrokeWidth;
 
-  if (mOrientType.GetAnimValue() != SVG_MARKER_ORIENT_AUTO) {
-    aAngle = mAngleAttributes[ORIENT].GetAnimValue();
-  }
+  float angle = mOrientType.GetAnimValue() == SVG_MARKER_ORIENT_AUTO ?
+                aAutoAngle :
+                mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0;
 
-  return gfxMatrix(cos(aAngle) * scale,   sin(aAngle) * scale,
-                   -sin(aAngle) * scale,  cos(aAngle) * scale,
+  return gfxMatrix(cos(angle) * scale,   sin(angle) * scale,
+                   -sin(angle) * scale,  cos(angle) * scale,
                    aX,                    aY);
 }
 
@@ -404,7 +405,7 @@ nsSVGMarkerElement::GetViewBoxTransform()
     float viewportHeight = 
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
    
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(); 
+    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(this); 
 
     if (viewbox.width <= 0.0f || viewbox.height <= 0.0f) {
       return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // invalid - don't paint element

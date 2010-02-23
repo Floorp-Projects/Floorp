@@ -90,6 +90,7 @@
 #include "nsILocalStore.h"
 #include "nsXPIDLString.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULDocument.h"
 #include "nsXULElement.h"
@@ -101,7 +102,6 @@
 #include "nsMimeTypes.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsIFocusController.h"
 #include "nsContentList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -1553,28 +1553,29 @@ nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 NS_IMETHODIMP
 nsXULDocument::TrustedGetPopupNode(nsIDOMNode** aNode)
 {
-    // Get the focus controller.
-    nsCOMPtr<nsIFocusController> focusController;
-    GetFocusController(getter_AddRefs(focusController));
-    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+    *aNode = nsnull;
 
-    // Get the popup node.
-    return focusController->GetPopupNode(aNode); // addref happens here
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin)
+        rootWin->GetPopupNode(aNode); // addref happens here
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 {
-    nsresult rv;
+    if (aNode) {
+        // only allow real node objects
+        nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+        NS_ENSURE_ARG(node);
+    }
 
-    // get focus controller
-    nsCOMPtr<nsIFocusController> focusController;
-    GetFocusController(getter_AddRefs(focusController));
-    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
-    // set popup node
-    rv = focusController->SetPopupNode(aNode);
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin)
+        rootWin->SetPopupNode(aNode); // addref happens here
 
-    return rv;
+    return NS_OK;
 }
 
 // Returns the rangeOffset element from the XUL Popup Manager. This is for
@@ -2034,29 +2035,7 @@ nsXULDocument::StartLayout(void)
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
-        // Trigger a refresh before the call to InitialReflow(),
-        // because the view manager's UpdateView() function is
-        // dropping dirty rects if refresh is disabled rather than
-        // accumulating them until refresh is enabled and then
-        // triggering a repaint...
-        // XXXbz Is that still the case?
         nsresult rv = NS_OK;
-        nsIViewManager* vm = shell->GetViewManager();
-        if (vm) {
-            nsCOMPtr<nsIContentViewer> contentViewer;
-            rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-            if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
-                PRBool enabled;
-                contentViewer->GetEnableRendering(&enabled);
-                if (enabled) {
-                    vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-                }
-            }
-        }
-
-        // Don't try to call GetVisibleArea earlier than this --- the EnableRefresh call
-        // above can flush reflows, which can cause a parent document to be flushed,
-        // calling ResizeReflow on our document which does SetVisibleArea.
         nsRect r = cx->GetVisibleArea();
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -4632,15 +4611,13 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
     return rv;
 }
 
-void
-nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
+already_AddRefed<nsPIWindowRoot>
+nsXULDocument::GetWindowRoot()
 {
     nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
-    nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(ir);
-    if (windowPrivate) {
-        NS_IF_ADDREF(*aFocusController = windowPrivate->GetRootFocusController());
-    } else
-        *aFocusController = nsnull;
+    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(ir));
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(window));
+    return piWin ? piWin->GetTopWindowRoot() : nsnull;
 }
 
 PRBool

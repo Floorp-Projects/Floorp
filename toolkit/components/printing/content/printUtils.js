@@ -235,6 +235,10 @@ var PrintUtils = {
       // causing an exception to be thrown which we catch here.
       // Unfortunately this will also consume helpful failures, so add a
       // dump(e); // if you need to debug
+
+      // Need to call enter and exit so that UI gets back to normal.
+      this._callback.onEnter();
+      this._callback.onExit();
       return;
     }
 

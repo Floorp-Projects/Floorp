@@ -140,7 +140,7 @@ protected:
   nsresult ScrollImageTo(PRInt32 aX, PRInt32 aY, PRBool restoreImage);
 
   float GetRatio() {
-    return PR_MIN((float)mVisibleWidth / mImageWidth,
+    return NS_MIN((float)mVisibleWidth / mImageWidth,
                   (float)mVisibleHeight / mImageHeight);
   }
 
@@ -473,8 +473,8 @@ nsImageDocument::ShrinkToFit()
   // Keep image content alive while changing the attributes.
   nsCOMPtr<nsIContent> imageContent = mImageContent;
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageContent);
-  image->SetWidth(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
-  image->SetHeight(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
+  image->SetWidth(NS_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
+  image->SetHeight(NS_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
   
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.

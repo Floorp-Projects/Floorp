@@ -1216,9 +1216,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   else
     gBrowser.selectedBrowser.focus();
 
-  if (gURLBar)
-    gURLBar.emptyText = gURLBarEmptyText.value;
-
   gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
   gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
 
@@ -1231,8 +1228,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
                            gAutoHideTabbarPrefListener, false);
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
-
-  gPrefService.addObserver(gURLBarEmptyText.domain, gURLBarEmptyText, false);
 
   var homeButton = document.getElementById("home-button");
   gHomeButton.updateTooltip(homeButton);
@@ -1424,7 +1419,6 @@ function BrowserShutdown()
     gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
                                 gAutoHideTabbarPrefListener);
     gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
-    gPrefService.removeObserver(gURLBarEmptyText.domain, gURLBarEmptyText);
   } catch (ex) {
     Components.utils.reportError(ex);
   }
@@ -1492,6 +1486,23 @@ function nonBrowserWindowStartup()
     // also hide the window-list separator
     element = document.getElementById("sep-window-list");
     element.setAttribute("hidden", "true");
+
+    // Setup the dock menu.
+    let dockMenuElement = document.getElementById("menu_mac_dockmenu");
+    if (dockMenuElement != null) {
+      let nativeMenu = Cc["@mozilla.org/widget/standalonenativemenu;1"]
+                       .createInstance(Ci.nsIStandaloneNativeMenu);
+
+      try {
+        nativeMenu.init(dockMenuElement);
+
+        let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+                          .getService(Ci.nsIMacDockSupport);
+        dockSupport.dockMenu = nativeMenu;
+      }
+      catch (e) {
+      }
+    }
   }
 
 
@@ -3391,8 +3402,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
-    if (gURLBar)
-      gURLBar.emptyText = gURLBarEmptyText.value;
 
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gHomeButton.updateTooltip();
@@ -3404,14 +3413,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
       backForwardDropmarker.disabled =
         document.getElementById('Browser:Back').hasAttribute('disabled') &&
         document.getElementById('Browser:Forward').hasAttribute('disabled');
-
-    // support downgrading to Firefox 2.0
-    var navBar = document.getElementById("nav-bar");
-    navBar.setAttribute("currentset",
-                        navBar.getAttribute("currentset")
-                              .replace("unified-back-forward-button",
-                                "unified-back-forward-button,back-button,forward-button"));
-    document.persist(navBar.id, "currentset");
 
 #ifndef XP_MACOSX
     updateEditUIVisibility();
@@ -6681,6 +6682,10 @@ var gIdentityHandler = {
     return this._overrideService = Cc["@mozilla.org/security/certoverride;1"]
                                      .getService(Ci.nsICertOverrideService);
   },
+  get _identityIconCountryLabel () {
+    delete this._identityIconCountryLabel;
+    return this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
+  },
 
   /**
    * Rebuild cache of the elements that may or may not exist depending
@@ -6689,8 +6694,10 @@ var gIdentityHandler = {
   _cacheElements : function() {
     delete this._identityBox;
     delete this._identityIconLabel;
+    delete this._identityIconCountryLabel;
     this._identityBox = document.getElementById("identity-box");
     this._identityIconLabel = document.getElementById("identity-icon-label");
+    this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
   },
 
   /**
@@ -6815,6 +6822,8 @@ var gIdentityHandler = {
       // let's just use that. Check the pref to determine how much of the verified
       // hostname to show
       var icon_label = "";
+      var icon_country_label = "";
+      var icon_labels_dir = "ltr";
       switch (gPrefService.getIntPref("browser.identity.ssl_domain_display")) {
         case 2 : // Show full domain
           icon_label = this._lastLocation.hostname;
@@ -6845,23 +6854,37 @@ var gIdentityHandler = {
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
-      iData = this.getIdentityData();  
+      iData = this.getIdentityData();
       tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
                                                     [iData.caOrg]);
+      icon_label = iData.subjectOrg;
       if (iData.country)
-        icon_label = gNavigatorBundle.getFormattedString("identity.identified.title_with_country",
-                                                         [iData.subjectOrg, iData.country]);
-      else
-        icon_label = iData.subjectOrg;
+        icon_country_label = "(" + iData.country + ")";
+      // If the organization name starts with an RTL character, then
+      // swap the positions of the organization and country code labels.
+      // The Unicode ranges reflect the definition of the UCS2_CHAR_IS_BIDI
+      // macro in intl/unicharutil/util/nsBidiUtils.h. When bug 218823 gets
+      // fixed, this test should be replaced by one adhering to the
+      // Unicode Bidirectional Algorithm proper (at the paragraph level).
+      icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
+                        "rtl" : "ltr";
     }
     else {
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
       icon_label = "";
+      icon_country_label = "";
+      icon_labels_dir = "ltr";
     }
     
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
     this._identityIconLabel.value = icon_label;
+    this._identityIconCountryLabel.value = icon_country_label;
+    // Set cropping and direction
+    this._identityIconLabel.crop = icon_country_label ? "end" : "center";
+    this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
+    // Hide completely if the organization label is empty
+    this._identityIconLabel.parentNode.hidden = icon_label ? false : true;
   },
   
   /**
@@ -7338,40 +7361,6 @@ let gPrivateBrowsingUI = {
 
   get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
-  }
-};
-
-let gURLBarEmptyText = {
-  domain: "browser.urlbar.",
-
-  observe: function UBET_observe(aSubject, aTopic, aPrefName) {
-    if (aTopic == "nsPref:changed") {
-      switch (aPrefName) {
-      case "browser.urlbar.autocomplete.enabled":
-      case "browser.urlbar.default.behavior":
-        gURLBar.emptyText = this.value;
-        break;
-      }
-    }
-  },
-
-  get value UBET_get_value() {
-    let type = "none";
-    if (gPrefService.getBoolPref("browser.urlbar.autocomplete.enabled")) {
-      // Bottom 2 bits of default.behavior specify history/bookmark
-      switch (gPrefService.getIntPref("browser.urlbar.default.behavior") & 3) {
-      case 0:
-        type = "bookmarkhistory";
-        break;
-      case 1:
-        type = "history";
-        break;
-      case 2:
-        type = "bookmark";
-        break;
-      }
-    }
-    return gURLBar.getAttribute(type + "emptytext");
   }
 };
 

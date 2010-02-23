@@ -72,6 +72,15 @@
 #include <direct.h>
 #endif
 
+#ifdef WINCE
+#include <windows.h>
+char *getcwd(char *buf, size_t size)
+{
+    wchar_t wpath[MAX_PATH];
+    _wgetcwd(wpath, MAX_PATH);
+    WideCharToMultiByte(CP_ACP, 0, wpath, -1, buf, size, 0, 0);
+}
+#endif
 
 #define BASE_PORT 9867
 

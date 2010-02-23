@@ -55,7 +55,7 @@ DIRS =  util freebl $(SQLITE_SRCDIR) softoken \
 	$(ZLIB_SRCDIR) ssl \
 	pkcs12 pkcs7 smime \
 	crmf jar \
-	ckfw      \
+	ckfw $(SYSINIT_SRCDIR) \
 	$(NULL)
 
 #  fortcrypt  is no longer built

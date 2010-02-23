@@ -45,6 +45,7 @@
 <binding id="pluginProblem" inheritstyle="false">
     <resources>
         <stylesheet src="chrome://mozapps/skin/plugins/pluginProblem.css"/>
+        <stylesheet src="chrome://mozapps/content/plugins/pluginProblemContent.css"/>
     </resources>
 
     <content>

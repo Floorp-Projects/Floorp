@@ -247,13 +247,16 @@ public:
   // of the above defined methods to select the document's application
   // cache, let it be associated with the document and eventually
   // schedule the cache update process.
+  void ProcessOfflineManifest(const nsAString& aManifestSpec);
+
+  // Extracts the manifest attribute from the element if it is the root 
+  // element and calls the above method.
   void ProcessOfflineManifest(nsIContent *aElement);
 
 protected:
   // Tries to scroll to the URI's named anchor. Once we've successfully
   // done that, further calls to this method will be ignored.
   void ScrollToRef();
-  nsresult RefreshIfEnabled(nsIViewManager* vm);
 
   // Start layout.  If aIgnorePendingSheets is true, this will happen even if
   // we still have stylesheet loads pending.  Otherwise, we'll wait until the

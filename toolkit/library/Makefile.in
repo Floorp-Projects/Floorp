@@ -257,7 +257,7 @@ EXTRA_DSO_LDOPTS += -ljprof
 endif
 
 ifdef MOZ_ENABLE_QT
-EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk

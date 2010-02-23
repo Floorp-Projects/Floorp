@@ -95,7 +95,6 @@ CSRCS = \
 	secoid.c \
 	sectime.c \
 	secport.c \
-	secinit.c \
 	templates.c \
 	utf8.c \
 	$(NULL)

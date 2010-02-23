@@ -548,7 +548,7 @@ nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
 
   // The threshold is when the distance between the two positions exceeds the
   // worse (larger value) of the two accuracies.
-  double max_accuracy = PR_MAX(oldAccuracy, newAccuracy);
+  double max_accuracy = NS_MAX(oldAccuracy, newAccuracy);
   if (delta > max_accuracy)
     return PR_TRUE;
 

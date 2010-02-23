@@ -2017,7 +2017,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
         inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
       }
       if (windowless || needXEmbed) {
+#ifdef MOZ_WIDGET_GTK2
         (*(Display **)result) = GDK_DISPLAY();
+#else
+        (*(Display **)result) = QX11Info::display();
+#endif
         return NPERR_NO_ERROR;
       }
     }
@@ -2435,7 +2439,7 @@ _pushpopupsenabledstate(NPP npp, NPBool enabled)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_pushpopupsenabledstate called from the wrong thread\n"));
     return;
   }
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
+  nsNPAPIPluginInstance *inst = npp ? (nsNPAPIPluginInstance *)npp->ndata : NULL;
   if (!inst)
     return;
 
@@ -2449,7 +2453,7 @@ _poppopupsenabledstate(NPP npp)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_poppopupsenabledstate called from the wrong thread\n"));
     return;
   }
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
+  nsNPAPIPluginInstance *inst = npp ? (nsNPAPIPluginInstance *)npp->ndata : NULL;
   if (!inst)
     return;
 

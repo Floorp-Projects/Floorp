@@ -160,6 +160,7 @@
 #include "nsIEditingSession.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
 #include "nsICacheVisitor.h"
@@ -179,7 +180,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 
-#include "nsIFocusController.h"
 #include "nsFocusManager.h"
 
 #include "nsITextToSubURI.h"
@@ -10970,18 +10970,16 @@ nsDocShell::GetControllerForCommand(const char * inCommand,
 {
   NS_ENSURE_ARG_POINTER(outController);
   *outController = nsnull;
-  
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
-  if (window) {
-    nsIFocusController *focusController = window->GetRootFocusController();
-    if (focusController)
-      rv = focusController->GetControllerForCommand (window, inCommand, outController);
-  } // if window
 
-  return rv;
-  
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mScriptGlobal));
+  if (window) {
+      nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
+      if (root) {
+          return root->GetControllerForCommand(inCommand, outController);
+      }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -11415,20 +11413,6 @@ nsDocShell::StopDocumentLoad(void)
   {
     Stop(nsIWebNavigation::STOP_ALL);
     return NS_OK;
-  }
-  //return failer if this request is not accepted due to mCharsetReloadState
-  return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetRendering(PRBool aRender)
-{
-  if(eCharsetReloadRequested != mCharsetReloadState) 
-  {
-    if (mContentViewer) {
-       mContentViewer->SetEnableRendering(aRender);
-       return NS_OK;
-    }
   }
   //return failer if this request is not accepted due to mCharsetReloadState
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;

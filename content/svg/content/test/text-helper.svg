@@ -13,5 +13,7 @@ text { font: 20px monospace; }
 
   <path id="MyPath" d="M 5 250 L 105 250 L 105 253 L 5 253 z" stroke="red" fill="none"/>
   <text id="text3"><textPath xlink:href="#MyPath">abcdefghijklmnopqrstuvwxyz</textPath></text>
+
+  <text display="none" id="text4" x="5" y="25">abc</text>
 </g>
 </svg>

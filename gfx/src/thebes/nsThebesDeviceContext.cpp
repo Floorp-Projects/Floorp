@@ -908,13 +908,6 @@ nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-    aPixel = aColor;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceSurfaceDimensions(nscoord &aWidth, nscoord &aHeight)
 {
     if (mPrintingSurface) {

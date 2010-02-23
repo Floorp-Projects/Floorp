@@ -2253,8 +2253,8 @@ moz_gtk_get_tab_thickness(void)
 
 static gint
 moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                  GdkRectangle* cliprect, GtkTabFlags flags,
-                  GtkTextDirection direction)
+                  GdkRectangle* cliprect, GtkWidgetState* state,
+                  GtkTabFlags flags, GtkTextDirection direction)
 {
     /* When the tab isn't selected, we just draw a notebook extension.
      * When it is selected, we overwrite the adjacent border of the tabpanel
@@ -2262,11 +2262,13 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
      * tab appear physically attached to the tabpanel; see details below. */
 
     GtkStyle* style;
+    GdkRectangle focusRect;
 
     ensure_tab_widget();
     gtk_widget_set_direction(gTabWidget, direction);
 
     style = gTabWidget->style;
+    focusRect = *rect;
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
     if ((flags & MOZ_GTK_TAB_SELECTED) == 0) {
@@ -2338,6 +2340,8 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
             cliprect->y -= gap_height - gap_voffset;
 
             /* Draw the tab */
+            focusRect.y += gap_voffset;
+            focusRect.height -= gap_voffset;
             gtk_paint_extension(style, drawable, GTK_STATE_NORMAL,
                                 GTK_SHADOW_OUT, cliprect, gTabWidget, "tab",
                                 rect->x, rect->y + gap_voffset, rect->width,
@@ -2363,6 +2367,7 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
             cliprect->height += gap_height - gap_voffset;
 
             /* Draw the tab */
+            focusRect.height -= gap_voffset;
             gtk_paint_extension(style, drawable, GTK_STATE_NORMAL,
                                 GTK_SHADOW_OUT, cliprect, gTabWidget, "tab",
                                 rect->x, rect->y, rect->width,
@@ -2385,6 +2390,22 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
                               gap_loffset, rect->width);
         }
 
+    }
+
+    if (state->focused) {
+      /* Paint the focus ring */
+      focusRect.x += XTHICKNESS(style);
+      focusRect.width -= XTHICKNESS(style) * 2;
+      focusRect.y += YTHICKNESS(style);
+      focusRect.height -= YTHICKNESS(style) * 2;
+
+      gtk_paint_focus(style, drawable,
+                      /* Believe it or not, NORMAL means a selected tab and
+                         ACTIVE means an unselected tab. */
+                      (flags & MOZ_GTK_TAB_SELECTED) ? GTK_STATE_NORMAL
+                                                     : GTK_STATE_ACTIVE,
+                      cliprect, gTabWidget, "tab",
+                      focusRect.x, focusRect.y, focusRect.width, focusRect.height);
     }
 
     return MOZ_GTK_SUCCESS;
@@ -3283,7 +3304,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                             direction);
         break;
     case MOZ_GTK_TAB:
-        return moz_gtk_tab_paint(drawable, rect, cliprect,
+        return moz_gtk_tab_paint(drawable, rect, cliprect, state,
                                  (GtkTabFlags) flags, direction);
         break;
     case MOZ_GTK_TABPANELS:

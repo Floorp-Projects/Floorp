@@ -268,7 +268,7 @@ nsControllerCommandGroup::AddCommandToGroup(const char * aCommand, const char *a
     mGroupsHash.Put(&groupKey, (void *)commandList);
   }
   // add the command to the list. Note that we're not checking for duplicates here
-  char*  commandString = nsCRT::strdup(aCommand);     // we store allocated PRUnichar* in the array
+  char* commandString = NS_strdup(aCommand); // we store allocated PRUnichar* in the array
   if (!commandString) return NS_ERROR_OUT_OF_MEMORY;
   
   PRBool      appended = commandList->AppendElement(commandString) != nsnull;

@@ -6477,7 +6477,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   if (mParentDocument && IsSafeToFlush()) {
     mozFlushType parentType = aType;
     if (aType >= Flush_Style)
-      parentType = PR_MAX(Flush_Layout, aType);
+      parentType = NS_MAX(Flush_Layout, aType);
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
@@ -7100,8 +7100,6 @@ nsDocument::Destroy()
   }
 
   mLayoutHistoryState = nsnull;
-
-  nsContentList::OnDocumentDestroy(this);
 
   // Shut down our external resource map.  We might not need this for
   // leak-fixing if we fix DocumentViewerImpl to do cycle-collection, but

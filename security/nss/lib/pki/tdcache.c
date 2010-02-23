@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.48 $ $Date: 2008/11/19 16:08:05 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.49 $ $Date: 2010/02/10 02:04:32 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -499,7 +499,7 @@ nssTrustDomain_UpdateCachedTokenCerts (
     PRUint32 count;
     certList = nssList_Create(NULL, PR_FALSE);
     if (!certList) return PR_FAILURE;
-    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    (void)nssTrustDomain_GetCertsFromCache(td, certList);
     count = nssList_Count(certList);
     if (count > 0) {
 	cached = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);

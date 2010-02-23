@@ -98,7 +98,7 @@ public:
 private:
   // stuff needed for callback
   nsSVGPathGeometryFrame *mMarkedFrame;
-  float mStrokeWidth, mX, mY, mAngle;
+  float mStrokeWidth, mX, mY, mAutoAngle;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();

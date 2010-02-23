@@ -1589,17 +1589,23 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       return rv;
   #endif
 
+    const char *dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
+    if (dbdir_override && strlen(dbdir_override)) {
+      profileStr = dbdir_override;
+    }
+    else {
   #if defined(XP_WIN)
-    // Native path will drop Unicode characters that cannot be mapped to system's
-    // codepage, using short (canonical) path as workaround.
-    nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
-    if (profilePathWin)
-      rv = profilePathWin->GetNativeCanonicalPath(profileStr);
+      // Native path will drop Unicode characters that cannot be mapped to system's
+      // codepage, using short (canonical) path as workaround.
+      nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
+      if (profilePathWin)
+        rv = profilePathWin->GetNativeCanonicalPath(profileStr);
   #else
-    rv = profilePath->GetNativePath(profileStr);
+      rv = profilePath->GetNativePath(profileStr);
   #endif
-    if (NS_FAILED(rv)) 
-      return rv;
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
 
     hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare,
       certHashtable_valueCompare, 0, 0 );

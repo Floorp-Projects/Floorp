@@ -866,13 +866,8 @@ toolbar[iconsize="small"] #fullscreen-button {
   background-color: rgba(0, 0, 0, .1);
 }
 
-#identity-icon-label {
+#identity-icon-labels {
   padding: 0 2px;
-  margin: 0;
-}
-
-#identity-icon-label[value=""] {
-  display: none;
 }
 
 #identity-box.verifiedDomain {
@@ -1194,15 +1189,6 @@ statusbarpanel#statusbar-display {
 
 #context_closeTab {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
-/* tabbrowser-tab focus ring */
-.tabbrowser-tab > .tab-text {
-  border: 1px dotted transparent;
-}
-
-.tabbrowser-tab:focus > .tab-text {
-  border: 1px dotted -moz-DialogText;
 }
 
 /* Tab drag and drop */

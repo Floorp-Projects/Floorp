@@ -82,6 +82,16 @@ static PRBool test_basic_array(ElementType *data,
     return PR_FALSE;
   // ensure sort results in ascending order
   ary.Sort();
+  PRUint32 j = 0, k;
+  if (ary.GreatestIndexLtEq(extra, k))
+    return PR_FALSE;
+  for (i = 0; i < ary.Length(); ++i) {
+    if (!ary.GreatestIndexLtEq(ary[i], k))
+      return PR_FALSE;
+    if (k < j)
+      return PR_FALSE;
+    j = k;
+  }
   for (i = ary.Length(); --i; ) {
     if (ary[i] < ary[i - 1])
       return PR_FALSE;

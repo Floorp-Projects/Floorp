@@ -590,7 +590,7 @@ CERT_CompareRDN(CERTRDN *a, CERTRDN *b)
     if (ac > bc) return SECGreaterThan;
 
     while (NULL != (aava = *aavas++)) {
-	for (bavas = b->avas; bava = *bavas++; ) {
+	for (bavas = b->avas; NULL != (bava = *bavas++); ) {
 	    rv = SECITEM_CompareItem(&aava->type, &bava->type);
 	    if (SECEqual == rv) {
 		rv = CERT_CompareAVA(aava, bava);

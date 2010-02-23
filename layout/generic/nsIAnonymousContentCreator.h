@@ -72,6 +72,12 @@ public:
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements)=0;
 
   /**
+   * Appends "native" anonymous children created by CreateAnonymousContent()
+   * to the given content list.
+   */
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements) = 0;
+
+  /**
    * Implementations can override this method to create special frames for the
    * anonymous content returned from CreateAnonymousContent.
    * By default this method returns nsnull, which means the default frame
