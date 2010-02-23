@@ -63,13 +63,30 @@ LoginManagerPromptFactory.prototype = {
     classID : Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
+    _debug : false,
     _asyncPrompts : {},
     _asyncPromptInProgress : false,
+
+    __logService : null, // Console logging service, used for debugging.
+    get _logService() {
+        if (!this.__logService)
+            this.__logService = Cc["@mozilla.org/consoleservice;1"].
+                                getService(Ci.nsIConsoleService);
+        return this.__logService;
+    },
+
+    __threadManager: null,
+    get _threadManager() {
+        if (!this.__threadManager)
+            this.__threadManager = Cc["@mozilla.org/thread-manager;1"].
+                                   getService(Ci.nsIThreadManager);
+        return this.__threadManager;
+    },
 
     observe : function (subject, topic, data) {
         if (topic == "quit-application-granted") {
             var asyncPrompts = this._asyncPrompts;
-            this._asyncPrompts = {};
+            this.__proto__._asyncPrompts = {};
             for each (var asyncPrompt in asyncPrompts) {
                 for each (var consumer in asyncPrompt.consumers) {
                     if (consumer.callback) {
@@ -84,9 +101,79 @@ LoginManagerPromptFactory.prototype = {
     },
 
     getPrompt : function (aWindow, aIID) {
+        var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefService).getBranch("signon.");
+        this._debug = prefBranch.getBoolPref("debug");
+
         var prompt = new LoginManagerPrompter().QueryInterface(aIID);
         prompt.init(aWindow, this);
         return prompt;
+    },
+
+    _doAsyncPrompt : function() {
+        if (this._asyncPromptInProgress) {
+            this.log("_doAsyncPrompt bypassed, already in progress");
+            return;
+        }
+
+        // Find the first prompt key we have in the queue
+        var hashKey = null;
+        for (hashKey in this._asyncPrompts)
+            break;
+
+        if (!hashKey) {
+            this.log("_doAsyncPrompt:run bypassed, no prompts in the queue");
+            return;
+        }
+
+        this._asyncPromptInProgress = true;
+        var self = this;
+
+        var runnable = {
+            run : function() {
+                var ok = false;
+                var prompt = self._asyncPrompts[hashKey];
+                try {
+                    self.log("_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'");
+                    ok = prompt.prompter.promptAuth(prompt.channel,
+                                                    prompt.level,
+                                                    prompt.authInfo);
+                } catch (e) {
+                    Components.utils.reportError("LoginManagerPrompter: " +
+                        "_doAsyncPrompt:run: " + e + "\n");
+                }
+
+                delete self._asyncPrompts[hashKey];
+                self._asyncPromptInProgress = false;
+
+                for each (var consumer in prompt.consumers) {
+                    if (!consumer.callback)
+                        // Not having a callback means that consumer didn't provide it
+                        // or canceled the notification
+                        continue;
+
+                    self.log("Calling back to " + consumer.callback + " ok=" + ok);
+                    try {
+                        if (ok)
+                            consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
+                        else
+                            consumer.callback.onAuthCancelled(consumer.context, true);
+                    } catch (e) { /* Throw away exceptions caused by callback */ }
+                }
+                self._doAsyncPrompt();
+            }
+        }
+
+        this._threadManager.mainThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
+        this.log("_doAsyncPrompt:run dispatched");
+    },
+
+    log : function (message) {
+        if (!this._debug)
+            return;
+
+        dump("Pwmgr PromptFactory: " + message + "\n");
+        this._logService.logStringMessage("Pwmgr PrompFactory: " + message);
     }
 }; // end of LoginManagerPromptFactory implementation
 
@@ -188,14 +275,6 @@ LoginManagerPrompter.prototype = {
             this.__ioService = Cc["@mozilla.org/network/io-service;1"].
                                getService(Ci.nsIIOService);
         return this.__ioService;
-    },
-
-    __threadManager: null,
-    get _threadManager() {
-        if (!this.__threadManager)
-            this.__threadManager = Cc["@mozilla.org/thread-manager;1"].
-                                   getService(Ci.nsIThreadManager);        
-        return this.__threadManager;
     },
 
 
@@ -620,11 +699,12 @@ LoginManagerPrompter.prototype = {
                 consumers: [cancelable],
                 channel: aChannel,
                 authInfo: aAuthInfo,
-                level: aLevel
+                level: aLevel,
+                prompter: this
             }
 
             this._factory._asyncPrompts[hashKey] = asyncPrompt;
-            this._doAsyncPrompt();
+            this._factory._doAsyncPrompt();
         }
         catch (e) {
             Components.utils.reportError("LoginManagerPrompter: " +
@@ -637,66 +717,6 @@ LoginManagerPrompter.prototype = {
         return cancelable;
     },
 
-    _doAsyncPrompt : function() {
-        if (this._factory._asyncPromptInProgress) {
-            this.log("_doAsyncPrompt bypassed, already in progress");
-            return;
-        }
-
-        // Find the first prompt key we have in the queue
-        var hashKey = null;
-        for (hashKey in this._factory._asyncPrompts)
-            break;
-
-        if (!hashKey) {
-            this.log("_doAsyncPrompt:run bypassed, no prompts in the queue");
-            return;
-        }
-
-        this._factory._asyncPromptInProgress = true;
-
-        var self = this;
-        var runnable = {
-            run : function() {
-                var ok = false;
-                var prompt = self._factory._asyncPrompts[hashKey];
-                try {
-                    self.log("_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'");
-                    ok = self.promptAuth(
-                        prompt.channel,
-                        prompt.level,
-                        prompt.authInfo
-                    );
-                } catch (e) {
-                    Components.utils.reportError("LoginManagerPrompter: " +
-                        "_doAsyncPrompt:run: " + e + "\n");
-                }
-
-                delete self._factory._asyncPrompts[hashKey];
-                self._factory._asyncPromptInProgress = false;
-
-                for each (var consumer in prompt.consumers) {
-                    if (!consumer.callback)
-                        // Not having a callback means that consumer didn't provide it
-                        // or canceled the notification
-                        continue;
-
-                    self.log("Calling back to " + consumer.callback + " ok=" + ok);
-                    try {
-                        if (ok)
-                            consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
-                        else
-                            consumer.callback.onAuthCancelled(consumer.context, true);
-                    } catch (e) { /* Throw away exceptions caused by callback */ }
-                }
-                self._doAsyncPrompt();
-            }
-        }
-
-        this._threadManager.mainThread.dispatch(runnable, 
-                                                Ci.nsIThread.DISPATCH_NORMAL);
-        this.log("_doAsyncPrompt:run dispatched");
-    },
 
 
 

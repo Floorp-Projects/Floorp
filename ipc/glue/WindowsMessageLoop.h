@@ -168,6 +168,32 @@ private:
   COPYDATASTRUCT copyData;
 };
 
+class DeferredStyleChangeMessage : public DeferredMessage
+{
+public:
+  DeferredStyleChangeMessage(HWND aHWnd,
+                             WPARAM aWParam,
+                             LPARAM aLParam);
+
+  virtual void Run();
+
+private:
+  HWND hWnd;
+  int index;
+  LONG_PTR style;
+};
+
+class DeferredSetIconMessage : public DeferredSendMessage
+{
+public:
+  DeferredSetIconMessage(HWND aHWnd,
+                         UINT aMessage,
+                         WPARAM aWParam,
+                         LPARAM aLParam);
+
+  virtual void Run();
+};
+
 } /* namespace windows */
 } /* namespace ipc */
 } /* namespace mozilla */

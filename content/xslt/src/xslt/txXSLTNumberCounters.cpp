@@ -220,8 +220,8 @@ const char* const kTxRomanNumbers[] =
 
 void txRomanCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 {
-    // Numbers bigger then 3999 can't be done in roman
-    if (aNumber >= 4000) {
+    // Numbers bigger then 3999 and negative numbers can't be done in roman
+    if (PRUint32(aNumber) >= 4000) {
         txDecimalCounter().appendNumber(aNumber, aDest);
         return;
     }

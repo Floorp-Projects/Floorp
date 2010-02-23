@@ -712,6 +712,9 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   if (mActiveWindow != window)
     return NS_OK;
 
+  // clear the mouse capture as the active window has changed
+  nsIPresShell::SetCapturingContent(nsnull, 0);
+
   // inform the DOM window that it has deactivated, so that the active
   // attribute is updated on the window
   window->ActivateOrDeactivate(PR_FALSE);
@@ -1202,7 +1205,7 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
   PRUint32 pos2 = parents2.Length();
   nsIDocShellTreeItem* parent = nsnull;
   PRUint32 len;
-  for (len = PR_MIN(pos1, pos2); len > 0; --len) {
+  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
     nsIDocShellTreeItem* child1 = parents1.ElementAt(--pos1);
     nsIDocShellTreeItem* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {

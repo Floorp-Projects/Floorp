@@ -58,7 +58,8 @@ public:
   AutoTestThread() {
     nsCOMPtr<nsIThread> newThread;
     nsresult rv = NS_NewThread(getter_AddRefs(newThread));
-    NS_ENSURE_SUCCESS(rv,);
+    if (NS_FAILED(rv))
+      return;
 
     newThread.swap(mThread);
   }

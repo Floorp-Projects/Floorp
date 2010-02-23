@@ -998,6 +998,7 @@ alltags:
 # creates OBJS, links with LIBS to create Foo
 #
 $(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
+	@rm -f $@.manifest
 ifeq (WINCE,$(OS_ARCH))
 	$(LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
@@ -1006,11 +1007,15 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f "$(srcdir)/$@.manifest"; then \
+			echo "Embedding manifest from $(srcdir)/$@.manifest and $@.manifest"; \
 			mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
+			echo "Embedding manifest from $@.manifest"; \
 			mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
-		rm -f $@.manifest; \
+	elif test -f "$(srcdir)/$@.manifest"; then \
+		echo "Embedding manifest from $(srcdir)/$@.manifest"; \
+		mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 ifdef MOZ_PROFILE_GENERATE
@@ -1402,6 +1407,10 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 
 moc_%.cpp: %.h $(GLOBAL_DEPS)
 	$(MOC) $< $(OUTOPTION)$@ 
+
+moc_%.cc: %.cc $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
+	$(ELOG) $(MOC) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
@@ -2092,12 +2101,6 @@ endif
 
 -include $(topsrcdir)/$(MOZ_BUILD_APP)/app-rules.mk
 -include $(MY_RULES)
-
-#
-# This speeds up gmake's processing if these files don't exist.
-#
-$(MY_CONFIG) $(MY_RULES):
-	@touch $@
 
 #
 # Generate Emacs tags in a file named TAGS if ETAGS was set in $(MY_CONFIG)

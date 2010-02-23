@@ -39,7 +39,6 @@
 
 #include "nsHTMLTableAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibleTreeWalker.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"

@@ -1,158 +1,152 @@
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
-+  skin/classic/global/10pct_transparent_grey.png
-+  skin/classic/global/50pct_transparent_grey.png
-+  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
-+  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
-+  skin/classic/global/arrow.css
-+  skin/classic/global/autocomplete.css
-+  skin/classic/global/button.css
-+  skin/classic/global/checkbox.css
-+  skin/classic/global/colorpicker.css
-+  skin/classic/global/commonDialog.css
-+  skin/classic/global/config.css
-+  skin/classic/global/customizeToolbar.css
-+  skin/classic/global/dialog.css
-+  skin/classic/global/dropmarker.css
-+  skin/classic/global/filefield.css
-+  skin/classic/global/filepicker.css
-*  skin/classic/global/findBar.css
-*  skin/classic/global/global.css
-+  skin/classic/global/groupbox.css
-+  skin/classic/global/linkTree.css
-+  skin/classic/global/listbox.css
-+  skin/classic/global/menu.css
-+  skin/classic/global/menulist.css
-+  skin/classic/global/notification.css
-+  skin/classic/global/netError.css
-+  skin/classic/global/numberbox.css
-   skin/classic/global/plugins.css         (/toolkit/empty-file)
-+  skin/classic/global/passwordmgr.css
-+  skin/classic/global/popup.css
-+  skin/classic/global/preferences.css
-+  skin/classic/global/progressmeter.css
-+  skin/classic/global/radio.css
-+  skin/classic/global/resizer.css
-+  skin/classic/global/richlistbox.css
-+  skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
-*+ skin/classic/global/scale.css
-+  skin/classic/global/scrollbox.css
-+  skin/classic/global/spinbuttons.css
-+  skin/classic/global/splitter.css
-+  skin/classic/global/tabbox.css
-+  skin/classic/global/textbox.css
-+  skin/classic/global/datetimepicker.css
-+  skin/classic/global/toolbar.css
-+  skin/classic/global/toolbarbutton.css
-+  skin/classic/global/tree.css
-*  skin/classic/global/viewbuttons.css
-+  skin/classic/global/wizard.css
-+  skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
-+  skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
-+  skin/classic/global/arrow/arrow-dn-sharp.gif                       (arrow/arrow-dn-sharp.gif)
-+  skin/classic/global/arrow/arrow-dn.gif                             (arrow/arrow-dn.gif)
-+  skin/classic/global/arrow/arrow-dn.png                             (arrow/arrow-dn.png)
-+  skin/classic/global/arrow/arrow-lft-dis.gif                        (arrow/arrow-lft-dis.gif)
-+  skin/classic/global/arrow/arrow-lft-hov.gif                        (arrow/arrow-lft-hov.gif)
-+  skin/classic/global/arrow/arrow-lft-sharp-end.gif                  (arrow/arrow-lft-sharp-end.gif)
-+  skin/classic/global/arrow/arrow-lft-sharp.gif                      (arrow/arrow-lft-sharp.gif)
-+  skin/classic/global/arrow/arrow-lft.gif                            (arrow/arrow-lft.gif)
-+  skin/classic/global/arrow/arrow-rit-dis.gif                        (arrow/arrow-rit-dis.gif)
-+  skin/classic/global/arrow/arrow-rit-hov.gif                        (arrow/arrow-rit-hov.gif)
-+  skin/classic/global/arrow/arrow-rit-sharp-end.gif                  (arrow/arrow-rit-sharp-end.gif)
-+  skin/classic/global/arrow/arrow-rit-sharp.gif                      (arrow/arrow-rit-sharp.gif)
-+  skin/classic/global/arrow/arrow-rit.gif                            (arrow/arrow-rit.gif)
-+  skin/classic/global/arrow/arrow-up-dis.gif                         (arrow/arrow-up-dis.gif)
-+  skin/classic/global/arrow/arrow-up-sharp.gif                       (arrow/arrow-up-sharp.gif)
-+  skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
-+  skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
-+  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
-+  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
-+  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
-*  skin/classic/global/console/console.css                            (console/console.css)
-+  skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
-+  skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
-+  skin/classic/global/dirListing/local.png                           (dirListing/local.png)
-+  skin/classic/global/dirListing/remote.png                          (dirListing/remote.png)
-+  skin/classic/global/dirListing/up.png                              (dirListing/up.png)
-+  skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
-+  skin/classic/global/icons/autoscroll.png                           (icons/autoscroll.png)
-+  skin/classic/global/icons/blacklist_favicon.png                    (icons/blacklist_favicon.png)
-+  skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
-+  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
-+  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
-+  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
-+  skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
-+  skin/classic/global/icons/closetab.png                             (icons/closetab.png)
-+  skin/classic/global/icons/information-16.png                       (icons/information-16.png)
-+  skin/classic/global/icons/information-24.png                       (icons/information-24.png)
-+  skin/classic/global/icons/information-32.png                       (icons/information-32.png)
-+  skin/classic/global/icons/information-64.png                       (icons/information-64.png)
-+  skin/classic/global/icons/information-large.png                    (icons/information-large.png)
-+  skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
-+  skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
-+  skin/classic/global/icons/notloading_16.png                        (icons/notloading_16.png)
-+  skin/classic/global/icons/notfound.png                             (icons/notfound.png)
-+  skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
-+  skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
-+  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
-+  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
-+  skin/classic/global/icons/searchfield-regular-cancel.png           (icons/searchfield-regular-cancel.png)
-+  skin/classic/global/icons/searchfield-small-cancel.png             (icons/searchfield-small-cancel.png)
-+  skin/classic/global/icons/warning-16.png                           (icons/warning-16.png)
-+  skin/classic/global/icons/warning-24.png                           (icons/warning-24.png)
-+  skin/classic/global/icons/warning-32.png                           (icons/warning-32.png)
-+  skin/classic/global/icons/warning-64.png                           (icons/warning-64.png)
-+  skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
-+  skin/classic/global/icons/error-16.png                             (icons/error-16.png)
-+  skin/classic/global/icons/error-24.png                             (icons/error-24.png)
-+  skin/classic/global/icons/error-64.png                             (icons/error-64.png)
-+  skin/classic/global/icons/error-large.png                          (icons/error-large.png)
-+  skin/classic/global/icons/Error.png                                (icons/Error.png)
-+  skin/classic/global/icons/question-16.png                          (icons/question-16.png)
-+  skin/classic/global/icons/question-24.png                          (icons/question-24.png)
-+  skin/classic/global/icons/question-32.png                          (icons/question-32.png)
-+  skin/classic/global/icons/question-64.png                          (icons/question-64.png)
-+  skin/classic/global/icons/question-large.png                       (icons/question-large.png)
-+  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
-+  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
-+  skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)
-+  skin/classic/global/notification/info-bar-background.png           (notification/info-bar-background.png)
-+  skin/classic/global/notification/info-icon.png                     (notification/info-icon.png)
-+  skin/classic/global/notification/warning-bar-background.png        (notification/warning-bar-background.png)
-+  skin/classic/global/notification/warning-icon.png                  (notification/warning-icon.png)
-+  skin/classic/global/media/videocontrols.css                        (media/videocontrols.css)
-+  skin/classic/global/media/pauseButton.png                          (media/pauseButton.png)
-+  skin/classic/global/media/playButton.png                           (media/playButton.png)
-+  skin/classic/global/media/muteButton.png                           (media/muteButton.png)
-+  skin/classic/global/media/unmuteButton.png                         (media/unmuteButton.png)
-+  skin/classic/global/media/scrubberThumb.png                        (media/scrubberThumb.png)
-+  skin/classic/global/media/scrubberThumbWide.png                    (media/scrubberThumbWide.png)
-+  skin/classic/global/media/error.png                                (media/error.png)
-+  skin/classic/global/media/throbber.png                             (media/throbber.png)
-+  skin/classic/global/media/volumeThumb.png                          (media/volumeThumb.png)
-+  skin/classic/global/menu/menu-arrow.png                            (menu/menu-arrow.png)
-+  skin/classic/global/menu/menu-check.png                            (menu/menu-check.png)
-+  skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
-+  skin/classic/global/scale/scale-tray-vert.gif                      (scale/scale-tray-vert.gif)
-+  skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)
-+  skin/classic/global/splitter/grip-hrz-after.gif                    (splitter/grip-hrz-after.gif)
-+  skin/classic/global/splitter/grip-hrz-before.gif                   (splitter/grip-hrz-before.gif)
-+  skin/classic/global/splitter/grip-vrt-after.gif                    (splitter/grip-vrt-after.gif)
-+  skin/classic/global/splitter/grip-vrt-before.gif                   (splitter/grip-vrt-before.gif)
-+  skin/classic/global/toolbar/dropmark-nav.png                       (toolbar/dropmark-nav.png)
-+  skin/classic/global/toolbar/spring.png                             (toolbar/spring.png)
-+  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
-+  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)
-+  skin/classic/global/toolbar/toolbar-background-tall.png            (toolbar/toolbar-background-tall.png)
-+  skin/classic/global/toolbar/toolbar-background-tall-inactive.png   (toolbar/toolbar-background-tall-inactive.png)
-+  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
-+  skin/classic/global/toolbar/toolbarbutton-customhover-left.png     (toolbar/toolbarbutton-customhover-left.png)
-+  skin/classic/global/toolbar/toolbarbutton-customhover-mid.png      (toolbar/toolbarbutton-customhover-mid.png)
-+  skin/classic/global/toolbar/toolbarbutton-customhover-right.png    (toolbar/toolbarbutton-customhover-right.png)
-+  skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
-+  skin/classic/global/tree/folder.png                                (tree/folder.png)
-+  skin/classic/global/tree/item.png                                  (tree/item.png)
-+  skin/classic/global/tree/item-grayscale.png                        (tree/item-grayscale.png)
-+  skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
-+  skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)
+  skin/classic/global/10pct_transparent_grey.png
+  skin/classic/global/50pct_transparent_grey.png
+  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
+  skin/classic/global/aboutMemory.css                                (../../winstripe/global/aboutMemory.css)
+  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
+  skin/classic/global/arrow.css
+  skin/classic/global/autocomplete.css
+  skin/classic/global/button.css
+  skin/classic/global/checkbox.css
+  skin/classic/global/colorpicker.css
+  skin/classic/global/commonDialog.css
+* skin/classic/global/config.css
+  skin/classic/global/customizeToolbar.css
+  skin/classic/global/dialog.css
+  skin/classic/global/dropmarker.css
+  skin/classic/global/filefield.css
+  skin/classic/global/filepicker.css
+* skin/classic/global/findBar.css
+* skin/classic/global/global.css
+  skin/classic/global/groupbox.css
+  skin/classic/global/linkTree.css
+  skin/classic/global/listbox.css
+  skin/classic/global/menu.css
+  skin/classic/global/menulist.css
+  skin/classic/global/notification.css
+  skin/classic/global/netError.css
+  skin/classic/global/numberbox.css
+  skin/classic/global/plugins.css         (/toolkit/empty-file)
+  skin/classic/global/passwordmgr.css
+  skin/classic/global/popup.css
+  skin/classic/global/preferences.css
+  skin/classic/global/progressmeter.css
+  skin/classic/global/radio.css
+  skin/classic/global/resizer.css
+  skin/classic/global/richlistbox.css
+  skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
+* skin/classic/global/scale.css
+  skin/classic/global/scrollbox.css
+  skin/classic/global/spinbuttons.css
+  skin/classic/global/splitter.css
+  skin/classic/global/tabbox.css
+  skin/classic/global/textbox.css
+  skin/classic/global/datetimepicker.css
+  skin/classic/global/toolbar.css
+  skin/classic/global/toolbarbutton.css
+  skin/classic/global/tree.css
+* skin/classic/global/viewbuttons.css
+  skin/classic/global/wizard.css
+  skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
+  skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
+  skin/classic/global/arrow/arrow-dn-sharp.gif                       (arrow/arrow-dn-sharp.gif)
+  skin/classic/global/arrow/arrow-dn.gif                             (arrow/arrow-dn.gif)
+  skin/classic/global/arrow/arrow-dn.png                             (arrow/arrow-dn.png)
+  skin/classic/global/arrow/arrow-lft-dis.gif                        (arrow/arrow-lft-dis.gif)
+  skin/classic/global/arrow/arrow-lft-hov.gif                        (arrow/arrow-lft-hov.gif)
+  skin/classic/global/arrow/arrow-lft-sharp-end.gif                  (arrow/arrow-lft-sharp-end.gif)
+  skin/classic/global/arrow/arrow-lft-sharp.gif                      (arrow/arrow-lft-sharp.gif)
+  skin/classic/global/arrow/arrow-lft.gif                            (arrow/arrow-lft.gif)
+  skin/classic/global/arrow/arrow-rit-dis.gif                        (arrow/arrow-rit-dis.gif)
+  skin/classic/global/arrow/arrow-rit-hov.gif                        (arrow/arrow-rit-hov.gif)
+  skin/classic/global/arrow/arrow-rit-sharp-end.gif                  (arrow/arrow-rit-sharp-end.gif)
+  skin/classic/global/arrow/arrow-rit-sharp.gif                      (arrow/arrow-rit-sharp.gif)
+  skin/classic/global/arrow/arrow-rit.gif                            (arrow/arrow-rit.gif)
+  skin/classic/global/arrow/arrow-up-dis.gif                         (arrow/arrow-up-dis.gif)
+  skin/classic/global/arrow/arrow-up-sharp.gif                       (arrow/arrow-up-sharp.gif)
+  skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
+  skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
+  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
+  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
+  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
+* skin/classic/global/console/console.css                            (console/console.css)
+  skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
+  skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
+  skin/classic/global/dirListing/local.png                           (dirListing/local.png)
+  skin/classic/global/dirListing/remote.png                          (dirListing/remote.png)
+  skin/classic/global/dirListing/up.png                              (dirListing/up.png)
+  skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
+  skin/classic/global/icons/autoscroll.png                           (icons/autoscroll.png)
+  skin/classic/global/icons/blacklist_favicon.png                    (icons/blacklist_favicon.png)
+  skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
+  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
+  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
+  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
+  skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
+  skin/classic/global/icons/closetab.png                             (icons/closetab.png)
+  skin/classic/global/icons/information-16.png                       (icons/information-16.png)
+  skin/classic/global/icons/information-24.png                       (icons/information-24.png)
+  skin/classic/global/icons/information-32.png                       (icons/information-32.png)
+  skin/classic/global/icons/information-64.png                       (icons/information-64.png)
+  skin/classic/global/icons/information-large.png                    (icons/information-large.png)
+  skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
+  skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
+  skin/classic/global/icons/notloading_16.png                        (icons/notloading_16.png)
+  skin/classic/global/icons/notfound.png                             (icons/notfound.png)
+  skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
+  skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
+  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
+  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
+  skin/classic/global/icons/searchfield-regular-cancel.png           (icons/searchfield-regular-cancel.png)
+  skin/classic/global/icons/searchfield-small-cancel.png             (icons/searchfield-small-cancel.png)
+  skin/classic/global/icons/warning-16.png                           (icons/warning-16.png)
+  skin/classic/global/icons/warning-24.png                           (icons/warning-24.png)
+  skin/classic/global/icons/warning-32.png                           (icons/warning-32.png)
+  skin/classic/global/icons/warning-64.png                           (icons/warning-64.png)
+  skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
+  skin/classic/global/icons/error-16.png                             (icons/error-16.png)
+  skin/classic/global/icons/error-24.png                             (icons/error-24.png)
+  skin/classic/global/icons/error-64.png                             (icons/error-64.png)
+  skin/classic/global/icons/error-large.png                          (icons/error-large.png)
+  skin/classic/global/icons/Error.png                                (icons/Error.png)
+  skin/classic/global/icons/question-16.png                          (icons/question-16.png)
+  skin/classic/global/icons/question-24.png                          (icons/question-24.png)
+  skin/classic/global/icons/question-32.png                          (icons/question-32.png)
+  skin/classic/global/icons/question-64.png                          (icons/question-64.png)
+  skin/classic/global/icons/question-large.png                       (icons/question-large.png)
+  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
+  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
+  skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)
+  skin/classic/global/notification/info-bar-background.png           (notification/info-bar-background.png)
+  skin/classic/global/notification/info-icon.png                     (notification/info-icon.png)
+  skin/classic/global/notification/warning-bar-background.png        (notification/warning-bar-background.png)
+  skin/classic/global/notification/warning-icon.png                  (notification/warning-icon.png)
+  skin/classic/global/media/videocontrols.css                        (media/videocontrols.css)
+  skin/classic/global/media/pauseButton.png                          (media/pauseButton.png)
+  skin/classic/global/media/playButton.png                           (media/playButton.png)
+  skin/classic/global/media/muteButton.png                           (media/muteButton.png)
+  skin/classic/global/media/unmuteButton.png                         (media/unmuteButton.png)
+  skin/classic/global/media/scrubberThumb.png                        (media/scrubberThumb.png)
+  skin/classic/global/media/scrubberThumbWide.png                    (media/scrubberThumbWide.png)
+  skin/classic/global/media/error.png                                (media/error.png)
+  skin/classic/global/media/throbber.png                             (media/throbber.png)
+  skin/classic/global/media/volumeThumb.png                          (media/volumeThumb.png)
+  skin/classic/global/menu/menu-arrow.png                            (menu/menu-arrow.png)
+  skin/classic/global/menu/menu-check.png                            (menu/menu-check.png)
+  skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
+  skin/classic/global/scale/scale-tray-vert.gif                      (scale/scale-tray-vert.gif)
+  skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)
+  skin/classic/global/splitter/grip-hrz-after.gif                    (splitter/grip-hrz-after.gif)
+  skin/classic/global/splitter/grip-hrz-before.gif                   (splitter/grip-hrz-before.gif)
+  skin/classic/global/splitter/grip-vrt-after.gif                    (splitter/grip-vrt-after.gif)
+  skin/classic/global/splitter/grip-vrt-before.gif                   (splitter/grip-vrt-before.gif)
+  skin/classic/global/toolbar/spring.png                             (toolbar/spring.png)
+  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
+  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)
+  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
+  skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
+  skin/classic/global/tree/folder.png                                (tree/folder.png)
+  skin/classic/global/tree/item.png                                  (tree/item.png)
+  skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
+  skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)

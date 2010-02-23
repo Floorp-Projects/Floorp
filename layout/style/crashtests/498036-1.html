@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- bogus assertion when one stylesheet contains two @import rules
+     specifying malformed URIs -->
+<html>
+<head>
+<style type="text/css"> 
+
+@import 'data:css'; 
+@import 'data:css'; 
+
+</style>
+</head>
+<body>
+</body>
+</html>

@@ -700,7 +700,6 @@ MAKEFILES_xulapp="
   toolkit/components/commandlines/src/Makefile
   toolkit/components/console/Makefile
   toolkit/components/contentprefs/Makefile
-  toolkit/components/contentprefs/public/Makefile
   toolkit/components/contentprefs/src/Makefile
   toolkit/components/cookie/Makefile
   toolkit/components/downloads/public/Makefile

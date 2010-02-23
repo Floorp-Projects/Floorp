@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Google Inc.
+ *  Ben Bucksch <ben.bucksch beonex.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,6 +79,15 @@ interface nsIAuthInformation : nsISupports
    * This flag is mutually exclusive with #NEED_DOMAIN.
    */
   const PRUint32 ONLY_PASSWORD = 8;
+
+  /**
+   * We have already tried to log in for this channel
+   * (with auth values from a previous promptAuth call),
+   * but it failed, so we now ask the user to provide a new, correct login.
+   *
+   * @see also RFC 2616, Section 10.4.2
+   */
+  const PRUint32 PREVIOUS_FAILED = 16;
   /* @} */
 
   /**

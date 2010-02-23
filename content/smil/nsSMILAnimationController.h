@@ -49,6 +49,7 @@
 #include "nsSMILCompositorTable.h"
 #include "nsSMILMilestone.h"
 
+struct nsSMILTargetIdentifier;
 class nsISMILAnimationElement;
 class nsIDocument;
 
@@ -156,8 +157,8 @@ protected:
                                  TimeContainerHashtable* aActiveContainers);
   static void AddAnimationToCompositorTable(
     nsISMILAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable);
-  static PRBool GetCompositorKeyForAnimation(nsISMILAnimationElement* aAnimElem,
-                                             nsSMILCompositorKey& aResult);
+  static PRBool GetTargetIdentifierForAnimation(
+      nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
   virtual nsresult AddChild(nsSMILTimeContainer& aChild);

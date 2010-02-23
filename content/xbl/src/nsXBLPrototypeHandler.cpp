@@ -57,7 +57,6 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
-#include "nsIFocusController.h"
 #include "nsFocusManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
@@ -273,21 +272,17 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aTarget));
-  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<nsPIDOMWindow> window;
 
   if (winRoot) {
     window = winRoot->GetWindow();
   }
 
   if (window) {
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(window));
+    window = window->GetCurrentInnerWindow();
+    NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
-    if (piWin) {
-      piWin = piWin->GetCurrentInnerWindow();
-      NS_ENSURE_TRUE(piWin, NS_ERROR_UNEXPECTED);
-    }
-
-    boundGlobal = do_QueryInterface(piWin->GetPrivateRoot());
+    boundGlobal = do_QueryInterface(window->GetPrivateRoot());
   }
   else boundGlobal = do_QueryInterface(aTarget);
 
@@ -409,14 +404,11 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
   // Instead of executing JS, let's get the controller for the bound
   // element and call doCommand on it.
   nsCOMPtr<nsIController> controller;
-  nsCOMPtr<nsIFocusController> focusController;
 
   nsCOMPtr<nsPIDOMWindow> privateWindow;
   nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aTarget));
   if (windowRoot) {
-    windowRoot->GetFocusController(getter_AddRefs(focusController));
-    if (windowRoot)
-      privateWindow = do_QueryInterface(windowRoot->GetWindow());
+    privateWindow = windowRoot->GetWindow();
   }
   else {
     privateWindow = do_QueryInterface(aTarget);
@@ -441,12 +433,12 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
         return NS_ERROR_FAILURE;
     }
 
-    focusController = privateWindow->GetRootFocusController();
+    windowRoot = privateWindow->GetTopWindowRoot();
   }
 
   NS_LossyConvertUTF16toASCII command(mHandlerText);
-  if (focusController)
-    focusController->GetControllerForCommand(privateWindow, command.get(), getter_AddRefs(controller));
+  if (windowRoot)
+    windowRoot->GetControllerForCommand(command.get(), getter_AddRefs(controller));
   else
     controller = GetController(aTarget); // We're attached to the receiver possibly.
 
@@ -461,7 +453,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
 
     nsCOMPtr<nsPIDOMWindow> windowToCheck;
     if (windowRoot)
-      windowToCheck = do_QueryInterface(windowRoot->GetWindow());
+      windowToCheck = windowRoot->GetWindow();
     else
       windowToCheck = privateWindow->GetPrivateRoot();
 

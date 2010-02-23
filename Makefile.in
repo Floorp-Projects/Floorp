@@ -83,7 +83,7 @@ include $(topsrcdir)/config/config.mk
 
 GARBAGE_DIRS += dist _javagen _profile _tests staticlib
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
-   dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
+   dependencies.beos config/autoconf.mk \
    unallmakefiles mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
@@ -143,6 +143,16 @@ endif
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
+
+ifeq ($(OS_ARCH),WINNT)
+rebase:
+ifdef MOZILLA_OFFICIAL
+	echo rebasing $(DIST)
+	/bin/find $(DIST) -name "*.dll" -a -not -name "msvc*" > rebase.lst
+	rebase -b 60000000 -R . -G rebase.lst
+	rm rebase.lst
+endif
+endif # WINNT
 
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
@@ -224,6 +234,19 @@ uploadsymbols:
 ifdef MOZ_CRASHREPORTER
 	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh "$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip"
 endif
+
+ifeq ($(OS_ARCH),WINNT)
+signnss:
+ifdef MOZILLA_OFFICIAL
+	echo signing NSS libs
+	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
+	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
+	cd $(DIST)/bin; ./shlibsign.exe -v -i nssdbm3.dll
+endif # MOZILLA_OFFICIAL
+
+deliver: rebase signnss
+
+endif # WINNT
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)

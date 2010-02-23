@@ -127,6 +127,8 @@ nsHttpChannel::nsHttpChannel()
     , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
     , mProxyAuth(PR_FALSE)
+    , mTriedProxyAuth(PR_FALSE)
+    , mTriedHostAuth(PR_FALSE)
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
@@ -223,25 +225,9 @@ nsHttpChannel::Init(nsIURI *uri,
     // Set request headers
     //
     nsCAutoString hostLine;
-    if (strchr(host.get(), ':')) {
-        // host is an IPv6 address literal and must be encapsulated in []'s
-        hostLine.Assign('[');
-        // scope id is not needed for Host header.
-        int scopeIdPos = host.FindChar('%');
-        if (scopeIdPos == kNotFound)
-            hostLine.Append(host);
-        else if (scopeIdPos > 0)
-            hostLine.Append(Substring(host, 0, scopeIdPos));
-        else
-          return NS_ERROR_MALFORMED_URI;
-        hostLine.Append(']');
-    }
-    else
-        hostLine.Assign(host);
-    if (port != -1) {
-        hostLine.Append(':');
-        hostLine.AppendInt(port);
-    }
+    rv = nsHttpHandler::GenerateHostPort(host, port, hostLine);
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
     if (NS_FAILED(rv)) return rv;
@@ -2492,10 +2478,8 @@ nsHttpChannel::InitCacheEntry()
     if (mResponseHead->NoStore())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
-    // Only cache SSL content on disk if the server sent a
-    // Cache-Control: public header, or if the user set the pref
-    if (!gHttpHandler->CanCacheAllSSLContent() &&
-        mConnectionInfo->UsingSSL() && !mResponseHead->CacheControlPublic())
+    // Only cache SSL content on disk if the pref is set
+    if (!gHttpHandler->IsPersistentHttpsCachingEnabled())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
     if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
@@ -3702,9 +3686,18 @@ nsHttpChannel::PromptForIdentity(PRUint32    level,
     // prompt the user...
     PRUint32 promptFlags = 0;
     if (proxyAuth)
+    {
         promptFlags |= nsIAuthInformation::AUTH_PROXY;
-    else
+        if (mTriedProxyAuth)
+            promptFlags |= nsIAuthInformation::PREVIOUS_FAILED;
+        mTriedProxyAuth = PR_TRUE;
+    }
+    else {
         promptFlags |= nsIAuthInformation::AUTH_HOST;
+        if (mTriedHostAuth)
+            promptFlags |= nsIAuthInformation::PREVIOUS_FAILED;
+        mTriedHostAuth = PR_TRUE;
+    }
 
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         promptFlags |= nsIAuthInformation::NEED_DOMAIN;

@@ -56,6 +56,8 @@ protected:
 
   // The remaining methods should never be called, so although they're very
   // simple they don't need to be inline.
+  virtual PRBool   IsEqual(const nsSMILValue& aLeft,
+                           const nsSMILValue& aRight) const;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        PRUint32 aCount) const;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,

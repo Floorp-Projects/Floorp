@@ -55,7 +55,6 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIFocusController.h"
 #include "nsFocusManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsIURI.h"
@@ -366,12 +365,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mTarget);
     if (root) {
-      nsCOMPtr<nsIFocusController> fc;
-      root->GetFocusController(getter_AddRefs(fc));
-      if (fc) {
-        nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(root->GetWindow());
-        fc->GetControllers(piWindow, getter_AddRefs(controllers));
-      }
+      root->GetControllers(getter_AddRefs(controllers));
     }
 
     PRBool handled = PR_FALSE;

@@ -920,11 +920,14 @@ function rebuildLWThemeDS() {
   for (var i = 0; i < themes.length; i++) {
     var theme = themes[i];
 
+    if (!("id" in theme))
+      continue;
+
     var themeNode = gRDF.GetResource(PREFIX_LWTHEME_URI + theme.id);
     rootctr.AppendElement(themeNode);
     gLWThemeDS.Assert(themeNode,
                       gRDF.GetResource(PREFIX_NS_EM + "name"),
-                      gRDF.GetLiteral(theme.name),
+                      gRDF.GetLiteral(theme.name || ""),
                       true);
     gLWThemeDS.Assert(themeNode,
                       gRDF.GetResource(PREFIX_NS_EM + "addonID"),

@@ -480,7 +480,7 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
 
   nsAutoString str;
   GetNodeText(aNode, str);
-  for (PRInt32 i = PR_MIN(aBeforeOffset, PRInt32(str.Length())) - 1; i >= 0; --i) {
+  for (PRInt32 i = NS_MIN(aBeforeOffset, PRInt32(str.Length())) - 1; i >= 0; --i) {
     if (IsDOMWordSeparator(str.CharAt(i))) {
       *aSeparatorOffset = i;
       return PR_TRUE;

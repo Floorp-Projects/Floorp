@@ -53,6 +53,9 @@
 extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
+extern const PRUnichar* kOOPPGetBaseMessageEventId;
+UINT gOOPPGetBaseMessageEvent =
+    RegisterWindowMessage(kOOPPGetBaseMessageEventId);
 UINT gOOPPSpinNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
 UINT gOOPPStopNativeLoopEvent =
@@ -444,39 +447,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 {
     switch (aVariable) {
 
-    case NPPVpluginWindowBool: {
-        bool windowed;
-        NPError rv;
-
-        if (!CallNPP_GetValue_NPPVpluginWindow(&windowed, &rv)) {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (NPERR_NO_ERROR != rv) {
-            return rv;
-        }
-
-        (*(NPBool*)_retval) = windowed;
-        return NPERR_NO_ERROR;
-    }
-
-    case NPPVpluginTransparentBool: {
-        bool transparent;
-        NPError rv;
-
-        if (!CallNPP_GetValue_NPPVpluginTransparent(&transparent, &rv)) {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (NPERR_NO_ERROR != rv) {
-            return rv;
-        }
-
-        (*(NPBool*)_retval) = transparent;
-        return NPERR_NO_ERROR;
-    }
-
-#ifdef OS_LINUX
+#ifdef MOZ_X11
     case NPPVpluginNeedsXEmbed: {
         bool needsXEmbed;
         NPError rv;
@@ -561,7 +532,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     NPEvent* npevent = reinterpret_cast<NPEvent*>(event);
     NPRemoteEvent npremoteevent;
     npremoteevent.event = *npevent;
-    int16_t handled;
+    int16_t handled = 0;
 
 #if defined(OS_WIN)
     if (mWindowType == NPWindowTypeDrawable) {
@@ -572,13 +543,52 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 SharedSurfaceBeforePaint(rect, npremoteevent);
                 CallNPP_HandleEvent(npremoteevent, &handled);
                 SharedSurfaceAfterPaint(npevent);
+                return handled;
             }
             break;
-            default:
-                if (!CallNPP_HandleEvent(npremoteevent, &handled))
-                    return 0;
+
+            case WM_KILLFOCUS:
+            {
+              // When the user selects fullscreen mode in Flash video players,
+              // WM_KILLFOCUS will be delayed by deferred event processing:
+              // WM_LBUTTONUP results in a call to CreateWindow within Flash,
+              // which fires WM_KILLFOCUS. Delayed delivery causes Flash to
+              // misinterpret the event, dropping back out of fullscreen. Trap
+              // this event and drop it.
+              PRUnichar szClass[26];
+              HWND hwnd = GetForegroundWindow();
+              if (hwnd && hwnd != mPluginHWND &&
+                  GetClassNameW(hwnd, szClass,
+                                sizeof(szClass)/sizeof(PRUnichar)) &&
+                  !wcscmp(szClass, L"ShockwaveFlashFullScreen")) {
+                  return 0;
+              }
+            }
+            break;
+
+            case WM_IME_SETCONTEXT:
+            {
+              // Children can activate the underlying parent browser window
+              // generating nested events that arrive here. Check the base
+              // event this event was triggered by and unlock the child using
+              // ReplyMessage if needed.
+              HWND hwnd = NULL;
+              UINT baseMsg = 0;
+              mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &hwnd);
+              NS_ASSERTION(GetWindowThreadProcessId(hwnd, nsnull) ==
+                           GetCurrentThreadId(),
+                           "hwnd belongs to another thread!");
+              if (hwnd &&
+                  SendMessage(hwnd, gOOPPGetBaseMessageEvent,
+                              (WPARAM)&baseMsg, 0) &&
+                  baseMsg == WM_ACTIVATE) {
+                  ReplyMessage(0);
+              }
+            }
             break;
         }
+        if (!CallNPP_HandleEvent(npremoteevent, &handled))
+            return 0;
     }
     else {
         if (!CallNPP_HandleEvent(npremoteevent, &handled))
@@ -599,6 +609,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // an X event to the child that the child would wait for.
 #  ifdef MOZ_WIDGET_GTK2
         XSync(GDK_DISPLAY(), False);
+#  elif defined(MOZ_WIDGET_QT)
+        XSync(QX11Info::display(), False);
 #  endif
     }
 
@@ -913,11 +925,8 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
 
     switch (message) {
         case WM_SETFOCUS:
-        // Widget may be calling us back from AnswerPluginGotFocus(), make
-        // sure we don't end up sending this back over. If we're not in
-        // SendMessage, this is coming from the dom / focus manager.
-        if ((::InSendMessageEx(NULL) & ISMEX_SEND|ISMEX_REPLIED) != ISMEX_SEND)
-            self->CallSetPluginFocus();
+        // Let the child plugin window know it should take focus.
+        self->CallSetPluginFocus();
         break;
 
         case WM_CLOSE:

@@ -43,8 +43,9 @@
 #include "nsISupports.h"
 #include "nsPIDOMEventTarget.h"
 
-class nsIDOMWindow;
-class nsIFocusController;
+class nsPIDOMWindow;
+class nsIControllers;
+class nsIController;
 struct JSContext;
 
 // a9f58a8b-55cd-47fb-aeaa-f54010ffd154
@@ -56,9 +57,14 @@ class nsPIWindowRoot : public nsPIDOMEventTarget {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
 
-  NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
+  virtual nsPIDOMWindow* GetWindow()=0;
 
-  virtual nsIDOMWindow* GetWindow()=0;
+  virtual void GetPopupNode(nsIDOMNode** aNode) = 0;
+  virtual void SetPopupNode(nsIDOMNode* aNode) = 0;
+
+  virtual nsresult GetControllerForCommand(const char *aCommand,
+                                           nsIController** aResult) = 0;
+  virtual nsresult GetControllers(nsIControllers** aResult) = 0;
 
   virtual void SetParentTarget(nsPIDOMEventTarget* aTarget) = 0;
 };

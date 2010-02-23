@@ -74,6 +74,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsICSSLoader.h"
+#include "nsMimeTypes.h"
 
 #ifdef MOZ_VIEW_SOURCE
 #include "nsViewSourceHTML.h"
@@ -962,9 +963,9 @@ NS_IMETHODIMP_(void)
 nsParser::SetCommand(const char* aCommand)
 {
   mCommandStr.Assign(aCommand);
-  if (mCommandStr.Equals(kViewSourceCommand)) {
+  if (mCommandStr.Equals("view-source")) {
     mCommand = eViewSource;
-  } else if (mCommandStr.Equals(kViewFragmentCommand)) {
+  } else if (mCommandStr.Equals("view-fragment")) {
     mCommand = eViewFragment;
   } else {
     mCommand = eViewNormal;
@@ -1433,15 +1434,15 @@ static void
 DetermineParseMode(const nsString& aBuffer, nsDTDMode& aParseMode,
                    eParserDocType& aDocType, const nsACString& aMimeType)
 {
-  if (aMimeType.EqualsLiteral(kHTMLTextContentType)) {
+  if (aMimeType.EqualsLiteral(TEXT_HTML)) {
     DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
-  } else if (aMimeType.EqualsLiteral(kPlainTextContentType) ||
-             aMimeType.EqualsLiteral(kTextCSSContentType) ||
-             aMimeType.EqualsLiteral(kApplicationJSContentType) ||
-             aMimeType.EqualsLiteral(kApplicationXJSContentType) ||
-             aMimeType.EqualsLiteral(kTextECMAScriptContentType) ||
-             aMimeType.EqualsLiteral(kApplicationECMAScriptContentType) ||
-             aMimeType.EqualsLiteral(kTextJSContentType)) {
+  } else if (aMimeType.EqualsLiteral(TEXT_PLAIN) ||
+             aMimeType.EqualsLiteral(TEXT_CSS) ||
+             aMimeType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
+             aMimeType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+             aMimeType.EqualsLiteral(TEXT_ECMASCRIPT) ||
+             aMimeType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
+             aMimeType.EqualsLiteral(TEXT_JAVASCRIPT)) {
     aDocType = ePlainText;
     aParseMode = eDTDMode_quirks;
   } else { // Some form of XML
@@ -2714,7 +2715,7 @@ nsParser::DetectMetaTag(const char* aBytes,
 
   // XXX Only look inside HTML documents for now. For XML
   // documents we should be looking inside the XMLDecl.
-  if (!mParserContext->mMimeType.EqualsLiteral(kHTMLTextContentType)) {
+  if (!mParserContext->mMimeType.EqualsLiteral(TEXT_HTML)) {
     return PR_FALSE;
   }
 

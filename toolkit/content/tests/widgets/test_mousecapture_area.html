@@ -60,6 +60,12 @@ function runTests()
   //XXX We need to make sure a paint has happened on the images because that is
   // when the image maps actually get setup.
 
+  // There's no way to force painting to happen on OS X, maybe some synthesized
+  // mouse events will do the job?
+  synthesizeMouse($("image"), 5, 5, { type: "mousedown" });
+  synthesizeMouse($("otherelement"), 5, 5, { type: "mousemove" });
+  synthesizeMouse($("image"), 5, 5, { type: "mouseup" });
+
   // Flush layout
   document.body.offsetWidth;
   // Flush out invalidation
@@ -68,7 +74,13 @@ function runTests()
                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.processUpdates();
 
-  setTimeout(finishTests, 0);
+  // There's no way to force painting to happen on OS X, maybe a synthesized
+  // mouse click will do the job?
+  synthesizeMouse($("image"), 5, 5, { type: "mousedown" });
+  synthesizeMouse($("otherelement"), 5, 5, { type: "mousemove" });
+  synthesizeMouse($("image"), 5, 5, { type: "mouseup" });
+
+  setTimeout(finishTests, 100);
 }
 
 function finishTests() {

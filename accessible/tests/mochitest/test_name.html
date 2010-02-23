@@ -73,7 +73,7 @@
       // Note: if input have label elements then the name isn't calculated
       // from them.
       testName("btn_labelledby_mixed_input",
-               "input button Submit Query Reset input image");
+               "input button Submit Query Reset Submit Query");
 
       // Gets the name from the title of object element.
       testName("btn_labelledby_mixed_object", "object");
@@ -147,6 +147,12 @@
 
       testName("textareawithchild", "Story Bar is ended.");
 
+      //////////////////////////////////////////////////////////////////////////
+      // button name (specific cases not covered by test_name_markup.html)
+
+      testName("submit", "Submit Query");
+      testName("image_submit", "Submit Query");
+
       /////////////////////////////////////////////////////////////////////////
       // label with nested combobox (test for 'f' item of name computation guide)
 
@@ -184,6 +190,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=444279"
      title="mochitest for accessible name calculating">
     Mozilla Bug 444279
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=530081"
+     title="Clean up our tree walker ">
+    Mozilla Bug 530081
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -356,6 +367,10 @@
       is ended.
     </label>
   </form>
+
+  <!-- submit buttons -->
+  <input type="submit" id="submit">
+  <input type="image" id="image_submit">
 
   <!-- a label with a nested control in the start, middle and end -->
   <form>

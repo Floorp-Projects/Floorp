@@ -135,9 +135,9 @@ nsDocAccessible::~nsDocAccessible()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
+// Callback used when traversing the cache by cycle collector.
 static PLDHashOperator
-ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
-                 void *aUserArg)
+ElementTraverser(const void *aKey, nsAccessNode *aAccessNode, void *aUserArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
@@ -539,16 +539,27 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
+nsAccessNode*
+nsDocAccessible::GetCachedAccessNode(void *aUniqueID)
 {
-  GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
+  nsAccessNode* accessNode = mAccessNodeCache.GetWeak(aUniqueID);
+
+  // No accessible in the cache, check if the given ID is unique ID of this
+  // document accesible.
+  if (!accessNode) {
+    void* thisUniqueID = nsnull;
+    GetUniqueID(&thisUniqueID);
+    if (thisUniqueID == aUniqueID)
+      accessNode = this;
+  }
+
 #ifdef DEBUG
   // All cached accessible nodes should be in the parent
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
   nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(*aAccessNode);
+    nsAccUtils::QueryObject<nsAccessible>(accessNode);
 
   if (acc) {
     nsAccessible* parent(acc->GetCachedParent());
@@ -556,25 +567,21 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
       parent->TestChildCache(acc);
   }
 #endif
-  return NS_OK;
+
+  return accessNode;
 }
 
 // nsDocAccessible public method
-void
-nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
+PRBool
+nsDocAccessible::CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode)
 {
-  // If there is an access node for the given unique ID then let's shutdown it.
-  // The unique ID may be presented in the cache if originally we created
-  // access node object and then we want to create accessible object when
-  // DOM node is changed.
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCacheEntry(mAccessNodeCache, aUniqueID, getter_AddRefs(accessNode));
-  if (accessNode) {
-    nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
-    accNode->Shutdown();
-  }
+  // If there is already an access node with the given unique ID, shut it down
+  // because the DOM node has changed.
+  nsAccessNode* accessNode = mAccessNodeCache.GetWeak(aUniqueID);
+  if (accessNode)
+    accessNode->Shutdown();
 
-  PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
+  return mAccessNodeCache.Put(aUniqueID, aAccessNode);
 }
 
 // nsDocAccessible public method
@@ -595,23 +602,26 @@ nsDocAccessible::RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode)
 nsresult
 nsDocAccessible::Init()
 {
-  PutCacheEntry(gGlobalDocAccessibleCache, mDocument, this);
-
-  AddEventListeners();
-
-  GetParent(); // Ensure outer doc mParent accessible.
-
-  nsresult rv = nsHyperTextAccessibleWrap::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Put the document into the global cache.
+  if (!gGlobalDocAccessibleCache.Put(static_cast<void*>(mDocument), this))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Initialize event queue.
   mEventQueue = new nsAccEventQueue(this);
+  if (!mEventQueue)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  AddEventListeners();
+
+  // Ensure outer doc mParent accessible.
+  GetParent();
 
   // Fire reorder event to notify new accessible document has been created and
   // attached to the tree.
   nsRefPtr<nsAccEvent> reorderEvent =
     new nsAccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDOMNode);
-  NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+  if (!reorderEvent)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   FireDelayedAccessibleEvent(reorderEvent);
   return NS_OK;
@@ -1763,9 +1773,8 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
 void nsDocAccessible::InvalidateChildrenInSubtree(nsIDOMNode *aStartNode)
 {
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
-  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(accessNode));
+  nsRefPtr<nsAccessible> acc =
+    nsAccUtils::QueryObject<nsAccessible>(GetCachedAccessNode(aStartNode));
   if (acc)
     acc->InvalidateChildren();
 
@@ -1785,12 +1794,12 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
     return; // All we have is a doc accessible. There is nothing to invalidate, quit early
   }
 
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
+  nsRefPtr<nsAccessNode> accessNode = GetCachedAccessNode(aStartNode);
 
   // Shut down accessible subtree, which may have been created for
   // anonymous content subtree
-  nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
+  nsRefPtr<nsAccessible> accessible =
+    nsAccUtils::QueryObject<nsAccessible>(accessNode);
   if (accessible) {
     // Fire menupopup end if a menu goes away
     PRUint32 role = nsAccUtils::Role(accessible);
@@ -1805,11 +1814,10 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
                                 accessible);
       }
     }
-    nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(accessible);
 
     // We only need to shutdown the accessibles here if one of them has been
     // created.
-    if (acc->GetCachedFirstChild()) {
+    if (accessible->GetCachedFirstChild()) {
       nsCOMPtr<nsIArray> children;
       // use GetChildren() to fetch children at one time, instead of using
       // GetNextSibling(), because after we shutdown the first child,
@@ -1860,8 +1868,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
   // Shut down the actual accessible or access node
   void *uniqueID;
   accessNode->GetUniqueID(&uniqueID);
-  nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
-  accNode->Shutdown();
+  accessNode->Shutdown();
 
   // Remove from hash table as well
   mAccessNodeCache.Remove(uniqueID);
@@ -1942,8 +1949,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   // Update last change state information
-  nsCOMPtr<nsIAccessNode> childAccessNode;
-  GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
+  nsCOMPtr<nsIAccessNode> childAccessNode = GetCachedAccessNode(childNode);
   nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
 
 #ifdef DEBUG_A11Y
@@ -1996,7 +2002,8 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     nsresult rv = FireShowHideEvents(childNode, PR_FALSE,
                                      nsIAccessibleEvent::EVENT_HIDE,
                                      eDelayedEvent, isAsynch);
-    NS_ENSURE_SUCCESS(rv,);
+    if (NS_FAILED(rv))
+      return;
 
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
       // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
@@ -2124,11 +2131,9 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
                                                 aAccessible);
     }
     else { // Only return cached accessibles, don't create anything
-      nsCOMPtr<nsIAccessNode> accessNode;
-      GetCachedAccessNode(currentNode, getter_AddRefs(accessNode)); // AddRefs
-      if (accessNode) {
-        CallQueryInterface(accessNode, aAccessible); // AddRefs
-      }
+      nsAccessNode* accessNode = GetCachedAccessNode(currentNode);
+      if (accessNode)
+        CallQueryInterface(accessNode, aAccessible);
     }
   } while (!*aAccessible);
 
@@ -2149,9 +2154,7 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode,
   if (!aAvoidOnThisNode) {
     if (aEventType == nsIAccessibleEvent::EVENT_HIDE) {
       // Don't allow creation for accessibles when nodes going away
-      nsCOMPtr<nsIAccessNode> accessNode;
-      GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
-      accessible = do_QueryInterface(accessNode);
+      accessible = do_QueryInterface(GetCachedAccessNode(aDOMNode));
     } else {
       // Allow creation of new accessibles for show events
       GetAccService()->GetAttachedAccessibleFor(aDOMNode,
