@@ -5931,3 +5931,24 @@ mozAutoRemovableBlockerRemover::~mozAutoRemovableBlockerRemover()
     }
   }
 }
+
+void nsContentUtils::RemoveNewlines(nsString &aString)
+{
+  // strip CR/LF and null
+  static const char badChars[] = {'\r', '\n', 0};
+  aString.StripChars(badChars);
+}
+
+void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
+{
+  if (aString.FindChar(PRUnichar('\r')) != -1) {
+    // Windows linebreaks: Map CRLF to LF:
+    aString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
+                             NS_LITERAL_STRING("\n").get());
+
+    // Mac linebreaks: Map any remaining CR to LF:
+    aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
+                             NS_LITERAL_STRING("\n").get());
+  }
+}
+
