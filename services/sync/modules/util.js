@@ -614,7 +614,7 @@ let Utils = {
     thisObj = thisObj || {};
 
     // Delay an existing timer if it exists
-    if (thisObj[name] instanceof Ci.nsITimer) {
+    if (name in thisObj && thisObj[name] instanceof Ci.nsITimer) {
       thisObj[name].delay = wait;
       return;
     }
