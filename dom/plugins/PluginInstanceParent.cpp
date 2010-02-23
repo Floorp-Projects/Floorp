@@ -903,11 +903,8 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
 
     switch (message) {
         case WM_SETFOCUS:
-        // Widget may be calling us back from AnswerPluginGotFocus(), make
-        // sure we don't end up sending this back over. If we're not in
-        // SendMessage, this is coming from the dom / focus manager.
-        if ((::InSendMessageEx(NULL) & (ISMEX_SEND|ISMEX_REPLIED)) != ISMEX_SEND)
-            self->CallSetPluginFocus();
+        // Let the child plugin window know it should take focus.
+        self->CallSetPluginFocus();
         break;
 
         case WM_CLOSE:
