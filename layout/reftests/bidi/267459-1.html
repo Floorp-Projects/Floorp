@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Test unicode-bidi in form controls</title>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <style type="text/css">
+   .reversed {
+     direction: rtl;
+     unicode-bidi: bidi-override;
+    }
+  </style>
+ </head>
+ <body>
+   <p class="reversed">This paragraph should appear backwards</p>
+   <p>
+   <textarea class="reversed" rows="3" cols="80">This textarea should appear backwards</textarea><br>
+   <input class="reversed" type="text" size="80" value="This input should appear backwards"><br>
+   <input class="reversed" type="button" value="This button should appear backwards"><br>
+   <select size="6" class="reversed">
+    <option selected class="reversed">This</option>
+    <optgroup class="reversed" label="select">
+     <option class="reversed">should</option>
+     <option class="reversed">appear</option>
+    </optgroup>
+    <optgroup class="reversed" label="backwards">
+     <option class="reversed">throughout</option>
+    </optgroup>
+   </select><br>
+ </body>
+</html>
