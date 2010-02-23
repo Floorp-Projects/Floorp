@@ -3,6 +3,10 @@
 #include "BrowserStreamParent.h"
 #include "PluginInstanceParent.h"
 
+// How much data are we willing to send across the wire
+// in one chunk?
+static const int32_t kSendDataChunk = 0x1000;
+
 namespace mozilla {
 namespace plugins {
 
@@ -10,6 +14,7 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
                                          NPStream* stream)
   : mNPP(npp)
   , mStream(stream)
+  , mState(ALIVE)
 {
   mStream->pdata = static_cast<AStream*>(this);
 }
@@ -23,6 +28,19 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                            NPError* result)
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
+
+  switch (mState) {
+  case ALIVE:
+    break;
+
+  case DYING:
+    *result = NPERR_GENERIC_ERROR;
+    return true;
+
+  default:
+    NS_ERROR("Unexpected state");
+    return false;
+  }
 
   if (!mStream)
     return false;
@@ -43,24 +61,49 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
 }
 
 bool
-BrowserStreamParent::Answer__delete__(const NPError& reason,
-                                      const bool& artificial)
+BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
 {
-  if (!artificial)
-    NPN_DestroyStream(reason);
+  switch (mState) {
+  case ALIVE:
+    break;
+
+  case DYING:
+    return true;
+
+  default:
+    NS_ERROR("Unexpected state");
+    return false;
+  };
+
+  mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
+  return true;
+}
+
+void
+BrowserStreamParent::NPP_DestroyStream(NPReason reason)
+{
+  NS_ASSERTION(ALIVE == mState, "NPP_DestroyStream called twice?");
+  mState = DYING;
+  SendNPP_DestroyStream(reason);
+}
+
+bool
+BrowserStreamParent::RecvStreamDestroyed()
+{
+  if (DYING != mState) {
+    NS_ERROR("Unexpected state");
+    return false;
+  }
+
+  mState = DELETING;
+  Send__delete__(this);
   return true;
 }
 
 int32_t
 BrowserStreamParent::WriteReady()
 {
-  PLUGIN_LOG_DEBUG_FUNCTION;
-
-  int32_t result;
-  if (!CallNPP_WriteReady(mStream->end, &result))
-    return -1;
-
-  return result;
+  return kSendDataChunk;
 }
 
 int32_t
@@ -70,13 +113,17 @@ BrowserStreamParent::Write(int32_t offset,
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
-  int32_t result;
-  if (!CallNPP_Write(offset,
-                     nsCString(static_cast<char*>(buffer), len),
-                     &result))
-    return -1;
+  NS_ASSERTION(ALIVE == mState, "Sending data after NPP_DestroyStream?");
+  NS_ASSERTION(len > 0, "Non-positive length to NPP_Write");
 
-  return result;
+  if (len > kSendDataChunk)
+    len = kSendDataChunk;
+
+  SendWrite(offset,
+    nsCString(static_cast<char*>(buffer), len),
+    mStream->end);
+
+  return len;
 }
 
 void
@@ -84,15 +131,11 @@ BrowserStreamParent::StreamAsFile(const char* fname)
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
+  NS_ASSERTION(ALIVE == mState,
+               "Calling streamasfile after NPP_DestroyStream?");
+
   CallNPP_StreamAsFile(nsCString(fname));
-}
-
-NPError
-BrowserStreamParent::NPN_DestroyStream(NPReason reason)
-{
-  PLUGIN_LOG_DEBUG_FUNCTION;
-
-  return mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
+  return;
 }
 
 } // namespace plugins
