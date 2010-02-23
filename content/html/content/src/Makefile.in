@@ -130,6 +130,8 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../layout/xul/base/src \
 		-I$(srcdir)/../../../../layout/generic \
 		-I$(srcdir)/../../../../dom/base \
+		-I$(srcdir)/../../../../editor/libeditor/base \
+		-I$(srcdir)/../../../../editor/libeditor/text \
 		-I$(srcdir) \
 		$(NULL)
 
