@@ -84,7 +84,6 @@
  * - Fuse objects and their JSXML* private data into single GC-things
  * - fix function::foo vs. x.(foo == 42) collision using proper namespacing
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
- * - JS_TypeOfValue sure could use a cleaner interface to "types"
  */
 
 #ifdef XML_METERING
@@ -5045,6 +5044,12 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return JS_TRUE;
 }
 
+static JSType
+xml_typeOf(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_XML;
+}
+
 static JSBool
 xml_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
@@ -5314,10 +5319,10 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_getAttributes,          xml_setAttributes,
     xml_deleteProperty,         xml_defaultValue,
     xml_enumerate,              js_CheckAccess,
+    xml_typeOf,                 js_TraceObject,
     NULL,                       NULL,
     NULL,                       NULL,
-    xml_hasInstance,            js_TraceObject,
-    xml_clear
+    xml_hasInstance,            xml_clear
 };
 
 static JSObjectOps *

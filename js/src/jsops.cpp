@@ -3292,7 +3292,7 @@ BEGIN_CASE(JSOP_SETTER)
     if (id == 0)
         FETCH_ELEMENT_ID(obj, i, id);
 
-    if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
+    if (!js_IsCallable(cx, rval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              (op == JSOP_GETTER)

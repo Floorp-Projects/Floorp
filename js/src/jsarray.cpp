@@ -828,6 +828,12 @@ static JSBool
 slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                     jsval *statep, jsid *idp);
 
+static JSType
+array_typeOf(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_OBJECT;
+}
+
 /* The same as js_ObjectOps except for the .enumerate and .call hooks. */
 static JSObjectOps js_SlowArrayObjectOps = {
     NULL,
@@ -836,10 +842,10 @@ static JSObjectOps js_SlowArrayObjectOps = {
     js_GetAttributes,       js_SetAttributes,
     js_DeleteProperty,      js_DefaultValue,
     slowarray_enumerate,    js_CheckAccess,
+    array_typeOf,           js_TraceObject,
     NULL,                   NATIVE_DROP_PROPERTY,
     NULL,                   js_Construct,
-    js_HasInstance,         js_TraceObject,
-    js_Clear
+    js_HasInstance,         js_Clear
 };
 
 static JSObjectOps *
@@ -1248,10 +1254,10 @@ JSObjectOps js_ArrayObjectOps = {
     array_getAttributes,  array_setAttributes,
     array_deleteProperty, js_DefaultValue,
     array_enumerate,      js_CheckAccess,
+    array_typeOf,         array_trace,
     NULL,                 array_dropProperty,
     NULL,                 NULL,
-    js_HasInstance,       array_trace,
-    NULL
+    js_HasInstance,       NULL
 };
 
 static JSObjectOps *
