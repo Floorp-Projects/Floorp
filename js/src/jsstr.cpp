@@ -1953,7 +1953,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     NORMALIZE_THIS(cx, vp, rdata.str);
 
     /* Extract replacement string/function. */
-    if (argc >= 2 && js_IsCallable(cx, vp[3])) {
+    if (argc >= 2 && js_IsCallable(vp[3])) {
         rdata.lambda = JSVAL_TO_OBJECT(vp[3]);
         rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;

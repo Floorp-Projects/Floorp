@@ -1821,7 +1821,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    if (argc <= 1 || !js_IsCallable(cx, vp[3])) {
+    if (argc <= 1 || !js_IsCallable(vp[3])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
@@ -1854,7 +1854,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    if (argc <= 1 || !js_IsCallable(cx, vp[3])) {
+    if (argc <= 1 || !js_IsCallable(vp[3])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
@@ -2175,7 +2175,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(cx, v)) &&
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) &&
             v != JSVAL_VOID) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_GETTER_OR_SETTER,
@@ -2191,7 +2191,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(cx, v)) &&
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) &&
             v != JSVAL_VOID) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_GETTER_OR_SETTER,
@@ -6038,7 +6038,7 @@ js_TypeOf(JSContext *cx, JSObject *obj)
      * [[Call]] should be of type "function". However, RegExp is of
      * type "object", not "function", for Web compatibility.
      */
-    if (obj->isCallable(cx)) {
+    if (obj->isCallable()) {
         return (obj->getClass() != &js_RegExpClass)
                ? JSTYPE_FUNCTION
                : JSTYPE_OBJECT;
@@ -6803,17 +6803,12 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
 }
 
 bool
-JSObject::isCallable(JSContext *cx)
+JSObject::isCallable()
 {
-    if (!isNative())
-        return map->ops->call;
+    if (isNative())
+        return isFunction() || getClass()->call;
 
-    JS_LOCK_OBJ(cx, this);
-    JSBool callable = (map->ops == &js_ObjectOps)
-                      ? isFunction() || getClass()->call
-                      : map->ops->call != NULL;
-    JS_UNLOCK_OBJ(cx, this);
-    return callable;
+    return map->ops->call;
 }
 
 JSBool
