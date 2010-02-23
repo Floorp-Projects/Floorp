@@ -110,6 +110,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
 
+#include "nsTextEditRules.h"
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
@@ -880,6 +882,13 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
       } else {
         CopyUTF8toUTF16(mValue, aValue);
       }
+
+      // If the value is not owned by the frame, then we should handle any
+      // exiting newline characters inside it, instead of relying on the
+      // editor to do it for us.
+      nsString value(aValue);
+      nsTextEditRules::HandleNewLines(value, -1);
+      aValue.Assign(value);
     }
 
     return NS_OK;
@@ -1007,7 +1016,9 @@ nsHTMLInputElement::TakeTextFrameValue(const nsAString& aValue)
   if (mValue) {
     nsMemory::Free(mValue);
   }
-  mValue = ToNewUTF8String(aValue);
+  nsString value(aValue);
+  nsContentUtils::PlatformToDOMLineBreaks(value);
+  mValue = ToNewUTF8String(value);
   return NS_OK;
 }
 

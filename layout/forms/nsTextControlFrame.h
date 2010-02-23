@@ -287,12 +287,6 @@ protected:
                               const nsAString *aValue = nsnull);
 
   /**
-   * Strip all \n, \r and nulls from the given string
-   * @param aString the string to remove newlines from [in/out]
-   */
-  void RemoveNewlines(nsString &aString);
-
-  /**
    * Get the maxlength attribute
    * @param aMaxLength the value of the max length attr
    * @returns PR_FALSE if attr not defined
