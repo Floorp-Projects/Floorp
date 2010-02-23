@@ -6027,9 +6027,11 @@ JSType
 js_TypeOf(JSContext *cx, JSObject *obj)
 {
     /*
-     * Wrappers should also intercept js_TypeOf and answer accordingly.
+     * Unfortunately we have wrappers that are native objects and thus don't
+     * overwrite js_TypeOf (i.e. XPCCrossOriginWrapper), so we have to
+     * unwrap here.
      */
-    JS_ASSERT(js_GetWrappedObject(cx, obj) == obj);
+    obj = js_GetWrappedObject(cx, obj);
 
     /*
      * ECMA 262, 11.4.3 says that any native object that implements
