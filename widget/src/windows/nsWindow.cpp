@@ -3655,12 +3655,20 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
   return false;
 }
 
-// static
 void
-nsWindow::IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lParam)
+nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
   NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                "Failed to prevent a nonqueued message from running!");
+
+  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
+  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
+      ::GetPropW(mWnd, L"PluginInstanceParentProperty")) {
+      ::ReplyMessage(0);
+      return;
+  }
+
+  // Modal UI being displayed in windowless plugins.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() &&
       (::InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     LRESULT res;
@@ -3695,8 +3703,12 @@ nsWindow::IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lP
 // The WndProc procedure for all nsWindows in this toolkit
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  // Get the window which caused the event and ask it to process the message
+  nsWindow *someWindow = GetNSWindowPtr(hWnd);
+
 #ifdef MOZ_IPC
-  IPCWindowProcHandler(hWnd, msg, wParam, lParam);
+  if (someWindow)
+    someWindow->IPCWindowProcHandler(msg, wParam, lParam);
 #endif
 
   // create this here so that we store the last rolled up popup until after
@@ -3706,9 +3718,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   LRESULT popupHandlingResult;
   if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
     return popupHandlingResult;
-
-  // Get the window which caused the event and ask it to process the message
-  nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
   // XXX This fixes 50208 and we are leaving 51174 open to further investigate
   // why we are hitting this assert
