@@ -907,6 +907,10 @@ function testMoveFocus()
   var selection = gChildWindow.getSelection();
   selection.removeAllRanges();
 
+  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_CARET, 0);
+  is(newFocus, null, "move caret when at document root");
+  is(fm.focusedElement, null, "move caret when at document root");
+
   var node = getById("t16").firstChild;
   var range = gChildWindow.document.createRange();
   range.setStart(node, 3);
@@ -917,11 +921,11 @@ function testMoveFocus()
   is(newFocus, null, "move caret to non-link return value");
   is(fm.focusedElement, null, "move caret to non-link");
 
-  var t25 = getById("t25")
+  var t25 = getById("t25");
   var node = t25.firstChild;
   range.setStart(node, 1);
   range.setEnd(node, 1);
-  var newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_CARET, 0);
+  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_CARET, 0);
 
   is(newFocus, t25, "move caret to link return value");
   is(fm.focusedElement, t25, "move caret to link focusedElement");
