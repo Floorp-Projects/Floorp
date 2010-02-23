@@ -419,7 +419,7 @@ class HashTable : AllocPolicy
 
     /*
      * This is a copy of lookup hardcoded to the assumptions:
-     *   1. the lookup is a looupForAdd
+     *   1. the lookup is a lookupForAdd
      *   2. the key, whose |keyHash| has been passed is not in the table,
      *   3. no entries have been removed from the table.
      * This specialized search avoids the need for recovering lookup values
