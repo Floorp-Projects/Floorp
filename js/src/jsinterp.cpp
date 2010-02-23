@@ -1166,7 +1166,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         if (!native)
             goto bad;
     } else {
-have_fun:
         /* Get private data and set derived locals from it. */
         fun = GET_FUNCTION_PRIVATE(cx, funobj);
         nslots = FUN_MINARGS(fun);
