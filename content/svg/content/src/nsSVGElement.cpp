@@ -217,12 +217,16 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (oldVal && oldVal->Type() == nsAttrValue::eCSSStyleRule) {
     // we need to force a reparse because the baseURI of the document
-    // may have changed
+    // may have changed, and in particular because we may be clones of
+    // XBL anonymous content now being bound to the document we should
+    // render in and due to the hacky way in which we implement the
+    // interaction of XBL and SVG resources.  Once we have a sane
+    // ownerDocument on XBL anonymous content, this can all go away.
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
     // Force in data doc, since we already have a style rule
-    ParseStyleAttribute(this, stringValue, attrValue, PR_TRUE);
+    ParseStyleAttribute(stringValue, attrValue, PR_TRUE);
     // Don't bother going through SetInlineStyleRule, we don't want to fire off
     // mutation events or document notifications anyway
     rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, attrValue);
