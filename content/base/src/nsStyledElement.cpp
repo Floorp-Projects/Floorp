@@ -50,6 +50,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
+#include "nsIDOMMutationEvent.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMSVGStylable.h"
@@ -127,8 +128,13 @@ nsStyledElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 
   nsAttrValue attrValue(aStyleRule);
 
+  // XXXbz do we ever end up with ADDITION here?  I doubt it.
+  PRUint8 modType = modification ?
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
-                          oldValueStr, attrValue, modification, hasListeners,
+                          oldValueStr, attrValue, modType, hasListeners,
                           aNotify, nsnull);
 }
 

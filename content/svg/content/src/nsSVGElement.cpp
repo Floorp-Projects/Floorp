@@ -936,29 +936,20 @@ nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGElement::WillModifySVGObservable(nsISVGValue* observable,
-                                      nsISVGValue::modificationType aModType)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
-                                     nsISVGValue::modificationType aModType)
+nsSVGElement::ObservableModificationData
+nsSVGElement::GetModificationDataForObservable(nsISVGValue* aObservable,
+                                               nsISVGValue::modificationType aModType)
 {
   // Return without setting DOM attributes as markup attributes if the
   // attribute's element is being inserted into an SVG document fragment,
   // which provides a context which percentage lengths are relative to.
   // Bug 274886
   if (aModType == nsISVGValue::mod_context)
-    return NS_OK;
+    return ObservableModificationData(nsnull, 0);
 
   // Return without setting DOM attribute 
   if (mSuppressNotification)
-    return NS_OK;
+    return ObservableModificationData(nsnull, 0);
 
   PRUint32 i, count = mMappedAttributes.AttrCount();
   const nsAttrValue* attrValue = nsnull;
@@ -972,26 +963,59 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
   if (i == count) {
     NS_NOTREACHED("unknown nsISVGValue");
 
-    return NS_ERROR_UNEXPECTED;
+    return ObservableModificationData(nsnull, 1);
+  }
+  
+  const nsAttrName* attrName = mMappedAttributes.AttrNameAt(i);
+  PRBool modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
+                                                    attrName->NamespaceID());
+
+  PRUint8 modType = modification ?
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+
+  return ObservableModificationData(attrName, modType);
+}
+
+
+NS_IMETHODIMP
+nsSVGElement::WillModifySVGObservable(nsISVGValue* aObservable,
+                                      nsISVGValue::modificationType aModType)
+{
+  ObservableModificationData data =
+    GetModificationDataForObservable(aObservable, aModType);
+  const nsAttrName* attrName = data.name;
+  if (!attrName) {
+    return data.modType ? NS_ERROR_UNEXPECTED : NS_OK;
   }
 
-  const nsAttrName* attrName = mMappedAttributes.AttrNameAt(i);
-  PRBool modification = PR_FALSE;
+  nsNodeUtils::AttributeWillChange(this, attrName->NamespaceID(),
+                                   attrName->LocalName(), data.modType);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
+                                     nsISVGValue::modificationType aModType)
+{
+  ObservableModificationData data =
+    GetModificationDataForObservable(aObservable, aModType);
+  const nsAttrName* attrName = data.name;
+  if (!attrName) {
+    return data.modType ? NS_ERROR_UNEXPECTED : NS_OK;
+  }
+
   PRBool hasListeners =
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);
 
-  if (hasListeners || IsInDoc()) {
-    modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
-                                               attrName->NamespaceID());
-  }
 
   nsAttrValue newValue(aObservable);
-
   return SetAttrAndNotify(attrName->NamespaceID(), attrName->LocalName(),
                           attrName->GetPrefix(), EmptyString(), newValue,
-                          modification, hasListeners, PR_TRUE, nsnull);
+                          data.modType, hasListeners, PR_TRUE, nsnull);
 }
 
 //----------------------------------------------------------------------
