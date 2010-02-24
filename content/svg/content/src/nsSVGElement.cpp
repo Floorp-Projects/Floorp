@@ -489,6 +489,10 @@ nsresult
 nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                         PRBool aNotify)
 {
+  // XXXbz there's a bunch of redundancy here with AfterSetAttr.
+  // Maybe consolidate?
+  nsresult rv = nsSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+
   PRBool foundMatch = PR_FALSE;
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -649,7 +653,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
   }
 
-  return nsSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+  return rv;
 }
 
 void
