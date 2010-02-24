@@ -247,9 +247,6 @@ private:
   // Notifies the element that decoding has failed.
   void DecodeError();
 
-  void RegisterShutdownObserver();
-  void UnregisterShutdownObserver();
-
   // Volume that the audio backend will be initialized with.
   float mInitialVolume;
 
