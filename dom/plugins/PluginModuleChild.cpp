@@ -923,13 +923,10 @@ _getstringidentifier(const NPUTF8* aName)
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-    NPRemoteIdentifier ident;
-    if (!PluginModuleChild::current()->
-             SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident)) {
-        NS_WARNING("Failed to send message!");
-        ident = 0;
-    }
-
+    NPRemoteIdentifier ident = 0;
+    if (aName)
+        PluginModuleChild::current()->
+            SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident);
     return (NPIdentifier)ident;
 }
 
@@ -945,32 +942,28 @@ _getstringidentifiers(const NPUTF8** aNames,
         NS_RUNTIMEABORT("Bad input! Headed for a crash!");
     }
 
-    nsAutoTArray<nsCString, 10> names;
-    nsAutoTArray<NPRemoteIdentifier, 10> ids;
-
-    if (names.SetCapacity(aNameCount)) {
-        for (int32_t index = 0; index < aNameCount; index++) {
-            names.AppendElement(nsDependentCString(aNames[index]));
-        }
-        NS_ASSERTION(int32_t(names.Length()) == aNameCount,
-                     "Should equal here!");
-
-        if (PluginModuleChild::current()->
-                SendNPN_GetStringIdentifiers(names, &ids)) {
-            NS_ASSERTION(int32_t(ids.Length()) == aNameCount, "Bad length!");
-
-            for (int32_t index = 0; index < aNameCount; index++) {
-                aIdentifiers[index] = (NPIdentifier)ids[index];
-            }
-            return;
-        }
-        NS_WARNING("Failed to send message!");
-    }
-
-    // Something must have failed above.
-    for (int32_t index = 0; index < aNameCount; index++) {
+    // Initialize to zero in case of errors later
+    for (int32_t index = 0; index < aNameCount; ++index)
         aIdentifiers[index] = 0;
+
+    nsTArray<nsCString> names;
+    nsTArray<NPRemoteIdentifier> ids;
+
+    names.SetLength(aNameCount);
+    for (int32_t index = 0; index < aNameCount; ++index) {
+        if (aNames[index]) {
+            names[index] = nsDependentCString(aNames[index]);
+        }
+        else {
+            names[index].SetIsVoid(true);
+        }
     }
+
+    PluginModuleChild::current()->
+        SendNPN_GetStringIdentifiers(names, &ids);
+
+    for (int32_t index = 0; index < ids.Length(); ++index)
+        aIdentifiers[index] = (NPIdentifier)ids[index];
 }
 
 bool NP_CALLBACK

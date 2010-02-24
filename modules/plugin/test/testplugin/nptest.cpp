@@ -299,6 +299,11 @@ static void initializeIdentifiers()
     NPN_GetStringIdentifiers(sPluginMethodIdentifierNames,
         ARRAY_LENGTH(sPluginMethodIdentifierNames), sPluginMethodIdentifiers);
     sIdentifiersInitialized = true;    
+
+    // Check whether NULL is handled in NPN_GetStringIdentifiers
+    NPIdentifier IDList[2];
+    static char const *const kIDNames[2] = { NULL, "setCookie" };
+    NPN_GetStringIdentifiers(const_cast<const NPUTF8**>(kIDNames), 2, IDList);
   }
 }
 
