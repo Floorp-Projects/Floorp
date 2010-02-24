@@ -99,6 +99,8 @@ parent:
   // entered a nested event loop.  If the browser doesn't process
   // native events, then "livelock" and some other glitches can occur.
   rpc ProcessSomeEvents();
+
+  sync AppendNotesToCrashReport(nsCString aNotes);
 };
 
 } // namespace plugins

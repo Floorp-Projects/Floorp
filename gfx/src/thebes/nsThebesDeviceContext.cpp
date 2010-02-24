@@ -57,24 +57,6 @@
 #include "nsIView.h"
 #include "nsILookAndFeel.h"
 
-#ifdef MOZ_ENABLE_GTK2
-// for getenv
-#include <cstdlib>
-// for round
-#include <cmath>
-
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
-
-#include "nsFont.h"
-
-#include <pango/pango.h>
-#ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#endif /* MOZ_X11 */
-#include <pango/pango-fontmap.h>
-#endif /* GTK2 */
-
 #include "gfxImageSurface.h"
 
 #ifdef MOZ_ENABLE_GTK2
@@ -107,15 +89,6 @@ static nsSystemFontsMac *gSystemFonts = nsnull;
 static nsSystemFontsQt *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
-#endif
-
-#if defined(MOZ_ENABLE_GTK2) && defined(MOZ_X11)
-extern "C" {
-static int x11_error_handler (Display *dpy, XErrorEvent *err) {
-    NS_ASSERTION(PR_FALSE, "X Error");
-    return 0;
-}
-}
 #endif
 
 #ifdef PR_LOGGING
@@ -738,15 +711,6 @@ nsThebesDeviceContext::Init(nsIWidget *aWidget)
     nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
     if (obs)
         obs->AddObserver(this, "memory-pressure", PR_TRUE);
-
-#if defined(MOZ_ENABLE_GTK2) && defined(MOZ_X11)
-    if (getenv ("MOZ_X_SYNC")) {
-        PR_LOG (gThebesGFXLog, PR_LOG_DEBUG, ("+++ Enabling XSynchronize\n"));
-        XSynchronize (gdk_x11_get_default_xdisplay(), True);
-        XSetErrorHandler(x11_error_handler);
-    }
-
-#endif
 
     mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
 
