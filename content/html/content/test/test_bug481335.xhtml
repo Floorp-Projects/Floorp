@@ -7,6 +7,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481335
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    a { color:blue; }
+    a:visited { color:red; }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481335">Mozilla Bug 481335</a>
@@ -17,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481335
 <p id="newparent" xml:base="http://www.example.com/"></p>
 <div id="content" style="display: none"></div>
 <pre id="test">
-<script type="application/javascript">
+<script type="application/javascript;version=1.7">
 <![CDATA[
 
 /** Test for Bug 481335 **/
@@ -31,54 +35,80 @@ is($("t").href, "",
 
 $("t").setAttribute("href", rand);
 is($("t").href,
-   window.location.href.replace(/test_bug481335.xhtml/, rand),
+   window.location.href.replace(/test_bug481335.xhtml([\?].*)?/, rand),
    "Unexpected href after set");
 is($("t").href,
-   window.location.href.replace(/test_bug481335.xhtml/, rand),
+   window.location.href.replace(/test_bug481335.xhtml([\?].*)?/, rand),
    "Unexpected cached href after set");
-var unvisitedColor = document.defaultView.getComputedStyle($("t"), "").color;
-var visitedColor;
+const unvisitedColor = "rgb(0, 0, 255)";
+const visitedColor = "rgb(255, 0, 0)";
 
-function afterThirdLoad() {
-  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
-     "Should be visited now after third load");
-  SimpleTest.finish();
+let tests = testIterator();
+function continueTest() {
+  tests.next();
 }
 
-function afterSecondLoad() {
-  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
-       "Should be visited now");
-  $("t").pathname = rand;
-  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
-       "Should still be visited after setting pathname to its existing value");
-  $("t").pathname += "x";
-  isnot(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
-       "Should not be visited after changing pathname");
-  $("t").pathname = $("t").pathname;
-  isnot(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
-       "Should not be visited after setting unvisited pathname to existing value");
-
-  $("i").onload = afterThirdLoad;
-  $("i").src = $("t").href;
+function checkLinkColor(aElmId, aExpectedColor, aMessage) {
+  // Because link coloring is asynchronous, we wait until we get the right
+  // result, or we will time out (resulting in a failure).
+  var getCS = document.defaultView.getComputedStyle;
+  while (getCS($(aElmId), "").color != aExpectedColor) {
+    setTimeout(continueTest, 10);
+    return false;
+  }
+  is(getCS($(aElmId), "").color, aExpectedColor, aMessage);
+  return true;
 }
 
-function afterFirstLoad() {
-  visitedColor = document.defaultView.getComputedStyle($("t"), "").color;
-  isnot(visitedColor, unvisitedColor, "Why are the colors the same?");
+function testIterator() {
+  // After first load
   $("newparent").appendChild($("t"));
   is($("t").href, "http://www.example.com/" + rand,
      "Unexpected href after move");
   is($("t").href, "http://www.example.com/" + rand,
      "Unexpected cached href after move");
-  is(document.defaultView.getComputedStyle($("t"), "").color, unvisitedColor,
-     "Should be unvisited now");
+  while (!checkLinkColor("t", unvisitedColor, "Should be unvisited now"))
+    yield;
 
-  $("i").onload = afterSecondLoad;
   $("i").src = $("t").href;
+  yield;
+
+  // After second load
+  while (!checkLinkColor("t", visitedColor, "Should be visited now"))
+    yield;
+  $("t").pathname = rand;
+  while (!checkLinkColor("t", visitedColor,
+            "Should still be visited after setting pathname to its existing value")) {
+    yield;
+  }
+  /* TODO uncomment this test with the landing of bug 534526.  See
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
+  $("t").pathname += "x";
+  while (!checkLinkColor("t", unvisitedColor,
+            "Should not be visited after changing pathname")) {
+    yield;
+  }
+  $("t").pathname = $("t").pathname;
+  while (!checkLinkColor("t", unvisitedColor,
+            "Should not be visited after setting unvisited pathname to existing value")) {
+    yield;
+  }
+  */
+
+  $("i").src = $("t").href;
+  yield;
+
+  // After third load
+  while (!checkLinkColor("t", visitedColor,
+                         "Should be visited now after third load")) {
+    yield;
+  }
+  SimpleTest.finish();
+  yield;
 }
 
 addLoadEvent(function() {
-  $("i").onload = afterFirstLoad;
+  $("i").onload = continueTest;
   $("i").src = $("t").href;
 });
 ]]>
