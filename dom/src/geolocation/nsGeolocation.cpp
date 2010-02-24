@@ -134,6 +134,7 @@ nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionOptions* aOptions)
   : mAllowed(PR_FALSE),
     mCleared(PR_FALSE),
+    mHasSentData(PR_FALSE),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
     mOptions(aOptions),
@@ -190,9 +191,11 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
   // provider yet, cancel the request.  Same logic as
   // ::Cancel, just a different error
   
-  NotifyError(nsIDOMGeoPositionError::TIMEOUT);
-  // remove ourselves from the locator's callback lists.
-  mLocator->RemoveRequest(this);
+  if (!mHasSentData) {
+    NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+    // remove ourselves from the locator's callback lists.
+    mLocator->RemoveRequest(this);
+  }
 
   mTimeoutTimer = nsnull;
   return NS_OK;
@@ -274,19 +277,6 @@ nsGeolocationRequest::Allow()
     SendLocation(lastPosition);
   }
 
-  SetTimeoutTimer();
-
-  mAllowed = PR_TRUE;
-  return NS_OK;
-}
-
-void
-nsGeolocationRequest::SetTimeoutTimer()
-{
-  if (mTimeoutTimer) {
-    mTimeoutTimer->Cancel();
-    mTimeoutTimer = nsnull;
-  }
   PRInt32 timeout;
   if (mOptions && NS_SUCCEEDED(mOptions->GetTimeout(&timeout)) && timeout > 0) {
     
@@ -296,6 +286,9 @@ nsGeolocationRequest::SetTimeoutTimer()
     mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
     mTimeoutTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
   }
+
+  mAllowed = PR_TRUE;
+  return NS_OK;
 }
 
 void
@@ -309,11 +302,6 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
 {
   if (mCleared || !mAllowed)
     return;
-
-  if (mTimeoutTimer) {
-    mTimeoutTimer->Cancel();
-    mTimeoutTimer = nsnull;
-  }
 
   // we should not pass null back to the DOM.
   if (!aPosition) {
@@ -332,7 +320,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   JSContext* cx;
   stack->Pop(&cx);
 
-  SetTimeoutTimer();
+  mHasSentData = PR_TRUE;
 }
 
 void
@@ -357,8 +345,6 @@ NS_IMPL_THREADSAFE_RELEASE(nsGeolocationService)
 
 
 static PRBool sGeoEnabled = PR_TRUE;
-static PRBool sGeoIgnoreLocationFilter = PR_FALSE;
-
 static int
 GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
 {
@@ -490,16 +476,13 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
 
 PRBool
 nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
-{  
+{
   if (!aSomewhere)
     return PR_FALSE;
 
   nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
   if (!geoService)
     return PR_FALSE;
-
-  if (sGeoIgnoreLocationFilter)
-    return PR_TRUE;
 
   nsCOMPtr<nsIDOMGeoPosition> lastPosition = geoService->GetCachedPosition();
   if (!lastPosition)
