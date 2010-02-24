@@ -1457,17 +1457,60 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
     mTimers.RemoveElement(id, ChildTimer::IDComparator());
 }
 
+static PLDHashOperator
+InvalidateObject(DeletingObjectEntry* e, void* userArg)
+{
+    NPObject* o = e->GetKey();
+    if (!e->mDeleted && o->_class && o->_class->invalidate)
+        o->_class->invalidate(o);
+
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+DeleteObject(DeletingObjectEntry* e, void* userArg)
+{
+    NPObject* o = e->GetKey();
+    if (!e->mDeleted) {
+        e->mDeleted = true;
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+        {
+            int32_t refcnt = o->referenceCount;
+            while (refcnt) {
+                --refcnt;
+                NS_LOG_RELEASE(o, refcnt, "NPObject");
+            }
+        }
+#endif
+
+        PluginModuleChild::DeallocNPObject(o);
+    }
+
+    return PL_DHASH_NEXT;
+}
+
 bool
 PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
+    PLUGIN_LOG_DEBUG_METHOD;
+    AssertPluginThread();
+
     for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
         mPendingAsyncCalls[i]->Cancel();
     mPendingAsyncCalls.TruncateLength(0);
 
     mTimers.Clear();
 
-    PluginModuleChild* module = PluginModuleChild::current();
-    bool retval = module->PluginInstanceDestroyed(this, aResult);
+    PluginModuleChild::current()->NPP_Destroy(this);
+    mData.ndata = 0;
+
+    mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
+    mDeletingHash->Init();
+    PluginModuleChild::current()->FindNPObjectsForInstance(this);
+
+    mDeletingHash->EnumerateEntries(InvalidateObject, NULL);
+    mDeletingHash->EnumerateEntries(DeleteObject, NULL);
 
     // Null out our cached actors as they should have been killed in the
     // PluginInstanceDestroyed call above.
@@ -1480,5 +1523,5 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     ResetPumpHooks();
 #endif
 
-    return retval;
+    return true;
 }

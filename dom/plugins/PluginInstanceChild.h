@@ -52,6 +52,7 @@
 #include "ChildAsyncCall.h"
 #include "ChildTimer.h"
 #include "nsRect.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace plugins {
@@ -181,6 +182,8 @@ public:
     void UnscheduleTimer(uint32_t id);
 
 private:
+    friend class PluginModuleChild;
+
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
         QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1, // Win32
@@ -252,6 +255,13 @@ private:
     friend class ChildAsyncCall;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
+
+    /**
+     * During destruction we enumerate all remaining scriptable objects and
+     * invalidate/delete them. Enumeration can re-enter, so maintain a
+     * hash separate from PluginModuleChild.mObjectMap.
+     */
+    nsAutoPtr< nsTHashtable<DeletingObjectEntry> > mDeletingHash;
 
 #if defined(OS_WIN)
 private:
