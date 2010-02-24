@@ -226,7 +226,7 @@ TraceRecorder::upRecursion()
     unsigned totalSlots = NativeStackSlots(cx, 1);
     unsigned downPostSlots = totalSlots - NativeStackSlots(cx, 0);
     FrameInfo* fi = (FrameInfo*)alloca(sizeof(FrameInfo) + totalSlots * sizeof(TraceType));
-    fi->block = cx->fp->down->blockChain;
+    fi->block = NULL;
     fi->pc = (jsbytecode*)return_pc;
     fi->imacpc = NULL;
 
