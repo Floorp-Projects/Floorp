@@ -185,6 +185,7 @@ NS_IMETHODIMP
 nsFrameMessageManager::SendSyncMessage()
 {
   if (mSyncCallback) {
+    NS_ENSURE_TRUE(mCallbackData, NS_ERROR_NOT_INITIALIZED);
     nsString messageName;
     nsString json;
     nsresult rv = GetParamsForMessage(messageName, json);
@@ -231,11 +232,12 @@ nsFrameMessageManager::SendSyncMessage()
   return NS_OK;
 }
 
-void
+nsresult
 nsFrameMessageManager::SendAsyncMessageInternal(const nsAString& aMessage,
                                                 const nsAString& aJSON)
 {
   if (mAsyncCallback) {
+    NS_ENSURE_TRUE(mCallbackData, NS_ERROR_NOT_INITIALIZED);
     mAsyncCallback(mCallbackData, aMessage, aJSON);
   }
   PRInt32 len = mChildManagers.Count();
@@ -243,6 +245,7 @@ nsFrameMessageManager::SendAsyncMessageInternal(const nsAString& aMessage,
     static_cast<nsFrameMessageManager*>(mChildManagers[i])->
       SendAsyncMessageInternal(aMessage, aJSON);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

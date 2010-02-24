@@ -113,8 +113,8 @@ public:
   void Disconnect(PRBool aRemoveFromParent = PR_TRUE);
   void SetCallbackData(void* aData);
   nsresult GetParamsForMessage(nsAString& aMessageName, nsAString& aJSON);
-  void SendAsyncMessageInternal(const nsAString& aMessage,
-                                const nsAString& aJSON);
+  nsresult SendAsyncMessageInternal(const nsAString& aMessage,
+                                    const nsAString& aJSON);
 protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
