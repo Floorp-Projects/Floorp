@@ -95,6 +95,7 @@ function clickit() {
   var evt = cspframe.contentDocument.createEvent("MouseEvents");
   evt.initMouseEvent("click", true, true, cspframe.contentWindow,
                       0,0,0,0,0, false, false, false, false, 0, null);
+  a.dispatchEvent(evt);
 }
 
 // save this for last so that our listeners are registered.
