@@ -72,8 +72,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xe88a767e, 0x1ca1, 0x4855, \
- { 0xa7, 0xa4, 0x37, 0x9f, 0x07, 0x89, 0x45, 0xef } }
+{ 0xc19d6f16, 0xab13, 0x4dde, \
+ { 0x99, 0x7a, 0x51, 0x04, 0xc3, 0x64, 0xd2, 0x51 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -668,17 +668,6 @@ public:
    */
   virtual PRBool IsLink(nsIURI** aURI) const = 0;
 
-   /**
-   * If the implementing element is a link, calling this method forces it to
-   * clear its cached href, if it has one.
-   *
-   * This function does not notify the document that it may need to restyle the
-   * link.
-   */
-  virtual void DropCachedHref()
-  {
-  }
-
   /**
    * Get the cached state of the link.  If the state is unknown, 
    * return eLinkState_Unknown.
@@ -688,17 +677,6 @@ public:
   virtual nsLinkState GetLinkState() const
   {
     return eLinkState_NotLink;
-  }
-
-  /**
-   * Set the cached state of the link.
-   *
-   * @param aState The cached link state of the link.
-   */
-  virtual void SetLinkState(nsLinkState aState)
-  {
-    NS_ASSERTION(aState == eLinkState_NotLink,
-                 "Need to override SetLinkState?");
   }
 
   /**
