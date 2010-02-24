@@ -5248,24 +5248,42 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
   NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
 
-  // Keep sXPConnect and sThreadJSContextStack alive.
-  nsLayoutStaticsRef layoutStaticsRef;
+  // Keep sXPConnect and sThreadJSContextStack alive. If we're on the main
+  // thread then this can be done simply and cheaply by adding a reference to
+  // nsLayoutStatics. If we're not on the main thread then we need to add a
+  // more expensive reference sXPConnect directly. We have to use manual
+  // AddRef and Release calls so don't early-exit from this function after we've
+  // added the reference!
+  PRBool isMainThread = NS_IsMainThread();
+
+  if (isMainThread) {
+    nsLayoutStatics::AddRef();
+  }
+  else {
+    sXPConnect->AddRef();
+  }
 
   JSContext *topJSContext;
   nsresult rv = sThreadJSContextStack->Peek(&topJSContext);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool push = topJSContext != cx;
-  if (push) {
-    rv = sThreadJSContextStack->Push(cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool push = topJSContext != cx;
+    if (push) {
+      rv = sThreadJSContextStack->Push(cx);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID,
+                                         aAllowWrapping, vp, aHolder);
+      if (push) {
+        sThreadJSContextStack->Pop(nsnull);
+      }
+    }
   }
 
-  rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID, aAllowWrapping,
-                                     vp, aHolder);
-
-  if (push) {
-    sThreadJSContextStack->Pop(nsnull);
+  if (isMainThread) {
+    nsLayoutStatics::Release();
+  }
+  else {
+    sXPConnect->Release();
   }
 
   return rv;
