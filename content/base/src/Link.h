@@ -110,6 +110,13 @@ private:
   mutable nsCOMPtr<nsIURI> mCachedURI;
 
   bool mRegistered;
+
+  /**
+   * Obtains a pointer to the nsIContent interface that classes inheriting from
+   * this should also inherit from.
+   */
+  nsIContent *Content();
+  nsIContent *mContent;
 };
 
 } // namespace dom
