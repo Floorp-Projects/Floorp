@@ -297,7 +297,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           continue;
         }
         nsCxPusher pusher;
-        NS_ENSURE_STATE(pusher.Push(mContext, NS_ERROR_FAILURE));
+        NS_ENSURE_STATE(pusher.Push(mContext, PR_FALSE));
 
         JSAutoRequest ar(mContext);
 
