@@ -78,14 +78,6 @@ Link::GetLinkState() const
 void
 Link::SetLinkState(nsLinkState aState)
 {
-  // Other code may try to reset our state by passing in eLinkState_Unknown.  In
-  // these situations, we want to call ResetLinkState and return since we may
-  // not be registered, and we may already be in an unknown state.
-  if (aState == eLinkState_Unknown) {
-    ResetLinkState();
-    return;
-  }
-
   NS_ASSERTION(mRegistered,
                "Setting the link state of an unregistered Link!");
   NS_ASSERTION(mLinkState != aState,
@@ -147,7 +139,7 @@ Link::LinkState() const
       // And make sure we are in the document's link map.
       nsIDocument *doc = content->GetCurrentDoc();
       if (doc) {
-        doc->AddStyleRelevantLink(content, hrefURI);
+        doc->AddStyleRelevantLink(self);
       }
     }
   }
@@ -470,16 +462,25 @@ Link::GetHash(nsAString &_hash)
 }
 
 void
-Link::ResetLinkState()
+Link::ResetLinkState(bool aNotify)
 {
+  // If we are in our default state, bail early.
+  if (mLinkState == defaultState) {
+    return;
+  }
+
+  // If we are not a link, revert to the default state and do no more work.
+  if (mLinkState == eLinkState_NotLink) {
+    mLinkState = defaultState;
+    return;
+  }
+
   nsIContent *content = Content();
 
-  // Tell the document to forget about this link, but only if we are registered.
-  if (mRegistered) {
-    nsIDocument *doc = content->GetCurrentDoc();
-    if (doc) {
-      doc->ForgetLink(content);
-    }
+  // Tell the document to forget about this link.
+  nsIDocument *doc = content->GetCurrentDoc();
+  if (doc) {
+    doc->ForgetLink(this);
   }
 
   UnregisterFromHistory();
@@ -489,6 +490,17 @@ Link::ResetLinkState()
 
   // Get rid of our cached URI.
   mCachedURI = nsnull;
+
+  // If aNotify is true, notify both of the visited-related states.  We have
+  // to do that, because we might be racing with a response from history and
+  // hence need to make sure that we get restyled whether we were visited or
+  // not before.  In particular, we need to make sure that our LinkState() is
+  // called so that we'll start a new history query as needed.
+  if (aNotify && doc) {
+    PRUint32 changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, aNotify);
+    doc->ContentStatesChanged(content, nsnull, changedState);
+  }
 }
 
 void
