@@ -121,3 +121,4 @@ HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
 
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
+HTTP(..) == bug533251.html bug533251-ref.html
