@@ -87,6 +87,9 @@
 #include "nsIPrincipal.h"
 #include "nsStyleSet.h"
 #include "prlog.h"
+#include "nsIObserverService.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsNetCID.h"
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -768,6 +771,62 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
   return entry->mSelectors;
 }
 
+class nsPrivateBrowsingObserver : nsIObserver,
+                                  nsSupportsWeakReference
+{
+public:
+  nsPrivateBrowsingObserver();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  void Init();
+  PRBool InPrivateBrowsing() const { return mInPrivateBrowsing; }
+
+private:
+  PRBool mInPrivateBrowsing;
+};
+
+NS_IMPL_ISUPPORTS2(nsPrivateBrowsingObserver, nsIObserver, nsISupportsWeakReference)
+
+nsPrivateBrowsingObserver::nsPrivateBrowsingObserver()
+  : mInPrivateBrowsing(PR_FALSE)
+{
+}
+
+void
+nsPrivateBrowsingObserver::Init()
+{
+  nsCOMPtr<nsIPrivateBrowsingService> pbService =
+    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (pbService) {
+    pbService->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
+
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+    }
+  }
+}
+
+nsresult
+nsPrivateBrowsingObserver::Observe(nsISupports *aSubject,
+                                   const char *aTopic,
+                                   const PRUnichar *aData)
+{
+  if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get())) {
+      mInPrivateBrowsing = PR_TRUE;
+    } else {
+      mInPrivateBrowsing = PR_FALSE;
+    }
+  }
+  return NS_OK;
+}
+
+static nsPrivateBrowsingObserver *gPrivateBrowsingObserver = nsnull;
+
 // -------------------------------
 // CSS Style rule processor implementation
 //
@@ -793,7 +852,7 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
-/* static */ void
+/* static */ nsresult
 nsCSSRuleProcessor::Startup()
 {
   nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
@@ -801,6 +860,13 @@ nsCSSRuleProcessor::Startup()
   // We want to default to true, not false as AddBoolPrefVarCache does.
   gSupportVisitedPseudo =
     nsContentUtils::GetBoolPref(VISITED_PSEUDO_PREF, PR_TRUE);
+
+  gPrivateBrowsingObserver = new nsPrivateBrowsingObserver();
+  NS_ENSURE_TRUE(gPrivateBrowsingObserver, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(gPrivateBrowsingObserver);
+  gPrivateBrowsingObserver->Init();
+
+  return NS_OK;
 }
 
 static PRBool
@@ -888,6 +954,13 @@ nsCSSRuleProcessor::FreeSystemMetrics()
 {
   delete sSystemMetrics;
   sSystemMetrics = nsnull;
+}
+
+/* static */ void
+nsCSSRuleProcessor::Shutdown()
+{
+  FreeSystemMetrics();
+  NS_RELEASE(gPrivateBrowsingObserver);
 }
 
 /* static */ PRBool
@@ -1037,7 +1110,9 @@ RuleProcessorData::ContentState()
 
     // If we are not supposed to mark visited links as such, be sure to flip the
     // bits appropriately.
-    if (!gSupportVisitedPseudo && (mContentState & NS_EVENT_STATE_VISITED)) {
+    if ((!gSupportVisitedPseudo ||
+        gPrivateBrowsingObserver->InPrivateBrowsing()) &&
+        (mContentState & NS_EVENT_STATE_VISITED)) {
       mContentState = (mContentState & ~PRUint32(NS_EVENT_STATE_VISITED)) |
                       NS_EVENT_STATE_UNVISITED;
     }
