@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Mozilla Foundation <http://www.mozilla.org/>
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Karl Tomlinson <karlt+@karlt.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_PluginThreadChild_h
-#define dom_plugins_PluginThreadChild_h 1
-
-#include "base/basictypes.h"
-
-#include "mozilla/ipc/MozillaChildThread.h"
-#include "base/file_path.h"
-#include "base/process.h"
-
-#include "mozilla/plugins/PluginModuleChild.h"
-
-namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
-
-// The PluginThreadChild class represents a background thread where plugin instances
-// live.
-class PluginThreadChild : public mozilla::ipc::MozillaChildThread {
-public:
-    PluginThreadChild(ProcessHandle aParentHandle);
-    ~PluginThreadChild();
-
-    static PluginThreadChild* current() {
-        return gInstance;
-    }
-
-    // For use on the plugin thread.
-    static void AppendNotesToCrashReport(const nsCString& aNotes);
-
-private:
-    static PluginThreadChild* gInstance;
-
-    // Thread implementation:
-    virtual void Init();
-    virtual void CleanUp();
-
-    PluginModuleChild mPlugin;
-    IPC::Channel* mChannel;
-
-    DISALLOW_EVIL_CONSTRUCTORS(PluginThreadChild);
-};
-
-}  // namespace plugins
-}  // namespace mozilla
-
-#endif  // ifndef dom_plugins_PluginThreadChild_h
+#ifdef MOZ_X11
+void InstallX11ErrorHandler();
+#endif

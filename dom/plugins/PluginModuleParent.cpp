@@ -192,7 +192,20 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
     // (as PluginName, PluginVersion)
     WriteExtraDataEntry(stream, "PluginName", "");
     WriteExtraDataEntry(stream, "PluginVersion", "");
+
+    if (!mCrashNotes.IsEmpty()) {
+        WriteExtraDataEntry(stream, "Notes", mCrashNotes.get());
+    }
+
     stream->Close();
+}
+
+
+bool
+PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
+{
+    mCrashNotes.Append(aNotes);
+    return true;
 }
 
 int

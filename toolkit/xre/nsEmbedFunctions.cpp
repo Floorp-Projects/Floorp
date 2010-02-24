@@ -76,6 +76,7 @@
 #include "nsXREDirProvider.h"
 
 #ifdef MOZ_IPC
+#include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
@@ -553,5 +554,12 @@ XRE_ShutdownTestShell()
   return ContentProcessParent::GetSingleton()->DestroyTestShell(gTestShellParent);
 }
 
+#ifdef MOZ_X11
+void
+XRE_InstallX11ErrorHandler()
+{
+  InstallX11ErrorHandler();
+}
+#endif
 #endif // MOZ_IPC
 
