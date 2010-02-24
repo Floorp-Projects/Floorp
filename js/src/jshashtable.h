@@ -78,9 +78,9 @@ class HashTable : AllocPolicy
         NonConstT t;
 
         bool isFree() const           { return keyHash == 0; }
-        void setFree()                { keyHash = 0; t = T(); }
+        void setFree()                { keyHash = 0; assignT(t, T()); }
         bool isRemoved() const        { return keyHash == 1; }
-        void setRemoved()             { keyHash = 1; t = T(); }
+        void setRemoved()             { keyHash = 1; assignT(t, T()); }
         bool isLive() const           { return keyHash > 1; }
         void setLive(HashNumber hn)   { JS_ASSERT(hn > 1); keyHash = hn; }
 
