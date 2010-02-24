@@ -50,6 +50,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
+#include "nsHashKeys.h"
 
 namespace mozilla {
 
@@ -226,6 +227,16 @@ NullableStringGet(const nsCString& str)
 
   return str.get();
 }
+
+struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
+{
+  DeletingObjectEntry(const NPObject* key)
+    : nsPtrHashKey<NPObject>(key)
+    , mDeleted(false)
+  { }
+
+  bool mDeleted;
+};
 
 } /* namespace plugins */
 
