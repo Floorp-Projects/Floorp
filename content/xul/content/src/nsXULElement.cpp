@@ -131,7 +131,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsDOMAttributeMap.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsStyledElement.h"
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsNodeUtils.h"
@@ -237,7 +236,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 //
 
 nsXULElement::nsXULElement(nsINodeInfo* aNodeInfo)
-    : nsGenericElement(aNodeInfo),
+    : nsStyledElement(aNodeInfo),
       mBindingParent(nsnull)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
@@ -359,13 +358,13 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
-                                                  nsGenericElement)
+                                                  nsStyledElement)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
                                                     nsXULPrototypeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
+NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
     NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXULElement)
@@ -514,9 +513,9 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
         return NS_OK;
     }
 
-    return nsGenericElement::GetEventListenerManagerForAttr(aManager,
-                                                            aTarget,
-                                                            aDefer);
+    return nsStyledElement::GetEventListenerManagerForAttr(aManager,
+                                                           aTarget,
+                                                           aDefer);
 }
 
 PRBool
@@ -858,9 +857,12 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
                          nsIContent* aBindingParent,
                          PRBool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
-                                             aBindingParent,
-                                             aCompileEventHandlers);
+  // Calling the nsStyledElementBase method on purpose to skip over
+  // nsStyledElement, since we don't want the style attribute
+  // reparsing it does.
+  nsresult rv = nsStyledElementBase::BindToTree(aDocument, aParent,
+                                                aBindingParent,
+                                                aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
@@ -901,7 +903,7 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
         }
     }
 
-    nsGenericElement::UnbindFromTree(aDeep, aNullParent);
+    nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsresult
@@ -974,7 +976,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEve
       }
     }
 
-    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+    rv = nsStyledElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
@@ -1061,8 +1063,8 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
     }
 
-    return nsGenericElement::BeforeSetAttr(aNamespaceID, aName,
-                                           aValue, aNotify);
+    return nsStyledElement::BeforeSetAttr(aNamespaceID, aName,
+                                          aValue, aNotify);
 }
 
 nsresult
@@ -1136,8 +1138,8 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // so, then we need to unhook the old one.  Or something.
     }
 
-    return nsGenericElement::AfterSetAttr(aNamespaceID, aName,
-                                          aValue, aNotify);
+    return nsStyledElement::AfterSetAttr(aNamespaceID, aName,
+                                         aValue, aNotify);
 }
 
 PRBool
@@ -1147,26 +1149,8 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
                              nsAttrValue& aResult)
 {
     // Parse into a nsAttrValue
-
-    // WARNING!!
-    // This code is largely duplicated in nsXULPrototypeElement::SetAttrAt.
-    // Any changes should be made to both functions.
-    if (aNamespaceID == kNameSpaceID_None) {
-        if (aAttribute == nsGkAtoms::style) {
-            SetFlags(NODE_MAY_HAVE_STYLE);
-            nsStyledElement::ParseStyleAttribute(this, aValue, aResult, PR_FALSE);
-            return PR_TRUE;
-        }
-
-        if (aAttribute == nsGkAtoms::_class) {
-            SetFlags(NODE_MAY_HAVE_CLASS);
-            aResult.ParseAtomArray(aValue);
-            return PR_TRUE;
-        }
-    }
-
-    if (!nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                          aResult)) {
+    if (!nsStyledElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                         aResult)) {
         // Fall back to parsing as atom for short values
         aResult.ParseStringOrAtom(aValue);
     }
@@ -1568,7 +1552,7 @@ nsXULElement::DestroyContent()
         }
     }
 
-    nsGenericElement::DestroyContent();
+    nsStyledElement::DestroyContent();
 }
 
 #ifdef DEBUG
@@ -1581,7 +1565,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
     }
     prefix.Append(' ');
 
-    nsGenericElement::List(out, aIndent, prefix);
+    nsStyledElement::List(out, aIndent, prefix);
 }
 #endif
 
@@ -1664,7 +1648,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         }
     }
 
-    return nsGenericElement::PreHandleEvent(aVisitor);
+    return nsStyledElement::PreHandleEvent(aVisitor);
 }
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
@@ -1770,39 +1754,6 @@ nsXULElement::GetInlineStyleRule()
     return nsnull;
 }
 
-NS_IMETHODIMP
-nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
-{
-  SetFlags(NODE_MAY_HAVE_STYLE);
-  PRBool modification = PR_FALSE;
-  nsAutoString oldValueStr;
-
-  PRBool hasListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
-                                         this);
-
-  // There's no point in comparing the stylerule pointers since we're always
-  // getting a new stylerule here. And we can't compare the stringvalues of
-  // the old and the new rules since both will point to the same declaration
-  // and thus will be the same.
-  if (hasListeners) {
-    // save the old attribute so we can set up the mutation event properly
-    // XXXbz if the old rule points to the same declaration as the new one,
-    // this is getting the new attr value, not the old one....
-    modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                           oldValueStr);
-  }
-  else if (aNotify && IsInDoc()) {
-    modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
-  }
-
-  nsAttrValue attrValue(aStyleRule);
-
-  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull, oldValueStr,
-                          attrValue, modification, hasListeners, aNotify, nsnull);
-}
-
 nsChangeHint
 nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                      PRInt32 aModType) const
@@ -1835,18 +1786,6 @@ NS_IMETHODIMP_(PRBool)
 nsXULElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
     return PR_FALSE;
-}
-
-nsIAtom *
-nsXULElement::GetIDAttributeName() const
-{
-    return nsGkAtoms::id;
-}
-
-nsIAtom *
-nsXULElement::GetClassAttributeName() const
-{
-    return nsGkAtoms::_class;
 }
 
 // Controllers Methods
@@ -1973,6 +1912,7 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
         }
     }
 
+    // XXXbz could this call nsStyledElement::GetStyle now?
     nsDOMSlots* slots = GetDOMSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2251,7 +2191,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
 PRInt32
 nsXULElement::IntrinsicState() const
 {
-    PRInt32 state = nsGenericElement::IntrinsicState();
+    PRInt32 state = nsStyledElement::IntrinsicState();
 
     const nsIAtom* tag = Tag();
     if (GetNameSpaceID() == kNameSpaceID_XUL &&
@@ -2270,7 +2210,7 @@ nsGenericElement::nsAttrInfo
 nsXULElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom *aName) const
 {
 
-    nsAttrInfo info(nsGenericElement::GetAttrInfo(aNamespaceID, aName));
+    nsAttrInfo info(nsStyledElement::GetAttrInfo(aNamespaceID, aName));
     if (!info.mValue) {
         nsXULPrototypeAttribute *protoattr =
             FindPrototypeAttribute(aNamespaceID, aName);
