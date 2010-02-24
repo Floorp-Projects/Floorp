@@ -84,7 +84,7 @@
 #define DISK_CACHE_DIR_PREF         "browser.cache.disk.parent_directory"
 #define DISK_CACHE_CAPACITY_PREF    "browser.cache.disk.capacity"
 #define DISK_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.disk.max_entry_size"
-#define DISK_CACHE_CAPACITY         102400
+#define DISK_CACHE_CAPACITY         51200
 
 #define OFFLINE_CACHE_ENABLE_PREF   "browser.cache.offline.enable"
 #define OFFLINE_CACHE_DIR_PREF      "browser.cache.offline.parent_directory"
