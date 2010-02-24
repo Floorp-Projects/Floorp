@@ -308,7 +308,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval json = JSVAL_NULL;
         nsAutoGCRoot root(&json, &rv);
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && !aJSON.IsEmpty()) {
           JSONParser* parser = JS_BeginJSONParse(mContext, &json);
           if (parser) {
             JSBool ok = JS_ConsumeJSONText(mContext, parser,
