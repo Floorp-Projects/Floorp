@@ -609,20 +609,17 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
         return false;
     }
 
-    nsAutoTArray<NPUTF8*, 10> buffers;
-    nsAutoTArray<NPIdentifier, 10> ids;
+    nsTArray<NPUTF8*> buffers;
+    nsTArray<NPIdentifier> ids;
 
     if (!(buffers.SetLength(count) &&
-          ids.SetLength(count) &&
-          aIds->SetCapacity(count))) {
+          ids.SetLength(count))) {
         NS_ERROR("Out of memory?");
         return false;
     }
 
-    for (PRUint32 index = 0; index < count; index++) {
-        buffers[index] = const_cast<NPUTF8*>(aNames[index].BeginReading());
-        NS_ASSERTION(buffers[index], "Null pointer should be impossible!");
-    }
+    for (PRUint32 index = 0; index < count; ++index)
+        buffers[index] = const_cast<NPUTF8*>(NullableStringGet(aNames[index]));
 
     mozilla::plugins::parent::_getstringidentifiers(
         const_cast<const NPUTF8**>(buffers.Elements()), count, ids.Elements());
