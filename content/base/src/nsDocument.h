@@ -945,7 +945,6 @@ public:
 
   virtual NS_HIDDEN_(void) AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI);
   virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
-  virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
   NS_IMETHOD GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
@@ -1038,7 +1037,6 @@ protected:
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
 
-  void UpdateLinkMap();
   // Call this before the document does something that will unbind all content.
   // That will stop us from resolving URIs for all links as they are removed.
   void DestroyLinkMap();
@@ -1243,11 +1241,9 @@ private:
   PRUint32 mOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
   ReadyState mReadyState;
-  
+
   // A map from unvisited URI hashes to content elements
   nsTHashtable<nsUint32ToContentHashEntry> mLinkMap;
-  // URIs whose visitedness has changed while we were hidden
-  nsCOMArray<nsIURI> mVisitednessChangedURIs;
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;

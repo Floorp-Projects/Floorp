@@ -106,8 +106,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x6b2f1996, 0x95d4, 0x48db, \
-  {0xaf, 0xd1, 0xfd, 0xaa, 0x75, 0x4c, 0x79, 0x92 } }
+  { 0x7d1ff787, 0x8c35, 0x45f3, \
+    { 0xa6, 0x7c, 0x8d, 0x7f, 0x36, 0xbd, 0x4e, 0x68 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -918,11 +918,6 @@ public:
    * (eventually) called on it again.
    */
   virtual void ForgetLink(nsIContent* aContent) = 0;
-  /**
-   * Notification that the visitedness state of a URI has been changed
-   * and style related to elements linking to that URI should be updated.
-   */
-  virtual void NotifyURIVisitednessChanged(nsIURI* aURI) = 0;
 
   /**
    * Resets and removes a box object from the document's box object cache
