@@ -1833,7 +1833,7 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
     // check out the style's language group
     if (!selectedFont) {
         nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
-        this->GetPrefFonts(mStyle.langGroup.get(), fonts);
+        this->GetPrefFonts(mStyle.language.get(), fonts);
         selectedFont = WhichFontSupportsChar(fonts, aCh);
     }
 

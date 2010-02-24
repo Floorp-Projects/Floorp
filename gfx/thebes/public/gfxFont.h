@@ -68,6 +68,8 @@ class gfxFontGroup;
 class gfxUserFontSet;
 class gfxUserFontData;
 
+class nsILanguageAtomService;
+
 // We should eliminate these synonyms when it won't cause many merge conflicts.
 #define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
 #define FONT_STYLE_ITALIC              NS_FONT_STYLE_ITALIC
@@ -82,7 +84,7 @@ class gfxUserFontData;
 struct THEBES_API gfxFontStyle {
     gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
-                 gfxFloat aSize, const nsACString& aLangGroup,
+                 gfxFloat aSize, const nsACString& aLanguage,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks,
                  PRPackedBool aPrinterFont);
@@ -117,8 +119,8 @@ struct THEBES_API gfxFontStyle {
     // The logical size of the font, in pixels
     gfxFloat size;
 
-    // the language group
-    nsCString langGroup;
+    // the language (may be an internal langGroup code rather than an actual lang)
+    nsCString language;
 
     // The aspect-value (ie., the ratio actualsize:actualxheight) that any
     // actual physical font created from this font structure must have when
@@ -137,7 +139,7 @@ struct THEBES_API gfxFontStyle {
     PLDHashNumber Hash() const {
         return ((style + (systemFont << 7) + (familyNameQuirks << 8) +
             (weight << 9)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
-            HashString(langGroup);
+            HashString(language);
     }
 
     void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
@@ -151,7 +153,7 @@ struct THEBES_API gfxFontStyle {
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
             (stretch == other.stretch) &&
-            (langGroup.Equals(other.langGroup)) &&
+            (language.Equals(other.language)) &&
             (sizeAdjust == other.sizeAdjust);
     }
 };
@@ -1717,6 +1719,8 @@ private:
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
 public:
+    static void Shutdown(); // platform must call this to release the languageAtomService
+
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet = nsnull);
 
     virtual ~gfxFontGroup();
@@ -1787,10 +1791,10 @@ public:
     typedef PRBool (*FontCreationCallback) (const nsAString& aName,
                                             const nsACString& aGenericName,
                                             void *closure);
-    /*static*/ PRBool ForEachFont(const nsAString& aFamilies,
-                              const nsACString& aLangGroup,
-                              FontCreationCallback fc,
-                              void *closure);
+    PRBool ForEachFont(const nsAString& aFamilies,
+                       const nsACString& aLanguage,
+                       FontCreationCallback fc,
+                       void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
     /**
@@ -1874,12 +1878,12 @@ protected:
      * family name in aFamilies (after resolving CSS/Gecko generic family names
      * if aResolveGeneric).
      */
-    /*static*/ PRBool ForEachFontInternal(const nsAString& aFamilies,
-                                      const nsACString& aLangGroup,
-                                      PRBool aResolveGeneric,
-                                      PRBool aResolveFontName,
-                                      FontCreationCallback fc,
-                                      void *closure);
+    PRBool ForEachFontInternal(const nsAString& aFamilies,
+                               const nsACString& aLanguage,
+                               PRBool aResolveGeneric,
+                               PRBool aResolveFontName,
+                               FontCreationCallback fc,
+                               void *closure);
 
     static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 
@@ -1897,5 +1901,6 @@ protected:
         return nsnull;
     }
 
+    static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 };
 #endif
