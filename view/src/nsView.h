@@ -195,17 +195,12 @@ public:
     return mViewToWidgetOffset;
   }
 
-  nsIntRect CalcWidgetBounds(nsWindowType aType);
-
-  PRBool IsEffectivelyVisible();
-
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
   void DoResetWidgetBounds(PRBool aMoveOnly, PRBool aInvalidateChangedSize);
 
   nsRegion*    mDirtyRegion;
-  nsPoint      mViewToWidgetOffset;
 };
 
 #endif

@@ -63,8 +63,8 @@ enum nsViewVisibility {
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
-  { 0x4435167c, 0xb627, 0x4073, \
-    { 0x9c, 0x92, 0xbc, 0x34, 0x39, 0xd9, 0xf8, 0xd2 } }
+  { 0xe981334b, 0x756e, 0x417a, \
+    { 0xbf, 0x18, 0x47, 0x4a, 0x2d, 0xfe, 0xc3, 0x87 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -334,6 +334,11 @@ public:
   virtual PRBool ExternalIsRoot() const;
 
   void SetDeletionObserver(nsWeakView* aDeletionObserver);
+
+  nsIntRect CalcWidgetBounds(nsWindowType aType);
+
+  PRBool IsEffectivelyVisible();
+
 protected:
   friend class nsWeakView;
   nsViewManager     *mViewManager;
@@ -346,6 +351,7 @@ protected:
   nsViewVisibility  mVis;
   nscoord           mPosX, mPosY;
   nsRect            mDimBounds; // relative to parent
+  nsPoint           mViewToWidgetOffset;
   float             mOpacity;
   PRUint32          mVFlags;
   nsWeakView*       mDeletionObserver;
