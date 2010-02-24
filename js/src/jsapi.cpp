@@ -502,7 +502,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
         obj = JSVAL_TO_OBJECT(v);
         if (obj)
             return obj->map->ops->typeOf(cx, obj);
-        return JSTYPE_OBJECT;
+        type = JSTYPE_OBJECT;
     } else if (JSVAL_IS_NUMBER(v)) {
         type = JSTYPE_NUMBER;
     } else if (JSVAL_IS_STRING(v)) {
