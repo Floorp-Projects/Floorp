@@ -364,6 +364,20 @@ private:
 
   void ResetOldStyleBaseType(nsISVGValue *svg_value);
 
+  struct ObservableModificationData {
+    // Only to be used if |name| is non-null.  Otherwise, modType will
+    // be 0 to indicate NS_OK should be returned and 1 to indicate
+    // NS_ERROR_UNEXPECTED should be returned.
+    ObservableModificationData(const nsAttrName* aName, PRUint32 aModType):
+      name(aName), modType(aModType)
+    {}
+    const nsAttrName* name;
+    PRUint8 modType;
+  };
+  ObservableModificationData
+    GetModificationDataForObservable(nsISVGValue* aObservable,
+                                     nsISVGValue::modificationType aModType);
+
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 
