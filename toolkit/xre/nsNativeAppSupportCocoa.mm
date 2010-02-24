@@ -110,13 +110,13 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
   OSErr err = ::Gestalt (gestaltSystemVersion, &response);
   response &= 0xFFFF; // The system version is in the low order word
 
-  // Check for at least Mac OS X 10.4, and if that fails return PR_FALSE,
+  // Check for at least Mac OS X 10.5, and if that fails return PR_FALSE,
   // which will make the browser quit.  In principle we could display an
   // alert here.  But the alert's message and buttons would require custom
   // localization.  So (for now at least) we just log an English message
   // to the console before quitting.
-  if ((err != noErr) || response < 0x00001040) {
-    NSLog(@"Requires Mac OS X version 10.4 or newer");
+  if ((err != noErr) || response < 0x00001050) {
+    NSLog(@"Requires Mac OS X version 10.5 or newer");
     return PR_FALSE;
   }
 
