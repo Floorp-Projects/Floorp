@@ -139,7 +139,7 @@ X11Error(Display *display, XErrorEvent *event) {
       notes.Append("; sync");
     } else {
       notes.Append("; ");
-      notes.AppendInt(age);
+      notes.AppendInt(PRUint32(age));
       notes.Append(" requests ago");
     }
   }
@@ -168,7 +168,7 @@ X11Error(Display *display, XErrorEvent *event) {
   // The resource id is unlikely to be useful in a crash report without
   // context of other ids, but add it to the debug console output.
   notes.Append("; id=0x");
-  notes.AppendInt(event->resourceid, 16);
+  notes.AppendInt(PRUint32(event->resourceid), 16);
 #ifdef MOZ_WIDGET_GTK2
   // Actually, for requests where Xlib gets the reply synchronously,
   // MOZ_X_SYNC=1 will not be necessary, but we don't have a table to tell us
