@@ -1932,8 +1932,8 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
       return NS_ERROR_FAILURE;
     nsIDocument* document = presShell->GetDocument();
 
-    nsCString langGroup;
-    presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
+    nsCString language;
+    presShell->GetPresContext()->GetLanguage()->ToUTF8String(language);
 
     nsCOMArray<nsIStyleRule> rules;
 
@@ -1998,7 +1998,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.weight,
                        fontStyle->mFont.stretch,
                        NSAppUnitsToFloatPixels(fontSize, aupcp),
-                       langGroup,
+                       language,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks,

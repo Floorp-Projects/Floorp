@@ -71,6 +71,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsCSSKeywords.h"
@@ -4209,7 +4210,9 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
     if (gLangService) {
       nsAutoString lang;
       displayData.mLang.GetStringValue(lang);
-      visibility->mLangGroup = gLangService->LookupLanguage(lang);
+
+      ToLowerCase(lang);
+      visibility->mLanguage = do_GetAtom(lang);
     }
   }
 

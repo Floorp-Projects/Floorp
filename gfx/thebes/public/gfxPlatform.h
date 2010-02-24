@@ -232,7 +232,7 @@ public:
     // check whether format is supported on a platform or not (if unclear, returns true)
     virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags) { return PR_FALSE; }
 
-    void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
+    void GetPrefFonts(const char *aLanguage, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
     // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
     void GetLangPrefs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);

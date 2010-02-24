@@ -538,7 +538,7 @@ public:
 
   nsIDeviceContext* DeviceContext() { return mDeviceContext; }
   nsIEventStateManager* EventStateManager() { return mEventManager; }
-  nsIAtom* GetLangGroup() { return mLangGroup; }
+  nsIAtom* GetLanguage() { return mLanguage; }
 
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
@@ -994,7 +994,13 @@ protected:
                                         // weak pointer to static atom
 
   nsILinkHandler*       mLinkHandler;   // [WEAK]
-  nsIAtom*              mLangGroup;     // [STRONG]
+
+  // Formerly mLangGroup; moving from charset-oriented langGroup to
+  // maintaining actual language settings everywhere (see bug 524107).
+  // This may in fact hold a langGroup such as x-western rather than
+  // a specific language, however (e.g, if it is inferred from the
+  // charset rather than explicitly specified as a lang attribute).
+  nsIAtom*              mLanguage;      // [STRONG]
 
   nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoader>
                         mImageLoaders[IMAGE_LOAD_TYPE_COUNT];

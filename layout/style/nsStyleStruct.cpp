@@ -1950,7 +1950,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
   else
     mDirection = NS_STYLE_DIRECTION_LTR;
 
-  mLangGroup = aPresContext->GetLangGroup();
+  mLanguage = aPresContext->GetLanguage();
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
 }
@@ -1960,14 +1960,14 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   MOZ_COUNT_CTOR(nsStyleVisibility);
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
-  mLangGroup = aSource.mLangGroup;
+  mLanguage = aSource.mLanguage;
   mPointerEvents = aSource.mPointerEvents;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
   if ((mDirection == aOther.mDirection) &&
-      (mLangGroup == aOther.mLangGroup)) {
+      (mLanguage == aOther.mLanguage)) {
     if ((mVisible == aOther.mVisible)) {
       return NS_STYLE_HINT_NONE;
     }
