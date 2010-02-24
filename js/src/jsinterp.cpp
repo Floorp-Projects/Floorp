@@ -75,6 +75,7 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -460,7 +461,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         --vcap;
     }
 
-    if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(vcap))) {
+    if (js_MatchPropertyCacheShape(cx, pobj, PCVCAP_SHAPE(vcap))) {
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
@@ -935,11 +936,13 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
         if (!ok)
             return NULL;
 
-        thisp = JSVAL_IS_VOID(v)
-                ? OBJ_GET_PARENT(cx, thisp)
-                : JSVAL_TO_OBJECT(v);
-        while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
-            thisp = parent;
+        if (v != JSVAL_NULL) {
+            thisp = JSVAL_IS_VOID(v)
+                    ? OBJ_GET_PARENT(cx, thisp)
+                    : JSVAL_TO_OBJECT(v);
+            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+                thisp = parent;
+        }
     }
 
     return CallThisObjectHook(cx, thisp, argv);
@@ -1145,26 +1148,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         /* Function is inlined, all other classes use object ops. */
         ops = funobj->map->ops;
 
-        /*
-         * XXX this makes no sense -- why convert to function if clasp->call?
-         * XXX better to call that hook without converting
-         *
-         * FIXME bug 408416: try converting to function, for API compatibility
-         * if there is a call op defined.
-         */
-        if ((ops == &js_ObjectOps) ? clasp->call : ops->call) {
-            ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
-            if (!ok)
-                goto out2;
-
-            if (VALUE_IS_FUNCTION(cx, v)) {
-                /* Make vp refer to funobj to keep it available as argv[-2]. */
-                *vp = v;
-                funobj = JSVAL_TO_OBJECT(v);
-                parent = OBJ_GET_PARENT(cx, funobj);
-                goto have_fun;
-            }
-        }
         fun = NULL;
         script = NULL;
         nslots = 0;
@@ -1183,7 +1166,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         if (!native)
             goto bad;
     } else {
-have_fun:
         /* Get private data and set derived locals from it. */
         fun = GET_FUNCTION_PRIVATE(cx, funobj);
         nslots = FUN_MINARGS(fun);
@@ -1566,7 +1548,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
          * CallStack of |down|. If |down == cx->fp|, the callstack is simply
          * the context's active callstack, so we can use |down->varobj(cx)|.
          * When |down != cx->fp|, we need to do a slow linear search. Luckily,
-         * this only happens with eval and JS_EvaluateInStackFrame.
+         * this only happens with indirect eval and JS_EvaluateInStackFrame.
          */
         if (down == cx->fp) {
             callStack.setInitialVarObj(down->varobj(cx));
@@ -2905,12 +2887,12 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH_TRACEVIS                                               \
     JS_BEGIN_MACRO                                                            \
         if (jumpTable != interruptJumpTable)                                  \
-            js_EnterTraceVisState(cx, S_RECORD, R_NONE);                      \
+            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
     JS_END_MACRO
 #else /* !JS_THREADED_INTERP */
 #define MONITOR_BRANCH_TRACEVIS                                               \
     JS_BEGIN_MACRO                                                            \
-        js_EnterTraceVisState(cx, S_RECORD, R_NONE);                          \
+        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
     JS_END_MACRO
 #endif
 #else

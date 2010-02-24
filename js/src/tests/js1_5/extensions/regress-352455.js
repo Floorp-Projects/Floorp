@@ -57,7 +57,7 @@ function test()
  
   expect = 'SyntaxError: invalid getter usage';
   z = ({});
-  try { eval('z.x getter= /g/i;'); } catch(ex) { actual = ex + '';}
+  try { eval('z.x getter= 5;'); } catch(ex) { actual = ex + '';}
   print("This line should not be the last output you see.");
   try { print(uneval(z)); } catch(e) { print("Threw!"); print(e); }
 

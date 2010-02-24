@@ -102,7 +102,7 @@
 #if JS_THREADED_INTERP
 #ifdef MOZ_TRACEVIS
         if (!moreInterrupts)
-            js_ExitTraceVisState(cx, R_ABORT);
+            ExitTraceVisState(cx, R_ABORT);
 #endif
         jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
         JS_EXTENSION_(goto *normalJumpTable[op]);
@@ -720,7 +720,6 @@ BEGIN_CASE(JSOP_BINDNAME)
             PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
             if (!atom) {
                 ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                JS_UNLOCK_OBJ(cx, obj2);
                 break;
             }
         } else {
@@ -1017,56 +1016,30 @@ BEGIN_CASE(JSOP_ADD)
     }
 END_CASE(JSOP_ADD)
 
+BEGIN_CASE(JSOP_OBJTOSTR)
+    rval = FETCH_OPND(-1);
+    if (!JSVAL_IS_PRIMITIVE(rval)) {
+        str = js_ValueToString(cx, rval);
+        if (!str)
+            goto error;
+        STORE_OPND(-1, STRING_TO_JSVAL(str));
+    }
+END_CASE(JSOP_OBJTOSTR)
+
 BEGIN_CASE(JSOP_CONCATN)
 {
-#ifdef JS_TRACER
-    JS_ASSERT_IF(fp->imacpc,
-                 *fp->imacpc == JSOP_CONCATN && *regs.pc == JSOP_IMACOP);
-
-    /*
-     * This instruction can be executed in three contexts. (1) is normal
-     * execution. (2) is while recording, during an imacro 'imacop'.  (3) is
-     * during a failed recording or when trace execution aborts during a
-     * recorded imacro.
-     *  1. !imacro              : N args on stack,   pc is regs.pc
-     *  2. imacro && recording  : N args on stack,   pc is fp->imacpc
-     *  3. imacro && !recording : N+2 args on stack, pc is fp->imacpc
-     */
-    bool imacro = fp->imacpc != NULL;
-    bool recording = TRACE_RECORDER(cx) != NULL;
-    if (imacro) {
-        argc = GET_ARGC(fp->imacpc);
-        if (!recording)
-            ConcatPostImacroStackCleanup(argc, regs, NULL);
-    } else {
-#endif  /* JS_TRACER */
-        argc = GET_ARGC(regs.pc);
-#ifdef JS_TRACER
-    }
-#endif  /* JS_TRACER */
-
     JSCharBuffer buf(cx);
+    argc = GET_ARGC(regs.pc);
     for (vp = regs.sp - argc; vp < regs.sp; vp++) {
-        if ((!JSVAL_IS_PRIMITIVE(*vp) &&
-             !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_VOID, vp)) ||
-            !js_ValueToCharBuffer(cx, *vp, buf)) {
+        JS_ASSERT(JSVAL_IS_PRIMITIVE(*vp));
+        if (!js_ValueToCharBuffer(cx, *vp, buf))
             goto error;
-        }
     }
-
     str = js_NewStringFromCharBuffer(cx, buf);
     if (!str)
         goto error;
-
     regs.sp -= argc - 1;
     STORE_OPND(-1, STRING_TO_JSVAL(str));
-
-#ifdef JS_TRACER
-    if (imacro) {
-        /* END_CASE does pc += CONCATN_LENGTH. (IMACOP YOU IDIOT!) */
-        regs.pc -= JSOP_CONCATN_LENGTH - JSOP_IMACOP_LENGTH;
-    }
-#endif  /* JS_TRACER */
 }
 END_CASE(JSOP_CONCATN)
 
@@ -1268,13 +1241,11 @@ BEGIN_CASE(JSOP_NAMEDEC)
                     if (!(js_CodeSpec[op].format & JOF_POST))
                         rtmp = rval;
                     LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-                    JS_UNLOCK_OBJ(cx, obj);
                     PUSH_OPND(rtmp);
                     len = JSOP_INCNAME_LENGTH;
                     DO_NEXT_OP(len);
                 }
             }
-            JS_UNLOCK_OBJ(cx, obj2);
             LOAD_ATOM(0);
         }
     } else {
@@ -1471,6 +1442,12 @@ BEGIN_CASE(JSOP_THIS)
     PUSH_OPND(OBJECT_TO_JSVAL(obj));
 END_CASE(JSOP_THIS)
 
+BEGIN_CASE(JSOP_UNBRANDTHIS)
+    COMPUTE_THIS(cx, fp, obj);
+    if (!obj->unbrand(cx))
+        goto error;
+END_CASE(JSOP_UNBRANDTHIS)
+
 BEGIN_CASE(JSOP_GETTHISPROP)
     i = 0;
     COMPUTE_THIS(cx, fp, obj);
@@ -1531,7 +1508,6 @@ BEGIN_CASE(JSOP_GETXPROP)
                                fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
                                &rval);
                 }
-                JS_UNLOCK_OBJ(cx, obj2);
                 break;
             }
         } else {
@@ -1594,19 +1570,19 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (!JSVAL_IS_PRIMITIVE(lval)) {
         obj = JSVAL_TO_OBJECT(lval);
     } else {
+        JSProtoKey protoKey;
         if (JSVAL_IS_STRING(lval)) {
-            i = JSProto_String;
+            protoKey = JSProto_String;
         } else if (JSVAL_IS_NUMBER(lval)) {
-            i = JSProto_Number;
+            protoKey = JSProto_Number;
         } else if (JSVAL_IS_BOOLEAN(lval)) {
-            i = JSProto_Boolean;
+            protoKey = JSProto_Boolean;
         } else {
             JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
             goto error;
         }
-
-        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
+        if (!js_GetClassPrototype(cx, NULL, protoKey, &obj))
             goto error;
     }
 
@@ -1626,7 +1602,6 @@ BEGIN_CASE(JSOP_CALLPROP)
                 sprop = PCVAL_TO_SPROP(entry->vword);
                 NATIVE_GET(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
             }
-            JS_UNLOCK_OBJ(cx, obj2);
             STORE_OPND(-1, rval);
             PUSH_OPND(lval);
             goto end_callprop;
@@ -1737,7 +1712,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             PCMETER(cache->settests++);
             if (entry->kpc == regs.pc && entry->kshape == kshape) {
                 JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);
-                if (JS_LOCK_OBJ_IF_SHAPE(cx, obj, kshape)) {
+                if (js_MatchPropertyCacheShape(cx, obj, kshape)) {
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                     sprop = PCVAL_TO_SPROP(entry->vword);
                     JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
@@ -1770,18 +1745,22 @@ BEGIN_CASE(JSOP_SETMETHOD)
                             PCMETER(cache->pchits++);
                             PCMETER(cache->setpchits++);
                             NATIVE_SET(cx, obj, sprop, entry, &rval);
-                            JS_UNLOCK_SCOPE(cx, scope);
                             break;
                         }
                         checkForAdd =
                             !(sprop->attrs & JSPROP_SHARED) &&
                             sprop->parent == scope->lastProperty();
                     } else {
+                        /*
+                         * We check that cx own obj here and will continue to
+                         * own it after js_GetMutableScope returns so we can
+                         * continue to skip JS_UNLOCK_OBJ calls.
+                         */
+                        JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
                         scope = js_GetMutableScope(cx, obj);
-                        if (!scope) {
-                            JS_UNLOCK_OBJ(cx, obj);
+                        JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
+                        if (!scope)
                             goto error;
-                        }
                         checkForAdd = !sprop->parent;
                     }
 
@@ -1813,10 +1792,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                             !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
                             ++scope->freeslot;
                         } else {
-                            if (!js_AllocSlot(cx, obj, &slot)) {
-                                JS_UNLOCK_SCOPE(cx, scope);
+                            if (!js_AllocSlot(cx, obj, &slot))
                                 goto error;
-                            }
                         }
 
                         /*
@@ -1834,10 +1811,9 @@ BEGIN_CASE(JSOP_SETMETHOD)
                                 scope->putProperty(cx, sprop->id,
                                                    sprop->getter, sprop->setter,
                                                    slot, sprop->attrs,
-                                                   sprop->flags, sprop->shortid);
+                                                   sprop->getFlags(), sprop->shortid);
                             if (!sprop2) {
                                 js_FreeSlot(cx, obj, slot);
-                                JS_UNLOCK_SCOPE(cx, scope);
                                 goto error;
                             }
                             sprop = sprop2;
@@ -1853,7 +1829,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                          */
                         TRACE_2(SetPropHit, entry, sprop);
                         LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-                        JS_UNLOCK_SCOPE(cx, scope);
 
                         /*
                          * Purge the property cache of the id we may have just
@@ -1863,7 +1838,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         js_PurgeScopeChain(cx, obj, sprop->id);
                         break;
                     }
-                    JS_UNLOCK_SCOPE(cx, scope);
                     PCMETER(cache->setpcmisses++);
                 }
             }
@@ -1883,7 +1857,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
                     NATIVE_SET(cx, obj, sprop, entry, &rval);
                 }
-                JS_UNLOCK_OBJ(cx, obj2);
                 if (sprop)
                     break;
             }
@@ -2332,7 +2305,6 @@ BEGIN_CASE(JSOP_CALLNAME)
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
             if (PCVAL_IS_OBJECT(entry->vword)) {
                 rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
-                JS_UNLOCK_OBJ(cx, obj2);
                 goto do_push_rval;
             }
 
@@ -2340,7 +2312,6 @@ BEGIN_CASE(JSOP_CALLNAME)
                 slot = PCVAL_TO_SLOT(entry->vword);
                 JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                 rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-                JS_UNLOCK_OBJ(cx, obj2);
                 goto do_push_rval;
             }
 
@@ -2444,22 +2415,26 @@ BEGIN_CASE(JSOP_OBJECT)
     PUSH_OPND(OBJECT_TO_JSVAL(obj));
 END_CASE(JSOP_OBJECT)
 
-BEGIN_CASE(JSOP_REGEXP)
+BEGIN_CASE(JSOP_REGEXP) {
     /*
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
      * flouted by many browser-based implementations.
      *
-     * XXX This code is specific to regular expression objects.  If we need a
-     * similar op for other kinds of object literals, we should push cloning
-     * down under JSObjectOps and reuse code here.
+     * We avoid the js_GetScopeChain call here and pass fp->scopeChain as
+     * js_GetClassPrototype uses the latter only to locate the global.
      */
     index = GET_FULL_INDEX(0);
-    obj = js_CloneRegExpObject(cx, script->getRegExp(index), NULL);
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, fp->scopeChain, JSProto_RegExp, &proto))
+        goto error;
+    JS_ASSERT(proto);
+    obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
     if (!obj)
         goto error;
     rval = OBJECT_TO_JSVAL(obj);
     PUSH_OPND(rval);
+}
 END_CASE(JSOP_REGEXP)
 
 BEGIN_CASE(JSOP_ZERO)
@@ -2945,7 +2920,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * requests in server-side JS.
      */
     if (OBJ_GET_PARENT(cx, obj) != obj2) {
-        obj = js_CloneFunctionObject(cx, fun, obj2);
+        obj = CloneFunctionObject(cx, fun, obj2);
         if (!obj)
             goto error;
     }
@@ -3108,7 +3083,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = js_CloneFunctionObject(cx, fun, fp->scopeChain);
+        obj = CloneFunctionObject(cx, fun, fp->scopeChain);
         if (!obj)
             goto error;
     } else {
@@ -3121,7 +3096,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
 #endif
-            obj = js_CloneFunctionObject(cx, fun, parent);
+            obj = CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
         }
@@ -3201,7 +3176,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                 goto error;
         }
 
-        obj = js_CloneFunctionObject(cx, fun, parent);
+        obj = CloneFunctionObject(cx, fun, parent);
         if (!obj)
             goto error;
     } while (0);
@@ -3291,7 +3266,7 @@ BEGIN_CASE(JSOP_SETTER)
     if (id == 0)
         FETCH_ELEMENT_ID(obj, i, id);
 
-    if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
+    if (!js_IsCallable(rval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              (op == JSOP_GETTER)
@@ -3367,6 +3342,13 @@ BEGIN_CASE(JSOP_NEWINIT)
                 JS_UNLOCK_OBJ(cx, obj);
                 goto error;
             }
+
+            /*
+             * We cannot assume that js_GetMutableScope above creates a scope
+             * owned by cx and skip JS_UNLOCK_SCOPE. A new object debugger
+             * hook may add properties to the newly created object, suspend
+             * the current request and share the object with other threads.
+             */
             JS_UNLOCK_SCOPE(cx, scope);
         }
     }
@@ -3395,14 +3377,19 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
     JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
-
     do {
         JSScope *scope;
         uint32 kshape;
         JSPropertyCache *cache;
         JSPropCacheEntry *entry;
 
-        JS_LOCK_OBJ(cx, obj);
+        /*
+         * We can not assume that the object created by JSOP_NEWINIT is still
+         * single-threaded as the debugger can access it from other threads.
+         */
+        if (!CX_OWNS_OBJECT_TITLE(cx, obj))
+            goto do_initprop_miss;
+
         scope = OBJ_SCOPE(obj);
         JS_ASSERT(scope->object == obj);
         JS_ASSERT(!scope->sealed());
@@ -3455,10 +3442,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
             if (slot < STOBJ_NSLOTS(obj)) {
                 ++scope->freeslot;
             } else {
-                if (!js_AllocSlot(cx, obj, &slot)) {
-                    JS_UNLOCK_SCOPE(cx, scope);
+                if (!js_AllocSlot(cx, obj, &slot))
                     goto error;
-                }
                 JS_ASSERT(slot == sprop->slot);
             }
 
@@ -3467,10 +3452,9 @@ BEGIN_CASE(JSOP_INITMETHOD)
             if (scope->table) {
                 JSScopeProperty *sprop2 =
                     scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, slot,
-                                       sprop->attrs, sprop->flags, sprop->shortid);
+                                       sprop->attrs, sprop->getFlags(), sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
-                    JS_UNLOCK_SCOPE(cx, scope);
                     goto error;
                 }
                 JS_ASSERT(sprop2 == sprop);
@@ -3486,13 +3470,11 @@ BEGIN_CASE(JSOP_INITMETHOD)
              */
             TRACE_2(SetPropHit, entry, sprop);
             LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-            JS_UNLOCK_SCOPE(cx, scope);
             break;
         }
 
       do_initprop_miss:
         PCMETER(cache->inipcmisses++);
-        JS_UNLOCK_SCOPE(cx, scope);
 
         /* Get the immediate property name into id. */
         LOAD_ATOM(0);

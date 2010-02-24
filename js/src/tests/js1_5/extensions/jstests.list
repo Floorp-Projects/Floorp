@@ -41,7 +41,7 @@ script regress-313938.js
 script regress-314874.js
 script regress-315509-02.js
 script regress-319683.js
-fails script regress-322957.js
+script regress-322957.js
 script regress-325269.js
 script regress-327608.js
 script regress-328443.js
@@ -165,6 +165,7 @@ script regress-385134.js
 script regress-385393-02.js
 script regress-385393-09.js
 script regress-390597.js
+script regress-390598.js
 script regress-394967.js
 script regress-396326.js
 script regress-406572.js
@@ -189,6 +190,7 @@ script regress-427196-01.js
 script regress-427196-02.js
 script regress-427196-03.js
 script regress-429264.js
+skip script regress-429739.js # Bug 520778 - wontfix
 script regress-431428.js
 skip script regress-432075.js # obsolete test
 script regress-434837-01.js
@@ -219,6 +221,7 @@ script regress-459606.js
 script regress-462734-02.js
 script regress-462734-03.js
 script regress-462734-04.js
+script regress-465145.js
 script regress-465276.js
 script regress-469625.js
 script regress-469761.js

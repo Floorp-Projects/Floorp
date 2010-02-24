@@ -50,6 +50,7 @@ script regress-334158.js
 script regress-346090.js
 script regress-367888.js
 script regress-375642.js
+script regress-375651.js
 script regress-375711.js
 script regress-375715-01-n.js
 script regress-375715-02.js
