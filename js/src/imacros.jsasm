@@ -697,32 +697,28 @@
 
 .end nextiter
 
+.igroup objtostr JSOP_OBJTOSTR
 
-# Force accounting for unused argument 'N' by touching it with 'swap'.
-.igroup defvalue JSOP_CONCATN
-
-    .imacro string                                  # [arg1..argN] argI I
-        swap                                        # [arg1..argN] I argI
-        dup                                         # [arg1..argN] I argI argI
-        dup                                         # [arg1..argN] I argI argI argI
-        getprop valueOf                             # [arg1..argN] I argI argI valueOf
-        ifprimtop 1                                 # [arg1..argN] I argI argI valueOf
-        swap                                        # [arg1..argN] I argI valueOf argI
-        string void                                 # [arg1..argN] I argI valueOf argI "void"
-        call 1                                      # [arg1..argN] I argI val
-        ifprimtop 3                                 # [arg1..argN] I argI val
-        pop                                         # [arg1..argN] I argI
-        dup                                         # [arg1..argN] I argI argI
+    .imacro toString                                # obj
+        dup                                         # obj obj
+        dup                                         # obj obj obj
+        getprop valueOf                             # obj obj valueOf?
+        ifprimtop 1                                 # obj obj valueOf?
+        swap                                        # obj valueOf obj
+        string void                                 # obj valueOf obj "void"
+        call 1                                      # obj val?
+        ifprimtop 3                                 # obj val?
+        pop                                         # obj
+        dup                                         # obj obj
         goto 2
-1:      pop                                         # [arg1..argN] I argI argI
-2:      callprop toString                           # [arg1..argN] I argI toString argI
-        call 0                                      # [arg1..argN] I argI val
-        primtop (JSTYPE_VOID)                       # [arg1..argN] I argI val
-3:      swap                                        # [arg1..argN] I val argI
-        pop                                         # [arg1..argN] I val
-        swap                                        # [arg1..argN] val I
-        imacop                                      # catstr
+1:      pop                                         # obj obj
+2:      callprop toString                           # obj toString obj
+        call 0                                      # obj val
+        primtop (JSTYPE_VOID)                       # obj val
+3:      swap                                        # val obj
+        pop                                         # val
         stop
     .end
 
-.end defvalue
+.end objtostr
+

@@ -304,6 +304,115 @@ TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty 
     return false;
 }
 
+/* Helper clamped uint8 type */
+
+int32 JS_FASTCALL
+js_TypedArray_uint8_clamp_double(const double x)
+{
+    // Not < so that NaN coerces to 0
+    if (!(x >= 0))
+        return 0;
+
+    if (x > 255)
+        return 255;
+
+    jsdouble toTruncate = x + 0.5;
+    JSUint8 y = JSUint8(toTruncate);
+
+    /*
+     * now val is rounded to nearest, ties rounded up.  We want
+     * rounded to nearest ties to even, so check whether we had a
+     * tie.
+     */
+    if (y == toTruncate) {
+        /*
+         * It was a tie (since adding 0.5 gave us the exact integer
+         * we want).  Since we rounded up, we either already have an
+         * even number or we have an odd number but the number we
+         * want is one less.  So just unconditionally masking out the
+         * ones bit should do the trick to get us the value we
+         * want.
+         */
+        return (y & ~1);
+    }
+
+    return y;
+}
+
+JS_DEFINE_CALLINFO_1(extern, INT32, js_TypedArray_uint8_clamp_double, DOUBLE, 1, 1)
+
+
+struct uint8_clamped {
+    uint8 val;
+
+    uint8_clamped() { }
+    uint8_clamped(const uint8_clamped& other) : val(other.val) { }
+
+    // invoke our assignment helpers for constructor conversion
+    uint8_clamped(uint8 x)    { *this = x; }
+    uint8_clamped(uint16 x)   { *this = x; }
+    uint8_clamped(uint32 x)   { *this = x; }
+    uint8_clamped(int8 x)     { *this = x; }
+    uint8_clamped(int16 x)    { *this = x; }
+    uint8_clamped(int32 x)    { *this = x; }
+    uint8_clamped(jsdouble x) { *this = x; }
+
+    inline uint8_clamped& operator= (const uint8_clamped& x) {
+        val = x.val;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (uint8 x) {
+        val = x;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (uint16 x) {
+        val = (x > 255) ? 255 : 0;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (uint32 x) {
+        val = (x > 255) ? 255 : 0;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (int8 x) {
+        val = (x >= 0) ? uint8(x) : 0;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (int16 x) {
+        val = (x >= 0)
+              ? ((x < 255)
+                 ? uint8(x)
+                 : 255)
+              : 0;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (int32 x) { 
+        val = (x >= 0)
+              ? ((x < 255)
+                 ? uint8(x)
+                 : 255)
+              : 0;
+        return *this;
+    }
+
+    inline uint8_clamped& operator= (const jsdouble x) { 
+        val = js_TypedArray_uint8_clamp_double(x);
+        return *this;
+    }
+
+    inline operator uint8() const {
+        return val;
+    }
+};
+
+/* Make sure the compiler isn't doing some funky stuff */
+JS_STATIC_ASSERT(sizeof(uint8_clamped) == 1);
+
 template<typename NativeType> static inline const int TypeIDOfType();
 template<> inline const int TypeIDOfType<int8>() { return TypedArray::TYPE_INT8; }
 template<> inline const int TypeIDOfType<uint8>() { return TypedArray::TYPE_UINT8; }
@@ -312,6 +421,8 @@ template<> inline const int TypeIDOfType<uint16>() { return TypedArray::TYPE_UIN
 template<> inline const int TypeIDOfType<int32>() { return TypedArray::TYPE_INT32; }
 template<> inline const int TypeIDOfType<uint32>() { return TypedArray::TYPE_UINT32; }
 template<> inline const int TypeIDOfType<float>() { return TypedArray::TYPE_FLOAT32; }
+template<> inline const int TypeIDOfType<double>() { return TypedArray::TYPE_FLOAT64; }
+template<> inline const int TypeIDOfType<uint8_clamped>() { return TypedArray::TYPE_UINT8_CLAMPED; }
 
 template<typename NativeType> class TypedArrayTemplate;
 
@@ -322,6 +433,8 @@ typedef TypedArrayTemplate<uint16> Uint16Array;
 typedef TypedArrayTemplate<int32> Int32Array;
 typedef TypedArrayTemplate<uint32> Uint32Array;
 typedef TypedArrayTemplate<float> Float32Array;
+typedef TypedArrayTemplate<double> Float64Array;
+typedef TypedArrayTemplate<uint8_clamped> Uint8ClampedArray;
 
 template<typename NativeType>
 class TypedArrayTemplate
@@ -484,6 +597,12 @@ class TypedArrayTemplate
         }
 
         return true;
+    }
+
+    static JSType
+    obj_typeOf(JSContext *cx, JSObject *obj)
+    {
+        return JSTYPE_OBJECT;
     }
 
     /*
@@ -860,7 +979,8 @@ class TypedArrayTemplate
                 *dest++ = NativeType(*src++);
             break;
           }
-          case TypedArray::TYPE_UINT8: {
+          case TypedArray::TYPE_UINT8:
+          case TypedArray::TYPE_UINT8_CLAMPED: {
             uint8 *src = static_cast<uint8*>(tarray->data);
             for (uintN i = 0; i < length; ++i)
                 *dest++ = NativeType(*src++);
@@ -892,6 +1012,12 @@ class TypedArrayTemplate
           }
           case TypedArray::TYPE_FLOAT32: {
             float *src = static_cast<float*>(tarray->data);
+            for (uintN i = 0; i < length; ++i)
+                *dest++ = NativeType(*src++);
+            break;
+          }
+          case TypedArray::TYPE_FLOAT64: {
+            double *src = static_cast<double*>(tarray->data);
             for (uintN i = 0; i < length; ++i)
                 *dest++ = NativeType(*src++);
             break;
@@ -994,6 +1120,15 @@ TypedArrayTemplate<float>::copyIndexToValue(JSContext *cx, uint32 index, jsval *
         *vp = JSVAL_VOID;
 }
 
+template<>
+void
+TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, jsval *vp)
+{
+    double val = getIndex(index);
+    if (!js_NewWeaklyRootedNumber(cx, jsdouble(val), vp))
+        *vp = JSVAL_VOID;
+}
+
 /***
  *** JS impl
  ***/
@@ -1057,10 +1192,11 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
     js_CheckAccess,                                                            \
+    _typedArray::obj_typeOf,                                                   \
+    _typedArray::obj_trace,                                                    \
     NULL,                                                                      \
     _typedArray::obj_dropProperty,                                             \
     NULL, NULL, NULL,                                                          \
-    TypedArray::obj_trace,                                                     \
     NULL                                                                       \
 };                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
@@ -1108,6 +1244,8 @@ IMPL_TYPED_ARRAY_STATICS(Uint16Array);
 IMPL_TYPED_ARRAY_STATICS(Int32Array);
 IMPL_TYPED_ARRAY_STATICS(Uint32Array);
 IMPL_TYPED_ARRAY_STATICS(Float32Array);
+IMPL_TYPED_ARRAY_STATICS(Float64Array);
+IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray);
 
 JSClass TypedArray::fastClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
@@ -1116,7 +1254,9 @@ JSClass TypedArray::fastClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint16Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Int32Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint32Array),
-    IMPL_TYPED_ARRAY_FAST_CLASS(Float32Array)
+    IMPL_TYPED_ARRAY_FAST_CLASS(Float32Array),
+    IMPL_TYPED_ARRAY_FAST_CLASS(Float64Array),
+    IMPL_TYPED_ARRAY_FAST_CLASS(Uint8ClampedArray)
 };
 
 JSClass TypedArray::slowClasses[TYPE_MAX] = {
@@ -1126,7 +1266,9 @@ JSClass TypedArray::slowClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_SLOW_CLASS(Uint16Array),
     IMPL_TYPED_ARRAY_SLOW_CLASS(Int32Array),
     IMPL_TYPED_ARRAY_SLOW_CLASS(Uint32Array),
-    IMPL_TYPED_ARRAY_SLOW_CLASS(Float32Array)
+    IMPL_TYPED_ARRAY_SLOW_CLASS(Float32Array),
+    IMPL_TYPED_ARRAY_SLOW_CLASS(Float64Array),
+    IMPL_TYPED_ARRAY_SLOW_CLASS(Uint8ClampedArray)
 };
 
 JS_FRIEND_API(JSObject *)
@@ -1148,6 +1290,8 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     INIT_TYPED_ARRAY_CLASS(Int32Array,TYPE_INT32);
     INIT_TYPED_ARRAY_CLASS(Uint32Array,TYPE_UINT32);
     INIT_TYPED_ARRAY_CLASS(Float32Array,TYPE_FLOAT32);
+    INIT_TYPED_ARRAY_CLASS(Float64Array,TYPE_FLOAT64);
+    INIT_TYPED_ARRAY_CLASS(Uint8ClampedArray,TYPE_UINT8_CLAMPED);
 
     proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
                          ArrayBuffer::class_constructor, 1,
@@ -1212,6 +1356,12 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, jsval *argv, jsval *
 
       case TypedArray::TYPE_FLOAT32:
         return Float32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+
+      case TypedArray::TYPE_FLOAT64:
+        return Float64Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+
+      case TypedArray::TYPE_UINT8_CLAMPED:
+        return Uint8ClampedArray::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");

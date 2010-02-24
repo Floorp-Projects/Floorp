@@ -48,7 +48,7 @@ namespace XPCWrapper {
 const PRUint32 sWrappedObjSlot = 1;
 const PRUint32 sFlagsSlot = 0;
 const PRUint32 sNumSlots = 2;
-JSNative sEvalNative = nsnull;
+JSFastNative sEvalNative = nsnull;
 
 const PRUint32 FLAG_RESOLVING = 0x1;
 const PRUint32 LAST_FLAG = FLAG_RESOLVING;

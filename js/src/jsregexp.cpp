@@ -5857,24 +5857,26 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     return obj;
 }
 
-JSObject *
-js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
+JSObject * JS_FASTCALL
+js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
-    JSObject *clone;
-    JSRegExp *re;
-
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
-    clone = js_NewObject(cx, &js_RegExpClass, NULL, parent);
+    JS_ASSERT(obj->getClass() == &js_RegExpClass);
+    JS_ASSERT(proto);
+    JS_ASSERT(proto->getClass() == &js_RegExpClass);
+    JSObject *clone = js_NewObjectWithGivenProto(cx, &js_RegExpClass, proto,
+                                                 NULL);
     if (!clone)
         return NULL;
-    re = (JSRegExp *) obj->getPrivate();
-    if (re) {
-        clone->setPrivate(re);
-        js_ClearRegExpLastIndex(clone);
-        HOLD_REGEXP(cx, re);
-    }
+    JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());
+    clone->setPrivate(re);
+    js_ClearRegExpLastIndex(clone);
+    HOLD_REGEXP(cx, re);
     return clone;
 }
+
+#ifdef JS_TRACER
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0, 0)
+#endif
 
 bool
 js_ContainsRegExpMetaChars(const jschar *chars, size_t length)

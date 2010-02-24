@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,19 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Gary Kwong
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,20 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _jsfile_h__
-#define _jsfile_h__
+var gTestfile = 'regress-476871-01.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 476871;
+var summary = 'Do not assert: *(JSObject**)slot == NULL';
+var actual = '';
+var expect = '';
 
-#if JS_HAS_FILE_OBJECT
+printBugNumber(BUGNUMBER);
+printStatus (summary);
 
-#include "jsobj.h"
+jit(true);
 
-extern JS_PUBLIC_API(JSObject*)
-js_InitFileClass(JSContext *cx, JSObject* obj);
+let ([] = false) { (this.watch("x", /a/g)); };
+(function () { (eval("(function(){for each (x in [1, 2, 2]);});"))(); })();
 
-extern JS_PUBLIC_API(JSObject*)
-js_NewFileObject(JSContext *cx, char *bytes);
+jit(false);
 
-extern JSClass js_FileClass;
-
-#endif /* JS_HAS_FILE_OBJECT */
-#endif /* _jsfile_h__ */
+reportCompare(expect, actual, summary);

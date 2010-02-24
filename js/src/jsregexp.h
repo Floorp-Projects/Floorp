@@ -187,8 +187,8 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
 extern JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 
-extern JSObject *
-js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
+extern JSObject * JS_FASTCALL
+js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
 const uint32 JSSLOT_REGEXP_LAST_INDEX = JSSLOT_PRIVATE + 1;
 const uint32 REGEXP_CLASS_FIXED_RESERVED_SLOTS = 1;

@@ -81,7 +81,7 @@ function test()
         check(function() thrown, todo);
     }
 
-    var buf;
+    var buf, buf2;
 
     buf = new ArrayBuffer(100);
     check(function() buf);
@@ -132,6 +132,9 @@ function test()
     check(function() (new Int32Array(buf)).length == 1);
     check(function() (new Uint32Array(buf)).length == 1);
     check(function() (new Float32Array(buf)).length == 1);
+    checkThrows(function() (new Float64Array(buf)));
+    buf2 = new ArrayBuffer(8);
+    check(function() (new Float64Array(buf2)).length == 1);
 
     buf = new ArrayBuffer(5);
     check(function() buf);
@@ -178,9 +181,22 @@ function test()
     checkThrows(function() a[-10] = 0);
     check(function() (a[0] = "10") && (a[0] == 10));
 
+
+    // check Uint8ClampedArray, which is an extension to this extension
+    a = new Uint8ClampedArray(4);
+    a[0] = 128;
+    a[1] = 512;
+    a[2] = -123.723;
+    a[3] = "foopy";
+
+    check(function() a[0] == 128);
+    check(function() a[1] == 255);
+    check(function() a[2] == 0);
+    check(function() a[3] == 0);
+
     print ("done");
 
-    reportCompare(0, TestFailCount, "typed array test failures");
+    reportCompare(0, TestFailCount, "typed array tests");
 
     exitFunc ('test');
 }
