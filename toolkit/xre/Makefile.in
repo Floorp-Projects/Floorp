@@ -121,6 +121,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacApplicationDelegate.mm
 endif
 
+ifdef MOZ_X11
+CPPSRCS += nsX11ErrorHandler.cpp
+endif
+
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
 
 ifdef MOZ_ENABLE_XREMOTE
