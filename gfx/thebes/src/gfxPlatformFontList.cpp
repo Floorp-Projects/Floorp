@@ -284,7 +284,7 @@ gfxPlatformFontList::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
     // for all the variations and should probably be moved up to
     // the Family
     gfxFontStyle style;
-    style.langGroup = data->mLangGroup;
+    style.language = data->mLangGroup;
     PRBool needsBold;
     nsRefPtr<gfxFontEntry> aFontEntry = aFamilyEntry->FindFontForStyle(style, needsBold);
     NS_ASSERTION(aFontEntry, "couldn't find any font entry in family");
@@ -306,7 +306,7 @@ gfxPlatformFontList::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
 }
 
 void
-gfxPlatformFontList::GetFontList (const nsACString& aLangGroup,
+gfxPlatformFontList::GetFontList(const nsACString& aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts)
 {

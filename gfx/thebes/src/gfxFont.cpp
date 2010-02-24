@@ -42,6 +42,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
+#include "nsILanguageAtomService.h"
 
 #include "gfxFont.h"
 #include "gfxPlatform.h"
@@ -1417,7 +1418,7 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyl
     mUserFontSet = nsnull;
     SetUserFontSet(aUserFontSet);
 
-    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
+    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.language.get());
     BuildFontList();
 }
 
@@ -1530,17 +1531,17 @@ PRBool
 gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
-    return ForEachFontInternal(mFamilies, mStyle.langGroup,
+    return ForEachFontInternal(mFamilies, mStyle.language,
                                PR_TRUE, PR_TRUE, fc, closure);
 }
 
 PRBool
 gfxFontGroup::ForEachFont(const nsAString& aFamilies,
-                          const nsACString& aLangGroup,
+                          const nsACString& aLanguage,
                           FontCreationCallback fc,
                           void *closure)
 {
-    return ForEachFontInternal(aFamilies, aLangGroup,
+    return ForEachFontInternal(aFamilies, aLanguage,
                                PR_FALSE, PR_TRUE, fc, closure);
 }
 
@@ -1559,7 +1560,7 @@ struct ResolveData {
 
 PRBool
 gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
-                                  const nsACString& aLangGroup,
+                                  const nsACString& aLanguage,
                                   PRBool aResolveGeneric,
                                   PRBool aResolveFontName,
                                   FontCreationCallback fc,
@@ -1568,6 +1569,23 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     const PRUnichar kSingleQuote  = PRUnichar('\'');
     const PRUnichar kDoubleQuote  = PRUnichar('\"');
     const PRUnichar kComma        = PRUnichar(',');
+
+    nsCAutoString langGroup;
+    if (!gLangService) {
+        CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
+    }
+    if (gLangService) {
+        nsresult rv;
+        // temp, until we pass aLanguage as an Atom
+        nsCOMPtr<nsIAtom> lang = do_GetAtom(mStyle.language);
+        nsIAtom *group = gLangService->GetLanguageGroup(lang, &rv);
+        if (NS_SUCCEEDED(rv) && group) {
+            group->ToUTF8String(langGroup);
+        }
+    }
+    if (langGroup.IsEmpty()) {
+        langGroup.Assign("x-unicode"); // XXX or should use "x-user-def"?
+    }
 
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
@@ -1579,9 +1597,6 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     nsCAutoString lcFamily;
     nsAutoString genericFamily;
     nsXPIDLCString value;
-    nsCAutoString lang(aLangGroup);
-    if (lang.IsEmpty())
-        lang.Assign("x-unicode"); // XXX or should use "x-user-def"?
 
     while (p < p_end) {
         while (nsCRT::IsAsciiSpace(*p))
@@ -1631,7 +1646,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                 nsCAutoString prefName("font.name.");
                 prefName.Append(lcFamily);
                 prefName.AppendLiteral(".");
-                prefName.Append(lang);
+                prefName.Append(langGroup);
 
                 // prefs file always uses (must use) UTF-8 so that we can use
                 // |GetCharPref| and treat the result as a UTF-8 string.
@@ -1647,7 +1662,8 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         }
 
         if (generic) {
-            ForEachFontInternal(family, lang, PR_FALSE, aResolveFontName, fc, closure);
+            ForEachFontInternal(family, langGroup, PR_FALSE,
+                                aResolveFontName, fc, closure);
         } else if (!family.IsEmpty()) {
             NS_LossyConvertUTF16toASCII gf(genericFamily);
             if (aResolveFontName) {
@@ -1677,11 +1693,11 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             nsCAutoString prefName("font.name-list.");
             prefName.Append(lcFamily);
             prefName.AppendLiteral(".");
-            prefName.Append(aLangGroup);
+            prefName.Append(langGroup);
             nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv)) {
                 ForEachFontInternal(NS_ConvertUTF8toUTF16(value),
-                                    lang, PR_FALSE, aResolveFontName,
+                                    langGroup, PR_FALSE, aResolveFontName,
                                     fc, closure);
             }
         }
@@ -2137,24 +2153,33 @@ gfxFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
     return nsnull;
 }
 
+/*static*/ void
+gfxFontGroup::Shutdown()
+{
+    NS_IF_RELEASE(gLangService);
+}
+
+nsILanguageAtomService* gfxFontGroup::gLangService = nsnull;
+
+
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
 gfxFontStyle::gfxFontStyle() :
     style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), printerFont(PR_FALSE), 
     familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL),
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
-    langGroup(NS_LITERAL_CSTRING("x-western")), sizeAdjust(0.0f)
+    language(NS_LITERAL_CSTRING("x-western")), sizeAdjust(0.0f)
 {
 }
 
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
-                           gfxFloat aSize, const nsACString& aLangGroup,
+                           gfxFloat aSize, const nsACString& aLanguage,
                            float aSizeAdjust, PRPackedBool aSystemFont,
                            PRPackedBool aFamilyNameQuirks,
                            PRPackedBool aPrinterFont):
     style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
-    size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
+    size(aSize), language(aLanguage), sizeAdjust(aSizeAdjust)
 {
     if (weight > 900)
         weight = 900;
@@ -2169,16 +2194,16 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
         size = 0.0;
     }
 
-    if (langGroup.IsEmpty()) {
-        NS_WARNING("empty langgroup");
-        langGroup.Assign("x-western");
+    if (language.IsEmpty()) {
+        NS_WARNING("empty language");
+        language.Assign("x-western");
     }
 }
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
     familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
-    stretch(aStyle.stretch), size(aStyle.size), langGroup(aStyle.langGroup),
+    stretch(aStyle.stretch), size(aStyle.size), language(aStyle.language),
     sizeAdjust(aStyle.sizeAdjust)
 {
 }
@@ -3498,7 +3523,7 @@ gfxTextRun::Dump(FILE* aOutput) {
         NS_ConvertUTF16toUTF8 fontName(font->GetName());
         fprintf(aOutput, "%d: %s %f/%d/%d/%s", mGlyphRuns[i].mCharacterOffset,
                 fontName.get(), style->size,
-                style->weight, style->style, style->langGroup.get());
+                style->weight, style->style, style->language.get());
     }
     fputc(']', aOutput);
 }

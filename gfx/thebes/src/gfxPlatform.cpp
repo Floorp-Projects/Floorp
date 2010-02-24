@@ -242,6 +242,7 @@ gfxPlatform::Shutdown()
     gfxTextRunCache::Shutdown();
     gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
+    gfxFontGroup::Shutdown();
 #if defined(XP_MACOSX) || defined(XP_WIN) // temporary, until this is implemented on others
     gfxPlatformFontList::Shutdown();
 #endif
@@ -397,11 +398,11 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
 }
 
 void
-gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts, PRBool aAppendUnicode)
+gfxPlatform::GetPrefFonts(const char *aLanguage, nsString& aFonts, PRBool aAppendUnicode)
 {
     aFonts.Truncate();
 
-    AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
+    AppendGenericFontFromPref(aFonts, aLanguage, nsnull);
     if (aAppendUnicode)
         AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
 }

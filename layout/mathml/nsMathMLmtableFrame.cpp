@@ -609,7 +609,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
     case eAlign_axis:
     default: {
       // XXX should instead use style data from the row of reference here ?
-      aReflowState.rendContext->SetFont(GetStyleFont()->mFont, nsnull,
+      aReflowState.rendContext->SetFont(GetStyleFont()->mFont,
                                         aPresContext->GetUserFontSet());
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));

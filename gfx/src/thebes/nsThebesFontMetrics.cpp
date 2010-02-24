@@ -65,12 +65,12 @@ nsThebesFontMetrics::~nsThebesFontMetrics()
 }
 
 NS_IMETHODIMP
-nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
+nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                           nsIDeviceContext *aContext, 
                           gfxUserFontSet *aUserFontSet)
 {
     mFont = aFont;
-    mLangGroup = aLangGroup;
+    mLanguage = aLanguage;
     mDeviceContext = (nsThebesDeviceContext*)aContext;
     mP2A = mDeviceContext->AppUnitsPerDevPixel();
     mIsRightToLeft = PR_FALSE;
@@ -78,16 +78,14 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
     gfxFloat size = gfxFloat(aFont.size) / mP2A;
 
-    nsCString langGroup;
-    if (aLangGroup) {
-        const char* lg;
-        mLangGroup->GetUTF8String(&lg);
-        langGroup.Assign(lg);
+    nsCString language;
+    if (aLanguage) {
+        mLanguage->ToUTF8String(language);
     }
 
     PRBool printerFont = mDeviceContext->IsPrinterSurface();
     mFontStyle = new gfxFontStyle(aFont.style, aFont.weight, aFont.stretch,
-                                  size, langGroup,
+                                  size, language,
                                   aFont.sizeAdjust, aFont.systemFont,
                                   aFont.familyNameQuirks,
                                   printerFont);
@@ -247,10 +245,10 @@ nsThebesFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 }
 
 NS_IMETHODIMP
-nsThebesFontMetrics::GetLangGroup(nsIAtom** aLangGroup)
+nsThebesFontMetrics::GetLanguage(nsIAtom** aLanguage)
 {
-    *aLangGroup = mLangGroup;
-    NS_IF_ADDREF(*aLangGroup);
+    *aLanguage = mLanguage;
+    NS_IF_ADDREF(*aLanguage);
     return NS_OK;
 }
 

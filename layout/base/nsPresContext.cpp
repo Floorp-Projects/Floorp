@@ -316,7 +316,7 @@ nsPresContext::~nsPresContext()
 
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
-  NS_IF_RELEASE(mLangGroup);
+  NS_IF_RELEASE(mLanguage);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -346,7 +346,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // worth bothering?
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mEventManager);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
-  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLanguage); // an atom
 
   for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
     tmp->mImageLoaders[i].Enumerate(TraverseImageLoader, &cb);
@@ -369,7 +369,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   }
 
   // NS_RELEASE(tmp->mLookAndFeel); // a service
-  // NS_RELEASE(tmp->mLangGroup); // an atom
+  // NS_RELEASE(tmp->mLanguage); // an atom
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -432,9 +432,14 @@ nsPresContext::GetFontPreferences()
   mDefaultVariableFont.size = CSSPixelsToAppUnits(16);
   mDefaultFixedFont.size = CSSPixelsToAppUnits(13);
 
+  // the font prefs are based on langGroup, not actual language
   const char *langGroup = "x-western"; // Assume x-western is safe...
-  if (mLangGroup) {
-    mLangGroup->GetUTF8String(&langGroup);
+  if (mLanguage && mLangService) {
+    nsresult rv;
+    nsIAtom *group = mLangService->GetLanguageGroup(mLanguage, &rv);
+    if (NS_SUCCEEDED(rv) && group) {
+      group->GetUTF8String(&langGroup);
+    }
   }
 
   nsCAutoString pref;
@@ -1000,14 +1005,15 @@ void
 nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
 {
   if (mLangService) {
-    NS_IF_RELEASE(mLangGroup);
-    mLangGroup = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
+    NS_IF_RELEASE(mLanguage);
+    mLanguage = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
+    // this will be a language group (or script) code rather than a true language code
 
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
 #if !defined(XP_BEOS) 
-    if (mLangGroup == nsGkAtoms::Unicode) {
-      NS_RELEASE(mLangGroup);
-      NS_IF_ADDREF(mLangGroup = mLangService->GetLocaleLanguageGroup()); 
+    if (mLanguage == nsGkAtoms::Unicode) {
+      NS_RELEASE(mLanguage);
+      NS_IF_ADDREF(mLanguage = mLangService->GetLocaleLanguage()); 
     }
 #endif
     GetFontPreferences();
@@ -1199,7 +1205,7 @@ already_AddRefed<nsIFontMetrics>
 nsPresContext::GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet)
 {
   nsIFontMetrics* metrics = nsnull;
-  mDeviceContext->GetMetricsFor(aFont, mLangGroup,
+  mDeviceContext->GetMetricsFor(aFont, mLanguage,
                                 aUseUserFontSet ? GetUserFontSet() : nsnull,
                                 metrics);
   return metrics;
