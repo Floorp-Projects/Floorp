@@ -60,7 +60,7 @@ public:
 
   static const nsLinkState defaultState = eLinkState_Unknown;
   Link();
-  virtual nsLinkState GetLinkState() const;
+  nsLinkState GetLinkState() const;
   virtual void SetLinkState(nsLinkState aState);
 
   /**
@@ -100,7 +100,7 @@ public:
    *        true if ResetLinkState should notify the owning document about style
    *        changes or false if it should not.
    */
-  virtual void ResetLinkState(bool aNotify);
+  void ResetLinkState(bool aNotify);
 
 protected:
   virtual ~Link();
