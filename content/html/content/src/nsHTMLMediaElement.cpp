@@ -269,6 +269,7 @@ nsHTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
 
   // Clear mElement to break cycle so we don't leak on shutdown
   mElement = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
