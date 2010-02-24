@@ -406,6 +406,7 @@ input[type="file"] > input[type="button"] {
   height: inherit;
   font-size: inherit;
   letter-spacing: inherit;
+  cursor: inherit;
 }
 
 /* radio buttons */
