@@ -80,7 +80,6 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
   PRBool Allowed() {return mAllowed;}
-  void SetTimeoutTimer();
 
   ~nsGeolocationRequest();
 
@@ -89,6 +88,7 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
+  PRPackedBool mHasSentData;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
