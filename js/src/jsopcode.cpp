@@ -1907,8 +1907,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  */
 #define PROPAGATE_CALLNESS()                                                  \
     JS_BEGIN_MACRO                                                            \
-        if (ss->opcodes[ss->top - 1] == JSOP_CALL)                            \
+        if (ss->opcodes[ss->top - 1] == JSOP_CALL ||                          \
+            ss->opcodes[ss->top - 1] == JSOP_EVAL ||                          \
+            ss->opcodes[ss->top - 1] == JSOP_APPLY) {                         \
             saveop = JSOP_CALL;                                               \
+        }                                                                     \
     JS_END_MACRO
 
     cx = ss->sprinter.context;
@@ -2525,13 +2528,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_HIDDEN:
-                    /*
-                     * Hide this pop. Don't adjust our stack depth model if
-                     * it's from a goto in a with or for/in.
-                     */
+                    /* Hide this pop, it's from a goto in a with or for/in. */
                     todo = -2;
-                    if (lastop == JSOP_UNBRAND)
-                        (void) POP_STR();
                     break;
 
                   case SRC_DECL:
@@ -2641,7 +2639,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                                    goto enterblock_out)
                 for (sprop = OBJ_SCOPE(obj)->lastProperty(); sprop;
                      sprop = sprop->parent) {
-                    if (!(sprop->flags & SPROP_HAS_SHORTID))
+                    if (!sprop->hasShortID())
                         continue;
                     LOCAL_ASSERT_OUT(sprop->shortid < argc);
                     atomv[sprop->shortid] = JSID_TO_ATOM(sprop->id);
@@ -5583,14 +5581,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             }
         }
 
-        /*
-         * Ignore early-exit code, which is SRC_HIDDEN, but do not ignore the
-         * hidden POP that sometimes appears after an UNBRAND. See bug 543565.
-         */
-        if (sn && SN_TYPE(sn) == SRC_HIDDEN &&
-            (op != JSOP_POP || js_GetOpcode(cx, script, pc - 1) != JSOP_UNBRAND)) {
+        /* Ignore early-exit code, which is annotated SRC_HIDDEN. */
+        if (sn && SN_TYPE(sn) == SRC_HIDDEN)
             continue;
-        }
 
         if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
             return -1;

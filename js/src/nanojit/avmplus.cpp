@@ -49,7 +49,7 @@ blx_lr_broken() {
 
 using namespace avmplus;
 
-Config AvmCore::config;
+nanojit::Config AvmCore::config;
 
 void
 avmplus::AvmLog(char const *msg, ...) {

@@ -1,5 +1,6 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Object/
-script 15.2.3.3-01.js # does not use reportCompare
+skip script defineProperty-setup.js # not a test.
+script 15.2.3.3-01.js
 script 15.2.3.5-01.js
 skip-if(!xulRuntime.shell) script 15.2.3.6-function-length.js # uses shell load() function
 script 15.2.3.6-miscellaneous.js

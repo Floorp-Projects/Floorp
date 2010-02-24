@@ -70,9 +70,9 @@ class XULInfoTester:
             cmd = [ self.js_bin, '-e', self.js_prolog, '-e', 'print(!!(%s))'%cond ]
             p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             out, err = p.communicate()
-            if out == 'true\n':
+            if out in ('true\n', 'true\r\n'):
                 ans = True
-            elif out == 'false\n':
+            elif out in ('false\n', 'false\r\n'):
                 ans = False
             else:
                 raise Exception("Failed to test XUL condition '%s'"%cond)

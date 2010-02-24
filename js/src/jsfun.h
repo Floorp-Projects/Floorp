@@ -128,7 +128,8 @@ typedef union JSLocalNames {
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
-struct JSFunction : public JSObject {
+struct JSFunction : public JSObject
+{
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
@@ -163,9 +164,9 @@ struct JSFunction : public JSObject {
     bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
-    uintN countVars() const { 
+    uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
-        return u.i.nvars; 
+        return u.i.nvars;
     }
 
     uintN countArgsAndVars() const {
@@ -192,6 +193,10 @@ struct JSFunction : public JSObject {
     JSAtom *findDuplicateFormal() const;
 
     uint32 countInterpretedReservedSlots() const;
+
+    bool mightEscape() const {
+        return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
+    }
 };
 
 /*
@@ -279,7 +284,19 @@ extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
 extern JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto);
+
+inline JSObject *
+CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
+{
+    JS_ASSERT(parent);
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
+        return NULL;
+    JS_ASSERT(proto);
+    return js_CloneFunctionObject(cx, fun, parent, proto);
+}
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
@@ -322,7 +339,7 @@ extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv, 
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv,
                         uint32 nvars, jsval *slots);
 
 extern JSFunction *
