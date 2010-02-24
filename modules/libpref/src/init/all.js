@@ -60,7 +60,7 @@ pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
 #ifndef WINCE
-pref("browser.cache.disk.capacity",         102400);
+pref("browser.cache.disk.capacity",         51200);
 #else
 pref("browser.cache.disk.capacity",         20000);
 #endif
