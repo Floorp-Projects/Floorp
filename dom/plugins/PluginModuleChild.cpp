@@ -1514,23 +1514,6 @@ PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor)
     return true;
 }
 
-bool
-PluginModuleChild::PluginInstanceDestroyed(PluginInstanceChild* aActor,
-                                           NPError* rv)
-{
-    PLUGIN_LOG_DEBUG_METHOD;
-    AssertPluginThread();
-
-    NPP npp = aActor->GetNPP();
-
-    *rv = mFunctions.destroy(npp, 0);
-    npp->ndata = 0;
-
-    DeallocNPObjectsForInstance(aActor);
-
-    return true;
-}
-
 NPObject* NP_CALLBACK
 PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
 {
@@ -1538,6 +1521,10 @@ PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
     AssertPluginThread();
 
     PluginInstanceChild* i = InstCast(aNPP);
+    if (i->mDeletingHash) {
+        NS_ERROR("Plugin used NPP after NPP_Destroy");
+        return NULL;
+    }
 
     NPObject* newObject;
     if (aClass && aClass->allocate) {
@@ -1577,17 +1564,30 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
 {
     AssertPluginThread();
 
+    NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
+    if (!d) {
+        NS_ERROR("Releasing object not in mObjectMap?");
+        return;
+    }
+
+    DeletingObjectEntry* doe = NULL;
+    if (d->instance->mDeletingHash) {
+        doe = d->instance->mDeletingHash->GetEntry(aNPObj);
+        if (!doe) {
+            NS_ERROR("An object for a destroyed instance isn't in the instance deletion hash");
+            return;
+        }
+        if (doe->mDeleted)
+            return;
+    }
+
     int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
     NS_LOG_RELEASE(aNPObj, refCnt, "NPObject");
 
     if (refCnt == 0) {
         DeallocNPObject(aNPObj);
-#ifdef DEBUG
-        NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
-        NS_ASSERTION(d, "NPObject not mapped?");
-        NS_ASSERTION(!d->actor, "NPObject has actor at destruction?");
-#endif
-        current()->mObjectMap.RemoveEntry(aNPObj);
+        if (doe)
+            doe->mDeleted = true;
     }
     return;
 }
@@ -1600,39 +1600,28 @@ PluginModuleChild::DeallocNPObject(NPObject* aNPObj)
     } else {
         child::_memfree(aNPObj);
     }
-}
 
-PLDHashOperator
-PluginModuleChild::DeallocForInstance(NPObjectData* d, void* userArg)
-{
-    if (d->instance == static_cast<PluginInstanceChild*>(userArg)) {
-        NPObject* o = d->GetKey();
-        if (o->_class && o->_class->invalidate)
-            o->_class->invalidate(o);
+    NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
+    if (d->actor)
+        d->actor->NPObjectDestroyed();
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-        {
-            int32_t refCnt = o->referenceCount;
-            while (refCnt) {
-                --refCnt;
-                NS_LOG_RELEASE(o, refCnt, "NPObject");
-            }
-        }
-#endif
-
-        DeallocNPObject(o);
-
-        if (d->actor)
-            d->actor->NPObjectDestroyed();
-
-        return PL_DHASH_REMOVE;
-    }
-
-    return PL_DHASH_NEXT;
+    current()->mObjectMap.RemoveEntry(aNPObj);
 }
 
 void
-PluginModuleChild::DeallocNPObjectsForInstance(PluginInstanceChild* instance)
+PluginModuleChild::FindNPObjectsForInstance(PluginInstanceChild* instance)
 {
-    mObjectMap.EnumerateEntries(DeallocForInstance, instance);
+    NS_ASSERTION(instance->mDeletingHash, "filling null mDeletingHash?");
+    mObjectMap.EnumerateEntries(CollectForInstance, instance);
+}
+
+PLDHashOperator
+PluginModuleChild::CollectForInstance(NPObjectData* d, void* userArg)
+{
+    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(userArg);
+    if (d->instance == instance) {
+        NPObject* o = d->GetKey();
+        instance->mDeletingHash->PutEntry(o);
+    }
+    return PL_DHASH_NEXT;
 }
