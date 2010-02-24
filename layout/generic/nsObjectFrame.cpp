@@ -1208,6 +1208,11 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
   nsRect bounds = GetContentRect() + GetParent()->GetOffsetTo(rootFrame);
   configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
 
+  // This should produce basically the same rectangle (but not relative
+  // to the root frame). We only call this here for the side-effect of
+  // setting mViewToWidgetOffset on the view.
+  mInnerView->CalcWidgetBounds(eWindowType_plugin);
+
   nsRegionRectIterator iter(aRegion);
   nsIntPoint pluginOrigin = aPluginOrigin.ToNearestPixels(appUnitsPerDevPixel);
   for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
