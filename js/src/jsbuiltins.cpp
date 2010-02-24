@@ -403,6 +403,8 @@ js_PopInterpFrame(JSContext* cx, InterpState* state)
         return JS_FALSE;
     if (cx->fp->imacpc)
         return JS_FALSE;
+    if (cx->fp->blockChain)
+        return JS_FALSE;
 
     cx->fp->putActivationObjects(cx);
     
