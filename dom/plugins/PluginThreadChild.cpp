@@ -104,5 +104,16 @@ PluginThreadChild::CleanUp()
     MozillaChildThread::CleanUp();
 }
 
+/* static */
+void
+PluginThreadChild::AppendNotesToCrashReport(const nsCString& aNotes)
+{
+    AssertPluginThread();
+
+    if (gInstance) {
+        gInstance->mPlugin.SendAppendNotesToCrashReport(aNotes);
+    }
+}
+
 } // namespace plugins
 } // namespace mozilla

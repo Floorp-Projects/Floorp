@@ -353,6 +353,10 @@ PluginModuleChild::InitGraphics()
 #else
     // may not be necessary on all platforms
 #endif
+#ifdef MOZ_X11
+    // Do this after initializing GDK, or GDK will install its own handler.
+    XRE_InstallX11ErrorHandler();
+#endif
 
     return true;
 }
