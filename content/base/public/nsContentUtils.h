@@ -117,6 +117,7 @@ class nsIXTFService;
 class nsIBidiKeyboard;
 #endif
 class nsIMIMEHeaderParam;
+class nsIObserver;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -597,6 +598,13 @@ public:
   {
     return sGenCat;
   }
+
+  /**
+   * Regster aObserver as a shutdown observer. A strong reference is held
+   * to aObserver until UnregisterShutdownObserver is called.
+   */
+  static void RegisterShutdownObserver(nsIObserver* aObserver);
+  static void UnregisterShutdownObserver(nsIObserver* aObserver);
 
   /**
    * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
