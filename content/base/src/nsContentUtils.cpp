@@ -104,6 +104,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsContentPolicyUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
@@ -3450,6 +3452,30 @@ nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
   nsReferencedElement ref;
   ref.Reset(aFromContent, aURI);
   return ref.get();
+}
+
+/* static */
+void
+nsContentUtils::RegisterShutdownObserver(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->AddObserver(aObserver, 
+                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                 PR_FALSE);
+  }
+}
+
+/* static */
+void
+nsContentUtils::UnregisterShutdownObserver(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->RemoveObserver(aObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
 }
 
 /* static */
