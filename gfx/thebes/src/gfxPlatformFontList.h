@@ -74,7 +74,7 @@ public:
         sPlatformFontList = nsnull;
     }
 
-    void GetFontList (const nsACString& aLangGroup,
+    void GetFontList (nsIAtom *aLangGroup,
                       const nsACString& aGenericFamily,
                       nsTArray<nsString>& aListOfFonts);
 

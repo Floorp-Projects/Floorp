@@ -78,14 +78,9 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
 
     gfxFloat size = gfxFloat(aFont.size) / mP2A;
 
-    nsCString language;
-    if (aLanguage) {
-        mLanguage->ToUTF8String(language);
-    }
-
     PRBool printerFont = mDeviceContext->IsPrinterSurface();
     mFontStyle = new gfxFontStyle(aFont.style, aFont.weight, aFont.stretch,
-                                  size, language,
+                                  size, aLanguage,
                                   aFont.sizeAdjust, aFont.systemFont,
                                   aFont.familyNameQuirks,
                                   printerFont);

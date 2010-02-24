@@ -49,6 +49,7 @@
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxGDIFontList.h"
+#include "gfxAtoms.h"
 
 #include "gfxFontTest.h"
 
@@ -558,7 +559,7 @@ gfxWindowsFontGroup::GroupFamilyListToArrayList(nsTArray<nsRefPtr<gfxFontEntry> 
 
 void
 gfxWindowsFontGroup::FamilyListToArrayList(const nsString& aFamilies,
-                                           const nsCString& aLangGroup,
+                                           nsIAtom *aLangGroup,
                                            nsTArray<nsRefPtr<gfxFontEntry> > *list)
 {
     nsAutoTArray<nsString, 15> fonts;
@@ -1040,17 +1041,11 @@ static const struct ScriptPropertyEntry gScriptToText[] =
 static const char *sCJKLangGroup[] = {
     "ja",
     "ko",
-    "zh-CN",
-    "zh-HK",
-    "zh-TW"
+    "zh-cn",
+    "zh-hk",
+    "zh-tw"
 };
-
 #define COUNT_OF_CJK_LANG_GROUP 5
-#define CJK_LANG_JA    sCJKLangGroup[0]
-#define CJK_LANG_KO    sCJKLangGroup[1]
-#define CJK_LANG_ZH_CN sCJKLangGroup[2]
-#define CJK_LANG_ZH_HK sCJKLangGroup[3]
-#define CJK_LANG_ZH_TW sCJKLangGroup[4]
 
 #define STATIC_STRING_LENGTH 100
 
@@ -1718,13 +1713,15 @@ gfxWindowsFontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry>
 }
 
 // this function appends to the array passed in.
-void gfxWindowsFontGroup::GetPrefFonts(const char *aLangGroup,
-                                       nsTArray<nsRefPtr<gfxFontEntry> >& array) {
+void gfxWindowsFontGroup::GetPrefFonts(nsIAtom *aLangGroup,
+                                       nsTArray<nsRefPtr<gfxFontEntry> >& array)
+{
     NS_ASSERTION(aLangGroup, "aLangGroup is null");
     gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
     nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
     /* this lookup has to depend on weight and style */
-    nsCAutoString key(aLangGroup);
+    nsCAutoString key;
+    aLangGroup->ToUTF8String(key);
     key.Append("-");
     key.AppendInt(GetStyle()->style);
     key.Append("-");
@@ -1735,8 +1732,7 @@ void gfxWindowsFontGroup::GetPrefFonts(const char *aLangGroup,
         if (fontString.IsEmpty())
             return;
 
-        FamilyListToArrayList(fontString, nsDependentCString(aLangGroup),
-                                      &fonts);
+        FamilyListToArrayList(fontString, aLangGroup, &fonts);
 
         platform->SetPrefFontEntries(key, fonts);
     }
@@ -1799,27 +1795,29 @@ void gfxWindowsFontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& arr
                 nsCAutoString lang(Substring(start, p));
                 lang.CompressWhitespace(PR_FALSE, PR_TRUE);
                 PRInt32 index = GetCJKLangGroupIndex(lang.get());
-                if (index >= 0)
-                    GetPrefFonts(sCJKLangGroup[index], array);
+                if (index >= 0) {
+                    nsCOMPtr<nsIAtom> atom = do_GetAtom(sCJKLangGroup[index]);
+                    GetPrefFonts(atom, array);
+                }
                 p++;
             }
         }
 
         // Add the system locale
         switch (::GetACP()) {
-            case 932: GetPrefFonts(CJK_LANG_JA, array); break;
-            case 936: GetPrefFonts(CJK_LANG_ZH_CN, array); break;
-            case 949: GetPrefFonts(CJK_LANG_KO, array); break;
-            // XXX Don't we need to append CJK_LANG_ZH_HK if the codepage is 950?
-            case 950: GetPrefFonts(CJK_LANG_ZH_TW, array); break;
+            case 932: GetPrefFonts(gfxAtoms::ja, array); break;
+            case 936: GetPrefFonts(gfxAtoms::zh_cn, array); break;
+            case 949: GetPrefFonts(gfxAtoms::ko, array); break;
+            // XXX Don't we need to append gfxAtoms::zh_hk if the codepage is 950?
+            case 950: GetPrefFonts(gfxAtoms::zh_tw, array); break;
         }
 
         // last resort...
-        GetPrefFonts(CJK_LANG_JA, array);
-        GetPrefFonts(CJK_LANG_KO, array);
-        GetPrefFonts(CJK_LANG_ZH_CN, array);
-        GetPrefFonts(CJK_LANG_ZH_HK, array);
-        GetPrefFonts(CJK_LANG_ZH_TW, array);
+        GetPrefFonts(gfxAtoms::ja, array);
+        GetPrefFonts(gfxAtoms::ko, array);
+        GetPrefFonts(gfxAtoms::zh_cn, array);
+        GetPrefFonts(gfxAtoms::zh_hk, array);
+        GetPrefFonts(gfxAtoms::zh_tw, array);
 
         platform->SetPrefFontEntries(key, array);
     }
@@ -1833,7 +1831,7 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
     // check out the style's language group
     if (!selectedFont) {
         nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
-        this->GetPrefFonts(mStyle.language.get(), fonts);
+        this->GetPrefFonts(mStyle.language, fonts);
         selectedFont = WhichFontSupportsChar(fonts, aCh);
     }
 
@@ -1844,7 +1842,8 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
             PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s ", mItemLangGroup));
 
             nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
-            this->GetPrefFonts(mItemLangGroup, fonts);
+            nsCOMPtr<nsIAtom> lgAtom = do_GetAtom(mItemLangGroup);
+            this->GetPrefFonts(lgAtom, fonts);
             selectedFont = WhichFontSupportsChar(fonts, aCh);
         } else if (aCh <= 0xFFFF) {
             PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
@@ -1858,10 +1857,13 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
                 this->GetCJKPrefFonts(fonts);
                 selectedFont = WhichFontSupportsChar(fonts, aCh);
             } else {
-                const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
+                nsIAtom *langGroup = LangGroupFromUnicodeRange(unicodeRange);
                 if (langGroup) {
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
-
+#ifdef PR_LOGGING
+                    const char *langGroupStr;
+                    langGroup->GetUTF8String(&langGroupStr);
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroupStr));
+#endif
                     nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
                     this->GetPrefFonts(langGroup, fonts);
                     selectedFont = WhichFontSupportsChar(fonts, aCh);

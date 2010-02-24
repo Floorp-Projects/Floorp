@@ -1932,8 +1932,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
       return NS_ERROR_FAILURE;
     nsIDocument* document = presShell->GetDocument();
 
-    nsCString language;
-    presShell->GetPresContext()->GetLanguage()->ToUTF8String(language);
+    nsIAtom *language = presShell->GetPresContext()->GetLanguage();
 
     nsCOMArray<nsIStyleRule> rules;
 
@@ -2004,7 +2003,10 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.familyNameQuirks,
                        printerFont);
 
-    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style, presShell->GetPresContext()->GetUserFontSet());
+    CurrentState().fontGroup =
+        gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
+                                                    &style,
+                                                    presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
     CurrentState().font = font;
     return NS_OK;

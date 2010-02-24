@@ -42,6 +42,7 @@
 
 #include "gfxPlatform.h"
 #include "nsTArray.h"
+#include "nsIAtom.h"
 
 NS_IMPL_ISUPPORTS1(nsThebesFontEnumerator, nsIFontEnumerator)
 
@@ -67,20 +68,14 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     nsTArray<nsString> fontList;
 
-    nsCAutoString langGroup;
     nsCAutoString generic;
-
-    if (aLangGroup)
-        langGroup.Assign(aLangGroup);
-    else
-        langGroup.SetIsVoid(PR_TRUE);
-
     if (aGeneric)
         generic.Assign(aGeneric);
     else
         generic.SetIsVoid(PR_TRUE);
 
-    nsresult rv = gfxPlatform::GetPlatform()->GetFontList(langGroup, generic, fontList);
+    nsCOMPtr<nsIAtom> langGroupAtom = do_GetAtom(aLangGroup);
+    nsresult rv = gfxPlatform::GetPlatform()->GetFontList(langGroupAtom, generic, fontList);
 
     if (NS_FAILED(rv)) {
         *aCount = 0;
