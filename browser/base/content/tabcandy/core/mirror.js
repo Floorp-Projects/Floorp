@@ -33,7 +33,7 @@ TabCanvas.prototype = {
     var paintIt = function(evt){self.onPaint(evt) };
     
     // Don't mirror chrome tabs.
-    if( window.location.protocol == "chrome:" ) return;
+    //if( window.location.protocol == "chrome:" ) return;
     
     
     tab.contentWindow.addEventListener("MozAfterPaint", paintIt, false);
@@ -62,10 +62,15 @@ TabCanvas.prototype = {
       var startTime = new Date();
       ctx.save();
       ctx.scale(scaler, scaler);
-      ctx.drawWindow( fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff" );
+      try{
+        ctx.drawWindow( fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff" );
+      } catch(e){
+        
+      }
+      
       ctx.restore();
       var elapsed = (new Date()) - startTime;
-      Utils.logger.log( this.window.location.host + " " + elapsed );
+      //Utils.logger.log( this.window.location.host + " " + elapsed );
       this.lastDraw = new Date();
     }
     ctx.restore();      
