@@ -167,7 +167,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 }
 
 nsresult
-gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
+gfxWindowsPlatform::GetFontList(nsIAtom *aLangGroup,
                                 const nsACString& aGenericFamily,
                                 nsTArray<nsString>& aListOfFonts)
 {
