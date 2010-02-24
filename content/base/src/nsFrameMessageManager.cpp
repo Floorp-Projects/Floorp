@@ -255,8 +255,7 @@ nsFrameMessageManager::SendAsyncMessage()
   nsString json;
   nsresult rv = GetParamsForMessage(messageName, json);
   NS_ENSURE_SUCCESS(rv, rv);
-  SendAsyncMessageInternal(messageName, json);
-  return NS_OK;
+  return SendAsyncMessageInternal(messageName, json);
 }
 
 NS_IMETHODIMP
