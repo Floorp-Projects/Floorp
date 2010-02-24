@@ -224,9 +224,9 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 }
 
 nsresult
-gfxQtPlatform::GetFontList(const nsACString& aLangGroup,
-                            const nsACString& aGenericFamily,
-                            nsTArray<nsString>& aListOfFonts)
+gfxQtPlatform::GetFontList(nsIAtom *aLangGroup,
+                           const nsACString& aGenericFamily,
+                           nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);

@@ -1,5 +1,5 @@
-/* vim:set sw=4 sts=4 et cin: */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,11 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is BeOS code in Thebes.
+ * The Original Code is Mozilla Foundation code.
  *
- * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,42 +34,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfxAtoms.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
-#ifndef GFX_PLATFORM_BEOS_H
-#define GFX_PLATFORM_BEOS_H
+#define GFX_ATOM(_name, _value) nsIAtom* gfxAtoms::_name = 0;
+#include "gfxAtomList.h"
+#undef GFX_ATOM
 
-#include "gfxPlatform.h"
-#include "gfxTArray.h"
-
-class gfxFontconfigUtils;
-
-class NS_EXPORT gfxBeOSPlatform : public gfxPlatform {
-public:
-    gfxBeOSPlatform();
-    virtual ~gfxBeOSPlatform();
-
-    static gfxBeOSPlatform *GetPlatform() {
-        return (gfxBeOSPlatform*) gfxPlatform::GetPlatform();
-    }
-
-    already_AddRefed<gfxASurface>
-        CreateOffscreenSurface(PRUint32 width,
-                               PRUint32 height,
-                               gfxASurface::gfxImageFormat imageFormat);
-
-    nsresult GetFontList(nsIAtom *aLangGroup,
-                         const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts);
-
-    nsresult UpdateFontList();
-
-    nsresult ResolveFontName(const nsAString& aFontName,
-                             FontResolverCallback aCallback,
-                             void *aClosure, PRBool& aAborted);
-
-    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
-protected:
-    static gfxFontconfigUtils *sFontconfigUtils;
+static const nsStaticAtom atoms[] = {
+#define GFX_ATOM(_name, _value) { _value, &gfxAtoms::_name },
+#include "gfxAtomList.h"
+#undef GFX_ATOM
 };
 
-#endif /* GFX_PLATFORM_BEOS_H */
+void gfxAtoms::RegisterAtoms()
+{
+    NS_RegisterStaticAtoms(atoms, NS_ARRAY_LENGTH(atoms));
+}

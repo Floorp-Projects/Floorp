@@ -103,7 +103,7 @@ public:
 
     static void Shutdown();
 
-    nsresult GetFontList(const nsACString& aLangGroup,
+    nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts);
 

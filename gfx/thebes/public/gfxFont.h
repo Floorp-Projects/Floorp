@@ -54,6 +54,7 @@
 #include "nsExpirationTracker.h"
 #include "gfxFontConstants.h"
 #include "gfxPlatform.h"
+#include "nsIAtom.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -61,7 +62,6 @@
 
 class gfxContext;
 class gfxTextRun;
-class nsIAtom;
 class gfxFont;
 class gfxFontFamily;
 class gfxFontGroup;
@@ -84,7 +84,7 @@ class nsILanguageAtomService;
 struct THEBES_API gfxFontStyle {
     gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
-                 gfxFloat aSize, const nsACString& aLanguage,
+                 gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks,
                  PRPackedBool aPrinterFont);
@@ -120,7 +120,7 @@ struct THEBES_API gfxFontStyle {
     gfxFloat size;
 
     // the language (may be an internal langGroup code rather than an actual lang)
-    nsCString language;
+    nsIAtom *language;
 
     // The aspect-value (ie., the ratio actualsize:actualxheight) that any
     // actual physical font created from this font structure must have when
@@ -139,7 +139,7 @@ struct THEBES_API gfxFontStyle {
     PLDHashNumber Hash() const {
         return ((style + (systemFont << 7) + (familyNameQuirks << 8) +
             (weight << 9)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
-            HashString(language);
+            nsISupportsHashKey::HashKey(language);
     }
 
     void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
@@ -153,7 +153,7 @@ struct THEBES_API gfxFontStyle {
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
             (stretch == other.stretch) &&
-            (language.Equals(other.language)) &&
+            (language == other.language) &&
             (sizeAdjust == other.sizeAdjust);
     }
 };
@@ -213,7 +213,7 @@ public:
     virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
         return PR_TRUE;
     }
-    virtual PRBool SupportsLangGroup(const nsACString& aLangGroup) const {
+    virtual PRBool SupportsLangGroup(nsIAtom *aLangGroup) const {
         return PR_TRUE;
     }
 
@@ -1792,7 +1792,7 @@ public:
                                             const nsACString& aGenericName,
                                             void *closure);
     PRBool ForEachFont(const nsAString& aFamilies,
-                       const nsACString& aLanguage,
+                       nsIAtom *aLanguage,
                        FontCreationCallback fc,
                        void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
@@ -1879,7 +1879,7 @@ protected:
      * if aResolveGeneric).
      */
     PRBool ForEachFontInternal(const nsAString& aFamilies,
-                               const nsACString& aLanguage,
+                               nsIAtom *aLanguage,
                                PRBool aResolveGeneric,
                                PRBool aResolveFontName,
                                FontCreationCallback fc,

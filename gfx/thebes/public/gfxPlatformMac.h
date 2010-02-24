@@ -86,7 +86,7 @@ public:
 
     PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
-    nsresult GetFontList(const nsACString& aLangGroup,
+    nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts);
     nsresult UpdateFontList();

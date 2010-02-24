@@ -263,12 +263,12 @@ gfxPlatformFontList::ResolveFontName(const nsAString& aFontName, nsAString& aRes
 }
 
 struct FontListData {
-    FontListData(const nsACString& aLangGroup,
+    FontListData(nsIAtom *aLangGroup,
                  const nsACString& aGenericFamily,
                  nsTArray<nsString>& aListOfFonts) :
         mLangGroup(aLangGroup), mGenericFamily(aGenericFamily),
         mListOfFonts(aListOfFonts) {}
-    const nsACString& mLangGroup;
+    nsIAtom *mLangGroup;
     const nsACString& mGenericFamily;
     nsTArray<nsString>& mListOfFonts;
 };
@@ -306,7 +306,7 @@ gfxPlatformFontList::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
 }
 
 void
-gfxPlatformFontList::GetFontList(const nsACString& aLangGroup,
+gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts)
 {
