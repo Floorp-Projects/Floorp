@@ -90,7 +90,11 @@ var Page = {
     });
     
     $search.keyup(function(evt){
-      var $found = $(".tab .name:not(:icontains(" + $search.val() + "))").parent();
+      if( $search.val().length > 0 )
+        var $found = $(".tab .name:not(:icontains(" + $search.val() + "))").parent();
+      else 
+        var $found = [];
+      
       if( $search.val().length > 1 ){
         $found.addClass("unhighlight");
         $(".tab .name:icontains(" + $search.val() + ")").parent().removeClass("unhighlight");      
@@ -99,10 +103,10 @@ var Page = {
         $(".tab .name").parent().removeClass("unhighlight");
       }
       
-      console.log( $found.length );
-      if ( $found.length == 1 ) {      
-        $found.animate({top:0, left:0})
-      }        
+      if ( $found.length == 1 ) {
+        $found.click();
+        //$found.animate({top:0, left:0})
+      }  
       
     });
     

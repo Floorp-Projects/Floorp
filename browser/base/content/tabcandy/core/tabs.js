@@ -322,11 +322,21 @@ function Tabs() {
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
       var chromeWindow = wm.getMostRecentWindow("navigator:browser");
+      Utils.logger.log( trackedWindows )
       if (chromeWindow)
         return trackedWindows.get(chromeWindow);
       return null;
     }
   };
+
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+           .getService(Ci.nsIWindowMediator);
+  var chromeWindow = wm.getMostRecentWindow("navigator:browser");
+  new BrowserWindow(chromeWindow);
+
+  trackedWindows.set(chromeWindow,
+                      new BrowserWindow(chromeWindow));
+
   windows.__proto__ = trackedWindows.values;
 
   var tabs = {
