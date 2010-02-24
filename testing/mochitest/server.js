@@ -211,7 +211,9 @@ function createMochitestServer(serverBasePath)
       getFile: function getFile(path)
       {
         var file = serverBasePath.clone().QueryInterface(Ci.nsILocalFile);
-        file.appendRelativePath(path);
+        path.split("/").forEach(function(p) {
+          file.appendRelativePath(p);
+        });
         return file;
       },
       QueryInterface: function(aIID) { return this; }
