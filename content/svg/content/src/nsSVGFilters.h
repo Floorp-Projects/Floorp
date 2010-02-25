@@ -113,8 +113,7 @@ protected:
                                const Image *aSource,
                                const Image *aTarget,
                                const nsIntRect& aDataRect,
-                               nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
-                               nsSVGElement *aElement);
+                               nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY);
 
   void FinishScalingFilter(ScaleInfo *aScaleInfo);
 

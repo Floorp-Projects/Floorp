@@ -819,7 +819,7 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::GetZoomAndPan(PRUint16 *aZoomAndPan)
 {
-  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue(this);
+  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
   return NS_OK;
 }
 
@@ -989,7 +989,7 @@ nsSVGSVGElement::GetViewBoxTransform()
 
   nsSVGViewBoxRect viewBox;
   if (mViewBox.IsValid()) {
-    viewBox = mViewBox.GetAnimValue(this);
+    viewBox = mViewBox.GetAnimValue();
   } else {
     viewBox.x = viewBox.y = 0.0f;
     viewBox.width  = viewportWidth;
@@ -1114,7 +1114,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
   float h, w;
 
   if (mViewBox.IsValid()) {
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(this);
+    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
     w = viewbox.width;
     h = viewbox.height;
   } else {
