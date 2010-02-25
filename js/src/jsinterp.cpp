@@ -3108,6 +3108,7 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
   error:
+#ifdef JS_TRACER
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
         if (*fp->imacpc == JSOP_NEXTITER &&
@@ -3130,6 +3131,7 @@ js_Interpret(JSContext *cx)
         fp->imacpc = NULL;
         atoms = script->atomMap.vector;
     }
+#endif
 
     JS_ASSERT((size_t)((fp->imacpc ? fp->imacpc : regs.pc) - script->code) < script->length);
 
