@@ -347,10 +347,11 @@ protected:
   /**
    * Get the name if it exists and return whether it did exist
    * @param aName the name returned [OUT]
-   * @param true if the name existed, false if not
+   * @param true if the name is empty, false otherwise
    */
   PRBool GetNameIfExists(nsAString& aName) {
-    return GetAttr(kNameSpaceID_None, nsGkAtoms::name, aName);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, aName);
+    return !aName.IsEmpty();
   }
 
   /**
@@ -2629,6 +2630,8 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
       aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
       aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
     }
+
+    return NS_OK;
   }
 
   //

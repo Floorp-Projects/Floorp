@@ -528,7 +528,8 @@ nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
+  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+  if (name.IsEmpty()) {
     return NS_OK;
   }
 
