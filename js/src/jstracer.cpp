@@ -7701,6 +7701,13 @@ DeepBail(JSContext *cx)
     state->deepBailSp = state->sp;
 }
 
+extern bool
+InCustomIterNextTryRegion(jsbytecode *pc)
+{
+    return nextiter_imacros.custom_iter_next <= pc &&
+           pc < nextiter_imacros.custom_iter_next + sizeof(nextiter_imacros.custom_iter_next);
+}
+
 JS_REQUIRES_STACK jsval&
 TraceRecorder::argval(unsigned n) const
 {

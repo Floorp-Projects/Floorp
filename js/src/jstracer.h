@@ -1518,6 +1518,9 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 extern bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
 
+extern bool
+InCustomIterNextTryRegion(jsbytecode *pc);
+
 #ifdef MOZ_TRACEVIS
 
 extern JS_FRIEND_API(bool)
