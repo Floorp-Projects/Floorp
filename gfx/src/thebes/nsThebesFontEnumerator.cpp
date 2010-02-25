@@ -74,7 +74,14 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     else
         generic.SetIsVoid(PR_TRUE);
 
-    nsCOMPtr<nsIAtom> langGroupAtom = do_GetAtom(aLangGroup);
+    nsCOMPtr<nsIAtom> langGroupAtom;
+    if (aLangGroup) {
+        nsCAutoString lowered;
+        lowered.Assign(aLangGroup);
+        ToLowerCase(lowered);
+        langGroupAtom = do_GetAtom(lowered);
+    }
+
     nsresult rv = gfxPlatform::GetPlatform()->GetFontList(langGroupAtom, generic, fontList);
 
     if (NS_FAILED(rv)) {
