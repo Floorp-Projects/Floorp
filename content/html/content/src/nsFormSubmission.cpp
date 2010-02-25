@@ -73,53 +73,22 @@
 #include "nsIFileStreams.h"
 #include "nsBidiUtils.h"
 
-/**
- * Get the submit charset for a form (suitable to pass in to the constructor).
- * @param aForm the form in question
- * @param aCtrlsModAtSubmit BIDI controls text mode.  Unused in non-BIDI
- *        builds.
- * @param aCharset the returned charset [OUT]
- */
-static void GetSubmitCharset(nsGenericHTMLElement* aForm,
-                             PRUint8 aCtrlsModAtSubmit,
-                             nsACString& aCharset);
-/**
- * Get the encoder for a form (suitable to pass in to the constructor).
- * @param aForm the form in question
- * @param aCharset the charset of the form
- * @param aEncoder the returned encoder [OUT]
- */
-static nsresult GetEncoder(nsGenericHTMLElement* aForm,
-                           const nsACString& aCharset,
-                           nsISaveAsCharset** aEncoder);
-/**
- * Get an attribute of a form as int, provided that it is an enumerated value.
- * @param aForm the form in question
- * @param aAtom the attribute (for example, nsGkAtoms::enctype) to get
- * @param aValue the result (will not be set at all if the attribute does not
- *        exist on the form, so *make sure you provide a default value*.)
- *        [OUT]
- */
-static void GetEnumAttr(nsGenericHTMLElement* aForm,
-                        nsIAtom* aAtom, PRInt32* aValue);
-
-//
-// Static helper methods that don't really have nothing to do with nsFormSub
-//
-
-/**
- * Send a warning to the JS console
- * @param aDocument the document the warning is about
- * @param aWarningName the internationalized name of the warning within
- *        layout/html/forms/src/HtmlProperties.js
- * @param aWarningArgs an array of strings to replace %S's in the warning
- * @param aWarningArgsLen the number of strings in the array
- */
 static void
 SendJSWarning(nsIDocument* aDocument,
               const char* aWarningName,
-              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen);
+              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
+{
+  nsContentUtils::ReportToConsole(nsContentUtils::eFORMS_PROPERTIES,
+                                  aWarningName,
+                                  aWarningArgs, aWarningArgsLen,
+                                  aDocument ? aDocument->GetDocumentURI() :
+                                              nsnull,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "HTML");
+}
 
+// --------------------------------------------------------------------------
 
 class nsFSURLEncoded : public nsFormSubmission
 {
@@ -144,18 +113,15 @@ public:
   {
   }
 
-  // nsFormSubmission
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIFile* aFile);
 
 protected:
-  // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
 
-  // Helpers
   /**
    * URL encode a Unicode string by encoding it to bytes, converting linebreaks
    * properly, and then escaping many bytes as %xx.
@@ -187,24 +153,18 @@ nsresult
 nsFSURLEncoded::AddNameValuePair(const nsAString& aName,
                                  const nsAString& aValue)
 {
-  //
   // Encode value
-  //
   nsCString convValue;
   nsresult rv = URLEncode(aValue, convValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  //
   // Encode name
-  //
   nsCAutoString convName;
   rv = URLEncode(aName, convName);
   NS_ENSURE_SUCCESS(rv, rv);
 
 
-  //
   // Append data to string
-  //
   if (mQueryString.IsEmpty()) {
     mQueryString += convName + NS_LITERAL_CSTRING("=") + convValue;
   } else {
@@ -358,9 +318,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
     }
 
   } else {
-    //
     // Get the full query string
-    //
     PRBool schemeIsJavaScript;
     rv = aURI->SchemeIs("javascript", &schemeIsJavaScript);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -425,7 +383,7 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
   return NS_OK;
 }
 
-
+// --------------------------------------------------------------------------
 
 /**
  * Handle multipart/form-data encoding, which does files as well as normal
@@ -444,18 +402,15 @@ public:
                         nsISaveAsCharset* aEncoder,
                         PRInt32 aBidiOptions);
  
-  // nsFormSubmission
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIFile* aFile);
 
 protected:
-  // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
 
-  // Helpers
   /**
    * Roll up the data we have so far and add it to the multiplexed data stream.
    */
@@ -486,9 +441,6 @@ private:
   nsCString mBoundary;
 };
 
-//
-// Constructor
-//
 nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
                                              nsISaveAsCharset* aEncoder,
                                              PRInt32 aBidiOptions)
@@ -503,9 +455,6 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
   mBoundary.AppendInt(rand());
 }
 
-//
-// nsFormSubmission
-//
 nsresult
 nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
                                         const nsAString& aValue)
@@ -524,9 +473,8 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
   rv = EncodeVal(aName, nameStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  //
   // Make MIME block for name/value pair
-  //
+
   // XXX: name parameter should be encoded per RFC 2231
   // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with MIME standard.
@@ -609,9 +557,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
        + NS_LITERAL_CSTRING("Content-Type: ") + contentType
        + NS_LITERAL_CSTRING(CRLF CRLF);
 
-  //
   // Add the file to the stream
-  //
   if (fileStream) {
     // We need to dump the data up to this point into the POST data stream here,
     // since we're about to add the file input stream
@@ -620,9 +566,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
     mPostDataStream->AppendStream(fileStream);
   }
 
-  //
   // CRLF after file
-  //
   mPostDataChunk.AppendLiteral(CRLF);
 
   return NS_OK;
@@ -634,20 +578,14 @@ nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
 {
   nsresult rv;
 
-  //
   // Finish data
-  //
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
                   + NS_LITERAL_CSTRING("--" CRLF);
 
-  //
   // Add final data input stream
-  //
   AddPostDataStream();
 
-  //
   // Make header
-  //
   nsCOMPtr<nsIMIMEInputStream> mimeStream
     = do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -684,10 +622,8 @@ nsFSMultipartFormData::AddPostDataStream()
   return rv;
 }
 
+// --------------------------------------------------------------------------
 
-//
-// CLASS nsFSTextPlain
-//
 class nsFSTextPlain : public nsFormSubmission
 {
 public:
@@ -698,14 +634,12 @@ public:
   {
   }
 
-  // nsFormSubmission
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIFile* aFile);
 
 protected:
-  // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
 
@@ -791,6 +725,8 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
   return rv;
 }
 
+// --------------------------------------------------------------------------
+
 nsFormSubmission::nsFormSubmission(const nsACString& aCharset,
                                    nsISaveAsCharset* aEncoder,
                                    PRInt32 aBidiOptions)
@@ -815,85 +751,6 @@ nsFormSubmission::Release()
   }
 }
 
-static void
-SendJSWarning(nsIDocument* aDocument,
-              const char* aWarningName,
-              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
-{
-  nsContentUtils::ReportToConsole(nsContentUtils::eFORMS_PROPERTIES,
-                                  aWarningName,
-                                  aWarningArgs, aWarningArgsLen,
-                                  aDocument ? aDocument->GetDocumentURI() :
-                                              nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "HTML");
-}
-
-nsresult
-GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                      nsFormSubmission** aFormSubmission)
-{
-  //
-  // Get all the information necessary to encode the form data
-  //
-  nsIDocument* doc = aForm->GetCurrentDoc();
-  NS_ASSERTION(doc, "Should have doc if we're building submission!");
-
-  // Get BIDI options
-  PRUint8 ctrlsModAtSubmit = 0;
-  PRUint32 bidiOptions = doc->GetBidiOptions();
-  ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
-
-  // Get encoding type (default: urlencoded)
-  PRInt32 enctype = NS_FORM_ENCTYPE_URLENCODED;
-  GetEnumAttr(aForm, nsGkAtoms::enctype, &enctype);
-
-  // Get method (default: GET)
-  PRInt32 method = NS_FORM_METHOD_GET;
-  GetEnumAttr(aForm, nsGkAtoms::method, &method);
-
-  // Get charset
-  nsCAutoString charset;
-  GetSubmitCharset(aForm, ctrlsModAtSubmit, charset);
-
-  // Get unicode encoder
-  nsCOMPtr<nsISaveAsCharset> encoder;
-  GetEncoder(aForm, charset, getter_AddRefs(encoder));
-
-  //
-  // Choose encoder
-  //
-  // If enctype=multipart/form-data and method=post, do multipart
-  // Else do URL encoded
-  // NOTE:
-  // The rule used to be, if enctype=multipart/form-data, do multipart
-  // Else do URL encoded
-  if (method == NS_FORM_METHOD_POST &&
-      enctype == NS_FORM_ENCTYPE_MULTIPART) {
-    *aFormSubmission = new nsFSMultipartFormData(charset, encoder,
-                                                 bidiOptions);
-  } else if (method == NS_FORM_METHOD_POST &&
-             enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-    *aFormSubmission = new nsFSTextPlain(charset, encoder, bidiOptions);
-  } else {
-    if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
-        enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-      nsAutoString enctypeStr;
-      aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::enctype, enctypeStr);
-      const PRUnichar* enctypeStrPtr = enctypeStr.get();
-      SendJSWarning(aForm->GetOwnerDoc(), "ForgotPostWarning",
-                    &enctypeStrPtr, 1);
-    }
-    *aFormSubmission = new nsFSURLEncoded(charset, encoder, bidiOptions,
-                                          method, aForm->GetOwnerDoc());
-  }
-  NS_ENSURE_TRUE(*aFormSubmission, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aFormSubmission);
-
-  return NS_OK;
-}
-
 nsresult
 nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
                            nsIContent* aSource, nsILinkHandler* aLinkHandler,
@@ -901,127 +758,18 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
 {
   nsresult rv;
 
-  //
   // Finish encoding (get post data stream and URI)
-  //
   nsCOMPtr<nsIInputStream> postDataStream;
   rv = GetEncodedSubmission(aActionURI, getter_AddRefs(postDataStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  //
   // Actually submit the data
-  //
   NS_ENSURE_ARG_POINTER(aLinkHandler);
 
   return aLinkHandler->OnLinkClickSync(aSource, aActionURI,
                                        PromiseFlatString(aTarget).get(),
                                        postDataStream, nsnull,
                                        aDocShell, aRequest);
-}
-
-void
-GetSubmitCharset(nsGenericHTMLElement* aForm,
-                 PRUint8 aCtrlsModAtSubmit,
-                 nsACString& oCharset)
-{
-  oCharset.AssignLiteral("UTF-8"); // default to utf-8
-
-  nsresult rv = NS_OK;
-  nsAutoString acceptCharsetValue;
-  aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::acceptcharset,
-                 acceptCharsetValue);
-
-  PRInt32 charsetLen = acceptCharsetValue.Length();
-  if (charsetLen > 0) {
-    PRInt32 offset=0;
-    PRInt32 spPos=0;
-    // get charset from charsets one by one
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    if (calias) {
-      do {
-        spPos = acceptCharsetValue.FindChar(PRUnichar(' '), offset);
-        PRInt32 cnt = ((-1==spPos)?(charsetLen-offset):(spPos-offset));
-        if (cnt > 0) {
-          nsAutoString uCharset;
-          acceptCharsetValue.Mid(uCharset, offset, cnt);
-
-          if (NS_SUCCEEDED(calias->
-                           GetPreferred(NS_LossyConvertUTF16toASCII(uCharset),
-                                        oCharset)))
-            return;
-        }
-        offset = spPos + 1;
-      } while (spPos != -1);
-    }
-  }
-  // if there are no accept-charset or all the charset are not supported
-  // Get the charset from document
-  nsIDocument* doc = aForm->GetDocument();
-  if (doc) {
-    oCharset = doc->GetDocumentCharacterSet();
-  }
-
-  if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-     && oCharset.Equals(NS_LITERAL_CSTRING("windows-1256"),
-                        nsCaseInsensitiveCStringComparator())) {
-//Mohamed
-    oCharset.AssignLiteral("IBM864");
-  }
-  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
-          && oCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
-                             nsCaseInsensitiveCStringComparator())) {
-    oCharset.AssignLiteral("IBM864i");
-  }
-  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-          && oCharset.Equals(NS_LITERAL_CSTRING("ISO-8859-6"),
-                             nsCaseInsensitiveCStringComparator())) {
-    oCharset.AssignLiteral("IBM864");
-  }
-  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-          && oCharset.Equals(NS_LITERAL_CSTRING("UTF-8"),
-                             nsCaseInsensitiveCStringComparator())) {
-    oCharset.AssignLiteral("IBM864");
-  }
-
-}
-
-nsresult
-GetEncoder(nsGenericHTMLElement* aForm,
-           const nsACString& aCharset,
-           nsISaveAsCharset** aEncoder)
-{
-  *aEncoder = nsnull;
-  nsresult rv = NS_OK;
-
-  nsCAutoString charset(aCharset);
-  // canonical name is passed so that we just have to check against
-  // *our* canonical names listed in charsetaliases.properties
-  if (charset.EqualsLiteral("ISO-8859-1")) {
-    charset.AssignLiteral("windows-1252");
-  }
-
-  // use UTF-8 for UTF-16* and UTF-32* (per WHATWG and existing practice of
-  // MS IE/Opera). 
-  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16")) || 
-      StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-32"))) {
-    charset.AssignLiteral("UTF-8");
-  }
-
-  rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = (*aEncoder)->Init(charset.get(),
-                         (nsISaveAsCharset::attr_EntityAfterCharsetConv + 
-                          nsISaveAsCharset::attr_FallbackDecimalNCR),
-                         0);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "initialize nsISaveAsCharset failed");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
 }
 
 // i18n helper routines
@@ -1089,9 +837,124 @@ nsFormSubmission::UnicodeToNewBytes(const nsAString& aStr,
   return NS_OK;
 }
 
+nsresult
+nsFormSubmission::EncodeVal(const nsAString& aStr, nsACString& aOut)
+{
+  NS_ASSERTION(mEncoder, "Encoder not available. Losing data !");
+  if (mEncoder)
+    return UnicodeToNewBytes(aStr, mEncoder, aOut);
 
-// static
-void
+  // fall back to UTF-8
+  CopyUTF16toUTF8(aStr, aOut);
+  return NS_OK;
+}
+
+// --------------------------------------------------------------------------
+
+static void
+GetSubmitCharset(nsGenericHTMLElement* aForm,
+                 PRUint8 aCtrlsModAtSubmit,
+                 nsACString& oCharset)
+{
+  oCharset.AssignLiteral("UTF-8"); // default to utf-8
+
+  nsresult rv = NS_OK;
+  nsAutoString acceptCharsetValue;
+  aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::acceptcharset,
+                 acceptCharsetValue);
+
+  PRInt32 charsetLen = acceptCharsetValue.Length();
+  if (charsetLen > 0) {
+    PRInt32 offset=0;
+    PRInt32 spPos=0;
+    // get charset from charsets one by one
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) {
+      return;
+    }
+    if (calias) {
+      do {
+        spPos = acceptCharsetValue.FindChar(PRUnichar(' '), offset);
+        PRInt32 cnt = ((-1==spPos)?(charsetLen-offset):(spPos-offset));
+        if (cnt > 0) {
+          nsAutoString uCharset;
+          acceptCharsetValue.Mid(uCharset, offset, cnt);
+
+          if (NS_SUCCEEDED(calias->
+                           GetPreferred(NS_LossyConvertUTF16toASCII(uCharset),
+                                        oCharset)))
+            return;
+        }
+        offset = spPos + 1;
+      } while (spPos != -1);
+    }
+  }
+  // if there are no accept-charset or all the charset are not supported
+  // Get the charset from document
+  nsIDocument* doc = aForm->GetDocument();
+  if (doc) {
+    oCharset = doc->GetDocumentCharacterSet();
+  }
+
+  if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+     && oCharset.Equals(NS_LITERAL_CSTRING("windows-1256"),
+                        nsCaseInsensitiveCStringComparator())) {
+    oCharset.AssignLiteral("IBM864");
+  }
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
+          && oCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset.AssignLiteral("IBM864i");
+  }
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+          && oCharset.Equals(NS_LITERAL_CSTRING("ISO-8859-6"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset.AssignLiteral("IBM864");
+  }
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+          && oCharset.Equals(NS_LITERAL_CSTRING("UTF-8"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset.AssignLiteral("IBM864");
+  }
+}
+
+static nsresult
+GetEncoder(nsGenericHTMLElement* aForm,
+           const nsACString& aCharset,
+           nsISaveAsCharset** aEncoder)
+{
+  *aEncoder = nsnull;
+  nsresult rv = NS_OK;
+
+  nsCAutoString charset(aCharset);
+  // canonical name is passed so that we just have to check against
+  // *our* canonical names listed in charsetaliases.properties
+  if (charset.EqualsLiteral("ISO-8859-1")) {
+    charset.AssignLiteral("windows-1252");
+  }
+
+  // use UTF-8 for UTF-16* and UTF-32* (per WHATWG and existing practice of
+  // MS IE/Opera). 
+  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16")) || 
+      StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-32"))) {
+    charset.AssignLiteral("UTF-8");
+  }
+
+  rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = (*aEncoder)->Init(charset.get(),
+                         (nsISaveAsCharset::attr_EntityAfterCharsetConv + 
+                          nsISaveAsCharset::attr_FallbackDecimalNCR),
+                         0);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "initialize nsISaveAsCharset failed");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+static void
 GetEnumAttr(nsGenericHTMLElement* aContent,
             nsIAtom* atom, PRInt32* aValue)
 {
@@ -1102,13 +965,56 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
 }
 
 nsresult
-nsFormSubmission::EncodeVal(const nsAString& aStr, nsACString& aOut)
+GetSubmissionFromForm(nsGenericHTMLElement* aForm,
+                      nsFormSubmission** aFormSubmission)
 {
-  NS_ASSERTION(mEncoder, "Encoder not available. Losing data !");
-  if (mEncoder)
-    return UnicodeToNewBytes(aStr, mEncoder, aOut);
+  // Get all the information necessary to encode the form data
+  nsIDocument* doc = aForm->GetCurrentDoc();
+  NS_ASSERTION(doc, "Should have doc if we're building submission!");
 
-  // fall back to UTF-8
-  CopyUTF16toUTF8(aStr, aOut);
+  // Get BIDI options
+  PRUint8 ctrlsModAtSubmit = 0;
+  PRUint32 bidiOptions = doc->GetBidiOptions();
+  ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
+
+  // Get encoding type (default: urlencoded)
+  PRInt32 enctype = NS_FORM_ENCTYPE_URLENCODED;
+  GetEnumAttr(aForm, nsGkAtoms::enctype, &enctype);
+
+  // Get method (default: GET)
+  PRInt32 method = NS_FORM_METHOD_GET;
+  GetEnumAttr(aForm, nsGkAtoms::method, &method);
+
+  // Get charset
+  nsCAutoString charset;
+  GetSubmitCharset(aForm, ctrlsModAtSubmit, charset);
+
+  // Get unicode encoder
+  nsCOMPtr<nsISaveAsCharset> encoder;
+  GetEncoder(aForm, charset, getter_AddRefs(encoder));
+
+  // Choose encoder
+  if (method == NS_FORM_METHOD_POST &&
+      enctype == NS_FORM_ENCTYPE_MULTIPART) {
+    *aFormSubmission = new nsFSMultipartFormData(charset, encoder,
+                                                 bidiOptions);
+  } else if (method == NS_FORM_METHOD_POST &&
+             enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
+    *aFormSubmission = new nsFSTextPlain(charset, encoder, bidiOptions);
+  } else {
+    if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
+        enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
+      nsAutoString enctypeStr;
+      aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::enctype, enctypeStr);
+      const PRUnichar* enctypeStrPtr = enctypeStr.get();
+      SendJSWarning(aForm->GetOwnerDoc(), "ForgotPostWarning",
+                    &enctypeStrPtr, 1);
+    }
+    *aFormSubmission = new nsFSURLEncoded(charset, encoder, bidiOptions,
+                                          method, aForm->GetOwnerDoc());
+  }
+  NS_ENSURE_TRUE(*aFormSubmission, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aFormSubmission);
+
   return NS_OK;
 }
