@@ -1448,7 +1448,7 @@ PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
     AssertPluginThread();
 
     nsAutoPtr<PluginInstanceChild> childInstance(
-        new PluginInstanceChild(&mFunctions));
+        new PluginInstanceChild(&mFunctions, aMimeType));
     if (!childInstance->Initialize()) {
         *rv = NPERR_GENERIC_ERROR;
         return 0;

@@ -149,7 +149,7 @@ protected:
     AnswerUpdateWindow();
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
+    PluginInstanceChild(const NPPluginFuncs* aPluginIface, const nsCString& aMimeType);
 
     virtual ~PluginInstanceChild();
 
@@ -181,6 +181,12 @@ public:
     void UnscheduleTimer(uint32_t id);
 
 private:
+    // Quirks mode support for various plugin mime types
+    enum PluginQuirks {
+        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1, // Win32
+    };
+
+    void InitQuirksModes(const nsCString& aMimeType);
 
     NPError
     InternalGetNPObjectForValue(NPNVariable aValue,
@@ -221,6 +227,7 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+    int mQuirks;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -239,6 +246,7 @@ private:
     HWND mCachedWinlessPluginHWND;
     UINT_PTR mEventPumpTimer;
     nsIntPoint mPluginSize;
+    nsIntPoint mPluginOffset;
 #endif
 
     friend class ChildAsyncCall;
