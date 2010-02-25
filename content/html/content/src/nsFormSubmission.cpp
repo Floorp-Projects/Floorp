@@ -379,58 +379,6 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 
 // --------------------------------------------------------------------------
 
-/**
- * Handle multipart/form-data encoding, which does files as well as normal
- * inputs.  This always does POST.
- */
-class nsFSMultipartFormData : public nsEncodingFormSubmission
-{
-public:
-  /**
-   * @param aCharset the charset of the form as a string
-   */
-  nsFSMultipartFormData(const nsACString& aCharset);
-  ~nsFSMultipartFormData();
- 
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIFile* aFile);
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
-
-protected:
-
-  /**
-   * Roll up the data we have so far and add it to the multiplexed data stream.
-   */
-  nsresult AddPostDataStream();
-
-private:
-  /**
-   * The post data stream as it is so far.  This is a collection of smaller
-   * chunks--string streams and file streams interleaved to make one big POST
-   * stream.
-   */
-  nsCOMPtr<nsIMultiplexInputStream> mPostDataStream;
-
-  /**
-   * The current string chunk.  When a file is hit, the string chunk gets
-   * wrapped up into an input stream and put into mPostDataStream so that the
-   * file input stream can then be appended and everything is in the right
-   * order.  Then the string chunk gets appended to again as we process more
-   * name/value pairs.
-   */
-  nsCString mPostDataChunk;
-
-  /**
-   * The boundary string to use after each "part" (the boundary that marks the
-   * end of a value).  This is computed randomly and is different for each
-   * submission.
-   */
-  nsCString mBoundary;
-};
-
 nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset)
     : nsEncodingFormSubmission(aCharset)
 {
@@ -441,6 +389,24 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset)
   mBoundary.AppendInt(rand());
   mBoundary.AppendInt(rand());
   mBoundary.AppendInt(rand());
+}
+
+nsFSMultipartFormData::~nsFSMultipartFormData()
+{
+  NS_ASSERTION(mPostDataChunk.IsEmpty(), "Left unsubmitted data");
+}
+
+nsIInputStream*
+nsFSMultipartFormData::GetSubmissionBody()
+{
+  // Finish data
+  mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
+                  + NS_LITERAL_CSTRING("--" CRLF);
+
+  // Add final data input stream
+  AddPostDataStream();
+
+  return mPostDataStream;
 }
 
 nsresult
@@ -566,28 +532,18 @@ nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
 {
   nsresult rv;
 
-  // Finish data
-  mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
-                  + NS_LITERAL_CSTRING("--" CRLF);
-
-  // Add final data input stream
-  AddPostDataStream();
-
   // Make header
   nsCOMPtr<nsIMIMEInputStream> mimeStream
     = do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString boundaryHeaderValue(
-    NS_LITERAL_CSTRING("multipart/form-data; boundary=") + mBoundary);
-
-  mimeStream->AddHeader("Content-Type", boundaryHeaderValue.get());
+  nsCAutoString contentType;
+  GetContentType(contentType);
+  mimeStream->AddHeader("Content-Type", contentType.get());
   mimeStream->SetAddContentLength(PR_TRUE);
-  mimeStream->SetData(mPostDataStream);
+  mimeStream->SetData(GetSubmissionBody());
 
-  *aPostDataStream = mimeStream;
-
-  NS_ADDREF(*aPostDataStream);
+  *aPostDataStream = mimeStream.forget().get();
 
   return NS_OK;
 }
