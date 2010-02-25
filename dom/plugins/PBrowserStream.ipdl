@@ -57,44 +57,26 @@ rpc protocol PBrowserStream
   manager PPluginInstance;
 
 child:
-  async Write(int32_t offset, Buffer data,
-              uint32_t newlength);
-  rpc NPP_StreamAsFile(nsCString fname);
+  rpc NPP_WriteReady(int32_t newlength)
+    returns (int32_t size);
 
-  /**
-   * NPP_DestroyStream may race with other messages: the child acknowledges
-   * the message with StreamDestroyed before this actor is deleted.
-   */
-  async NPP_DestroyStream(NPReason reason);
-  async __delete__();
+  rpc NPP_Write(int32_t offset,
+                Buffer data)
+    returns (int32_t consumed);
+
+  rpc NPP_StreamAsFile(nsCString fname);
 
 parent:
   rpc NPN_RequestRead(IPCByteRanges ranges)
     returns (NPError result);
-  async NPN_DestroyStream(NPReason reason);
-  async StreamDestroyed();
 
-/*
-  TODO: turn on state machine.
-
-  // need configurable start state: if the constructor
-  // returns an error in result, start state should
-  // be DELETING.
-start state ALIVE:
-  send Write goto ALIVE;
-  call NPP_StreamAsFile goto ALIVE;
-  send NPP_DestroyStream goto ALIVE;
-  answer NPN_RequestRead goto ALIVE;
-  recv NPN_DestroyStream goto DYING;
-
-state DYING:
-  answer NPN_RequestRead goto DYING;
-  recv NPN_DestroyStream goto DYING;
-  recv StreamDestroyed goto DELETING;
-
-state DELETING:
-  send __delete__;
-*/
+both:
+  /**
+   * ~PBrowserStream is for both NPN_DestroyStream and NPP_DestroyStream.
+   * @param artificial True when the stream is closed as a by-product of
+   *                        some other call (such as a failure in NPP_Write).
+   */
+  rpc __delete__(NPReason reason, bool artificial);
 };
 
 } // namespace plugins
