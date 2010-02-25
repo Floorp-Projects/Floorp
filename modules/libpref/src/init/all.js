@@ -219,9 +219,6 @@ pref("gfx.use_text_smoothing_setting", false);
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
-// form submission
-pref("browser.forms.submit.backwards_compatible", true);
-
 // Number of characters to consider emphasizing for rich autocomplete results
 pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 

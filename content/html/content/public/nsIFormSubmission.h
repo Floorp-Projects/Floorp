@@ -38,8 +38,9 @@
 #define nsIFormSubmission_h___
 
 #include "nsISupports.h"
-class nsAString;
-class nsACString;
+#include "nsString.h"
+#include "nsCOMPtr.h"
+
 class nsIURI;
 class nsIInputStream;
 class nsGenericHTMLElement;
@@ -49,27 +50,23 @@ class nsIFormControl;
 class nsIDOMHTMLElement;
 class nsIDocShell;
 class nsIRequest;
-
-#define NS_IFORMSUBMISSION_IID   \
-{ 0x7ee38e3a, 0x1dd2, 0x11b2, \
-  {0x89, 0x6f, 0xab, 0x28, 0x03, 0x96, 0x25, 0xa9} }
+class nsISaveAsCharset;
 
 /**
- * Interface for form submissions; encompasses the function to call to submit as
+ * Class for form submissions; encompasses the function to call to submit as
  * well as the form submission name/value pairs
  */
-class nsIFormSubmission : public nsISupports
-{
+class nsFormSubmission {
+
 public:
+  virtual ~nsFormSubmission();
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMSUBMISSION_IID)
-
-  /**
-   * Find out whether or not this form submission accepts files
-   *
-   * @param aAcceptsFiles the boolean output
-   */
-  virtual PRBool AcceptsFiles() const = 0;
+  void AddRef()
+  {
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsFormSubmission", sizeof(*this));
+  }
+  void Release();
 
   /**
    * Call to perform the submission
@@ -82,47 +79,87 @@ public:
    *        loaded
    * @param aRequest (out param) the Request for the submission
    */
-  virtual nsresult SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                            nsIContent* aSource, nsILinkHandler* aLinkHandler,
-                            nsIDocShell** aDocShell,
-                            nsIRequest** aRequest) = 0;
+  nsresult SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
+                    nsIContent* aSource, nsILinkHandler* aLinkHandler,
+                    nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   /**
    * Submit a name/value pair
    *
-   * @param aSource the control sending the parameter
    * @param aName the name of the parameter
    * @param aValue the value of the parameter
    */
-  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
-                                    const nsAString& aName,
+  virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) = 0;
 
   /**
    * Submit a name/file pair
    *
-   * @param aSource the control sending the parameter
    * @param aName the name of the parameter
-   * @param aFilename the name of the file (pass null to provide no name)
-   * @param aStream the stream containing the file data to be sent
-   * @param aContentType the content-type of the file data being sent
-   * @param aMoreFilesToCome true if another name/file pair with the same name
-   *        will be sent soon
+   * @param aFile the file to submit
    */
-  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
-                               const nsAString& aName,
-                               const nsAString& aFilename,
-                               nsIInputStream* aStream,
-                               const nsACString& aContentType,
-                               PRBool aMoreFilesToCome) = 0;
+  virtual nsresult AddNameFilePair(const nsAString& aName,
+                                   nsIFile* aFile) = 0;
+  
+  /**
+   * Get the charset that will be used for submission.
+   */
+  void GetCharset(nsACString& aCharset)
+  {
+    aCharset = mCharset;
+  }
 
+protected:
+  /**
+   * Can only be constructed by subclasses.
+   *
+   * @param aCharset the charset of the form as a string
+   * @param aEncoder an encoder that will encode Unicode names and values into
+   *        bytes to be sent over the wire (usually a charset transformation)
+   * @param aBidiOptions the BIDI options flags for the current pres context
+   */
+  nsFormSubmission(const nsACString& aCharset,
+                   nsISaveAsCharset* aEncoder,
+                   PRInt32 aBidiOptions);
+
+  /**
+   * Given a URI and the current submission, create the final URI and data
+   * stream that will be submitted.  Subclasses *must* implement this.
+   *
+   * @param aURI the URI being submitted to [INOUT]
+   * @param aPostDataStream a data stream for POST data [OUT]
+   */
+  NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
+                                  nsIInputStream** aPostDataStream) = 0;
+
+  /**
+   * Encode a Unicode string to bytes using the encoder (or just copy the input
+   * if there is no encoder).
+   * @param aStr the string to encode
+   * @param aResult the encoded string [OUT]
+   * @throws an error if UnicodeToNewBytes fails
+   */
+  nsresult EncodeVal(const nsAString& aStr, nsACString& aResult);
+
+  /**
+   * Encode a Unicode string to bytes using an encoder.  (Used by EncodeVal)
+   * @param aStr the string to encode
+   * @param aEncoder the encoder to encode the bytes with (cannot be null)
+   * @param aOut the encoded string [OUT] 
+   * @throws an error if the encoder fails
+   */
+  nsresult UnicodeToNewBytes(const nsAString& aStr, nsISaveAsCharset* aEncoder,
+                             nsACString& aOut);
+
+  nsAutoRefCnt mRefCnt;
+  // The name of the encoder charset
+  nsCString mCharset;
+  // The encoder that will encode Unicode names and values
+  nsCOMPtr<nsISaveAsCharset> mEncoder;
+  // The BIDI options flags for the current pres context
+  PRInt32 mBidiOptions;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmission, NS_IFORMSUBMISSION_IID)
-
-//
-// Factory methods
-// 
 
 /**
  * Get a submission object based on attributes in the form (ENCTYPE and METHOD)
@@ -131,7 +168,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmission, NS_IFORMSUBMISSION_IID)
  * @param aFormSubmission the form submission object (out param)
  */
 nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                               nsIFormSubmission** aFormSubmission);
+                               nsFormSubmission** aFormSubmission);
 
 
 #endif /* nsIFormSubmission_h___ */
