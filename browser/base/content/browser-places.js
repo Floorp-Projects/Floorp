@@ -229,7 +229,7 @@ var StarUI = {
   function SU_panelShown(aEvent) {
     if (aEvent.target == this.panel) {
       if (!this._element("editBookmarkPanelContent").hidden) {
-        fieldToFocus = "editBMPanel_" +
+        let fieldToFocus = "editBMPanel_" +
           gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField");
         var elt = this._element(fieldToFocus);
         elt.focus();
