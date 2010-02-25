@@ -115,8 +115,10 @@ gfxOS2Platform::GetFontList(nsIAtom *aLangGroup,
                             nsTArray<nsString>& aListOfFonts)
 {
 #ifdef DEBUG_thebes
-    const char *langgroup;
-    aLangGroup->GetUTF8String(&langgroup);
+    const char *langgroup = "(null)";
+    if (aLangGroup) {
+        aLangGroup->GetUTF8String(&langgroup);
+    }
     char *family = ToNewCString(aGenericFamily);
     printf("gfxOS2Platform::GetFontList(%s, %s, ..)\n",
            langgroup, family);
