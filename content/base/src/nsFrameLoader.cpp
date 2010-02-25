@@ -77,6 +77,7 @@
 #include "nsISHistoryInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIView.h"
+#include "nsPLDOMEvent.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -180,8 +181,28 @@ nsFrameLoader::LoadFrame()
                    charset, base_uri);
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
-  return LoadURI(uri);
+  if (NS_SUCCEEDED(rv)) {
+    rv = LoadURI(uri);
+  }
+  
+  if (NS_FAILED(rv)) {
+    FireErrorEvent();
+
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+nsFrameLoader::FireErrorEvent()
+{
+  if (mOwnerContent) {
+    nsRefPtr<nsPLDOMEvent> event =
+      new nsLoadBlockingPLDOMEvent(mOwnerContent, NS_LITERAL_STRING("error"),
+                                   PR_FALSE, PR_FALSE);
+    event->PostDOMEvent();
+  }
 }
 
 NS_IMETHODIMP
@@ -209,6 +230,17 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 
 nsresult
 nsFrameLoader::ReallyStartLoading()
+{
+  nsresult rv = ReallyStartLoadingInternal();
+  if (NS_FAILED(rv)) {
+    FireErrorEvent();
+  }
+  
+  return rv;
+}
+
+nsresult
+nsFrameLoader::ReallyStartLoadingInternal()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
   // Just to be safe, recheck uri.
@@ -240,11 +272,8 @@ nsFrameLoader::ReallyStartLoading()
                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nsnull;
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to load the URL");
-  }
-#endif
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
