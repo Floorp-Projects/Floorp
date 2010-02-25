@@ -289,7 +289,7 @@ protected:
    * @param aFormSubmission the submission object
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult BuildSubmission(nsRefPtr<nsFormSubmission>& aFormSubmission, 
+  nsresult BuildSubmission(nsFormSubmission** aFormSubmission, 
                            nsEvent* aEvent);
   /**
    * Perform the submission (called by DoSubmit and FlushPendingSubmission)
@@ -338,13 +338,6 @@ public:
    */
   void FlushPendingSubmission();
 protected:
-  /**
-   * Forget a possible pending submission. Same as above but this time we
-   * get rid of the pending submission because the handler returned true
-   * so we will rebuild the submission with the name/value of the triggering
-   * element
-   */
-  void ForgetPendingSubmission();
 
   //
   // Data members
@@ -371,7 +364,7 @@ protected:
   PRBool mSubmitInitiatedFromUserInput;
 
   /** The pending submission object */
-  nsRefPtr<nsFormSubmission> mPendingSubmission;
+  nsAutoPtr<nsFormSubmission> mPendingSubmission;
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */

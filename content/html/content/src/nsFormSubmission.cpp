@@ -734,21 +734,12 @@ nsFormSubmission::nsFormSubmission(const nsACString& aCharset,
     mEncoder(aEncoder),
     mBidiOptions(aBidiOptions)
 {
+  MOZ_COUNT_CTOR(nsFormSubmission);
 }
 
 nsFormSubmission::~nsFormSubmission()
 {
-}
-
-void
-nsFormSubmission::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsFormSubmission");
-  if (mRefCnt == 0) {
-    mRefCnt = 1; // stabilize
-    delete this;
-  }
+  MOZ_COUNT_DTOR(nsFormSubmission);
 }
 
 nsresult
@@ -1014,7 +1005,6 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                                           method, aForm->GetOwnerDoc());
   }
   NS_ENSURE_TRUE(*aFormSubmission, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aFormSubmission);
 
   return NS_OK;
 }

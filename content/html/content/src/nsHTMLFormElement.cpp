@@ -620,7 +620,7 @@ nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // ignored) so if there is a stored submission, it will miss
             // the name/value of the submitting element, thus we need
             // to forget it and the form element will build a new one
-            ForgetPendingSubmission();
+            mPendingSubmission = nsnull;
           }
           DoSubmitOrReset(aVisitor.mEvent, msg);
         }
@@ -709,12 +709,12 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
   mIsSubmitting = PR_TRUE;
   NS_ASSERTION(!mWebProgress && !mSubmittingRequest, "Web progress / submitting request should not exist here!");
 
-  nsRefPtr<nsFormSubmission> submission;
+  nsAutoPtr<nsFormSubmission> submission;
 
   //
   // prepare the submission object
   //
-  BuildSubmission(submission, aEvent); 
+  BuildSubmission(getter_Transfers(submission), aEvent); 
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
@@ -745,7 +745,7 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 }
 
 nsresult
-nsHTMLFormElement::BuildSubmission(nsRefPtr<nsFormSubmission>& aFormSubmission, 
+nsHTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission, 
                                    nsEvent* aEvent)
 {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
@@ -763,13 +763,13 @@ nsHTMLFormElement::BuildSubmission(nsRefPtr<nsFormSubmission>& aFormSubmission,
   //
   // Get the submission object
   //
-  rv = GetSubmissionFromForm(this, getter_AddRefs(aFormSubmission));
+  rv = GetSubmissionFromForm(this, aFormSubmission);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   //
   // Dump the data into the submission object
   //
-  rv = WalkFormElements(aFormSubmission, originatingElement);
+  rv = WalkFormElements(*aFormSubmission, originatingElement);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   return NS_OK;
@@ -1327,26 +1327,13 @@ nsHTMLFormElement::OnSubmitClickEnd()
 void
 nsHTMLFormElement::FlushPendingSubmission()
 {
-  nsRefPtr<nsFormSubmission> kunkFuDeathGrip(mPendingSubmission);
+  if (mPendingSubmission) {
+    // Transfer owning reference so that the submissioin doesn't get deleted
+    // if we reenter
+    nsAutoPtr<nsFormSubmission> submission = mPendingSubmission;
 
-  if (!mPendingSubmission) {
-    return;
+    SubmitSubmission(submission);
   }
-
-  //
-  // perform the submission with the stored pending submission
-  //
-  SubmitSubmission(mPendingSubmission);
-
-  // now delete the pending submission object
-  mPendingSubmission = nsnull;
-}
-
-void
-nsHTMLFormElement::ForgetPendingSubmission()
-{
-  // just delete the pending submission
-  mPendingSubmission = nsnull;
 }
 
 nsresult
