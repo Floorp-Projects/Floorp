@@ -717,12 +717,9 @@ function getMozParamPref(prefName)
  *
  * @see nsIBrowserSearchService.idl
  */
-let gEnginesLoaded = false;
 function notifyAction(aEngine, aVerb) {
-  if (gEnginesLoaded) {
-    LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
-    gObsSvc.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
-  }
+  LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
+  gObsSvc.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
 }
 
 /**
@@ -2637,8 +2634,6 @@ SearchService.prototype = {
 
     for each (let dir in cache.directories)
       this._loadEnginesFromCache(dir);
-
-    gEnginesLoaded = true;
   },
 
   _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {
