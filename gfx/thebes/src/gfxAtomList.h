@@ -87,3 +87,7 @@ GFX_ATOM(x_telu, "x-telu")
 GFX_ATOM(x_knda, "x-knda")
 GFX_ATOM(x_sinh, "x-sinh")
 
+// used in gfxGDIFontList.h
+GFX_ATOM(ko_xxx, "ko-xxx")
+GFX_ATOM(x_central_euro, "x-central-euro")
+GFX_ATOM(x_symbol, "x-symbol")
