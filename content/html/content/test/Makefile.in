@@ -115,6 +115,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug394700.html \
 		test_bug395107.html \
 		test_bug401160.xhtml \
+		test_bug405242.html \
 		test_bug406596.html \
 		test_bug408231.html \
 		test_bug417760.html \
