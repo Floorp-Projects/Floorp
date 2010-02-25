@@ -60,11 +60,13 @@ nsNodeIterator::NodePointer::NodePointer(nsINode *aNode,
                                          PRBool aBeforeNode) :
     mNode(aNode),
     mBeforeNode(aBeforeNode)
-{ 
+{
 }
 
 PRBool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
 {
+    NS_ASSERTION(mNode, "Iterating an uninitialized NodePointer");
+
     if (mBeforeNode) {
         mBeforeNode = PR_FALSE;
         return PR_TRUE;
@@ -75,6 +77,8 @@ PRBool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
 
 PRBool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
 {
+    NS_ASSERTION(mNode, "Iterating an uninitialized NodePointer");
+
     if (!mBeforeNode) {
         mBeforeNode = PR_TRUE;
         return PR_TRUE;
@@ -100,14 +104,24 @@ void nsNodeIterator::NodePointer::AdjustAfterInsertion(nsINode *aContainer, PRIn
         mIndexInParent++;
 }
 
-void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode* aRoot, nsINode *aContainer, nsIContent *aChild, PRInt32 aIndexInContainer)
+void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode* aRoot,
+                                                     nsINode *aContainer,
+                                                     nsIContent *aChild,
+                                                     PRInt32 aIndexInContainer)
 {
     if (!mNode)
         return;
 
-    // check if earlier sibling was removed
-    if (aContainer == mNodeParent && aIndexInContainer < mIndexInParent)
-        mIndexInParent--;
+    // Check if earlier sibling was removed.
+    // The mNode != aRoot check isn't strictly needed because if mNode is the
+    // root, we'll never use mNodeParent or mIndexInParent. However without the
+    // check valgrind will (rightly) complain about reading uninitialized
+    // memory.
+    if (mNode != aRoot &&
+        aContainer == mNodeParent && aIndexInContainer < mIndexInParent) {
+        --mIndexInParent;
+        return;
+    }
 
     // check if ancestor was removed
     if (!nsContentUtils::ContentIsDescendantOf(mNode, aChild))
