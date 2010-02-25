@@ -945,7 +945,10 @@ _invalidaterect(NPP aNPP,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    InstCast(aNPP)->InvalidateRect(aInvalidRect);
+    // NULL check for nspluginwrapper (bug 548434)
+    if (aNPP) {
+        InstCast(aNPP)->InvalidateRect(aInvalidRect);
+    }
 }
 
 void NP_CALLBACK
