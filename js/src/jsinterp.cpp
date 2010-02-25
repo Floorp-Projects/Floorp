@@ -3110,9 +3110,14 @@ js_Interpret(JSContext *cx)
   error:
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
-        if (*fp->imacpc == JSOP_NEXTITER && js_ValueIsStopIteration(cx->exception)) {
+        if (*fp->imacpc == JSOP_NEXTITER &&
+            InCustomIterNextTryRegion(regs.pc) &&
+            js_ValueIsStopIteration(cx->exception)) {
+            // If the other NEXTITER imacro, native_iter_next, throws
+            // StopIteration, do not catch it here. See bug 547911.
+
             // pc may point to JSOP_DUP here due to bug 474854.
-            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP || *regs.pc == JSOP_TRUE);
+            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
             cx->throwing = JS_FALSE;
             cx->exception = JSVAL_VOID;
             regs.sp[-1] = JSVAL_HOLE;
