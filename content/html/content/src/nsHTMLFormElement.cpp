@@ -709,8 +709,8 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
   mIsSubmitting = PR_TRUE;
   NS_ASSERTION(!mWebProgress && !mSubmittingRequest, "Web progress / submitting request should not exist here!");
 
-  nsCOMPtr<nsIFormSubmission> submission;
-   
+  nsRefPtr<nsFormSubmission> submission;
+
   //
   // prepare the submission object
   //
@@ -745,7 +745,7 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 }
 
 nsresult
-nsHTMLFormElement::BuildSubmission(nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+nsHTMLFormElement::BuildSubmission(nsRefPtr<nsFormSubmission>& aFormSubmission, 
                                    nsEvent* aEvent)
 {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
@@ -776,7 +776,7 @@ nsHTMLFormElement::BuildSubmission(nsCOMPtr<nsIFormSubmission>& aFormSubmission,
 }
 
 nsresult
-nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
+nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 {
   nsresult rv;
   //
@@ -947,7 +947,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
 
 
 nsresult
-nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
+nsHTMLFormElement::WalkFormElements(nsFormSubmission* aFormSubmission,
                                     nsIContent* aSubmitElement)
 {
   nsTArray<nsGenericHTMLFormElement*> sortedControls;
@@ -1327,7 +1327,7 @@ nsHTMLFormElement::OnSubmitClickEnd()
 void
 nsHTMLFormElement::FlushPendingSubmission()
 {
-  nsCOMPtr<nsIFormSubmission> kunkFuDeathGrip(mPendingSubmission);
+  nsRefPtr<nsFormSubmission> kunkFuDeathGrip(mPendingSubmission);
 
   if (!mPendingSubmission) {
     return;
