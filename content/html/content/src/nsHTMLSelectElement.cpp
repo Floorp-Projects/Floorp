@@ -1978,3 +1978,16 @@ nsHTMLOptionCollection::Add(nsIDOMHTMLOptionElement *aOption,
 
   return mSelect->Add(aOption, beforeElement);
 }
+
+NS_IMETHODIMP
+nsHTMLOptionCollection::Remove(PRInt32 aIndex)
+{
+  NS_ENSURE_TRUE(mSelect, NS_ERROR_UNEXPECTED);
+
+  PRUint32 len = 0;
+  mSelect->GetLength(&len);
+  if (aIndex < 0 || aIndex >= len)
+    aIndex = 0;
+
+  return mSelect->Remove(aIndex);
+}
