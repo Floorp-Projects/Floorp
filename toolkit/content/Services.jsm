@@ -57,7 +57,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "obs",
                                    "@mozilla.org/observer-service;1",
                                    "nsIObserverService");
 
-XPCOMUtils.defineLazyServiceGetter(Services, "pm",
+XPCOMUtils.defineLazyServiceGetter(Services, "perms",
                                    "@mozilla.org/permissionmanager;1",
                                    "nsIPermissionManager");
 
