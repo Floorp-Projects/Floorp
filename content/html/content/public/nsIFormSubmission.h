@@ -51,6 +51,7 @@ class nsIDOMHTMLElement;
 class nsIDocShell;
 class nsIRequest;
 class nsISaveAsCharset;
+class nsIMultiplexInputStream;
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
@@ -135,6 +136,66 @@ public:
 private:
   // The encoder that will encode Unicode names and values
   nsCOMPtr<nsISaveAsCharset> mEncoder;
+};
+
+/**
+ * Handle multipart/form-data encoding, which does files as well as normal
+ * inputs.  This always does POST.
+ */
+class nsFSMultipartFormData : public nsEncodingFormSubmission
+{
+public:
+  /**
+   * @param aCharset the charset of the form as a string
+   */
+  nsFSMultipartFormData(const nsACString& aCharset);
+  ~nsFSMultipartFormData();
+ 
+  virtual nsresult AddNameValuePair(const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(const nsAString& aName,
+                                   nsIFile* aFile);
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream);
+
+  void GetContentType(nsACString& aContentType)
+  {
+    aContentType =
+      NS_LITERAL_CSTRING("multipart/form-data; boundary=") + mBoundary;
+  }
+
+  nsIInputStream* GetSubmissionBody();
+
+protected:
+
+  /**
+   * Roll up the data we have so far and add it to the multiplexed data stream.
+   */
+  nsresult AddPostDataStream();
+
+private:
+  /**
+   * The post data stream as it is so far.  This is a collection of smaller
+   * chunks--string streams and file streams interleaved to make one big POST
+   * stream.
+   */
+  nsCOMPtr<nsIMultiplexInputStream> mPostDataStream;
+
+  /**
+   * The current string chunk.  When a file is hit, the string chunk gets
+   * wrapped up into an input stream and put into mPostDataStream so that the
+   * file input stream can then be appended and everything is in the right
+   * order.  Then the string chunk gets appended to again as we process more
+   * name/value pairs.
+   */
+  nsCString mPostDataChunk;
+
+  /**
+   * The boundary string to use after each "part" (the boundary that marks the
+   * end of a value).  This is computed randomly and is different for each
+   * submission.
+   */
+  nsCString mBoundary;
 };
 
 /**

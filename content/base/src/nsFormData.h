@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,17 +14,15 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,13 +34,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef nsFormData_h__
+#define nsFormData_h__
 
-interface nsIDOMFormData;
+#include "nsIDOMFormData.h"
+#include "nsIXMLHttpRequest.h"
+#include "nsIFormSubmission.h"
+#include "nsTArray.h"
 
-[scriptable, uuid(a5735b98-7a5f-4242-8c9a-3805f3f61b76)]
-interface nsIDOMNSHTMLFormElement : nsISupports
+class nsFormData : public nsIDOMFormData,
+                   public nsIXHRSendable,
+                   public nsFormSubmission
 {
-           attribute DOMString        encoding;
-  nsIDOMFormData getFormData();
+public:
+  nsFormData();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMFORMDATA
+  NS_DECL_NSIXHRSENDABLE
+
+  // nsFormSubmission
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream);
+  virtual nsresult AddNameValuePair(const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(const nsAString& aName,
+                                   nsIFile* aFile);
+
+  
+
+private:
+  struct FormDataTuple
+  {
+    nsString name;
+    nsString stringValue;
+    nsCOMPtr<nsIFile> fileValue;
+    PRBool valueIsFile;
+  };
+  
+  nsTArray<FormDataTuple> mFormData;
 };
+
+#endif // nsFormData_h__

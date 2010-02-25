@@ -451,6 +451,17 @@ var expectedSub = [
   { name: "msel_31", value: "msel_31_v1" },
 ];
 
+expectedAugment = [
+  { name: "aName", value: "aValue" },
+  //{ name: "aNameBool", value: "false" },
+  { name: "aNameNum", value: "9.2" },
+  { name: "aNameFile1", value: myFile1 },
+  { name: "aNameFile2", value: myFile2 },
+  //{ name: "aNameObj", value: "[object XMLHttpRequest]" },
+  //{ name: "aNameNull", value: "null" },
+  //{ name: "aNameUndef", value: "undefined" },
+];
+
 function checkMPSubmission(sub, expected) {
   function getPropCount(o) {
     var x, l = 0;
@@ -521,7 +532,7 @@ function runTest() {
   fileReader1.onload = fileReader2.onload = function() { gen.next(); };
   yield; // Wait for both FileReaders. We don't care which order they finish.
   yield;
-  expectedSub.forEach(function(o) {
+  function fileFixup(o) {
     if (o.value == myFile1) {
       o.value = fileReader1.result;
       o.fileName = myFile1.name;
@@ -537,7 +548,9 @@ function runTest() {
       o.fileName = emptyFile.name;
       o.contentType = emptyFile.type;
     }
-  });
+  };
+  expectedSub.forEach(fileFixup);
+  expectedAugment.forEach(fileFixup);
 
   // multipart/form-data
 
@@ -590,6 +603,47 @@ function runTest() {
   yield;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkPlainSubmission(submission, expectedSub);
+
+  // Send form using XHR and FormData
+  xhr = new XMLHttpRequest();
+  xhr.onload = function() { gen.next(); };
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(form.getFormData());
+  yield; // Wait for XHR load
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub);
+  
+  // Send disabled form using XHR and FormData
+  setDisabled(document.getElementsByTagName("input"), true);
+  setDisabled(document.getElementsByTagName("select"), true);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(form.getFormData());
+  yield;
+  checkMPSubmission(JSON.parse(xhr.responseText), []);
+  setDisabled(document.getElementsByTagName("input"), false);
+  setDisabled(document.getElementsByTagName("select"), false);
+  
+  // Send FormData
+  function addToFormData(fd) {
+    fd.append("aName", "aValue");
+    fd.append("aNameNum", 9.2);
+    fd.append("aNameFile1", myFile1);
+    fd.append("aNameFile2", myFile2);
+  }
+  var fd = new FormData();
+  addToFormData(fd);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(fd);
+  yield;
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment);
+
+  // Augment <form> using FormData
+  fd = form.getFormData();
+  addToFormData(fd);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(fd);
+  yield;
+  checkMPSubmission(JSON.parse(xhr.responseText),
+                    expectedSub.concat(expectedAugment));
 
   SimpleTest.finish();
   yield;

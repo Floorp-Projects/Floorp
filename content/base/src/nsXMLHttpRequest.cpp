@@ -2299,6 +2299,12 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       // Feed local file input stream into our upload channel
       return NS_NewLocalFileInputStream(aResult, internalFile);
     }
+
+    // nsIXHRSendable?
+    nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
+    if (sendable) {
+      return sendable->GetSendInfo(aResult, aContentType, aCharset);
+    }
   }
   else if (dataType == nsIDataType::VTYPE_VOID ||
            dataType == nsIDataType::VTYPE_EMPTY) {
