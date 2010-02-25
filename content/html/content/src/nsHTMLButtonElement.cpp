@@ -100,7 +100,7 @@ public:
   // overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return mType; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
   PRBool RestoreState(nsPresState* aState);
@@ -503,7 +503,7 @@ nsHTMLButtonElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+nsHTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                        nsIContent* aSubmitElement)
 {
   nsresult rv = NS_OK;
@@ -545,7 +545,7 @@ nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   // Submit
   //
-  rv = aFormSubmission->AddNameValuePair(this, name, value);
+  rv = aFormSubmission->AddNameValuePair(name, value);
 
   return rv;
 }
