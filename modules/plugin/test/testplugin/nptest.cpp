@@ -1011,6 +1011,9 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
       if (err != NPERR_NO_ERROR) {
         instanceData->err << "Error: NPN_DestroyStream returned " << err;
       }
+      if (instanceData->frame.length() > 0) {
+        sendBufferToFrame(instance);
+      }
     }
   }
   else {
