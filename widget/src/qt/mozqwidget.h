@@ -29,6 +29,9 @@ public:
     void dropReceiver() { mReceiver = 0x0; };
     nsWindow* getReceiver() { return mReceiver; };
 
+    void activate();
+    void deactivate();
+
 protected:
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* aEvent);
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent* aEvent);
@@ -53,7 +56,6 @@ protected:
     virtual void closeEvent(QCloseEvent* aEvent);
     virtual void hideEvent(QHideEvent* aEvent);
     virtual void showEvent(QShowEvent* aEvent);
-    virtual bool sceneEvent(QEvent* aEvent);
  
     bool SetCursor(const QPixmap& aPixmap, int, int);
 
@@ -82,6 +84,22 @@ public:
     }
 
 protected:
+
+    virtual bool event(QEvent* aEvent)
+    {
+        if (aEvent->type() == QEvent::WindowActivate) {
+            if (mTopLevelWidget)
+                mTopLevelWidget->activate();
+        }
+
+        if (aEvent->type() == QEvent::WindowDeactivate) {
+            if (mTopLevelWidget)
+                mTopLevelWidget->deactivate();
+        }
+
+        return QGraphicsView::event(aEvent);
+    }
+
     virtual void resizeEvent(QResizeEvent* aEvent)
     {
         if (mTopLevelWidget) {
