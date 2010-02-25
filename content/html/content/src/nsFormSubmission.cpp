@@ -89,7 +89,7 @@ SendJSWarning(nsIDocument* aDocument,
 
 // --------------------------------------------------------------------------
 
-class nsFSURLEncoded : public nsFormSubmission
+class nsFSURLEncoded : public nsEncodingFormSubmission
 {
 public:
   /**
@@ -100,7 +100,7 @@ public:
   nsFSURLEncoded(const nsACString& aCharset,
                  PRInt32 aMethod,
                  nsIDocument* aDocument)
-    : nsFormSubmission(aCharset),
+    : nsEncodingFormSubmission(aCharset),
       mMethod(aMethod),
       mDocument(aDocument),
       mWarnedFileControl(PR_FALSE)
@@ -383,13 +383,14 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
  * Handle multipart/form-data encoding, which does files as well as normal
  * inputs.  This always does POST.
  */
-class nsFSMultipartFormData : public nsFormSubmission
+class nsFSMultipartFormData : public nsEncodingFormSubmission
 {
 public:
   /**
    * @param aCharset the charset of the form as a string
    */
   nsFSMultipartFormData(const nsACString& aCharset);
+  ~nsFSMultipartFormData();
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
@@ -431,7 +432,7 @@ private:
 };
 
 nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset)
-    : nsFormSubmission(aCharset)
+    : nsEncodingFormSubmission(aCharset)
 {
   mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -611,11 +612,11 @@ nsFSMultipartFormData::AddPostDataStream()
 
 // --------------------------------------------------------------------------
 
-class nsFSTextPlain : public nsFormSubmission
+class nsFSTextPlain : public nsEncodingFormSubmission
 {
 public:
   nsFSTextPlain(const nsACString& aCharset)
-    : nsFormSubmission(aCharset)
+    : nsEncodingFormSubmission(aCharset)
   {
   }
 
@@ -710,11 +711,9 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
 // --------------------------------------------------------------------------
 
-nsFormSubmission::nsFormSubmission(const nsACString& aCharset)
-  : mCharset(aCharset)
+nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset)
+  : nsFormSubmission(aCharset)
 {
-  MOZ_COUNT_CTOR(nsFormSubmission);
-
   nsCAutoString charset(aCharset);
   // canonical name is passed so that we just have to check against
   // *our* canonical names listed in charsetaliases.properties
@@ -742,14 +741,13 @@ nsFormSubmission::nsFormSubmission(const nsACString& aCharset)
   }
 }
 
-nsFormSubmission::~nsFormSubmission()
+nsEncodingFormSubmission::~nsEncodingFormSubmission()
 {
-  MOZ_COUNT_DTOR(nsFormSubmission);
 }
 
 // i18n helper routines
 nsresult
-nsFormSubmission::EncodeVal(const nsAString& aStr, nsACString& aOut)
+nsEncodingFormSubmission::EncodeVal(const nsAString& aStr, nsACString& aOut)
 {
   if (mEncoder) {
     aOut.Truncate();

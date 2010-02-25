@@ -56,10 +56,13 @@ class nsISaveAsCharset;
  * Class for form submissions; encompasses the function to call to submit as
  * well as the form submission name/value pairs
  */
-class nsFormSubmission {
-
+class nsFormSubmission
+{
 public:
-  virtual ~nsFormSubmission();
+  virtual ~nsFormSubmission()
+  {
+    MOZ_COUNT_DTOR(nsFormSubmission);
+  }
 
   /**
    * Submit a name/value pair
@@ -103,7 +106,22 @@ protected:
    *
    * @param aCharset the charset of the form as a string
    */
-  nsFormSubmission(const nsACString& aCharset);
+  nsFormSubmission(const nsACString& aCharset)
+    : mCharset(aCharset)
+  {
+    MOZ_COUNT_CTOR(nsFormSubmission);
+  }
+
+  // The name of the encoder charset
+  nsCString mCharset;
+};
+
+class nsEncodingFormSubmission : public nsFormSubmission
+{
+public:
+  nsEncodingFormSubmission(const nsACString& aCharset);
+
+  virtual ~nsEncodingFormSubmission();
 
   /**
    * Encode a Unicode string to bytes using the encoder (or just copy the input
@@ -114,12 +132,10 @@ protected:
    */
   nsresult EncodeVal(const nsAString& aStr, nsACString& aResult);
 
-  // The name of the encoder charset
-  nsCString mCharset;
+private:
   // The encoder that will encode Unicode names and values
   nsCOMPtr<nsISaveAsCharset> mEncoder;
 };
-
 
 /**
  * Get a submission object based on attributes in the form (ENCTYPE and METHOD)
@@ -129,6 +145,5 @@ protected:
  */
 nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                                nsFormSubmission** aFormSubmission);
-
 
 #endif /* nsIFormSubmission_h___ */
