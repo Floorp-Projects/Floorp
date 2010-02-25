@@ -392,7 +392,7 @@ const gPopupBlockerObserver = {
 
   toggleAllowPopupsForSite: function (aEvent)
   {
-    var pm = Services.pm;
+    var pm = Services.perms;
     var shouldBlock = aEvent.target.getAttribute("block") == "true";
     var perm = shouldBlock ? pm.DENY_ACTION : pm.ALLOW_ACTION;
     pm.add(gBrowser.currentURI, "popup", perm);
@@ -416,7 +416,7 @@ const gPopupBlockerObserver = {
     try {
       blockedPopupAllowSite.removeAttribute("hidden");
 
-      var pm = Services.pm;
+      var pm = Services.perms;
       if (pm.testPermission(uri, "popup") == pm.ALLOW_ACTION) {
         // Offer an item to block popups for this site, if a whitelist entry exists
         // already for it.
@@ -5530,8 +5530,8 @@ var OfflineApps = {
 
     // Now that we've warned once, prevent the warning from showing up
     // again.
-    Services.pm.add(aURI, "offline-app",
-                    Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+    Services.perms.add(aURI, "offline-app",
+                       Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
   },
 
   // XXX: duplicated in preferences/advanced.js
@@ -5560,7 +5560,7 @@ var OfflineApps = {
 
   _checkUsage: function(aURI) {
     // if the user has already allowed excessive usage, don't bother checking
-    if (Services.pm.testExactPermission(aURI, "offline-app") !=
+    if (Services.perms.testExactPermission(aURI, "offline-app") !=
         Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
       var usage = this._getOfflineAppUsage(aURI.asciiHost);
       var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
@@ -5584,7 +5584,7 @@ var OfflineApps = {
     var currentURI = aContentWindow.document.documentURIObject;
 
     // don't bother showing UI if the user has already made a decision
-    if (Services.pm.testExactPermission(currentURI, "offline-app") != Services.pm.UNKNOWN_ACTION)
+    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
       return;
 
     try {
@@ -5638,7 +5638,7 @@ var OfflineApps = {
   },
 
   allowSite: function(aDocument) {
-    Services.pm.add(aDocument.documentURIObject, "offline-app", Services.pm.ALLOW_ACTION);
+    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will
     // start fetching immediately.  This one time we need to do it
@@ -5647,7 +5647,7 @@ var OfflineApps = {
   },
 
   disallowSite: function(aDocument) {
-    Services.pm.add(aDocument.documentURIObject, "offline-app", Services.pm.DENY_ACTION);
+    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.DENY_ACTION);
   },
 
   manage: function() {
@@ -7451,7 +7451,7 @@ var LightWeightThemeWebInstaller = {
   },
 
   _isAllowed: function (node) {
-    var pm = Services.pm;
+    var pm = Services.perms;
 
     var prefs = [["xpinstall.whitelist.add", pm.ALLOW_ACTION],
                  ["xpinstall.whitelist.add.36", pm.ALLOW_ACTION],
