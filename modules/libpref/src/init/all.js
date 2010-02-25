@@ -1067,13 +1067,6 @@ pref("bidi.direction", 1);
 // 3 = visualtexttypeBidi
 pref("bidi.texttype", 1);
 // ------------------
-//  Controls Text Mode
-// ------------------
-// 1 = logicalcontrolstextmodeBidiCmd
-// 2 = visualcontrolstextmodeBidi <-- NO LONGER SUPPORTED
-// 3 = containercontrolstextmodeBidi *
-pref("bidi.controlstextmode", 1);
-// ------------------
 //  Numeral Style
 // ------------------
 // 0 = nominalnumeralBidi *

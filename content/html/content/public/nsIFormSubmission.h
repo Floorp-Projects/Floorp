@@ -102,10 +102,8 @@ protected:
    * Can only be constructed by subclasses.
    *
    * @param aCharset the charset of the form as a string
-   * @param aBidiOptions the BIDI options flags for the current pres context
    */
-  nsFormSubmission(const nsACString& aCharset,
-                   PRInt32 aBidiOptions);
+  nsFormSubmission(const nsACString& aCharset);
 
   /**
    * Encode a Unicode string to bytes using the encoder (or just copy the input
@@ -116,21 +114,10 @@ protected:
    */
   nsresult EncodeVal(const nsAString& aStr, nsACString& aResult);
 
-  /**
-   * Encode a Unicode string to bytes using an encoder.  (Used by EncodeVal)
-   * @param aStr the string to encode
-   * @param aEncoder the encoder to encode the bytes with (cannot be null)
-   * @param aOut the encoded string [OUT] 
-   * @throws an error if the encoder fails
-   */
-  nsresult UnicodeToNewBytes(const nsAString& aStr, nsACString& aOut);
-
   // The name of the encoder charset
   nsCString mCharset;
   // The encoder that will encode Unicode names and values
   nsCOMPtr<nsISaveAsCharset> mEncoder;
-  // The BIDI options flags for the current pres context
-  PRInt32 mBidiOptions;
 };
 
 
