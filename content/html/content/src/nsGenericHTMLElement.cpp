@@ -2822,13 +2822,16 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
+  if (aNameSpaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::src) {
-    return LoadSrc();
+    // Don't propagate error here. The attribute was successfully set, that's
+    // what we should reflect.
+    LoadSrc();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 void
