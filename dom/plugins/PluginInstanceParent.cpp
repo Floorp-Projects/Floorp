@@ -640,7 +640,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
-        PBrowserStreamParent::Send__delete__(bs);
+        PBrowserStreamParent::Call__delete__(bs, NPERR_GENERIC_ERROR, true);
 
     return err;
 }
@@ -658,7 +658,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mNPP != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        sp->NPP_DestroyStream(reason);
+        PBrowserStreamParent::Call__delete__(sp, reason, false);
         return NPERR_NO_ERROR;
     }
     else {

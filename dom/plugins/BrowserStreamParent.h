@@ -61,27 +61,18 @@ public:
   virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                      NPError* result);
 
-  virtual bool RecvNPN_DestroyStream(const NPReason& reason);
-
-  virtual bool RecvStreamDestroyed();
+  virtual bool
+  Answer__delete__(const NPError& reason, const bool& artificial);
 
   int32_t WriteReady();
   int32_t Write(int32_t offset, int32_t len, void* buffer);
   void StreamAsFile(const char* fname);
 
-  void NPP_DestroyStream(NPReason reason);
-
 private:
-  using PBrowserStreamParent::SendNPP_DestroyStream;
+  NPError NPN_DestroyStream(NPError reason);
 
   PluginInstanceParent* mNPP;
   NPStream* mStream;
-
-  enum {
-    ALIVE,
-    DYING,
-    DELETING
-  } mState;
 };
 
 } // namespace plugins
