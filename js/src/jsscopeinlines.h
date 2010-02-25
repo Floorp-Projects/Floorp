@@ -208,11 +208,11 @@ JSScopeProperty::hash() const
     JSDHashNumber hash = 0;
 
     /* Accumulate from least to most random so the low bits are most random. */
-    JS_ASSERT_IF(isMethod(), !setter || setter == js_watch_set);
-    if (getter)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(getter);
-    if (setter)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(setter);
+    JS_ASSERT_IF(isMethod(), !rawSetter || rawSetter == js_watch_set);
+    if (rawGetter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(rawGetter);
+    if (rawSetter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(rawSetter);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
@@ -227,7 +227,8 @@ JSScopeProperty::matches(const JSScopeProperty *p) const
     JS_ASSERT(!JSVAL_IS_NULL(id));
     JS_ASSERT(!JSVAL_IS_NULL(p->id));
     return id == p->id &&
-           matchesParamsAfterId(p->getter, p->setter, p->slot, p->attrs, p->flags, p->shortid);
+           matchesParamsAfterId(p->rawGetter, p->rawSetter, p->slot, p->attrs, p->flags,
+                                p->shortid);
 }
 
 inline bool
@@ -235,8 +236,8 @@ JSScopeProperty::matchesParamsAfterId(JSPropertyOp agetter, JSPropertyOp asetter
                                       uintN aattrs, uintN aflags, intN ashortid) const
 {
     JS_ASSERT(!JSVAL_IS_NULL(id));
-    return getter == agetter &&
-           setter == asetter &&
+    return rawGetter == agetter &&
+           rawSetter == asetter &&
            slot == aslot &&
            attrs == aattrs &&
            ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
