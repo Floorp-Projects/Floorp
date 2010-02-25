@@ -61,6 +61,7 @@ using namespace mozilla::plugins;
 using mozilla::gfx::SharedDIB;
 
 #include <windows.h>
+#include <windowsx.h>
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 
@@ -73,10 +74,12 @@ using mozilla::gfx::SharedDIB;
 
 #endif // defined(OS_WIN)
 
-PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-    mPluginIface(aPluginIface),
-    mCachedWindowActor(nsnull),
-    mCachedElementActor(nsnull)
+PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+                                         const nsCString& aMimeType) :
+    mPluginIface(aPluginIface)
+    , mCachedWindowActor(nsnull)
+    , mCachedElementActor(nsnull)
+    , mQuirks(0)
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -104,12 +107,26 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
     mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
 #endif // OS_WIN
+    InitQuirksModes(aMimeType);
 }
 
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
+#endif
+}
+
+void
+PluginInstanceChild::InitQuirksModes(const nsCString& aMimeType)
+{
+#ifdef OS_WIN
+    // application/x-silverlight
+    // application/x-silverlight-2
+    NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+    if (FindInReadable(silverlight, aMimeType)) {
+        mQuirks |= QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION;
+    }
 #endif
 }
 
@@ -791,23 +808,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
 /* winless modal ui loop logic */
 
-static bool
-IsUserInputEvent(UINT msg)
-{
-  // Events we assume some sort of modal ui *might* be generated.
-  switch (msg) {
-      case WM_LBUTTONUP:
-      case WM_RBUTTONUP:
-      case WM_MBUTTONUP:
-      case WM_LBUTTONDOWN:
-      case WM_RBUTTONDOWN:
-      case WM_MBUTTONDOWN:
-      case WM_CONTEXTMENU:
-          return true;
-  }
-  return false;
-}
-
 VOID CALLBACK
 PluginInstanceChild::PumpTimerProc(HWND hwnd,
                                    UINT uMsg,
@@ -923,42 +923,101 @@ PluginInstanceChild::InternalCallSetNestedEventState(bool aState)
     }
 }
 
+/* windowless handle event helpers */
+
+static bool
+NeedsNestedEventCoverage(UINT msg)
+{
+    // Events we assume some sort of modal ui *might* be generated.
+    switch (msg) {
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_CONTEXTMENU:
+            return true;
+    }
+    return false;
+}
+
+static bool
+IsMouseInputEvent(UINT msg)
+{
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+        case WM_MBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
+            return true;
+    }
+    return false;
+}
+
 int16_t
 PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 {
-  if (!IsUserInputEvent(event.event)) {
-      return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-  }
+    // Winless Silverlight quirk: winposchanged events are not used in
+    // determining the position of the plugin within the parent window,
+    // NPP_SetWindow values are used instead. Due to shared memory dib
+    // rendering, the origin of NPP_SetWindow is 0x0, so we trap
+    // winposchanged events here and do the translation internally for
+    // mouse input events.
+    if (mQuirks & QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION) {
+        if (event.event == WM_WINDOWPOSCHANGED && event.lParam) {
+            WINDOWPOS* pos = reinterpret_cast<WINDOWPOS*>(event.lParam);
+            mPluginOffset.x = pos->x;
+            mPluginOffset.y = pos->y;
+        }
+        else if (IsMouseInputEvent(event.event)) {
+            event.lParam =
+                MAKELPARAM((GET_X_LPARAM(event.lParam) - mPluginOffset.x),
+                           (GET_Y_LPARAM(event.lParam) - mPluginOffset.y));
+        }
+    }
 
-  int16_t handled;
+    if (!NeedsNestedEventCoverage(event.event)) {
+        return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
+    }
 
-  mNestedEventLevelDepth++;
-  PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
+    // Events that might generate nested event dispatch loops need
+    // special handling during delivery.
+    int16_t handled;
 
-  // On the first, non-reentrant call, setup our modal ui detection hook.
-  if (mNestedEventLevelDepth == 1) {
-      NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
-      gTempChildPointer = this;
-      SetNestedInputEventHook();
-  }
+    mNestedEventLevelDepth++;
+    PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
 
-  bool old_state = MessageLoop::current()->NestableTasksAllowed();
-  MessageLoop::current()->SetNestableTasksAllowed(true);
-  handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-  MessageLoop::current()->SetNestableTasksAllowed(old_state);
+    // On the first, non-reentrant call, setup our modal ui detection hook.
+    if (mNestedEventLevelDepth == 1) {
+        NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
+        gTempChildPointer = this;
+        SetNestedInputEventHook();
+    }
 
-  gTempChildPointer = NULL;
+    bool old_state = MessageLoop::current()->NestableTasksAllowed();
+    MessageLoop::current()->SetNestableTasksAllowed(true);
+    handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
+    MessageLoop::current()->SetNestableTasksAllowed(old_state);
 
-  mNestedEventLevelDepth--;
-  PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
+    gTempChildPointer = NULL;
 
-  NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
-  if (mNestedEventLevelDepth <= 0) {
-      ResetNestedEventHook();
-      ResetPumpHooks();
-      InternalCallSetNestedEventState(false);
-  }
-  return handled;
+    mNestedEventLevelDepth--;
+    PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
+
+    NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
+    if (mNestedEventLevelDepth <= 0) {
+        ResetNestedEventHook();
+        ResetPumpHooks();
+        InternalCallSetNestedEventState(false);
+    }
+    return handled;
 }
 
 /* windowless drawing helpers */
