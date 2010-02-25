@@ -2200,6 +2200,123 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody)
   return Send(variant);
 }
 
+static nsresult
+GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
+               nsACString& aContentType, nsACString& aCharset)
+{
+  *aResult = nsnull;
+  aContentType.AssignLiteral("text/plain");
+  aCharset.AssignLiteral("UTF-8");
+
+  PRUint16 dataType;
+  nsresult rv = aBody->GetDataType(&dataType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (dataType == nsIDataType::VTYPE_INTERFACE ||
+      dataType == nsIDataType::VTYPE_INTERFACE_IS) {
+    nsCOMPtr<nsISupports> supports;
+    nsID *iid;
+    rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsMemory::Free(iid);
+
+    // document?
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(supports);
+    if (doc) {
+      aContentType.AssignLiteral("application/xml");
+      nsCOMPtr<nsIDOM3Document> dom3doc = do_QueryInterface(doc);
+      if (dom3doc) {
+        nsAutoString inputEncoding;
+        dom3doc->GetInputEncoding(inputEncoding);
+        if (!DOMStringIsNull(inputEncoding)) {
+          CopyUTF16toUTF8(inputEncoding, aCharset);
+        }
+      }
+
+      // Serialize to a stream so that the encoding used will
+      // match the document's.
+      nsCOMPtr<nsIDOMSerializer> serializer =
+        do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIStorageStream> storStream;
+      rv = NS_NewStorageStream(4096, PR_UINT32_MAX,
+                               getter_AddRefs(storStream));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIOutputStream> output;
+      rv = storStream->GetOutputStream(0, getter_AddRefs(output));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Make sure to use the encoding we'll send
+      rv = serializer->SerializeToStream(doc, output, aCharset);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      output->Close();
+
+      return storStream->NewInputStream(0, aResult);
+    }
+
+    // nsISupportsString?
+    nsCOMPtr<nsISupportsString> wstr = do_QueryInterface(supports);
+    if (wstr) {
+      nsAutoString string;
+      wstr->GetData(string);
+
+      return NS_NewCStringInputStream(aResult,
+                                      NS_ConvertUTF16toUTF8(string));
+    }
+
+    // nsIInputStream?
+    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supports);
+    if (stream) {
+      *aResult = stream.forget().get();
+      aCharset.Truncate();
+
+      return NS_OK;
+    }
+
+    // nsIDOMFile?
+    nsCOMPtr<nsIDOMFileInternal> file = do_QueryInterface(supports);
+    if (file) {
+      aCharset.Truncate();
+
+      nsCOMPtr<nsIFile> internalFile;
+      rv = file->GetInternalFile(getter_AddRefs(internalFile));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Get the mimetype
+      nsCOMPtr<nsIMIMEService> mimeService =
+          do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mimeService->GetTypeFromFile(internalFile, aContentType);
+      if (NS_FAILED(rv)) {
+        aContentType.Truncate();
+      }
+
+      // Feed local file input stream into our upload channel
+      return NS_NewLocalFileInputStream(aResult, internalFile);
+    }
+  }
+  else if (dataType == nsIDataType::VTYPE_VOID ||
+           dataType == nsIDataType::VTYPE_EMPTY) {
+    // Makes us act as if !aBody, don't upload anything
+    return NS_OK;
+  }
+
+  PRUnichar* data = nsnull;
+  PRUint32 len = 0;
+  rv = aBody->GetAsWStringWithSize(&len, &data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString string;
+  string.Adopt(data, len);
+
+  return NS_NewCStringInputStream(aResult, NS_ConvertUTF16toUTF8(string));
+}
+
 /* void send (in nsIVariant aBody); */
 NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
@@ -2268,136 +2385,14 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   mUploadProgress = 0;
   mUploadProgressMax = 0;
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
-    nsXPIDLString serial;
+
+    nsCAutoString charset;
+    nsCAutoString defaultContentType;
     nsCOMPtr<nsIInputStream> postDataStream;
-    nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
-    nsCAutoString defaultContentType(NS_LITERAL_CSTRING("text/plain"));
 
-    PRUint16 dataType;
-    rv = aBody->GetDataType(&dataType);
-    if (NS_FAILED(rv))
-      return rv;
-
-    switch (dataType) {
-    case nsIDataType::VTYPE_INTERFACE:
-    case nsIDataType::VTYPE_INTERFACE_IS:
-      {
-        nsCOMPtr<nsISupports> supports;
-        nsID *iid;
-        rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
-        if (NS_FAILED(rv))
-          return rv;
-        if (iid)
-          nsMemory::Free(iid);
-
-        // document?
-        nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
-        if (doc) {
-          defaultContentType.AssignLiteral("application/xml");
-
-          nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-          if (NS_FAILED(rv)) return rv;
-
-          nsCOMPtr<nsIDOM3Document> dom3doc(do_QueryInterface(doc));
-          if (dom3doc) {
-            nsAutoString inputEncoding;
-            dom3doc->GetInputEncoding(inputEncoding);
-            if (!DOMStringIsNull(inputEncoding)) {
-              CopyUTF16toUTF8(inputEncoding, charset);
-            }
-          }
-
-          // Serialize to a stream so that the encoding used will
-          // match the document's.
-          nsCOMPtr<nsIStorageStream> storStream;
-          rv = NS_NewStorageStream(4096, PR_UINT32_MAX, getter_AddRefs(storStream));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          nsCOMPtr<nsIOutputStream> output;
-          rv = storStream->GetOutputStream(0, getter_AddRefs(output));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // Make sure to use the encoding we'll send
-          rv = serializer->SerializeToStream(doc, output, charset);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          output->Close();
-          rv = storStream->NewInputStream(0, getter_AddRefs(postDataStream));
-          NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-          // nsISupportsString?
-          nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
-          if (wstr) {
-            wstr->GetData(serial);
-          } else {
-            // stream?
-            nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
-            if (stream) {
-              postDataStream = stream;
-              charset.Truncate();
-            }
-            else {
-              // nsIDOMFile?
-              nsCOMPtr<nsIDOMFileInternal> file(do_QueryInterface(supports));
-
-              if (file) {
-                nsCOMPtr<nsIFile> internalFile;
-                rv = file->GetInternalFile(getter_AddRefs(internalFile));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nsCOMPtr<nsIInputStream> stream;
-                rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), internalFile); 
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                // Feed local file input stream into our upload channel
-                if (stream) {
-                  postDataStream = stream;
-                  charset.Truncate();
-                  defaultContentType.Truncate();
-
-                  nsCOMPtr<nsIMIMEService> mimeService =
-                      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-                  NS_ENSURE_SUCCESS(rv, rv);
-
-                  nsCAutoString mediaType;
-                  rv = mimeService->GetTypeFromFile(internalFile, mediaType);
-                  if (NS_SUCCEEDED(rv)) {
-                    defaultContentType = mediaType;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-    case nsIDataType::VTYPE_VOID:
-    case nsIDataType::VTYPE_EMPTY:
-      // Makes us act as if !aBody, don't upload anything
-      break;
-    default:
-      // try variant string
-      PRUnichar* data = nsnull;
-      PRUint32 len = 0;
-      rv = aBody->GetAsWStringWithSize(&len, &data);
-      NS_ENSURE_SUCCESS(rv, rv);
-      serial.Adopt(data, len);
-      break;
-    }
-
-    if (serial) {
-      // Convert to a byte stream
-      nsCOMPtr<nsIScriptableUnicodeConverter> converter =
-        do_CreateInstance("@mozilla.org/intl/scriptableunicodeconverter", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = converter->SetCharset("UTF-8");
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = converter->ConvertToInputStream(serial,
-                                           getter_AddRefs(postDataStream));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = GetRequestBody(aBody, getter_AddRefs(postDataStream),
+                        defaultContentType, charset);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (postDataStream) {
       // If no content type header was set by the client, we set it to
