@@ -61,13 +61,6 @@ class nsFormSubmission {
 public:
   virtual ~nsFormSubmission();
 
-  void AddRef()
-  {
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsFormSubmission", sizeof(*this));
-  }
-  void Release();
-
   /**
    * Call to perform the submission
    *
@@ -151,7 +144,6 @@ protected:
   nsresult UnicodeToNewBytes(const nsAString& aStr, nsISaveAsCharset* aEncoder,
                              nsACString& aOut);
 
-  nsAutoRefCnt mRefCnt;
   // The name of the encoder charset
   nsCString mCharset;
   // The encoder that will encode Unicode names and values
