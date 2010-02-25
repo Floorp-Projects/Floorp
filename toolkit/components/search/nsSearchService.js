@@ -717,9 +717,12 @@ function getMozParamPref(prefName)
  *
  * @see nsIBrowserSearchService.idl
  */
+let gEnginesLoaded = false;
 function notifyAction(aEngine, aVerb) {
-  LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
-  gObsSvc.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
+  if (gEnginesLoaded) {
+    LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
+    gObsSvc.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
+  }
 }
 
 /**
@@ -2471,6 +2474,7 @@ function SearchService() {
   } catch (ex) {
     LOG("_init: failure loading engines: " + ex);
   }
+  gEnginesLoaded = true;
   this._addObservers();
 }
 SearchService.prototype = {
