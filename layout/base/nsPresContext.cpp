@@ -734,11 +734,6 @@ nsPresContext::GetUserPreferences()
   SET_BIDI_OPTION_TEXTTYPE(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref(IBMBIDI_CONTROLSTEXTMODE_STR,
-                               GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions));
-  SET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions, prefInt);
-
-  prefInt =
     nsContentUtils::GetIntPref(IBMBIDI_NUMERAL_STR,
                                GET_BIDI_OPTION_NUMERAL(bidiOptions));
   SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);

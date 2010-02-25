@@ -117,46 +117,6 @@ typedef enum nsCharType nsCharType;
                            || ( ( (val) > eCharType_ArabicNumber) && ( (val) != eCharType_RightToLeftArabic) ) )
 
   /**
-   * Perform Arabic shaping on a Unichar string
-   * @param aString is the input string
-   * @param aLen is the length of aStrong
-   * @param aBuf receives the shaped output
-   * @param aBuflen receives the length of aBuf
-   * @param aInputLogical indicates that the input is in logical order
-   * @param aOutputLogical indicates that the output should be in logical order
-   */
-  nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-                         PRUnichar* aBuf, PRUint32* aBufLen,
-                         PRBool aInputLogical, PRBool aOutputLogical);
-
-  /**
-   * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
-   * range
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   */
-  nsresult Conv_FE_06(const nsString& aSrc, nsString& aDst);
-
-  /**
-   * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
-   * range, and also reverse the string
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   */
-  nsresult Conv_FE_06_WithReverse(const nsString& aSrc, nsString& aDst);
-
-  /**
-   * Scan an nsString, converting characters in the 06xx range to the equivalent characters in the 0Fxx range (Arabic presentation
-   * forms), with the option to reverse the string
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   * @param aDir indicates whether the string should be reversed
-   *        IBMBIDI_TEXTDIRECTION_LTR: do not reverse the string
-   *        IBMBIDI_TEXTDIRECTION_RTL: reverse the string
-   */
-  nsresult Conv_06_FE_WithReverse(const nsString& aSrc, nsString& aDst, PRUint32 aDir);
-
-  /**
    * Inspects a Unichar, converting numbers to Arabic or Hindi forms and returning them
    * @param aChar is the character
    * @param aPrevCharArabic is true if the previous character in the string is an Arabic char
@@ -229,14 +189,12 @@ typedef enum nsCharType nsCharType;
 //
 #define IBMBIDI_TEXTDIRECTION_STR       "bidi.direction"
 #define IBMBIDI_TEXTTYPE_STR            "bidi.texttype"
-#define IBMBIDI_CONTROLSTEXTMODE_STR    "bidi.controlstextmode"
 #define IBMBIDI_NUMERAL_STR             "bidi.numeral"
 #define IBMBIDI_SUPPORTMODE_STR         "bidi.support"
 #define IBMBIDI_CHARSET_STR             "bidi.characterset"
 
 #define IBMBIDI_TEXTDIRECTION       1
 #define IBMBIDI_TEXTTYPE            2
-#define IBMBIDI_CONTROLSTEXTMODE    3
 #define IBMBIDI_NUMERAL             4
 #define IBMBIDI_SUPPORTMODE         5
 #define IBMBIDI_CHARSET             6
@@ -254,13 +212,6 @@ typedef enum nsCharType nsCharType;
 #define IBMBIDI_TEXTTYPE_CHARSET      1 //  1 = charsettexttypeBidi *
 #define IBMBIDI_TEXTTYPE_LOGICAL      2 //  2 = logicaltexttypeBidi
 #define IBMBIDI_TEXTTYPE_VISUAL       3 //  3 = visualtexttypeBidi
-//  ------------------
-//  Controls Text Mode
-//  ------------------
-//  bidi.controlstextmode
-#define IBMBIDI_CONTROLSTEXTMODE_LOGICAL   1 //  1 = logicalcontrolstextmodeBidiCmd *
-#define IBMBIDI_CONTROLSTEXTMODE_VISUAL    2 //  2 = visualcontrolstextmodeBidi
-#define IBMBIDI_CONTROLSTEXTMODE_CONTAINER 3 //  3 = containercontrolstextmodeBidi
 //  ------------------
 //  Numeral Style
 //  ------------------
@@ -289,25 +240,22 @@ typedef enum nsCharType nsCharType;
 #define IBMBIDI_DEFAULT_BIDI_OPTIONS              \
         ((IBMBIDI_TEXTDIRECTION_LTR<<0)         | \
          (IBMBIDI_TEXTTYPE_CHARSET<<4)          | \
-         (IBMBIDI_CONTROLSTEXTMODE_LOGICAL<<8)  | \
-         (IBMBIDI_NUMERAL_NOMINAL<<12)          | \
-         (IBMBIDI_SUPPORTMODE_MOZILLA<<16)      | \
-         (IBMBIDI_CHARSET_BIDI<<20))
+         (IBMBIDI_NUMERAL_NOMINAL<<8)          | \
+         (IBMBIDI_SUPPORTMODE_MOZILLA<<12)      | \
+         (IBMBIDI_CHARSET_BIDI<<16))
 
 
 #define GET_BIDI_OPTION_DIRECTION(bo) (((bo)>>0) & 0x0000000F) /* 4 bits for DIRECTION */
 #define GET_BIDI_OPTION_TEXTTYPE(bo) (((bo)>>4) & 0x0000000F) /* 4 bits for TEXTTYPE */
-#define GET_BIDI_OPTION_CONTROLSTEXTMODE(bo) (((bo)>>8) & 0x0000000F) /* 4 bits for CONTROLTEXTMODE */
-#define GET_BIDI_OPTION_NUMERAL(bo) (((bo)>>12) & 0x0000000F) /* 4 bits for NUMERAL */
-#define GET_BIDI_OPTION_SUPPORT(bo) (((bo)>>16) & 0x0000000F) /* 4 bits for SUPPORT */
-#define GET_BIDI_OPTION_CHARACTERSET(bo) (((bo)>>20) & 0x0000000F) /* 4 bits for CHARACTERSET */
+#define GET_BIDI_OPTION_NUMERAL(bo) (((bo)>>8) & 0x0000000F) /* 4 bits for NUMERAL */
+#define GET_BIDI_OPTION_SUPPORT(bo) (((bo)>>12) & 0x0000000F) /* 4 bits for SUPPORT */
+#define GET_BIDI_OPTION_CHARACTERSET(bo) (((bo)>>16) & 0x0000000F) /* 4 bits for CHARACTERSET */
 
 #define SET_BIDI_OPTION_DIRECTION(bo, dir) {(bo)=((bo) & 0xFFFFFFF0)|(((dir)& 0x0000000F)<<0);}
 #define SET_BIDI_OPTION_TEXTTYPE(bo, tt) {(bo)=((bo) & 0xFFFFFF0F)|(((tt)& 0x0000000F)<<4);}
-#define SET_BIDI_OPTION_CONTROLSTEXTMODE(bo, cotm) {(bo)=((bo) & 0xFFFFF0FF)|(((cotm)& 0x0000000F)<<8);}
-#define SET_BIDI_OPTION_NUMERAL(bo, num) {(bo)=((bo) & 0xFFFF0FFF)|(((num)& 0x0000000F)<<12);}
-#define SET_BIDI_OPTION_SUPPORT(bo, sup) {(bo)=((bo) & 0xFFF0FFFF)|(((sup)& 0x0000000F)<<16);}
-#define SET_BIDI_OPTION_CHARACTERSET(bo, cs) {(bo)=((bo) & 0xFF0FFFFF)|(((cs)& 0x0000000F)<<20);}
+#define SET_BIDI_OPTION_NUMERAL(bo, num) {(bo)=((bo) & 0xFFFFF0FF)|(((num)& 0x0000000F)<<8);}
+#define SET_BIDI_OPTION_SUPPORT(bo, sup) {(bo)=((bo) & 0xFFFF0FFF)|(((sup)& 0x0000000F)<<12);}
+#define SET_BIDI_OPTION_CHARACTERSET(bo, cs) {(bo)=((bo) & 0xFFF0FFFF)|(((cs)& 0x0000000F)<<16);}
 
 /* Constants related to the position of numerics in the codepage */
 #define START_HINDI_DIGITS              0x0660
@@ -341,9 +289,6 @@ typedef enum nsCharType nsCharType;
     || ( (u) >= 0x06EA && (u) <= 0x06ED) )
 
 #define IS_HEBREW_CHAR(c) (((0x0590 <= (c)) && ((c)<= 0x05FF)) || (((c) >= 0xfb1d) && ((c) <= 0xfb4f)))
-#define IS_06_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
-#define IS_FE_CHAR(c) (((0xfb50 <= (c)) && ((c)<= 0xfbFF)) \
-                       || ((0xfe70 <= (c)) && ((c)<= 0xfeFC)))
 #define IS_ARABIC_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
 #define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && \
                                 !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c) || IS_ARABIC_SEPARATOR(c)))
