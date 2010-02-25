@@ -817,7 +817,7 @@ _destroystream(NPP aNPP,
     if (s->IsBrowserStream()) {
         BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(s);
         bs->EnsureCorrectInstance(p);
-        bs->SendNPN_DestroyStream(aReason);
+        PBrowserStreamChild::Call__delete__(bs, aReason, false);
     }
     else {
         PluginStreamChild* ps = static_cast<PluginStreamChild*>(s);

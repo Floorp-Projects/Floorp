@@ -74,12 +74,16 @@ public:
             const bool& seekable,
             uint16_t* stype);
 
-  virtual bool RecvWrite(const int32_t& offset,
-                         const Buffer& data,
-                         const uint32_t& newsize);
+  virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
+                                        int32_t *size);
+  virtual bool AnswerNPP_Write(const int32_t& offset,
+                                   const Buffer& data,
+                                   int32_t* consumed);
+
   virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
-  virtual bool RecvNPP_DestroyStream(const NPReason& reason);
-  virtual bool Recv__delete__();
+  virtual bool Answer__delete__(const NPError& reason,
+                                const bool& artificial);
+
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {
@@ -93,37 +97,14 @@ public:
   }
 
   NPError NPN_RequestRead(NPByteRange* aRangeList);
+  void NPP_DestroyStream(NPError reason);
 
 private:
-  /**
-   * Deliver the data currently in mPending, scheduling
-   * or cancelling the suspended timer as needed.
-   */
-  void DeliverData();
-  void SetSuspendedTimer();
-  void ClearSuspendedTimer();
-
   PluginInstanceChild* mInstance;
   NPStream mStream;
   bool mClosed;
-  enum {
-    CONSTRUCTING,
-    ALIVE,
-    DYING,
-    DELETING
-  } mState;
   nsCString mURL;
   nsCString mHeaders;
-
-  struct PendingData
-  {
-    int32_t offset;
-    Buffer data;
-    int32_t curpos;
-  };
-  nsTArray<PendingData> mPendingData;
-
-  base::RepeatingTimer<BrowserStreamChild> mSuspendedTimer;
 };
 
 } // namespace plugins
