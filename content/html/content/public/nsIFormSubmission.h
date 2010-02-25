@@ -62,21 +62,6 @@ public:
   virtual ~nsFormSubmission();
 
   /**
-   * Call to perform the submission
-   *
-   * @param aActionURL the URL to submit to (may be modified with GET contents)
-   * @param aTarget the target window
-   * @param aSource the element responsible for the submission (for web shell)
-   * @param aLinkHandler the link handler to use
-   * @param aDocShell (out param) the DocShell in which the submission was
-   *        loaded
-   * @param aRequest (out param) the Request for the submission
-   */
-  nsresult SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
-                    nsIContent* aSource, nsILinkHandler* aLinkHandler,
-                    nsIDocShell** aDocShell, nsIRequest** aRequest);
-
-  /**
    * Submit a name/value pair
    *
    * @param aName the name of the parameter
@@ -95,6 +80,16 @@ public:
                                    nsIFile* aFile) = 0;
   
   /**
+   * Given a URI and the current submission, create the final URI and data
+   * stream that will be submitted.  Subclasses *must* implement this.
+   *
+   * @param aURI the URI being submitted to [INOUT]
+   * @param aPostDataStream a data stream for POST data [OUT]
+   */
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream) = 0;
+
+  /**
    * Get the charset that will be used for submission.
    */
   void GetCharset(nsACString& aCharset)
@@ -107,23 +102,10 @@ protected:
    * Can only be constructed by subclasses.
    *
    * @param aCharset the charset of the form as a string
-   * @param aEncoder an encoder that will encode Unicode names and values into
-   *        bytes to be sent over the wire (usually a charset transformation)
    * @param aBidiOptions the BIDI options flags for the current pres context
    */
   nsFormSubmission(const nsACString& aCharset,
-                   nsISaveAsCharset* aEncoder,
                    PRInt32 aBidiOptions);
-
-  /**
-   * Given a URI and the current submission, create the final URI and data
-   * stream that will be submitted.  Subclasses *must* implement this.
-   *
-   * @param aURI the URI being submitted to [INOUT]
-   * @param aPostDataStream a data stream for POST data [OUT]
-   */
-  NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
-                                  nsIInputStream** aPostDataStream) = 0;
 
   /**
    * Encode a Unicode string to bytes using the encoder (or just copy the input
@@ -141,8 +123,7 @@ protected:
    * @param aOut the encoded string [OUT] 
    * @throws an error if the encoder fails
    */
-  nsresult UnicodeToNewBytes(const nsAString& aStr, nsISaveAsCharset* aEncoder,
-                             nsACString& aOut);
+  nsresult UnicodeToNewBytes(const nsAString& aStr, nsACString& aOut);
 
   // The name of the encoder charset
   nsCString mCharset;

@@ -856,12 +856,18 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput, PR_FALSE);
 
-    rv = aFormSubmission->SubmitTo(actionURI, target, this, linkHandler,
-                                   getter_AddRefs(docShell),
-                                   getter_AddRefs(mSubmittingRequest));
-  }
+    nsCOMPtr<nsIInputStream> postDataStream;
+    rv = aFormSubmission->GetEncodedSubmission(actionURI,
+                                               getter_AddRefs(postDataStream));
+    NS_ENSURE_SUBMIT_SUCCESS(rv);
 
-  NS_ENSURE_SUBMIT_SUCCESS(rv);
+    rv = linkHandler->OnLinkClickSync(this, actionURI,
+                                      target.get(),
+                                      postDataStream, nsnull,
+                                      getter_AddRefs(docShell),
+                                      getter_AddRefs(mSubmittingRequest));
+    NS_ENSURE_SUBMIT_SUCCESS(rv);
+  }
 
   // Even if the submit succeeds, it's possible for there to be no docshell
   // or request; for example, if it's to a named anchor within the same page
