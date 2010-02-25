@@ -107,6 +107,10 @@ protected:
             mTopLevelWidget->setGeometry( 0.0, 0.0,
                 static_cast<qreal>(aEvent->size().width()),
                 static_cast<qreal>(aEvent->size().height()));
+            // resize scene rect to vieport size,
+            // to avoid extra scrolling from QAbstractScrollable
+            setSceneRect(viewport()->rect());
+
         }
         QGraphicsView::resizeEvent(aEvent);
     }
