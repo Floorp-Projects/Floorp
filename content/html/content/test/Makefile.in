@@ -120,6 +120,10 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
+		test_formSubmission.html \
+		test_formSubmission2.html \
+		file_formSubmission_text.txt \
+		file_formSubmission_img.jpg \
 		test_bug418756.html \
 		test_bug421640.html \
 		test_bug424698.html \
