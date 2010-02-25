@@ -576,8 +576,11 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!realFocusItem || realFocusItem->hasFocus())
         return NS_OK;
 
-    if (aRaise)
+    if (aRaise) {
+        // the raising has to happen on the view widget
+        GetViewWidget()->raise();
         realFocusItem->setFocus(Qt::ActiveWindowFocusReason);
+    }
     else
         realFocusItem->setFocus(Qt::OtherFocusReason);
 
@@ -1926,6 +1929,12 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     MozQWidget * widget = new MozQWidget(this, parent);
     if (!widget)
         return nsnull;
+
+    // make only child and plugin windows focusable
+    if (eWindowType_child == mWindowType || eWindowType_plugin == mWindowType) {
+        widget->setFlag(QGraphicsItem::ItemIsFocusable);
+        widget->setFocusPolicy(Qt::WheelFocus);
+    }
 
     // create a QGraphicsView if this is a new toplevel window
     MozQGraphicsView* newView = 0;

@@ -18,9 +18,6 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
 {
-    setFlag(QGraphicsItem::ItemIsFocusable);
-
-    setFocusPolicy(Qt::WheelFocus);
 }
 
 MozQWidget::~MozQWidget()
@@ -32,6 +29,16 @@ MozQWidget::~MozQWidget()
 void MozQWidget::paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget /*= 0*/)
 {
     mReceiver->DoPaint(aPainter, aOption);
+}
+
+void MozQWidget::activate()
+{
+    mReceiver->DispatchActivateEvent();
+}
+
+void MozQWidget::deactivate()
+{
+    mReceiver->DispatchDeactivateEvent();
 }
 
 void MozQWidget::resizeEvent(QGraphicsSceneResizeEvent* aEvent)
@@ -117,17 +124,6 @@ void MozQWidget::mousePressEvent(QGraphicsSceneMouseEvent* aEvent)
 void MozQWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent)
 {
     mReceiver->OnButtonReleaseEvent(aEvent);
-}
-
-bool MozQWidget::sceneEvent(QEvent* aEvent)
-{
-    if (QEvent::WindowActivate == aEvent->type()) {
-        mReceiver->OnFocusInEvent(aEvent);
-    } else if (QEvent::WindowDeactivate == aEvent->type()) {
-        mReceiver->OnFocusOutEvent(aEvent);
-    }
-
-    return QGraphicsWidget::sceneEvent(aEvent);
 }
 
 void MozQWidget::wheelEvent(QGraphicsSceneWheelEvent* aEvent)
