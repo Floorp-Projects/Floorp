@@ -187,7 +187,7 @@ nsSVGTextPathFrame::GetPathScale()
     return 1.0;
 
   nsSVGPathElement *path = static_cast<nsSVGPathElement*>(pathFrame->GetContent());
-  float pl = path->mPathLength.GetAnimValue(path);
+  float pl = path->mPathLength.GetAnimValue();
 
   if (pl == 0.0f)
     return 1.0;

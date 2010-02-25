@@ -70,13 +70,8 @@ public:
     { return mBaseVal; }
 
   void SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement);
-  PRUint16 GetAnimValue(nsSVGElement *aSVGElement) const
-  {
-  #ifdef MOZ_SMIL
-    aSVGElement->FlushAnimations();
-  #endif
-    return mAnimVal;
-  }
+  PRUint16 GetAnimValue() const
+    { return mAnimVal; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
                              nsSVGElement* aSVGElement);
@@ -108,8 +103,17 @@ private:
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRUint16 aValue)
       { return mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); }
+
+    // Script may have modified animation parameters or timeline -- DOM getters
+    // need to flush any resample requests to reflect these modifications.
     NS_IMETHOD GetAnimVal(PRUint16* aResult)
-      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
+    {
+#ifdef MOZ_SMIL
+      mSVGElement->FlushAnimations();
+#endif
+      *aResult = mVal->GetAnimValue();
+      return NS_OK;
+    }
   };
 
 #ifdef MOZ_SMIL
