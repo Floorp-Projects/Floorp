@@ -44,6 +44,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -293,6 +294,32 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
   if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
+  }
+
+  if (aElement->IsHTML() && aElement->Tag() == nsGkAtoms::link) {
+    // look for <link rel="next" href="url">
+    nsAutoString relVal;
+    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
+    if (!relVal.IsEmpty()) {
+      // XXX seems overkill to generate this string array
+      nsAutoTArray<nsString, 4> linkTypes;
+      nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
+      PRBool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
+      if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {
+        nsAutoString hrefVal;
+        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
+        if (!hrefVal.IsEmpty()) {
+          PrefetchHref(hrefVal, aElement, hasPrefetch);
+        }
+      }
+      if (linkTypes.Contains(NS_LITERAL_STRING("dns-prefetch"))) {
+        nsAutoString hrefVal;
+        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
+        if (!hrefVal.IsEmpty()) {
+          PrefetchDNS(hrefVal);
+        }
+      }
+    }
   }
 
   // Re-open update
