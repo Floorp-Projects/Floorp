@@ -4924,20 +4924,11 @@ nsDocument::GetTitleContent(PRUint32 aNamespace)
     return nsnull;
 
   nsRefPtr<nsContentList> list =
-    NS_GetContentList(this, nsGkAtoms::title, kNameSpaceID_Unknown);
+    NS_GetContentList(this, nsGkAtoms::title, aNamespace);
   if (!list)
     return nsnull;
 
-  for (PRUint32 i = 0; ; ++i) {
-    // Avoid calling list->Length --- by calling Item one at a time,
-    // we can avoid scanning the whole document to build the list of all
-    // matches
-    nsIContent* elem = list->Item(i, PR_FALSE);
-    if (!elem)
-      return nsnull;
-    if (elem->IsInNamespace(aNamespace))
-      return elem;
-  }
+  return list->Item(0, PR_FALSE);
 }
 
 void
