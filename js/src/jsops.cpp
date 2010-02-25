@@ -1809,7 +1809,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         if (slot != sprop->slot || scope->table) {
                             JSScopeProperty *sprop2 =
                                 scope->putProperty(cx, sprop->id,
-                                                   sprop->getter, sprop->setter,
+                                                   sprop->getter(), sprop->setter(),
                                                    slot, sprop->attrs,
                                                    sprop->getFlags(), sprop->shortid);
                             if (!sprop2) {
@@ -3451,7 +3451,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                       scope->shape == scope->lastProperty()->shape);
             if (scope->table) {
                 JSScopeProperty *sprop2 =
-                    scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, slot,
+                    scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(), slot,
                                        sprop->attrs, sprop->getFlags(), sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);

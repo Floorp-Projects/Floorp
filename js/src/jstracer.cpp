@@ -7880,13 +7880,13 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     uintN upvar_slot = SPROP_INVALID_SLOT;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
-        if (sprop->getter == js_GetCallArg) {
+        if (sprop->getterOp() == js_GetCallArg) {
             JS_ASSERT(slot < cfp->fun->nargs);
             vp = &cfp->argv[slot];
             upvar_slot = slot;
             nr.v = *vp;
-        } else if (sprop->getter == js_GetCallVar ||
-                   sprop->getter == js_GetCallVarChecked) {
+        } else if (sprop->getterOp() == js_GetCallVar ||
+                   sprop->getterOp() == js_GetCallVarChecked) {
             JS_ASSERT(slot < cfp->script->nslots);
             vp = &cfp->slots[slot];
             upvar_slot = cx->fp->fun->nargs + slot;
@@ -7933,11 +7933,11 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
         int32 dslot_index = slot;
-        if (sprop->getter == js_GetCallArg) {
+        if (sprop->getterOp() == js_GetCallArg) {
             JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(obj));
             dslot_index += ArgClosureTraits::slot_offset(obj);
-        } else if (sprop->getter == js_GetCallVar ||
-                   sprop->getter == js_GetCallVarChecked) {
+        } else if (sprop->getterOp() == js_GetCallVar ||
+                   sprop->getterOp() == js_GetCallVarChecked) {
             JS_ASSERT(dslot_index < VarClosureTraits::slot_count(obj));
             dslot_index += VarClosureTraits::slot_offset(obj);
         } else {
@@ -7965,10 +7965,10 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
             cx_ins
         };
         const CallInfo* ci;
-        if (sprop->getter == js_GetCallArg) {
+        if (sprop->getterOp() == js_GetCallArg) {
             ci = &GetClosureArg_ci;
-        } else if (sprop->getter == js_GetCallVar ||
-                   sprop->getter == js_GetCallVarChecked) {
+        } else if (sprop->getterOp() == js_GetCallVar ||
+                   sprop->getterOp() == js_GetCallVarChecked) {
             ci = &GetClosureVar_ci;
         } else {
             RETURN_STOP("dynamic property of Call object");
@@ -10514,7 +10514,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
         lir->insStorei(boxed_ins, vp_ins, 0);
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
-    ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
+    ci->_address = uintptr_t(setflag ? sprop->setterOp() : sprop->getterOp());
     ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
                     ARGSIZE_P << (1*ARGSIZE_SHIFT) |
                     ARGSIZE_P << (2*ARGSIZE_SHIFT) |
@@ -11321,14 +11321,14 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // Set variables in on-trace-stack call objects by updating the tracker.
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
-        if (sprop->setter == SetCallArg) {
+        if (sprop->setterOp() == SetCallArg) {
             JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->argv[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
-        if (sprop->setter == SetCallVar) {
+        if (sprop->setterOp() == SetCallVar) {
             JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->slots[slot];
@@ -11345,10 +11345,10 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
         int32 dslot_index = uint16(sprop->shortid);
-        if (sprop->setter == SetCallArg) {
+        if (sprop->setterOp() == SetCallArg) {
             JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(callobj));
             dslot_index += ArgClosureTraits::slot_offset(callobj);
-        } else if (sprop->setter == SetCallVar) {
+        } else if (sprop->setterOp() == SetCallVar) {
             JS_ASSERT(dslot_index < VarClosureTraits::slot_count(callobj));
             dslot_index += VarClosureTraits::slot_offset(callobj);
         } else {
@@ -11371,9 +11371,9 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
 
     // Set variables in off-trace-stack call objects by calling standard builtins.
     const CallInfo* ci = NULL;
-    if (sprop->setter == SetCallArg)
+    if (sprop->setterOp() == SetCallArg)
         ci = &js_SetCallArg_ci;
-    else if (sprop->setter == SetCallVar)
+    else if (sprop->setterOp() == SetCallVar)
         ci = &js_SetCallVar_ci;
     else
         RETURN_STOP("can't trace special CallClass setter");
@@ -11392,7 +11392,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // Compute native stack slot and address offset we are storing to.
     unsigned slot = uint16(sprop->shortid);
     LIns *slot_ins;
-    if (sprop->setter == SetCallArg)
+    if (sprop->setterOp() == SetCallArg)
         slot_ins = ArgClosureTraits::adj_slot_lir(lir, fp_ins, slot);
     else
         slot_ins = VarClosureTraits::adj_slot_lir(lir, fp_ins, slot);
@@ -11675,7 +11675,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop
     JS_ASSERT(obj->getClass() != &js_WithClass);
 
     *vp = JSVAL_VOID;
-    if (!sprop->getter(cx, obj, SPROP_USERID(sprop), vp)) {
+    if (!sprop->getterOp()(cx, obj, SPROP_USERID(sprop), vp)) {
         SetBuiltinError(cx);
         return JS_FALSE;
     }

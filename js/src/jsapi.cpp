@@ -3029,7 +3029,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     } else {
         sprop = (JSScopeProperty *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
-                                   sprop->getter, sprop->setter, sprop->slot,
+                                   sprop->getter(), sprop->setter(), sprop->slot,
                                    sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                    sprop->shortid)
               != NULL);
@@ -3102,8 +3102,8 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (OBJ_IS_NATIVE(obj2)) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
-            desc->getter = sprop->getter;
-            desc->setter = sprop->setter;
+            desc->getter = sprop->getter();
+            desc->setter = sprop->setter();
             desc->value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                           ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                           : JSVAL_VOID;
@@ -3702,7 +3702,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     }
     sprop = (JSScopeProperty *)prop;
     ok = (js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
-                               sprop->getter, sprop->setter, sprop->slot,
+                               sprop->getter(), sprop->setter(), sprop->slot,
                                sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                sprop->shortid)
           != NULL);
