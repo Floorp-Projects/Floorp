@@ -3243,7 +3243,7 @@ esac
 
 dnl ========================================================
 dnl Check whether we can compile code for Core Text
-dnl (Mac OS X 10.5 or later)
+dnl (available on Mac OS X 10.5 or later)
 dnl ========================================================
 case "$target" in
 *-darwin*)
@@ -3254,23 +3254,11 @@ case "$target" in
                   ac_cv_have_core_text="no")
   AC_MSG_RESULT([$ac_cv_have_core_text])
 
-  MOZ_CORETEXT=1
-
-  MOZ_ARG_DISABLE_BOOL(coretext,
-[  --disable-coretext      Use ATSUI instead of Core Text for text rendering],
-    MOZ_CORETEXT=,
-    MOZ_CORETEXT=1)
-
-  if test -n "$MOZ_CORETEXT"; then
-    if test "$ac_cv_have_core_text" = "no"; then
-      AC_MSG_ERROR([--enable-coretext requires MacOS SDK 10.5 or newer])
-     fi
-     AC_DEFINE(MOZ_CORETEXT)
+  if test "$ac_cv_have_core_text" = "no"; then
+    AC_MSG_ERROR([Core Text is required (available on Mac OS X 10.5 or later).])
   fi
   ;;
 esac
-
-AC_SUBST(MOZ_CORETEXT)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"

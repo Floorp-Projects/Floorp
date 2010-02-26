@@ -45,10 +45,7 @@
 #include "nsRefPtrHashtable.h"
 
 #include "gfxPlatformFontList.h"
-#ifdef MOZ_CORETEXT
 #include "gfxCoreTextFonts.h"
-#endif
-#include "gfxAtsuiFonts.h"
 #include "gfxPlatform.h"
 
 #include <Carbon/Carbon.h>
@@ -70,10 +67,6 @@ public:
     ATSFontRef GetFontRef();
     nsresult ReadCMAP();
 
-#ifndef __LP64__
-    PRBool UseLiGothicAtsuiHack() { return mUseLiGothicAtsuiHack; }
-#endif
-
 protected:
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
@@ -86,9 +79,6 @@ protected:
 
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
-#ifndef __LP64__
-    PRPackedBool mUseLiGothicAtsuiHack;
-#endif
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
