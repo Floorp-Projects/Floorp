@@ -116,8 +116,6 @@ struct sa_stream {
   WAVEHDR*			  waveBlocks;  
   volatile int		waveFreeBlockCount;
   int				      waveCurrentBlock;
-
-  int playing;
 };
 
 
@@ -164,7 +162,6 @@ int sa_stream_create_pcm(sa_stream_t **s,
   _s->channels = nchannels;
   _s->deviceName = DEFAULT_DEVICE_NAME;
   _s->device = DEFAULT_DEVICE;
-  _s->playing = 0;
 
   *s = _s; 
   return SA_SUCCESS;
@@ -308,8 +305,6 @@ int sa_stream_resume(sa_stream_t *s) {
   status = waveOutRestart(s->hWaveOut);
   HANDLE_WAVE_ERROR(status, "resuming audio playback");
 
-  s->playing = 1;
-
   return SA_SUCCESS;
 }
 /** Pause audio playback (do not empty the buffer) */
@@ -321,18 +316,12 @@ int sa_stream_pause(sa_stream_t *s) {
   status = waveOutPause(s->hWaveOut);
   HANDLE_WAVE_ERROR(status, "resuming audio playback");
 
-  s->playing = 0;
-
   return SA_SUCCESS;
 }
 /** Block until all audio has been played */
 int sa_stream_drain(sa_stream_t *s) {
   ERROR_IF_NO_INIT(s);
   
-  if (!s->playing) {
-    return SA_ERROR_INVALID;
-  }
-
   /* wait for all blocks to complete */
   EnterCriticalSection(&(s->waveCriticalSection));
   while(s->waveFreeBlockCount < BLOCK_COUNT) {
@@ -500,8 +489,6 @@ int closeAudio(sa_stream_t * s) {
     result = getSAErrorCode(status);
   }
 
-  s->playing = 0;
-
   DeleteCriticalSection(&(s->waveCriticalSection));
   CloseHandle(s->callbackEvent);
   
@@ -563,8 +550,6 @@ int writeAudio(sa_stream_t *s, LPSTR data, int bytes) {
 
     current = &(s->waveBlocks[s->waveCurrentBlock]);
     current->dwUser = 0;
-
-    s->playing = 1;
   }
   return SA_SUCCESS;
 }
