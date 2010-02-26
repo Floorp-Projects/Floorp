@@ -179,22 +179,15 @@ class HashTable : AllocPolicy
         void operator=(const Enum &);
 
       public:
-        /* Type returned from hash table used to initialize Enum object. */
-        struct Init {
-            Init(Range r, HashTable &t) : range(r), table(t) {}
-            Range range;
-            HashTable &table;
-        };
-
-        /* Initialize with the return value of enumerate. */
-        Enum(Init i) : Range(i.range), table(i.table), removed(false) {}
+        template<class Map>
+        Enum(Map &map) : Range(map.all()), table(map.impl), removed(false) {}
 
         /*
          * Removes the |front()| element from the table, leaving |front()|
          * invalid until the next call to |popFront()|. For example:
          *
          *   HashSet<int> s;
-         *   for (HashSet<int>::Enum e(s.enumerate()); !e.empty(); e.popFront())
+         *   for (HashSet<int>::Enum e(s); !e.empty(); e.popFront())
          *     if (e.front() == 42)
          *       e.removeFront();
          */
@@ -529,10 +522,6 @@ class HashTable : AllocPolicy
         return Range(table, table + tableCapacity);
     }
 
-    typename Enum::Init enumerate() {
-        return typename Enum::Init(all(), *this);
-    }
-
     bool empty() const {
         return !entryCount;
     }
@@ -715,6 +704,8 @@ class HashMap
     };
     typedef detail::HashTable<Entry, MapHashPolicy, AllocPolicy> Impl;
 
+    friend class Impl::Enum;
+
     /* Not implicitly copyable (expensive). May add explicit |clone| later. */
     HashMap(const HashMap &);
     HashMap &operator=(const HashMap &);
@@ -785,12 +776,12 @@ class HashMap
     size_t count() const                              { return impl.count(); }
 
     /*
-     * Returns a value that may be used to initialize an Enum. An Enum may be
-     * used to examine and remove table entries:
+     * Typedef for the enumeration class. An Enum may be used to examine and
+     * remove table entries:
      *
      *   typedef HashMap<int,char> HM;
      *   HM s;
-     *   for (HM::Enum e(s.enumerate()); !e.empty(); e.popFront())
+     *   for (HM::Enum e(s); !e.empty(); e.popFront())
      *     if (e.front().value == 'l')
      *       e.removeFront();
      *
@@ -798,7 +789,6 @@ class HashMap
      * Enum in HashTable above (with T = Entry).
      */
     typedef typename Impl::Enum Enum;
-    typename Enum::Init enumerate()                   { return impl.enumerate(); }
 
     /* Remove all entries. */
     void clear()                                      { impl.clear(); }
@@ -860,6 +850,8 @@ class HashSet
         static const KeyType &getKey(const T &t) { return t; }
     };
     typedef detail::HashTable<const T, SetOps, AllocPolicy> Impl;
+
+    friend class Impl::Enum;
 
     /* Not implicitly copyable (expensive). May add explicit |clone| later. */
     HashSet(const HashSet &);
@@ -927,12 +919,12 @@ class HashSet
     size_t count() const                              { return impl.count(); }
 
     /*
-     * Returns a value that may be used to initialize an Enum. An Enum may be
-     * used to examine and remove table entries.
+     * Typedef for the enumeration class. An Enum may be used to examine and
+     * remove table entries:
      *
      *   typedef HashSet<int> HS;
      *   HS s;
-     *   for (HS::Enum e(s.enumerate()); !e.empty(); e.popFront())
+     *   for (HS::Enum e(s); !e.empty(); e.popFront())
      *     if (e.front() == 42)
      *       e.removeFront();
      *
@@ -940,7 +932,6 @@ class HashSet
      * Enum in HashTable above.
      */
     typedef typename Impl::Enum Enum;
-    typename Enum::Init enumerate()                   { return impl.enumerate(); }
 
     /* Remove all entries. */
     void clear()                                      { impl.clear(); }
