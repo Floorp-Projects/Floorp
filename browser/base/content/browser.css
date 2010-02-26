@@ -103,6 +103,10 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   font-weight: bold;
 }
 
+toolbarbutton.bookmark-item {
+  max-width: 13em;
+}
+
 %ifdef MOZ_WIDGET_GTK2
 /* Bookmarks override the "images-in-menus" metric in xul.css */
 .bookmark-item > .menu-iconic-left,
