@@ -1960,9 +1960,9 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
       language.FindChar(PRUnichar(',')) == kNotFound) {
     mLanguage = do_GetAtom(language);
   } else {
-    // we didn't find a (usable) Content-Language,
-    // so fall back to the presContext's language
-    mLanguage = aPresContext->GetLanguage();
+    // we didn't find a (usable) Content-Language, so we fall back
+    // to whatever the presContext guessed from the charset
+    mLanguage = aPresContext->GetLanguageFromCharset();
   }
 
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
