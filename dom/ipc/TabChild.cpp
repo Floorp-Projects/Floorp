@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_WIDGET_QT
-#include <QtGui/QX11EmbedWidget>
-#include <QApplication> 
-#endif
 #include "TabChild.h"
 
 #include "nsIWebBrowser.h"
@@ -70,6 +66,11 @@
 #include "nsScriptLoader.h"
 #include "nsPIWindowRoot.h"
 #include "nsIScriptContext.h"
+
+#ifdef MOZ_WIDGET_QT
+#include <QX11EmbedWidget>
+#include <QApplication>
+#endif
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
