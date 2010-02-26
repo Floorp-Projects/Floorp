@@ -81,8 +81,12 @@ public:
                                    int32_t* consumed);
 
   virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
-  virtual bool Answer__delete__(const NPError& reason,
-                                const bool& artificial);
+
+  NS_OVERRIDE
+  virtual bool AnswerNPP_DestroyStream(const NPReason& reason, NPError* err);
+
+  NS_OVERRIDE
+  virtual bool Recv__delete__();
 
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
