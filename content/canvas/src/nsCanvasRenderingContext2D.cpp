@@ -1932,7 +1932,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
       return NS_ERROR_FAILURE;
     nsIDocument* document = presShell->GetDocument();
 
-    nsIAtom *language = presShell->GetPresContext()->GetLanguage();
+    nsIAtom *language = presShell->GetPresContext()->GetLanguageFromCharset();
 
     nsCOMArray<nsIStyleRule> rules;
 
