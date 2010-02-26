@@ -1782,7 +1782,7 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
       = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
     NS_ENSURE_TRUE(list, nsnull);
 
-    return new nsSVGTransformSMILAttr(list, this);
+    return new nsSVGTransformSMILAttr(list);
   }
 
   // Lengths:
