@@ -165,6 +165,7 @@
 #endif
 
 #include "nsWindowGfx.h"
+#include "gfxWindowsPlatform.h"
 
 #if !defined(WINCE)
 #include "nsUXThemeData.h"
@@ -2365,7 +2366,11 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
       }
     }
 
-    if (flags & SW_SCROLLCHILDREN) {
+    if (flags & SW_SCROLLCHILDREN 
+#ifdef CAIRO_HAS_D2D_SURFACE
+        && !mD2DWindowSurface
+#endif
+        ) {
       // ScrollWindowEx will send WM_MOVE to each moved window to tell it
       // its new position. Unfortunately those messages don't reach our
       // WM_MOVE handler for some plugins, so we have to update their
@@ -2380,23 +2385,21 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     }
 
     RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
-    ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
+#ifdef CAIRO_HAS_D2D_SURFACE
+    if (mD2DWindowSurface) {
+      mD2DWindowSurface->Scroll(aDelta, affectedRect);
 
-    // Areas that get scrolled into view from offscreen or under another
-    // window (but inside the scroll area) need to be repainted.
-    // ScrollWindowEx returns those areas in updateRgn, but also includes
-    // the area of the source that isn't covered by the destination.
-    // ScrollWindowEx will refuse to blit into an area that's already
-    // invalid. When we're blitting multiple adjacent rectangles, we have
-    // a problem where the source area of rectangle A overlaps the
-    // destination area of a subsequent rectangle B; the first ScrollWindowEx
-    // invalidates the source area of A that's outside of the destination
-    // area of A, and then the ScrollWindowEx for B will refuse to fully
-    // blit into B's destination. This produces nasty temporary glitches.
-    // We combat this by having ScrollWindowEx not invalidate directly,
-    // but give us back the region that needs to be invalidated,
-    // and restricting that region to the destination before invalidating
-    // it.
+      for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        w->Invalidate(PR_FALSE);
+      }
+    } else {
+#endif
+      ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
+#ifdef CAIRO_HAS_D2D_SURFACE
+    }
+#endif
     ::SetRectRgn(destRgn, destRect.x, destRect.y, destRect.XMost(), destRect.YMost());
     ::CombineRgn(updateRgn, updateRgn, destRgn, RGN_AND);
     if (flags & SW_SCROLLCHILDREN) {
@@ -2808,10 +2811,24 @@ nsWindow::HasPendingInputEvent()
 
 gfxASurface *nsWindow::GetThebesSurface()
 {
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mD2DWindowSurface) {
+    return mD2DWindowSurface;
+  }
+#endif
   if (mPaintDC)
     return (new gfxWindowsSurface(mPaintDC));
 
-  return (new gfxWindowsSurface(mWnd));
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    return (new gfxD2DSurface(mWnd));
+  } else {
+#endif
+    return (new gfxWindowsSurface(mWnd));
+#ifdef CAIRO_HAS_D2D_SURFACE
+  }
+#endif
 }
 
 /**************************************************************
@@ -6117,6 +6134,12 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 // Send a resize message to the listener
 PRBool nsWindow::OnResize(nsIntRect &aWindowRect)
 {
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mD2DWindowSurface) {
+    mD2DWindowSurface = NULL;
+    Invalidate(PR_FALSE);
+  }
+#endif
   // call the event callback
   if (mEventCallback) {
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);

@@ -57,6 +57,9 @@
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
+#ifdef CAIRO_HAS_D2D_SURFACE
+#include "gfxD2DSurface.h"
+#endif
 
 #if !defined(WINCE)
 #include "nsWinGesture.h"
@@ -481,6 +484,10 @@ protected:
 
   // Graphics
   HDC                   mPaintDC; // only set during painting
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+  nsRefPtr<gfxD2DSurface>    mD2DWindowSurface; // Surface for this window.
+#endif
 
   // Transparency
 #ifdef MOZ_XUL

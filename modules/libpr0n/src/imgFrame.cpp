@@ -126,6 +126,11 @@ static PRBool ShouldUseImageSurfaces()
 #elif defined(USE_WIN_SURFACE)
   static const DWORD kGDIObjectsHighWaterMark = 7000;
 
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    return PR_TRUE;
+  }
+
   // at 7000 GDI objects, stop allocating normal images to make sure
   // we never hit the 10k hard limit.
   // GetCurrentProcess() just returns (HANDLE)-1, it's inlined afaik

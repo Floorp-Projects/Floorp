@@ -290,6 +290,12 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 {
     const gfxIntSize& surfaceSize = aSurface->GetSize();
 
+#ifdef XP_WIN
+    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() == 
+        gfxWindowsPlatform::RENDER_DIRECT2D) {
+        return nsnull;
+    }
+#endif
     nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
     if (!optSurface || optSurface->CairoStatus() != 0)
         return nsnull;

@@ -170,6 +170,12 @@ pref("gfx.color_management.rendering_intent", 0);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
+#ifdef XP_WIN
+#ifndef WINCE
+pref("gfx.font_rendering.directwrite.enabled", false);
+#endif
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
@@ -1260,6 +1266,8 @@ pref("font.minimum-size.x-unicode", 0);
 pref("font.minimum-size.x-user-def", 0);
 
 #ifdef XP_WIN
+
+pref("gfx.font_rendering.directwrite.enabled", true);
 
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
