@@ -412,7 +412,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif // WIDGET_DEBUG_OUTPUT
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
-  mPaintDC = hDC;
+  if (!IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
+    mPaintDC = hDC;
+  }
 
 #ifdef MOZ_XUL
   PRBool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
@@ -462,7 +464,16 @@ PRBool nsWindow::OnPaint(HDC aDC)
       targetSurfaceWin = new gfxWindowsSurface(hDC);
       targetSurface = targetSurfaceWin;
     }
-
+#ifdef CAIRO_HAS_D2D_SURFACE
+    if (!targetSurface &&
+        IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
+    {
+      if (!mD2DWindowSurface) {
+        mD2DWindowSurface = new gfxD2DSurface(mWnd);
+      }
+      targetSurface = mD2DWindowSurface;
+    }
+#endif
 #ifdef CAIRO_HAS_DDRAW_SURFACE
     nsRefPtr<gfxDDrawSurface> targetSurfaceDDraw;
     if (!targetSurface &&
@@ -522,7 +533,23 @@ DDRAW_FAILED:
 
     nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
     thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) && paintRgnWin) {
+      PRUint32 rects;
+      paintRgnWin->GetNumRects(&rects);
+      nsRegionRectSet *rectSet = NULL;
+      paintRgnWin->GetRects(&rectSet);
+      for (int i = 0; i < rectSet->mNumRects; i++) {
+        thebesContext->Rectangle(
+        gfxRect(
+               rectSet->mRects[i].x,
+               rectSet->mRects[i].y,
+               rectSet->mRects[i].width,
+               rectSet->mRects[i].height), PR_TRUE);
+      }
+      thebesContext->Clip();
 
+      paintRgnWin->FreeRects(rectSet);
+    }
 #ifdef WINCE
     thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
 #endif
@@ -571,6 +598,13 @@ DDRAW_FAILED:
       // that displayed on the screen.
       UpdateTranslucentWindow();
     } else
+#endif
+#ifdef CAIRO_HAS_D2D_SURFACE
+    if (result) {
+      if (mD2DWindowSurface) {
+        mD2DWindowSurface->Present();
+      }
+    }
 #endif
     if (result) {
       if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {

@@ -48,7 +48,6 @@ EXTRA_DSO_LDOPTS += \
 	$(QCMS_LIBS) \
 	$(NULL)
 
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
@@ -66,7 +65,12 @@ CPPSRCS	+= gfxFT2Fonts.cpp \
 EXTRA_DSO_LDOPTS += ddraw.lib
 else
 CPPSRCS	+= gfxWindowsFonts.cpp \
+	   gfxDWriteFonts.cpp \
+	   gfxDWriteTextAnalysis.cpp \
+	   gfxDWriteCommon.cpp \
+	   gfxD2DSurface.cpp \
 	   gfxGDIFontList.cpp \
+	   gfxDWriteFontList.cpp \
 	   $(NULL)
 endif
 
@@ -202,4 +206,3 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
-
