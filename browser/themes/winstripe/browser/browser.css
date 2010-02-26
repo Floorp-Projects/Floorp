@@ -75,8 +75,6 @@
 
 toolbarbutton.bookmark-item {
   margin: 0;
-  min-width: 0;
-  max-width: 13em;
   padding: 2px 3px;
 }
 
