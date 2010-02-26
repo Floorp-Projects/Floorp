@@ -51,7 +51,9 @@ EXPORTS +=	gfxFT2Fonts.h \
 		gfxDDrawSurface.h \
 		$(NULL)
 else
-EXPORTS +=	gfxWindowsFonts.h 
+EXPORTS +=  gfxWindowsFonts.h
+EXPORTS +=  gfxDWriteFonts.h
+EXPORTS +=  gfxD2DSurface.h
 endif
 
 endif
