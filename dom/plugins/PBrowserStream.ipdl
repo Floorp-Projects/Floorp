@@ -66,17 +66,17 @@ child:
 
   rpc NPP_StreamAsFile(nsCString fname);
 
+  rpc NPP_DestroyStream(NPReason reason)
+    returns (NPError error);
+
+  async __delete__();
+
 parent:
   rpc NPN_RequestRead(IPCByteRanges ranges)
     returns (NPError result);
 
-both:
-  /**
-   * ~PBrowserStream is for both NPN_DestroyStream and NPP_DestroyStream.
-   * @param artificial True when the stream is closed as a by-product of
-   *                        some other call (such as a failure in NPP_Write).
-   */
-  rpc __delete__(NPReason reason, bool artificial);
+  rpc NPN_DestroyStream(NPReason reason)
+    returns (NPError error);
 };
 
 } // namespace plugins
