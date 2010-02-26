@@ -44,6 +44,7 @@
 namespace mozilla {
 namespace plugins {
 
+class PluginModuleParent;
 class PluginInstanceParent;
 
 class BrowserStreamParent : public PBrowserStreamParent, public AStream
@@ -56,23 +57,25 @@ public:
                       NPStream* stream);
   virtual ~BrowserStreamParent();
 
+  NPError NPP_DestroyStream(NPReason reason);
+
   NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
 
   virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                      NPError* result);
 
-  virtual bool
-  Answer__delete__(const NPError& reason, const bool& artificial);
+  virtual bool AnswerNPN_DestroyStream(const NPReason& reason, NPError* result);
 
   int32_t WriteReady();
   int32_t Write(int32_t offset, int32_t len, void* buffer);
   void StreamAsFile(const char* fname);
 
 private:
-  NPError NPN_DestroyStream(NPError reason);
+  void Delete();
 
   PluginInstanceParent* mNPP;
   NPStream* mStream;
+  CancelableTask* mDeleteTask;
 };
 
 } // namespace plugins
