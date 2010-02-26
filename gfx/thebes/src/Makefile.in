@@ -158,15 +158,11 @@ CPPSRCS	+= \
 	gfxQuartzImageSurface.cpp \
 	gfxQuartzPDFSurface.cpp \
 	gfxPlatformMac.cpp \
-	gfxAtsuiFonts.cpp \
+	gfxCoreTextFonts.cpp \
 	$(NULL)
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
-
-ifdef MOZ_CORETEXT
-CPPSRCS += gfxCoreTextFonts.cpp
-endif
 
 CMMSRCS = gfxMacPlatformFontList.mm
 
