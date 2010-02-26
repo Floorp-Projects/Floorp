@@ -1267,8 +1267,6 @@ pref("font.minimum-size.x-user-def", 0);
 
 #ifdef XP_WIN
 
-pref("gfx.font_rendering.directwrite.enabled", true);
-
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
 pref("font.name.monospace.ar", "Courier New");
