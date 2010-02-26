@@ -52,8 +52,7 @@ class nsSVGSMILTransform;
 class nsSVGTransformSMILAttr : public nsISMILAttr
 {
 public:
-  nsSVGTransformSMILAttr(nsSVGAnimatedTransformList* aTransform,
-                         nsSVGElement* aSVGElement)
+  nsSVGTransformSMILAttr(nsSVGAnimatedTransformList* aTransform)
     : mVal(aTransform) {}
 
   // nsISMILAttr methods
