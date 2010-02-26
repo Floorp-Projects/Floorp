@@ -179,28 +179,8 @@ nsHtml5Parser::GetStreamListener(nsIStreamListener** aListener)
 NS_IMETHODIMP
 nsHtml5Parser::ContinueInterruptedParsing()
 {
-  // If there are scripts executing, then the content sink is jumping the gun
-  // (probably due to a synchronous XMLHttpRequest) and will re-enable us
-  // later, see bug 460706.
-  if (mExecutor->IsScriptExecuting()) {
-    return NS_OK;
-  }
-  if (mExecutor->IsFlushing()) {
-    // A nested event loop dequeued the continue event and there aren't
-    // scripts executing. What's currently causing the flush is running to 
-    // completion or there will be a script later and the script will cause
-    // another continue event.
-    return NS_OK;
-  }
-  // If the stream has already finished, there's a good chance
-  // that we might start closing things down when the parser
-  // is reenabled. To make sure that we're not deleted across
-  // the reenabling process, hold a reference to ourselves.
-  nsCOMPtr<nsIParser> kungFuDeathGrip(this);
-  nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(mStreamParser);
-  nsRefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
-  ParseUntilBlocked();
-  return NS_OK;
+  NS_NOTREACHED("Don't call. For interface compat only.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(void)
@@ -360,7 +340,6 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
 
   if (!mBlocked) {
-    // mExecutor->WillResume();
     while (buffer->hasMore()) {
       buffer->adjust(mLastWasCR);
       mLastWasCR = PR_FALSE;
@@ -387,10 +366,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         if (mTreeBuilder->HasScript()) {
           // No need to flush characters, because an end tag was tokenized last
           mTreeBuilder->Flush(); // Move ops to the executor
-          mExecutor->Flush(PR_TRUE); // run the ops    
+          mExecutor->FlushDocumentWrite(); // run the ops    
         }
         if (mBlocked) {
-          // mExecutor->WillInterrupt();
           break;
         }
         // Ignore suspension requests
@@ -403,7 +381,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // Scripting semantics require a forced tree builder flush here
     mTreeBuilder->flushCharacters(); // Flush trailing characters
     mTreeBuilder->Flush(); // Move ops to the executor
-    mExecutor->Flush(PR_TRUE); // run the ops    
+    mExecutor->FlushDocumentWrite(); // run the ops    
   }
 
   return NS_OK;
@@ -498,7 +476,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   mTokenizer->eof();
   mTreeBuilder->StreamEnded();
   mTreeBuilder->Flush();
-  mExecutor->Flush(PR_TRUE);
+  mExecutor->FlushDocumentWrite();
   mTokenizer->end();
   mExecutor->DropParserAndPerfHint();
   mAtomTable.Clear();
@@ -592,7 +570,6 @@ nsHtml5Parser::ParseUntilBlocked()
   }
   NS_ASSERTION(mExecutor->HasStarted(), "Bad life cycle.");
 
-  mExecutor->WillResume();
   for (;;) {
     if (!mFirstBuffer->hasMore()) {
       if (mFirstBuffer == mLastBuffer) {
@@ -606,7 +583,7 @@ nsHtml5Parser::ParseUntilBlocked()
           mTokenizer->eof();
           mTreeBuilder->StreamEnded();
           mTreeBuilder->Flush();
-          mExecutor->Flush(PR_TRUE);
+          mExecutor->FlushDocumentWrite();
           mTokenizer->end();
           return;            
         } else {
@@ -651,10 +628,9 @@ nsHtml5Parser::ParseUntilBlocked()
       }
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush();
-        mExecutor->Flush(PR_TRUE);
+        mExecutor->FlushDocumentWrite();
       }
       if (mBlocked) {
-        // mExecutor->WillInterrupt();
         return;
       }
     }

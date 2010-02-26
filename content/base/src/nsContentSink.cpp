@@ -1728,11 +1728,13 @@ nsContentSink::WillBuildModelImpl()
 void
 nsContentSink::ContinueInterruptedParsingIfEnabled()
 {
+  // This shouldn't be called in the HTML5 case.
   if (mParser && mParser->IsParserEnabled()) {
     mParser->ContinueInterruptedParsing();
   }
 }
 
+// Overridden in the HTML5 case
 void
 nsContentSink::ContinueInterruptedParsingAsync()
 {

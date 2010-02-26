@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,54 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5SpeculativeLoader_h__
-#define nsHtml5SpeculativeLoader_h__
-
-#include "mozilla/Mutex.h"
-#include "nsIURI.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
+#include "nsHtml5SpeculativeLoad.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsHashSets.h"
 
-class nsHtml5SpeculativeLoader
+nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
+#ifdef DEBUG
+ : mOpCode(eSpeculativeLoadUninitialized)
+#endif
 {
-  public:
-    nsHtml5SpeculativeLoader(nsHtml5TreeOpExecutor* aExecutor);
-    ~nsHtml5SpeculativeLoader();
+  MOZ_COUNT_CTOR(nsHtml5SpeculativeLoad);
+}
 
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
+nsHtml5SpeculativeLoad::~nsHtml5SpeculativeLoad()
+{
+  MOZ_COUNT_DTOR(nsHtml5SpeculativeLoad);
+  NS_ASSERTION(mOpCode != eSpeculativeLoadUninitialized,
+               "Uninitialized speculative load.");
+}
 
-    void PreloadScript(const nsAString& aURL,
-                       const nsAString& aCharset,
-                       const nsAString& aType);
-
-    void PreloadStyle(const nsAString& aURL, const nsAString& aCharset);
-
-    void PreloadImage(const nsAString& aURL);
-
-    void ProcessManifest(const nsAString& aURL);
-
-  private:
-    
-    /**
-     * Get a nsIURI for an nsString if the URL hasn't been preloaded yet.
-     */
-    already_AddRefed<nsIURI> ConvertIfNotPreloadedYet(const nsAString& aURL);
-  
-    nsAutoRefCnt   mRefCnt;
-    
-    /**
-     * The executor to use as the context for preloading.
-     */
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
-    
-    /**
-     * URLs already preloaded/preloading.
-     */
-    nsCStringHashSet mPreloadedURLs;
-};
-
-#endif // nsHtml5SpeculativeLoader_h__
-
+void
+nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
+{
+  switch (mOpCode) {
+    case eSpeculativeLoadImage:
+        aExecutor->PreloadImage(mUrl);
+      break;
+    case eSpeculativeLoadScript:
+        aExecutor->PreloadScript(mUrl, mCharset, mType);
+      break;
+    case eSpeculativeLoadStyle:
+        aExecutor->PreloadStyle(mUrl, mCharset);
+      break;
+    case eSpeculativeLoadManifest:  
+        aExecutor->ProcessOfflineManifest(mUrl);
+      break;
+    default:
+      NS_NOTREACHED("Bogus speculative load.");
+      break;
+  }
+}
