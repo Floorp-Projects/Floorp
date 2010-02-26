@@ -401,10 +401,10 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
    * better not to be inside the lock when we enable the audio callback.
    */
   if (!s->playing) {
-    if (AudioOutputUnitStart(s->output_unit) != 0) {
-      return SA_ERROR_SYSTEM;
-    }
     s->playing = TRUE;
+    if (AudioOutputUnitStart(s->output_unit) != 0) {
+      result = SA_ERROR_SYSTEM;
+    }
   }
 
   return result;
@@ -558,10 +558,7 @@ sa_stream_pause(sa_stream_t *s) {
    * internal Core Audio lock, and with the callback thread holding the Core
    * Audio lock and waiting on the mutex.
   */
-  if (AudioOutputUnitStop(s->output_unit) != 0) {
-    return SA_ERROR_SYSTEM;
-  }
-  s->playing = FALSE;
+  AudioOutputUnitStop(s->output_unit);
 
   return SA_SUCCESS;
 }
@@ -589,10 +586,7 @@ sa_stream_resume(sa_stream_t *s) {
    * internal Core Audio lock, and with the callback thread holding the Core
    * Audio lock and waiting on the mutex.
   */
-  if (AudioOutputUnitStart(s->output_unit) != 0) {
-    return SA_ERROR_SYSTEM;
-  }
-  s->playing = TRUE;
+  AudioOutputUnitStart(s->output_unit);
 
   return SA_SUCCESS;
 }
@@ -616,10 +610,6 @@ sa_stream_drain(sa_stream_t *s)
 {
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
-  }
-
-  if (!s->playing) {
-    return SA_ERROR_INVALID;
   }
 
   while (1) {
