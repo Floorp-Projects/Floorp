@@ -77,7 +77,8 @@ __defineGetter__("_ioService", function () {
 var LightweightThemeManager = {
   get usedThemes () {
     try {
-      return JSON.parse(_prefs.getCharPref("usedThemes"));
+      return JSON.parse(_prefs.getComplexValue("usedThemes",
+                                               Ci.nsISupportsString).data);
     } catch (e) {
       return [];
     }
@@ -297,7 +298,10 @@ function _updateUsedThemes(aList) {
   if (aList.length > MAX_USED_THEMES_COUNT)
     aList.length = MAX_USED_THEMES_COUNT;
 
-  _prefs.setCharPref("usedThemes", JSON.stringify(aList));
+  var str = Cc["@mozilla.org/supports-string;1"]
+              .createInstance(Ci.nsISupportsString);
+  str.data = JSON.stringify(aList);
+  _prefs.setComplexValue("usedThemes", Ci.nsISupportsString, str);
 
   _observerService.notifyObservers(null, "lightweight-theme-list-changed", null);
 }
