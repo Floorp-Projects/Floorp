@@ -250,7 +250,7 @@ XPITriggerEvent::Run()
     JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(args), args);
 
     // args[0] is the URL
-    JSString *str = JS_NewUCStringCopyZ(cx, URL.get());
+    JSString *str = JS_NewUCStringCopyZ(cx, reinterpret_cast<const jschar*>(URL.get()));
     if (!str)
         return 0;
     args[0] = STRING_TO_JSVAL(str);
