@@ -162,6 +162,21 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
+input > .placeholder,
+textarea > .placeholder {
+  color: GrayText;
+  overflow: hidden;
+}
+
+textarea > .placeholder {
+  white-space: pre-wrap;
+}
+
+input > .placeholder.hidden,
+textarea > .placeholder.hidden {
+  visibility: hidden;
+}
+
 input:-moz-read-write,
 textarea:-moz-read-write {
   -moz-user-modify: read-write !important;
