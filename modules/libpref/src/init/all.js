@@ -1672,11 +1672,6 @@ pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 pref("ui.click_hold_context_menus", false);
 
-#ifndef __LP64__
-// whether to always use ATSUI for text even if CoreText is available
-pref("gfx.force_atsui_text", false);
-#endif
-
 // default fonts (in UTF8 and using canonical names)
 // to determine canonical font names, use a debug build and 
 // enable NSPR logging for module fontInfoLog:5

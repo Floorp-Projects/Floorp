@@ -107,14 +107,10 @@ EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzSurface.h \
 		gfxQuartzImageSurface.h \
 		gfxQuartzPDFSurface.h \
-		gfxAtsuiFonts.h \
 		gfxQuartzNativeDrawing.h \
+		gfxCoreTextFonts.h \
 		$(NULL)
 
-endif
-
-ifdef MOZ_CORETEXT
-EXPORTS += gfxCoreTextFonts.h
 endif
 
 include $(topsrcdir)/config/rules.mk
