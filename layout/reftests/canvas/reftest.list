@@ -37,3 +37,4 @@
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-ltr-test.html text-bidi-ltr-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
+!= text-font-lang.html text-font-lang-notref.html
