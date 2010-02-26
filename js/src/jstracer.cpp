@@ -7615,7 +7615,7 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
     }
 
     RecordAttemptMap &table = *tm->recordAttempts;
-    for (RecordAttemptMap::Enum e(table.enumerate()); !e.empty(); e.popFront()) {
+    for (RecordAttemptMap::Enum e(table); !e.empty(); e.popFront()) {
         if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
             e.removeFront();
     }
@@ -9038,7 +9038,7 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
 void
 TraceRecorder::forgetGuardedShapesForObject(JSObject* obj)
 {
-    for (GuardedShapeTable::Enum e(guardedShapeTable.enumerate()); !e.empty(); e.popFront()) {
+    for (GuardedShapeTable::Enum e(guardedShapeTable); !e.empty(); e.popFront()) {
         if (e.front().value == obj) {
 #if defined DEBUG_notme && defined XP_UNIX
             DumpShape(entry->obj, "forget");
