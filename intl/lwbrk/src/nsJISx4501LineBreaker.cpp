@@ -722,15 +722,19 @@ ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next,
       // If this is immediately after same char, we should not break here.
       if (prev == cur)
         return CLASS_CHARACTER;
+      // If this text has two or more (BACK)SLASHs, this may be file path or URL.
+      // Make sure to compute shouldReturn before we notify on this slash.
+      PRBool shouldReturn = !aState.UseConservativeBreaking() &&
+        (cur == U_SLASH ?
+         aState.HasPreviousSlash() : aState.HasPreviousBackslash());
+
       if (cur == U_SLASH) {
         aState.NotifySeenSlash();
       } else {
         aState.NotifySeenBackslash();
       }
-      // If this text has two or more (BACK)SLASHs, this may be file path or URL.
-      if (!aState.UseConservativeBreaking() &&
-          (cur == U_SLASH ?
-           aState.HasPreviousSlash() : aState.HasPreviousBackslash()))
+
+      if (shouldReturn)
         return CLASS_OPEN;
     } else if (cur == U_PERCENT) {
       // If this is a part of the param of URL, we should break before.
