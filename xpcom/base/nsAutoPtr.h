@@ -1417,6 +1417,14 @@ operator==( int lhs, const nsRefPtr<T>& rhs )
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 
+template <class SourceType, class DestinationType>
+inline
+nsresult
+CallQueryInterface( nsRefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr )
+  {
+    return CallQueryInterface(aSourcePtr.get(), aDestPtr);
+  }
+
 /*****************************************************************************/
 
 #endif // !defined(nsAutoPtr_h___)
