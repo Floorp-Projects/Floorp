@@ -315,8 +315,13 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring mips, $(OS_TEST)))
+ifneq (,$(findstring mips64, $(OS_TEST)))
+CPPSRCS		:= xptcinvoke_mips64.cpp xptcstubs_mips64.cpp
+ASFILES		:= xptcinvoke_asm_mips64.s xptcstubs_asm_mips64.s
+else
 CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_mips.cpp
 ASFILES		:= xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
+endif
 ASFLAGS		+= -I$(DIST)/include -x assembler-with-cpp
 endif
 endif
