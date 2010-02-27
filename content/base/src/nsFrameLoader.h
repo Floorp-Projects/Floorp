@@ -87,7 +87,7 @@ protected:
     , mRemoteWidgetCreated(PR_FALSE)
     , mRemoteFrame(false)
     , mChildProcess(nsnull)
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
     , mRemoteSocket(nsnull)
 #endif
 #endif
