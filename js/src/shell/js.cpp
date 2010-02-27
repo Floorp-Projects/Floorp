@@ -2549,7 +2549,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         /* Make sure to define this property on the inner object. */
-        if (!JS_ValueToId(cx, *vp, &asId))
+        if (!JS_ValueToId(cx, id, &asId))
             return JS_FALSE;
         return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, NULL, NULL, JSPROP_ENUMERATE);
     }
