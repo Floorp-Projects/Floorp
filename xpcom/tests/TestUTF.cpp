@@ -152,7 +152,10 @@ tests[] =
     { "test_valid", test_valid },
     { "test_invalid16", test_invalid16 },
     { "test_invalid8", test_invalid8 },
+#ifndef DEBUG
+    // Don't run this test in debug builds as that intentionally asserts
     { "test_malformed8", test_malformed8 },
+#endif
     { nsnull, nsnull }
   };
 
