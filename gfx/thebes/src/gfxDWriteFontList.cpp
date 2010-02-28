@@ -519,3 +519,16 @@ gfxDWriteFontList::InitFontList()
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
 }
+
+PRBool
+gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
+                                         nsAString& aFamilyName)
+{
+    gfxFontFamily *family = FindFamily(aFontName);
+    if (family) {
+        family->LocalizedName(aFamilyName);
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
