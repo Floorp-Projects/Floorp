@@ -200,6 +200,9 @@ public:
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength);
 
+    PRBool GetStandardFamilyName(const nsAString& aFontName,
+                                 nsAString& aFamilyName);
+
 private:
     friend class gfxDWriteFontFamily;
 
