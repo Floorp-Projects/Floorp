@@ -2088,7 +2088,7 @@ namespace nanojit
     /**
      * move regs around so the SavedRegs contains the highest priority regs.
      */
-    void Assembler::evictScratchRegs()
+    void Assembler::evictScratchRegsExcept(RegisterMask ignore)
     {
         // find the top GpRegs that are candidates to put in SavedRegs
 
@@ -2099,7 +2099,7 @@ namespace nanojit
         int len=0;
         RegAlloc *regs = &_allocator;
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r)) {
-            if (rmask(r) & GpRegs) {
+            if (rmask(r) & GpRegs & ~ignore) {
                 LIns *ins = regs->getActive(r);
                 if (ins) {
                     if (canRemat(ins)) {
@@ -2156,7 +2156,7 @@ namespace nanojit
         }
 
         // now evict everything else.
-        evictSomeActiveRegs(~SavedRegs);
+        evictSomeActiveRegs(~(SavedRegs | ignore));
     }
 
     void Assembler::evictAllActiveRegs()
