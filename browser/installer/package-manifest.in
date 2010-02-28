@@ -73,9 +73,7 @@
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
-#ifndef XP_MACOSX
 @BINPATH@/@MOZ_APP_NAME@
-#endif
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
@@ -99,9 +97,9 @@
 @BINPATH@/LICENSE
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
+@BINPATH@/run-mozilla.sh
 #ifndef XP_MACOSX
 @BINPATH@/mozilla-xremote-client
-@BINPATH@/run-mozilla.sh
 #endif
 #endif
 #ifdef MOZ_SPLASHSCREEN
@@ -375,8 +373,10 @@
 
 ; shell icons
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
+#endif
 #endif
 
 ; [Default Preferences]
