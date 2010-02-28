@@ -1377,6 +1377,7 @@ public:
     GCGraphBuilder(GCGraph &aGraph,
                    nsCycleCollectionLanguageRuntime **aRuntimes);
     ~GCGraphBuilder();
+    bool Initialized();
 
     PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
 
@@ -1428,6 +1429,12 @@ GCGraphBuilder::~GCGraphBuilder()
 {
     if (mPtrToNodeMap.ops)
         PL_DHashTableFinish(&mPtrToNodeMap);
+}
+
+bool
+GCGraphBuilder::Initialized()
+{
+    return !!mPtrToNodeMap.ops;
 }
 
 PtrInfo*
@@ -2581,6 +2588,8 @@ nsCycleCollector::BeginCollection()
         return PR_FALSE;
 
     GCGraphBuilder builder(mGraph, mRuntimes);
+    if (!builder.Initialized())
+        return PR_FALSE;
 
 #ifdef COLLECT_TIME_DEBUG
     PRTime now = PR_Now();
