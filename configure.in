@@ -4959,7 +4959,7 @@ dnl = QT support
 dnl ========================================================
 if test "$MOZ_ENABLE_QT"
 then
-    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtUiTools QtCore)
+    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
     AC_SUBST(MOZ_QT_CFLAGS)
     AC_SUBST(MOZ_QT_LIBS)
 
