@@ -826,14 +826,14 @@ Assembler::asm_call(LInsp ins)
          * sequence we'd get would be something like:
          *     MOV {R0-R3},params        [from below]
          *     BL function               [from below]
-         *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
+         *     MOV {R0-R3},spilled data  [from evictScratchRegsExcept()]
          *     MOV Dx,{R0,R1}            [from here]
          * which is clearly broken.
          *
          * This is not a problem for non-floating point calls, because the
          * restoring of spilled data into R0 is done via a call to
          * deprecated_prepResultReg(R0) in the other branch of this if-then-else,
-         * meaning that evictScratchRegs() will not modify R0. However,
+         * meaning that evictScratchRegsExcept() will not modify R0. However,
          * deprecated_prepResultReg is not aware of the concept of using a register pair
          * (R0,R1) for the result of a single operation, so it can only be
          * used here with the ultimate VFP register, and not R0/R1, which
@@ -846,7 +846,7 @@ Assembler::asm_call(LInsp ins)
     // Do this after we've handled the call result, so we don't
     // force the call result to be spilled unnecessarily.
 
-    evictScratchRegs();
+    evictScratchRegsExcept(0);
 
     const CallInfo* call = ins->callInfo();
     ArgSize sizes[MAXARGS];
