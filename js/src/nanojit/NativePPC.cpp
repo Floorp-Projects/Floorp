@@ -688,7 +688,7 @@ namespace nanojit
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
 
-        evictScratchRegs();
+        evictScratchRegsExcept(0);
 
         const CallInfo* call = ins->callInfo();
         ArgSize sizes[MAXARGS];

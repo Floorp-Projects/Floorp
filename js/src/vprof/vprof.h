@@ -121,7 +121,7 @@ extern void* _tprof_before_id;
 #ifndef DOPROF
 #ifndef VMCFG_SYMBIAN
 #define _vprof(v,...)
-#define _nvprof(e,v,...)
+#define _nvprof(e,v)
 #define _hprof(h,n,...)
 #define _nhprof(e,v,n,...)
 #define _ntprof(e)
@@ -139,7 +139,7 @@ extern void* _tprof_before_id;
     ;\
 }
 
-#define _nvprof(e,v,...) \
+#define _nvprof(e,v) \
 { \
     static void* id = 0; \
     (id != 0) ? \

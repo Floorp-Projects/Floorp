@@ -620,63 +620,35 @@ namespace nanojit
         }
     }
 
-    // register allocation for 2-address style ops of the form R = R (op) B
-    void Assembler::regalloc_binary(LIns *ins, RegisterMask allow, Register &rr, Register &ra, Register &rb) {
-#ifdef _DEBUG
-        RegisterMask originalAllow = allow;
-#endif
-        LIns *a = ins->oprnd1();
-        LIns *b = ins->oprnd2();
-        if (a != b) {
-            rb = findRegFor(b, allow);
-            allow &= ~rmask(rb);
-        }
-        rr = deprecated_prepResultReg(ins, allow);
-        // if this is last use of a in reg, we can re-use result reg
-        if (!a->isInReg()) {
-            ra = findSpecificRegForUnallocated(a, rr);
-        } else if (!(allow & rmask(a->getReg()))) {
-            // 'a' already has a register assigned, but it's not valid.
-            // To make sure floating point operations stay in FPU registers
-            // as much as possible, make sure that only a few opcodes are
-            // reserving GPRs.
-            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_float) ||
-                       a->isop(LIR_ldf) || a->isop(LIR_ldfc) ||
-                       a->isop(LIR_ldq) || a->isop(LIR_ldqc) ||
-                       a->isop(LIR_ld32f) || a->isop(LIR_ldc32f) ||
-                       a->isop(LIR_u2f) || a->isop(LIR_fcall));
-            allow &= ~rmask(rr);
-            ra = findRegFor(a, allow);
-        } else {
-            ra = a->getReg();
-        }
-        if (a == b) {
-            rb = ra;
-        }
-        NanoAssert(originalAllow & rmask(rr));
-        NanoAssert(originalAllow & rmask(ra));
-        NanoAssert(originalAllow & rmask(rb));
-    }
-
     void Assembler::asm_qbinop(LIns *ins) {
         asm_arith(ins);
     }
 
     void Assembler::asm_shift(LIns *ins) {
-        // shift require rcx for shift count
+        // Shift requires rcx for shift count.
+        LIns *a = ins->oprnd1();
         LIns *b = ins->oprnd2();
         if (b->isconst()) {
             asm_shift_imm(ins);
             return;
         }
+
         Register rr, ra;
-        if (b != ins->oprnd1()) {
+        if (a != b) {
             findSpecificRegFor(b, RCX);
-            regalloc_unary(ins, GpRegs & ~rmask(RCX), rr, ra);
+            beginOp1Regs(ins, GpRegs & ~rmask(RCX), rr, ra);
         } else {
-            // a == b means both must be in RCX
-            regalloc_unary(ins, rmask(RCX), rr, ra);
+            // Nb: this is just like beginOp1Regs() except that it asserts
+            // that ra is in GpRegs instead of rmask(RCX)) -- this is
+            // necessary for the a==b case because 'a' might not be in RCX
+            // (which is ok, the MR(rr, ra) below will move it into RCX).
+            rr = prepareResultReg(ins, rmask(RCX));
+
+            // If 'a' isn't in a register, it can be clobbered by 'ins'.
+            ra = a->isInReg() ? a->getReg() : rr;
+            NanoAssert(rmask(ra) & GpRegs);
         }
+
         switch (ins->opcode()) {
         default:
             TODO(asm_shift);
@@ -689,11 +661,14 @@ namespace nanojit
         }
         if (rr != ra)
             MR(rr, ra);
+
+        endOpRegs(ins, rr, ra);
     }
 
     void Assembler::asm_shift_imm(LIns *ins) {
         Register rr, ra;
-        regalloc_unary(ins, GpRegs, rr, ra);
+        beginOp1Regs(ins, GpRegs, rr, ra);
+
         int shift = ins->oprnd2()->imm32() & 63;
         switch (ins->opcode()) {
         default: TODO(shiftimm);
@@ -706,6 +681,8 @@ namespace nanojit
         }
         if (rr != ra)
             MR(rr, ra);
+
+        endOpRegs(ins, rr, ra);
     }
 
     static bool isImm32(LIns *ins) {
@@ -715,21 +692,22 @@ namespace nanojit
         return ins->isconst() ? ins->imm32() : int32_t(ins->imm64());
     }
 
-    // binary op, integer regs, rhs is int32 const
+    // Binary op, integer regs, rhs is int32 constant.
     void Assembler::asm_arith_imm(LIns *ins) {
         LIns *b = ins->oprnd2();
         int32_t imm = getImm32(b);
         LOpcode op = ins->opcode();
         Register rr, ra;
         if (op == LIR_mul || op == LIR_mulxov) {
-            // imul has true 3-addr form, it doesn't clobber ra
-            rr = deprecated_prepResultReg(ins, GpRegs);
-            LIns *a = ins->oprnd1();
-            ra = findRegFor(a, GpRegs);
+            // Special case: imul-by-imm has true 3-addr form.  So we don't
+            // need the MR(rr, ra) after the IMULI.
+            beginOp1Regs(ins, GpRegs, rr, ra);
             IMULI(rr, ra, imm);
+            endOpRegs(ins, rr, ra);
             return;
         }
-        regalloc_unary(ins, GpRegs, rr, ra);
+
+        beginOp1Regs(ins, GpRegs, rr, ra);
         if (isS8(imm)) {
             switch (ins->opcode()) {
             default: TODO(arith_imm8);
@@ -765,35 +743,63 @@ namespace nanojit
         }
         if (rr != ra)
             MR(rr, ra);
+
+        endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_div_mod(LIns *ins) {
-        LIns *div;
-        if (ins->opcode() == LIR_mod) {
-            // LIR_mod expects the LIR_div to be near
-            div = ins->oprnd1();
-            deprecated_prepResultReg(ins, rmask(RDX));
-        } else {
-            div = ins;
-            evictIfActive(RDX);
-        }
-
+    // Generates code for a LIR_div that doesn't have a subsequent LIR_mod.
+    void Assembler::asm_div(LIns *div) {
         NanoAssert(div->isop(LIR_div));
+        LIns *a = div->oprnd1();
+        LIns *b = div->oprnd2();
 
-        LIns *lhs = div->oprnd1();
-        LIns *rhs = div->oprnd2();
+        evictIfActive(RDX);
+        prepareResultReg(div, rmask(RAX));
 
-        deprecated_prepResultReg(div, rmask(RAX));
+        Register rb = findRegFor(b, GpRegs & ~(rmask(RAX)|rmask(RDX)));
+        Register ra = a->isInReg() ? a->getReg() : RAX;
 
-        Register rhsReg = findRegFor(rhs, GpRegs & ~(rmask(RAX)|rmask(RDX)));
-        Register lhsReg = !lhs->isInReg()
-                          ? findSpecificRegForUnallocated(lhs, RAX)
-                          : lhs->getReg();
-        IDIV(rhsReg);
+        IDIV(rb);
         SARI(RDX, 31);
         MR(RDX, RAX);
-        if (RAX != lhsReg)
-            MR(RAX, lhsReg);
+        if (RAX != ra)
+            MR(RAX, ra);
+
+        freeResourcesOf(div);
+        if (!a->isInReg()) {
+            NanoAssert(ra == RAX);
+            findSpecificRegForUnallocated(a, RAX);
+        }
+    }
+
+    // Generates code for a LIR_mod(LIR_div(divL, divR)) sequence.
+    void Assembler::asm_div_mod(LIns *mod) {
+        LIns *div = mod->oprnd1();
+
+        NanoAssert(mod->isop(LIR_mod));
+        NanoAssert(div->isop(LIR_div));
+
+        LIns *divL = div->oprnd1();
+        LIns *divR = div->oprnd2();
+
+        prepareResultReg(mod, rmask(RDX));
+        prepareResultReg(div, rmask(RAX));
+
+        Register rDivR = findRegFor(divR, GpRegs & ~(rmask(RAX)|rmask(RDX)));
+        Register rDivL = divL->isInReg() ? divL->getReg() : RAX;
+
+        IDIV(rDivR);
+        SARI(RDX, 31);
+        MR(RDX, RAX);
+        if (RAX != rDivL)
+            MR(RAX, rDivL);
+
+        freeResourcesOf(mod);
+        freeResourcesOf(div);
+        if (!divL->isInReg()) {
+            NanoAssert(rDivL == RAX);
+            findSpecificRegForUnallocated(divL, RAX);
+        }
     }
 
     // binary op with integer registers
@@ -807,8 +813,12 @@ namespace nanojit
             asm_shift(ins);
             return;
         case LIR_mod:
-        case LIR_div:
             asm_div_mod(ins);
+            return;
+        case LIR_div:
+            // Nb: if the div feeds into a mod it will be handled by
+            // asm_div_mod() rather than here.
+            asm_div(ins);
             return;
         default:
             break;
@@ -819,7 +829,7 @@ namespace nanojit
             asm_arith_imm(ins);
             return;
         }
-        regalloc_binary(ins, GpRegs, rr, ra, rb);
+        beginOp2Regs(ins, GpRegs, rr, ra, rb);
         switch (ins->opcode()) {
         default:            TODO(asm_arith);
         case LIR_or:        ORLRR(rr, rb);  break;
@@ -838,16 +848,15 @@ namespace nanojit
         case LIR_qaddp:     ADDQRR(rr, rb); break;
         }
         if (rr != ra)
-            MR(rr,ra);
+            MR(rr, ra);
+
+        endOpRegs(ins, rr, ra);
     }
 
-    // binary op with fp registers
+    // Binary op with fp registers.
     void Assembler::asm_fop(LIns *ins) {
-        // NB, rb is always filled in by regalloc_binary, 
-        // but compilers can't always tell that: init to UnspecifiedReg
-        // to avoid a warning.
-        Register rr, ra, rb = UnspecifiedReg;
-        regalloc_binary(ins, FpRegs, rr, ra, rb);
+        Register rr, ra, rb = UnspecifiedReg;   // init to shut GCC up
+        beginOp2Regs(ins, FpRegs, rr, ra, rb);
         switch (ins->opcode()) {
         default:       TODO(asm_fop);
         case LIR_fdiv: DIVSD(rr, rb); break;
@@ -858,28 +867,29 @@ namespace nanojit
         if (rr != ra) {
             asm_nongp_copy(rr, ra);
         }
+
+        endOpRegs(ins, rr, ra);
     }
 
     void Assembler::asm_neg_not(LIns *ins) {
         Register rr, ra;
-        regalloc_unary(ins, GpRegs, rr, ra);
-        NanoAssert(IsGpReg(ra));
+        beginOp1Regs(ins, GpRegs, rr, ra);
+
         if (ins->isop(LIR_not))
             NOT(rr);
         else
             NEG(rr);
         if (rr != ra)
             MR(rr, ra);
+
+        endOpRegs(ins, rr, ra);
     }
 
     void Assembler::asm_call(LIns *ins) {
-        Register retReg = ( ins->isop(LIR_fcall) ? XMM0 : retRegs[0] );
-        deprecated_prepResultReg(ins, rmask(retReg));
+        Register rr = ( ins->isop(LIR_fcall) ? XMM0 : retRegs[0] );
+        prepareResultReg(ins, rmask(rr));
 
-        // Do this after we've handled the call result, so we don't
-        // force the call result to be spilled unnecessarily.
-
-        evictScratchRegs();
+        evictScratchRegsExcept(rmask(rr));
 
         const CallInfo *call = ins->callInfo();
         ArgSize sizes[MAXARGS];
@@ -905,6 +915,9 @@ namespace nanojit
             asm_regarg(ARGSIZE_P, ins->arg(--argc), RAX);
             CALLRAX();
         }
+
+        // Call this now so that the arg setup can involve 'rr'. 
+        freeResourcesOf(ins);
 
     #ifdef _WIN64
         int stk_used = 32; // always reserve 32byte shadow area
@@ -994,14 +1007,15 @@ namespace nanojit
 
     void Assembler::asm_q2i(LIns *ins) {
         Register rr, ra;
-        regalloc_unary(ins, GpRegs, rr, ra);
+        beginOp1Regs(ins, GpRegs, rr, ra);
         NanoAssert(IsGpReg(ra));
         MOVLR(rr, ra);  // 32bit mov zeros the upper 32bits of the target
+        endOpRegs(ins, rr, ra);
     }
 
     void Assembler::asm_promote(LIns *ins) {
         Register rr, ra;
-        regalloc_unary(ins, GpRegs, rr, ra);
+        beginOp1Regs(ins, GpRegs, rr, ra);
         NanoAssert(IsGpReg(ra));
         if (ins->isop(LIR_u2q)) {
             MOVLR(rr, ra);      // 32bit mov zeros the upper 32bits of the target
@@ -1009,38 +1023,44 @@ namespace nanojit
             NanoAssert(ins->isop(LIR_i2q));
             MOVSXDR(rr, ra);    // sign extend 32->64
         }
+        endOpRegs(ins, rr, ra);
     }
 
-    // the CVTSI2SD instruction only writes to the low 64bits of the target
+    // The CVTSI2SD instruction only writes to the low 64bits of the target
     // XMM register, which hinders register renaming and makes dependence
     // chains longer.  So we precede with XORPS to clear the target register.
 
     void Assembler::asm_i2f(LIns *ins) {
-        Register r = deprecated_prepResultReg(ins, FpRegs);
-        Register b = findRegFor(ins->oprnd1(), GpRegs);
-        CVTSI2SD(r, b);     // cvtsi2sd xmmr, b  only writes xmm:0:64
-        XORPS(r);           // xorps xmmr,xmmr to break dependency chains
+        LIns *a = ins->oprnd1();
+        NanoAssert(ins->isF64() && a->isI32());
+
+        Register rr = prepareResultReg(ins, FpRegs);
+        Register ra = findRegFor(a, GpRegs);
+        CVTSI2SD(rr, ra);   // cvtsi2sd xmmr, b  only writes xmm:0:64
+        XORPS(rr);          // xorps xmmr,xmmr to break dependency chains
+        freeResourcesOf(ins);
     }
 
     void Assembler::asm_u2f(LIns *ins) {
-        Register r = deprecated_prepResultReg(ins, FpRegs);
-        Register b = findRegFor(ins->oprnd1(), GpRegs);
-        NanoAssert(ins->oprnd1()->isI32());
-        // since oprnd1 value is 32bit, its okay to zero-extend the value without worrying about clobbering.
-        CVTSQ2SD(r, b);     // convert int64 to double
-        XORPS(r);           // xorps xmmr,xmmr to break dependency chains
-        MOVLR(b, b);        // zero extend u32 to int64
+        LIns *a = ins->oprnd1();
+        NanoAssert(ins->isF64() && a->isI32());
+
+        Register rr = prepareResultReg(ins, FpRegs);
+        Register ra = findRegFor(a, GpRegs);
+        // Because oprnd1 is 32bit, it's ok to zero-extend it without worrying about clobbering.
+        CVTSQ2SD(rr, ra);   // convert int64 to double
+        XORPS(rr);          // xorps xmmr,xmmr to break dependency chains
+        MOVLR(ra, ra);      // zero extend u32 to int64
+        freeResourcesOf(ins);
     }
 
     void Assembler::asm_f2i(LIns *ins) {
-        LIns *lhs = ins->oprnd1();
+        LIns *a = ins->oprnd1();
+        NanoAssert(ins->isI32() && a->isF64());
 
-        NanoAssert(ins->isI32() && lhs->isF64());
-        Register r = prepareResultReg(ins, GpRegs);
-        Register b = findRegFor(lhs, FpRegs);
-
-        CVTSD2SI(r, b);
-
+        Register rr = prepareResultReg(ins, GpRegs);
+        Register rb = findRegFor(a, FpRegs);
+        CVTSD2SI(rr, rb);
         freeResourcesOf(ins);
     }
 
@@ -1052,11 +1072,16 @@ namespace nanojit
         NanoAssert((ins->isop(LIR_cmov)  && iftrue->isI32() && iffalse->isI32()) ||
                    (ins->isop(LIR_qcmov) && iftrue->isI64() && iffalse->isI64()));
 
-        // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
-        // (This is true on Intel, is it true on all architectures?)
-        const Register rr = deprecated_prepResultReg(ins, GpRegs);
-        const Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+        Register rr = prepareResultReg(ins, GpRegs);
 
+        Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+        // WARNING: We cannot generate any code that affects the condition
+        // codes between the MRcc generation here and the asm_cmp() call
+        // below.  See asm_cmp() for more details.
         LOpcode condop = cond->opcode();
         if (ins->opcode() == LIR_cmov) {
             switch (condop) {
@@ -1085,7 +1110,15 @@ namespace nanojit
             default:                        NanoAssert(0);    break;
             }
         }
-        /*const Register rt =*/ findSpecificRegFor(iftrue, rr);
+        if (rr != rt)
+            MR(rr, rt);
+
+        freeResourcesOf(ins);
+        if (!iftrue->isInReg()) {
+            NanoAssert(rt == rr);
+            findSpecificRegForUnallocated(iftrue, rr);
+        }
+
         asm_cmp(cond);
     }
 
@@ -1099,7 +1132,7 @@ namespace nanojit
         if (condop >= LIR_feq && condop <= LIR_fge)
             return asm_fbranch(onFalse, cond, target);
 
-        // We must ensure there's room for the instr before calculating
+        // We must ensure there's room for the instruction before calculating
         // the offset.  And the offset determines the opcode (8bit or 32bit).
         if (target && isTargetWithinS8(target)) {
             if (onFalse) {
@@ -1158,7 +1191,7 @@ namespace nanojit
                 }
             }
         }
-        NIns *patch = _nIns;            // addr of instr to patch
+        NIns *patch = _nIns;    // address of instruction to patch
         asm_cmp(cond);
         return patch;
     }
@@ -1176,6 +1209,9 @@ namespace nanojit
             JO( 8, target);
     }
 
+    // WARNING: this function cannot generate code that will affect the
+    // condition codes prior to the generation of the test/cmp.  See
+    // Nativei386.cpp:asm_cmp() for details.
     void Assembler::asm_cmp(LIns *cond) {
         LIns *b = cond->oprnd2();
         if (isImm32(b)) {
@@ -1220,8 +1256,8 @@ namespace nanojit
         }
     }
 
-    // compiling floating point branches
-    // discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=443886
+    // Compiling floating point branches.
+    // Discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=443886.
     //
     //  fucom/p/pp: c3 c2 c0   jae ja    jbe jb je jne
     //  ucomisd:     Z  P  C   !C  !C&!Z C|Z C  Z  !Z
@@ -1231,7 +1267,7 @@ namespace nanojit
     //  less    <    0  0  1             T   T     T
     //  equal   =    1  0  0   T         T      T
     //
-    //  here's the cases, using conditionals:
+    //  Here are the cases, using conditionals:
     //
     //  branch  >=  >   <=       <        =
     //  ------  --- --- ---      ---      ---
@@ -1281,7 +1317,7 @@ namespace nanojit
             }
             patch = _nIns;
         }
-        fcmp(a, b);
+        asm_fcmp(a, b);
         return patch;
     }
 
@@ -1292,7 +1328,7 @@ namespace nanojit
         if (op == LIR_feq) {
             // result = ZF & !PF, must do logic on flags
             // r = al|bl|cl|dl, can only use rh without rex prefix
-            Register r = deprecated_prepResultReg(ins, 1<<RAX|1<<RCX|1<<RDX|1<<RBX);
+            Register r = prepareResultReg(ins, 1<<RAX|1<<RCX|1<<RDX|1<<RBX);
             MOVZX8(r, r);       // movzx8   r,rl     r[8:63] = 0
             X86_AND8R(r);       // and      rl,rh    rl &= rh
             X86_SETNP(r);       // setnp    rh       rh = !PF
@@ -1305,22 +1341,30 @@ namespace nanojit
                 op = LIR_fge;
                 LIns *t = a; a = b; b = t;
             }
-            Register r = deprecated_prepResultReg(ins, GpRegs); // x64 can use any GPR as setcc target
+            Register r = prepareResultReg(ins, GpRegs); // x64 can use any GPR as setcc target
             MOVZX8(r, r);
             if (op == LIR_fgt)
                 SETA(r);
             else
                 SETAE(r);
         }
-        fcmp(a, b);
+
+        freeResourcesOf(ins);
+
+        asm_fcmp(a, b);
     }
 
-    void Assembler::fcmp(LIns *a, LIns *b) {
+    // WARNING: This function cannot generate any code that will affect the
+    // condition codes prior to the generation of the ucomisd.  See asm_cmp()
+    // for more details.
+    void Assembler::asm_fcmp(LIns *a, LIns *b) {
         Register ra, rb;
         findRegFor2(FpRegs, a, ra, FpRegs, b, rb);
         UCOMISD(ra, rb);
     }
 
+    // WARNING: the code generated by this function must not affect the
+    // condition codes.  See asm_cmp() for details.
     void Assembler::asm_restore(LIns *ins, Register r) {
         if (ins->isop(LIR_alloc)) {
             int d = arDisp(ins);
@@ -1336,11 +1380,10 @@ namespace nanojit
         }
         else {
             int d = findMemFor(ins);
-            if (IsFpReg(r)) {
-                NanoAssert(ins->isN64());
-                // load 64bits into XMM.  don't know if double or int64, assume double.
+            if (ins->isF64()) {
+                NanoAssert(IsFpReg(r));
                 MOVSDRM(r, d, FP);
-            } else if (ins->isN64()) {
+            } else if (ins->isI64()) {
                 NanoAssert(IsGpReg(r));
                 MOVQRM(r, d, FP);
             } else {
@@ -1353,8 +1396,10 @@ namespace nanojit
 
     void Assembler::asm_cond(LIns *ins) {
         LOpcode op = ins->opcode();
+
         // unlike x86-32, with a rex prefix we can use any GP register as an 8bit target
-        Register r = deprecated_prepResultReg(ins, GpRegs);
+        Register r = prepareResultReg(ins, GpRegs);
+
         // SETcc only sets low 8 bits, so extend
         MOVZX8(r, r);
         switch (op) {
@@ -1379,6 +1424,8 @@ namespace nanojit
         case LIR_quge:
         case LIR_uge:   SETAE(r);   break;
         }
+        freeResourcesOf(ins);
+
         asm_cmp(ins);
     }
 
@@ -1409,18 +1456,17 @@ namespace nanojit
         }
     }
 
-    void Assembler::regalloc_load(LIns *ins, RegisterMask allow, Register &rr, int32_t &dr, Register &rb) {
+    // Register setup for load ops.  Pairs with endLoadRegs().
+    void Assembler::beginLoadRegs(LIns *ins, RegisterMask allow, Register &rr, int32_t &dr, Register &rb) {
         dr = ins->disp();
         LIns *base = ins->oprnd1();
         rb = getBaseReg(base, dr, BaseRegs);
-        if (!ins->isInRegMask(allow)) {
-            rr = deprecated_prepResultReg(ins, allow & ~rmask(rb));
-        } else {
-            // keep already assigned register
-            rr = ins->getReg();
-            NanoAssert(allow & rmask(rr));
-            deprecated_freeRsrcOf(ins, false);
-        }
+        rr = prepareResultReg(ins, allow & ~rmask(rb));
+    }
+
+    // Register clean-up for load ops.  Pairs with beginLoadRegs().
+    void Assembler::endLoadRegs(LIns* ins) {
+        freeResourcesOf(ins);
     }
 
     void Assembler::asm_load64(LIns *ins) {
@@ -1429,19 +1475,19 @@ namespace nanojit
         switch (ins->opcode()) {
             case LIR_ldq:
             case LIR_ldqc:
-                regalloc_load(ins, GpRegs, rr, dr, rb);
+                beginLoadRegs(ins, GpRegs, rr, dr, rb);
                 NanoAssert(IsGpReg(rr));
                 MOVQRM(rr, dr, rb);     // general 64bit load, 32bit const displacement
                 break;
             case LIR_ldf:
             case LIR_ldfc:
-                regalloc_load(ins, FpRegs, rr, dr, rb);
+                beginLoadRegs(ins, FpRegs, rr, dr, rb);
                 NanoAssert(IsFpReg(rr));
                 MOVSDRM(rr, dr, rb);    // load 64bits into XMM
                 break;
             case LIR_ld32f:
             case LIR_ldc32f:
-                regalloc_load(ins, FpRegs, rr, dr, rb);
+                beginLoadRegs(ins, FpRegs, rr, dr, rb);
                 NanoAssert(IsFpReg(rr));
                 CVTSS2SD(rr, rr);
                 MOVSSRM(rr, dr, rb);
@@ -1450,14 +1496,14 @@ namespace nanojit
                 NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
                 break;
         }
-
+        endLoadRegs(ins);
     }
 
     void Assembler::asm_load32(LIns *ins) {
         NanoAssert(ins->isI32());
         Register r, b;
         int32_t d;
-        regalloc_load(ins, GpRegs, r, d, b);
+        beginLoadRegs(ins, GpRegs, r, d, b);
         LOpcode op = ins->opcode();
         switch(op) {
             case LIR_ldzb:
@@ -1484,6 +1530,7 @@ namespace nanojit
                 NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
                 break;
         }
+        endLoadRegs(ins);
     }
 
     void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
@@ -1542,8 +1589,6 @@ namespace nanojit
                 NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
                 break;
         }
-
-
     }
 
     void Assembler::asm_int(LIns *ins) {
@@ -1597,11 +1642,11 @@ namespace nanojit
         uint32_t a = ins->paramArg();
         uint32_t kind = ins->paramKind();
         if (kind == 0) {
-            // ordinary param
-            // first four or six args always in registers for x86_64 ABI
+            // Ordinary param.  First four or six args always in registers for x86_64 ABI.
             if (a < (uint32_t)NumArgRegs) {
                 // incoming arg in register
-                deprecated_prepResultReg(ins, rmask(argRegs[a]));
+                prepareResultReg(ins, rmask(argRegs[a]));
+                // No code to generate.
             } else {
                 // todo: support stack based args, arg 0 is at [FP+off] where off
                 // is the # of regs to be pushed in genProlog()
@@ -1609,24 +1654,60 @@ namespace nanojit
             }
         }
         else {
-            // saved param
-            deprecated_prepResultReg(ins, rmask(savedRegs[a]));
+            // Saved param.
+            prepareResultReg(ins, rmask(savedRegs[a]));
+            // No code to generate.
+        }
+        freeResourcesOf(ins);
+    }
+
+    // Register setup for 2-address style unary ops of the form R = (op) R.
+    // Pairs with endOpRegs().
+    void Assembler::beginOp1Regs(LIns* ins, RegisterMask allow, Register &rr, Register &ra) {
+        LIns* a = ins->oprnd1();
+
+        rr = prepareResultReg(ins, allow);
+
+        // If 'a' isn't in a register, it can be clobbered by 'ins'.
+        ra = a->isInReg() ? a->getReg() : rr;
+        NanoAssert(rmask(ra) & allow);
+    }
+
+    // Register setup for 2-address style binary ops of the form R = R (op) B.
+    // Pairs with endOpRegs().
+    void Assembler::beginOp2Regs(LIns *ins, RegisterMask allow, Register &rr, Register &ra,
+                                 Register &rb) {
+        LIns *a = ins->oprnd1();
+        LIns *b = ins->oprnd2();
+        if (a != b) {
+            rb = findRegFor(b, allow);
+            allow &= ~rmask(rb);
+        }
+        rr = prepareResultReg(ins, allow);
+
+        // If 'a' isn't in a register, it can be clobbered by 'ins'.
+        ra = a->isInReg() ? a->getReg() : rr;
+        NanoAssert(rmask(ra) & allow);
+
+        if (a == b) {
+            rb = ra;
         }
     }
 
-    // register allocation for 2-address style unary ops of the form R = (op) R
-    void Assembler::regalloc_unary(LIns *ins, RegisterMask allow, Register &rr, Register &ra) {
-        LIns *a = ins->oprnd1();
-        rr = deprecated_prepResultReg(ins, allow);
-        // if this is last use of a in reg, we can re-use result reg
+    // Register clean-up for 2-address style unary ops of the form R = (op) R.
+    // Pairs with beginOp1Regs() and beginOp2Regs().
+    void Assembler::endOpRegs(LIns* ins, Register rr, Register ra) {
+        LIns* a = ins->oprnd1();
+
+        // We're finished with 'ins'.
+        NanoAssert(ins->getReg() == rr);
+        freeResourcesOf(ins);
+
+        // If 'a' isn't in a register yet, that means it's clobbered by 'ins'.
         if (!a->isInReg()) {
-            ra = findSpecificRegForUnallocated(a, rr);
-        } else {
-            // 'a' already has a register assigned.  Caller must emit a copy
-            // to rr once instr code is generated.  (ie  mov rr,ra ; op rr)
-            ra = a->getReg();
-        }
-        NanoAssert(allow & rmask(rr));
+            NanoAssert(ra == rr);
+            findSpecificRegForUnallocated(a, ra);
+         }
     }
 
     static const AVMPLUS_ALIGN16(int64_t) negateMask[] = {0x8000000000000000LL,0};
@@ -1634,7 +1715,7 @@ namespace nanojit
     void Assembler::asm_fneg(LIns *ins) {
         Register rr, ra;
         if (isS32((uintptr_t)negateMask) || isTargetWithinS32((NIns*)negateMask)) {
-            regalloc_unary(ins, FpRegs, rr, ra);
+            beginOp1Regs(ins, FpRegs, rr, ra);
             if (isS32((uintptr_t)negateMask)) {
                 // builtin code is in bottom or top 2GB addr space, use absolute addressing
                 XORPSA(rr, (int32_t)(uintptr_t)negateMask);
@@ -1644,14 +1725,17 @@ namespace nanojit
             }
             if (ra != rr)
                 asm_nongp_copy(rr,ra);
+            endOpRegs(ins, rr, ra);
+
         } else {
-            // this is just hideous - can't use RIP-relative load, can't use
+            // This is just hideous - can't use RIP-relative load, can't use
             // absolute-address load, and cant move imm64 const to XMM.
             // so do it all in a GPR.  hrmph.
-            rr = deprecated_prepResultReg(ins, GpRegs);
+            rr = prepareResultReg(ins, GpRegs);
             ra = findRegFor(ins->oprnd1(), GpRegs & ~rmask(rr));
             XORQRR(rr, ra);                                     // xor rr, ra
             asm_quad(rr, negateMask[0], /*canClobberCCs*/true); // mov rr, 0x8000000000000000
+            freeResourcesOf(ins);
         }
     }
 
