@@ -166,6 +166,7 @@ input > .placeholder,
 textarea > .placeholder {
   color: GrayText;
   overflow: hidden;
+  pointer-events: none;
 }
 
 textarea > .placeholder {
