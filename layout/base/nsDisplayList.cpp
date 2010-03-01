@@ -676,13 +676,33 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
         item->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
       layerItems->mVisibleRect.UnionRect(layerItems->mVisibleRect,
         item->mVisibleRect.ToNearestPixels(appUnitsPerDevPixel));
-      layerItems->mLayer->SetVisibleRegion(nsIntRegion(layerItems->mVisibleRect));
     }
   }
 
   if (!firstThebesLayerItems->mStartItem) {
     // The first Thebes layer has nothing in it. Delete the layer.
     aLayers->RemoveElementAt(0);
+  }
+
+  for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
+    LayerItems* layerItems = &aLayers->ElementAt(i);
+
+    gfxMatrix transform;
+    nsIntRect visibleRect = layerItems->mVisibleRect;
+    if (layerItems->mLayer->GetTransform().Is2D(&transform)) {
+      // if 'transform' is not invertible, then nothing will be displayed
+      // for the layer, so it doesn't really matter what we do here
+      transform.Invert();
+      gfxRect layerVisible = transform.TransformBounds(
+          gfxRect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height));
+      layerVisible.RoundOut();
+      if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(layerVisible, &visibleRect))) {
+        NS_ERROR("Visible rect transformed out of bounds");
+      }
+    } else {
+      NS_ERROR("Only 2D transformations currently supported");
+    }
+    layerItems->mLayer->SetVisibleRegion(nsIntRegion(visibleRect));
   }
 }
 
