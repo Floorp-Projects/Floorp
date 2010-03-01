@@ -164,6 +164,15 @@
       messageManager.addMessageListener("async-echo", echoListener);
       messageManager.sendAsyncMessage("async-echo");
     }
+
+    var MozAfterPaintCount = 0;
+    function enableMozAfterPaint() {
+      messageManager.addMessageListener("MozAfterPaint",
+        function(m) {
+          document.getElementById("messageLog").value = m.name + "[" + (++MozAfterPaintCount) + "]";
+        });
+      messageManager.loadFrameScript("data:,addEventListener('MozAfterPaint', function(e) { sendAsyncMessage('MozAfterPaint'); },true);", false);
+    }
   </script>
 
   <toolbar id="controls">
@@ -176,6 +185,7 @@
     <toolbarbutton onclick="randomClick()" label="random click"/>
     <toolbarbutton onclick="messageSpeed()" label="test message handling speed"/>
     <toolbarbutton onclick="listenerAddRemove()" label="test listener add/remove"/>
+    <toolbarbutton onclick="enableMozAfterPaint()" label="MozAfterPaint"/>
     <toolbarbutton onclick="openWindow()" label="open new window"/>
     <toolbarbutton onclick="closeWindow()" label="close this window"/>
   </toolbar>

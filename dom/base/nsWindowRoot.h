@@ -102,6 +102,7 @@ public:
   {
     mParent = aTarget;
   }
+  virtual nsPIDOMEventTarget* GetParentTarget() { return mParent; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 
