@@ -78,7 +78,8 @@ nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
     mVisited(PR_FALSE),
     mChainEnd(PR_FALSE),
     mCreator(aCreator),
-    mBaseInterval(nsnull)
+    mBaseInterval(nsnull) // This will get set to aBaseInterval in a call to
+                          // SetBaseInterval() at end of constructor
 {
   switch (aSource) {
     case SOURCE_NONE:
@@ -137,8 +138,9 @@ nsSMILInstanceTime::HandleChangedInterval(
     return;
   }
 
-  PRBool objectChanged = mCreator->DependsOnBegin() ? aBeginObjectChanged
-                                                    : aEndObjectChanged;
+  PRBool objectChanged = mCreator->DependsOnBegin() ? aBeginObjectChanged :
+                                                      aEndObjectChanged;
+
   AutoBoolSetter setVisited(mVisited);
 
   nsRefPtr<nsSMILInstanceTime> deathGrip(this);
@@ -192,9 +194,9 @@ nsSMILInstanceTime::SetBaseInterval(nsSMILInterval* aBaseInterval)
     if (!mCreator)
       return;
 
-    const nsSMILInstanceTime* dependentTime = mCreator->DependsOnBegin()
-                                            ? aBaseInterval->Begin()
-                                            : aBaseInterval->End();
+    const nsSMILInstanceTime* dependentTime = mCreator->DependsOnBegin() ?
+                                              aBaseInterval->Begin() :
+                                              aBaseInterval->End();
     dependentTime->BreakPotentialCycle(this);
     aBaseInterval->AddDependentTime(*this);
   }
@@ -214,8 +216,8 @@ nsSMILInstanceTime::GetBaseTime() const
     return nsnull;
   }
 
-  return mCreator->DependsOnBegin() ? mBaseInterval->Begin()
-                                    : mBaseInterval->End();
+  return mCreator->DependsOnBegin() ? mBaseInterval->Begin() :
+                                      mBaseInterval->End();
 }
 
 void

@@ -68,7 +68,8 @@ nsSMILInterval::NotifyChanged(const nsSMILTimeContainer* aContainer)
 {
   for (PRInt32 i = mDependentTimes.Length() - 1; i >= 0; --i) {
     mDependentTimes[i]->HandleChangedInterval(aContainer,
-        mBeginObjectChanged, mEndObjectChanged);
+                                              mBeginObjectChanged,
+                                              mEndObjectChanged);
   }
   mBeginObjectChanged = PR_FALSE;
   mEndObjectChanged = PR_FALSE;
@@ -135,7 +136,9 @@ nsSMILInterval::AddDependentTime(nsSMILInstanceTime& aTime)
 void
 nsSMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime)
 {
-  PRBool found = mDependentTimes.RemoveElementSorted(&aTime);
+#ifdef DEBUG
+  PRBool found =
+#endif
+    mDependentTimes.RemoveElementSorted(&aTime);
   NS_ABORT_IF_FALSE(found, "Couldn't find instance time to delete.");
-  (void)found;
 }
