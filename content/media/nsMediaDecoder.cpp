@@ -70,7 +70,6 @@ nsMediaDecoder::nsMediaDecoder() :
   mProgressTime(),
   mDataTime(),
   mVideoUpdateLock(nsnull),
-  mFramerate(0.0),
   mAspectRatio(1.0),
   mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE)
@@ -213,78 +212,20 @@ nsresult nsMediaDecoder::StopProgress()
   return rv;
 }
 
-void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate,
-                                float aAspectRatio, unsigned char* aRGBBuffer)
+void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
+                                  float aAspectRatio,
+                                  Image* aImage)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
-  if (mRGBWidth != aWidth || mRGBHeight != aHeight ||
+  if (mRGBWidth != aSize.width || mRGBHeight != aSize.height ||
       mAspectRatio != aAspectRatio) {
-    mRGBWidth = aWidth;
-    mRGBHeight = aHeight;
+    mRGBWidth = aSize.width;
+    mRGBHeight = aSize.height;
     mAspectRatio = aAspectRatio;
     mSizeChanged = PR_TRUE;
   }
-  mFramerate = aFramerate;
-  mRGB = aRGBBuffer;
-}
-
-void nsMediaDecoder::Paint(gfxContext* aContext,
-                           gfxPattern::GraphicsFilter aFilter,
-                           const gfxRect& aRect)
-{
-  nsAutoLock lock(mVideoUpdateLock);
-
-  if (!mRGB)
-    return;
-
-  nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(mRGB,
-                          gfxIntSize(mRGBWidth, mRGBHeight),
-                          mRGBWidth * 4,
-                          gfxASurface::ImageFormatRGB24);
-  if (!imgSurface)
-    return;
-
-  nsRefPtr<gfxASurface> surface(imgSurface);
-
-#if defined(XP_MACOSX)
-  nsRefPtr<gfxQuartzImageSurface> quartzSurface =
-    new gfxQuartzImageSurface(imgSurface);
-  if (!quartzSurface)
-    return;
-
-  surface = quartzSurface;
-#endif
-
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
-  if (!pat)
-    return;
-
-  // Make the source image fill the rectangle completely
-  pat->SetMatrix(gfxMatrix().Scale(mRGBWidth/aRect.Width(), mRGBHeight/aRect.Height()));
-
-  pat->SetFilter(aFilter);
-
-  // Set PAD mode so that when the video is being scaled, we do not sample
-  // outside the bounds of the video image.
-  gfxPattern::GraphicsExtend extend = gfxPattern::EXTEND_PAD;
-
-  // PAD is slow with X11 and Quartz surfaces, so prefer speed over correctness
-  // and use NONE.
-  nsRefPtr<gfxASurface> target = aContext->CurrentSurface();
-  gfxASurface::gfxSurfaceType type = target->GetType();
-  if (type == gfxASurface::SurfaceTypeXlib ||
-      type == gfxASurface::SurfaceTypeXcb ||
-      type == gfxASurface::SurfaceTypeQuartz) {
-    extend = gfxPattern::EXTEND_NONE;
+  if (mImageContainer && aImage) {
+    mImageContainer->SetCurrentImage(aImage);
   }
-
-  pat->SetExtend(extend);
-
-  /* Draw RGB surface onto frame */
-  aContext->NewPath();
-  aContext->PixelSnappedRectangleAndSetPattern(aRect, pat);
-  aContext->Fill();
 }
-

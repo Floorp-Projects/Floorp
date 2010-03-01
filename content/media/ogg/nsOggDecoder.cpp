@@ -56,6 +56,7 @@
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using namespace mozilla::layers;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gOggDecoderLog;
@@ -1015,35 +1016,63 @@ void nsOggDecodeStateMachine::PlayFrame() {
   }
 }
 
+static void ToARGBHook(const PlanarYCbCrImage::Data& aData, PRUint8* aOutput)
+{
+  OggPlayYUVChannels yuv;
+  NS_ASSERTION(aData.mYStride == aData.mYSize.width,
+               "Stride not supported");
+  NS_ASSERTION(aData.mCbCrStride == aData.mCbCrSize.width,
+               "Stride not supported");
+  yuv.ptry = aData.mYChannel;
+  yuv.ptru = aData.mCbChannel;
+  yuv.ptrv = aData.mCrChannel;
+  yuv.uv_width = aData.mCbCrSize.width;
+  yuv.uv_height = aData.mCbCrSize.height;
+  yuv.y_width = aData.mYSize.width;
+  yuv.y_height = aData.mYSize.height;
+
+  OggPlayRGBChannels rgb;
+  rgb.ptro = aOutput;
+  rgb.rgb_width = aData.mYSize.width;
+  rgb.rgb_height = aData.mYSize.height;
+
+  oggplay_yuv2bgra(&yuv, &rgb);  
+}
+
 void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 {
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   if (aFrame && aFrame->mVideoHeader) {
-    OggPlayVideoData* videoData = oggplay_callback_info_get_video_data(aFrame->mVideoHeader);
+    ImageContainer* container = mDecoder->GetImageContainer();
+    // Currently our Ogg decoder only knows how to output to PLANAR_YCBCR
+    // format.
+    Image::Format format = Image::PLANAR_YCBCR;
+    nsRefPtr<Image> image;
+    if (container) {
+      image = container->CreateImage(&format, 1);
+    }
+    if (image) {
+      NS_ASSERTION(image->GetFormat() == Image::PLANAR_YCBCR,
+                   "Wrong format?");
+      PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(image.get());
 
-    OggPlayYUVChannels yuv;
-    yuv.ptry = videoData->y;
-    yuv.ptru = videoData->u;
-    yuv.ptrv = videoData->v;
-    yuv.uv_width = aFrame->mUVWidth;
-    yuv.uv_height = aFrame->mUVHeight;
-    yuv.y_width = aFrame->mVideoWidth;
-    yuv.y_height = aFrame->mVideoHeight;
+      // XXX this is only temporary until we get YUV code in the layer
+      // system.
+      videoImage->SetRGBConverter(ToARGBHook);
 
-    size_t size = aFrame->mVideoWidth * aFrame->mVideoHeight * 4;
-    nsAutoArrayPtr<unsigned char> buffer(new unsigned char[size]);
-    if (!buffer)
-      return;
+      OggPlayVideoData* videoData = oggplay_callback_info_get_video_data(aFrame->mVideoHeader);
+      PlanarYCbCrImage::Data data;
+      data.mYChannel = videoData->y;
+      data.mYSize = gfxIntSize(aFrame->mVideoWidth, aFrame->mVideoHeight);
+      data.mYStride = data.mYSize.width;
+      data.mCbChannel = videoData->u;
+      data.mCrChannel = videoData->v;
+      data.mCbCrSize = gfxIntSize(aFrame->mUVWidth, aFrame->mUVHeight);
+      data.mCbCrStride = data.mCbCrSize.width;
+      videoImage->SetData(data);
 
-    OggPlayRGBChannels rgb;
-    rgb.ptro = buffer;
-    rgb.rgb_width = aFrame->mVideoWidth;
-    rgb.rgb_height = aFrame->mVideoHeight;
-
-    oggplay_yuv2bgra(&yuv, &rgb);
-
-    mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight,
-                         mFramerate, mAspectRatio, buffer.forget());
+      mDecoder->SetVideoData(data.mYSize, mAspectRatio, image);
+    }
 
     // Don't play the frame's video data more than once.
     aFrame->ClearVideoHeader();
@@ -1871,7 +1900,8 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
       int y_width;
       int y_height;
       oggplay_get_video_y_size(mPlayer, i, &y_width, &y_height);
-      mDecoder->SetRGBData(y_width, y_height, mFramerate, mAspectRatio, nsnull);
+      mDecoder->SetVideoData(gfxIntSize(y_width, y_height), mAspectRatio,
+                             nsnull);
     }
     else if (mAudioTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_VORBIS) {
       mAudioTrack = i;
@@ -2010,6 +2040,8 @@ PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
 
   mReader = new nsChannelReader();
   NS_ENSURE_TRUE(mReader, PR_FALSE);
+
+  mImageContainer = aElement->GetImageContainer();
 
   return PR_TRUE;
 }
