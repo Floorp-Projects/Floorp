@@ -46,19 +46,22 @@
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsITimer.h"
+#include "ImageLayers.h"
 
 class nsHTMLMediaElement;
 class nsMediaStream;
 class nsIStreamListener;
 
 // All methods of nsMediaDecoder must be called from the main thread only
-// with the exception of SetRGBData and GetStatistics, which can be
-// called from any thread.
+// with the exception of GetImageContainer, SetVideoData and GetStatistics,
+// which can be called from any thread.
 class nsMediaDecoder : public nsIObserver
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::Image Image;
 
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
@@ -110,15 +113,6 @@ public:
   // This is called at most once per decoder, after Init().
   virtual nsresult Load(nsMediaStream* aStream,
                         nsIStreamListener **aListener) = 0;
-
-  // Draw the latest video data. This is done
-  // here instead of in nsVideoFrame so that the lock around the
-  // RGB buffer doesn't have to be exposed publically.
-  // The current video frame is drawn to fill aRect.
-  // Called in the main thread only.
-  virtual void Paint(gfxContext* aContext,
-                     gfxPattern::GraphicsFilter aFilter,
-                     const gfxRect& aRect);
 
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;
@@ -229,6 +223,11 @@ public:
   // their nsMediaStream.
   virtual void MoveLoadsToBackground()=0;
 
+  // Gets the image container for the media element. Will return null if
+  // the element is not a video element. This can be called from any
+  // thread; ImageContainers can be used from any thread.
+  ImageContainer* GetImageContainer() { return mImageContainer; }
+
 protected:
 
   // Start timer to update download progress information.
@@ -237,15 +236,11 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
-  // Set the RGB width, height, pixel aspect ratio, and framerate.
-  // Ownership of the passed RGB buffer is transferred to the decoder.
-  // This is the only nsMediaDecoder method that may be called from
-  // threads other than the main thread.
-  void SetRGBData(PRInt32 aWidth,
-                  PRInt32 aHeight,
-                  float aFramerate,
-                  float aAspectRatio,
-                  unsigned char* aRGBBuffer);
+  // Set the video width, height, pixel aspect ratio, and current image.
+  // Ownership of the image is transferred to the decoder.
+  void SetVideoData(const gfxIntSize& aSize,
+                    float aAspectRatio,
+                    Image* aImage);
 
 protected:
   // Timer used for updating progress events
@@ -256,13 +251,10 @@ protected:
   // The decoder does not add a reference the element.
   nsHTMLMediaElement* mElement;
 
-  // RGB data for last decoded frame of video data.
-  // The size of the buffer is mRGBWidth*mRGBHeight*4 bytes and
-  // contains bytes in RGBA format.
-  nsAutoArrayPtr<unsigned char> mRGB;
-
   PRInt32 mRGBWidth;
   PRInt32 mRGBHeight;
+
+  nsRefPtr<ImageContainer> mImageContainer;
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.

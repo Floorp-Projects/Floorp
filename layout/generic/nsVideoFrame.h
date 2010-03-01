@@ -49,12 +49,17 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsIAnonymousContentCreator.h"
+#include "Layers.h"
+#include "ImageLayers.h"
 
 nsIFrame* NS_NewVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsVideoFrame : public nsContainerFrame, public nsIAnonymousContentCreator
 {
 public:
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   nsVideoFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
@@ -111,6 +116,9 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
+
+  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                     LayerManager* aManager);
 
 protected:
 

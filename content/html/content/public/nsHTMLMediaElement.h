@@ -44,6 +44,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
+#include "ImageLayers.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -54,6 +55,8 @@ typedef PRUint16 nsMediaReadyState;
 class nsHTMLMediaElement : public nsGenericHTMLElement,
                            public nsIObserver
 {
+  typedef mozilla::layers::ImageContainer ImageContainer;
+
 public:
   nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
   virtual ~nsHTMLMediaElement();
@@ -159,11 +162,13 @@ public:
   // (no data has arrived for a while).
   void DownloadStalled();
 
-  // Draw the latest video data. See nsMediaDecoder for
-  // details.
-  void Paint(gfxContext* aContext,
-             gfxPattern::GraphicsFilter aFilter,
-             const gfxRect& aRect);
+  // Called by the media decoder and the video frame to get the
+  // ImageContainer containing the video data.
+  ImageContainer* GetImageContainer();
+
+  // Called by the video frame to get the print surface, if this is
+  // a static document and we're not actually playing video
+  gfxASurface* GetPrintSurface() { return mPrintSurface; }
 
   // Dispatch events
   nsresult DispatchSimpleEvent(const nsAString& aName);
@@ -392,6 +397,10 @@ protected:
   void DoRemoveSelfReference();
 
   nsRefPtr<nsMediaDecoder> mDecoder;
+
+  // A reference to the ImageContainer which contains the current frame
+  // of video to display.
+  nsRefPtr<ImageContainer> mImageContainer;
 
   // Holds a reference to the first channel we open to the media resource.
   // Once the decoder is created, control over the channel passes to the
