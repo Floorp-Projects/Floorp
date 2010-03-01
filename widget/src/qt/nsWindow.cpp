@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+./* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -231,8 +231,15 @@ UpdateOffScreenBuffers(QSize aSize, int aDepth)
     if (!gBufferPixmap)
         return false;
 
-    if (gfxQtPlatform::GetPlatform()->GetRenderMode() == gfxQtPlatform::RENDER_XLIB)
+    if (gfxQtPlatform::GetPlatform()->GetRenderMode() == gfxQtPlatform::RENDER_XLIB) {
+        if (!gBufferPixmap->handle()) {
+            NS_ERROR("XDrawable must be available for QPixmap in RENDER_XLIB mode");
+            delete gBufferPixmap;
+            gBufferPixmap = nsnull;
+            return false;
+        }
         return true;
+    }
 
     // Check if system depth has related gfxImage format
     gfxASurface::gfxImageFormat format =
@@ -576,8 +583,11 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!realFocusItem || realFocusItem->hasFocus())
         return NS_OK;
 
-    if (aRaise)
+    if (aRaise) {
+        // the raising has to happen on the view widget
+        GetViewWidget()->raise();
         realFocusItem->setFocus(Qt::ActiveWindowFocusReason);
+    }
     else
         realFocusItem->setFocus(Qt::OtherFocusReason);
 
@@ -650,7 +660,10 @@ nsWindow::Update()
     if (!mWidget)
         return NS_OK;
 
-    mWidget->update(); // FIXME  This call cause update for whole window on each scroll event
+    // Just proceed all pending paints
+    if (GetViewWidget())
+        GetViewWidget()->repaint();
+
     return NS_OK;
 }
 
@@ -685,9 +698,21 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 
     for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
         const nsIntRect & r = iter.Rect();
-        QRect rect(r.x - aDelta.x, r.y - aDelta.y, r.width, r.height);
-        mWidget->scroll(aDelta.x, aDelta.y, rect);
+        QRegion goodReg(QRect(r.x, r.y, r.width, r.height));
+        goodReg = goodReg.subtracted(mDirtyScrollArea);
+
+        const QVector<QRect> myRects = goodReg.rects();
+        for (QVector<QRect>::const_iterator it = myRects.constBegin(); it < myRects.constEnd(); ++it) {
+            QRect rect(*it);
+            mWidget->scroll(aDelta.x, aDelta.y, rect);
+            // Calculate dirty area which is need to be updated
+            QRegion dirtyReg(rect);
+            rect.translate(aDelta.x, aDelta.y);
+            dirtyReg = dirtyReg.subtracted(rect);
+            mDirtyScrollArea = mDirtyScrollArea.united(dirtyReg);
+        }
     }
+
     ConfigureChildren(aConfigurations);
 
     // Show windows again...
@@ -958,20 +983,13 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     if (!mWidget)
         return nsEventStatus_eIgnore;
 
-    static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
-    nsCOMPtr<nsIRegion> updateRegion = do_CreateInstance(kRegionCID);
-    if (!updateRegion)
-        return nsEventStatus_eIgnore;
-
     QRectF r;
-
     if (aOption)
         r = aOption->exposedRect;
     else
         r = mWidget->boundingRect();
 
-    updateRegion->SetTo( (int)r.x(), (int)r.y(), (int)r.width(), (int)r.height() );
+    mDirtyScrollArea = QRegion();
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     // Prepare offscreen buffers if RenderMode Xlib or Image
@@ -994,23 +1012,18 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
-    nsCOMPtr<nsIRenderingContext> rc;
-    GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-    if (NS_UNLIKELY(!rc))
-        return nsEventStatus_eIgnore;
-
-    rc->Init(GetDeviceContext(), ctx);
-
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
     nsIntRect rect(r.x(), r.y(), r.width(), r.height());
     event.refPoint.x = r.x();
     event.refPoint.y = r.y();
-    event.rect = nsnull;
-    event.region = updateRegion;
-    event.renderingContext = rc;
+    event.region = nsIntRegion(rect);
 
-    nsEventStatus status = DispatchEvent(&event);
+    nsEventStatus status;
+    {
+      AutoLayerManagerSetup setupLayerManager(this, ctx);
+      status = DispatchEvent(&event);
+    }
 
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
@@ -1022,7 +1035,10 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     LOGDRAW(("[%p] draw done\n", this));
 
-    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE) {
+    // If handle not available for QPixmap it means that we are using
+    //   "-graphicssystem raster" rendering backend
+    // in raster mode we can just wrap gBufferImage as QImage and paint directly
+    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE && gBufferPixmap->handle()) {
         if (gNeedColorConversion) {
             pixman_image_t *src_image = NULL;
             pixman_image_t *dst_image = NULL;
@@ -1054,13 +1070,25 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         gcv.graphics_exposures = False;
         GC gc = XCreateGC (disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
         XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
-                     0, 0, 0, 0, gBufferImage->GetSize().width, gBufferImage->GetSize().height,
+                     rect.x, rect.y, rect.x, rect.y, rect.width, rect.height,
                      False);
         XFreeGC (disp, gc);
     }
 
-    if (renderMode != gfxQtPlatform::RENDER_QPAINTER)
-        aPainter->drawPixmap(QPoint(0, 0), *gBufferPixmap);
+    if (renderMode != gfxQtPlatform::RENDER_QPAINTER) {
+        if (gBufferPixmap->handle())
+            aPainter->drawPixmap(QPoint(rect.x, rect.y), *gBufferPixmap,
+                                 QRect(rect.x, rect.y, rect.width, rect.height));
+        else {
+            QImage img(gBufferImage->Data(),
+                       gBufferImage->Width(),
+                       gBufferImage->Height(),
+                       gBufferImage->Stride(),
+                       QImage::Format_RGB32);
+            aPainter->drawImage(QPoint(rect.x, rect.y), img,
+                                QRect(rect.x, rect.y, rect.width, rect.height));
+        }
+    }
 
     ctx = nsnull;
     targetSurface = nsnull;
@@ -1927,6 +1955,12 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     if (!widget)
         return nsnull;
 
+    // make only child and plugin windows focusable
+    if (eWindowType_child == mWindowType || eWindowType_plugin == mWindowType) {
+        widget->setFlag(QGraphicsItem::ItemIsFocusable);
+        widget->setFocusPolicy(Qt::WheelFocus);
+    }
+
     // create a QGraphicsView if this is a new toplevel window
     MozQGraphicsView* newView = 0;
 
@@ -1955,6 +1989,10 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     if (mScene && newView) {
         mScene->addItem(widget);
         newView->setTopLevel(widget);
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+        // Top level widget is just container, and should not be painted
+        widget->setFlag(QGraphicsItem::ItemHasNoContents);
+#endif
     }
 
     if (mWindowType == eWindowType_popup) {

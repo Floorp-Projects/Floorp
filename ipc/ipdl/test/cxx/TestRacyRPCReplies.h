@@ -21,7 +21,10 @@ public:
 
 protected:    
     NS_OVERRIDE
-    virtual bool RecvA();
+    virtual bool RecvA_();
+
+    NS_OVERRIDE
+    virtual bool Answer_R(int* replyNum);
 
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)
@@ -31,6 +34,9 @@ protected:
         passed("ok");
         QuitParent();
     }
+
+private:
+    int mReplyNum;
 };
 
 
@@ -43,7 +49,13 @@ public:
 
 protected:
     NS_OVERRIDE
-    virtual bool AnswerR(int* replyNum);
+    virtual bool AnswerR_(int* replyNum);
+
+    NS_OVERRIDE
+    virtual bool RecvChildTest();
+
+    NS_OVERRIDE
+    virtual bool Recv_A();
 
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)

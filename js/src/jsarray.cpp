@@ -824,7 +824,29 @@ slowarray_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSObjectOps js_SlowArrayObjectOps;
+static JSBool
+slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                    jsval *statep, jsid *idp);
+
+static JSType
+array_typeOf(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_OBJECT;
+}
+
+/* The same as js_ObjectOps except for the .enumerate and .call hooks. */
+static JSObjectOps js_SlowArrayObjectOps = {
+    NULL,
+    js_LookupProperty,      js_DefineProperty,
+    js_GetProperty,         js_SetProperty,
+    js_GetAttributes,       js_SetAttributes,
+    js_DeleteProperty,      js_DefaultValue,
+    slowarray_enumerate,    js_CheckAccess,
+    array_typeOf,           js_TraceObject,
+    NULL,                   NATIVE_DROP_PROPERTY,
+    NULL,                   js_Construct,
+    js_HasInstance,         js_Clear
+};
 
 static JSObjectOps *
 slowarray_getObjectOps(JSContext *cx, JSClass *clasp)
@@ -1216,7 +1238,7 @@ array_trace(JSTracer *trc, JSObject *obj)
         v = obj->dslots[i];
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_INDEX(trc, "array_dslots", i);
-            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
 }
@@ -1232,10 +1254,10 @@ JSObjectOps js_ArrayObjectOps = {
     array_getAttributes,  array_setAttributes,
     array_deleteProperty, js_DefaultValue,
     array_enumerate,      js_CheckAccess,
+    array_typeOf,         array_trace,
     NULL,                 array_dropProperty,
     NULL,                 NULL,
-    js_HasInstance,       array_trace,
-    NULL
+    js_HasInstance,       NULL
 };
 
 static JSObjectOps *
@@ -1467,20 +1489,6 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-static JSHashNumber
-js_hash_array(const void *key)
-{
-    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
-}
-
-bool
-js_InitContextBusyArrayTable(JSContext *cx)
-{
-    cx->busyArrayTable = JS_NewHashTable(4, js_hash_array, JS_CompareValues,
-                                         JS_CompareValues, NULL, NULL);
-    return cx->busyArrayTable != NULL;
-}
-
 static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, jsval *rval)
@@ -1488,25 +1496,19 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     JS_CHECK_RECURSION(cx, return false);
 
     /*
-     * This hash table is shared between toString invocations and must be empty
-     * after the root invocation completes.
-     */
-    JSHashTable *table = cx->busyArrayTable;
-
-    /*
      * Use HashTable entry as the cycle indicator. On first visit, create the
      * entry, and, when leaving, remove the entry.
      */
-    JSHashNumber hash = js_hash_array(obj);
-    JSHashEntry **hep = JS_HashTableRawLookup(table, hash, obj);
-    JSHashEntry *he = *hep;
-    if (!he) {
+    typedef js::HashSet<JSObject *> ObjSet;
+    ObjSet::AddPtr hashp = cx->busyArrays.lookupForAdd(obj);
+    uint32 genBefore;
+    if (!hashp) {
         /* Not in hash table, so not a cycle. */
-        he = JS_HashTableRawAdd(table, hep, hash, obj, NULL);
-        if (!he) {
+        if (!cx->busyArrays.add(hashp, obj)) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
+        genBefore = cx->busyArrays.generation();
     } else {
         /* Cycle, so return empty string. */
         *rval = ATOM_KEY(cx->runtime->atomState.emptyAtom);
@@ -1580,11 +1582,10 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     ok = true;
 
   out:
-    /*
-     * It is possible that 'hep' may have been invalidated by subsequent
-     * RawAdd/Remove. Hence, 'RawRemove' must not be used.
-     */
-    JS_HashTableRemove(table, obj);
+    if (genBefore == cx->busyArrays.generation())
+        cx->busyArrays.remove(hashp);
+    else
+        cx->busyArrays.remove(obj);
     return ok;
 }
 
@@ -3451,15 +3452,8 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
-    /* Initialize the ops structure used by slow arrays */
-    memcpy(&js_SlowArrayObjectOps, &js_ObjectOps, sizeof(JSObjectOps));
-    js_SlowArrayObjectOps.enumerate = slowarray_enumerate;
-    js_SlowArrayObjectOps.call = NULL;
-
-    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
-                         array_props, array_methods, NULL, array_static_methods);
+    JSObject *proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
+                                   array_props, array_methods, NULL, array_static_methods);
 
     /* Initialize the Array prototype object so it gets a length property. */
     if (!proto || !InitArrayObject(cx, proto, 0, NULL))

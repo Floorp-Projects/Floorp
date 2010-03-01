@@ -83,6 +83,7 @@ _BROWSER_FILES = harness.js \
                  browser_cancel.js \
                  browser_navigateaway.js \
                  browser_navigateaway2.js \
+                 browser_bug540558.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
@@ -98,6 +99,7 @@ _BROWSER_FILES = harness.js \
                  installchrome.html \
                  authRedirect.sjs \
                  cookieRedirect.sjs \
+                 bug540558.html \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)

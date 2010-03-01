@@ -84,7 +84,6 @@
  * - Fuse objects and their JSXML* private data into single GC-things
  * - fix function::foo vs. x.(foo == 42) collision using proper namespacing
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
- * - JS_TypeOfValue sure could use a cleaner interface to "types"
  */
 
 #ifdef XML_METERING
@@ -1753,7 +1752,7 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 {
     jsval v;
 
-    if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_XML), &v))
+    if (!js_FindClassObject(cx, NULL, JSProto_XML, &v))
         return JS_FALSE;
     if (!VALUE_IS_FUNCTION(cx, v)) {
         *vp = JSVAL_VOID;
@@ -4734,7 +4733,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
              * GetXMLFunction returns existing function.
              */
             JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr);
-            ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_String),
+            ok = js_GetClassPrototype(cx, NULL, JSProto_String,
                                       &tvr.u.object);
             JS_ASSERT(tvr.u.object);
             if (ok) {
@@ -4797,7 +4796,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
         xml = vec[i];
         if (xml) {
             JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            JS_CallTracer(trc, xml, JSTRACE_XML);
+            js_CallGCMarker(trc, xml, JSTRACE_XML);
         }
     }
 }
@@ -5043,6 +5042,12 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         break;
     }
     return JS_TRUE;
+}
+
+static JSType
+xml_typeOf(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_XML;
 }
 
 static JSBool
@@ -5314,10 +5319,10 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_getAttributes,          xml_setAttributes,
     xml_deleteProperty,         xml_defaultValue,
     xml_enumerate,              js_CheckAccess,
+    xml_typeOf,                 js_TraceObject,
     NULL,                       NULL,
     NULL,                       NULL,
-    xml_hasInstance,            js_TraceObject,
-    xml_clear
+    xml_hasInstance,            xml_clear
 };
 
 static JSObjectOps *
@@ -5894,7 +5899,7 @@ TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
         obj = vec[i];
         if (obj) {
             JS_SET_TRACING_INDEX(trc, "vector", i);
-            JS_CallTracer(trc, obj, JSTRACE_OBJECT);
+            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
         }
     }
 }
@@ -7836,8 +7841,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     xml = (JSXML *) obj->getPrivate();
     if (HasSimpleContent(xml)) {
         /* Search in String.prototype to implement 11.2.2.1 Step 3(f). */
-        ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_String),
-                                  &tvr.u.object);
+        ok = js_GetClassPrototype(cx, NULL, JSProto_String, &tvr.u.object);
         if (!ok)
             goto out;
         JS_ASSERT(tvr.u.object);

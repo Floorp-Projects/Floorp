@@ -907,6 +907,8 @@ enum TypeConsensus
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
 
+typedef HashMap<nanojit::LIns*, JSObject*> GuardedShapeTable;
+
 #ifdef DEBUG
 # define AbortRecording(cx, reason) AbortRecordingImpl(cx, reason)
 #else
@@ -1002,6 +1004,9 @@ class TraceRecorder
     /* A list of trees to trash at the end of the recording session. */
     Queue<TreeFragment*>            whichTreesToTrash;
 
+    /* The set of objects whose shapes already have been guarded. */
+    GuardedShapeTable               guardedShapeTable;
+
     /***************************************** Temporal state hoisted into the recording session */
 
     /* Carry the return value from a STOP/RETURN to the subsequent record_LeaveFrame. */
@@ -1077,6 +1082,8 @@ class TraceRecorder
 
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
+                                               nanojit::LIns* d1, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpInt32Slot(nanojit::LIns* val_ins, jsval* vp,
                                                     VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, jsval* vp,
@@ -1104,6 +1111,7 @@ class TraceRecorder
                              bool demote);
     JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false,
                                bool demote = true);
+    nanojit::LIns* getFromTracker(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* attemptImport(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(jsval* p);
@@ -1185,8 +1193,6 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
                                                  uint32 shape, const char* name,
                                                  nanojit::LIns* map_ins, VMSideExit* exit);
-
-    JSDHashTable guardedShapeTable;
 
 #if defined DEBUG_notme && defined XP_UNIX
     void dumpGuardedShapes(const char* prefix);
@@ -1288,9 +1294,10 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      VMSideExit* exit);
-    JS_REQUIRES_STACK bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                           VMSideExit* exit);
+                                      VMSideExit* exit, nanojit::LOpcode loadOp = nanojit::LIR_ldp);
+    bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp, VMSideExit* exit) {
+        return guardClass(obj, obj_ins, clasp, exit, nanojit::LIR_ldcp);
+    }
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
@@ -1404,7 +1411,6 @@ class TraceRecorder
     friend class DetermineTypesVisitor;
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
-    friend jsval* ConcatPostImacroStackCleanup(uint32, JSFrameRegs &, TraceRecorder *);
     friend bool MonitorLoopEdge(JSContext*, uintN&, RecordReason);
     friend void AbortRecording(JSContext*, const char*);
 
@@ -1515,16 +1521,16 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
 #ifdef MOZ_TRACEVIS
 
 extern JS_FRIEND_API(bool)
-JS_StartTraceVis(const char* filename);
+StartTraceVis(const char* filename);
 
 extern JS_FRIEND_API(JSBool)
-StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 extern JS_FRIEND_API(bool)
-JS_StopTraceVis();
+StopTraceVis();
 
 extern JS_FRIEND_API(JSBool)
-StopTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 /* Must contain no more than 16 items. */
 enum TraceVisState {
@@ -1640,9 +1646,6 @@ struct TraceVisStateObj {
 
 #endif /* MOZ_TRACEVIS */
 
-extern jsval *
-ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
-                             TraceRecorder *recorder);
 }      /* namespace js */
 
 #else  /* !JS_TRACER */

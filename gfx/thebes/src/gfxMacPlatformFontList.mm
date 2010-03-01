@@ -44,7 +44,6 @@
 
 #include "gfxPlatformMac.h"
 #include "gfxMacPlatformFontList.h"
-#include "gfxAtsuiFonts.h"
 #include "gfxUserFontSet.h"
 
 #include "nsServiceManagerUtils.h"
@@ -123,9 +122,6 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     : gfxFontEntry(aPostscriptName, aFamily, aIsStandardFace),
       mATSFontRef(0),
       mATSFontRefInitialized(PR_FALSE)
-#ifndef __LP64__
-      , mUseLiGothicAtsuiHack(PR_FALSE)
-#endif
 {
     mWeight = aWeight;
 }
@@ -136,9 +132,6 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFon
     : gfxFontEntry(aPostscriptName),
       mATSFontRef(aFontRef),
       mATSFontRefInitialized(PR_TRUE)
-#ifndef __LP64__
-      , mUseLiGothicAtsuiHack(PR_FALSE)
-#endif
 {
     // xxx - stretch is basically ignored for now
 
@@ -249,15 +242,13 @@ MacOSFontEntry::ReadCMAP()
 
             // special-cases for Arabic:
             if (whichScript == eComplexScriptArabic) {
-                // even if there's no morph table, CoreText can shape if there's GSUB support
-                if (gfxPlatformMac::GetPlatform()->UsingCoreText()) {
-                    // with CoreText, don't exclude Arabic if the font has GSUB
-                    status = ::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','S','U','B'), 0, 0, 0, &size);
-                    if (status == noErr) {
-                        // TODO: to be really thorough, we could check that the GSUB table
-                        // actually supports the 'arab' script tag.
-                        omitRange = PR_FALSE;
-                    }
+                // even if there's no morph table, CoreText can shape Arabic
+                // if there's GSUB support
+                status = ::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','S','U','B'), 0, 0, 0, &size);
+                if (status == noErr) {
+                    // TODO: to be really thorough, we could check that the GSUB table
+                    // actually supports the 'arab' script tag.
+                    omitRange = PR_FALSE;
                 }
 
                 // rude hack - the Chinese STxxx fonts on 10.4 contain morx tables and Arabic glyphs but
@@ -273,26 +264,6 @@ MacOSFontEntry::ReadCMAP()
             }
         }
     }
-
-#ifndef __LP64__  /* ATSUI not available on 64-bit */
-
-    if ((gfxPlatformMac::GetPlatform()->OSXVersion() &
-         MAC_OS_X_MAJOR_VERSION_MASK) == MAC_OS_X_VERSION_10_6_HEX) {
-        // even ruder hack - LiGothic font on 10.6 has a bad glyph for U+775B
-        // that causes ATSUI failure, so we set a flag to tell our layout code
-        // to hack around that character
-        if (mName.EqualsLiteral("LiGothicMed")) {
-            // check whether the problem char maps to the expected glyph;
-            // if not, we'll assume this isn't the problem version of the font
-            if (gfxFontUtils::MapCharToGlyph(cmap.Elements(), cmap.Length(),
-                                             kLiGothicBadCharUnicode) ==
-                kLiGothicBadCharGlyph) {
-                mUseLiGothicAtsuiHack = PR_TRUE;
-            }
-        }
-    }
-
-#endif /* not __LP64__ */
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n",
                                         NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
@@ -324,21 +295,7 @@ MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 gfxFont*
 MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
 {
-    gfxFont *newFont;
-#ifdef __LP64__
-    newFont = new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
-#else
-#ifdef MOZ_CORETEXT
-    if (gfxPlatformMac::GetPlatform()->UsingCoreText()) {
-        newFont = new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
-    } else {
-#endif
-        newFont = new gfxAtsuiFont(this, aFontStyle, aNeedsBold);
-#ifdef MOZ_CORETEXT
-    }
-#endif
-#endif
-    return newFont;
+    return new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
 }
 
 

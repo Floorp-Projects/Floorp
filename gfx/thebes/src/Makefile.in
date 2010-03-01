@@ -22,6 +22,7 @@ CPPSRCS	= \
 	gfxFontMissingGlyphs.cpp \
 	gfxFontTest.cpp \
 	gfxFontUtils.cpp \
+	gfxAtoms.cpp \
 	gfxMatrix.cpp \
 	gfxPath.cpp \
 	gfxPattern.cpp \
@@ -47,7 +48,6 @@ EXTRA_DSO_LDOPTS += \
 	$(QCMS_LIBS) \
 	$(NULL)
 
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
@@ -64,6 +64,14 @@ CPPSRCS	+= gfxFT2Fonts.cpp \
 	   $(NULL)
 EXTRA_DSO_LDOPTS += ddraw.lib
 else
+ifdef MOZ_ENABLE_DWRITE_FONT
+CPPSRCS	+= gfxDWriteFonts.cpp \
+	   gfxDWriteTextAnalysis.cpp \
+	   gfxDWriteCommon.cpp \
+	   gfxD2DSurface.cpp \
+	   gfxDWriteFontList.cpp \
+	   $(NULL)
+endif
 CPPSRCS	+= gfxWindowsFonts.cpp \
 	   gfxGDIFontList.cpp \
 	   $(NULL)
@@ -153,15 +161,11 @@ CPPSRCS	+= \
 	gfxQuartzImageSurface.cpp \
 	gfxQuartzPDFSurface.cpp \
 	gfxPlatformMac.cpp \
-	gfxAtsuiFonts.cpp \
+	gfxCoreTextFonts.cpp \
 	$(NULL)
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
-
-ifdef MOZ_CORETEXT
-CPPSRCS += gfxCoreTextFonts.cpp
-endif
 
 CMMSRCS = gfxMacPlatformFontList.mm
 
@@ -201,4 +205,3 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
-

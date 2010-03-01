@@ -103,6 +103,7 @@ _TEST_FILES =	\
 		     bug512295-2-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
+		test_bug548545.xhtml \
 		test_flush_on_paint.html \
 		test_scroll_selection_into_view.html \
 		test_scrolling.html \

@@ -182,7 +182,7 @@ nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
   if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
     return;
 
-  gfxContext* ctx = static_cast<gfxContext*>(aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext.ThebesContext();
   nsPresContext* presContext = PresContext();
   gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
                       presContext->AppUnitsToGfxUnits(area.y),

@@ -43,6 +43,7 @@
 #include <objc/objc.h>
 #include <objc/objc-runtime.h>
 
+#include "nsObjCExceptions.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsWifiMonitor.h"
@@ -59,36 +60,43 @@ BOOL UsingSnowLeopard() {
 nsresult
 GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (!UsingSnowLeopard())
     return NS_ERROR_NOT_AVAILABLE;
 
   accessPoints.Clear();
 
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  @try {
 
-    NSBundle * bundle = [[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"];
-    if (!bundle)
+  @try {
+    NSBundle * bundle = [[[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
+    if (!bundle) {
+      [pool release];
       return NS_ERROR_NOT_AVAILABLE;
+    }
 
     Class CWI_class = [bundle classNamed:@"CWInterface"];
-    if (!CWI_class)
+    if (!CWI_class) {
+      [pool release];
       return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    NSDictionary *params = nil;
-    NSError *err = nil;
-    id scanResult = [[CWI_class interface] scanForNetworksWithParameters: params error: err];
-
-    if (!scanResult)
+    id scanResult = [[CWI_class interface] scanForNetworksWithParameters:nil error:nil];
+    if (!scanResult) {
+      [pool release];
       return NS_ERROR_NOT_AVAILABLE;
+    }
 
     NSArray* scan = [NSMutableArray arrayWithArray:scanResult];
     NSEnumerator *enumerator = [scan objectEnumerator];
 
     while (id anObject = [enumerator nextObject]) {
       nsWifiAccessPoint* ap = new nsWifiAccessPoint();
-      if (!ap)
+      if (!ap) {
+        [pool release];
         return NS_ERROR_OUT_OF_MEMORY;
+      }
       NSData* data = [anObject bssidData];
       ap->setMac((unsigned char*)[data bytes]);
       ap->setSignal([[anObject rssi] intValue]);
@@ -98,7 +106,13 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
     }
   }
   @catch(NSException *_exn) {
+    [pool release];
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  [pool release];
+
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NS_ERROR_NOT_AVAILABLE);
 }

@@ -100,15 +100,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 @end
 
-// Needed to support pixel scrolling.
-// See http://developer.apple.com/qa/qa2005/qa1453.html.
-// kEventMouseScroll is only defined on 10.5+. Using the moz prefix avoids
-// potential symbol conflicts.
-// This should be changed when 10.4 support is dropped.
-enum {
-  mozkEventMouseScroll             = 11
-};
-
 // Support for pixel scroll deltas, not part of NSEvent.h
 // See http://lists.apple.com/archives/cocoa-dev/2007/Feb/msg00050.html
 @interface NSEvent (DeviceDelta)
@@ -230,51 +221,6 @@ enum {
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
 @end
-
-
-
-#ifndef NS_LEOPARD_AND_LATER
-//-------------------------------------------------------------------------
-//
-// nsTSMManager
-//
-//-------------------------------------------------------------------------
-
-class nsTSMManager {
-public:
-  static PRBool IsComposing() { return sComposingView ? PR_TRUE : PR_FALSE; }
-  static PRBool IsIMEEnabled() { return sIsIMEEnabled; }
-  static PRBool IgnoreCommit() { return sIgnoreCommit; }
-
-  static void OnDestroyView(NSView<mozView>* aDestroyingView);
-
-  // Note that we cannot get the actual state in TSM. But we can trust this
-  // value. Because nsIMEStateManager reset this at every focus changing.
-  static PRBool IsRomanKeyboardsOnly() { return sIsRomanKeyboardsOnly; }
-
-  static PRBool GetIMEOpenState();
-
-  static void InitTSMDocument(NSView<mozView>* aViewForCaret);
-  static void StartComposing(NSView<mozView>* aComposingView);
-  static void UpdateComposing(NSString* aComposingString);
-  static void EndComposing();
-  static void EnableIME(PRBool aEnable);
-  static void SetIMEOpenState(PRBool aOpen);
-  static void SetRomanKeyboardsOnly(PRBool aRomanOnly);
-
-  static void CommitIME();
-  static void CancelIME();
-private:
-  static PRBool sIsIMEEnabled;
-  static PRBool sIsRomanKeyboardsOnly;
-  static PRBool sIgnoreCommit;
-  static NSView<mozView>* sComposingView;
-  static TSMDocumentID sDocumentID;
-  static NSString* sComposingString;
-
-  static void KillComposing();
-};
-#endif // NS_LEOPARD_AND_LATER
 
 class ChildViewMouseTracker {
 
@@ -428,136 +374,78 @@ public:
                                  const nsIWidget::Configuration& aConfiguration,
                                  PRBool aRepaint);
 
-#ifdef NS_LEOPARD_AND_LATER
   nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();
-#endif
 
   // Wrapper methods of nsIMEManager and nsTSMManager
   void IME_OnDestroyView(NSView<mozView> *aDestroyingView)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.OnDestroyView(aDestroyingView);
-#else
-    nsTSMManager::OnDestroyView(aDestroyingView);
-#endif
   }
 
   void IME_OnStartComposition(NSView<mozView>* aComposingView)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.OnStartIMEComposition(aComposingView);
-#else
-    nsTSMManager::StartComposing(aComposingView);
-#endif
   }
 
   void IME_OnUpdateComposition(NSString* aCompositionString)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.OnUpdateIMEComposition(aCompositionString);
-#else
-    nsTSMManager::UpdateComposing(aCompositionString);
-#endif
   }
 
   void IME_OnEndComposition()
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.OnEndIMEComposition();
-#else
-    nsTSMManager::EndComposing();
-#endif
   }
 
   PRBool IME_IsComposing()
   {
-#ifdef NS_LEOPARD_AND_LATER
     return mTextInputHandler.IsIMEComposing();
-#else
-    return nsTSMManager::IsComposing();
-#endif
   }
 
   PRBool IME_IsASCIICapableOnly()
   {
-#ifdef NS_LEOPARD_AND_LATER
     return mTextInputHandler.IsASCIICapableOnly();
-#else
-    return nsTSMManager::IsRomanKeyboardsOnly();
-#endif
   }
 
   PRBool IME_IsOpened()
   {
-#ifdef NS_LEOPARD_AND_LATER
     return mTextInputHandler.IsIMEOpened();
-#else
-    return nsTSMManager::GetIMEOpenState();
-#endif
   }
 
   PRBool IME_IsEnabled()
   {
-#ifdef NS_LEOPARD_AND_LATER
     return mTextInputHandler.IsIMEEnabled();
-#else
-    return nsTSMManager::IsIMEEnabled();
-#endif
   }
 
   PRBool IME_IgnoreCommit()
   {
-#ifdef NS_LEOPARD_AND_LATER
     return mTextInputHandler.IgnoreIMECommit();
-#else
-    return nsTSMManager::IgnoreCommit();
-#endif
   }
 
   void IME_CommitComposition()
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.CommitIMEComposition();
-#else
-    nsTSMManager::CommitIME();
-#endif
   }
 
   void IME_CancelComposition()
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.CancelIMEComposition();
-#else
-    nsTSMManager::CancelIME();
-#endif
   }
 
   void IME_SetASCIICapableOnly(PRBool aASCIICapableOnly)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.SetASCIICapableOnly(aASCIICapableOnly);
-#else
-    nsTSMManager::SetRomanKeyboardsOnly(aASCIICapableOnly);
-#endif
   }
 
   void IME_SetOpenState(PRBool aOpen)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.SetIMEOpenState(aOpen);
-#else
-    nsTSMManager::SetIMEOpenState(aOpen);
-#endif
   }
 
   void IME_Enable(PRBool aEnable)
   {
-#ifdef NS_LEOPARD_AND_LATER
     mTextInputHandler.EnableIME(aEnable);
-#else
-    nsTSMManager::EnableIME(aEnable);
-#endif
   }
 
 protected:
@@ -575,9 +463,7 @@ protected:
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
-#ifdef NS_LEOPARD_AND_LATER
   nsCocoaTextInputHandler mTextInputHandler;
-#endif
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;

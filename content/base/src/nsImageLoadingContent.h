@@ -245,8 +245,6 @@ private:
    * @param aEventType "load" or "error" depending on how things went
    */
   nsresult FireEvent(const nsAString& aEventType);
-  class Event;
-  friend class Event;
 protected:
   void CreateStaticImageClone(nsImageLoadingContent* aDest) const;
 

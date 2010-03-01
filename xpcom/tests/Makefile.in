@@ -116,6 +116,7 @@ CPP_UNIT_TESTS += \
                   TestTimeStamp.cpp \
                   TestXPIDLString.cpp \
                   TestStaticAtoms.cpp \
+                  TestUTF.cpp \
                   $(NULL)
 endif
 

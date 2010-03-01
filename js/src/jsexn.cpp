@@ -995,10 +995,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      * See the equivalent code to ensure that parent_proto is non-null when
      * JS_InitClass calls js_NewObject, in jsapi.c.
      */
-    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Object),
-                              &obj_proto)) {
+    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
-    }
 
     memset(roots, 0, sizeof(roots));
     JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
@@ -1167,8 +1165,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      * exception constructor name in the scope chain of the current context's
      * top stack frame, or in the global object if no frame is active.
      */
-    ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(GetExceptionProtoKey(exn)),
-                              &errProto);
+    ok = js_GetClassPrototype(cx, NULL, GetExceptionProtoKey(exn), &errProto);
     if (!ok)
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);

@@ -383,7 +383,7 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                        float aX, float aY, float aAutoAngle)
 {
   float scale = 1.0;
-  if (mEnumAttributes[MARKERUNITS].GetAnimValue(this) ==
+  if (mEnumAttributes[MARKERUNITS].GetAnimValue() ==
       SVG_MARKERUNITS_STROKEWIDTH)
     scale = aStrokeWidth;
 
@@ -405,7 +405,7 @@ nsSVGMarkerElement::GetViewBoxTransform()
     float viewportHeight = 
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
    
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(this); 
+    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(); 
 
     if (viewbox.width <= 0.0f || viewbox.height <= 0.0f) {
       return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // invalid - don't paint element

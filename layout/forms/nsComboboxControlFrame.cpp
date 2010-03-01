@@ -1450,8 +1450,9 @@ nsComboboxControlFrame::OnOptionSelected(PRInt32 aIndex, PRBool aSelected)
 void nsComboboxControlFrame::FireValueChangeEvent()
 {
   // Fire ValueChange event to indicate data value of combo box has changed
-  nsContentUtils::AddScriptRunner(new nsPLDOMEvent(mContent,
-                                  NS_LITERAL_STRING("ValueChange"), PR_FALSE));
+  nsContentUtils::AddScriptRunner(
+    new nsPLDOMEvent(mContent, NS_LITERAL_STRING("ValueChange"), PR_TRUE,
+                     PR_FALSE));
 }
 
 void

@@ -1335,14 +1335,6 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     gfxPoint p = m.Transform(gfxPoint(1, 1)) - m.Transform(gfxPoint(0, 0));
     double contextScale = nsSVGUtils::ComputeNormalizedHypotenuse(p.x, p.y);
 
-    nsCAutoString langGroup;
-    nsIAtom *langGroupAtom = mStyleContext->GetStyleVisibility()->mLangGroup;
-    if (langGroupAtom) {
-      const char* lg;
-      langGroupAtom->GetUTF8String(&lg);
-      langGroup.Assign(lg);
-    }
-
     if (GetStyleSVG()->mTextRendering ==
         NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION) {
       textRunSize = PRECISE_SIZE;
@@ -1356,7 +1348,8 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     PRBool printerFont = (presContext->Type() == nsPresContext::eContext_PrintPreview ||
                           presContext->Type() == nsPresContext::eContext_Print);
     gfxFontStyle fontStyle(font.style, font.weight, font.stretch, textRunSize,
-                           langGroup, font.sizeAdjust, font.systemFont,
+                           mStyleContext->GetStyleVisibility()->mLanguage,
+                           font.sizeAdjust, font.systemFont,
                            font.familyNameQuirks,
                            printerFont);
 

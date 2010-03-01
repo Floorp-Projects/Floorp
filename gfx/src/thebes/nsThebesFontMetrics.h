@@ -56,7 +56,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+    NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLanguage,
                      nsIDeviceContext *aContext, 
                      gfxUserFontSet *aUserFontSet = nsnull);
     NS_IMETHOD  Destroy();
@@ -75,7 +75,7 @@ public:
     NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
     NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
     NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
+    NS_IMETHOD  GetLanguage(nsIAtom** aLanguage);
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
     NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth);
     NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
@@ -191,7 +191,7 @@ protected:
 
 private:
     nsThebesDeviceContext *mDeviceContext;
-    nsCOMPtr<nsIAtom> mLangGroup;
+    nsCOMPtr<nsIAtom> mLanguage;
     PRInt32 mP2A;
     PRPackedBool mIsRightToLeft;
     PRPackedBool mTextRunRTL;

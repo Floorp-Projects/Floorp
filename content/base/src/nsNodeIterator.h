@@ -89,9 +89,12 @@ private:
         void Clear() { mNode = nsnull; }
 
         nsINode *mNode;
-        // pointer to the parent of mNode. Can be dangling if mNode is null or points to the root
+        // pointer to the parent of mNode. Can be dangling if mNode is null or
+        // points to the root
         nsINode *mNodeParent;
         PRBool mBeforeNode;
+        // mNode's index in mNodeParent. Uninitialized if mNodeParent is null
+        // or dangling (per above comment).
         PRInt32 mIndexInParent;
     };
 

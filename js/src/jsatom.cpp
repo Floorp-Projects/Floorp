@@ -537,8 +537,8 @@ js_locked_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
         return JS_DHASH_NEXT;
     }
     JS_SET_TRACING_INDEX(trc, "locked_atom", (size_t)number);
-    JS_CallTracer(trc, ATOM_ENTRY_KEY(entry),
-                  IS_STRING_TABLE(table) ? JSTRACE_STRING : JSTRACE_DOUBLE);
+    js_CallGCMarker(trc, ATOM_ENTRY_KEY(entry),
+                    IS_STRING_TABLE(table) ? JSTRACE_STRING : JSTRACE_DOUBLE);
     return JS_DHASH_NEXT;
 }
 
@@ -557,7 +557,7 @@ js_pinned_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              ? "pinned_atom"
                              : "interned_atom",
                              (size_t)number);
-        JS_CallTracer(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
+        js_CallGCMarker(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
     }
     return JS_DHASH_NEXT;
 }

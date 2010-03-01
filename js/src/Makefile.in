@@ -218,13 +218,14 @@ INSTALLED_HEADERS = \
 		jstypes.h \
 		jsutil.h \
 		jsvector.h \
-	        jstl.h \
+		jstl.h \
+		jshashtable.h \
 		jsversion.h \
 		jsxdrapi.h \
 		jsxml.h \
 		$(NULL)
 
-ifdef ENABLE_JIT
+ifdef ENABLE_TRACEJIT
 VPATH		+= $(srcdir)/nanojit
 
 INSTALLED_HEADERS += \
@@ -238,6 +239,7 @@ INSTALLED_HEADERS += \
 		Fragmento.h	\
 		Native.h	\
 		Native$(NANOJIT_ARCH).h \
+		njconfig.h  \
 		RegAlloc.h	\
 		nanojit.h	\
 		VMPI.h		\
@@ -251,6 +253,7 @@ CPPSRCS += \
 		Containers.cpp \
 		Fragmento.cpp  \
 		LIR.cpp        \
+		njconfig.cpp   \
 		RegAlloc.cpp   \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
@@ -265,7 +268,7 @@ ASFLAGS += -arch 6
 ASFILES += jswince.asm
 endif
 
-endif # ENABLE_JIT
+endif # ENABLE_TRACEJIT
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
@@ -361,7 +364,7 @@ check-valgrind::
 	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
 endif
 
-ifdef ENABLE_JIT
+ifdef ENABLE_TRACEJIT
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)

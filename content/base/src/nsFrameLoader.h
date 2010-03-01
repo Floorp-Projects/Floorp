@@ -164,6 +164,8 @@ private:
   // when we have our own in-process DocShell.
   NS_HIDDEN_(nsresult) UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame);
   nsresult CheckURILoad(nsIURI* aURI);
+  void FireErrorEvent();
+  nsresult ReallyStartLoadingInternal();
 
 #ifdef MOZ_IPC
   // True means new process started; nothing else to do

@@ -623,9 +623,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
             JS_LOCK_OBJ(cx, obj);
             propid = ID_TO_VALUE(sprop->id);
-            userid = (sprop->flags & SPROP_HAS_SHORTID)
-                     ? INT_TO_JSVAL(sprop->shortid)
-                     : propid;
+            userid = SPROP_USERID(sprop);
             scope = OBJ_SCOPE(obj);
             JS_UNLOCK_OBJ(cx, obj);
 
@@ -880,7 +878,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             getter = sprop->getter;
             setter = sprop->setter;
             attrs = sprop->attrs;
-            flags = sprop->flags;
+            flags = sprop->getFlags();
             shortid = sprop->shortid;
         } else {
             if (!pobj->getProperty(cx, propid, &value) ||
@@ -1125,18 +1123,17 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     return NULL;
 }
 
-JS_PUBLIC_API(JSPrincipals *)
-JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
+JSPrincipals *
+js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller)
 {
     JSPrincipals *principals, *callerPrincipals;
     JSSecurityCallbacks *callbacks;
 
     callbacks = JS_GetSecurityCallbacks(cx);
-    if (callbacks && callbacks->findObjectPrincipals) {
-        principals = callbacks->findObjectPrincipals(cx, fp->callee());
-    } else {
+    if (callbacks && callbacks->findObjectPrincipals)
+        principals = callbacks->findObjectPrincipals(cx, callee);
+    else
         principals = NULL;
-    }
     if (!caller)
         return principals;
     callerPrincipals = JS_StackFramePrincipals(cx, caller);
@@ -1144,6 +1141,12 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
             callerPrincipals->subsume(callerPrincipals, principals))
            ? principals
            : callerPrincipals;
+}
+
+JS_PUBLIC_API(JSPrincipals *)
+JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
+{
+    return js_EvalFramePrincipals(cx, fp->callee(), caller);
 }
 
 JS_PUBLIC_API(void *)
@@ -2304,7 +2307,7 @@ jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 
 /* Collect states here and distribute to a matching buffer, if any */
 JS_FRIEND_API(void)
-js_StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
+js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
     JSStackFrame *fp = cx->fp;
 

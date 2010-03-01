@@ -86,7 +86,7 @@ public:
 
     PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
-    nsresult GetFontList(const nsACString& aLangGroup,
+    nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts);
     nsresult UpdateFontList();
@@ -97,14 +97,6 @@ public:
 
     // lower threshold on font anti-aliasing
     PRUint32 GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
-
-    // whether we are using CoreText rather than ATSUI for shaping
-    PRBool UsingCoreText()
-#ifdef __LP64__
-        { return PR_TRUE; }
-#else
-        { return mUseCoreText; }
-#endif
 
     // record Unicode cluster boundaries in the text run
     virtual void SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString);
@@ -117,12 +109,6 @@ private:
     
     PRInt32 mOSXVersion;
     PRUint32 mFontAntiAliasingThreshold;
-
-#ifndef __LP64__
-    // whether to use CoreText instead of ATSUI
-    // NOTE that this must not be changed after startup, once font objects have been created
-    PRBool mUseCoreText;
-#endif
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

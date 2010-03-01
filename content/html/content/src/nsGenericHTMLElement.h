@@ -198,9 +198,6 @@ public:
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
   PRBool IsHTMLLink(nsIURI** aURI) const;
 
-  // Used by A, AREA, LINK, and STYLE.
-  already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
-
   // As above, but makes sure to return a URI object that we can mutate with
   // impunity without changing our current URI.  That is, if the URI is cached
   // it clones it and returns the clone.
@@ -496,24 +493,6 @@ public:
    */
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
-  // Helper functions for <a> and <area>
-  void SetHrefToURI(nsIURI* aURI);
-  nsresult SetProtocolInHrefURI(const nsAString &aProtocol);
-  nsresult SetHostInHrefURI(const nsAString &aHost);
-  nsresult SetHostnameInHrefURI(const nsAString &aHostname);
-  nsresult SetPathnameInHrefURI(const nsAString &aPathname);
-  nsresult SetSearchInHrefURI(const nsAString &aSearch);
-  nsresult SetPortInHrefURI(const nsAString &aPort);
-  nsresult SetHashInHrefURI(const nsAString &aHash);
-
-  nsresult GetProtocolFromHrefURI(nsAString& aProtocol);
-  nsresult GetHostFromHrefURI(nsAString& aHost);
-  nsresult GetHostnameFromHrefURI(nsAString& aHostname);
-  nsresult GetPathnameFromHrefURI(nsAString& aPathname);
-  nsresult GetSearchFromHrefURI(nsAString& aSearch);
-  nsresult GetPortFromHrefURI(nsAString& aPort);
-  nsresult GetHashFromHrefURI(nsAString& aHash);
-
   /**
    * Locate an nsIEditor rooted at this content node, if there is one.
    */
@@ -740,6 +719,9 @@ protected:
 
     return value > 0 ? eTrue : (value == 0 ? eFalse : eInherit);
   }
+
+  // Used by A, AREA, LINK, and STYLE.
+  already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
 
 private:
   /**

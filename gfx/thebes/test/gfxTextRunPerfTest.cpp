@@ -93,7 +93,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               NS_FONT_STRETCH_NORMAL,
                                               400,
                                               16.0,
-                                              nsDependentCString("x-western"),
+                                              NS_NewPermanentAtom("en"),
                                               0.0,
                                               PR_FALSE, PR_FALSE, PR_FALSE);
 

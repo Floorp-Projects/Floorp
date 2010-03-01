@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+
+  <title>Testcase for clipPath referencing other clipPaths</title>
+  
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=534612 -->
+
+  <defs>
+    <clipPath id="clip1">
+      <rect id="r1" x="20" y="-40" width="100" height="40" />
+    </clipPath>
+    <clipPath id="clip2">
+      <rect x="20" y="20" width="100" height="100" clip-path="url(#clip1)" />
+    </clipPath>
+    <clipPath id="clip3">
+      <rect x="140" y="-40" width="100" height="40" />
+    </clipPath>
+    <clipPath id="clip4" clip-path="url(#clip3)">
+      <rect x="140" y="20" width="100" height="100" />
+    </clipPath>
+    <clipPath id="clip1">
+      <rect x="20" y="-40" width="100" height="40" />
+    </clipPath>
+    <clipPath id="clip5">
+      <rect id="r5" x="20" y="140" width="100" height="100" />
+    </clipPath>
+    <clipPath id="clip6">
+      <use xlink:href="#r5" clip-path="url(#clip5)" />
+    </clipPath>
+    <clipPath id="clip7">
+      <rect id="r7" x="140" y="140" width="100" height="100" />
+    </clipPath>
+    <clipPath id="clip8">
+      <use xlink:href="#r7" fill="red" clip-path="url(#clip1)"/>
+    </clipPath>
+    <clipPath id="clip9">
+      <rect x="20" y="260" width="100" height="100" />
+    </clipPath>
+    <clipPath id="clip10">
+      <use xlink:href="#r1" fill="red" clip-path="url(#clip9)"/>
+    </clipPath>
+    <clipPath id="clip11">
+      <rect id="r11" x="140" y="260" width="100" height="100" clip-path="url(#clip1)"/>
+    </clipPath>
+    <clipPath id="clip12">
+      <use xlink:href="#r11" fill="red" clip-path="url(#clip11)"/>
+    </clipPath>
+    <clipPath id="clip12" clipPathUnits="objectBoundingBox">
+      <rect width=".5" height=".5"/>
+    </clipPath>
+    <clipPath id="clip13" clip-path="url(#clip12)">
+      <circle cx="100" cy="470" r="150"/>
+    </clipPath>
+    <clipPath id="clip14">
+      <use xlink:href="#clip1"/>
+    </clipPath>
+    <clipPath id="clip15" clip-path="url(#clip14)">
+      <text x="140" y="500" font-size="100px">CLIP</text>
+    </clipPath>
+  </defs>
+
+  <rect width="100%" height="100%" fill="lime" />
+  <!-- clip path where an object is itself clipped -->
+  <rect x="20" y="20" width="100" height="100" fill="red" clip-path="url(#clip2)" />
+  
+  <!-- clip path referencing another clip-path -->
+  <rect x="140" y="20" width="100" height="100" fill="red" clip-path="url(#clip4)" />
+
+  <!-- clip paths where object has complex clipping -->
+  <rect x="20" y="140" width="100" height="100" fill="red" />
+  <rect x="20" y="140" width="100" height="100" fill="lime" clip-path="url(#clip6)" />
+
+  <rect x="140" y="140" width="100" height="100" fill="red" clip-path="url(#clip8)" />
+
+  <rect x="20" y="260" width="100" height="100" fill="red" clip-path="url(#clip10)" />
+
+  <rect x="140" y="260" width="100" height="100" fill="red" clip-path="url(#clip12)" />
+
+  <!-- clip paths with different clipPathUnits -->
+  <rect x="20" y="400" height="300" width="300" fill="red" clip-path="url(#clip13)" />
+  <rect x="20" y="400" width="100" height="100" fill="lime" />
+
+  <!-- text clipping -->
+  <rect x="140" y="400" height="300" width="300" fill="red" clip-path="url(#clip15)" />
+</svg>

@@ -459,7 +459,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsISupports> container = doc->GetContainer();
-  NS_ENSURE_TRUE(container, NS_ERROR_NOT_AVAILABLE);
+  // Can be null if owner document is synthetic
 
   Initialize(doc, uri, container, nsnull);
 

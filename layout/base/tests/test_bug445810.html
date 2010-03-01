@@ -85,7 +85,7 @@ function step2() {
   is(divcs.width, "9px", "border image loading caused reflow");
   is(divcs.height, "19px", "border image loading caused reflow");
 
-  p.style.border = "";
+  p.style.borderStyle = "none";
   is(divcs.width, "9px", "border image still shows with border-style:none");
   is(divcs.height, "19px", "border image still shows with border-style:none");
 
@@ -113,7 +113,6 @@ function step3() {
 
   currImageElem.src = new_image_url();
   p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2";
-  p.style.border = "3px none";
   is(divcs.width, "5px", "border image not loaded yet");
   is(divcs.height, "5px", "border image not loaded yet");
   currImageElem.onload = step4;

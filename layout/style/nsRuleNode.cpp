@@ -71,6 +71,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsCSSKeywords.h"
@@ -150,6 +151,8 @@ static void EnsureBlockDisplay(PRUint8& display)
     // do not muck with these at all - already blocks
     // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we
     // should just call that?)
+    // This needs to match the check done in
+    // nsCSSFrameConstructor::FindMathMLData for <math>.
     break;
 
   case NS_STYLE_DISPLAY_INLINE_TABLE :
@@ -4209,7 +4212,9 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
     if (gLangService) {
       nsAutoString lang;
       displayData.mLang.GetStringValue(lang);
-      visibility->mLangGroup = gLangService->LookupLanguage(lang);
+
+      ToLowerCase(lang);
+      visibility->mLanguage = do_GetAtom(lang);
     }
   }
 

@@ -2067,8 +2067,8 @@ MarkDelayedChildren(JSTracer *trc)
     JS_ASSERT(rt->gcMarkLaterCount == 0);
 }
 
-JS_PUBLIC_API(void)
-JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
+void
+js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
@@ -2186,7 +2186,7 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     } else {
         return;
     }
-    JS_CallTracer(trc, thing, kind);
+    js_CallGCMarker(trc, thing, kind);
 }
 
 static JSDHashOperator
@@ -2267,8 +2267,8 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
             _v = *_vp;                                                        \
             if (JSVAL_IS_TRACEABLE(_v)) {                                     \
                 JS_SET_TRACING_INDEX(trc, name, _vp - (vec));                 \
-                JS_CallTracer(trc, JSVAL_TO_TRACEABLE(_v),                    \
-                              JSVAL_TRACE_KIND(_v));                          \
+                js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(_v),                  \
+                                JSVAL_TRACE_KIND(_v));                        \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
@@ -2378,34 +2378,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 {
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
-
-    if (IS_GC_MARKING_TRACER(trc)) {
-
-#define FREE_OLD_ARENAS(pool)                                                 \
-        JS_BEGIN_MACRO                                                        \
-            int64 _age;                                                       \
-            JSArena * _a = (pool).current;                                    \
-            if (_a == (pool).first.next &&                                    \
-                _a->avail == _a->base + sizeof(int64)) {                      \
-                _age = JS_Now() - *(int64 *) _a->base;                        \
-                if (_age > (int64) acx->runtime->gcEmptyArenaPoolLifespan *   \
-                           1000)                                              \
-                    JS_FreeArenaPool(&(pool));                                \
-            }                                                                 \
-        JS_END_MACRO
-
-        /*
-         * Release the stackPool's arenas if the stackPool has existed for
-         * longer than the limit specified by gcEmptyArenaPoolLifespan.
-         */
-        FREE_OLD_ARENAS(acx->stackPool);
-
-        /*
-         * Release the regexpPool's arenas based on the same criterion as for
-         * the stackPool.
-         */
-        FREE_OLD_ARENAS(acx->regexpPool);
-    }
 
     /*
      * Trace active and suspended callstacks.
@@ -2870,7 +2842,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
     JSGCCallback callback;
-    bool keepAtoms;
     JSTracer trc;
     JSGCArena *emptyArenas, *a, **ap;
 #ifdef JS_THREADSAFE
@@ -3141,6 +3112,12 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     js_PurgeThreads(cx);
+    {
+        JSContext *iter = NULL, *acx;
+        while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
+            acx->purge();
+    }
+
 
 #ifdef JS_TRACER
     if (gckind == GC_LAST_CONTEXT) {
@@ -3149,20 +3126,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
-    if (gckind & GC_KEEP_ATOMS) {
-        /*
-         * The set slot request and last ditch GC kinds preserve all atoms and
-         * weak roots.
-         */
-        keepAtoms = true;
-    } else {
-        /*
-         * Query rt->gcKeepAtoms only when we know that all other threads are
-         * suspended, see bug 541790.
-         */
-        keepAtoms = (rt->gcKeepAtoms != 0);
+    /* The last ditch GC preserves weak roots. */
+    if (!(gckind & GC_KEEP_ATOMS))
         JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
-    }
 
   restart:
     rt->gcNumber++;
@@ -3181,8 +3147,15 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JS_ASSERT(!a->info.hasMarkedDoubles);
 #endif
 
-    js_TraceRuntime(&trc, keepAtoms);
-    js_MarkScriptFilenames(rt, keepAtoms);
+    {
+        /*
+         * Query rt->gcKeepAtoms only when we know that all other threads are
+         * suspended, see bug 541790.
+         */
+        bool keepAtoms = (gckind & GC_KEEP_ATOMS) || rt->gcKeepAtoms != 0;
+        js_TraceRuntime(&trc, keepAtoms);
+        js_MarkScriptFilenames(rt, keepAtoms);
+    }
 
     /*
      * Mark children of things that caused too deep recursion during the above

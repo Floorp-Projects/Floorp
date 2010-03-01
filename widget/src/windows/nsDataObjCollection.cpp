@@ -44,6 +44,10 @@
 
 #include <ole2.h>
 
+// {25589C3E-1FAC-47b9-BF43-CAEA89B79533}
+const IID IID_IDataObjCollection =
+  {0x25589c3e, 0x1fac, 0x47b9, {0xbf, 0x43, 0xca, 0xea, 0x89, 0xb7, 0x95, 0x33}};
+
 /*
  * Class nsDataObjCollection
  */

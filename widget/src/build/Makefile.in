@@ -55,6 +55,7 @@ CPPSRCS		= nsWinWidgetFactory.cpp
 
 EXTRA_DSO_LIBS	= gkgfx \
 		  thebes \
+		  layers \
 		  $(NULL)
 
 LOCAL_INCLUDES	= \

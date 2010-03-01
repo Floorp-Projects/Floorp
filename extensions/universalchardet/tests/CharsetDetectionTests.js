@@ -32,6 +32,16 @@ function InitDetectorTests()
     SetDetectorPref(gDetectorList[0]);
     gTestIndex = 0;
     $("testframe").onload = DoDetectionTest;
+
+    if (gExpectedCharset == "default") {
+      try {
+	gExpectedCharset = prefService
+	  .getComplexValue("intl.charset.default",
+			   Components.interfaces.nsIPrefLocalizedString).data;
+      } catch (e) {
+	gExpectedCharset = "ISO-8859-8";
+      }
+    }
 }
 
 function SetDetectorPref(aPrefValue)
