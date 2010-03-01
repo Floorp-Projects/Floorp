@@ -4,7 +4,6 @@
  *              component, specifically for bookmark management.
  */
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var thread = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).currentThread;
 var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
 var chromeWindow = window;
@@ -36,10 +35,10 @@ var gCurrentTest = null;
 function test() {
   // test testing dependencies
   ok(isnot, "Mochitest must be in context");
-  ok(ioService, "nsIIOService must be in context");
   ok(thread, "nsIThreadManager must be in context");
   ok(PlacesUtils, "PlacesUtils must be in context");
   ok(EventUtils, "EventUtils must be in context");
+  ok(gIOService, "nsIIOService must be in context");
   ok(chromeWindow, "ChromeWindow must be in context");
   
   ok(true, "*** Starting test browser_bookmark_folders.js\n"); 
@@ -205,7 +204,7 @@ gTests.push({
     var donebutton = chromeWindow.document.getAnonymousElementByAttribute(folderitem, "anonid", "done-button");
     donebutton.click();
 
-    var bookmarkitemid = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
+    var bookmarkitemid = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     is(PlacesUtils.bookmarks.getFolderIdForItem(bookmarkitemid), BookmarkList.mobileRoot, "bookmark starts off in root");
 
     // Move bookmark
@@ -340,9 +339,3 @@ gTests.push({
   },
   
 });
-
-//------------------------------------------------------------------------------
-// Helpers
-function uri(spec) {
-  return ioService.newURI(spec, null, null);
-}
