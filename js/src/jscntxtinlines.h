@@ -136,6 +136,12 @@ AutoGCRooter::trace(JSTracer *trc)
         JS_SET_TRACING_NAME(trc, "js::AutoIdRooter.val");
         js_CallValueTracerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
         return;
+
+      case VECTOR: {
+        js::Vector<jsval, 8> &vector = static_cast<js::AutoValueVector *>(this)->vector;
+        js::TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
