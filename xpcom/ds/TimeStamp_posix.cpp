@@ -58,6 +58,12 @@ static const PRUint64 kNsPerMs   =    1000000;
 static const PRUint64 kNsPerSec  = 1000000000; 
 static const double kNsPerSecd   = 1000000000.0;
 
+static PRUint64
+TimespecToNs(const struct timespec& ts)
+{
+  PRUint64 baseNs = PRUint64(ts.tv_sec) * kNsPerSec;
+  return baseNs + PRUint64(ts.tv_nsec);
+}
 
 static PRUint64
 ClockTimeNs()
@@ -73,16 +79,14 @@ ClockTimeNs()
   // bits, tv_sec won't overflow while the browser is open.  Revisit
   // this argument if we're still building with 32-bit time_t around
   // the year 2037.
-  PRUint64 baseNs = PRUint64(ts.tv_sec) * kNsPerSec;
-
-  return baseNs + PRUint64(ts.tv_nsec);
+  return TimespecToNs(ts);
 }
 
 static PRUint64
 ClockResolutionNs()
 {
-  // NB: why not use clock_getres()?  Two reasons: (i) it might lie,
-  // and (ii) it might return an "ideal" resolution that while
+  // NB: why not rely on clock_getres()?  Two reasons: (i) it might
+  // lie, and (ii) it might return an "ideal" resolution that while
   // theoretically true, could never be measured in practice.  Since
   // clock_gettime() likely involves a system call on your platform,
   // the "actual" timing resolution shouldn't be lower than syscall
@@ -105,11 +109,19 @@ ClockResolutionNs()
   }
 
   if (0 == minres) {
-    NS_WARNING("the clock resolution is *not* 1ns, something's wrong");
-    minres = 1;                 // to avoid /0
+    // measurable resolution is either incredibly low, ~1ns, or very
+    // high.  fall back on clock_getres()
+    struct timespec ts;
+    clock_getres(CLOCK_MONOTONIC, &ts);
+
+    minres = TimespecToNs(ts);
   }
-  if (minres / kNsPerMs)
-    NS_WARNING("the clock resolution is *not* >=1ms, something's wrong");
+
+  if (0 == minres) {
+    // clock_getres probably failed.  fall back on NSPR's resolution
+    // assumption
+    minres = 1 * kNsPerMs;
+  }
 
   return minres;
 }
