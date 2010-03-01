@@ -52,7 +52,7 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 
-EXTRA_DSO_LIBS	= gkgfx thebes
+EXTRA_DSO_LIBS	= gkgfx thebes layers
 
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\
