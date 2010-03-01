@@ -53,6 +53,8 @@ namespace layers {
 class Layer;
 class ThebesLayer;
 class ContainerLayer;
+class ImageLayer;
+class ImageContainer;
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -150,6 +152,16 @@ public:
    * Create a ContainerLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create an ImageLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() = 0;
+
+  /**
+   * Can be called anytime
+   */
+  virtual already_AddRefed<ImageContainer> CreateImageContainer() = 0;
 };
 
 /**
