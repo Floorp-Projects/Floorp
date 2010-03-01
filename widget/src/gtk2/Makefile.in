@@ -108,6 +108,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		-lthebes \
+		-llayers \
 		$(MOZ_CAIRO_LIBS) \
                 $(MOZ_STARTUP_NOTIFICATION_LIBS) \
 		$(XLDFLAGS) \
