@@ -603,8 +603,6 @@ namespace nanojit
             LInsp rhs = ins->oprnd2();
             LOpcode op = ins->opcode();
 
-            NanoAssert(op >= LIR_fadd && op <= LIR_fdiv);
-
             // rr = ra OP rb
 
             Register rr = deprecated_prepResultReg(ins, FpRegs);
@@ -1175,7 +1173,7 @@ namespace nanojit
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, Register cr)
     {
-        RegisterMask allow = condop >= LIR_feq && condop <= LIR_fge ? FpRegs : GpRegs;
+        RegisterMask allow = isFCmpOpcode(condop) ? FpRegs : GpRegs;
         Register ra = findRegFor(a, allow);
         Register rb = (b==a) ? ra : findRegFor(b, allow & ~rmask(ra));
 
@@ -1244,7 +1242,7 @@ namespace nanojit
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCond());
         bool inrange;
-        RegisterMask allow = condop >= LIR_feq && condop <= LIR_fge ? FpRegs : GpRegs;
+        RegisterMask allow = isFCmpOpcode(condop) ? FpRegs : GpRegs;
         LIns *a = cond->oprnd1();
         LIns *b = cond->oprnd2();
         Register ra = findRegFor(a, allow);
@@ -1319,7 +1317,7 @@ namespace nanojit
         }
 
         NIns *patch = NULL;
-        if (cpu_has_fpu && (condop >= LIR_feq && condop <= LIR_fge)) {
+        if (cpu_has_fpu && isFCmpOpcode(condop)) {
             // c.xx.d $ra,$rb
             // bc1x   btarg
             switch (condop) {

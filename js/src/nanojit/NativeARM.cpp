@@ -2135,8 +2135,6 @@ Assembler::asm_fop(LInsp ins)
     LInsp rhs = ins->oprnd2();
     LOpcode op = ins->opcode();
 
-    NanoAssert(op >= LIR_fadd && op <= LIR_fdiv);
-
     // rr = ra OP rb
 
     Register rr = deprecated_prepResultReg(ins, FpRegs);
@@ -2163,7 +2161,7 @@ Assembler::asm_fcmp(LInsp ins)
     LInsp rhs = ins->oprnd2();
     LOpcode op = ins->opcode();
 
-    NanoAssert(op >= LIR_feq && op <= LIR_fge);
+    NanoAssert(isFCmpOpcode(op));
 
     Register ra, rb;
     findRegFor2(FpRegs, lhs, ra, FpRegs, rhs, rb);
@@ -2183,7 +2181,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 {
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCmp());
-    NanoAssert(_config.arm_vfp || ((condop < LIR_feq) || (condop > LIR_fge)));
+    NanoAssert(_config.arm_vfp || !isFCmpOpcode(condop));
 
     // The old "never" condition code has special meaning on newer ARM cores,
     // so use "always" as a sensible default code.
