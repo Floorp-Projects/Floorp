@@ -444,6 +444,12 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_DoubleIsInt32(jsdouble d, jsint *ip)
+{
+    return JSDOUBLE_IS_INT(d, *ip);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {
     CHECK_REQUEST(cx);
