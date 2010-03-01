@@ -852,6 +852,16 @@ public:
     mInvalidateRequests.mRequests.Clear();
   }
 
+  PRBool IsProcessingRestyles() const {
+    return mProcessingRestyles;
+  }
+
+  void SetProcessingRestyles(PRBool aProcessing) {
+    NS_ASSERTION(aProcessing != PRBool(mProcessingRestyles),
+                 "should never nest");
+    mProcessingRestyles = aProcessing;
+  }
+
   PRBool IsProcessingAnimationStyleChange() const {
     return mProcessingAnimationStyleChange;
   }
@@ -1106,6 +1116,7 @@ protected:
 
   unsigned              mIsVisual : 1;
 
+  unsigned              mProcessingRestyles : 1;
   unsigned              mProcessingAnimationStyleChange : 1;
 
 #ifdef DEBUG
