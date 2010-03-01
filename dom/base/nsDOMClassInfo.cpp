@@ -67,7 +67,6 @@
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
 #include "jsdbgapi.h"
-#include "jsnum.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -3825,7 +3824,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
 
   jsint i = -1;
 
-  if (!JSDOUBLE_IS_INT(array_index, i)) {
+  if (!::JS_DoubleIsInt32(array_index, &i)) {
     return -1;
   }
 
