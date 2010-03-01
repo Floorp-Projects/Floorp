@@ -508,7 +508,7 @@ DDRAW_FAILED:
     thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
     if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
       const nsIntRect* r;
-      for (nsIntRegionRectIterator iter(paintRgn);
+      for (nsIntRegionRectIterator iter(event.region);
            (r = iter.Next()) != nsnull;) {
         thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
       }
