@@ -368,7 +368,7 @@ namespace nanojit
                                   verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
-            bool isKnownReg(Register r) {
+            bool deprecated_isKnownReg(Register r) {
                 return r != deprecated_UnknownReg;
             }
 

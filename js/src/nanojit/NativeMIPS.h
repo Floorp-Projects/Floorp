@@ -88,7 +88,7 @@ namespace nanojit
         // Wellknown register names used by code generator
         FirstReg = ZERO,
         LastReg = F31,
-        deprecated_UnknownReg = 127
+        deprecated_UnknownReg = 127     // XXX: remove eventually, see bug 538924
 
     } Register;
 
