@@ -880,7 +880,7 @@ namespace nanojit
     *(--_nIns) = 0x57;\
     *(--_nIns) = 0x0f;\
     *(--_nIns) = 0x66;\
-    asm_output("xorpd %s,[0x%p]",gpn(r),(void*)(maskaddr));\
+    asm_output("xorpd %s,[%p]",gpn(r),(void*)(maskaddr));\
     } while(0)
 
 #define SSE_XORPDr(rd,rs) do{ \
