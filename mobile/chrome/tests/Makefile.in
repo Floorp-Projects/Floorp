@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
+  head.js \
   browser_mainui.js \
   browser_tabs.js \
   browser_bookmarks.js \
@@ -52,9 +53,11 @@ _BROWSER_FILES = \
   browser_bookmarks_tags.js \
   browser_select.js \
   browser_rect.js \
+  browser_FormAssistant.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_select.html \
+  browser_FormAssistant.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)

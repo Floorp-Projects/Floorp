@@ -39,18 +39,3 @@ function onUIReady() {
   // We must finialize the tests
   finish();
 }
-
-//------------------------------------------------------------------------------
-// Helpers
-function waitFor(callback, test, timeout) {
-  if (test()) {
-    callback();
-    return;
-  }
-
-  timeout = timeout || Date.now();
-  if (Date.now() - timeout > 1000)
-    throw "waitFor timeout";
-  setTimeout(waitFor, 50, callback, test, timeout);
-}
-

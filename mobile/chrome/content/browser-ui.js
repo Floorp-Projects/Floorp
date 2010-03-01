@@ -1068,6 +1068,7 @@ var BookmarkList = {
 };
 
 var FormHelper = {
+  _open: false,
   _nodes: null,
   get _container() {
     delete this._container;
@@ -1143,7 +1144,7 @@ var FormHelper = {
     if (this._isValidSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
       return this._isElementVisible(aElement);
 
-    if (aElement instanceof HTMLInputElement) {
+    if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement) {
       let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
       let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
       if (!isValidElement)
@@ -1160,8 +1161,12 @@ var FormHelper = {
   },
 
   _isElementVisible: function(aElement) {
+    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
+    let isVisible = (style.getPropertyValue("visibility") != "hidden");
+    let isOpaque = (style.getPropertyValue("opacity") != 0);
+
     let rect = aElement.getBoundingClientRect();
-    return (rect.height != 0 || rect.width != 0);
+    return isVisible && isOpaque && (rect.height != 0 || rect.width != 0);
   },
 
   _getAll: function() {
@@ -1355,6 +1360,9 @@ var FormHelper = {
     // the user clicks on it
     let formExceptions = ["submit", "image", "file"];
     if (aElement instanceof HTMLInputElement && formExceptions.indexOf(aElement.type) != -1)
+      return false;
+
+    if (aElement instanceof HTMLButtonElement || (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex")))
       return false;
 
     return this._isValidElement(aElement);

@@ -4,7 +4,6 @@
  *              component, specifically for bookmark management.
  */
  
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService); 
 var testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
 var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
 
@@ -63,7 +62,7 @@ gTests.push({
     var starbutton = document.getElementById("tool-star");
     starbutton.click();
     
-    var bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
+    var bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     ok(bookmarkItem != -1, testURL_02 + " should be added.");
     
     BookmarkList.show();  
@@ -83,7 +82,7 @@ gTests.push({
     var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
 
-    var tagsarray = PlacesUtils.tagging.getTagsForURI(uri(testURL_02), {});
+    var tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 4, "All tags are associated with specified bookmark");
     
     BookmarkList.close();
@@ -123,7 +122,7 @@ gTests.push({
     is(untaggeduri, "", "Old tag is not associated with any bookmark");
     taggeduri = PlacesUtils.tagging.getURIsForTag("edited-tag-three");
     is(taggeduri[0].spec, testURL_02, "New tag is added to bookmark");
-    var tagsarray = PlacesUtils.tagging.getTagsForURI(uri(testURL_02), {});
+    var tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 4, "Bookmark still has same number of tags");
     
     BookmarkList.close();
@@ -159,7 +158,7 @@ gTests.push({
 
     var untaggeduri = PlacesUtils.tagging.getURIsForTag("edited-tag-three");
     is(untaggeduri, "", "Old tag is not associated with any bookmark");
-    var tagsarray = PlacesUtils.tagging.getTagsForURI(uri(testURL_02), {});
+    var tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 3, "Tag is successfully deleted");
     
     BookmarkList.close();
@@ -167,22 +166,3 @@ gTests.push({
     runNextTest();
   }  
 });
-
-//------------------------------------------------------------------------------
-// Helpers
-function uri(spec) {
-  return ioService.newURI(spec, null, null);
-}
-
-function waitFor(callback, test, timeout) {
-  if (test()) {
-    callback();
-    return;
-  }
-
-  timeout = timeout || Date.now();
-  if (Date.now() - timeout > 1000)
-    throw "waitFor timeout";
-  setTimeout(waitFor, 50, callback, test, timeout);
-}
-
