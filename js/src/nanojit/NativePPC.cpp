@@ -230,7 +230,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
     #ifdef NANOJIT_64BIT
         Register rr = ins->deprecated_getReg();
-        if (isKnownReg(rr) && (rmask(rr) & FpRegs)) {
+        if (deprecated_isKnownReg(rr) && (rmask(rr) & FpRegs)) {
             // FPR already assigned, fine, use it
             deprecated_freeRsrcOf(ins, false);
         } else {
@@ -796,7 +796,7 @@ namespace nanojit
         else if (sz == ARGSIZE_F) {
             if (p->isUsed()) {
                 Register rp = p->deprecated_getReg();
-                if (!isKnownReg(rp) || !IsFpReg(rp)) {
+                if (!deprecated_isKnownReg(rp) || !IsFpReg(rp)) {
                     // load it into the arg reg
                     int d = findMemFor(p);
                     LFD(r, d, FP);
@@ -1039,7 +1039,7 @@ namespace nanojit
     void Assembler::asm_quad(LIns *ins) {
     #ifdef NANOJIT_64BIT
         Register r = ins->deprecated_getReg();
-        if (isKnownReg(r) && (rmask(r) & FpRegs)) {
+        if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {
             // FPR already assigned, fine, use it
             deprecated_freeRsrcOf(ins, false);
         } else {
