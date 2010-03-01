@@ -106,6 +106,7 @@ EXTRA_DSO_LDOPTS += \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
+		-llayers \
 		$(QCMS_LIBS) \
 		$(NULL)
 

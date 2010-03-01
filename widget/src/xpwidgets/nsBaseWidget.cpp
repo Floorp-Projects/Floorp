@@ -49,6 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
+#include "BasicLayers.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -61,6 +62,8 @@ static PRBool debug_InSecureKeyboardInputMode = PR_FALSE;
 #ifdef NOISY_WIDGET_LEAKS
 static PRInt32 gNumWidgets;
 #endif
+
+using namespace mozilla::layers;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
 
@@ -627,6 +630,34 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(PRBool aFullScreen)
   }
 
   return NS_OK;
+}
+
+nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
+    nsBaseWidget* aWidget, gfxContext* aTarget)
+  : mWidget(aWidget)
+{
+  BasicLayerManager* manager =
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+  if (manager) {
+    manager->SetDefaultTarget(aTarget);
+  }
+}
+
+nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
+{
+  BasicLayerManager* manager =
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+  if (manager) {
+    manager->SetDefaultTarget(nsnull);
+  }
+}
+
+LayerManager* nsBaseWidget::GetLayerManager()
+{
+  if (!mLayerManager) {
+    mLayerManager = new BasicLayerManager(nsnull);
+  }
+  return mLayerManager;
 }
 
 //-------------------------------------------------------------------------
@@ -1330,20 +1361,6 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
           (void *) aWidget,
           aWidgetName.get(),
           (void *) aWindowID);
-  
-  if (aPaintEvent->rect) 
-  {
-    fprintf(aFileOut,
-            "%3d,%-3d %3d,%-3d",
-            aPaintEvent->rect->x, 
-            aPaintEvent->rect->y,
-            aPaintEvent->rect->width, 
-            aPaintEvent->rect->height);
-  }
-  else
-  {
-    fprintf(aFileOut,"none");
-  }
   
   fprintf(aFileOut,"\n");
 }

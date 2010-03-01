@@ -1192,7 +1192,11 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.Paint(&builder, aRenderingContext);
+  PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
+  }
+  list.Paint(&builder, aRenderingContext, flags);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+./* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -1012,23 +1012,18 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
-    nsCOMPtr<nsIRenderingContext> rc;
-    GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-    if (NS_UNLIKELY(!rc))
-        return nsEventStatus_eIgnore;
-
-    rc->Init(GetDeviceContext(), ctx);
-
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
     nsIntRect rect(r.x(), r.y(), r.width(), r.height());
     event.refPoint.x = r.x();
     event.refPoint.y = r.y();
-    event.rect = &rect;
-    event.region = nsnull;
-    event.renderingContext = rc;
+    event.region = nsIntRegion(rect);
 
-    nsEventStatus status = DispatchEvent(&event);
+    nsEventStatus status;
+    {
+      AutoLayerManagerSetup setupLayerManager(this, ctx);
+      status = DispatchEvent(&event);
+    }
 
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().

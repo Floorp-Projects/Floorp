@@ -3313,6 +3313,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
         renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
     }
+    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_USE_WIDGET_LAYERS) {
+        renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
+    }
 
     PRBool oldDisableValue = nsLayoutUtils::sDisableGetUsedXAssertions;
     nsLayoutUtils::sDisableGetUsedXAssertions = oldDisableValue || skipFlush;
