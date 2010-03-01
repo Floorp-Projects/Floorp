@@ -70,6 +70,8 @@
 #ifdef MOZ_WIDGET_QT
 #include <QX11EmbedWidget>
 #include <QApplication>
+#include <QGraphicsView>
+#include <QGraphicsWidget>
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
@@ -314,10 +316,18 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
     GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
     gtk_widget_show(win);
 #elif defined(MOZ_WIDGET_QT)
-    QX11EmbedWidget *win = new QX11EmbedWidget();
-    NS_ENSURE_TRUE(win, true);
-    win->embedInto(parentWidget);
-    win->show();
+    QX11EmbedWidget *embedWin = nsnull;
+    if (parentWidget) {
+      embedWin = new QX11EmbedWidget();
+      NS_ENSURE_TRUE(embedWin, false);
+      embedWin->embedInto(parentWidget);
+      embedWin->show();
+    }
+    QGraphicsView *view = new QGraphicsView(new QGraphicsScene(), embedWin);
+    NS_ENSURE_TRUE(view, false);
+    QGraphicsWidget *win = new QGraphicsWidget();
+    NS_ENSURE_TRUE(win, false);
+    view->scene()->addItem(win);
 #elif defined(XP_WIN)
     HWND win = parentWidget;
 #elif defined(XP_MACOSX)
