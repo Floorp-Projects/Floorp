@@ -2653,6 +2653,7 @@ function FillInHTMLTooltip(tipElement)
   var titleText = null;
   var XLinkTitleText = null;
   var SVGTitleText = null;
+  var lookingForSVGTitle = true;
   var direction = tipElement.ownerDocument.dir;
 
   while (!titleText && !XLinkTitleText && !SVGTitleText && tipElement) {
@@ -2664,7 +2665,13 @@ function FillInHTMLTooltip(tipElement)
           (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))) {
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
-      if (tipElement instanceof SVGElement) {
+      if (lookingForSVGTitle && 
+          !(tipElement instanceof SVGElement &&
+            tipElement.parentNode instanceof SVGElement &&
+            !(tipElement.parentNode instanceof SVGForeignObjectElement))) {
+        lookingForSVGTitle = false;
+      }
+      if (lookingForSVGTitle) {
         let length = tipElement.childNodes.length;
         for (let i = 0; i < length; i++) {
           let childNode = tipElement.childNodes[i];
