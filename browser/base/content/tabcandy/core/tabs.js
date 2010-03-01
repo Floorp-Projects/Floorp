@@ -329,6 +329,8 @@ function Tabs() {
     }
   };
 
+  // TODO: AZA ADDED THIS TO MAKE IT WORK WHEN JETPACK NOT INSTALLED
+  // TOTALLY HACKY :(
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
            .getService(Ci.nsIWindowMediator);
   var chromeWindow = wm.getMostRecentWindow("navigator:browser");
