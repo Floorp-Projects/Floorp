@@ -53,11 +53,13 @@ LIBXUL_LIBRARY = 1
 DEFINES += -DIMPL_THEBES
 
 EXPORTS = \
-        Layers.h \
         BasicLayers.h \
+        ImageLayers.h \
+        Layers.h \
         $(NULL)
 
 CPPSRCS = \
+        BasicImages.cpp \
         BasicLayers.cpp \
         $(NULL)
 
@@ -75,3 +77,5 @@ EXTRA_DSO_LDOPTS += \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
