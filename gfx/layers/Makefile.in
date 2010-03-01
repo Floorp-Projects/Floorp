@@ -47,6 +47,8 @@ LIBRARY_NAME   = layers
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 
+DEFINES += -DIMPL_THEBES
+
 EXPORTS = \
         Layers.h \
         BasicLayers.h \
