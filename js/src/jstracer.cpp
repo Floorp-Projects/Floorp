@@ -1715,7 +1715,7 @@ public:
                     return insImm(1);
                 }
             }
-        } else if (LIR_feq <= v && v <= LIR_fge) {
+        } else if (isFCmpOpcode(v)) {
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fcmp to cmp
                 v = LOpcode(v + (LIR_eq - LIR_feq));
@@ -8845,7 +8845,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      * compare.
      */
     if (!fp) {
-        JS_ASSERT(op >= LIR_feq && op <= LIR_fge);
+        JS_ASSERT(isFCmpOpcode(op));
         op = LOpcode(op + (LIR_eq - LIR_feq));
     }
     x = lir->ins2(op, l_ins, r_ins);
@@ -8925,23 +8925,19 @@ TraceRecorder::binary(LOpcode op)
     bool rightIsNumber = isNumber(r);
     jsdouble rnum = rightIsNumber ? asNumber(r) : 0;
 
-    if ((op >= LIR_sub && op <= LIR_ush) ||   // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
-        (op >= LIR_fsub && op <= LIR_fmod)) { // fsub, fmul, fdiv, fmod
-        LIns* args[2];
-        if (JSVAL_IS_STRING(l)) {
-            args[0] = a;
-            args[1] = cx_ins;
-            a = lir->insCall(&js_StringToNumber_ci, args);
-            lnum = js_StringToNumber(cx, JSVAL_TO_STRING(l));
-            leftIsNumber = true;
-        }
-        if (JSVAL_IS_STRING(r)) {
-            args[0] = b;
-            args[1] = cx_ins;
-            b = lir->insCall(&js_StringToNumber_ci, args);
-            rnum = js_StringToNumber(cx, JSVAL_TO_STRING(r));
-            rightIsNumber = true;
-        }
+    if (JSVAL_IS_STRING(l)) {
+        NanoAssert(op != LIR_fadd); // LIR_fadd/IS_STRING case handled by record_JSOP_ADD()
+        LIns* args[] = { a, cx_ins };
+        a = lir->insCall(&js_StringToNumber_ci, args);
+        lnum = js_StringToNumber(cx, JSVAL_TO_STRING(l));
+        leftIsNumber = true;
+    }
+    if (JSVAL_IS_STRING(r)) {
+        NanoAssert(op != LIR_fadd); // LIR_fadd/IS_STRING case handled by record_JSOP_ADD()
+        LIns* args[] = { b, cx_ins };
+        b = lir->insCall(&js_StringToNumber_ci, args);
+        rnum = js_StringToNumber(cx, JSVAL_TO_STRING(r));
+        rightIsNumber = true;
     }
     if (JSVAL_IS_SPECIAL(l)) {
         LIns* args[] = { a, cx_ins };
