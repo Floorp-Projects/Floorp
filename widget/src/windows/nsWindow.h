@@ -402,7 +402,7 @@ protected:
   static void             SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers);
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                               PRBool aIntersectWithExisting);
-  nsCOMPtr<nsIRegion>     GetRegionToPaint(PRBool aForceFullRepaint, 
+  nsIntRegion             GetRegionToPaint(PRBool aForceFullRepaint, 
                                            PAINTSTRUCT ps, HDC aDC);
 #if !defined(WINCE)
   static void             ActivateOtherWindowHelper(HWND aWnd);

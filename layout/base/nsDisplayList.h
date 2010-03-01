@@ -550,6 +550,7 @@ public:
   /**
    * Actually paint this item to some rendering context.
    * Content outside mVisibleRect need not be painted.
+   * aCtx must be set up as for nsDisplayList::Paint.
    */
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {}
   /**
@@ -848,9 +849,20 @@ public:
    * rectangle in aDirtyRect is painted, which *must* be contained in the
    * dirty rect used to construct the display list.
    * 
+   * If aFlags contains PAINT_USE_WIDGET_LAYERS and
+   * ShouldUseWidgetLayerManager() is set, then we will paint using
+   * the reference frame's widget's layer manager (and ctx may be null),
+   * otherwise we will use a temporary BasicLayerManager and ctx must
+   * not be null.
+   * 
    * ComputeVisibility must be called before Paint.
    */
-  void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) const;
+  enum {
+    PAINT_DEFAULT = 0,
+    PAINT_USE_WIDGET_LAYERS = 0x01
+  };
+  void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+             PRUint32 aFlags) const;
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    */

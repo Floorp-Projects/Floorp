@@ -877,7 +877,8 @@ function InitCurrentCanvasWithSnapshot()
                    Math.ceil(gCurrentCanvas.width / scale),
                    Math.ceil(gCurrentCanvas.height / scale),
                    "rgb(255,255,255)",
-                   ctx.DRAWWINDOW_DRAW_CARET);
+                   ctx.DRAWWINDOW_DRAW_CARET |
+                   ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
     ctx.restore();
 }
 
