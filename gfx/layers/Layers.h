@@ -42,6 +42,7 @@
 #include "nsRegion.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "gfx3DMatrix.h"
 
 class gfxContext;
 class nsPaintEvent;
@@ -228,6 +229,15 @@ public:
     }
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Tell this layer what its transform should be. The transformation
+   * is applied when compositing the layer into its parent container.
+   * XXX Currently only transformations corresponding to 2D affine transforms
+   * are supported.
+   */
+  void SetTransform(const gfx3DMatrix& aMatrix) { mTransform = aMatrix; }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
@@ -236,6 +246,7 @@ public:
   Layer* GetNextSibling() { return mNextSibling; }
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
+  const gfx3DMatrix& GetTransform() { return mTransform; }
 
   /**
    * Only the implementation should call this. This is per-implementation
@@ -268,6 +279,7 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
   PRPackedBool mUseClipRect;
