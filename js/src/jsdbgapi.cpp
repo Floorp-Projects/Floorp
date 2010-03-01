@@ -773,8 +773,10 @@ IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
     if (sprop->attrs & JSPROP_SETTER) {
         JSObject *funobj = sprop->setterObject();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        if (!funobj->isFunction())
+            return false;
 
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         return FUN_NATIVE(fun) == js_watch_set_wrapper;
     }
     return sprop->setterOp() == js_watch_set;
