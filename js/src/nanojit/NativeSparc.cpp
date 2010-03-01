@@ -458,7 +458,7 @@ namespace nanojit
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCmp());
-        if (condop >= LIR_feq && condop <= LIR_fge)
+        if (isFCmpOpcode(condop))
             {
                 return asm_fbranch(branchOnFalse, cond, targ);
             }
@@ -574,7 +574,7 @@ namespace nanojit
         Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
         underrunProtect(8);
         LOpcode condop = ins->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        NanoAssert(isFCmpOpcode(condop));
         if (condop == LIR_feq)
             MOVFEI(1, 0, 0, 0, r);
         else if (condop == LIR_fle)
@@ -932,7 +932,7 @@ namespace nanojit
     {
         NIns *at = 0;
         LOpcode condop = cond->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        NanoAssert(isFCmpOpcode(condop));
         underrunProtect(32);
         intptr_t tt = ((intptr_t)targ - (intptr_t)_nIns + 8) >> 2;
         // !targ means that it needs patch.

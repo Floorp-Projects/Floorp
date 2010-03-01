@@ -540,19 +540,19 @@ namespace nanojit
     }
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, ConditionRegister cr) {
-        RegisterMask allow = condop >= LIR_feq && condop <= LIR_fge ? FpRegs : GpRegs;
+        RegisterMask allow = isFCmpOpcode(condop) ? FpRegs : GpRegs;
         Register ra = findRegFor(a, allow);
 
     #if !PEDANTIC
         if (b->isconst()) {
             int32_t d = b->imm32();
             if (isS16(d)) {
-                if (condop >= LIR_eq && condop <= LIR_ge) {
+                if (isSICmpOpcode(condop)) {
                     CMPWI(cr, ra, d);
                     return;
                 }
     #if defined NANOJIT_64BIT
-                if (condop >= LIR_qeq && condop <= LIR_qge) {
+                if (isSQCmpOpcode(condop)) {
                     CMPDI(cr, ra, d);
                     TODO(cmpdi);
                     return;
@@ -560,12 +560,12 @@ namespace nanojit
     #endif
             }
             if (isU16(d)) {
-                if ((condop == LIR_eq || condop >= LIR_ult && condop <= LIR_uge)) {
+                if (isUICmpOpcode(condop)) {
                     CMPLWI(cr, ra, d);
                     return;
                 }
     #if defined NANOJIT_64BIT
-                if ((condop == LIR_qeq || condop >= LIR_qult && condop <= LIR_quge)) {
+                if (isUQCmpOpcode(condop)) {
                     CMPLDI(cr, ra, d);
                     TODO(cmpldi);
                     return;
@@ -577,21 +577,21 @@ namespace nanojit
 
         // general case
         Register rb = b==a ? ra : findRegFor(b, allow & ~rmask(ra));
-        if (condop >= LIR_eq && condop <= LIR_ge) {
+        if (isSICmpOpcode(condop)) {
             CMPW(cr, ra, rb);
         } 
-        else if (condop >= LIR_ult && condop <= LIR_uge) {
+        else if (isUICmpOpcode(condop)) {
             CMPLW(cr, ra, rb);
         } 
     #if defined NANOJIT_64BIT
-        else if (condop >= LIR_qeq && condop <= LIR_qge) {
+        else if (isSQCmpOpcode(condop)) {
             CMPD(cr, ra, rb);
         }
-        else if (condop >= LIR_qult && condop <= LIR_quge) {
+        else if (isUQCmpOpcode(condop)) {
             CMPLD(cr, ra, rb);
         }
     #endif
-        else if (condop >= LIR_feq && condop <= LIR_fge) {
+        else if (isFCmpOpcode(condop)) {
             // set the lt/gt bit for fle/fge.  We don't do this for
             // int/uint because in those cases we can invert the branch condition.
             // for float, we can't because of unordered comparisons

@@ -48,7 +48,7 @@ namespace nanojit
           : unsigned
 #endif
     {
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
         LIR_##op = (number),
 #include "LIRopcode.tbl"
         LIR_sentinel,
@@ -88,6 +88,54 @@ namespace nanojit
         LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
         LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret)
     };
+
+    // 32-bit integer comparisons must be contiguous, as must 64-bit integer
+    // comparisons and 64-bit float comparisons.
+    NanoStaticAssert(LIR_eq + 1 == LIR_lt  &&
+                     LIR_eq + 2 == LIR_gt  &&
+                     LIR_eq + 3 == LIR_le  &&
+                     LIR_eq + 4 == LIR_ge  &&
+                     LIR_eq + 5 == LIR_ult &&
+                     LIR_eq + 6 == LIR_ugt &&
+                     LIR_eq + 7 == LIR_ule &&
+                     LIR_eq + 8 == LIR_uge);
+#ifdef NANOJIT_64BIT
+    NanoStaticAssert(LIR_qeq + 1 == LIR_qlt  &&
+                     LIR_qeq + 2 == LIR_qgt  &&
+                     LIR_qeq + 3 == LIR_qle  &&
+                     LIR_qeq + 4 == LIR_qge  &&
+                     LIR_qeq + 5 == LIR_qult &&
+                     LIR_qeq + 6 == LIR_qugt &&
+                     LIR_qeq + 7 == LIR_qule &&
+                     LIR_qeq + 8 == LIR_quge);
+#endif
+    NanoStaticAssert(LIR_feq + 1 == LIR_flt &&
+                     LIR_feq + 2 == LIR_fgt &&
+                     LIR_feq + 3 == LIR_fle &&
+                     LIR_feq + 4 == LIR_fge);
+
+    // Various opcodes must be changeable to their opposite with op^1
+    // (although we use invertXyz() when possible, ie. outside static
+    // assertions).
+    NanoStaticAssert((LIR_jt^1) == LIR_jf && (LIR_jf^1) == LIR_jt);
+
+    NanoStaticAssert((LIR_xt^1) == LIR_xf && (LIR_xf^1) == LIR_xt);
+
+    NanoStaticAssert((LIR_lt^1)  == LIR_gt  && (LIR_gt^1)  == LIR_lt);
+    NanoStaticAssert((LIR_le^1)  == LIR_ge  && (LIR_ge^1)  == LIR_le);
+    NanoStaticAssert((LIR_ult^1) == LIR_ugt && (LIR_ugt^1) == LIR_ult);
+    NanoStaticAssert((LIR_ule^1) == LIR_uge && (LIR_uge^1) == LIR_ule);
+    
+#ifdef NANOJIT_64BIT
+    NanoStaticAssert((LIR_qlt^1)  == LIR_qgt  && (LIR_qgt^1)  == LIR_qlt);
+    NanoStaticAssert((LIR_qle^1)  == LIR_qge  && (LIR_qge^1)  == LIR_qle);
+    NanoStaticAssert((LIR_qult^1) == LIR_qugt && (LIR_qugt^1) == LIR_qult);
+    NanoStaticAssert((LIR_qule^1) == LIR_quge && (LIR_quge^1) == LIR_qule);
+#endif
+    
+    NanoStaticAssert((LIR_flt^1) == LIR_fgt && (LIR_fgt^1) == LIR_flt);
+    NanoStaticAssert((LIR_fle^1) == LIR_fge && (LIR_fge^1) == LIR_fle);
+
 
     struct GuardRecord;
     struct SideExit;
@@ -171,14 +219,12 @@ namespace nanojit
         uint32_t    index;
     };
 
+    // Array holding the 'isCse' field from LIRopcode.tbl.
+    extern const int8_t isCses[];       // cannot be uint8_t, some values are negative
+
     inline bool isCseOpcode(LOpcode op) {
-        return
-#if defined NANOJIT_64BIT
-            (op >= LIR_quad && op <= LIR_quge) ||
-#else
-            (op >= LIR_i2f && op <= LIR_float) ||       // XXX: yuk;  use a table (bug 542932)
-#endif
-            (op >= LIR_int && op <= LIR_uge);
+        NanoAssert(isCses[op] != -1);   // see LIRopcode.tbl to understand this
+        return isCses[op] == 1;
     }
     inline bool isRetOpcode(LOpcode op) {
         return 
@@ -194,6 +240,53 @@ namespace nanojit
 #endif
             op == LIR_cmov;
     }
+    inline bool isICmpOpcode(LOpcode op) {
+        return LIR_eq <= op && op <= LIR_uge;
+    }
+    inline bool isSICmpOpcode(LOpcode op) {
+        return LIR_eq <= op && op <= LIR_ge;
+    }
+    inline bool isUICmpOpcode(LOpcode op) {
+        return LIR_eq == op || (LIR_ult <= op && op <= LIR_uge);
+    }
+#ifdef NANOJIT_64BIT
+    inline bool isQCmpOpcode(LOpcode op) {
+        return LIR_qeq <= op && op <= LIR_quge;
+    }
+    inline bool isSQCmpOpcode(LOpcode op) {
+        return LIR_qeq <= op && op <= LIR_qge;
+    }
+    inline bool isUQCmpOpcode(LOpcode op) {
+        return LIR_qeq == op || (LIR_qult <= op && op <= LIR_quge);
+    }
+#endif
+    inline bool isFCmpOpcode(LOpcode op) {
+        return LIR_feq <= op && op <= LIR_fge;
+    }
+
+    inline LOpcode invertCondJmpOpcode(LOpcode op) {
+        NanoAssert(op == LIR_jt || op == LIR_jf);
+        return LOpcode(op ^ 1);
+    }
+    inline LOpcode invertCondGuardOpcode(LOpcode op) {
+        NanoAssert(op == LIR_xt || op == LIR_xf);
+        return LOpcode(op ^ 1);
+    }
+    inline LOpcode invertICmpOpcode(LOpcode op) {
+        NanoAssert(isICmpOpcode(op));
+        return LOpcode(op ^ 1);
+    }
+#ifdef NANOJIT_64BIT
+    inline LOpcode invertQCmpOpcode(LOpcode op) {
+        NanoAssert(isQCmpOpcode(op));
+        return LOpcode(op ^ 1);
+    }
+#endif
+    inline LOpcode invertFCmpOpcode(LOpcode op) {
+        NanoAssert(isFCmpOpcode(op));
+        return LOpcode(op ^ 1);
+    }
+
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_pcall;
         switch (ci->returnType()) {
@@ -560,37 +653,33 @@ namespace nanojit
         }
 
         // LIns predicates.
-        bool isCse() const {
-            return isCseOpcode(opcode()) || (isCall() && callInfo()->_cse);
+        bool isop(LOpcode o) const {
+            return opcode() == o;
         }
         bool isRet() const {
             return isRetOpcode(opcode());
         }
         bool isLive() const {
-            LOpcode op = opcode();
-            return 
+            return isop(LIR_live) ||
 #if defined NANOJIT_64BIT
-                op == LIR_qlive ||
+                   isop(LIR_qlive) ||
 #endif
-                op == LIR_live || op == LIR_flive;
-        }
-        bool isop(LOpcode o) const {
-            return opcode() == o;
+                   isop(LIR_flive);
         }
         bool isCmp() const {
             LOpcode op = opcode();
-            return (op >= LIR_eq  && op <= LIR_uge) ||
+            return isICmpOpcode(op) ||
 #if defined NANOJIT_64BIT
-                   (op >= LIR_qeq && op <= LIR_quge) ||
+                   isQCmpOpcode(op) ||
 #endif
-                   (op >= LIR_feq && op <= LIR_fge);
+                   isFCmpOpcode(op);
         }
         bool isCall() const {
-            return 
+            return isop(LIR_icall) ||
 #if defined NANOJIT_64BIT
-                isop(LIR_qcall) ||
+                   isop(LIR_qcall) ||
 #endif
-                isop(LIR_icall) || isop(LIR_fcall);
+                   isop(LIR_fcall);
         }
         bool isCmov() const {
             return isCmovOpcode(opcode());
@@ -681,10 +770,10 @@ namespace nanojit
         // affect the control flow.
         bool isStmt() {
             NanoAssert(!isop(LIR_start) && !isop(LIR_skip));
-            // All instructions with Void retType are statements.  And some
-            // calls are statements too.
+            // All instructions with Void retType are statements, as are calls
+            // to non-CSEable functions.
             if (isCall())
-                return !isCse();
+                return !callInfo()->_cse;
             else
                 return isVoid();
         }
