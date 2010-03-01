@@ -9,7 +9,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= thebes
 
 
-EXPORTS		= 	gfxASurface.h \
+EXPORTS		= 	gfx3DMatrix.h \
+			gfxASurface.h \
 			gfxAlphaRecovery.h \
 			gfxBlur.h \
 			gfxColor.h \
