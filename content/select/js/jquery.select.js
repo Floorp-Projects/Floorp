@@ -35,14 +35,14 @@ function group(els){
     var el = els[i];
     var pos = startEl.position()
     $(el).css("z-index", i*10)
-    $(el).animate({top: pos.top+i*10, left: pos.left+i*10, position: "absolute"}, 250);
+    $(el).animate({top: pos.top+i*15, left: pos.left+i*15, position: "absolute"}, 250);
   }
 }
 
 
 $(function(){
   var select = new Selector({
-    targets: ".element",
-    container: "body",
+    targets: ".tab",
+    container: "html",
   });
 });

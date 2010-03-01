@@ -7,9 +7,8 @@
     <script src="js/stacks.js"></script>
     <style>
       body{ margin: 0px, padding: 0px; }
-      #content{ width: 100%; height:100%;}
-      .element{ width: 160px; height: 120px; background-color: #222; -moz-box-shadow: 1px 1px 8px rgba(0,0,0,.8); border:1px solid white;}
-      .element{ color: rgba(255,255,255,0.3); font-size:250px; overflow:hidden; line-height:.5em; font-family: "Helvetica"}
+      .tab{ width: 160px; height: 120px; background-color: #222; -moz-box-shadow: 1px 1px 8px rgba(0,0,0,.8); border:1px solid white;}
+      .tab{ color: rgba(255,255,255,0.3); font-size:250px; overflow:hidden; line-height:.5em; font-family: "Helvetica"}
       .lasso-menu{
         background-color: white;
         width: 100px;
@@ -25,19 +24,19 @@
   
   <body>
     <div id="content">
-      <div class="element">A</div>
-      <div class="element">B</div>
-      <div class="element">C</div>
-      <div class="element">D</div>
-      <div class="element">E</div>      
-      <div class="element">z</div>      
+      <div class="tab">A<div id="aza">hello</div></div>
+      <div class="tab">B</div>
+      <div class="tab">C</div>
+      <div class="tab">D</div>
+      <div class="tab">E</div>      
+      <div class="tab">z</div>      
     </div>
   <script>
     function randInt(num){
       return parseInt(Math.random()*num);
     }
   
-    $(".element").each(function(){
+    $(".tab").each(function(){
       $(this).css({
         top: randInt(window.innerHeight-150),
         left:randInt(window.innerWidth-150),
