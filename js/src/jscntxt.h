@@ -43,6 +43,8 @@
 /*
  * JS execution context.
  */
+#include <string.h>
+
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsclist.h"
 #include "jslong.h"
@@ -59,6 +61,7 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
+#include "jshashtable.h"
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -130,6 +133,27 @@ typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 struct FragPI;
 typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
 #endif
+
+/*
+ * Allocation policy that calls JSContext memory functions and reports errors
+ * to the context. Since the JSContext given on construction is stored for
+ * the lifetime of the container, this policy may only be used for containers
+ * whose lifetime is a shorter than the given JSContext.
+ */
+class ContextAllocPolicy
+{
+    JSContext *cx;
+
+  public:
+    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    JSContext *context() const { return cx; }
+
+    /* Inline definitions below. */
+    void *malloc(size_t bytes);
+    void free(void *p);
+    void *realloc(void *p, size_t bytes);
+    void reportAllocOverflow() const;
+};
 
 /* Holds the execution state during trace execution. */
 struct InterpState
@@ -295,6 +319,12 @@ class CallStack
     }
 };
 
+/* Holds the number of recording attemps for an address. */
+typedef HashMap<jsbytecode*,
+                size_t,
+                DefaultHasher<jsbytecode*>,
+                SystemAllocPolicy> RecordAttemptMap;
+
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -360,7 +390,7 @@ struct TraceMonitor {
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
     TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
-    JSDHashTable            recordAttempts;
+    RecordAttemptMap*       recordAttempts;
 
     /*
      * Maximum size of the code cache before we start flushing. 1/16 of this
@@ -648,6 +678,33 @@ struct JSSetSlotRequest {
     uint16              slot;           /* which to set, proto or parent */
     JSPackedBool        cycle;          /* true if a cycle was detected */
     JSSetSlotRequest    *next;          /* next request in GC worklist */
+};
+
+/* Caching Class.prototype lookups for the standard classes. */
+struct JSClassProtoCache {
+    void purge() { memset(entries, 0, sizeof(entries)); }
+
+#ifdef JS_PROTO_CACHE_METERING
+    struct Stats {
+        int32       probe, hit;
+    };
+# define PROTO_CACHE_METER(cx, x)                                             \
+    ((void) (JS_ATOMIC_INCREMENT(&(cx)->runtime->classProtoCacheStats.x)))
+#else
+# define PROTO_CACHE_METER(cx, x)  ((void) 0)
+#endif
+
+  private:
+    struct GlobalAndProto {
+        JSObject    *global;
+        JSObject    *proto;
+    };
+
+    GlobalAndProto  entries[JSProto_LIMIT - JSProto_Object];
+
+    friend JSBool js_GetClassPrototype(JSContext *cx, JSObject *scope,
+                                       JSProtoKey protoKey, JSObject **protop,
+                                       JSClass *clasp);
 };
 
 struct JSRuntime {
@@ -1000,6 +1057,10 @@ struct JSRuntime {
     char                lastScriptFilename[1024];
 #endif
 
+#ifdef JS_PROTO_CACHE_METERING
+    JSClassProtoCache::Stats classProtoCacheStats;
+#endif
+
     JSRuntime();
     ~JSRuntime();
 
@@ -1192,13 +1253,15 @@ extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
  * Wraps a stack frame which has been temporarily popped from its call stack
  * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
  */
-struct JSGCReachableFrame
-{
+struct JSGCReachableFrame {
     JSGCReachableFrame  *next;
     JSStackFrame        *frame;
 };
 
-struct JSContext {
+struct JSContext
+{
+    explicit JSContext(JSRuntime *rt) : runtime(rt), busyArrays(this) {}
+
     /*
      * If this flag is set, we were asked to call back the operation callback
      * as soon as possible.
@@ -1267,8 +1330,6 @@ struct JSContext {
     /* Data shared by threads in an address space. */
     JSRuntime * const   runtime;
 
-    explicit JSContext(JSRuntime *rt) : runtime(rt) {}
-
     /* Stack arena pool and frame pointer register. */
     JS_REQUIRES_STACK
     JSArenaPool         stackPool;
@@ -1290,7 +1351,7 @@ struct JSContext {
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
-    JSHashTable         *busyArrayTable;
+    js::HashSet<JSObject *> busyArrays;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
@@ -1329,7 +1390,13 @@ struct JSContext {
     }
 
   private:
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
     friend void js_TraceContext(JSTracer *, JSContext *);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 
     /* Linked list of callstacks. See CallStack. */
     js::CallStack       *currentCallStack;
@@ -1428,6 +1495,8 @@ struct JSContext {
      */
     bool                 jitEnabled;
 #endif
+
+    JSClassProtoCache    classProtoCache;
 
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled() {
@@ -1586,6 +1655,8 @@ struct JSContext {
     }
 
     bool isConstructing();
+
+    void purge();
 
 private:
 
@@ -2183,25 +2254,29 @@ js_RegenerateShapeForGC(JSContext *cx)
 
 namespace js {
 
-/*
- * Policy that calls JSContext:: memory functions and reports errors to the
- * context.  Since the JSContext* given on construction is stored for the
- * lifetime of the container, this policy may only be used for containers whose
- * lifetime is a shorter than the given JSContext.
- */
-class ContextAllocPolicy
+inline void *
+ContextAllocPolicy::malloc(size_t bytes)
 {
-    JSContext *mCx;
+    return cx->malloc(bytes);
+}
 
-  public:
-    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
-    JSContext *context() const { return mCx; }
+inline void
+ContextAllocPolicy::free(void *p)
+{
+    cx->free(p);
+}
 
-    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
-    void free(void *p) { mCx->free(p); }
-    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
-    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
-};
+inline void *
+ContextAllocPolicy::realloc(void *p, size_t bytes)
+{
+    return cx->realloc(p, bytes);
+}
+
+inline void
+ContextAllocPolicy::reportAllocOverflow() const
+{
+    js_ReportAllocationOverflow(cx);
+}
 
 }
 

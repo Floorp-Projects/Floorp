@@ -46,8 +46,8 @@ void  nsEUCJPProber::Reset(void)
 {
   mCodingSM->Reset(); 
   mState = eDetecting;
-  mContextAnalyser.Reset();
-  mDistributionAnalyser.Reset();
+  mContextAnalyser.Reset(mIsPreferredLanguage);
+  mDistributionAnalyser.Reset(mIsPreferredLanguage);
 }
 
 nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
@@ -91,8 +91,8 @@ nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsEUCJPProber::GetConfidence(void)
 {
-  float contxtCf = mContextAnalyser.GetConfidence(mIsPreferredLanguage);
-  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
+  float contxtCf = mContextAnalyser.GetConfidence();
+  float distribCf = mDistributionAnalyser.GetConfidence();
 
   return (contxtCf > distribCf ? contxtCf : distribCf);
 }

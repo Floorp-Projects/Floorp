@@ -6968,6 +6968,34 @@ CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
       AppendValue(kBorderStyleIDs[index], values[1]);
       AppendValue(kBorderColorIDs[index], values[2]);
     }
+
+    static const nsCSSProperty kBorderColorsProps[] = {
+      eCSSProperty_border_top_colors,
+      eCSSProperty_border_right_colors,
+      eCSSProperty_border_bottom_colors,
+      eCSSProperty_border_left_colors
+    };
+
+    // Set the other properties that the border shorthand sets to their
+    // initial values.
+    nsCSSValue extraValue;
+    switch (values[0].GetUnit()) {
+      case eCSSUnit_Inherit:    extraValue.SetInheritValue();    break;
+      case eCSSUnit_Initial:    extraValue.SetInitialValue();    break;
+      default:                  extraValue.SetNoneValue();       break;
+    }
+    NS_FOR_CSS_SIDES(side) {
+      nsCSSValueList *l = new nsCSSValueList;
+      if (!l) {
+        mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+        return PR_FALSE;
+      }
+      l->mValue = extraValue;
+      mTempData.mMargin.mBorderColors.*(nsCSSValueListRect::sides[side]) = l;
+      mTempData.SetPropertyBit(kBorderColorsProps[side]);
+    }
+    mTempData.mMargin.mBorderImage = extraValue;
+    mTempData.SetPropertyBit(eCSSProperty_border_image);
   }
   else {
     // Just set our one side

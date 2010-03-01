@@ -255,7 +255,11 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  nsCSSRuleProcessor::Startup();
+  rv = nsCSSRuleProcessor::Startup();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsCSSRuleProcessor");
+    return rv;
+  }
 
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
@@ -308,7 +312,7 @@ nsLayoutStatics::Shutdown()
   nsEventListenerManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
-  nsCSSRuleProcessor::FreeSystemMetrics();
+  nsCSSRuleProcessor::Shutdown();
   nsTextFrameTextRunCache::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
@@ -391,6 +395,9 @@ nsLayoutStatics::Shutdown()
 void
 nsLayoutStatics::AddRef()
 {
+  NS_ASSERTION(NS_IsMainThread(),
+               "nsLayoutStatics reference counting must be on main thread");
+
   NS_ASSERTION(sLayoutStaticRefcnt,
                "nsLayoutStatics already dropped to zero!");
 
@@ -402,6 +409,9 @@ nsLayoutStatics::AddRef()
 void
 nsLayoutStatics::Release()
 {
+  NS_ASSERTION(NS_IsMainThread(),
+               "nsLayoutStatics reference counting must be on main thread");
+
   --sLayoutStaticRefcnt;
   NS_LOG_RELEASE(&sLayoutStaticRefcnt, sLayoutStaticRefcnt,
                  "nsLayoutStatics");

@@ -53,10 +53,6 @@
 
 #include <math.h>
 
-#ifdef NS_MAEMO_LOCATION
-#include "MaemoLocationProvider.h"
-#endif
-
 #ifdef WINCE_WINDOWS_MOBILE
 #include "WinMobileLocationProvider.h"
 #endif

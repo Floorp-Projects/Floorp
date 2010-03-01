@@ -117,6 +117,7 @@
 // DOM includes
 #include "nsDOMException.h"
 #include "nsDOMFileReader.h"
+#include "nsFormData.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
@@ -291,6 +292,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
@@ -1426,6 +1428,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FILEREADER_CID,
     NS_FILEREADER_CONTRACTID,
     nsDOMFileReaderConstructor },
+
+  { "FormData",
+    NS_FORMDATA_CID,
+    NS_FORMDATA_CONTRACTID,
+    nsFormDataConstructor },
 
   { "XMLHttpRequest",
     NS_XMLHTTPREQUEST_CID,

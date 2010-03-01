@@ -66,6 +66,12 @@ class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;
 
+namespace mozilla {
+namespace layers {
+class LayerManager;
+}
+}
+
 /**
  * Callback function that processes events.
  *
@@ -103,7 +109,7 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x6bdb96ba, 0x1727, 0x40ae, \
+{ 0x9383831, 0x1039, 0x010f9, \
   { 0x85, 0x55, 0x9c, 0x53, 0x4b, 0x95, 0x23, 0x98 } }
 
 /*
@@ -180,6 +186,7 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 class nsIWidget : public nsISupports {
 
   public:
+    typedef mozilla::layers::LayerManager LayerManager;
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
 
@@ -666,6 +673,14 @@ class nsIWidget : public nsISupports {
      */
 
     virtual nsIToolkit* GetToolkit() = 0;    
+
+    /**
+     * Return the widget's LayerManager. The layer tree for that
+     * LayerManager is what gets rendered to the widget.
+     * The layer manager is guaranteed to be the same for the lifetime
+     * of the widget.
+     */
+    virtual LayerManager* GetLayerManager() = 0;
 
     /**
      * Scroll a set of rectangles in this widget and (as simultaneously as

@@ -1948,9 +1948,6 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
       return NS_ERROR_FAILURE;
     nsIDocument* document = presShell->GetDocument();
 
-    nsCString langGroup;
-    presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
-
     nsCOMArray<nsIStyleRule> rules;
 
     nsCOMPtr<nsICSSStyleRule> rule;
@@ -2002,6 +1999,11 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
 
+    nsIAtom* language = sc->GetStyleVisibility()->mLanguage;
+    if (!language) {
+        language = presShell->GetPresContext()->GetLanguageFromCharset();
+    }
+
     // use CSS pixels instead of dev pixels to avoid being affected by page zoom
     const PRUint32 aupcp = nsPresContext::AppUnitsPerCSSPixel();
     // un-zoom the font size to avoid being affected by text-only zoom
@@ -2014,13 +2016,16 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.weight,
                        fontStyle->mFont.stretch,
                        NSAppUnitsToFloatPixels(fontSize, aupcp),
-                       langGroup,
+                       language,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks,
                        printerFont);
 
-    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style, presShell->GetPresContext()->GetUserFontSet());
+    CurrentState().fontGroup =
+        gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
+                                                    &style,
+                                                    presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
     CurrentState().font = font;
     return NS_OK;
@@ -3323,6 +3328,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     }
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
         renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+    }
+    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_USE_WIDGET_LAYERS) {
+        renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
     }
 
     PRBool oldDisableValue = nsLayoutUtils::sDisableGetUsedXAssertions;

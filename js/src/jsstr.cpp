@@ -1953,7 +1953,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     NORMALIZE_THIS(cx, vp, rdata.str);
 
     /* Extract replacement string/function. */
-    if (argc >= 2 && JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
+    if (argc >= 2 && js_IsCallable(vp[3])) {
         rdata.lambda = JSVAL_TO_OBJECT(vp[3]);
         rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;
@@ -3324,7 +3324,7 @@ js_ValueToString(JSContext *cx, jsval v)
 }
 
 static inline JSBool
-pushAtom(JSAtom *atom, JSCharBuffer &cb)
+AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 {
     JSString *str = ATOM_TO_STRING(atom);
     const jschar *chars;
@@ -3352,9 +3352,9 @@ js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
     if (JSVAL_IS_BOOLEAN(v))
         return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), cb);
     if (JSVAL_IS_NULL(v))
-        return pushAtom(cx->runtime->atomState.nullAtom, cb);
+        return AppendAtom(cx->runtime->atomState.nullAtom, cb);
     JS_ASSERT(JSVAL_IS_VOID(v));
-    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], cb);
+    return AppendAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], cb);
 }
 
 JS_FRIEND_API(JSString *)

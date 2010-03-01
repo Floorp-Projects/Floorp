@@ -326,7 +326,7 @@ JSFunctionBox::shouldUnbrand(uintN methods, uintN slowMethods) const
 {
     if (slowMethods != 0) {
         for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-            if (!(funbox->node->pn_dflags & PND_MODULEPAT))
+            if (!(funbox->tcflags & TCF_FUN_MODULE_PATTERN))
                 return true;
             if (funbox->inLoop)
                 return true;
@@ -358,6 +358,24 @@ UnlinkFunctionBox(JSParseNode *pn, JSTreeContext *tc)
     if (funbox) {
         JS_ASSERT(funbox->node == pn);
         funbox->node = NULL;
+
+        if (funbox->parent && PN_OP(pn) == JSOP_LAMBDA) {
+            /*
+             * Remove pn from funbox->parent's methods list if it's there. See
+             * the TOK_SEMI case in Statement, near the bottom, the TOK_ASSIGN
+             * sub-case matching a constructor method assignment pattern.
+             */
+            JS_ASSERT(!pn->pn_defn);
+            JS_ASSERT(!pn->pn_used);
+            JSParseNode **pnp = &funbox->parent->methods;
+            while (JSParseNode *method = *pnp) {
+                if (method == pn) {
+                    *pnp = method->pn_link;
+                    break;
+                }
+                pnp = &method->pn_link;
+            }
+        }
 
         JSFunctionBox **funboxp = &tc->functionList;
         while (*funboxp) {
@@ -1993,7 +2011,8 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
 
                 if (!lexdep->isFreeVar() &&
                     !lexdep->isFunArg() &&
-                    lexdep->kind() == JSDefinition::FUNCTION) {
+                    (lexdep->kind() == JSDefinition::FUNCTION ||
+                     PN_OP(lexdep) == JSOP_CALLEE)) {
                     /*
                      * Mark this formerly-Algol-like function as an escaping
                      * function (i.e., as a funarg), because it is used from a
@@ -2006,7 +2025,26 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                      */
                     lexdep->setFunArg();
 
-                    JSFunctionBox *afunbox = lexdep->pn_funbox;
+                    JSFunctionBox *afunbox;
+                    if (PN_OP(lexdep) == JSOP_CALLEE) {
+                        /*
+                         * A named function expression will not appear to be a
+                         * funarg if it is immediately applied. However, if its
+                         * name is used in an escaping function nested within
+                         * it, then it must become flagged as a funarg again.
+                         * See bug 545980. 
+                         */
+                        afunbox = funbox;
+                        uintN calleeLevel = UPVAR_FRAME_SKIP(lexdep->pn_cookie);
+                        uintN staticLevel = afunbox->level + 1U;
+                        while (staticLevel != calleeLevel) {
+                            afunbox = afunbox->parent;
+                            --staticLevel;
+                        }
+                        afunbox->node->setFunArg();
+                    } else {
+                       afunbox = lexdep->pn_funbox;
+                    }
                     queue.push(afunbox);
 
                     /*
@@ -2037,18 +2075,178 @@ MinBlockId(JSParseNode *fn, uint32 id)
     return true;
 }
 
-static bool
-OneBlockId(JSParseNode *fn, uint32 id)
+static inline bool
+CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
 {
-    if (fn->pn_blockid != id)
+    /*
+     * Consider the current function (the lambda, innermost below) using a var
+     * x defined two static levels up:
+     *
+     *  function f() {
+     *      // z = g();
+     *      var x = 42;
+     *      function g() {
+     *          return function () { return x; };
+     *      }
+     *      return g();
+     *  }
+     *
+     * So long as (1) the initialization in 'var x = 42' dominates all uses of
+     * g and (2) x is not reassigned, it is safe to optimize the lambda to a
+     * flat closure. Uncommenting the early call to g makes this optimization
+     * unsafe (z could name a global setter that calls its argument).
+     */
+    JSFunctionBox *afunbox = funbox;
+    uintN dnLevel = dn->frameLevel();
+
+    JS_ASSERT(dnLevel <= funbox->level);
+    while (afunbox->level != dnLevel) {
+        afunbox = afunbox->parent;
+
+        /*
+         * NB: afunbox can't be null because we are sure to find a function box
+         * whose level == dnLevel before we would try to walk above the root of
+         * the funbox tree. See bug 493260 comments 16-18.
+         *
+         * Assert but check anyway, to protect future changes that bind eval
+         * upvars in the parser.
+         */
+        JS_ASSERT(afunbox);
+
+        /*
+         * If this function is reaching up across an enclosing funarg, then we
+         * cannot copy dn's value into a flat closure slot (the display stops
+         * working once the funarg escapes).
+         */
+        if (!afunbox || afunbox->node->isFunArg())
+            return false;
+    }
+
+    /*
+     * If afunbox's function (which is at the same level as dn) is in a loop,
+     * pessimistically assume the variable initializer may be in the same loop.
+     * A flat closure would then be unsafe, as the captured variable could be
+     * assigned after the closure is created. See bug 493232.
+     */
+    if (afunbox->inLoop)
         return false;
-    if (fn->pn_defn) {
-        for (JSParseNode *pn = fn->dn_uses; pn; pn = pn->pn_link) {
-            if (pn->pn_blockid != id)
-                return false;
+
+    /*
+     * |with| and eval used as an operator defeat lexical scoping: they can be
+     * used to assign to any in-scope variable. Therefore they must disable
+     * flat closures that use such upvars.  The parser detects these as special
+     * forms and marks the function heavyweight.
+     */
+    if ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_HEAVYWEIGHT)
+        return false;
+
+    /*
+     * If afunbox's function is not a lambda, it will be hoisted, so it could
+     * capture the undefined value that by default initializes var, let, and
+     * const bindings. And if dn is a function that comes at (meaning a
+     * function refers to its own name) or strictly after afunbox, we also
+     * defeat the flat closure optimization for this dn.
+     */
+    JSFunction *afun = (JSFunction *) afunbox->object;
+    if (!(afun->flags & JSFUN_LAMBDA)) {
+        if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
+            return false;
+    }
+
+    if (!dn->isInitialized())
+        return false;
+
+    JSDefinition::Kind dnKind = dn->kind();
+    if (dnKind != JSDefinition::CONST) {
+        if (dn->isAssigned())
+            return false;
+
+        /*
+         * Any formal could be mutated behind our back via the arguments
+         * object, so deoptimize if the outer function uses arguments.
+         *
+         * In a Function constructor call where the final argument -- the body
+         * source for the function to create -- contains a nested function
+         * definition or expression, afunbox->parent will be null. The body
+         * source might use |arguments| outside of any nested functions it may
+         * contain, so we have to check the tcflags parameter that was passed
+         * in from JSCompiler::compileFunctionBody.
+         */
+        if (dnKind == JSDefinition::ARG &&
+            ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_USES_ARGUMENTS)) {
+            return false;
         }
     }
+
+    /*
+     * Check quick-and-dirty dominance relation. Function definitions dominate
+     * their uses thanks to hoisting.  Other binding forms hoist as undefined,
+     * of course, so check forward-reference and blockid relations.
+     */
+    if (dnKind != JSDefinition::FUNCTION) {
+        /*
+         * Watch out for code such as
+         *
+         *   (function () {
+         *   ...
+         *   var jQuery = ... = function (...) {
+         *       return new jQuery.foo.bar(baz);
+         *   }
+         *   ...
+         *   })();
+         *
+         * where the jQuery variable is not reassigned, but of course is not
+         * initialized at the time that the would-be-flat closure containing
+         * the jQuery upvar is formed.
+         */
+        if (dn->pn_pos.end >= afunbox->node->pn_pos.end)
+            return false;
+        if (!MinBlockId(afunbox->node, dn->pn_blockid))
+            return false;
+    }
     return true;
+}
+
+static void
+FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
+{
+    JSFunctionBox *afunbox = funbox->parent;
+    uintN dnLevel = dn->frameLevel();
+
+    while (afunbox) {
+        /*
+         * Notice that afunbox->level is the static level of the definition or
+         * expression of the function parsed into afunbox, not the static level
+         * of its body. Therefore we must add 1 to match dn's level to find the
+         * afunbox whose body contains the dn definition.
+         */
+        if (afunbox->level + 1U == dnLevel || (dnLevel == 0 && dn->isLet())) {
+            afunbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
+            break;
+        }
+        afunbox = afunbox->parent;
+    }
+    if (!afunbox && (tcflags & TCF_IN_FUNCTION))
+        tcflags |= TCF_FUN_HEAVYWEIGHT;
+}
+
+static void
+DeoptimizeUsesWithin(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
+{
+    uintN ndeoptimized = 0;
+    const JSTokenPos &pos = funbox->node->pn_body->pn_pos;
+
+    for (JSParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
+        JS_ASSERT(pnu->pn_used);
+        JS_ASSERT(!pnu->pn_defn);
+        if (pnu->pn_pos.begin >= pos.begin && pnu->pn_pos.end <= pos.end) {
+            pnu->pn_dflags |= PND_DEOPTIMIZED;
+            ++ndeoptimized;
+        }
+    }
+
+    if (ndeoptimized != 0)
+        FlagHeavyweights(dn, funbox, tcflags);
 }
 
 void
@@ -2181,8 +2379,9 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                 } else if (!mutation && !(funbox->tcflags & TCF_FUN_IS_GENERATOR)) {
                     /*
                      * Algol-like functions can read upvars using the dynamic
-                     * link (cx->fp/fp->down). They do not need to entrain and
-                     * search their environment.
+                     * link (cx->fp/fp->down), optimized using the cx->display
+                     * lookup table indexed by static level. They do not need
+                     * to entrain and search their environment objects.
                      */
                     FUN_METER(display);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
@@ -2191,7 +2390,7 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                         FUN_METER(setupvar);
                 }
             } else {
-                uintN nupvars = 0;
+                uintN nupvars = 0, nflattened = 0;
 
                 /*
                  * For each lexical dependency from this closure to an outer
@@ -2203,165 +2402,18 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
                     if (!lexdep->isFreeVar()) {
                         ++nupvars;
-
-                        /*
-                         * Consider the current function (the lambda, innermost
-                         * below) using a var x defined two static levels up:
-                         *
-                         *  function f() {
-                         *      // z = g();
-                         *      var x = 42;
-                         *      function g() {
-                         *          return function () { return x; };
-                         *      }
-                         *      return g();
-                         *  }
-                         *
-                         * So long as (1) the initialization in 'var x = 42'
-                         * dominates all uses of g and (2) x is not reassigned,
-                         * it is safe to optimize the lambda to a flat closure.
-                         * Uncommenting the early call to g makes it unsafe to
-                         * so optimize (z could name a global setter that calls
-                         * its argument).
-                         */
-                        JSFunctionBox *afunbox = funbox;
-                        uintN lexdepLevel = lexdep->frameLevel();
-
-                        JS_ASSERT(lexdepLevel <= funbox->level);
-                        while (afunbox->level != lexdepLevel) {
-                            afunbox = afunbox->parent;
-
-                            /*
-                             * afunbox can't be null because we are sure
-                             * to find a function box whose level == lexdepLevel
-                             * before walking off the top of the funbox tree.
-                             * See bug 493260 comments 16-18.
-                             *
-                             * Assert but check anyway, to check future changes
-                             * that bind eval upvars in the parser.
-                             */
-                            JS_ASSERT(afunbox);
-
-                            /*
-                             * If this function is reaching up across an
-                             * enclosing funarg, we cannot make a flat
-                             * closure. The display stops working once the
-                             * funarg escapes.
-                             */
-                            if (!afunbox || afunbox->node->isFunArg())
-                                goto break2;
+                        if (CanFlattenUpvar(lexdep, funbox, tcflags)) {
+                            ++nflattened;
+                            continue;
                         }
-
-                        /*
-                         * If afunbox's function (which is at the same level as
-                         * lexdep) is in a loop, pessimistically assume the
-                         * variable initializer may be in the same loop. A flat
-                         * closure would then be unsafe, as the captured
-                         * variable could be assigned after the closure is
-                         * created. See bug 493232.
-                         */
-                        if (afunbox->inLoop)
-                            break;
-
-                        /*
-                         * with and eval defeat lexical scoping; eval anywhere
-                         * in a variable's scope can assign to it. Both defeat
-                         * the flat closure optimization. The parser detects
-                         * these cases and flags the function heavyweight.
-                         */
-                        if ((afunbox->parent ? afunbox->parent->tcflags : tcflags)
-                            & TCF_FUN_HEAVYWEIGHT) {
-                            break;
-                        }
-
-                        /*
-                         * If afunbox's function is not a lambda, it will be
-                         * hoisted, so it could capture the undefined value
-                         * that by default initializes var/let/const
-                         * bindings. And if lexdep is a function that comes at
-                         * (meaning a function refers to its own name) or
-                         * strictly after afunbox, we also break to defeat the
-                         * flat closure optimization.
-                         */
-                        JSFunction *afun = (JSFunction *) afunbox->object;
-                        if (!(afun->flags & JSFUN_LAMBDA)) {
-                            if (lexdep->isBindingForm())
-                                break;
-                            if (lexdep->pn_pos >= afunbox->node->pn_pos)
-                                break;
-                        }
-
-                        if (!lexdep->isInitialized())
-                            break;
-
-                        JSDefinition::Kind lexdepKind = lexdep->kind();
-                        if (lexdepKind != JSDefinition::CONST) {
-                            if (lexdep->isAssigned())
-                                break;
-
-                            /*
-                             * Any formal could be mutated behind our back via
-                             * the arguments object, so deoptimize if the outer
-                             * function uses arguments.
-                             *
-                             * In a Function constructor call where the final
-                             * argument -- the body source for the function to
-                             * create -- contains a nested function definition
-                             * or expression, afunbox->parent will be null. The
-                             * body source might use |arguments| outside of any
-                             * nested functions it may contain, so we have to
-                             * check the tcflags parameter that was passed in
-                             * from JSCompiler::compileFunctionBody.
-                             */
-                            if (lexdepKind == JSDefinition::ARG &&
-                                ((afunbox->parent ? afunbox->parent->tcflags : tcflags) &
-                                 TCF_FUN_USES_ARGUMENTS)) {
-                                break;
-                            }
-                        }
-
-                        /*
-                         * Check quick-and-dirty dominance relation. Function
-                         * definitions dominate their uses thanks to hoisting.
-                         * Other binding forms hoist as undefined, of course,
-                         * so check forward-reference and blockid relations.
-                         */
-                        if (lexdepKind != JSDefinition::FUNCTION) {
-                            /*
-                             * Watch out for code such as
-                             *
-                             *   (function () {
-                             *   ...
-                             *   var jQuery = ... = function (...) {
-                             *       return new jQuery.foo.bar(baz);
-                             *   }
-                             *   ...
-                             *   })();
-                             *
-                             * where the jQuery var is not reassigned, but of
-                             * course is not initialized at the time that the
-                             * would-be-flat closure containing the jQuery
-                             * upvar is formed.
-                             */
-                            if (lexdep->pn_pos.end >= afunbox->node->pn_pos.end)
-                                break;
-
-                            if (lexdep->isTopLevel()
-                                ? !MinBlockId(afunbox->node, lexdep->pn_blockid)
-                                : !lexdep->isBlockChild() ||
-                                  !afunbox->node->isBlockChild() ||
-                                  !OneBlockId(afunbox->node, lexdep->pn_blockid)) {
-                                break;
-                            }
-                        }
+                        DeoptimizeUsesWithin(lexdep, funbox, tcflags);
                     }
                 }
 
-              break2:
                 if (nupvars == 0) {
                     FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                } else if (!ale) {
+                } else if (nflattened != 0) {
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
@@ -2406,30 +2458,8 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
             while ((ale = iter()) != NULL) {
                 JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
-
-                if (!lexdep->isFreeVar()) {
-                    JSFunctionBox *afunbox = funbox->parent;
-                    uintN lexdepLevel = lexdep->frameLevel();
-
-                    while (afunbox) {
-                        /*
-                         * NB: afunbox->level is the static level of
-                         * the definition or expression of the function
-                         * parsed into afunbox, not the static level of
-                         * its body. Therefore we must add 1 to match
-                         * lexdep's level to find the afunbox whose
-                         * body contains the lexdep definition.
-                         */
-                        if (afunbox->level + 1U == lexdepLevel ||
-                            (lexdepLevel == 0 && lexdep->isLet())) {
-                            afunbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
-                            break;
-                        }
-                        afunbox = afunbox->parent;
-                    }
-                    if (!afunbox && (tcflags & TCF_IN_FUNCTION))
-                        tcflags |= TCF_FUN_HEAVYWEIGHT;
-                }
+                if (!lexdep->isFreeVar())
+                    FlagHeavyweights(lexdep, funbox, tcflags);
             }
         }
 
@@ -4000,7 +4030,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
                                        JSPROP_ENUMERATE |
                                        JSPROP_PERMANENT |
                                        JSPROP_SHARED,
-                                       SPROP_HAS_SHORTID, 0, NULL);
+                                       JSScopeProperty::HAS_SHORTID, 0, NULL);
         if (!ok)
             goto out;
     }
@@ -5746,7 +5776,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              */
             if (PN_TYPE(pn2->pn_head) == TOK_FUNCTION &&
                 !pn2->pn_head->pn_funbox->node->isFunArg()) {
-                pn2->pn_head->pn_funbox->node->pn_dflags |= PND_MODULEPAT;
+                pn2->pn_head->pn_funbox->tcflags |= TCF_FUN_MODULE_PATTERN;
             }
             break;
           case TOK_ASSIGN:
@@ -7474,7 +7504,7 @@ static JSParseNode *
 XMLExpr(JSContext *cx, JSTokenStream *ts, JSBool inTag, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2;
-    uintN oldflags;
+    uintN oldflag;
 
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_LC);
     pn = NewParseNode(PN_UNARY, tc);
@@ -7482,19 +7512,19 @@ XMLExpr(JSContext *cx, JSTokenStream *ts, JSBool inTag, JSTreeContext *tc)
         return NULL;
 
     /*
-     * Turn off XML tag mode, but don't restore it after parsing this braced
-     * expression.  Instead, simply restore ts's old flags.  This is required
-     * because XMLExpr is called both from within a tag, and from within text
-     * contained in an element, but outside of any start, end, or point tag.
+     * Turn off XML tag mode. We save the old value of the flag because it may
+     * already be off: XMLExpr is called both from within a tag, and from
+     * within text contained in an element, but outside of any start, end, or
+     * point tag.
      */
-    oldflags = ts->flags;
-    ts->flags = oldflags & ~TSF_XMLTAGMODE;
+    oldflag = ts->flags & TSF_XMLTAGMODE;
+    ts->flags &= ~TSF_XMLTAGMODE;
     pn2 = Expr(cx, ts, tc);
     if (!pn2)
         return NULL;
 
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_XML_EXPR);
-    ts->flags = oldflags;
+    ts->flags |= oldflag;
     pn->pn_kid = pn2;
     pn->pn_op = inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR;
     return pn;

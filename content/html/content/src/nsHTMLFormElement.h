@@ -289,14 +289,14 @@ protected:
    * @param aFormSubmission the submission object
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult BuildSubmission(nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+  nsresult BuildSubmission(nsFormSubmission** aFormSubmission, 
                            nsEvent* aEvent);
   /**
    * Perform the submission (called by DoSubmit and FlushPendingSubmission)
    *
    * @param aFormSubmission the submission object
    */
-  nsresult SubmitSubmission(nsIFormSubmission* aFormSubmission);
+  nsresult SubmitSubmission(nsFormSubmission* aFormSubmission);
   /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
    * their data pumped into the FormSubmitter.
@@ -304,7 +304,7 @@ protected:
    * @param aFormSubmission the form submission object
    * @param aSubmitElement the element that was clicked on (nsnull if none)
    */
-  nsresult WalkFormElements(nsIFormSubmission* aFormSubmission,
+  nsresult WalkFormElements(nsFormSubmission* aFormSubmission,
                             nsIContent* aSubmitElement);
 
   /**
@@ -338,13 +338,6 @@ public:
    */
   void FlushPendingSubmission();
 protected:
-  /**
-   * Forget a possible pending submission. Same as above but this time we
-   * get rid of the pending submission because the handler returned true
-   * so we will rebuild the submission with the name/value of the triggering
-   * element
-   */
-  void ForgetPendingSubmission();
 
   //
   // Data members
@@ -371,7 +364,7 @@ protected:
   PRBool mSubmitInitiatedFromUserInput;
 
   /** The pending submission object */
-  nsCOMPtr<nsIFormSubmission> mPendingSubmission;
+  nsAutoPtr<nsFormSubmission> mPendingSubmission;
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */

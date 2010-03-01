@@ -433,8 +433,10 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
   nsAutoString langGroup;
   rv = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), langGroup);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
+    ToLowerCase(langGroup); // use lowercase for all language atoms
     *aResult = NS_NewAtom(langGroup);
+  }
 
   return rv;
 }

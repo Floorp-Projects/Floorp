@@ -44,9 +44,13 @@ function charsetTestFinished(id, doc, charsetTarget) {
 }
 
 function f2Continue() {
+//   Commented out pending discussion at the WHATWG
+//   $("f2").
+//     setAttribute("onload",
+//                  "charsetTestFinished('f2 reloaded', this.contentDocument, 'us-ascii');");
   $("f2").
     setAttribute("onload",
-                 "charsetTestFinished('f2 reloaded', this.contentDocument, 'us-ascii');");
+                 "testFinished();");
   $("f2").contentWindow.location.reload();
 }
 

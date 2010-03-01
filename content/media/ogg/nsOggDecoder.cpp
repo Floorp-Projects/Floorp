@@ -1973,7 +1973,7 @@ PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
   if (!mMonitor)
     return PR_FALSE;
 
-  RegisterShutdownObserver();
+  nsContentUtils::RegisterShutdownObserver(this);
 
   mReader = new nsChannelReader();
   NS_ENSURE_TRUE(mReader, PR_FALSE);
@@ -2033,7 +2033,7 @@ void nsOggDecoder::Shutdown()
     NS_NEW_RUNNABLE_METHOD(nsOggDecoder, this, Stop);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
-  UnregisterShutdownObserver();
+  nsContentUtils::UnregisterShutdownObserver(this);
 }
 
 nsOggDecoder::~nsOggDecoder()
@@ -2274,8 +2274,8 @@ void nsOggDecoder::PlaybackEnded()
 }
 
 NS_IMETHODIMP nsOggDecoder::Observe(nsISupports *aSubjet,
-                                      const char *aTopic,
-                                      const PRUnichar *someData)
+                                    const char *aTopic,
+                                    const PRUnichar *someData)
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     Shutdown();
@@ -2467,28 +2467,6 @@ void nsOggDecoder::SeekingStarted()
   if (mElement) {
     UpdateReadyStateForData();
     mElement->SeekStarted();
-  }
-}
-
-void nsOggDecoder::RegisterShutdownObserver()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    observerService->AddObserver(this, 
-                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
-                                 PR_FALSE);
-  } else {
-    NS_WARNING("Could not get an observer service. Video decoding events may not shutdown cleanly.");
-  }
-}
-
-void nsOggDecoder::UnregisterShutdownObserver()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
 }
 

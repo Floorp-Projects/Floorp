@@ -128,6 +128,16 @@ function _do_quit() {
 }
 
 function _execute_test() {
+  // Map resource://test/ to the current working directory.
+  let (ios = Components.classes["@mozilla.org/network/io-service;1"]
+             .getService(Components.interfaces.nsIIOService)) {
+    let protocolHandler =
+      ios.getProtocolHandler("resource")
+         .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+    let curDirURI = ios.newFileURI(do_get_cwd());
+    protocolHandler.setSubstitution("test", curDirURI);
+  }
+
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.

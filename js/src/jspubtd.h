@@ -261,6 +261,12 @@ typedef JSBool
 (* JSConvertOp)(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 /*
+ * Delegate typeof to an object so it can cloak a primitive or another object.
+ */
+typedef JSType
+(* JSTypeOfOp)(JSContext *cx, JSObject *obj);
+
+/*
  * Finalize obj, which the garbage collector has determined to be unreachable
  * from other live objects or from GC roots.  Obviously, finalizers must never
  * store a reference to obj.

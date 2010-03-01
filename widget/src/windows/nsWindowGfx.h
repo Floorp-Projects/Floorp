@@ -56,8 +56,13 @@
 
 class nsWindowGfx {
 public:
-  static void AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion);
-  static already_AddRefed<nsIRegion> ConvertHRGNToRegion(HRGN aRgn);
+  static nsIntRect ToIntRect(const RECT& aRect)
+  {
+    return nsIntRect(aRect.left, aRect.top,
+                     aRect.right - aRect.left, aRect.bottom - aRect.top);
+  }
+
+  static nsIntRegion ConvertHRGNToRegion(HRGN aRgn);
   static void OnSettingsChangeGfx(WPARAM wParam);
 
 #if defined(CAIRO_HAS_DDRAW_SURFACE)

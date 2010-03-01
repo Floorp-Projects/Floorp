@@ -84,7 +84,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   direction: ltr;
 }
 
-#identity-box.verifiedIdentity > hbox > #identity-icon-labels > #identity-icon-label {
+#identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-labels > #identity-icon-label {
   -moz-margin-end: 0.25em !important;
 }
 
@@ -101,6 +101,10 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 }
 .unified-nav-current {
   font-weight: bold;
+}
+
+toolbarbutton.bookmark-item {
+  max-width: 13em;
 }
 
 %ifdef MOZ_WIDGET_GTK2

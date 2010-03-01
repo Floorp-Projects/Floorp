@@ -1,3 +1,6 @@
 include Date/jstests.list
 include Object/jstests.list
+include Types/jstests.list
+include extensions/jstests.list
+include misc/jstests.list
 include strict/jstests.list

@@ -152,16 +152,6 @@ BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
   return true;
 }
 
-bool
-BrowserStreamChild::Answer__delete__(const NPError& reason,
-                                     const bool& artificial)
-{
-  AssertPluginThread();
-  if (!artificial)
-    NPP_DestroyStream(reason);
-  return true;
-}
-
 NPError
 BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
 {
@@ -180,18 +170,31 @@ BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
   return result;
 }
 
-void
-BrowserStreamChild::NPP_DestroyStream(NPError reason)
+bool
+BrowserStreamChild::AnswerNPP_DestroyStream(const NPReason& reason,
+                                            NPError* err)
 {
   PLUGIN_LOG_DEBUG(("%s (reason=%i)", FULLFUNCTION, reason));
 
   AssertPluginThread();
 
-  if (mClosed)
-    return;
+  if (mClosed) {
+    NS_WARNING("NPP_DestroyStream on a closed stream");
+    return true;
+  }
 
-  mInstance->mPluginIface->destroystream(&mInstance->mData, &mStream, reason);
+  *err = mInstance->mPluginIface->destroystream(&mInstance->mData,
+                                                &mStream, reason);
   mClosed = true;
+  return true;
+}
+
+bool
+BrowserStreamChild::Recv__delete__()
+{
+  if (!mClosed)
+    NS_WARNING("__delete__ on an open stream");
+  return true;
 }
 
 } /* namespace plugins */

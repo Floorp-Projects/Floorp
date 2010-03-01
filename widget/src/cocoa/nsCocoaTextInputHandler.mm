@@ -39,8 +39,6 @@
 
 #include "nsCocoaTextInputHandler.h"
 
-#ifdef NS_LEOPARD_AND_LATER
-
 #include "nsChildView.h"
 #include "nsObjCExceptions.h"
 #include "nsBidiUtils.h"
@@ -1277,5 +1275,3 @@ nsCocoaIMEHandler::OpenSystemPreferredLanguageIME()
   }
   ::CFRelease(langList);
 }
-
-#endif // NS_LEOPARD_AND_LATER

@@ -22,24 +22,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=376075
 
 var e = document.getElementById("display");
 
+var borderExtras = ";-moz-border-top-colors: none; -moz-border-right-colors: none; -moz-border-bottom-colors: none; -moz-border-left-colors: none; -moz-border-image: none";
+
 // Test that we only serialize the 'border' shorthand when appropriate.
-e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: blue medium solid");
+e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: blue medium solid" + borderExtras);
 isnot(e.style.border, "", "should be able to serialize border");
-e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: green medium solid");
+e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: green medium solid" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green" + borderExtras);
 isnot(e.style.border, "", "should be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green blue blue blue");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green blue blue blue" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue green blue blue");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue green blue blue" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue green blue");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue green blue" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue blue green");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue blue green" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 2px 3px 3px; border-style: solid; border-color: green");
+e.setAttribute("style", "border-width: 3px 2px 3px 3px; border-style: solid; border-color: green" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
-e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid dashed; border-color: green");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid dashed; border-color: green" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
 
 // Test suppression of -moz-use-text-color in border shorthands.
@@ -167,6 +169,25 @@ is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists 
 e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s, 0s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
 
+// Check that the 'border' shorthand resets 'border-image' and
+// '-moz-border-*-colors', but that other 'border-*' shorthands don't
+// (bug 482692).
+e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5; border-left: medium solid green');
+is(e.style.cssText,
+   '-moz-border-image: url("foo.png") 5 5 5 5; border-left: medium solid green;',
+   "border-left does NOT reset -moz-border-image");
+e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5; border: medium solid green');
+is(e.style.cssText,
+   'border: medium solid green;',
+   "border DOES reset -moz-border-image");
+e.setAttribute("style", '-moz-border-left-colors: fuchsia blue; border-left: medium solid green');
+is(e.style.cssText,
+   '-moz-border-left-colors: fuchsia blue; border-left: medium solid green;',
+   "border-left does NOT reset -moz-border-left-colors");
+e.setAttribute("style", '-moz-border-left-colors: fuchsia blue; border: medium solid green');
+is(e.style.cssText,
+   'border: medium solid green;',
+   "border DOES reset -moz-border-left-colors");
 
 </script>
 </pre>

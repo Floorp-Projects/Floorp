@@ -1756,7 +1756,8 @@ nsDocShell::SetCharset(const char* aCharset)
     if (viewer) {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV(do_QueryInterface(viewer));
       if (muDV) {
-        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(nsDependentCString(aCharset)),
+        nsCString charset(aCharset);
+        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(charset),
                           NS_ERROR_FAILURE);
       }
     }
@@ -4682,7 +4683,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     }
 
     if (mGlobalHistory && mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
-        mGlobalHistory->SetPageTitle(mCurrentURI, nsDependentString(aTitle));
+        mGlobalHistory->SetPageTitle(mCurrentURI, nsString(mTitle));
     }
 
 
@@ -11345,30 +11346,6 @@ nsDocShell::OnLeaveLink()
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
-{
-  if (!aLinkURI) {
-    // No uri means not a link
-    aState = eLinkState_NotLink;
-    return NS_OK;
-  }
-    
-  aState = eLinkState_Unvisited;
-
-  // no history, leave state unchanged
-  if (!mGlobalHistory)
-    return NS_OK;
-
-  PRBool isVisited;
-  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(aLinkURI, &isVisited),
-                    NS_ERROR_FAILURE);
-  if (isVisited)
-    aState = eLinkState_Visited;
-  
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Web Shell Services API
 
@@ -11379,7 +11356,7 @@ nsDocShell::ReloadDocument(const char* aCharset,
                            PRInt32 aSource)
 {
 
-  // XXX hack. kee the aCharset and aSource wait to pick it up
+  // XXX hack. keep the aCharset and aSource wait to pick it up
   nsCOMPtr<nsIContentViewer> cv;
   NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
   if (cv)
@@ -11389,19 +11366,20 @@ nsDocShell::ReloadDocument(const char* aCharset,
     {
       PRInt32 hint;
       muDV->GetHintCharacterSetSource(&hint);
-      if( aSource > hint ) 
+      if (aSource > hint)
       {
-         muDV->SetHintCharacterSet(nsDependentCString(aCharset));
-         muDV->SetHintCharacterSetSource(aSource);
-         if(eCharsetReloadRequested != mCharsetReloadState) 
-         {
-            mCharsetReloadState = eCharsetReloadRequested;
-            return Reload(LOAD_FLAGS_CHARSET_CHANGE);
-         }
+        nsCString charset(aCharset);
+        muDV->SetHintCharacterSet(charset);
+        muDV->SetHintCharacterSetSource(aSource);
+        if(eCharsetReloadRequested != mCharsetReloadState) 
+        {
+          mCharsetReloadState = eCharsetReloadRequested;
+          return Reload(LOAD_FLAGS_CHARSET_CHANGE);
+        }
       }
     }
   }
-  //return failer if this request is not accepted due to mCharsetReloadState
+  //return failure if this request is not accepted due to mCharsetReloadState
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
 }
 

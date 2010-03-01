@@ -73,7 +73,7 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
-    nsresult GetFontList(const nsACString& aLangGroup,
+    nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts);
 

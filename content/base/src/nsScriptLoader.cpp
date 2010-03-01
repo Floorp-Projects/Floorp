@@ -70,6 +70,13 @@
 #include "nsThreadUtils.h"
 #include "nsIChannelClassifier.h"
 #include "nsDocShellCID.h"
+#include "nsIContentSecurityPolicy.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gCspPRLog;
+#endif
+
 
 //////////////////////////////////////////////////////////////
 // Per-request data structure
@@ -129,6 +136,11 @@ nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
     mDeferEnabled(PR_FALSE),
     mUnblockOnloadWhenDoneProcessing(PR_FALSE)
 {
+  // enable logging for CSP
+#ifdef PR_LOGGING
+  if (!gCspPRLog)
+    gCspPRLog = PR_NewLogModule("CSP");
+#endif
 }
 
 nsScriptLoader::~nsScriptLoader()
@@ -563,6 +575,24 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       return rv;
     }
   } else {
+    // in-line script
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    nsresult rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (csp) {
+      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("New ScriptLoader i ****with CSP****"));
+      PRBool inlineOK;
+      // this call will send violation reports when necessary
+      rv = NS_SUCCEEDED(csp->GetAllowsInlineScript(&inlineOK));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!inlineOK) {
+        PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP blocked inline scripts (2)"));
+        return NS_ERROR_FAILURE;
+      }
+    }
+
     request->mDefer = PR_FALSE;
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;

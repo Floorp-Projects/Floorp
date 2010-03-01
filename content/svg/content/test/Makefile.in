@@ -72,6 +72,8 @@ _TEST_FILES = \
 		test_valueLeaks.xhtml \
 		viewport-helper.svg \
 		test_viewport.html \
+		zoom-helper.svg \
+		test_zoom.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

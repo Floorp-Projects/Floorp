@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Frame Ancestors directive</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/";
+
+var inlineScriptsThatRan = 0;
+var inlineScriptsBlocked = 0;
+var inlineScriptsTotal = 4;
+
+// This is used to watch the blocked data bounce off CSP and allowed data 
+// get sent out to the wire.
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  this.obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  this.obsvc.addObserver(this, "csp-on-violate-policy", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if(!subject.QueryInterface) return;
+
+    if (topic === "csp-on-violate-policy") {
+      var what = null;
+      try {
+        //these were blocked... record that they were blocked
+        what = subject.QueryInterface(Components.interfaces.nsIURI).asciiSpec;
+      } catch(e) {
+        //if that fails, the subject is probably a string
+        what = subject.QueryInterface(Components.interfaces.nsISupportsCString).data;
+      }
+      window.scriptBlocked(what, data);
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    this.obsvc.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+// called by scripts that run
+// -- this is used to log failures
+var scriptRan = function(testname, data) {
+  inlineScriptsThatRan++;
+  ok(false, 'INLINE SCRIPT RAN: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+// called when a script is blocked
+// -- we can't determine *which* frame was blocked, but at least we can count them
+var scriptBlocked = function(testname, data) {
+  inlineScriptsBlocked++;
+  ok(true, 'INLINE SCRIPT BLOCKED: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  if (inlineScriptsTotal - inlineScriptsBlocked - inlineScriptsThatRan > 0)
+    return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+function clickit() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var cspframe = document.getElementById('cspframe');
+  var a = cspframe.contentDocument.getElementById('anchortoclick');
+  var evt = cspframe.contentDocument.createEvent("MouseEvents");
+  evt.initMouseEvent("click", true, true, cspframe.contentWindow,
+                      0,0,0,0,0, false, false, false, false, 0, null);
+  a.dispatchEvent(evt);
+}
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_CSP_inlinescript_main.html';
+document.getElementById('cspframe').addEventListener('load', clickit, false);
+</script>
+</pre>
+</body>
+</html>

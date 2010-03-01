@@ -51,6 +51,7 @@
 #include "gfxOS2Platform.h"
 #endif
 
+#include "gfxAtoms.h"
 #include "gfxPlatformFontList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -174,6 +175,9 @@ nsresult
 gfxPlatform::Init()
 {
     NS_ASSERTION(!gPlatform, "Already started???");
+
+    gfxAtoms::RegisterAtoms();
+
 #if defined(XP_WIN)
     gPlatform = new gfxWindowsPlatform;
 #elif defined(XP_MACOSX)
@@ -242,6 +246,7 @@ gfxPlatform::Shutdown()
     gfxTextRunCache::Shutdown();
     gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
+    gfxFontGroup::Shutdown();
 #if defined(XP_MACOSX) || defined(XP_WIN) // temporary, until this is implemented on others
     gfxPlatformFontList::Shutdown();
 #endif
@@ -285,6 +290,12 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 {
     const gfxIntSize& surfaceSize = aSurface->GetSize();
 
+#ifdef XP_WIN
+    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() == 
+        gfxWindowsPlatform::RENDER_DIRECT2D) {
+        return nsnull;
+    }
+#endif
     nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
     if (!optSurface || optSurface->CairoStatus() != 0)
         return nsnull;
@@ -300,7 +311,7 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 }
 
 nsresult
-gfxPlatform::GetFontList(const nsACString& aLangGroup,
+gfxPlatform::GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts)
 {
@@ -352,7 +363,7 @@ gfxPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 static void
-AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *aGenericName)
+AppendGenericFontFromPref(nsString& aFonts, nsIAtom *aLangGroup, const char *aGenericName)
 {
     nsresult rv;
 
@@ -360,20 +371,22 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
     if (!prefs)
         return;
 
-    nsCAutoString prefName;
+    nsCAutoString prefName, langGroupString;
     nsXPIDLCString nameValue, nameListValue;
+
+    aLangGroup->ToUTF8String(langGroupString);
 
     nsCAutoString genericDotLang;
     if (aGenericName) {
         genericDotLang.Assign(aGenericName);
     } else {
         prefName.AssignLiteral("font.default.");
-        prefName.Append(aLangGroup);
+        prefName.Append(langGroupString);
         prefs->GetCharPref(prefName.get(), getter_Copies(genericDotLang));
     }
 
     genericDotLang.AppendLiteral(".");
-    genericDotLang.Append(aLangGroup);
+    genericDotLang.Append(langGroupString);
 
     // fetch font.name.xxx value                   
     prefName.AssignLiteral("font.name.");
@@ -397,13 +410,13 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
 }
 
 void
-gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts, PRBool aAppendUnicode)
+gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, PRBool aAppendUnicode)
 {
     aFonts.Truncate();
 
-    AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
+    AppendGenericFontFromPref(aFonts, aLanguage, nsnull);
     if (aAppendUnicode)
-        AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
+        AppendGenericFontFromPref(aFonts, gfxAtoms::x_unicode, nsnull);
 }
 
 PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,
@@ -483,6 +496,16 @@ gfxPlatform::GetFontPrefLangFor(const char* aLang)
             return eFontPrefLang(i);
     }
     return eFontPrefLang_Others;
+}
+
+eFontPrefLang
+gfxPlatform::GetFontPrefLangFor(nsIAtom *aLang)
+{
+    if (!aLang)
+        return eFontPrefLang_Others;
+    nsCAutoString lang;
+    aLang->ToUTF8String(lang);
+    return GetFontPrefLangFor(lang.get());
 }
 
 const char*

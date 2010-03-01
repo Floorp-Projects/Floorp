@@ -75,8 +75,6 @@
 
 toolbarbutton.bookmark-item {
   margin: 0;
-  min-width: 0;
-  max-width: 13em;
   padding: 2px 3px;
 }
 
@@ -186,27 +184,31 @@ menuitem.bookmark-item {
 .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1 {
   -moz-appearance: none;
-  padding: 1px 2px;
+  padding: 1px 5px;
   background: rgba(85%,85%,85%,.1)
-              -moz-linear-gradient(top, rgba(255,255,255,.7), rgba(255,255,255,.39) 48%,
-                                        rgba(95%,95%,95%,.33) 52%, rgba(95%,95%,95%,.15));
+              -moz-linear-gradient(top, rgba(255,255,255,.9), rgba(255,255,255,.45) 48%,
+                                        rgba(90%,90%,90%,.4) 52%, rgba(90%,90%,90%,.2));
   -moz-background-clip: padding;
   -moz-border-radius: 5px;
   border: 1px solid;
-  border-color: rgba(0,0,0,.1) rgba(0,0,0,.15) rgba(0,0,0,.25);
+  border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 1px 0 rgba(0,0,0,.08);
+                   0 0 0 2px rgba(255,255,255,.1) inset,
+                   0 1px 0 rgba(0,0,0,.1);
   color: black;
   text-shadow: 0 0 3px white;
+}
+
+.toolbarbutton-menubutton-dropmarker,
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-menubutton-button,
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 .toolbarbutton-1 {
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-
-.toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
-  opacity: .5;
 }
 
 toolbarbutton[type="menu-button"] {
@@ -220,6 +222,12 @@ toolbarbutton[type="menu-button"] {
 .toolbarbutton-1,
 toolbarbutton[type="menu-button"] {
   margin: 1px 3px;
+}
+
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1,
+toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .toolbarbutton-menubutton-dropmarker {
@@ -241,23 +249,24 @@ toolbarbutton[type="menu-button"] {
 .toolbarbutton-menubutton-button[disabled="true"],
 .toolbarbutton-menubutton-dropmarker[disabled="true"],
 .toolbarbutton-1[disabled="true"] {
-  background-color: rgba(0,0,0,.15);
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.08);
+  opacity: .8;
+}
+
+.toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+.toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
+  opacity: .6;
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
 :not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
 .toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not(:active):hover {
-  background-color: rgba(255,255,255,.6);
-  border-color: rgba(60%,60%,60%,.3) rgba(60%,60%,60%,.45) rgba(60%,60%,60%,.75);
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.04),
-                   0 0 6px -1px white,
-                   0 0 6px -2px highlight,
-                   0 0 5px -2px highlight,
-                   0 4px 4px -3px white inset,
-                   0 -4px 4px -3px white inset,
-                   0 -3px 12px -5px highlight inset;
-  -moz-transition: background-color .6s;
+  background-color: hsla(190,60%,70%,.5);
+  border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
+  -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
+                   0 0 0 2px rgba(255,255,255,.1) inset,
+                   0 0 5px hsl(190,90%,80%),
+                   0 1px 0 rgba(0,0,0,.1);
+  -moz-transition: background-color .5s ease-in;
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
@@ -347,7 +356,13 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask);
   -moz-margin-start: -6px;
-  padding-left: 6px;
+  padding-left: 7px;
+  padding-right: 3px;
+}
+
+toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="true"]):hover {
+  /*mask: url(keyhole-forward-mask.svg#mask-hover);*/
+  mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask-hover);
 }
 
 #back-forward-dropmarker {

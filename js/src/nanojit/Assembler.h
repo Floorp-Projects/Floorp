@@ -68,8 +68,8 @@ namespace nanojit
     // - 'entry' records the state of the native machine stack at particular
     //   points during assembly.  Each entry represents four bytes.
     //
-    // - Parts of the stack can be allocated by LIR_ialloc, in which case each
-    //   slot covered by the allocation contains a pointer to the LIR_ialloc
+    // - Parts of the stack can be allocated by LIR_alloc, in which case each
+    //   slot covered by the allocation contains a pointer to the LIR_alloc
     //   LIns.
     //
     // - The stack also holds spilled values, in which case each slot holding
@@ -88,7 +88,7 @@ namespace nanojit
     //   * An LIns can appear in at most one contiguous sequence of slots in
     //     AR, and the length of that sequence depends on the opcode (1 slot
     //     for instructions producing 32-bit values, 2 slots for instructions
-    //     producing 64-bit values, N slots for LIR_ialloc).
+    //     producing 64-bit values, N slots for LIR_alloc).
     //
     //   * An LIns named by 'entry[i]' must have an in-use reservation with
     //     arIndex==i (or an 'i' indexing the start of the same contiguous
@@ -151,7 +151,19 @@ namespace nanojit
 
     inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
     {
-        return ins->isop(LIR_alloc) ? (ins->size()>>2) : ((ins->isI64() || ins->isF64()) ? 2 : 1);
+        uint32_t n = 0;
+        if (ins->isop(LIR_alloc)) {
+            n = ins->size() >> 2;
+        } else {
+            switch (ins->retType()) {
+            case LTy_I32:   n = 1;          break;
+            CASE64(LTy_I64:)
+            case LTy_F64:   n = 2;          break;
+            case LTy_Void:  NanoAssert(0);  break;
+            default:        NanoAssert(0);  break;
+            }
+        }
+        return n;
     }
 
     inline uint32_t AR::stackSlotsNeeded() const
@@ -193,6 +205,7 @@ namespace nanojit
          None = 0
         ,StackFull
         ,UnknownBranch
+        ,ConditionalBranchTooFar
     };
 
     typedef SeqBuilder<NIns*> NInsList;
@@ -280,7 +293,7 @@ namespace nanojit
             avmplus::CodegenLIR *cgen;
             #endif
 
-            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
+            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
 
             void        compile(Fragment *frag, Allocator& alloc, bool optimize
                                 verbose_only(, LabelMap*));
@@ -355,11 +368,6 @@ namespace nanojit
                                   verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
-            // njn
-            // njn
-            // njn
-            // njn
-            // njn
             bool isKnownReg(Register r) {
                 return r != deprecated_UnknownReg;
             }
@@ -411,7 +419,6 @@ namespace nanojit
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
             NIns*       asm_exit(LInsp guard);
             NIns*       asm_leave_trace(LInsp guard);
-            void        asm_qjoin(LIns *ins);
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_store64(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_restore(LInsp, Register);
@@ -428,19 +435,25 @@ namespace nanojit
             void        asm_cmov(LInsp i);
             void        asm_param(LInsp i);
             void        asm_int(LInsp i);
+#if NJ_SOFTFLOAT_SUPPORTED
             void        asm_qlo(LInsp i);
             void        asm_qhi(LInsp i);
+            void        asm_qjoin(LIns *ins);
+#endif
             void        asm_fneg(LInsp ins);
             void        asm_fop(LInsp ins);
             void        asm_i2f(LInsp ins);
             void        asm_u2f(LInsp ins);
             void        asm_f2i(LInsp ins);
+#ifdef NANOJIT_64BIT
             void        asm_q2i(LInsp ins);
             void        asm_promote(LIns *ins);
+#endif
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);
             NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
+            void        asm_branch_xov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        emitJumpTable(SwitchInfo* si, NIns* target);
@@ -475,7 +488,7 @@ namespace nanojit
                 debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
             }
 #endif
-            avmplus::Config &config;
+            const Config& _config;
     };
 
     inline int32_t arDisp(LIns* ins)

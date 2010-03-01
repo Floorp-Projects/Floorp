@@ -1655,8 +1655,6 @@ case "$target" in
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
     MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
-    # set MACOSX to generate lib/mac/MoreFiles/Makefile
-    MACOSX=1
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
@@ -2498,28 +2496,28 @@ dnl Configure JIT support
 
 case "$target" in
 i?86-*)
-    ENABLE_JIT=1
+    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=i386
     ;;
 x86_64*-*)
-    ENABLE_JIT=1
+    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=X64
     ;;
 arm*-*)
-    ENABLE_JIT=1
+    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=ARM
     ;;
 sparc*-*)
-    ENABLE_JIT=1
+    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=Sparc
     ;;
 esac
 
-MOZ_ARG_DISABLE_BOOL(jit,
-[  --disable-jit           Disable JIT support],
-  ENABLE_JIT=)
+MOZ_ARG_DISABLE_BOOL(tracejit,
+[  --disable-tracejit           Disable tracing JIT support],
+  ENABLE_TRACEJIT=)
 
-if test "$ENABLE_JIT"; then
+if test "$ENABLE_TRACEJIT"; then
 
 AC_DEFINE(FEATURE_NANOJIT)
 AC_DEFINE(JS_TRACER)
@@ -2561,12 +2559,12 @@ freebsd*|kfreebsd*)
     AC_DEFINE(AVMPLUS_OS2)
     ;;
 *)
-    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-jit to build without JIT support.])
+    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-tracejit to build without tracing JIT support.])
 esac
 
-fi # ENABLE_JIT
+fi # ENABLE_TRACEJIT
 
-AC_SUBST(ENABLE_JIT)
+AC_SUBST(ENABLE_TRACEJIT)
 AC_SUBST(NANOJIT_ARCH)
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
@@ -4234,8 +4232,8 @@ MOZ_ARG_ENABLE_BOOL(tracevis,
     MOZ_TRACEVIS= )
 if test -n "$MOZ_TRACEVIS"; then
     AC_DEFINE(MOZ_TRACEVIS)
-    if test -z "$ENABLE_JIT"; then
-       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-jit])
+    if test -z "$ENABLE_TRACEJIT"; then
+       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-tracejit])
     fi
 fi
 

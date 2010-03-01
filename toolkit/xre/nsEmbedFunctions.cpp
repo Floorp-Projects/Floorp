@@ -561,5 +561,6 @@ XRE_InstallX11ErrorHandler()
   InstallX11ErrorHandler();
 }
 #endif
+
 #endif // MOZ_IPC
 

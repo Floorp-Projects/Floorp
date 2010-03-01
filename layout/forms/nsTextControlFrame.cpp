@@ -268,14 +268,9 @@ NS_INTERFACE_MAP_END
 static PRBool
 IsFocusedContent(nsIContent* aContent)
 {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm)
-    return PR_FALSE;
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
-  return (focusedContent == aContent);
+  return fm && fm->GetFocusedContent() == aContent;
 }
 
 NS_IMETHODIMP
@@ -1099,10 +1094,11 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (!mDidPreDestroy) {
     PreDestroy();
   }
-  if (mAnonymousDiv && mMutationObserver) {
-    mAnonymousDiv->RemoveMutationObserver(mMutationObserver);
+  if (mValueDiv && mMutationObserver) {
+    mValueDiv->RemoveMutationObserver(mMutationObserver);
   }
-  nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
+  nsContentUtils::DestroyAnonymousContent(&mValueDiv);
+  nsContentUtils::DestroyAnonymousContent(&mPlaceholderDiv);
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -1262,14 +1258,14 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
       aIntrinsicSize.width += 1;
     }
 
-    // Also add in the padding of our anonymous div child.  Note that it hasn't
+    // Also add in the padding of our value div child.  Note that it hasn't
     // been reflowed yet, so we can't get its used padding, but it shouldn't be
     // using percentage padding anyway.
     nsMargin childPadding;
     if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
       aIntrinsicSize.width += childPadding.LeftRight();
     } else {
-      NS_ERROR("Percentage padding on anonymous div?");
+      NS_ERROR("Percentage padding on value div?");
     }
   }
 
@@ -1416,7 +1412,7 @@ nsTextControlFrame::InitEditor()
   if (!domdoc)
     return NS_ERROR_FAILURE;
 
-  rv = mEditor->Init(domdoc, shell, mAnonymousDiv, mSelCon, editorFlags);
+  rv = mEditor->Init(domdoc, shell, mValueDiv, mSelCon, editorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the controller for the editor
@@ -1540,6 +1536,12 @@ nsTextControlFrame::InitEditor()
     // Now restore the original editor flags.
     rv = mEditor->SetFlags(editorFlags);
 
+    // By default the placeholder is shown,
+    // we should hide it if the default value is not empty.
+    nsWeakFrame weakFrame(this);
+    HidePlaceholder();
+    NS_ENSURE_STATE(weakFrame.IsAlive());
+
     if (NS_FAILED(rv))
       return rv;
   }
@@ -1586,7 +1588,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                                  kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo, PR_FALSE);
+  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mValueDiv), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the necessary classes on the text control. We use class values
@@ -1611,13 +1613,13 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
     mMutationObserver = new nsAnonDivObserver(this);
     NS_ENSURE_TRUE(mMutationObserver, NS_ERROR_OUT_OF_MEMORY);
-    mAnonymousDiv->AddMutationObserver(mMutationObserver);
+    mValueDiv->AddMutationObserver(mMutationObserver);
   }
-  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                              classValue, PR_FALSE);
+  rv = mValueDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                          classValue, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aElements.AppendElement(mAnonymousDiv))
+  if (!aElements.AppendElement(mValueDiv))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Create selection
@@ -1629,7 +1631,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // Create a SelectionController
 
   mSelCon = new nsTextInputSelectionImpl(mFrameSel, shell,
-                                         mAnonymousDiv);
+                                         mValueDiv);
   if (!mSelCon)
     return NS_ERROR_OUT_OF_MEMORY;
   mTextListener = new nsTextInputListener();
@@ -1667,13 +1669,18 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Now create the placeholder anonymous content
+  rv = CreatePlaceholderDiv(aElements, doc->NodeInfoManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
 void
 nsTextControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
 {
-  aElements.MaybeAppendElement(mAnonymousDiv);
+  aElements.MaybeAppendElement(mValueDiv);
+  aElements.MaybeAppendElement(mPlaceholderDiv);
 }
 
 nscoord
@@ -1827,12 +1834,33 @@ nsTextControlFrame::IsLeaf() const
 void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (!aOn) {
+    nsWeakFrame weakFrame(this);
+
+    nsAutoString valueString;
+    GetValue(valueString, PR_TRUE);
+    if (valueString.IsEmpty())
+      ShowPlaceholder();
+
+    if (!weakFrame.IsAlive())
+    {
+      return;
+    }
+
     MaybeEndSecureKeyboardInput();
     return;
   }
 
   if (!mSelCon)
     return;
+
+  nsWeakFrame weakFrame(this);
+
+  HidePlaceholder();
+
+  if (!weakFrame.IsAlive())
+  {
+    return;
+  }
 
   if (NS_SUCCEEDED(InitFocusedValue()))
     MaybeBeginSecureKeyboardInput();
@@ -2405,6 +2433,12 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     }    
     mEditor->SetFlags(flags);
   }
+  else if (nsGkAtoms::placeholder == aAttribute)
+  {
+    nsWeakFrame weakFrame(this);
+    UpdatePlaceholderText(PR_TRUE);
+    NS_ENSURE_STATE(weakFrame.IsAlive());
+  }
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
@@ -2795,6 +2829,18 @@ nsTextControlFrame::IsScrollable() const
 void
 nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 {
+  // placeholder management
+  if (!IsFocusedContent(mContent)) {
+    // If the content is focused, we don't care about the changes because
+    // the placeholder is going to be hide/show on blur.
+    nsAutoString valueString;
+    GetValue(valueString, PR_TRUE);
+    if (valueString.IsEmpty())
+      ShowPlaceholder();
+    else
+      HidePlaceholder();
+  }
+
   nsCOMPtr<nsITextControlElement> elem = do_QueryInterface(mContent);
   if (elem) {
     elem->SetValueChanged(aValueChanged);
@@ -2806,6 +2852,88 @@ nsTextControlFrame::ShutDown()
 {
   NS_IF_RELEASE(sNativeTextAreaBindings);
   NS_IF_RELEASE(sNativeInputBindings);
+}
+
+nsresult
+nsTextControlFrame::CreatePlaceholderDiv(nsTArray<nsIContent*>& aElements,
+                                         nsNodeInfoManager* pNodeInfoManager)
+{
+  nsresult rv;
+  nsCOMPtr<nsIContent> placeholderText;
+
+  // Create a DIV for the placeholder
+  // and add it to the anonymous content child list
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = pNodeInfoManager->GetNodeInfo(nsGkAtoms::div, nsnull,
+                                           kNameSpaceID_XHTML);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = NS_NewHTMLElement(getter_AddRefs(mPlaceholderDiv), nodeInfo, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the text node for the placeholder text before doing anything else
+  rv = NS_NewTextNode(getter_AddRefs(placeholderText), pNodeInfoManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPlaceholderDiv->AppendChildTo(placeholderText, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the necessary classes on the text control. We use class values
+  // instead of a 'style' attribute so that the style comes from a user-agent
+  // style sheet and is still applied even if author styles are disabled.
+  SetPlaceholderClass(PR_TRUE, PR_FALSE);
+
+  if (!aElements.AppendElement(mPlaceholderDiv))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // initialise the text
+  UpdatePlaceholderText(PR_FALSE);
+
+  return NS_OK;
+}
+
+nsresult
+nsTextControlFrame::ShowPlaceholder()
+{
+  return SetPlaceholderClass(PR_TRUE, PR_TRUE);
+}
+
+nsresult
+nsTextControlFrame::HidePlaceholder()
+{
+  return SetPlaceholderClass(PR_FALSE, PR_TRUE);
+}
+
+nsresult
+nsTextControlFrame::SetPlaceholderClass(PRBool aVisible,
+                                        PRBool aNotify)
+{
+  nsresult rv;
+  nsAutoString classValue;
+
+  classValue.Assign(NS_LITERAL_STRING("anonymous-div placeholder"));
+
+  if (!aVisible)
+    classValue.AppendLiteral(" hidden");
+
+  rv = mPlaceholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                classValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsTextControlFrame::UpdatePlaceholderText(PRBool aNotify)
+{
+  nsAutoString placeholderValue;
+
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderValue);
+  RemoveNewlines(placeholderValue);
+  NS_ASSERTION(mPlaceholderDiv->GetChildAt(0), "placeholder div has no child");
+  mPlaceholderDiv->GetChildAt(0)->SetText(placeholderValue, aNotify);
+
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(nsAnonDivObserver, nsIMutationObserver)

@@ -1207,7 +1207,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
             }
         }
         if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID, getter, setter,
-                                     attrs, SPROP_HAS_SHORTID, (int16) slot,
+                                     attrs, JSScopeProperty::HAS_SHORTID, (int16) slot,
                                      NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
         }
@@ -1506,7 +1506,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             if (!js_DefineNativeProperty(cx, obj,
                                          ATOM_TO_JSID(atom), JSVAL_VOID,
                                          fun_getProperty, JS_PropertyStub,
-                                         lfp->attrs, SPROP_HAS_SHORTID,
+                                         lfp->attrs, JSScopeProperty::HAS_SHORTID,
                                          lfp->tinyid, NULL)) {
                 return JS_FALSE;
             }
@@ -1947,7 +1947,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     fval = vp[1];
 
-    if (!VALUE_IS_FUNCTION(cx, fval)) {
+    if (!js_IsCallable(fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             const char *bytes = js_GetStringBytes(cx, str);
@@ -2015,7 +2015,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     fval = vp[1];
 
-    if (!VALUE_IS_FUNCTION(cx, fval)) {
+    if (!js_IsCallable(fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             const char *bytes = js_GetStringBytes(cx, str);
@@ -2448,20 +2448,28 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 }
 
 JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto)
 {
+    JS_ASSERT(parent);
+    JS_ASSERT(proto);
+
     /*
      * The cloned function object does not need the extra JSFunction members
      * beyond JSObject as it points to fun via the private slot.
      */
-    JSObject *clone = js_NewObject(cx, &js_FunctionClass, NULL, parent, sizeof(JSObject));
+    JSObject *clone = js_NewObjectWithGivenProto(cx, &js_FunctionClass, proto,
+                                                 parent, sizeof(JSObject));
     if (!clone)
         return NULL;
     clone->setPrivate(fun);
     return clone;
 }
 
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, 0, 0)
+#ifdef JS_TRACER
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject,
+                     CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+#endif
 
 /*
  * Create a new flat closure, but don't initialize the imported upvar
@@ -2476,7 +2484,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
                ? fun->u.i.script->upvars()->length
                : 0) == fun->u.i.nupvars);
 
-    JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
+    JSObject *closure = CloneFunctionObject(cx, fun, scopeChain);
     if (!closure)
         return closure;
 
@@ -2492,10 +2500,18 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
                      CONTEXT, FUNCTION, OBJECT, 0, 0)
 
-JSObject *
+JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 {
-    JSObject *closure = js_AllocFlatClosure(cx, fun, cx->fp->scopeChain);
+    /*
+     * Flat closures can be partial, they may need to search enclosing scope
+     * objects via JSOP_NAME, etc.
+     */
+    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp);
+    if (!scopeChain)
+        return NULL;
+
+    JSObject *closure = js_AllocFlatClosure(cx, fun, scopeChain);
     if (!closure || fun->u.i.nupvars == 0)
         return closure;
 
@@ -2611,7 +2627,7 @@ js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 {
     JSObject *callable = JSVAL_IS_OBJECT(*vp) ? JSVAL_TO_OBJECT(*vp) : NULL;
 
-    if (callable && js_IsCallable(callable, cx)) {
+    if (callable && callable->isCallable()) {
         *vp = OBJECT_TO_JSVAL(callable);
         return callable;
     }
@@ -3028,7 +3044,7 @@ trace_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
     JS_SET_TRACING_INDEX(trc,
                          entry->localKind == JSLOCAL_ARG ? "arg" : "var",
                          entry->index);
-    JS_CallTracer(trc, ATOM_TO_STRING(entry->name), JSTRACE_STRING);
+    js_CallGCMarker(trc, ATOM_TO_STRING(entry->name), JSTRACE_STRING);
     return JS_DHASH_NEXT;
 }
 
@@ -3053,7 +3069,7 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
                 JS_SET_TRACING_INDEX(trc,
                                      i < fun->nargs ? "arg" : "var",
                                      i < fun->nargs ? i : i - fun->nargs);
-                JS_CallTracer(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
+                js_CallGCMarker(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
             }
         } while (i != 0);
     } else {

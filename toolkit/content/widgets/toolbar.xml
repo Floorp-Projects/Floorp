@@ -90,40 +90,25 @@
           return Components.interfaces.nsIAccessibleProvider.XULToolbar;
         </getter>
       </property>
-      <field name="firstPermanentChild">
-        null
-      </field>
-      <field name="lastPermanentChild">
-        null
-      </field>
       
       <property name="toolbarName"
                 onget="return this.getAttribute('toolbarname');"
                 onset="this.setAttribute('toolbarname', val); return val;"/>
-      
+
+      <field name="toolbox" readonly="true">
+      <![CDATA[
+        this.parentNode && this.parentNode.localName == "toolbox" ? this.parentNode : null;
+      ]]>
+      </field>
+
       <constructor>
         <![CDATA[
-          if (this.hasAttribute("firstpermanentchild")) {
-            // The toolbar is being reconstructed. The original first and last
-            // permanent child nodes need to be restored, the rest of the
-            // constructor can be skipped.
-
-            this.firstPermanentChild =
-              this.childNodes.item(this.getAttribute("firstpermanentchild"));
-            this.lastPermanentChild =
-              this.childNodes.item(this.getAttribute("lastpermanentchild"));
-            return;
-          }
-
-          this.firstPermanentChild = this.firstChild;
-          this.lastPermanentChild = this.lastChild;
-          this.setAttribute("firstpermanentchild", this.firstChild ? 0 : -1);
-          this.setAttribute("lastpermanentchild", this.childNodes.length -1);
-
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
-          var toolbox = this.parentNode;
-          
+          var toolbox = this.toolbox;
+          if (!toolbox)
+            return;
+
           if (!toolbox.palette) {
             // Look to see if there is a toolbarpalette.
             var node = toolbox.firstChild;
@@ -137,10 +122,10 @@
               return;
 
             // Hold on to the palette but remove it from the document.
-            toolbox.palette = node;       
+            toolbox.palette = node;
             toolbox.removeChild(node);
           }
-          
+
           // Build up our contents from the palette.
           var currentSet = this.getAttribute("currentset");
           if (!currentSet)
@@ -150,145 +135,182 @@
         ]]>
       </constructor>
 
+      <method name="_idFromNode">
+        <parameter name="aNode"/>
+        <body>
+        <![CDATA[
+          switch (aNode.localName) {
+            case "toolbarseparator":
+              return "separator";
+            case "toolbarspring":
+              return "spring";
+            case "toolbarspacer":
+              return "spacer";
+            case "splitter":
+              return "splitter";
+            default:
+              return aNode.id;
+          }
+        ]]>
+        </body>
+      </method>
+
       <property name="currentSet">
         <getter>
           <![CDATA[
-            var currentSet = "";
-            for (let i = 0, node; node = this.childNodes.item(i); i++) {
-              if (node == this.firstPermanentChild)
-                this.setAttribute("firstpermanentchild", i);
-              if (node == this.lastPermanentChild)
-                this.setAttribute("lastpermanentchild", i);
-
-              if (node.id &&
-                  node.localName == "toolbaritem" || 
-                  node.localName == "toolbarbutton" ||
-                  node.localName == "toolbarseparator" ||
-                  node.localName == "toolbarspring" ||
-                  node.localName == "toolbarspacer")
-              {
-                if (currentSet)
-                  currentSet += ",";
-
-                if (node.localName == "toolbarseparator")
-                  currentSet += "separator";
-                else if (node.localName == "toolbarspring")
-                  currentSet += "spring";
-                else if (node.localName == "toolbarspacer")
-                  currentSet += "spacer";
-                else
-                  currentSet += node.id;
+            var node = this.firstChild;
+            var currentSet = [];
+            while (node) {
+              var id = this._idFromNode(node);
+              if (id) {
+                currentSet.push(id);
               }
+              node = node.nextSibling;
             }
 
-            if ("currentSetChanged" in this)
-              this.currentSetChanged(currentSet);
-
-            return currentSet ? currentSet : "__empty";
+            return currentSet.join(",") || "__empty";
           ]]>
         </getter>
-        
+
         <setter>
           <![CDATA[
-            var palette = this.parentNode.palette;
-            // Remove all items before the first permanent child and after the last permanent child.
-            while (this.lastChild != this.lastPermanentChild) {
-              switch (this.lastChild.localName) {
-                case "toolbarseparator":
-                case "toolbarspring":
-                case "toolbarspacer":
-                  this.removeChild(this.lastChild);
-                  break;
-                default:
-                  palette.appendChild(this.lastChild);
+            var ids = (val == "__empty") ? [] : val.split(",");
+
+            var nodeidx = 0;
+            var paletteItems = { }, added = { };
+
+            var palette = this.toolbox ? this.toolbox.palette : null;
+
+            // build a cache of items in the toolbarpalette
+            var paletteChildren = palette ? palette.childNodes : [];
+            for (let c = 0; c < paletteChildren.length; c++) {
+              let curNode = paletteChildren[c];
+              paletteItems[curNode.id] = curNode;
+            }
+
+            var children = this.childNodes;
+
+            iter:
+            // iterate over the ids to use on the toolbar
+            for (let i = 0; i < ids.length; i++) {
+              let  id = ids[i];
+
+              // iterate over the existing nodes on the toolbar. nodeidx is the
+              // spot where we want to insert items.
+              for (let c = nodeidx; c < children.length; c++) {
+                let curNode = children[c];
+                if (this._idFromNode(curNode) == id) {
+                  // the node already exists. If c equals nodeidx, we haven't
+                  // iterated yet, so the item is already in the right position.
+                  // Otherwise, insert it here.
+                  if (c != nodeidx) {
+                    this.insertBefore(curNode, children[nodeidx]);
+                  }
+
+                  added[curNode.id] = true;
+                  nodeidx++;
+                  continue iter; // move on to the next id
+                }
+              }
+
+              // the node isn't already on the toolbar, so add a new one.
+              var nodeToAdd = paletteItems[id] || this._getToolbarItem(id);
+              if (nodeToAdd && !(nodeToAdd.id in added)) {
+                added[nodeToAdd.id] = true;
+                this.insertBefore(nodeToAdd, children[nodeidx] || null);
+                nodeToAdd.setAttribute("removable", "true");
+                nodeidx++;
               }
             }
 
-            while (this.firstChild != this.firstPermanentChild) {
-              switch (this.firstChild.localName) {
-                case "toolbarseparator":
-                case "toolbarspring":
-                case "toolbarspacer":
-                  this.removeChild(this.firstChild);
-                  break;
-                default:
-                  palette.appendChild(this.firstChild);
-              }
-            }
+            // remove any leftover removable nodes
+            for (let i = children.length - 1; i >= nodeidx; i--) {
+              let curNode = children[i];
 
-            var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
-            var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";
-
-            if (val && val != "__empty") {
-              var itemIds = val.split(",");
-              var before = true;
-              for (var i = 0; i < itemIds.length; i++) {
-                if (itemIds[i] == firstChildID || itemIds[i] == lastChildID)
-                  before = false;
+              let curNodeId = this._idFromNode(curNode);
+              // skip over fixed items
+              if (curNodeId && curNode.getAttribute("removable") == "true") {
+                if (palette)
+                  palette.appendChild(curNode);
                 else
-                  this.insertItem(itemIds[i], null, null, before);
+                  this.removeChild(curNode);
               }
             }
-
-            if (this.firstPermanentChild) {
-              this.setAttribute("firstpermanentchild",
-                                Array.indexOf(this.childNodes, this.firstPermanentChild));
-              this.setAttribute("lastpermanentchild",
-                                Array.indexOf(this.childNodes, this.lastPermanentChild));
-            }
-
-            if ("currentSetChanged" in this)
-              this.currentSetChanged(val);
 
             return val;
           ]]>
         </setter>
       </property>
-      
+
+      <method name="_getToolbarItem">
+        <parameter name="aId"/>
+        <body>
+          <![CDATA[
+            const XUL_NS = "http://www.mozilla.org/keymaster/" +
+                           "gatekeeper/there.is.only.xul";
+
+            var newItem = null;
+            switch (aId) {
+              // Handle special cases
+              case "separator":
+              case "spring":
+              case "spacer":
+                newItem = document.createElementNS(XUL_NS, "toolbar" + aId);
+                newItem.id = aId + Date.now() + this.childNodes.length;
+                if (aId == "spring")
+                  newItem.flex = 1;
+                break;
+              case "splitter":
+                newItem = document.createElementNS(XUL_NS, "splitter");
+                newItem.id = aId + Date.now() + this.childNodes.length;
+                newItem.className = "toolbar-splitter";
+                break;
+              default:
+                var toolbox = this.toolbox;
+                if (!toolbox)
+                  break;
+
+                // look for an item with the same id, as the item may be
+                // in a different toolbar.
+                var item = document.getElementById(aId);
+                if (item && item.parentNode && item.parentNode.parentNode == toolbox) {
+                  newItem = item;
+                  break;
+                }
+
+                if (toolbox.palette) {
+                  // Attempt to locate an item with a matching ID within
+                  // the palette.
+                  let paletteItem = this.toolbox.palette.firstChild;
+                  while (paletteItem) {
+                    if (paletteItem.id == aId) {
+                      newItem = paletteItem;
+                      break;
+                    }
+                    paletteItem = paletteItem.nextSibling;
+                  }
+                }
+                break;
+            }
+
+            return newItem;
+          ]]>
+        </body>
+      </method>
+
       <method name="insertItem">
         <parameter name="aId"/>
         <parameter name="aBeforeElt"/>
         <parameter name="aWrapper"/>
-        <parameter name="aBeforePermanent"/>
         <body>
           <![CDATA[
-            var newItem = null;
-            
-            // Create special cases of palette items.
-            var uniqueId;
-            if (aId == "separator") {
-              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                 "toolbarseparator");
-              uniqueId = (new Date()).getTime()+this.childNodes.length;
-              newItem.id = "separator" + uniqueId;
-              newItem.className = "chromeclass-toolbar-additional";
-            } else if (aId == "spring") {
-              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                 "toolbarspring");
-              uniqueId = (new Date()).getTime()+this.childNodes.length;
-              newItem.flex = 1;
-              newItem.id = "spring" + uniqueId;
-              newItem.className = "chromeclass-toolbar-additional";
-            } else if (aId == "spacer") {
-              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                 "toolbarspacer");
-              uniqueId = (new Date()).getTime()+this.childNodes.length;
-              newItem.id = "spacer" + uniqueId;
-              newItem.className = "chromeclass-toolbar-additional";
-            } else if (this.parentNode.localName == "toolbox") {
-              // Attempt to locate an item with a matching id within document.
-              newItem = document.getElementById(aId);
-              if (!newItem || newItem.parentNode.parentNode != this.parentNode) {
-                // Attempt to locate an item with a matching id within palette.
-                // The palette does not live in the document by default.
-                newItem = this.parentNode.palette
-                              .getElementsByAttribute("id", aId).item(0);
-                if (!newItem || newItem.parentNode != this.parentNode.palette)
-                  return false;
-              }
-            }
+            var newItem = this._getToolbarItem(aId);
+            if (!newItem)
+              return null;
 
             var insertItem = newItem;
+            // make sure added items are removable
+            newItem.setAttribute("removable", "true");
             
             // Wrap the item in another node if so inclined.
             if (aWrapper) {
@@ -299,8 +321,6 @@
             // Insert the palette item into the toolbar.
             if (aBeforeElt)
               this.insertBefore(insertItem, aBeforeElt);
-            else if (aBeforePermanent && this.firstPermanentChild)
-              this.insertBefore(insertItem, this.firstPermanentChild);
             else
               this.appendChild(insertItem);
                

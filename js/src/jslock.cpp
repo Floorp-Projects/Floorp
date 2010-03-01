@@ -128,11 +128,15 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
                           "sete %%al\n"
                           "andl $1, %%eax\n"
                           : "=a" (res)
+#ifdef __SUNPRO_CC
+/* Different code for Sun Studio because of a bug of SS12U1 */
+                          : "c" (w), "d" (nv), "a" (ov)
+#else
                           : "r" (w), "r" (nv), "a" (ov)
+#endif
                           : "cc", "memory");
     return (int)res;
 }
-
 #elif defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))
 
 static JS_ALWAYS_INLINE int
@@ -1341,17 +1345,6 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
-}
-
-bool
-js_LockObjIfShape(JSContext *cx, JSObject *obj, uint32 shape)
-{
-    JS_ASSERT(OBJ_SCOPE(obj)->title.ownercx != cx);
-    js_LockObj(cx, obj);
-    if (OBJ_SHAPE(obj) == shape)
-        return true;
-    js_UnlockObj(cx, obj);
-    return false;
 }
 
 void

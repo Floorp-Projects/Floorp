@@ -121,7 +121,8 @@ int main(int argc, char** argv)
     double resolution = TimeDuration::Resolution().ToSecondsSigDigits();
     printf(" (platform timer resolution is ~%g s)\n", resolution);
     Assert(0.000000001 < resolution, "Time resolution is sane");
-    Assert(resolution <= 0.001, "Time resolution as good as NSPR's worst");
+    // Don't upper-bound sanity check ... although NSPR reports 1ms
+    // resolution, it might be lying, so we shouldn't compare with it
 
     return gFailCount > 0;
 }

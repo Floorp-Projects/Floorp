@@ -39,8 +39,11 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf90c6-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMFormData;
+
+[scriptable, uuid(a5735b98-7a5f-4242-8c9a-3805f3f61b76)]
 interface nsIDOMNSHTMLFormElement : nsISupports
 {
            attribute DOMString        encoding;
+  nsIDOMFormData getFormData();
 };

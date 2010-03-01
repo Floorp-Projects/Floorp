@@ -1,0 +1,2 @@
+include regress/jstests.list
+include extensions/jstests.list

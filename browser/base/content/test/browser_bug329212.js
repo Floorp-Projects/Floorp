@@ -26,6 +26,8 @@ function test () {
     ok(FillInHTMLTooltip(doc.getElementById("link4"), "should get title"));
     is(tooltip.getAttribute("label"), "This is an xlink:title attribute");
 
+    ok(!FillInHTMLTooltip(doc.getElementById("text5"), "should not get title"));
+
     gBrowser.removeCurrentTab();
     finish();
   }, true);

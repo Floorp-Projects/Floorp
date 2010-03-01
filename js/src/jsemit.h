@@ -306,6 +306,12 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_UNBRAND_THIS   0x100000
 
 /*
+ * "Module pattern", i.e., a lambda that is immediately applied and the whole
+ * of an expression statement.
+ */
+#define TCF_FUN_MODULE_PATTERN 0x200000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)

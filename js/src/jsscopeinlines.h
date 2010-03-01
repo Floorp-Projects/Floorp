@@ -126,7 +126,7 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
-    funobj = js_CloneFunctionObject(cx, fun, OBJ_GET_PARENT(cx, funobj));
+    funobj = CloneFunctionObject(cx, fun, OBJ_GET_PARENT(cx, funobj));
     if (!funobj)
         return false;
     *vp = OBJECT_TO_JSVAL(funobj);
@@ -171,9 +171,9 @@ JSScope::trace(JSTracer *trc)
         uint32 newShape;
 
         if (sprop) {
-            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
+            if (!sprop->hasRegenFlag()) {
                 sprop->shape = js_RegenerateShapeForGC(cx);
-                sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
+                sprop->setRegenFlag();
             }
             newShape = sprop->shape;
         }
@@ -200,6 +200,47 @@ JSScope::trace(JSTracer *trc)
             sprop->trace(trc);
         } while ((sprop = sprop->parent) != NULL);
     }
+}
+
+inline JSDHashNumber
+JSScopeProperty::hash() const
+{
+    JSDHashNumber hash = 0;
+
+    /* Accumulate from least to most random so the low bits are most random. */
+    JS_ASSERT_IF(isMethod(), !setter || setter == js_watch_set);
+    if (getter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(getter);
+    if (setter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(setter);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ slot;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ id;
+    return hash;
+}
+
+inline bool
+JSScopeProperty::matches(const JSScopeProperty *p) const
+{
+    JS_ASSERT(!JSVAL_IS_NULL(id));
+    JS_ASSERT(!JSVAL_IS_NULL(p->id));
+    return id == p->id &&
+           matchesParamsAfterId(p->getter, p->setter, p->slot, p->attrs, p->flags, p->shortid);
+}
+
+inline bool
+JSScopeProperty::matchesParamsAfterId(JSPropertyOp agetter, JSPropertyOp asetter, uint32 aslot,
+                                      uintN aattrs, uintN aflags, intN ashortid) const
+{
+    JS_ASSERT(!JSVAL_IS_NULL(id));
+    return getter == agetter &&
+           setter == asetter &&
+           slot == aslot &&
+           attrs == aattrs &&
+           ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
+           shortid == ashortid;
 }
 
 #endif /* jsscopeinlines_h___ */

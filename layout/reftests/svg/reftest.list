@@ -19,6 +19,7 @@ include svg-integration/reftest.list
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
+== clipPath-advanced-01.svg pass.svg
 == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-winding-01.svg pass.svg
@@ -27,6 +28,9 @@ include svg-integration/reftest.list
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
+== dynamic-attr-removal-1.svg pass.svg
+== dynamic-attr-removal-2.svg pass.svg
+== dynamic-attr-change-1.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
 == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
@@ -34,7 +38,7 @@ include svg-integration/reftest.list
 == dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-gradient-contents-02.svg pass.svg
-== dynamic-link-style-01.svg pass.svg
+fails == dynamic-link-style-01.svg pass.svg # https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 == dynamic-mask-contents-01.svg pass.svg
@@ -104,7 +108,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
-fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.4$/)) == opacity-and-gradient-01.svg pass.svg # fails on OS X 10.4 (bug 379610)
+== opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == path-01.svg path-01-ref.svg

@@ -230,6 +230,9 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
+extern void
+js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
+
 /*
  * The kind of GC thing with a finalizer. The external strings follow the
  * ordinary string to simplify js_GetExternalStringGCType.
