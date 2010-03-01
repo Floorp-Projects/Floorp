@@ -110,6 +110,9 @@ include image-region/reftest.list
 # inline borders and padding
 include inline-borderpadding/reftest.list
 
+# layers/
+include layers/reftest.list
+
 # line-breaking/
 include line-breaking/reftest.list
 
