@@ -49,9 +49,11 @@ LIBXUL_LIBRARY = 1
 
 EXPORTS = \
         Layers.h \
+        BasicLayers.h \
         $(NULL)
 
 CPPSRCS = \
+        BasicLayers.cpp \
         $(NULL)
 
 EXTRA_DSO_LIBS = \
