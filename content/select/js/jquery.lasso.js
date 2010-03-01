@@ -32,7 +32,7 @@ Lasso.prototype = {
     var self = this;
     $(this._container)
       .mousedown( function(e){
-        if( $(e.target).is(self._selector) ) return;
+        if( $(e.target).is(self._selector) || $(e.target).parent(self._selector).length > 0 ) return;
         self.startSelection();
         return false;
       })
@@ -52,14 +52,14 @@ Lasso.prototype = {
     this.ctx.fillStyle = this._fillColor;
     this.ctx.strokeStyle = this._strokeColor;
     this.ctx.lineWidth = 1;
-    $(this._container).mousemove(this._draw);
+    $(this.canvas).mousemove(this._draw);
     $(this.canvas).show();
     
 
   },
   
   stopSelection: function(){
-    $(this._container).unbind("mousemove", this._draw);
+    $(this.canvas).unbind("mousemove", this._draw);
     this._isSelecting = false;
     this._hitTest();         
     $(this.canvas).hide();
@@ -109,9 +109,14 @@ Lasso.prototype = {
         // If transparent (i.e., empty)
         if( data[index] != 0 ){
           var hit = document.elementFromPoint(x,y);
-          if( hitElements.indexOf( hit ) == -1 && $(hit).is(this._selector) ){
-            hitElements.push( hit );
-          }
+          var desired = null;
+          if( $(hit).is(this._selector) )
+            desired = hit;
+          else if( $(hit).parent(this._selector).length > 0 )
+            desired = $(hit).parent(this._selector).get(0);
+          if( desired && hitElements.indexOf( desired ) == -1 )
+            hitElements.push( desired );
+          
         }
       }
     }
