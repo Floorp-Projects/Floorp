@@ -730,16 +730,36 @@ nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
  * root of the layer manager, drawing into the ThebesLayers.
  */
 void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder,
-                          nsIRenderingContext* aCtx) const {
+                          nsIRenderingContext* aCtx,
+                          PRUint32 aFlags) const {
   NS_ASSERTION(mDidComputeVisibility,
                "Must call ComputeVisibility before calling Paint");
 
-  // To paint a display list, we construct a BasicLayerManager and
-  // a layer tree for it, and ask the BasicLayerManager to render.
-  nsRefPtr<LayerManager> layerManager = new BasicLayerManager();
-  if (!layerManager)
-    return;
-  layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
+  nsRefPtr<LayerManager> layerManager;
+  if (aFlags & PAINT_USE_WIDGET_LAYERS) {
+    nsIFrame* referenceFrame = aBuilder->ReferenceFrame();
+    NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
+                 "Reference frame must be a display root for us to use the layer manager");
+    nsIWidget* window = referenceFrame->GetWindow();
+    if (window) {
+      layerManager = window->GetLayerManager();
+    }
+  }
+  if (!layerManager) {
+    if (!aCtx) {
+      NS_WARNING("Nowhere to paint into");
+      return;
+    }
+    layerManager = new BasicLayerManager(aCtx->ThebesContext());
+    if (!layerManager)
+      return;
+  }
+
+  if (aCtx) {
+    layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
+  } else {
+    layerManager->BeginTransaction();
+  }
 
   nsAutoTArray<LayerItems,10> layers;
   nsRefPtr<Layer> root = BuildLayer(aBuilder, layerManager, &layers);
@@ -1829,7 +1849,7 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
 
   /* Now, send the paint call down.
    */    
-  mStoredList.GetList()->Paint(aBuilder, aCtx);
+  mStoredList.GetList()->Paint(aBuilder, aCtx, nsDisplayList::PAINT_DEFAULT);
 
   /* The AutoSaveRestore object will clean things up. */
 }

@@ -824,6 +824,13 @@ public:
    * clipping/scrolling/scrollbar painting due to scrolling in the viewport
    *   set RENDER_CARET to draw the caret if one would be visible
    * (by default the caret is never drawn)
+   *   set RENDER_USE_LAYER_MANAGER to force rendering to go through
+   * the layer manager for the window. This may be unexpectedly slow
+   * (if the layer manager must read back data from the GPU) or low-quality
+   * (if the layer manager reads back pixel data and scales it
+   * instead of rendering using the appropriate scaling). It may also
+   * slow everything down if the area rendered does not correspond to the
+   * normal visible area of the window.
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
@@ -832,7 +839,8 @@ public:
   enum {
     RENDER_IS_UNTRUSTED = 0x01,
     RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
-    RENDER_CARET = 0x04
+    RENDER_CARET = 0x04,
+    RENDER_USE_WIDGET_LAYERS = 0x08
   };
   NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                             nscolor aBackgroundColor,

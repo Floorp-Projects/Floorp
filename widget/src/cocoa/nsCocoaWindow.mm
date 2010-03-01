@@ -71,6 +71,13 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+namespace mozilla {
+namespace layers {
+class LayerManager;
+}
+}
+using namespace mozilla::layers;
+
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
 
@@ -906,6 +913,15 @@ nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
   if (mPopupContentView) {
     mPopupContentView->Scroll(aDelta, aDestRects, aConfigurations);
   }
+}
+
+LayerManager*
+nsCocoaWindow::GetLayerManager()
+{
+  if (mPopupContentView) {
+    return mPopupContentView->GetLayerManager();
+  }
+  return nsnull;
 }
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()

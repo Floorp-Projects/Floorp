@@ -179,7 +179,7 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (BOOL)beginMaybeResetUnifiedToolbar:(nsIRegion*)aRegion context:(CGContextRef)aContext;
+- (BOOL)beginMaybeResetUnifiedToolbar:(nsIntRegion*)aRegion context:(CGContextRef)aContext;
 - (void)endMaybeResetUnifiedToolbar:(BOOL)aReset;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
@@ -1669,7 +1669,6 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
       // to do exactly what we need here.
       nsIntRegion needsInvalidation;
       needsInvalidation.Sub(allRects, destRegion);
-      nsIntRegionRectIterator iter(needsInvalidation);
       const nsIntRect* invalidate;
       for (nsIntRegionRectIterator iter(needsInvalidation);
            (invalidate = iter.Next()) != nsnull;) {
@@ -2453,11 +2452,11 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   return ctm.ty >= [[[[NSView focusView] window] contentView] bounds].size.height;
 }
 
-- (BOOL)beginMaybeResetUnifiedToolbar:(nsIRegion*)aRegion context:(CGContextRef)aContext
+- (BOOL)beginMaybeResetUnifiedToolbar:(nsIntRegion*)aRegion context:(CGContextRef)aContext
 {
   if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
       !DrawingAtWindowTop(aContext) ||
-      !aRegion->ContainsRect(0, 0, (int)[self bounds].size.width, 1))
+      !aRegion->Contains(nsIntRect(0, 0, (int)[self bounds].size.width, 1)))
     return NO;
 
   [(ToolbarWindow*)[self window] beginMaybeResetUnifiedToolbar];
@@ -2512,15 +2511,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  mGeckoChild->GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-  rc->Init(mGeckoChild->GetDeviceContext(), targetContext);
-
-  // Build a region.
-  nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
-  if (!rgn)
-    return;
-  rgn->Init();
+  // Create the event so we can fill in its region
+  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
 
   const NSRect *rects;
   NSInteger count, i;
@@ -2529,10 +2521,12 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
     for (i = 0; i < count; ++i) {
       // Add the rect to the region.
       const NSRect& r = [self convertRect:rects[i] fromView:[NSView focusView]];
-      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
+      paintEvent.region.Or(paintEvent.region,
+        nsIntRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
     }
   } else {
-    rgn->Union(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
+    paintEvent.region =
+      nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
   }
 
   // Subtract child view rectangles from the region
@@ -2542,36 +2536,31 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
     if (![view isKindOfClass:[ChildView class]] || [view isHidden])
       continue;
     NSRect frame = [view frame];
-    rgn->Subtract(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+    paintEvent.region.Sub(paintEvent.region,
+      nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
   }
 
   // Set up the clip region.
-  nsRegionRectSet* rgnRects = nsnull;
-  rgn->GetRects(&rgnRects);
-  if (!rgnRects)
-    return;
-
-  for (PRUint32 i = 0; i < rgnRects->mNumRects; ++i) {
-    const nsRegionRect& rect = rgnRects->mRects[i];
-    targetContext->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height));
+  nsIntRegionRectIterator iter(paintEvent.region);
+  targetContext->NewPath();
+  for (;;) {
+    const nsIntRect* r = iter.Next();
+    if (!r)
+      break;
+    targetContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
   }
-  rgn->FreeRects(rgnRects);
   targetContext->Clip();
 
-  // bounding box of the dirty area
-  nsIntRect fullRect;
-  NSRectToGeckoRect(aRect, fullRect);
-
-  // Create the event and dispatch it.
-  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
-  paintEvent.renderingContext = rc;
-  paintEvent.rect = &fullRect;
-  paintEvent.region = rgn;
-
-  BOOL resetUnifiedToolbar = [self beginMaybeResetUnifiedToolbar:rgn context:aContext];
+  BOOL resetUnifiedToolbar =
+    [self beginMaybeResetUnifiedToolbar:&paintEvent.region context:aContext];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  PRBool painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  PRBool painted;
+  {
+    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(mGeckoChild, targetContext);
+    painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+
   if (!painted && [self isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
@@ -2582,21 +2571,11 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
 
   [self endMaybeResetUnifiedToolbar:resetUnifiedToolbar];
 
-  if (!mGeckoChild)
-    return;
-
-  paintEvent.renderingContext = nsnull;
-  paintEvent.region = nsnull;
-
-  targetContext = nsnull;
-  targetSurface = nsnull;
-
   // note that the cairo surface *MUST* be destroyed at this point,
   // or bad things will happen (since we can't keep the cgContext around
   // beyond this drawRect message handler)
 
 #ifdef DEBUG_UPDATE
-  fprintf (stderr, "  window coords: [%d %d %d %d]\n", fullRect.x, fullRect.y, fullRect.width, fullRect.height);
   fprintf (stderr, "---- update done ----\n");
 
 #if 0

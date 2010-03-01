@@ -179,7 +179,6 @@ private:
   void CallWillPaintOnObservers();
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
   void UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
                         const nsRegion &aDamagedRegion,
                         nsView* aIgnoreWidgetView);
@@ -188,9 +187,9 @@ private:
 
   void TriggerRefresh(PRUint32 aUpdateFlags);
 
-  void Refresh(nsView *aView, nsIRenderingContext *aContext,
-               nsIRegion *region, PRUint32 aUpdateFlags);
-  void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
+  void Refresh(nsView *aView, nsIWidget *aWidget,
+               const nsIntRegion& aRegion, PRUint32 aUpdateFlags);
+  void RenderViews(nsView *aRootView, nsIWidget *aWidget,
                    const nsRegion& aRegion);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
