@@ -69,11 +69,16 @@ public:
   nsresult SetSpec(const nsAString& aStringSpec, nsIContent* aContextNode);
   void     ResolveReferences(nsIContent* aContextNode);
 
-  void     HandleNewInterval(const nsSMILInterval& aInterval,
+  void     HandleNewInterval(nsSMILInterval& aInterval,
                              const nsSMILTimeContainer* aSrcContainer);
-  void     HandleChangedInterval(const nsSMILInterval& aInterval,
-                                 const nsSMILTimeContainer* aSrcContainer);
-  void     HandleDeletedInterval();
+
+  // For created nsSMILInstanceTime objects
+  PRBool   DependsOnBegin() const;
+  void     HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
+                                     const nsSMILTimeContainer* aSrcContainer,
+                                     nsSMILInstanceTime& aInstanceTimeToUpdate,
+                                     PRBool aObjectChanged);
+  void     HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
 
   // Cycle-collection support
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
@@ -93,13 +98,7 @@ protected:
                                           // mParams.mSyncBegin which indicates
                                           // if we're synced with the begin of
                                           // the target.
-  PRPackedBool                  mVisited;
-  PRPackedBool                  mChainEnd;
   nsSMILTimeValueSpecParams     mParams;
-
-  // The latest instance time we have generated. Only used for syncbase timing
-  // where the instance time might actually change.
-  nsRefPtr<nsSMILInstanceTime>  mLatestInstanceTime;
 
   class TimebaseElement : public nsReferencedElement {
   public:
