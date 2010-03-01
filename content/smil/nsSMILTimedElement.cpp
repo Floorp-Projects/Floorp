@@ -422,6 +422,17 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
   nsSMILTimeValue sampleTime(aContainerTime);
 
   do {
+#ifdef DEBUG
+    // Check invariant
+    if (mElementState == STATE_STARTUP || mElementState == STATE_POSTACTIVE) {
+      NS_ABORT_IF_FALSE(!mCurrentInterval,
+          "Shouldn't have current interval in startup or postactive states");
+    } else {
+      NS_ABORT_IF_FALSE(mCurrentInterval,
+          "Should have current interval in waiting and active states");
+    }
+#endif
+
     stateChanged = PR_FALSE;
 
     switch (mElementState)
@@ -917,11 +928,12 @@ nsSMILTimedElement::AddDependent(nsSMILTimeValueSpec& aDependent)
   //
   // It's not necessary to call SyncPauseTime since we're dealing with
   // historical instance times not newly added ones.
+  nsSMILTimeContainer* container = GetTimeContainer();
   for (PRUint32 i = 0; i < mOldIntervals.Length(); ++i) {
-    aDependent.HandleNewInterval(*mOldIntervals[i], GetTimeContainer());
+    aDependent.HandleNewInterval(*mOldIntervals[i], container);
   }
   if (mCurrentInterval) {
-    aDependent.HandleNewInterval(*mCurrentInterval, GetTimeContainer());
+    aDependent.HandleNewInterval(*mCurrentInterval, container);
   }
 }
 
@@ -1069,7 +1081,7 @@ nsSMILTimedElement::ClearBeginOrEndSpecs(PRBool aIsBegin)
 nsresult
 nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
                                     const nsSMILInstanceTime* aFixedBeginTime,
-                                    nsSMILInterval& aResult)
+                                    nsSMILInterval& aResult) const
 {
   NS_ABORT_IF_FALSE(!aFixedBeginTime || aFixedBeginTime->Time().IsResolved(),
       "Unresolved begin time specified for interval start");
@@ -1462,20 +1474,19 @@ nsSMILTimedElement::SampleSimpleTime(nsSMILTime aActiveTime)
 void
 nsSMILTimedElement::SampleFillValue()
 {
-  NS_ABORT_IF_FALSE(!mOldIntervals.IsEmpty(),
-      "Attempting to sample fill value but there is no previous interval");
-
   if (mFillMode != FILL_FREEZE || !mClient)
     return;
 
-  const nsSMILInterval& prevInterval = *GetPreviousInterval();
-  NS_ABORT_IF_FALSE(prevInterval.End()->Time().IsResolved() &&
-      !prevInterval.End()->MayUpdate(),
+  const nsSMILInterval* prevInterval = GetPreviousInterval();
+  NS_ABORT_IF_FALSE(prevInterval,
+      "Attempting to sample fill value but there is no previous interval");
+  NS_ABORT_IF_FALSE(prevInterval->End()->Time().IsResolved() &&
+      !prevInterval->End()->MayUpdate(),
       "Attempting to sample fill value but the endpoint of the previous "
       "interval is not resolved and frozen");
 
-  nsSMILTime activeTime = prevInterval.End()->Time().GetMillis() -
-                          prevInterval.Begin()->Time().GetMillis();
+  nsSMILTime activeTime = prevInterval->End()->Time().GetMillis() -
+                          prevInterval->Begin()->Time().GetMillis();
 
   PRUint32 repeatIteration;
   nsSMILTime simpleTime =
