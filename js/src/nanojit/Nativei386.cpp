@@ -657,7 +657,7 @@ namespace nanojit
         NanoAssert(cond->isCmp());
 
         // Handle float conditions separately.
-        if (condop >= LIR_feq && condop <= LIR_fge) {
+        if (isFCmpOpcode(condop)) {
             return asm_fbranch(branchOnFalse, cond, targ);
         }
 
@@ -1730,7 +1730,7 @@ namespace nanojit
     void Assembler::asm_fcmp(LIns *cond)
     {
         LOpcode condop = cond->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        NanoAssert(isFCmpOpcode(condop));
         LIns* lhs = cond->oprnd1();
         LIns* rhs = cond->oprnd2();
         NanoAssert(lhs->isF64() && rhs->isF64());

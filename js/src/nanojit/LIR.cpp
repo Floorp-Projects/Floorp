@@ -45,7 +45,7 @@ namespace nanojit
     #ifdef FEATURE_NANOJIT
 
     const uint8_t repKinds[] = {
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
         LRK_##repKind,
 #include "LIRopcode.tbl"
 #undef OP___
@@ -53,18 +53,26 @@ namespace nanojit
     };
 
     const LTy retTypes[] = {
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
         LTy_##retType,
 #include "LIRopcode.tbl"
 #undef OP___
         LTy_Void
     };
 
+    const int8_t isCses[] = {
+#define OP___(op, number, repKind, retType, isCse) \
+        isCse,
+#include "LIRopcode.tbl"
+#undef OP___
+        0
+    };
+
     // LIR verbose specific
     #ifdef NJ_VERBOSE
 
     const char* lirNames[] = {
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
         #op,
 #include "LIRopcode.tbl"
 #undef OP___
@@ -334,7 +342,7 @@ namespace nanojit
     {
         static const uint8_t insSizes[] = {
         // LIR_start is treated specially -- see below.
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
             ((number) == LIR_start ? 0 : sizeof(LIns##repKind)),
 #include "LIRopcode.tbl"
 #undef OP___
@@ -666,17 +674,12 @@ namespace nanojit
                 oprnd1 = t;
                 break;
             default:
-                if (v >= LIR_lt && v <= LIR_uge) {
-                    NanoStaticAssert((LIR_lt ^ 1) == LIR_gt);
-                    NanoStaticAssert((LIR_le ^ 1) == LIR_ge);
-                    NanoStaticAssert((LIR_ult ^ 1) == LIR_ugt);
-                    NanoStaticAssert((LIR_ule ^ 1) == LIR_uge);
-
+                if (isICmpOpcode(v)) {
                     // move const to rhs, swap the operator
                     LIns *t = oprnd2;
                     oprnd2 = oprnd1;
                     oprnd1 = t;
-                    v = LOpcode(v^1);
+                    v = invertICmpOpcode(v);
                 }
                 break;
             }
@@ -810,11 +813,10 @@ namespace nanojit
                 }
             }
             else {
-                NanoStaticAssert((LIR_xt ^ 1) == LIR_xf);
                 while (c->isop(LIR_eq) && c->oprnd1()->isCmp() &&
                     c->oprnd2()->isconstval(0)) {
                     // xt(eq(cmp,0)) => xf(cmp)   or   xf(eq(cmp,0)) => xt(cmp)
-                    v = LOpcode(v^1);
+                    v = invertCondGuardOpcode(v);
                     c = c->oprnd1();
                 }
             }
@@ -883,7 +885,7 @@ namespace nanojit
         case LIR_jf:
             while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
                 // jt(eq(cmp,0)) => jf(cmp)   or   jf(eq(cmp,0)) => jt(cmp)
-                v = LOpcode(v ^ 1);
+                v = invertCondJmpOpcode(v);
                 c = c->oprnd1();
             }
             break;
@@ -2150,7 +2152,7 @@ namespace nanojit
 
     LIns* CseFilter::ins3(LOpcode v, LInsp a, LInsp b, LInsp c)
     {
-        NanoAssert(isCmovOpcode(v));
+        NanoAssert(isCseOpcode(v));
         uint32_t k;
         LInsp ins = exprs->find3(v, a, b, c, k);
         if (ins)
@@ -2392,7 +2394,7 @@ namespace nanojit
     LIns* SoftFloatFilter::ins2(LOpcode op, LIns *a, LIns *b) {
         const CallInfo *ci = softFloatOps.opmap[op];
         if (ci) {
-            if ((op >= LIR_feq && op <= LIR_fge))
+            if (isFCmpOpcode(op))
                 return fcmp(ci, a, b);
             return fcall2(ci, a, b);
         }

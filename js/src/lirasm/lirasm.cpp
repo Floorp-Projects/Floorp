@@ -1990,7 +1990,7 @@ Lirasm::Lirasm(bool verbose) :
 #endif
 
     // Populate the mOpMap table.
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
     mOpMap[#op] = LIR_##op;
 #include "nanojit/LIRopcode.tbl"
 #undef OP___

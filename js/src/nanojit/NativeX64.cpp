@@ -1129,7 +1129,7 @@ namespace nanojit
         }
         NanoAssert(cond->isCmp());
         LOpcode condop = cond->opcode();
-        if (condop >= LIR_feq && condop <= LIR_fge)
+        if (isFCmpOpcode(condop))
             return asm_fbranch(onFalse, cond, target);
 
         // We must ensure there's room for the instruction before calculating
@@ -1228,10 +1228,10 @@ namespace nanojit
         }
 
         LOpcode condop = cond->opcode();
-        if (LIR_qeq <= condop && condop <= LIR_quge) {
+        if (isQCmpOpcode(condop)) {
             CMPQR(ra, rb);
         } else {
-            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
+            NanoAssert(isICmpOpcode(condop));
             CMPLR(ra, rb);
         }
     }
@@ -1242,13 +1242,13 @@ namespace nanojit
         LIns *b = cond->oprnd2();
         Register ra = findRegFor(a, GpRegs);
         int32_t imm = getImm32(b);
-        if (LIR_qeq <= condop && condop <= LIR_quge) {
+        if (isQCmpOpcode(condop)) {
             if (isS8(imm))
                 CMPQR8(ra, imm);
             else
                 CMPQRI(ra, imm);
         } else {
-            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
+            NanoAssert(isICmpOpcode(condop));
             if (isS8(imm))
                 CMPLR8(ra, imm);
             else
