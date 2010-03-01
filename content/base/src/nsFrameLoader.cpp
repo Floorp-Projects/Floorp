@@ -101,6 +101,8 @@
 
 #ifdef MOZ_WIDGET_QT
 #include <QtGui/QX11EmbedWidget>
+#include <QGraphicsWidget>
+#include <QGraphicsProxyWidget>
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
@@ -689,12 +691,22 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
   GdkNativeWindow id = gtk_socket_get_id(GTK_SOCKET(mRemoteSocket));
   mChildProcess->SendcreateWidget(id);
 #elif defined(MOZ_WIDGET_QT)
-  QWidget* parent_win = static_cast<QWidget*>(w->GetNativeData(NS_NATIVE_WINDOW));
-  mRemoteSocket = new QX11EmbedContainer(parent_win);
-  NS_ENSURE_TRUE(mRemoteSocket, false);
-  mRemoteSocket->show();
-  mRemoteSocket->resize(size.width, size.height);
-  mChildProcess->SendcreateWidget(mRemoteSocket->winId());
+  if (getenv("USE_XEMBED_PROXY")) {
+    // Very bad idea to use Xembedding for IPC, but test-ipc.xul still rendering with XEmbed
+    QGraphicsWidget *widget = static_cast<QGraphicsWidget*>(w->GetNativeData(NS_NATIVE_WINDOW));
+    NS_ENSURE_TRUE(widget, false);
+    QGraphicsProxyWidget *proxy = new QGraphicsProxyWidget(widget);
+    NS_ENSURE_TRUE(proxy, false);
+    mRemoteSocket = new QX11EmbedContainer();
+    NS_ENSURE_TRUE(mRemoteSocket, false);
+    proxy->setWidget(mRemoteSocket);
+    mRemoteSocket->show();
+    mRemoteSocket->resize(size.width, size.height);
+    mChildProcess->SendcreateWidget(0);
+  } else {
+    // Don't create any parent/child XEmbed, because we are painting with shared memory
+    mChildProcess->SendcreateWidget(0);
+  }
 #elif defined(XP_MACOSX)
 #  warning IMPLEMENT ME
 
