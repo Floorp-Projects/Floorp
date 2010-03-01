@@ -1405,6 +1405,18 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
 }
 
+static JSType
+XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_OBJECT;
+}
+
+static JSType
+XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_FUNCTION;
+}
+
 static void
 XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
 {
@@ -1554,11 +1566,13 @@ JSBool xpc_InitWrappedNativeJSOps()
         XPC_WN_NoCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
         XPC_WN_NoCall_JSOps.call = nsnull;
         XPC_WN_NoCall_JSOps.construct = nsnull;
+        XPC_WN_NoCall_JSOps.typeOf = XPC_WN_JSOp_TypeOf_Object;
         XPC_WN_NoCall_JSOps.clear = XPC_WN_JSOp_Clear;
         XPC_WN_NoCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;
 
         memcpy(&XPC_WN_WithCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_WithCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
+        XPC_WN_WithCall_JSOps.typeOf = XPC_WN_JSOp_TypeOf_Function;
         XPC_WN_WithCall_JSOps.clear = XPC_WN_JSOp_Clear;
         XPC_WN_WithCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;
     }

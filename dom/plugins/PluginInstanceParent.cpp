@@ -134,10 +134,8 @@ NPError
 PluginInstanceParent::Destroy()
 {
     NPError retval;
-    if (!CallNPP_Destroy(&retval)) {
-        NS_WARNING("Failed to send message!");
-        return NPERR_GENERIC_ERROR;
-    }
+    if (!CallNPP_Destroy(&retval))
+        retval = NPERR_GENERIC_ERROR;
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
@@ -642,7 +640,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
-        PBrowserStreamParent::Call__delete__(bs, NPERR_GENERIC_ERROR, true);
+        bs->NPP_DestroyStream(NPERR_GENERIC_ERROR);
 
     return err;
 }
@@ -660,8 +658,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mNPP != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        PBrowserStreamParent::Call__delete__(sp, reason, false);
-        return NPERR_NO_ERROR;
+        return sp->NPP_DestroyStream(reason);
     }
     else {
         PluginStreamParent* sp =

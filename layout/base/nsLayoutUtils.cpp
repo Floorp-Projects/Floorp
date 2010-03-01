@@ -1192,7 +1192,11 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.Paint(&builder, aRenderingContext);
+  PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
+  }
+  list.Paint(&builder, aRenderingContext, flags);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;
@@ -1650,7 +1654,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   
   return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
                   aStyleContext->GetStyleFont()->mFont,
-                  aStyleContext->GetStyleVisibility()->mLangGroup,
+                  aStyleContext->GetStyleVisibility()->mLanguage,
                   fs, *aFontMetrics);
 }
 
@@ -3129,7 +3133,7 @@ nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   const nsStyleFont* font = aSC->GetStyleFont();
   const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
 
-  aRC->SetFont(font->mFont, visibility->mLangGroup,
+  aRC->SetFont(font->mFont, visibility->mLanguage,
                aSC->PresContext()->GetUserFontSet());
 }
 

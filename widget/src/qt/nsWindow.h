@@ -354,6 +354,8 @@ private:
     }
     PRInt32 mQCursor;
 
+    // Remember dirty area caused by ::Scroll
+    QRegion mDirtyScrollArea;
 };
 
 class nsChildWindow : public nsWindow

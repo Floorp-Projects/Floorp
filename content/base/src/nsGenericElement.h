@@ -754,7 +754,10 @@ public:
 protected:
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
-   * mutation events.
+   * mutation events.  This will send the AttributeChanged notification.
+   * Callers of this method are responsible for calling AttributeWillChange,
+   * since that needs to happen before the new attr value has been set, and
+   * in particular before it has been parsed.
    *
    * @param aNamespaceID  namespace of attribute
    * @param aAttribute    local-name of attribute
@@ -762,7 +765,7 @@ protected:
    * @param aOldValue     previous value of attribute. Only needed if
    *                      aFireMutation is true.
    * @param aParsedValue  parsed new value of attribute
-   * @param aModification is this a attribute-modification or addition. Only
+   * @param aModType      nsIDOMMutationEvent::MODIFICATION or ADDITION.  Only
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
@@ -774,7 +777,7 @@ protected:
                             nsIAtom* aPrefix,
                             const nsAString& aOldValue,
                             nsAttrValue& aParsedValue,
-                            PRBool aModification,
+                            PRUint8 aModType,
                             PRBool aFireMutation,
                             PRBool aNotify,
                             const nsAString* aValueForAfterSetAttr);
@@ -816,8 +819,9 @@ protected:
   /**
    * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we verify that
-   * we're actually doing an attr set and will be called before ParseAttribute
-   * and hence before we've set the new value.
+   * we're actually doing an attr set and will be called before
+   * AttributeWillChange and before ParseAttribute and hence before we've set
+   * the new value.
    *
    * @param aNamespaceID the namespace of the attr being set
    * @param aName the localname of the attribute being set
@@ -836,7 +840,8 @@ protected:
   /**
    * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we have called
-   * SetAndTakeAttr (that is, after we have actually set the attr).
+   * SetAndTakeAttr and AttributeChanged (that is, after we have actually set
+   * the attr).
    *
    * @param aNamespaceID the namespace of the attr being set
    * @param aName the localname of the attribute being set

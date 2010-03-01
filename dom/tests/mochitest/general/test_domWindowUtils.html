@@ -92,6 +92,8 @@ function testElementFromPoint() {
   SimpleTest.finish();
 }
 
+// Run the test from onload, since the onscreen and offscreen divs should be in
+// the right places by then.
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(testElementFromPoint);
 

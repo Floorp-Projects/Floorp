@@ -806,7 +806,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (STOBJ_GET_CLASS(objToWrap) == &js_ScriptClass ||
       (::JS_ObjectIsFunction(cx, objToWrap) &&
-       ::JS_GetFunctionNative(cx, ::JS_ValueToFunction(cx, argv[0])) ==
+       ::JS_GetFunctionFastNative(cx, ::JS_ValueToFunction(cx, argv[0])) ==
        XPCWrapper::sEvalNative)) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }

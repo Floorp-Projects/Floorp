@@ -531,6 +531,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { TEXT_PLAIN, "txt,text", "Text File" },
   { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language" },
   { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language" },
+  { APPLICATION_MATHML_XML, "mml", "Mathematical Markup Language" },
   { APPLICATION_RDF, "rdf", "Resource Description Framework" },
   { TEXT_XUL, "xul", "XML-Based User Interface Language" },
   { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language" },

@@ -776,6 +776,7 @@ $(foreach tier,$(TIERS),tier_$(tier))::
 	$(foreach dir,$($@_staticdirs),$(call SUBMAKE,,$(dir)))
 	$(MAKE) export_$@
 	$(MAKE) libs_$@
+	$(MAKE) tools_$@
 
 # Do everything from scratch
 everything::

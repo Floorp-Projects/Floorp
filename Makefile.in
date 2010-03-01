@@ -126,33 +126,9 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# After we build tier toolkit, go back and build the tools from previous dirs
-tier_toolkit::
-	$(MAKE) tools_tier_js
-	$(MAKE) tools_tier_xpcom
-	$(MAKE) tools_tier_necko
-	$(MAKE) tools_tier_gecko
-	$(MAKE) tools_tier_toolkit
-
-ifeq (netwerk,$(MOZ_BUILD_APP))
-tier_necko::
-	$(EXIT_ON_ERROR) \
-	$(foreach tier,$(TIERS),$(MAKE) tools_tier_$(tier); )
-endif
-
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
-
-ifeq ($(OS_ARCH),WINNT)
-rebase:
-ifdef MOZILLA_OFFICIAL
-	echo rebasing $(DIST)
-	/bin/find $(DIST) -name "*.dll" -a -not -name "msvc*" > rebase.lst
-	rebase -b 60000000 -R . -G rebase.lst
-	rm rebase.lst
-endif
-endif # WINNT
 
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
@@ -235,26 +211,7 @@ ifdef MOZ_CRASHREPORTER
 	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh "$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip"
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-signnss:
-ifdef MOZILLA_OFFICIAL
-	echo signing NSS libs
-	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
-	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
-	cd $(DIST)/bin; ./shlibsign.exe -v -i nssdbm3.dll
-endif # MOZILLA_OFFICIAL
-
-deliver: rebase signnss
-
-endif # WINNT
-
-ifneq (,$(wildcard $(DIST)/bin/application.ini))
-BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
-else
-BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
-endif
-
-MOZ_SOURCE_STAMP = $(shell hg -R $(srcdir) parent --template="{node|short}\n" 2>/dev/null)
+# defined in package-name.mk
 export MOZ_SOURCE_STAMP
 
 #XXX: this is a hack, since we don't want to clobber for MSVC

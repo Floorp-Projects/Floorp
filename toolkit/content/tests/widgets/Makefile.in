@@ -88,6 +88,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_textbox_emptytext.xul \
 		test_textbox_number.xul \
 		test_textbox_search.xul \
+		test_toolbar.xul \
 		xul_selectcontrol.js \
 		test_popupincontent.xul \
 		test_panelfrommenu.xul \

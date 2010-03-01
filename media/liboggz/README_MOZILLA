@@ -9,8 +9,6 @@ The git commit id used was cf5feeaab69b05 from git://git.xiph.org/liboggz.git
 The wince.patch addresses the lack of posix file IO support on windows ce,
 see bug 461844 for details.
 
-endian.patch is applied to fix bug 452698.
-
 key_frame_seek.patch fixes bug 463358.
 
 offset_next.patch fixes bug 495366.

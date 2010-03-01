@@ -48,7 +48,8 @@
  * order.  The first argument to CSS_PSEUDO_CLASS is the C++
  * identifier of the atom.  The second argument is the string value of
  * the atom.  CSS_STATE_PSEUDO_CLASS also takes the name of the state
- * bit that the class corresponds to.  If CSS_STATE_PSEUDO_CLASS is
+ * bits that the class corresponds to.  Only one of the bits needs to
+ * match for the pseudo-class to match.  If CSS_STATE_PSEUDO_CLASS is
  * not defined, it'll be automatically defined to CSS_PSEUDO_CLASS.
  */
 
@@ -73,9 +74,11 @@ CSS_PSEUDO_CLASS(notPseudo, ":not")
 CSS_PSEUDO_CLASS(mozBoundElement, ":-moz-bound-element")
 CSS_PSEUDO_CLASS(root, ":root")
 
-CSS_PSEUDO_CLASS(link, ":link")
-CSS_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link") // what matches :link or :visited
-CSS_PSEUDO_CLASS(visited, ":visited")
+CSS_STATE_PSEUDO_CLASS(link, ":link", NS_EVENT_STATE_UNVISITED)
+// what matches :link or :visited
+CSS_STATE_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link",
+                       NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)
+CSS_STATE_PSEUDO_CLASS(visited, ":visited", NS_EVENT_STATE_VISITED)
 
 CSS_STATE_PSEUDO_CLASS(active, ":active", NS_EVENT_STATE_ACTIVE)
 CSS_STATE_PSEUDO_CLASS(checked, ":checked", NS_EVENT_STATE_CHECKED)

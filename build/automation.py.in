@@ -565,8 +565,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     reporting, if we know how for this platform. Otherwise just .kill() it."""
     if self.CRASHREPORTER:
       if self.UNIXISH:
-        # SEGV will get picked up by Breakpad's signal handler
-        os.kill(proc.pid, signal.SIGSEGV)
+        # ABRT will get picked up by Breakpad's signal handler
+        os.kill(proc.pid, signal.SIGABRT)
         return
       elif self.IS_WIN32:
         # We should have a "crashinject" program in our utility path

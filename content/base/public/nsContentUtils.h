@@ -117,11 +117,16 @@ class nsIXTFService;
 class nsIBidiKeyboard;
 #endif
 class nsIMIMEHeaderParam;
+class nsIObserver;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 #define have_PrefChangedFunc_typedef
 #endif
+
+namespace mozilla {
+  class IHistory;
+}
 
 extern const char kLoadAsData[];
 
@@ -466,6 +471,11 @@ public:
     return sImgLoader;
   }
 
+  static mozilla::IHistory* GetHistory()
+  {
+    return sHistory;
+  }
+
 #ifdef MOZ_XTF
   static nsIXTFService* GetXTFService();
 #endif
@@ -588,6 +598,13 @@ public:
   {
     return sGenCat;
   }
+
+  /**
+   * Regster aObserver as a shutdown observer. A strong reference is held
+   * to aObserver until UnregisterShutdownObserver is called.
+   */
+  static void RegisterShutdownObserver(nsIObserver* aObserver);
+  static void UnregisterShutdownObserver(nsIObserver* aObserver);
 
   /**
    * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
@@ -1433,7 +1450,16 @@ public:
 
   static JSContext *GetCurrentJSContext();
 
-                                             
+  /**
+   * Convert ASCII A-Z to a-z.
+   */
+  static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
+
+  /**
+   * Convert ASCII a-z to A-Z.
+   */
+  static void ASCIIToUpper(nsAString& aStr);
+
   static nsIInterfaceRequestor* GetSameOriginChecker();
 
   static nsIThreadJSContextStack* ThreadJSContextStack()
@@ -1548,6 +1574,8 @@ private:
 
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;
+
+  static mozilla::IHistory* sHistory;
 
   static nsIConsoleService* sConsoleService;
 

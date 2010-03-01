@@ -57,9 +57,13 @@ fails-if(!xulRuntime.shell) script regress-455982-01.js # NS_ERROR_DOM_NOT_SUPPO
 fails-if(!xulRuntime.shell) script regress-455982-02.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
 skip-if(!xulRuntime.shell||xulRuntime.shell&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-458679.js # slow
 script regress-469234.js
+script regress-469405-01.js
+script regress-469405-02.js
 script regress-470176.js
 script regress-470300-01.js
 script regress-470300-02.js
+script regress-473282.js
 script regress-474771-01.js
 script regress-474771-02.js
+script regress-476257.js
 script regress-477048.js

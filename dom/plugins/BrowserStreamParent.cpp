@@ -2,6 +2,15 @@
 
 #include "BrowserStreamParent.h"
 #include "PluginInstanceParent.h"
+#include "PluginModuleParent.h"
+
+template<>
+struct RunnableMethodTraits<mozilla::plugins::BrowserStreamParent>
+{
+  typedef mozilla::plugins::BrowserStreamParent Cls;
+    static void RetainCallee(Cls* obj) { }
+    static void ReleaseCallee(Cls* obj) { }
+};
 
 namespace mozilla {
 namespace plugins {
@@ -10,12 +19,33 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
                                          NPStream* stream)
   : mNPP(npp)
   , mStream(stream)
+  , mDeleteTask(nsnull)
 {
   mStream->pdata = static_cast<AStream*>(this);
 }
 
 BrowserStreamParent::~BrowserStreamParent()
 {
+  if (mDeleteTask) {
+    mDeleteTask->Cancel();
+    // MessageLoop::current() owns this
+    mDeleteTask = nsnull;
+  }
+}
+
+NPError
+BrowserStreamParent::NPP_DestroyStream(NPReason reason)
+{
+  PLUGIN_LOG_DEBUG(("%s (reason=%i)", FULLFUNCTION, reason));
+
+  if (!mDeleteTask) {
+    mDeleteTask = NewRunnableMethod(this, &BrowserStreamParent::Delete);
+    MessageLoop::current()->PostTask(FROM_HERE, mDeleteTask);
+  }
+
+  NPError err = NPERR_NO_ERROR;
+  CallNPP_DestroyStream(reason, &err);
+  return err;
 }
 
 bool
@@ -39,15 +69,6 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   rp[ranges.size() - 1].next = NULL;
 
   *result = mNPP->mNPNIface->requestread(mStream, rp);
-  return true;
-}
-
-bool
-BrowserStreamParent::Answer__delete__(const NPError& reason,
-                                      const bool& artificial)
-{
-  if (!artificial)
-    NPN_DestroyStream(reason);
   return true;
 }
 
@@ -87,12 +108,21 @@ BrowserStreamParent::StreamAsFile(const char* fname)
   CallNPP_StreamAsFile(nsCString(fname));
 }
 
-NPError
-BrowserStreamParent::NPN_DestroyStream(NPReason reason)
+bool
+BrowserStreamParent::AnswerNPN_DestroyStream(const NPReason& reason,
+                                             NPError* result)
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
-  return mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
+  *result = mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
+  return true;
+}
+
+void
+BrowserStreamParent::Delete()
+{
+  PBrowserStreamParent::Send__delete__(this);
+  // |this| just got deleted
 }
 
 } // namespace plugins

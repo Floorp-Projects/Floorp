@@ -170,6 +170,12 @@ pref("gfx.color_management.rendering_intent", 0);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
+#ifdef XP_WIN
+#ifndef WINCE
+pref("gfx.font_rendering.directwrite.enabled", false);
+#endif
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
@@ -218,9 +224,6 @@ pref("gfx.use_text_smoothing_setting", false);
 
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
-
-// form submission
-pref("browser.forms.submit.backwards_compatible", true);
 
 // Number of characters to consider emphasizing for rich autocomplete results
 pref("toolkit.autocomplete.richBoundaryCutoff", 200);
@@ -1070,13 +1073,6 @@ pref("bidi.direction", 1);
 // 3 = visualtexttypeBidi
 pref("bidi.texttype", 1);
 // ------------------
-//  Controls Text Mode
-// ------------------
-// 1 = logicalcontrolstextmodeBidiCmd
-// 2 = visualcontrolstextmodeBidi <-- NO LONGER SUPPORTED
-// 3 = containercontrolstextmodeBidi *
-pref("bidi.controlstextmode", 1);
-// ------------------
 //  Numeral Style
 // ------------------
 // 0 = nominalnumeralBidi *
@@ -1224,6 +1220,14 @@ pref("dom.ipc.plugins.timeoutSecs", 10);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
+#endif
+
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+// Linux plugins using Xt instead of Xembed don't work out-of-process yet.
+pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
+pref("dom.ipc.plugins.enabled.nppdf.so", false);
+#endif
 #endif
 
 pref("svg.enabled", true);
@@ -1667,11 +1671,6 @@ pref("ui.trackpoint_hack.enabled", -1);
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 pref("ui.click_hold_context_menus", false);
-
-#ifndef __LP64__
-// whether to always use ATSUI for text even if CoreText is available
-pref("gfx.force_atsui_text", false);
-#endif
 
 // default fonts (in UTF8 and using canonical names)
 // to determine canonical font names, use a debug build and 

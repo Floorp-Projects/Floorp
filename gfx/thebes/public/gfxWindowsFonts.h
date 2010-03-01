@@ -155,7 +155,7 @@ public:
     void GroupFamilyListToArrayList(nsTArray<nsRefPtr<gfxFontEntry> > *list,
                                     nsTArray<PRPackedBool> *aNeedsBold);
     void FamilyListToArrayList(const nsString& aFamilies,
-                               const nsCString& aLangGroup,
+                               nsIAtom *aLangGroup,
                                nsTArray<nsRefPtr<gfxFontEntry> > *list);
 
     virtual void UpdateFontList();
@@ -184,7 +184,7 @@ protected:
     already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
     already_AddRefed<gfxWindowsFont> WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry> >& fonts, PRUint32 ch);
-    void GetPrefFonts(const char *aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& array);
+    void GetPrefFonts(nsIAtom *aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& array);
     void GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& array);
 
     static PRBool FindWindowsFont(const nsAString& aName,

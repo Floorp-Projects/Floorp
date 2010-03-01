@@ -47,6 +47,7 @@
 #include "nsMappedAttributes.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
+#include "nsIFormProcessor.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIOptionElement.h"
@@ -66,6 +67,7 @@
 #include "nsIFrame.h"
 
 #include "nsDOMError.h"
+#include "nsServiceManagerUtils.h"
 #include "nsRuleData.h"
 #include "nsEventDispatcher.h"
 
@@ -1582,8 +1584,10 @@ nsHTMLSelectElement::Reset()
   return NS_OK;
 }
 
+static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
+
 NS_IMETHODIMP
-nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+nsHTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                        nsIContent* aSubmitElement)
 {
   nsresult rv = NS_OK;
@@ -1601,7 +1605,8 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
+  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+  if (name.IsEmpty()) {
     return NS_OK;
   }
 
@@ -1610,6 +1615,13 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   PRUint32 len;
   GetLength(&len);
+
+  nsAutoString mozType;
+  nsCOMPtr<nsIFormProcessor> keyGenProcessor;
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_type, mozType) &&
+      mozType.EqualsLiteral("-mozilla-keygen")) {
+    keyGenProcessor = do_GetService(kFormProcessorCID, &rv);
+  }
 
   for (PRUint32 optIndex = 0; optIndex < len; optIndex++) {
     // Don't send disabled options
@@ -1636,7 +1648,15 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     rv = optionElement->GetValue(value);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aFormSubmission->AddNameValuePair(this, name, value);
+    if (keyGenProcessor) {
+      nsAutoString tmp(value);
+      rv = keyGenProcessor->ProcessValue(this, name, tmp);
+      if (NS_SUCCEEDED(rv)) {
+        value = tmp;
+      }
+    }
+
+    rv = aFormSubmission->AddNameValuePair(name, value);
   }
 
   return NS_OK;
@@ -1977,4 +1997,17 @@ nsHTMLOptionCollection::Add(nsIDOMHTMLOptionElement *aOption,
     do_QueryInterface(beforeNode);
 
   return mSelect->Add(aOption, beforeElement);
+}
+
+NS_IMETHODIMP
+nsHTMLOptionCollection::Remove(PRInt32 aIndex)
+{
+  NS_ENSURE_TRUE(mSelect, NS_ERROR_UNEXPECTED);
+
+  PRUint32 len = 0;
+  mSelect->GetLength(&len);
+  if (aIndex < 0 || aIndex >= len)
+    aIndex = 0;
+
+  return mSelect->Remove(aIndex);
 }

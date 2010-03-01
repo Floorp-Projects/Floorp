@@ -52,16 +52,6 @@ function test_BrokenFile(path, shouldThrow, expectedName) {
 }
 
 function run_test() {
-  const C_i = Components.interfaces;
-  const ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(C_i.nsIIOService);
-  const resProt = ioService.getProtocolHandler("resource")
-                           .QueryInterface(C_i.nsIResProtocolHandler);
-
-  var curdir = do_get_cwd();
-  var curURI = ioService.newFileURI(curdir);
-  resProt.setSubstitution("test", curURI);
-
   test_BrokenFile("resource://test/bogus_exports_type.jsm", true, "Error");
 
   test_BrokenFile("resource://test/bogus_element_type.jsm", true, "Error");
@@ -83,6 +73,4 @@ function run_test() {
   do_check_eq(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
                                              null)),
               "object");
-
-  resProt.setSubstitution("test", null);
 }

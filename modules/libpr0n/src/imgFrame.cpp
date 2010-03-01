@@ -126,6 +126,11 @@ static PRBool ShouldUseImageSurfaces()
 #elif defined(USE_WIN_SURFACE)
   static const DWORD kGDIObjectsHighWaterMark = 7000;
 
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    return PR_TRUE;
+  }
+
   // at 7000 GDI objects, stop allocating normal images to make sure
   // we never hit the 10k hard limit.
   // GetCurrentProcess() just returns (HANDLE)-1, it's inlined afaik
@@ -157,6 +162,7 @@ imgFrame::imgFrame() :
 #ifdef USE_WIN_SURFACE
   , mIsDDBSurface(PR_FALSE)
 #endif
+  , mLocked(PR_FALSE)
 {
   static PRBool hasCheckedOptimize = PR_FALSE;
   if (!hasCheckedOptimize) {
@@ -813,6 +819,12 @@ nsresult imgFrame::LockImageData()
   if (mPalettedImageData)
     return NS_ERROR_NOT_AVAILABLE;
 
+  NS_ABORT_IF_FALSE(!mLocked, "Trying to lock already locked image data.");
+  if (mLocked) {
+    return NS_ERROR_FAILURE;
+  }
+  mLocked = PR_TRUE;
+
   if ((mOptSurface || mSinglePixel) && !mImageSurface) {
     // Recover the pixels
     mImageSurface = new gfxImageSurface(gfxIntSize(mSize.width, mSize.height),
@@ -844,6 +856,13 @@ nsresult imgFrame::UnlockImageData()
 {
   if (mPalettedImageData)
     return NS_ERROR_NOT_AVAILABLE;
+
+  NS_ABORT_IF_FALSE(mLocked, "Unlocking an unlocked image!");
+  if (!mLocked) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mLocked = PR_FALSE;
 
 #ifdef XP_MACOSX
   if (mQuartzSurface)

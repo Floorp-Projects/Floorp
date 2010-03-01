@@ -218,10 +218,11 @@ public:
       if (!(remoteVariant && 
             ConvertToRemoteVariant(aArgs[index], *remoteVariant, aInstance,
                                    true))) {
-        break;
+        mOk = false;
+        return;
       }
     }
-    mOk = mArray.Length() == aCount;
+    mOk = true;
   }
 
   ProtectedVariantArray(const NPVariant* aArgs,
@@ -233,11 +234,13 @@ public:
       if (!(remoteVariant && 
             ConvertToRemoteVariant(aArgs[index], *remoteVariant, aInstance,
                                    true))) {
-        break;
+        mOk = false;
+        return;
       }
     }
-    mOk = mArray.Length() == aCount;
+    mOk = true;
   }
+
   ~ProtectedVariantArray()
   {
     PRUint32 count = mArray.Length();

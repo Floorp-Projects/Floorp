@@ -103,7 +103,7 @@ public:
   }
 
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsIFormSubmission *aFormSubmission,
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission,
                                nsIContent *aSubmitElement);
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -316,7 +316,7 @@ nsHTMLObjectElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission *aFormSubmission,
+nsHTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission,
                                        nsIContent *aSubmitElement)
 {
   nsAutoString name;
@@ -344,7 +344,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission *aFormSubmission,
   nsresult rv = pi->GetFormValue(value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aFormSubmission->AddNameValuePair(this, name, value);
+  return aFormSubmission->AddNameValuePair(name, value);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Align, align)

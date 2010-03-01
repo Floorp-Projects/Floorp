@@ -115,10 +115,15 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug394700.html \
 		test_bug395107.html \
 		test_bug401160.xhtml \
+		test_bug405242.html \
 		test_bug406596.html \
 		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
+		test_formSubmission.html \
+		test_formSubmission2.html \
+		file_formSubmission_text.txt \
+		file_formSubmission_img.jpg \
 		test_bug418756.html \
 		test_bug421640.html \
 		test_bug424698.html \
@@ -148,6 +153,8 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug529819.html \
 		test_bug529859.html \
 		test_bug535043.html \
+		test_bug547850.html \
+		test_bug457800.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

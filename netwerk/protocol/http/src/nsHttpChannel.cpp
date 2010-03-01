@@ -1229,6 +1229,7 @@ nsHttpChannel::HandleAsyncReplaceWithProxy()
 nsresult
 nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
 {
+    LOG(("DoReplaceWithProxy from @%x [pi=%p]", this, pi));
     nsresult rv;
 
     nsCOMPtr<nsIChannel> newChannel;
@@ -2383,7 +2384,8 @@ nsHttpChannel::CloseCacheEntry(PRBool doomOnFailure)
     if (!mCacheEntry)
         return;
 
-    LOG(("nsHttpChannel::CloseCacheEntry [this=%x]", this));
+    LOG(("nsHttpChannel::CloseCacheEntry [this=%x] mStatus=%x mCacheAccess=%x",
+            this, mStatus, mCacheAccess));
 
     // If we have begun to create or replace a cache entry, and that cache
     // entry is not complete and not resumable, then it needs to be doomed.
@@ -2659,9 +2661,21 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out, nsnull);
-    if (NS_FAILED(rv)) return rv;
+    nsCacheStoragePolicy policy;
+    rv = mCacheEntry->GetStoragePolicy(&policy);
 
+    if (!gHttpHandler->mCacheWriteThread ||
+         NS_FAILED(rv) ||
+         policy == nsICache::STORE_ON_DISK_AS_FILE) {
+        LOG(("nsHttpChannel::InstallCacheListener sync tee %p\n", tee.get()));
+        rv = tee->Init(mListener, out, nsnull);
+    } else {
+        LOG(("nsHttpChannel::InstallCacheListener async tee %p\n",
+                tee.get()));
+        rv = tee->InitAsync(mListener, gHttpHandler->mCacheWriteThread, out, nsnull);
+    }
+   
+    if (NS_FAILED(rv)) return rv;
     mListener = tee;
     return NS_OK;
 }
@@ -2735,6 +2749,8 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
                                        nsIChannel   *newChannel,
                                        PRBool        preserveMethod)
 {
+    LOG(("SetupReplacementChannel from @%x with @%x [preserveMethod=%d]",
+         this, newChannel, preserveMethod));
     PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
     // if the original channel was using SSL and this channel is not using
     // SSL, then no need to inhibit persistent caching.  however, if the
@@ -2773,11 +2789,11 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
                 if (!ctype)
                     ctype = "";
                 const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
-                if (clen)
-                    uploadChannel2->ExplicitSetUploadStream(
+                PRInt64 len = clen ? nsCRT::atoll(clen) : -1;
+                uploadChannel2->ExplicitSetUploadStream(
                         mUploadStream,
                         nsDependentCString(ctype),
-                        nsCRT::atoll(clen),
+                        len,
                         nsDependentCString(mRequestHead.Method()),
                         mUploadStreamHasHeaders);
             }
@@ -4767,7 +4783,7 @@ nsHttpChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
     // Ensure stream is set and method is valid 
     NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
 
-    if (aContentLength < 0) {
+    if (aContentLength < 0 && !aStreamHasHeaders) {
         PRUint32 streamLength;
         aStream->Available(&streamLength);
         aContentLength = streamLength;
@@ -4780,8 +4796,10 @@ nsHttpChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
     nsresult rv = SetRequestMethod(aMethod);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mRequestHead.SetHeader(nsHttp::Content_Length, nsPrintfCString("%lld", aContentLength));
-    mRequestHead.SetHeader(nsHttp::Content_Type, aContentType);
+    if (!aStreamHasHeaders) {
+        mRequestHead.SetHeader(nsHttp::Content_Length, nsPrintfCString("%lld", aContentLength));
+        mRequestHead.SetHeader(nsHttp::Content_Type, aContentType);
+    }
 
     mUploadStreamHasHeaders = aStreamHasHeaders;
     mUploadStream = aStream;

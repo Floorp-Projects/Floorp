@@ -139,7 +139,11 @@ public:
                                     CharacterDataChangeInfo* aInfo) = 0;
 
   /**
-   * Notification that an attribute of an element will change.
+   * Notification that an attribute of an element will change.  This
+   * can happen before the BeginUpdate for the change and may not
+   * always be followed by an AttributeChanged (in particular, if the
+   * attribute doesn't actually change there will be no corresponding
+   * AttributeChanged).
    *
    * @param aDocument    The owner-document of aContent. Can be null.
    * @param aContent     The element whose attribute will change

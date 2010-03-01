@@ -147,10 +147,6 @@ public:
     bool NPObjectIsRegistered(NPObject* aObject);
 #endif
 
-    bool
-    PluginInstanceDestroyed(PluginInstanceChild* aActor,
-                            NPError* rv);
-
     /**
      * The child implementation of NPN_CreateObject.
      */
@@ -245,22 +241,25 @@ private:
      */
     nsTHashtable<NPObjectData> mObjectMap;
 
+public: // called by PluginInstanceChild
     /**
      * Dealloc an NPObject after last-release or when the associated instance
-     * is destroyed. It is the callers responsibility to remove the object
-     * from mObjectMap.
+     * is destroyed. This function will remove the object from mObjectMap.
      */
     static void DeallocNPObject(NPObject* o);
 
+    NPError NPP_Destroy(PluginInstanceChild* instance) {
+        return mFunctions.destroy(instance->GetNPP(), 0);
+    }
+
     /**
-     * After an instance has been destroyed, dealloc the objects associated
-     * with that instance.
+     * Fill PluginInstanceChild.mDeletingHash with all the remaining NPObjects
+     * associated with that instance.
      */
-    void DeallocNPObjectsForInstance(PluginInstanceChild* instance);
-    /**
-     * Enumeration helper function for DeallocNPObjectsForInstance.
-     */
-    static PLDHashOperator DeallocForInstance(NPObjectData* d, void* userArg);
+    void FindNPObjectsForInstance(PluginInstanceChild* instance);
+
+private:
+    static PLDHashOperator CollectForInstance(NPObjectData* d, void* userArg);
 };
 
 } /* namespace plugins */

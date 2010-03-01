@@ -13,3 +13,4 @@ script regress-465443.js
 script regress-470310.js
 script regress-472508.js
 fails-if(!xulRuntime.shell) script regress-475144.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+script regress-479567.js

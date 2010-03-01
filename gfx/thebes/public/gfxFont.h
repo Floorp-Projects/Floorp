@@ -54,6 +54,7 @@
 #include "nsExpirationTracker.h"
 #include "gfxFontConstants.h"
 #include "gfxPlatform.h"
+#include "nsIAtom.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -61,12 +62,13 @@
 
 class gfxContext;
 class gfxTextRun;
-class nsIAtom;
 class gfxFont;
 class gfxFontFamily;
 class gfxFontGroup;
 class gfxUserFontSet;
 class gfxUserFontData;
+
+class nsILanguageAtomService;
 
 // We should eliminate these synonyms when it won't cause many merge conflicts.
 #define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
@@ -82,7 +84,7 @@ class gfxUserFontData;
 struct THEBES_API gfxFontStyle {
     gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
-                 gfxFloat aSize, const nsACString& aLangGroup,
+                 gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks,
                  PRPackedBool aPrinterFont);
@@ -117,8 +119,8 @@ struct THEBES_API gfxFontStyle {
     // The logical size of the font, in pixels
     gfxFloat size;
 
-    // the language group
-    nsCString langGroup;
+    // the language (may be an internal langGroup code rather than an actual lang)
+    nsIAtom *language;
 
     // The aspect-value (ie., the ratio actualsize:actualxheight) that any
     // actual physical font created from this font structure must have when
@@ -137,7 +139,7 @@ struct THEBES_API gfxFontStyle {
     PLDHashNumber Hash() const {
         return ((style + (systemFont << 7) + (familyNameQuirks << 8) +
             (weight << 9)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
-            HashString(langGroup);
+            nsISupportsHashKey::HashKey(language);
     }
 
     void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
@@ -151,7 +153,7 @@ struct THEBES_API gfxFontStyle {
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
             (stretch == other.stretch) &&
-            (langGroup.Equals(other.langGroup)) &&
+            (language == other.language) &&
             (sizeAdjust == other.sizeAdjust);
     }
 };
@@ -211,7 +213,7 @@ public:
     virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
         return PR_TRUE;
     }
-    virtual PRBool SupportsLangGroup(const nsACString& aLangGroup) const {
+    virtual PRBool SupportsLangGroup(nsIAtom *aLangGroup) const {
         return PR_TRUE;
     }
 
@@ -1717,6 +1719,8 @@ private:
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
 public:
+    static void Shutdown(); // platform must call this to release the languageAtomService
+
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet = nsnull);
 
     virtual ~gfxFontGroup();
@@ -1787,10 +1791,10 @@ public:
     typedef PRBool (*FontCreationCallback) (const nsAString& aName,
                                             const nsACString& aGenericName,
                                             void *closure);
-    /*static*/ PRBool ForEachFont(const nsAString& aFamilies,
-                              const nsACString& aLangGroup,
-                              FontCreationCallback fc,
-                              void *closure);
+    PRBool ForEachFont(const nsAString& aFamilies,
+                       nsIAtom *aLanguage,
+                       FontCreationCallback fc,
+                       void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
     /**
@@ -1854,6 +1858,9 @@ protected:
     // as invalidation of font lists and caches is not considered.
     void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
+    // Initialize the list of fonts
+    void BuildFontList();
+
     // Init this font group's font metrics. If there no bad fonts, you don't need to call this.
     // But if there are one or more bad fonts which have bad underline offset,
     // you should call this with the *first* bad font.
@@ -1871,12 +1878,12 @@ protected:
      * family name in aFamilies (after resolving CSS/Gecko generic family names
      * if aResolveGeneric).
      */
-    /*static*/ PRBool ForEachFontInternal(const nsAString& aFamilies,
-                                      const nsACString& aLangGroup,
-                                      PRBool aResolveGeneric,
-                                      PRBool aResolveFontName,
-                                      FontCreationCallback fc,
-                                      void *closure);
+    PRBool ForEachFontInternal(const nsAString& aFamilies,
+                               nsIAtom *aLanguage,
+                               PRBool aResolveGeneric,
+                               PRBool aResolveFontName,
+                               FontCreationCallback fc,
+                               void *closure);
 
     static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 
@@ -1894,5 +1901,6 @@ protected:
         return nsnull;
     }
 
+    static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 };
 #endif

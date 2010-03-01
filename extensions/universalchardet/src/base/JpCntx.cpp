@@ -170,7 +170,7 @@ void JapaneseContextAnalysis::HandleData(const char* aBuf, PRUint32 aLen)
   return;
 }
 
-void JapaneseContextAnalysis::Reset(void)
+void JapaneseContextAnalysis::Reset(PRBool aIsPreferredLanguage)
 {
   mTotalRel = 0;
   for (PRUint32 i = 0; i < NUM_OF_CATEGORY; i++)
@@ -178,13 +178,14 @@ void JapaneseContextAnalysis::Reset(void)
   mNeedToSkipCharNum = 0;
   mLastCharOrder = -1;
   mDone = PR_FALSE;
+  mDataThreshold = aIsPreferredLanguage ? 0 : MINIMUM_DATA_THRESHOLD;
 }
 #define DONT_KNOW (float)-1
 
-float  JapaneseContextAnalysis::GetConfidence(PRBool aIsPreferredLanguage)
+float  JapaneseContextAnalysis::GetConfidence(void)
 {
   //This is just one way to calculate confidence. It works well for me.
-  if (aIsPreferredLanguage || mTotalRel > MINIMUM_DATA_THRESHOLD)
+  if (mTotalRel > mDataThreshold)
     return ((float)(mTotalRel - mRelSample[0]))/mTotalRel;
   else 
     return (float)DONT_KNOW;

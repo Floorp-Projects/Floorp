@@ -87,6 +87,9 @@
 #include "nsIPrincipal.h"
 #include "nsStyleSet.h"
 #include "prlog.h"
+#include "nsIObserverService.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsNetCID.h"
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -768,6 +771,62 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
   return entry->mSelectors;
 }
 
+class nsPrivateBrowsingObserver : nsIObserver,
+                                  nsSupportsWeakReference
+{
+public:
+  nsPrivateBrowsingObserver();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  void Init();
+  PRBool InPrivateBrowsing() const { return mInPrivateBrowsing; }
+
+private:
+  PRBool mInPrivateBrowsing;
+};
+
+NS_IMPL_ISUPPORTS2(nsPrivateBrowsingObserver, nsIObserver, nsISupportsWeakReference)
+
+nsPrivateBrowsingObserver::nsPrivateBrowsingObserver()
+  : mInPrivateBrowsing(PR_FALSE)
+{
+}
+
+void
+nsPrivateBrowsingObserver::Init()
+{
+  nsCOMPtr<nsIPrivateBrowsingService> pbService =
+    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (pbService) {
+    pbService->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
+
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+    }
+  }
+}
+
+nsresult
+nsPrivateBrowsingObserver::Observe(nsISupports *aSubject,
+                                   const char *aTopic,
+                                   const PRUnichar *aData)
+{
+  if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get())) {
+      mInPrivateBrowsing = PR_TRUE;
+    } else {
+      mInPrivateBrowsing = PR_FALSE;
+    }
+  }
+  return NS_OK;
+}
+
+static nsPrivateBrowsingObserver *gPrivateBrowsingObserver = nsnull;
+
 // -------------------------------
 // CSS Style rule processor implementation
 //
@@ -793,7 +852,7 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
-/* static */ void
+/* static */ nsresult
 nsCSSRuleProcessor::Startup()
 {
   nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
@@ -801,6 +860,13 @@ nsCSSRuleProcessor::Startup()
   // We want to default to true, not false as AddBoolPrefVarCache does.
   gSupportVisitedPseudo =
     nsContentUtils::GetBoolPref(VISITED_PSEUDO_PREF, PR_TRUE);
+
+  gPrivateBrowsingObserver = new nsPrivateBrowsingObserver();
+  NS_ENSURE_TRUE(gPrivateBrowsingObserver, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(gPrivateBrowsingObserver);
+  gPrivateBrowsingObserver->Init();
+
+  return NS_OK;
 }
 
 static PRBool
@@ -890,6 +956,13 @@ nsCSSRuleProcessor::FreeSystemMetrics()
   sSystemMetrics = nsnull;
 }
 
+/* static */ void
+nsCSSRuleProcessor::Shutdown()
+{
+  FreeSystemMetrics();
+  NS_RELEASE(gPrivateBrowsingObserver);
+}
+
 /* static */ PRBool
 nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
 {
@@ -910,8 +983,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mPreviousSiblingData(nsnull),
     mParentData(nsnull),
     mLanguage(nsnull),
-    mGotContentState(PR_FALSE),
-    mGotLinkInfo(PR_FALSE)
+    mGotContentState(PR_FALSE)
 {
   MOZ_COUNT_CTOR(RuleProcessorData);
 
@@ -958,9 +1030,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   // check for HTMLContent status
   mIsHTMLContent = (mNameSpaceID == kNameSpaceID_XHTML);
   mIsHTML = mIsHTMLContent && aContent->IsInHTMLDocument();
-
-  // No need to initialize mIsLink or mLinkState; the IsLink() accessor will
-  // handle that.
 
   // No need to initialize mContentState; the ContentState() accessor will handle
   // that.
@@ -1038,6 +1107,15 @@ RuleProcessorData::ContentState()
     } else {
       mContentState = mContent->IntrinsicState();
     }
+
+    // If we are not supposed to mark visited links as such, be sure to flip the
+    // bits appropriately.
+    if ((!gSupportVisitedPseudo ||
+        gPrivateBrowsingObserver->InPrivateBrowsing()) &&
+        (mContentState & NS_EVENT_STATE_VISITED)) {
+      mContentState = (mContentState & ~PRUint32(NS_EVENT_STATE_VISITED)) |
+                      NS_EVENT_STATE_UNVISITED;
+    }
   }
   return mContentState;
 }
@@ -1045,37 +1123,8 @@ RuleProcessorData::ContentState()
 PRBool
 RuleProcessorData::IsLink()
 {
-  if (!mGotLinkInfo) {
-    mGotLinkInfo = PR_TRUE;
-    mLinkState = eLinkState_Unknown;
-    mIsLink = PR_FALSE;
-    // if HTML content and it has some attributes, check for an HTML link
-    // NOTE: optimization: cannot be a link if no attributes (since it needs
-    // an href)
-    nsILinkHandler* linkHandler =
-      mPresContext ? mPresContext->GetLinkHandler() : nsnull;
-    if (mIsHTMLContent && mHasAttributes) {
-      // check if it is an HTML Link
-      if (nsStyleUtil::IsHTMLLink(mContent, linkHandler, &mLinkState)) {
-        mIsLink = PR_TRUE;
-      }
-    }
-
-    // if not an HTML link, check for a simple xlink (cannot be both HTML
-    // link and xlink) NOTE: optimization: cannot be an XLink if no
-    // attributes (since it needs an href)
-    if(!mIsLink &&
-       mHasAttributes && 
-       !(mIsHTMLContent || mContent->IsXUL()) && 
-       nsStyleUtil::IsLink(mContent, linkHandler, &mLinkState)) {
-      mIsLink = PR_TRUE;
-    }
-
-    if (mLinkState == eLinkState_Visited && !gSupportVisitedPseudo) {
-      mLinkState = eLinkState_Unvisited;
-    }
-  }
-  return mIsLink;
+  PRUint32 state = ContentState();
+  return (state & (NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) != 0;
 }
 
 PRInt32
@@ -1638,31 +1687,6 @@ langMatches(RuleProcessorData& data, PRBool setNodeFlags,
 }
 
 static PRBool NS_FASTCALL
-mozAnyLinkMatches(RuleProcessorData& data, PRBool setNodeFlags,
-                  nsPseudoClassList* pseudoClass)
-{
-  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozAnyLink,
-                  "Unexpected atom");
-  return data.IsLink();
-}
-
-static PRBool NS_FASTCALL
-linkMatches(RuleProcessorData& data, PRBool setNodeFlags,
-            nsPseudoClassList* pseudoClass)
-{
-  NS_NOTREACHED("Shouldn't be called");
-  return PR_FALSE;
-}
-
-static PRBool NS_FASTCALL
-visitedMatches(RuleProcessorData& data, PRBool setNodeFlags,
-               nsPseudoClassList* pseudoClass)
-{
-  NS_NOTREACHED("Shouldn't be called");
-  return PR_FALSE;
-}
-
-static PRBool NS_FASTCALL
 mozIsHTMLMatches(RuleProcessorData& data, PRBool setNodeFlags,
                  nsPseudoClassList* pseudoClass)
 {
@@ -1735,13 +1759,13 @@ notPseudoMatches(RuleProcessorData& data, PRBool setNodeFlags,
 typedef PRBool
   (NS_FASTCALL * PseudoClassMatcher)(RuleProcessorData&, PRBool setNodeFlags,
                                      nsPseudoClassList* pseudoClass);
-// Only one of mFunc or mBit will be set; the other will be null or 0
+// Only one of mFunc or mBits will be set; the other will be null or 0
 // respectively.  We could use a union, but then we'd still need to
 // differentiate somehow, eiher with another member in the struct or
 // with a boolean coming from _sowewhere_.
 struct PseudoClassInfo {
   PseudoClassMatcher mFunc;
-  PRInt32 mBit;
+  PRInt32 mBits;
 };
 
 static const PseudoClassInfo sPseudoClassInfo[] = {
@@ -1865,33 +1889,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // test for pseudo class match
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    // XXXbz special-case for :link and :visited, which are neither
-    // fish nor fowl
-    if (pseudoClass->mAtom == nsCSSPseudoClasses::link ||
-        pseudoClass->mAtom == nsCSSPseudoClasses::visited) {
-      if (!data.IsLink()) {
-        return PR_FALSE;
-      }
-
-      if (aStateMask & NS_EVENT_STATE_VISITED) {
-        if (aDependence)
-          *aDependence = PR_TRUE;
-      } else if ((eLinkState_Visited == data.LinkState()) ==
-                 (nsCSSPseudoClasses::link == pseudoClass->mAtom)) {
-        // Visited but :link or unvisited but :visited
-        return PR_FALSE;
-      }
-      continue;
-    }
     const PseudoClassInfo& info = sPseudoClassInfo[pseudoClass->mType];
     if (info.mFunc) {
       if (!(*info.mFunc)(data, setNodeFlags, pseudoClass)) {
         return PR_FALSE;
       }
     } else {
-      PRInt32 stateToCheck = info.mBit;
-      NS_ABORT_IF_FALSE(stateToCheck != 0, "How did that happen?");
-      if ((stateToCheck & (NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) &&
+      PRInt32 statesToCheck = info.mBits;
+      NS_ABORT_IF_FALSE(statesToCheck != 0, "How did that happen?");
+      if ((statesToCheck & (NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) &&
           data.mCompatMode == eCompatibility_NavQuirks &&
           // global selector (but don't check .class):
           !aSelector->HasTagSelector() && !aSelector->mIDList && 
@@ -1908,11 +1914,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         // selectors ":hover" and ":active".
         return PR_FALSE;
       } else {
-        if (aStateMask & stateToCheck) {
+        if (aStateMask & statesToCheck) {
           if (aDependence)
             *aDependence = PR_TRUE;
         } else {
-          if (!(data.ContentState() & stateToCheck)) {
+          if (!(data.ContentState() & statesToCheck)) {
             return PR_FALSE;
           }
         }
@@ -2324,28 +2330,6 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // Don't do our special handling of certain attributes if the attr
   // hasn't changed yet.
   if (aData->mAttrHasChanged) {
-    // Since we always have :-moz-any-link (and almost always have :link
-    // and :visited rules from prefs), rather than hacking AddRule below
-    // to add |href| to the hash, we'll just handle it here.
-    if (aData->mAttribute == nsGkAtoms::href &&
-        aData->mIsHTMLContent &&
-        (aData->mContentTag == nsGkAtoms::a ||
-         aData->mContentTag == nsGkAtoms::area ||
-         aData->mContentTag == nsGkAtoms::link)) {
-      data.change = nsReStyleHint(data.change | eReStyle_Self);
-    }
-    // XXX What about XLinks?
-#ifdef MOZ_SVG
-    // XXX should really check the attribute namespace is XLink
-    if (aData->mAttribute == nsGkAtoms::href &&
-        aData->mNameSpaceID == kNameSpaceID_SVG &&
-        aData->mContentTag == nsGkAtoms::a) {
-      data.change = nsReStyleHint(data.change | eReStyle_Self);
-    }
-#endif
-    // XXXbz now that :link and :visited are also states, do we need a
-    // similar optimization in HasStateDependentStyle?
-
     // check for the localedir, lwtheme and lwthemetextcolor attribute on root XUL elements
     if ((aData->mAttribute == nsGkAtoms::localedir ||
          aData->mAttribute == nsGkAtoms::lwtheme ||
@@ -2462,11 +2446,7 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
     if (pseudoClass->mType >= nsCSSPseudoClasses::ePseudoClass_Count) {
       continue;
     }
-    // XXXbz special-case for now for :link/:visited, since they're
-    // sorta-states-but-not-really right now.
-    if (sPseudoClassInfo[pseudoClass->mType].mBit ||
-        pseudoClass->mAtom == nsCSSPseudoClasses::link ||
-        pseudoClass->mAtom == nsCSSPseudoClasses::visited) {
+    if (sPseudoClassInfo[pseudoClass->mType].mBits) {
       return PR_TRUE;
     }
   }

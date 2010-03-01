@@ -110,16 +110,18 @@ gfxOS2Platform::CreateOffscreenSurface(const gfxIntSize& aSize,
 }
 
 nsresult
-gfxOS2Platform::GetFontList(const nsACString& aLangGroup,
+gfxOS2Platform::GetFontList(nsIAtom *aLangGroup,
                             const nsACString& aGenericFamily,
                             nsTArray<nsString>& aListOfFonts)
 {
 #ifdef DEBUG_thebes
-    char *langgroup = ToNewCString(aLangGroup),
-         *family = ToNewCString(aGenericFamily);
+    const char *langgroup = "(null)";
+    if (aLangGroup) {
+        aLangGroup->GetUTF8String(&langgroup);
+    }
+    char *family = ToNewCString(aGenericFamily);
     printf("gfxOS2Platform::GetFontList(%s, %s, ..)\n",
            langgroup, family);
-    free(langgroup);
     free(family);
 #endif
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,

@@ -61,7 +61,7 @@ LIBXUL_LIBRARY	= 1
 ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
 endif
-EXTRA_DSO_LIBS	+= thebes
+EXTRA_DSO_LIBS	+= thebes layers
 
 
 CPPSRCS		= \

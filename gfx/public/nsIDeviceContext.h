@@ -168,10 +168,9 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
-// 40aebd88-a82b-48b0-8a44-be51510064a7
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x40aebd88, 0xa82b, 0x48b0, \
-  { 0x8a, 0x44, 0xbe, 0x51, 0x51, 0x00, 0x64, 0xa7 } }
+{ 0x41391E7C, 0x9ED5, 0x4A60, \
+  { 0x88, 0x72, 0x06, 0x15, 0x73, 0xF5, 0x0E, 0xE7 } }
 
   typedef enum {
     eSystemFont_Caption,         // css2
@@ -317,12 +316,12 @@ public:
    * Get the nsIFontMetrics that describe the properties of
    * an nsFont.
    * @param aFont font description to obtain metrics for
-   * @param aLangGroup the language group of the document
+   * @param aLanguage the language of the document
    * @param aMetrics out parameter for font metrics
    * @param aUserFontSet user font set
    * @return error status
    */
-  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                             gfxUserFontSet* aUserFontSet,
                             nsIFontMetrics*& aMetrics) = 0;
 

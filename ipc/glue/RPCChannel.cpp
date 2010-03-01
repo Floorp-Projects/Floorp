@@ -226,7 +226,10 @@ RPCChannel::Call(Message* msg, Message* reply)
 
             const Message& outcall = mStack.top();
 
-            if (recvd.seqno() < outcall.seqno()) {
+            // in the parent, seqno's increase from 0, and in the
+            // child, they decrease from 0
+            if ((!mChild && recvd.seqno() < outcall.seqno()) ||
+                (mChild && recvd.seqno() > outcall.seqno())) {
                 mOutOfTurnReplies[recvd.seqno()] = recvd;
                 continue;
             }
