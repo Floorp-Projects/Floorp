@@ -99,7 +99,7 @@ public:
     mEnd->MarkNoLongerUpdating();
   }
 
-  // XXX Backwards seeking support
+  // XXX Backwards seeking support (bug 492458)
   void Unfreeze()
   {
     // XXX

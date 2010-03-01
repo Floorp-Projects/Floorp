@@ -399,7 +399,7 @@ protected:
    */
   nsresult          GetNextInterval(const nsSMILInterval* aPrevInterval,
                                     const nsSMILInstanceTime* aFixedBeginTime,
-                                    nsSMILInterval& aResult);
+                                    nsSMILInterval& aResult) const;
   nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
                                      const nsSMILTimeValue& aBase,
                                      PRInt32& aPosition) const;
