@@ -506,22 +506,13 @@ DDRAW_FAILED:
 
     nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
     thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-    if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) && paintRgnWin) {
-      PRUint32 rects;
-      paintRgnWin->GetNumRects(&rects);
-      nsRegionRectSet *rectSet = NULL;
-      paintRgnWin->GetRects(&rectSet);
-      for (int i = 0; i < rectSet->mNumRects; i++) {
-        thebesContext->Rectangle(
-        gfxRect(
-               rectSet->mRects[i].x,
-               rectSet->mRects[i].y,
-               rectSet->mRects[i].width,
-               rectSet->mRects[i].height), PR_TRUE);
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
+      const nsIntRect* r;
+      for (nsIntRegionRectIterator iter(paintRgn);
+           (r = iter.Next()) != nsnull;) {
+        thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
       }
       thebesContext->Clip();
-
-      paintRgnWin->FreeRects(rectSet);
     }
 #ifdef WINCE
     thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
