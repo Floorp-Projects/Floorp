@@ -63,6 +63,7 @@ class nsSMILTimedElement
 {
 public:
   nsSMILTimedElement();
+  ~nsSMILTimedElement();
 
   /*
    * Sets the owning animation element which this class uses to convert between
@@ -156,7 +157,6 @@ public:
    */
   void UpdateInstanceTime(nsSMILInstanceTime* aInstanceTime,
                           nsSMILTimeValue& aUpdatedTime,
-                          const nsSMILInstanceTime* aDependentTime,
                           PRBool aIsBegin);
 
   /**
@@ -169,6 +169,19 @@ public:
    *                        time or PR_FALSE if it represents an end time.
    */
   void RemoveInstanceTime(nsSMILInstanceTime* aInstanceTime, PRBool aIsBegin);
+
+  /**
+   * Removes all the instance times associated with the given
+   * nsSMILTimeValueSpec object. Used when an ID assignment changes and hence
+   * all the previously associated instance times become invalid.
+   *
+   * @param aSpec    The nsSMILTimeValueSpec object whose created
+   *                 nsSMILInstanceTime's should be removed.
+   * @param aIsBegin PR_TRUE if the times to be removed represent begin
+   *                 times or PR_FALSE if they are end times.
+   */
+  void RemoveInstanceTimesForCreator(const nsSMILTimeValueSpec* aSpec,
+                                     PRBool aIsBegin);
 
   /**
    * Sets the object that will be called by this timed element each time it is
@@ -314,6 +327,7 @@ protected:
   // Typedefs
   typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
   typedef nsTArray<nsRefPtr<nsSMILInstanceTime> >   InstanceTimeList;
+  typedef nsTArray<nsAutoPtr<nsSMILInterval> >      IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
@@ -410,19 +424,13 @@ protected:
 
   void              NotifyNewInterval();
   void              NotifyChangedInterval();
-  void              NotifyDeletedInterval();
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
+  const nsSMILInterval* GetPreviousInterval() const;
+  PRBool            HasPlayed() const { return !mOldIntervals.IsEmpty(); }
 
   // Hashtable callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) NotifyNewIntervalCallback(
       TimeValueSpecPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) NotifyChangedIntervalCallback(
-      TimeValueSpecPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) NotifyDeletedIntervalCallback(
-      TimeValueSpecPtrKey* aKey, void* /* unused */);
-  static inline void SanityCheckTimeDependentCallbackArgs(
-      TimeValueSpecPtrKey* aKey, NotifyTimeDependentsParams* aParams,
-      PRBool aExpectingParams);
 
   //
   // Members
@@ -471,8 +479,8 @@ protected:
   PRUint32                        mInstanceSerialIndex;
 
   nsSMILAnimationFunction*        mClient;
-  nsSMILInterval                  mCurrentInterval;
-  nsSMILInterval                  mPrevInterval;
+  nsAutoPtr<nsSMILInterval>       mCurrentInterval;
+  IntervalList                    mOldIntervals;
   nsSMILMilestone                 mPrevRegisteredMilestone;
   static const nsSMILMilestone    sMaxMilestone;
 

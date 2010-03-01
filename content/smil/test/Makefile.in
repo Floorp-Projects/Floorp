@@ -52,6 +52,7 @@ _TEST_FILES = \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
 	  test_smilChangeAfterFrozen.xhtml \
+	  test_smilContainerBinding.xhtml \
 	  test_smilCrossContainer.xhtml \
 	  test_smilCSSFontStretchRelative.xhtml \
 	  test_smilCSSFromBy.xhtml \
