@@ -64,6 +64,8 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+using namespace mozilla::layers;
+
 nsIFrame*
 NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -172,25 +174,77 @@ CorrectForAspectRatio(const gfxRect& aRect, const nsIntSize& aRatio)
   return gfxRect(aRect.TopLeft() + topLeft, scaledRatio);
 }
 
-void
-nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect, nsPoint aPt)
+already_AddRefed<Layer>
+nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
+                         LayerManager* aManager)
 {
-  nsRect area = GetContentRect() - GetPosition() + aPt;
+  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
   nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
   if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
-    return;
+    return nsnull;
 
-  gfxContext* ctx = aRenderingContext.ThebesContext();
+  nsRefPtr<ImageContainer> container = element->GetImageContainer();
+  // If we have a container with the right layer manager already, we don't
+  // need to do anything here. Otherwise we need to set up a temporary
+  // ImageContainer, capture the video data and store it in the temp
+  // container.
+  if (!container || container->Manager() != aManager) {
+    nsRefPtr<ImageContainer> tmpContainer = aManager->CreateImageContainer();
+    if (!tmpContainer)
+      return nsnull;
+    
+    // We get a reference to the video data as a cairo surface.
+    CairoImage::Data cairoData;
+    nsRefPtr<gfxASurface> imageSurface;
+    if (container) {
+      // Get video from the existing container. It was created for a
+      // different layer manager, so we do fallback through cairo.
+      imageSurface = container->GetCurrentAsSurface(&cairoData.mSize);
+      cairoData.mSurface = imageSurface;
+    } else {
+      // We're probably printing.
+      cairoData.mSurface = element->GetPrintSurface();
+      if (!cairoData.mSurface)
+        return nsnull;
+      cairoData.mSize = gfxIntSize(videoSize.width, videoSize.height);
+    }
+
+    // Now create a CairoImage to display the surface.
+    Image::Format cairoFormat = Image::CAIRO_SURFACE;
+    nsRefPtr<Image> image = tmpContainer->CreateImage(&cairoFormat, 1);
+    if (!image)
+      return nsnull;
+
+    NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
+    static_cast<CairoImage*>(image.get())->SetData(cairoData);
+    tmpContainer->SetCurrentImage(image);
+    container = tmpContainer.forget();
+  }
+
+  // Compute the rectangle in which to paint the video. We need to use
+  // the largest rectangle that fills our content-box and has the
+  // correct aspect ratio.
   nsPresContext* presContext = PresContext();
   gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
                       presContext->AppUnitsToGfxUnits(area.y),
                       presContext->AppUnitsToGfxUnits(area.width),
                       presContext->AppUnitsToGfxUnits(area.height));
-
   r = CorrectForAspectRatio(r, videoSize);
-  element->Paint(ctx, nsLayoutUtils::GetGraphicsFilterForFrame(this), r);
+
+  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+  if (!layer)
+    return nsnull;
+
+  layer->SetContainer(container);
+  layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+  // Set a transform on the layer to draw the video in the right place
+  gfxMatrix transform;
+  transform.Translate(r.pos);
+  transform.Scale(r.Width()/videoSize.width, r.Height()/videoSize.height);
+  layer->SetTransform(gfx3DMatrix::From2D(transform));
+  nsRefPtr<Layer> result = layer.forget();
+  return result.forget();
 }
 
 NS_IMETHODIMP
@@ -274,20 +328,41 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-static void PaintVideo(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-                        const nsRect& aDirtyRect, nsPoint aPt)
-{
-#if 0
-  double start = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
+class nsDisplayVideo : public nsDisplayItem {
+public:
+  nsDisplayVideo(nsVideoFrame* aFrame)
+    : nsDisplayItem(aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplayVideo);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayVideo() {
+    MOZ_COUNT_DTOR(nsDisplayVideo);
+  }
 #endif
+  
+  NS_DISPLAY_DECL_NAME("Video")
 
-  static_cast<nsVideoFrame*>(aFrame)->PaintVideo(*aCtx, aDirtyRect, aPt);
-#if 0
-  double end = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
-  printf("PaintVideo: %f\n", (float)end - (float)start);
+  // It would be great if we could override IsOpaque to return false here,
+  // but it's probably not safe to do so in general. Video frames are
+  // updated asynchronously from decoder threads, and it's possible that
+  // we might have an opaque video frame when IsOpaque is called, but
+  // when we come to paint, the video frame is transparent or has gone
+  // away completely (e.g. because of a decoder error). The problem would
+  // be especially acute if we have off-main-thread rendering.
 
-#endif
-}
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    nsIFrame* f = GetUnderlyingFrame();
+    return f->GetContentRect() + aBuilder->ToReferenceFrame(f->GetParent());
+  }
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager)
+  {
+    return static_cast<nsVideoFrame*>(mFrame)->BuildLayer(aBuilder, aManager);
+  }
+};
 
 NS_IMETHODIMP
 nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -302,9 +377,9 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!ShouldDisplayPoster() && HasVideoData()) {
+  if (HasVideoElement() && !ShouldDisplayPoster()) {
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayGeneric(this, ::PaintVideo, "Video"));
+      new (aBuilder) nsDisplayVideo(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -89,6 +89,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
+#include "ImageLayers.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -96,6 +97,8 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #endif
+
+using namespace mozilla::layers;
 
 /**
  * A namespace class for static layout utilities.
@@ -3436,26 +3439,31 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     if (!principal)
       return result;
 
-    PRUint32 w, h;
-    rv = video->GetVideoWidth(&w);
-    rv |= video->GetVideoHeight(&h);
-    if (NS_FAILED(rv))
+    ImageContainer *container = video->GetImageContainer();
+    if (!container)
       return result;
 
-    nsRefPtr<gfxASurface> surf;
-    if (wantImageSurface) {
-      surf = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
-    } else {
-      surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+    gfxIntSize size;
+    nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
+    if (!surf)
+      return result;
+
+    if (wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage) {
+      nsRefPtr<gfxImageSurface> imgSurf =
+        new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+      if (!imgSurf)
+        return result;
+
+      nsRefPtr<gfxContext> ctx = new gfxContext(imgSurf);
+      if (!ctx)
+        return result;
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->DrawSurface(surf, size);
+      surf = imgSurf;
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    video->Paint(ctx, gfxPattern::FILTER_NEAREST, gfxRect(0, 0, w, h));
-
     result.mSurface = surf;
-    result.mSize = gfxIntSize(w, h);
+    result.mSize = size;
     result.mPrincipal = principal;
     result.mIsWriteOnly = PR_FALSE;
 
