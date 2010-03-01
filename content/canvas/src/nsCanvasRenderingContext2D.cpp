@@ -41,6 +41,9 @@
 #define _USE_MATH_DEFINES
 #endif
 #include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
 
 #include "prmem.h"
 
@@ -87,7 +90,6 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-#include "jsnum.h"
 
 #include "nsTArray.h"
 
@@ -116,7 +118,17 @@ using namespace mozilla;
 
 /* Float validation stuff */
 
-#define VALIDATE(_f)  if (!JSDOUBLE_IS_FINITE(_f)) return PR_FALSE
+static inline bool
+DoubleIsFinite(double d)
+{
+#ifdef WIN32
+    return _finite(d);
+#else
+    return finite(d);
+#endif
+}
+
+#define VALIDATE(_f)  if (!DoubleIsFinite(_f)) return PR_FALSE
 
 /* These must take doubles as args, because JSDOUBLE_IS_FINITE expects
  * to take the address of its argument; we can't cast/convert in the

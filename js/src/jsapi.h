@@ -467,6 +467,9 @@ JS_ValueToSource(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_DoubleIsInt32(jsdouble d, jsint *ip);
+
 /*
  * Convert a value to a number, then to an int32, according to the ECMA rules
  * for ToInt32.
