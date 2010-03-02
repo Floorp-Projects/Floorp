@@ -158,6 +158,9 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif
+#ifdef MOZ_SMIL
+#include "nsSMILAnimationController.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -4755,6 +4758,15 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       // cause style changes (for updating ex/ch units, and to cause a
       // reflow).
       mPresContext->FlushUserFontSet();
+
+#ifdef MOZ_SMIL
+      // Flush any requested SMIL samples.
+      nsSMILAnimationController* smilController =
+        mDocument->GetAnimationController();
+      if (smilController) {
+        smilController->FlushResampleRequests();
+      }
+#endif // MOZ_SMIL
 
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->ProcessPendingRestyles();
