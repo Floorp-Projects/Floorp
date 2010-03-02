@@ -297,7 +297,7 @@ js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
 #endif
 
 JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT,
-                     DOUBLEPTR, APNPTR, 0, 0)
+                     DOUBLEPTR, APNPTR, 0, nanojit::ACC_STORE_ANY)
 
 /* FIXME change the return type to void. */
 JSBool JS_FASTCALL
@@ -309,7 +309,8 @@ js_PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
     return true;
 }
 
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_PutArguments, CONTEXT, OBJECT, JSVALPTR, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_PutArguments, CONTEXT, OBJECT, JSVALPTR, 0,
+                     nanojit::ACC_STORE_ANY)
 
 static JSBool
 args_delProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
@@ -867,7 +868,8 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     return callobj;
 }
 
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
+                     0, nanojit::ACC_STORE_ANY)
 
 JSFunction *
 js_GetCallObjectFunction(JSObject *obj)
@@ -947,7 +949,8 @@ js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval
     return true;
 }
 
-JS_DEFINE_CALLINFO_6(extern, BOOL, js_PutCallObjectOnTrace, CONTEXT, OBJECT, UINT32, JSVALPTR, UINT32, JSVALPTR, 0, 0)
+JS_DEFINE_CALLINFO_6(extern, BOOL, js_PutCallObjectOnTrace, CONTEXT, OBJECT, UINT32, JSVALPTR,
+                     UINT32, JSVALPTR, 0, nanojit::ACC_STORE_ANY)
 
 static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
@@ -1133,8 +1136,10 @@ js_SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval v)
     return CallPropertyOp(cx, obj, id, &v, JSCPK_VAR, JS_TRUE);
 }
 
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, JSID, JSVAL, 0, 0)
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, JSID, JSVAL, 0, 0)
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, JSID, JSVAL, 0,
+                     nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, JSID, JSVAL, 0,
+                     nanojit::ACC_STORE_ANY)
 
 static JSBool
 call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
@@ -2467,8 +2472,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 }
 
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject,
-                     CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, OBJECT, 0,
+                     nanojit::ACC_STORE_ANY)
 #endif
 
 /*
@@ -2498,7 +2503,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 }
 
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
-                     CONTEXT, FUNCTION, OBJECT, 0, 0)
+                     CONTEXT, FUNCTION, OBJECT, 0, nanojit::ACC_STORE_ANY)
 
 JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun)
