@@ -62,11 +62,11 @@ nsresult
 nsWifiMonitor::DoScanWithCoreWLAN()
 {
   // Regularly get the access point data.
-    
+
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
-  do {    
+  do {
     nsresult rv = GetAccessPointsFromWLAN(accessPoints);
     if (NS_FAILED(rv))
       return rv;
@@ -76,7 +76,7 @@ nsWifiMonitor::DoScanWithCoreWLAN()
 
     {
       nsAutoMonitor mon(mMonitor);
-      
+
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
           mListeners[i].mHasSentData = PR_TRUE;
@@ -84,7 +84,7 @@ nsWifiMonitor::DoScanWithCoreWLAN()
         }
       }
     }
-    
+
     ReplaceArray(lastAccessPoints, accessPoints);
 
     if (currentListeners.Count() > 0)
@@ -99,9 +99,9 @@ nsWifiMonitor::DoScanWithCoreWLAN()
         result[i] = lastAccessPoints[i];
 
       for (PRInt32 i = 0; i < currentListeners.Count(); i++) {
-        
+
         LOG(("About to send data to the wifi listeners\n"));
-        
+
         nsCOMPtr<nsIWifiListener> proxy;
         nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
         proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
@@ -124,12 +124,12 @@ nsWifiMonitor::DoScanWithCoreWLAN()
 
     // wait for some reasonable amount of time.  pref?
     LOG(("waiting on monitor\n"));
-    
+
     nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
   while (mKeepGoing);
-  
+
   return NS_OK;
 }
 
@@ -147,7 +147,7 @@ nsWifiMonitor::DoScanOld()
   WirelessAttachFunction WirelessAttach_function_ = reinterpret_cast<WirelessAttachFunction>(dlsym(apple_80211_library, "WirelessAttach"));
   WirelessScanSplitFunction WirelessScanSplit_function_ = reinterpret_cast<WirelessScanSplitFunction>(dlsym(apple_80211_library, "WirelessScanSplit"));
   WirelessDetachFunction WirelessDetach_function_ = reinterpret_cast<WirelessDetachFunction>(dlsym(apple_80211_library, "WirelessDetach"));
-  
+
   if (!WirelessAttach_function_ || !WirelessScanSplit_function_ || !WirelessDetach_function_) {
     dlclose(apple_80211_library);
     return NS_ERROR_NOT_AVAILABLE;
@@ -163,7 +163,7 @@ nsWifiMonitor::DoScanOld()
   }
 
   // Regularly get the access point data.
-    
+
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
@@ -172,14 +172,14 @@ nsWifiMonitor::DoScanOld()
 
     CFArrayRef managed_access_points = NULL;
     CFArrayRef adhoc_access_points = NULL;
-    
+
     if ((*WirelessScanSplit_function_)(wifi_context_,
                                       &managed_access_points,
                                       &adhoc_access_points,
                                       0) != noErr) {
       continue;
     }
-    
+
     if (managed_access_points == NULL) {
       continue;
     }
@@ -211,7 +211,7 @@ nsWifiMonitor::DoScanOld()
 
     {
       nsAutoMonitor mon(mMonitor);
-      
+
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
           mListeners[i].mHasSentData = PR_TRUE;
@@ -219,7 +219,7 @@ nsWifiMonitor::DoScanOld()
         }
       }
     }
-    
+
     ReplaceArray(lastAccessPoints, accessPoints);
 
     if (currentListeners.Count() > 0)
@@ -235,9 +235,9 @@ nsWifiMonitor::DoScanOld()
         result[i] = lastAccessPoints[i];
 
       for (PRInt32 i = 0; i < currentListeners.Count(); i++) {
-        
+
         LOG(("About to send data to the wifi listeners\n"));
-        
+
         nsCOMPtr<nsIWifiListener> proxy;
         nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
         proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
@@ -260,16 +260,16 @@ nsWifiMonitor::DoScanOld()
 
     // wait for some reasonable amount of time.  pref?
     LOG(("waiting on monitor\n"));
-    
+
     nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
   while (mKeepGoing);
-  
+
   (*WirelessDetach_function_)(wifi_context_);
-  
+
   dlclose(apple_80211_library);
-  
+
   return NS_OK;
 }
 
