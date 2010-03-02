@@ -130,7 +130,22 @@ public:
   PRBool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
+  // Tell this style context to cache aStruct as the struct for aSID
   NS_HIDDEN_(void) SetStyle(nsStyleStructID aSID, void* aStruct);
+
+  // Setters for inherit structs only, since rulenode only sets those eagerly.
+  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)          \
+    void SetStyle##name_ (nsStyle##name_ * aStruct) {                       \
+      NS_ASSERTION(!mCachedInheritedData.m##name_##Data ||                  \
+                   (mBits &                                                 \
+                    nsCachedStyleData::GetBitForSID(eStyleStruct_##name_)), \
+                   "Going to leak styledata");                              \
+      mCachedInheritedData.m##name_##Data = aStruct;                        \
+    }
+#define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_) /* nothing */
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT_RESET
+  #undef STYLE_STRUCT_INHERITED
 
   nsRuleNode* GetRuleNode() { return mRuleNode; }
   void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
@@ -258,14 +273,14 @@ protected:
   // this style context's ancestors (which are indirectly owned since this
   // style context owns a reference to its parent).  If the bit in |mBits|
   // is set for a struct, that means that the pointer for that struct is
-  // owned by an ancestor rather than by this style context.
+  // owned by an ancestor or by mRuleNode rather than by this style context.
   // Since style contexts typically have some inherited data but only sometimes
   // have reset data, we always allocate the mCachedInheritedData, but only
   // sometimes allocate the mCachedResetData.
   nsResetStyleData*       mCachedResetData; // Cached reset style data.
   nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
   PRUint32                mBits; // Which structs are inherited from the
-                                 // parent context.
+                                 // parent context or owned by mRuleNode.
   PRUint32                mRefCnt;
 };
 
