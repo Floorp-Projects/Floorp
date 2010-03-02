@@ -46,7 +46,7 @@
 
 class nsIAtom;
 class nsIURI;
-class nsICSSParser;
+class nsCSSParser;
 class nsICSSStyleSheet;
 class nsPresContext;
 class nsIContent;
@@ -58,10 +58,10 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSLoader interface
-// 33c469dd-af03-4098-9984-b13cee34d86a
-#define NS_ICSS_LOADER_IID     \
-{ 0x33c469dd, 0xaf03, 0x4098, \
- { 0x99, 0x84, 0xb1, 0x3c, 0xee, 0x34, 0xd8, 0x6a } }
+// 4e12812e-490c-4cec-b0f4-75c8b79779ba
+#define NS_ICSS_LOADER_IID    \
+{ 0x4e12812e, 0x490c, 0x4cec, \
+  { 0xb0, 0xf4, 0x75, 0xc8, 0xb7, 0x97, 0x79, 0xba } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -73,16 +73,12 @@ public:
   NS_IMETHOD DropDocumentReference(void) = 0; // notification that doc is going away
 
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aCompatMode) = 0;
+  NS_IMETHOD_(nsCompatibility) GetCompatibilityMode() = 0;
   NS_IMETHOD SetPreferredSheet(const nsAString& aTitle) = 0;
   NS_IMETHOD GetPreferredSheet(nsAString& aTitle) = 0;
 
-  // Get/Recycle a CSS parser for general use
-  NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
-                          nsICSSParser** aParser) = 0;
-  NS_IMETHOD RecycleParser(nsICSSParser* aParser) = 0;
-
   // XXXbz sort out what the deal is with events!  When should they fire?
-  
+
   /**
    * Load an inline style sheet.  If a successful result is returned and
    * *aCompleted is false, then aObserver is guaranteed to be notified

@@ -43,7 +43,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSLoader.h"
-#include "nsICSSParser.h"
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleConsts.h"
@@ -183,8 +182,7 @@ nsresult
 nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                        nsIURI** aBaseURI,
                                                        nsIPrincipal** aSheetPrincipal,
-                                                       nsICSSLoader** aCSSLoader,
-                                                       nsICSSParser** aCSSParser)
+                                                       nsICSSLoader** aCSSLoader)
 {
   NS_ASSERTION(mContent, "Something is severely broken -- there should be an nsIContent here!");
   // null out the out params since some of them may not get initialized below
@@ -192,7 +190,6 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   *aBaseURI = nsnull;
   *aSheetPrincipal = nsnull;
   *aCSSLoader = nsnull;
-  *aCSSParser = nsnull;
 
   nsIDocument* doc = mContent->GetOwnerDoc();
   if (!doc) {
@@ -204,16 +201,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   nsCOMPtr<nsIURI> sheetURI = doc->GetDocumentURI();
 
   NS_ADDREF(*aCSSLoader = doc->CSSLoader());
-  
-  nsresult rv = NS_OK;
 
-  // Note: parsers coming from a CSSLoader for a document already have
-  // the right case-sensitivity, quirkiness, etc.
-  rv = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  
   baseURI.swap(*aBaseURI);
   sheetURI.swap(*aSheetURI);
   NS_ADDREF(*aSheetPrincipal = mContent->NodePrincipal());

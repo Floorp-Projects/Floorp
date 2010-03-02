@@ -63,7 +63,7 @@
 #include "nsDOMError.h"
 #include "nsIScriptError.h"
 
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSStyleRule.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
@@ -165,8 +165,8 @@ class nsCanvasGradient : public nsIDOMCanvasGradient
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
 
-    nsCanvasGradient(gfxPattern* pat, nsICSSParser* cssparser)
-        : mPattern(pat), mCSSParser(cssparser)
+    nsCanvasGradient(gfxPattern* pat)
+        : mPattern(pat)
     {
     }
 
@@ -186,7 +186,9 @@ public:
         if (offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-        nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, &color);
+        nsCSSParser parser;
+        nsresult rv = parser.ParseColorString(nsString(colorstr),
+                                              nsnull, 0, &color);
         if (NS_FAILED(rv))
             return NS_ERROR_DOM_SYNTAX_ERR;
 
@@ -199,7 +201,6 @@ public:
 
 protected:
     nsRefPtr<gfxPattern> mPattern;
-    nsCOMPtr<nsICSSParser> mCSSParser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradient, NS_CANVASGRADIENT_PRIVATE_IID)
@@ -392,9 +393,6 @@ protected:
 
     // If mCanvasElement is not provided, then a docshell is
     nsCOMPtr<nsIDocShell> mDocShell;
-
-    // our CSS parser, for colors and whatnot
-    nsCOMPtr<nsICSSParser> mCSSParser;
 
     // yay thebes
     nsRefPtr<gfxContext> mThebes;
@@ -731,7 +729,8 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhich
         }
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = mCSSParser->ParseColorString(str, nsnull, 0, &color);
+        nsCSSParser parser;
+        rv = parser.ParseColorString(str, nsnull, 0, &color);
         if (NS_FAILED(rv)) {
             // Error reporting happens inside the CSS parser
             return NS_OK;
@@ -925,11 +924,6 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
         mThebes = new gfxContext(mSurface);
     } else {
         mValid = PR_TRUE;
-    }
-
-    // set up our css parser, if necessary
-    if (!mCSSParser) {
-        mCSSParser = do_CreateInstance("@mozilla.org/content/css-parser;1");
     }
 
     // set up the initial canvas defaults
@@ -1297,7 +1291,7 @@ nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, f
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat, mCSSParser);
+    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat);
     if (!grad)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1316,7 +1310,7 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat, mCSSParser);
+    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat);
     if (!grad)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1423,9 +1417,9 @@ nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowColor(const nsAString& colorstr)
 {
+    nsCSSParser parser;
     nscolor color;
-
-    nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, &color);
+    nsresult rv = parser.ParseColorString(colorstr, nsnull, 0, &color);
     if (NS_FAILED(rv)) {
         // Error reporting happens inside the CSS parser
         return NS_OK;
@@ -1850,61 +1844,40 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 /**
  * Helper function for SetFont that creates a style rule for the given font.
  * @param aFont The CSS font string
- * @param aCSSParser The CSS parser of the canvas rendering context
  * @param aNode The canvas element
  * @param aResult Pointer in which to place the new style rule.
  * @remark Assumes all pointer arguments are non-null.
  */
 static nsresult
 CreateFontStyleRule(const nsAString& aFont,
-                    nsICSSParser* aCSSParser,
                     nsINode* aNode,
                     nsICSSStyleRule** aResult)
 {
-    nsresult rv;
+    nsCSSParser parser;
+    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsICSSStyleRule> rule;
-    PRBool changed;
+    // aFont is to be parsed as the value of a CSS 'font' shorthand,
+    // and then any line-height setting in that shorthand is to be
+    // overridden with "normal".  Because of the way style rules are
+    // stored, it is more efficient to fabricate a text string that
+    // can be processed in one go with ParseStyleAttribute than to
+    // make two calls to ParseDeclaration.
+
+    nsAutoString styleAttr(NS_LITERAL_STRING("font:"));
+    styleAttr.Append(aFont);
+    styleAttr.AppendLiteral(";line-height:normal");
 
     nsIPrincipal* principal = aNode->NodePrincipal();
     nsIDocument* document = aNode->GetOwnerDoc();
-
     nsIURI* docURL = document->GetDocumentURI();
     nsIURI* baseURL = document->GetBaseURI();
 
-    rv = aCSSParser->ParseStyleAttribute(
-            EmptyString(),
-            docURL,
-            baseURL,
-            principal,
-            getter_AddRefs(rule));
+    nsresult rv = parser.ParseStyleAttribute(styleAttr, docURL, baseURL,
+                                             principal, aResult);
     if (NS_FAILED(rv))
         return rv;
 
-    rv = aCSSParser->ParseProperty(eCSSProperty_font,
-                                   aFont,
-                                   docURL,
-                                   baseURL,
-                                   principal,
-                                   rule->GetDeclaration(),
-                                   &changed);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // set line height to normal, as per spec
-    rv = aCSSParser->ParseProperty(eCSSProperty_line_height,
-                                   NS_LITERAL_STRING("normal"),
-                                   docURL,
-                                   baseURL,
-                                   principal,
-                                   rule->GetDeclaration(),
-                                   &changed);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rule->RuleMatched();
-
-    rule.forget(aResult);
+    (*aResult)->RuleMatched();
     return NS_OK;
 }
 
@@ -1935,7 +1908,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     nsCOMArray<nsIStyleRule> rules;
 
     nsCOMPtr<nsICSSStyleRule> rule;
-    rv = CreateFontStyleRule(font, mCSSParser.get(), document, getter_AddRefs(rule));
+    rv = CreateFontStyleRule(font, document, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1957,7 +1930,6 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
         // otherwise inherit from default (10px sans-serif)
         nsCOMPtr<nsICSSStyleRule> parentRule;
         rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
-                                 mCSSParser.get(),
                                  document,
                                  getter_AddRefs(parentRule));
         if (NS_FAILED(rv))
@@ -3293,8 +3265,10 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
         return NS_ERROR_FAILURE;
 
     nscolor bgColor;
-    nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
-                                               nsnull, 0, &bgColor);
+    nsCSSParser parser;
+    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
+                                          nsnull, 0, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsIPresShell* presShell = presContext->PresShell();
