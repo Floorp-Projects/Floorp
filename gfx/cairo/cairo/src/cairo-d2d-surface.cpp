@@ -1985,6 +1985,14 @@ _cairo_d2d_getextents(void		       *surface,
 cairo_surface_t*
 cairo_d2d_surface_create_for_hwnd(HWND wnd)
 {
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	/**
+	 * FIXME: In the near future we can use cairo_device_t to pass in a
+	 * device.
+	 */
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
+    }
+
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
 
     memset(newSurf, 0, sizeof(cairo_d2d_surface_t));
@@ -2103,6 +2111,13 @@ cairo_d2d_surface_create(cairo_format_t format,
                          int width,
                          int height)
 {
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	/**
+	 * FIXME: In the near future we can use cairo_device_t to pass in a
+	 * device.
+	 */
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
+    }
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
 
     memset(newSurf, 0, sizeof(cairo_d2d_surface_t));
@@ -2232,4 +2247,17 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
 						  0,
 						  &rect);
 
+}
+
+cairo_bool_t
+cairo_d2d_has_support()
+{
+    /**
+     * FIXME: We should be able to fix this in the near future when we pass in
+     * a cairo_device_t to our surface creation functions.
+     */
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	return false;
+    }
+    return true;
 }
