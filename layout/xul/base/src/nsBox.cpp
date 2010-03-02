@@ -178,6 +178,11 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
       box->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
+  // Another copy-over from nsHTMLReflowState.
+  // Since we are in reflow, we don't need to store these properties anymore.
+  DeleteProperty(nsGkAtoms::usedBorderProperty);
+  DeleteProperty(nsGkAtoms::usedPaddingProperty);
+  DeleteProperty(nsGkAtoms::usedMarginProperty);
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
