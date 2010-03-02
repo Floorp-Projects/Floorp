@@ -42,7 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleConsts.h"
@@ -182,7 +182,7 @@ nsresult
 nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                        nsIURI** aBaseURI,
                                                        nsIPrincipal** aSheetPrincipal,
-                                                       nsICSSLoader** aCSSLoader)
+                                                       mozilla::css::Loader** aCSSLoader)
 {
   NS_ASSERTION(mContent, "Something is severely broken -- there should be an nsIContent here!");
   // null out the out params since some of them may not get initialized below

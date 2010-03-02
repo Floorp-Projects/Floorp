@@ -48,7 +48,6 @@
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
-#include "nsICSSLoader.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSStruct.h"

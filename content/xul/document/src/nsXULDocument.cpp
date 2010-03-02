@@ -113,6 +113,7 @@
 #include "nsIParser.h"
 #include "nsIParserService.h"
 #include "nsICSSStyleSheet.h"
+#include "nsCSSLoader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsEventDispatcher.h"

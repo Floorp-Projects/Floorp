@@ -72,7 +72,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsILinkHandler.h"
 
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocumentObserver.h"
@@ -3372,29 +3372,22 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   {
     // Disable last sheet if not the same as new one
     if (!mLastStyleSheetURL.IsEmpty() && !mLastStyleSheetURL.Equals(aURL))
-        return EnableStyleSheet(mLastStyleSheetURL, PR_FALSE);
+      return EnableStyleSheet(mLastStyleSheetURL, PR_FALSE);
 
     return NS_OK;
   }
 
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // Make sure the pres shell doesn't disappear during the load.
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsIDocument *document = ps->GetDocument();
-  if (!document)     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIURI> uaURI;
-  rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cssLoader->LoadSheet(uaURI, nsnull, EmptyCString(), this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return ps->GetDocument()->CSSLoader()->
+    LoadSheet(uaURI, nsnull, EmptyCString(), this);
 }
 
 NS_IMETHODIMP
@@ -3423,19 +3416,20 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 {
   // Enable existing sheet if already loaded.
   if (EnableExistingStyleSheet(aURL))
     return NS_OK;
 
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Make sure the pres shell doesn't disappear during the load.
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIURI> uaURI;
-  rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We MUST ONLY load synchronous local files (no @import)
@@ -3443,15 +3437,12 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // synchronously, of course..
   nsCOMPtr<nsICSSStyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
-  rv = cssLoader->LoadSheetSync(uaURI, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
+  rv = ps->GetDocument()->CSSLoader()->
+    LoadSheetSync(uaURI, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
   if (!sheet)
     return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps)
-    return NS_ERROR_NOT_INITIALIZED;
 
   // Add the override style sheet
   // (This checks if already exists)
@@ -3630,29 +3621,9 @@ nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
   return NS_OK;
 }
 
-nsresult
-nsHTMLEditor::GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader)
-{
-  if (!aCSSLoader)
-    return NS_ERROR_NULL_POINTER;
-  *aCSSLoader = 0;
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsIDocument *document = ps->GetDocument();
-  if (!document)     return NS_ERROR_NULL_POINTER;
-
-  NS_ADDREF(*aCSSLoader = document->CSSLoader());
-
-  return NS_OK;
-}
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsIEditorMailSupport methods 
-#pragma mark -
-#endif
+/*
+ * nsIEditorMailSupport methods
+ */
 
 NS_IMETHODIMP
 nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)

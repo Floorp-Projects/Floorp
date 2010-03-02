@@ -50,7 +50,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsCSSRules.h"
@@ -176,7 +176,7 @@ public:
   nsresult SetSVGMode(PRBool aSVGMode);
 #endif
 
-  nsresult SetChildLoader(nsICSSLoader* aChildLoader);
+  nsresult SetChildLoader(mozilla::css::Loader* aChildLoader);
 
   // Clears everything set by the above Set*() functions.
   void Reset();
@@ -619,7 +619,7 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mSheet;
 
   // Used for @import rules
-  nsICSSLoader* mChildLoader; // not ref counted, it owns us
+  mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
 
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
@@ -793,7 +793,7 @@ CSSParserImpl::SetSVGMode(PRBool aSVGMode)
 #endif
 
 nsresult
-CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
+CSSParserImpl::SetChildLoader(mozilla::css::Loader* aChildLoader)
 {
   mChildLoader = aChildLoader;  // not ref counted, it owns us
   return NS_OK;
@@ -9137,7 +9137,7 @@ CSSParserImpl::ParseMarker()
 
 static CSSParserImpl* gFreeList = nsnull;
 
-nsCSSParser::nsCSSParser(nsICSSLoader* aLoader,
+nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
                          nsICSSStyleSheet* aSheet)
 {
   CSSParserImpl *impl = gFreeList;
@@ -9207,7 +9207,7 @@ nsCSSParser::SetSVGMode(PRBool aSVGMode)
 #endif
 
 nsresult
-nsCSSParser::SetChildLoader(nsICSSLoader* aChildLoader)
+nsCSSParser::SetChildLoader(mozilla::css::Loader* aChildLoader)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetChildLoader(aChildLoader);

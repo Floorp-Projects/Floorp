@@ -66,7 +66,7 @@
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
 #include "nsCSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsINameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
@@ -77,6 +77,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsCSSDeclaration.h"
 #include "nsRuleNode.h"
+
+namespace css = mozilla::css;
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -1843,7 +1845,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
 
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
-  nsCOMPtr<nsICSSLoader> loader;
+  nsRefPtr<css::Loader> loader;
   if (mDocument) {
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
@@ -2062,10 +2064,10 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     // Nothing to do here
     return NS_OK;
   }
-  
+
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
-  nsCOMPtr<nsICSSLoader> loader;
+  nsRefPtr<css::Loader> loader;
   if (mDocument) {
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
