@@ -119,7 +119,10 @@ struct JSStackFrame {
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
-    JSObject        *scopeChain;
+    union {
+        JSObject    *scopeChain;
+        jsval       scopeChainVal;
+    };
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
