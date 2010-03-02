@@ -1658,6 +1658,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                    const nsMargin* aBorder,
                                    const nsMargin* aPadding)
 {
+  // Since we are in reflow, we don't need to store these properties anymore
+  frame->DeleteProperty(nsGkAtoms::usedBorderProperty);
+  frame->DeleteProperty(nsGkAtoms::usedPaddingProperty);
+  frame->DeleteProperty(nsGkAtoms::usedMarginProperty);
+
   // If this is the root frame, then set the computed width and
   // height equal to the available space
   if (nsnull == parentReflowState) {

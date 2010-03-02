@@ -1686,6 +1686,7 @@ GK_ATOM(tableBCProperty, "TableBCProperty")                // table border colla
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
+GK_ATOM(usedBorderProperty, "UsedBorderProperty") // nsMargin*
 GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
 GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
 GK_ATOM(viewProperty, "ViewProperty")                      

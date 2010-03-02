@@ -2430,11 +2430,6 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
   nsRect bounds;
   if (bounds.IntersectRect(closure.mAffectedPluginBounds,
                            closure.mRootFrame->GetRect())) {
-    // It's OK to disable GetUsedX assertions because after a reflow,
-    // any changed geometry will cause UpdatePluginGeometry to happen
-    // again.
-    nsAutoDisableGetUsedXAssertions disableAssertions;
-
     nsDisplayListBuilder builder(closure.mRootFrame, PR_FALSE, PR_FALSE);
     builder.SetAccurateVisibleRegions();
     nsDisplayList list;
