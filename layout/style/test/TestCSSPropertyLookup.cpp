@@ -39,6 +39,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsString.h"
+#include "nsXPCOM.h"
 
 static const char* const kJunkNames[] = {
   nsnull,
@@ -49,8 +50,10 @@ static const char* const kJunkNames[] = {
   "#@$&@#*@*$@$#"
 };
 
-int TestProps() {
-  int rv = 0;
+static bool
+TestProps()
+{
+  bool success = true;
   nsCSSProperty id;
   nsCSSProperty index;
 
@@ -72,11 +75,11 @@ int TestProps() {
     id = nsCSSProps::LookupProperty(nsCString(tagName));
     if (id == eCSSProperty_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
-      rv = -1;
+      success = false;
     }
     if (id != index) {
       printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
-      rv = -1;
+      success = false;
     }
 
     // fiddle with the case to make sure we can still find it
@@ -86,11 +89,11 @@ int TestProps() {
     id = nsCSSProps::LookupProperty(NS_ConvertASCIItoUTF16(tagName));
     if (id < 0) {
       printf("bug: can't find '%s'\n", tagName);
-      rv = -1;
+      success = false;
     }
     if (index != id) {
       printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
-      rv = -1;
+      success = false;
     }
     et++;
   }
@@ -101,18 +104,20 @@ int TestProps() {
     id = nsCSSProps::LookupProperty(nsCAutoString(tag));
     if (id >= 0) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
-      rv = -1;
+      success = false;
     }
   }
 
   nsCSSProps::ReleaseTable();
-  return rv;
+  return success;
 }
 
-int TestKeywords() {
+bool
+TestKeywords()
+{
   nsCSSKeywords::AddRefTable();
 
-  int rv = 0;
+  bool success = true;
   nsCSSKeyword id;
   nsCSSKeyword index;
 
@@ -140,11 +145,11 @@ int TestKeywords() {
     id = nsCSSKeywords::LookupKeyword(nsCString(tagName));
     if (id <= eCSSKeyword_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
-      rv = -1;
+      success = false;
     }
     if (id != index) {
       printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
-      rv = -1;
+      success = false;
     }
 
     // fiddle with the case to make sure we can still find it
@@ -154,11 +159,11 @@ int TestKeywords() {
     id = nsCSSKeywords::LookupKeyword(nsCString(tagName));
     if (id <= eCSSKeyword_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
-      rv = -1;
+      success = false;
     }
     if (id != index) {
       printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
-      rv = -1;
+      success = false;
     }
     et++;
   }
@@ -169,17 +174,26 @@ int TestKeywords() {
     id = nsCSSKeywords::LookupKeyword(nsCAutoString(tag));
     if (eCSSKeyword_UNKNOWN < id) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
-      rv = -1;
+      success = false;
     }
   }
 
   nsCSSKeywords::ReleaseTable();
-  return rv;
+  return success;
 }
 
-int main(int argc, char** argv)
+int
+main(void)
 {
-  TestProps();
-  TestKeywords();
-  return 0;
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  NS_ENSURE_SUCCESS(rv, 2);
+
+  bool testOK = true;
+  testOK &= TestProps();
+  testOK &= TestKeywords();
+
+  rv = NS_ShutdownXPCOM(nsnull);
+  NS_ENSURE_SUCCESS(rv, 2);
+
+  return testOK ? 0 : 1;
 }

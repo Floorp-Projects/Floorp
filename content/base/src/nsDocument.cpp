@@ -7618,6 +7618,44 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
   }
 }
 
+namespace {
+
+/**
+ * Stub for LoadSheet(), since all we want is to get the sheet into
+ * the CSSLoader's style cache
+ */
+class StubCSSLoaderObserver : public nsICSSLoaderObserver {
+public:
+  NS_IMETHOD
+  StyleSheetLoaded(nsICSSStyleSheet*, PRBool, nsresult)
+  {
+    return NS_OK;
+  }
+  NS_DECL_ISUPPORTS
+};
+NS_IMPL_ISUPPORTS1(StubCSSLoaderObserver, nsICSSLoaderObserver)
+
+}
+
+void
+nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset)
+{
+  // The CSSLoader will retain this object after we return.
+  nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
+
+  // Charset names are always ASCII.
+  CSSLoader()->LoadSheet(uri, NodePrincipal(),
+                         NS_LossyConvertUTF16toASCII(charset),
+                         obs);
+}
+
+nsresult
+nsDocument::LoadChromeSheetSync(nsIURI* uri, PRBool isAgentSheet,
+                                nsICSSStyleSheet** sheet)
+{
+  return CSSLoader()->LoadSheetSync(uri, isAgentSheet, isAgentSheet, sheet);
+}
+
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:
