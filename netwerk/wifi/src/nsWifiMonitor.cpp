@@ -112,7 +112,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
   }
 
   nsAutoMonitor mon(mMonitor);
-  
+
   mKeepGoing = PR_TRUE;
 
   mListeners.AppendElement(nsWifiListener(aListener));
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
   LOG(("removing listener\n"));
 
   nsAutoMonitor mon(mMonitor);
-  
+
   for (PRUint32 i = 0; i < mListeners.Length(); i++) {
 
     if (mListeners[i].mListener == aListener) {
