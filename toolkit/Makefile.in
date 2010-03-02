@@ -44,6 +44,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS = \
+  components \
   content \
   locales \
   mozapps \
