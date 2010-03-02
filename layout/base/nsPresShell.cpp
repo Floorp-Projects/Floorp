@@ -4137,6 +4137,11 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
         didScroll = PR_TRUE;
       }
 
+      // only scroll one container when this flag is set
+      if (aFlags & SCROLL_FIRST_ANCESTOR_ONLY) {
+        break;
+      }
+
       nsRect scrollPort = sf->GetScrollPortRect();
       if (rect.XMost() < scrollPort.x ||
           rect.x > scrollPort.XMost() ||
@@ -4155,7 +4160,7 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
     }
     rect += container->GetPosition();
     container = container->GetParent();
-  } while (container && !(aFlags & SCROLL_FIRST_ANCESTOR_ONLY));
+  } while (container);
 
   return didScroll;
 }
