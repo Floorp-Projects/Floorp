@@ -829,7 +829,7 @@ namespace nanojit
         if (oprnd1->isconst() && oprnd2->isconst()) {
             int32_t c1 = oprnd1->imm32();
             int32_t c2 = oprnd2->imm32();
-            double d;
+            double d = 0.0;
 
             switch (op) {
             case LIR_addxov:    d = double(c1) + double(c2);    break;
@@ -2510,6 +2510,8 @@ namespace nanojit
 
     void ValidateWriter::typeCheckArgs(LOpcode op, int nArgs, LTy formals[], LIns* args[])
     {
+        NanoAssert(nArgs >= 0);
+
         // Type-check the arguments.
         for (int i = 0; i < nArgs; i++) {
             LTy formal = formals[i];
@@ -2896,7 +2898,7 @@ namespace nanojit
 
     LIns* ValidateWriter::insGuard(LOpcode op, LIns *cond, GuardRecord *gr)
     {
-        int nArgs;
+        int nArgs = -1;     // init to shut compilers up
         LTy formals[1];
         LIns* args[1];
 
@@ -2953,7 +2955,7 @@ namespace nanojit
 
     LIns* ValidateWriter::insBranch(LOpcode op, LIns* cond, LIns* to)
     {
-        int nArgs = 0;
+        int nArgs = -1;     // init to shut compilers up
         LTy formals[1];
         LIns* args[1];
 
