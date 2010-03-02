@@ -112,7 +112,7 @@ interface nsIContentPolicy : nsISupports
   const unsigned long TYPE_PING        = 10;
 
   /**
-   * Indicates an XMLHttpRequest.
+   * Indicates an XMLHttpRequest. Also used for document.load.
    */
   const unsigned long TYPE_XMLHTTPREQUEST = 11;
 
