@@ -4563,8 +4563,7 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
   // and hence possibly completely bogus for GetStyle* purposes.
   // We use PeekStyleData instead.
 
-  const nsStyleBorder* oldStyleData = static_cast<const nsStyleBorder*>
-                        (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+  const nsStyleBorder* oldStyleData = aOldStyleContext->PeekStyleBorder();
   if (!oldStyleData)
     return PR_FALSE;
 

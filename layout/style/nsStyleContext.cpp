@@ -69,6 +69,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
     mRuleNode(aRuleNode),
+    mCachedResetData(nsnull),
     mBits(((PRUint32)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
 {
@@ -117,8 +118,9 @@ nsStyleContext::~nsStyleContext()
   }
 
   // Free up our data structs.
-  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData) {
-    mCachedStyleData.Destroy(mBits, presContext);
+  mCachedInheritedData.DestroyStructs(mBits, presContext);
+  if (mCachedResetData) {
+    mCachedResetData->Destroy(mBits, presContext);
   }
 }
 
@@ -201,33 +203,32 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   return result;
 }
 
+const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
+{
+  const void* cachedData;
+  PRBool isReset = nsCachedStyleData::IsReset(aSID);
+  if (isReset) {
+    if (mCachedResetData) {
+      char* slot = reinterpret_cast<char*>(mCachedResetData) +
+                   nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
+      cachedData = *reinterpret_cast<void**>(slot);
+    } else {
+      cachedData = nsnull;
+    }
+  } else {
+    char* slot = reinterpret_cast<char*>(&mCachedInheritedData) +
+                 nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
+    cachedData = *reinterpret_cast<void**>(slot);
+  }
+  return cachedData;
+}
+
 const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 {
-  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
+  const void* cachedData = GetCachedStyleData(aSID);
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   return mRuleNode->GetStyleData(aSID, this, PR_TRUE); // Our rule node will take care of it for us.
-}
-
-#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-  const nsStyle##name_ * nsStyleContext::GetStyle##name_ ()                 \
-  {                                                                         \
-    const nsStyle##name_ * cachedData = mCachedStyleData.GetStyle##name_(); \
-    if (cachedData)                                                         \
-      return cachedData; /* We have computed data stored on this node */    \
-                         /* in the context tree. */                         \
-    /* Else our rule node will take care of it for us. */                   \
-    return mRuleNode->GetStyle##name_(this, PR_TRUE);                       \
-  }
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
-{
-  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
-  if (cachedData)
-    return cachedData; // We have computed data stored on this node in the context tree.
-  return mRuleNode->GetStyleData(aSID, this, PR_FALSE); // Our rule node will take care of it for us.
 }
 
 // This is an evil evil function, since it forces you to alloc your own separate copy of
@@ -244,7 +245,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   const void *current = GetStyleData(aSID);
   if (!mChild && !mEmptyChild &&
       !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
-      mCachedStyleData.GetStyleData(aSID))
+      GetCachedStyleData(aSID))
     return const_cast<void*>(current);
 
   void* result;
@@ -293,25 +294,18 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
   // See the comments there (in nsRuleNode.h) for more details about
   // what this is doing and why.
 
-  const nsCachedStyleData::StyleStructInfo& info =
-      nsCachedStyleData::gInfo[aSID];
-  char* resetOrInheritSlot = reinterpret_cast<char*>(&mCachedStyleData) +
-                             info.mCachedStyleDataOffset;
-  char* resetOrInherit = reinterpret_cast<char*>
-                                         (*reinterpret_cast<void**>(resetOrInheritSlot));
-  if (!resetOrInherit) {
-    nsPresContext *presContext = mRuleNode->GetPresContext();
-    if (mCachedStyleData.IsReset(aSID)) {
-      mCachedStyleData.mResetData = new (presContext) nsResetStyleData;
-      resetOrInherit = reinterpret_cast<char*>(mCachedStyleData.mResetData);
-    } else {
-      mCachedStyleData.mInheritedData =
-          new (presContext) nsInheritedStyleData;
-      resetOrInherit =
-          reinterpret_cast<char*>(mCachedStyleData.mInheritedData);
+  char* dataSlot;
+  if (nsCachedStyleData::IsReset(aSID)) {
+    if (!mCachedResetData) {
+      mCachedResetData = new (mRuleNode->GetPresContext()) nsResetStyleData;
+      // XXXbz And if that fails?
     }
+    dataSlot = reinterpret_cast<char*>(mCachedResetData) +
+               nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
+  } else {
+    dataSlot = reinterpret_cast<char*>(&mCachedInheritedData) +
+               nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
   }
-  char* dataSlot = resetOrInherit + info.mInheritResetOffset;
   NS_ASSERTION(!*reinterpret_cast<void**>(dataSlot) ||
                (mBits & nsCachedStyleData::GetBitForSID(aSID)),
                "Going to leak style data");
@@ -405,9 +399,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   PR_BEGIN_MACRO                                                              \
     NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
                  "Struct placed in the wrong maxHint section");               \
-    const nsStyle##struct_* this##struct_ =                                   \
-        static_cast<const nsStyle##struct_*>(                                 \
-                       PeekStyleData(eStyleStruct_##struct_));                \
+    const nsStyle##struct_* this##struct_ = PeekStyle##struct_();             \
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
       if ((compare || nsStyle##struct_::ForceCompare()) &&                    \
