@@ -1086,6 +1086,7 @@ var FormHelper = {
   },
 
   _getRectForElement: function formHelper_getRectForElement(aElement) {
+    const kDistanceMax = 100;
     let elRect = Browser.getBoundingContentRect(aElement);
     let bv = Browser._browserView;
 
@@ -1093,8 +1094,12 @@ var FormHelper = {
     for (let i=0; i<labels.length; i++) {
       let labelRect = Browser.getBoundingContentRect(labels[i]);
       if (labelRect.left < elRect.left) {
-        let width = labelRect.width + elRect.width + (elRect.x - labelRect.x - labelRect.width);
-        return new Rect(labelRect.x, labelRect.y, width, elRect.height).expandToIntegers();
+        let isClosed = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
+                       Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
+        if (!isClosed) {
+          let width = labelRect.width + elRect.width + (elRect.left - labelRect.left - labelRect.width);
+          return new Rect(labelRect.left, labelRect.top, width, elRect.height).expandToIntegers();
+        }
       }
     }
     return elRect;
