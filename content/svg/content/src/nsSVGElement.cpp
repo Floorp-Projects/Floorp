@@ -1230,10 +1230,6 @@ nsSVGElement::DidAnimateLength(PRUint8 aAttrEnum)
 void
 nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
 {
-#ifdef MOZ_SMIL
-  FlushAnimations();
-#endif
-
   LengthAttributesInfo info = GetLengthInfo();
 
   NS_ASSERTION(info.mLengthCount > 0,
