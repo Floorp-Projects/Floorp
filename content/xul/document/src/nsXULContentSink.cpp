@@ -83,7 +83,7 @@
 #include "nsCRT.h"
 
 #include "nsXULPrototypeDocument.h"     // XXXbe temporary
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"

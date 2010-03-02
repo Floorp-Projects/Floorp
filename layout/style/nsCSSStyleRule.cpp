@@ -50,7 +50,7 @@
 #include "nsICSSGroupRule.h"
 #include "nsCSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIURL.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -912,7 +912,7 @@ public:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            nsICSSLoader** aCSSLoader);
+                                            mozilla::css::Loader** aCSSLoader);
   virtual nsresult DeclarationChanged();
   virtual nsIDocument* DocToUpdate();
 
@@ -1019,7 +1019,7 @@ nsresult
 DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                 nsIURI** aBaseURI,
                                                 nsIPrincipal** aSheetPrincipal,
-                                                nsICSSLoader** aCSSLoader)
+                                                mozilla::css::Loader** aCSSLoader)
 {
   // null out the out params since some of them may not get initialized below
   *aSheetURI = nsnull;

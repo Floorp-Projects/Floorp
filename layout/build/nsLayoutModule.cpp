@@ -46,7 +46,6 @@
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
-#include "nsICSSLoader.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIContentIterator.h"
@@ -483,7 +482,6 @@ MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXML
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 #endif
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
-MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
 MAKE_CTOR(CreateSelection,                nsFrameSelection,            NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
@@ -1045,11 +1043,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_IMAGEDOCUMENT_CID,
     nsnull,
     CreateImageDocument },
-
-  { "CSS loader",
-    NS_CSS_LOADER_CID,
-    nsnull,
-    CreateCSSLoader },
 
   { "Dom selection",
     NS_DOMSELECTION_CID,

@@ -90,7 +90,6 @@ class nsIDOMDocumentType;
 class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
-class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
@@ -106,6 +105,10 @@ class nsFrameLoader;
 class nsIBoxObject;
 
 namespace mozilla {
+namespace css {
+class Loader;
+} // namespace css
+
 namespace dom {
 class Link;
 } // namespace dom
@@ -568,7 +571,7 @@ public:
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
    */
-  nsICSSLoader* CSSLoader() const {
+  mozilla::css::Loader* CSSLoader() const {
     return mCSSLoader;
   }
 
@@ -1333,7 +1336,7 @@ protected:
   // additional headers that we don't want to expose.
   // The cleanup is handled by the nsDocument destructor.
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
-  nsICSSLoader* mCSSLoader; // [STRONG]
+  mozilla::css::Loader* mCSSLoader; // [STRONG]
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)

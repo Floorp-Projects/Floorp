@@ -74,7 +74,6 @@
 
 #include "nsIScriptContext.h"
 
-#include "nsICSSLoader.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsXBLResourceLoader.h"
 

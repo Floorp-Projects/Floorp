@@ -64,7 +64,6 @@
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
 
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"

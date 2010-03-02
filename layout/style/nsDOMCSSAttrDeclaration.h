@@ -46,7 +46,11 @@
 #include "nsWrapperCache.h"
 #include "nsIContent.h"
 
-class nsICSSLoader;
+namespace mozilla {
+namespace css {
+class Loader;
+}
+}
 
 class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration,
                                      public nsWrapperCache
@@ -69,7 +73,7 @@ public:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            nsICSSLoader** aCSSLoader);
+                                            mozilla::css::Loader** aCSSLoader);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
 
   virtual nsINode *GetParentObject()

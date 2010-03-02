@@ -82,7 +82,6 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
-#include "nsICSSLoader.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
 #include "nsILayoutHistoryState.h"

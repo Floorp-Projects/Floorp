@@ -50,7 +50,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDocumentObserver.h"
 #include "TypeInState.h"
