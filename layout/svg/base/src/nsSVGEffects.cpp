@@ -378,8 +378,12 @@ nsSVGEffects::EffectProperties::GetClipPathFrame(PRBool *aOK)
 {
   if (!mClipPath)
     return nsnull;
-  return static_cast<nsSVGClipPathFrame *>
+  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
     (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, aOK));
+  if (frame && aOK && *aOK) {
+    *aOK = frame->IsValid();
+  }
+  return frame;
 }
 
 nsSVGMaskFrame *
