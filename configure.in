@@ -473,14 +473,15 @@ dnl ========================================================
 case "$target" in
 *-wince|*-winmo)
     WINVER=500
+    WINSDK_TARGETVER=502
     ;;
 *)
     WINVER=502
+    dnl Target the Windows 7 SDK by default
+    WINSDK_TARGETVER=601
     ;;
 esac
 
-dnl Target the Windows 7 SDK by default
-WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
@@ -2063,6 +2064,10 @@ case "$target" in
     AR_EXTRACT="$AR -extract"
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
+    MOZ_MEMORY=1
+    NSS_DISABLE_DBM=1
+    MOZ_OGG=
+    ac_configure_args="$ac_configure_args --enable-win32-target=WINCE"
 
     if test "$AS_BIN"; then
         AS="$AS_BIN"
@@ -4670,7 +4675,7 @@ XPC_IDISPATCH_SUPPORT=
 
 
 case "$target_os" in
-darwin*)
+darwin*|*wince*|*winmo*)
     ACCESSIBILITY=
     ;;
 *)
@@ -4837,6 +4842,11 @@ photon)
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
     MOZ_WEBGL=1
+    case "${target}" in
+    *-wince*)
+        NS_PRINTING=
+        ;;
+    esac
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -5692,6 +5702,12 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
 dnl ========================================================
 dnl JavaXPCOM
 dnl ========================================================
+case "${target}" in
+*-wince*)
+    MOZ_JAVAXPCOM=
+    ;;
+esac
+
 MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
