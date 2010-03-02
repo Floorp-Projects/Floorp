@@ -5,19 +5,19 @@
 <head>
   <title>Switch</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-  <link rel="icon" href="chrome://abouttab/content/tabcandy.png"/>
+  <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
   <style media="screen" type="text/css">
   html, body {
     margin: 0;
     padding: 0;
-    font-family: Geneva;
+    font-family: arial, sans-serif;
   }
   
   .tab{
     position: absolute;
     display: block;
     float:left;
-    margin: 10px;
+    margin: 0px;
     padding: 0;
     background-color: rgba(255,255,255,.8);
   }
@@ -44,7 +44,10 @@
   }
   
   .name{
-    font-size: 9px;
+  	position: absolute;
+  	top: 123px;
+    font-size: 12px;
+    color: #888;
     display:block;
     width:160px;
     white-space: nowrap;
@@ -58,12 +61,12 @@
     content:" ";
     position: absolute;
     right:0px;
-    background: -moz-linear-gradient(0deg, rgba(255,255,255,0), white);
+//    background: -moz-linear-gradient(0deg, rgba(255,255,255,0), white);
   }
   
   .close{
     position: absolute;
-    top:12px; right:0;
+    top:2px; right:2px;
     margin: 1px;
     width:12px; height:12px;
     background-color: rgba(0,0,0,.6);
@@ -79,7 +82,7 @@
   }     
   
     
-  .search{width:100%; margin-top: 30px; text-align: center; margin-bottom: 30px;}
+  .search{width:100%; margin-top: 15px; text-align: center; margin-bottom: 30px;}
   .search input{ width: 300px; font-size: 16pt;}
 
   #actions{
@@ -89,12 +92,16 @@
    font-size: 11px;
   }
   
+  .action { 
+    margin: 5px;
+  }
+  
   .unhighlight{
     opacity: .1;
     z-index: -100;
   }
   
-  .lasso-menu{
+  .lasso-menu {
     background-color: white;
     width: 100px;
     height: 100px;
@@ -105,28 +112,43 @@
     cursor: pointer;
   }
   
-  
+  #mode {
+    font-size: 11px;
+    margin: 5px 0px 0px 5px;
+  }
+    
   </style>
   
 </head>
 
 <body>
-  <div class="search">
-    <input type="text"/>
+  <div id="nav">
+    <div id="mode">
+      Mode: Stacks (<a href="../index.html">switch</a>)
+    </div>
+    <div class="search">
+      <input type="text"/>
+    </div>
+    <div id="actions">
+      <a id="tabbar" class="action" href="#">Toggle Tab Bar</a>
+    </div>
   </div>
-  <div id="actions">
-    <a id="tabbar" href="#">Toggle Tab Bar</a>
-  </div>
-  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/jquery.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/jquery-ui.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/utils.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/tabs.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/mirror.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/optional/ui.js"></script>  
 
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/select/js/jquery.lasso.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/select/js/jquery.select.js"></script>  
+  <script type="text/javascript;version=1.8" src="../js/jquery.js"></script>  
+  <script type="text/javascript;version=1.8" src="../js/jquery-ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../js/utils.js"></script>  
+  <script type="text/javascript;version=1.8">
+  	function log(text) { 
+      Utils.logger.log(text);
+    }  	
+  	log('it begins');
+//  	Utils.logger.logFormatted('%d happy', 3);
+  </script>
+  <script type="text/javascript;version=1.8" src="../js/tabs.js"></script>
+  <script type="text/javascript;version=1.8" src="../js/mirror.js"></script>
+  <script type="text/javascript;version=1.8" src="js/ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../js/optional/jquery.lasso.js"></script>
+  <script type="text/javascript;version=1.8" src="js/jquery.select.js"></script>  
 
 </body>
 </html>
