@@ -933,6 +933,11 @@ public:
 
   virtual void MaybePreLoadImage(nsIURI* uri);
 
+  virtual void PreloadStyle(nsIURI* uri, const nsAString& charset);
+
+  virtual nsresult LoadChromeSheetSync(nsIURI* uri, PRBool isAgentSheet,
+                                       nsICSSStyleSheet** sheet);
+
   virtual nsISupports* GetCurrentContentSink();
 
 protected:

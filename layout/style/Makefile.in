@@ -41,10 +41,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = xbl-marquee
+DIRS		= xbl-marquee
 
 ifdef ENABLE_TESTS
-DIRS		+= test
+TOOL_DIRS	= test
 endif
 
 MODULE		= layout
