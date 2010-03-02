@@ -173,6 +173,9 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 #ifndef CAIRO_HAS_D2D_SURFACE
                 return;
 #else
+                if (!cairo_d2d_has_support()) {
+                    return;
+                }
 #ifdef CAIRO_HAS_DWRITE_FONT
                 if (!GetDWriteFactory()) {
 #endif
