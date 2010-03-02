@@ -1,7 +1,7 @@
 // By Aza Raskin, 2010
 
-function Lasso(options){ this.init(options); }
-Lasso.prototype = {
+function Line(options){ this.init(options); }
+Line.prototype = {
   init: function(options){
     var canvas = document.createElement("canvas");
     var w = window.innerWidth;
@@ -13,6 +13,7 @@ Lasso.prototype = {
     this._strokeColor = options.strokeColor || "rgba(0,0,255,.4)";
     this._onSelect    = options.onSelect || function(){};
     this._onStart     = options.onStart || function(){};
+    this._onMove      = options.onMove;
       
     this._lastPos = null;
     this._isSelecting = false;
@@ -51,7 +52,7 @@ Lasso.prototype = {
     this.ctx.beginPath();
     this.ctx.fillStyle = this._fillColor;
     this.ctx.strokeStyle = this._strokeColor;
-    this.ctx.lineWidth = 1;
+    this.ctx.lineWidth = 10;
     $(this.canvas).mousemove(this._draw);
     $(this.canvas).show();
     
@@ -82,10 +83,14 @@ Lasso.prototype = {
       clearRect(0,0,this.canvas.width,this.canvas.height)   
       lineTo(pos.x, pos.y);
       stroke();
-      fill();
     }
     
     self._lastPos = pos;
+    
+    if(self._onMove) {
+      this._hitTest();
+      this._onMove(this.getSelectedElements());
+    }
   },
   
   _clear: function(){
