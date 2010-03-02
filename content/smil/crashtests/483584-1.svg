@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g id="s">
-    <circle/>
-    <animateTransform attributeName="transform"/>
-  </g>
-  <use xlink:href="#s"/>
-</svg>
