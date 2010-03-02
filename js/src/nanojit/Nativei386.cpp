@@ -504,7 +504,6 @@ namespace nanojit
             asm_spilli(ins, false);         // if also in memory in post-state, spill it now
             switch (ins->opcode()) {
             case LIR_ldf:
-            case LIR_ldfc:
                 if (rmask(rr) & XmmRegs) {
                     SSE_LDQ(rr, db, rb);
                 } else {
@@ -514,7 +513,6 @@ namespace nanojit
                 break;
 
             case LIR_ld32f:
-            case LIR_ldc32f:
                 if (rmask(rr) & XmmRegs) {
                     SSE_CVTSS2SD(rr, rr);
                     SSE_LDSS(rr, db, rb);
@@ -536,13 +534,11 @@ namespace nanojit
 
             switch (ins->opcode()) {
             case LIR_ldf:
-            case LIR_ldfc:
                 // Don't use an fpu reg to simply load & store the value.
                 asm_mmq(FP, dr, rb, db);
                 break;
 
             case LIR_ld32f:
-            case LIR_ldc32f:
                 // Need to use fpu to expand 32->64.
                 FSTPQ(dr, FP);
                 FLD32(db, rb);
@@ -584,7 +580,7 @@ namespace nanojit
             STi(rb, dr+4, value->imm64_1());
             STi(rb, dr,   value->imm64_0());
 
-        } else if (value->isop(LIR_ldf) || value->isop(LIR_ldfc)) {
+        } else if (value->isop(LIR_ldf)) {
             // value is 64bit struct or int64_t, or maybe a double.
             // It may be live in an FPU reg.  Either way, don't put it in an
             // FPU reg just to load & store it.
@@ -1053,23 +1049,18 @@ namespace nanojit
             addr += d;
             switch (op) {
                 case LIR_ldzb:
-                case LIR_ldcb:
                     LD8Zdm(rr, addr);
                     break;
                 case LIR_ldsb:
-                case LIR_ldcsb:
                     LD8Sdm(rr, addr);
                     break;
                 case LIR_ldzs:
-                case LIR_ldcs:
                     LD16Zdm(rr, addr);
                     break;
                 case LIR_ldss:
-                case LIR_ldcss:
                     LD16Sdm(rr, addr);
                     break;
                 case LIR_ld:
-                case LIR_ldc:
                     LDdm(rr, addr);
                     break;
                 default:
@@ -1127,23 +1118,18 @@ namespace nanojit
 
             switch (op) {
                 case LIR_ldzb:
-                case LIR_ldcb:
                     LD8Zsib(rr, d, ra, rb, scale);
                     break;
                 case LIR_ldsb:
-                case LIR_ldcsb:
                     LD8Ssib(rr, d, ra, rb, scale);
                     break;
                 case LIR_ldzs:
-                case LIR_ldcs:
                     LD16Zsib(rr, d, ra, rb, scale);
                     break;
                 case LIR_ldss:
-                case LIR_ldcss:
                     LD16Ssib(rr, d, ra, rb, scale);
                     break;
                 case LIR_ld:
-                case LIR_ldc:
                     LDsib(rr, d, ra, rb, scale);
                     break;
                 default:
@@ -1165,23 +1151,18 @@ namespace nanojit
 
             switch (op) {
                 case LIR_ldzb:
-                case LIR_ldcb:
                     LD8Z(rr, d, ra);
                     break;
                 case LIR_ldsb:
-                case LIR_ldcsb:
                     LD8S(rr, d, ra);
                     break;
                 case LIR_ldzs:
-                case LIR_ldcs:
                     LD16Z(rr, d, ra);
                     break;
                 case LIR_ldss:
-                case LIR_ldcss:
                     LD16S(rr, d, ra);
                     break;
                 case LIR_ld:
-                case LIR_ldc:
                     LD(rr, d, ra);
                     break;
                 default:

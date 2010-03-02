@@ -139,7 +139,6 @@ namespace nanojit
 
         switch(ins->opcode()) {
             case LIR_ldzb:
-            case LIR_ldcb:
                 if (isS16(d)) {
                     LBZ(rr, d, ra);
                 } else {
@@ -148,7 +147,6 @@ namespace nanojit
                 }
                 return;
             case LIR_ldzs:
-            case LIR_ldcs:
                 // these are expected to be 2 or 4-byte aligned
                 if (isS16(d)) {
                     LHZ(rr, d, ra);
@@ -158,7 +156,6 @@ namespace nanojit
                 }
                 return;
             case LIR_ld:
-            case LIR_ldc:
                 // these are expected to be 4-byte aligned
                 if (isS16(d)) {
                     LWZ(rr, d, ra);
@@ -169,8 +166,6 @@ namespace nanojit
                 return;
             case LIR_ldsb:
             case LIR_ldss:
-            case LIR_ldcsb:
-            case LIR_ldcss:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -213,13 +208,10 @@ namespace nanojit
 
         switch (ins->opcode()) {
             case LIR_ldf:
-            case LIR_ldfc:
             CASE64(LIR_ldq:)
-            CASE64(LIR_ldqc:)
                 // handled by mainline code below for now
                 break;
             case LIR_ld32f:
-            case LIR_ldc32f:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
