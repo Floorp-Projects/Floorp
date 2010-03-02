@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 
 class nsCSSDeclaration;
-class nsICSSParser;
+class nsCSSParser;
 class nsICSSLoader;
 class nsIURI;
 class nsIPrincipal;
@@ -94,7 +94,7 @@ public:
                          const nsAString & value, const nsAString & priority);
   NS_IMETHOD GetLength(PRUint32 *aLength);
   NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0; 
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
 protected:
   // Always fills in the out parameter, even on failure, and if the out
@@ -107,15 +107,14 @@ protected:
   // calls to DeclarationChanged and the style rule mutation that leads
   // to it.
   virtual nsIDocument* DocToUpdate() = 0;
-  
+
   // This will only fail if it can't get a parser or a principal.
   // This means it can return NS_OK without aURI or aCSSLoader being
   // initialized.
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            nsICSSLoader** aCSSLoader,
-                                            nsICSSParser** aCSSParser) = 0;
+                                            nsICSSLoader** aCSSLoader) = 0;
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue);
@@ -125,8 +124,7 @@ protected:
   // Prop-id based version of RemoveProperty.  Note that this does not
   // return the old value; it just does a straight removal.
   nsresult RemoveProperty(const nsCSSProperty aPropID);
-  
-  
+
 protected:
   virtual ~nsDOMCSSDeclaration();
 };

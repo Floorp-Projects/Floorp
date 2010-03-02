@@ -55,7 +55,6 @@
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"
-#include "nsICSSParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
@@ -302,23 +301,6 @@ public:
     // (eg, when a node from an overlay ends up in our document, that node
     // must use its original script language, not our document's default.
     PRUint16                 mScriptTypeID;
-    static void ReleaseGlobals()
-    {
-        NS_IF_RELEASE(sCSSParser);
-    }
-
-protected:
-    static nsICSSParser* GetCSSParser()
-    {
-        if (!sCSSParser) {
-            CallCreateInstance(kCSSParserCID, &sCSSParser);
-            if (sCSSParser) {
-                sCSSParser->SetQuirkMode(PR_FALSE);
-            }
-        }
-        return sCSSParser;
-    }
-    static nsICSSParser* sCSSParser;
 };
 
 class nsXULDocument;

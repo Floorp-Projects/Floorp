@@ -40,7 +40,7 @@
 
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSRule.h"
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsIStyleRule.h"
 #include "nsCSSDeclaration.h"
@@ -251,17 +251,15 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   if (!decl) {
     return result;
   }
-  
+
   nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
   nsCOMPtr<nsIURI> baseURI, sheetURI;
   nsCOMPtr<nsIPrincipal> sheetPrincipal;
-  
+
   result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
                                     getter_AddRefs(baseURI),
                                     getter_AddRefs(sheetPrincipal),
-                                    getter_AddRefs(cssLoader),
-                                    getter_AddRefs(cssParser));
+                                    getter_AddRefs(cssLoader));
   if (NS_FAILED(result)) {
     return result;
   }
@@ -273,15 +271,12 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
+  nsCSSParser cssParser(cssLoader);
   PRBool changed;
-  result = cssParser->ParseProperty(aPropID, aPropValue, sheetURI, baseURI,
-                                    sheetPrincipal, decl, &changed);
+  result = cssParser.ParseProperty(aPropID, aPropValue, sheetURI, baseURI,
+                                   sheetPrincipal, decl, &changed);
   if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
-  }
-
-  if (cssLoader) {
-    cssLoader->RecycleParser(cssParser);
   }
 
   return result;
@@ -299,15 +294,13 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
   }
 
   nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
   nsCOMPtr<nsIURI> baseURI, sheetURI;
   nsCOMPtr<nsIPrincipal> sheetPrincipal;
 
   result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
                                     getter_AddRefs(baseURI),
                                     getter_AddRefs(sheetPrincipal),
-                                    getter_AddRefs(cssLoader),
-                                    getter_AddRefs(cssParser));
+                                    getter_AddRefs(cssLoader));
 
   if (NS_FAILED(result)) {
     return result;
@@ -320,19 +313,16 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
+  nsCSSParser cssParser(cssLoader);
   PRBool changed;
-  result = cssParser->ParseAndAppendDeclaration(aDecl, sheetURI, baseURI,
-                                                sheetPrincipal, decl,
-                                                aParseOnlyOneDecl,
-                                                &changed,
-                                                aClearOldDecl);
-  
+  result = cssParser.ParseAndAppendDeclaration(aDecl, sheetURI, baseURI,
+                                               sheetPrincipal, decl,
+                                               aParseOnlyOneDecl,
+                                               &changed,
+                                               aClearOldDecl);
+
   if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
-  }
-
-  if (cssLoader) {
-    cssLoader->RecycleParser(cssParser);
   }
 
   return result;
