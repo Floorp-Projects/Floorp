@@ -128,6 +128,11 @@ SHARED_LIBRARY_LIBS += \
 		../wifi/src/$(LIB_PREFIX)neckowifi_s.$(LIB_SUFFIX) \
                 $(NULL)
 LOCAL_INCLUDES	+= -I$(srcdir)/../wifi/src
+
+ifeq ($(OS_ARCH),SunOS)
+OS_LIBS += $(GLIB_LIBS)
+endif
+
 endif
 
 
