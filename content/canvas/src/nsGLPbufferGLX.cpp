@@ -159,13 +159,13 @@ nsGLPbufferGLX::Init(WebGLContext *priv)
 
     // Make sure that everyone agrees that pbuffers are supported
     s = gGLXWrap.fQueryExtensionsString(mDisplay, DefaultScreen(mDisplay));
-    if (strstr(s, "GLX_SGIX_pbuffer") == NULL) {
+    if (!s || strstr(s, "GLX_SGIX_pbuffer") == NULL) {
         LogMessage("Canvas 3D: GLX_SGIX_pbuffer not supported");
         return PR_FALSE;
     }
 
     s = gGLXWrap.fQueryServerString(mDisplay, DefaultScreen(mDisplay), GLX_EXTENSIONS);
-    if (strstr(s, "GLX_SGIX_pbuffer") == NULL) {
+    if (!s || strstr(s, "GLX_SGIX_pbuffer") == NULL) {
         LogMessage("Canvas 3D: GLX_SGIX_pbuffer not supported by server");
         return PR_FALSE;
     }
