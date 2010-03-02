@@ -4270,7 +4270,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 #ifndef NP_NO_CARBON
         if (eventModel == NPEventModelCarbon) {
-          Point carbonPt = { ptPx.y + mPluginWindow->y, ptPx.x + mPluginWindow->x };
+          nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
+          Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
 
           event = &synthCarbonEvent;
           InitializeEventRecord(&synthCarbonEvent, &carbonPt);
