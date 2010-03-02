@@ -526,7 +526,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
               &info);
     /* scopeChain */
     slurpSlot(addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, scopeChain)), "scopeChain"),
-              (jsval*) &fp->scopeChain,
+              &fp->scopeChainVal,
               &info);
     /* vars */
     LIns* slots_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, slots)),
