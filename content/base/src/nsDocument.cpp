@@ -63,6 +63,7 @@
 #include "nsContentList.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
+#include "nsCSSLoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScriptRuntime.h"
@@ -1750,9 +1751,10 @@ nsDocument::Init()
 
   mOnloadBlocker = new nsOnloadBlocker();
   NS_ENSURE_TRUE(mOnloadBlocker, NS_ERROR_OUT_OF_MEMORY);
-  
-  NS_NewCSSLoader(this, &mCSSLoader);
+
+  mCSSLoader = new mozilla::css::Loader(this);
   NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(mCSSLoader);
   // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
@@ -3493,9 +3495,8 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
 void
 nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
 {
-  nsICSSLoader* cssLoader = CSSLoader();
-  PRBool enabled;
-  if (NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
+  mozilla::css::Loader* cssLoader = CSSLoader();
+  if (cssLoader->GetEnabled()) {
     PRInt32 sheetCount = GetNumberOfCatalogStyleSheets();
     for (PRInt32 i = 0; i < sheetCount; i++) {
       nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);

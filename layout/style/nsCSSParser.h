@@ -45,23 +45,27 @@
 #include "nsColor.h"
 #include "nsCOMArray.h"
 
-class nsICSSStyleRule;
-class nsICSSLoader;
-class nsICSSStyleSheet;
-class nsIUnicharInputStream;
-class nsIURI;
-class nsCSSDeclaration;
-class nsICSSLoader;
 class nsICSSRule;
-class nsMediaList;
+class nsICSSStyleRule;
+class nsICSSStyleSheet;
 class nsIPrincipal;
+class nsIURI;
+class nsIUnicharInputStream;
+class nsCSSDeclaration;
 struct nsCSSSelectorList;
+class nsMediaList;
+
+namespace mozilla {
+namespace css {
+  class Loader;
+}
+}
 
 // Interface to the css parser.
 
 class NS_STACK_CLASS nsCSSParser {
 public:
-  NS_HIDDEN nsCSSParser(nsICSSLoader* aLoader = nsnull,
+  NS_HIDDEN nsCSSParser(mozilla::css::Loader* aLoader = nsnull,
                         nsICSSStyleSheet* aSheet = nsnull);
   NS_HIDDEN ~nsCSSParser();
 
@@ -92,7 +96,7 @@ public:
 #endif
 
   // Set loader to use for child sheets
-  NS_HIDDEN_(nsresult) SetChildLoader(nsICSSLoader* aChildLoader);
+  NS_HIDDEN_(nsresult) SetChildLoader(mozilla::css::Loader* aChildLoader);
 
   /**
    * Parse aInput into the stylesheet that was previously set by calling
@@ -108,7 +112,7 @@ public:
    *                        the principal of the sheet passed to SetStyleSheet.
    * @param aLineNumber the line number of the first line of the sheet.
    * @param aAllowUnsafeRules see aEnableUnsafeRules in
-   *                          nsICSSLoader::LoadSheetSync
+   *                          mozilla::css::Loader::LoadSheetSync
    */
   NS_HIDDEN_(nsresult) Parse(nsIUnicharInputStream* aInput,
                              nsIURI*                aSheetURL,

@@ -51,10 +51,8 @@
 #include "nsNetUtil.h"
 
 #include "nsContentCID.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsICSSStyleSheet.h"
-
-static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 static already_AddRefed<nsIURI>
 FileToURI(const char *aFilename, nsresult *aRv = 0)
@@ -74,7 +72,7 @@ FileToURI(const char *aFilename, nsresult *aRv = 0)
 static int
 ParseCSSFile(nsIURI *aSheetURI)
 {
-    nsCOMPtr<nsICSSLoader> loader(do_CreateInstance(kCSSLoaderCID));
+    nsRefPtr<mozilla::css::Loader> = new mozilla::css::Loader();
     nsCOMPtr<nsICSSStyleSheet> sheet;
     loader->LoadSheetSync(aSheetURI, getter_AddRefs(sheet));
     NS_ASSERTION(sheet, "sheet load failed");

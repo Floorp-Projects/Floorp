@@ -61,7 +61,6 @@
 #include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
-#include "nsICSSLoader.h"
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"

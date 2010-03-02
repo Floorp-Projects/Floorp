@@ -49,7 +49,7 @@
 #include "nsIDocument.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIDOMMutationEvent.h"
 
 #ifdef MOZ_SVG
@@ -242,7 +242,7 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
     }
 
     if (isCSS) {
-      nsICSSLoader* cssLoader = doc->CSSLoader();
+      mozilla::css::Loader* cssLoader = doc->CSSLoader();
       nsCSSParser cssParser(cssLoader);
       if (cssParser) {
         nsCOMPtr<nsIURI> baseURI = GetBaseURI();

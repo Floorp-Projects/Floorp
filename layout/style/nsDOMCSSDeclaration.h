@@ -47,10 +47,15 @@
 
 class nsCSSDeclaration;
 class nsCSSParser;
-class nsICSSLoader;
 class nsIURI;
 class nsIPrincipal;
 class nsIDocument;
+
+namespace mozilla {
+namespace css {
+class Loader;
+}
+}
 
 class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
 {
@@ -114,7 +119,7 @@ protected:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            nsICSSLoader** aCSSLoader) = 0;
+                                            mozilla::css::Loader** aCSSLoader) = 0;
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue);

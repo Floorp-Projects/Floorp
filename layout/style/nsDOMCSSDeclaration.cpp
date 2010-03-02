@@ -41,7 +41,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSRule.h"
 #include "nsCSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIStyleRule.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
@@ -53,6 +53,7 @@
 #include "nsContentUtils.h"
 #include "mozAutoDocUpdate.h"
 
+namespace css = mozilla::css;
 
 nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 {
@@ -252,7 +253,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
     return result;
   }
 
-  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsRefPtr<css::Loader> cssLoader;
   nsCOMPtr<nsIURI> baseURI, sheetURI;
   nsCOMPtr<nsIPrincipal> sheetPrincipal;
 
@@ -293,7 +294,7 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
     return result;
   }
 
-  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsRefPtr<css::Loader> cssLoader;
   nsCOMPtr<nsIURI> baseURI, sheetURI;
   nsCOMPtr<nsIPrincipal> sheetPrincipal;
 
