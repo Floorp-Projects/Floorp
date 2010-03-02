@@ -1608,6 +1608,18 @@ nsSVGElement::DidAnimatePreserveAspectRatio()
   }
 }
 
+void
+nsSVGElement::DidAnimateTransform()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None,
+                            nsGkAtoms::transform,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGElement::StringAttributesInfo
 nsSVGElement::GetStringInfo()
 {
@@ -1782,7 +1794,7 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
       = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
     NS_ENSURE_TRUE(list, nsnull);
 
-    return new nsSVGTransformSMILAttr(list);
+    return new nsSVGTransformSMILAttr(list, this);
   }
 
   // Lengths:
