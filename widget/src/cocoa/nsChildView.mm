@@ -3086,12 +3086,13 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
     }
   }
 
+  // This might destroy our widget (and null out mGeckoChild).
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   // If our mouse-up event's location is over some other object (as might
   // happen if it came at the end of a dragging operation), also send our
   // Gecko frame a mouse-exit event.
-  if (mIsPluginView) {
+  if (mGeckoChild && mIsPluginView) {
 #ifndef NP_NO_CARBON
     if (mPluginEventModel == NPEventModelCocoa)
 #endif
