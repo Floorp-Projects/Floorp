@@ -82,9 +82,8 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
 
   gfxContext *gfx = aContext->GetGfxContext();
 
-  PRBool isOK = PR_TRUE;
   nsSVGClipPathFrame *clipPathFrame =
-    nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
+    nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
   PRBool referencedClipIsTrivial;
   if (clipPathFrame) {
     referencedClipIsTrivial = clipPathFrame->IsTrivial();
@@ -107,6 +106,9 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
       PRBool isOK = PR_TRUE;
       nsSVGClipPathFrame *clipPathFrame =
         nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(&isOK);
+      if (!isOK) {
+        continue;
+      }
 
       PRBool isTrivial;
 
@@ -183,9 +185,8 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   mClipParent = aParent;
   mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
 
-  PRBool isOK = PR_TRUE;
   nsSVGClipPathFrame *clipPathFrame =
-    nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
+    nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
   if (clipPathFrame && !clipPathFrame->ClipHitTest(aParent, aMatrix, aPoint))
     return PR_FALSE;
 
@@ -209,8 +210,7 @@ PRBool
 nsSVGClipPathFrame::IsTrivial()
 {
   // If the clip path is clipped then it's non-trivial
-  PRBool isOK = PR_TRUE;
-  if (nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK))
+  if (nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull))
     return PR_FALSE;
 
   PRBool foundChild = PR_FALSE;
@@ -225,10 +225,51 @@ nsSVGClipPathFrame::IsTrivial()
         return PR_FALSE;
 
       // or where the child is itself clipped
-      if (nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(&isOK))
+      if (nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(nsnull))
         return PR_FALSE;
 
       foundChild = PR_TRUE;
+    }
+  }
+  return PR_TRUE;
+}
+
+PRBool
+nsSVGClipPathFrame::IsValid()
+{
+  if (mInUse) {
+    NS_WARNING("Clip loop detected!");
+    return PR_FALSE;
+  }
+  AutoClipPathReferencer clipRef(this);
+
+  PRBool isOK = PR_TRUE;
+  nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
+  if (!isOK) {
+    return PR_FALSE;
+  }
+
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+
+    nsIAtom *type = kid->GetType();
+
+    if (type == nsGkAtoms::svgUseFrame) {
+      for (nsIFrame* grandKid = kid->GetFirstChild(nsnull); grandKid;
+           grandKid = grandKid->GetNextSibling()) {
+
+        nsIAtom *type = grandKid->GetType();
+
+        if (type != nsGkAtoms::svgPathGeometryFrame &&
+            type != nsGkAtoms::svgTextFrame) {
+          return PR_FALSE;
+        }
+      }
+      continue;
+    }
+    if (type != nsGkAtoms::svgPathGeometryFrame &&
+        type != nsGkAtoms::svgTextFrame) {
+      return PR_FALSE;
     }
   }
   return PR_TRUE;
