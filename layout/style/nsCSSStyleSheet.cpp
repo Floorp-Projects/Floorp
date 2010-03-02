@@ -65,7 +65,7 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsINameSpaceManager.h"
@@ -555,9 +555,8 @@ nsMediaList::GetText(nsAString& aMediaText)
 nsresult
 nsMediaList::SetText(const nsAString& aMediaText)
 {
-  nsCOMPtr<nsICSSParser> parser;
-  nsresult rv = NS_NewCSSParser(getter_AddRefs(parser));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCSSParser parser;
+  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool htmlMode = PR_FALSE;
   nsCOMPtr<nsIDOMStyleSheet> domSheet =
@@ -568,8 +567,8 @@ nsMediaList::SetText(const nsAString& aMediaText)
     htmlMode = !!node;
   }
 
-  return parser->ParseMediaList(nsString(aMediaText), nsnull, 0,
-                                this, htmlMode);
+  return parser.ParseMediaList(nsString(aMediaText), nsnull, 0,
+                               this, htmlMode);
 }
 
 PRBool
@@ -1849,28 +1848,19 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
-  
-  nsCOMPtr<nsICSSParser> css;
-  if (loader) {
-    result = loader->GetParserFor(this, getter_AddRefs(css));
-  }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(css));
-    if (css) {
-      css->SetStyleSheet(this);
-    }
-  }
-  if (NS_FAILED(result))
-    return result;
+
+  nsCSSParser css(loader, this);
+  if (!css)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                          mInner->mPrincipal, rules);
+  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                         mInner->mPrincipal, rules);
   if (NS_FAILED(result))
     return result;
-  
+
   PRInt32 rulecount = rules.Count();
   if (rulecount == 0) {
     // Since we know aRule was not an empty string, just throw
@@ -1967,10 +1957,6 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     if (mDocument && notify) {
       mDocument->StyleRuleAdded(this, cssRule);
     }
-  }
-  
-  if (loader) {
-    loader->RecycleParser(css);
   }
   
   *aReturn = aIndex;
@@ -2085,17 +2071,10 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
 
-  nsCOMPtr<nsICSSParser> css;
-  if (loader) {
-    result = loader->GetParserFor(this, getter_AddRefs(css));
+  nsCSSParser css(loader, this);
+  if (!css) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(css));
-    if (css) {
-      css->SetStyleSheet(this);
-    }
-  }
-  NS_ENSURE_SUCCESS(result, result);
 
   // parse and grab the rule
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
@@ -2104,8 +2083,8 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                          mInner->mPrincipal, rules);
+  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                         mInner->mPrincipal, rules);
   NS_ENSURE_SUCCESS(result, result);
 
   PRInt32 rulecount = rules.Count();
@@ -2135,10 +2114,6 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     if (mDocument) {
       mDocument->StyleRuleAdded(this, rule);
     }
-  }
-
-  if (loader) {
-    loader->RecycleParser(css);
   }
 
   *_retval = aIndex;

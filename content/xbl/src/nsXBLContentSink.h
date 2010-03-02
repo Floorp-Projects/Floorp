@@ -43,7 +43,6 @@
 #include "nsXBLDocumentInfo.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImpl.h"
-#include "nsICSSParser.h"
 #include "nsLayoutCID.h"
 
 /*

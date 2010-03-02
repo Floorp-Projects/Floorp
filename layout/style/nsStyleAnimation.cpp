@@ -47,7 +47,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSDeclaration.h"
@@ -940,8 +940,8 @@ BuildStyleRule(nsCSSProperty aProperty,
   PRBool changed; // ignored, but needed as outparam for ParseProperty
   nsIDocument* doc = aTargetElement->GetOwnerDoc();
   nsCOMPtr<nsIURI> baseURI = aTargetElement->GetBaseURI();
-  nsCOMPtr<nsICSSParser> parser;
   nsCOMPtr<nsICSSStyleRule> styleRule;
+  nsCSSParser parser(doc->CSSLoader());
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
     nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;
@@ -951,12 +951,11 @@ BuildStyleRule(nsCSSProperty aProperty,
   // and build a rule for the resulting declaration.  If any of these steps
   // fails, we bail out and delete the declaration.
   if (!declaration->InitializeEmpty() ||
-      NS_FAILED(doc->CSSLoader()->GetParserFor(nsnull,
-                                               getter_AddRefs(parser))) ||
-      NS_FAILED(parser->ParseProperty(aProperty, aSpecifiedValue,
-                                      doc->GetDocumentURI(), baseURI,
-                                      aTargetElement->NodePrincipal(),
-                                      declaration, &changed)) ||
+      !parser ||
+      NS_FAILED(parser.ParseProperty(aProperty, aSpecifiedValue,
+                                     doc->GetDocumentURI(), baseURI,
+                                     aTargetElement->NodePrincipal(),
+                                     declaration, &changed)) ||
       // check whether property parsed without CSS parsing errors
       !declaration->HasNonImportantValueFor(propertyToCheck) ||
       NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(styleRule), nsnull,

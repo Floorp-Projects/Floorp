@@ -48,7 +48,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
 #include "nsICSSStyleRule.h"
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsIDOMMutationEvent.h"
 
@@ -224,7 +224,6 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
                                      nsAttrValue& aResult,
                                      PRBool aForceInDataDoc)
 {
-  nsresult result = NS_OK;
   nsIDocument* doc = GetOwnerDoc();
 
   if (doc && (aForceInDataDoc ||
@@ -244,18 +243,15 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
 
     if (isCSS) {
       nsICSSLoader* cssLoader = doc->CSSLoader();
-      nsCOMPtr<nsICSSParser> cssParser;
-      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
+      nsCSSParser cssParser(cssLoader);
       if (cssParser) {
         nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
         nsCOMPtr<nsICSSStyleRule> rule;
-        result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
-                                                baseURI,
-                                                NodePrincipal(),
-                                                getter_AddRefs(rule));
-        cssLoader->RecycleParser(cssParser);
-
+        cssParser.ParseStyleAttribute(aValue, doc->GetDocumentURI(),
+                                      baseURI,
+                                      NodePrincipal(),
+                                      getter_AddRefs(rule));
         if (rule) {
           aResult.SetTo(rule);
           return;

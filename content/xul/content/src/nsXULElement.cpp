@@ -123,6 +123,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSDeclaration.h"
+#include "nsCSSParser.h"
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
@@ -156,7 +157,6 @@
 #include "nsCCUncollectableMarker.h"
 
 // Global object maintenance
-nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
 
 /**
@@ -2753,23 +2753,24 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         mHasClassAttribute = PR_TRUE;
         // Compute the element's class list
         mAttributes[aPos].mValue.ParseAtomArray(aValue);
-        
+
         return NS_OK;
     }
     else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
         mHasStyleAttribute = PR_TRUE;
         // Parse the element's 'style' attribute
         nsCOMPtr<nsICSSStyleRule> rule;
-        nsICSSParser* parser = GetCSSParser();
+
+        nsCSSParser parser;
         NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
-        parser->ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
-                                    // This is basically duplicating what
-                                    // nsINode::NodePrincipal() does
-                                    mNodeInfo->NodeInfoManager()->
-                                      DocumentPrincipal(),
-                                    getter_AddRefs(rule));
+        parser.ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
+                                   // This is basically duplicating what
+                                   // nsINode::NodePrincipal() does
+                                   mNodeInfo->NodeInfoManager()->
+                                     DocumentPrincipal(),
+                                   getter_AddRefs(rule));
         if (rule) {
             mAttributes[aPos].mValue.SetTo(rule);
 

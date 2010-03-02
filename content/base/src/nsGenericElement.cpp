@@ -152,7 +152,7 @@
 
 #include "mozAutoDocUpdate.h"
 
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
@@ -5121,16 +5121,14 @@ ParseSelectorList(nsINode* aNode,
   nsIDocument* doc = aNode->GetOwnerDoc();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<nsICSSParser> parser;
-  nsresult rv = doc->CSSLoader()->GetParserFor(nsnull, getter_AddRefs(parser));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCSSParser parser(doc->CSSLoader());
+  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsCSSSelectorList* selectorList;
-  rv = parser->ParseSelectorString(aSelectorString,
-                                   doc->GetDocumentURI(),
-                                   0, // XXXbz get the right line number!
-                                   &selectorList);
-  doc->CSSLoader()->RecycleParser(parser);
+  nsresult rv = parser.ParseSelectorString(aSelectorString,
+                                           doc->GetDocumentURI(),
+                                           0, // XXXbz get the line number!
+                                           &selectorList);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Filter out pseudo-element selectors from selectorList

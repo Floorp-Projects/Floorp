@@ -57,6 +57,7 @@ EXPORTS		= \
 		nsCSSAnonBoxes.h \
 		nsCSSKeywordList.h \
 		nsCSSKeywords.h \
+		nsCSSParser.h \
 		nsCSSPropList.h \
 		nsCSSProperty.h \
 		nsCSSProps.h \
@@ -76,7 +77,6 @@ EXPORTS		= \
 		nsICSSLoader.h \
 		nsICSSLoaderObserver.h \
 		nsICSSNameSpaceRule.h \
-		nsICSSParser.h \
 		nsICSSPseudoComparator.h \
 		nsICSSRule.h \
 		nsICSSRuleList.h \
