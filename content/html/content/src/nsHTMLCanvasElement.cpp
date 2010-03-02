@@ -540,11 +540,6 @@ nsHTMLCanvasElement::InvalidateFrameSubrect(const gfxRect& damageRect)
   // we plan to reframe we don't need to invalidate it anyway.
   nsIFrame *frame = GetPrimaryFrame();
   if (frame) {
-    // Frame might be dirty, but we don't care about that; if the geometry
-    // changes the right invalidates will happen anyway.  Don't assert on our
-    // geometry getters.
-    nsAutoDisableGetUsedXAssertions noAssert;
-    
     nsRect contentArea(frame->GetContentRect());
     nsIntSize size = GetWidthHeight();
 
