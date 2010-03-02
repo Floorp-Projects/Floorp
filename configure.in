@@ -7961,6 +7961,7 @@ fi
 if test "$NECKO_WIFI" -a \
         "$OS_ARCH" != "Linux" -a \
         "$OS_ARCH" != "Darwin" -a \
+        "$OS_ARCH" != "SunOS" -a \
         "$OS_ARCH" != "WINNT" -a \
         "$OS_ARCH" != "WINCE"; then
   AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
