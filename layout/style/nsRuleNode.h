@@ -78,18 +78,6 @@ struct nsInheritedStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void ClearInheritedData(PRUint32 aBits) {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-    if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
-      m##name##Data = nsnull;
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-  }
-
   void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -133,18 +121,6 @@ struct nsResetStyleData
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
-  }
-
-  void ClearInheritedData(PRUint32 aBits) {
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-    if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
-      m##name##Data = nsnull;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_RESET
-#undef STYLE_STRUCT_INHERITED
   }
 
   void Destroy(PRUint32 aBits, nsPresContext* aContext) {
@@ -236,13 +212,6 @@ struct nsCachedStyleData
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
-
-  NS_HIDDEN_(void) ClearInheritedData(PRUint32 aBits) {
-    if (mResetData)
-      mResetData->ClearInheritedData(aBits);
-    if (mInheritedData)
-      mInheritedData->ClearInheritedData(aBits);
-  }
 
   NS_HIDDEN_(void) Destroy(PRUint32 aBits, nsPresContext* aContext) {
     if (mResetData)
