@@ -325,24 +325,17 @@ let Utils = {
 
       // Try creating a fake service if we can handle that
       if (!Cc[cid]) {
-        switch (cid) {
-          case "@mozilla.org/privatebrowsing;1":
-            svc = {
-              autoStarted: false,
-              privateBrowsingEnabled: false
-            };
-            break;
-        }
+        svc = FakeSvc[cid];
 
         let log = Log4Moz.repository.getLogger("Service.Util");
-        if (svc == null)
-          log.warn("Component " + cid + " doesn't exist on this platform.");
-        else
+        if (svc)
           log.debug("Using a fake svc object for " + cid);
+        else
+          log.warn("Component " + cid + " doesn't exist on this platform.");
       }
       else
         svc = Cc[cid].getService(iface);
-      
+
       return dest[prop] = svc;
     };
     dest.__defineGetter__(prop, getter);
@@ -786,6 +779,14 @@ let Utils = {
       this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
     }
     return this.__prefs;
+  }
+};
+
+let FakeSvc = {
+  // Private Browsing
+  "@mozilla.org/privatebrowsing;1": {
+    autoStarted: false,
+    privateBrowsingEnabled: false
   }
 };
 
