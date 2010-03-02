@@ -9758,8 +9758,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     jsval* vp = &fp->argv[fp->argc];
     jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
     while (vp < vpstop) {
-        if (vp >= fp->down->regs->sp)
-            nativeFrameTracker.set(vp, (LIns*)0);
+        nativeFrameTracker.set(vp, (LIns*)0);
         set(vp++, void_ins, true);
     }
 
