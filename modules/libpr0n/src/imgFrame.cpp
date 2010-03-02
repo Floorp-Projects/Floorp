@@ -849,6 +849,11 @@ nsresult imgFrame::LockImageData()
 #endif
   }
 
+  // We might write to the bits in this image surface, so we need to make the
+  // surface ready for that.
+  if (mImageSurface)
+    mImageSurface->Flush();
+
   return NS_OK;
 }
 
@@ -864,7 +869,13 @@ nsresult imgFrame::UnlockImageData()
 
   mLocked = PR_FALSE;
 
+  // Assume we've been written to.
+  if (mImageSurface)
+    mImageSurface->MarkDirty();
+
 #ifdef XP_MACOSX
+  // The quartz image surface (ab)uses the flush method to get the
+  // cairo_image_surface data into a CGImage, so we have to call Flush() here.
   if (mQuartzSurface)
     mQuartzSurface->Flush();
 #endif
