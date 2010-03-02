@@ -328,10 +328,10 @@ let Utils = {
         svc = FakeSvc[cid];
 
         let log = Log4Moz.repository.getLogger("Service.Util");
-        if (svc)
-          log.debug("Using a fake svc object for " + cid);
-        else
+        if (svc == null)
           log.warn("Component " + cid + " doesn't exist on this platform.");
+        else
+          log.debug("Using a fake svc object for " + cid);
       }
       else
         svc = Cc[cid].getService(iface);
