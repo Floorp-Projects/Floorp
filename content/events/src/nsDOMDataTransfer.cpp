@@ -387,6 +387,24 @@ nsDOMDataTransfer::SetMozCursor(const nsAString& aCursorState)
 }
 
 NS_IMETHODIMP
+nsDOMDataTransfer::GetMozSourceNode(nsIDOMNode** aSourceNode)
+{
+  *aSourceNode = nsnull;
+
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (!dragSession)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+  if (sourceNode && !nsContentUtils::CanCallerAccess(sourceNode))
+    return NS_OK;
+
+  sourceNode.swap(*aSourceNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDataTransfer::MozTypesAt(PRUint32 aIndex, nsIDOMDOMStringList** aTypes)
 {
   *aTypes = nsnull;
@@ -789,13 +807,7 @@ nsDOMDataTransfer::CacheExternalFormats()
   // asked for, as it may be time consuming for the source application to
   // generate it.
 
-  nsCOMPtr<nsIDragService> dragService =
-    do_GetService("@mozilla.org/widget/dragservice;1");
-  if (!dragService)
-    return;
-
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (!dragSession)
     return;
 
@@ -853,13 +865,7 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, PRUint32 aIndex)
     else if (strcmp(format, "text/uri-list") == 0)
       format = kURLDataMime;
 
-    nsCOMPtr<nsIDragService> dragService =
-      do_GetService("@mozilla.org/widget/dragservice;1");
-    if (!dragService)
-      return;
-
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
     if (!dragSession)
       return;
 
