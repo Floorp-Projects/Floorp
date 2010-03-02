@@ -35,9 +35,11 @@ CPPSRCS	= \
 	gfxUserFontSet.cpp \
 	$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
