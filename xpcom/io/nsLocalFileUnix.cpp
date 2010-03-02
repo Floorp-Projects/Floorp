@@ -1307,11 +1307,9 @@ nsLocalFile::GetParent(nsIFile **aParent)
  */
 
 
-#if defined(XP_BEOS) || defined(SOLARIS)
+#if defined(XP_BEOS)
 // access() is buggy in BeOS POSIX implementation, at least for BFS, using stat() instead
 // see bug 169506, https://bugzilla.mozilla.org/show_bug.cgi?id=169506
-// access() problem also exists in Solaris POSIX implementation
-// see bug 351595, https://bugzilla.mozilla.org/show_bug.cgi?id=351595
 NS_IMETHODIMP
 nsLocalFile::Exists(PRBool *_retval)
 {
@@ -1411,6 +1409,23 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     NS_ENSURE_ARG_POINTER(_retval);
 
     *_retval = (access(mPath.get(), X_OK) == 0);
+#ifdef SOLARIS
+    // On Solaris, access will always return 0 for root user, however
+    // the file is only executable if S_IXUSR | S_IXGRP | S_IXOTH is set.
+    // See bug 351950, https://bugzilla.mozilla.org/show_bug.cgi?id=351950
+    if (*_retval) {
+        struct STAT buf;
+
+        *_retval = (STAT(mPath.get(), &buf) == 0);
+        if (*_retval || errno == EACCES) {
+            *_retval = *_retval &&
+                       (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
+            return NS_OK;
+        }
+
+        return NSRESULT_FOR_ERRNO();
+    }
+#endif
     if (*_retval || errno == EACCES)
         return NS_OK;
     return NSRESULT_FOR_ERRNO();
