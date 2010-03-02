@@ -90,7 +90,7 @@ js_dmod(jsdouble a, jsdouble b)
     }
     return js_fmod(a, b);
 }
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_dmod, DOUBLE, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_dmod, DOUBLE, DOUBLE, 1, ACC_NONE)
 
 int32 FASTCALL
 js_imod(int32 a, int32 b)
@@ -100,7 +100,7 @@ js_imod(int32 a, int32 b)
     int r = a % b;
     return r;
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
 /* The following boxing/unboxing primitives we can't emit inline because
    they either interact with the GC and depend on Spidermonkey's 32-bit
@@ -118,7 +118,7 @@ js_BoxDouble(JSContext* cx, jsdouble d)
         return JSVAL_ERROR_COOKIE;
     return v;
 }
-JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxDouble, CONTEXT, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxDouble, CONTEXT, DOUBLE, 1, ACC_NONE)
 
 jsval FASTCALL
 js_BoxInt32(JSContext* cx, int32 i)
@@ -132,7 +132,7 @@ js_BoxInt32(JSContext* cx, int32 i)
         return JSVAL_ERROR_COOKIE;
     return v;
 }
-JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, ACC_NONE)
 
 jsdouble FASTCALL
 js_UnboxDouble(jsval v)
@@ -141,7 +141,7 @@ js_UnboxDouble(jsval v)
         return (jsdouble)JSVAL_TO_INT(v);
     return *JSVAL_TO_DOUBLE(v);
 }
-JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, JSVAL, 1, 1)
+JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, JSVAL, 1, ACC_NONE)
 
 int32 FASTCALL
 js_UnboxInt32(jsval v)
@@ -150,7 +150,7 @@ js_UnboxInt32(jsval v)
         return JSVAL_TO_INT(v);
     return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, JSVAL, 1, 1)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, JSVAL, 1, ACC_NONE)
 
 JSBool FASTCALL
 js_TryUnboxInt32(jsval v, int32* i32p)
@@ -168,21 +168,21 @@ js_TryUnboxInt32(jsval v, int32* i32p)
     *i32p = i;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, ACC_NONE)
 
 int32 FASTCALL
 js_DoubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_DoubleToInt32, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_DoubleToInt32, DOUBLE, 1, ACC_NONE)
 
 uint32 FASTCALL
 js_DoubleToUint32(jsdouble d)
 {
     return js_DoubleToECMAUint32(d);
 }
-JS_DEFINE_CALLINFO_1(extern, UINT32, js_DoubleToUint32, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_1(extern, UINT32, js_DoubleToUint32, DOUBLE, 1, ACC_NONE)
 
 jsdouble FASTCALL
 js_StringToNumber(JSContext* cx, JSString* str)
@@ -201,7 +201,7 @@ js_StringToNumber(JSContext* cx, JSString* str)
     }
     return d;
 }
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_StringToNumber, CONTEXT, STRING, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_StringToNumber, CONTEXT, STRING, 1, ACC_NONE)
 
 int32 FASTCALL
 js_StringToInt32(JSContext* cx, JSString* str)
@@ -227,7 +227,7 @@ js_StringToInt32(JSContext* cx, JSString* str)
     }
     return js_DoubleToECMAInt32(d);
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACC_NONE)
 
 JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
@@ -282,7 +282,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddProperty, CONTEXT, OBJECT, SCOPEPROP, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddProperty, CONTEXT, OBJECT, SCOPEPROP, 0, ACC_STORE_ANY)
 
 static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
@@ -314,7 +314,7 @@ js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 
     return HasProperty(cx, obj, id);
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedProperty, CONTEXT, OBJECT, STRING, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedProperty, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
 
 JSBool FASTCALL
 js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
@@ -325,7 +325,8 @@ js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 
     return HasProperty(cx, obj, id);
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32, 0,
+                     ACC_STORE_ANY)
 
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
@@ -334,7 +335,7 @@ js_TypeOfObject(JSContext* cx, JSObject* obj)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_OBJECT]);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[obj->typeOf(cx)]);
 }
-JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, ACC_NONE)
 
 JSString* FASTCALL
 js_TypeOfBoolean(JSContext* cx, int32 unboxed)
@@ -345,7 +346,7 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
     JSType type = JS_TypeOfValue(cx, boxed);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
 }
-JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, ACC_NONE)
 
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
@@ -355,7 +356,7 @@ js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
     JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
     return unboxed;
 }
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_BooleanOrUndefinedToNumber, CONTEXT, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_BooleanOrUndefinedToNumber, CONTEXT, INT32, 1, ACC_NONE)
 
 JSString* FASTCALL
 js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
@@ -363,7 +364,7 @@ js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
     JS_ASSERT(uint32(unboxed) <= 2);
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
 }
-JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, ACC_NONE)
 
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
@@ -383,7 +384,8 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
                                    reinterpret_cast<jsval>(fun));
     return closure;
 }
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0,
+                     ACC_STORE_ANY)
 
 JS_REQUIRES_STACK JSBool FASTCALL
 js_PopInterpFrame(JSContext* cx, InterpState* state)
@@ -424,7 +426,7 @@ js_PopInterpFrame(JSContext* cx, InterpState* state)
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, INTERPSTATE, 0, 0)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, INTERPSTATE, 0, ACC_STORE_ANY)
 
 JSString* FASTCALL
 js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)
@@ -463,4 +465,4 @@ js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)
         cx->free(buf);
     return str;
 }
-JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatN, CONTEXT, STRINGPTR, UINT32, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatN, CONTEXT, STRINGPTR, UINT32, 0, ACC_STORE_ANY)

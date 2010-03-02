@@ -1029,7 +1029,8 @@ js_String_p_charCodeAt_int_int(JSString* str, jsint i)
         return 0;
     return str->chars()[i];
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int_int,  STRING, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int_int,  STRING, INT32, 1,
+                     nanojit::ACC_NONE)
 
 int32 FASTCALL
 js_String_p_charCodeAt_double_int(JSString* str, double d)
@@ -1039,7 +1040,8 @@ js_String_p_charCodeAt_double_int(JSString* str, double d)
         return 0;
     return str->chars()[jsuint(d)];
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_double_int,  STRING, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_double_int,  STRING, DOUBLE, 1,
+                     nanojit::ACC_NONE)
 
 jsdouble FASTCALL
 js_String_p_charCodeAt0(JSString* str)
@@ -1060,7 +1062,7 @@ js_String_p_charCodeAt0_int(JSString* str)
         return 0;
     return str->chars()[0];
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING,        1, 1)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING, 1, nanojit::ACC_NONE)
 #endif
 
 jsint
@@ -2543,14 +2545,19 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 #endif
 
 JS_DEFINE_TRCINFO_1(js_str_toString,
-    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
+    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,               1,
+         nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(str_charAt,
-    (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
+    (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32, 1,
+         nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_2(str_charCodeAt,
-    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,                     1, 1)),
-    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,              1, 1)))
+    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,           1,
+         nanojit::ACC_NONE)),
+    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,    1,
+         nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(str_concat,
-    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)))
+    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING, 1,
+         nanojit::ACC_NONE)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
 #define PRIMITIVE         JSFUN_THISP_PRIMITIVE
@@ -2952,7 +2959,8 @@ js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
     JS_ASSERT(JS_ON_TRACE(cx));
     return js_NewObjectWithClassProto(cx, &js_StringClass, proto, STRING_TO_JSVAL(str));
 }
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
+                     nanojit::ACC_STORE_ANY)
 
 #endif /* !JS_TRACER */
 
@@ -3009,7 +3017,7 @@ String_fromCharCode(JSContext* cx, int32 i)
 #endif
 
 JS_DEFINE_TRCINFO_1(str_fromCharCode,
-    (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, 1)))
+    (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, nanojit::ACC_NONE)))
 
 static JSFunctionSpec string_static_methods[] = {
     JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
@@ -3430,7 +3438,7 @@ js_EqualStrings(JSString *str1, JSString *str2)
 
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_EqualStrings, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_EqualStrings, STRING, STRING, 1, nanojit::ACC_NONE)
 
 int32 JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2)
@@ -3456,7 +3464,7 @@ js_CompareStrings(JSString *str1, JSString *str2)
     }
     return (intN)(l1 - l2);
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_CompareStrings, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_CompareStrings, STRING, STRING, 1, nanojit::ACC_NONE)
 
 size_t
 js_strlen(const jschar *s)

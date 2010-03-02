@@ -936,7 +936,7 @@ nsICanvasRenderingContextWebGL_Uniform1iv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform1iv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform1iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform1iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform2iv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -945,7 +945,7 @@ nsICanvasRenderingContextWebGL_Uniform2iv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform2iv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform2iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform2iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform3iv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -954,7 +954,7 @@ nsICanvasRenderingContextWebGL_Uniform3iv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform3iv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform3iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform3iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform4iv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -963,7 +963,7 @@ nsICanvasRenderingContextWebGL_Uniform4iv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform4iv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform4iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform4iv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform1fv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -972,7 +972,7 @@ nsICanvasRenderingContextWebGL_Uniform1fv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform1fv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform1fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform1fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform2fv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -981,7 +981,7 @@ nsICanvasRenderingContextWebGL_Uniform2fv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform2fv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform2fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform2fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform3fv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -990,7 +990,7 @@ nsICanvasRenderingContextWebGL_Uniform3fv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform3fv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform3fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform3fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_Uniform4fv_tn(JSContext *cx, JSObject *obj, uint32 location, JSObject *arg)
@@ -999,7 +999,7 @@ nsICanvasRenderingContextWebGL_Uniform4fv_tn(JSContext *cx, JSObject *obj, uint3
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_Uniform4fv,
-    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform4fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, 0)))
+    (4, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_Uniform4fv_tn, CONTEXT, THIS, UINT32, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_UniformMatrix2fv_tn(JSContext *cx, JSObject *obj, uint32 loc, JSBool transpose, JSObject *arg)
@@ -1008,7 +1008,7 @@ nsICanvasRenderingContextWebGL_UniformMatrix2fv_tn(JSContext *cx, JSObject *obj,
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_UniformMatrix2fv,
-    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix2fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, 0)))
+    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix2fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_UniformMatrix3fv_tn(JSContext *cx, JSObject *obj, uint32 loc, JSBool transpose, JSObject *arg)
@@ -1017,7 +1017,7 @@ nsICanvasRenderingContextWebGL_UniformMatrix3fv_tn(JSContext *cx, JSObject *obj,
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_UniformMatrix3fv,
-    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix3fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, 0)))
+    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix3fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 static jsval FASTCALL
 nsICanvasRenderingContextWebGL_UniformMatrix4fv_tn(JSContext *cx, JSObject *obj, uint32 loc, JSBool transpose, JSObject *arg)
@@ -1026,6 +1026,6 @@ nsICanvasRenderingContextWebGL_UniformMatrix4fv_tn(JSContext *cx, JSObject *obj,
 }
 
 JS_DEFINE_TRCINFO_1(nsICanvasRenderingContextWebGL_UniformMatrix4fv,
-    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix4fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, 0)))
+    (5, (static, JSVAL_FAIL, nsICanvasRenderingContextWebGL_UniformMatrix4fv_tn, CONTEXT, THIS, UINT32, BOOL, OBJECT, 0, nanojit::ACC_STORE_ANY)))
 
 #endif /* JS_TRACER */

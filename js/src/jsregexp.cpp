@@ -2352,7 +2352,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns* text_ch = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
 
         // Extra characters that need to be compared against when doing folding.
         struct extra {
@@ -2573,7 +2573,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns* text_ch = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
         if (!fails.append(lir->insBranch(LIR_jf,
                                          lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)),
                                          0))) {
@@ -2581,7 +2581,8 @@ class RegExpNativeCompiler {
         }
         LIns* byteIndex = lir->ins_i2p(lir->ins2(LIR_rsh, text_ch, lir->insImm(3)));
         LIns* bitmap = lir->insImmPtr(bitmapData);
-        LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
+        LIns* byte = lir->insLoad(LIR_ldzb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0,
+                                  ACC_READONLY);
         LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
                                lir->ins2(LIR_and, text_ch, lir->insImm(0x7)));
         LIns* test = lir->ins2(LIR_eq, lir->ins2(LIR_and, byte, bitMask), lir->insImm(0));
@@ -2600,7 +2601,7 @@ class RegExpNativeCompiler {
             chr = lir->ins2(LIR_lsh, chr, sizeLog2);
         }
         LIns *addr = lir->ins2(LIR_piadd, lir->insImmPtr(tbl), lir->ins_u2p(chr));
-        return lir->insLoad(LIR_ldcb, addr, 0);
+        return lir->insLoad(LIR_ldzb, addr, 0, ACC_READONLY);
     }
 
     /* Compile a builtin character class. */
@@ -2609,7 +2610,7 @@ class RegExpNativeCompiler {
         /* All the builtins checked below consume one character. */
         if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0)))
             return NULL;
-        LIns *chr = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns *chr = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
 
         switch (node->op) {
           case REOP_DOT:
@@ -5875,7 +5876,8 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0,
+                     ACC_STORE_ANY)
 #endif
 
 bool
