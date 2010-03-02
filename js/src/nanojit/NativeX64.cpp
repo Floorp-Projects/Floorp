@@ -1474,19 +1474,16 @@ namespace nanojit
         int32_t dr;
         switch (ins->opcode()) {
             case LIR_ldq:
-            case LIR_ldqc:
                 beginLoadRegs(ins, GpRegs, rr, dr, rb);
                 NanoAssert(IsGpReg(rr));
                 MOVQRM(rr, dr, rb);     // general 64bit load, 32bit const displacement
                 break;
             case LIR_ldf:
-            case LIR_ldfc:
                 beginLoadRegs(ins, FpRegs, rr, dr, rb);
                 NanoAssert(IsFpReg(rr));
                 MOVSDRM(rr, dr, rb);    // load 64bits into XMM
                 break;
             case LIR_ld32f:
-            case LIR_ldc32f:
                 beginLoadRegs(ins, FpRegs, rr, dr, rb);
                 NanoAssert(IsFpReg(rr));
                 CVTSS2SD(rr, rr);
@@ -1505,25 +1502,20 @@ namespace nanojit
         int32_t d;
         beginLoadRegs(ins, GpRegs, r, d, b);
         LOpcode op = ins->opcode();
-        switch(op) {
+        switch (op) {
             case LIR_ldzb:
-            case LIR_ldcb:
                 MOVZX8M( r, d, b);
                 break;
             case LIR_ldzs:
-            case LIR_ldcs:
                 MOVZX16M(r, d, b);
                 break;
             case LIR_ld:
-            case LIR_ldc:
                 MOVLRM(  r, d, b);
                 break;
             case LIR_ldsb:
-            case LIR_ldcsb:
                 MOVSX8M( r, d, b);
                 break;
             case LIR_ldss:
-            case LIR_ldcss:
                 MOVSX16M( r, d, b);
                 break;
             default:

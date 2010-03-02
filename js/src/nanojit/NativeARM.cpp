@@ -1326,7 +1326,6 @@ Assembler::asm_load64(LInsp ins)
 
     switch (ins->opcode()) {
         case LIR_ldf:
-        case LIR_ldfc:
             if (_config.arm_vfp && deprecated_isKnownReg(rr)) {
                 // VFP is enabled and the result will go into a register.
                 NanoAssert(IsFpReg(rr));
@@ -1353,7 +1352,6 @@ Assembler::asm_load64(LInsp ins)
             return;
 
         case LIR_ld32f:
-        case LIR_ldc32f:
             if (_config.arm_vfp) {
                 if (deprecated_isKnownReg(rr)) {
                     NanoAssert(IsFpReg(rr));
@@ -2555,7 +2553,6 @@ Assembler::asm_load32(LInsp ins)
 
     switch (op) {
         case LIR_ldzb:
-        case LIR_ldcb:
             if (isU12(-d) || isU12(d)) {
                 LDRB(rr, ra, d);
             } else {
@@ -2564,7 +2561,6 @@ Assembler::asm_load32(LInsp ins)
             }
             return;
         case LIR_ldzs:
-        case LIR_ldcs:
             // Some ARM machines require 2-byte alignment here.
             // Similar to the ldcb/ldzb case, but the max offset is smaller.
             if (isU8(-d) || isU8(d)) {
@@ -2575,7 +2571,6 @@ Assembler::asm_load32(LInsp ins)
             }
             return;
         case LIR_ld:
-        case LIR_ldc:
             // Some ARM machines require 4-byte alignment here.
             if (isU12(-d) || isU12(d)) {
                 LDR(rr, ra, d);
@@ -2585,7 +2580,6 @@ Assembler::asm_load32(LInsp ins)
             }
             return;
         case LIR_ldsb:
-        case LIR_ldcsb:
             if (isU8(-d) || isU8(d)) {
                 LDRSB(rr, ra, d);
             } else {
@@ -2594,7 +2588,6 @@ Assembler::asm_load32(LInsp ins)
             }
             return;
         case LIR_ldss:
-        case LIR_ldcss:
             if (isU8(-d) || isU8(d)) {
                 LDRSH(rr, ra, d);
             } else {

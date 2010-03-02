@@ -1384,12 +1384,7 @@ namespace nanojit
                 case LIR_ldzs:
                 case LIR_ldsb:
                 case LIR_ldss:
-                case LIR_ldcsb:
-                case LIR_ldcss:
                 case LIR_ld:
-                case LIR_ldc:
-                case LIR_ldcb:
-                case LIR_ldcs:
                 {
                     countlir_ld();
                     asm_load32(ins);
@@ -1397,11 +1392,8 @@ namespace nanojit
                 }
 
                 case LIR_ld32f:
-                case LIR_ldc32f:
                 case LIR_ldf:
-                case LIR_ldfc:
                 CASE64(LIR_ldq:)
-                CASE64(LIR_ldqc:)
                 {
                     countlir_ldq();
                     asm_load64(ins);

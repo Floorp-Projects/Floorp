@@ -668,8 +668,6 @@ namespace nanojit
 
     void Assembler::asm_load64(LIns *ins)
     {
-        NanoAssert(!ins->isop(LIR_ldq) && !ins->isop(LIR_ldqc));
-
         NanoAssert(ins->isF64());
 
         LIns* base = ins->oprnd1();
@@ -879,23 +877,18 @@ namespace nanojit
         Register rbase = getBaseReg(base, d, GpRegs);
 
         switch (op) {
-        case LIR_ldcb:
         case LIR_ldzb:          // 8-bit integer load, zero-extend to 32-bit
             asm_ldst(OP_LBU, rres, d, rbase);
             break;
-        case LIR_ldcs:
         case LIR_ldzs:          // 16-bit integer load, zero-extend to 32-bit 
             asm_ldst(OP_LHU, rres, d, rbase);
             break;
-        case LIR_ldcsb:
         case LIR_ldsb:          // 8-bit integer load, sign-extend to 32-bit
             asm_ldst(OP_LB, rres, d, rbase);
             break;
-        case LIR_ldcss:
         case LIR_ldss:          // 16-bit integer load, sign-extend to 32-bit
             asm_ldst(OP_LH, rres, d, rbase);
             break;
-        case LIR_ldc:
         case LIR_ld:            // 32-bit integer load 
             asm_ldst(OP_LW, rres, d, rbase);
             break;
@@ -1112,8 +1105,7 @@ namespace nanojit
 
             if (value->isconstq())
                 asm_store_imm64(value, dr, rbase);
-            else if (!cpu_has_fpu ||
-                     value->isop(LIR_ldq) || value->isop(LIR_ldqc)) {
+            else if (!cpu_has_fpu || value->isop(LIR_ldq)) {
 
                 int ds = findMemFor(value);
 
