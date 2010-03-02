@@ -416,7 +416,8 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   if (mLoadedIcon)
     return NS_OK;
 
-  if (!mNativeMenuItem) return NS_ERROR_FAILURE;
+  if (!mNativeMenuItem)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<imgIContainer> imageContainer;
   aRequest->GetImage(getter_AddRefs(imageContainer));
@@ -442,8 +443,6 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32* imageData = (PRUint32*)image->Data();
-
   // If the image region is invalid, don't draw the image to almost match
   // the behavior of other platforms.
   if (!mImageRegionRect.IsEmpty() &&
@@ -460,37 +459,40 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   PRInt32 newStride = mImageRegionRect.width * sizeof(PRUint32);
   PRInt32 imageLength = mImageRegionRect.height * mImageRegionRect.width;
 
-  PRUint32* reorderedData = (PRUint32*)malloc(imageLength * sizeof(PRUint32));
-  if (!reorderedData) {
-    [mNativeMenuItem setImage:nil];
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  PRUint32* origImageData = (PRUint32*)image->Data();
+  PRUint32* imageData = origImageData;
 
-  // We have to clip the data to the image region and reorder the data to have
-  // alpha last because only Tiger can handle alpha being first. Also the data
-  // must always be big endian (silly).
-  for (PRInt32 y = 0; y < mImageRegionRect.height; y++) {
-    PRInt32 srcLine = (mImageRegionRect.y + y) * (origStride/4);
-    PRInt32 dstLine = y * mImageRegionRect.width;
-    for (PRInt32 x = 0; x < mImageRegionRect.width; x++) {
-      PRUint32 pixel = imageData[srcLine + x + mImageRegionRect.x];
-      reorderedData[dstLine + x] =
-        CFSwapInt32HostToBig((pixel << 8) | (pixel >> 24));
+  PRBool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
+                            mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
+  if (createSubImage) {
+    imageData = (PRUint32*)malloc(imageLength * sizeof(PRUint32));
+    if (!imageData) {
+      [mNativeMenuItem setImage:nil];
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    for (PRInt32 y = 0; y < mImageRegionRect.height; y++) {
+      PRInt32 srcLine = (mImageRegionRect.y + y) * (origStride / 4);
+      PRInt32 dstLine = y * mImageRegionRect.width;
+      for (PRInt32 x = 0; x < mImageRegionRect.width; x++) {
+        imageData[dstLine + x] = origImageData[srcLine + x + mImageRegionRect.x];
+      }
     }
   }
 
-  CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL, reorderedData, imageLength, PRAllocCGFree);
+  CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL, imageData, imageLength,
+                                                              createSubImage ? PRAllocCGFree : NULL);
   if (!provider) {
-    free(reorderedData);
+    if (createSubImage)
+      free(imageData);
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
   }
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-  CGImageRef cgImage = ::CGImageCreate(mImageRegionRect.width,
-                                       mImageRegionRect.height, 8, 32, newStride,
-                                       colorSpace, kCGImageAlphaPremultipliedLast,
-                                       provider, NULL, true,
-                                       kCGRenderingIntentDefault);
+  uint32_t byteFormat = (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+  CGImageRef cgImage = ::CGImageCreate(mImageRegionRect.width, mImageRegionRect.height,
+                                       8, 32, newStride, colorSpace, byteFormat,
+                                       provider, NULL, true, kCGRenderingIntentDefault);
   ::CGDataProviderRelease(provider);
 
   // The image may not be the right size for a menu icon (16x16).
