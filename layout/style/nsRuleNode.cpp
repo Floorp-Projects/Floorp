@@ -2445,11 +2445,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                    "canStoreInRuleTree must be false for inherited structs "  \
                    "unless all properties have been specified with values "   \
                    "other than inherit");                                     \
-  if (!canStoreInRuleTree)                                                    \
-    /* We can't be cached in the rule node.  We have to be put right */       \
-    /* on the style context. */                                               \
-    aContext->SetStyle(eStyleStruct_##type_, data_);                          \
-  else {                                                                      \
+  if (canStoreInRuleTree) {                                                   \
     /* We were fully specified and can therefore be cached right on the */    \
     /* rule node. */                                                          \
     if (!aHighestNode->mStyleData.mInheritedData) {                           \
@@ -2465,7 +2461,12 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     aHighestNode->mStyleData.mInheritedData->m##type_##Data = data_;          \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
+    /* Tell the style context that it doesn't own the data */                 \
+    aContext->                                                                \
+      AddStyleBit(nsCachedStyleData::GetBitForSID(eStyleStruct_##type_));     \
   }                                                                           \
+  /* Always cache inherited data on the style context */                      \
+  aContext->SetStyle##type_(data_);                                           \
                                                                               \
   return data_;
 
