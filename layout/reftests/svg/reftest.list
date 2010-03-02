@@ -22,6 +22,8 @@ include svg-integration/reftest.list
 == clipPath-advanced-01.svg pass.svg
 == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
 == clipPath-basic-01.svg pass.svg
+== clipPath-basic-02.svg pass.svg
+== clipPath-basic-03.svg pass.svg
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg

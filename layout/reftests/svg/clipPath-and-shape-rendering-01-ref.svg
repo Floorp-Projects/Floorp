@@ -15,9 +15,6 @@
       <circle cx="50" cy="50" r="50" fill="lime"/>
       <circle cx="150" cy="50" r="50" fill="lime"/>
     </g>
-    <clipPath id="clip">
-      <use xlink:href="#circles"/>
-    </clipPath>
   </defs>
 
   <use xlink:href="#circles"/>
