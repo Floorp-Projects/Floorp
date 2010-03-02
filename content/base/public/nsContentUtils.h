@@ -1257,6 +1257,11 @@ public:
                                           nsISupports* aExtra = nsnull);
 
   /**
+   * Returns true if aPrincipal is the system principal.
+   */
+  static PRBool IsSystemPrincipal(nsIPrincipal* aPrincipal);
+
+  /**
    * Trigger a link with uri aLinkURI. If aClick is false, this triggers a
    * mouseover on the link, otherwise it triggers a load after doing a
    * security check using aContent's principal.
