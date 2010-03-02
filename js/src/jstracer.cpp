@@ -3601,7 +3601,7 @@ TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset, bool shouldDemot
 
 /* Update the tracker, then issue a write back store. */
 JS_REQUIRES_STACK void
-TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
+TraceRecorder::set(jsval* p, LIns* i, bool demote)
 {
     JS_ASSERT(i != NULL);
     checkForGlobalObjectReallocation();
@@ -4472,7 +4472,7 @@ class SlotMap : public SlotVisitorBase
             JS_ASSERT(mRecorder.get(info.vp)->isF64());
 
             /* Never demote this final i2f. */
-            mRecorder.set(info.vp, mRecorder.get(info.vp), false, false);
+            mRecorder.set(info.vp, mRecorder.get(info.vp), false);
         }
     }
 
@@ -8028,7 +8028,7 @@ TraceRecorder::stack(int n)
 JS_REQUIRES_STACK void
 TraceRecorder::stack(int n, LIns* i)
 {
-    set(&stackval(n), i, n >= 0);
+    set(&stackval(n), i);
 }
 
 JS_REQUIRES_STACK LIns*
@@ -9759,14 +9759,14 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
     while (vp < vpstop) {
         nativeFrameTracker.set(vp, (LIns*)0);
-        set(vp++, void_ins, true);
+        set(vp++, void_ins);
     }
 
     vp = &fp->slots[0];
     vpstop = vp + fp->script->nfixed;
     while (vp < vpstop)
-        set(vp++, void_ins, true);
-    set(&fp->argsobj, INS_NULL(), true);
+        set(vp++, void_ins);
+    set(&fp->argsobj, INS_NULL());
 
     LIns* callee_ins = get(&cx->fp->argv[-2]);
     LIns* scopeChain_ins = stobj_get_parent(callee_ins);
@@ -9774,7 +9774,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     if (cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags)) {
         // We need to make sure every part of the frame is known to the tracker
         // before taking a snapshot.
-        set(&fp->scopeChainVal, INS_NULL(), true);
+        set(&fp->scopeChainVal, INS_NULL());
 
         if (js_IsNamedLambda(cx->fp->fun))
             RETURN_STOP_A("can't call named lambda heavyweight on trace");
@@ -9787,7 +9787,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
 
         set(&fp->scopeChainVal, call_ins);
     } else {
-        set(&fp->scopeChainVal, scopeChain_ins, true);
+        set(&fp->scopeChainVal, scopeChain_ins);
     }
 
     /*
@@ -9878,7 +9878,7 @@ TraceRecorder::record_LeaveFrame()
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
     atoms = FrameAtomBase(cx, cx->fp);
-    set(&stackval(-1), rval_ins, true);
+    set(&stackval(-1), rval_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -11490,9 +11490,9 @@ TraceRecorder::finishGetProp(LIns* obj_ins, LIns* vp_ins, LIns* ok_ins, jsval* o
     // guard. The deep-bail case requires this. If the property get fails,
     // these slots will be ignored anyway.
     LIns* result_ins = lir->insLoad(LIR_ldp, vp_ins, 0);
-    set(outp, result_ins, true);
+    set(outp, result_ins);
     if (js_CodeSpec[*cx->fp->regs->pc].format & JOF_CALLOP)
-        set(outp + 1, obj_ins, true);
+        set(outp + 1, obj_ins);
 
     // We need to guard on ok_ins, but this requires a snapshot of the state
     // after this op. monitorRecording will do it for us.
@@ -12833,7 +12833,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
             }
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
-        set(outp, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)), true);
+        set(outp, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
         return ARECORD_CONTINUE;
     }
 
@@ -12932,7 +12932,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pc
         *v_insp = v_ins;
     }
     if (outp)
-        set(outp, v_ins, true);
+        set(outp, v_ins);
     return ARECORD_CONTINUE;
 }
 
