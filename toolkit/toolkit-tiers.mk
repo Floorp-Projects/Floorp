@@ -48,6 +48,10 @@ ifdef NS_TRACE_MALLOC
 tier_platform_dirs = tools/trace-malloc/lib
 endif
 
+ifdef MOZ_TREE_FREETYPE
+tier_platform_dirs += modules/freetype2
+endif
+
 tier_platform_dirs += xpcom
 
 ifndef MOZ_NATIVE_ZLIB
