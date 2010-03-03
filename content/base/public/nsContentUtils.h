@@ -1541,6 +1541,7 @@ public:
     return WrapNative(cx, scope, native, nsnull, vp, aHolder, aAllowWrapping);
   }
 
+  static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 private:
 
   static PRBool InitializeEventTable();
