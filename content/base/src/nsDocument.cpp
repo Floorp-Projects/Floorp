@@ -146,6 +146,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
 #include "nsILink.h"
+#include "nsFileDataProtocolHandler.h"
 
 #include "nsICharsetAlias.h"
 #include "nsIParser.h"
@@ -1504,6 +1505,10 @@ nsDocument::~nsDocument()
   }
 
   mPendingTitleChangeEvent.Revoke();
+
+  for (PRUint32 i = 0; i < mFileDataUris.Length(); ++i) {
+    nsFileDataProtocolHandler::RemoveFileDataEntry(mFileDataUris[i]);
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
@@ -7712,6 +7717,12 @@ nsISupports*
 nsDocument::GetCurrentContentSink()
 {
   return mParser ? mParser->GetContentSink() : nsnull;
+}
+
+void
+nsDocument::RegisterFileDataUri(nsACString& aUri)
+{
+  mFileDataUris.AppendElement(aUri);
 }
 
 void

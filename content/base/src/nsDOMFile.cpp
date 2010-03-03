@@ -59,6 +59,8 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIUUIDGenerator.h"
+#include "nsFileDataProtocolHandler.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -155,6 +157,40 @@ nsDOMFile::GetType(nsAString &aType)
 
   aType = mContentType;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFile::GetUrl(nsAString& aURL)
+{
+  if (mURL.IsEmpty()) {
+    nsresult rv;
+    nsCOMPtr<nsIUUIDGenerator> uuidgen =
+      do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    nsID id;
+    rv = uuidgen->GenerateUUIDInPlace(&id);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    char chars[NSID_LENGTH];
+    id.ToProvidedString(chars);
+    
+    nsCString url = NS_LITERAL_CSTRING(FILEDATA_SCHEME ":") +
+                    Substring(chars + 1, chars + NSID_LENGTH - 2);
+
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mRelatedDoc);
+    if (doc) {
+      doc->RegisterFileDataUri(url);
+      nsFileDataProtocolHandler::AddFileDataEntry(url, mFile,
+                                                  doc->NodePrincipal());
+    }
+
+    CopyASCIItoUTF16(url, mURL);
+  }
+
+  aURL = mURL;
+  
   return NS_OK;
 }
 

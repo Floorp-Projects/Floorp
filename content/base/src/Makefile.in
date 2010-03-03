@@ -141,6 +141,7 @@ CPPSRCS		= \
 		nsXMLHttpRequest.cpp \
 		nsXMLNameSpaceMap.cpp \
 		Link.cpp \
+		nsFileDataProtocolHandler.cpp \
 		$(NULL)
 
 GQI_SRCS = contentbase.gqi

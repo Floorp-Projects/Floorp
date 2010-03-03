@@ -890,6 +890,8 @@ public:
   virtual NS_HIDDEN_(void)
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
+  nsTArray<nsCString> mFileDataUris;
+
 #ifdef MOZ_SMIL
   // Returns our (lazily-initialized) animation controller.
   // If HasAnimationController is true, this is guaranteed to return non-null.
@@ -936,6 +938,8 @@ public:
                                        nsICSSStyleSheet** sheet);
 
   virtual nsISupports* GetCurrentContentSink();
+
+  virtual void RegisterFileDataUri(nsACString& aUri);
 
 protected:
   friend class nsNodeUtils;
