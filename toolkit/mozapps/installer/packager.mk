@@ -92,7 +92,7 @@ ifdef MOZ_FASTSTART
 CABARGS += -faststart
 endif
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
-MAKE_CAB	= $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py \
+MAKE_CAB	= $(PYTHON) $(MOZILLA_DIR)/build/package/wince/make_wince_cab.py \
 	$(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" \
 	"$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab"
 endif

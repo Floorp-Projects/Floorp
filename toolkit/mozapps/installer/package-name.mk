@@ -163,9 +163,9 @@ SYMBOL_ARCHIVE_BASENAME = $(PKG_BASENAME).crashreporter-symbols
 TEST_PACKAGE = $(PKG_BASENAME).tests.tar.bz2
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
-BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
+BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
 else
-BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
+BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
 endif
 
 MOZ_SOURCE_STAMP = $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
