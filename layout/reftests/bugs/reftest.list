@@ -1359,6 +1359,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 521539-1.html 521539-1-ref.html
 == 521542-1.xhtml 521542-1-ref.xhtml
 == 521685-1.html 521685-1-ref.html
+== 522632-1.html 522632-1-ref.html
 == 523096-1.html 523096-1-ref.html
 == 523468-1.html 523468-1-ref.html
 == 524175-1.html 524175-1-ref.html
