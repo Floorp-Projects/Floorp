@@ -364,20 +364,6 @@ public:
    */
   virtual void EndDrawing() = 0;
 
-  /**
-   * DRAWING PHASE ONLY
-   * Copy the aRegion contents from aSource into this layer, offsetting
-   * them by aDelta. The validity is also copied, so invalid areas in
-   * aSource will make corresponding areas of this layer invalid. You
-   * must not call this after BeginDrawing/EndDrawing on this layer.
-   * 
-   * aSource must be this layer or a layer after this layer in a
-   * preorder traversal of the layer tree.
-   */
-  virtual void CopyFrom(ThebesLayer* aSource,
-                        const nsIntRegion& aRegion,
-                        const nsIntPoint& aDelta) = 0;
-
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData) {}
