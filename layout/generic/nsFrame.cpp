@@ -536,8 +536,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // We don't want to set the property if one already exists.
     nsMargin oldValue(0, 0, 0, 0);
     nsMargin newValue(0, 0, 0, 0);
-    const nsStyleMargin* oldMargin = static_cast<const nsStyleMargin*>
-                            (aOldStyleContext->PeekStyleData(eStyleStruct_Margin));
+    const nsStyleMargin* oldMargin = aOldStyleContext->PeekStyleMargin();
     if (oldMargin && oldMargin->GetMargin(oldValue)) {
       if ((!GetStyleMargin()->GetMargin(newValue) || oldValue != newValue) &&
           !GetProperty(nsGkAtoms::usedMarginProperty)) {
@@ -547,8 +546,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       }
     }
 
-    const nsStylePadding* oldPadding = static_cast<const nsStylePadding*>
-                             (aOldStyleContext->PeekStyleData(eStyleStruct_Padding));
+    const nsStylePadding* oldPadding = aOldStyleContext->PeekStylePadding();
     if (oldPadding && oldPadding->GetPadding(oldValue)) {
       if ((!GetStylePadding()->GetPadding(newValue) || oldValue != newValue) &&
           !GetProperty(nsGkAtoms::usedPaddingProperty)) {
@@ -558,8 +556,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       }
     }
 
-    const nsStyleBorder* oldBorder = static_cast<const nsStyleBorder*>
-                            (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+    const nsStyleBorder* oldBorder = aOldStyleContext->PeekStyleBorder();
     if (oldBorder) {
       oldValue = oldBorder->GetActualBorder();
       newValue = GetStyleBorder()->GetActualBorder();
