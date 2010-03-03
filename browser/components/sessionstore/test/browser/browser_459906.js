@@ -64,6 +64,15 @@ function test() {
 
       executeSoon(function() {
         let iframes = tab2.linkedBrowser.contentWindow.frames;
+        if (iframes[1].document.body.innerHTML !== uniqueValue) {
+          // Poll again the value, since we can't ensure to run
+          // after SessionStore has injected innerHTML value.
+          // See bug 521802.
+          info("Polling for innerHTML value");
+          setTimeout(arguments.callee, 100);
+          return;
+        }
+
         is(iframes[1].document.body.innerHTML, uniqueValue,
            "rich textarea's content correctly duplicated");
 
