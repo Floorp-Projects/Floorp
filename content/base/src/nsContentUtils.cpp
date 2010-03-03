@@ -5330,6 +5330,28 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   return rv;
 }
 
+void
+nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
+{
+  // In common cases where we don't have nulls in the
+  // string we can simple simply bypass the checking code.
+  PRInt32 firstNullPos = aInStr.FindChar('\0');
+  if (firstNullPos == kNotFound) {
+    aOutStr.Assign(aInStr);
+    return;
+  }
+
+  aOutStr.SetCapacity(aInStr.Length() - 1);
+  nsAString::const_iterator start, end;
+  aInStr.BeginReading(start);
+  aInStr.EndReading(end);
+  while (start != end) {
+    if (*start != '\0')
+      aOutStr.Append(*start);
+    ++start;
+  }
+}
+
 #ifdef DEBUG
 class DebugWrapperTraversalCallback : public nsCycleCollectionTraversalCallback
 {

@@ -1151,6 +1151,9 @@ DocumentViewerImpl::PermitUnload(PRBool aCallerClosesWindow, PRBool *aPermitUnlo
   beforeUnload->GetReturnValue(text);
   if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
       !text.IsEmpty()) {
+    nsAutoString tmp;
+    nsContentUtils::StripNullChars(text, tmp);
+    text = tmp;
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
