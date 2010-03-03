@@ -63,7 +63,7 @@ if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc"; then
   CXX="g++-$GCC_VERSION -arch $TARGET_CPU"
 
   # $HOST_CXX is presently unused.  $HOST_CC will only be used during a cross
-  # compile.  Always use the 4.0 compiler, since it will always be present and
+  # compile.  Always use the 4.2 compiler, since it will always be present and
   # will always work.
   HOST_CC=gcc-4.2
   HOST_CXX=g++-4.2
