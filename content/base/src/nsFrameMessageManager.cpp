@@ -273,6 +273,13 @@ nsFrameMessageManager::GetContent(nsIDOMWindow** aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::GetDocShell(nsIDocShell** aDocShell)
+{
+  *aDocShell = nsnull;
+  return NS_OK;
+}
+
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,

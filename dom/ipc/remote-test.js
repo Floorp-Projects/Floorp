@@ -1,10 +1,20 @@
 dump("Loading remote script!\n");
 dump(content + "\n");
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var dshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIDocShell);
+
+
 addEventListener("click",
   function(e) {
     dump(e.target + "\n");
-    if (e.target instanceof Components.interfaces.nsIDOMHTMLAnchorElement) {
+    if (e.target instanceof Components.interfaces.nsIDOMHTMLAnchorElement &&
+        dshell == docShell) {
       var retval = sendSyncMessage("linkclick", { href : e.target.href });
       dump(uneval(retval[0]) + "\n");
       // Test here also that both retvals are the same

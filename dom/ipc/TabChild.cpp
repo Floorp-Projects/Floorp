@@ -710,6 +710,15 @@ TabChildGlobal::GetContent(nsIDOMWindow** aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
+{
+  *aDocShell = nsnull;
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mTabChild->WebNavigation());
+  docShell.swap(*aDocShell);
+  return NS_OK;
+}
+
 JSContext*
 TabChildGlobal::GetJSContextForEventHandlers()
 {
