@@ -135,10 +135,6 @@ struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
 class nsChildContentList;
-#ifdef MOZ_SMIL
-class nsSMILAnimationController;
-#endif // MOZ_SMIL
-
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -895,6 +891,8 @@ public:
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
 #ifdef MOZ_SMIL
+  // Returns our (lazily-initialized) animation controller.
+  // If HasAnimationController is true, this is guaranteed to return non-null.
   nsSMILAnimationController* GetAnimationController();
 #endif // MOZ_SMIL
 
@@ -1194,10 +1192,6 @@ private:
   nsCOMArray<imgIRequest> mPreloadingImages;
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
-
-#ifdef MOZ_SMIL
-  nsAutoPtr<nsSMILAnimationController> mAnimationController;
-#endif // MOZ_SMIL
 
 #ifdef DEBUG
 protected:
