@@ -64,7 +64,7 @@ function add_visit(aURI, aDate) {
   return placeID;
 }
 
-var viewer = {
+var resultObserver = {
   insertedNode: null,
   nodeInserted: function(parent, node, newIndex) {
     this.insertedNode = node;
@@ -117,9 +117,6 @@ var viewer = {
     this.sortingMode = sortingMode;
   },
   result: null,
-  ignoreInvalidateContainer: false,
-  addViewObserver: function(observer, ownsWeak) {},
-  removeViewObserver: function(observer) {},
   reset: function() {
     this.insertedNode = null;
     this.removedNode = null;
@@ -143,55 +140,55 @@ function run_test() {
   options.resultType = options.RESULTS_AS_VISIT;
   var query = histsvc.getNewQuery();
   var result = histsvc.executeQuery(query, options);
-  result.viewer = viewer;
+  result.addObserver(resultObserver, false);
   var root = result.root;
   root.containerOpen = true;
 
-  // nsINavHistoryResultViewer.containerOpened
-  do_check_neq(viewer.openedContainer, null);
+  // nsINavHistoryResultObserver.containerOpened
+  do_check_neq(resultObserver.openedContainer, null);
 
-  // nsINavHistoryResultViewer.nodeInserted
+  // nsINavHistoryResultObserver.nodeInserted
   // add a visit
   var testURI = uri("http://mozilla.com");
   add_visit(testURI);
-  do_check_eq(testURI.spec, viewer.insertedNode.uri);
+  do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
-  // nsINavHistoryResultViewer.nodeHistoryDetailsChanged
+  // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
   // adding a visit causes nodeHistoryDetailsChanged for the folder
-  do_check_eq(root.uri, viewer.nodeChangedByHistoryDetails.uri);
+  do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
-  // nsINavHistoryResultViewer.itemTitleChanged for a leaf node
+  // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
   bhist.addPageWithDetails(testURI, "baz", Date.now() * 1000);
-  do_check_eq(viewer.nodeChangedByTitle.title, "baz");
+  do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
-  // nsINavHistoryResultViewer.nodeRemoved
+  // nsINavHistoryResultObserver.nodeRemoved
   var removedURI = uri("http://google.com");
   add_visit(removedURI);
   bhist.removePage(removedURI);
-  do_check_eq(removedURI.spec, viewer.removedNode.uri);
+  do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
 
-  // XXX nsINavHistoryResultViewer.nodeReplaced
+  // XXX nsINavHistoryResultObserver.nodeReplaced
   // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
-  // nsINavHistoryResultViewer.invalidateContainer
+  // nsINavHistoryResultObserver.invalidateContainer
   bhist.removePagesFromHost("mozilla.com", false);
-  do_check_eq(root.uri, viewer.invalidatedContainer.uri);
+  do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
-  // nsINavHistoryResultViewer.sortingChanged
-  viewer.invalidatedContainer = null;
+  // nsINavHistoryResultObserver.sortingChanged
+  resultObserver.invalidatedContainer = null;
   result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
-  do_check_eq(viewer.sortingMode, options.SORT_BY_TITLE_ASCENDING);
-  do_check_eq(viewer.invalidatedContainer, result.root);
+  do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
+  do_check_eq(resultObserver.invalidatedContainer, result.root);
 
-  // nsINavHistoryResultViewer.containerClosed
+  // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
-  do_check_eq(viewer.closedContainer, viewer.openedContainer);
-  result.viewer = null;
+  do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
+  result.removeObserver(resultObserver);
 
   // bookmarks query
   
-  // reset the viewer
-  viewer.reset();
+  // Reset the result observer.
+  resultObserver.reset();
 
   try {
     var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
@@ -203,49 +200,49 @@ function run_test() {
   var query = histsvc.getNewQuery();
   query.setFolders([bmsvc.bookmarksMenuFolder], 1);
   var result = histsvc.executeQuery(query, options);
-  result.viewer = viewer;
+  result.addObserver(resultObserver, false);
   var root = result.root;
   root.containerOpen = true;
 
-  // nsINavHistoryResultViewer.containerOpened
-  do_check_neq(viewer.openedContainer, null);
+  // nsINavHistoryResultObserver.containerOpened
+  do_check_neq(resultObserver.openedContainer, null);
 
-  // nsINavHistoryResultViewer.nodeInserted
+  // nsINavHistoryResultObserver.nodeInserted
   // add a bookmark
   var testBookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, bmsvc.DEFAULT_INDEX, "foo");
-  do_check_eq("foo", viewer.insertedNode.title);
-  do_check_eq(testURI.spec, viewer.insertedNode.uri);
+  do_check_eq("foo", resultObserver.insertedNode.title);
+  do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
-  // nsINavHistoryResultViewer.nodeHistoryDetailsChanged
+  // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
   // adding a visit causes nodeHistoryDetailsChanged for the folder
-  do_check_eq(root.uri, viewer.nodeChangedByHistoryDetails.uri);
+  do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
-  // nsINavHistoryResultViewer.nodeTitleChanged for a leaf node
+  // nsINavHistoryResultObserver.nodeTitleChanged for a leaf node
   bmsvc.setItemTitle(testBookmark, "baz");
-  do_check_eq(viewer.nodeChangedByTitle.title, "baz");
-  do_check_eq(viewer.newTitle, "baz");
+  do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
+  do_check_eq(resultObserver.newTitle, "baz");
 
   var testBookmark2 = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri("http://google.com"), bmsvc.DEFAULT_INDEX, "foo");
   bmsvc.moveItem(testBookmark2, bmsvc.bookmarksMenuFolder, 0);
-  do_check_eq(viewer.movedNode.itemId, testBookmark2);
+  do_check_eq(resultObserver.movedNode.itemId, testBookmark2);
 
-  // nsINavHistoryResultViewer.nodeRemoved
+  // nsINavHistoryResultObserver.nodeRemoved
   bmsvc.removeItem(testBookmark2);
-  do_check_eq(testBookmark2, viewer.removedNode.itemId);
+  do_check_eq(testBookmark2, resultObserver.removedNode.itemId);
 
-  // XXX nsINavHistoryResultViewer.nodeReplaced
+  // XXX nsINavHistoryResultObserver.nodeReplaced
   // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
-  // XXX nsINavHistoryResultViewer.invalidateContainer
+  // XXX nsINavHistoryResultObserver.invalidateContainer
 
-  // nsINavHistoryResultViewer.sortingChanged
-  viewer.invalidatedContainer = null;
+  // nsINavHistoryResultObserver.sortingChanged
+  resultObserver.invalidatedContainer = null;
   result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
-  do_check_eq(viewer.sortingMode, options.SORT_BY_TITLE_ASCENDING);
-  do_check_eq(viewer.invalidatedContainer, result.root);
+  do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
+  do_check_eq(resultObserver.invalidatedContainer, result.root);
 
-  // nsINavHistoryResultViewer.containerClosed
+  // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
-  do_check_eq(viewer.closedContainer, viewer.openedContainer);
-  result.viewer = null;
+  do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
+  result.removeObserver(resultObserver);
 }
