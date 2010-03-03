@@ -52,15 +52,15 @@ parent:
   __delete__();
 
   AsyncOpen(nsCString   uriSpec, 
-            nsCString   originCharset, 
+            nsCString   charset, 
             // - TODO: unclear if any HTTP channel clients ever set
             // originalURI != uri (about:credits?); also not clear if chrome
             // channel would ever need to know.  Can we get rid of next two
             // args?
             nsCString   originalUriSpec, 
             nsCString   originalCharset, 
-            nsCString   documentUriSpec, 
-            nsCString   documentCharset, 
+            nsCString   docUriSpec, 
+            nsCString   docCharset, 
             PRUint32    loadFlags);
 
 child:

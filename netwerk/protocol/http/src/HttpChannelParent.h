@@ -66,7 +66,7 @@ public:
 
 protected:
   virtual bool RecvAsyncOpen(const nsCString& uriSpec, 
-                             const nsCString& originCharset,
+                             const nsCString& charset,
                              const nsCString& originalUriSpec, 
                              const nsCString& originalCharset,
                              const nsCString& docUriSpec, 
