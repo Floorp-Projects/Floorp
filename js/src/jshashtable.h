@@ -140,7 +140,7 @@ class HashTable : AllocPolicy
                 ++cur;
         }
 
-        Entry *cur, * const end;
+        Entry *cur, *end;
 
       public:
         bool empty() const {
