@@ -106,7 +106,7 @@ ThebesLayerD3D9::RenderLayer()
     context = new gfxContext(destinationSurface);
     context->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
     LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-    cbInfo.Callback(this, context, region, cbInfo.CallbackData);
+    cbInfo.Callback(this, context, region, nsIntRegion(), cbInfo.CallbackData);
 
     nsRefPtr<IDirect3DTexture9> tmpTexture;
     device()->CreateTexture(mInvalidatedRect.width, mInvalidatedRect.height, 1,
