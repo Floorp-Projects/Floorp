@@ -48,11 +48,11 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_UPDATE_MANUAL_URL        = "app.update.url.manual";
+const PREF_APP_UPDATE_ENABLED       = "app.update.enabled";
 const PREF_APP_UPDATE_LOG           = "app.update.log";
-const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
-const PREF_UPDATE_NEVER_BRANCH      = "app.update.never.";
-const PREF_AUTO_UPDATE_ENABLED      = "app.update.enabled";
+const PREF_APP_UPDATE_MANUAL_URL    = "app.update.url.manual";
+const PREF_APP_UPDATE_NEVER_BRANCH  = "app.update.never.";
+const PREF_APP_UPDATE_TEST_LOOP     = "app.update.test.loop";
 const PREF_PLUGINS_UPDATEURL        = "plugins.update.url";
 
 const UPDATE_TEST_LOOP_INTERVAL     = 2000;
@@ -222,14 +222,10 @@ var gUpdates = {
   },
 
   never: function () {
-    // If the user clicks "Never", we should not prompt them about updating to
-    // this major update version again, unless they manually do
-    // "Check for Updates..." which will clear the "never" pref for the version
-    // presented and remind them later about this available update.
-    //
-    // Encode version since it could be a non-ascii string (bug 359093)
-    var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
-                        encodeURIComponent(gUpdates.update.version);
+    // If the user clicks "No Thanks", we should not prompt them to update to
+    // this version again unless they manually select "Check for Updates..."
+    // which will clear all of the "never" prefs.
+    var neverPrefName = PREF_APP_UPDATE_NEVER_BRANCH + gUpdates.update.appVersion;
     gPref.setBoolPref(neverPrefName, true);
     this.wiz.cancel();
   },
@@ -597,7 +593,7 @@ var gNoUpdatesPage = {
     LOG("gNoUpdatesPage", "onPageShow - could not select an appropriate " +
         "update. Either there were no updates or |selectUpdate| failed");
 
-    if (getPref("getBoolPref", PREF_AUTO_UPDATE_ENABLED, true))
+    if (getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true))
       document.getElementById("noUpdatesAutoEnabled").hidden = false;
     else
       document.getElementById("noUpdatesAutoDisabled").hidden = false;
@@ -648,8 +644,8 @@ var gIncompatibleCheckPage = {
     var ai = CoC["@mozilla.org/xre/app-info;1"].getService(CoI.nsIXULAppInfo);
     var vc = CoC["@mozilla.org/xpcom/version-comparator;1"].
              getService(CoI.nsIVersionComparator);
-    if (!gUpdates.update.extensionVersion ||
-        vc.compare(gUpdates.update.extensionVersion, ai.version) == 0) {
+    if (!gUpdates.update.appVersion ||
+        vc.compare(gUpdates.update.appVersion, ai.version) == 0) {
       // Go to the next page
       gUpdates.wiz.advance();
       return;
@@ -657,7 +653,7 @@ var gIncompatibleCheckPage = {
 
     var em = CoC["@mozilla.org/extensions/manager;1"].
              getService(CoI.nsIExtensionManager);
-    this.addons = em.getIncompatibleItemList(gUpdates.update.extensionVersion,
+    this.addons = em.getIncompatibleItemList(gUpdates.update.appVersion,
                                              gUpdates.update.platformVersion,
                                              CoI.nsIUpdateItem.TYPE_ANY, false);
     if (this.addons.length > 0) {
@@ -696,7 +692,7 @@ var gIncompatibleCheckPage = {
     em.update(this.addons, this.addons.length,
               CoI.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION, this,
               CoI.nsIExtensionManager.UPDATE_WHEN_NEW_APP_DETECTED,
-              gUpdates.update.extensionVersion, gUpdates.update.platformVersion);
+              gUpdates.update.appVersion, gUpdates.update.platformVersion);
   },
 
   /**
@@ -768,17 +764,14 @@ var gManualUpdatePage = {
   onPageShow: function() {
     var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(CoI.nsIURLFormatter);
-    var manualURL = formatter.formatURLPref(PREF_UPDATE_MANUAL_URL);
+    var manualURL = formatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
     var manualUpdateLinkLabel = document.getElementById("manualUpdateLinkLabel");
     manualUpdateLinkLabel.value = manualURL;
     manualUpdateLinkLabel.setAttribute("url", manualURL);
 
     // Prevent multiple notifications for the same update when the user is
     // unable to apply updates.
-    // Encode version since it could be a non-ascii string (bug 359093)
-    var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
-                        encodeURIComponent(gUpdates.update.version);
-    gPref.setBoolPref(neverPrefName, true);
+    gUpdates.never();
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
@@ -799,10 +792,10 @@ var gUpdatesAvailablePage = {
    * Initialize
    */
   onPageShow: function() {
-    var severity = gUpdates.update.type;
+    var update = gUpdates.update;
     gUpdates.setButtons("askLaterButton",
-                        severity == "major" ? "noThanksButton" : null,
-                        "updateButton_" + severity, true);
+                        update.showNeverForVersion ? "noThanksButton" : null,
+                        "updateButton_" + update.type, true);
     var btn = gUpdates.wiz.getButton("next");
     btn.className += " heed";
     btn.focus();
@@ -810,37 +803,37 @@ var gUpdatesAvailablePage = {
     if (this._loaded)
       return;
 
-    if (!gUpdates.update.licenseURL) {
+    if (!update.licenseURL) {
       if (gIncompatibleCheckPage.addons.length == 0)
         gUpdates.wiz.currentPage.setAttribute("next", "downloading");
       else
         gUpdates.wiz.currentPage.setAttribute("next", "incompatibleList");
     }
 
-    var updateName = gUpdates.update.name;
-    if (gUpdates.update.channel == "nightly") {
+    var updateName = update.name;
+    if (update.channel == "nightly") {
       updateName = gUpdates.getAUSString("updateName", [gUpdates.brandName,
-                                                        gUpdates.update.version]);
-      updateName = updateName + " " + gUpdates.update.buildID + " nightly";
+                                                        update.displayVersion]);
+      updateName = updateName + " " + update.buildID + " nightly";
     }
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
     var updateTypeElement = document.getElementById("updateType");
-    updateTypeElement.setAttribute("severity", severity);
+    updateTypeElement.setAttribute("severity", update.type);
 
     var moreInfoContent = document.getElementById("moreInfoContent");
     var intro;
-    if (severity == "major") {
+    if (update.billboardURL) {
       // for major updates, use the brandName and the version for the intro
       intro = gUpdates.getAUSString("intro_major_app_and_version",
-                                    [gUpdates.brandName, gUpdates.update.version]);
+                                    [gUpdates.brandName, update.displayVersion]);
       var remoteContent = document.getElementById("updateMoreInfoContent");
       // update_name and update_version need to be set before url
       // so that when attempting to download the url, we can show
       // the formatted "Download..." string
       remoteContent.update_name = gUpdates.brandName;
-      remoteContent.update_version = gUpdates.update.version;
-      remoteContent.url = gUpdates.update.detailsURL;
+      remoteContent.update_version = update.displayVersion;
+      remoteContent.url = update.billboardURL;
 
       moreInfoContent.hidden = false;
       document.getElementById("moreInfoURL").hidden = true;
@@ -849,29 +842,27 @@ var gUpdatesAvailablePage = {
       document.getElementById("upgradeEvangelism").hidden = true;
       document.getElementById("upgradeEvangelismSep").hidden = true;
 
-      // Clear the "never" pref for this version.  this is to handle the
-      // scenario where the user clicked "never" for a major update and then at
-      // a later point, did "Check for Updates..." and then canceled.  If we
-      // don't clear the "never" pref future notifications for this version
-      // will never happen.
-      //
-      // Encode version since it could be a non-ascii string (bug 359093)
-      var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
-                          encodeURIComponent(gUpdates.update.version);
-      gPref.setBoolPref(neverPrefName, false);
+      // Clear all of the "never" prefs to handle the scenario where the user
+      // clicked "never" for an update, selected "Check for Updates...", and
+      // then canceled.  If we don't clear the "never" prefs future
+      // notifications will never happen.
+      gPref.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
     }
     else {
       // for minor updates, just use the brandName for the intro
       intro = gUpdates.getAUSString("intro_minor_app", [gUpdates.brandName]);
       // This element when hidden still receives focus events which will
-      // cause assertions with debug builds so remove it if it isn't used.
+      // cause assertions with debug builds so remove it when it isn't used.
       moreInfoContent.parentNode.removeChild(moreInfoContent);
       var updateMoreInfoURL = document.getElementById("updateMoreInfoURL");
-      updateMoreInfoURL.setAttribute("url", gUpdates.update.detailsURL);
+      if (update.detailsURL)
+        updateMoreInfoURL.setAttribute("url", update.detailsURL);
+      else
+        updateMoreInfoURL.hidden = true;
     }
     updateTypeElement.textContent = intro;
 
-    var updateTitle = gUpdates.getAUSString("updatesfound_" + severity +
+    var updateTitle = gUpdates.getAUSString("updatesfound_" + update.type +
                                             ".title");
     gUpdates.wiz.currentPage.setAttribute("label", updateTitle);
     // this is necessary to make this change to the label of the current
@@ -954,7 +945,7 @@ var gLicensePage = {
     // can display the formatted "Download..." string when attempting to
     // download the url.
     licenseContent.update_name = gUpdates.brandName;
-    licenseContent.update_version = gUpdates.update.version;
+    licenseContent.update_version = gUpdates.update.displayVersion;
     licenseContent.url = gUpdates.update.licenseURL;
   },
 
@@ -1051,7 +1042,8 @@ var gIncompatibleListPage = {
     var intro;
     if (severity == "major")
       intro = gUpdates.getAUSString("incompatibleAddons_" + severity,
-                                    [gUpdates.brandName, gUpdates.update.version,
+                                    [gUpdates.brandName,
+                                     gUpdates.update.displayVersion,
                                      gUpdates.brandName]);
     else
       intro = gUpdates.getAUSString("incompatibleAddons_" + severity,
@@ -1170,7 +1162,10 @@ var gDownloadingPage = {
     }
 
     var link = document.getElementById("downloadDetailsLink");
-    link.setAttribute("url", gUpdates.update.detailsURL);
+    if (gUpdates.update.detailsURL)
+      link.setAttribute("url", gUpdates.update.detailsURL);
+    else
+      link.hidden = true;
 
     gUpdates.setButtons("hideButton", null, null, false);
     gUpdates.wiz.getButton("extra1").focus();
@@ -1500,7 +1495,7 @@ var gErrorsPage = {
     errorReason.value = statusText;
     var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(CoI.nsIURLFormatter);
-    var manualURL = formatter.formatURLPref(PREF_UPDATE_MANUAL_URL);
+    var manualURL = formatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.setAttribute("url", manualURL);
@@ -1568,12 +1563,16 @@ var gFinishedPage = {
     updateFinishedName.value = gUpdates.update.name;
 
     var link = document.getElementById("finishedBackgroundLink");
-    link.setAttribute("url", gUpdates.update.detailsURL);
-    // The details link is stealing focus so it is disabled by default and
-    // should only be enabled after onPageShow has been called.
-    link.disabled = false;
+    if (gUpdates.update.detailsURL) {
+      link.setAttribute("url", gUpdates.update.detailsURL);
+      // The details link is stealing focus so it is disabled by default and
+      // should only be enabled after onPageShow has been called.
+      link.disabled = false;
+    }
+    else
+      link.hidden = true;
 
-    if (getPref("getBoolPref", PREF_UPDATE_TEST_LOOP, false)) {
+    if (getPref("getBoolPref", PREF_APP_UPDATE_TEST_LOOP, false)) {
       setTimeout(function () {
                    gUpdates.wiz.getButton("finish").click();
                  }, UPDATE_TEST_LOOP_INTERVAL);
