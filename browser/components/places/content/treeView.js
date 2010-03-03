@@ -995,22 +995,16 @@ PlacesTreeView.prototype = {
 
   get result() this._result,
   set result(val) {
-    // Some methods (e.g. getURLsFromContainer) temporarily null out the
-    // viewer when they do temporary changes to the view, this does _not_
-    // call setResult(null), but then, we're called again with the result
-    // object which is already set for this viewer. At that point,
-    // we should do nothing.
-    if (this._result != val) {
-      if (this._result)
-        this._rootNode.containerOpen = false;
+    if (this._result)
+      this._rootNode.containerOpen = false;
 
-      this._result = val;
-      this._rootNode = val ? val.root : null;
+    this._result = val;
+    this._rootNode = val ? val.root : null;
 
-      // If the tree is not set yet, setTree will call finishInit.
-      if (this._tree && val)
-        this._finishInit();
-    }
+    // If the tree is not set yet, setTree will call finishInit.
+    if (this._tree && val)
+      this._finishInit();
+
     return val;
   },
 
@@ -1364,7 +1358,7 @@ PlacesTreeView.prototype = {
         // detach from result when we are detaching from the tree.
         // This breaks the reference cycle between us and the result.
         if (!aTree)
-          this._result.viewer = null;
+          this._result.removeObserver(this);
       }
       if (aTree)
         this._finishInit();
