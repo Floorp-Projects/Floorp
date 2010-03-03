@@ -59,7 +59,7 @@
 #include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #ifdef MOZ_SMIL
-class nsSMILAnimationController;
+#include "nsSMILAnimationController.h"
 #endif // MOZ_SMIL
 
 class nsIContent;
@@ -114,10 +114,9 @@ class Link;
 } // namespace dom
 } // namespace mozilla
 
-// 0bce8f8b-8e27-44e6-92bc-65d0805b7fb4
 #define NS_IDOCUMENT_IID      \
-{ 0x0bce8f8b, 0x8e27, 0x44e6, \
-  { 0x92, 0xbc, 0x65, 0xd0, 0x80, 0x5b, 0x7f, 0xb4 } }
+{ 0x36f0a42c, 0x089b, 0x4909, \
+  { 0xb3, 0xee, 0xc5, 0xa4, 0x00, 0x90, 0x30, 0x02 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1165,7 +1164,14 @@ public:
                                   void* aData);
 
 #ifdef MOZ_SMIL
-  // Getter for this document's SMIL Animation Controller
+  // Indicates whether mAnimationController has been (lazily) initialized.
+  // If this returns PR_TRUE, we're promising that GetAnimationController()
+  // will have a non-null return value.
+  PRBool HasAnimationController()  { return !!mAnimationController; }
+
+  // Getter for this document's SMIL Animation Controller. Performs lazy
+  // initialization, if this document supports animation and if
+  // mAnimationController isn't yet initialized.
   virtual nsSMILAnimationController* GetAnimationController() = 0;
 #endif // MOZ_SMIL
 
@@ -1343,6 +1349,11 @@ protected:
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
+
+#ifdef MOZ_SMIL
+  // SMIL Animation Controller, lazily-initialized in GetAnimationController
+  nsAutoPtr<nsSMILAnimationController> mAnimationController;
+#endif // MOZ_SMIL
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

@@ -1128,8 +1128,8 @@ void
 nsPresContext::SetSMILAnimations(nsIDocument *aDoc, PRUint16 aNewMode,
                                  PRUint16 aOldMode)
 {
-  nsSMILAnimationController *controller = aDoc->GetAnimationController();
-  if (controller) {
+  if (aDoc->HasAnimationController()) {
+    nsSMILAnimationController* controller = aDoc->GetAnimationController();
     switch (aNewMode)
     {
       case imgIContainer::kNormalAnimMode:
