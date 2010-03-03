@@ -468,16 +468,24 @@ nsresult
 nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
-  if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    Link::ResetLinkState(!!aNotify);
-  }
-
   if (aAttribute == nsGkAtoms::accesskey &&
       kNameSpaceID_None == aNameSpaceID) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                                aNotify);
+
+  // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState
+  // is important here!  The attribute is not unset until UnsetAttr returns, and
+  // we will need the updated attribute value because notifying the document
+  // that content states have changed will call IntrinsicState, which will try
+  // to get updated information about the visitedness from Link.
+  if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+    Link::ResetLinkState(!!aNotify);
+  }
+
+  return rv;
 }
 
 PRBool

@@ -154,3 +154,4 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
 fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
+== href-attr-removal-restyles.svg href-attr-removal-restyles-ref.svg
