@@ -164,7 +164,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     PRInt32 rmode;
     if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
-        if (rmode >= 0 || rmode < RENDER_MODE_MAX) {
+        if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
 #ifndef CAIRO_HAS_DDRAW_SURFACE
             if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
                 rmode = RENDER_IMAGE_STRETCH24;
