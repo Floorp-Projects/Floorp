@@ -1457,10 +1457,10 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
 
     str = (JSString *) closure;
     caller = JS_GetScriptedCaller(cx, NULL);
-    if (!JS_EvaluateScript(cx, caller->scopeChain,
-                           JS_GetStringBytes(str), JS_GetStringLength(str),
-                           caller->script->filename, caller->script->lineno,
-                           rval)) {
+    if (!JS_EvaluateUCInStackFrame(cx, caller,
+                                   JS_GetStringChars(str), JS_GetStringLength(str),
+                                   caller->script->filename, caller->script->lineno,
+                                   rval)) {
         return JSTRAP_ERROR;
     }
     if (!JSVAL_IS_VOID(*rval))
