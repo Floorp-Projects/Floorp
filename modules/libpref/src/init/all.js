@@ -2832,6 +2832,9 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
+// Initialize default render-mode.
+pref("mozilla.widget.render-mode", -1);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
