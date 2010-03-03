@@ -159,7 +159,7 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
       if (channel) {
       nsCOMPtr<nsIURI> uri;
-        channel->GetURI(getter_AddRefs(uri));
+        NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
         if (uri) {
           nsXMLHttpRequest::sAccessControlCache->
             RemoveEntries(uri, mRequestingPrincipal);
@@ -381,7 +381,7 @@ nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
     if (NS_FAILED(rv)) {
       if (nsXMLHttpRequest::sAccessControlCache) {
         nsCOMPtr<nsIURI> oldURI;
-        aOldChannel->GetURI(getter_AddRefs(oldURI));
+        NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
         if (oldURI) {
           nsXMLHttpRequest::sAccessControlCache->
             RemoveEntries(oldURI, mRequestingPrincipal);
@@ -410,7 +410,7 @@ nsresult
 nsCrossSiteListenerProxy::UpdateChannel(nsIChannel* aChannel)
 {
   nsCOMPtr<nsIURI> uri, originalURI;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
   NS_ENSURE_SUCCESS(rv, rv);  

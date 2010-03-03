@@ -1302,6 +1302,14 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
+  /**
+   * Register a filedata uri as being "owned" by this document. I.e. that its
+   * lifetime is connected with this document. When the document goes away it
+   * should "kill" the uri by calling
+   * nsFileDataProtocolHandler::RemoveFileDataEntry
+   */
+  virtual void RegisterFileDataUri(nsACString& aUri) = 0;
+
 protected:
   ~nsIDocument()
   {

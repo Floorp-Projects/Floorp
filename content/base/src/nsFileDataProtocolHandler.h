@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,8 +14,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,25 +34,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef nsFileDataProtocolHandler_h___
+#define nsFileDataProtocolHandler_h___
 
-interface nsIDOMFileError;
+#include "nsIProtocolHandler.h"
 
-[scriptable, uuid(b10293e1-d531-4bdd-9b2b-4d8c1c9bc633)]
-interface nsIDOMFile : nsISupports
+#define FILEDATA_SCHEME "moz-filedata"
+
+class nsIFile;
+class nsIPrincipal;
+
+class nsFileDataProtocolHandler : public nsIProtocolHandler
 {
-  //fileName and fileSize are now deprecated attributes
-  readonly attribute DOMString fileName;
-  readonly attribute unsigned long long fileSize;
+public:
+  NS_DECL_ISUPPORTS
 
-  readonly attribute DOMString name;
-  readonly attribute DOMString mozFullPath;
-  readonly attribute unsigned long long size;
-  readonly attribute DOMString type;
+  // nsIProtocolHandler methods:
+  NS_DECL_NSIPROTOCOLHANDLER
 
-  readonly attribute DOMString url;
+  // nsFileDataProtocolHandler methods:
+  nsFileDataProtocolHandler() {}
+  virtual ~nsFileDataProtocolHandler() {}
 
-  DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
-  DOMString getAsDataURL();             // raises(FileException) on retrieval
-  DOMString getAsBinary();              // raises(FileException) on retrieval
+  // Methods for managing uri->file mapping
+  static void AddFileDataEntry(nsACString& aUri, nsIFile* aFile,
+                               nsIPrincipal* aPrincipal);
+  static void RemoveFileDataEntry(nsACString& aUri);
+  
 };
+
+#define NS_FILEDATAPROTOCOLHANDLER_CID \
+{ 0xb43964aa, 0xa078, 0x44b2, \
+  { 0xb0, 0x6b, 0xfd, 0x4d, 0x1b, 0x17, 0x2e, 0x66 } }
+
+#endif /* nsFileDataProtocolHandler_h___ */
