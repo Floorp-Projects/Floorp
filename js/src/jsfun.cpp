@@ -1019,9 +1019,12 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                JSCallPropertyKind kind, JSBool setter = false)
 {
     JS_ASSERT(obj->getClass() == &js_CallClass);
-    JS_ASSERT((int16) JSVAL_TO_INT(id) == JSVAL_TO_INT(id));
 
-    uintN i = (uint16) JSVAL_TO_INT(id);
+    uintN i = 0;
+    if (kind != JSCPK_ARGUMENTS) {
+        JS_ASSERT((int16) JSVAL_TO_INT(id) == JSVAL_TO_INT(id));
+        i = (uint16) JSVAL_TO_INT(id);
+    }
 
     jsval *array;
     if (kind == JSCPK_UPVAR) {
