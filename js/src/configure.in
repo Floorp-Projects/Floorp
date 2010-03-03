@@ -2436,17 +2436,6 @@ case "$target" in
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
-dnl
-dnl Indicate that platform requires special thread safe 
-dnl locking when starting up the OJI JVM 
-dnl (see mozilla/modules/oji/src/nsJVMManager.cpp)
-dnl ========================================================
-case "$target" in
-    *-hpux*)      
-        AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
-        ;;
-esac
-
 dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
 dnl ========================================================
