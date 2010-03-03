@@ -2076,15 +2076,6 @@ case "$target" in
     cygwin*|msvc*|mks*)
         AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
         ;;
-
-    *)
-        AC_CHECK_HEADERS(oleacc.idl)
-
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
-        AC_LANG_RESTORE
-        ;;
     esac
 
     case "$target" in
