@@ -48,7 +48,10 @@ function browserWindowsCount() {
 }
 
 function test() {
-  /** Test for Bug 394759 **/
+  // This test takes quite some time, and timeouts frequently, so we require
+  // more time to run.
+  // See Bug 518970.
+  requestLongerTimeout(2);
   
   // test setup
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
