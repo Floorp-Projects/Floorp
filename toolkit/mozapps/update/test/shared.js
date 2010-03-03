@@ -45,6 +45,7 @@ const AUS_Cr = Components.results;
 
 const PREF_APP_UPDATE_CHANNEL           = "app.update.channel";
 const PREF_APP_UPDATE_ENABLED           = "app.update.enabled";
+const PREF_APP_UPDATE_IDLETIME          = "app.update.idletime";
 const PREF_APP_UPDATE_LOG               = "app.update.log";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_URL_DETAILS       = "app.update.url.details";
@@ -99,6 +100,7 @@ __defineGetter__("gAUS", function() {
   delete this.gAUS;
   return this.gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
                      getService(AUS_Ci.nsIApplicationUpdateService).
+                     QueryInterface(AUS_Ci.nsITimerCallback).
                      QueryInterface(AUS_Ci.nsIObserver);
 });
 
