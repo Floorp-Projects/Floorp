@@ -38,12 +38,7 @@
 
 /* General URL Construction Tests */
 
-const URL_PREFIX = URL_HOST + DIR_DATA + "/";
-
-const PREF_APP_UPDATE_CHANNEL        = "app.update.channel";
-const PREF_PARTNER_BRANCH            = "app.partner.";
-const PREF_APP_DISTRIBUTION          = "distribution.id";
-const PREF_APP_DISTRIBUTION_VERSION  = "distribution.version";
+const URL_PREFIX = URL_HOST + URL_PATH + "/";
 
 var gAppInfo;
 
@@ -52,8 +47,7 @@ function run_test() {
   removeUpdateDirsAndFiles();
   // The mock XMLHttpRequest is MUCH faster
   overrideXHR(callHandleEvent);
-  startAUS();
-  startUpdateChecker();
+  standardInit();
   gAppInfo = AUS_Cc["@mozilla.org/xre/app-info;1"].
              getService(AUS_Ci.nsIXULAppInfo).
              QueryInterface(AUS_Ci.nsIXULRuntime);
@@ -82,7 +76,7 @@ function run_test_pt1() {
   gCheckFunc = check_test_pt1;
   var url = URL_PREFIX + "%PRODUCT%/";
   dump("Testing: url constructed with %PRODUCT% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -96,7 +90,7 @@ function run_test_pt2() {
   gCheckFunc = check_test_pt2;
   var url = URL_PREFIX + "%VERSION%/";
   dump("Testing: url constructed with %VERSION% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -110,7 +104,7 @@ function run_test_pt3() {
   gCheckFunc = check_test_pt3;
   var url = URL_PREFIX + "%BUILD_ID%/";
   dump("Testing: url constructed with %BUILD_ID% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -125,7 +119,7 @@ function run_test_pt4() {
   gCheckFunc = check_test_pt4;
   var url = URL_PREFIX + "%BUILD_TARGET%/";
   dump("Testing: url constructed with %BUILD_TARGET% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -159,7 +153,7 @@ function run_test_pt5() {
   gCheckFunc = check_test_pt5;
   var url = URL_PREFIX + "%LOCALE%/";
   dump("Testing: url constructed with %LOCALE% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   try {
     gUpdateChecker.checkForUpdates(updateCheckListener, true);
   }
@@ -180,15 +174,13 @@ function run_test_pt6() {
   gCheckFunc = check_test_pt6;
   var url = URL_PREFIX + "%CHANNEL%/";
   dump("Testing: url constructed with %CHANNEL% - " + url + "\n");
-  var pb = getPrefBranch();
-  pb.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
-  var defaults = pb.QueryInterface(AUS_Ci.nsIPrefService).getDefaultBranch(null);
-  defaults.setCharPref(PREF_APP_UPDATE_CHANNEL, "bogus_channel");
+  setUpdateURLOverride(url);
+  setUpdateChannel();
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt6() {
-  do_check_eq(getResult(gRequestURL), "bogus_channel");
+  do_check_eq(getResult(gRequestURL), "test_channel");
   run_test_pt7();
 }
 
@@ -197,16 +189,15 @@ function run_test_pt7() {
   gCheckFunc = check_test_pt7;
   var url = URL_PREFIX + "%CHANNEL%/";
   dump("Testing: url constructed with %CHANNEL% - " + url + "\n");
-  var pb = getPrefBranch();
-  pb.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
-  var defaults = pb.QueryInterface(AUS_Ci.nsIPrefService).getDefaultBranch(null);
-  defaults.setCharPref(PREF_PARTNER_BRANCH + "bogus_partner1", "bogus_partner1");
-  defaults.setCharPref(PREF_PARTNER_BRANCH + "bogus_partner2", "bogus_partner2");
+  setUpdateURLOverride(url);
+  var defaults = getDefaultPrefBranch();
+  defaults.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1", "test_partner1");
+  defaults.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2", "test_partner2");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt7() {
-  do_check_eq(getResult(gRequestURL), "bogus_channel-cck-bogus_partner1-bogus_partner2");
+  do_check_eq(getResult(gRequestURL), "test_channel-cck-test_partner1-test_partner2");
   run_test_pt8();
 }
 
@@ -215,7 +206,7 @@ function run_test_pt8() {
   gCheckFunc = check_test_pt8;
   var url = URL_PREFIX + "%PLATFORM_VERSION%/";
   dump("Testing: url constructed with %PLATFORM_VERSION% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -229,7 +220,7 @@ function run_test_pt9() {
   gCheckFunc = check_test_pt9;
   var url = URL_PREFIX + "%OS_VERSION%/";
   dump("Testing: url constructed with %OS_VERSION% - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -259,15 +250,13 @@ function run_test_pt10() {
   gCheckFunc = check_test_pt10;
   var url = URL_PREFIX + "%DISTRIBUTION%/";
   dump("Testing: url constructed with %DISTRIBUTION% - " + url + "\n");
-  var pb = getPrefBranch();
-  pb.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
-  var defaults = pb.QueryInterface(AUS_Ci.nsIPrefService).getDefaultBranch(null);
-  defaults.setCharPref(PREF_APP_DISTRIBUTION, "bogus_distro");
+  setUpdateURLOverride(url);
+  getDefaultPrefBranch().setCharPref(PREF_DISTRIBUTION_ID, "test_distro");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt10() {
-  do_check_eq(getResult(gRequestURL), "bogus_distro");
+  do_check_eq(getResult(gRequestURL), "test_distro");
   run_test_pt11();
 }
 
@@ -276,15 +265,13 @@ function run_test_pt11() {
   gCheckFunc = check_test_pt11;
   var url = URL_PREFIX + "%DISTRIBUTION_VERSION%/";
   dump("Testing: url constructed with %DISTRIBUTION_VERSION% - " + url + "\n");
-  var pb = getPrefBranch();
-  pb.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
-  var defaults = pb.QueryInterface(AUS_Ci.nsIPrefService).getDefaultBranch(null);
-  defaults.setCharPref(PREF_APP_DISTRIBUTION_VERSION, "bogus_distro_version");
+  setUpdateURLOverride(url);
+  getDefaultPrefBranch().setCharPref(PREF_DISTRIBUTION_VERSION, "test_distro_version");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt11() {
-  do_check_eq(getResult(gRequestURL), "bogus_distro_version");
+  do_check_eq(getResult(gRequestURL), "test_distro_version");
   run_test_pt12();
 }
 
@@ -293,7 +280,7 @@ function run_test_pt12() {
   gCheckFunc = check_test_pt12;
   var url = URL_PREFIX;
   dump("Testing: url constructed that doesn't have a parameter - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -305,13 +292,13 @@ function check_test_pt12() {
 // url constructed that has a parameter - bug 454357
 function run_test_pt13() {
   gCheckFunc = check_test_pt13;
-  var url = URL_PREFIX + "?bogus=param";
+  var url = URL_PREFIX + "?extra=param";
   dump("Testing: url constructed that has a parameter - " + url + "\n");
-  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt13() {
-  do_check_eq(getResult(gRequestURL), "?bogus=param&force=1");
+  do_check_eq(getResult(gRequestURL), "?extra=param&force=1");
   end_test();
 }

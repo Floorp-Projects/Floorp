@@ -54,6 +54,7 @@ function run_test() {
        "browser.privatebrowsing.autostart set to true\n");
 
   removeUpdateDirsAndFiles();
+  setUpdateChannel();
 
   var registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
@@ -61,14 +62,10 @@ function run_test() {
                             "@mozilla.org/embedcomp/window-watcher;1",
                              WindowWatcherFactory);
 
-  var pb = getPrefBranch();
   // Enable automatic app update so that after the failed partial is found the
   // complete update will start to download automatically.
-  pb.setBoolPref("app.update.enabled", true);
-  pb.setBoolPref("browser.privatebrowsing.autostart", true);
-
-  var defaults = pb.QueryInterface(AUS_Ci.nsIPrefService).getDefaultBranch(null);
-  defaults.setCharPref("app.update.channel", "bogus_channel");
+  gPref.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
+  gPref.setBoolPref("browser.privatebrowsing.autostart", true);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
   setDefaultPrefs();
@@ -82,19 +79,18 @@ function end_test() {
 
 function run_test_pt1() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  var url = URL_HOST + DIR_DATA + "/partial.mar";
+  var url = URL_HOST + URL_PATH + "/partial.mar";
   var patches = getLocalPatchString("partial", url, null, null, null, null,
                                     STATE_FAILED) +
                 getLocalPatchString(null, null, null, null, null, null,
                                     STATE_NONE);
-  var updates = getLocalUpdateString(patches, false, null, "1.0", null, "1.0",
-                                     null, null, null,
-                                     URL_HOST + DIR_DATA + "/partial.mar");
+  var updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0",
+                                     null, null, null, null, url);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_FAILED);
 
-  startAUS();
-  startUpdateManager();
+  standardInit();
+
   dump("Testing: activeUpdate.state should equal STATE_DOWNLOADING prior to " +
        "entering private browsing\n");
   do_check_eq(gUpdateManager.activeUpdate.state, STATE_DOWNLOADING);
