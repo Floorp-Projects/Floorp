@@ -73,7 +73,7 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)
 
 ifndef MOZ_ENABLE_LIBXUL
 CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
-LIBS += ../nsCSSKeywords.o ../nsCSSProps.o $(XPCOM_LIBS)
+LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
