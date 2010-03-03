@@ -42,6 +42,8 @@
 
 #include "gfxGDIFontList.h"
 
+#include "nsIWindowsRegKey.h"
+
 // font info loader constants
 static const PRUint32 kDelayBeforeLoadingFonts = 8 * 1000; // 8secs
 static const PRUint32 kIntervalBetweenLoadingFonts = 150; // 150ms
@@ -332,6 +334,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
 
 gfxDWriteFontList::gfxDWriteFontList()
 {
+    mFontSubstitutes.Init();
 }
 
 gfxFontEntry *
@@ -459,6 +462,9 @@ gfxDWriteFontList::InitFontList()
 
     gfxPlatformFontList::InitFontList();
 
+    mFontSubstitutes.Clear();
+    mNonExistingFonts.Clear();
+
     nsRefPtr<IDWriteFontCollection> systemFonts;
     hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
         GetSystemFontCollection(getter_AddRefs(systemFonts));
@@ -507,17 +513,83 @@ gfxDWriteFontList::InitFontList()
         nsAutoString name(famName.Elements());
         BuildKeyNameFromFontName(name);
 
-        gfxDWriteFontList *fontList = PlatformFontList();
-        if (!fontList->mFontFamilies.GetWeak(name)) {
+        if (!mFontFamilies.GetWeak(name)) {
             nsRefPtr<gfxFontFamily> fam = 
                 new gfxDWriteFontFamily(
                     nsDependentString(famName.Elements()),
                     family);
-            fontList->mFontFamilies.Put(name, fam);
+            mFontFamilies.Put(name, fam);
         }
     }
 
+    GetFontSubstitutes();
+
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
+}
+
+static void
+RemoveCharsetFromFontSubstitute(nsAString &aName)
+{
+    PRInt32 comma = aName.FindChar(PRUnichar(','));
+    if (comma >= 0)
+        aName.Truncate(comma);
+}
+
+nsresult
+gfxDWriteFontList::GetFontSubstitutes()
+{
+    // Create the list of FontSubstitutes
+    nsCOMPtr<nsIWindowsRegKey> regKey = 
+        do_CreateInstance("@mozilla.org/windows-registry-key;1");
+    if (!regKey) {
+        return NS_ERROR_FAILURE;
+    }
+    NS_NAMED_LITERAL_STRING(
+        kFontSubstitutesKey,
+        "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
+
+    nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                               kFontSubstitutesKey,
+                               nsIWindowsRegKey::ACCESS_READ);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    PRUint32 count;
+    rv = regKey->GetValueCount(&count);
+    if (NS_FAILED(rv) || count == 0)
+        return rv;
+    for (PRUint32 i = 0; i < count; i++) {
+        nsAutoString substituteName;
+        rv = regKey->GetValueName(i, substituteName);
+        if (NS_FAILED(rv) || substituteName.IsEmpty() ||
+            substituteName.CharAt(1) == PRUnichar('@')) {
+            continue;
+        }
+        PRUint32 valueType;
+        rv = regKey->GetValueType(substituteName, &valueType);
+        if (NS_FAILED(rv) || valueType != nsIWindowsRegKey::TYPE_STRING) {
+            continue;
+        }
+        nsAutoString actualFontName;
+        rv = regKey->ReadStringValue(substituteName, actualFontName);
+        if (NS_FAILED(rv)) {
+            continue;
+        }
+
+        RemoveCharsetFromFontSubstitute(substituteName);
+        BuildKeyNameFromFontName(substituteName);
+        RemoveCharsetFromFontSubstitute(actualFontName);
+        BuildKeyNameFromFontName(actualFontName);
+        gfxFontFamily *ff;
+        if (!actualFontName.IsEmpty() && 
+            (ff = mFontFamilies.GetWeak(actualFontName))) {
+            mFontSubstitutes.Put(substituteName, ff);
+        } else {
+            mNonExistingFonts.AppendElement(substituteName);
+        }
+    }
+    return NS_OK;
 }
 
 PRBool
@@ -531,4 +603,24 @@ gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
     }
 
     return PR_FALSE;
+}
+
+PRBool 
+gfxDWriteFontList::ResolveFontName(const nsAString& aFontName,
+                                   nsAString& aResolvedFontName)
+{
+    nsAutoString keyName(aFontName);
+    BuildKeyNameFromFontName(keyName);
+
+    nsRefPtr<gfxFontFamily> ff;
+    if (mFontSubstitutes.Get(keyName, &ff)) {
+        aResolvedFontName = ff->Name();
+        return PR_TRUE;
+    }
+
+    if (mNonExistingFonts.Contains(keyName)) {
+        return PR_FALSE;
+    }
+
+    return gfxPlatformFontList::ResolveFontName(aFontName, aResolvedFontName);
 }
