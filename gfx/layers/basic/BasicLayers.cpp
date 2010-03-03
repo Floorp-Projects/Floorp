@@ -239,9 +239,6 @@ public:
 
   virtual gfxContext* BeginDrawing(nsIntRegion* aRegionToDraw);
   virtual void EndDrawing();
-  virtual void CopyFrom(ThebesLayer* aSource,
-                        const nsIntRegion& aRegion,
-                        const nsIntPoint& aDelta);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -274,22 +271,6 @@ BasicThebesLayer::EndDrawing()
                "Can only draw in drawing phase");
   NS_ASSERTION(BasicManager()->GetLastPainted() == this,
                "Not currently drawing this layer");
-}
-
-void
-BasicThebesLayer::CopyFrom(ThebesLayer* aSource,
-                           const nsIntRegion& aRegion,
-                           const nsIntPoint& aDelta)
-{
-  NS_ASSERTION(!BasicManager()->IsBeforeInTree(aSource, this),
-               "aSource must not be before this layer in tree");
-  NS_ASSERTION(BasicManager()->IsBeforeInTree(BasicManager()->GetLastPainted(), this),
-               "Cannot copy into a layer already painted");
-  NS_ASSERTION(BasicManager()->InDrawing(),
-               "Can only draw in drawing phase");
-  // Nothing to do here since we have no retained buffers. Our
-  // valid region is empty (since we haven't painted this layer yet),
-  // so no need to mark anything invalid.
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
