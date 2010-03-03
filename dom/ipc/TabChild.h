@@ -57,6 +57,7 @@
 #include "jsapi.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMWindow.h"
+#include "nsIDocShell.h"
 #include "nsNetUtil.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
@@ -86,6 +87,7 @@ public:
                            : NS_ERROR_NULL_POINTER;
   }
   NS_IMETHOD GetContent(nsIDOMWindow** aContent);
+  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
   NS_IMETHOD Dump(const nsAString& aStr)
   {
     return mMessageManager ? mMessageManager->Dump(aStr) : NS_OK;
