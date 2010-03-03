@@ -1109,20 +1109,21 @@ PlacesController.prototype = {
    *          The dragstart event.
    */
   setDataTransfer: function PC_setDataTransfer(aEvent) {
-    var dt = aEvent.dataTransfer;
-    var doCopy = ["copyLink", "copy", "link"].indexOf(dt.effectAllowed) != -1;
+    let dt = aEvent.dataTransfer;
+    let doCopy = ["copyLink", "copy", "link"].indexOf(dt.effectAllowed) != -1;
 
-    var result = this._view.getResult();
-    var oldViewer = result.viewer;
+    let result = this._view.getResult();
+    let suppressNotificationsOld = result.suppressNotifications;
+    if (!suppressNotificationsOld)
+      result.suppressNotifications = true;
+
     try {
-      result.viewer = null;
-      var nodes = this._view.getDraggableSelection();
-
-      for (var i = 0; i < nodes.length; ++i) {
+      let nodes = this._view.getDraggableSelection();
+      for (let i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
 
         function addData(type, index, overrideURI) {
-          var wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
+          let wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
           dt.mozSetDataAt(type, wrapNode, index);
         }
 
@@ -1144,8 +1145,8 @@ PlacesController.prototype = {
       }
     }
     finally {
-      if (oldViewer)
-        result.viewer = oldViewer;
+      if (!suppressNotificationsOld)
+        result.suppressNotifications = false;
     }
   },
 

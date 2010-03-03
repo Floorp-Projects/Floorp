@@ -525,7 +525,7 @@
         if (this._result) {
           this._resultNode.containerOpen = false;
           this._resultNode = null;
-          this._result.viewer = null;
+          this._result.removeObserver(this._resultObserver);
           this._result = null;
         }
       ]]></destructor>
@@ -692,8 +692,8 @@
         ]]></body>
       </method>
 
-      <!-- nsINavHistoryResultViewer -->
-      <field name="_viewer"><![CDATA[({
+      <!-- nsINavHistoryResultObserver -->
+      <field name="_resultObserver"><![CDATA[({
         _self: this,
 
         get result() {
@@ -701,24 +701,19 @@
         },
 
         set result(val) {
-          // some methods (e.g. getURLsFromContainer) temporarily null out the
-          // viewer when they do temporary changes to the view, this does _not_
-          // call setResult(null), but then, we're called again with the result
-          // object which is already set for this viewer. At that point,
-          // we should do nothing.
-          if (this._self._result != val) {
-            if (this._self._result)
-              this._self._resultNode.containerOpen = false;
+          if (this._self._result)
+            this._self._resultNode.containerOpen = false;
 
-            this._self.parentNode._built = false;
-            this._self._result = val;
-            if (val) {
-              this._self._resultNode = val.root;
-              this._self._resultNode._DOMElement = this._self.parentNode;
-            }
-            else
-              this._self._resultNode = null;
+          this._self.parentNode._built = false;
+          this._self._result = val;
+          if (val) {
+            this._self._resultNode = val.root;
+            this._self._resultNode._DOMElement = this._self.parentNode;
           }
+          else {
+            this._self._resultNode = null;
+          }
+
           return val;
         },
 
@@ -914,7 +909,7 @@
                                                queries.value.length,
                                                options.value);
 
-          result.viewer = this._viewer;
+          result.addObserver(this._resultObserver, false);
           return val;
         ]]></setter>
       </property>
