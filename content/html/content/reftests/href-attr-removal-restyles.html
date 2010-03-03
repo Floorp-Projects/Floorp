@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 549797 - Removing href attribute doesn't remove link styling</title>
+  <style type="text/css">
+    link {
+      display:block;
+    }
+    link::before {
+      content:"Test link";
+    }
+  </style>
+</head>
+<body onload="run_test();">
+<script type="text/javascript">
+function run_test()
+{
+  // Remove the href attributes of the links so they should be restyled as
+  // non-links.
+  document.getElementById("link1").removeAttribute("href");
+  document.getElementById("link2").removeAttribute("href");
+}
+</script>
+<p>
+  <a id="link1" href="http://example.com/1">Test anchor</a>
+  <link id="link2" href="http://example.com/1"/>
+</p>
+</body>
+</html>

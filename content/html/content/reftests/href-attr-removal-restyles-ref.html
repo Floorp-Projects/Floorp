@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 549797 - Removing href attribute doesn't remove link styling</title>
+  <style type="text/css">
+    a, link {
+      display:block;
+    }
+    link::before {
+      content:"Test link";
+    }
+  </style>
+</head>
+<body>
+<p>
+  <a>Test anchor</a>
+  <link/>
+</p>
+</body>
+</html>
