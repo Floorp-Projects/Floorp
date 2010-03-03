@@ -156,9 +156,16 @@ public:
   /**
    * Function called to draw the contents of each ThebesLayer.
    * aRegionToDraw contains the region that needs to be drawn.
-   * This would normally be a subregion of the visible region. Drawing is
-   * not necessarily clipped to aRegionToDraw.
+   * This would normally be a subregion of the visible region.
+   * The callee must draw all of aRegionToDraw. Drawing outside
+   * aRegionToDraw will be clipped out or ignored.
    * The callee must draw all of aRegionToDraw.
+   * 
+   * aRegionToInvalidate contains a region whose contents have been
+   * changed by the layer manager and which must therefore be invalidated.
+   * For example, this could be non-empty if the layer internally switched
+   * from RGBA to RGB or back ... we might want to repaint it to
+   * consistently use subpixel-AA or not.
    * 
    * aContext must not be used after the call has returned.
    * We guarantee that buffered contents in the visible
@@ -167,6 +174,7 @@ public:
   typedef void (* DrawThebesLayerCallback)(ThebesLayer* aLayer,
                                            gfxContext* aContext,
                                            const nsIntRegion& aRegionToDraw,
+                                           const nsIntRegion& aRegionToInvalidate,
                                            void* aCallbackData);
   /**
    * Finish the construction phase of the transaction, perform the

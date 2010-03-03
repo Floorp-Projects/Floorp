@@ -184,7 +184,8 @@ public:
     NS_ASSERTION(mThebesLayerCallback,
                  "CallThebesLayerDrawCallback without callback!");
     mThebesLayerCallback(aLayer, aContext,
-                         aRegionToDraw, mThebesLayerCallbackData);
+                         aRegionToDraw, nsIntRegion(),
+                         mThebesLayerCallbackData);
   }
 
   GLenum FBOTextureTarget() { return mFBOTextureTarget; }
