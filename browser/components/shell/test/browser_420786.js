@@ -69,10 +69,10 @@ function onPageLoad() {
 function test() {
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(Ci.nsIXULRuntime).OS;
-
-  // This test is Linux specific for now
-  if (osString != "Linux")
+  if (osString != "Linux") {
+    todo(false, "This test is Linux specific for now.");
     return;
+  }
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", onPageLoad, true);
