@@ -1877,11 +1877,8 @@ void
 nsSVGElement::AnimationNeedsResample()
 {
   nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsSMILAnimationController* smilController = doc->GetAnimationController();
-    if (smilController) {
-      smilController->SetResampleNeeded();
-    }
+  if (doc && doc->HasAnimationController()) {
+    doc->GetAnimationController()->SetResampleNeeded();
   }
 }
 
@@ -1889,11 +1886,8 @@ void
 nsSVGElement::FlushAnimations()
 {
   nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsSMILAnimationController* smilController = doc->GetAnimationController();
-    if (smilController) {
-      smilController->FlushResampleRequests();
-    }
+  if (doc && doc->HasAnimationController()) {
+    doc->GetAnimationController()->FlushResampleRequests();
   }
 }
 #endif // MOZ_SMIL
