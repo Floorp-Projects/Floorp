@@ -412,15 +412,29 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     HRESULT hr;
 
     /**
-     * We pass in a -reference- to this pointer to newFontData. DWrite will
+     * We pass in a pointer to a structure containing a pointer to the array
+     * containing the font data and a unique identifier. DWrite will
      * internally copy what is at that pointer, and pass that to
      * CreateStreamFromKey. The array will be empty when the function 
      * succesfully returns since it swaps out the data.
      */
-    nsTArray<PRUint8> *data = &newFontData;
+    ffReferenceKey key;
+    key.mArray = &newFontData;
+    nsCOMPtr<nsIUUIDGenerator> uuidgen =
+      do_GetService("@mozilla.org/uuid-generator;1");
+    if (!uuidgen) {
+        return nsnull;
+    }
+
+    rv = uuidgen->GenerateUUIDInPlace(&key.mGUID);
+
+    if (NS_FAILED(rv)) {
+        return nsnull;
+    }
+
     hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
-        CreateCustomFontFileReference(&data,
-                                      sizeof(&data),
+        CreateCustomFontFileReference(&key,
+                                      sizeof(key),
                                       gfxDWriteFontFileLoader::Instance(),
                                       getter_AddRefs(fontFile));
 

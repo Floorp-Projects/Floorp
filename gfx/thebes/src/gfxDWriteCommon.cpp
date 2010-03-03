@@ -47,8 +47,10 @@ gfxDWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
     if (!fontFileReferenceKey || !fontFileStream) {
         return E_POINTER;
     }
+
     *fontFileStream = 
-        new gfxDWriteFontFileStream(*(nsTArray<PRUint8>**)fontFileReferenceKey);
+        new gfxDWriteFontFileStream(
+        static_cast<const ffReferenceKey*>(fontFileReferenceKey)->mArray);
 
     if (!*fontFileStream) {
         return E_OUTOFMEMORY;
