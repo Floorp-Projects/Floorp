@@ -848,14 +848,16 @@ var gUpdatesFoundBasicPage = {
 
     var updateName = update.name;
     if (update.channel == "nightly") {
-      updateName = gUpdates.getAUSString("updateName", [gUpdates.brandName,
-                                                        update.displayVersion]);
-      updateName = updateName + " " + update.buildID + " nightly";
+      updateName = gUpdates.getAUSString("updateNightlyName",
+                                         [gUpdates.brandName,
+                                          update.displayVersion,
+                                          update.buildID]);
     }
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
 
-    var introText = gUpdates.getAUSString("intro_minor_app", [gUpdates.brandName]);
+    var introText = gUpdates.getAUSString("intro_" + update.type,
+                                          [gUpdates.brandName, update.displayVersion]);
     var introElem = document.getElementById("updatesFoundInto");
     introElem.setAttribute("severity", update.type);
     introElem.textContent = introText;
@@ -933,7 +935,7 @@ var gUpdatesFoundBillboardPage = {
     remoteContent.update_version = update.displayVersion;
     remoteContent.url = update.billboardURL;
 
-    var introText = gUpdates.getAUSString("intro_major_app_and_version",
+    var introText = gUpdates.getAUSString("intro_" + update.type,
                                           [gUpdates.brandName, update.displayVersion]);
     var introElem = document.getElementById("updatesFoundBillboardIntro");
     introElem.setAttribute("severity", update.type);
@@ -1110,23 +1112,17 @@ var gIncompatibleListPage = {
     if (listbox.children.length > 0)
       return;
 
-    var severity = gUpdates.update.type;
-    var intro;
-    if (severity == "major")
-      intro = gUpdates.getAUSString("incompatibleAddons_" + severity,
-                                    [gUpdates.brandName,
-                                     gUpdates.update.displayVersion,
-                                     gUpdates.brandName]);
-    else
-      intro = gUpdates.getAUSString("incompatibleAddons_" + severity,
-                                    [gUpdates.brandName]);
-
+    var intro = gUpdates.getAUSString("incompatAddons_" + gUpdates.update.type,
+                                      [gUpdates.brandName,
+                                       gUpdates.update.displayVersion]);
     document.getElementById("incompatibleListDesc").textContent = intro;
 
     var addons = gUpdates.addons;
     for (var i = 0; i < addons.length; ++i) {
       var listitem = document.createElement("listitem");
-      listitem.setAttribute("label", addons[i].name + " " + addons[i].version);
+      var addonLabel = gUpdates.getAUSString("addonLabel", [addons[i].name,
+                                                            addons[i].version]);
+      listitem.setAttribute("label", addonLabel);
       listbox.appendChild(listitem);
     }
   },
