@@ -1360,6 +1360,19 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
        return NS_ERROR_DOM_BAD_URI;
     }
 
+    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
+
+    // Check for uris that are only loadable by principals that subsume them
+    PRBool hasFlags;
+    rv = NS_URIChainHasFlags(targetBaseURI,
+                             nsIProtocolHandler::URI_LOADABLE_BY_SUBSUMERS,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (hasFlags) {
+        return aPrincipal->CheckMayLoad(targetBaseURI, PR_TRUE);
+    }
+
     //-- get the source scheme
     nsCAutoString sourceScheme;
     rv = sourceBaseURI->GetScheme(sourceScheme);
@@ -1379,8 +1392,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         return NS_OK;
     }
 
-    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
-    
     // If the schemes don't match, the policy is specified by the protocol
     // flags on the target URI.  Note that the order of policy checks here is
     // very important!  We start from most restrictive and work our way down.
@@ -1398,7 +1409,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     // Check for chrome target URI
-    PRBool hasFlags;
     rv = NS_URIChainHasFlags(targetBaseURI,
                              nsIProtocolHandler::URI_IS_UI_RESOURCE,
                              &hasFlags);
@@ -1973,6 +1983,20 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **re
     // I _think_ it's safe to not create null principals here based on aURI.
     // At least all the callers would do the right thing in those cases, as far
     // as I can tell.  --bz
+
+    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
+    if (uriPrinc) {
+        nsCOMPtr<nsIPrincipal> principal;
+        uriPrinc->GetPrincipal(getter_AddRefs(principal));
+        if (!principal || principal == mSystemPrincipal) {
+            return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
+        }
+
+        principal.forget(result);
+
+        return NS_OK;
+    }
+
     nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;

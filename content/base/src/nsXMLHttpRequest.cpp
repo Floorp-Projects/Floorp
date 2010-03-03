@@ -363,7 +363,7 @@ nsACProxyListener::AddResultToCache(nsIRequest *aRequest)
   // syntax.
 
   nsCOMPtr<nsIURI> uri;
-  http->GetURI(getter_AddRefs(uri));
+  NS_GetFinalChannelURI(http, getter_AddRefs(uri));
 
   // PR_Now gives microseconds
   PRTime expirationTime = PR_Now() + (PRUint64)age * PR_USEC_PER_SEC;
@@ -1549,17 +1549,11 @@ CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
 {
   NS_ASSERTION(!IsSystemPrincipal(aPrincipal), "Shouldn't get here!");
 
-  nsCOMPtr<nsIURI> channelURI, originalURI;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(channelURI));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  rv = aPrincipal->CheckMayLoad(channelURI, PR_FALSE);
-  if (NS_SUCCEEDED(rv) && originalURI != channelURI) {
-    rv = aPrincipal->CheckMayLoad(originalURI, PR_FALSE);
-  }
-  return NS_SUCCEEDED(rv);
+  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, PR_FALSE));
 }
 
 nsresult
@@ -2494,7 +2488,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     // Check to see if this initial OPTIONS request has already been cached
     // in our special Access Control Cache.
     nsCOMPtr<nsIURI> uri;
-    rv = mChannel->GetURI(getter_AddRefs(uri));
+    rv = NS_GetFinalChannelURI(mChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAccessControlLRUCache::CacheEntry* entry =

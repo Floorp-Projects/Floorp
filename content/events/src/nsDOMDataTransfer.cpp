@@ -254,7 +254,13 @@ nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
       if (!file)
         continue;
 
-      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+      nsCOMPtr<nsIDocument> targetDoc;
+      nsCOMPtr<nsINode> targetNode = do_QueryInterface(mDragTarget);
+      if (targetNode) {
+        targetDoc = targetNode->GetOwnerDoc();
+      }
+
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file, targetDoc);
       NS_ENSURE_TRUE(domFile, NS_ERROR_OUT_OF_MEMORY);
 
       if (!mFiles->Append(domFile))
