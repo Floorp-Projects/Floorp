@@ -72,25 +72,25 @@ const PRUint8   kRangeOriya     =  22;
 const PRUint8   kRangeTelugu    =  23;
 const PRUint8   kRangeKannada   =  24;
 const PRUint8   kRangeSinhala   =  25;
+const PRUint8   kRangeTibetan   =  26;
 
-const PRUint8   kRangeSpecificItemNum = 26;
+const PRUint8   kRangeSpecificItemNum = 27;
 
-//range/rangeSet grow to this place 26-29
+//range/rangeSet grow to this place 27-30
 
-const PRUint8   kRangeSetStart  =  30;    // range set definition starts from here
-const PRUint8   kRangeSetLatin  =  30;
-const PRUint8   kRangeSetCJK    =  31;
-const PRUint8   kRangeSetEnd    =  31;   // range set definition ends here
+const PRUint8   kRangeSetStart  =  31;    // range set definition starts from here
+const PRUint8   kRangeSetLatin  =  31;
+const PRUint8   kRangeSetCJK    =  32;
+const PRUint8   kRangeSetEnd    =  32;   // range set definition ends here
 
 // less frequently used range definition
-const PRUint8   kRangeSurrogate            = 32;
-const PRUint8   kRangePrivate              = 33;
-const PRUint8   kRangeMisc                 = 34;
-const PRUint8   kRangeUnassigned           = 35;
-const PRUint8   kRangeSyriac               = 36;
-const PRUint8   kRangeThaana               = 37;
-const PRUint8   kRangeLao                  = 38;
-const PRUint8   kRangeTibetan              = 39;
+const PRUint8   kRangeSurrogate            = 33;
+const PRUint8   kRangePrivate              = 34;
+const PRUint8   kRangeMisc                 = 35;
+const PRUint8   kRangeUnassigned           = 36;
+const PRUint8   kRangeSyriac               = 37;
+const PRUint8   kRangeThaana               = 38;
+const PRUint8   kRangeLao                  = 39;
 const PRUint8   kRangeMyanmar              = 40;
 const PRUint8   kRangeCherokee             = 41;
 const PRUint8   kRangeOghamRunic           = 42;
