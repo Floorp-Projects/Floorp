@@ -44,5 +44,7 @@ $(function(){
   var select = new Selector({
     targets: ".tab",
     container: "html",
+    fill: false,
+    strokeWidth: 3
   });
 });
