@@ -113,7 +113,7 @@
     <hbox>
       <textbox id="filter" flex="1"
                type="search"
-               emptytext="&filter.emptytext;"
+               placeholder="&filter.emptytext;"
                aria-controls="handlersView"
                oncommand="gApplicationsPane.filter();"/>
     </hbox>

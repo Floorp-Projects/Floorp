@@ -176,7 +176,7 @@
         <toolbarspring flex="1"/>
         <toolbaritem id="search-box"
                      align="center" pack="center">
-          <textbox id="findText" type="search" emptytext="&search.emptytext;"
+          <textbox id="findText" type="search" placeholder="&search.emptytext;"
                    aria-controls="help-toc-panel"
                    oncommand="doFind();"/>
         </toolbaritem>

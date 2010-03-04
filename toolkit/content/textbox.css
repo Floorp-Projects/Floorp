@@ -14,20 +14,15 @@ html|*.textbox-textarea {
   -moz-box-sizing: border-box;
 }
 
-textbox[isempty="true"] html|*.textbox-input ,
-textbox[isempty="true"] html|*.textbox-textarea {
+html|*.textbox-input:-moz-placeholder,
+html|*.textbox-textarea:-moz-placeholder {
   text-align: left;
   direction: ltr;
 }
 
-textbox[isempty="true"]:-moz-locale-dir(rtl) html|*.textbox-input ,
-textbox[isempty="true"]:-moz-locale-dir(rtl) html|*.textbox-textarea {
+html|*.textbox-input:-moz-placeholder:-moz-locale-dir(rtl),
+html|*.textbox-textarea:-moz-placeholder:-moz-locale-dir(rtl) {
   text-align: right;
   direction: rtl;
-}
-
-textbox[isempty="true"] html|*.textbox-input[emptytextdelay="true"] ,
-textbox[isempty="true"] html|*.textbox-textarea[emptytextdelay="true"] {
-  color: transparent !important;
 }
 

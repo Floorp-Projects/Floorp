@@ -2,9 +2,9 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <!--
-  XUL Widget Test for textbox with emptyText
+  XUL Widget Test for textbox with placeholder
   -->
-<window title="Textbox with emptyText test" width="500" height="600"
+<window title="Textbox with placeholder test" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
@@ -24,26 +24,20 @@ SimpleTest.waitForExplicitFinish();
 function doTests() {
   var t1 = $("t1");
 
-  t1.emptyText = 1;
-  ok(t1.hasAttribute("isempty"), "emptyText but no value => 'isempty' attribute is present");
-  ok("1" === t1.label,          "emptyText exposed as label");
-  ok(""  === t1.value,          "emptyText not exposed as value");
+  t1.placeholder = 1;
+  ok("1" === t1.label,          "placeholder exposed as label");
+  ok(""  === t1.value,          "placeholder not exposed as value");
 
   t1.label = 2;
   ok("2" === t1.label,          "label can be set explicitly");
-  ok("1" === t1.emptyText,      "emptyText persists after setting label");
+  ok("1" === t1.placeholder,    "placeholder persists after setting label");
 
   t1.value = 3;
-  ok(!t1.hasAttribute("isempty"), "value present => 'isempty' attribute not present");
-  ok("3" === t1.value,          "value setter/getter works while emptyText is present");
-  ok("1" === t1.emptyText,      "emptyText persists after setting value");
+  ok("3" === t1.value,          "value setter/getter works while placeholder is present");
+  ok("1" === t1.placeholder,    "placeholder persists after setting value");
 
   t1.value = "";
-  is(t1.inputField.value, 1,    "emptyText is displayed");
-  is(t1.textLength, 0,          "textLength while emptyText is displayed");
-
-  t1.focus();
-  is(t1.inputField.value, "",   "emptyText is not displayed as the textbox has focus");
+  is(t1.textLength, 0,          "textLength while placeholder is displayed");
 
   SimpleTest.finish();
 }
