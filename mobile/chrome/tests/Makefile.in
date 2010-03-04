@@ -54,10 +54,13 @@ _BROWSER_FILES = \
   browser_select.js \
   browser_rect.js \
   browser_FormAssistant.js \
+  browser_viewport.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_select.html \
   browser_FormAssistant.html \
+  browser_viewport_01.html \
+  browser_viewport_02.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
