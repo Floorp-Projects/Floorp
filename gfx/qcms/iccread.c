@@ -421,8 +421,6 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	lut->e22 = read_s15Fixed16Number(src, offset+44);
 
 	//TODO: finish up
-	for (i = 0; i < lut->num_input_table_entries; i++) {
-	}
 	return lut;
 }
 
