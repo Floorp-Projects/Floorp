@@ -1158,6 +1158,28 @@ static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
     d2dsurf->rt->PopLayer();
 }
 
+static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
+						     const cairo_pattern_t *source)
+{
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	/** Operator over is easier for D2D! If the source if opaque, change */
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    const cairo_surface_pattern_t *surfpattern =
+		reinterpret_cast<const cairo_surface_pattern_t*>(source);
+	    if (surfpattern->surface->content == CAIRO_CONTENT_COLOR) {
+		return CAIRO_OPERATOR_OVER;
+	    }
+	} else if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
+	    const cairo_solid_pattern_t *solidpattern =
+		reinterpret_cast<const cairo_solid_pattern_t*>(source);
+	    if (solidpattern->color.alpha == 1.0) {
+		return CAIRO_OPERATOR_OVER;
+	    }
+	}
+    }
+    return op;
+}
+
 // Implementation
 static cairo_surface_t*
 _cairo_d2d_create_similar(void			*surface,
@@ -1630,6 +1652,9 @@ _cairo_d2d_paint(void			*surface,
 {
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
+
+    op = _cairo_d2d_simplify_operator(op, source);
+
     if (op == CAIRO_OPERATOR_CLEAR) {
 	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
 	return CAIRO_INT_STATUS_SUCCESS;
@@ -1774,6 +1799,8 @@ _cairo_d2d_stroke(void			*surface,
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
 
+    op = _cairo_d2d_simplify_operator(op, source);
+
     if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
 	op != CAIRO_OPERATOR_CLEAR) {
 	/** 
@@ -1902,6 +1929,8 @@ _cairo_d2d_fill(void			*surface,
     }
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
+
+    op = _cairo_d2d_simplify_operator(op, source);
 
     if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
 	op != CAIRO_OPERATOR_CLEAR) {
