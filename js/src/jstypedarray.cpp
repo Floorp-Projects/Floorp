@@ -920,7 +920,7 @@ class TypedArrayTemplate
     {
         NativeType *dest = static_cast<NativeType*>(data);
 
-        if (ar->isDenseArray() && js_DenseArrayCapacity(ar) >= len) {
+        if (ar->isDenseArray()) {
             JS_ASSERT(ar->fslots[JSSLOT_ARRAY_LENGTH] == (jsval)len);
 
             jsval *src = ar->dslots;
@@ -931,12 +931,6 @@ class TypedArrayTemplate
                     *dest++ = NativeType(JSVAL_TO_INT(v));
                 } else if (JSVAL_IS_DOUBLE(v)) {
                     *dest++ = NativeType(*JSVAL_TO_DOUBLE(v));
-                } else if (v == JSVAL_HOLE) {
-                    // Holes convert to 0.
-                    // XXX for floating-point arrays, they should convert to NaN
-                    // Note that the int32() is necessary, because on MSVC int32 is not the
-                    // same as int, and there's no constructor for uint8_clamped(int).
-                    *dest++ = NativeType(int32(0));
                 } else {
                     jsdouble dval;
                     if (!JS_ValueToNumber(cx, v, &dval))
@@ -956,9 +950,6 @@ class TypedArrayTemplate
                     *dest++ = NativeType(JSVAL_TO_INT(v));
                 } else if (JSVAL_IS_DOUBLE(v)) {
                     *dest++ = NativeType(*JSVAL_TO_DOUBLE(v));
-                } else if (v == JSVAL_VOID) {
-                    // See earlier comment about why int32(0) is necessary
-                    *dest++ = NativeType(int32(0));
                 } else {
                     jsdouble dval;
                     if (!JS_ValueToNumber(cx, v, &dval))
