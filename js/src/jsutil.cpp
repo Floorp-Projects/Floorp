@@ -74,6 +74,7 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
      * trapped.
      */
     *((int *) NULL) = 0;  /* To continue from here in GDB: "return" then "continue". */
+    raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */
 #else
     raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */
 #endif

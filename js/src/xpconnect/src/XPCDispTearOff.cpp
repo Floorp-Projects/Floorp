@@ -338,6 +338,8 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         XPCJSRuntime* rt = ccx.GetRuntime();
         int j;
 
+        js::InvokeArgsGuard args;
+
         thisObj = obj = GetJSObject();;
 
         if(!cx || !xpcc)
@@ -349,16 +351,12 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         xpcc->SetException(nsnull);
         ccx.GetThreadData()->SetException(nsnull);
 
-        // We use js_AllocStack, js_Invoke, and js_FreeStack so that the gcthings
-        // we use as args will be rooted by the engine as we do conversions and
-        // prepare to do the function call. This adds a fair amount of complexity,
-        // but is a good optimization compared to calling JS_AddRoot for each item.
+        // We use js_Invoke so that the gcthings we use as args will be rooted
+        // by the engine as we do conversions and prepare to do the function
+        // call. This adds a fair amount of complexity, but is a good
+        // optimization compared to calling JS_AddRoot for each item.
 
-        // setup stack
-
-        // allocate extra space for function and 'this'
-        stack_size = argc + 2;
-
+        js::LeaveTrace(cx);
 
         // In the xpidl [function] case we are making sure now that the 
         // JSObject is callable. If it is *not* callable then we silently 
@@ -382,19 +380,17 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
             goto pre_call_clean_up;
         }
 
-        // if stack_size is zero then we won't be needing a stack
-        if(stack_size && !(stackbase = sp = js_AllocStack(cx, stack_size, &mark)))
+        if (!cx->stack().pushInvokeArgsFriendAPI(cx, argc, args))
         {
             retval = NS_ERROR_OUT_OF_MEMORY;
             goto pre_call_clean_up;
         }
 
+        sp = stackbase = args.getvp();
+
         // this is a function call, so push function and 'this'
-        if(stack_size != argc)
-        {
-            *sp++ = fval;
-            *sp++ = OBJECT_TO_JSVAL(thisObj);
-        }
+        *sp++ = fval;
+        *sp++ = OBJECT_TO_JSVAL(thisObj);
 
         // make certain we leave no garbage in the stack
         for(i = 0; i < argc; i++)
@@ -445,7 +441,7 @@ pre_call_clean_up:
 
         if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            success = js_Invoke(cx, argc, stackbase, 0);
+            success = js_Invoke(cx, args, 0);
             result = stackbase[0];
         }
         else
@@ -527,9 +523,6 @@ pre_call_clean_up:
         }
 
 done:
-        if(sp)
-            js_FreeStack(cx, mark);
-
         // TODO: I think we may need to translate this error, 
         // for now we'll pass through
         return retval;

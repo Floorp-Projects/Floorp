@@ -89,6 +89,7 @@
 
 #include "jsatominlines.h"
 #include "jsscopeinlines.h"
+#include "jscntxtinlines.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -2295,8 +2296,6 @@ JS_GC(JSContext *cx)
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
-    if (cx->stackPool.current == &cx->stackPool.first)
-        JS_FinishArenaPool(&cx->stackPool);
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
     js_GC(cx, GC_NORMAL);
@@ -4956,18 +4955,18 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // is not a simple variation of JSOP_CALL. We have to determine what class
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
-    void *mark;
-    jsval *vp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!vp)
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return NULL;
+
+    jsval *vp = args.getvp();
     vp[0] = OBJECT_TO_JSVAL(ctor);
     vp[1] = JSVAL_NULL;
     memcpy(vp + 2, argv, argc * sizeof(jsval));
 
-    JSBool ok = js_InvokeConstructor(cx, argc, JS_TRUE, vp);
+    JSBool ok = js_InvokeConstructor(cx, args, JS_TRUE);
     JSObject *obj = ok ? JSVAL_TO_OBJECT(vp[0]) : NULL;
 
-    js_FreeStack(cx, mark);
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
 }
