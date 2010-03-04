@@ -2297,6 +2297,24 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
     rect.front = 0;
     rect.back = 1;
 
+    IDXGISurface *dxgiSurface;
+    d2dsurf->surface->QueryInterface(&dxgiSurface);
+    DXGI_SURFACE_DESC desc;
+
+    dxgiSurface->GetDesc(&desc);
+    dxgiSurface->Release();
+
+    /**
+     * It's important we constrain the size of the clip region to the area of
+     * the surface. If we don't we might get a box that goes outside the
+     * surface, and CopySubresourceRegion will become very angry with us.
+     * It will cause a device failure and subsequent drawing will break.
+     */
+    clip->x = MAX(clip->x, 0);
+    clip->y = MAX(clip->y, 0);
+    clip->width = MIN(clip->width, desc.Width - clip->x);
+    clip->height = MIN(clip->height, desc.Height - clip->y);
+
     if (x < 0) {
 	point.x = (UINT32)clip->x;
 	rect.left = (UINT)(clip->x - x);
