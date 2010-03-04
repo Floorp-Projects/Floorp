@@ -6964,8 +6964,8 @@ let DownloadMonitorPanel = {
     this._panel = document.getElementById("download-monitor");
 
     // Cache the status strings
-    this._activeStr = gNavigatorBundle.getString("activeDownloads");
-    this._pausedStr = gNavigatorBundle.getString("pausedDownloads");
+    this._activeStr = gNavigatorBundle.getString("activeDownloads1");
+    this._pausedStr = gNavigatorBundle.getString("pausedDownloads1");
 
     gDownloadMgr.addListener(this);
     this._listening = true;
