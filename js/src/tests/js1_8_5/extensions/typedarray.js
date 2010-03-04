@@ -194,21 +194,6 @@ function test()
     check(function() a[2] == 0);
     check(function() a[3] == 0);
 
-    // check handling of holes and non-numeric values
-    var x = Array(3);
-    x[0] = "hello";
-    x[1] = { };
-
-    a = new Uint8Array(x);
-    check(function() a[0] == 0);
-    check(function() a[1] == 0);
-    check(function() a[2] == 0);
-
-    a = new Float32Array(x);
-    check(function() a[0] == NaN, TODO); // XXX should be NaN, not 0, most likely
-    check(function() a[1] == NaN);
-    check(function() a[2] == NaN);
-
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
