@@ -201,23 +201,23 @@ endif
 
 $(DATASTAGE): $(DEB_PKG_NAME)
 	$(RM) -rf $(DATASTAGE)
-	$(NSINSTALL) -D $(DATASTAGE)
+	$(NSINSTALL) -D $(DATASTAGE)/DEBIAN
 	ar -p $(DEB_PKG_NAME) data.tar.gz | $(TAR) -zx -C $(DATASTAGE)
 	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)
+	ar -p $(DEB_PKG_NAME) control.tar.gz | $(TAR) -zx -C $(DATASTAGE)/DEBIAN
 # XXX hack around multi-locale deb right now
 	$(RM) $(DATASTAGE)/$(installdir)/chrome/??.*
 	$(RM) $(DATASTAGE)/$(installdir)/chrome/??-??.*
 
 repackage-deb: $(DATASTAGE)
 	$(RM) -rf $(AB_CD)
-	$(NSINSTALL) -D $(AB_CD)
+	$(NSINSTALL) -D $(AB_CD)/tmp
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir) && tar -xf - )
-	$(NSINSTALL) $(DEB_PKG_NAME) $(AB_CD)
-	cd $(DATASTAGE) && $(TAR) -zcf $(CURDIR)/$(AB_CD)/data.tar.gz *
+	  $(TAR) --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir) && $(TAR) -xf - )
+	cd $(DATASTAGE) && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd $(CURDIR)/$(AB_CD)/tmp && $(TAR) -xf - )
 	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)
-	cd $(AB_CD) && ar -rv $(DEB_PKG_NAME) data.tar.gz
-	$(RM) $(AB_CD)/data.tar.gz
+	cd $(AB_CD) && dpkg-deb -b tmp $(DEB_PKG_NAME)
+	$(RM) -rf $(AB_CD)/tmp
 
 deb-%: AB_CD=$*
 deb-%: clobber-% langpack-%
