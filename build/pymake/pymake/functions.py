@@ -415,7 +415,7 @@ class AbspathFunction(Function):
 
     def resolve(self, makefile, variables, fd, setting):
         assert os.path.isabs(makefile.workdir)
-        fd.write(' '.join([os.path.join(makefile.workdir, path).replace('\\', '/')
+        fd.write(' '.join([util.normaljoin(makefile.workdir, path).replace('\\', '/')
                            for path in self._arguments[0].resolvesplit(makefile, variables, setting)]))
 
 class IfFunction(Function):

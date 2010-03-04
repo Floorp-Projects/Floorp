@@ -12,6 +12,15 @@ class MakeError(Exception):
 
         return "%s%s" % (locstr, self.msg)
 
+def normaljoin(path, suffix):
+    """
+    Combine the given path with the suffix, and normalize if necessary to shrink the path to avoid hitting path length limits
+    """
+    result = os.path.join(path, suffix)
+    if len(result) > 255:
+        result = os.path.normpath(result)
+    return result
+
 def joiniter(fd, it):
     """
     Given an iterator that returns strings, write the words with a space in between each.
