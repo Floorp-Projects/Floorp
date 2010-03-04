@@ -83,13 +83,30 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   attribute float globalAlpha; /* default 1.0 -- opaque */
   attribute DOMString globalCompositeOperation; /* default "over" */
 
-  // colors and styles
+  // Colors and Styles
+
+  // These attributes work, but are quickstubbed for JS code.  Native
+  // code should use the _multi variants below.
   attribute nsIVariant strokeStyle;
   attribute nsIVariant fillStyle;
 
+  // These do the actual work.  Use these from c++ -- only one of str or iface
+  // should be specified; the one that's not null/void is used.  For the getter,
+  // ifaceType is 0 if it's a string, 1 if it's a pattern, or 2 if it's a gradient
+%{C++
+enum CanvasMultiGetterType {
+      CMG_STYLE_STRING = 0,
+      CMG_STYLE_PATTERN = 1,
+      CMG_STYLE_GRADIENT = 2
+};
+%}
+  [noscript] void setStrokeStyle_multi(in DOMString str, in nsISupports iface);
+  [noscript] void getStrokeStyle_multi(out DOMString str, out nsISupports iface, out long type);
+  [noscript] void setFillStyle_multi(in DOMString str, in nsISupports iface);
+  [noscript] void getFillStyle_multi(out DOMString str, out nsISupports iface, out long type);
+
   nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
   nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
-  //nsIDOMCanvasPattern createPattern(in nsIDOMHTMLImageElement image, in DOMString repetition);
   nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, in DOMString repetition);
   attribute float lineWidth; /* default 1 */
   attribute DOMString lineCap; /* "butt", "round", "square" (default) */
