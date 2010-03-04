@@ -163,8 +163,8 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
         exitTypeMap[i] = typeMap[i];
 
     /* Add the return type. */
-    JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    JS_ASSERT_IF(*cx->regs->pc != JSOP_RETURN, *cx->regs->pc == JSOP_STOP);
+    if (*cx->regs->pc == JSOP_RETURN)
         exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
     else
         exitTypeMap[downPostSlots] = TT_VOID;
@@ -198,12 +198,21 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     return exit;
 }
 
+static JS_REQUIRES_STACK jsval *
+DownFrameSP(JSContext *cx)
+{
+    FrameRegsIter i(cx);
+    ++i;
+    JS_ASSERT(i.fp() == cx->fp->down);
+    return i.sp();
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::upRecursion()
 {
-    JS_ASSERT((JSOp)*cx->fp->down->regs->pc == JSOP_CALL);
+    JS_ASSERT((JSOp)*cx->fp->down->savedPC == JSOP_CALL);
     JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->down->script,
-              cx->fp->down->regs->pc)].length == JSOP_CALL_LENGTH);
+              cx->fp->down->savedPC)].length == JSOP_CALL_LENGTH);
 
     JS_ASSERT(callDepth == 0);
 
@@ -215,10 +224,10 @@ TraceRecorder::upRecursion()
     if (anchor && (anchor->exitType == RECURSIVE_EMPTY_RP_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_MISMATCH_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)) {
-        return slurpDownFrames(cx->fp->down->regs->pc);
+        return slurpDownFrames(cx->fp->down->savedPC);
     }
 
-    jsbytecode* return_pc = cx->fp->down->regs->pc;
+    jsbytecode* return_pc = cx->fp->down->savedPC;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
 
     /*
@@ -245,7 +254,7 @@ TraceRecorder::upRecursion()
      * Need to compute this from the down frame, since the stack could have
      * moved on this one.
      */
-    fi->spdist = cx->fp->down->regs->sp - cx->fp->down->slots();
+    fi->spdist = DownFrameSP(cx) - cx->fp->down->slots();
     JS_ASSERT(cx->fp->argc == cx->fp->down->argc);
     fi->set_argc(uint16(cx->fp->argc), false);
     fi->callerHeight = downPostSlots;
@@ -308,7 +317,7 @@ TraceRecorder::upRecursion()
     exit = downSnapshot(fi);
 
     LIns* rval_ins;
-    if (*cx->fp->regs->pc == JSOP_RETURN) {
+    if (*cx->regs->pc == JSOP_RETURN) {
         JS_ASSERT(!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT);
         rval_ins = get(&stackval(-1));
         JS_ASSERT(rval_ins);
@@ -318,7 +327,7 @@ TraceRecorder::upRecursion()
 
     TraceType returnType = exit->stackTypeMap()[downPostSlots];
     if (returnType == TT_INT32) {
-        JS_ASSERT(*cx->fp->regs->pc == JSOP_RETURN);
+        JS_ASSERT(*cx->regs->pc == JSOP_RETURN);
         JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
         JS_ASSERT(isPromoteInt(rval_ins));
         rval_ins = demote(lir, rval_ins);
@@ -327,7 +336,7 @@ TraceRecorder::upRecursion()
     UpRecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(exit->stackType(i));
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    if (*cx->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1));
     else
         slotMap.addSlot(TT_VOID);
@@ -386,7 +395,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     unsigned frameDepth;
     unsigned downPostSlots;
 
-    JSStackFrame* fp = cx->fp;
+    FrameRegsIter i(cx);
     LIns* fp_ins =
         addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACC_OTHER), "fp");
 
@@ -399,7 +408,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         fp_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, down), ACC_OTHER),
                          "downFp");
-        fp = fp->down;
+        ++i;
 
         argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACC_OTHER),
                            "argv");
@@ -427,14 +436,12 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                   RECURSIVE_LOOP_EXIT);
         }
 
-        /* fp->down->regs->pc should be == pc. */
+        /* fp->down->savedPC should be == pc. */
         guard(true,
               lir->ins2(LIR_eqp,
-                        lir->insLoad(LIR_ldp,
-                                     addName(lir->insLoad(LIR_ldp, fp_ins,
-                                                          offsetof(JSStackFrame, regs), ACC_OTHER),
-                                             "regs"),
-                                     offsetof(JSFrameRegs, pc), ACC_OTHER),
+                        addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, savedPC),  
+                                             ACC_OTHER),
+                                "savedPC"),
                         INS_CONSTPTR(return_pc)),
               RECURSIVE_SLURP_MISMATCH_EXIT);
 
@@ -489,13 +496,13 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * thrown away.
      */
     TraceType* typeMap = exit->stackTypeMap();
-    jsbytecode* oldpc = cx->fp->regs->pc;
-    cx->fp->regs->pc = exit->pc;
+    jsbytecode* oldpc = cx->regs->pc;
+    cx->regs->pc = exit->pc;
     captureStackTypes(frameDepth, typeMap);
-    cx->fp->regs->pc = oldpc;
+    cx->regs->pc = oldpc;
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
-        if (*cx->fp->regs->pc == JSOP_RETURN)
+        JS_ASSERT_IF(*cx->regs->pc != JSOP_RETURN, *cx->regs->pc == JSOP_STOP);
+        if (*cx->regs->pc == JSOP_RETURN)
             typeMap[downPostSlots] = determineSlotType(&stackval(-1));
         else
             typeMap[downPostSlots] = TT_VOID;
@@ -522,10 +529,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         /*
-         * It is safe to read cx->fp->regs->pc here because the frame hasn't
+         * It is safe to read cx->regs->pc here because the frame hasn't
          * been popped yet. We're guaranteed to have a return or stop.
          */
-        JSOp op = JSOp(*cx->fp->regs->pc);
+        JSOp op = JSOp(*cx->regs->pc);
         JS_ASSERT(op == JSOP_RETURN || op == JSOP_STOP);
 
         if (op == JSOP_RETURN) {
@@ -575,6 +582,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     info.slurpFailSlot = (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) ?
                          anchor->slurpFailSlot : 0;
 
+    JSStackFrame *const fp = i.fp();
+
     /* callee */
     slurpSlot(lir->insLoad(LIR_ldp, argv_ins, -2 * ptrdiff_t(sizeof(jsval)), ACC_OTHER),
               &fp->argv[-2],
@@ -612,7 +621,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                                         slots_ins,
                                         INS_CONSTWORD(nfixed * sizeof(jsval))),
                               "stackBase");
-    size_t limit = size_t(fp->regs->sp - StackBase(fp));
+
+    size_t limit = size_t(i.sp() - StackBase(fp));
     if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         limit--;
     else
@@ -634,7 +644,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     RecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(typeMap[i]);
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    if (*cx->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
     else
         slotMap.addSlot(TT_VOID);

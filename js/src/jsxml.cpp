@@ -1754,7 +1754,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
     JSXML *xml;
     const char *filename;
     uintN lineno;
-    JSStackFrame *fp;
     JSOp op;
     JSParseNode *pn;
     JSXMLArray nsarray;
@@ -1797,13 +1796,16 @@ ParseXMLSource(JSContext *cx, JSString *src)
                              &dstlen);
     chars [offset + dstlen] = 0;
 
+    LeaveTrace(cx);
     xml = NULL;
-    for (fp = js_GetTopStackFrame(cx); fp && !fp->regs; fp = fp->down)
-        JS_ASSERT(!fp->script);
+    FrameRegsIter i(cx);
+    for (; !i.done() && !i.pc(); ++i)
+        JS_ASSERT(!i.fp()->script);
     filename = NULL;
     lineno = 1;
-    if (fp) {
-        op = (JSOp) *fp->regs->pc;
+    if (!i.done()) {
+        JSStackFrame *fp = i.fp();
+        op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
             filename = fp->script->filename;
             lineno = js_FramePCToLineNumber(cx, fp);
@@ -7717,7 +7719,8 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
     JSXML *xml, *list;
     JSXMLFilter *filter;
 
-    sp = js_GetTopStackFrame(cx)->regs->sp;
+    LeaveTrace(cx);
+    sp = cx->regs->sp;
     if (!initialized) {
         /*
          * We haven't iterated yet, so initialize the filter based on the

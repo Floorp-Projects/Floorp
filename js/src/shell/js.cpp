@@ -3023,7 +3023,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script,
-                                                   fp->regs->pc),
+                                                   fp->pc(cx)),
                                  rval);
     }
 
@@ -3061,13 +3061,13 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 
     JS_ASSERT(cx->fp);
 
-    JSStackFrame *fp = cx->fp;
-    for (uint32 i = 0; i < upCount; ++i) {
-        if (!fp->down)
+    FrameRegsIter fi(cx);
+    for (uint32 i = 0; i < upCount; ++i, ++fi) {
+        if (!fi.fp()->down)
             break;
-        fp = fp->down;
     }
 
+    JSStackFrame *const fp = fi.fp();
     if (!fp->script) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
@@ -3080,7 +3080,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
                                           fp->script->filename,
                                           JS_PCToLineNumber(cx, fp->script,
-                                                            fp->regs->pc),
+                                                            fi.pc()),
                                           vp);
 
     if (saveCurrent)
