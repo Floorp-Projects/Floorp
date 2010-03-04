@@ -41,11 +41,119 @@
 #define jscntxtinlines_h___
 
 #include "jscntxt.h"
+#include "jsparse.h"
 #include "jsxml.h"
 
 #include "jsobjinlines.h"
 
 namespace js {
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+CallStack::getCurrentFrame() const
+{
+    JS_ASSERT(inContext());
+    return isSuspended() ? getSuspendedFrame() : cx->fp;
+}
+
+JS_REQUIRES_STACK inline jsval *
+StackSpace::firstUnused() const
+{
+    CallStack *ccs = currentCallStack;
+    if (!ccs)
+        return base;
+    if (!ccs->inContext())
+        return ccs->getInitialArgEnd();
+    JSStackFrame *fp = ccs->getCurrentFrame();
+    if (JSFrameRegs *regs = fp->regs)
+        return regs->sp;
+    return fp->slots();
+}
+
+/* Inline so we don't need the friend API. */
+JS_ALWAYS_INLINE void
+StackSpace::assertIsCurrent(JSContext *cx) const
+{
+#ifdef DEBUG
+    JS_ASSERT(cx == currentCallStack->maybeContext());
+    JS_ASSERT(cx->getCurrentCallStack() == currentCallStack);
+    cx->assertCallStacksInSync();
+#endif
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
+{
+    JS_ASSERT(from == firstUnused());
+#ifdef XP_WIN
+    JS_ASSERT(from <= commitEnd);
+    if (commitEnd - from >= nvals)
+        return true;
+    if (end - from < nvals) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    if (!bumpCommit(from, nvals)) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    return true;
+#else
+    if (end - from < nvals) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    return true;
+#endif
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureEnoughSpaceToEnterTrace()
+{
+#ifdef XP_WIN
+    return ensureSpace(NULL, firstUnused(), MAX_TRACE_SPACE_VALS);
+#endif
+    return end - firstUnused() > MAX_TRACE_SPACE_VALS;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+                           uintN nmissing, uintN nfixed) const
+{
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp->regs->sp == sp);
+
+    ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
+    if (!ensureSpace(cx, sp, nvals))
+        return NULL;
+
+    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
+    return fp;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, JSStackFrame *newfp)
+{
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp == fp);
+
+    newfp->down = fp;
+    cx->setCurrentFrame(newfp);
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
+{
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp == up && up->down == down);
+
+    cx->setCurrentFrame(down);
+}
 
 void
 AutoIdArray::trace(JSTracer *trc) {
