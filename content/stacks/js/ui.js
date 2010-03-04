@@ -26,6 +26,7 @@ var Page = {
     
     var zIndex = 100;
     function mod($div){
+/*       Utils.log('creating a tab'); */
       $div.draggable({
         start:function(){ isDragging = true; },
         stop: function(){

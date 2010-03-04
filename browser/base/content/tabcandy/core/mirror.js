@@ -1,4 +1,5 @@
 (function(){
+/* Utils.log('top of tab mirror file'); */
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -54,6 +55,7 @@ TabCanvas.prototype = {
   
     var fromWin = this.tab.contentWindow;
     if( fromWin == null || fromWin.location.protocol == "chrome:") return;
+/*     Utils.trace('paint: ' + this.tab.url); */
     var scaler = w/fromWin.innerWidth;
   
     // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
@@ -70,7 +72,7 @@ TabCanvas.prototype = {
       
       ctx.restore();
       var elapsed = (new Date()) - startTime;
-      //Utils.logger.log( this.window.location.host + " " + elapsed );
+      //Utils.log( this.window.location.host + " " + elapsed );
       this.lastDraw = new Date();
     }
     ctx.restore();      
@@ -105,6 +107,7 @@ TabCanvas.prototype = {
 var TabMirror = function( ){ this.init() }
 TabMirror.prototype = {
   init: function(){
+/*   	Utils.log('creating tab mirror'); */
     var self = this;
     
     // When a tab is updated, update the mirror
@@ -183,6 +186,8 @@ TabMirror.prototype = {
   },
   
   link: function(tab){
+/*   	Utils.trace('link'); */
+/*   	Utils.log('link: ' + tab.url); */
     // Don't add duplicates
     var dup = this._getEl(tab)
     if( dup ) return false;
