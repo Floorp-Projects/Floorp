@@ -38,10 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "Function.h"
 #include "Library.h"
 #include "nsAutoPtr.h"
-#include "jscntxt.h"
 
 namespace mozilla {
 namespace ctypes {
