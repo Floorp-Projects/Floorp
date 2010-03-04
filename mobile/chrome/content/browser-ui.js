@@ -151,8 +151,9 @@ var BrowserUI = {
       return;
 
     if (/\bicon\b/i(link.rel)) {
+      // Must have an owner document and not be in a frame
       var ownerDoc = link.ownerDocument;
-      if (!ownerDoc) // no document, no icon
+      if (!ownerDoc || ownerDoc.defaultView.frameElement)
         return;
 
       let tab = Browser.getTabForDocument(ownerDoc);
