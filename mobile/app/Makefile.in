@@ -67,7 +67,10 @@ ifdef BUILD_STATIC_LIBS
 LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 else
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
-LIBS += $(LIB_PREFIX)xul.$(LIB_SUFFIX)
+LIBS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xul.$(LIB_SUFFIX)
+ifndef WINCE
+OS_LIBS += version.lib
+endif
 endif
 endif
 
@@ -189,7 +192,7 @@ endif # SKIP_COPY_XULRUNNER
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
 	cp $(srcdir)/$(APP_SPLASH).bmp $(DIST)/bin/$(APP_SPLASH).bmp
-	$(REDIT_PATH)/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
+	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 
 endif
