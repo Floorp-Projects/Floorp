@@ -86,10 +86,6 @@ RETRIEVE_WINDOWS_INSTALLER = 1
 
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
 
-ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
-DEFINES += -DEXTENSION_PREF
-endif
-
 PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
                        $(srcdir)/en-US/firefox-l10n.js )
 

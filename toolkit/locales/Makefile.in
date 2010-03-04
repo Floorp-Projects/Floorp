@@ -44,10 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
-DEFINES += -DEXTENSION_PREF
-endif
-
 XULPPFLAGS += -I$(LOCALE_SRCDIR)/defines.inc
 
 include $(topsrcdir)/config/rules.mk
