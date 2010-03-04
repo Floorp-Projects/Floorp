@@ -1896,6 +1896,7 @@ _cairo_d2d_stroke(void			*surface,
 
 	    if (!brush) {
 		strokeStyle->Release();
+		d2dpath->Release();
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 	    }
 	    d2dsurf->rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
