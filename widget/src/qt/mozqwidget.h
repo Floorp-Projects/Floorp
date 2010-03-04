@@ -1,11 +1,11 @@
 #ifndef MOZQWIDGET_H
 #define MOZQWIDGET_H
 
-#include "nsIWidget.h"
-
 #include <QtGui/QApplication>
 #include <QtGui/QGraphicsView>
 #include <QtGui/QGraphicsWidget>
+
+#include "nsIWidget.h"
 
 class QEvent;
 class QPixmap;

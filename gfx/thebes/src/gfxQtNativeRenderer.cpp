@@ -35,13 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QWidget>
+
 #include "gfxQtNativeRenderer.h"
 #include "gfxContext.h"
 
 #include "gfxQtPlatform.h"
 
 #include "cairo.h"
-#include <QWidget>
 
 typedef struct {
     gfxQtNativeRenderer* mRenderer;

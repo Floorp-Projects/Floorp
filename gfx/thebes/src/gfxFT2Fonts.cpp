@@ -38,8 +38,8 @@
 #include "gfxPlatformGtk.h"
 #define gfxToolkitPlatform gfxPlatformGtk
 #elif defined(MOZ_WIDGET_QT)
-#include "gfxQtPlatform.h"
 #include <qfontinfo.h>
+#include "gfxQtPlatform.h"
 #define gfxToolkitPlatform gfxQtPlatform
 #elif defined(XP_WIN)
 #ifdef WINCE
