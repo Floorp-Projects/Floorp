@@ -600,148 +600,124 @@ js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
 JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSRuntime *rt;
-    JSWatchPoint *wp;
-    JSScopeProperty *sprop;
-    jsval propid, userid;
-    JSScope *scope;
-    JSBool ok;
-
-    rt = cx->runtime;
+    JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
-    for (wp = (JSWatchPoint *)rt->watchPointList.next;
+    for (JSWatchPoint *wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        sprop = wp->sprop;
+        JSScopeProperty *sprop = wp->sprop;
         if (wp->object == obj && SPROP_USERID(sprop) == id &&
             !(wp->flags & JSWP_HELD)) {
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
             JS_LOCK_OBJ(cx, obj);
-            propid = ID_TO_VALUE(sprop->id);
-            userid = SPROP_USERID(sprop);
-            scope = obj->scope();
+            jsval propid = ID_TO_VALUE(sprop->id);
+            jsval userid = SPROP_USERID(sprop);
+            JSScope *scope = obj->scope();
             JS_UNLOCK_OBJ(cx, obj);
 
             /* NB: wp is held, so we can safely dereference it still. */
-            ok = wp->handler(cx, obj, propid,
+            if (!wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
                              ? obj->getSlotMT(cx, sprop->slot)
                              : JSVAL_VOID,
-                             vp, wp->closure);
-            if (ok) {
+                             vp, wp->closure)) {
+                DBG_LOCK(rt);
+                DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
+                return JS_FALSE;
+            }
+
+            /*
+             * Create a pseudo-frame for the setter invocation so that any
+             * stack-walking security code under the setter will correctly
+             * identify the guilty party.  So that the watcher appears to
+             * be active to obj_eval and other such code, point frame.pc
+             * at the JSOP_STOP at the end of the script.
+             *
+             * The pseudo-frame is not created for fast natives as they
+             * are treated as interpreter frame extensions and always
+             * trusted.
+             */
+            JSObject *closure = wp->closure;
+            JSClass *clasp = closure->getClass();
+            JSFunction *fun;
+            JSScript *script;
+            if (clasp == &js_FunctionClass) {
+                fun = GET_FUNCTION_PRIVATE(cx, closure);
+                script = FUN_SCRIPT(fun);
+            } else if (clasp == &js_ScriptClass) {
+                fun = NULL;
+                script = (JSScript *) closure->getPrivate();
+            } else {
+                fun = NULL;
+                script = NULL;
+            }
+
+            uintN vplen = 2;
+            if (fun)
+                vplen += fun->minArgs() + (fun->isInterpreted() ? 0 : fun->u.n.extra);
+            uintN nfixed = script ? script->nfixed : 0;
+
+            /* Destructor pops frame. */
+            JSFrameRegs regs;
+            ExecuteFrameGuard frame;
+
+            if (fun && !fun->isFastNative()) {
                 /*
-                 * Create a pseudo-frame for the setter invocation so that any
-                 * stack-walking security code under the setter will correctly
-                 * identify the guilty party.  So that the watcher appears to
-                 * be active to obj_eval and other such code, point frame.pc
-                 * at the JSOP_STOP at the end of the script.
-                 *
-                 * The pseudo-frame is not created for fast natives as they
-                 * are treated as interpreter frame extensions and always
-                 * trusted.
+                 * Get a pointer to new frame/slots. This memory is not
+                 * "claimed", so the code before pushExecuteFrame must not
+                 * reenter the interpreter.
                  */
-                JSObject *closure;
-                JSClass *clasp;
-                JSFunction *fun;
-                JSScript *script;
-                JSBool injectFrame;
-                uintN nslots, slotsStart;
-                jsval smallv[5];
-                jsval *argv;
-                JSStackFrame frame;
-                JSFrameRegs regs;
-
-                closure = wp->closure;
-                clasp = closure->getClass();
-                if (clasp == &js_FunctionClass) {
-                    fun = GET_FUNCTION_PRIVATE(cx, closure);
-                    script = FUN_SCRIPT(fun);
-                } else if (clasp == &js_ScriptClass) {
-                    fun = NULL;
-                    script = (JSScript *) closure->getPrivate();
-                } else {
-                    fun = NULL;
-                    script = NULL;
+                JSStackFrame *down = js_GetTopStackFrame(cx);
+                if (!cx->stack().getExecuteFrame(cx, down, vplen, nfixed, frame)) {
+                    DBG_LOCK(rt);
+                    DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
+                    return JS_FALSE;
                 }
 
-                slotsStart = nslots = 2;
-                injectFrame = JS_TRUE;
-                if (fun) {
-                    nslots += FUN_MINARGS(fun);
-                    if (!FUN_INTERPRETED(fun)) {
-                        nslots += fun->u.n.extra;
-                        injectFrame = !(fun->flags & JSFUN_FAST_NATIVE);
-                    }
-
-                    slotsStart = nslots;
+                /* Initialize slots/frame. */
+                jsval *vp = frame.getvp();
+                PodZero(vp, vplen);
+                vp[0] = OBJECT_TO_JSVAL(closure);
+                JSStackFrame *fp = frame.getFrame();
+                PodZero(fp->slots(), nfixed);
+                PodZero(fp);
+                fp->script = script;
+                fp->regs = NULL;
+                fp->fun = fun;
+                fp->argv = vp + 2;
+                fp->scopeChain = closure->getParent();
+                if (script) {
+                    JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
+                    regs.pc = script->code + script->length - JSOP_STOP_LENGTH;
+                    regs.sp = fp->slots() + script->nfixed;
+                    fp->regs = &regs;
                 }
-                if (script)
-                    nslots += script->nslots;
 
-                if (injectFrame) {
-                    if (nslots <= JS_ARRAY_LENGTH(smallv)) {
-                        argv = smallv;
-                    } else {
-                        argv = (jsval *) cx->malloc(nslots * sizeof(jsval));
-                        if (!argv) {
-                            DBG_LOCK(rt);
-                            DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                            return JS_FALSE;
-                        }
-                    }
+                /* Officially push |fp|. |frame|'s destructor pops. */
+                cx->stack().pushExecuteFrame(cx, frame, NULL);
 
-                    argv[0] = OBJECT_TO_JSVAL(closure);
-                    argv[1] = JSVAL_NULL;
-                    PodZero(argv + 2, nslots - 2);
-
-                    PodZero(&frame);
-                    frame.script = script;
-                    frame.regs = NULL;
-                    frame.fun = fun;
-                    frame.argv = argv + 2;
-                    frame.down = js_GetTopStackFrame(cx);
-                    frame.scopeChain = closure->getParent();
-                    if (script && script->nslots)
-                        frame.slots = argv + slotsStart;
-                    if (script) {
-                        JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
-                        regs.pc = script->code + script->length
-                                  - JSOP_STOP_LENGTH;
-                        regs.sp = NULL;
-                        frame.regs = &regs;
-                        if (fun &&
-                            JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
-                            !js_GetCallObject(cx, &frame)) {
-                            if (argv != smallv)
-                                cx->free(argv);
-                            DBG_LOCK(rt);
-                            DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                            return JS_FALSE;
-                        }
-                    }
-
-                    cx->fp = &frame;
-                }
-#ifdef __GNUC__
-                else
-                    argv = NULL;    /* suppress bogus gcc warnings */
-#endif
-                ok = !wp->setter ||
-                     (sprop->hasSetterValue()
-                      ? js_InternalCall(cx, obj,
-                                        CastAsObjectJSVal(wp->setter),
-                                        1, vp, vp)
-                      : wp->setter(cx, obj, userid, vp));
-                if (injectFrame) {
-                    /* Evil code can cause us to have an arguments object. */
-                    frame.putActivationObjects(cx);
-                    cx->fp = frame.down;
-                    if (argv != smallv)
-                        cx->free(argv);
+                /* Now that fp has been pushed, get the call object. */
+                if (script && fun && fun->isHeavyweight() &&
+                    !js_GetCallObject(cx, fp)) {
+                    DBG_LOCK(rt);
+                    DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
+                    return JS_FALSE;
                 }
             }
+
+            JSBool ok = !wp->setter ||
+                        (sprop->hasSetterValue()
+                         ? js_InternalCall(cx, obj,
+                                           CastAsObjectJSVal(wp->setter),
+                                           1, vp, vp)
+                         : wp->setter(cx, obj, userid, vp));
+
+            /* Evil code can cause us to have an arguments object. */
+            if (frame.getFrame())
+                frame.getFrame()->putActivationObjects(cx);
+
             DBG_LOCK(rt);
             return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
         }
@@ -1198,6 +1174,8 @@ JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 {
+    JS_ASSERT(cx->stack().contains(fp));
+
     /* Force creation of argument and call objects if not yet created */
     (void) JS_GetFrameCallObject(cx, fp);
     return js_GetScopeChain(cx, fp);
@@ -1206,6 +1184,8 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 {
+    JS_ASSERT(cx->stack().contains(fp));
+
     if (! fp->fun)
         return NULL;
 
