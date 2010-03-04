@@ -51,8 +51,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-JS_BEGIN_EXTERN_C
-
 #define JSTRACE_XML         3
 
 /*
@@ -476,29 +474,29 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 extern void
 js_MarkTraps(JSTracer *trc);
 
-JS_END_EXTERN_C
-
 namespace js {
 
 void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
 
 inline void
-#ifdef DEBUG
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
-#else
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
-#endif
+TraceValues(JSTracer *trc, jsval *beg, jsval *end, const char *name)
 {
-    for (jsval *vp = vec, *end = vp + len; vp < end; vp++) {
+    for (jsval *vp = beg; vp < end; ++vp) {
         jsval v = *vp;
         if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_INDEX(trc, name, vp - vec);
+            JS_SET_TRACING_INDEX(trc, name, vp - beg);
             js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
 }
 
+inline void
+TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
+{
+    TraceValues(trc, vec, vec + len, name);
 }
+
+} /* namespace js */
 
 #endif /* jsgc_h___ */
