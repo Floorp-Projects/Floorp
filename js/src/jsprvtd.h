@@ -151,8 +151,12 @@ extern "C++" {
 
 namespace js {
 
+class ExecuteArgsGuard;
+class InvokeFrameGuard;
+class InvokeArgsGuard;
 class TraceRecorder;
-struct TraceMonitor;
+class TraceMonitor;
+class StackSpace;
 class CallStack;
 
 class TokenStream;
