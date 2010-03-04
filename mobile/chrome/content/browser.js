@@ -559,7 +559,7 @@ var Browser = {
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
 
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
+        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Elements.browserBundle.getString("alertAddons"),
                                      label, false, "", null);
       }
       gPrefService.clearUserPref("extensions.disabledAddons");

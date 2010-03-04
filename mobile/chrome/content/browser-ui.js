@@ -1094,9 +1094,9 @@ var FormHelper = {
     for (let i=0; i<labels.length; i++) {
       let labelRect = Browser.getBoundingContentRect(labels[i]);
       if (labelRect.left < elRect.left) {
-        let isClosed = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
-                       Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
-        if (!isClosed) {
+        let isClose = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
+                      Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
+        if (isClose) {
           let width = labelRect.width + elRect.width + (elRect.left - labelRect.left - labelRect.width);
           return new Rect(labelRect.left, labelRect.top, width, elRect.height).expandToIntegers();
         }
