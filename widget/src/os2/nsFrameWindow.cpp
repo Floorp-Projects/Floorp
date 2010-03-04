@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: set sw=2 sts=2 et cin: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,299 +39,257 @@
  * ***** END LICENSE BLOCK *****
  *
  * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
+ * Modifications made by IBM are
+ * Copyright (c) International Business Machines Corporation, 2000
  *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 03/23/2000       IBM Corp.      Fix missing title bars on profile wizard windows.
- * 04/11/2000       IBM Corp.      Remove assertion.
- * 05/10/2000       IBM Corp.      Correct initial position of frame w/titlebar
- * 06/21/2000       IBM Corp.      Use rollup listener from nsWindow
  */
-
-// Frame window - produced when NS_WINDOW_CID is required.
+//=============================================================================
 
 #include "nsFrameWindow.h"
 #include "nsIRollupListener.h"
-#include "nsIDeviceContext.h"
-#include "nsIComponentManager.h"
-#include "nsGfxCIID.h"
 
-extern nsIRollupListener * gRollupListener;
-extern nsIWidget         * gRollupWidget;
+//-----------------------------------------------------------------------------
+
+extern nsIRollupListener*  gRollupListener;
+extern nsIWidget*          gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
+extern PRUint32            gOS2Flags;
 
 #ifdef DEBUG_FOCUS
   extern int currentWindowIdentifier;
 #endif
 
+//=============================================================================
+//  nsFrameWindow Setup
+//=============================================================================
+
 nsFrameWindow::nsFrameWindow() : nsWindow()
 {
-   fnwpDefFrame = 0;
-   mWindowType  = eWindowType_toplevel;
-   mNeedActivation = PR_FALSE;
+  mPrevFrameProc = 0;
+  mWindowType  = eWindowType_toplevel;
+  mNeedActivation = PR_FALSE;
 }
 
 nsFrameWindow::~nsFrameWindow()
 {
 }
 
-void nsFrameWindow::SetWindowListVisibility( PRBool bState)
-{
-   HSWITCH hswitch;
-   SWCNTRL swctl;
+//-----------------------------------------------------------------------------
+// Create frame & client windows for an nsFrameWindow object
 
-   hswitch = WinQuerySwitchHandle(mFrameWnd, 0);
-   if( hswitch)
-   {
-      WinQuerySwitchEntry( hswitch, &swctl);
-      swctl.uchVisibility = bState ? SWL_VISIBLE : SWL_INVISIBLE;
-      swctl.fbJump        = bState ? SWL_JUMPABLE : SWL_NOTJUMPABLE;
-      WinChangeSwitchEntry( hswitch, &swctl);
-   }
+nsresult nsFrameWindow::CreateWindow(nsWindow* aParent,
+                                     HWND aParentWnd,
+                                     const nsIntRect& aRect,
+                                     PRUint32 aStyle)
+{
+  // top-level widget windows (i.e nsFrameWindow) are created for
+  // windows of types eWindowType_toplevel, *_dialog, & *_invisible
+  mIsTopWidgetWindow = PR_TRUE;
+
+  // Create a frame window with a MozillaWindowClass window as its client.
+  PRUint32 fcfFlags = GetFCFlags();
+  mFrameWnd = WinCreateStdWindow(HWND_DESKTOP,
+                                 0,
+                                 (ULONG*)&fcfFlags,
+                                 kWindowClassName,
+                                 "Title",
+                                 aStyle,
+                                 NULLHANDLE,
+                                 0,
+                                 &mWnd);
+  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_FAILURE);
+
+  // Hide from the Window List until shown.
+  SetWindowListVisibility(PR_FALSE);
+
+  // This prevents a modal dialog from being covered by its disabled parent.
+  if (aParentWnd != HWND_DESKTOP) {
+    WinSetOwner(mFrameWnd, aParentWnd);
+  }
+
+  // Set the frame control HWNDs as properties for use by fullscreen mode.
+  HWND hTemp = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
+  WinSetProperty(mFrameWnd, "hwndTitleBar", (PVOID)hTemp, 0);
+  hTemp = WinWindowFromID(mFrameWnd, FID_SYSMENU);
+  WinSetProperty(mFrameWnd, "hwndSysMenu", (PVOID)hTemp, 0);
+  hTemp = WinWindowFromID(mFrameWnd, FID_MINMAX);
+  WinSetProperty(mFrameWnd, "hwndMinMax", (PVOID)hTemp, 0);
+
+  // Establish a minimum height or else some dialogs will be truncated.
+  PRInt32 minHeight;
+  if (fcfFlags & FCF_SIZEBORDER) {
+    minHeight = 2 * WinQuerySysValue(HWND_DESKTOP, SV_CYSIZEBORDER);
+  } else if (fcfFlags & FCF_DLGBORDER) {
+    minHeight = 2 * WinQuerySysValue(HWND_DESKTOP, SV_CYDLGFRAME);
+  } else {
+    minHeight = 2 * WinQuerySysValue(HWND_DESKTOP, SV_CYBORDER);
+  }
+  if (fcfFlags & FCF_TITLEBAR) {
+    minHeight += WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
+  }
+
+  // Store the frame's adjusted dimensions, move & resize accordingly,
+  // then calculate the client's dimensions.
+  mBounds = aRect;
+  if (mBounds.height < minHeight) {
+    mBounds.height = minHeight;
+  }
+  PRInt32 pmY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN)
+                - mBounds.y - mBounds.height;
+  WinSetWindowPos(mFrameWnd, 0, mBounds.x, pmY,
+                  mBounds.width, mBounds.height, SWP_SIZE | SWP_MOVE);
+  UpdateClientSize();
+
+  // Subclass the frame;  the client will be subclassed by Create().
+  mPrevFrameProc = WinSubclassWindow(mFrameWnd, fnwpFrame);
+  WinSetWindowPtr(mFrameWnd, QWL_USER, this);
+
+  DEBUGFOCUS(Create nsFrameWindow);
+  return NS_OK;
 }
 
-// Called in the PM thread.
-void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
-                                  const nsIntRect &aRect,
-                                  EVENT_CALLBACK aHandleEventFunction,
-                                  nsIDeviceContext *aContext,
-                                  nsIAppShell *aAppShell,
-                                  nsWidgetInitData *aInitData, HWND hwndO)
+//-----------------------------------------------------------------------------
+
+PRUint32 nsFrameWindow::GetFCFlags()
 {
-   nsIntRect rect = aRect;
-   if( aParent)  // Offset rect by position of owner
-   {
-      nsIntRect clientRect;
-      aParent->GetBounds(rect);
-      aParent->GetClientBounds(clientRect);
-      rect.x += aRect.x + clientRect.x;
-      rect.y += aRect.y + clientRect.y;
-      rect.width = aRect.width;
-      rect.height = aRect.height;
-      hwndP = aParent->GetMainWindow();
-      rect.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (rect.y + rect.height);
-   }
-   else          // Use original rect, no owner window
-   {
-      rect = aRect;
-      rect.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (aRect.y + aRect.height);
-   }
+  PRUint32 style = FCF_TITLEBAR | FCF_SYSMENU | FCF_TASKLIST |
+                   FCF_CLOSEBUTTON | FCF_NOBYTEALIGN | FCF_AUTOICON;
 
-#if DEBUG_sobotka
-   printf("\nIn nsFrameWindow::RealDoCreate:\n");
-   printf("   hwndP = %lu\n", hwndP);
-   printf("   aParent = 0x%lx\n", &aParent);
-   printf("   aRect = %ld, %ld, %ld, %ld\n", aRect.x, aRect.y, aRect.height, aRect.width);
-#endif
+  if (mWindowType == eWindowType_dialog) {
+    if (mBorderStyle == eBorderStyle_default) {
+      style |= FCF_DLGBORDER;
+    } else {
+      style |= FCF_SIZEBORDER | FCF_MINMAX;
+    }
+  }
+  else {
+    style |= FCF_SIZEBORDER | FCF_MINMAX;
+  }
 
-   ULONG fcfFlags = GetFCFlags();
+  if (gOS2Flags & kIsDBCS) {
+    style |= FCF_DBE_APPSTAT;
+  }
+  if (mWindowType == eWindowType_invisible) {
+    style &= ~FCF_TASKLIST;
+  }
 
-   ULONG style = WindowStyle();
-   if( aInitData)
-   {
-      if( aInitData->clipChildren)
-         style |= WS_CLIPCHILDREN;
-#if 0
-      //
-      // Windows has a slightly different idea of what the implications are
-      // of a window having or not having the CLIPSIBLINGS style.
-      // All 'canvas' components we create must have clipsiblings, or
-      // strange things happen & performance actually degrades.
-      //
-      else
-        style &= ~WS_CLIPCHILDREN;
-#endif
+  if (mBorderStyle != eBorderStyle_default &&
+      mBorderStyle != eBorderStyle_all) {
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_resizeh)) {
+      style &= ~FCF_SIZEBORDER;
+      style |= FCF_DLGBORDER;
+    }
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_border)) {
+      style &= ~(FCF_DLGBORDER | FCF_SIZEBORDER);
+    }
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_title)) {
+      style &= ~(FCF_TITLEBAR | FCF_TASKLIST);
+    }
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_close)) {
+      style &= ~FCF_CLOSEBUTTON;
+    }
+    if (mBorderStyle == eBorderStyle_none ||
+      !(mBorderStyle & (eBorderStyle_menu | eBorderStyle_close))) {
+      style &= ~FCF_SYSMENU;
+    }
 
-      if( aInitData->clipSiblings)
-         style |= WS_CLIPSIBLINGS;
-      else
-         style &= ~WS_CLIPSIBLINGS;
-   }
+    // Looks like getting rid of the system menu also does away
+    // with the close box. So, we only get rid of the system menu
+    // if you want neither it nor the close box.
 
-#ifdef DEBUG_FOCUS
-   mWindowIdentifier = currentWindowIdentifier;
-   currentWindowIdentifier++;
-   if (aInitData && (aInitData->mWindowType == eWindowType_toplevel))
-     DEBUGFOCUS(Create Frame Window);
-   else
-     DEBUGFOCUS(Create Window);
-#endif
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_minimize)) {
+      style &= ~FCF_MINBUTTON;
+    }
+    if (mBorderStyle == eBorderStyle_none ||
+        !(mBorderStyle & eBorderStyle_maximize)) {
+      style &= ~FCF_MAXBUTTON;
+    }
+  }
 
-   mFrameWnd = WinCreateStdWindow( HWND_DESKTOP,
-                                   0,
-                                   &fcfFlags,
-                                   WindowClass(),
-                                   "Title",
-                                   style,
-                                   NULLHANDLE,
-                                   0,
-                                   &mWnd);
-
-  
-   /* Because WinCreateStdWindow doesn't take an owner, we have to set it */
-   if (hwndP)
-     WinSetOwner(mFrameWnd, hwndP);
-
-
-   /* Set some HWNDs and style into properties for fullscreen mode */
-   HWND hwndTitleBar = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
-   WinSetProperty(mFrameWnd, "hwndTitleBar", (PVOID)hwndTitleBar, 0);
-   HWND hwndSysMenu = WinWindowFromID(mFrameWnd, FID_SYSMENU);
-   WinSetProperty(mFrameWnd, "hwndSysMenu", (PVOID)hwndSysMenu, 0);
-   HWND hwndMinMax = WinWindowFromID(mFrameWnd, FID_MINMAX);
-   WinSetProperty(mFrameWnd, "hwndMinMax", (PVOID)hwndMinMax, 0);
-
-
-   SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
-
-   NS_ASSERTION( mFrameWnd, "Couldn't create frame");
-
-   // Frames have a minimum height based on the pieces they are created with,
-   // such as titlebar, menubar, frame borders, etc.  We need this minimum
-   // height so we can correctly set the frame position (coordinate flipping).
-   nsIntRect frameRect = rect;
-   long minheight; 
-
-   if ( fcfFlags & FCF_SIZEBORDER) {
-      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYSIZEBORDER);
-   }
-   else if ( fcfFlags & FCF_DLGBORDER) {
-      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYDLGFRAME);
-   }
-   else {
-      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
-   }
-   if ( fcfFlags & FCF_TITLEBAR) {
-      minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYTITLEBAR);
-   }
-   if ( frameRect.height < minheight) {
-      frameRect.height = minheight;
-   }
-
-   // Set up parent data - don't addref to avoid circularity
-   mParent = nsnull;
-
-   // Make sure we have a device context from somewhere
-   if( aContext)
-   {
-      mContext = aContext;
-      NS_ADDREF(mContext);
-   }
-   else
-   {
-      nsresult rc;
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-
-      rc = CallCreateInstance(kDeviceContextCID, &mContext);
-      if( NS_SUCCEEDED(rc))
-         mContext->Init(this);
-#ifdef DEBUG
-      else
-         printf( "Couldn't find DC instance for nsWindow\n");
-#endif
-   }
-
-   // Record bounds.  This is XP, the rect of the entire main window in
-   // parent space.  Returned by GetBounds().
-   // NB: We haven't subclassed yet, so callbacks to change mBounds won't
-   //     have happened!
-   mBounds = frameRect;
-   mBounds.height = frameRect.height;
-
-   // Record passed in things
-   mEventCallback = aHandleEventFunction;
-
-   if( mParent)
-      mParent->AddChild( this);
-
-   // call the event callback to notify about creation
-
-   DispatchStandardEvent( NS_CREATE );
-   SubclassWindow(TRUE);
-   PostCreateWidget();
-
-   // Subclass frame
-   fnwpDefFrame = WinSubclassWindow( mFrameWnd, fnwpFrame);
-   WinSetWindowPtr( mFrameWnd, QWL_USER, this);
-
-
-   WinSetWindowPos(mFrameWnd, 0, frameRect.x, frameRect.y, frameRect.width, frameRect.height, SWP_SIZE | SWP_MOVE);
+  return style;
 }
 
+//=============================================================================
+//  Window Operations
+//=============================================================================
+
+// For frame windows, 'Show' is equivalent to 'Show & Activate'
+
+NS_METHOD nsFrameWindow::Show(PRBool aState)
+{
+  if (!mWnd) {
+    return NS_OK;
+  }
+
+  PRUint32 ulFlags;
+  if (!aState) {
+    ulFlags = SWP_HIDE | SWP_DEACTIVATE;
+  } else {
+    ulFlags = SWP_SHOW;
+
+    // Don't activate the window unless the parent is visible
+    if (WinIsWindowVisible(WinQueryWindow(mFrameWnd, QW_PARENT))) {
+      ulFlags |= SWP_ACTIVATE;
+    }
+
+    PRUint32 ulStyle = WinQueryWindowULong(mFrameWnd, QWL_STYLE);
+    if (!(ulStyle & WS_VISIBLE)) {
+      PRInt32 sizeMode;
+      GetSizeMode(&sizeMode);
+      if (sizeMode == nsSizeMode_Maximized) {
+        ulFlags |= SWP_MAXIMIZE;
+      } else if (sizeMode == nsSizeMode_Minimized) {
+        ulFlags |= SWP_MINIMIZE;
+      } else {
+        ulFlags |= SWP_RESTORE;
+      }
+    }
+    if (ulStyle & WS_MINIMIZED) {
+      ulFlags |= (SWP_RESTORE | SWP_MAXIMIZE);
+    }
+  }
+
+  WinSetWindowPos(mFrameWnd, 0, 0, 0, 0, 0, ulFlags);
+  SetWindowListVisibility(aState);
+
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_METHOD nsFrameWindow::GetClientBounds(nsIntRect& aRect)
+{
+  RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
+  WinCalcFrameRect(mFrameWnd, &rcl, TRUE); // provided == frame rect
+  aRect.x = rcl.xLeft;
+  aRect.y = mBounds.height - rcl.yTop;
+  aRect.width = mSizeClient.width;
+  aRect.height = mSizeClient.height;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 
 void nsFrameWindow::UpdateClientSize()
 {
-   RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
-   WinCalcFrameRect( mFrameWnd, &rcl, TRUE); // provided == frame rect
-   mSizeClient.width = rcl.xRight - rcl.xLeft;
-   mSizeClient.height = rcl.yTop - rcl.yBottom;
-   mSizeBorder.width = (mBounds.width - mSizeClient.width) / 2;
-   mSizeBorder.height = (mBounds.height - mSizeClient.height) / 2;
+  RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
+  WinCalcFrameRect(mFrameWnd, &rcl, TRUE); // provided == frame rect
+  mSizeClient.width  = rcl.xRight - rcl.xLeft;
+  mSizeClient.height = rcl.yTop - rcl.yBottom;
 }
 
-nsresult nsFrameWindow::GetClientBounds( nsIntRect &aRect)
-{
-   RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
-   WinCalcFrameRect( mFrameWnd, &rcl, TRUE); // provided == frame rect
-   aRect.x = rcl.xLeft;
-   aRect.y = mBounds.height - rcl.yTop;
-   aRect.width = mSizeClient.width;
-   aRect.height = mSizeClient.height;
-   return NS_OK;
-}
-
-// Just ignore this callback; the correct stuff is done in the frame wp.
-PRBool nsFrameWindow::OnReposition( PSWP pSwp)
-{
-   return PR_TRUE;
-}
-
-// For frame windows, 'Show' is equivalent to 'Show & Activate'
-nsresult nsFrameWindow::Show( PRBool bState)
-{
-   if( mWnd)
-   {
-      ULONG ulFlags;
-      if( bState) {
-         ULONG ulStyle = WinQueryWindowULong( GetMainWindow(), QWL_STYLE);
-         ulFlags = SWP_SHOW;
-         /* Don't activate the window unless the parent is visible */
-         if (WinIsWindowVisible(WinQueryWindow(GetMainWindow(), QW_PARENT)))
-           ulFlags |= SWP_ACTIVATE;
-         if (!( ulStyle & WS_VISIBLE)) {
-            PRInt32 sizeMode;
-            GetSizeMode( &sizeMode);
-            if ( sizeMode == nsSizeMode_Maximized) {
-               ulFlags |= SWP_MAXIMIZE;
-            } else if ( sizeMode == nsSizeMode_Minimized) {
-               ulFlags |= SWP_MINIMIZE;
-            } else {
-               ulFlags |= SWP_RESTORE;
-            }
-         }
-         if( ulStyle & WS_MINIMIZED)
-            ulFlags |= (SWP_RESTORE | SWP_MAXIMIZE);
-      }
-      else
-         ulFlags = SWP_HIDE | SWP_DEACTIVATE;
-      WinSetWindowPos( GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, ulFlags);
-      SetWindowListVisibility( bState);
-   }
-
-   return NS_OK;
-}
-
+//-----------------------------------------------------------------------------
 // When WM_ACTIVATE is received with the "gaining activation" flag set,
 // the frame's wndproc sets mNeedActivation.  Later, when an nsWindow
 // gets a WM_FOCUSCHANGED msg with the "gaining focus" flag set, it
 // invokes this method on nsFrameWindow to fire an NS_ACTIVATE event.
 
-void    nsFrameWindow::ActivateTopLevelWidget()
+void nsFrameWindow::ActivateTopLevelWidget()
 {
   // Don't fire event if we're minimized or else the window will
   // be restored as soon as the user clicks on it.  When the user
@@ -340,181 +301,205 @@ void    nsFrameWindow::ActivateTopLevelWidget()
     if (sizeMode != nsSizeMode_Minimized) {
       mNeedActivation = PR_FALSE;
       DEBUGFOCUS(NS_ACTIVATE);
-      DispatchFocus(NS_ACTIVATE);
+      DispatchActivationEvent(NS_ACTIVATE);
     }
   }
   return;
 }
 
+//-----------------------------------------------------------------------------
+// Just ignore this callback; the correct stuff is done in the frame wp.
+
+PRBool nsFrameWindow::OnReposition(PSWP pSwp)
+{
+  return PR_TRUE;
+}
+
+//-----------------------------------------------------------------------------
+
+void nsFrameWindow::SetWindowListVisibility(PRBool aState)
+{
+  HSWITCH hswitch = WinQuerySwitchHandle(mFrameWnd, 0);
+  if (hswitch) {
+    SWCNTRL swctl;
+    WinQuerySwitchEntry(hswitch, &swctl);
+    swctl.uchVisibility = aState ? SWL_VISIBLE : SWL_INVISIBLE;
+    swctl.fbJump        = aState ? SWL_JUMPABLE : SWL_NOTJUMPABLE;
+    WinChangeSwitchEntry(hswitch, &swctl);
+  }
+}
+
+//=============================================================================
+//  nsFrameWindow's Window Procedure
+//=============================================================================
+
 // Subclass for frame window
-MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+
+MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   // check to see if we have a rollup listener registered
-   if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if (msg == WM_TRACKFRAME || msg == WM_MINMAXFRAME ||
-          msg == WM_BUTTON1DOWN || msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
-         // Rollup if the event is outside the popup
-         if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
-            gRollupListener->Rollup(PR_UINT32_MAX, nsnull);
-
-            // if we are supposed to be consuming events and it is
-            // a Mouse Button down, let it go through
-//            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
-//               return FALSE;
-//            }
-         } 
+  // check to see if we have a rollup listener registered
+  if (gRollupListener && gRollupWidget) {
+    if (msg == WM_TRACKFRAME || msg == WM_MINMAXFRAME ||
+        msg == WM_BUTTON1DOWN || msg == WM_BUTTON2DOWN ||
+        msg == WM_BUTTON3DOWN) {
+      // Rollup if the event is outside the popup
+      if (!nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
+        gRollupListener->Rollup(PR_UINT32_MAX, nsnull);
       }
-   }
+    }
+  }
 
-   nsFrameWindow *pFrame = (nsFrameWindow*) WinQueryWindowPtr( hwnd, QWL_USER);
-   return pFrame->FrameMessage( msg, mp1, mp2);
+  nsFrameWindow* pFrame = (nsFrameWindow*)WinQueryWindowPtr(hwnd, QWL_USER);
+  return pFrame->FrameMessage(msg, mp1, mp2);
 }
 
+//-----------------------------------------------------------------------------
 // Process messages from the frame
-MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
+
+MRESULT nsFrameWindow::FrameMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   MRESULT mresult = 0;
-   BOOL    bDone = FALSE;
+  MRESULT mresult = 0;
+  PRBool  bDone = PR_FALSE;
 
-   switch (msg)
-   {
-      case WM_WINDOWPOSCHANGED:
-      {
-         PSWP pSwp = (PSWP) mp1;
+  switch (msg) {
+    case WM_WINDOWPOSCHANGED: {
+      PSWP pSwp = (PSWP)mp1;
 
-         // Note that client windows never get 'move' messages (well, they won't here anyway)
-         if( pSwp->fl & SWP_MOVE && !(pSwp->fl & SWP_MINIMIZE))
-         {
-            // These commented-out `-1's cancel each other out.
-            POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy /* - 1 */ };
-            ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - ptl.y /* - 1*/ ;
-            mBounds.x = ptl.x;
-            mBounds.y = ptl.y;
-            OnMove( ptl.x, ptl.y);
-         }
-
-         // When the frame is sized, do stuff to recalculate client size.
-         if( pSwp->fl & SWP_SIZE && !(pSwp->fl & SWP_MINIMIZE))
-         {
-            mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
-            bDone = TRUE;
-
-            mBounds.width = pSwp->cx;
-            mBounds.height = pSwp->cy;
-
-            UpdateClientSize();
-            DispatchResizeEvent( mSizeClient.width, mSizeClient.height);
-         }
- 
-         if (pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
-           nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-            if (pSwp->fl & SWP_MAXIMIZE)
-              event.mSizeMode = nsSizeMode_Maximized;
-            else if (pSwp->fl & SWP_MINIMIZE)
-              event.mSizeMode = nsSizeMode_Minimized;
-            else
-              event.mSizeMode = nsSizeMode_Normal;
-            InitEvent(event);
-            DispatchWindowEvent(&event);
-         }
-
-         break;
+      // Note that client windows never get 'move' messages
+      if (pSwp->fl & SWP_MOVE && !(pSwp->fl & SWP_MINIMIZE)) {
+        POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy };
+        ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - ptl.y;
+        mBounds.x = ptl.x;
+        mBounds.y = ptl.y;
+        DispatchMoveEvent(ptl.x, ptl.y);
       }
 
-      // a frame window in kiosk/fullscreen mode must have its frame
-      // controls reattached before it's minimized & detached after it's
-      // restored;  if this doesn't happen at the correct times, clicking
-      // on the icon won't restore it, the sysmenu will have the wrong
-      // items, and/or the minmax button will have the wrong buttons
+      // When the frame is sized, do stuff to recalculate client size.
+      if (pSwp->fl & SWP_SIZE && !(pSwp->fl & SWP_MINIMIZE)) {
+        mresult = (*mPrevFrameProc)(mFrameWnd, msg, mp1, mp2);
+        bDone = PR_TRUE;
+        mBounds.width = pSwp->cx;
+        mBounds.height = pSwp->cy;
+        UpdateClientSize();
+        DispatchResizeEvent(mSizeClient.width, mSizeClient.height);
+      }
 
-      case WM_ADJUSTWINDOWPOS:
-      {
-        if (mChromeHidden && ((PSWP)mp1)->fl & SWP_MINIMIZE) {
-          HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, mFrameWnd, TRUE);
-          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, mFrameWnd, TRUE);
-          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, mFrameWnd, TRUE);
+      if (pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
+        nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+        if (pSwp->fl & SWP_MAXIMIZE) {
+          event.mSizeMode = nsSizeMode_Maximized;
+        } else if (pSwp->fl & SWP_MINIMIZE) {
+          event.mSizeMode = nsSizeMode_Minimized;
+        } else {
+          event.mSizeMode = nsSizeMode_Normal;
         }
-        break;
+        InitEvent(event);
+        DispatchWindowEvent(&event);
       }
-      case WM_ADJUSTFRAMEPOS:
-      {
-        if (mChromeHidden && ((PSWP)mp1)->fl & SWP_RESTORE) {
-          HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
-          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
-          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
-          if (hwndTemp)
-            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
+
+      break;
+    }
+
+     // a frame window in kiosk/fullscreen mode must have its frame
+     // controls reattached before it's minimized & detached after it's
+     // restored;  if this doesn't happen at the correct times, clicking
+     // on the icon won't restore it, the sysmenu will have the wrong
+     // items, and/or the minmax button will have the wrong buttons
+
+    case WM_ADJUSTWINDOWPOS: {
+      if (mChromeHidden && ((PSWP)mp1)->fl & SWP_MINIMIZE) {
+        HWND hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
+        if (hTemp) {
+          WinSetParent(hTemp, mFrameWnd, TRUE);
         }
-        break;
+        hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+        if (hTemp) {
+          WinSetParent(hTemp, mFrameWnd, TRUE);
+        }
+        hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+        if (hTemp) {
+          WinSetParent(hTemp, mFrameWnd, TRUE);
+        }
       }
+      break;
+    }
 
-      case WM_DESTROY:
-         DEBUGFOCUS(frame WM_DESTROY);
-         WinSubclassWindow( mFrameWnd, fnwpDefFrame);
-         WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
-         WinRemoveProperty(mFrameWnd, "hwndTitleBar");
-         WinRemoveProperty(mFrameWnd, "hwndSysMenu");
-         WinRemoveProperty(mFrameWnd, "hwndMinMax");
-         WinRemoveProperty(mFrameWnd, "ulStyle");
-         break;
-      case WM_INITMENU:
-         /* If we are in fullscreen/kiosk mode, disable maximize menu item */
-         if (mChromeHidden) {
-            if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
-              if (SHORT1FROMMP(mp1) == SC_SYSMENU) {
-                MENUITEM menuitem;
-                WinSendMsg(WinWindowFromID(mFrameWnd, FID_SYSMENU), MM_QUERYITEM, MPFROM2SHORT(SC_SYSMENU, FALSE), MPARAM(&menuitem));
-                mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
-                WinEnableMenuItem(menuitem.hwndSubMenu, SC_MAXIMIZE, FALSE);
-                bDone = TRUE;
-              }
-            }
-         }
-         break;
-      case WM_SYSCOMMAND:
-         /* If we are in fullscreen/kiosk mode, don't honor maximize requests */
-         if (mChromeHidden) {
-            if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
-              if ((SHORT1FROMMP(mp1) == SC_MAXIMIZE))
-              {
-                bDone = TRUE;
-              }
-            }
-         }
-         break;
+    case WM_ADJUSTFRAMEPOS: {
+      if (mChromeHidden && ((PSWP)mp1)->fl & SWP_RESTORE) {
+        HWND hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+        if (hTemp) {
+          WinSetParent(hTemp, HWND_OBJECT, TRUE);
+        }
+        hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+        if (hTemp) {
+          WinSetParent(hTemp, HWND_OBJECT, TRUE);
+        }
+        hTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
+        if (hTemp) {
+          WinSetParent(hTemp, HWND_OBJECT, TRUE);
+        }
+      }
+      break;
+    }
 
-      // When the frame is activated, set a flag to be acted on after
-      // PM has finished changing focus.  When deactivated, dispatch
-      // the event immediately because it doesn't affect the focus.
-      case WM_ACTIVATE:
-         DEBUGFOCUS(WM_ACTIVATE);
-         if (mp1) {
-            mNeedActivation = PR_TRUE;
-         } else {
-            mNeedActivation = PR_FALSE;
-            DEBUGFOCUS(NS_DEACTIVATE);
-            DispatchFocus(NS_DEACTIVATE);
-            // Prevent the frame from automatically focusing any window
-            // when it's reactivated.  Let moz set the focus to avoid
-            // having non-widget children of plugins focused in error.
-            WinSetWindowULong(mFrameWnd, QWL_HWNDFOCUSSAVE, 0);
-         }
-         break;
-   }
+    case WM_DESTROY:
+      DEBUGFOCUS(frame WM_DESTROY);
+      WinSubclassWindow(mFrameWnd, mPrevFrameProc);
+      WinSetWindowPtr(mFrameWnd, QWL_USER, 0);
+      WinRemoveProperty(mFrameWnd, "hwndTitleBar");
+      WinRemoveProperty(mFrameWnd, "hwndSysMenu");
+      WinRemoveProperty(mFrameWnd, "hwndMinMax");
+      WinRemoveProperty(mFrameWnd, "ulStyle");
+      break;
 
-   if( !bDone)
-      mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
+    case WM_INITMENU:
+      // If we are in fullscreen/kiosk mode, disable maximize menu item
+      if (mChromeHidden &&
+          SHORT1FROMMP(mp1) == SC_SYSMENU &&
+          WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
+        MENUITEM menuitem;
+        WinSendMsg(WinWindowFromID(mFrameWnd, FID_SYSMENU), MM_QUERYITEM,
+                   MPFROM2SHORT(SC_SYSMENU, FALSE), MPARAM(&menuitem));
+        mresult = (*mPrevFrameProc)(mFrameWnd, msg, mp1, mp2);
+        WinEnableMenuItem(menuitem.hwndSubMenu, SC_MAXIMIZE, FALSE);
+        bDone = PR_TRUE;
+      }
+      break;
 
-   return mresult;
+    case WM_SYSCOMMAND:
+      // If we are in fullscreen/kiosk mode, don't honor maximize requests
+      if (mChromeHidden &&
+          SHORT1FROMMP(mp1) == SC_MAXIMIZE &&
+          WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
+        bDone = PR_TRUE;
+      }
+      break;
+
+    // When the frame is activated, set a flag to be acted on after
+    // PM has finished changing focus.  When deactivated, dispatch
+    // the event immediately because it doesn't affect the focus.
+    case WM_ACTIVATE:
+      DEBUGFOCUS(WM_ACTIVATE);
+      if (mp1) {
+        mNeedActivation = PR_TRUE;
+      } else {
+        mNeedActivation = PR_FALSE;
+        DEBUGFOCUS(NS_DEACTIVATE);
+        DispatchActivationEvent(NS_DEACTIVATE);
+        // Prevent the frame from automatically focusing any window
+        // when it's reactivated.  Let moz set the focus to avoid
+        // having non-widget children of plugins focused in error.
+        WinSetWindowULong(mFrameWnd, QWL_HWNDFOCUSSAVE, 0);
+      }
+      break;
+  }
+
+  if (!bDone) {
+    mresult = (*mPrevFrameProc)(mFrameWnd, msg, mp1, mp2);
+  }
+
+  return mresult;
 }
+
+//=============================================================================
 

@@ -50,7 +50,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsOS2Uni.h"
-#include "nsdefs.h"
 #include "wdgtos2rc.h"
 #include "nsILocalFileOS2.h"
 #include "nsIDocument.h"
@@ -75,6 +74,13 @@
 #define OS2FILE_NAME    "MOZ_TGT.TMP"
 #define OS2FILE_TXTRMF  "<DRM_OS2FILE, DRF_TEXT>"
 #define OS2FILE_UNKRMF  "<DRM_OS2FILE, DRF_UNKNOWN>"
+
+// not defined in the OS/2 toolkit headers
+extern "C" {
+APIRET APIENTRY DosQueryModFromEIP(HMODULE *phMod, ULONG *pObjNum,
+                                   ULONG BuffLen,  PCHAR pBuff,
+                                   ULONG *pOffset, ULONG Address);
+}
 
 // --------------------------------------------------------------------------
 // Helper functions
