@@ -76,8 +76,11 @@ struct _cairo_d2d_surface {
     ID2D1Layer *clipLayer;
     /** Mask layer used by surface_mask to push opacity masks */
     ID2D1Layer *maskLayer;
-    /** Layer used for clipping when tiling - lazily initialized */
-    ID2D1Layer *tilingLayer;
+    /**
+     * Layer used for clipping when tiling, and also for clearing out geometries
+     * - lazily initialized 
+     */
+    ID2D1Layer *helperLayer;
     /** If this layer currently is clipping, used to prevent excessive push/pops */
     bool clipping;
     /** Brush used for bitmaps */
