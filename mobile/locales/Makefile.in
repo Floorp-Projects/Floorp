@@ -71,7 +71,7 @@ SEARCH_PLUGINS = $(shell cat \
        @srcdir@/en-US/searchplugins/list.txt ) )
 
 tmp-search.jar.mn::
-	@echo -n "$(AB_CD).jar:" > $@
+	printf "$(AB_CD).jar:" > $@
 	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
 	@echo   >> $@
 
