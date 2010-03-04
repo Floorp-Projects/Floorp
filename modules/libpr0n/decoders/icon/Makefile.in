@@ -115,7 +115,7 @@ endif
 
 LOCAL_INCLUDES	= -I$(srcdir)/$(PLATFORM)
 
-ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= $(call EXPAND_LIBNAME,shell32 gdi32 comctl32)
 endif
 

@@ -78,8 +78,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
 
-
+ifndef WINCE
 _OS_LIBS	= usp10
+endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 endif
