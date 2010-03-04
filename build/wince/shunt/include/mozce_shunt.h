@@ -67,32 +67,27 @@ typedef unsigned short wchar_t;
 namespace std {
   struct nothrow_t {};
   extern const nothrow_t nothrow;
+  struct bad_alloc {};
 };
 #endif
 
 // grab malloc and free prototypes
 #include "jemalloc.h"
 
-// Normal and nothrow versions of operator new, none of which
-// actually throw for us.  These are both inline and exported
-// from the shunt.
-inline void *operator new(size_t size) throw() {
-  return (void*) malloc(size);
-}
+// mozalloc.h defines "normal" infallible operator new, but not
+// std::nothrow operator new, so we define that below.  This is inline
+// and exported from the shunt.
 inline void *operator new(size_t size, const std::nothrow_t&) throw() {
-  return (void*) malloc(size);
-}
-inline void operator delete(void *ptr) throw() {
-  free(ptr);
-}
-inline void *operator new[](size_t size) throw() {
-  return (void*) malloc(size);
+  return malloc(size);
 }
 inline void *operator new[](size_t size, const std::nothrow_t&) throw() {
-  return (void*) malloc(size);
+  return malloc(size);
 }
-inline void operator delete[](void *ptr) throw() {
-  return free(ptr);
+inline void operator delete(void* ptr, const std::nothrow_t&) throw() {
+  free(ptr);
+}
+inline void operator delete[](void* ptr, const std::nothrow_t&) throw() {
+  free(ptr);
 }
 
 // Placement new.  Just inline, not exported (which doesn't work for
@@ -103,6 +98,30 @@ inline void *operator new(size_t, void *p) {
 inline void *operator new[](size_t, void *p) {
   return p;
 }
+
+
+// for Gecko, include infallible mozalloc allocators.  elsewhere, define
+// operator new() normally.
+// NB: this include guard needs to be kept in sync with the one in nscore.h
+#if defined(_MOZILLA_CONFIG_H_) && !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
+#  include "mozilla/mozalloc.h"
+#else
+
+inline void* operator new(size_t size) throw() {
+  return malloc(size);
+}
+inline void* operator new[](size_t size) throw() {
+  return malloc(size);
+}
+inline void operator delete(void* ptr) throw() {
+  free(ptr);
+}
+inline void operator delete[](void* ptr) throw() {
+  free(ptr);
+}
+
+#endif  // if defined(_MOZILLA_CONFIG_H_)
+
 
 extern "C" {
 #endif
@@ -132,7 +151,7 @@ _wcsndup(const wchar_t *, unsigned int);
 }   //extern "C" 
 #endif
 
-#endif
+#endif  // ifdef MOZ_MEMORY
 
 #define strdup  _strdup
 #define strndup _strndup
