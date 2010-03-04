@@ -277,7 +277,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 
     assertIsCurrent(cx);
     JS_ASSERT(currentCallStack->isActive());
-    jsval *start = cx->fp->regs->sp;
+    jsval *start = cx->regs->sp;
     ptrdiff_t nvals = nmissing + VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -288,7 +288,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 
 JS_REQUIRES_STACK void
 StackSpace::pushInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
-                            InvokeFrameGuard &fg)
+                            InvokeFrameGuard &fg, JSFrameRegs &regs)
 {
     JS_ASSERT(!!ag.cs ^ !!fg.cs);
     JS_ASSERT_IF(ag.cs, ag.cs == currentCallStack && !ag.cs->inContext());
@@ -298,7 +298,7 @@ StackSpace::pushInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
     }
     JSStackFrame *fp = fg.fp;
     fp->down = cx->fp;
-    cx->pushCallStackAndFrame(currentCallStack, fp);
+    cx->pushCallStackAndFrame(currentCallStack, fp, regs);
     currentCallStack->setInitialVarObj(NULL);
     fg.cx = cx;
 }
@@ -361,13 +361,13 @@ StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
 
 JS_REQUIRES_STACK void
 StackSpace::pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
-                             JSObject *initialVarObj)
+                             JSFrameRegs &regs, JSObject *initialVarObj)
 {
     fg.fp->down = fg.down;
     CallStack *cs = fg.cs;
     cs->setPreviousInThread(currentCallStack);
     currentCallStack = cs;
-    cx->pushCallStackAndFrame(cs, fg.fp);
+    cx->pushCallStackAndFrame(cs, fg.fp, regs);
     cs->setInitialVarObj(initialVarObj);
     fg.cx = cx;
 }
@@ -391,14 +391,15 @@ StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStack
 }
 
 JS_REQUIRES_STACK void
-StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp)
+StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp,
+                                           JSFrameRegs &regs)
 {
     JS_ASSERT(cx->fp->fun->isInterpreted());
     JS_ASSERT(!fp->script && FUN_SLOW_NATIVE(fp->fun));
     fp->down = cx->fp;
     cs->setPreviousInThread(currentCallStack);
     currentCallStack = cs;
-    cx->pushCallStackAndFrame(cs, fp);
+    cx->pushCallStackAndFrame(cs, fp, regs);
     cs->setInitialVarObj(NULL);
 }
 
@@ -411,6 +412,84 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
     JS_ASSERT(!cx->fp->script && FUN_SLOW_NATIVE(cx->fp->fun));
     cx->popCallStackAndFrame();
     currentCallStack = currentCallStack->getPreviousInThread();
+}
+
+/*
+ * When a pair of down-linked stack frames are in the same callstack, the
+ * up-frame's address is the top of the down-frame's stack, modulo missing
+ * arguments.
+ */
+static inline jsval *
+InlineDownFrameSP(JSStackFrame *up)
+{
+    JS_ASSERT(up->fun && up->script);
+    jsval *sp = up->argv + up->argc;
+#ifdef DEBUG
+    uint16 nargs = up->fun->nargs;
+    uintN argc = up->argc;
+    uintN missing = argc < nargs ? nargs - argc : 0;
+    JS_ASSERT(sp == (jsval *)up - missing);
+#endif
+    return sp;
+}
+
+JS_REQUIRES_STACK
+FrameRegsIter::FrameRegsIter(JSContext *cx)
+{
+    curcs = cx->getCurrentCallStack();
+    if (!curcs) {
+        curfp = NULL;
+        return;
+    }
+    if (curcs->isSuspended()) {
+        curfp = curcs->getSuspendedFrame();
+        cursp = curcs->getSuspendedRegs()->sp;
+        curpc = curcs->getSuspendedRegs()->pc;
+    }
+    JS_ASSERT(cx->fp);
+    curfp = cx->fp;
+    cursp = cx->regs->sp;
+    curpc = cx->regs->pc;
+    return;
+}
+
+FrameRegsIter &
+FrameRegsIter::operator++()
+{
+    JSStackFrame *up = curfp;
+    JSStackFrame *down = curfp = curfp->down;
+    if (!down)
+        return *this;
+
+    curpc = down->savedPC;
+
+    /* For a contiguous down and up, compute sp from up. */
+    if (up != curcs->getInitialFrame()) {
+        cursp = InlineDownFrameSP(up);
+        return *this;
+    }
+
+    /*
+     * If the up-frame is in csup and the down-frame is in csdown, it is not
+     * necessarily the case that |csup->getPreviousInContext == csdown| or that
+     * |csdown->getSuspendedFrame == down| (because of indirect eval and
+     * JS_EvaluateInStackFrame). To compute down's sp, we need to do a linear
+     * scan, keeping track of what is immediately after down in memory.
+     */
+    curcs = curcs->getPreviousInContext();
+    cursp = curcs->getSuspendedSP();
+    JSStackFrame *f = curcs->getSuspendedFrame();
+    while (f != down) {
+        if (f == curcs->getInitialFrame()) {
+            curcs = curcs->getPreviousInContext();
+            cursp = curcs->getSuspendedSP();
+            f = curcs->getSuspendedFrame();
+        } else {
+            cursp = InlineDownFrameSP(f);
+            f = f->down;
+        }
+    }
+    return *this;
 }
 
 bool
@@ -1641,14 +1720,12 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
 static void
 PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 {
-    JSStackFrame *fp;
-
     /*
      * Walk stack until we find a frame that is associated with some script
      * rather than a native frame.
      */
-    for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
-        if (fp->regs) {
+    for (JSStackFrame *fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
+        if (fp->pc(cx)) {
             report->filename = fp->script->filename;
             report->lineno = js_FramePCToLineNumber(cx, fp);
             break;
@@ -2227,13 +2304,10 @@ js_GetCurrentBytecodePC(JSContext* cx)
 #endif
     {
         JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
-        JSStackFrame* fp = cx->fp;
-        if (fp && fp->regs) {
-            pc = fp->regs->pc;
-            imacpc = fp->imacpc;
-        } else {
+        pc = cx->regs ? cx->regs->pc : NULL;
+        if (!pc)
             return NULL;
-        }
+        imacpc = cx->fp->imacpc;
     }
 
     /*
@@ -2258,18 +2332,27 @@ js_CurrentPCIsInImacro(JSContext *cx)
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
     fp(NULL),
+    regs(NULL),
     regExpStatics(this),
     busyArrays(this)
 {}
 
 void
-JSContext::pushCallStackAndFrame(js::CallStack *newcs, JSStackFrame *newfp)
+JSContext::pushCallStackAndFrame(js::CallStack *newcs, JSStackFrame *newfp,
+                                 JSFrameRegs &newregs)
 {
-    if (hasActiveCallStack())
-        currentCallStack->suspend(fp);
+    if (hasActiveCallStack()) {
+        JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
+        fp->savedPC = regs->pc;
+        currentCallStack->suspend(fp, regs);
+    }
     newcs->setPreviousInContext(currentCallStack);
     currentCallStack = newcs;
+#ifdef DEBUG
+    newfp->savedPC = JSStackFrame::sInvalidPC;
+#endif
     setCurrentFrame(newfp);
+    setCurrentRegs(&newregs);
     newcs->joinContext(this, newfp);
 }
 
@@ -2278,18 +2361,25 @@ JSContext::popCallStackAndFrame()
 {
     JS_ASSERT(currentCallStack->maybeContext() == this);
     JS_ASSERT(currentCallStack->getInitialFrame() == fp);
+    JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
     currentCallStack->leaveContext();
     currentCallStack = currentCallStack->getPreviousInContext();
     if (currentCallStack) {
         if (currentCallStack->isSaved()) {
             setCurrentFrame(NULL);
+            setCurrentRegs(NULL);
         } else {
             setCurrentFrame(currentCallStack->getSuspendedFrame());
+            setCurrentRegs(currentCallStack->getSuspendedRegs());
             currentCallStack->resume();
+#ifdef DEBUG
+            fp->savedPC = JSStackFrame::sInvalidPC;
+#endif
         }
     } else {
         JS_ASSERT(fp->down == NULL);
         setCurrentFrame(NULL);
+        setCurrentRegs(NULL);
     }
 }
 
@@ -2297,16 +2387,23 @@ void
 JSContext::saveActiveCallStack()
 {
     JS_ASSERT(hasActiveCallStack());
-    currentCallStack->save(fp);
+    currentCallStack->save(fp, regs);
+    JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
+    fp->savedPC = regs->pc;
     setCurrentFrame(NULL);
+    setCurrentRegs(NULL);
 }
 
 void
 JSContext::restoreCallStack()
 {
-    JS_ASSERT(!hasActiveCallStack());
-    setCurrentFrame(currentCallStack->getSuspendedFrame());
-    currentCallStack->restore();
+    js::CallStack *ccs = currentCallStack;
+    setCurrentFrame(ccs->getSuspendedFrame());
+    setCurrentRegs(ccs->getSuspendedRegs());
+    ccs->restore();
+#ifdef DEBUG
+    fp->savedPC = JSStackFrame::sInvalidPC;
+#endif
 }
 
 JSGenerator *
@@ -2329,7 +2426,7 @@ JSContext::generatorFor(JSStackFrame *fp) const
 }
 
 CallStack *
-JSContext::containingCallStack(JSStackFrame *target)
+JSContext::containingCallStack(const JSStackFrame *target)
 {
     /* The context may have nothing running. */
     CallStack *cs = currentCallStack;

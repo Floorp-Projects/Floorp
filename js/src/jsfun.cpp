@@ -2621,14 +2621,8 @@ js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
-    JSStackFrame *fp;
     uintN error;
-    const char *name, *source;
-
-    for (fp = js_GetTopStackFrame(cx); fp && !fp->regs; fp = fp->down)
-        continue;
-    name = source = NULL;
-
+    const char *name = NULL, *source = NULL;
     AutoValueRooter tvr(cx);
     if (flags & JSV2F_ITERATOR) {
         error = JSMSG_BAD_ITERATOR;
@@ -2650,15 +2644,18 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
         error = JSMSG_NOT_FUNCTION;
     }
 
-    js_ReportValueError3(cx, error,
-                         (fp && fp->regs &&
-                          StackBase(fp) <= vp && vp < fp->regs->sp)
-                         ? vp - fp->regs->sp
-                         : (flags & JSV2F_SEARCH_STACK)
-                         ? JSDVG_SEARCH_STACK
-                         : JSDVG_IGNORE_STACK,
-                         *vp, NULL,
-                         name, source);
+    LeaveTrace(cx);
+    FrameRegsIter i(cx);
+    while (!i.done() && !i.pc())
+        ++i;
+
+    ptrdiff_t spindex =
+        !i.done() && StackBase(i.fp()) <= vp && vp < i.sp()
+            ? vp - i.sp()
+            : flags & JSV2F_SEARCH_STACK ? JSDVG_SEARCH_STACK
+                                         : JSDVG_IGNORE_STACK;
+
+    js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
 }
 
 /*

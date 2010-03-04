@@ -1993,7 +1993,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
              */
             fp = js_GetScriptedCaller(cx, NULL);
             format = cs->format;
-            if (((fp && fp->regs && pc == fp->regs->pc) ||
+            if (((fp && pc == fp->pc(cx)) ||
                  (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
                 mode = JOF_MODE(format);
@@ -5102,26 +5102,25 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSStackFrame *fp;
     jsbytecode *pc;
     JSScript *script;
-    JSFrameRegs *regs;
-    intN pcdepth;
-    jsval *sp, *stackBase;
-    char *name;
 
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    fp = js_GetScriptedCaller(cx, NULL);
-    if (!fp || !fp->regs || !fp->regs->sp)
+    LeaveTrace(cx);
+    
+    /* Get scripted caller */
+    FrameRegsIter i(cx);
+    while (!i.done() && !i.fp()->script)
+        ++i;
+
+    if (i.done() || !i.pc())
         goto do_fallback;
 
+    fp = i.fp();
     script = fp->script;
-    regs = fp->regs;
-    pc = fp->imacpc ? fp->imacpc : regs->pc;
-    if (pc < script->main || script->code + script->length <= pc) {
-        JS_NOT_REACHED("bug");
-        goto do_fallback;
-    }
+    pc = fp->imacpc ? fp->imacpc : i.pc();
+    JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
@@ -5134,7 +5133,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                   cx->malloc(StackDepth(script) * sizeof *pcstack);
         if (!pcstack)
             return NULL;
-        pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
+        intN pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
         if (pcdepth < 0)
             goto release_pcstack;
 
@@ -5150,8 +5149,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            stackBase = StackBase(fp);
-            sp = regs->sp;
+            jsval *stackBase = StackBase(fp);
+            jsval *sp = i.sp();
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
@@ -5178,10 +5177,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     }
 
     {
-        jsbytecode* savepc = regs->pc;
+        jsbytecode* savepc = i.pc();
         jsbytecode* imacpc = fp->imacpc;
         if (imacpc) {
-            regs->pc = imacpc;
+            if (fp == cx->fp)
+                cx->regs->pc = imacpc;
+            else
+                fp->savedPC = imacpc;
             fp->imacpc = NULL;
         }
 
@@ -5189,18 +5191,23 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
          * FIXME: bug 489843. Stack reconstruction may have returned a pc
          * value *inside* an imacro; this would confuse the decompiler.
          */
+        char *name;
         if (imacpc && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
             name = DecompileExpression(cx, script, fp->fun, pc);
 
         if (imacpc) {
-            regs->pc = savepc;
+            if (fp == cx->fp)
+                cx->regs->pc = imacpc;
+            else
+                fp->savedPC = savepc;
             fp->imacpc = imacpc;
         }
+
+        if (name != FAILED_EXPRESSION_DECOMPILER)
+            return name;
     }
-    if (name != FAILED_EXPRESSION_DECOMPILER)
-        return name;
 
   do_fallback:
     if (!fallback) {
