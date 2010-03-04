@@ -1382,8 +1382,7 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	d2dsurf->surface->Release();
-	d2dsurf->surface = NULL;
+	softTexture->Release();
 	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
     }
     *image_out = 
@@ -1407,9 +1406,6 @@ _cairo_d2d_release_source_image(void                   *abstract_surface,
     }
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(abstract_surface);
 
-    if (!d2dsurf->surface) {
-	return;
-    }
     ID3D10Texture2D *softTexture = (ID3D10Texture2D*)image_extra;
     
     softTexture->Unmap(0);
@@ -1455,8 +1451,7 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	d2dsurf->surface->Release();
-	d2dsurf->surface = NULL;
+	softTexture->Release();
 	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
     }
     *image_out = 
