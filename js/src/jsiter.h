@@ -158,7 +158,6 @@ js_LiveFrameIfGenerator(JSStackFrame *fp)
         return js_FloatingFrameToGenerator(fp)->getLiveFrame();
     return fp;
 }
-
 #endif
 
 extern JS_FRIEND_API(JSClass) js_GeneratorClass;
