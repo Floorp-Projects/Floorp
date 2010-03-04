@@ -182,22 +182,10 @@ enum CanvasMultiGetterType {
   // void putImageData (in ImageData d, in float x, in float y);
   // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
 
-  // These are just dummy functions; for JS, they are implemented as quickstubs
-  // that call the _explicit methods below.  Native callers should use the _explit
-  // methods directly.
   void getImageData();
   void putImageData();
 
-  // dataLen must be == width*height*4 in both of these calls
-  [noscript] void getImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
-                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen);
-  [noscript] void putImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
-                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen);
-
   // ImageData createImageData(in float w, in float h);
-  // Note: this is basically script-only (and really, quickstub-only).  Native callers
-  // should just use the noscript 'explicit' get/put methods above, instead of using
-  // a separate ImageData object.
   void createImageData();
 
   // image smoothing mode -- if disabled, images won't be smoothed
