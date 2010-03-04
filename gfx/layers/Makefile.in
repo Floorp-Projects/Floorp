@@ -64,6 +64,7 @@ EXTRA_DSO_LIBS = \
         $(NULL)
 
 EXTRA_DSO_LDOPTS += \
+        $(LIBS_DIR) \
         $(EXTRA_DSO_LIBS) \
         $(MOZ_CAIRO_LIBS) \
         $(XPCOM_LIBS) \
