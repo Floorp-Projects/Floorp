@@ -689,7 +689,7 @@ var allTabs = {
 
   setupGUI: function allTabs_setupGUI() {
     this.filterField.focus();
-    this.filterField.setAttribute("emptytext", this.filterField.tooltipText);
+    this.filterField.placeholder = this.filterField.tooltipText;
 
     this.panel.addEventListener("keypress", this, false);
     this.panel.addEventListener("keypress", this, true);
@@ -697,7 +697,7 @@ var allTabs = {
   },
 
   suspendGUI: function allTabs_suspendGUI() {
-    this.filterField.removeAttribute("emptytext");
+    this.filterField.placeholder = "";
     this.filterField.value = "";
     this._currentFilter = null;
 
