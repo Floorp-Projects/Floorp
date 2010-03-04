@@ -361,7 +361,9 @@ protected:
     void Destroy();
 
     // Some helpers.  Doesn't modify acolor on failure.
-    nsresult SetStyleFromVariant(nsIVariant* aStyle, Style aWhichStyle);
+    nsresult SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
+    nsresult GetStyleAsStringOrInterface(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType, Style aWhichStyle);
+
     void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
     void DirtyAllStyles();
@@ -709,28 +711,16 @@ nsCanvasRenderingContext2D::Destroy()
 }
 
 nsresult
-nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhichStyle)
+nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
+                                                          nsISupports *aInterface,
+                                                          Style aWhichStyle)
 {
     nsresult rv;
     nscolor color;
 
-    PRUint16 paramType;
-    rv = aStyle->GetDataType(&paramType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (paramType == nsIDataType::VTYPE_DOMSTRING ||
-        paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
-        nsAutoString str;
-
-        if (paramType == nsIDataType::VTYPE_DOMSTRING) {
-            rv = aStyle->GetAsDOMString(str);
-        } else {
-            rv = aStyle->GetAsAString(str);
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
-
+    if (!aStr.IsVoid()) {
         nsCSSParser parser;
-        rv = parser.ParseColorString(str, nsnull, 0, &color);
+        rv = parser.ParseColorString(aStr, nsnull, 0, &color);
         if (NS_FAILED(rv)) {
             // Error reporting happens inside the CSS parser
             return NS_OK;
@@ -740,21 +730,17 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhich
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
         return NS_OK;
-    } else if (paramType == nsIDataType::VTYPE_INTERFACE ||
-               paramType == nsIDataType::VTYPE_INTERFACE_IS)
-    {
-        nsID *iid;
-        nsCOMPtr<nsISupports> iface;
-        rv = aStyle->GetAsInterface(&iid, getter_AddRefs(iface));
+    }
 
-        nsCOMPtr<nsCanvasGradient> grad(do_QueryInterface(iface));
+    if (aInterface) {
+        nsCOMPtr<nsCanvasGradient> grad(do_QueryInterface(aInterface));
         if (grad) {
             CurrentState().SetGradientStyle(aWhichStyle, grad);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
             return NS_OK;
         }
 
-        nsCOMPtr<nsCanvasPattern> pattern(do_QueryInterface(iface));
+        nsCOMPtr<nsCanvasPattern> pattern(do_QueryInterface(aInterface));
         if (pattern) {
             CurrentState().SetPatternStyle(aWhichStyle, pattern);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
@@ -770,6 +756,29 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhich
         EmptyString(), 0, 0,
         nsIScriptError::warningFlag,
         "Canvas");
+
+    return NS_OK;
+}
+
+nsresult
+nsCanvasRenderingContext2D::GetStyleAsStringOrInterface(nsAString& aStr,
+                                                        nsISupports **aInterface,
+                                                        PRInt32 *aType,
+                                                        Style aWhichStyle)
+{
+    if (CurrentState().patternStyles[aWhichStyle]) {
+        aStr.SetIsVoid(PR_TRUE);
+        NS_ADDREF(*aInterface = CurrentState().patternStyles[aWhichStyle]);
+        *aType = CMG_STYLE_PATTERN;
+    } else if (CurrentState().gradientStyles[aWhichStyle]) {
+        aStr.SetIsVoid(PR_TRUE);
+        NS_ADDREF(*aInterface = CurrentState().gradientStyles[aWhichStyle]);
+        *aType = CMG_STYLE_GRADIENT;
+    } else {
+        StyleColorToString(CurrentState().colorStyles[aWhichStyle], aStr);
+        *aInterface = nsnull;
+        *aType = CMG_STYLE_STRING;
+    }
 
     return NS_OK;
 }
@@ -1208,73 +1217,146 @@ nsCanvasRenderingContext2D::GetGlobalAlpha(float *aGlobalAlpha)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant* aStyle)
+nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant *aValue)
 {
-    return SetStyleFromVariant(aStyle, STYLE_STROKE);
+    if (!aValue)
+        return NS_ERROR_FAILURE;
+
+    nsString str;
+
+    nsresult rv;
+    PRUint16 vtype;
+    rv = aValue->GetDataType(&vtype);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (vtype == nsIDataType::VTYPE_INTERFACE ||
+        vtype == nsIDataType::VTYPE_INTERFACE_IS)
+    {
+        nsIID *iid;
+        nsCOMPtr<nsISupports> sup;
+        rv = aValue->GetAsInterface(&iid, getter_AddRefs(sup));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        str.SetIsVoid(PR_TRUE);
+        return SetStrokeStyle_multi(str, sup);
+    }
+
+    rv = aValue->GetAsAString(str);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetStrokeStyle_multi(str, nsnull);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
+nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant **aResult)
 {
-    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> wv = do_CreateInstance(NS_VARIANT_CONTRACTID);
 
-    nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
-    if (!var)
-        return NS_ERROR_FAILURE;
-    rv = var->SetWritable(PR_TRUE);
+    nsCOMPtr<nsISupports> sup;
+    nsString str;
+    PRInt32 t;
+    nsresult rv = GetStrokeStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (CurrentState().patternStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_STROKE]);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else if (CurrentState().gradientStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_STROKE]);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (t == CMG_STYLE_STRING) {
+        rv = wv->SetAsAString(str);
+    } else if (t == CMG_STYLE_PATTERN) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasPattern),
+                                sup);
+    } else if (t == CMG_STYLE_GRADIENT) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasGradient),
+                                sup);
     } else {
-        nsString styleStr;
-        StyleColorToString(CurrentState().colorStyles[STYLE_STROKE], styleStr);
-
-        rv = var->SetAsDOMString(styleStr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ERROR("Unknown type from GetStroke/FillStyle_multi!");
+        return NS_ERROR_FAILURE;
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *aStyle = var.forget().get();
+    NS_IF_ADDREF(*aResult = wv.get());
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetFillStyle(nsIVariant* aStyle)
+nsCanvasRenderingContext2D::SetFillStyle(nsIVariant *aValue)
 {
-    return SetStyleFromVariant(aStyle, STYLE_FILL);
+    if (!aValue)
+        return NS_ERROR_FAILURE;
+
+    nsString str;
+    nsresult rv;
+    PRUint16 vtype;
+    rv = aValue->GetDataType(&vtype);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (vtype == nsIDataType::VTYPE_INTERFACE ||
+        vtype == nsIDataType::VTYPE_INTERFACE_IS)
+    {
+        nsIID *iid;
+        nsCOMPtr<nsISupports> sup;
+        rv = aValue->GetAsInterface(&iid, getter_AddRefs(sup));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        str.SetIsVoid(PR_TRUE);
+        return SetFillStyle_multi(str, sup);
+    }
+
+    rv = aValue->GetAsAString(str);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetFillStyle_multi(str, nsnull);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetFillStyle(nsIVariant** aStyle)
+nsCanvasRenderingContext2D::GetFillStyle(nsIVariant **aResult)
 {
-    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> wv = do_CreateInstance(NS_VARIANT_CONTRACTID);
 
-    nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
-    if (!var)
-        return NS_ERROR_FAILURE;
-    rv = var->SetWritable(PR_TRUE);
+    nsCOMPtr<nsISupports> sup;
+    nsString str;
+    PRInt32 t;
+    nsresult rv = GetFillStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (CurrentState().patternStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_FILL]);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else if (CurrentState().gradientStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_FILL]);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (t == CMG_STYLE_STRING) {
+        rv = wv->SetAsAString(str);
+    } else if (t == CMG_STYLE_PATTERN) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasPattern),
+                                sup);
+    } else if (t == CMG_STYLE_GRADIENT) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasGradient),
+                                sup);
     } else {
-        nsString styleStr;
-        StyleColorToString(CurrentState().colorStyles[STYLE_FILL], styleStr);
-
-        rv = var->SetAsDOMString(styleStr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ERROR("Unknown type from GetStroke/FillStyle_multi!");
+        return NS_ERROR_FAILURE;
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *aStyle = var.forget().get();
+    NS_IF_ADDREF(*aResult = wv.get());
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetStrokeStyle_multi(const nsAString& aStr, nsISupports *aInterface)
+{
+    return SetStyleFromStringOrInterface(aStr, aInterface, STYLE_STROKE);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+{
+    return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_STROKE);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetFillStyle_multi(const nsAString& aStr, nsISupports *aInterface)
+{
+    return SetStyleFromStringOrInterface(aStr, aInterface, STYLE_FILL);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+{
+    return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_FILL);
 }
 
 //
