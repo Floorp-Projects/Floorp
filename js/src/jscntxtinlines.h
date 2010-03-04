@@ -41,11 +41,147 @@
 #define jscntxtinlines_h___
 
 #include "jscntxt.h"
+#include "jsparse.h"
 #include "jsxml.h"
 
 #include "jsobjinlines.h"
 
 namespace js {
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+CallStack::getCurrentFrame() const
+{
+    JS_ASSERT(inContext());
+    return isSuspended() ? getSuspendedFrame() : cx->fp;
+}
+
+JS_REQUIRES_STACK inline jsval *
+StackSpace::firstUnused() const
+{
+    CallStack *ccs = currentCallStack;
+    if (!ccs)
+        return base;
+    if (!ccs->inContext())
+        return ccs->getInitialArgEnd();
+    JSStackFrame *fp = ccs->getCurrentFrame();
+    if (JSFrameRegs *regs = fp->regs)
+        return regs->sp;
+    return fp->slots();
+}
+
+#ifdef DEBUG
+/* Inline so we don't need the friend API. */
+JS_ALWAYS_INLINE bool
+StackSpace::isCurrent(JSContext *cx) const
+{
+    JS_ASSERT(cx == currentCallStack->maybeContext());
+    JS_ASSERT(cx->getCurrentCallStack() == currentCallStack);
+    JS_ASSERT(cx->callStackInSync());
+    return true;
+}
+#endif
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
+{
+    JS_ASSERT(from == firstUnused());
+#ifdef XP_WIN
+    JS_ASSERT(from <= commitEnd);
+    if (commitEnd - from >= nvals)
+        return true;
+    if (end - from < nvals) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    if (!bumpCommit(from, nvals)) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    return true;
+#else
+    if (end - from < nvals) {
+        if (maybecx)
+            js_ReportOutOfScriptQuota(maybecx);
+        return false;
+    }
+    return true;
+#endif
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureEnoughSpaceToEnterTrace()
+{
+#ifdef XP_WIN
+    return ensureSpace(NULL, firstUnused(), sMaxJSValsNeededForTrace);
+#endif
+    return end - firstUnused() > sMaxJSValsNeededForTrace;
+}
+
+JS_ALWAYS_INLINE void
+StackSpace::popInvokeArgs(JSContext *cx, jsval *vp)
+{
+    JS_ASSERT(!currentCallStack->inContext());
+    currentCallStack = currentCallStack->getPreviousInThread();
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+                           uintN nmissing, uintN nslots) const
+{
+    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp->regs->sp == sp);
+
+    ptrdiff_t nvals = nmissing + ValuesPerStackFrame + nslots;
+    if (!ensureSpace(cx, sp, nvals))
+        return NULL;
+
+    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
+    return fp;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, JSStackFrame *newfp)
+{
+    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp == fp);
+
+    newfp->down = fp;
+    cx->setCurrentFrame(newfp);
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
+{
+    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    JS_ASSERT(cx->fp == up && up->down == down);
+
+    cx->setCurrentFrame(down);
+}
+
+/*
+ * InvokeArgsGuard is used outside the JS engine. To simplify symbol visibility
+ * issues, force InvokeArgsGuard members inline:
+ */
+JS_ALWAYS_INLINE
+InvokeArgsGuard::InvokeArgsGuard()
+  : cx(NULL), cs(NULL), vp(NULL)
+{}
+
+JS_ALWAYS_INLINE
+InvokeArgsGuard::InvokeArgsGuard(jsval *vp, uintN argc)
+  : cx(NULL), cs(NULL), vp(vp), argc(argc)
+{}
+
+JS_ALWAYS_INLINE
+InvokeArgsGuard::~InvokeArgsGuard()
+{
+    if (!cs)
+        return;
+    JS_ASSERT(cs == cx->stack().getCurrentCallStack());
+    cx->stack().popInvokeArgs(cx, vp);
+}
 
 void
 AutoIdArray::trace(JSTracer *trc) {
