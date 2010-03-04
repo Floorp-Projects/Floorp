@@ -117,11 +117,11 @@ typedef struct _HISTORY {
 /*
 **  Globals.
 */
-int		rl_eof;
-int		rl_erase;
-int		rl_intr;
-int		rl_kill;
-int		rl_quit;
+unsigned	rl_eof;
+unsigned	rl_erase;
+unsigned	rl_intr;
+unsigned	rl_kill;
+unsigned	rl_quit;
 
 STATIC CHAR		NIL[] = "";
 STATIC CONST CHAR	*Input = NIL;
@@ -841,7 +841,7 @@ meta()
     unsigned int	c;
     KEYMAP		*kp;
 
-    if ((c = TTYget()) == EOF)
+    if ((int)(c = TTYget()) == EOF)
 	return CSeof;
 #if	defined(ANSI_ARROWS)
     /* Also include VT-100 arrows. */
@@ -857,7 +857,7 @@ meta()
 #endif	/* defined(ANSI_ARROWS) */
 
     if (isdigit(c)) {
-	for (Repeat = c - '0'; (c = TTYget()) != EOF && isdigit(c); )
+	for (Repeat = c - '0'; (int)(c = TTYget()) != EOF && isdigit(c); )
 	    Repeat = Repeat * 10 + c - '0';
 	Pushed = 1;
 	PushBack = c;
@@ -902,7 +902,7 @@ TTYspecial(c)
     if (ISMETA(c))
 	return CSdispatch;
 
-    if (c == rl_erase || c == DEL)
+    if (c == rl_erase || (int)c == DEL)
 	return bk_del_char();
     if (c == rl_kill) {
 	if (Point != 0) {
@@ -936,7 +936,7 @@ editinput()
     Line[0] = '\0';
 
     Signal = -1;
-    while ((c = TTYget()) != EOF)
+    while ((int)(c = TTYget()) != EOF)
 	switch (TTYspecial(c)) {
 	case CSdone:
 	    return Line;
@@ -966,7 +966,7 @@ editinput()
 	case CSstay:
 	    break;
 	}
-    if (strlen(Line))
+    if (strlen((char *)Line))
         return Line;
     free(Line);
     return NULL;
@@ -1050,7 +1050,7 @@ add_history(p)
 	return;
 
 #if	defined(UNIQUE_HISTORY)
-    if (H.Size && strcmp(p, H.Lines[H.Size - 1]) == 0)
+    if (H.Size && strcmp(p, (char *)H.Lines[H.Size - 1]) == 0)
         return;
 #endif	/* defined(UNIQUE_HISTORY) */
     hist_add((CHAR *)p);
@@ -1113,7 +1113,7 @@ quote()
 {
     unsigned int	c;
 
-    return (c = TTYget()) == EOF ? CSeof : insert_char((int)c);
+    return (int)(c = TTYget()) == EOF ? CSeof : insert_char((int)c);
 }
 
 STATIC STATUS
@@ -1147,9 +1147,9 @@ exchange()
     unsigned int	c;
 
     if ((c = TTYget()) != CTL('X'))
-	return c == EOF ? CSeof : ring_bell();
+	return (int)c == EOF ? CSeof : ring_bell();
 
-    if ((c = Mark) <= End) {
+    if ((int)(c = Mark) <= End) {
 	Mark = Point;
 	Point = c;
 	return CSmove;
@@ -1186,7 +1186,7 @@ move_to_char()
     int			i;
     CHAR		*p;
 
-    if ((c = TTYget()) == EOF)
+    if ((int)(c = TTYget()) == EOF)
 	return CSeof;
     for (i = Point + 1, p = &Line[i]; i < End; i++, p++)
 	if (*p == c) {

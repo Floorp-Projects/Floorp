@@ -88,9 +88,7 @@
 #define JS_HAS_OBJ_WATCHPOINT   0       /* has o.watch and o.unwatch */
 #define JS_HAS_EVAL_THIS_SCOPE  0       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       0       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              0       /* has XDR API and internal support */
-#define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
 #define JS_HAS_DEBUGGER_KEYWORD 0       /* has hook for debugger keyword */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
@@ -120,9 +118,7 @@
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              1       /* has XDR API and internal support */
-#define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_DEBUGGER_KEYWORD 1       /* has hook for debugger keyword */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
@@ -148,9 +144,7 @@
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              1       /* has XDR API and internal support */
-#define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_DEBUGGER_KEYWORD 1       /* has hook for debugger keyword */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
@@ -176,9 +170,7 @@
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              1       /* has XDR API and internal support */
-#define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_DEBUGGER_KEYWORD 1       /* has hook for debugger keyword */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
@@ -204,9 +196,7 @@
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              1       /* has XDR API and internal support */
-#define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_DEBUGGER_KEYWORD 1       /* has hook for debugger keyword */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
