@@ -1092,7 +1092,9 @@ JSScopeProperty *
 JSScope::newDictionaryProperty(JSContext *cx, const JSScopeProperty &child,
                                JSScopeProperty **childp)
 {
+    JS_LOCK_GC(cx->runtime);
     JSScopeProperty *dprop = NewScopeProperty(cx->runtime);
+    JS_UNLOCK_GC(cx->runtime);
     if (!dprop) {
         JS_ReportOutOfMemory(cx);
         return NULL;
