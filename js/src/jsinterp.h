@@ -78,13 +78,10 @@ typedef struct JSFrameRegs {
  * function.
  *
  * NB: This struct is manually initialized in jsinterp.c and jsiter.c.  If you
- * add new members, update both files.  But first, try to remove members.  The
- * sharp* and xml* members should be moved onto the stack as local variables
- * with well-known slots, if possible.
+ * add new members, update both files.
  */
 struct JSStackFrame
 {
-    JSFrameRegs         *regs;
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
     jsval               argsobj;        /* lazily created arguments object, must be
@@ -100,6 +97,10 @@ struct JSStackFrame
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
                                            stack layout invariant */
+    jsbytecode          *savedPC;       /* only valid if cx->fp != this */
+#ifdef DEBUG
+    static jsbytecode *const sInvalidPC;
+#endif
 
     /*
      * We can't determine in advance which local variables can live on
@@ -148,11 +149,8 @@ struct JSStackFrame
                                        script->staticLevel */
 
     /* Members only needed for inline calls. */
-    JSFrameRegs     callerRegs;     /* caller's regs for inline call */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
-
-    inline void assertValidStackDepth(uintN depth);
 
     void putActivationObjects(JSContext *cx) {
         /*
@@ -166,6 +164,9 @@ struct JSStackFrame
             js_PutArgsObject(cx, this);
         }
     }
+
+    /* Get the frame's current bytecode, assuming |this| is in |cx|. */
+    jsbytecode *pc(JSContext *cx) const;
 
     jsval *argEnd() const {
         return (jsval *)this;
@@ -215,31 +216,11 @@ static const size_t ValuesPerStackFrame = sizeof(JSStackFrame) / sizeof(jsval);
 
 }
 
-#ifdef __cplusplus
-static JS_INLINE uintN
-FramePCOffset(JSStackFrame* fp)
-{
-    return uintN((fp->imacpc ? fp->imacpc : fp->regs->pc) - fp->script->code);
-}
-#endif
-
 static JS_INLINE jsval *
 StackBase(JSStackFrame *fp)
 {
     return fp->slots() + fp->script->nfixed;
 }
-
-#ifdef DEBUG
-void
-JSStackFrame::assertValidStackDepth(uintN depth)
-{
-    JS_ASSERT(0 <= regs->sp - StackBase(this));
-    JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
-}
-#else
-void
-JSStackFrame::assertValidStackDepth(uintN /*depth*/){}
-#endif
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
@@ -429,8 +410,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
  * fp->sp on return to stackDepth.
  */
 extern JS_REQUIRES_STACK JSBool
-js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
-               JSBool normalUnwind);
+js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
 
 extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);
