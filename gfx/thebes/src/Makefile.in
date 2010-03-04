@@ -64,7 +64,10 @@ CPPSRCS	+= gfxFT2Fonts.cpp \
 	   gfxDDrawSurface.cpp \
 	   gfxFT2FontList.cpp \
 	   $(NULL)
-EXTRA_DSO_LDOPTS += ddraw.lib
+
+EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+
+OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
 else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
@@ -77,11 +80,11 @@ endif
 CPPSRCS	+= gfxWindowsFonts.cpp \
 	   gfxGDIFontList.cpp \
 	   $(NULL)
+_OS_LIBS = usp10 msimg32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
 
-_OS_LIBS	= usp10 msimg32
 ifdef GNU_CXX
 _OS_LIBS	+= uuid
 endif
