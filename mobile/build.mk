@@ -37,6 +37,12 @@
 
 ifndef LIBXUL_SDK
 include $(topsrcdir)/toolkit/toolkit-tiers.mk
+else
+ifdef ENABLE_TESTS
+tier_testharness_dirs += \
+  testing/mochitest \
+  $(NULL)
+endif
 endif
 
 TIERS += app
@@ -50,11 +56,6 @@ tier_app_dirs += \
   mobile \
   $(NULL)
 
-ifdef ENABLE_TESTS
-tier_testharness_dirs += \
-  testing/mochitest \
-  $(NULL)
-endif
 
 installer: 
 	@$(MAKE) -C mobile/installer installer
