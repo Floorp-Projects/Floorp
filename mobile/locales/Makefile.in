@@ -70,11 +70,12 @@ SEARCH_PLUGINS = $(shell cat \
   $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
        @srcdir@/en-US/searchplugins/list.txt ) )
 
-searchplugins::
-	@echo "$(AB_CD).jar:" > tmp-search.jar.mn
-	@for line in $(foreach plugin,$(SEARCH_PLUGINS),"locale/$(AB_CD)/browser/searchplugins/$(notdir $(plugin)).xml ($(plugin).xml)"); do \
-	    echo " $$line" >> tmp-search.jar.mn; \
-	done
+tmp-search.jar.mn::
+	@echo -n "$(AB_CD).jar:" > $@
+	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
+	@echo   >> $@
+
+searchplugins: tmp-search.jar.mn
 	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
           $(QUIET) -j $(FINAL_TARGET)/chrome \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
