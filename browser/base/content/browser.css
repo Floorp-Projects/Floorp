@@ -71,8 +71,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 }
 
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
-#urlbar[isempty="true"] > #urlbar-icons > #go-button {
+#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
   visibility: collapse;
 }
 
