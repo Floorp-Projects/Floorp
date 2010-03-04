@@ -503,7 +503,8 @@
              collapsed="true"
 #endif
              customizable="true">
-      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
+      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
+                   removable="true">
          <hbox id="bookmarksBarContent" flex="1"
                type="places"
                place="place:folder=TOOLBAR"
