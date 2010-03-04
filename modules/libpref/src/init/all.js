@@ -1258,6 +1258,7 @@ pref("font.minimum-size.x-orya", 0);
 pref("font.minimum-size.x-sinh", 0);
 pref("font.minimum-size.x-tamil", 0);
 pref("font.minimum-size.x-telu", 0);
+pref("font.minimum-size.x-tibt", 0);
 pref("font.minimum-size.th", 0);
 pref("font.minimum-size.tr", 0);
 pref("font.minimum-size.x-cans", 0);
@@ -1461,6 +1462,13 @@ pref("font.name-list.serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.sans-serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.monospace.x-sinh", "Iskoola Pota, AksharUnicode");
 
+pref("font.name.serif.x-tibt", "Tibetan Machine Uni");
+pref("font.name.sans-serif.x-tibt", "Tibetan Machine Uni");
+pref("font.name.monospace.x-tibt", "Tibetan Machine Uni");
+pref("font.name-list.serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+pref("font.name-list.sans-serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -1561,6 +1569,10 @@ pref("font.size.fixed.x-knda", 13);
 pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
@@ -1880,6 +1892,14 @@ pref("font.name-list.serif.x-tamil", "InaiMathi");
 pref("font.name-list.sans-serif.x-tamil", "InaiMathi");
 pref("font.name-list.monospace.x-tamil", "InaiMathi");
 
+// Kailasa ships with mac os x >= 10.5
+pref("font.name.serif.x-tibt", "Kailasa");
+pref("font.name.sans-serif.x-tibt", "Kailasa");
+pref("font.name.monospace.x-tibt", "Kailasa");
+pref("font.name-list.serif.x-tibt", "Kailasa");
+pref("font.name-list.sans-serif.x-tibt", "Kailasa");
+pref("font.name-list.monospace.x-tibt", "Kailasa");
+
 pref("font.name.serif.x-unicode", "Times");
 pref("font.name.sans-serif.x-unicode", "Helvetica");
 pref("font.name.monospace.x-unicode", "Courier");
@@ -2023,6 +2043,10 @@ pref("font.size.fixed.x-knda", 13);
 pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
@@ -2635,6 +2659,10 @@ pref("font.size.fixed.x-knda", 13);
 pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
