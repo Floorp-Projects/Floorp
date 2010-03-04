@@ -684,19 +684,16 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 PodZero(fp->slots(), nfixed);
                 PodZero(fp);
                 fp->script = script;
-                fp->regs = NULL;
                 fp->fun = fun;
                 fp->argv = vp + 2;
                 fp->scopeChain = closure->getParent();
-                if (script) {
-                    JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
-                    regs.pc = script->code + script->length - JSOP_STOP_LENGTH;
-                    regs.sp = fp->slots() + script->nfixed;
-                    fp->regs = &regs;
-                }
+
+                /* Initialize regs. */
+                regs.pc = script ? script->code : NULL;
+                regs.sp = fp->slots() + nfixed;
 
                 /* Officially push |fp|. |frame|'s destructor pops. */
-                cx->stack().pushExecuteFrame(cx, frame, NULL);
+                cx->stack().pushExecuteFrame(cx, frame, regs, NULL);
 
                 /* Now that fp has been pushed, get the call object. */
                 if (script && fun && fun->isHeavyweight() &&
@@ -1070,7 +1067,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->regs ? fp->regs->pc : NULL;
+    return fp->pc(cx);
 }
 
 JS_PUBLIC_API(JSStackFrame *)

@@ -795,14 +795,13 @@ js_NewGenerator(JSContext *cx)
     /* Initialize JSGenerator. */
     gen->obj = obj;
     gen->state = JSGEN_NEWBORN;
-    gen->savedRegs.pc = fp->regs->pc;
-    JS_ASSERT(fp->regs->sp == fp->slots() + fp->script->nfixed);
+    gen->savedRegs.pc = cx->regs->pc;
+    JS_ASSERT(cx->regs->sp == fp->slots() + fp->script->nfixed);
     gen->savedRegs.sp = slots + fp->script->nfixed;
     gen->vplen = vplen;
     gen->liveFrame = newfp;
 
     /* Copy generator's stack frame copy in from |cx->fp|. */
-    newfp->regs = &gen->savedRegs;
     newfp->imacpc = NULL;
     newfp->callobj = fp->callobj;
     if (fp->callobj) {      /* Steal call object. */
@@ -923,7 +922,6 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         memcpy(vp, genVp, usedBefore * sizeof(jsval));
         fp->flags &= ~JSFRAME_FLOATING_GENERATOR;
         fp->argv = vp + 2;
-        fp->regs = &gen->savedRegs;
         gen->savedRegs.sp = fp->slots() + (gen->savedRegs.sp - genfp->slots());
         JS_ASSERT(uintN(gen->savedRegs.sp - fp->slots()) <= fp->script->nslots);
 
@@ -946,7 +944,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         (void)cx->enterGenerator(gen); /* OOM check above. */
 
         /* Officially push |fp|. |frame|'s destructor pops. */
-        cx->stack().pushExecuteFrame(cx, frame, NULL);
+        cx->stack().pushExecuteFrame(cx, frame, gen->savedRegs, NULL);
 
         ok = js_Interpret(cx);
 
