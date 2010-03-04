@@ -2394,6 +2394,9 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
         w->Invalidate(PR_FALSE);
       }
+
+      ::GetUpdateRgn(mWnd, updateRgn, FALSE);
+      ::OffsetRgn(updateRgn, aDelta.x, aDelta.y);
     } else {
 #endif
       ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
