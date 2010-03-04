@@ -275,7 +275,8 @@ extern  "C" int cacheflush(char *addr, int nbytes, int cache);
 #endif
 
 #ifdef AVMPLUS_SPARC
-#ifdef __linux__  // bugzilla 502369
+// Note: the linux #define provided by the compiler.
+#ifdef linux  // bugzilla 502369
 void sync_instruction_memory(caddr_t v, u_int len)
 {
     caddr_t end = v + len;
