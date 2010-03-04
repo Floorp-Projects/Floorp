@@ -1194,9 +1194,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitStringClass(cx, obj) &&
            js_InitEval(cx, obj) &&
            js_InitTypedArrayClasses(cx, obj) &&
-#if JS_HAS_SCRIPT_OBJECT
-           js_InitScriptClass(cx, obj) &&
-#endif
 #if JS_HAS_XML_SUPPORT
            js_InitXMLClasses(cx, obj) &&
 #endif
@@ -1255,9 +1252,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
-#if JS_HAS_SCRIPT_OBJECT
-    {js_InitScriptClass,                EAGER_ATOM_AND_CLASP(Script)},
-#endif
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
     {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
