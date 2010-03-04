@@ -1109,20 +1109,21 @@ PlacesController.prototype = {
    *          The dragstart event.
    */
   setDataTransfer: function PC_setDataTransfer(aEvent) {
-    var dt = aEvent.dataTransfer;
-    var doCopy = ["copyLink", "copy", "link"].indexOf(dt.effectAllowed) != -1;
+    let dt = aEvent.dataTransfer;
+    let doCopy = ["copyLink", "copy", "link"].indexOf(dt.effectAllowed) != -1;
 
-    var result = this._view.getResult();
-    var oldViewer = result.viewer;
+    let result = this._view.getResult();
+    let suppressNotificationsOld = result.suppressNotifications;
+    if (!suppressNotificationsOld)
+      result.suppressNotifications = true;
+
     try {
-      result.viewer = null;
-      var nodes = this._view.getDraggableSelection();
-
-      for (var i = 0; i < nodes.length; ++i) {
+      let nodes = this._view.getDraggableSelection();
+      for (let i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
 
         function addData(type, index, overrideURI) {
-          var wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
+          let wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
           dt.mozSetDataAt(type, wrapNode, index);
         }
 
@@ -1144,8 +1145,8 @@ PlacesController.prototype = {
       }
     }
     finally {
-      if (oldViewer)
-        result.viewer = oldViewer;
+      if (!suppressNotificationsOld)
+        result.suppressNotifications = false;
     }
   },
 
@@ -1153,29 +1154,32 @@ PlacesController.prototype = {
    * Copy Bookmarks and Folders to the clipboard
    */
   copy: function PC_copy() {
-    var result = this._view.getResult();
-    var oldViewer = result.viewer;
-    try {
-      result.viewer = null;
-      var nodes = this._view.getSelectionNodes();
+    let result = this._view.getResult();
 
-      var xferable =  Cc["@mozilla.org/widget/transferable;1"].
+    let suppressNotificationsOld = result.suppressNotifications;
+    if (!suppressNotificationsOld)
+      result.suppressNotifications = true;
+
+    try {
+      let nodes = this._view.getSelectionNodes();
+
+      let xferable =  Cc["@mozilla.org/widget/transferable;1"].
                       createInstance(Ci.nsITransferable);
-      var foundFolder = false, foundLink = false;
-      var copiedFolders = [];
-      var placeString, mozURLString, htmlString, unicodeString;
+      let foundFolder = false, foundLink = false;
+      let copiedFolders = [];
+      let placeString, mozURLString, htmlString, unicodeString;
       placeString = mozURLString = htmlString = unicodeString = "";
 
-      for (var i = 0; i < nodes.length; ++i) {
-        var node = nodes[i];
+      for (let i = 0; i < nodes.length; ++i) {
+        let node = nodes[i];
         if (this._shouldSkipNode(node, copiedFolders))
           continue;
         if (PlacesUtils.nodeIsFolder(node))
           copiedFolders.push(node);
         
         function generateChunk(type, overrideURI) {
-          var suffix = i < (nodes.length - 1) ? NEWLINE : "";
-          var uri = overrideURI;
+          let suffix = i < (nodes.length - 1) ? NEWLINE : "";
+          let uri = overrideURI;
         
           if (PlacesUtils.nodeIsLivemarkContainer(node))
             uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec
@@ -1216,8 +1220,8 @@ PlacesController.prototype = {
       }
     }
     finally {
-      if (oldViewer)
-        result.viewer = oldViewer;
+      if (!suppressNotificationsOld)
+        result.suppressNotifications = false;
     }
   },
 
