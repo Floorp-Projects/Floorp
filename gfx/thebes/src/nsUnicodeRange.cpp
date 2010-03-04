@@ -69,7 +69,8 @@ static nsIAtom **gUnicodeRangeToLangGroupAtomTable[] =
   &gfxAtoms::x_orya,
   &gfxAtoms::x_telu,
   &gfxAtoms::x_knda,
-  &gfxAtoms::x_sinh
+  &gfxAtoms::x_sinh,
+  &gfxAtoms::x_tibt
 };
 
 /**********************************************************************

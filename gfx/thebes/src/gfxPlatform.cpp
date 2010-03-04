@@ -160,6 +160,7 @@ static const char *gPrefLangNames[] = {
     "x-telu",
     "x-knda",
     "x-sinh",
+    "x-tibt",
     "x-unicode",
     "x-user-def"
 };
