@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: set sw=2 sts=2 et cin: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -19,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,64 +38,72 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//=============================================================================
+/*
+ * nsFrameWindow is a subclass of nsWindow and is created when NS_WINDOW_CID
+ * is specified.  It represents a top-level widget and is implemented as two
+ * native windows, a frame (WC_FRAME) and a client (MozillaWindowClass).
+ *
+ * Most methods inherited from nsIWidget are handled by nsWindow.  For those
+ * which require slightly different implementations for top-level and child
+ * widgets, nsWindow relies on a flag or on virtual helper methods to handle
+ * the differences properly.
+ * 
+ * There are two items where these differences are particularly important:
+ * - mWnd identifies the frame's client which is seldom acted upon directly;
+ *   instead, most operations involve mFrameWnd.
+ * - mBounds contains the dimensions of mFrameWnd, not mWnd whose width and
+ *   height are stored in mSizeClient.
+ *
+ */
+//=============================================================================
+
 #ifndef _nsframewindow_h
 #define _nsframewindow_h
-
-// Widget needs to treat the frame/client as one window - it's only really
-// interested in the client.
-//
-// mWnd is the client window; mBounds holds the frame rectangle relative to
-// the desktop.
-//
-// The frame itself is subclassed so OnMove events for the client happen.
 
 #include "nsWindow.h"
 #include "nssize.h"
 
+//=============================================================================
+//  nsFrameWindow
+//=============================================================================
+
 class nsFrameWindow : public nsWindow
 {
- public:
-   nsFrameWindow();
-   virtual ~nsFrameWindow();
+public:
+  nsFrameWindow();
+  virtual ~nsFrameWindow();
 
-   // So Destroy, Show, SetWindowPos, SetTitle, etc. work
-   HWND GetMainWindow() const { return mFrameWnd; }
+  // from nsIWidget
+  virtual nsresult      CreateWindow(nsWindow* aParent,
+                                     HWND aParentWnd,
+                                     const nsIntRect& aRect,
+                                     PRUint32 aStyle);
+  NS_IMETHOD            Show(PRBool aState);
+  NS_IMETHOD            GetClientBounds(nsIntRect& aRect);
 
- protected:
-   PFNWP  fnwpDefFrame;
-   nsSize mSizeClient;
-   nsSize mSizeBorder;
-   PRBool mNeedActivation;
+protected:
+  // from nsWindow
+  virtual HWND          GetMainWindow()     const {return mFrameWnd;}
+  virtual void          ActivateTopLevelWidget();
+  virtual PRBool        OnReposition(PSWP pSwp);
+  virtual PRInt32       GetClientHeight()   {return mSizeClient.height;}
 
-   // Fires NS_ACTIVATE is mNeedActivation is set
-   virtual void ActivateTopLevelWidget();
+  // nsFrameWindow
+  PRUint32              GetFCFlags();
+  void                  UpdateClientSize();
+  void                  SetWindowListVisibility(PRBool aState);
+  MRESULT               FrameMessage(ULONG msg, MPARAM mp1, MPARAM mp2);
 
-   // So we can create the frame, parent the client & position it right
-   virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,
-                              const nsIntRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
-                              nsWidgetInitData *aInitData, HWND hwndO);
+  friend MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg,
+                                    MPARAM mp1, MPARAM mp2);
 
-   // So correct sizing behaviour happens
-   PRBool OnReposition( PSWP pSwp);
-
-   // Set up client sizes from frame dimensions
-   void    UpdateClientSize();
-   PRInt32 GetClientHeight() { return mSizeClient.height; }
-
-   // So we can catch move messages
-   MRESULT FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2);
-
-   NS_IMETHOD Show( PRBool bState);
-   void SetWindowListVisibility( PRBool bState);
-
-   // We have client
-   NS_IMETHOD GetClientBounds( nsIntRect &aRect);
-
-   friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
-   static BOOL fHiddenWindowCreated;
+  PFNWP         mPrevFrameProc;
+  nsSize        mSizeClient;
+  PRBool        mNeedActivation;
 };
 
-#endif
+#endif //_nsframewindow_h
+
+//=============================================================================
+
