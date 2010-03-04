@@ -699,9 +699,8 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
 }
 
 /**
- * We build a single layer by first building a list of layers needed for
- * all the display items, and then if there's not just one layer in the
- * list, we build a container layer to hold them.
+ * We build a single layer by building a list of layers needed for
+ * all the display items and building a container layer to hold them.
  */
 already_AddRefed<Layer>
 nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -709,30 +708,27 @@ nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
                           nsTArray<LayerItems>* aLayers) const {
   BuildLayers(aBuilder, aManager, aLayers);
 
-  nsRefPtr<Layer> layer;
-  if (aLayers->Length() == 1) {
-    // We can just return the one layer
-    layer = aLayers->ElementAt(0).mLayer;
-  } else {
-    // We need to group multiple layers together into a container
-    nsRefPtr<ContainerLayer> container =
-      aManager->CreateContainerLayer();
-    if (!container)
-      return nsnull;
-    
-    Layer* lastChild = nsnull;
-    nsIntRect visibleRect;
-    for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
-      LayerItems* layerItems = &aLayers->ElementAt(i);
-      visibleRect.UnionRect(visibleRect, layerItems->mVisibleRect);
-      Layer* child = layerItems->mLayer;
-      container->InsertAfter(child, lastChild);
-      lastChild = child;
-    }
-    container->SetVisibleRegion(nsIntRegion(visibleRect));
-    layer = container.forget();
+  // If there's only one layer, then in principle we can try to flatten
+  // things by returning that layer here. But that adds complexity to
+  // retained layer management so we don't do it. Layer backends can
+  // flatten internally.
+  nsRefPtr<ContainerLayer> container =
+    aManager->CreateContainerLayer();
+  if (!container)
+    return nsnull;
+
+  Layer* lastChild = nsnull;
+  nsIntRect visibleRect;
+  for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
+    LayerItems* layerItems = &aLayers->ElementAt(i);
+    visibleRect.UnionRect(visibleRect, layerItems->mVisibleRect);
+    Layer* child = layerItems->mLayer;
+    container->InsertAfter(child, lastChild);
+    lastChild = child;
   }
-  layer->SetIsOpaqueContent(mIsOpaque);
+  container->SetVisibleRegion(nsIntRegion(visibleRect));
+  container->SetIsOpaqueContent(mIsOpaque);
+  nsRefPtr<Layer> layer = container.forget();
   return layer.forget();
 }
 
