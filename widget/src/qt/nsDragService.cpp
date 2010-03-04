@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "qmimedata.h"
+#include "qwidget.h"
+
 #include "nsDragService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMMouseEvent.h"
-
-#include "qmimedata.h"
-#include "qwidget.h"
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)

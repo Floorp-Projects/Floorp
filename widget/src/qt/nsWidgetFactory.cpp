@@ -39,13 +39,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsWindow.h"
+#include "nsAppShell.h"
+
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-#include "nsAppShell.h"
-#include "nsWindow.h"
 #include "nsToolkit.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
