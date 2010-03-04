@@ -4783,7 +4783,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
                               "entering REGEXP trace at %s:%u@%u, code: %p\n",
                               caller ? caller->script->filename : "<unknown>",
                               caller ? js_FramePCToLineNumber(gData->cx, caller) : 0,
-                              caller ? FramePCOffset(caller) : 0,
+                              caller ? FramePCOffset(gData->cx, caller) : 0,
                               JS_FUNC_TO_DATA_PTR(void *, native));
         })
 #endif

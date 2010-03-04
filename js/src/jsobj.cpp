@@ -1023,9 +1023,10 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    if (caller->regs && js_GetOpcode(cx, caller->script, caller->regs->pc) == JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, caller->script, caller->regs->pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
-        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
+    jsbytecode *pc = caller->pc(cx);
+    if (pc && js_GetOpcode(cx, caller->script, pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->script, pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
@@ -1069,7 +1070,8 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    bool indirectCall = (caller->regs && *caller->regs->pc != JSOP_EVAL);
+    jsbytecode *callerPC = caller->pc(cx);
+    bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
 
     /*
      * This call to js_GetWrappedObject is safe because of the security checks
@@ -2795,16 +2797,14 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
 
     JS_ASSERT_NOT_ON_TRACE(cx);
 
-    JSStackFrame *fp;
     jsbytecode *pc;
     const JSCodeSpec *cs;
     uint32 format;
     uintN flags = 0;
 
-    fp = js_GetTopStackFrame(cx);
-    if (!fp || !fp->regs)
+    JSStackFrame *const fp = js_GetTopStackFrame(cx);
+    if (!fp || !(pc = cx->regs->pc))
         return defaultFlags;
-    pc = fp->regs->pc;
     cs = &js_CodeSpec[js_GetOpcode(cx, fp->script, pc)];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
@@ -3010,15 +3010,11 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
 JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 {
-    JSStackFrame *fp;
-    JSObject *obj;
-    uintN depth, count;
-
     /* Blocks have one fixed slot available for the first local.*/
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
-    fp = cx->fp;
-    obj = fp->scopeChain;
+    JSStackFrame *const fp = cx->fp;
+    JSObject *obj = fp->scopeChain;
     JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
@@ -3035,10 +3031,10 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(obj->numSlots() == JS_INITIAL_NSLOTS);
 
     /* The block and its locals must be on the current stack for GC safety. */
-    depth = OBJ_BLOCK_DEPTH(cx, obj);
-    count = OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(depth <= (size_t) (fp->regs->sp - StackBase(fp)));
-    JS_ASSERT(count <= (size_t) (fp->regs->sp - StackBase(fp) - depth));
+    uintN depth = OBJ_BLOCK_DEPTH(cx, obj);
+    uintN count = OBJ_BLOCK_COUNT(cx, obj);
+    JS_ASSERT(depth <= (size_t) (cx->regs->sp - StackBase(fp)));
+    JS_ASSERT(count <= (size_t) (cx->regs->sp - StackBase(fp) - depth));
 
     /* See comments in CheckDestructuring from jsparse.cpp. */
     JS_ASSERT(count >= 1);
@@ -4776,7 +4772,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp)
 JS_FRIEND_API(bool)
 js_CheckUndeclaredVarAssignment(JSContext *cx, jsval propname)
 {
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    JSStackFrame *const fp = js_GetTopStackFrame(cx);
     if (!fp)
         return true;
 
@@ -6418,32 +6414,42 @@ MaybeDumpValue(const char *name, jsval v)
 }
 
 JS_FRIEND_API(void)
-js_DumpStackFrame(JSStackFrame *fp)
+js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
 {
-    jsval *sp = NULL;
+    /* This should only called during live debugging. */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    for (; fp; fp = fp->down) {
+    if (!start)
+        start = cx->fp;
+    FrameRegsIter i(cx);
+    while (!i.done() && i.fp() != start)
+        ++i;
+
+    if (i.done()) {
+        fprintf(stderr, "fp = %p not found in cx = %p\n", (void *)start, (void *)cx);
+        return;
+    }
+
+    for (; !i.done(); ++i) {
+        JSStackFrame *const fp = i.fp();
+
         fprintf(stderr, "JSStackFrame at %p\n", (void *) fp);
-        if (fp->argv)
+        if (fp->argv) {
+            fprintf(stderr, "callee: ");
             dumpValue(fp->argv[-2]);
-        else
+        } else {
             fprintf(stderr, "global frame, no callee");
+        }
         fputc('\n', stderr);
 
         if (fp->script)
             fprintf(stderr, "file %s line %u\n", fp->script->filename, (unsigned) fp->script->lineno);
 
-        if (fp->regs) {
-            if (!fp->regs->pc) {
-                fprintf(stderr, "*** regs && !regs->pc, skipping frame\n\n");
-                continue;
-            }
+        if (jsbytecode *pc = i.pc()) {
             if (!fp->script) {
-                fprintf(stderr, "*** regs && !script, skipping frame\n\n");
+                fprintf(stderr, "*** pc && !script, skipping frame\n\n");
                 continue;
             }
-            jsbytecode *pc = fp->regs->pc;
-            sp = fp->regs->sp;
             if (fp->imacpc) {
                 fprintf(stderr, "  pc in imacro at %p\n  called from ", pc);
                 pc = fp->imacpc;
@@ -6453,19 +6459,15 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, "pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
-        if (sp && fp->slots()) {
-            fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
-            fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
-            if (sp - fp->slots() < 10000) { // sanity
-                for (jsval *p = fp->slots(); p < sp; p++) {
-                    fprintf(stderr, "    %p: ", (void *) p);
-                    dumpValue(*p);
-                    fputc('\n', stderr);
-                }
+        jsval *sp = i.sp();
+        fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
+        fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
+        if (sp - fp->slots() < 10000) { // sanity
+            for (jsval *p = fp->slots(); p < sp; p++) {
+                fprintf(stderr, "    %p: ", (void *) p);
+                dumpValue(*p);
+                fputc('\n', stderr);
             }
-        } else {
-            fprintf(stderr, "  sp:    %p\n", (void *) sp);
-            fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
         }
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
