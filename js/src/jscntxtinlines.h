@@ -61,12 +61,12 @@ StackSpace::firstUnused() const
     CallStack *ccs = currentCallStack;
     if (!ccs)
         return base;
-    if (!ccs->inContext())
-        return ccs->getInitialArgEnd();
-    JSStackFrame *fp = ccs->getCurrentFrame();
-    if (JSFrameRegs *regs = fp->regs)
-        return regs->sp;
-    return fp->slots();
+    if (JSContext *cx = ccs->maybeContext()) {
+        if (!ccs->isSuspended())
+            return cx->regs->sp;
+        return ccs->getSuspendedRegs()->sp;
+    }
+    return ccs->getInitialArgEnd();
 }
 
 #ifdef DEBUG
@@ -131,7 +131,7 @@ StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
                            uintN nmissing, uintN nslots) const
 {
     JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
-    JS_ASSERT(cx->fp->regs->sp == sp);
+    JS_ASSERT(cx->regs->sp == sp);
 
     ptrdiff_t nvals = nmissing + ValuesPerStackFrame + nslots;
     if (!ensureSpace(cx, sp, nvals))
@@ -142,12 +142,17 @@ StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, JSStackFrame *newfp)
+StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
+                            JSStackFrame *newfp)
 {
     JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
-    JS_ASSERT(cx->fp == fp);
+    JS_ASSERT(cx->fp == fp && cx->regs->pc == pc);
 
+    fp->savedPC = pc;
     newfp->down = fp;
+#ifdef DEBUG
+    newfp->savedPC = JSStackFrame::sInvalidPC;
+#endif
     cx->setCurrentFrame(newfp);
 }
 
@@ -156,7 +161,14 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 {
     JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
     JS_ASSERT(cx->fp == up && up->down == down);
+    JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
 
+    JSFrameRegs *regs = cx->regs;
+    regs->pc = down->savedPC;
+    regs->sp = up->argv - 1;
+#ifdef DEBUG
+    down->savedPC = JSStackFrame::sInvalidPC;
+#endif
     cx->setCurrentFrame(down);
 }
 
