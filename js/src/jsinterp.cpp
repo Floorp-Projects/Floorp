@@ -2782,7 +2782,7 @@ js_Interpret(JSContext *cx)
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                                METER_OP_PAIR(op, regs.pc[n]);                \
+                            METER_OP_PAIR(op, JSOp(regs.pc[n]));              \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
                             JS_END_MACRO
