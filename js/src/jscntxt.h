@@ -200,6 +200,10 @@ struct TracerState
     uintN          nativeVpLen;
     jsval*         nativeVp;
 
+    // The regs pointed to by cx->regs while a deep-bailed slow native
+    // completes execution.
+    JSFrameRegs    bailedSlowNativeRegs;
+
     TracerState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~TracerState();
@@ -251,10 +255,11 @@ struct GlobalState {
  *
  * A callstack in a context may additionally be "active" or "suspended". A
  * suspended callstack |cs| has a "suspended frame" which serves as the current
- * frame of |cs|. There is at most one active callstack in a given context.
- * Callstacks in a context execute LIFO and are maintained in a stack. The top
- * of this stack is the context's "current callstack". If a context |cx| has an
- * active callstack |cs|, then:
+ * frame of |cs|. Additionally, a suspended callstack has "suspended regs",
+ * which is a snapshot of |cx->regs| when |cs| was suspended. There is at most
+ * one active callstack in a given context.  Callstacks in a context execute
+ * LIFO and are maintained in a stack. The top of this stack is the context's
+ * "current callstack". If a context |cx| has an active callstack |cs|, then:
  *   1. |cs| is |cx|'s current callstack,
  *   2. |cx->fp != NULL|, and
  *   3. |cs|'s current frame is |cx->fp|.
@@ -283,6 +288,9 @@ class CallStack
 
     /* If this callstack is suspended, the top of the callstack. */
     JSStackFrame        *suspendedFrame;
+
+    /* If this callstack is suspended, |cx->regs| when it was suspended. */
+    JSFrameRegs         *suspendedRegs;
 
     /* This callstack was suspended by JS_SaveFrameChain. */
     bool                saved;
@@ -366,11 +374,12 @@ class CallStack
 
     /* Transitioning between isActive <--> isSuspended */
 
-    void suspend(JSStackFrame *fp) {
+    void suspend(JSStackFrame *fp, JSFrameRegs *regs) {
         JS_ASSERT(isActive());
         JS_ASSERT(fp && contains(fp));
         suspendedFrame = fp;
         JS_ASSERT(isSuspended());
+        suspendedRegs = regs;
     }
 
     void resume() {
@@ -381,9 +390,9 @@ class CallStack
 
     /* When isSuspended, transitioning isSaved <--> !isSaved */
 
-    void save(JSStackFrame *fp) {
+    void save(JSStackFrame *fp, JSFrameRegs *regs) {
         JS_ASSERT(!isSaved());
-        suspend(fp);
+        suspend(fp, regs);
         saved = true;
         JS_ASSERT(isSaved());
     }
@@ -421,6 +430,16 @@ class CallStack
     JSStackFrame *getSuspendedFrame() const {
         JS_ASSERT(isSuspended());
         return suspendedFrame;
+    }
+
+    JSFrameRegs *getSuspendedRegs() const {
+        JS_ASSERT(isSuspended());
+        return suspendedRegs;
+    }
+
+    jsval *getSuspendedSP() const {
+        JS_ASSERT(isSuspended());
+        return suspendedRegs->sp;
     }
 
     /* JSContext / js::StackSpace bookkeeping. */
@@ -682,7 +701,7 @@ class StackSpace
 
     JS_REQUIRES_STACK
     void pushInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
-                         InvokeFrameGuard &fg);
+                         InvokeFrameGuard &fg, JSFrameRegs &regs);
 
     /*
      * For the simpler case when arguments are allocated at the same time as
@@ -695,7 +714,7 @@ class StackSpace
                          ExecuteFrameGuard &fg) const;
     JS_REQUIRES_STACK
     void pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
-                          JSObject *initialVarObj);
+                          JSFrameRegs &regs, JSObject *initialVarObj);
 
     /*
      * Since RAII cannot be used for inline frames, callers must manually
@@ -706,7 +725,8 @@ class StackSpace
                                         uintN nmissing, uintN nfixed) const;
 
     JS_REQUIRES_STACK
-    inline void pushInlineFrame(JSContext *cx, JSStackFrame *fp, JSStackFrame *newfp);
+    inline void pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
+                                JSStackFrame *newfp);
 
     JS_REQUIRES_STACK
     inline void popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down);
@@ -719,7 +739,8 @@ class StackSpace
     void getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStackFrame *&fp);
 
     JS_REQUIRES_STACK
-    void pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp);
+    void pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp,
+                                        JSFrameRegs &regs);
 
     JS_REQUIRES_STACK
     void popSynthesizedSlowNativeFrame(JSContext *cx);
@@ -730,6 +751,34 @@ class StackSpace
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
+
+/*
+ * While |cx->fp|'s pc/sp are available in |cx->regs|, to compute the saved
+ * value of pc/sp for any other frame, it is necessary to know about that
+ * frame's up-frame. This iterator maintains this information when walking down
+ * a chain of stack frames starting at |cx->fp|.
+ *
+ * Usage:
+ *   for (FrameRegsIter i(cx); !i.done(); ++i)
+ *     ... i.fp() ... i.sp() ... i.pc()
+ */
+class FrameRegsIter
+{
+    CallStack         *curcs;
+    JSStackFrame      *curfp;
+    jsval             *cursp;
+    jsbytecode        *curpc;
+
+  public:
+    JS_REQUIRES_STACK FrameRegsIter(JSContext *cx);
+
+    bool done() const { return curfp == NULL; }
+    FrameRegsIter &operator++();
+
+    JSStackFrame *fp() const { return curfp; }
+    jsval *sp() const { return cursp; }
+    jsbytecode *pc() const { return curpc; }
+};
 
 /* Holds the number of recording attemps for an address. */
 typedef HashMap<jsbytecode*,
@@ -1637,12 +1686,24 @@ struct JSContext
     JS_REQUIRES_STACK
     JSStackFrame        *fp;
 
+    /*
+     * Currently executing frame's regs, set by stack operations.
+     * |fp != NULL| iff |regs != NULL| (although regs->pc can be NULL)
+     */
+    JS_REQUIRES_STACK
+    JSFrameRegs         *regs;
+
   private:
     friend class js::StackSpace;
+    friend JSBool js_Interpret(JSContext *);
 
-    /* 'fp' must only be changed by calling this function. */
+    /* 'fp' and 'regs' must only be changed by calling these functions. */
     void setCurrentFrame(JSStackFrame *fp) {
         this->fp = fp;
+    }
+
+    void setCurrentRegs(JSFrameRegs *regs) {
+        this->regs = regs;
     }
 
   public:
@@ -1721,7 +1782,8 @@ struct JSContext
     }
 
     /* Add the given callstack to the list as the new active callstack. */
-    void pushCallStackAndFrame(js::CallStack *newcs, JSStackFrame *newfp);
+    void pushCallStackAndFrame(js::CallStack *newcs, JSStackFrame *newfp,
+                               JSFrameRegs &regs);
 
     /* Remove the active callstack and make the next callstack active. */
     void popCallStackAndFrame();
@@ -1736,7 +1798,7 @@ struct JSContext
      * Perform a linear search of all frames in all callstacks in the given context
      * for the given frame, returning the callstack, if found, and null otherwise.
      */
-    js::CallStack *containingCallStack(JSStackFrame *target);
+    js::CallStack *containingCallStack(const JSStackFrame *target);
 
 #ifdef JS_THREADSAFE
     JSThread            *thread;
@@ -1820,9 +1882,7 @@ struct JSContext
     JSGenerator *generatorFor(JSStackFrame *fp) const;
 
     /* Early OOM-check. */
-    bool ensureGeneratorStackSpace() {
-        return genStack.reserve(genStack.length() + 1);
-    }
+    inline bool ensureGeneratorStackSpace();
 
     bool enterGenerator(JSGenerator *gen) {
         return genStack.append(gen);
@@ -1968,6 +2028,15 @@ struct JSContext
         return JS_THREAD_DATA(this)->stackSpace;
     }
 
+#ifdef DEBUG
+    void assertValidStackDepth(uintN depth) {
+        JS_ASSERT(0 <= regs->sp - StackBase(fp));
+        JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(fp)));
+    }
+#else
+    void assertValidStackDepth(uintN /*depth*/) {}
+#endif
+
 private:
 
     /*
@@ -1991,6 +2060,13 @@ JSStackFrame::varobj(JSContext *cx) const
 {
     JS_ASSERT(cx->activeCallStack()->contains(this));
     return fun ? callobj : cx->activeCallStack()->getInitialVarObj();
+}
+
+JS_ALWAYS_INLINE jsbytecode *
+JSStackFrame::pc(JSContext *cx) const
+{
+    JS_ASSERT(cx->containingCallStack(this) != NULL);
+    return cx->fp == this ? cx->regs->pc : savedPC;
 }
 
 /*
@@ -2031,7 +2107,11 @@ InvokeArgsGuard::~InvokeArgsGuard()
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
 #endif
 
-#ifdef __cplusplus
+static inline uintN
+FramePCOffset(JSContext *cx, JSStackFrame* fp)
+{
+    return uintN((fp->imacpc ? fp->imacpc : fp->pc(cx)) - fp->script->code);
+}
 
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, JSStackFrame *fp)
@@ -2434,8 +2514,6 @@ class JSAutoResolveFlags
     uintN mSaved;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-#endif /* __cpluscplus */
 
 /*
  * Slightly more readable macros for testing per-context option settings (also
