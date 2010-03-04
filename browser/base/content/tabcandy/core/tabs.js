@@ -124,7 +124,7 @@ function BrowserWatcher(options) {
       try {
         func(window);
       } catch (e) {
-        Utils.logger.log(e);
+        Utils.log(e);
       }
     };
     return safeFunc;
@@ -233,7 +233,7 @@ function EventListenerMixIns(mixInto) {
   this.add = function add(options) {
     if (mixIns) {
       if (options.name in mixIns)
-        Utils.logging.log("mixIn for", options.name, "already exists.");
+        Utils.log("mixIn for", options.name, "already exists.");
       options.mixInto = mixInto;
       mixIns[options.name] = new EventListenerMixIn(options);
     }
@@ -259,6 +259,8 @@ function EventListenerMixIn(options) {
   var listeners = [];
 
   function onEvent(event, target) {
+/*     Utils.log('event = ' + event.type + ', mixInto = ' + options.mixInto); */
+/*     Utils.log(options); */
     if (listeners) {
       if (options.filter)
         event = options.filter.call(this, event);
@@ -266,11 +268,13 @@ function EventListenerMixIn(options) {
         if (!target)
           target = options.mixInto;
         var listenersCopy = listeners.slice();
+/*         Utils.log(Utils.expandObject(event) + '; ' + listenersCopy.length); */
         for (var i = 0; i < listenersCopy.length; i++)
           try {
+/*           	Utils.log('telling listener'); */
             listenersCopy[i].call(target, event);
           } catch (e) {
-            Utils.logger.log(e);
+            Utils.log(e);
           }
         if (options.bubbleTo)
           options.bubbleTo.bubble(options.name, target, event);
@@ -279,8 +283,9 @@ function EventListenerMixIn(options) {
   };
 
   options.mixInto[options.name] = function bind(cb) {
+// 	Utils.trace('bind');
     if (typeof(cb) != "function")
-      Utils.logging.log("Callback must be a function.");
+      Utils.log("Callback must be a function.");
     if (listeners)
       listeners.push(cb);
   };
@@ -322,7 +327,7 @@ function Tabs() {
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
       var chromeWindow = wm.getMostRecentWindow("navigator:browser");
-      Utils.logger.log( trackedWindows )
+      Utils.log( trackedWindows )
       if (chromeWindow)
         return trackedWindows.get(chromeWindow);
       return null;
@@ -334,8 +339,6 @@ function Tabs() {
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
            .getService(Ci.nsIWindowMediator);
   var chromeWindow = wm.getMostRecentWindow("navigator:browser");
-  new BrowserWindow(chromeWindow);
-
   trackedWindows.set(chromeWindow,
                       new BrowserWindow(chromeWindow));
 
@@ -366,6 +369,7 @@ function Tabs() {
   tabsMixIns.add({name: "onOpen"});
 
   tabs.__proto__ = trackedTabs.values;
+/*   Utils.log(tabs); */
 
   function newBrowserTab(tabbrowser, chromeTab) {
     var browserTab = new BrowserTab(tabbrowser, chromeTab);
@@ -415,7 +419,7 @@ function Tabs() {
           break;
         }
       } catch (e) {
-        Utils.logger.log(e);
+        Utils.log(e);
       }
     }
 
