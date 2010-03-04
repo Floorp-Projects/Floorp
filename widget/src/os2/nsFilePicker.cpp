@@ -37,25 +37,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Define so header files for openfilename are included
-#ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif
-
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
-#include "nsWidgetDefs.h"
-#include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
-
+#include "nsIWidget.h"
 #include "nsOS2Uni.h"
+#include "nsFilePicker.h"
+
+#ifndef MAX_PATH
+#define MAX_PATH CCHMAXPATH
+#endif
 
 /* Item structure */
 typedef struct _MyData

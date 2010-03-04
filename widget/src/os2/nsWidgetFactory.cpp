@@ -59,8 +59,6 @@
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 
-//#include "nsWidgetDefs.h"
-
 // class definition headers
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
