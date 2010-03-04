@@ -79,7 +79,7 @@ jsdtrace_fun_linenumber(JSContext *cx, const JSFunction *fun)
 static int
 jsdtrace_frame_linenumber(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp && fp->regs)
+    if (fp)
         return (int) js_FramePCToLineNumber(cx, fp);
 
     return 0;

@@ -224,7 +224,6 @@ BEGIN_CASE(JSOP_STOP)
     {
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
-        JS_ASSERT(fp->down->regs == &fp->callerRegs);
 
         if (JS_LIKELY(script->staticLevel < JS_DISPLAY_SIZE))
             cx->display[script->staticLevel] = fp->displaySave;
@@ -277,14 +276,11 @@ BEGIN_CASE(JSOP_STOP)
         JSStackFrame *down = fp->down;
         bool recursive = fp->script == down->script;
 
-        /* Restore caller's registers. */
-        regs = fp->callerRegs;
-        regs.sp -= 1 + (size_t) fp->argc;
-        regs.sp[-1] = fp->rval;
-        down->regs = &regs;
-
-        /* Pop |fp| from the context. */
+        /* Pop the frame. */
         cx->stack().popInlineFrame(cx, fp, down);
+
+        /* Propagate return value before fp is lost. */
+        regs.sp[-1] = fp->rval;
 
         /* Sync interpreter registers. */
         fp = cx->fp;
@@ -2071,7 +2067,6 @@ BEGIN_CASE(JSOP_APPLY)
             }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
             newfp->thisv = vp[1];
-            newfp->regs = NULL;
             newfp->imacpc = NULL;
 
             /* Push void to initialize local variables. */
@@ -2091,16 +2086,15 @@ BEGIN_CASE(JSOP_APPLY)
                     js_SetVersion(cx, currentVersion);
             }
 
-            /* Push the frame and set interpreter registers. */
-            newfp->callerRegs = regs;
-            fp->regs = &newfp->callerRegs;
-            regs.sp = newsp;
+            /* Push the frame. */
+            stack.pushInlineFrame(cx, fp, regs.pc, newfp);
+
+            /* Initializer regs after pushInlineFrame snapshots pc. */
             regs.pc = newscript->code;
-            newfp->regs = &regs;
-            stack.pushInlineFrame(cx, fp, newfp);
-            JS_ASSERT(newfp == cx->fp);
+            regs.sp = newsp;
 
             /* Import into locals. */
+            JS_ASSERT(newfp == cx->fp);
             fp = newfp;
             script = newscript;
             atoms = script->atomMap.vector;
@@ -2132,8 +2126,8 @@ BEGIN_CASE(JSOP_APPLY)
                         goto error;
                 }
             } else if (fp->script == fp->down->script &&
-                       *fp->down->regs->pc == JSOP_CALL &&
-                       *fp->regs->pc == JSOP_TRACE) {
+                       *fp->down->savedPC == JSOP_CALL &&
+                       *regs.pc == JSOP_TRACE) {
                 MONITOR_BRANCH(Record_EnterFrame);
             }
 #endif
@@ -3195,7 +3189,7 @@ END_CASE(JSOP_HOLE)
 
 BEGIN_CASE(JSOP_NEWARRAY)
     len = GET_UINT16(regs.pc);
-    cx->fp->assertValidStackDepth(len);
+    cx->assertValidStackDepth(len);
     obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
     if (!obj)
         goto error;
