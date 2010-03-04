@@ -54,6 +54,7 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+
 /* Check pseudo-booleans values. */
 JS_STATIC_ASSERT(!(JSVAL_TRUE & JSVAL_HOLE_FLAG));
 JS_STATIC_ASSERT(!(JSVAL_FALSE & JSVAL_HOLE_FLAG));

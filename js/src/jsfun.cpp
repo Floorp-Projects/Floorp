@@ -81,6 +81,7 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+#include "jscntxtinlines.h"
 
 using namespace js;
 
@@ -669,8 +670,12 @@ args_enumerate(JSContext *cx, JSObject *obj)
 
 #if JS_HAS_GENERATORS
 /*
- * If a generator-iterator's arguments or call object escapes, it needs to
- * mark its generator object.
+ * If a generator's arguments or call object escapes, and the generator frame
+ * is not executing, the generator object needs to be marked because it is not
+ * otherwise reachable. An executing generator is rooted by its invocation.  To
+ * distinguish the two cases (which imply different access paths to the
+ * generator object), we use the JSFRAME_FLOATING_GENERATOR flag, which is only
+ * set on the JSStackFrame kept in the generator object's JSGenerator.
  */
 static void
 args_or_call_trace(JSTracer *trc, JSObject *obj)
@@ -683,9 +688,9 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
     }
 
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-    if (fp && (fp->flags & JSFRAME_GENERATOR)) {
-        JS_CALL_OBJECT_TRACER(trc, FRAME_TO_GENERATOR(fp)->obj,
-                              "FRAME_TO_GENERATOR(fp)->obj");
+    if (fp && fp->isFloatingGenerator()) {
+        JSObject *obj = js_FloatingFrameToGenerator(fp)->obj;
+        JS_CALL_OBJECT_TRACER(trc, obj, "generator object");
     }
 }
 #else
@@ -810,7 +815,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 #ifdef DEBUG
     /* A call object should be a frame's outermost scope chain element.  */
     JSClass *classp = fp->scopeChain->getClass();
-    if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
+    if (classp == &js_WithClass || classp == &js_BlockClass)
+        JS_ASSERT(fp->scopeChain->getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
+    else if (classp == &js_CallClass)
         JS_ASSERT(fp->scopeChain->getPrivate() != fp);
 #endif
 
@@ -920,7 +927,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (n != 0) {
         JS_ASSERT(callobj->numSlots() >= JS_INITIAL_NSLOTS + n);
         n += JS_INITIAL_NSLOTS;
-        CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots);
+        CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots());
     }
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
@@ -1080,7 +1087,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
             array = fp->argv;
         } else {
             JS_ASSERT(kind == JSCPK_VAR);
-            array = fp->slots;
+            array = fp->slots();
         }
     }
 
@@ -1963,9 +1970,8 @@ JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
-    jsval fval, *argv, *invokevp;
+    jsval fval, *argv;
     JSString *str;
-    void *mark;
     JSBool ok;
 
     LeaveTrace(cx);
@@ -2005,18 +2011,17 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /* Allocate stack space for fval, obj, and the args. */
-    invokevp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!invokevp)
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return JS_FALSE;
 
     /* Push fval, obj, and the args. */
-    invokevp[0] = fval;
-    invokevp[1] = OBJECT_TO_JSVAL(obj);
-    memcpy(invokevp + 2, argv, argc * sizeof *argv);
+    args.getvp()[0] = fval;
+    args.getvp()[1] = OBJECT_TO_JSVAL(obj);
+    memcpy(args.getvp() + 2, argv, argc * sizeof *argv);
 
-    ok = js_Invoke(cx, argc, invokevp, 0);
-    *vp = *invokevp;
-    js_FreeStack(cx, mark);
+    ok = js_Invoke(cx, args, 0);
+    *vp = *args.getvp();
     return ok;
 }
 
@@ -2024,11 +2029,10 @@ JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
-    jsval fval, *invokevp, *sp;
+    jsval fval, *sp;
     JSString *str;
     jsuint length;
-    JSBool arraylike, ok;
-    void *mark;
+    JSBool arraylike;
     uintN i;
 
     if (argc == 0) {
@@ -2090,12 +2094,13 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 
     /* Allocate stack space for fval, obj, and the args. */
     argc = (uintN)JS_MIN(length, JS_ARGS_LENGTH_MAX);
-    invokevp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!invokevp)
+
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return JS_FALSE;
 
     /* Push fval, obj, and aobj's elements as args. */
-    sp = invokevp;
+    sp = args.getvp();
     *sp++ = fval;
     *sp++ = OBJECT_TO_JSVAL(obj);
     if (aobj && aobj->isArguments()) {
@@ -2121,17 +2126,14 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         }
     } else {
         for (i = 0; i < argc; i++) {
-            ok = aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp);
-            if (!ok)
-                goto out;
+            if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp))
+                return JS_FALSE;
             sp++;
         }
     }
 
-    ok = js_Invoke(cx, argc, invokevp, 0);
-    *vp = *invokevp;
-out:
-    js_FreeStack(cx, mark);
+    JSBool ok = js_Invoke(cx, args, 0);
+    *vp = *args.getvp();
     return ok;
 }
 
@@ -2141,9 +2143,8 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *aobj;
     uintN length, i;
-    void *mark;
-    jsval *invokevp, *sp;
     JSBool ok;
+    jsval *sp;
 
     if (JSVAL_IS_PRIMITIVE(vp[2]) ||
         (aobj = JSVAL_TO_OBJECT(vp[2]),
@@ -2159,11 +2160,12 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 
     if (length > JS_ARGS_LENGTH_MAX)
         length = JS_ARGS_LENGTH_MAX;
-    invokevp = js_AllocStack(cx, 2 + length, &mark);
-    if (!invokevp)
         return JS_FALSE;
 
-    sp = invokevp;
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, length, args))
+
+    sp = args.getvp();
     *sp++ = vp[1];
     *sp++ = JSVAL_NULL; /* this is filled automagically */
     for (i = 0; i < length; i++) {
@@ -2173,10 +2175,8 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    ok = js_InvokeConstructor(cx, length, JS_TRUE, invokevp);
-    *vp = *invokevp;
-out:
-    js_FreeStack(cx, mark);
+    JSBool ok = js_InvokeConstructor(cx, args, JS_TRUE);
+    *vp = *args.getvp();
     return ok;
 }
 #endif

@@ -1406,7 +1406,7 @@ ValueToScript(JSContext *cx, jsval v)
             script = (JSScript *) JS_GetPrivate(cx, obj);
         } else if (clasp == &js_GeneratorClass) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->frame.fun;
+            fun = gen->getFloatingFrame()->fun;
             script = FUN_SCRIPT(fun);
         }
     }

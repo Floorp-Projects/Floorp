@@ -163,6 +163,10 @@ struct JSFunction : public JSObject
 
     bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
+    bool isInterpreted()    const { return FUN_INTERPRETED(this); }
+    bool isFastNative()     const { return flags & JSFUN_FAST_NATIVE; }
+    bool isHeavyweight()    const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+    bool minArgs()          const { return FUN_MINARGS(this); }
 
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -443,8 +447,12 @@ const uint32 ARGS_FIXED_RESERVED_SLOTS = JSSLOT_ARGS_START - JSSLOT_ARGS_LENGTH;
  * arguments that can be supplied via the second (so-called |argArray|) param
  * to Function.prototype.apply. This value also bounds the number of elements
  * parsed in an array initialiser.
+ *
+ * The thread's stack is the limiting factor for this number. It is currently
+ * 2MB, which fits a little less than 2^19 arguments (once the stack frame,
+ * callstack, etc are included). Pick a max args length that is a little less.
  */
-const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(24) - 1;
+const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(19) - 1024;
 
 /*
  * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
