@@ -1119,7 +1119,7 @@ var PlacesUtils = {
     if (!wasOpen) {
       root.containerOpen = false;
       if (!suppressNotificationsOld)
-        result.suppressNotificationsOld = false;
+        result.suppressNotifications = false;
     }
     return found;
   },
