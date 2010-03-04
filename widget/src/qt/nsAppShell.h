@@ -39,10 +39,9 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
+#include <qsocketnotifier.h>
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
-#include <qsocketnotifier.h>
-
 
 /**
  * Native QT Application shell wrapper

@@ -48,13 +48,13 @@
 
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
-#include "nsAppRunner.h"
-#include "nsUpdateDriver.h"
-
 #if defined(MOZ_WIDGET_QT)
 #include <qwidget.h>
 #include <qapplication.h>
 #endif
+
+#include "nsAppRunner.h"
+#include "nsUpdateDriver.h"
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"

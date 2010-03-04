@@ -38,9 +38,10 @@
 #ifndef nsToolkit_h__      
 #define nsToolkit_h__
 
+#include <QPixmap>
+
 #include "nsIToolkit.h"
 #include "nsString.h"
-#include <QPixmap>
 
 /**
  * Wrapper around the thread running the message pump.
