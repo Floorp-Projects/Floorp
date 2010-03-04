@@ -3014,7 +3014,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj = NewObject(cx, &js_WithClass, proto, parent);
     if (!obj)
         return NULL;
-    obj->setPrivate(cx->fp);
+    obj->setPrivate(js_FloatingFrameIfGenerator(cx, cx->fp));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
     return obj;
 }
@@ -3042,7 +3042,8 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
         return NULL;
 
     /* The caller sets parent on its own. */
-    clone->init(&js_BlockClass, proto, NULL, reinterpret_cast<jsval>(fp));
+    jsval priv = (jsval)js_FloatingFrameIfGenerator(cx, fp);
+    clone->init(&js_BlockClass, proto, NULL, priv);
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
 
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
@@ -3065,7 +3066,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     fp = cx->fp;
     obj = fp->scopeChain;
     JS_ASSERT(obj->getClass() == &js_BlockClass);
-    JS_ASSERT(obj->getPrivate() == cx->fp);
+    JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
     /*
@@ -3089,14 +3090,14 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(count >= 1);
 
     depth += fp->script->nfixed;
-    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots[depth];
+    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots()[depth];
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
         if (!obj->allocSlots(cx, JS_INITIAL_NSLOTS + count))
             normalUnwind = JS_FALSE;
         else
-            memcpy(obj->dslots, fp->slots + depth + 1, count * sizeof(jsval));
+            memcpy(obj->dslots, fp->slots() + depth + 1, count * sizeof(jsval));
         JS_UNLOCK_OBJ(cx, obj);
     }
 
@@ -3121,9 +3122,10 @@ block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
+        fp = js_LiveFrameIfGenerator(fp);
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
-        *vp = fp->slots[index];
+        *vp = fp->slots()[index];
         return true;
     }
 
@@ -3146,9 +3148,10 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
+        fp = js_LiveFrameIfGenerator(fp);
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
-        fp->slots[index] = *vp;
+        fp->slots()[index] = *vp;
         return true;
     }
 
@@ -6492,11 +6495,11 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, "pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
-        if (sp && fp->slots) {
-            fprintf(stderr, "  slots: %p\n", (void *) fp->slots);
-            fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots));
-            if (sp - fp->slots < 10000) { // sanity
-                for (jsval *p = fp->slots; p < sp; p++) {
+        if (sp && fp->slots()) {
+            fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
+            fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
+            if (sp - fp->slots() < 10000) { // sanity
+                for (jsval *p = fp->slots(); p < sp; p++) {
                     fprintf(stderr, "    %p: ", (void *) p);
                     dumpValue(*p);
                     fputc('\n', stderr);
@@ -6504,7 +6507,7 @@ js_DumpStackFrame(JSStackFrame *fp)
             }
         } else {
             fprintf(stderr, "  sp:    %p\n", (void *) sp);
-            fprintf(stderr, "  slots: %p\n", (void *) fp->slots);
+            fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
         }
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
@@ -6527,8 +6530,6 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, " debugger");
         if (fp->flags & JSFRAME_EVAL)
             fprintf(stderr, " eval");
-        if (fp->flags & JSFRAME_ROOTED_ARGV)
-            fprintf(stderr, " rooted_argv");
         if (fp->flags & JSFRAME_YIELDING)
             fprintf(stderr, " yielding");
         if (fp->flags & JSFRAME_ITERATOR)

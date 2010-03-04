@@ -78,6 +78,7 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -1682,30 +1683,25 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
-     : g(cx), invokevp(NULL), cb(cx)
+     : g(cx), cb(cx)
     {}
 
-    ~ReplaceData() {
-        if (invokevp) {
-            /* If we set invokevp, we already left trace. */
-            VOUCH_HAVE_STACK();
-            js_FreeStack(g.cx(), invokevpMark);
-        }
+    bool argsPushed() const {
+        return args.getvp() != NULL;
     }
 
-    JSString      *str;           /* 'this' parameter object as a string */
-    RegExpGuard   g;              /* regexp parameter object and private data */
-    JSObject      *lambda;        /* replacement function object or null */
-    JSString      *repstr;        /* replacement string */
-    jschar        *dollar;        /* null or pointer to first $ in repstr */
-    jschar        *dollarEnd;     /* limit pointer for js_strchr_limit */
-    jsint         index;          /* index in result of next replacement */
-    jsint         leftIndex;      /* left context index in str->chars */
-    JSSubString   dollarStr;      /* for "$$" InterpretDollar result */
-    bool          calledBack;     /* record whether callback has been called */
-    jsval         *invokevp;      /* reusable allocation from js_AllocStack */
-    void          *invokevpMark;  /* the mark to return */
-    JSCharBuffer  cb;             /* buffer built during DoMatch */
+    JSString        *str;           /* 'this' parameter object as a string */
+    RegExpGuard     g;              /* regexp parameter object and private data */
+    JSObject        *lambda;        /* replacement function object or null */
+    JSString        *repstr;        /* replacement string */
+    jschar          *dollar;        /* null or pointer to first $ in repstr */
+    jschar          *dollarEnd;     /* limit pointer for js_strchr_limit */
+    jsint           index;          /* index in result of next replacement */
+    jsint           leftIndex;      /* left context index in str->chars */
+    JSSubString     dollarStr;      /* for "$$" InterpretDollar result */
+    bool            calledBack;     /* record whether callback has been called */
+    InvokeArgsGuard args;           /* arguments for lambda's js_Invoke call */
+    JSCharBuffer    cb;             /* buffer built during DoMatch */
 };
 
 static JSSubString *
@@ -1816,17 +1812,13 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         uintN p = rdata.g.re()->parenCount;
         uintN argc = 1 + p + 2;
 
-        if (!rdata.invokevp) {
-            rdata.invokevp = js_AllocStack(cx, 2 + argc, &rdata.invokevpMark);
-            if (!rdata.invokevp)
-                return false;
-        }
-        jsval* invokevp = rdata.invokevp;
+        if (!rdata.argsPushed() && !cx->stack().pushInvokeArgs(cx, argc, rdata.args))
+            return false;
 
         PreserveRegExpStatics save(cx);
 
         /* Push lambda and its 'this' parameter. */
-        jsval *sp = invokevp;
+        jsval *sp = rdata.args.getvp();
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(lambda->getParent());
 
@@ -1848,7 +1840,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata.str);
 
-        if (!js_Invoke(cx, argc, invokevp, 0))
+        if (!js_Invoke(cx, rdata.args, 0))
             return false;
 
         /*
@@ -1856,7 +1848,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
          * created by this js_ValueToString that would otherwise be GC-
          * able, until we use rdata.repstr in DoReplace.
          */
-        repstr = js_ValueToString(cx, *invokevp);
+        repstr = js_ValueToString(cx, *rdata.args.getvp());
         if (!repstr)
             return false;
 

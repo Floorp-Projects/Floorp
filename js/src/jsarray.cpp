@@ -112,6 +112,7 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+#include "jscntxtinlines.h"
 
 using namespace js;
 
@@ -1822,11 +1823,16 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
     return JS_TRUE;
 }
 
-typedef struct CompareArgs {
-    JSContext   *context;
-    jsval       fval;
-    jsval       *elemroot;      /* stack needed for js_Invoke */
-} CompareArgs;
+struct CompareArgs
+{
+    JSContext       *context;
+    jsval           fval;
+    InvokeArgsGuard args;
+
+    CompareArgs(JSContext *cx, jsval fval)
+      : context(cx), fval(fval)
+    {}
+};
 
 static JS_REQUIRES_STACK JSBool
 sort_compare(void *arg, const void *a, const void *b, int *result)
@@ -1834,9 +1840,8 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
     CompareArgs *ca = (CompareArgs *) arg;
     JSContext *cx = ca->context;
-    jsval *invokevp, *sp;
 
-    /**
+    /*
      * array_sort deals with holes and undefs on its own and they should not
      * come here.
      */
@@ -1846,14 +1851,14 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    invokevp = ca->elemroot;
-    sp = invokevp;
+    jsval *invokevp = ca->args.getvp();
+    jsval *sp = invokevp;
     *sp++ = ca->fval;
     *sp++ = JSVAL_NULL;
     *sp++ = av;
     *sp++ = bv;
 
-    if (!js_Invoke(cx, 2, invokevp, 0))
+    if (!js_Invoke(cx, ca->args, 0))
         return JS_FALSE;
 
     jsdouble cmp;
@@ -2101,22 +2106,17 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
                 } while (++i != newlen);
             }
         } else {
-            void *mark;
-
             LeaveTrace(cx);
 
-            CompareArgs ca;
-            ca.context = cx;
-            ca.fval = fval;
-            ca.elemroot  = js_AllocStack(cx, 2 + 2, &mark);
-            if (!ca.elemroot)
+            CompareArgs ca(cx, fval);
+            if (!cx->stack().pushInvokeArgs(cx, 2, ca.args))
                 return false;
-            bool ok = !!js_MergeSort(vec, size_t(newlen), sizeof(jsval),
-                                     comparator_stack_cast(sort_compare),
-                                     &ca, mergesort_tmp);
-            js_FreeStack(cx, mark);
-            if (!ok)
+
+            if (!js_MergeSort(vec, size_t(newlen), sizeof(jsval),
+                              comparator_stack_cast(sort_compare),
+                              &ca, mergesort_tmp)) {
                 return false;
+            }
         }
 
         /*
@@ -2811,15 +2811,8 @@ typedef enum ArrayExtraMode {
 static JSBool
 array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
 {
-    JSObject *obj;
-    jsuint length, newlen;
-    jsval *argv, *elemroot, *invokevp, *sp;
-    JSBool ok, cond, hole;
-    JSObject *callable, *thisp, *newarr;
-    jsint start, end, step, i;
-    void *mark;
-
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    jsuint length;
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -2831,8 +2824,8 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
         js_ReportMissingArg(cx, vp, 0);
         return JS_FALSE;
     }
-    argv = vp + 2;
-    callable = js_ValueToCallableObject(cx, &argv[0], JSV2F_SEARCH_STACK);
+    jsval *argv = vp + 2;
+    JSObject *callable = js_ValueToCallableObject(cx, &argv[0], JSV2F_SEARCH_STACK);
     if (!callable)
         return JS_FALSE;
 
@@ -2840,11 +2833,13 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
      * Set our initial return condition, used for zero-length array cases
      * (and pre-size our map return to match our known length, for all cases).
      */
+    jsuint newlen;
+    JSObject *newarr;
 #ifdef __GNUC__ /* quell GCC overwarning */
     newlen = 0;
     newarr = NULL;
 #endif
-    start = 0, end = length, step = 1;
+    jsint start = 0, end = length, step = 1;
 
     switch (mode) {
       case REDUCE_RIGHT:
@@ -2859,6 +2854,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
         if (argc >= 2) {
             *vp = argv[1];
         } else {
+            JSBool hole;
             do {
                 if (!GetArrayElement(cx, obj, start, &hole, vp))
                     return JS_FALSE;
@@ -2894,6 +2890,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     if (length == 0)
         return JS_TRUE;
 
+    JSObject *thisp;
     if (argc > 1 && !REDUCE_MODE(mode)) {
         if (!js_ValueToObject(cx, argv[1], &thisp))
             return JS_FALSE;
@@ -2908,17 +2905,21 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
      */
     LeaveTrace(cx);
     argc = 3 + REDUCE_MODE(mode);
-    elemroot = js_AllocStack(cx, 1 + 2 + argc, &mark);
-    if (!elemroot)
+
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return JS_FALSE;
 
     MUST_FLOW_THROUGH("out");
-    ok = JS_TRUE;
-    invokevp = elemroot + 1;
+    JSBool ok = JS_TRUE;
+    JSBool cond;
+    jsval *invokevp = args.getvp();
 
-    for (i = start; i != end; i += step) {
+    AutoValueRooter tvr(cx);
+    for (jsint i = start; i != end; i += step) {
+        JSBool hole;
         ok = JS_CHECK_OPERATION_LIMIT(cx) &&
-             GetArrayElement(cx, obj, i, &hole, elemroot);
+             GetArrayElement(cx, obj, i, &hole, tvr.addr());
         if (!ok)
             goto out;
         if (hole)
@@ -2926,21 +2927,21 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
 
         /*
          * Push callable and 'this', then args. We must do this for every
-         * iteration around the loop since js_Invoke uses spbase[0] for return
-         * value storage, while some native functions use spbase[1] for local
+         * iteration around the loop since js_Invoke uses invokevp[0] for return
+         * value storage, while some native functions use invokevp[1] for local
          * rooting.
          */
-        sp = invokevp;
+        jsval *sp = invokevp;
         *sp++ = OBJECT_TO_JSVAL(callable);
         *sp++ = OBJECT_TO_JSVAL(thisp);
         if (REDUCE_MODE(mode))
             *sp++ = *vp;
-        *sp++ = *elemroot;
+        *sp++ = tvr.value();
         *sp++ = INT_TO_JSVAL(i);
         *sp++ = OBJECT_TO_JSVAL(obj);
 
         /* Do the call. */
-        ok = js_Invoke(cx, argc, invokevp, 0);
+        ok = js_Invoke(cx, args, 0);
         if (!ok)
             break;
 
@@ -2966,8 +2967,8 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
           case FILTER:
             if (!cond)
                 break;
-            /* The filter passed *elemroot, so push it onto our result. */
-            ok = SetArrayElement(cx, newarr, newlen++, *elemroot);
+            /* The element passed the filter, so push it onto our result. */
+            ok = SetArrayElement(cx, newarr, newlen++, tvr.value());
             if (!ok)
                 goto out;
             break;
@@ -2987,7 +2988,6 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     }
 
   out:
-    js_FreeStack(cx, mark);
     if (ok && mode == FILTER)
         ok = js_SetLengthProperty(cx, newarr, newlen);
     return ok;
