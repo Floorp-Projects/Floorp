@@ -6417,7 +6417,8 @@ BCPaintBorderIterator::SetNewRowGroup()
   mIsRepeatedHeader = PR_FALSE;
   mIsRepeatedFooter = PR_FALSE;
 
-  if (mRgIndex < mRowGroups.Length()) {
+  NS_ASSERTION(mRgIndex >= 0, "mRgIndex out of bounds");
+  if (PRUint32(mRgIndex) < mRowGroups.Length()) {
     mPrevRg = mRg;
     mRg = mRowGroups[mRgIndex];
     mFifRgFirstRowIndex = ((nsTableRowGroupFrame*)mRg->GetFirstInFlow())->GetStartRowIndex();
