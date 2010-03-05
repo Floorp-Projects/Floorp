@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=545268
+-->
+<head>
+  <title>Test for Bug 545268</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545268">Mozilla Bug 545268</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 545268
+    Like the test for bug 493251, but we test that suppressing events in
+    a parent window stops the events from reaching the child window. */
+
+  var win;
+  var subwin;
+
+  var mouseDown = 0;
+  var mouseUp = 0;
+  var mouseClick = 0;
+
+  var keyDown = 0;
+  var keyPress = 0;
+  var keyUp = 0;
+
+  function dispatchKeyEvent(type) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = subwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendKeyEvent(type, 
+                       Components.interfaces.nsIDOMKeyEvent.DOM_VK_A,
+                       0, 0);
+  }
+
+  function doTest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var f = win.document.getElementById("f");
+    subwin = f.contentWindow;
+    subwin.document.getElementsByTagName("input")[0].focus();
+    subwin.addEventListener("keydown", function(e) { ++keyDown; }, true);
+    subwin.addEventListener("keypress", function(e) { ++keyPress; }, true);
+    subwin.addEventListener("keyup", function(e) { ++keyUp; }, true);
+    subwin.addEventListener("mousedown", function(e) { ++mouseDown; }, true);
+    subwin.addEventListener("mouseup", function(e) { ++mouseUp; }, true);
+    subwin.addEventListener("click", function(e) { ++mouseClick; }, true);
+
+    dispatchKeyEvent("keydown");
+    dispatchKeyEvent("keypress");
+    dispatchKeyEvent("keyup");
+    is(keyDown, 1, "Wrong number events (1)");
+    is(keyPress, 1, "Wrong number events (2)");
+    is(keyUp, 1, "Wrong number events (3)");
+
+    // Test that suppressing events on the parent window prevents key
+    // events in the subdocument window
+    utils.suppressEventHandling(true);
+    dispatchKeyEvent("keydown");
+    dispatchKeyEvent("keypress");
+    dispatchKeyEvent("keyup");
+    is(keyDown, 1, "Wrong number events (4)");
+    is(keyPress, 1, "Wrong number events (5)");
+    is(keyUp, 1, "Wrong number events (6)");
+    utils.suppressEventHandling(false);
+    is(keyDown, 1, "Wrong number events (7)");
+    is(keyPress, 1, "Wrong number events (8)");
+    is(keyUp, 1, "Wrong number events (9)");
+
+    setTimeout(continueTest1, 0);
+    }
+
+  function continueTest1() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    dispatchKeyEvent("keydown");
+    utils.suppressEventHandling(true);
+    dispatchKeyEvent("keypress");
+    dispatchKeyEvent("keyup");
+    is(keyDown, 2, "Wrong number events (10)");
+    is(keyPress, 1, "Wrong number events (11)");
+    is(keyUp, 1, "Wrong number events (12)");
+    utils.suppressEventHandling(false);
+    setTimeout(continueTest2, 0);
+  }
+
+  function continueTest2() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    is(keyDown, 2, "Wrong number events (13)");
+    is(keyPress, 2, "Wrong number events (14)");
+    is(keyUp, 2, "Wrong number events (15)");
+
+    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    is(mouseDown, 1, "Wrong number events (16)");
+    is(mouseUp, 1, "Wrong number events (17)");
+    is(mouseClick, 1, "Wrong number events (18)");
+
+    utils.suppressEventHandling(true);
+    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    utils.suppressEventHandling(false);
+    is(mouseDown, 1, "Wrong number events (19)");
+    is(mouseUp, 1, "Wrong number events (20)");
+    is(mouseClick, 1, "Wrong number events (21)");
+
+    setTimeout(continueTest3, 0);
+  }
+
+  function continueTest3() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    utils.suppressEventHandling(true);
+    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    utils.suppressEventHandling(false);
+    setTimeout(continueTest4, 1000);
+  }
+
+  function continueTest4() {
+    is(mouseDown, 2, "Wrong number events (19)");
+    is(mouseUp, 2, "Wrong number events (20)");
+    is(mouseClick, 2, "Wrong number events (21)");
+    win.close();
+    SimpleTest.finish();
+  }
+
+
+  SimpleTest.waitForExplicitFinish();
+  win = window.open("data:text/html,<iframe id='f' style='position:absolute; border:none; width:100%; height:100%; left:0; top:0' src='data:text/html,&lt;input&gt;'>", "" , "");
+  win.onload = doTest;
+
+</script>
+</pre>
+</body>
+</html>
