@@ -731,6 +731,12 @@ JS_DestroyRuntime(JSRuntime *rt)
     js_free(rt);
 }
 
+#ifdef JS_REPRMETER
+namespace reprmeter {
+    extern void js_DumpReprMeter();
+}
+#endif
+
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
@@ -740,8 +746,11 @@ JS_ShutDown(void)
 
 #ifdef JS_OPMETER
     extern void js_DumpOpMeters();
-
     js_DumpOpMeters();
+#endif
+
+#ifdef JS_REPRMETER
+    reprmeter::js_DumpReprMeter();
 #endif
 
     js_FinishDtoa();

@@ -2347,6 +2347,166 @@ js_DumpOpMeters()
 
 #ifndef  jsinvoke_cpp___
 
+#ifdef JS_REPRMETER
+// jsval representation metering: this measures the kinds of jsvals that
+// are used as inputs to each JSOp.
+namespace reprmeter {
+    enum Repr {
+        NONE,
+        INT,
+        DOUBLE,
+        BOOLEAN_PROPER,
+        BOOLEAN_OTHER,
+        STRING,
+        OBJECT_NULL,
+        OBJECT_PLAIN,
+        FUNCTION_INTERPRETED,
+        FUNCTION_FASTNATIVE,
+        FUNCTION_SLOWNATIVE,
+        ARRAY_SLOW,
+        ARRAY_DENSE
+    };
+
+    // Return the |repr| value giving the representation of the given jsval.
+    static Repr
+    GetRepr(jsval v)
+    {
+        if (JSVAL_IS_INT(v))
+            return INT;
+        if (JSVAL_IS_DOUBLE(v))
+            return DOUBLE;
+        if (JSVAL_IS_SPECIAL(v)) {
+            return (v == JSVAL_TRUE || v == JSVAL_FALSE)
+                   ? BOOLEAN_PROPER
+                   : BOOLEAN_OTHER;
+        }
+        if (JSVAL_IS_STRING(v))
+            return STRING;
+
+        JS_ASSERT(JSVAL_IS_OBJECT(v));
+
+        JSObject *obj = JSVAL_TO_OBJECT(v);
+        if (VALUE_IS_FUNCTION(cx, v)) {
+            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+            if (FUN_INTERPRETED(fun))
+                return FUNCTION_INTERPRETED;
+            if (fun->flags & JSFUN_FAST_NATIVE)
+                return FUNCTION_FASTNATIVE;
+            return FUNCTION_SLOWNATIVE;
+        }
+        // This must come before the general array test, because that
+        // one subsumes this one.
+        if (!obj)
+            return OBJECT_NULL;
+        if (obj->isDenseArray())
+            return ARRAY_DENSE;
+        if (obj->isArray())
+            return ARRAY_SLOW;
+        return OBJECT_PLAIN;
+    }
+
+    static const char *reprName[] = { "invalid", "int", "double", "bool", "special",
+                                      "string", "null", "object", 
+                                      "fun:interp", "fun:fast", "fun:slow",
+                                      "array:slow", "array:dense" };
+
+    // Logically, a tuple of (JSOp, repr_1, ..., repr_n) where repr_i is
+    // the |repr| of the ith input to the JSOp.
+    struct OpInput {
+        enum { max_uses = 16 };
+
+        JSOp op;
+        Repr uses[max_uses];
+
+        OpInput() : op(JSOp(255)) {
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = NONE;
+        }
+
+        OpInput(JSOp op) : op(op) {
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = NONE;
+        }
+
+        // Hash function
+        operator uint32() const {
+            uint32 h = op;
+            for (int i = 0; i < max_uses; ++i)
+                h = h * 7 + uses[i] * 13;
+            return h;
+        }
+
+        bool operator==(const OpInput &opinput) const {
+            if (op != opinput.op)
+                return false;
+            for (int i = 0; i < max_uses; ++i) {
+                if (uses[i] != opinput.uses[i])
+                    return false;
+            }
+            return true;
+        }
+
+        OpInput &operator=(const OpInput &opinput) {
+            op = opinput.op;
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = opinput.uses[i];
+            return *this;
+        }
+    };
+
+    typedef HashMap<OpInput, uint64, DefaultHasher<OpInput>, SystemAllocPolicy> OpInputHistogram;
+
+    OpInputHistogram opinputs;
+    bool             opinputsInitialized = false;
+
+    // Record an OpInput for the current op. This should be called just
+    // before executing the op.
+    static void
+    MeterRepr(JSStackFrame *fp)
+    {
+        // Note that we simply ignore the possibility of errors (OOMs)
+        // using the hash map, since this is only metering code.
+
+        if (!opinputsInitialized) {
+            opinputs.init();
+            opinputsInitialized = true;
+        }
+
+        JSOp op = JSOp(*fp->regs->pc);
+        unsigned nuses = js_GetStackUses(&js_CodeSpec[op], op, fp->regs->pc);
+
+        // Build the OpInput.
+        OpInput opinput(op);
+        for (unsigned i = 0; i < nuses; ++i) {
+            jsval v = fp->regs->sp[-nuses+i];
+            opinput.uses[i] = GetRepr(v);
+        }
+
+        OpInputHistogram::AddPtr p = opinputs.lookupForAdd(opinput);
+        if (p)
+            ++p->value;
+        else
+            opinputs.add(p, opinput, 1);
+    }
+
+    void
+    js_DumpReprMeter()
+    {
+        FILE *f = fopen("/tmp/reprmeter.txt", "w");
+        JS_ASSERT(f);
+        for (OpInputHistogram::Range r = opinputs.all(); !r.empty(); r.popFront()) {
+            const OpInput &o = r.front().key;
+            uint64 c = r.front().value;
+            fprintf(f, "%3d,%s", o.op, js_CodeName[o.op]);
+            for (int i = 0; i < OpInput::max_uses && o.uses[i] != NONE; ++i)
+                fprintf(f, ",%s", reprName[o.uses[i]]);
+            fprintf(f, ",%llu\n", c);
+        }
+        fclose(f);
+    }
+}
+#endif /* JS_REPRMETER */
+
 #define PUSH(v)         (*regs.sp++ = (v))
 #define PUSH_OPND(v)    PUSH(v)
 #define STORE_OPND(n,v) (regs.sp[n] = (v))
@@ -2533,6 +2693,12 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL_CONSTEXPR(JSVAL_INT_MAX)));
 # define METER_SLOT_OP(op,slot) (js_MeterSlotOpcode(op, slot))
 
 #endif
+
+#ifdef JS_REPRMETER
+# define METER_REPR(fp)         (reprmeter::MeterRepr(fp))
+#else
+# define METER_REPR(fp)
+#endif /* JS_REPRMETER */
 
 /*
  * Threaded interpretation via computed goto appears to be well-supported by
@@ -2776,8 +2942,9 @@ js_Interpret(JSContext *cx)
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                            METER_OP_PAIR(op, JSOp(regs.pc[n]));              \
+                                METER_OP_PAIR(op, JSOp(regs.pc[n]));          \
                                 op = (JSOp) *(regs.pc += (n));                \
+                                METER_REPR(fp);                               \
                                 DO_OP();                                      \
                             JS_END_MACRO
 
