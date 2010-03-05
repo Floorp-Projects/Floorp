@@ -290,7 +290,6 @@ protected:
 
   void AssertInitialState() {
     NS_PRECONDITION(!mHTMLMediaMode, "Bad initial state");
-    NS_PRECONDITION(!mUnresolvablePrefixException, "Bad initial state");
     NS_PRECONDITION(!mParsingCompoundProperty, "Bad initial state");
   }
 
@@ -584,17 +583,10 @@ protected:
   PRBool ParseMozTransformOrigin();
 
 
-  /* Find and return the correct namespace ID for the prefix aPrefix.
-     If the prefix cannot be resolved to a namespace, this method will
-     return false.  Otherwise it will return true.  When returning
-     false, it may set the low-level error code, depending on the
-     value of mUnresolvablePrefixException.
-
-     This method never returns kNameSpaceID_Unknown or
-     kNameSpaceID_None for aNameSpaceID while returning true.
-  */
-  PRBool GetNamespaceIdForPrefix(const nsString& aPrefix,
-                                 PRInt32* aNameSpaceID);
+  /* Find and return the namespace ID associated with aPrefix.
+     If aPrefix has not been declared in an @namespace rule, returns
+     kNameSpaceID_Unknown and sets mFoundUnresolvablePrefix to true. */
+  PRInt32 GetNamespaceIdForPrefix(const nsString& aPrefix);
 
   /* Find the correct default namespace, and set it on aSelector. */
   void SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector);
@@ -653,9 +645,9 @@ protected:
   // some quirks during shorthand parsing
   PRPackedBool  mParsingCompoundProperty : 1;
 
-  // If this flag is true, failure to resolve a namespace prefix
-  // should set the low-level error to NS_ERROR_DOM_NAMESPACE_ERR
-  PRPackedBool  mUnresolvablePrefixException : 1;
+  // GetNamespaceIdForPrefix will set mFoundUnresolvablePrefix to true
+  // when it encounters a prefix that is not mapped to a namespace.
+  PRPackedBool  mFoundUnresolvablePrefix : 1;
 
 #ifdef DEBUG
   PRPackedBool mScannerInited : 1;
@@ -742,7 +734,7 @@ CSSParserImpl::CSSParserImpl()
     mUnsafeRulesEnabled(PR_FALSE),
     mHTMLMediaMode(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE),
-    mUnresolvablePrefixException(PR_FALSE)
+    mFoundUnresolvablePrefix(PR_FALSE)
 #ifdef DEBUG
     , mScannerInited(PR_FALSE)
 #endif
@@ -1284,14 +1276,15 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
 
   AssertInitialState();
 
-  mUnresolvablePrefixException = PR_TRUE;
+  // This is the only place that cares about mFoundUnresolvablePrefix,
+  // so this is the only place that bothers clearing it.
+  mFoundUnresolvablePrefix = PR_FALSE;
 
   PRBool success = ParseSelectorList(*aSelectorList, PR_FALSE);
-  nsresult rv = mScanner.GetLowLevelError();
+  PRBool prefixErr = mFoundUnresolvablePrefix;
+
   OUTPUT_ERROR();
   ReleaseScanner();
-
-  mUnresolvablePrefixException = PR_FALSE;
 
   if (success) {
     NS_ASSERTION(*aSelectorList, "Should have list!");
@@ -1299,10 +1292,10 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
   }
 
   NS_ASSERTION(!*aSelectorList, "Shouldn't have list!");
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ERROR_DOM_SYNTAX_ERR;
-  }
-  return rv;
+  if (prefixErr)
+    return NS_ERROR_DOM_NAMESPACE_ERR;
+
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 //----------------------------------------------------------------------
@@ -2746,8 +2739,8 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
 
     if (ExpectSymbol('|', PR_FALSE)) {  // was namespace
       aDataMask |= SEL_MASK_NSPACE;
-      PRInt32 nameSpaceID;
-      if (!GetNamespaceIdForPrefix(buffer, &nameSpaceID)) {
+      PRInt32 nameSpaceID = GetNamespaceIdForPrefix(buffer);
+      if (nameSpaceID == kNameSpaceID_Unknown) {
         return eSelectorParsingStatus_Error;
       }
       aSelector.SetNameSpace(nameSpaceID);
@@ -2870,7 +2863,8 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
   else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
     attr = mToken.mIdent; // hang on to it
     if (ExpectSymbol('|', PR_FALSE)) {  // was a namespace
-      if (!GetNamespaceIdForPrefix(attr, &nameSpaceID)) {
+      nameSpaceID = GetNamespaceIdForPrefix(attr);
+      if (nameSpaceID == kNameSpaceID_Unknown) {
         return eSelectorParsingStatus_Error;
       }
       if (! GetToken(PR_FALSE)) { // premature EOF
@@ -4723,8 +4717,8 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
   if (eCSSToken_Ident == mToken.mType) {  // attr name or namespace
     nsAutoString  holdIdent(mToken.mIdent);
     if (ExpectSymbol('|', PR_FALSE)) {  // namespace
-      PRInt32 nameSpaceID;
-      if (!GetNamespaceIdForPrefix(holdIdent, &nameSpaceID)) {
+      PRInt32 nameSpaceID = GetNamespaceIdForPrefix(holdIdent);
+      if (nameSpaceID == kNameSpaceID_Unknown) {
         return PR_FALSE;
       }
       attr.AppendInt(nameSpaceID, 10);
@@ -9004,9 +8998,8 @@ CSSParserImpl::ParseBoxShadow()
   return PR_TRUE;
 }
 
-PRBool
-CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix,
-                                       PRInt32* aNameSpaceID)
+PRInt32
+CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix)
 {
   NS_PRECONDITION(!aPrefix.IsEmpty(), "Must have a prefix here");
 
@@ -9018,18 +9011,15 @@ CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix,
   }
   // else no declared namespaces
 
-  if (kNameSpaceID_Unknown == nameSpaceID) {   // unknown prefix, dump it
+  if (nameSpaceID == kNameSpaceID_Unknown) {   // unknown prefix, dump it
     const PRUnichar *params[] = {
       aPrefix.get()
     };
     REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
-    if (mUnresolvablePrefixException)
-      mScanner.SetLowLevelError(NS_ERROR_DOM_NAMESPACE_ERR);
-    return PR_FALSE;
+    mFoundUnresolvablePrefix = PR_TRUE;
   }
 
-  *aNameSpaceID = nameSpaceID;
-  return PR_TRUE;
+  return nameSpaceID;
 }
 
 void
