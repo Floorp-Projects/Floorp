@@ -4164,15 +4164,17 @@ protected:
 nsJSArgArray::nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv,
                            nsresult *prv) :
     mContext(aContext),
-    mArgv(argv),
+    mArgv(nsnull),
     mArgc(argc)
 {
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
   // refcounting.  Alloc zero'd array so cleanup etc is safe.
-  mArgv = (jsval *) PR_CALLOC(argc * sizeof(jsval));
-  if (!mArgv) {
-    *prv = NS_ERROR_OUT_OF_MEMORY;
-    return;
+  if (argc) {
+    mArgv = (jsval *) PR_CALLOC(argc * sizeof(jsval));
+    if (!mArgv) {
+      *prv = NS_ERROR_OUT_OF_MEMORY;
+      return;
+    }
   }
 
   // Callers are allowed to pass in a null argv even for argc > 0. They can
