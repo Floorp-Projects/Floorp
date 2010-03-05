@@ -66,6 +66,7 @@
 #include "jsapi.h"
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
+#include "jsobj.h"
 #include "jsdbgapi.h"
 
 // General helper includes
@@ -1564,6 +1565,13 @@ GetInternedJSVal(JSContext *cx, const char *str)
 }
 
 // static
+
+nsISupports *
+nsDOMClassInfo::GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
+{
+  return wrapper ? wrapper->Native() : static_cast<nsISupports*>(obj->getPrivate());
+}
+
 nsresult
 nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 {
