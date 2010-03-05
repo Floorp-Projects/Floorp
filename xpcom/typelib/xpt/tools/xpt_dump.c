@@ -404,7 +404,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor,
         fprintf(stdout, "%*sNamespace:                       %s\n", 
                 indent, " ", ide->name_space ? ide->name_space : "none");
         fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
-                indent, " ", ide->interface_descriptor);
+                indent, " ", (void*)(ide->interface_descriptor));
 
         fprintf(stdout, "%*sDescriptor:\n", indent, " ");
     
