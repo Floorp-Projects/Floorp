@@ -1,8 +1,9 @@
-#include <unistd.h>
+#include <stdio.h>
  
 int main()
 {
-   while(1) sleep(10);
+   char text[20];
+   fgets(text, sizeof text, stdin);
    return 0;
 }
 
