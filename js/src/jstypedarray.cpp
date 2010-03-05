@@ -368,12 +368,12 @@ struct uint8_clamped {
     }
 
     inline uint8_clamped& operator= (uint16 x) {
-        val = (x > 255) ? 255 : 0;
+        val = (x > 255) ? 255 : uint8(x);
         return *this;
     }
 
     inline uint8_clamped& operator= (uint32 x) {
-        val = (x > 255) ? 255 : 0;
+        val = (x > 255) ? 255 : uint8(x);
         return *this;
     }
 
@@ -424,6 +424,15 @@ template<> inline const int TypeIDOfType<float>() { return TypedArray::TYPE_FLOA
 template<> inline const int TypeIDOfType<double>() { return TypedArray::TYPE_FLOAT64; }
 template<> inline const int TypeIDOfType<uint8_clamped>() { return TypedArray::TYPE_UINT8_CLAMPED; }
 
+template<typename NativeType> static inline const bool TypeIsUnsigned() { return false; }
+template<> inline const bool TypeIsUnsigned<uint8>() { return true; }
+template<> inline const bool TypeIsUnsigned<uint16>() { return true; }
+template<> inline const bool TypeIsUnsigned<uint32>() { return true; }
+
+template<typename NativeType> static inline const bool TypeIsFloatingPoint() { return false; }
+template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
+template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
+
 template<typename NativeType> class TypedArrayTemplate;
 
 typedef TypedArrayTemplate<int8> Int8Array;
@@ -442,6 +451,9 @@ class TypedArrayTemplate
 {
   public:
     typedef TypedArrayTemplate<NativeType> ThisTypeArray;
+    static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
+    static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
+    static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
 
     static JSObjectOps fastObjectOps;
     static JSObjectMap fastObjectMap;
@@ -450,12 +462,12 @@ class TypedArrayTemplate
 
     static inline JSClass *slowClass()
     {
-        return &TypedArray::slowClasses[TypeIDOfType<NativeType>()];
+        return &TypedArray::slowClasses[ArrayTypeID()];
     }
 
     static inline JSClass *fastClass()
     {
-        return &TypedArray::fastClasses[TypeIDOfType<NativeType>()];
+        return &TypedArray::fastClasses[ArrayTypeID()];
     }
 
     static JSObjectOps *getObjectOps(JSContext *cx, JSClass *clasp)
@@ -536,12 +548,51 @@ class TypedArrayTemplate
 
         if (JSVAL_IS_INT(*vp)) {
             tarray->setIndex(index, NativeType(JSVAL_TO_INT(*vp)));
-        } else if (JSVAL_IS_DOUBLE(*vp)) {
-            tarray->setIndex(index, NativeType(*JSVAL_TO_DOUBLE(*vp)));
+            return true;
+        }
+
+        jsdouble d;
+
+        if (JSVAL_IS_DOUBLE(*vp)) {
+            d = *JSVAL_TO_DOUBLE(*vp);
+        } else if (JSVAL_IS_NULL(*vp)) {
+            d = 0.0f;
+        } else if (JSVAL_IS_PRIMITIVE(*vp)) {
+            JS_ASSERT(JSVAL_IS_STRING(*vp) || JSVAL_IS_SPECIAL(*vp));
+            if (JSVAL_IS_STRING(*vp)) {
+                // note that ValueToNumber will always
+                // succeed with a string arg
+                d = js_ValueToNumber(cx, vp);
+                JS_ASSERT(*vp != JSVAL_NULL);
+            } else if (*vp == JSVAL_VOID) {
+                d = js_NaN;
+            } else {
+                d = (double) JSVAL_TO_BOOLEAN(*vp);
+            }
         } else {
-            jsdouble d;
-            if (JS_ValueToNumber(cx, *vp, &d))
-                tarray->setIndex(index, NativeType(d));
+            // non-primitive assignments become NaN or 0 (for float/int arrays)
+            d = js_NaN;
+        }
+
+        // If the array is an integer array, we only handle up to
+        // 32-bit ints from this point on.  if we want to handle
+        // 64-bit ints, we'll need some changes.
+
+        // Assign based on characteristics of the destination type
+        if (ArrayTypeIsFloatingPoint()) {
+            tarray->setIndex(index, NativeType(d));
+        } else if (ArrayTypeIsUnsigned()) {
+            JS_ASSERT(sizeof(NativeType) <= 4);
+            uint32 n = js_DoubleToECMAUint32(d);
+            tarray->setIndex(index, NativeType(n));
+        } else if (ArrayTypeID() == TypedArray::TYPE_UINT8_CLAMPED) {
+            // The uint8_clamped type has a special rounding converter
+            // for doubles.
+            tarray->setIndex(index, NativeType(d));
+        } else {
+            JS_ASSERT(sizeof(NativeType) <= 4);
+            int32 n = js_DoubleToECMAInt32(d);
+            tarray->setIndex(index, NativeType(n));
         }
 
         return true;
@@ -815,14 +866,14 @@ class TypedArrayTemplate
     bool
     init(JSContext *cx, uint32 len)
     {
-        type = TypeIDOfType<NativeType>();
+        type = ArrayTypeID();
         return createBufferWithSizeAndCount(cx, sizeof(NativeType), len);
     }
 
     bool
     init(JSContext *cx, JSObject *other, int32 byteOffsetInt = -1, int32 lengthInt = -1)
     {
-        type = TypeIDOfType<NativeType>();
+        type = ArrayTypeID();
 
         //printf ("Constructing with type %d other %p offset %d length %d\n", type, other, byteOffset, length);
 
@@ -924,28 +975,40 @@ class TypedArrayTemplate
     }
 
   protected:
+    static NativeType
+    nativeFromValue(JSContext *cx, jsval v)
+    {
+        if (JSVAL_IS_INT(v))
+            return NativeType(JSVAL_TO_INT(v));
+
+        if (JSVAL_IS_DOUBLE(v))
+            return NativeType(*JSVAL_TO_DOUBLE(v));
+
+        if (JSVAL_IS_PRIMITIVE(v) && v != JSVAL_HOLE) {
+            jsdouble dval = js_ValueToNumber(cx, &v);
+            JS_ASSERT(v != JSVAL_NULL);
+            return NativeType(dval);
+        }
+
+        if (ArrayTypeIsFloatingPoint())
+            return NativeType(js_NaN);
+
+        return NativeType(int32(0));
+    }
+    
     bool
     copyFrom(JSContext *cx, JSObject *ar, jsuint len)
     {
         NativeType *dest = static_cast<NativeType*>(data);
 
-        if (ar->isDenseArray()) {
+        if (ar->isDenseArray() && js_DenseArrayCapacity(ar) >= len) {
             JS_ASSERT(ar->fslots[JSSLOT_ARRAY_LENGTH] == (jsval)len);
 
             jsval *src = ar->dslots;
 
             for (uintN i = 0; i < len; ++i) {
                 jsval v = *src++;
-                if (JSVAL_IS_INT(v)) {
-                    *dest++ = NativeType(JSVAL_TO_INT(v));
-                } else if (JSVAL_IS_DOUBLE(v)) {
-                    *dest++ = NativeType(*JSVAL_TO_DOUBLE(v));
-                } else {
-                    jsdouble dval;
-                    if (!JS_ValueToNumber(cx, v, &dval))
-                        return false;
-                    *dest++ = NativeType(dval);
-                }
+                *dest++ = nativeFromValue(cx, v);
             }
         } else {
             // slow path
@@ -954,17 +1017,7 @@ class TypedArrayTemplate
             for (uintN i = 0; i < len; ++i) {
                 if (!JS_GetElement(cx, ar, i, &v))
                     return false;
-
-                if (JSVAL_IS_INT(v)) {
-                    *dest++ = NativeType(JSVAL_TO_INT(v));
-                } else if (JSVAL_IS_DOUBLE(v)) {
-                    *dest++ = NativeType(*JSVAL_TO_DOUBLE(v));
-                } else {
-                    jsdouble dval;
-                    if (!JS_ValueToNumber(cx, v, &dval))
-                        return false;
-                    *dest++ = NativeType(dval);
-                }
+                *dest++ = nativeFromValue(cx, v);
             }
         }
 
@@ -1341,7 +1394,7 @@ js_CreateArrayBuffer(JSContext *cx, jsuint nbytes)
     return JSVAL_TO_OBJECT(rval.value());
 }
 
-static inline bool
+static inline JSBool
 TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, jsval *argv, jsval *rv)
 {
     switch (atype) {
