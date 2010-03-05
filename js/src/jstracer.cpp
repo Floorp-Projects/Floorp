@@ -5487,7 +5487,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
 
 #ifdef DEBUG
     if (fi.block != fp->blockChain) {
-        for (JSObject* obj = fi.block; obj != fp->blockChain; obj = STOBJ_GET_PARENT(obj))
+        for (JSObject* obj = fi.block; obj != fp->blockChain; obj = obj->getParent())
             JS_ASSERT(obj);
     }
 #endif
@@ -6414,7 +6414,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
      * either check causes an early return from execution.
      */
     JSObject* child = cx->fp->scopeChain;
-    while (JSObject* parent = OBJ_GET_PARENT(cx, child)) {
+    while (JSObject* parent = child->getParent()) {
         if (!js_IsCacheableNonGlobalScope(child)) {
             debug_only_print0(LC_TMTracer,"Blacklist: non-cacheable object on scope chain.\n");
             Blacklist((jsbytecode*) f->root->ip);
@@ -7931,7 +7931,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     }
 
     LIns* obj_ins;
-    JSObject* parent = STOBJ_GET_PARENT(cx->fp->calleeObject());
+    JSObject* parent = cx->fp->calleeObject()->getParent();
     LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
@@ -10819,7 +10819,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         this_ins = newobj_ins; /* boxing an object is a no-op */
     } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
         /* |funobj| was rooted above already. */
-        this_ins = INS_CONSTWORD(OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, funobj)));
+        this_ins = INS_CONSTWORD(OBJECT_TO_JSVAL(funobj->getParent()));
     } else {
         this_ins = get(&vp[1]);
 
@@ -11273,7 +11273,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     // Find obj2. If entry->adding(), the TAG bits are all 0.
     JSObject* obj2 = obj;
     for (jsuword i = PCVCAP_TAG(entry->vcap) >> PCVCAP_PROTOBITS; i; i--)
-        obj2 = OBJ_GET_PARENT(cx, obj2);
+        obj2 = obj2->getParent();
     for (jsuword j = PCVCAP_TAG(entry->vcap) & PCVCAP_PROTOMASK; j; j--)
         obj2 = obj2->getProto();
     scope = OBJ_SCOPE(obj2);
@@ -13586,7 +13586,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
         if (searchObj == targetObj)
             break;
 
-        searchObj = STOBJ_GET_PARENT(searchObj);
+        searchObj = searchObj->getParent();
         if (!searchObj)
             RETURN_STOP("cannot traverse this scope chain on trace");
     }
@@ -13627,7 +13627,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
         if (obj == targetObj)
             break;
 
-        obj = STOBJ_GET_PARENT(obj);
+        obj = obj->getParent();
         obj_ins = stobj_get_parent(obj_ins);
     }
 
@@ -13646,10 +13646,10 @@ TraceRecorder::record_JSOP_BINDNAME()
 
         // In global code, fp->scopeChain can only contain blocks whose values
         // are still on the stack.  We never use BINDNAME to refer to these.
-        while (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
+        while (obj->getClass() == &js_BlockClass) {
             // The block's values are still on the stack.
             JS_ASSERT(obj->getPrivate() == fp);
-            obj = OBJ_GET_PARENT(cx, obj);
+            obj = obj->getParent();
             // Blocks always have parents.
             JS_ASSERT(obj);
         }
@@ -13678,7 +13678,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     // that is on the scope chain and doesn't skip the target object (the one
     // that contains the property).
     jsval *callee = &cx->fp->argv[-2];
-    obj = STOBJ_GET_PARENT(JSVAL_TO_OBJECT(*callee));
+    obj = JSVAL_TO_OBJECT(*callee)->getParent();
     if (obj == globalObj) {
         stack(0, INS_CONSTOBJ(obj));
         return ARECORD_CONTINUE;
@@ -13953,7 +13953,7 @@ TraceRecorder::record_JSOP_LAMBDA()
      * must agree with the corresponding break-from-do-while(0) logic there.
      */
     if (FUN_NULL_CLOSURE(fun)) {
-        if (OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) != globalObj)
+        if (FUN_OBJECT(fun)->getParent() != globalObj)
             RETURN_STOP_A("Null closure function object parent must be global object");
         JSOp op2 = JSOp(cx->fp->regs->pc[JSOP_LAMBDA_LENGTH]);
 
@@ -13999,7 +13999,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     JSFunction* fun;
     fun = cx->fp->script->getFunction(getFullIndex());
 
-    if (OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) != globalObj)
+    if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
 
     LIns* args[] = {
@@ -14133,7 +14133,7 @@ TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
 {
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
 
-    if (FUN_NULL_CLOSURE(fun) && OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) == globalObj) {
+    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() == globalObj) {
         LIns *proto_ins;
         CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
 
@@ -14929,7 +14929,7 @@ GetBuiltinFunction(JSContext *cx, uintN index)
         if (fun) {
             funobj = FUN_OBJECT(fun);
             funobj->clearProto();
-            STOBJ_CLEAR_PARENT(funobj);
+            funobj->clearParent();
 
             JS_LOCK_GC(rt);
             if (!rt->builtinFunctions[index]) /* retest now that the lock is held */

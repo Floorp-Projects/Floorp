@@ -227,7 +227,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
 
     AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
-    STOBJ_CLEAR_PARENT(funobj);
+    funobj->clearParent();
     funobj->clearProto();
 
     if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(iface))||

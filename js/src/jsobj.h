@@ -443,16 +443,8 @@ struct JSObject {
     inline bool unbrand(JSContext *cx);
 };
 
-/* Compatibility macros. */
+/* Compatibility macro. */
 #define OBJ_IS_NATIVE(obj)              ((obj)->isNative())
-
-#define STOBJ_GET_PARENT(obj)           ((obj)->getParent())
-#define STOBJ_SET_PARENT(obj,parent)    ((obj)->setParent(parent))
-#define STOBJ_CLEAR_PARENT(obj)         ((obj)->clearParent())
-
-#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
-#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
-#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
@@ -889,7 +881,7 @@ js_IsCacheableNonGlobalScope(JSObject *obj)
 {
     extern JS_FRIEND_DATA(JSClass) js_CallClass;
     extern JS_FRIEND_DATA(JSClass) js_DeclEnvClass;
-    JS_ASSERT(STOBJ_GET_PARENT(obj));
+    JS_ASSERT(obj->getParent());
 
     JSClass *clasp = STOBJ_GET_CLASS(obj);
     bool cacheable = (clasp == &js_CallClass ||

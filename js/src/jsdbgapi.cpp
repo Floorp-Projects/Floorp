@@ -705,7 +705,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     frame.fun = fun;
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
-                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
+                    frame.scopeChain = closure->getParent();
                     if (script && script->nslots)
                         frame.slots = argv + slotsStart;
                     if (script) {
@@ -801,7 +801,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
         atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, js_CastAsObject(setter)),
+                             js_CastAsObject(setter)->getParent(),
                              atom);
     if (!wrapper)
         return NULL;

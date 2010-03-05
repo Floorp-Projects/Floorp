@@ -5437,7 +5437,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        STOBJ_CLEAR_PARENT(obj);
+        obj->clearParent();
         obj->clearProto();
         re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
