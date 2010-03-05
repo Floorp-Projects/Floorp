@@ -1,0 +1,18 @@
+diff --git a/media/libvorbis/lib/vorbis_info.c b/media/libvorbis/lib/vorbis_info.c
+index 30088d8..8583224 100644
+--- a/media/libvorbis/lib/vorbis_info.c
++++ b/media/libvorbis/lib/vorbis_info.c
+@@ -628,12 +628,12 @@ int vorbis_analysis_headerout(vorbis_dsp_state *v,
+   oggpack_writeclear(&opb);
+   return(0);
+  err_out:
+-  oggpack_writeclear(&opb);
+   memset(op,0,sizeof(*op));
+   memset(op_comm,0,sizeof(*op_comm));
+   memset(op_code,0,sizeof(*op_code));
+ 
+   if(b){
++    oggpack_writeclear(&opb);
+     if(b->header)_ogg_free(b->header);
+     if(b->header1)_ogg_free(b->header1);
+     if(b->header2)_ogg_free(b->header2);
