@@ -110,6 +110,10 @@ private:
 //    nsNavHistory creates this object and fills in mChildren (by getting
 //    it through GetTopLevel()). Then FilledAllResults() is called to finish
 //    object initialization.
+//
+//    This object implements nsITreeView so you can just set it to a tree
+//    view and it will work. This object also observes the necessary history
+//    and bookmark events to keep itself up-to-date.
 
 #define NS_NAVHISTORYRESULT_IID \
   { 0x455d1d40, 0x1b9b, 0x40e6, { 0xa6, 0x41, 0x8b, 0xb7, 0xe8, 0x82, 0x23, 0x87 } }
@@ -126,6 +130,9 @@ public:
                                    nsNavHistoryContainerResultNode* aRoot,
                                    nsNavHistoryResult** result);
 
+  // the tree viewer can go faster if it can bypass XPCOM
+  friend class nsNavHistoryResultTreeViewer;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -140,6 +147,10 @@ public:
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
+
+  // returns the view. NOT-ADDREFED. May be NULL if there is no view
+  nsINavHistoryResultViewer* GetView() const
+    { return mView; }
 
 public:
   // two-stage init, use NewHistoryResult to construct
@@ -165,6 +176,8 @@ public:
   // The sorting annotation to be used for in SORT_BY_ANNOTATION_* modes
   nsCString mSortingAnnotation;
 
+  nsCOMPtr<nsINavHistoryResultViewer> mView;
+
   // node observers
   PRBool mIsHistoryObserver;
   PRBool mIsBookmarkFolderObserver;
@@ -184,9 +197,6 @@ public:
   void InvalidateTree();
   
   PRBool mBatchInProgress;
-
-  nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
-  PRBool mSuppressNotifications;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
@@ -528,25 +538,25 @@ public:
 
   PRBool AreChildrenVisible();
 
-  // Overridded by descendents to populate.
+  // overridded by descendents to populate
   virtual nsresult OpenContainer();
-  nsresult CloseContainer(PRBool aSuppressNotifications = PR_FALSE);
+  nsresult CloseContainer(PRBool aUpdateView = PR_TRUE);
 
-  // This points to the result that owns this container. All containers have
+  // this points to the result that owns this container. All containers have
   // their result pointer set so we can quickly get to the result without having
   // to walk the tree. Yet, this also saves us from storing a million pointers
   // for every leaf node to the result.
   nsRefPtr<nsNavHistoryResult> mResult;
 
-  // For example, RESULT_TYPE_QUERY. Query and Folder results override GetType
+  // for example, RESULT_TYPE_QUERY. Query and Folder results override GetType
   // so this is not used, but is still kept in sync.
   PRUint32 mContainerType;
 
-  // When there are children, this stores the open state in the tree
-  // this is set to the default in the constructor.
+  // when there are children, this stores the open state in the tree
+  // this is set to the default in the constructor
   PRBool mExpanded;
 
-  // Filled in by the result type generator in nsNavHistory.
+  // Filled in by the result type generator in nsNavHistory
   nsCOMArray<nsNavHistoryResultNode> mChildren;
 
   PRBool mChildrenReadOnly;
@@ -557,9 +567,9 @@ public:
   nsCString mDynamicContainerType;
 
   void FillStats();
-  nsresult ReverseUpdateStats(PRInt32 aAccessCountChange);
+  void ReverseUpdateStats(PRInt32 aAccessCountChange);
 
-  // Sorting methods.
+  // sorting
   typedef nsCOMArray<nsNavHistoryResultNode>::nsCOMArrayComparatorFunc SortComparator;
   virtual PRUint16 GetSortType();
   virtual void GetSortingAnnotation(nsACString& aSortingAnnotation);
@@ -643,10 +653,10 @@ public:
                          nsNavHistoryContainerResultNode* aContainer,
                          const nsCString& aSpec,
                          nsCOMArray<nsNavHistoryResultNode>* aMatches);
-  nsresult UpdateURIs(PRBool aRecursive, PRBool aOnlyOne, PRBool aUpdateSort,
-                      const nsCString& aSpec,
-                      nsresult (*aCallback)(nsNavHistoryResultNode*,void*, nsNavHistoryResult*),
-                      void* aClosure);
+  void UpdateURIs(PRBool aRecursive, PRBool aOnlyOne, PRBool aUpdateSort,
+                  const nsCString& aSpec,
+                  void (*aCallback)(nsNavHistoryResultNode*,void*, nsNavHistoryResult*),
+                  void* aClosure);
   nsresult ChangeTitles(nsIURI* aURI, const nsACString& aNewTitle,
                         PRBool aRecursive, PRBool aOnlyOne);
 };
