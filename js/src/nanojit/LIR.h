@@ -1163,7 +1163,8 @@ namespace nanojit
         clearArIndex();
         lastWord.opcode = opcode;
         toLInsLd()->oprnd_1 = val;
-        toLInsLd()->disp = d;
+        NanoAssert(d == int16_t(d));
+        toLInsLd()->disp = int16_t(d);
         toLInsLd()->accSet = accSet;
         NanoAssert(isLInsLd());
     }
@@ -1173,7 +1174,8 @@ namespace nanojit
         lastWord.opcode = opcode;
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
-        toLInsSti()->disp = d;
+        NanoAssert(d == int16_t(d));
+        toLInsSti()->disp = int16_t(d);
         toLInsSti()->accSet = accSet;
         NanoAssert(isLInsSti());
     }
