@@ -1058,6 +1058,25 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
   return PR_TRUE;
 }
 
+PRBool
+nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
+{
+  ResetIfSet();
+
+  PRInt32 ec;
+  PRBool strict;
+  PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
+  if (NS_FAILED(ec)) {
+    return PR_FALSE;
+  }
+
+  PRInt32 val = PR_MAX(originalVal, -1);
+  strict = strict && (originalVal == val);
+  SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
+
+  return PR_TRUE;
+}
+
 void
 nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
 {
