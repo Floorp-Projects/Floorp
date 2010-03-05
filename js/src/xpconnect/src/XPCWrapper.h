@@ -443,6 +443,14 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
                   JSBool keysonly);
 
 /**
+ * Like CreateIteratorObj, but doesn't need a security wrapper. If
+ * propertyContainer is null, creates an empty iterator.
+ */
+JSObject *
+CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
+                     JSObject *propertyContainer);
+
+/**
  * Called for the common part of adding a property to obj.
  */
 JSBool
