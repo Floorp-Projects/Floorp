@@ -259,7 +259,14 @@ _cairo_xlib_display_get (Display *dpy,
      * add our hook. For now, that means Render, so we call into its
      * QueryVersion function to ensure it gets initialized.
      */
-    XRenderQueryVersion (dpy, &render_major, &render_minor);
+    Status s = XRenderQueryVersion (dpy, &render_major, &render_minor);
+    if (s == 0) {
+        /* XRenderQueryVersion failed, possibly because the server
+         * doesn't have the RENDER extension.  Don't leave the version
+         * numbers uninitialised.  See #548793.
+         */
+        render_major = render_minor = 0;
+    }
 
     codes = XAddExtension (dpy);
     if (unlikely (codes == NULL)) {
