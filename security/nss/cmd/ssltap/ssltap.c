@@ -66,7 +66,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.18 $ ($Date: 2010/02/10 02:00:56 $) $Author: wtc%google.com $"
+#define VERSIONSTRING "$Revision: 1.19 $ ($Date: 2010/02/16 18:56:47 $) $Author: wtc%google.com $"
 
 
 struct _DataBufferList;
@@ -426,7 +426,7 @@ const char * V2CipherString(int cs_int)
   case 0x00009A:    cs_str = "TLS/DHE-RSA/SEED-CBC/SHA";	break;     
   case 0x00009B:    cs_str = "TLS/DH-ANON/SEED-CBC/SHA";	break;     
 
-  case 0x0000FF:    cs_str = "TLS_RENEGO_PROTECTION_REQUEST";	break;
+  case 0x0000FF:    cs_str = "TLS_EMPTY_RENEGOTIATION_INFO_SCSV"; break;
 
   case 0x00C001:    cs_str = "TLS/ECDH-ECDSA/NULL/SHA";         break;
   case 0x00C002:    cs_str = "TLS/ECDH-ECDSA/RC4-128/SHA";      break;
