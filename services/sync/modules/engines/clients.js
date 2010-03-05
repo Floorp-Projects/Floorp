@@ -211,10 +211,9 @@ ClientStore.prototype = {
     this.update(record);
   },
 
-  createRecord: function ClientStore_createRecord(id) {
+  createRecord: function createRecord(guid) {
     let record = new ClientRecord();
-    record.id = id;
-    record.payload = this.clients[id];
+    record.payload = this.clients[guid];
     return record;
   },
 

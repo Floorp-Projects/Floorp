@@ -149,7 +149,7 @@ TabStore.prototype = {
     return allTabs;
   },
 
-  createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let record = new TabSetRecord();
     record.clientName = Clients.clientName;
 
@@ -161,8 +161,6 @@ TabStore.prototype = {
       this._log.trace("Wrapping tab: " + JSON.stringify(tab));
     }, this);
 
-    record.id = id;
-    record.encryption = cryptoMetaURL;
     return record;
   },
 
