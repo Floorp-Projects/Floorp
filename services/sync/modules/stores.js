@@ -59,12 +59,6 @@ function Store(name) {
   this._log.level = Log4Moz.Level[level];
 }
 Store.prototype = {
-  get cache() {
-    let cache = new Cache();
-    this.__defineGetter__("cache", function() cache);
-    return cache;
-  },
-
   applyIncoming: function Store_applyIncoming(record) {
     if (record.deleted)
       this.remove(record);
@@ -106,78 +100,5 @@ Store.prototype = {
 
   wipe: function Store_wipe() {
     throw "override wipe in a subclass";
-  }
-};
-
-function Cache() {
-  this.count = 0;
-  this.maxItems = 100;
-  this.fifo = true;
-  this.enabled = true;
-  this._head = this._tail = null;
-  this._items = {};
-}
-Cache.prototype = {
-  remove: function Cache_remove(item) {
-    if (this.count <= 0 || this.count == 1) {
-      this.clear();
-      return;
-    }
-
-    item.next.prev = item.prev;
-    item.prev.next = item.next;
-
-    if (item == this._head)
-      this._head = item.next;
-    if (item == this._tail)
-      this._tail = item.prev;
-
-    item.next = null;
-    item.prev = null;
-
-    delete this._items[item.id];
-    this.count--;
-  },
-  pop: function Cache_pop() {
-    if (this.fifo)
-      this.remove(this._tail);
-    else
-      this.remove(this._head);
-  },
-  put: function Cache_put(id, item) {
-    if (!this.enabled)
-      return;
-
-    let wrapper = {id: id, item: item};
-
-    if (this._head === null) {
-      wrapper.next = wrapper;
-      wrapper.prev = wrapper;
-      this._head = wrapper;
-      this._tail = wrapper;
-    } else {
-      wrapper.next = this._tail;
-      wrapper.prev = this._head;
-      this._head.prev = wrapper;
-      this._tail.next = wrapper;
-      this._tail = wrapper;
-    }
-
-    this._items[wrapper.id] = wrapper;
-    this.count++;
-
-    if (this.count >= this.maxItems)
-      this.pop();
-  },
-  get: function Cache_get(id) {
-    if (id in this._items)
-      return this._items[id].item;
-    return undefined;
-  },
-  clear: function Cache_clear() {
-    this.count = 0;
-    this._head = null;
-    this._tail = null;
-    this._items = {};
   }
 };
