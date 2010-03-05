@@ -333,9 +333,12 @@ SyncEngine.prototype = {
       this._toFetch = o));
   },
 
-  // Create a new record by querying the store, and add the engine metadata
+  // Create a new record using the store and add in crypto fields
   _createRecord: function SyncEngine__createRecord(id) {
-    return this._store.createRecord(id, this.cryptoMetaURL);
+    let record = this._store.createRecord(id);
+    record.id = id;
+    record.encryption = this.cryptoMetaURL;
+    return record;
   },
 
   // Any setup that needs to happen at the beginning of each sync.

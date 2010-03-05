@@ -170,13 +170,11 @@ PasswordStore.prototype = {
     return false;
   },
 
-  createRecord: function PasswordStore__createRecord(guid, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let record = new LoginRec();
     let login = this._getLoginFromGUID(guid);
 
-    record.id = guid;
     if (login) {
-      record.encryption = cryptoMetaURL;
       record.hostname = login.hostname;
       record.formSubmitURL = login.formSubmitURL;
       record.httpRealm = login.httpRealm;

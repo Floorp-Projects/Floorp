@@ -249,16 +249,14 @@ HistoryStore.prototype = {
     return url ? this._hsvc.isVisited(url) : false;
   },
 
-  createRecord: function HistStore_createRecord(guid, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let foo = this._findURLByGUID(guid);
     let record = new HistoryRec();
-    record.id = guid;
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;
       record.sortindex = foo.frecency;
       record.visits = this._getVisits(record.histUri);
-      record.encryption = cryptoMetaURL;
     }
     else
       record.deleted = true;

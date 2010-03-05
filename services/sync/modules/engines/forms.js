@@ -155,13 +155,11 @@ FormStore.prototype = {
     return (id in this._formItems);
   },
 
-  createRecord: function FormStore_createRecord(guid, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let record = new FormRec();
-    record.id = guid;
 
     if (guid in this._formItems) {
       let item = this._formItems[guid];
-      record.encryption = cryptoMetaURL;
       record.name = item.name;
       record.value = item.value;
     } else {

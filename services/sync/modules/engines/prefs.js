@@ -182,12 +182,10 @@ PrefStore.prototype = {
     return (id === WEAVE_PREFS_GUID);
   },
 
-  createRecord: function FormStore_createRecord(guid, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let record = new PrefRec();
-    record.id = guid;
 
     if (guid == WEAVE_PREFS_GUID) {
-      record.encryption = cryptoMetaURL;
       record.value = this._getAllPrefs();
     } else {
       record.deleted = true;

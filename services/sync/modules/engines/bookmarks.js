@@ -704,11 +704,10 @@ BookmarksStore.prototype = {
   },
 
   // Create a record starting from the weave id (places guid)
-  createRecord: function BStore_createRecord(guid, cryptoMetaURL) {
+  createRecord: function createRecord(guid) {
     let placeId = idForGUID(guid);
     if (placeId <= 0) { // deleted item
       record = new PlacesItem();
-      record.id = guid;
       record.deleted = true;
       return record;
     }
@@ -787,10 +786,8 @@ BookmarksStore.prototype = {
                      this._bms.getItemType(placeId));
     }
 
-    record.id = guid;
     record.parentid = this._getParentGUIDForId(placeId);
     record.predecessorid = this._getPredecessorGUIDForId(placeId);
-    record.encryption = cryptoMetaURL;
     record.sortindex = this._calculateIndex(record);
 
     return record;
