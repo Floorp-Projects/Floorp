@@ -1393,4 +1393,3 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 541382-1.html 541382-1-ref.html
 == 541406-1.html 541406-1-ref.html
 == 546033-1.html 546033-1-ref.html
-== 546071-1.html 546071-1-ref.html
