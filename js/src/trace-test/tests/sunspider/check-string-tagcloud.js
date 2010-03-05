@@ -263,4 +263,8 @@ function makeTagCloud(tagInfo)
 
 var tagcloud = makeTagCloud(tagInfo);
 tagInfo = null;
-assertEq(tagcloud.length, 315260)
+
+// The result string embeds floating-point numbers, which can vary a bit on different platforms,
+// so we truncate them a bit before comparing.
+var tagcloud_norm = tagcloud.replace(/([0-9.]+)px/g, function(str, p1) { return p1.substr(0, 10) + 'px' })
+assertEq(tagcloud_norm.length, 295906)
