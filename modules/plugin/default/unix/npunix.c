@@ -627,8 +627,9 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         pluginFuncs->event      = NULL;
         pluginFuncs->javaClass  = NULL;
 
-        // This function is supposedly loaded magically, but that doesn't
-        // seem to be true.
+        /* This function is supposedly loaded magically, but that doesn't
+         * seem to be true.
+         */
         pluginFuncs->getvalue   = (NPP_GetValueProcPtr)(NP_GetValue);
 
         err = NPP_Initialize();
