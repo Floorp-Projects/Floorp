@@ -1174,7 +1174,7 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
             }
         }
 
-        scopeobj = OBJ_GET_PARENT(cx, scopeobj);
+        scopeobj = scopeobj->getParent();
     }
 
     return inner;
@@ -1272,7 +1272,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
      * the former indirect case.
      */
     {
-        JSObject *parent = OBJ_GET_PARENT(cx, obj);
+        JSObject *parent = obj->getParent();
         if (indirectCall || parent) {
             uintN flags = parent
                           ? JSREPORT_ERROR
@@ -1346,7 +1346,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
             }
 
             /* NB: We know obj is a global object here. */
-            JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
+            JS_ASSERT(!obj->getParent());
             scopeobj = obj;
         } else {
             /*
@@ -1458,7 +1458,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
                             }
                         }
                         if (i < 0 ||
-                            STOBJ_GET_PARENT(objarray->vector[i]) == scopeobj) {
+                            objarray->vector[i]->getParent() == scopeobj) {
                             JS_ASSERT(staticLevel == script->staticLevel);
                             EVAL_CACHE_METER(hit);
                             *scriptp = script->u.nextToGC;
@@ -3099,7 +3099,7 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
         proto = JSVAL_TO_OBJECT(pval);
     } else if (pval == JSVAL_HOLE) {
         /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
-        proto = js_NewObject(cx, clasp, NULL, OBJ_GET_PARENT(cx, ctor));
+        proto = js_NewObject(cx, clasp, NULL, ctor->getParent());
         if (!proto)
             return NULL;
         if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
@@ -3464,7 +3464,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->scopeChain = OBJ_GET_PARENT(cx, obj);
+    fp->scopeChain = obj->getParent();
     return normalUnwind;
 }
 
@@ -3578,7 +3578,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = OBJ_GET_PARENT(cx, obj);
+        parent = obj->getParent();
         parentId = (xdr->script->objectsOffset == 0)
                    ? NO_PARENT_INDEX
                    : FindObjectIndex(xdr->script->objects(), parent);
@@ -3609,7 +3609,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             parent = NULL;
         else
             parent = xdr->script->getObject(parentId);
-        STOBJ_SET_PARENT(obj, parent);
+        obj->setParent(parent);
     }
 
     JSAutoTempValueRooter tvr(cx, obj);
@@ -4003,7 +4003,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     JSObjectOp init;
     jsval v;
 
-    while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+    while ((tmp = obj->getParent()) != NULL)
         obj = tmp;
     if (!(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL)) {
         *objp = NULL;
@@ -4049,7 +4049,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 JSBool
 js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj)
 {
-    JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
+    JS_ASSERT(!obj->getParent());
     if (!(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL))
         return JS_TRUE;
 
@@ -4080,7 +4080,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         /* Find the topmost object in the scope chain. */
         do {
             obj = start;
-            start = OBJ_GET_PARENT(cx, obj);
+            start = obj->getParent();
         } while (start);
     } else {
         obj = cx->globalObject;
@@ -4159,7 +4159,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
      */
     ctor = JSVAL_TO_OBJECT(cval);
     if (!parent)
-        parent = OBJ_GET_PARENT(cx, ctor);
+        parent = ctor->getParent();
     if (!proto) {
         if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
                                &rval)) {
@@ -4319,7 +4319,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
             scope->shadowingShapeChange(cx, sprop);
             JS_UNLOCK_SCOPE(cx, scope);
 
-            if (!STOBJ_GET_PARENT(obj)) {
+            if (!obj->getParent()) {
                 /*
                  * All scope chains end in a global object, so this will change
                  * the global shape. jstracer.cpp assumes that the global shape
@@ -4348,7 +4348,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
     if (STOBJ_GET_CLASS(obj) == &js_CallClass) {
-        while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL) {
+        while ((obj = obj->getParent()) != NULL) {
             if (PurgeProtoChain(cx, obj, id))
                 break;
         }
@@ -4788,7 +4788,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
     obj = scopeChain;
-    parent = OBJ_GET_PARENT(cx, obj);
+    parent = obj->getParent();
     for (scopeIndex = 0;
          parent
          ? js_IsCacheableNonGlobalScope(obj)
@@ -4834,7 +4834,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
             goto out;
         }
         obj = parent;
-        parent = OBJ_GET_PARENT(cx, obj);
+        parent = obj->getParent();
     }
 
     for (;;) {
@@ -4849,7 +4849,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
          * We conservatively assume that a resolve hook could mutate the scope
          * chain during JSObject::lookupProperty. So we read parent here again.
          */
-        parent = OBJ_GET_PARENT(cx, obj);
+        parent = obj->getParent();
         if (!parent) {
             pobj = NULL;
             break;
@@ -4879,7 +4879,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * This function should not be called for a global object or from the
      * trace and should have a valid cache entry for native scopeChain.
      */
-    JS_ASSERT(OBJ_GET_PARENT(cx, scopeChain));
+    JS_ASSERT(scopeChain->getParent());
     JS_ASSERT(!JS_ON_TRACE(cx));
 
     JSObject *obj = scopeChain;
@@ -4913,8 +4913,8 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
         }
 
         /* Call and other cacheable objects always have a parent. */
-        obj = OBJ_GET_PARENT(cx, obj);
-        if (!OBJ_GET_PARENT(cx, obj))
+        obj = obj->getParent();
+        if (!obj->getParent())
             return obj;
     }
 
@@ -4934,11 +4934,11 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
          * chain during JSObject::lookupProperty. So we must check if parent is
          * not null here even if it wasn't before the lookup.
          */
-        JSObject *parent = OBJ_GET_PARENT(cx, obj);
+        JSObject *parent = obj->getParent();
         if (!parent)
             break;
         obj = parent;
-    } while (OBJ_GET_PARENT(cx, obj));
+    } while (obj->getParent());
     return obj;
 }
 
@@ -5260,7 +5260,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         /* We should never add properties to lexical blocks.  */
         JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
 
-        if (!OBJ_GET_PARENT(cx, obj) && !js_CheckUndeclaredVarAssignment(cx))
+        if (!obj->getParent() && !js_CheckUndeclaredVarAssignment(cx))
             return JS_FALSE;
     }
     sprop = (JSScopeProperty *) prop;
@@ -5969,7 +5969,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
       case JSACC_PARENT:
         JS_ASSERT(!writing);
         pobj = obj;
-        *vp = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, obj));
+        *vp = OBJECT_TO_JSVAL(obj->getParent());
         *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
         break;
 
@@ -6078,7 +6078,7 @@ GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
     JSObject *tmp;
     jsval xcval;
 
-    while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+    while ((tmp = obj->getParent()) != NULL)
         obj = tmp;
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.ExecutionContextAtom), &xcval))
         return JS_FALSE;
@@ -7022,7 +7022,7 @@ js_DumpObject(JSObject *obj)
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");
-    dumpValue(OBJECT_TO_JSVAL(STOBJ_GET_PARENT(obj)));
+    dumpValue(OBJECT_TO_JSVAL(obj->getParent()));
     fputc('\n', stderr);
 
     i = JSSLOT_PRIVATE;

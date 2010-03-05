@@ -1063,7 +1063,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     if (script) {
         JSObject *obj = scopeChain;
         uintN depth = 1;
-        while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL)
+        while ((obj = obj->getParent()) != NULL)
             ++depth;
         JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
     }
@@ -1825,7 +1825,7 @@ JSCompiler::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
                          parent, atom);
 
     if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
-        STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
+        FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
     }
     return fun;
@@ -5600,7 +5600,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
-            STOBJ_SET_PARENT(obj, tc->blockChain);
+            obj->setParent(tc->blockChain);
             tc->blockChain = obj;
             stmt->blockObj = obj;
 
@@ -8604,7 +8604,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!obj)
             return NULL;
         if (!(tc->flags & TCF_COMPILE_N_GO)) {
-            STOBJ_CLEAR_PARENT(obj);
+            obj->clearParent();
             obj->clearProto();
         }
 

@@ -126,7 +126,7 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
-    funobj = CloneFunctionObject(cx, fun, OBJ_GET_PARENT(cx, funobj));
+    funobj = CloneFunctionObject(cx, fun, funobj->getParent());
     if (!funobj)
         return false;
     *vp = OBJECT_TO_JSVAL(funobj);

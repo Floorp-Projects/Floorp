@@ -333,8 +333,8 @@ RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   XPCWrappedNative *wn = nsnull;
-  if (STOBJ_GET_CLASS(obj) == &XOWClass.base &&
-      STOBJ_GET_PARENT(outerObj) != STOBJ_GET_PARENT(obj)) {
+  if (obj->getClass() == &XOWClass.base &&
+      outerObj->getParent() != obj->getParent()) {
     *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, obj));
   } else if (!(wn = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj))) {
     return JS_TRUE;
@@ -538,9 +538,9 @@ WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
   // Check if wrappedObj is an XOW. If so, verify that it's from the
   // right scope.
   if (clasp == &XOWClass.base &&
-      STOBJ_GET_PARENT(wrappedObj) != STOBJ_GET_PARENT(outerObj)) {
+      wrappedObj->getParent() != outerObj->getParent()) {
     *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, wrappedObj));
-    return WrapObject(cx, STOBJ_GET_PARENT(outerObj), vp);
+    return WrapObject(cx, outerObj->getParent(), vp);
   }
 
   return JS_TRUE;
@@ -560,10 +560,10 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (!JSVAL_IS_PRIMITIVE(*vp)) {
     JSObject *addedObj = JSVAL_TO_OBJECT(*vp);
-    if (STOBJ_GET_CLASS(addedObj) == &XOWClass.base &&
-        STOBJ_GET_PARENT(addedObj) != STOBJ_GET_PARENT(obj)) {
+    if (addedObj->getClass() == &XOWClass.base &&
+        addedObj->getParent() != obj->getParent()) {
       *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, addedObj));
-      if (!WrapObject(cx, STOBJ_GET_PARENT(obj), vp, nsnull)) {
+      if (!WrapObject(cx, obj->getParent(), vp, nsnull)) {
         return JS_FALSE;
       }
     }
@@ -825,8 +825,7 @@ GetUXPCObject(JSContext *cx, JSObject *obj)
   }
 
   JSObject *uxpco =
-    JS_NewObjectWithGivenProto(cx, &XOWClass.base, nsnull,
-                               STOBJ_GET_PARENT(obj));
+    JS_NewObjectWithGivenProto(cx, &XOWClass.base, nsnull, obj->getParent());
   if (!uxpco) {
     return nsnull;
   }

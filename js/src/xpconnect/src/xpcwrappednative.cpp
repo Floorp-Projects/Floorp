@@ -745,8 +745,8 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(STOBJ_GET_PARENT(
-                                                             existingJSObject)),
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(existingJSObject
+                                                    ->getParent()),
                  "XPCNativeWrapper being used to parent XPCWrappedNative?");
     
     if(!wrapper->Init(ccx, existingJSObject))
@@ -1635,14 +1635,14 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
 
     if(funobj)
     {
-        JSObject* funObjParent = STOBJ_GET_PARENT(funobj);
+        JSObject* funObjParent = funobj->getParent();
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
         JSClass* funObjParentClass = STOBJ_GET_CLASS(funObjParent);
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
-            NS_ASSERTION(STOBJ_GET_PARENT(funObjParent), "funobj's parent (proto) is global");
+            NS_ASSERTION(funObjParent->getParent(), "funobj's parent (proto) is global");
             proto = (XPCWrappedNativeProto*) xpc_GetJSPrivate(funObjParent);
             if(proto)
                 protoClassInfo = proto->GetClassInfo();
@@ -1654,7 +1654,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         }
         else if(IS_TEAROFF_CLASS(funObjParentClass))
         {
-            NS_ASSERTION(STOBJ_GET_PARENT(funObjParent), "funobj's parent (tearoff) is global");
+            NS_ASSERTION(funObjParent->getParent(), "funobj's parent (tearoff) is global");
             cur = funObjParent;
             goto return_tearoff;
         }
@@ -1699,7 +1699,7 @@ return_wrapper:
         {
 return_tearoff:
             XPCWrappedNative* wrapper =
-                (XPCWrappedNative*) xpc_GetJSPrivate(STOBJ_GET_PARENT(cur));
+                (XPCWrappedNative*) xpc_GetJSPrivate(cur->getParent());
             if(proto && proto != wrapper->GetProto() &&
                (proto->GetScope() != wrapper->GetScope() ||
                 !protoClassInfo || !wrapper->GetProto() ||

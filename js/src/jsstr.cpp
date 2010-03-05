@@ -1787,7 +1787,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         /* Push lambda and its 'this' parameter. */
         jsval *sp = invokevp;
         *sp++ = OBJECT_TO_JSVAL(lambda);
-        *sp++ = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, lambda));
+        *sp++ = OBJECT_TO_JSVAL(lambda->getParent());
 
         /* Push $&, $1, $2, ... */
         if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))
