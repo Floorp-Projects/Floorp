@@ -109,11 +109,13 @@ class HashTable : AllocPolicy
         Ptr(Entry &entry) : entry(&entry) {}
 
       public:
-        bool found() const           { return entry->isLive(); }
-        operator ConvertibleToBool() { return found() ? &Ptr::nonNull : 0; }
+        bool found() const                    { return entry->isLive(); }
+        operator ConvertibleToBool() const    { return found() ? &Ptr::nonNull : 0; }
+        bool operator==(const Ptr &rhs) const { JS_ASSERT(found() && rhs.found()); return entry == rhs.entry; }
+        bool operator!=(const Ptr &rhs) const { return !(*this == rhs); }
 
-        T &operator*() const         { return entry->t; }
-        T *operator->() const        { return &entry->t; }
+        T &operator*() const                  { return entry->t; }
+        T *operator->() const                 { return &entry->t; }
     };
 
     /* A Ptr that can be used to add a key after a failed lookup. */
