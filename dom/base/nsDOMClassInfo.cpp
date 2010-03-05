@@ -6541,6 +6541,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                       ::JS_GetStringLength(str), v, nsnull,
                                       nsnull,
                                       JSPROP_PERMANENT |
+                                      JSPROP_READONLY |
                                       JSPROP_ENUMERATE);
 
     if (!ok) {
@@ -8160,6 +8161,7 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                       ::JS_GetStringLength(str), v, nsnull,
                                       nsnull,
                                       JSPROP_PERMANENT |
+                                      JSPROP_READONLY |
                                       JSPROP_ENUMERATE);
 
     if (!ok) {
