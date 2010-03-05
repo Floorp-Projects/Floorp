@@ -315,6 +315,13 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         nsAutoGCRoot resultGCRoot(&param, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
+        jsval targetv;
+        nsAutoGCRoot resultGCRoot2(&targetv, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsContentUtils::WrapNative(mContext,
+                                   JS_GetGlobalObject(mContext),
+                                   aTarget, &targetv);
+
         jsval json = JSVAL_NULL;
         nsAutoGCRoot root(&json, &rv);
         if (NS_SUCCEEDED(rv) && !aJSON.IsEmpty()) {
@@ -334,22 +341,39 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                               reinterpret_cast<const jschar *>(nsString(aMessage).get()),
                               aMessage.Length());
         NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
+        JS_DefineProperty(mContext, param, "target", targetv, NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(mContext, param, "name",
                           STRING_TO_JSVAL(jsMessage), NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(mContext, param, "sync",
                           BOOLEAN_TO_JSVAL(aSync), NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(mContext, param, "json", json, NULL, NULL, JSPROP_ENUMERATE);
 
-        jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(object));
-        jsval targetv;
-        nsAutoGCRoot resultGCRoot2(&targetv, &rv);
+        jsval thisValue = JSVAL_VOID;
+        nsAutoGCRoot resultGCRoot3(&thisValue, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsContentUtils::WrapNative(mContext,
-                                   JS_GetGlobalObject(mContext),
-                                   aTarget, &targetv);
+
+        jsval funval = JSVAL_VOID;
+        if (JS_ObjectIsFunction(mContext, object)) {
+          // If the listener is a JS function:
+          funval = OBJECT_TO_JSVAL(object);
+          nsCOMPtr<nsISupports> defaultThisValue =
+            do_QueryInterface(static_cast<nsIContentFrameMessageManager*>(this));
+          nsContentUtils::WrapNative(mContext,
+                                     JS_GetGlobalObject(mContext),
+                                     defaultThisValue, &thisValue);
+        } else {
+          // If the listener is a JS object which has receiveMessage function:
+          NS_ENSURE_STATE(JS_GetProperty(mContext, object, "receiveMessage",
+                                         &funval) &&
+                          JSVAL_IS_OBJECT(funval) &&
+                          !JSVAL_IS_NULL(funval));
+          JSObject* funobject = JSVAL_TO_OBJECT(funval);
+          NS_ENSURE_STATE(JS_ObjectIsFunction(mContext, funobject));
+          thisValue = OBJECT_TO_JSVAL(object);
+        }
 
         jsval rval = JSVAL_VOID;
-        nsAutoGCRoot resultGCRoot3(&rval, &rv);
+        nsAutoGCRoot resultGCRoot4(&rval, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
         void* mark = nsnull;
@@ -357,8 +381,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
 
         argv[0] = OBJECT_TO_JSVAL(param);
-        JSObject* target = JSVAL_TO_OBJECT(targetv);
-        JS_CallFunctionValue(mContext, target,
+        JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
+        JS_CallFunctionValue(mContext, thisObject,
                              funval, 1, argv, &rval);
         if (aJSONRetVal) {
           nsString json;

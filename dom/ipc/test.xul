@@ -97,17 +97,23 @@
 
       // 4. Test that receiving an async message works.
       //    Test also that sending async message to content works.
+      //    Test also that { receiveMessage: function(m) {} } works.
       messageManager.addMessageListener("linkclick-reply-object",
-        function(m) {
-           var s = (m.json.message == "linkclick-received") ? "PASS" : "FAIL";
-           messageManager.sendAsyncMessage("chrome-message", { ok : s } );
-        });
+        { foobarObjectVar: true,
+          receiveMessage: function(m) {
+            var s = (m.json.message == "linkclick-received") &amp;&amp;
+                    (this.foobarObjectVar) ? "PASS" : "FAIL";
+            messageManager.sendAsyncMessage("chrome-message", { ok : s } );
+          }
+        }
+        );
 
       // 5. Final test to check that everything went ok.
       messageManager.addMessageListener("chrome-message-reply",
         function(m) {
-          // Check that 'this' value is handled correctly.
-          if (this == document.getElementById("page")) {
+          // Check that 'this' and .target values are handled correctly.
+          if (m.target == document.getElementById("page") &amp;&amp;
+              this == messageManager) {
             // Check that the message properties are enumerable.
             var hasName = false;
             var hasSync = false;
