@@ -774,24 +774,24 @@ XPC_COW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSObject *wrapperIter = JS_NewObject(cx, &COWClass.base, nsnull,
-                                       JS_GetGlobalForObject(cx, obj));
-  if (!wrapperIter) {
-    return nsnull;
+  jsval exposedProps;
+  if (!JS_GetReservedSlot(cx, obj, sExposedPropsSlot, &exposedProps)) {
+    return JS_FALSE;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
-
-  // Initialize our COW.
-  jsval v = OBJECT_TO_JSVAL(wrappedObj);
-  if (!JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sWrappedObjSlot, v) ||
-      !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sFlagsSlot,
-                          JSVAL_ZERO)) {
-    return nsnull;
+  JSObject *propertyContainer;
+  if (JSVAL_IS_VOID(exposedProps)) {
+    // TODO For now, expose whatever properties are on our object.
+    propertyContainer = wrappedObj;
+  } else if (JSVAL_IS_PRIMITIVE(exposedProps)) {
+    // Expose no properties at all.
+    propertyContainer = nsnull;
+  } else {
+    // Just expose whatever the object exposes through __exposedProps__.
+    propertyContainer = JSVAL_TO_OBJECT(exposedProps);
   }
 
-  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, wrappedObj,
-                                       keysonly);
+  return CreateSimpleIterator(cx, obj, keysonly, propertyContainer);
 }
 
 static JSObject *

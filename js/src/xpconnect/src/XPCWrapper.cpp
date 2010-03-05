@@ -122,6 +122,9 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
 
   JS_GetReservedSlot(cx, obj, 0, &v);
   JSIdArray *ida = reinterpret_cast<JSIdArray *>(JSVAL_TO_PRIVATE(v));
+  if (!ida) {
+    return JS_ThrowStopIteration(cx);
+  }
 
   JS_GetReservedSlot(cx, obj, 1, &v);
   jsint idx = JSVAL_TO_INT(v);
@@ -142,25 +145,9 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
   } else {
     // We need to return an [id, value] pair.
-    if (!JS_GetPropertyById(cx, STOBJ_GET_PARENT(obj), id, &v)) {
+    if (!JS_GetPropertyById(cx, STOBJ_GET_PARENT(obj), id, vp)) {
       return JS_FALSE;
     }
-
-    jsval name;
-    JSString *str;
-    if (!JS_IdToValue(cx, id, &name) ||
-        !(str = JS_ValueToString(cx, name))) {
-      return JS_FALSE;
-    }
-
-    jsval vec[2] = { STRING_TO_JSVAL(str), v };
-    JSAutoTempValueRooter tvr(cx, 2, vec);
-    JSObject *array = JS_NewArrayObject(cx, 2, vec);
-    if (!array) {
-      return JS_FALSE;
-    }
-
-    *vp = OBJECT_TO_JSVAL(array);
   }
 
   JS_SetReservedSlot(cx, obj, 1, INT_TO_JSVAL(idx));
@@ -291,6 +278,33 @@ CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
   return JS_TRUE;
 }
 
+static JSObject *
+FinishCreatingIterator(JSContext *cx, JSObject *iterObj, JSBool keysonly)
+{
+  JSIdArray *ida = JS_Enumerate(cx, iterObj);
+  if (!ida) {
+    return nsnull;
+  }
+
+  // Initialize iterObj.
+  if (!JS_DefineFunction(cx, iterObj, "next", (JSNative)IteratorNext, 0,
+                         JSFUN_FAST_NATIVE)) {
+    return nsnull;
+  }
+
+  if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(ida)) ||
+      !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
+      !JS_SetReservedSlot(cx, iterObj, 2, BOOLEAN_TO_JSVAL(keysonly))) {
+    return nsnull;
+  }
+
+  if (!JS_SetPrototype(cx, iterObj, nsnull)) {
+    return nsnull;
+  }
+
+  return iterObj;
+}
+
 JSObject *
 CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
                   JSObject *wrapperObj, JSObject *innerObj,
@@ -302,7 +316,8 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
   // identifiers with a next method, so we create an object that
   // delegates (via the __proto__ link) to the wrapper.
 
-  JSObject *iterObj = JS_NewObject(cx, &IteratorClass, tempWrapper, wrapperObj);
+  JSObject *iterObj =
+    JS_NewObjectWithGivenProto(cx, &IteratorClass, tempWrapper, wrapperObj);
   if (!iterObj) {
     return nsnull;
   }
@@ -337,28 +352,63 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     }
   } while ((innerObj = STOBJ_GET_PROTO(innerObj)) != nsnull);
 
-  JSIdArray *ida = JS_Enumerate(cx, iterObj);
+  return FinishCreatingIterator(cx, iterObj, keysonly);
+}
+
+static JSBool
+SimpleEnumerate(JSContext *cx, JSObject *iterObj, JSObject *properties)
+{
+  JSIdArray *ida = JS_Enumerate(cx, properties);
   if (!ida) {
+    return JS_FALSE;
+  }
+
+  for (jsint i = 0, n = ida->length; i < n; ++i) {
+    if (!JS_DefinePropertyById(cx, iterObj, ida->vector[i], JSVAL_VOID,
+                               nsnull, nsnull,
+                               JSPROP_ENUMERATE | JSPROP_SHARED)) {
+      return JS_FALSE;
+    }
+  }
+
+  JS_DestroyIdArray(cx, ida);
+
+  return JS_TRUE;
+}
+
+JSObject *
+CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
+                     JSObject *propertyContainer)
+{
+  JSObject *iterObj = JS_NewObjectWithGivenProto(cx, &IteratorClass,
+                                                 propertyContainer, scope);
+  if (!iterObj) {
     return nsnull;
   }
 
-  // Initialize iterObj.
-  if (!JS_DefineFunction(cx, iterObj, "next", (JSNative)IteratorNext, 0,
-                         JSFUN_FAST_NATIVE)) {
-    return nsnull;
+  JSAutoTempValueRooter tvr(cx, iterObj);
+  if (!propertyContainer) {
+    if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(nsnull)) ||
+        !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
+        !JS_SetReservedSlot(cx, iterObj, 2, JSVAL_TRUE)) {
+      return nsnull;
+    }
+
+    if (!JS_DefineFunction(cx, iterObj, "next", (JSNative)IteratorNext, 0,
+                           JSFUN_FAST_NATIVE)) {
+      return nsnull;
+    }
+
+    return iterObj;
   }
 
-  if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(ida)) ||
-      !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
-      !JS_SetReservedSlot(cx, iterObj, 2, BOOLEAN_TO_JSVAL(keysonly))) {
-    return nsnull;
-  }
+  do {
+    if (!SimpleEnumerate(cx, iterObj, propertyContainer)) {
+      return nsnull;
+    }
+  } while ((propertyContainer = STOBJ_GET_PROTO(propertyContainer)));
 
-  if (!JS_SetPrototype(cx, iterObj, nsnull)) {
-    return nsnull;
-  }
-
-  return iterObj;
+  return FinishCreatingIterator(cx, iterObj, keysonly);
 }
 
 JSBool
