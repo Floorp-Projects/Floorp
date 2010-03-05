@@ -8638,10 +8638,10 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             op = LIR_feq;
         }
     } else if (JSVAL_IS_NULL(l) && JSVAL_IS_SPECIAL(r)) {
-        l_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        l_ins = INS_VOID();
         cond = (r == JSVAL_VOID);
     } else if (JSVAL_IS_SPECIAL(l) && JSVAL_IS_NULL(r)) {
-        r_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        r_ins = INS_VOID();
         cond = (l == JSVAL_VOID);
     } else if (isNumber(l) && JSVAL_IS_STRING(r)) {
         args[0] = r_ins, args[1] = cx_ins;
@@ -12985,7 +12985,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
         // Return undefined and indicate that we didn't actually read this (addr_ins).
-        v_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        v_ins = INS_VOID();
         addr_ins = NULL;
         return RECORD_CONTINUE;
     }
@@ -13057,9 +13057,16 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     /* priv_ins will load the TypedArray* */
     LIns* priv_ins = stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE);
 
-    /* for out-of-range, just let the interpreter handle it */
-    if ((jsuint) idx >= tarray->length)
-        return ARECORD_STOP;
+    /* for out-of-range, do the same thing that the interpreter does, which is return undefined */
+    if ((jsuint) idx >= tarray->length) {
+        guard(false,
+              lir->ins2(LIR_ult,
+                        idx_ins,
+                        lir->insLoad(LIR_ldc, priv_ins, js::TypedArray::lengthOffset())),
+              BRANCH_EXIT);
+        v_ins = INS_VOID();
+        return ARECORD_CONTINUE;
+    }
 
     /*
      * Ensure idx < length
@@ -13074,7 +13081,7 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
           lir->ins2(LIR_ult,
                     idx_ins,
                     lir->insLoad(LIR_ldc, priv_ins, js::TypedArray::lengthOffset())),
-          OVERFLOW_EXIT);
+          BRANCH_EXIT);
 
     /* We are now ready to load.  Do a different type of load
      * depending on what type of thing we're loading. */
