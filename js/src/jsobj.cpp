@@ -2902,8 +2902,10 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (clasp == &js_FunctionClass && !objectSize) {
         obj = (JSObject*) js_NewGCFunction(cx);
 #ifdef DEBUG
-        memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
-               sizeof(JSFunction) - sizeof(JSObject));
+        if (obj) {
+            memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
+                   sizeof(JSFunction) - sizeof(JSObject));
+        }
 #endif
     } else {
         JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
