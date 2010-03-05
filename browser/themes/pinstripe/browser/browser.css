@@ -237,6 +237,11 @@ toolbarbutton.bookmark-item[open="true"] {
   background-color: rgba(0, 0, 0, .5);
 }
 
+toolbarbutton.bookmark-item > menupopup {
+  margin-top: 2px;
+  -moz-margin-start: 3px;
+}
+
 .bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/places/livemarkFolder.png");
   -moz-image-region: rect(0, 9px, 10px, 0);
