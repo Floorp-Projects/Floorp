@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <mask id="mask" maskContentUnits="objectBoundingBox">
     <rect x="0" y="0" width="1" height="1" fill="white"/>
-    <circle cx="-0.46" cy="0.5" r="0.63" id="circle"/>
+    <circle cx="-0.46" cy="0.5" r="0.63"/>
   </mask>
   <mask id="mask-hover" maskContentUnits="objectBoundingBox">
     <rect x="0" y="0" width="1" height="1" fill="white"/>
-    <circle cx="-0.35" cy="0.5" r="0.58" id="circle"/>
+    <circle cx="-0.35" cy="0.5" r="0.58"/>
   </mask>
 </svg>
