@@ -11,10 +11,14 @@ Lasso.prototype = {
     this._container   = options.container || "body";
     this._fillColor   = options.fillColor || "rgba(0,0,255,.1)";
     this._strokeColor = options.strokeColor || "rgba(0,0,255,.4)";
+    this._strokeWidth = options.strokeWidth || 1;
     this._onSelect    = options.onSelect || function(){};
     this._onStart     = options.onStart || function(){};
     this._onMove      = options.onMove;
-    this._acceptMouseDown = options.acceptMouseDown || function(){ return true; }; 
+    this._acceptMouseDown = options.acceptMouseDown || function(){ return true; };
+    
+    if( options.fill != false ) this._fill = true;
+    else this._fill = false;
       
     this._lastPos = null;
     this._isSelecting = false;
@@ -57,7 +61,7 @@ Lasso.prototype = {
     this.ctx.beginPath();
     this.ctx.fillStyle = this._fillColor;
     this.ctx.strokeStyle = this._strokeColor;
-    this.ctx.lineWidth = 1;
+    this.ctx.lineWidth = this._strokeWidth;
     $(this.canvas).mousemove(this._draw);
     $(this.canvas).show();
     
@@ -88,7 +92,7 @@ Lasso.prototype = {
       clearRect(0,0,this.canvas.width,this.canvas.height)   
       lineTo(pos.x, pos.y);
       stroke();
-      fill();
+      if( self._fill ) fill();
     }
     
     self._lastPos = pos;
