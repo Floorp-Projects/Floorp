@@ -38,7 +38,6 @@
 #include "nsIGenericFactory.h"
 #include "nsAppStartup.h"
 #include "nsUserInfo.h"
-#include "nsXPFEComponentsCID.h"
 #include "nsToolkitCompsCID.h"
 
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)

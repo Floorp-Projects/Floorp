@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = appcomps
 
-EXPORTS = nsXPFEComponentsCID.h
-
 include $(topsrcdir)/config/config.mk
 
 MOZ_HAVE_BROWSER=1
