@@ -126,7 +126,7 @@ JSObject *
 GetWrapper(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &XPCCrossOriginWrapper::XOWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       break;
     }
@@ -698,7 +698,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   JSBool checkProto =
     (isSet && id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_PROTO));
   if (checkProto) {
-    proto = STOBJ_GET_PROTO(wrappedObj);
+    proto = wrappedObj->getProto();
   }
 
   // Same origin, pass this request along as though nothing interesting
@@ -717,7 +717,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   if (checkProto) {
-    JSObject *newProto = STOBJ_GET_PROTO(wrappedObj);
+    JSObject *newProto = wrappedObj->getProto();
 
     // If code is trying to set obj.__proto__ and we're on obj's
     // prototype chain, then the JS_GetPropertyById above will do the

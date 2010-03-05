@@ -421,7 +421,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 {
-    char thousandsLength, decimalLength;
+    size_t thousandsLength, decimalLength;
     const char *numGrouping, *tmpGroup;
     JSRuntime *rt;
     JSString *numStr, *str;
@@ -885,7 +885,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
         if (jsuint(i) < jsuint(base)) {
             if (i < 10)
                 return JSString::intString(i);
-            return JSString::unitString('a' + i - 10);
+            return JSString::unitString(jschar('a' + i - 10));
         }
     }
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);

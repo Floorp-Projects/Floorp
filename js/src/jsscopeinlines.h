@@ -130,7 +130,7 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
     if (!funobj)
         return false;
     *vp = OBJECT_TO_JSVAL(funobj);
-    return js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
+    return !!js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
 }
 
 inline bool

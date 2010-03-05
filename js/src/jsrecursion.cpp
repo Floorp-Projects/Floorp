@@ -236,7 +236,7 @@ TraceRecorder::upRecursion()
      */
     fi->spdist = cx->fp->down->regs->sp - cx->fp->down->slots;
     JS_ASSERT(cx->fp->argc == cx->fp->down->argc);
-    fi->set_argc(cx->fp->argc, false);
+    fi->set_argc(uint16(cx->fp->argc), false);
     fi->callerHeight = downPostSlots;
     fi->callerArgc = cx->fp->down->argc;
 

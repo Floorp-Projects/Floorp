@@ -261,6 +261,12 @@ extern uintN            js_NumCodeSpecs;
 extern const char       *js_CodeName[];
 extern const char       js_EscapeMap[];
 
+/* Silence unreferenced formal parameter warnings */
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4100)
+#endif
+
 /*
  * Return a GC'ed string containing the chars in str, with any non-printing
  * chars or quotes (' or " as specified by the quote argument) escaped, and
@@ -463,6 +469,10 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
  */
 extern uintN
 js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 JS_END_EXTERN_C
 

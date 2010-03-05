@@ -255,7 +255,7 @@ TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
         return true;
     }
 
-    JSObject *proto = STOBJ_GET_PROTO(obj);
+    JSObject *proto = obj->getProto();
     if (!proto) {
         *objp = NULL;
         *propp = NULL;
@@ -401,7 +401,7 @@ struct uint8_clamped {
     }
 
     inline uint8_clamped& operator= (const jsdouble x) { 
-        val = js_TypedArray_uint8_clamp_double(x);
+        val = uint8(js_TypedArray_uint8_clamp_double(x));
         return *this;
     }
 
@@ -483,7 +483,7 @@ class TypedArrayTemplate
             JSProperty *prop;
             JSScopeProperty *sprop;
 
-            JSObject *proto = STOBJ_GET_PROTO(obj);
+            JSObject *proto = obj->getProto();
             if (!proto) {
                 *vp = JSVAL_VOID;
                 return true;
@@ -1337,31 +1337,31 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, jsval *argv, jsval *
 {
     switch (atype) {
       case TypedArray::TYPE_INT8:
-        return Int8Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Int8Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_UINT8:
-        return Uint8Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Uint8Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_INT16:
-        return Int16Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Int16Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_UINT16:
-        return Uint16Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Uint16Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_INT32:
-        return Int32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Int32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_UINT32:
-        return Uint32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Uint32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_FLOAT32:
-        return Float32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Float32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_FLOAT64:
-        return Float64Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Float64Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       case TypedArray::TYPE_UINT8_CLAMPED:
-        return Uint8ClampedArray::class_constructor(cx, cx->globalObject, argc, argv, rv);
+        return !!Uint8ClampedArray::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");

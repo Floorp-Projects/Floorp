@@ -346,7 +346,7 @@ struct JSGCArena {
         return reinterpret_cast<JSGCArena *>(pageStart);
     }
 
-    bool hasPrevUnmarked() const { return info.prevUnmarkedPage; }
+    bool hasPrevUnmarked() const { return !!info.prevUnmarkedPage; }
 
     JSGCArena *getPrevUnmarked() const {
         JS_ASSERT(hasPrevUnmarked());
@@ -520,7 +520,7 @@ IsMarkedGCThing(JSGCArena *a, void *thing)
 {
     JS_ASSERT(a == JSGCArena::fromGCThing(thing));
     jsuword index = ThingToGCCellIndex(thing);
-    return JS_TEST_BIT(a->markBitmap, index);
+    return !!JS_TEST_BIT(a->markBitmap, index);
 }
 
 inline bool
@@ -529,7 +529,7 @@ IsMarkedGCThing(JSGCArena *a, jsuword thingOffset)
     JS_ASSERT(thingOffset < GC_ARENA_CELLS_SIZE);
     JS_ASSERT(!(thingOffset & GC_CELL_MASK));
     jsuword index = thingOffset >> GC_CELL_SHIFT;
-    return JS_TEST_BIT(a->markBitmap, index);
+    return !!JS_TEST_BIT(a->markBitmap, index);
 }
 
 inline bool
@@ -1060,7 +1060,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
         sumThings += st->nthings;
         sumMaxThings += st->maxthings;
         sumThingSize += thingSize * st->nthings;
-        sumTotalThingSize += thingSize * st->totalthings;
+        sumTotalThingSize += size_t(thingSize * st->totalthings);
         sumArenaCapacity += thingSize * thingsPerArena * st->narenas;
         sumTotalArenaCapacity += thingSize * thingsPerArena * st->totalarenas;
         sumAlloc += st->alloc;

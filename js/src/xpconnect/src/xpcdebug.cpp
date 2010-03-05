@@ -454,7 +454,7 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
         return;
 
     JSObject* parent = STOBJ_GET_PARENT(obj);
-    JSObject* proto  = STOBJ_GET_PROTO(obj);
+    JSObject* proto  = obj->getProto();
 
     printf("%*sparent: ", INDENT(depth+1));
     if(parent)

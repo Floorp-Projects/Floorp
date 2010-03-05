@@ -2753,7 +2753,7 @@ TraceMonitor::mark(JSTracer* trc)
 bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
 {
-    bool ok;
+    JSBool ok;
     jsint i;
     jsdouble d;
     switch (type) {
@@ -3549,13 +3549,13 @@ TraceRecorder::importGlobalSlot(unsigned slot)
 
     /* Add the slot to the list of interned global slots. */
     TraceType type;
-    int index = tree->globalSlots->offsetOf(slot);
+    int index = tree->globalSlots->offsetOf(uint16(slot));
     if (index == -1) {
         type = getCoercedType(*vp);
         if (type == TT_INT32 && oracle.isGlobalSlotUndemotable(cx, slot))
             type = TT_DOUBLE;
         index = (int)tree->globalSlots->length();
-        tree->globalSlots->add(slot);
+        tree->globalSlots->add(uint16(slot));
         tree->typeMap.add(type);
         SpecializeTreesToMissingGlobals(cx, globalObj, tree);
         JS_ASSERT(tree->nGlobalTypes() == tree->globalSlots->length());
@@ -3677,7 +3677,7 @@ TraceRecorder::get(jsval* p)
         return x;
     if (isGlobal(p)) {
         unsigned slot = nativeGlobalSlot(p);
-        JS_ASSERT(tree->globalSlots->offsetOf(slot) != -1);
+        JS_ASSERT(tree->globalSlots->offsetOf(uint16(slot)) != -1);
         importGlobalSlot(slot);
     } else {
         unsigned slot = nativeStackSlot(p);
@@ -3864,7 +3864,7 @@ TraceRecorder::determineSlotType(jsval* vp)
         if (i) {
             m = isPromoteInt(i) ? TT_INT32 : TT_DOUBLE;
         } else if (isGlobal(vp)) {
-            int offset = tree->globalSlots->offsetOf(nativeGlobalSlot(vp));
+            int offset = tree->globalSlots->offsetOf(uint16(nativeGlobalSlot(vp)));
             JS_ASSERT(offset != -1);
             m = importTypeMap[importStackSlots + offset];
         } else {
@@ -4353,6 +4353,10 @@ class SlotMap : public SlotVisitorBase
     {
     }
 
+    virtual ~SlotMap()
+    {
+    }
+
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(jsval *vp, unsigned n, unsigned slot)
     {
@@ -4415,7 +4419,7 @@ class SlotMap : public SlotVisitorBase
             if (LIns* i = mRecorder.getFromTracker(vp)) {
                 promoteInt = isPromoteInt(i);
             } else if (mRecorder.isGlobal(vp)) {
-                int offset = mRecorder.tree->globalSlots->offsetOf(mRecorder.nativeGlobalSlot(vp));
+                int offset = mRecorder.tree->globalSlots->offsetOf(uint16(mRecorder.nativeGlobalSlot(vp)));
                 JS_ASSERT(offset != -1);
                 promoteInt = mRecorder.importTypeMap[mRecorder.importStackSlots + offset] ==
                              TT_INT32;
@@ -4518,6 +4522,10 @@ class DefaultSlotMap : public SlotMap
 {
   public:
     DefaultSlotMap(TraceRecorder& tr) : SlotMap(tr)
+    {
+    }
+    
+    virtual ~DefaultSlotMap()
     {
     }
 
@@ -7801,7 +7809,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
     JSObject* obj2;
     JSProperty* prop;
     JSObject *obj = chainHead;
-    bool ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop);
+    JSBool ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop);
 
     /* js_FindProperty can reenter the interpreter and kill |this|. */
     if (!localtm.recorder)
@@ -9131,9 +9139,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // hop along the proto chain when accessing a named (not indexed) property,
     // typically to find Array.prototype methods.
     JSObject* aobj = obj;
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+    if (obj->isDenseArray()) {
         guardDenseArray(obj, obj_ins, BRANCH_EXIT);
-        aobj = OBJ_GET_PROTO(cx, obj);
+        aobj = obj->getProto();
         obj_ins = stobj_get_proto(obj_ins);
     }
 
@@ -11267,7 +11275,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     for (jsuword i = PCVCAP_TAG(entry->vcap) >> PCVCAP_PROTOBITS; i; i--)
         obj2 = OBJ_GET_PARENT(cx, obj2);
     for (jsuword j = PCVCAP_TAG(entry->vcap) & PCVCAP_PROTOMASK; j; j--)
-        obj2 = OBJ_GET_PROTO(cx, obj2);
+        obj2 = obj2->getProto();
     scope = OBJ_SCOPE(obj2);
     JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
@@ -12106,7 +12114,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         } else {
             RETURN_STOP_A("can't trace setting typed array element to non-number value");
         }
-    } else if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
+    } else if (JSVAL_TO_INT(idx) < 0 || !obj->isDenseArray()) {
         CHECK_STATUS_A(initOrSetPropertyByIndex(obj_ins, idx_ins, &v,
                                                 *cx->fp->regs->pc == JSOP_INITELEM));
     } else {
@@ -12464,7 +12472,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->pc = fp->regs->pc;
     fi->imacpc = fp->imacpc;
     fi->spdist = fp->regs->sp - fp->slots;
-    fi->set_argc(argc, constructing);
+    fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
     fi->callerArgc = fp->argc;
 
@@ -12577,7 +12585,7 @@ TraceRecorder::record_JSOP_APPLY()
          * We trace dense arrays and arguments objects. The code we generate
          * for apply uses imacros to handle a specific number of arguments.
          */
-        if (OBJ_IS_DENSE_ARRAY(cx, aobj)) {
+        if (aobj->isDenseArray()) {
             guardDenseArray(aobj, aobj_ins);
             length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
             guard(true,
@@ -13754,7 +13762,7 @@ TraceRecorder::record_JSOP_IN()
 
     JSObject* obj2;
     JSProperty* prop;
-    bool ok = obj->lookupProperty(cx, id, &obj2, &prop);
+    JSBool ok = obj->lookupProperty(cx, id, &obj2, &prop);
 
     /* lookupProperty can reenter the interpreter and kill |this|. */
     if (!localtm.recorder) {
@@ -14733,7 +14741,7 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     JS_ASSERT(cx->fp->slots + slot < cx->fp->regs->sp - 1);
     jsval &arrayval = cx->fp->slots[slot];
     JS_ASSERT(JSVAL_IS_OBJECT(arrayval));
-    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(arrayval)));
+    JS_ASSERT(JSVAL_TO_OBJECT(arrayval)->isDenseArray());
     LIns *array_ins = get(&arrayval);
     jsval &elt = stackval(-1);
     LIns *elt_ins = box_jsval(elt, get(&elt));
@@ -14920,7 +14928,7 @@ GetBuiltinFunction(JSContext *cx, uintN index)
                                          NULL);
         if (fun) {
             funobj = FUN_OBJECT(fun);
-            STOBJ_CLEAR_PROTO(funobj);
+            funobj->clearProto();
             STOBJ_CLEAR_PARENT(funobj);
 
             JS_LOCK_GC(rt);
@@ -14996,10 +15004,10 @@ TraceRecorder::record_JSOP_LENGTH()
     }
 
     LIns* v_ins;
-    if (OBJ_IS_ARRAY(cx, obj)) {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+    if (obj->isArray()) {
+        if (obj->isDenseArray()) {
             if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-                JS_NOT_REACHED("OBJ_IS_DENSE_ARRAY but not?!?");
+                JS_NOT_REACHED("obj->isDenseArray() but not?!?");
                 return ARECORD_STOP;
             }
         } else {

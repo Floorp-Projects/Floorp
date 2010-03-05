@@ -1178,7 +1178,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     uintN slot, attrs;
 
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass);
-    JS_ASSERT(!STOBJ_GET_PROTO(obj));
+    JS_ASSERT(!obj->getProto());
 
     if (!JSVAL_IS_STRING(idval))
         return JS_TRUE;
@@ -1357,7 +1357,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                    JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
         if (slot != FUN_LENGTH)
             return JS_TRUE;
-        obj = OBJ_GET_PROTO(cx, obj);
+        obj = obj->getProto();
         if (!obj)
             return JS_TRUE;
     }
@@ -1614,7 +1614,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         if (!fun)
             return JS_FALSE;
         STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
-        STOBJ_CLEAR_PROTO(FUN_OBJECT(fun));
+        FUN_OBJECT(fun)->clearProto();
 #ifdef __GNUC__
         nvars = nargs = nupvars = 0;    /* quell GCC uninitialized warning */
 #endif
@@ -2448,7 +2448,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     fun = (JSFunction *) funobj;
 
     /* Initialize all function members. */
-    fun->nargs = nargs;
+    fun->nargs = uint16(nargs);
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);

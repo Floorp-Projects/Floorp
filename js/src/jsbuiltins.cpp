@@ -288,7 +288,7 @@ static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
     // Check that we know how the lookup op will behave.
-    for (JSObject* pobj = obj; pobj; pobj = OBJ_GET_PROTO(cx, pobj)) {
+    for (JSObject* pobj = obj; pobj; pobj = pobj->getProto()) {
         if (pobj->map->ops->lookupProperty != js_LookupProperty)
             return JSVAL_TO_SPECIAL(JSVAL_VOID);
         JSClass* clasp = OBJ_GET_CLASS(cx, pobj);
