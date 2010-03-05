@@ -47,7 +47,6 @@
 #include <float.h>
 #endif
 
-#include "jsprvtd.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsINodeInfo.h"
@@ -64,6 +63,8 @@
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
 #include "nsIPrefBranch2.h"
+
+#include "jsapi.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
