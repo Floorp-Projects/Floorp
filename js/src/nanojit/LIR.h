@@ -683,7 +683,7 @@ namespace nanojit
 
         // For loads/stores.
         inline int32_t  disp() const;
-        inline int32_t  accSet() const;
+        inline AccSet   accSet() const;
 
         // For LInsSk.
         inline LIns*    prevLIns() const;
@@ -1295,7 +1295,7 @@ namespace nanojit
         }
     }
 
-    int32_t LIns::accSet() const {
+    AccSet LIns::accSet() const {
         if (isLInsSti()) {
             return toLInsSti()->accSet;
         } else {
