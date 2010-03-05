@@ -190,12 +190,17 @@ StackBase(JSStackFrame *fp)
     return fp->slots + fp->script->nfixed;
 }
 
+#ifdef DEBUG
 void
 JSStackFrame::assertValidStackDepth(uintN depth)
 {
     JS_ASSERT(0 <= regs->sp - StackBase(this));
     JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
 }
+#else
+void
+JSStackFrame::assertValidStackDepth(uintN /*depth*/){}
+#endif
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
@@ -416,7 +421,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             pobj = obj;                                                       \
             JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
             if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
-                (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL) {                   \
+                (tmp_ = pobj->getProto()) != NULL) {                          \
                 pobj = tmp_;                                                  \
             }                                                                 \
                                                                               \

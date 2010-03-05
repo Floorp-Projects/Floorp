@@ -214,7 +214,7 @@ static inline JSObject *
 FindSafeObject(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &SJOWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
 
     if (!obj) {
       break;

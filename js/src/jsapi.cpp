@@ -1145,9 +1145,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    OBJ_SET_PROTO(cx, fun_proto, obj_proto);
-    if (!OBJ_GET_PROTO(cx, obj))
-        OBJ_SET_PROTO(cx, obj, obj_proto);
+    fun_proto->setProto(obj_proto);
+    if (!obj->getProto())
+        obj->setProto(obj_proto);
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
@@ -1409,7 +1409,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
             }
         }
 
-        if (!stdnm && !OBJ_GET_PROTO(cx, obj)) {
+        if (!stdnm && !obj->getProto()) {
             /*
              * Try even less frequently used names delegated from the global
              * object to Object.prototype, but only if the Object class hasn't
@@ -2659,7 +2659,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     CHECK_REQUEST(cx);
-    proto = OBJ_GET_PROTO(cx, obj);
+    proto = obj->getProto();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return proto && proto->map ? proto : NULL;
@@ -2745,7 +2745,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     uint32 nslots, i;
     jsval v;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
 
     if (!OBJ_IS_NATIVE(obj)) {
@@ -3064,7 +3064,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
         *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                : JSVAL_TRUE;
-    } else if (OBJ_IS_DENSE_ARRAY(cx, obj2)) {
+    } else if (obj2->isDenseArray()) {
         ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
     } else {
         /* XXX bad API: no way to return "defined but value unknown" */
@@ -3644,7 +3644,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
-    return OBJ_IS_ARRAY(cx, js_GetWrappedObject(cx, obj));
+    return js_GetWrappedObject(cx, obj)->isArray();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5583,7 +5583,8 @@ JS_ClearPendingException(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
-    JSBool save, ok;
+    JSBool ok;
+    JSPackedBool save;
 
     CHECK_REQUEST(cx);
 

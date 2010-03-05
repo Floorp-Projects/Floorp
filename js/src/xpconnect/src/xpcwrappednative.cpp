@@ -1570,7 +1570,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             // is directly using that of its XPCWrappedNativeProto.
 
             if(wrapper->HasProto() &&
-               STOBJ_GET_PROTO(flat) == oldProto->GetJSProtoObject())
+               flat->getProto() == oldProto->GetJSProtoObject())
             {
                 if(!JS_SetPrototype(ccx, flat, newProto->GetJSProtoObject()))
                 {
@@ -1665,7 +1665,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         }
     }
 
-    for(cur = obj; cur; cur = STOBJ_GET_PROTO(cur))
+    for(cur = obj; cur; cur = cur->getProto())
     {
         // this is on two lines to make the compiler happy given the goto.
         JSClass* clazz;
@@ -1980,14 +1980,14 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                         JSObject* proto  = nsnull;
                         JSObject* our_proto = GetProto()->GetJSProtoObject();
 
-                        proto = STOBJ_GET_PROTO(jso);
+                        proto = jso->getProto();
 
                         NS_ASSERTION(proto && proto != our_proto,
                             "!!! xpconnect/xbl check - wrapper has no special proto");
 
                         PRBool found_our_proto = PR_FALSE;
                         while(proto && !found_our_proto) {
-                            proto = STOBJ_GET_PROTO(proto);
+                            proto = proto->getProto();
 
                             found_our_proto = proto == our_proto;
                         }

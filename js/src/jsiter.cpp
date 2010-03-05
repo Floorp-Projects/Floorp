@@ -180,7 +180,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
          * store the original object.
          */
         JS_ASSERT(obj != iterobj);
-        STOBJ_SET_PROTO(iterobj, obj);
+        iterobj->setProto(obj);
     }
     return JS_TRUE;
 }
@@ -484,7 +484,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
     JS_ASSERT(STOBJ_GET_CLASS(iterobj) == &js_IteratorClass);
 
     obj = STOBJ_GET_PARENT(iterobj);
-    origobj = STOBJ_GET_PROTO(iterobj);
+    origobj = iterobj->getProto();
     state = STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_STATE);
     if (JSVAL_IS_NULL(state))
         goto stop;
@@ -530,7 +530,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
             } else
 #endif
             {
-                obj = OBJ_GET_PROTO(cx, obj);
+                obj = obj->getProto();
                 if (obj) {
                     STOBJ_SET_PARENT(iterobj, obj);
                     if (!obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))

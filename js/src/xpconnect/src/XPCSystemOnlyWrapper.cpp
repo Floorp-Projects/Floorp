@@ -242,7 +242,7 @@ JSObject *
 GetWrapper(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &SOWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       break;
     }
@@ -346,7 +346,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     if (native == XPC_SOW_FunctionWrapper) {
       // If this is a system function wrapper, make sure its ours, otherwise,
       // its prototype could come from the wrong scope.
-      if (STOBJ_GET_PROTO(wrapperObj) == STOBJ_GET_PARENT(obj)) {
+      if (wrapperObj->getProto() == STOBJ_GET_PARENT(obj)) {
         return JS_TRUE;
       }
 

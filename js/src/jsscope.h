@@ -56,6 +56,8 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
+#pragma warning(push)
+#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
 #endif
 
 JS_BEGIN_EXTERN_C
@@ -553,7 +555,7 @@ js_CastAsObjectJSVal(JSPropertyOp op)
 }
 
 struct JSScopeProperty {
-    friend class JSScope;
+    friend struct JSScope;
     friend void js_SweepScopeProperties(JSContext *cx);
     friend JSScopeProperty * js_GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
                                                      const JSScopeProperty &child);
@@ -600,8 +602,8 @@ private:
 
     JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
                     uintN attrs, uintN flags, intN shortid)
-        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(attrs),
-          flags(flags), shortid(shortid)
+        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
+          flags(uint8(flags)), shortid(int16(shortid))
     {
         JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER),
                      JSVAL_TO_OBJECT(getterValue())->isCallable());
@@ -963,6 +965,7 @@ js_FinishPropertyTree(JSRuntime *rt);
 JS_END_EXTERN_C
 
 #ifdef _MSC_VER
+#pragma warning(pop)
 #pragma warning(pop)
 #endif
 

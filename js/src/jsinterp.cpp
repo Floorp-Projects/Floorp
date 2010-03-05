@@ -155,7 +155,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 
         protoIndex = 1;
         for (;;) {
-            tmp = OBJ_GET_PROTO(cx, tmp);
+            tmp = tmp->getProto();
 
             /*
              * We cannot cache properties coming from native objects behind
@@ -295,7 +295,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                      * matching empty scope. In unusual cases involving
                      * __proto__ assignment we may not find one.
                      */
-                    JSObject *proto = STOBJ_GET_PROTO(obj);
+                    JSObject *proto = obj->getProto();
                     if (!proto || !OBJ_IS_NATIVE(proto))
                         return JS_NO_PROP_CACHE_FILL;
                     JSScope *protoscope = OBJ_SCOPE(proto);
@@ -335,7 +335,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #ifdef DEBUG
         if (scopeIndex == 0) {
             JS_ASSERT(protoIndex != 0);
-            JS_ASSERT((protoIndex == 1) == (OBJ_GET_PROTO(cx, obj) == pobj));
+            JS_ASSERT((protoIndex == 1) == (obj->getProto() == pobj));
         }
 #endif
 
@@ -454,7 +454,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     while (vcap & PCVCAP_PROTOMASK) {
-        tmp = OBJ_GET_PROTO(cx, pobj);
+        tmp = pobj->getProto();
         if (!tmp || !OBJ_IS_NATIVE(tmp))
             break;
         pobj = tmp;
@@ -783,7 +783,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          * be a block either.  So we can just grab limitClone's prototype here
          * regardless of its type or which frame it belongs to.
          */
-        limitBlock = OBJ_GET_PROTO(cx, limitClone);
+        limitBlock = limitClone->getProto();
 
         /* If the innermost block has already been cloned, we are done. */
         if (limitBlock == sharedBlock)
@@ -808,7 +808,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JSObject *newChild = innermostNewChild;
     for (;;) {
-        JS_ASSERT(OBJ_GET_PROTO(cx, newChild) == sharedBlock);
+        JS_ASSERT(newChild->getProto() == sharedBlock);
         sharedBlock = OBJ_GET_PARENT(cx, sharedBlock);
 
         /* Sometimes limitBlock will be NULL, so check that first.  */

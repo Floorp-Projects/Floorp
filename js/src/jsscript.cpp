@@ -1019,7 +1019,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         goto bad;
     }
     script->nslots = script->nfixed + cg->maxStackDepth;
-    script->staticLevel = cg->staticLevel;
+    script->staticLevel = uint16(cg->staticLevel);
     script->principals = cg->compiler->principals;
     if (script->principals)
         JSPRINCIPALS_HOLD(cx, script->principals);
