@@ -5053,19 +5053,15 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 fi
-AC_SUBST(MOZ_MOVEMAIL)
 
 AC_ARG_ENABLE(threadsafe,
               [  --enable-threadsafe     Enable support for multiple threads.],
