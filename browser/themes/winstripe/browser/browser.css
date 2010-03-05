@@ -262,7 +262,7 @@ toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
-:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
+toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
 .toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not(:active):hover {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
@@ -274,8 +274,8 @@ toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
-:hover:active > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-[open="true"] > .toolbarbutton-menubutton-dropmarker,
+toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
+toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1:not([disabled="true"]):hover:active,
 .toolbarbutton-1[checked="true"],
 .toolbarbutton-1[open="true"] {
