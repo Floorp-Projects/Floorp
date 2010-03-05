@@ -116,11 +116,9 @@ tier_platform_dirs += \
 		$(NULL)
 
 ifdef BUILD_CTYPES
-ifndef _MSC_VER
 tier_platform_staticdirs += \
 		js/ctypes/libffi \
 		$(NULL)
-endif
 endif
 
 ifdef MOZ_ENABLE_GTK2
