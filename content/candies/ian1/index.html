@@ -5,19 +5,19 @@
 <head>
   <title>Switch</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-  <link rel="icon" href="chrome://abouttab/content/tabcandy.png"/>
+  <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
   <style media="screen" type="text/css">
   html, body {
     margin: 0;
     padding: 0;
-    font-family: Geneva;
+    font-family: arial, sans-serif;
   }
   
   .tab{
     position: absolute;
     display: block;
     float:left;
-    margin: 10px;
+    margin: 0px;
     padding: 0;
     background-color: rgba(255,255,255,.8);
   }
@@ -44,7 +44,10 @@
   }
   
   .name{
-    font-size: 9px;
+  	position: absolute;
+  	top: 123px;
+    font-size: 12px;
+    color: #888;
     display:block;
     width:160px;
     white-space: nowrap;
@@ -58,12 +61,12 @@
     content:" ";
     position: absolute;
     right:0px;
-    background: -moz-linear-gradient(0deg, rgba(255,255,255,0), white);
+//    background: -moz-linear-gradient(0deg, rgba(255,255,255,0), white);
   }
   
   .close{
     position: absolute;
-    top:12px; right:0;
+    top:2px; right:2px;
     margin: 1px;
     width:12px; height:12px;
     background-color: rgba(0,0,0,.6);
@@ -89,22 +92,14 @@
    font-size: 11px;
   }
   
+  .action { 
+    margin: 5px;
+  }
+  
   .unhighlight{
     opacity: .1;
     z-index: -100;
   }
-  
-  .lasso-menu{
-    background-color: white;
-    width: 100px;
-    height: 100px;
-    border: 1px solid #DDD;
-    -moz-box-shadow: 2px 2px 4px rgba(0,0,0,.5);
-    line-height: 100px;
-    text-align: center;
-    cursor: pointer;
-  }
-  
   
   </style>
   
@@ -115,18 +110,25 @@
     <input type="text"/>
   </div>
   <div id="actions">
-    <a id="tabbar" href="#">Toggle Tab Bar</a>
+    <a id="tabbar" class="action" href="#">Toggle Tab Bar</a>
   </div>
-  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/jquery.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/jquery-ui.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/utils.js"></script>  
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/tabs.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/mirror.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/js/optional/ui.js"></script>  
 
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/select/js/jquery.lasso.js"></script>
-  <script type="text/javascript;version=1.8" src="chrome://tabcandy/content/select/js/jquery.select.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/core/jquery.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/optional/jquery-ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/core/utils.js"></script>  
+  <script type="text/javascript;version=1.8">
+  	Utils.log('it begins');
+  </script>
+  <script type="text/javascript;version=1.8" src="../../js/core/tabs.js"></script>
+  <script type="text/javascript;version=1.8" src="../../js/core/mirror.js"></script>
+  <script type="text/javascript;version=1.8" src="js/ui.js"></script>  
+  
+  <!-- BEGIN Switch Control -->
+  <script type="text/javascript;version=1.8" src="../../js/optional/switch.js"></script>  
+  <script type="text/javascript;version=1.8">
+    Switch.insert('body', '');
+  </script>
+  <!-- END Switch Control -->
 
 </body>
 </html>
