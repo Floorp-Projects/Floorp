@@ -253,8 +253,8 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * js_GetClassPrototype not being able to find a global object containing
      * the standard prototype by starting from arguments and following parent.
      */
-    JSObject *parent, *global = fp->scopeChain;
-    while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
+    JSObject *global = fp->scopeChain;
+    while (JSObject *parent = global->getParent())
         global = parent;
 
     JS_ASSERT(fp->argv);
@@ -924,7 +924,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
     if (js_IsNamedLambda(fun)) {
-        JSObject *env = STOBJ_GET_PARENT(callobj);
+        JSObject *env = callobj->getParent();
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
         JS_ASSERT(env->getPrivate() == fp);
@@ -1518,7 +1518,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * object itself.
          */
         JSObject *proto =
-            js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj));
+            js_NewObject(cx, &js_ObjectClass, NULL, obj->getParent());
         if (!proto)
             return JS_FALSE;
 
@@ -1613,7 +1613,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return JS_FALSE;
-        STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
+        FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
 #ifdef __GNUC__
         nvars = nargs = nupvars = 0;    /* quell GCC uninitialized warning */
@@ -2225,7 +2225,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * its running context's globalObject, which might be different from the
      * top-level reachable from scopeChain (in HTML frames, e.g.).
      */
-    parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
+    parent = JSVAL_TO_OBJECT(argv[-2])->getParent();
 
     fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
                          parent, cx->runtime->atomState.anonymousAtom);
@@ -2438,7 +2438,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 
     if (funobj) {
         JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
-        OBJ_SET_PARENT(cx, funobj, parent);
+        funobj->setParent(parent);
     } else {
         funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
         if (!funobj)

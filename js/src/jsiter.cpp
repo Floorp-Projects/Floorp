@@ -153,7 +153,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
     JS_ASSERT(STOBJ_GET_CLASS(iterobj) == &js_IteratorClass);
 
     /* Initialize iterobj in case of enumerate hook failure. */
-    STOBJ_SET_PARENT(iterobj, obj);
+    iterobj->setParent(obj);
     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, JSVAL_NULL);
     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_FLAGS, INT_TO_JSVAL(flags));
     if (!js_RegisterCloseableIterator(cx, iterobj))
@@ -239,9 +239,9 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     JSBool foreach, ok;
     jsid id;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_IteratorClass);
+    JS_ASSERT(obj->getClass() == &js_IteratorClass);
 
-    iterable = OBJ_GET_PARENT(cx, obj);
+    iterable = obj->getParent();
     JS_ASSERT(iterable);
     state = STOBJ_GET_SLOT(obj, JSSLOT_ITER_STATE);
     if (JSVAL_IS_NULL(state))
@@ -481,9 +481,9 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
     JSString *str;
 
     JS_ASSERT(flags & JSITER_ENUMERATE);
-    JS_ASSERT(STOBJ_GET_CLASS(iterobj) == &js_IteratorClass);
+    JS_ASSERT(iterobj->getClass() == &js_IteratorClass);
 
-    obj = STOBJ_GET_PARENT(iterobj);
+    obj = iterobj->getParent();
     origobj = iterobj->getProto();
     state = STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_STATE);
     if (JSVAL_IS_NULL(state))
@@ -532,7 +532,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
             {
                 obj = obj->getProto();
                 if (obj) {
-                    STOBJ_SET_PARENT(iterobj, obj);
+                    iterobj->setParent(obj);
                     if (!obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
                         return JS_FALSE;
                     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, state);

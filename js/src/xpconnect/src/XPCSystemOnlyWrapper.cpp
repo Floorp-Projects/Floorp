@@ -346,7 +346,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     if (native == XPC_SOW_FunctionWrapper) {
       // If this is a system function wrapper, make sure its ours, otherwise,
       // its prototype could come from the wrong scope.
-      if (wrapperObj->getProto() == STOBJ_GET_PARENT(obj)) {
+      if (wrapperObj->getProto() == obj->getParent()) {
         return JS_TRUE;
       }
 
@@ -365,7 +365,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     // if it's possible to reach them through objects that we wrap, but figuring
     // that out is more expensive (and harder) than simply checking and
     // rewrapping here.
-    if (STOBJ_GET_PARENT(wrapperObj) == STOBJ_GET_PARENT(obj)) {
+    if (wrapperObj->getParent() == obj->getParent()) {
       // Already wrapped.
       return JS_TRUE;
     }
@@ -379,7 +379,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     v = *vp = OBJECT_TO_JSVAL(obj);
   }
 
-  return WrapObject(cx, STOBJ_GET_PARENT(wrapperObj), v, vp);
+  return WrapObject(cx, wrapperObj->getParent(), v, vp);
 }
 
 static JSBool

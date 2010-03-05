@@ -150,7 +150,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         JSObject *tmp = obj;
 
         for (uintN i = 0; i != scopeIndex; i++)
-            tmp = OBJ_GET_PARENT(cx, tmp);
+            tmp = tmp->getParent();
         JS_ASSERT(tmp != pobj);
 
         protoIndex = 1;
@@ -443,7 +443,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     if (JOF_MODE(cs->format) == JOF_NAME) {
         while (vcap & (PCVCAP_SCOPEMASK << PCVCAP_PROTOBITS)) {
-            tmp = OBJ_GET_PARENT(cx, pobj);
+            tmp = pobj->getParent();
             if (!tmp || !OBJ_IS_NATIVE(tmp))
                 break;
             pobj = tmp;
@@ -762,7 +762,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          */
         limitClone = fp->scopeChain;
         while (OBJ_GET_CLASS(cx, limitClone) == &js_WithClass)
-            limitClone = OBJ_GET_PARENT(cx, limitClone);
+            limitClone = limitClone->getParent();
         JS_ASSERT(limitClone);
 
         /*
@@ -809,7 +809,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     JSObject *newChild = innermostNewChild;
     for (;;) {
         JS_ASSERT(newChild->getProto() == sharedBlock);
-        sharedBlock = OBJ_GET_PARENT(cx, sharedBlock);
+        sharedBlock = sharedBlock->getParent();
 
         /* Sometimes limitBlock will be NULL, so check that first.  */
         if (sharedBlock == limitBlock || !sharedBlock)
@@ -821,14 +821,10 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         if (!clone)
             return NULL;
 
-        /*
-         * Avoid OBJ_SET_PARENT overhead as newChild cannot escape to
-         * other threads.
-         */
-        STOBJ_SET_PARENT(newChild, clone);
+        newChild->setParent(clone);
         newChild = clone;
     }
-    STOBJ_SET_PARENT(newChild, fp->scopeChain);
+    newChild->setParent(fp->scopeChain);
 
 
     /*
@@ -894,7 +890,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
     JSObject *thisp;
 
     if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
+        !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
         thisp = cx->globalObject;
     } else {
         jsid id;
@@ -937,10 +933,8 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
             return NULL;
 
         if (v != JSVAL_NULL) {
-            thisp = JSVAL_IS_VOID(v)
-                    ? OBJ_GET_PARENT(cx, thisp)
-                    : JSVAL_TO_OBJECT(v);
-            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+            thisp = JSVAL_IS_VOID(v) ? thisp->getParent() : JSVAL_TO_OBJECT(v);
+            while ((parent = thisp->getParent()) != NULL)
                 thisp = parent;
         }
     }
@@ -1135,8 +1129,8 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         goto bad;
 
     funobj = JSVAL_TO_OBJECT(v);
-    parent = OBJ_GET_PARENT(cx, funobj);
-    clasp = OBJ_GET_CLASS(cx, funobj);
+    parent = funobj->getParent();
+    clasp = funobj->getClass();
     if (clasp != &js_FunctionClass) {
 #if JS_HAS_NO_SUCH_METHOD
         if (clasp == &js_NoSuchMethodClass) {
@@ -1561,7 +1555,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.argsobj = NULL;
         JSObject *obj = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
-            while (JSObject *tmp = OBJ_GET_PARENT(cx, obj))
+            while (JSObject *tmp = obj->getParent())
                 obj = tmp;
         }
         frame.fun = NULL;
@@ -1899,9 +1893,9 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
         }
         rval = vp[1];
         proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
-        parent = OBJ_GET_PARENT(cx, obj2);
+        parent = obj2->getParent();
 
-        if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
+        if (obj2->getClass() == &js_FunctionClass) {
             fun2 = GET_FUNCTION_PRIVATE(cx, obj2);
             if (!FUN_INTERPRETED(fun2) && fun2->u.n.clasp)
                 clasp = fun2->u.n.clasp;
@@ -2005,7 +1999,7 @@ js_LeaveWith(JSContext *cx)
     JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
     JS_ASSERT(withobj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
-    cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
+    cx->fp->scopeChain = withobj->getParent();
     withobj->setPrivate(NULL);
 }
 
@@ -2037,7 +2031,7 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     JS_ASSERT(stackDepth >= 0);
     JS_ASSERT(StackBase(fp) + stackDepth <= fp->regs->sp);
 
-    for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+    for (obj = fp->blockChain; obj; obj = obj->getParent()) {
         JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
         if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
             break;

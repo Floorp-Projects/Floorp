@@ -1657,9 +1657,7 @@ JS_GetScopeChain(JSContext *cx)
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *parent;
-
-    while ((parent = OBJ_GET_PARENT(cx, obj)) != NULL)
+   while (JSObject *parent = obj->getParent())
         obj = parent;
     return obj;
 }
@@ -2675,9 +2673,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
-    JSObject *parent;
-
-    parent = OBJ_GET_PARENT(cx, obj);
+    JSObject *parent = obj->getParent();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return parent && parent->map ? parent : NULL;
@@ -3967,7 +3963,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
     i = JSVAL_TO_INT(iterobj->fslots[JSSLOT_ITER_INDEX]);
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
-        obj = OBJ_GET_PARENT(cx, iterobj);
+        obj = iterobj->getParent();
         JS_ASSERT(OBJ_IS_NATIVE(obj));
         scope = OBJ_SCOPE(obj);
         sprop = (JSScopeProperty *) iterobj->getPrivate();
@@ -4155,7 +4151,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                          JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                     goto break2;
                 }
-                obj = OBJ_GET_PARENT(cx, obj);
+                obj = obj->getParent();
             }
 
             JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(names[i]);
@@ -4736,7 +4732,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         JSObject *pobj = obj;
         uintN depth = 1;
 
-        while ((pobj = OBJ_GET_PARENT(cx, pobj)) != NULL)
+        while ((pobj = pobj->getParent()) != NULL)
             ++depth;
         JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
     }

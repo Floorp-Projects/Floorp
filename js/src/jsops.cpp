@@ -144,7 +144,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - StackBase(fp)));
-    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+    for (obj = fp->scopeChain; obj; obj = obj->getParent()) {
         clasp = OBJ_GET_CLASS(cx, obj);
         if (clasp != &js_BlockClass && clasp != &js_WithClass)
             continue;
@@ -714,7 +714,7 @@ BEGIN_CASE(JSOP_BINDNAME)
          * forms.
          */
         obj = fp->scopeChain;
-        if (!OBJ_GET_PARENT(cx, obj))
+        if (!obj->getParent())
             break;
         if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
             PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
@@ -2003,7 +2003,7 @@ BEGIN_CASE(JSOP_NEW)
             rval = vp[1];
             obj2 = js_NewObject(cx, &js_ObjectClass,
                                 JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
-                                OBJ_GET_PARENT(cx, obj));
+                                obj->getParent());
             if (!obj2)
                 goto error;
 
@@ -2133,7 +2133,7 @@ BEGIN_CASE(JSOP_APPLY)
             newifp->frame.rval = JSVAL_VOID;
             newifp->frame.down = fp;
             newifp->frame.annotation = NULL;
-            newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
+            newifp->frame.scopeChain = parent = obj->getParent();
             newifp->frame.flags = flags;
             newifp->frame.blockChain = NULL;
             if (script->staticLevel < JS_DISPLAY_SIZE) {
@@ -2919,7 +2919,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (OBJ_GET_PARENT(cx, obj) != obj2) {
+    if (obj->getParent() != obj2) {
         obj = CloneFunctionObject(cx, fun, obj2);
         if (!obj)
             goto error;
@@ -3091,7 +3091,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         if (!parent)
             goto error;
 
-        if (OBJ_GET_PARENT(cx, obj) != parent) {
+        if (obj->getParent() != parent) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
@@ -3142,7 +3142,7 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (FUN_NULL_CLOSURE(fun)) {
             parent = fp->scopeChain;
 
-            if (OBJ_GET_PARENT(cx, obj) == parent) {
+            if (obj->getParent() == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
 
                 /*
@@ -4012,7 +4012,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
     }
 
 #ifdef DEBUG
-    JS_ASSERT(fp->blockChain == OBJ_GET_PARENT(cx, obj));
+    JS_ASSERT(fp->blockChain == obj->getParent());
 
     /*
      * The young end of fp->scopeChain may omit blocks if we haven't closed
@@ -4022,14 +4022,14 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      * static scope.
      */
     obj2 = fp->scopeChain;
-    while ((clasp = OBJ_GET_CLASS(cx, obj2)) == &js_WithClass)
-        obj2 = OBJ_GET_PARENT(cx, obj2);
+    while ((clasp = obj2->getClass()) == &js_WithClass)
+        obj2 = obj2->getParent();
     if (clasp == &js_BlockClass &&
         obj2->getPrivate() == fp) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
         parent = obj;
-        while ((parent = OBJ_GET_PARENT(cx, parent)) != youngestProto)
+        while ((parent = parent->getParent()) != youngestProto)
             JS_ASSERT(parent);
     }
 #endif
@@ -4059,7 +4059,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
     }
 
     /* Pop the block chain, too.  */
-    fp->blockChain = OBJ_GET_PARENT(cx, fp->blockChain);
+    fp->blockChain = fp->blockChain->getParent();
 
     /* Move the result of the expression to the new topmost stack slot. */
     if (op == JSOP_LEAVEBLOCKEXPR)
