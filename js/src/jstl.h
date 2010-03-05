@@ -171,6 +171,10 @@ template <class T, size_t N> inline T *ArrayEnd(T (&arr)[N]) { return arr + N; }
 /* Useful for implementing containers that assert non-reentrancy */
 class ReentrancyGuard
 {
+    /* ReentrancyGuard is not copyable. */
+    ReentrancyGuard(const ReentrancyGuard &);
+    void operator=(const ReentrancyGuard &);
+
 #ifdef DEBUG
     bool &entered;
 #endif
