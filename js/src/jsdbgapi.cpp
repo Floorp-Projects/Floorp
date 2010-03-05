@@ -1465,7 +1465,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 {
     pd->id = ID_TO_VALUE(sprop->id);
 
-    bool wasThrowing = cx->throwing;
+    JSBool wasThrowing = cx->throwing;
     JSAutoTempValueRooter lastException(cx, cx->exception);
     cx->throwing = JS_FALSE;
 

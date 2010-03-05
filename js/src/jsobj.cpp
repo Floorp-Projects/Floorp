@@ -305,7 +305,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
             JS_LOCK_OBJ(cx, oldproto);
             JSScope *scope = OBJ_SCOPE(oldproto);
             scope->protoShapeChange(cx);
-            JSObject *tmp = STOBJ_GET_PROTO(oldproto);
+            JSObject *tmp = oldproto->getProto();
             JS_UNLOCK_OBJ(cx, oldproto);
             oldproto = tmp;
         }
@@ -1595,7 +1595,7 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     *vp = JSVAL_VOID;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
     return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, callable);
 }
@@ -2571,7 +2571,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
      * attributes).  Such definitions are probably unlikely, so we don't bother
      * for now.
      */
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
 
     jsuint oldLen = obj->fslots[JSSLOT_ARRAY_LENGTH];
@@ -2616,7 +2616,7 @@ static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc, bool throwError,
                bool *rval)
 {
-    if (OBJ_IS_ARRAY(cx, obj))
+    if (obj->isArray())
         return DefinePropertyArray(cx, obj, desc, throwError, rval);
 
     if (!OBJ_IS_NATIVE(obj))
@@ -2831,7 +2831,7 @@ static inline bool
 InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* ops)
 {
     JS_ASSERT(ops->isNative());
-    JS_ASSERT(proto == OBJ_GET_PROTO(cx, obj));
+    JS_ASSERT(proto == obj->getProto());
 
     /* Share proto's emptyScope only if obj is similar to proto. */
     JSClass *clasp = OBJ_GET_CLASS(cx, obj);
@@ -3243,7 +3243,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         flags = js_InferFlags(cx, flags);
     flags |= JSRESOLVE_WITH;
     JSAutoResolveFlags rf(cx, flags);
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_LookupProperty(cx, obj, id, objp, propp);
     return proto->lookupProperty(cx, id, objp, propp);
@@ -3252,7 +3252,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 static JSBool
 with_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_GetProperty(cx, obj, id, vp);
     return proto->getProperty(cx, id, vp);
@@ -3261,7 +3261,7 @@ with_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 with_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_SetProperty(cx, obj, id, vp);
     return proto->setProperty(cx, id, vp);
@@ -3271,7 +3271,7 @@ static JSBool
 with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
                    uintN *attrsp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_GetAttributes(cx, obj, id, prop, attrsp);
     return proto->getAttributes(cx, id, prop, attrsp);
@@ -3281,7 +3281,7 @@ static JSBool
 with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
                    uintN *attrsp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_SetAttributes(cx, obj, id, prop, attrsp);
     return proto->setAttributes(cx, id, prop, attrsp);
@@ -3290,7 +3290,7 @@ with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_DeleteProperty(cx, obj, id, rval);
     return proto->deleteProperty(cx, id, rval);
@@ -3299,7 +3299,7 @@ with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 static JSBool
 with_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_DefaultValue(cx, obj, hint, vp);
     return proto->defaultValue(cx, hint, vp);
@@ -3309,7 +3309,7 @@ static JSBool
 with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                jsval *statep, jsid *idp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_Enumerate(cx, obj, enum_op, statep, idp);
     return proto->enumerate(cx, enum_op, statep, idp);
@@ -3319,7 +3319,7 @@ static JSBool
 with_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                  jsval *vp, uintN *attrsp)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return js_CheckAccess(cx, obj, id, mode, vp, attrsp);
     return proto->checkAccess(cx, id, mode, vp, attrsp);
@@ -3334,7 +3334,7 @@ with_TypeOf(JSContext *cx, JSObject *obj)
 static JSObject *
 with_ThisObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = obj->getProto();
     if (!proto)
         return obj;
     return proto->thisObject(cx);
@@ -3804,7 +3804,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (OBJ_GET_CLASS(cx, ctor) == clasp)
-            OBJ_SET_PROTO(cx, ctor, proto);
+            ctor->setProto(proto);
     }
 
     /* Add properties and methods to the prototype and the constructor. */
@@ -4308,7 +4308,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
 
     while (obj) {
         if (!OBJ_IS_NATIVE(obj)) {
-            obj = OBJ_GET_PROTO(cx, obj);
+            obj = obj->getProto();
             continue;
         }
         JS_LOCK_OBJ(cx, obj);
@@ -4675,7 +4675,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         }
                         protoIndex = 0;
                         for (proto = start; proto && proto != obj2;
-                             proto = OBJ_GET_PROTO(cx, proto)) {
+                             proto = proto->getProto()) {
                             protoIndex++;
                         }
                         if (!OBJ_IS_NATIVE(obj2)) {
@@ -4815,7 +4815,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                     JS_ASSERT(protoIndex == 1);
                 } else {
                     /* Call and DeclEnvClass objects have no prototypes. */
-                    JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
+                    JS_ASSERT(!obj->getProto());
                     JS_ASSERT(protoIndex == 0);
                 }
             }
@@ -5072,7 +5072,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-    aobj = js_GetProtoIfDenseArray(cx, obj);
+    aobj = js_GetProtoIfDenseArray(obj);
     protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
                                             &obj2, &prop);
     if (protoIndex < 0)
@@ -5172,7 +5172,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp)
         obj->map->ops->getProperty == js_GetProperty) {
         return js_GetPropertyHelper(cx, obj, id, getHow, vp);
     }
-    JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, OBJ_IS_DENSE_ARRAY(cx, obj));
+    JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, obj->isDenseArray());
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj))
         return js_GetXMLMethod(cx, obj, id, vp);
@@ -5962,7 +5962,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
       case JSACC_PROTO:
         pobj = obj;
         if (!writing)
-            *vp = OBJECT_TO_JSVAL(OBJ_GET_PROTO(cx, obj));
+            *vp = OBJECT_TO_JSVAL(obj->getProto());
         *attrsp = JSPROP_PERMANENT;
         break;
 
@@ -6208,7 +6208,7 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     if (JSVAL_IS_PRIMITIVE(v))
         return JS_TRUE;
     obj2 = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(v));
-    while ((obj2 = OBJ_GET_PROTO(cx, obj2)) != NULL) {
+    while ((obj2 = obj2->getProto()) != NULL) {
         if (obj2 == obj) {
             *bp = JS_TRUE;
             break;
@@ -6814,7 +6814,7 @@ JSObject::isCallable()
     if (isNative())
         return isFunction() || getClass()->call;
 
-    return map->ops->call;
+    return !!map->ops->call;
 }
 
 JSBool
@@ -7018,7 +7018,7 @@ js_DumpObject(JSObject *obj)
     }
 
     fprintf(stderr, "proto ");
-    dumpValue(OBJECT_TO_JSVAL(STOBJ_GET_PROTO(obj)));
+    dumpValue(OBJECT_TO_JSVAL(obj->getProto()));
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");

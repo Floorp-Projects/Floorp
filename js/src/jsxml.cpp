@@ -7492,7 +7492,7 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
              * refer to this instance in scripts.  When used to qualify method
              * names, its prefix and uri references are copied to the QName.
              */
-            OBJ_CLEAR_PROTO(cx, obj);
+            obj->clearProto();
             OBJ_CLEAR_PARENT(cx, obj);
 
             JS_LOCK_GC(rt);
@@ -7711,7 +7711,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                     ok = JS_FALSE;
                     break;
                 }
-                JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
+                JS_ASSERT(!obj->getProto());
                 JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
             } while (0);
 
@@ -7766,7 +7766,7 @@ js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp)
         /* Skip any With object that can wrap XML. */
         target = obj;
         while (OBJ_GET_CLASS(cx, target) == &js_WithClass) {
-             proto = OBJ_GET_PROTO(cx, target);
+             proto = target->getProto();
              if (!proto)
                  break;
              target = proto;
@@ -7832,7 +7832,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             ok = JS_TRUE;
             goto out;
         }
-        target = OBJ_GET_PROTO(cx, target);
+        target = target->getProto();
         if (target == NULL)
             break;
         tvr.u.object = target;

@@ -369,7 +369,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
     if (iterObj) {
         // Always close the iterator, but make sure not to stomp on OK
         JS_ASSERT(OBJECT_TO_JSVAL(iterObj) == *keySource);
-        ok &= js_CloseIterator(cx, *keySource);
+        ok &= !!js_CloseIterator(cx, *keySource);
     }
 
     if (!ok)
@@ -590,7 +590,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
         jsval propValue = JSVAL_NULL;
         JSAutoTempValueRooter tvr(cx, 1, &propValue);
 
-        if(OBJ_IS_ARRAY(cx, obj)) {
+        if(obj->isArray()) {
             jsuint length = 0;
             if (!js_GetLengthProperty(cx, obj, &length))
                 return JS_FALSE;
@@ -778,7 +778,7 @@ static JSBool
 PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
 {
     JSBool ok;
-    if (OBJ_IS_ARRAY(cx, parent)) {
+    if (parent->isArray()) {
         jsuint len;
         ok = js_GetLengthProperty(cx, parent, &len);
         if (ok) {

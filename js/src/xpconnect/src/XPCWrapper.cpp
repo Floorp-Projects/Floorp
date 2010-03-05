@@ -226,7 +226,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
       return nsnull;
     }
-  } while ((innerObj = STOBJ_GET_PROTO(innerObj)) != nsnull);
+  } while ((innerObj = innerObj->getProto()) != nsnull);
 
   JSIdArray *ida = JS_Enumerate(cx, iterObj);
   if (!ida) {

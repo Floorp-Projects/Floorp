@@ -342,7 +342,7 @@ JSObject *
 GetWrapper(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &COWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       break;
     }

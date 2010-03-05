@@ -1826,7 +1826,7 @@ JSCompiler::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
 
     if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
         STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
-        STOBJ_CLEAR_PROTO(FUN_OBJECT(fun));
+        FUN_OBJECT(fun)->clearProto();
     }
     return fun;
 }
@@ -8605,7 +8605,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
         if (!(tc->flags & TCF_COMPILE_N_GO)) {
             STOBJ_CLEAR_PARENT(obj);
-            STOBJ_CLEAR_PROTO(obj);
+            obj->clearProto();
         }
 
         pn->pn_objbox = tc->compiler->newObjectBox(obj);

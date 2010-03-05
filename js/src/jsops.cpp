@@ -1490,7 +1490,7 @@ BEGIN_CASE(JSOP_GETXPROP)
          * assuming any property gets it does (e.g., for 'toString'
          * from JSOP_NEW) will not be leaked to the calling script.
          */
-        aobj = js_GetProtoIfDenseArray(cx, obj);
+        aobj = js_GetProtoIfDenseArray(obj);
         if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
             PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
             if (!atom) {
@@ -1540,7 +1540,7 @@ BEGIN_CASE(JSOP_LENGTH)
         str = JSVAL_TO_STRING(lval);
         regs.sp[-1] = INT_TO_JSVAL(str->length());
     } else if (!JSVAL_IS_PRIMITIVE(lval) &&
-               (obj = JSVAL_TO_OBJECT(lval), OBJ_IS_ARRAY(cx, obj))) {
+               (obj = JSVAL_TO_OBJECT(lval), obj->isArray())) {
         jsuint length;
 
         /*
@@ -1586,7 +1586,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 
-    aobj = js_GetProtoIfDenseArray(cx, obj);
+    aobj = js_GetProtoIfDenseArray(obj);
     if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
         PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
@@ -1731,7 +1731,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     bool checkForAdd;
                     if (sprop->attrs & JSPROP_SHARED) {
                         if (PCVCAP_TAG(entry->vcap) == 0 ||
-                            ((obj2 = OBJ_GET_PROTO(cx, obj)) &&
+                            ((obj2 = obj->getProto()) &&
                              OBJ_IS_NATIVE(obj2) &&
                              OBJ_SHAPE(obj2) == PCVCAP_SHAPE(entry->vcap))) {
                             goto fast_set_propcache_hit;
@@ -1897,7 +1897,7 @@ BEGIN_CASE(JSOP_GETELEM)
 
     VALUE_TO_OBJECT(cx, -2, lval, obj);
     if (JSVAL_IS_INT(rval)) {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        if (obj->isDenseArray()) {
             jsuint length;
 
             length = js_DenseArrayCapacity(obj);
@@ -1946,7 +1946,7 @@ BEGIN_CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, lval, obj);
     FETCH_ELEMENT_ID(obj, -2, id);
     do {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
+        if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length;
 
             length = js_DenseArrayCapacity(obj);
@@ -3528,7 +3528,7 @@ BEGIN_CASE(JSOP_INITELEM)
      * initialiser, set the array length to one greater than id.
      */
     if (rval == JSVAL_HOLE) {
-        JS_ASSERT(OBJ_IS_ARRAY(cx, obj));
+        JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
         if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
@@ -4026,7 +4026,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
         obj2 = OBJ_GET_PARENT(cx, obj2);
     if (clasp == &js_BlockClass &&
         obj2->getPrivate() == fp) {
-        JSObject *youngestProto = OBJ_GET_PROTO(cx, obj2);
+        JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
         parent = obj;
         while ((parent = OBJ_GET_PARENT(cx, parent)) != youngestProto)
@@ -4052,7 +4052,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      * the stack into the clone, and pop it off the chain.
      */
     obj = fp->scopeChain;
-    if (OBJ_GET_PROTO(cx, obj) == fp->blockChain) {
+    if (obj->getProto() == fp->blockChain) {
         JS_ASSERT (OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             goto error;
