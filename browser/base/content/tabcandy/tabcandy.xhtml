@@ -5,7 +5,7 @@
 <head>
   <title>Switch</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-  <link rel="icon" href="chrome://abouttab/content/tabcandy.png"/>
+  <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
   <style media="screen" type="text/css">
 
     html {
@@ -38,12 +38,28 @@
 
 <body>
   <h1>Pick a style:</h1>
-  <ul>
-    <li><a href="tab.html">Aza's original</a></li>
-    <li><a href="ian1/index.html">Ian's first</a></li>
-    <li><a href="select/index.html">Lasso selection</a></li>
-    <li><a href="stacks/index.html">Stacks</a></li>
-    <li><a href="line/index.html">Line</a></li>
+  <ul id="list">
   </ul>
+  
+  <script type="text/javascript;version=1.8" src="js/core/jquery.js"></script>  
+  <script type="text/javascript;version=1.8" src="js/core/utils.js"></script>  
+  <script type="text/javascript;version=1.8">
+
+    var names = Utils.getVisualizationNames();
+    var count = names.length;
+    var a;
+    for(a = 0; a < count; a++) {
+      var name = names[a];
+      var html = '<li><a href="candies/'
+        + name
+        + '/index.html">'
+        + name
+        + '</a></li>';
+        
+      $('#list').append(html);
+    }
+    
+  </script>
+
 </body>
 </html>

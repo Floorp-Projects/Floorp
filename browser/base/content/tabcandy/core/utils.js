@@ -14,7 +14,11 @@ var homeWindow = Cc["@mozilla.org/embedcomp/window-watcher;1"]
 var consoleService = Cc["@mozilla.org/consoleservice;1"]
     .getService(Components.interfaces.nsIConsoleService);
 
+var extensionManager = Cc["@mozilla.org/extensions/manager;1"]  
+    .getService(Ci.nsIExtensionManager);  
+
 var Utils = {
+  // ___ Windows and Tabs
   get activeWindow(){
     var win = Cc["@mozilla.org/embedcomp/window-watcher;1"]
                .getService(Ci.nsIWindowWatcher)
@@ -38,19 +42,57 @@ var Utils = {
     
     return null;
   },
-    
-  log: function(value) {
-    if(typeof(value) == 'object')
-      value = this.expandObject(value);
-    
-    consoleService.logStringMessage(value);
+  
+  // ___ Files
+  getInstallDirectory: function(id) { 
+    var file = extensionManager.getInstallLocation(id).getItemFile(id, "install.rdf");  
+    return file.parent;  
   }, 
   
-  error: function(text) {
+  getFiles: function(dir) {
+    var files = [];
+    if(dir.isReadable() && dir.isDirectory) {
+      var entries = dir.directoryEntries;
+      while(entries.hasMoreElements()) {
+        var entry = entries.getNext();
+        entry.QueryInterface(Ci.nsIFile);
+        files.push(entry);
+      }
+    }
+    
+    return files;
+  },
+
+  getVisualizationNames: function() {
+    var names = [];
+    var dir = this.getInstallDirectory('tabcandy@aza.raskin');  
+    dir.append('content');
+    dir.append('candies');
+    var files = this.getFiles(dir);
+    var count = files.length;
+    var a;
+    for(a = 0; a < count; a++) {
+      var file = files[a];
+      if(file.isDirectory()) 
+        names.push(file.leafName);
+    }
+
+    return names;
+  },
+    
+  // ___ Logging
+  log: function() { // pass as many arguments as you want, it'll print them all
+    var text = this.expandArgumentsForLog(arguments);
+    consoleService.logStringMessage(text);
+  }, 
+  
+  error: function(text) { // pass as many arguments as you want, it'll print them all
+    var text = this.expandArgumentsForLog(arguments);
     Components.utils.reportError(text);
   }, 
   
-  trace: function(text) {
+  trace: function(text) { // pass as many arguments as you want, it'll print them all
+    var text = this.expandArgumentsForLog(arguments);
     if(typeof(printStackTrace) != 'function')
       this.log(text + ' trace: you need to include stacktrace.js');
     else {
@@ -71,8 +113,33 @@ var Utils = {
         + ", ";
       }
       return s + '}';
-    } 
-}
+    }, 
+    
+  expandArgumentsForLog: function(args) {
+    var s = '';
+    var count = args.length;
+    var a;
+    for(a = 0; a < count; a++) {
+      var arg = args[a];
+      if(typeof(arg) == 'object')
+        arg = this.expandObject(arg);
+        
+      s += arg;
+      if(a < count - 1)
+        s += '; ';
+    }
+    
+    return s;
+  },
+  
+  testLogging: function() {
+    this.log('beginning logging test'); 
+    this.error('this is an error');
+    this.trace('this is a trace');
+    this.log(1, null, {'foo': 'hello', 'bar': 2}, 'whatever');
+    this.log('ending logging test');
+  }      
+};
 
 window.Utils = Utils;
 

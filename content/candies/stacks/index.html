@@ -31,7 +31,7 @@
     padding: 3px;
     -moz-box-shadow: 1px 1px 3px rgba(0,0,0,.2);
   }
-  
+         
   .thumb{
     width: 160px;
     height: 120px;
@@ -82,7 +82,7 @@
   }     
   
     
-  .search{width:100%; margin-top: 30px; text-align: center; margin-bottom: 30px;}
+  .search{width:100%; margin-top: 15px; text-align: center; margin-bottom: 30px;}
   .search input{ width: 300px; font-size: 16pt;}
 
   #actions{
@@ -101,27 +101,53 @@
     z-index: -100;
   }
   
+  .lasso-menu {
+    background-color: white;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #DDD;
+    -moz-box-shadow: 2px 2px 4px rgba(0,0,0,.5);
+    line-height: 100px;
+    text-align: center;
+    cursor: pointer;
+  }
+    
   </style>
   
 </head>
-
+  
 <body>
-  <div class="search">
-    <input type="text"/>
-  </div>
-  <div id="actions">
-    <a id="tabbar" class="action" href="#">Toggle Tab Bar</a>
+  <div id="nav">
+    <div class="search">
+      <input type="text"/>
+    </div>
+    <div id="actions">
+      <a id="tabbar" class="action" href="#">Toggle Tab Bar</a>
+    </div>
   </div>
 
-  <script type="text/javascript;version=1.8" src="../js/jquery.js"></script>  
-  <script type="text/javascript;version=1.8" src="../js/jquery-ui.js"></script>  
-  <script type="text/javascript;version=1.8" src="../js/utils.js"></script>  
+  <script type="text/javascript;version=1.8">
+  </script>
+  <script type="text/javascript;version=1.8" src="../../js/optional/stacktrace.js"></script>
+  <script type="text/javascript;version=1.8" src="../../js/core/jquery.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/optional/jquery-ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/core/utils.js"></script>  
   <script type="text/javascript;version=1.8">
   	Utils.log('it begins');
+/*     Utils.testLogging(); */
   </script>
-  <script type="text/javascript;version=1.8" src="../js/tabs.js"></script>
-  <script type="text/javascript;version=1.8" src="../js/mirror.js"></script>
-  <script type="text/javascript;version=1.8" src="ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/core/tabs.js"></script>
+  <script type="text/javascript;version=1.8" src="../../js/core/mirror.js"></script>
+  <script type="text/javascript;version=1.8" src="js/ui.js"></script>  
+  <script type="text/javascript;version=1.8" src="../../js/shared/jquery.lasso.js"></script>
+  <script type="text/javascript;version=1.8" src="js/jquery.select.js"></script>  
+  
+  <!-- BEGIN Switch Control -->
+  <script type="text/javascript;version=1.8" src="../../js/optional/switch.js"></script>  
+  <script type="text/javascript;version=1.8">
+    Switch.insert('#nav', '');
+  </script>
+  <!-- END Switch Control -->
 
 </body>
 </html>
