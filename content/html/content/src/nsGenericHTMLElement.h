@@ -1040,6 +1040,31 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   }
 
 /**
+ * A macro to implement the getter and setter for a given content
+ * property that needs to set a non-negative integer. The method
+ * uses the generic GetAttr and SetAttr methods. This macro is much
+ * like the NS_IMPL_INT_ATTR macro except we throw an exception if
+ * the set value is negative.
+ */
+#define NS_IMPL_NON_NEGATIVE_INT_ATTR(_class, _method, _atom)             \
+  NS_IMPL_NON_NEGATIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
+
+#define NS_IMPL_NON_NEGATIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRInt32* aValue)                                   \
+  {                                                                       \
+    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);                \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRInt32 aValue)                                    \
+  {                                                                       \
+    if (aValue < 0) {                                                     \
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
+    }                                                                     \
+    return SetIntAttr(nsGkAtoms::_atom, aValue);                          \
+  }
+
+/**
  * QueryInterface() implementation helper macros
  */
 

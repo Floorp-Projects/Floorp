@@ -71,7 +71,7 @@ SimpleTest.waitForFocus(function() {
       caught = true;
     }
     if (testNums[i] < 0) {
-      todo(caught, 'Setting negative maxLength should throw exception');
+      ok(caught, 'Setting negative maxLength should throw exception');
     } else {
       ok(!caught, 'Setting nonnegative maxLength should not throw exception');
     }

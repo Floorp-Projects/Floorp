@@ -40,8 +40,7 @@ function checkNegativeMaxLength(element)
   element.setAttribute('maxLength', 'non-numerical-value');
   is(element.maxLength, -1, "non-numerical value should be considered invalid and represented as -1");
 
-  element.maxLength = -10;
-  is(element.maxLength, -1, "negative maxLength is not processed correctly when set dynamically from the DOM");
+  /* we do not check when changing the value from the DOM because it is throwing an exception, see bug 536895 */
 }
 
 /* TODO: correct behavior may be checked for email, telephone, url and search input types */
