@@ -6097,23 +6097,16 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
-  if (mDocument && mDocument->EventHandlingSuppressed()) {
-    nsDelayedEvent* event = nsnull;
-    if (aEvent->eventStructType == NS_KEY_EVENT) {
-      if (aEvent->message == NS_KEY_DOWN) {
-        mNoDelayedKeyEvents = PR_TRUE;
-      } else if (!mNoDelayedKeyEvents) {
-        event = new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
+  if (aEvent->eventStructType == NS_KEY_EVENT &&
+      mDocument && mDocument->EventHandlingSuppressed()) {
+    if (aEvent->message == NS_KEY_DOWN) {
+      mNoDelayedKeyEvents = PR_TRUE;
+    } else if (!mNoDelayedKeyEvents) {
+      nsDelayedEvent* event =
+        new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
+      if (event && !mDelayedEvents.AppendElement(event)) {
+        delete event;
       }
-    } else if (aEvent->eventStructType == NS_MOUSE_EVENT) {
-      if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
-        mNoDelayedMouseEvents = PR_TRUE;
-      } else if (!mNoDelayedMouseEvents && aEvent->message == NS_MOUSE_BUTTON_UP) {
-        event = new nsDelayedMouseEvent(static_cast<nsMouseEvent*>(aEvent));
-      }
-    }
-    if (event && !mDelayedEvents.AppendElement(event)) {
-      delete event;
     }
     return NS_OK;
   }
@@ -6159,7 +6152,7 @@ PresShell::HandleEvent(nsIView         *aView,
         nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
         PRUint32 i;
         // Search from top to bottom
-        nsIDocument* doc = frame->PresContext()->GetPresShell()->GetDocument();
+        nsIDocument* doc = framePresContext->GetPresShell()->GetDocument();
         for (i = 0; i < popups.Length(); i++) {
           nsIFrame* popup = popups[i];
           if (popup->GetOverflowRect().Contains(
@@ -6221,7 +6214,6 @@ PresShell::HandleEvent(nsIView         *aView,
     // Get the frame at the event point. However, don't do this if we're
     // capturing and retargeting the event because the captured frame will
     // be used instead below.
-    nsIFrame* targetFrame = nsnull;
     if (!captureRetarget) {
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
@@ -6230,8 +6222,11 @@ PresShell::HandleEvent(nsIView         *aView,
         if (aEvent->eventStructType == NS_MOUSE_EVENT) {
           ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
         }
-        targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
-                                                      PR_FALSE, ignoreRootScrollFrame);
+        nsIFrame* target = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
+                                                           PR_FALSE, ignoreRootScrollFrame);
+        if (target) {
+          frame = target;
+        }
       }
     }
 
@@ -6240,9 +6235,8 @@ PresShell::HandleEvent(nsIView         *aView,
     // capture retargeting is being used, no frame was found or the frame's
     // content is not a descendant of the capturing content.
     if (capturingContent &&
-        (gCaptureInfo.mRetargetToElement ||
-         !targetFrame || !targetFrame->GetContent() ||
-         !nsContentUtils::ContentIsCrossDocDescendantOf(targetFrame->GetContent(),
+        (gCaptureInfo.mRetargetToElement || !frame->GetContent() ||
+         !nsContentUtils::ContentIsCrossDocDescendantOf(frame->GetContent(),
                                                         capturingContent))) {
       // A check was already done above to ensure that capturingContent is
       // in this presshell.
@@ -6250,33 +6244,45 @@ PresShell::HandleEvent(nsIView         *aView,
                    "Unexpected document");
       nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
       if (capturingFrame) {
-        targetFrame = capturingFrame;
-        aView = targetFrame->GetClosestView();
+        frame = capturingFrame;
+        aView = frame->GetClosestView();
       }
     }
 
-    if (targetFrame) {
-      PresShell* shell =
-          static_cast<PresShell*>(targetFrame->PresContext()->PresShell());
-      if (shell != this) {
-        // Handle the event in the correct shell.
-        // Prevent deletion until we're done with event handling (bug 336582).
-        nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
-        nsIView* subshellRootView;
-        shell->GetViewManager()->GetRootView(subshellRootView);
-        // We pass the subshell's root view as the view to start from. This is
-        // the only correct alternative; if the event was captured then it
-        // must have been captured by us or some ancestor shell and we
-        // now ask the subshell to dispatch it normally.
-        return shell->HandlePositionedEvent(subshellRootView, targetFrame,
-                                            aEvent, aEventStatus);
+    // Suppress mouse event if it's being targeted at an element inside
+    // a document which needs events suppressed
+    if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+        frame->PresContext()->Document()->EventHandlingSuppressed()) {
+      if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+        mNoDelayedMouseEvents = PR_TRUE;
+      } else if (!mNoDelayedMouseEvents && aEvent->message == NS_MOUSE_BUTTON_UP) {
+        nsDelayedEvent* event =
+          new nsDelayedMouseEvent(static_cast<nsMouseEvent*>(aEvent));
+        if (!mDelayedEvents.AppendElement(event)) {
+          delete event;
+        }
       }
+
+      return NS_OK;
     }
-    
-    if (!targetFrame) {
-      targetFrame = frame;
+
+    PresShell* shell =
+        static_cast<PresShell*>(frame->PresContext()->PresShell());
+    if (shell != this) {
+      // Handle the event in the correct shell.
+      // Prevent deletion until we're done with event handling (bug 336582).
+      nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
+      nsIView* subshellRootView;
+      shell->GetViewManager()->GetRootView(subshellRootView);
+      // We pass the subshell's root view as the view to start from. This is
+      // the only correct alternative; if the event was captured then it
+      // must have been captured by us or some ancestor shell and we
+      // now ask the subshell to dispatch it normally.
+      return shell->HandlePositionedEvent(subshellRootView, frame,
+                                          aEvent, aEventStatus);
     }
-    return HandlePositionedEvent(aView, targetFrame, aEvent, aEventStatus);
+
+    return HandlePositionedEvent(aView, frame, aEvent, aEventStatus);
   }
   
   nsresult rv = NS_OK;
