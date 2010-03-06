@@ -93,13 +93,17 @@ public:
   }
 
   NPError NPN_RequestRead(NPByteRange* aRangeList);
+  void NPN_DestroyStream(NPReason reason);
 
 private:
+  using PBrowserStreamChild::SendNPN_DestroyStream;
+
   /**
    * Deliver the data currently in mPending, scheduling
    * or cancelling the suspended timer as needed.
    */
   void DeliverData();
+  void MaybeDeliverNPP_DestroyStream();
   void SetSuspendedTimer();
   void ClearSuspendedTimer();
 
@@ -115,6 +119,16 @@ private:
   nsCString mURL;
   nsCString mHeaders;
 
+  static const NPReason kDestroyNotPending = -1;
+
+  /**
+   * When NPP_DestroyStream is delivered with pending data, we postpone
+   * delivering or acknowledging it until the pending data has been written.
+   *
+   * The default/initial value is kDestroyNotPending
+   */
+  NPReason mDestroyPending;
+
   struct PendingData
   {
     int32_t offset;
@@ -123,6 +137,13 @@ private:
   };
   nsTArray<PendingData> mPendingData;
 
+  /**
+   * Asynchronous RecvWrite messages are never delivered to the plugin
+   * immediately, because that may be in the midst of an unexpected RPC
+   * stack frame. It instead posts a runnable using this tracker to cancel
+   * in case we are destroyed.
+   */
+  ScopedRunnableMethodFactory<BrowserStreamChild> mDeliverDataTracker;
   base::RepeatingTimer<BrowserStreamChild> mSuspendedTimer;
 };
 
