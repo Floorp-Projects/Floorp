@@ -66,6 +66,7 @@
 //=============================================================================
 
 #include "nsWindow.h"
+#include "os2FrameWindow.h"
 #include "gfxContext.h"
 #include "gfxOS2Surface.h"
 #include "imgIContainer.h"
@@ -166,11 +167,21 @@
 // name of the window class used to clip plugins
 #define kClipWndClass   "nsClipWnd"
 
+//-----------------------------------------------------------------------------
+// Debug
+
+#ifdef DEBUG_FOCUS
+  #define DEBUGFOCUS(what) fprintf(stderr, "[%8x]  %8lx  (%02d)  "#what"\n", \
+                                   (int)this, mWnd, mWindowIdentifier)
+#else
+  #define DEBUGFOCUS(what)
+#endif
+
 //=============================================================================
 //  Variables & Forward declarations
 //=============================================================================
 
-// Rollup Listener - used by nsWindow & nsFrameWindow
+// Rollup Listener - used by nsWindow & os2FrameWindow
 nsIRollupListener*  gRollupListener           = 0;
 nsIMenuRollup*      gMenuRollup               = 0;
 nsIWidget*          gRollupWidget             = 0;
@@ -204,8 +215,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 {
   mWnd                = 0;
   mParent             = 0;
-  mIsTopWidgetWindow  = PR_FALSE;
-  mWindowType         = eWindowType_child;
+  mFrame              = 0;
+  mWindowType         = eWindowType_toplevel;
   mBorderStyle        = eBorderStyle_default;
   mWindowState        = nsWindowState_ePrecreate;
   mOnDestroyCalled    = PR_FALSE;
@@ -216,10 +227,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mClipWnd            = 0;
   mCssCursorHPtr      = 0;
   mThebesSurface      = 0;
-
-  mFrameWnd           = 0;
-  mFrameIcon          = 0;
-  mChromeHidden       = PR_FALSE;
 
   if (!gOS2Flags) {
     InitGlobals();
@@ -239,10 +246,6 @@ nsWindow::~nsWindow()
   //       may even be illegal to call them from here.
 
   mIsDestroying = PR_TRUE;
-  if (mFrameIcon) {
-    WinFreeFileIcon(mFrameIcon);
-    mFrameIcon = 0;
-  }
 
   if (mCssCursorHPtr) {
     WinDestroyPointer(mCssCursorHPtr);
@@ -256,6 +259,12 @@ nsWindow::~nsWindow()
     mWindowState &= ~(nsWindowState_eLive | nsWindowState_ePrecreate |
                       nsWindowState_eInCreate);
     Destroy();
+  }
+
+  // If it exists, destroy our os2FrameWindow helper object.
+  if (mFrame) {
+    delete mFrame;
+    mFrame = 0;
   }
 }
 
@@ -316,7 +325,7 @@ void nsWindow::ReleaseGlobals()
 }
 
 //-----------------------------------------------------------------------------
-// Init an nsWindow or nsFrameWindow & create the appropriate native window.
+// Init an nsWindow & create the appropriate native window.
 
 NS_METHOD nsWindow::Create(nsIWidget* aParent,
                            nsNativeWidget aNativeParent,
@@ -327,12 +336,11 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
                            nsIToolkit* aToolkit,
                            nsWidgetInitData* aInitData)
 {
-  nsresult rv;
   mWindowState = nsWindowState_eInCreate;
 
   // Identify the parent's nsWindow & native window.  Only one of these
   // should be supplied.  Note:  only nsWindow saves pParent as mParent;
-  // nsFrameWindow discards it since toplevel widgets have no parent.
+  // os2FrameWindow discards it since toplevel widgets have no parent.
   HWND      hParent;
   nsWindow* pParent;
   if (aParent) {
@@ -357,7 +365,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
     NS_ADDREF(mContext);
   } else {
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    rv = CallCreateInstance(kDeviceContextCID, &mContext);
+    nsresult rv = CallCreateInstance(kDeviceContextCID, &mContext);
     NS_ENSURE_SUCCESS(rv, rv);
     mContext->Init(nsnull);
   }
@@ -375,30 +383,34 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
     NS_ADDREF(mToolkit);
   }
 
-  // Some basic initialization.
-  PRUint32 style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-  if (aInitData) {
-    // While we comply with the clipSiblings flag, we always set
-    // clipChildren regardless of the flag for performance reasons.
-    if (!aInitData->clipSiblings) {
-      style &= ~WS_CLIPSIBLINGS;
-    }
-    mWindowType = aInitData->mWindowType;
-    mBorderStyle = aInitData->mBorderStyle;
-  }
-
 #ifdef DEBUG_FOCUS
   mWindowIdentifier = currentWindowIdentifier;
   currentWindowIdentifier++;
 #endif
 
-  // This is virtual and creates the appropriate type of window for
-  // the class.  It also does a few other class-specific chores.
-  rv = CreateWindow(pParent, hParent, aRect, style);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Some basic initialization.
+  if (aInitData) {
+    mWindowType = aInitData->mWindowType;
+    mBorderStyle = aInitData->mBorderStyle;
+  }
 
-  // Both versions of CreateWindow() create a MozillaWindow
-  // class window that needs to store this object's pointer.
+  // For toplevel windows, create an instance of our helper class,
+  // then have it create a frame & client window;  otherwise,
+  // call our own CreateWindow() method to create a child window.
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog   ||
+      mWindowType == eWindowType_invisible) {
+    mFrame = new os2FrameWindow(this);
+    NS_ENSURE_TRUE(mFrame, NS_ERROR_FAILURE);
+    mWnd = mFrame->CreateFrameWindow(pParent, hParent, aRect,
+                                     mWindowType, mBorderStyle);
+    NS_ENSURE_TRUE(mWnd, NS_ERROR_FAILURE);
+  } else {
+    nsresult rv = CreateWindow(pParent, hParent, aRect, aInitData);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Store a pointer to this object in the window's extra bytes.
   SetNSWindowPtr(mWnd, this);
 
   // Finalize the widget creation process.
@@ -407,7 +419,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
   DispatchWindowEvent(&event);
 
   mWindowState = nsWindowState_eLive;
-  return rv;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -416,7 +428,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
 nsresult nsWindow::CreateWindow(nsWindow* aParent,
                                 HWND aParentWnd,
                                 const nsIntRect& aRect,
-                                PRUint32 aStyle)
+                                nsWidgetInitData* aInitData)
 {
   // For pop-ups, the Desktop is the parent and aParentWnd is the owner.
   HWND hOwner = 0;
@@ -425,11 +437,18 @@ nsresult nsWindow::CreateWindow(nsWindow* aParent,
     aParentWnd = HWND_DESKTOP;
   }
 
+  // While we comply with the clipSiblings flag, we always set
+  // clipChildren regardless of the flag for performance reasons.
+  PRUint32 style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+  if (aInitData && !aInitData->clipSiblings) {
+    style &= ~WS_CLIPSIBLINGS;
+  }
+
   // Create the window hidden;  it will be resized below.
   mWnd = WinCreateWindow(aParentWnd,
                          kWindowClassName,
                          0,
-                         aStyle,
+                         style,
                          0, 0, 0, 0,
                          hOwner,
                          HWND_TOP,
@@ -488,9 +507,7 @@ NS_METHOD nsWindow::Destroy()
     CaptureRollupEvents(nsnull, nsnull, PR_FALSE, PR_TRUE);
   }
 
-  // Since this may be called by the destructor, don't use
-  // GetMainWindow() which is virtual (and will cause a crash).
-  HWND hMain = mFrameWnd ? mFrameWnd : mWnd;
+  HWND hMain = GetMainWindow();
   if (hMain) {
     DEBUGFOCUS(Destroy);
     if (hMain == WinQueryFocus(HWND_DESKTOP)) {
@@ -505,8 +522,19 @@ NS_METHOD nsWindow::Destroy()
 //  Standard Window Operations
 //=============================================================================
 
+// This can't be inlined in nsWindow.h because it doesn't know about
+// GetFrameWnd().
+
+inline HWND nsWindow::GetMainWindow()
+{
+  return mFrame ? mFrame->GetFrameWnd() : mWnd;
+}
+
+//-----------------------------------------------------------------------------
+// Inline this here for consistency (and a cleaner looking .h).
+
 // static
-nsWindow* nsWindow::GetNSWindowPtr(HWND aWnd)
+inline nsWindow* nsWindow::GetNSWindowPtr(HWND aWnd)
 {
   return (nsWindow*)WinQueryWindowPtr(aWnd, QWL_NSWINDOWPTR);
 }
@@ -514,7 +542,7 @@ nsWindow* nsWindow::GetNSWindowPtr(HWND aWnd)
 //-----------------------------------------------------------------------------
 
 // static
-PRBool nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow* aPtr)
+inline PRBool nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow* aPtr)
 {
   return WinSetWindowPtr(aWnd, QWL_NSWINDOWPTR, aPtr);
 }
@@ -525,7 +553,7 @@ nsIWidget* nsWindow::GetParent()
 {
   // if this window isn't supposed to have a parent or it doesn't have
   // a parent, or if it or its parent is being destroyed, return null
-  if (mIsTopWidgetWindow || mIsDestroying || mOnDestroyCalled ||
+  if (mFrame || mIsDestroying || mOnDestroyCalled ||
       !mParent || mParent->mIsDestroying) {
     return 0;
   }
@@ -555,10 +583,12 @@ NS_METHOD nsWindow::IsEnabled(PRBool* aState)
 }
 
 //-----------------------------------------------------------------------------
-// nsFrameWindow overrides this
 
 NS_METHOD nsWindow::Show(PRBool aState)
 {
+  if (mFrame) {
+    return mFrame->Show(aState);
+  }
   if (mWnd) {
     if (aState) {
       // don't try to show new windows (e.g. the Bookmark menu)
@@ -828,15 +858,21 @@ void nsWindow::Scroll(const nsIntPoint& aDelta,
 //  Window Positioning
 //=============================================================================
 
+// For toplevel windows, mBounds contains the dimensions of the client
+// window.  os2FrameWindow's "override" returns the size of the frame.
+
 NS_METHOD nsWindow::GetBounds(nsIntRect& aRect)
 {
+  if (mFrame) {
+    return mFrame->GetBounds(aRect);
+  }
   aRect = mBounds;
   return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
-// nsFrameWindow overrides this method.  Since it is only invoked on toplevel
-// windows, this implementation for child windows should never get called.
+// Since mBounds contains the dimensions of the client, os2FrameWindow
+// doesn't have to provide any special handling for this method.
 
 NS_METHOD nsWindow::GetClientBounds(nsIntRect& aRect)
 {
@@ -865,14 +901,14 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
 // ptl is in this window's space
 void nsWindow::NS2PM(POINTL& ptl)
 {
-  ptl.y = GetClientHeight() - ptl.y - 1;
+  ptl.y = mBounds.height - ptl.y - 1;
 }
 
 // rcl is in this window's space
 void nsWindow::NS2PM(RECTL& rcl)
 {
   LONG height = rcl.yTop - rcl.yBottom;
-  rcl.yTop = GetClientHeight() - rcl.yBottom;
+  rcl.yTop = mBounds.height - rcl.yBottom;
   rcl.yBottom = rcl.yTop - height;
 }
 
@@ -882,7 +918,7 @@ void nsWindow::NS2PM_PARENT(POINTL& ptl)
   if (mParent) {
     mParent->NS2PM(ptl);
   } else {
-    HWND hParent = WinQueryWindow(GetMainWindow(), QW_PARENT);
+    HWND hParent = WinQueryWindow(mWnd, QW_PARENT);
     SWP  swp;
     WinQueryWindowPos(hParent, &swp);
     ptl.y = swp.cy - ptl.y - 1;
@@ -893,9 +929,8 @@ void nsWindow::NS2PM_PARENT(POINTL& ptl)
 
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-  if (mWindowType == eWindowType_toplevel ||
-      mWindowType == eWindowType_dialog) {
-    SetSizeMode(nsSizeMode_Normal);
+  if (mFrame) {
+    return mFrame->Move(aX, aY);
   }
   Resize(aX, aY, mBounds.width, mBounds.height, PR_FALSE);
   return NS_OK;
@@ -905,6 +940,9 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (mFrame) {
+    return mFrame->Resize(aWidth, aHeight, aRepaint);
+  }
   Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
   return NS_OK;
 }
@@ -914,6 +952,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (mFrame) {
+    return mFrame->Resize(aX, aY, aWidth, aHeight, aRepaint);
+  }
+
   // For mWnd & eWindowType_child set the cached values upfront, see bug 286555.
   // For other mWnd types we defer transfer of values to mBounds to
   // WinSetWindowPos(), see bug 391421.
@@ -943,7 +985,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY,
                          &ptl, 1);
     }
 
-    if (!WinSetWindowPos(GetMainWindow(), 0, ptl.x, ptl.y, aWidth, aHeight,
+    if (!WinSetWindowPos(mWnd, 0, ptl.x, ptl.y, aWidth, aHeight,
                          SWP_MOVE | SWP_SIZE) && aRepaint) {
       WinInvalidateRect(mWnd, 0, FALSE);
     }
@@ -1183,277 +1225,57 @@ HWND nsWindow::GetPluginClipWindow(HWND aParentWnd)
 //  Top-level (frame window) Operations
 //=============================================================================
 
-// When a window gets the focus, call nsFrameWindow's version of this
+// When a window gets the focus, call os2FrameWindow's version of this
 // method.  It will fire an NS_ACTIVATE event on the top-level widget
 // if appropriate.
 
 void nsWindow::ActivateTopLevelWidget()
 {
-  nsWindow* top = static_cast<nsWindow*>(GetTopLevelWidget());
-  if (top) {
-    top->ActivateTopLevelWidget();
+  if (mFrame) {
+    mFrame->ActivateTopLevelWidget();
+  } else {
+    nsWindow* top = static_cast<nsWindow*>(GetTopLevelWidget());
+    if (top && top->mFrame) {
+      top->mFrame->ActivateTopLevelWidget();
+    }
   }
   return;
 }
 
 //-----------------------------------------------------------------------------
-// Maximize, minimize or restore the window.  When the frame has its
-// controls, this method is advisory because the min/max/restore has
-// already occurred.  Only when the frame is in kiosk/fullscreen mode
-// does it perform the minimize or restore
+// All of these methods are inherently toplevel-only, and are in fact
+// only invoked on toplevel widgets.  If they're invoked on a child
+// window, there's an error upstream.
 
 NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 {
-  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_UNEXPECTED);
-
-  PRInt32 previousMode;
-  GetSizeMode(&previousMode);
-
-  // save the new state
-  nsresult rv = nsBaseWidget::SetSizeMode(aMode);
-
-  // Minimized windows would get restored involuntarily if we fired an
-  // NS_ACTIVATE when the user clicks on them.  Instead, we defer the
-  // activation event until the window has explicitly been restored.
-  if (previousMode == nsSizeMode_Minimized && previousMode != aMode) {
-    DEBUGFOCUS(deferred NS_ACTIVATE);
-    ActivateTopLevelWidget();
-  }
-
-  // nothing to do in these cases
-  if (!NS_SUCCEEDED(rv) || !mChromeHidden || aMode == nsSizeMode_Maximized) {
-    return rv;
-  }
-
-  ULONG ulStyle = WinQueryWindowULong(mFrameWnd, QWL_STYLE);
-
-  // act on the request if the frame isn't already in the requested state
-  if (aMode == nsSizeMode_Minimized) {
-    if (!(ulStyle & WS_MINIMIZED)) {
-      WinSetWindowPos(mFrameWnd, HWND_BOTTOM, 0, 0, 0, 0,
-                      SWP_MINIMIZE | SWP_ZORDER | SWP_DEACTIVATE);
-    }
-  } else
-  if (ulStyle & (WS_MAXIMIZED | WS_MINIMIZED)) {
-    WinSetWindowPos(mFrameWnd, 0, 0, 0, 0, 0, SWP_RESTORE);
-  }
-
-  return NS_OK;
+  NS_ENSURE_TRUE(mFrame, NS_ERROR_UNEXPECTED);
+  return mFrame->SetSizeMode(aMode);
 }
-
-//-----------------------------------------------------------------------------
-// Hide or show the frame & its controls (titlebar, minmax, etc.).
 
 NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
-  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_UNEXPECTED);
-
-  // Putting a maximized window into fullscreen mode causes multiple
-  // problems if it's later minimized & then restored.  To avoid them,
-  // restore maximized windows before putting them in fullscreen mode.
-  if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MAXIMIZED) {
-    WinSetWindowPos(mFrameWnd, 0, 0, 0, 0, 0, SWP_RESTORE | SWP_NOREDRAW);
-  }
-
-  HWND hParent;
-  if (aShouldHide) {
-    hParent = HWND_OBJECT;
-    mChromeHidden = PR_TRUE;
-  } else {
-    hParent = mFrameWnd;
-    mChromeHidden = PR_FALSE;
-  }
-
-  // Hide or show the frame controls.
-  HWND hControl = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-  if (hControl) {
-    WinSetParent(hControl, hParent, FALSE);
-  }
-  hControl = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
-  if (hControl) {
-    WinSetParent(hControl, hParent, FALSE);
-  }
-  hControl = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
-  if (hControl) {
-    WinSetParent(hControl, hParent, FALSE);
-  }
-
-  // Modify the frame style, then advise it of the changes.
-  if (aShouldHide) {
-    ULONG ulStyle = WinQueryWindowULong(mFrameWnd, QWL_STYLE);
-    WinSetProperty(mFrameWnd, "ulStyle", (PVOID)ulStyle, 0);
-    WinSetWindowULong(mFrameWnd, QWL_STYLE, ulStyle & ~FS_SIZEBORDER);
-    WinSendMsg(mFrameWnd, WM_UPDATEFRAME, 0, 0);
-  } else {
-    ULONG ulStyle = (ULONG)WinQueryProperty(mFrameWnd, "ulStyle");
-    WinSetWindowULong(mFrameWnd, QWL_STYLE, ulStyle);
-    WinSendMsg(mFrameWnd, WM_UPDATEFRAME,
-               MPFROMLONG(FCF_TITLEBAR | FCF_SYSMENU | FCF_MINMAX), 0);
-  }
-
-  return NS_OK;
+  NS_ENSURE_TRUE(mFrame, NS_ERROR_UNEXPECTED);
+  return mFrame->HideWindowChrome(aShouldHide);
 }
-
-//-----------------------------------------------------------------------------
-// On OS/2, if you pass a titlebar > 512 characters, it doesn't display at all.
-// We are going to limit our titlebars to 256 just to be on the safe side.
-
-#define MAX_TITLEBAR_LENGTH 256
 
 NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
 {
-  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_UNEXPECTED);
-
-  PRUnichar* uchtemp = ToNewUnicode(aTitle);
-  for (PRUint32 i = 0; i < aTitle.Length(); i++) {
-    switch (uchtemp[i]) {
-      case 0x2018:
-      case 0x2019:
-        uchtemp[i] = 0x0027;
-        break;
-      case 0x201C:
-      case 0x201D:
-        uchtemp[i] = 0x0022;
-        break;
-      case 0x2014:
-        uchtemp[i] = 0x002D;
-        break;
-    }
-  }
-
-  nsAutoCharBuffer title;
-  PRInt32 titleLength;
-  WideCharToMultiByte(0, uchtemp, aTitle.Length(), title, titleLength);
-  if (titleLength > MAX_TITLEBAR_LENGTH) {
-    title[MAX_TITLEBAR_LENGTH] = '\0';
-  }
-  WinSetWindowText(mFrameWnd, title.Elements());
-
-  // If the chrome is hidden, set the text of the titlebar directly
-  if (mChromeHidden) {
-    HWND hTitleBar = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-    WinSetWindowText(hTitleBar, title.Elements());
-  }
-
-  nsMemory::Free(uchtemp);
-  return NS_OK;
+  NS_ENSURE_TRUE(mFrame, NS_ERROR_UNEXPECTED);
+  return mFrame->SetTitle(aTitle);
 }
-
-//-----------------------------------------------------------------------------
-// This implementation guarantees that sysmenus & minimized windows
-// will always have some icon other than the sysmenu default.
 
 NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
 {
-  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_UNEXPECTED);
-
-  static HPOINTER hDefaultIcon = 0;
-  HPOINTER        hWorkingIcon = 0;
-
-  // Assume the given string is a local identifier for an icon file.
-  nsCOMPtr<nsILocalFile> iconFile;
-  ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
-                  getter_AddRefs(iconFile));
-
-  // if the file was found, try to use it
-  if (iconFile) {
-    nsCAutoString path;
-    iconFile->GetNativePath(path);
-
-    if (mFrameIcon) {
-      WinFreeFileIcon(mFrameIcon);
-    }
-    mFrameIcon = WinLoadFileIcon(path.get(), FALSE);
-    hWorkingIcon = mFrameIcon;
-  }
-
-  // if that doesn't work, use the app's icon (let's hope it can be
-  // loaded because nobody should have to look at SPTR_APPICON - ugggh!)
-  if (!hWorkingIcon) {
-    if (!hDefaultIcon) {
-      hDefaultIcon = WinLoadPointer(HWND_DESKTOP, 0, 1);
-      if (!hDefaultIcon) {
-        hDefaultIcon = WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE);
-      }
-    }
-    hWorkingIcon = hDefaultIcon;
-  }
-
-  WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)hWorkingIcon, (MPARAM)0);
-  return NS_OK;
+  NS_ENSURE_TRUE(mFrame, NS_ERROR_UNEXPECTED);
+  return mFrame->SetIcon(aIconSpec);
 }
-
-//-----------------------------------------------------------------------------
-// Constrain a potential move to fit onscreen.
 
 NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
                                       PRInt32* aX, PRInt32* aY)
 {
-  NS_ENSURE_TRUE(mFrameWnd, NS_ERROR_UNEXPECTED);
-
-  // do we have enough info to do anything
-  PRBool doConstrain = PR_FALSE;
-
-  // get our playing field. use the current screen, or failing
-  // that for any reason, use device caps for the default screen.
-  RECTL screenRect;
-
-  nsCOMPtr<nsIScreenManager> screenmgr =
-    do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (screenmgr) {
-    nsCOMPtr<nsIScreen> screen;
-    PRInt32 left, top, width, height;
-
-    // zero size rects confuse the screen manager
-    width = mBounds.width > 0 ? mBounds.width : 1;
-    height = mBounds.height > 0 ? mBounds.height : 1;
-    screenmgr->ScreenForRect(*aX, *aY, width, height,
-                             getter_AddRefs(screen));
-    if (screen) {
-      screen->GetAvailRect(&left, &top, &width, &height);
-      screenRect.xLeft = left;
-      screenRect.xRight = left+width;
-      screenRect.yTop = top;
-      screenRect.yBottom = top+height;
-      doConstrain = PR_TRUE;
-    }
-  }
-
-#define kWindowPositionSlop 100
-
-  if (doConstrain) {
-    if (aAllowSlop) {
-      if (*aX < screenRect.xLeft - mBounds.width + kWindowPositionSlop) {
-        *aX = screenRect.xLeft - mBounds.width + kWindowPositionSlop;
-      } else
-      if (*aX >= screenRect.xRight - kWindowPositionSlop) {
-        *aX = screenRect.xRight - kWindowPositionSlop;
-      }
-
-      if (*aY < screenRect.yTop) {
-        *aY = screenRect.yTop;
-      } else
-      if (*aY >= screenRect.yBottom - kWindowPositionSlop) {
-        *aY = screenRect.yBottom - kWindowPositionSlop;
-      }
-    } else {
-      if (*aX < screenRect.xLeft) {
-        *aX = screenRect.xLeft;
-      } else
-      if (*aX >= screenRect.xRight - mBounds.width) {
-        *aX = screenRect.xRight - mBounds.width;
-      }
-
-      if (*aY < screenRect.yTop) {
-        *aY = screenRect.yTop;
-      } else
-      if (*aY >= screenRect.yBottom - mBounds.height) {
-        *aY = screenRect.yBottom - mBounds.height;
-      }
-    }
-  }
-
-  return NS_OK;
+  NS_ENSURE_TRUE(mFrame, NS_ERROR_UNEXPECTED);
+  return mFrame->ConstrainPosition(aAllowSlop, aX, aY);
 }
 
 //=============================================================================
@@ -2143,7 +1965,7 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
       isDone = DispatchScrollEvent(msg, mp1, mp2);
       break;
 
-    // Do not act on WM_ACTIVATE - it is handled by nsFrameWindow.
+    // Do not act on WM_ACTIVATE - it is handled by os2FrameWindow.
     // case WM_ACTIVATE:
     //   break;
 
@@ -2220,7 +2042,6 @@ void nsWindow::OnDestroy()
 }
 
 //-----------------------------------------------------------------------------
-// nsFrameWindow overrides this.
 
 PRBool nsWindow::OnReposition(PSWP pSwp)
 {
@@ -2297,7 +2118,7 @@ PRBool nsWindow::OnPaint()
         // build XP rect from in-ex window rect
         nsIntRect rect;
         rect.x = rcl.xLeft;
-        rect.y = GetClientHeight() - rcl.yTop;
+        rect.y = mBounds.height - rcl.yTop;
         rect.width = rcl.xRight - rcl.xLeft;
         rect.height = rcl.yTop - rcl.yBottom;
         event.rect = &rect;
