@@ -113,7 +113,7 @@ parent:
   /**
    * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
    * @TODO This would be more readable as an overloaded method,
-   *       but IPDL doesn't allow that for constructors (or any method?).
+   *       but IPDL doesn't allow that for constructors.
    */
   rpc PStreamNotify(nsCString url, nsCString target, bool post,
                     nsCString buffer, bool file)

@@ -75,11 +75,11 @@ using mozilla::gfx::SharedDIB;
 #endif // defined(OS_WIN)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
-                                         const nsCString& aMimeType) :
-    mPluginIface(aPluginIface)
+                                         const nsCString& aMimeType)
+    : mPluginIface(aPluginIface)
+    , mQuirks(0)
     , mCachedWindowActor(nsnull)
     , mCachedElementActor(nsnull)
-    , mQuirks(0)
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -1288,9 +1288,7 @@ PluginInstanceChild::AnswerPBrowserStreamConstructor(
 {
     AssertPluginThread();
     *rv = static_cast<BrowserStreamChild*>(aActor)
-          ->StreamConstructed(url, length, lastmodified,
-                              notifyData, headers, mimeType, seekable,
-                              stype);
+          ->StreamConstructed(mimeType, seekable, stype);
     return true;
 }
 
@@ -1306,7 +1304,8 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          uint16_t *stype)
 {
     AssertPluginThread();
-    return new BrowserStreamChild(this, url, length, lastmodified, notifyData,
+    return new BrowserStreamChild(this, url, length, lastmodified,
+                                  static_cast<StreamNotifyChild*>(notifyData),
                                   headers, mimeType, seekable, rv, stype);
 }
 
@@ -1348,29 +1347,58 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
     return NULL;
 }
 
-bool
-StreamNotifyChild::Answer__delete__(const NPReason& reason)
+void
+StreamNotifyChild::ActorDestroy(ActorDestroyReason why)
 {
-    AssertPluginThread();
-    return static_cast<PluginInstanceChild*>(Manager())
-        ->NotifyStream(this, reason);
+    if (AncestorDeletion == why && mBrowserStream) {
+        NS_ERROR("Pending NPP_URLNotify not called when closing an instance.");
+
+        // reclaim responsibility for deleting ourself
+        mBrowserStream = NULL;
+        mBrowserStream->mStreamNotify = NULL;
+    }
+}
+
+
+void
+StreamNotifyChild::SetAssociatedStream(BrowserStreamChild* bs)
+{
+    NS_ASSERTION(bs, "Shouldn't be null");
+    NS_ASSERTION(!mBrowserStream, "Two streams for one streamnotify?");
+
+    mBrowserStream = bs;
 }
 
 bool
-PluginInstanceChild::NotifyStream(StreamNotifyChild* notifyData,
-                                  NPReason reason)
+StreamNotifyChild::Recv__delete__(const NPReason& reason)
 {
-    if (notifyData->mClosure)
-        mPluginIface->urlnotify(&mData, notifyData->mURL.get(), reason,
-                                notifyData->mClosure);
+    AssertPluginThread();
+
+    if (mBrowserStream)
+        mBrowserStream->NotifyPending();
+    else
+        NPP_URLNotify(reason);
+
     return true;
+}
+
+void
+StreamNotifyChild::NPP_URLNotify(NPReason reason)
+{
+    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(Manager());
+
+    if (mClosure)
+        instance->mPluginIface->urlnotify(instance->GetNPP(), mURL.get(),
+                                          reason, mClosure);
 }
 
 bool
 PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData)
 {
     AssertPluginThread();
-    delete notifyData;
+
+    if (!static_cast<StreamNotifyChild*>(notifyData)->mBrowserStream)
+        delete notifyData;
     return true;
 }
 
@@ -1505,6 +1533,19 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+
+    nsTArray<PBrowserStreamChild*> streams;
+    ManagedPBrowserStreamChild(streams);
+
+    // First make sure none of these streams become deleted
+    for (PRUint32 i = 0; i < streams.Length(); ) {
+        if (static_cast<BrowserStreamChild*>(streams[i])->InstanceDying())
+            ++i;
+        else
+            streams.RemoveElementAt(i);
+    }
+    for (PRUint32 i = 0; i < streams.Length(); ++i)
+        static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
     for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
         mPendingAsyncCalls[i]->Cancel();
