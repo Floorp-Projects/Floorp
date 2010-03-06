@@ -43,6 +43,7 @@
 #include "prtypes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIPluginTag.h"
 #include "nsIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
@@ -130,7 +131,7 @@ struct nsPluginInstanceTag
   nsNPAPIPluginInstance* mInstance; // this must always be valid
   PRBool                 mDefaultPlugin;
   // Array holding all opened stream listeners for this entry
-  nsCOMPtr <nsISupportsArray> mStreams; 
+  nsCOMArray<nsIPluginStreamInfo> mStreams; 
   
   nsPluginInstanceTag(nsPluginTag* aPluginTag,
                       nsIPluginInstance* aInstance, 
