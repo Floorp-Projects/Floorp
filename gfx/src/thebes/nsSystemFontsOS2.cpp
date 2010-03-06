@@ -86,7 +86,7 @@ void QueryFontFromINI(char* fontType, char* fontName, ULONG ulLength)
 
     /* We had to switch to using PrfQueryProfileData because */
     /* some users have binary font data in their INI files */
-    BOOL rc = PrfQueryProfileData(HINI_USER, "PM_SystemFonts", fontType,
+    BOOL rc = PrfQueryProfileData(HINI_USER, (PCSZ)"PM_SystemFonts", (PCSZ)fontType,
                                   fontName, &ulMaxNameL);
     /* If there was no entry in the INI, default to something */
     if (rc == FALSE) {
