@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  *   Peter Weilbacher (mozilla@Weilbacher.org)
+ *   Walter Meinl (wuno@lsvw.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,9 @@ toolbox {
   -moz-appearance: toolbox;
   border: none;
   background-color: ThreeDFace;
+}
+
+toolbox:not(:-moz-lwtheme) {
   color: ButtonText;
 }
 
@@ -65,7 +69,6 @@ toolbar {
 }
 
 toolbar[type="menubar"], menubar {
-  background-color: Menu;
   -moz-appearance: toolbar;
   min-width: 1px; /* DON'T DELETE! */
   border-top: none !important;
@@ -73,9 +76,22 @@ toolbar[type="menubar"], menubar {
   -moz-border-bottom-colors: ThreeDShadow;
 }
 
+toolbar[type="menubar"], menubar:not(:-moz-lwtheme) {
+  background-color: Menu;
+}
+
 toolbar:first-child, menubar:first-child {
   min-width: 1px; /* DON'T DELETE! */
   border-top: none !important;
+}
+
+/* ::::: lightweight theme ::::: */
+ 
+toolbox:-moz-lwtheme,
+toolbar:-moz-lwtheme {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
 }
 
 /* ::::: toolbar decorations ::::: */
