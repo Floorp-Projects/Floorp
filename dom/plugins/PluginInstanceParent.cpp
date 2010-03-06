@@ -53,9 +53,6 @@
 extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
-extern const PRUnichar* kOOPPGetBaseMessageEventId;
-UINT gOOPPGetBaseMessageEvent =
-    RegisterWindowMessage(kOOPPGetBaseMessageEventId);
 UINT gOOPPSpinNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
 UINT gOOPPStopNativeLoopEvent =
@@ -560,27 +557,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                                 sizeof(szClass)/sizeof(PRUnichar)) &&
                   !wcscmp(szClass, L"ShockwaveFlashFullScreen")) {
                   return 0;
-              }
-            }
-            break;
-
-            case WM_IME_SETCONTEXT:
-            {
-              // Children can activate the underlying parent browser window
-              // generating nested events that arrive here. Check the base
-              // event this event was triggered by and unlock the child using
-              // ReplyMessage if needed.
-              HWND hwnd = NULL;
-              UINT baseMsg = 0;
-              mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &hwnd);
-              NS_ASSERTION(GetWindowThreadProcessId(hwnd, nsnull) ==
-                           GetCurrentThreadId(),
-                           "hwnd belongs to another thread!");
-              if (hwnd &&
-                  SendMessage(hwnd, gOOPPGetBaseMessageEvent,
-                              (WPARAM)&baseMsg, 0) &&
-                  baseMsg == WM_ACTIVATE) {
-                  ReplyMessage(0);
               }
             }
             break;

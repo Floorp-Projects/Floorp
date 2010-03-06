@@ -284,12 +284,6 @@ LPFNLRESULTFROMOBJECT
 const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 PRUint32        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
-// Used in OOPP hang detection.
-const PRUnichar* kOOPPGetBaseMessageEventId   = L"Get Base Widget Event Message";
-PRUint32        nsWindow::sOOPPGetBaseMessageEvent =
-                  RegisterWindowMessage(kOOPPGetBaseMessageEventId);
-PRInt32         nsWindow::sCallDepth              = 0;
-UINT            nsWindow::sBaseMsg                = 0;
 #endif
 
 /**************************************************************
@@ -3702,6 +3696,15 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
       ::ReplyMessage(res);
     }
   }
+
+  // Windowless flash plugins sending WM_ACTIVATE events to the main window
+  // via child calls to ShowWindow. Unblock the child to prevent lock ups.
+  if (msg == WM_ACTIVATE && lParam != 0 &&
+      LOWORD(wParam) == WA_ACTIVE && IsWindow((HWND)lParam) &&
+      (::InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+    ::ReplyMessage(0);
+    return;
+  }
 }
 
 #endif // MOZ_IPC
@@ -3768,28 +3771,14 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
-#ifdef MOZ_IPC
-  // Track the base event, used in focus hang detection for OOPP.
-  NS_ASSERTION(nsWindow::sCallDepth >= 0, "Call depth out of sync.");
-  if (++nsWindow::sCallDepth == 1)
-    nsWindow::sBaseMsg = msg;
-#endif
-
   // Call ProcessMessage
   LRESULT retValue;
   if (PR_TRUE == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
-#ifdef MOZ_IPC
-    nsWindow::sCallDepth--;
-#endif
     return retValue;
   }
 
   LRESULT res = ::CallWindowProcW(someWindow->GetPrevWindowProc(),
                                   hWnd, msg, wParam, lParam);
-
-#ifdef MOZ_IPC
-  nsWindow::sCallDepth--;
-#endif
 
   return res;
 }
@@ -4748,16 +4737,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         // receive this event when the child window receives focus. (sent from
         // PluginInstanceParent.cpp)
         ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
-      }
-      else if (msg == sOOPPGetBaseMessageEvent && wParam) {
-        // PluginInstanceParent uses this to retreive the base event for a nested
-        // event it receives. Used in preventing hangs on events forwared from
-        // child.
-        NS_ASSERTION(nsWindow::sCallDepth > 0,
-                     "Call depth not 0 when requesting base message?");
-        *(reinterpret_cast<UINT*>(wParam)) = sBaseMsg;
-        *aRetValue = 1;
-        return PR_TRUE;
       }
 #endif
     }
