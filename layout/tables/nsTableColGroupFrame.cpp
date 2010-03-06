@@ -324,10 +324,12 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
   NS_ASSERTION(!aListName, "unexpected child list");
 
   if (!aOldFrame) return NS_OK;
-
+  PRBool contentRemoval = PR_FALSE;
+  
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
     if (colFrame->GetColType() == eColContent) {
+      contentRemoval = PR_TRUE;
       // Remove any anonymous column frames this <col> produced via a colspan
       nsTableColFrame* col = colFrame->GetNextCol();
       nsTableColFrame* nextCol;
@@ -350,6 +352,11 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
       return NS_ERROR_NULL_POINTER;
 
     tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
+    if (mFrames.IsEmpty() && contentRemoval && 
+        GetColType() == eColGroupContent) {
+      tableFrame->AppendAnonymousColFrames(this, GetSpan(),
+                                           eColAnonymousColGroup, PR_TRUE);
+    }
   }
   else {
     mFrames.DestroyFrame(aOldFrame);
