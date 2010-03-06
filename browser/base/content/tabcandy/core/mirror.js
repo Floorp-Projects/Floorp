@@ -36,8 +36,15 @@ TabCanvas.prototype = {
     // Don't mirror chrome tabs.
     //if( window.location.protocol == "chrome:" ) return;
     
-    
+/*     Utils.log('attaching', tab.contentWindow.location.href); */
     tab.contentWindow.addEventListener("MozAfterPaint", paintIt, false);
+
+/*
+    tab.contentDocument.addEventListener("onload", function() { 
+      Utils.log('onload', this.tab.contentWindow.location.href);
+    }, false);
+*/
+    
     $(window).unload(function(){
       tab.contentWindow.removeEventListener("MozAfterPaint", paintIt, false);
     })
@@ -79,10 +86,18 @@ TabCanvas.prototype = {
   },
   
   onPaint: function(evt){
+/*
+    if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
+      Utils.trace('on paint', this.tab.contentWindow.location.href);
+*/
     this.paint(evt);    
   },
   
   animate: function(options, duration){
+/*
+    if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
+      Utils.log('on animate', this.tab.contentWindow.location.href);
+*/
     var self = this;
     if( duration == null ) duration = 0;
         
