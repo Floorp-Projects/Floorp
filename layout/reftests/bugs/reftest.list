@@ -636,6 +636,9 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 == 377603-1.html 377603-1-ref.html
 == 377918.html 377918-ref.html
 == 378535-1.html 378535-1-ref.html
+== 378933-1.html 378933-1-ref.html
+== 378935-1.html 378935-1-ref.html
+== 378937-1.html 378937-1-ref.html
 == 379178-xhtml.xhtml 379178-xhtml-ref.xhtml
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg

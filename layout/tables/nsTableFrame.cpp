@@ -6897,7 +6897,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
                                                      NS_SIDE_TOP;
   nsIFrame* rg   = aIter.mRg;  if (!rg) ABORT0();
   nsIFrame* row  = aIter.mRow; if (!row) ABORT0();
-  nsIFrame* cell = mFirstCell; if (!cell) ABORT0(); // ????
+  nsIFrame* cell = mFirstCell;
   nsIFrame* col;
   nsIFrame* owner = nsnull;
 
