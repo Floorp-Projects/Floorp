@@ -157,7 +157,7 @@
         this._setNewlineHandling();
 
         if (this.hasAttribute("emptytext"))
-          this.placeholder = this.setAttribute("emptytext");
+          this.placeholder = this.getAttribute("emptytext");
       ]]></constructor>
 
       <destructor>
