@@ -345,6 +345,28 @@ nsresult nsPluginHost::PostPluginUnloadEvent(PRLibrary* aLibrary)
   return NS_ERROR_FAILURE;
 }
 
+/**
+ * When a plugin requests opens multiple requests to the same URL and
+ * the request must be satified by saving a file to disk, each stream
+ * listener holds a reference to the backing file: the file is only removed
+ * when all the listeners are done.
+ */
+class CachedFileHolder
+{
+public:
+  CachedFileHolder(nsIFile* cacheFile);
+  ~CachedFileHolder();
+
+  void AddRef();
+  void Release();
+
+  nsIFile* file() const { return mFile; }
+
+private:
+  nsAutoRefCnt mRefCnt;
+  nsCOMPtr<nsIFile> mFile;
+};
+
 class nsPluginStreamListenerPeer : public nsIStreamListener,
                                    public nsIProgressEventSink,
                                    public nsIHttpHeaderVisitor,
@@ -415,7 +437,7 @@ private:
 
   // local cached file, we save the content into local cache if browser cache is not available,
   // or plugin asks stream as file and it expects file extension until bug 90558 got fixed
-  nsCOMPtr<nsIFile> mLocalCachedFile;
+  nsRefPtr<CachedFileHolder> mLocalCachedFileHolder;
   nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
   nsHashtable             *mDataForwardToRequest;
 
@@ -453,6 +475,33 @@ nsPluginStreamListenerPeer::GetContentType(char** result)
 {
   *result = const_cast<char*>(mContentType.get());
   return NS_OK;
+}
+
+CachedFileHolder::CachedFileHolder(nsIFile* cacheFile)
+  : mFile(cacheFile)
+{
+  NS_ASSERTION(mFile, "Empty CachedFileHolder");
+}
+
+CachedFileHolder::~CachedFileHolder()
+{
+  mFile->Remove(PR_FALSE);
+}
+
+void
+CachedFileHolder::AddRef()
+{
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "CachedFileHolder", sizeof(*this));
+}
+
+void
+CachedFileHolder::Release()
+{
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "CachedFileHolder");
+  if (0 == mRefCnt)
+    delete this;
 }
 
 NS_IMETHODIMP
@@ -678,32 +727,13 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 {
 #ifdef PLUGIN_LOGGING
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-    ("nsPluginStreamListenerPeer::dtor this=%p, url=%s%c",this, mURLSpec.get(), mLocalCachedFile?',':'\n'));
+    ("nsPluginStreamListenerPeer::dtor this=%p, url=%s\n",this, mURLSpec.get()));
 #endif
 
   // close FD of mFileCacheOutputStream if it's still open
   // or we won't be able to remove the cache file
   if (mFileCacheOutputStream)
     mFileCacheOutputStream = nsnull;
-
-  // if we have mLocalCachedFile lets release it
-  // and it'll be fiscally remove if refcnt == 1
-  if (mLocalCachedFile) {
-    nsrefcnt refcnt;
-    NS_RELEASE2(mLocalCachedFile, refcnt);
-
-#ifdef PLUGIN_LOGGING
-    nsCAutoString filePath;
-    mLocalCachedFile->GetNativePath(filePath);
-
-    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-      ("LocalyCachedFile=%s has %d refcnt and will %s be deleted now\n",filePath.get(),refcnt,refcnt==1?"":"NOT"));
-#endif
-
-    if (refcnt == 1) {
-      mLocalCachedFile->Remove(PR_FALSE);
-    }
-  }
 
   delete mDataForwardToRequest;
 }
@@ -817,20 +847,16 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   nsTArray< nsAutoPtr<nsPluginInstanceTag> > *instanceTags = pluginHost->InstanceTagArray();
   for (PRUint32 i = 0; i < instanceTags->Length(); i++) {
     nsPluginInstanceTag *instanceTag = (*instanceTags)[i];
-    if (instanceTag->mStreams) {
-      // most recent streams are at the end of list
-      PRInt32 cnt;
-      instanceTag->mStreams->Count((PRUint32*)&cnt);
-      while (--cnt >= 0) {
-        nsPluginStreamListenerPeer *lp =
-          reinterpret_cast<nsPluginStreamListenerPeer*>(instanceTag->mStreams->ElementAt(cnt));
-        if (lp && lp->mLocalCachedFile) {
-          useExistingCacheFile = lp->UseExistingPluginCacheFile(this);
-          if (useExistingCacheFile) {
-            mLocalCachedFile = lp->mLocalCachedFile;
-            break;
-          }
-          NS_RELEASE(lp);
+
+    // most recent streams are at the end of list
+    for (PRInt32 i = instanceTag->mStreams.Count() - 1; i >= 0; --i) {
+      nsPluginStreamListenerPeer *lp =
+        static_cast<nsPluginStreamListenerPeer*>(instanceTag->mStreams[i]);
+      if (lp && lp->mLocalCachedFileHolder) {
+        useExistingCacheFile = lp->UseExistingPluginCacheFile(this);
+        if (useExistingCacheFile) {
+          mLocalCachedFileHolder = lp->mLocalCachedFileHolder;
+          break;
         }
       }
       if (useExistingCacheFile)
@@ -878,25 +904,15 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 
     // save the file.
     
-    mLocalCachedFile = pluginTmp;
-    // Addref to add one extra refcnt, we can use NS_RELEASE2(mLocalCachedFile...) in dtor
-    // to remove this file when refcnt == 1
-    NS_ADDREF(mLocalCachedFile);
+    mLocalCachedFileHolder = new CachedFileHolder(pluginTmp);
   }
 
   // add this listenerPeer to list of stream peers for this instance
   // it'll delay release of listenerPeer until nsPluginInstanceTag::~nsPluginInstanceTag
   // and the temp file is going to stay alive until then
   nsPluginInstanceTag *instanceTag = pluginHost->FindInstanceTag(mInstance);
-  if (instanceTag) {
-    if (!instanceTag->mStreams &&
-        (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(instanceTag->mStreams))))) {
-      return rv;
-    }
-
-    nsISupports* supports = static_cast<nsISupports*>((static_cast<nsIStreamListener*>(this)));
-    instanceTag->mStreams->AppendElement(supports);
-  }
+  if (instanceTag)
+    instanceTag->mStreams.AppendObject(this);
 
   return rv;
 }
@@ -1274,8 +1290,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
 
   // call OnFileAvailable if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
   if (mStreamType >= NP_ASFILE) {
-    nsCOMPtr<nsIFile> localFile = mLocalCachedFile;
-    if (!localFile) {
+    nsCOMPtr<nsIFile> localFile;
+    if (mLocalCachedFileHolder)
+      localFile = mLocalCachedFileHolder->file();
+    else {
       nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
       if (cacheChannel) {
         cacheChannel->GetCacheFile(getter_AddRefs(localFile));
@@ -4495,11 +4513,8 @@ nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListen
 
   // add peer to list of stream peers for this instance
   nsPluginInstanceTag * p = FindInstanceTag(aInstance);
-  if (p) {
-    if (!p->mStreams && (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(p->mStreams)))))
-      return rv;
-    p->mStreams->AppendElement(aStreamListener);
-  }
+  if (p)
+    p->mStreams.AppendObject(listener);
 
   return rv;
 }
