@@ -92,3 +92,6 @@ GFX_ATOM(x_tibt, "x-tibt")
 GFX_ATOM(ko_xxx, "ko-xxx")
 GFX_ATOM(x_central_euro, "x-central-euro")
 GFX_ATOM(x_symbol, "x-symbol")
+
+// referenced in all.js
+GFX_ATOM(x_user_def, "x-user-def")
