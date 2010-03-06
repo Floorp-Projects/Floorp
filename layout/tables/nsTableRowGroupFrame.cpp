@@ -319,11 +319,9 @@ nsTableRowGroupFrame::InitChildReflowState(nsPresContext&     aPresContext,
   nsMargin padding(0,0,0,0);
   nsMargin* pCollapseBorder = nsnull;
   if (aBorderCollapse) {
-    if (aReflowState.frame) {
-      nsTableRowFrame *rowFrame = do_QueryFrame(aReflowState.frame);
-      if (rowFrame) {
-        pCollapseBorder = rowFrame->GetBCBorderWidth(collapseBorder);
-      }
+    nsTableRowFrame *rowFrame = do_QueryFrame(aReflowState.frame);
+    if (rowFrame) {
+      pCollapseBorder = rowFrame->GetBCBorderWidth(collapseBorder);
     }
   }
   aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder, &padding);
