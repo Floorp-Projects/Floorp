@@ -553,7 +553,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
       nscoord availWidth = cellFrame->GetPriorAvailWidth();
       nsSize desSize = cellFrame->GetDesiredSize();
       if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !GetPrevInFlow()) {
-        CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
+        CalculateCellActualHeight(cellFrame, desSize.height);
       }
       // height may have changed, adjust descent to absorb any excess difference
       nscoord ascent;
@@ -642,15 +642,12 @@ nsTableRowFrame::GetSkipSides() const
   return skip;
 }
 
-// Calculate the cell's actual size given its pass2 desired width and height.
-// Takes into account the specified height (in the style), and any special logic
-// needed for backwards compatibility.
-// Modifies the desired width and height that are passed in.
+// Calculate the cell's actual height given its pass2  height.
+// Takes into account the specified height (in the style).
+// Modifies the desired height that is passed in.
 nsresult
-nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
-                                         nscoord&  aDesiredWidth,
-                                         nscoord&  aDesiredHeight,
-                                         nscoord   aAvailWidth)
+nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
+                                           nscoord&          aDesiredHeight)
 {
   nscoord specifiedHeight = 0;
   
@@ -661,7 +658,7 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
   if (!tableFrame)
     return NS_ERROR_NULL_POINTER;
   
-  PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aCellFrame);
+  PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
   
   switch (position->mHeight.GetUnit()) {
     case eStyleUnit_Coord:
@@ -683,10 +680,6 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
   // If the specified height is greater than the desired height, then use the specified height
   if (specifiedHeight > aDesiredHeight)
     aDesiredHeight = specifiedHeight;
- 
-  if ((0 == aDesiredWidth) && (NS_UNCONSTRAINEDSIZE != aAvailWidth)) { // special Nav4 compatibility code for the width
-    aDesiredWidth = aAvailWidth;
-  } 
 
   return NS_OK;
 }
@@ -948,11 +941,9 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       
       if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
         if (!GetPrevInFlow()) {
-          // Calculate the cell's actual size given its pass2 size. This function
-          // takes into account the specified height (in the style), and any special
-          // logic needed for backwards compatibility
-          CalculateCellActualSize(kidFrame, desiredSize.width, 
-                                  desiredSize.height, availCellWidth);
+          // Calculate the cell's actual height given its pass2 height. This
+          // function takes into account the specified height (in the style)
+          CalculateCellActualHeight(cellFrame, desiredSize.height);
         }
         // height may have changed, adjust descent to absorb any excess difference
         nscoord ascent;
