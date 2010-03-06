@@ -46,16 +46,33 @@
 
 //=============================================================================
 /*
- * nsWindow derives from nsIWidget via nsBaseWindow, and is created when
- * NS_CHILD_CID is specified.  It is used for widgets that are either
- * children of other widgets or are popups (standalone windows such as
- * menus that float above other widgets).
- * 
+ * nsWindow derives from nsIWidget via nsBaseWindow.  With the aid
+ * of a helper class (os2FrameWindow) and a subclass (nsChildWindow),
+ * it implements the functionality of both toplevel and child widgets.
+ *
  * Top-level widgets (windows surrounded by a frame with a titlebar, etc.)
- * are implemented by nsFrameWindow which is a subclass of nsWindow.  Many
- * nsWindow methods operate on both child & top-level windows.  Where the
- * two categories require differing implementations, these methods rely on
- * a flag or on virtual helper methods to produce the correct result.
+ * are created when NS_WINDOW_CID is used to identify the type of object
+ * needed.  Child widgets (windows that either are children of other windows
+ * or are popups such as menus) are created when NS_CHILD_CID is specified.
+ * Since Mozilla expects these to be different classes, NS_CHILD_CID is
+ * mapped to a subclass (nsChildWindow) which acts solely as a wrapper for
+ * nsWindow and adds no functionality.
+ *
+ * While most of the methods inherited from nsIWidget are generic, some
+ * apply only to toplevel widgets (e.g. setting a title or icon).  The
+ * nature of toplevel windows on OS/2 with their separate frame & client
+ * windows introduces the need for additional toplevel-specific methods,
+ * as well as for special handling in otherwise generic methods.
+ *
+ * Rather than incorporating these toplevel functions into the body of
+ * the class, nsWindow delegates them to a helper class, os2FrameWindow.
+ * An instance of this class is created when nsWindow is told to create
+ * a toplevel native window and is destroyed in nsWindow's destructor.
+ * The class's methods operate exclusively on the frame window and never
+ * deal with the frame's client other than to create it.  Similarly,
+ * nsWindow never operates on frame windows except for a few trivial
+ * methods (e.g. Enable()).  Neither class accesses the other's data
+ * though, of necessity, both call the other's methods.
  *
  */
 //=============================================================================
@@ -123,18 +140,12 @@ extern "C" {
 
 //#define DEBUG_FOCUS
 
-#ifdef DEBUG_FOCUS
-  #define DEBUGFOCUS(what) fprintf(stderr, "[%8x]  %8lx  (%02d)  "#what"\n", \
-                                   (int)this, mWnd, mWindowIdentifier)
-#else
-  #define DEBUGFOCUS(what)
-#endif
-
 //-----------------------------------------------------------------------------
 // Forward declarations
 
 class imgIContainer;
 class gfxOS2Surface;
+class os2FrameWindow;
 
 MRESULT EXPENTRY fnwpNSWindow(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
@@ -215,11 +226,11 @@ protected:
 
   // nsWindow
   static void           InitGlobals();
-  virtual nsresult      CreateWindow(nsWindow* aParent,
+  nsresult              CreateWindow(nsWindow* aParent,
                                      HWND aParentWnd,
                                      const nsIntRect& aRect,
-                                     PRUint32 aStyle);
-  virtual HWND          GetMainWindow()     const {return mWnd;}
+                                     nsWidgetInitData* aInitData);
+  HWND                  GetMainWindow();
   static nsWindow*      GetNSWindowPtr(HWND aWnd);
   static PRBool         SetNSWindowPtr(HWND aWnd, nsWindow* aPtr);
   void                  NS2PM(POINTL& ptl);
@@ -228,7 +239,7 @@ protected:
   void                  ActivatePlugin(HWND aWnd);
   void                  SetPluginClipRegion(const Configuration& aConfiguration);
   HWND                  GetPluginClipWindow(HWND aParentWnd);
-  virtual void          ActivateTopLevelWidget();
+  void                  ActivateTopLevelWidget();
   HBITMAP               DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
                                      PRUint32 aHeight, PRUint32 aDepth);
   HBITMAP               CreateBitmapRGB(PRUint8* aImageData,
@@ -240,7 +251,7 @@ protected:
   static PRBool         RollupOnButtonDown(ULONG aMsg);
   static void           RollupOnFocusLost(HWND aFocus);
   MRESULT               ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2);
-  virtual PRBool        OnReposition(PSWP pNewSwp);
+  PRBool                OnReposition(PSWP pNewSwp);
   PRBool                OnPaint();
   PRBool                OnMouseChord(MPARAM mp1, MPARAM mp2);
   PRBool                OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2,
@@ -264,16 +275,16 @@ protected:
                                            PRInt16 aButton = nsMouseEvent::eLeftButton);
   PRBool                DispatchActivationEvent(PRUint32 aEventType);
   PRBool                DispatchScrollEvent(ULONG msg, MPARAM mp1, MPARAM mp2);
-  virtual PRInt32       GetClientHeight()   {return mBounds.height;}
 
   friend MRESULT EXPENTRY fnwpNSWindow(HWND hwnd, ULONG msg,
                                        MPARAM mp1, MPARAM mp2);
   friend MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg,
                                     MPARAM mp1, MPARAM mp2);
+  friend class os2FrameWindow;
 
   HWND          mWnd;               // window handle
   nsWindow*     mParent;            // parent widget
-  PRBool        mIsTopWidgetWindow; // is nsFrameWindow class?
+  os2FrameWindow* mFrame;           // ptr to os2FrameWindow helper object
   PRInt32       mWindowState;       // current nsWindowState_* value
   PRBool        mIsDestroying;      // in destructor
   PRBool        mInSetFocus;        // prevent recursive calls
@@ -283,12 +294,22 @@ protected:
   HPOINTER      mCssCursorHPtr;     // created by SetCursor(imgIContainer*)
   nsCOMPtr<imgIContainer> mCssCursorImg;// saved by SetCursor(imgIContainer*)
   nsRefPtr<gfxOS2Surface> mThebesSurface;
-  HWND          mFrameWnd;          // frame window handle
-  HPOINTER      mFrameIcon;         // current frame icon
-  PRBool        mChromeHidden;      // are frame controls hidden?
 #ifdef DEBUG_FOCUS
   int           mWindowIdentifier;  // a serial number for each new window
 #endif
+};
+
+//=============================================================================
+//  nsChildWindow
+//=============================================================================
+
+// This only purpose of this subclass is to map NS_CHILD_CID to
+// some class other than nsWindow which is mapped to NS_WINDOW_CID.
+
+class nsChildWindow : public nsWindow {
+public:
+  nsChildWindow()       {}
+  ~nsChildWindow()      {}
 };
 
 #endif // _nswindow_h
