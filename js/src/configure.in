@@ -1596,6 +1596,7 @@ case "$target" in
     if test "$COMPILE_ENVIRONMENT"; then
         AC_CHECK_HEADERS(sys/inttypes.h)
     fi
+    AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
