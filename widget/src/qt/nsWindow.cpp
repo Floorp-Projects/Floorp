@@ -173,7 +173,6 @@ nsWindow::nsWindow()
     mSizeState           = nsSizeMode_Normal;
     mPluginType          = PluginType_NONE;
     mQCursor             = Qt::ArrowCursor;
-    mScene               = nsnull;
     
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
@@ -354,7 +353,14 @@ nsWindow::Destroy(void)
     // the surface after its X Window.
     mThebesSurface = nsnull;
 
+    QWidget *view = nsnull;
+    QGraphicsScene *scene = nsnull;
     if (mWidget) {
+        if (mIsTopLevel) {
+            view = GetViewWidget();
+            scene = mWidget->scene();
+        }
+
         mWidget->dropReceiver();
 
         // Call deleteLater instead of delete; Qt still needs the object
@@ -367,14 +373,8 @@ nsWindow::Destroy(void)
     OnDestroy();
 
     // tear down some infrastructure after all event handling is finished
-    if (mScene) {
-        QWidget* view = GetViewWidget();
-
-        delete mScene;
-        mScene = nsnull;
-
-        delete view;
-    }
+    delete scene;
+    delete view;
 
     return NS_OK;
 }
@@ -599,8 +599,8 @@ nsWindow::SetFocus(PRBool aRaise)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(nsIntRect &aRect)
 {
-   aRect = nsIntRect(WidgetToScreenOffset(), mBounds.Size());
-   LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
+    aRect = nsIntRect(WidgetToScreenOffset(), mBounds.Size());
+    LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
          mBounds.width, mBounds.height,
          aRect.width, aRect.height));
@@ -648,7 +648,7 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
     // QGraphicsItems cannot trigger a repaint themselves, so we start it on the view
-    if (aIsSynchronous && GetViewWidget())
+    if (aIsSynchronous)
         GetViewWidget()->repaint();
 
     return NS_OK;
@@ -721,21 +721,18 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     }
 }
 
+// Returns the graphics view widget for this nsWindow by iterating
+// the chain of parents until a toplevel window with a view/scene is found.
+// (This function always returns something or asserts if the precondition
+// is not met)
 QWidget* nsWindow::GetViewWidget()
 {
-    QWidget* viewWidget = nsnull;
-
-    if (!mScene) {
-        if (mParent)
-            return static_cast<nsWindow*>(mParent.get())->GetViewWidget();
-
+    NS_ASSERTION(mWidget, "Calling GetViewWidget without mWidget created");
+    if (!mWidget)
         return nsnull;
-    }
 
-    NS_ASSERTION(mScene->views().size() == 1, "Not exactly one view for our scene!");
-    viewWidget = mScene->views()[0];
-
-    return viewWidget;
+    NS_ASSERTION(mWidget->scene()->views().size() == 1, "Not exactly one view for our scene!");
+    return mWidget->scene()->views()[0];
 }
 
 void*
@@ -837,7 +834,7 @@ nsWindow::WidgetToScreenOffset()
 
     return nsIntPoint(origin.x(), origin.y());
 }
- 
+
 NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
@@ -1765,10 +1762,10 @@ nsWindow::SetWindowIconList(const nsTArray<nsCString> &aIconList)
         LOG(("window [%p] Loading icon from %s\n", (void *)this, path));
         icon.addFile(path);
     }
- 
+
     GetViewWidget()->setWindowIcon(icon);
- 
-   return NS_OK;
+
+    return NS_OK;
 }
 
 void
@@ -1962,33 +1959,31 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     }
 
     // create a QGraphicsView if this is a new toplevel window
-    MozQGraphicsView* newView = 0;
 
     if (eWindowType_dialog == mWindowType ||
         eWindowType_toplevel == mWindowType)
     {
-        mScene = new QGraphicsScene();
-        if (!mScene) {
+        MozQGraphicsView* newView = 0;
+        QGraphicsScene *scene = new QGraphicsScene();
+        if (!scene) {
             delete widget;
             return nsnull;
         }
 
-        newView = new MozQGraphicsView(mScene);
+        newView = new MozQGraphicsView(scene);
         if (!newView) {
-            delete mScene;
+            delete scene;
             delete widget;
             return nsnull;
         }
+        newView->setTopLevel(widget);
 
         newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->show();
         newView->raise();
-    }
 
-    if (mScene && newView) {
-        mScene->addItem(widget);
-        newView->setTopLevel(widget);
+        scene->addItem(widget);
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         // Top level widget is just container, and should not be painted
         widget->setFlag(QGraphicsItem::ItemHasNoContents);
@@ -2005,7 +2000,7 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     } else if (mIsTopLevel) {
         SetDefaultIcon();
     }
- 
+
     return widget;
 }
 
