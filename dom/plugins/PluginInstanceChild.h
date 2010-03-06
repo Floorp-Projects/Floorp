@@ -59,11 +59,13 @@ namespace plugins {
 
 class PBrowserStreamChild;
 class BrowserStreamChild;
+class StreamNotifyChild;
 
 class PluginInstanceChild : public PPluginInstanceChild
 {
     friend class BrowserStreamChild;
     friend class PluginStreamChild;
+    friend class StreamNotifyChild; 
 
 #ifdef OS_WIN
     friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
@@ -182,8 +184,6 @@ public:
                   NPStream** aStream);
 
     void InvalidateRect(NPRect* aInvalidRect);
-
-    bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
 
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
