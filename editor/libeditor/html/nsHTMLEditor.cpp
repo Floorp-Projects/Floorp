@@ -46,8 +46,7 @@
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
 
-#include "nsEditorEventListeners.h"
-#include "nsHTMLEditorMouseListener.h"
+#include "nsHTMLEditorEventListener.h"
 #include "TypeInState.h"
 
 #include "nsHTMLURIRefObject.h"
@@ -337,20 +336,11 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
 nsresult
 nsHTMLEditor::CreateEventListeners()
 {
-  nsresult rv = NS_OK;
-
-  if (!mMouseListenerP)
-  {
-    // get a mouse listener
-    rv = NS_NewHTMLEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
-
-    if (NS_FAILED(rv))
-    {
-      return rv;
-    }
-  }
-
-  return nsPlaintextEditor::CreateEventListeners();
+  NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
+  mEventListener = do_QueryInterface(
+    static_cast<nsIDOMKeyListener*>(new nsHTMLEditorEventListener(this)));
+  NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
+  return NS_OK;
 }
 
 void

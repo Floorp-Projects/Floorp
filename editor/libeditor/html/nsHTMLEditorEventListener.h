@@ -37,49 +37,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef htmlEditorMouseListener_h__
-#define htmlEditorMouseListener_h__
+#ifndef nsHTMLEditorEventListener_h__
+#define nsHTMLEditorEventListener_h__
 
-#include "nsCOMPtr.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIEditor.h"
-#include "nsIPlaintextEditor.h"
-#include "nsIHTMLEditor.h"
-#include "nsEditorEventListeners.h"
+#include "nsEditorEventListener.h"
 #include "nsHTMLEditor.h"
 
-class nsString;
-
-class nsHTMLEditorMouseListener : public nsTextEditorMouseListener
+class nsHTMLEditorEventListener : public nsEditorEventListener
 {
 public:
-  /** default constructor
-   */
-  nsHTMLEditorMouseListener(nsHTMLEditor *aHTMLEditor);
-  /** default destructor
-   */
-  virtual ~nsHTMLEditorMouseListener();
+  nsHTMLEditorEventListener(nsHTMLEditor* aEditor) :
+    nsEditorEventListener(aEditor)
+  {
+  }
 
-//  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
+  virtual ~nsHTMLEditorEventListener()
+  {
+  }
 
-/*interfaces for addref and release and queryinterface*/
-  NS_DECL_ISUPPORTS_INHERITED
-
-/*BEGIN implementations of mouseevent handler interface*/
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-/*END implementations of mouseevent handler interface*/
-
-protected:
-
-  nsHTMLEditor *mHTMLEditor; // un-addref'd weak pointer
 };
 
-/** factory for the mouse listener
- */
-extern nsresult NS_NewHTMLEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsHTMLEditor *aHTMLEditor);
-
-#endif //htmlEditorMouseListener_h__
+#endif // nsHTMLEditorEventListener_h__
 

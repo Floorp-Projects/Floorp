@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Charles Manske (cmanske@netscape.com)
  *   Daniel Glazman (glazman@netscape.com)
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsHTMLEditorMouseListener.h"
+#include "nsHTMLEditorEventListener.h"
 #include "nsString.h"
 
 #include "nsIDOMEvent.h"
@@ -61,26 +62,14 @@
 #include "nsIHTMLInlineTableEditor.h"
 
 /*
- * nsHTMLEditorMouseListener implementation
+ * nsHTMLEditorEventListener implementation
  *
  * The only reason we need this is so a context mouse-click
  *  moves the caret or selects an element as it does for normal click
  */
 
-nsHTMLEditorMouseListener::nsHTMLEditorMouseListener(nsHTMLEditor *aHTMLEditor)
-  : mHTMLEditor(aHTMLEditor)
-{
-  SetEditor(mHTMLEditor); // Tell the base class about the editor.
-}
-
-nsHTMLEditorMouseListener::~nsHTMLEditorMouseListener() 
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLEditorMouseListener, nsTextEditorMouseListener, nsIDOMMouseListener)
-
-nsresult
-nsHTMLEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
+NS_IMETHODIMP
+nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
@@ -105,11 +94,11 @@ nsHTMLEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
     objectResizer->MouseUp(clientX, clientY, element);
   }
 
-  return nsTextEditorMouseListener::MouseUp(aMouseEvent);
+  return nsEditorEventListener::MouseUp(aMouseEvent);
 }
 
-nsresult
-nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
+NS_IMETHODIMP
+nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
@@ -226,7 +215,9 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         //   and not the entire body, or table-related elements
         if (element)
         {
-          nsCOMPtr<nsIDOMNode> selectAllNode = mHTMLEditor->FindUserSelectAllNode(element);
+          // mEditor must be nsHTMLEditor, see the constructor.
+          nsCOMPtr<nsIDOMNode> selectAllNode =
+            reinterpret_cast<nsHTMLEditor*>(mEditor)->FindUserSelectAllNode(element);
 
           if (selectAllNode)
           {
@@ -279,11 +270,11 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  return nsTextEditorMouseListener::MouseDown(aMouseEvent);
+  return nsEditorEventListener::MouseDown(aMouseEvent);
 }
 
-nsresult
-nsHTMLEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+NS_IMETHODIMP
+nsHTMLEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
@@ -304,16 +295,5 @@ nsHTMLEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     inlineTableEditing->DoInlineTableEditingAction(element);
   }
 
-  return nsTextEditorMouseListener::MouseClick(aMouseEvent);
-}
-
-nsresult
-NS_NewHTMLEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, 
-                              nsHTMLEditor *aHTMLEditor)
-{
-  nsHTMLEditorMouseListener* listener = new nsHTMLEditorMouseListener(aHTMLEditor);
-  if (!listener)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return listener->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);   
+  return nsEditorEventListener::MouseClick(aMouseEvent);
 }
