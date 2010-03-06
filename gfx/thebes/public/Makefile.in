@@ -81,9 +81,13 @@ EXPORTS += gfxFT2FontBase.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+ifdef MOZ_PANGO
+EXPORTS += gfxPangoFonts.h
+else
+EXPORTS += gfxFT2Fonts.h
+endif
 EXPORTS += gfxQtPlatform.h gfxQPainterSurface.h
 EXPORTS += gfxXlibSurface.h gfxQtNativeRenderer.h
-EXPORTS += gfxFT2Fonts.h
 EXPORTS += gfxFT2FontBase.h
 endif
 
