@@ -45,7 +45,7 @@ namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
-class PStreamNotifyChild;
+class StreamNotifyChild;
 
 class BrowserStreamChild : public PBrowserStreamChild, public AStream
 {
@@ -54,22 +54,17 @@ public:
                      const nsCString& url,
                      const uint32_t& length,
                      const uint32_t& lastmodified,
-                     const PStreamNotifyChild* notifyData,
+                     StreamNotifyChild* notifyData,
                      const nsCString& headers,
                      const nsCString& mimeType,
                      const bool& seekable,
                      NPError* rv,
                      uint16_t* stype);
-  virtual ~BrowserStreamChild() { }
+  virtual ~BrowserStreamChild();
 
   NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
 
   NPError StreamConstructed(
-            const nsCString& url,
-            const uint32_t& length,
-            const uint32_t& lastmodified,
-            PStreamNotifyChild* notifyData,
-            const nsCString& headers,
             const nsCString& mimeType,
             const bool& seekable,
             uint16_t* stype);
@@ -95,21 +90,87 @@ public:
   NPError NPN_RequestRead(NPByteRange* aRangeList);
   void NPN_DestroyStream(NPReason reason);
 
+  void NotifyPending() {
+    NS_ASSERTION(!mNotifyPending, "Pending twice?");
+    mNotifyPending = true;
+    EnsureDeliveryPending();
+  }
+
+  /**
+   * During instance destruction, artificially cancel all outstanding streams.
+   *
+   * @return false if we are already in the DELETING state.
+   */
+  bool InstanceDying() {
+    if (DELETING == mState)
+      return false;
+
+    mInstanceDying = true;
+    return true;
+  }
+
+  void FinishDelivery() {
+    NS_ASSERTION(mInstanceDying, "Should only be called after InstanceDying");
+    NS_ASSERTION(DELETING != mState, "InstanceDying didn't work?");
+    mStreamStatus = NPRES_NETWORK_ERR;
+    Deliver();
+    NS_ASSERTION(!mStreamNotify, "Didn't deliver NPN_URLNotify?");
+  }
+
 private:
+  friend class StreamNotifyChild;
   using PBrowserStreamChild::SendNPN_DestroyStream;
 
   /**
-   * Deliver the data currently in mPending, scheduling
+   * Post an event to ensure delivery of pending data/destroy/urlnotify events
+   * outside of the current RPC stack.
+   */
+  void EnsureDeliveryPending();
+
+  /**
+   * Deliver data, destruction, notify scheduling
    * or cancelling the suspended timer as needed.
    */
-  void DeliverData();
-  void MaybeDeliverNPP_DestroyStream();
+  void Deliver();
+
+  /**
+   * Deliver one chunk of pending data.
+   * @return true if the plugin indicated a pause was necessary
+   */
+  bool DeliverPendingData();
+
   void SetSuspendedTimer();
   void ClearSuspendedTimer();
 
   PluginInstanceChild* mInstance;
   NPStream mStream;
-  bool mClosed;
+
+  static const NPReason kStreamOpen = -1;
+
+  /**
+   * The plugin's notion of whether a stream has been "closed" (no more
+   * data delivery) differs from the plugin host due to asynchronous delivery
+   * of data and NPN_DestroyStream. While the plugin-visible stream is open,
+   * mStreamStatus should be kStreamOpen (-1). mStreamStatus will be a
+   * failure code if either the parent or child indicates stream failure.
+   */
+  NPReason mStreamStatus;
+
+  /**
+   * Delivery of NPP_DestroyStream and NPP_URLNotify must be postponed until
+   * all data has been delivered.
+   */
+  enum {
+    NOT_DESTROYED, // NPP_DestroyStream not yet received
+    DESTROY_PENDING, // NPP_DestroyStream received, not yet delivered
+    DESTROYED // NPP_DestroyStream delivered, NPP_URLNotify may still be pending
+  } mDestroyPending;
+  bool mNotifyPending;
+
+  // When NPP_Destroy is called for our instance (manager), this flag is set
+  // cancels the stream and avoids sending StreamDestroyed.
+  bool mInstanceDying;
+
   enum {
     CONSTRUCTING,
     ALIVE,
@@ -118,16 +179,7 @@ private:
   } mState;
   nsCString mURL;
   nsCString mHeaders;
-
-  static const NPReason kDestroyNotPending = -1;
-
-  /**
-   * When NPP_DestroyStream is delivered with pending data, we postpone
-   * delivering or acknowledging it until the pending data has been written.
-   *
-   * The default/initial value is kDestroyNotPending
-   */
-  NPReason mDestroyPending;
+  StreamNotifyChild* mStreamNotify;
 
   struct PendingData
   {
@@ -143,7 +195,7 @@ private:
    * stack frame. It instead posts a runnable using this tracker to cancel
    * in case we are destroyed.
    */
-  ScopedRunnableMethodFactory<BrowserStreamChild> mDeliverDataTracker;
+  ScopedRunnableMethodFactory<BrowserStreamChild> mDeliveryTracker;
   base::RepeatingTimer<BrowserStreamChild> mSuspendedTimer;
 };
 
