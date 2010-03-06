@@ -1,7 +1,14 @@
 Makefile.in
+Makefile
 autoconf.mk.in
+autoconf.mk
 check-sync-dirs.py
 static-checking-config.mk
+nsinstall
+nsinstall.exe
+host_nsinstall.o
+host_pathsub.o
 
 # This is a copy of nspr's config/make-system-wrappers.pl.
 make-system-wrappers.pl
+system_wrappers_js
