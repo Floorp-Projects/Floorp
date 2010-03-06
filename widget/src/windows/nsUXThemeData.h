@@ -46,7 +46,7 @@
 #include <dwmapi.h>
 #endif
 
-#if defined(WINCE) || (MOZ_WINSDK_TARGETVER == MOZ_NTDDI_WS03)
+#if defined(WINCE)
 struct MARGINS
 {
   int cxLeftWidth;
