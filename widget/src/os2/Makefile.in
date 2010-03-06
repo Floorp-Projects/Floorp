@@ -89,6 +89,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
+		-llayers \
 		$(QCMS_LIBS) \
 		$(NULL)
 
