@@ -306,7 +306,6 @@ private:
     QWidget*           GetViewWidget();
 
     MozQWidget*        mWidget;
-    QGraphicsScene*    mScene;
 
     PRUint32           mIsVisible : 1,
                        mActivatePending : 1;
