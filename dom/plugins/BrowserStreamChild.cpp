@@ -57,6 +57,8 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   , mState(CONSTRUCTING)
   , mURL(url)
   , mHeaders(headers)
+  , mDestroyPending(kDestroyNotPending)
+  , mDeliverDataTracker(this)
 {
   PLUGIN_LOG_DEBUG(("%s (%s, %i, %i, %p, %s, %s)", FULLFUNCTION,
                     url.get(), length, lastmodified, (void*) notifyData,
@@ -127,7 +129,9 @@ BrowserStreamChild::RecvWrite(const int32_t& offset,
   newdata->data = data;
   newdata->curpos = 0;
 
-  DeliverData();
+  if (mDeliverDataTracker.empty())
+    MessageLoop::current()->PostTask(FROM_HERE,
+      mDeliverDataTracker.NewRunnableMethod(&BrowserStreamChild::DeliverData));
 
   return true;
 }
@@ -159,12 +163,11 @@ BrowserStreamChild::RecvNPP_DestroyStream(const NPReason& reason)
     NS_RUNTIMEABORT("Unexpected state: recevied NPP_DestroyStream twice?");
 
   mState = DYING;
+  mDestroyPending = reason;
 
-  mClosed = true;
-  mInstance->mPluginIface->destroystream(&mInstance->mData, &mStream, reason);
-
-  SendStreamDestroyed();
-  mState = DELETING;
+  if (mDeliverDataTracker.empty())
+    MessageLoop::current()->PostTask(FROM_HERE,
+      mDeliverDataTracker.NewRunnableMethod(&BrowserStreamChild::DeliverData));
 
   return true;
 }
@@ -202,45 +205,86 @@ BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
 }
 
 void
+BrowserStreamChild::NPN_DestroyStream(NPReason reason)
+{
+  mClosed = true;
+  if (ALIVE == mState)
+    SendNPN_DestroyStream(NPRES_NETWORK_ERR);
+
+  ClearSuspendedTimer();
+  mPendingData.Clear();
+  MaybeDeliverNPP_DestroyStream();
+}
+
+void
 BrowserStreamChild::DeliverData()
 {
-  if (ALIVE != mState || mClosed) {
+  if (mState != ALIVE && mState != DYING)
+    NS_RUNTIMEABORT("Unexpected state");
+
+  if (mClosed) {
     ClearSuspendedTimer();
+    MaybeDeliverNPP_DestroyStream();
     return;
   }
 
   while (mPendingData.Length()) {
-    PendingData& cur = mPendingData[0];
-    while (cur.curpos < cur.data.Length()) {
+    while (mPendingData[0].curpos < mPendingData[0].data.Length()) {
       int32_t r = mInstance->mPluginIface->writeready(&mInstance->mData, &mStream);
       if (r == 0) {
         SetSuspendedTimer();
         return;
       }
+      if (!mPendingData.Length())
+        break;
       r = mInstance->mPluginIface->write(
         &mInstance->mData, &mStream,
-        cur.offset + cur.curpos, // offset
-        cur.data.Length() - cur.curpos, // length
-        const_cast<char*>(cur.data.BeginReading() + cur.curpos));
+        mPendingData[0].offset + mPendingData[0].curpos, // offset
+        mPendingData[0].data.Length() - mPendingData[0].curpos, // length
+        const_cast<char*>(mPendingData[0].data.BeginReading() + mPendingData[0].curpos));
       if (r == 0) {
         SetSuspendedTimer();
         return;
       }
       if (r < 0) { // error condition
-        if (ALIVE == mState && !mClosed) { // re-check
-          mClosed = true;
-          SendNPN_DestroyStream(NPRES_NETWORK_ERR);
-        }
-        ClearSuspendedTimer();
+        NPN_DestroyStream(NPRES_NETWORK_ERR);
         return;
       }
-      cur.curpos += r;
+      if (!mPendingData.Length())
+        break;
+
+      mPendingData[0].curpos += r;
     }
+    if (!mPendingData.Length())
+      break;
     mPendingData.RemoveElementAt(0);
   }
 
   ClearSuspendedTimer();
+  MaybeDeliverNPP_DestroyStream();
 }
+
+void
+BrowserStreamChild::MaybeDeliverNPP_DestroyStream()
+{
+  if (kDestroyNotPending != mDestroyPending) {
+    NS_ASSERTION(mPendingData.Length() == 0, "Pending data?");
+
+    if (mState != DYING)
+      NS_RUNTIMEABORT("mDestroyPending but state not DYING");
+
+    mClosed = true;
+    NPReason reason = mDestroyPending;
+    mDestroyPending = kDestroyNotPending;
+
+    (void) mInstance->mPluginIface
+      ->destroystream(&mInstance->mData, &mStream, reason);
+
+    SendStreamDestroyed();
+    mState = DELETING;
+  }
+}
+
 
 void
 BrowserStreamChild::SetSuspendedTimer()
