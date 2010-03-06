@@ -46,16 +46,6 @@
 #include <dwmapi.h>
 #endif
 
-#if defined(WINCE)
-struct MARGINS
-{
-  int cxLeftWidth;
-  int cxRightWidth;
-  int cyTopHeight;
-  int cyBottomHeight;
-};
-#endif
-
 // These window messages are not defined in dwmapi.h
 #ifndef WM_DWMCOMPOSITIONCHANGED
 #define WM_DWMCOMPOSITIONCHANGED        0x031E
