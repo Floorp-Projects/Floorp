@@ -58,7 +58,8 @@
 /* If we have a working stdint.h, then jsinttypes.h has already
    defined the standard integer types.  Otherwise, define the standard
    names in terms of the 'JS' types.  */
-#if ! defined(JS_HAVE_STDINT_H)
+#if ! defined(JS_HAVE_STDINT_H) && \
+    ! defined(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
 
 typedef JSInt8  int8_t;
 typedef JSInt16 int16_t;
