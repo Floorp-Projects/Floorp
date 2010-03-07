@@ -169,7 +169,7 @@ X11Error(Display *display, XErrorEvent *event) {
   // context of other ids, but add it to the debug console output.
   notes.Append("; id=0x");
   notes.AppendInt(PRUint32(event->resourceid), 16);
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_X11
   // Actually, for requests where Xlib gets the reply synchronously,
   // MOZ_X_SYNC=1 will not be necessary, but we don't have a table to tell us
   // which requests get a synchronous reply.
@@ -190,9 +190,12 @@ InstallX11ErrorHandler()
   XSetErrorHandler(X11Error);
 
 #ifdef MOZ_WIDGET_GTK2
-  NS_ASSERTION(GDK_DISPLAY(), "No GDK display");
-  if (PR_GetEnv("MOZ_X_SYNC")) {
-    XSynchronize(GDK_DISPLAY(), True);
-  }
+  Display *display = GDK_DISPLAY();
+#elif defined(MOZ_WIDGET_QT)
+  Display *display = QX11Info::display();
 #endif
+  NS_ASSERTION(display, "No X display");
+  if (PR_GetEnv("MOZ_X_SYNC")) {
+    XSynchronize(display, True);
+  }
 }
