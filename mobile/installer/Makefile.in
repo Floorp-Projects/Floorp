@@ -127,6 +127,12 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
 
+ifdef LIBXUL_SDK
+MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)/xulrunner
+else
+MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)
+endif
+
 package-xulrunner:
 ifdef LIBXUL_SDK
 ifndef SYSTEM_LIBXUL
@@ -218,7 +224,17 @@ zip:
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(PYTHON) $(ABS_TOPSRCDIR)/build/package/wince/make_wince_cab.py -setupdll -s "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(MOZ_PKG_DIR)/setup.cab"
 	$(NSINSTALL) $(DIST)/$(MOZ_PKG_DIR)/setup.ini $(DIST)
-	cd $(DIST) && mv $(MOZ_PKG_DIR)/xulrunner/uninstall.exe $(MOZ_PKG_DIR)/ && 7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini -x!$(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx -x!$(MOZ_PKG_DIR)/setup.ini && cat $(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && rm $(PKG_PATH)$(PKG_BASENAME).7z && rm setup.ini
+ifdef LIBXUL_SDK
+	mv $(DIST)/$(MOZ_GRE_PKG_DIR)/uninstall.exe $(DIST)/$(MOZ_PKG_DIR)/ 
+endif
+	cd $(DIST) &&                                                       \
+	  7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini       \
+	    -x!$(MOZ_GRE_PKG_DIR)/xulrunner-stub-installer.sfx              \
+	    -x!$(MOZ_PKG_DIR)/setup.ini &&                                  \
+	  cat $(MOZ_GRE_PKG_DIR)/xulrunner-stub-installer.sfx               \
+	    $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && \
+	  rm $(PKG_PATH)$(PKG_BASENAME).7z &&                               \
+	  rm setup.ini
 
 endif
 
