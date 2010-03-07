@@ -1363,8 +1363,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(TreeFragment* f);
-    JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner, nanojit::LIns*& inner_sp_ins);
-    JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit, nanojit::LIns* inner_sp_ins);
+    JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner);
+    JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit);
     JS_REQUIRES_STACK void determineGlobalTypes(TraceType* typeMap);
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
