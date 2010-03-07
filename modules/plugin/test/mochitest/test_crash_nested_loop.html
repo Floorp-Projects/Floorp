@@ -1,0 +1,40 @@
+<head>
+  <title>Plugin crashing in nested loop</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var iframe = document.getElementById('iframe1');
+
+  window.frameLoaded = function frameLoaded_toCrash() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var prefs = Components.classes['@mozilla.org/preferences-service;1']
+      .getService(Components.interfaces.nsIPrefBranch);
+    if (!prefs.getBoolPref('dom.ipc.plugins.enabled')) {
+      ok(true, "Skipping this test when IPC plugins are not enabled.");
+      SimpleTest.finish();
+      return;
+    }
+
+    var p = iframe.contentDocument.getElementById('plugin1');
+
+    try {
+      p.crashInNestedLoop();
+      ok(false, "p.crashInNestedLoop() should throw an exception");
+    }
+    catch (e) {
+      ok(true, "p.crashInNestedLoop() should throw an exception");
+    }
+
+    // this test is for bug 550026, which is inherently
+    // nondeterministic.  if we hit that bug, the browser process
+    // would have crashed by now.  if not, we'll pass "spuriously"
+    SimpleTest.finish();
+  }
+
+  </script>
