@@ -264,35 +264,6 @@ public:
   static PRBool IsAscii(const char* aString, PRUint32 aLength) { return NS_IsAscii(aString, aLength); }
 };
 
-#define FF '\f'
-#define TAB '\t'
-
-#define CRSTR "\015"
-#define LFSTR "\012"
-#define CRLF "\015\012"     /* A CR LF equivalent string */
-
-
-#if defined(XP_MACOSX)
-  #define FILE_PATH_SEPARATOR        "/"
-  #define OS_FILE_ILLEGAL_CHARACTERS ":"
-#elif defined(XP_WIN) || defined(XP_OS2)
-  #define FILE_PATH_SEPARATOR        "\\"
-  #define OS_FILE_ILLEGAL_CHARACTERS "/:*?\"<>|"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-  #define FILE_PATH_SEPARATOR        "/"
-  #define OS_FILE_ILLEGAL_CHARACTERS ""
-#else
-  #error need_to_define_your_file_path_separator_and_illegal_characters
-#endif
-
-// Not all these control characters are illegal in all OSs, but we don't really
-// want them appearing in filenames
-#define CONTROL_CHARACTERS     "\001\002\003\004\005\006\007" \
-                           "\010\011\012\013\014\015\016\017" \
-                           "\020\021\022\023\024\025\026\027" \
-                           "\030\031\032\033\034\035\036\037"
-
-#define FILE_ILLEGAL_CHARACTERS CONTROL_CHARACTERS OS_FILE_ILLEGAL_CHARACTERS
 
 #define NS_IS_SPACE(VAL) \
   (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && isspace((intn)(VAL)) )
