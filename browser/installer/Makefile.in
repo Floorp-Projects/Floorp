@@ -108,7 +108,7 @@ endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-ifeq (Darwin, $(OS_ARCH))
+ifeq (bundle, $(MOZ_FS_LAYOUT))
 DEFINES += \
   -DBINPATH=$(_BINPATH) \
   -DAPPNAME=$(_APPNAME) \
