@@ -989,7 +989,8 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     else
         r = mWidget->boundingRect();
 
-    mDirtyScrollArea = QRegion();
+    if (!mDirtyScrollArea.isEmpty())
+        mDirtyScrollArea = QRegion();
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     // Prepare offscreen buffers if RenderMode Xlib or Image
@@ -1068,11 +1069,12 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         Display *disp = gBufferPixmap->x11Info().display();
         XGCValues gcv;
         gcv.graphics_exposures = False;
-        GC gc = XCreateGC (disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
+        GC gc = XCreateGC(disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
         XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
                      rect.x, rect.y, rect.x, rect.y, rect.width, rect.height,
                      False);
-        XFreeGC (disp, gc);
+        XSync(disp, False);
+        XFreeGC(disp, gc);
     }
 
     if (renderMode != gfxQtPlatform::RENDER_QPAINTER) {
