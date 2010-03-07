@@ -38,7 +38,7 @@ function openZip(path) {
   var zip = Cc["@mozilla.org/libjar/zip-reader;1"].
             createInstance(Ci.nsIZipReader);
   zip.open(resolved);
-  return zip.QueryInterface(Ci.nsIJAR);
+  return zip;
 }
 
 // Gets the pretty name from the signing cert or null if the zip is unsigned.
