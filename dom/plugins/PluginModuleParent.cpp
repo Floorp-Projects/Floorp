@@ -70,24 +70,6 @@ struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
     static void ReleaseCallee(Class* obj) { }
 };
 
-class PluginCrashed : public nsRunnable
-{
-public:
-    PluginCrashed(nsNPAPIPlugin* plugin,
-                  const nsString& dumpID)
-        : mDumpID(dumpID),
-          mPlugin(plugin) { }
-
-    NS_IMETHOD Run() {
-        mPlugin->PluginCrashed(mDumpID);
-        return NS_OK;
-    }
-
-private:
-    nsNPAPIPlugin* mPlugin;
-    nsString mDumpID;
-};
-
 // static
 PluginLibrary*
 PluginModuleParent::LoadModule(const char* aFilePath)
@@ -112,6 +94,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mNPNIface(NULL)
     , mPlugin(NULL)
     , mProcessStartTime(time(NULL))
+    , mPluginCrashedTask(NULL)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
@@ -124,6 +107,13 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 
 PluginModuleParent::~PluginModuleParent()
 {
+    NS_ASSERTION(OkToCleanup(), "unsafe destruction");
+
+    if (mPluginCrashedTask) {
+        mPluginCrashedTask->Cancel();
+        mPluginCrashedTask = 0;
+    }
+
     if (!mShutdown) {
         NS_WARNING("Plugin host deleted the module without shutting down.");
         NPError err;
@@ -269,12 +259,11 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
     switch (why) {
     case AbnormalShutdown: {
         nsCOMPtr<nsIFile> dump;
-        nsAutoString dumpID;
         if (GetMinidump(getter_AddRefs(dump))) {
             WriteExtraDataForMinidump(dump);
-            if (NS_SUCCEEDED(dump->GetLeafName(dumpID))) {
-                dumpID.Replace(dumpID.Length() - 4, 4,
-                               NS_LITERAL_STRING(""));
+            if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
+                mDumpID.Replace(mDumpID.Length() - 4, 4,
+                                NS_LITERAL_STRING(""));
             }
         }
         else {
@@ -285,9 +274,9 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
         // Defer the PluginCrashed method so that we don't re-enter
         // and potentially modify the actor child list while enumerating it.
         if (mPlugin) {
-            nsCOMPtr<nsIRunnable> r =
-                new PluginCrashed(mPlugin, dumpID);
-            NS_DispatchToMainThread(r);
+            mPluginCrashedTask = NewRunnableMethod(
+                this, &PluginModuleParent::NotifyPluginCrashed);
+            MessageLoop::current()->PostTask(FROM_HERE, mPluginCrashedTask);
         }
         break;
     }
@@ -298,6 +287,16 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
     default:
         NS_ERROR("Unexpected shutdown reason for toplevel actor.");
     }
+}
+
+void
+PluginModuleParent::NotifyPluginCrashed()
+{
+    // MessageLoop owns this
+    mPluginCrashedTask = NULL;
+
+    if (mPlugin)
+        mPlugin->PluginCrashed(mDumpID);
 }
 
 PPluginInstanceParent*
