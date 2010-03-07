@@ -128,6 +128,11 @@ public:
     // Return true iff successful.
     bool UnblockChild();
 
+    // Return true iff this has code on the C++ stack.
+    bool IsOnCxxStack() const {
+        return 0 < mCxxStackFrames;
+    }
+
     NS_OVERRIDE
     virtual bool OnSpecialMessage(uint16 id, const Message& msg);
 
