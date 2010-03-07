@@ -1344,9 +1344,11 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   color: inherit;
 }
 
+/*
 #editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #bbb !important;
 }
+*/
 
 #editBMPanel_tagsField[focused="true"],
 #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {

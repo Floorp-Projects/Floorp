@@ -554,10 +554,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   color: black;
 }
 
+/*
 #urlbar:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
 .searchbar-textbox:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #777;
 }
+*/
 
 #urlbar:-moz-lwtheme[focused="true"],
 .searchbar-textbox:-moz-lwtheme[focused="true"] {
