@@ -35,12 +35,15 @@
 
 #include "nptest_platform.h"
 #include "npapi.h"
+#include <pthread.h>
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include <X11/extensions/shape.h>
 #endif
+#include <glib.h>
 #include <gtk/gtk.h>
+#include <unistd.h>
 
  using namespace std;
 
@@ -634,4 +637,69 @@ pluginGetClipboardText(InstanceData* instanceData)
   g_free(text);
 
   return retText;
+}
+
+//-----------------------------------------------------------------------------
+// NB: this test is quite gross in that it's not only
+// nondeterministic, but dependent on the guts of the nested glib
+// event loop handling code in PluginModule.  We first sleep long
+// enough to make sure that the "detection timer" will be pending when
+// we enter the nested glib loop, then similarly for the "process browser
+// events" timer.  Then we "schedule" the crasher thread to run at about the
+// same time we expect that the PluginModule "process browser events" task
+// will run.  If all goes well, the plugin process will crash and generate the
+// XPCOM "plugin crashed" task, and the browser will run that task while still
+// in the "process some events" loop.
+
+static void*
+CrasherThread(void* data)
+{
+  // Give the parent thread a chance to send the message.
+  usleep(200);
+
+  IntentionalCrash();
+
+  // not reached
+  return(NULL);
+}
+
+bool
+pluginCrashInNestedLoop(InstanceData* instanceData)
+{
+  // wait at least long enough for nested loop detector task to be pending ...
+  sleep(1);
+
+  // Run the nested loop detector.  Other events are not expected.
+  if (!g_main_context_iteration(NULL, TRUE)) {
+    g_warning("DetectNestedEventLoop did not fire");
+    return true; // trigger a test failure
+
+  }
+
+  // wait at least long enough for the "process browser events" task to be
+  // pending ...
+  sleep(1);
+
+  // we'll be crashing soon, note that fact now to avoid messing with
+  // timing too much
+  NoteIntentionalCrash();
+
+  // schedule the crasher thread ...
+  pthread_t crasherThread;
+  if (0 != pthread_create(&crasherThread, NULL, CrasherThread, NULL)) {
+    g_warning("Failed to create thread");
+    return true; // trigger a test failure
+  }
+
+  // .. and hope the time it takes to spawn means that it crashes at about the
+  // same time as the "process browser events" task that should run next is
+  // being processed in the parent.  Other events are not expected.
+  if (g_main_context_iteration(NULL, TRUE)) {
+    g_warning("Should have crashed in ProcessBrowserEvents");
+  } else {
+    g_warning("ProcessBrowserEvents did not fire");
+  }
+
+  // if we get here without crashing, then we'll trigger a test failure
+  return true;
 }
