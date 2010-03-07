@@ -91,6 +91,9 @@
 #include "gfxContext.h"
 #include "gfxSharedImageSurface.h"
 
+// imported in nsWidgetFactory.cpp
+PRBool gDisableNativeTheme = PR_FALSE;
+
 // Buffered Pixmap stuff
 static QPixmap *gBufferPixmap = nsnull;
 static int gBufferPixmapUsageCount = 0;
@@ -1869,7 +1872,9 @@ initialize_prefs(void)
 
     PRBool val = PR_TRUE;
     nsresult rv;
-    rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
+    rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
+    if (NS_SUCCEEDED(rv))
+        gDisableNativeTheme = val;
 
     return NS_OK;
 }
