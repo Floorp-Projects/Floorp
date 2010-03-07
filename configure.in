@@ -4714,6 +4714,7 @@ MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -5191,12 +5192,10 @@ AC_SUBST(MOZ_DISTRIBUTION_ID)
 dnl ========================================================
 dnl complex text support off by default
 dnl ========================================================
-MOZ_PANGO=1
 MOZ_ARG_DISABLE_BOOL(pango,
 [  --disable-pango Disable usage of Pango ],
     MOZ_PANGO=,
     MOZ_PANGO=1)
-
 
 dnl ========================================================
 dnl = Pango
@@ -5207,17 +5206,13 @@ then
 
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+    AC_SUBST(MOZ_PANGO_CFLAGS)
+    AC_SUBST(MOZ_PANGO_LIBS)
     if test "$MOZ_PANGO"
     then
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-        AC_SUBST(MOZ_PANGO_CFLAGS)
-        AC_SUBST(MOZ_PANGO_LIBS)
         AC_DEFINE(MOZ_PANGO)
     else
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-        AC_SUBST(MOZ_PANGO_CFLAGS)
-        AC_SUBST(MOZ_PANGO_LIBS)
-
         PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0 fontconfig)
         AC_SUBST(FT2_CFLAGS)
         AC_SUBST(FT2_LIBS)
