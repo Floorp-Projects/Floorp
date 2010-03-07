@@ -4917,9 +4917,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
 JS_REQUIRES_STACK void
-TraceRecorder::prepareTreeCall(TreeFragment* inner, LIns*& inner_sp_ins)
+TraceRecorder::prepareTreeCall(TreeFragment* inner)
 {
-    inner_sp_ins = lirbuf->sp;
     VMSideExit* exit = snapshot(OOM_EXIT);
 
     /*
@@ -4966,7 +4965,7 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner, LIns*& inner_sp_ins)
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + inner->nativeStackBase; /* plus the inner tree's stack base */
         /* We have enough space, so adjust sp and rp to their new level. */
-        lir->insStorei(inner_sp_ins = lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(sp_offset)),
+        lir->insStorei(lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(sp_offset)),
                 lirbuf->state, offsetof(InterpState, sp));
         lir->insStorei(lir->ins2(LIR_piadd, lirbuf->rp, INS_CONSTWORD(rp_adj)),
                 lirbuf->state, offsetof(InterpState, rp));
@@ -5004,7 +5003,7 @@ BuildGlobalTypeMapFromInnerTree(Queue<TraceType>& typeMap, VMSideExit* inner)
 
 /* Record a call to an inner tree. */
 JS_REQUIRES_STACK void
-TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_sp_ins)
+TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
 {
     /* Invoke the inner tree. */
     LIns* args[] = { lirbuf->state }; /* reverse order */
@@ -5986,8 +5985,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     }
 
     adjustCallerTypes(f);
-    LIns* inner_sp_ins;
-    prepareTreeCall(f, inner_sp_ins);
+    prepareTreeCall(f);
 
 #ifdef DEBUG
     unsigned oldInlineCallCount = inlineCallCount;
@@ -6036,7 +6034,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
         JS_ASSERT(oldInlineCallCount == inlineCallCount);
 
         /* Emit a call to the inner tree and continue recording the outer tree trace. */
-        emitTreeCall(f, lr, inner_sp_ins);
+        emitTreeCall(f, lr);
         return ARECORD_CONTINUE;
 
       case UNSTABLE_LOOP_EXIT:
