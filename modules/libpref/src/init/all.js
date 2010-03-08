@@ -2860,6 +2860,9 @@ pref("mozilla.widget.render-mode", -1);
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
+// Enable/Disable the orientation API for content
+pref("accelerometer.enabled", true);
+
 // Enable/Disable HTML5 parser
 pref("html5.enable", false);
 // Toggle which thread the HTML5 parser uses for stream parsing
