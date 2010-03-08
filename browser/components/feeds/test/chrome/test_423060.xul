@@ -29,7 +29,7 @@
 
     /* register a handler for the feed type */
     const MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
-    var handlerPage = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=%s";
+    var handlerPage = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=%s";
     var wccr = Cc[wccrID].getService(Ci.nsIWebContentConverterService);
     wccr.registerContentHandler(MAYBE_FEED, handlerPage, "Demo handler", null);
     var demoHandler = wccr.getWebContentHandlerByURI(MAYBE_FEED, handlerPage);
@@ -40,7 +40,7 @@
 
     function finishUp() {
       var theframe = document.getElementById('theframe');
-      var previewURL = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=http%3A%2F%2Flocalhost%3A8888%2Ftests%2Ftoolkit%2Fcomponents%2Fplaces%2Ftests%2Fchrome%2Fsample_feed.atom";
+      var previewURL = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=http%3A%2F%2Fmochi.test%3A8888%2Ftests%2Ftoolkit%2Fcomponents%2Fplaces%2Ftests%2Fchrome%2Fsample_feed.atom";
       is(theframe.contentDocument.URL, previewURL);
 
       /* remove our demoHandler */
@@ -52,7 +52,7 @@
       SimpleTest.finish();
     }
   </script>
-  <html:iframe src="http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom" height="400px" 
+  <html:iframe src="http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom" height="400px" 
     id="theframe" onload="finishUp();">
   </html:iframe>
 </window>
