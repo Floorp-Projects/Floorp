@@ -9,14 +9,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430251
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <script type="text/javascript" src="browserFu.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <base href="http://example.com/" />
+  <base href="http://mochi.test:8888/" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430251">Mozilla Bug 430251</a>
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="jar:http://example.com/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html"
+<iframe src="jar:http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html"
         name="kid"></iframe>
 
 <pre id="test">
@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.origin, "http://example.com", "wrong sender");
+  is(evt.origin, "http://mochi.test:8888", "wrong sender");
   ok(evt.source === window.frames.kid, "wrong source");
 
   is(evt.data, "finish-test", "wrong data");
@@ -40,7 +40,7 @@ window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.frames.kid.postMessage("start-test", "http://example.com");
+  window.frames.kid.postMessage("start-test", "http://mochi.test:8888");
 }
 
 window.addEventListener("load", run, false);

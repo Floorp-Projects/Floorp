@@ -7,14 +7,14 @@ function receiveMessage(evt)
 {
   var response = "PASS";
 
-  if (evt.origin !== "http://localhost:8888")
+  if (evt.origin !== "http://mochi.test:8888")
     response += " wrong-origin(" + evt.origin + ")";
   if (evt.source !== window.parent)
     response += " wrong-source";
   if (evt.data !== "PASS")
     response += " wrong-data(" + evt.data + ")";
 
-  window.parent.postMessage(response, "http://localhost:8888");
+  window.parent.postMessage(response, "http://mochi.test:8888");
 }
 
 window.addEventListener("message", receiveMessage, false);

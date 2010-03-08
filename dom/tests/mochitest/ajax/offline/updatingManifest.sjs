@@ -2,9 +2,9 @@ ver1manifest =
   "CACHE MANIFEST\n" +
   "# v1\n" +
   "\n" +
-  "http://localhost:8888/MochiKit/packed.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs\n" +
+  "http://mochi.test:8888/MochiKit/packed.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs\n" +
   "\n" +
   "FALLBACK:\n" +
   "namespace1/ fallback.html\n" +
@@ -16,10 +16,10 @@ ver2manifest =
   "CACHE MANIFEST\n" +
   "# v2\n" +
   "\n" +
-  "http://localhost:8888/tests/SimpleTest/SimpleTest.js\n" +
-  "http://localhost:8888/MochiKit/packed.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
+  "http://mochi.test:8888/tests/SimpleTest/SimpleTest.js\n" +
+  "http://mochi.test:8888/MochiKit/packed.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
   "\n" +
   "FALLBACK:\n" +
   "namespace1/ fallback.html\n" +
@@ -29,9 +29,9 @@ ver3manifest =
   "CACHE MANIFEST\n" +
   "# v3\n" +
   "\n" +
-  "http://localhost:8888/MochiKit/packed.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
-  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
+  "http://mochi.test:8888/MochiKit/packed.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
+  "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
   "\n" +
   "FALLBACK:\n" +
   "namespace1/sub fallback2.html\n" +

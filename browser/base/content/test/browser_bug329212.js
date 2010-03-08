@@ -33,6 +33,6 @@ function test () {
   }, true);
 
   content.location = 
-    "http://localhost:8888/browser/browser/base/content/test/title_test.svg";
+    "http://mochi.test:8888/browser/browser/base/content/test/title_test.svg";
 }
 
