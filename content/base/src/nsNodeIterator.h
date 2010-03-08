@@ -83,9 +83,9 @@ private:
         PRBool MoveForward(nsINode *aRoot, nsINode *aParent, PRInt32 aChildNum);
         void MoveBackward(nsINode *aParent, PRInt32 aChildNum);
 
-        void AdjustAfterInsertion(nsINode *aContainer, PRInt32 aIndexInContainer);
+        void AdjustAfterInsertion(nsINode *aRoot, nsINode *aContainer, PRInt32 aIndexInContainer);
         void AdjustAfterRemoval(nsINode *aRoot, nsINode *aContainer, nsIContent *aChild, PRInt32 aIndexInContainer);
-        
+
         void Clear() { mNode = nsnull; }
 
         nsINode *mNode;

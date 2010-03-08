@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+ <head>
+  <title>col removal</title>
+  <script type="text/javascript">
+   function foo ()
+   {
+     var out =document.getElementById('outer');
+     var int   =document.getElementById('inner');
+     out.removeChild(int);
+   }
+  </script>
+ </head>
+ <body onload="foo()">
+
+  <table border>
+   <colgroup width="500px" id="outer">
+    <col width="200px" id="inner">
+   </colgroup>
+   <tr><td>&nbsp;</td></tr>
+  </table>
+ </body>
+</html>

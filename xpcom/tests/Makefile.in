@@ -72,13 +72,6 @@ CPPSRCS		= \
 		TestArguments.cpp \
 		$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS += \
-		TestAtoms.cpp \
-		TestPermanentAtoms.cpp \
-		$(NULL)
-endif
-
 SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
@@ -117,6 +110,7 @@ CPP_UNIT_TESTS += \
                   TestXPIDLString.cpp \
                   TestStaticAtoms.cpp \
                   TestUTF.cpp \
+                  TestAtoms.cpp \
                   $(NULL)
 endif
 
@@ -205,3 +199,5 @@ check::
 	regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";	\
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) "$$regOrderDir"
+
+GARBAGE += TestScriptable.h

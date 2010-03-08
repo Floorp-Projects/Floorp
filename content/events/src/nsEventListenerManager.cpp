@@ -1484,10 +1484,8 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     } else if (ls.mEventType == NS_USER_DEFINED_EVENT) {
       // Handle user defined event types.
       if (ls.mTypeAtom) {
-        nsAutoString atomName;
-        ls.mTypeAtom->ToString(atomName);
         const nsDependentSubstring& eventType =
-          Substring(atomName, 2, atomName.Length() - 2);
+          Substring(nsDependentAtomString(ls.mTypeAtom), 2);
         nsRefPtr<nsEventListenerInfo> info =
           new nsEventListenerInfo(eventType, ls.mListener, capturing,
                                   allowsUntrusted, systemGroup);

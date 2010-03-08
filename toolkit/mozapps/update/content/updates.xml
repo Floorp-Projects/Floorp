@@ -187,7 +187,7 @@
     <content>
       <xul:hbox>
         <xul:label class="update-name" xbl:inherits="value=name" flex="1" crop="right"/>
-        <xul:label xbl:inherits="href=detailsURL" class="text-link"
+        <xul:label xbl:inherits="href=detailsURL,hidden=hideDetailsURL" class="text-link"
                    value="&update.details.label;"/>
       </xul:hbox>
       <xul:label class="update-type" xbl:inherits="value=type"/>
@@ -221,6 +221,9 @@
       <property name="type"
                 onget="return this.getAttribute('type');"
                 onset="this.setAttribute('type', val); return val;"/>
+      <property name="hideDetailsURL"
+                onget="return this.getAttribute('hideDetailsURL');"
+                onset="this.setAttribute('hideDetailsURL', val); return val;"/>
       <property name="status"
                 onget="return this.getAttribute('status');">
         <setter><![CDATA[

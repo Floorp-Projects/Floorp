@@ -194,7 +194,8 @@ nsHTMLEditor::CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsIDOMN
 
   // add the mouse listener so we can detect a click on a resizer
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMouseListenerP, PR_TRUE);
+  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mEventListener,
+                              PR_TRUE);
 
   nsAutoString locationStr;
   switch (aLocation) {
@@ -453,43 +454,43 @@ nsHTMLEditor::HideResizers(void)
 
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mTopLeftHandle, parentContent, ps);
   mTopLeftHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mTopHandle, parentContent, ps);
   mTopHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mTopRightHandle, parentContent, ps);
   mTopRightHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mLeftHandle, parentContent, ps);
   mLeftHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mRightHandle, parentContent, ps);
   mRightHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mBottomLeftHandle, parentContent, ps);
   mBottomLeftHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mBottomHandle, parentContent, ps);
   mBottomHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mBottomRightHandle, parentContent, ps);
   mBottomRightHandle = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mResizingShadow, parentContent, ps);
   mResizingShadow = nsnull;
 
-  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+  RemoveListenerAndDeleteRef(mousedown, mEventListener, PR_TRUE,
                              mResizingInfo, parentContent, ps);
   mResizingInfo = nsnull;
 

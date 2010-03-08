@@ -686,6 +686,9 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
   // If we were successful, set STATUS_DECODE_COMPLETE
   if (NS_SUCCEEDED(aStatus))
     mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
+  // If we weren't, clear all success status bits and set error.
+  else
+    mImageStatus = imgIRequest::STATUS_ERROR;
 
   // ImgContainer and everything below it is completely correct and
   // bulletproof about its handling of decoder notifications.

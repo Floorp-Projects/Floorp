@@ -65,50 +65,19 @@ CPPSRCS = \
     Module.cpp \
     $(NULL)
 
-ifdef _MSC_VER
-
-# build and link sources directly from libffi_msvc
-VPATH += \
-    $(srcdir)/libffi_msvc \
-    $(NULL)
-
-LOCAL_INCLUDES = \
-    -I$(srcdir)/libffi_msvc \
-    $(NULL)
-
-CSRCS = \
-    ffi.c \
-    prep_cif.c \
-    types.c \
-    $(NULL)
-
-ifndef HAVE_64BIT_OS
-CSRCS += \
-    win32.c \
-    $(NULL)
-else
-ASFILES = \
-    win64.asm \
-    $(NULL)
-endif
-
-else # _MSVC_VER
-
-# build libffi proper
 LOCAL_INCLUDES = \
     -Ilibffi/include \
     $(NULL)
 
 ifeq ($(OS_ARCH),OS2)
-libffi/.libs/ffi.$(LIB_SUFFIX): libffi/.libs/$(LIB_PREFIX)ffi.a
+# libffi builds an aout lib on OS/2; convert it to an OMF lib.
+libffi/.libs/libffi.$(LIB_SUFFIX): libffi/.libs/libffi.a
 	emxomf $<
 endif
 
 SHARED_LIBRARY_LIBS = \
-    libffi/.libs/$(LIB_PREFIX)ffi.$(LIB_SUFFIX) \
+    libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
-
-endif # _MSVC_VER
 
 EXTRA_DSO_LDOPTS += \
     $(MOZ_COMPONENT_LIBS) \

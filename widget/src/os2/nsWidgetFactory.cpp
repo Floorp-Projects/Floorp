@@ -59,8 +59,6 @@
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 
-//#include "nsWidgetDefs.h"
-
 // class definition headers
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
@@ -86,9 +84,6 @@
 #include "nsDeviceContextSpecOS2.h"
 #include "nsPrintOptionsOS2.h"
 #include "nsPrintSession.h"
-
-#include "nsFrameWindow.h" // OS/2 only
-
 #include "nsIdleServiceOS2.h"
 
 // objects that just require generic constructors
@@ -97,7 +92,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -126,7 +121,7 @@ static const nsModuleComponentInfo components[] =
   { "OS/2 Child Window",
     NS_CHILD_CID,
     "@mozilla.org/widget/child_window/os2;1",
-    nsWindowConstructor },
+    nsChildWindowConstructor },
   { "OS/2 Clipboard",
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
@@ -155,10 +150,10 @@ static const nsModuleComponentInfo components[] =
     NS_TOOLKIT_CID,
     "@mozilla.org/widget/toolkit/os2;1",
     nsToolkitConstructor },
-  { "OS/2 Frame Window",
+  { "OS/2 Window",
     NS_WINDOW_CID,
     "@mozilla.org/widget/window/os2;1",
-    nsFrameWindowConstructor },
+    nsWindowConstructor },
   { "OS/2 Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

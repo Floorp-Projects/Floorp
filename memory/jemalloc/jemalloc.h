@@ -79,16 +79,21 @@ typedef struct {
 	size_t	dirty;		/* Bytes dirty (committed unused pages). */
 } jemalloc_stats_t;
 
-#ifndef MOZ_MEMORY_DARWIN
+/* Darwin and Linux already have memory allocation functions */
+#if (!defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_LINUX))
 void	*malloc(size_t size);
 void	*valloc(size_t size);
 void	*calloc(size_t num, size_t size);
 void	*realloc(void *ptr, size_t size);
 void	free(void *ptr);
-#endif
-
 int	posix_memalign(void **memptr, size_t alignment, size_t size);
+#endif /* MOZ_MEMORY_DARWIN, MOZ_MEMORY_LINUX */
+
+/* Linux has memalign */
+#if !defined(MOZ_MEMORY_LINUX)
 void	*memalign(size_t alignment, size_t size);
+#endif /* MOZ_MEMORY_LINUX */
+
 size_t	malloc_usable_size(const void *ptr);
 void	jemalloc_stats(jemalloc_stats_t *stats);
 

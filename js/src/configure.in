@@ -1596,6 +1596,7 @@ case "$target" in
     if test "$COMPILE_ENVIRONMENT"; then
         AC_CHECK_HEADERS(sys/inttypes.h)
     fi
+    AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
@@ -2076,15 +2077,6 @@ case "$target" in
     cygwin*|msvc*|mks*)
         AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
         ;;
-
-    *)
-        AC_CHECK_HEADERS(oleacc.idl)
-
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
-        AC_LANG_RESTORE
-        ;;
     esac
 
     case "$target" in
@@ -2224,8 +2216,8 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
@@ -2329,7 +2321,7 @@ alpha*-*-osf*)
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2444,17 +2436,6 @@ case "$target" in
     ;;
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
-
-dnl
-dnl Indicate that platform requires special thread safe 
-dnl locking when starting up the OJI JVM 
-dnl (see mozilla/modules/oji/src/nsJVMManager.cpp)
-dnl ========================================================
-case "$target" in
-    *-hpux*)      
-        AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
-        ;;
-esac
 
 dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
@@ -4550,13 +4531,8 @@ dnl Sun Studio on Solaris
 if test "$SOLARIS_SUNPRO_CC"; then
   PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
   PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  if test "$CPU_ARCH" != "sparc"; then
-    PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
-  else
-    PROFILE_USE_CFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-  fi
+  PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
+  PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
 fi
 
 AC_SUBST(PROFILE_GEN_CFLAGS)
@@ -5073,19 +5049,15 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 fi
-AC_SUBST(MOZ_MOVEMAIL)
 
 AC_ARG_ENABLE(threadsafe,
               [  --enable-threadsafe     Enable support for multiple threads.],

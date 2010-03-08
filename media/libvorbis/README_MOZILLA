@@ -11,3 +11,4 @@ file names with other Mozilla libraries.
 alloca.diff - Bug 469639 - Failed to build firefox trunk on OpenSolaris
 bug487519.patch: fix for bug 487519.
 bug498855.patch: fix for bug 498855
+bug550184.patch: fix for bug 550184 (Xiph trac 1656)

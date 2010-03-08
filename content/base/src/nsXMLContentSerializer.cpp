@@ -718,7 +718,7 @@ nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
                                                   const nsAString& aTagNamespaceURI)
 {
   PRUint32 index, count;
-  nsAutoString nameStr, prefixStr, uriStr, valueStr;
+  nsAutoString uriStr, valueStr;
 
   count = aContent->GetAttrCount();
 
@@ -758,8 +758,8 @@ nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
         }
       }
       else {
-        attrName->ToString(nameStr);
-        PushNameSpaceDecl(nameStr, uriStr, aOriginalElement);
+        PushNameSpaceDecl(nsDependentAtomString(attrName), uriStr,
+                          aOriginalElement);
       }
     }
   }
@@ -819,7 +819,7 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                             PRBool aAddNSAttr)
 {
 
-  nsAutoString nameStr, prefixStr, uriStr, valueStr;
+  nsAutoString prefixStr, uriStr, valueStr;
   nsAutoString xmlnsStr;
   xmlnsStr.AssignLiteral(kXMLNS);
   PRUint32 index, count;
@@ -867,7 +867,7 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     }
     
     aContent->GetAttr(namespaceID, attrName, valueStr);
-    attrName->ToString(nameStr);
+    nsDependentAtomString nameStr(attrName);
 
     // XXX Hack to get around the fact that MathML can add
     //     attributes starting with '-', which makes them

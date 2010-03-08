@@ -40,20 +40,22 @@
 #define NS_ISMILANIMATIONELEMENT_H_
 
 #include "nsISupports.h"
-#include "nsIContent.h"
-
-class nsISMILAttr;
 
 //////////////////////////////////////////////////////////////////////////////
 // nsISMILAnimationElement: Interface for elements that control the animation of
 // some property of another element, e.g. <animate>, <set>.
 
 #define NS_ISMILANIMATIONELEMENT_IID \
-{ 0x70ac6eed, 0x0dba, 0x4c11, { 0xa6, 0xc5, 0x15, 0x73, 0xbc, 0x2f, 0x1a, 0xd8 } }
+{ 0x5c891601, 0x47aa, 0x4230,        \
+  { 0xb8, 0xdc, 0xb9, 0x26, 0xd1, 0xe7, 0xd7, 0xf4 } }
 
+class nsISMILAttr;
 class nsSMILAnimationFunction;
 class nsSMILTimeContainer;
 class nsSMILTimedElement;
+class nsIContent;
+class nsIAtom;
+class nsAttrValue;
 
 enum nsSMILTargetAttrType {
   eSMILTargetAttrType_auto,
@@ -98,18 +100,12 @@ public:
    * @returns PR_TRUE if the attribute was set (even when set to empty string)
    *          PR_FALSE when not set.
    */
-  PRBool GetAnimAttr(nsIAtom* aAttName, nsAString &aResult) const
-  {
-    return Content().GetAttr(kNameSpaceID_None, aAttName, aResult);
-  }
+  virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const = 0;
 
   /*
    * Check for the presence of an attribute in the global namespace.
    */
-  PRBool HasAnimAttr(nsIAtom* aAttName) const
-  {
-    return Content().HasAttr(kNameSpaceID_None, aAttName);
-  }
+  virtual PRBool HasAnimAttr(nsIAtom* aAttName) const = 0;
 
   /*
    * Returns the target (animated) element.

@@ -1,0 +1,84 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH     = ../../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir = toolkit/mozapps/update/test/chrome
+
+include $(DEPTH)/config/autoconf.mk
+
+_OTHER_FILES = \
+  ../unit/data/empty.mar \
+  $(NULL)
+
+_CHROME_FILES = \
+  test_0011_check_billboard_noLicense_noAddons.xul \
+  test_0012_check_billboard_noAddons.xul \
+  test_0021_check_noBillboard_noLicense_noAddons.xul \
+  test_0022_check_noBillboard_noAddons.xul \
+  test_0031_available_billboard_noLicense_noAddons.xul \
+  test_0032_available_billboard_noAddons.xul \
+  test_0041_available_noBillboard_noLicense_noAddons.xul \
+  test_0042_available_noBillboard_noAddons.xul \
+  test_0051_check_error_xml_malformed.xul \
+  test_0052_check_no_updates.xul \
+  test_0081_error_patchApplyFailure_partial_only.xul \
+  test_0082_error_patchApplyFailure_complete_only.xul \
+  test_0083_error_patchApplyFailure_partial_complete.xul \
+  test_0084_error_patchApplyFailure_verify_failed.xul \
+  test_0091_installed.xul \
+  test_0092_finishedBackground.xul \
+  test_0111_neverButton_billboard.xul \
+  test_0112_neverButton_noBillboard.xul \
+  test_9999_cleanup.xul \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: $(_OTHER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+libs:: 
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(srcdir)/utils.js > \
+    $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/utils.js
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(srcdir)/update.sjs > \
+    $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/update.sjs

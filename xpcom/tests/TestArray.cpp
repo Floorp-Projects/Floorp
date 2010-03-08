@@ -86,13 +86,15 @@ Foo::Foo(PRInt32 aID)
 {
   mID = aID;
   ++gCount;
-  fprintf(stdout, "init: %d (%p), %d total)\n", mID, this, gCount);
+  fprintf(stdout, "init: %d (%p), %d total)\n",
+          mID, static_cast<void*>(this), gCount);
 }
 
 Foo::~Foo()
 {
   --gCount;
-  fprintf(stdout, "destruct: %d (%p), %d remain)\n", mID, this, gCount);
+  fprintf(stdout, "destruct: %d (%p), %d remain)\n",
+          mID, static_cast<void*>(this), gCount);
 }
 
 NS_IMPL_ISUPPORTS1(Foo, IFoo)
@@ -124,7 +126,8 @@ void DumpArray(nsISupportsArray* aArray, PRInt32 aExpectedCount, PRInt32 aElemen
   for (index = 0; (index < count) && (index < aExpectedCount); index++) {
     IFoo* foo = (IFoo*)(aArray->ElementAt(index));
     fprintf(stdout, "%2d: %d=%d (%p) c: %d %s\n", 
-            index, aElementIDs[index], foo->ID(), foo, foo->RefCnt() - 1,
+            index, aElementIDs[index], foo->ID(),
+            static_cast<void*>(foo), foo->RefCnt() - 1,
             AssertEqual(foo->ID(), aElementIDs[index]));
     foo->Release();
   }

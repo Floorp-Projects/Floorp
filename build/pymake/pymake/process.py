@@ -73,7 +73,7 @@ def call(cline, env, cwd, loc, cb, context, echo):
         return
 
     if argv[0].find('/') != -1:
-        executable = os.path.join(cwd, argv[0])
+        executable = util.normaljoin(cwd, argv[0])
     else:
         executable = None
 

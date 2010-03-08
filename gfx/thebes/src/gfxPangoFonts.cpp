@@ -54,7 +54,12 @@
 #include "nsILanguageAtomService.h"
 
 #include "gfxContext.h"
+#ifdef MOZ_WIDGET_GTK2
 #include "gfxPlatformGtk.h"
+#endif
+#ifdef MOZ_WIDGET_QT
+#include "gfxQtPlatform.h"
+#endif
 #include "gfxPangoFonts.h"
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
@@ -107,6 +112,13 @@ static PangoFontMap *GetPangoFontMap();
 static PRBool gUseFontMapProperty;
 
 static FT_Library gFTLibrary;
+
+template <class T>
+class gfxGObjectRefTraits : public nsPointerRefTraits<T> {
+public:
+    static void Release(T *aPtr) { g_object_unref(aPtr); }
+    static void AddRef(T *aPtr) { g_object_ref(aPtr); }
+};
 
 NS_SPECIALIZE_TEMPLATE
 class nsAutoRefTraits<PangoFont> : public gfxGObjectRefTraits<PangoFont> { };

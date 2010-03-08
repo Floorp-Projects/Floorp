@@ -159,7 +159,7 @@ main (int argc, char **argv) {
                            NS_FONT_STRETCH_NORMAL,
                            139,
                            10.0,
-                           NS_NewPermanentAtom("en"),
+                           NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                            0.0,
                            PR_FALSE, PR_FALSE, PR_FALSE);
 

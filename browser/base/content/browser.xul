@@ -399,10 +399,10 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 bookmarkhistoryemptytext="&urlbar.bookmarkhistory.emptyText;"
-                 bookmarkemptytext="&urlbar.bookmark.emptyText;"
-                 historyemptytext="&urlbar.history.emptyText;"
-                 noneemptytext="&urlbar.none.emptyText;"
+                 bookmarkhistoryplaceholder="&urlbar.bookmarkhistory.emptyText;"
+                 bookmarkplaceholder="&urlbar.bookmark.emptyText;"
+                 historyplaceholder="&urlbar.history.emptyText;"
+                 noneplaceholder="&urlbar.none.emptyText;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletepopup="PopupAutoCompleteRichResult"
@@ -503,7 +503,8 @@
              collapsed="true"
 #endif
              customizable="true">
-      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
+      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
+                   removable="true">
          <hbox id="bookmarksBarContent" flex="1"
                type="places"
                place="place:folder=TOOLBAR"
@@ -644,11 +645,11 @@
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.46" cy="0.5" r="0.63" id="circle"/>
+      <svg:circle cx="-0.46" cy="0.5" r="0.63"/>
     </svg:mask>
     <svg:mask id="winstripe-keyhole-forward-mask-hover" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.35" cy="0.5" r="0.58" id="circle"/>
+      <svg:circle cx="-0.35" cy="0.5" r="0.58"/>
     </svg:mask>
   </svg:svg>
 #endif

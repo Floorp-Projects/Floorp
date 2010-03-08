@@ -595,9 +595,11 @@ nsBlockFrame::IsContainingBlock() const
   // of an element's containing block.
   // Since the parent of such a block is either a normal block or
   // another such pseudo, this shouldn't cause anything bad to happen.
+  // Also the anonymous blocks inside table cells are not containing blocks.
   nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
   return pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
-         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock;
+         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock &&
+         pseudoType != nsCSSAnonBoxes::cellContent;
 }
 
 /* virtual */ PRBool

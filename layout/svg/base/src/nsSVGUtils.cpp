@@ -1109,8 +1109,9 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   if (!props.mClipPath)
     return PR_TRUE;
 
-  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(nsnull);
-  if (!clipPathFrame) {
+  PRBool isOK = PR_TRUE;
+  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
+  if (!clipPathFrame || !isOK) {
     // clipPath is not a valid resource, so nothing gets painted, so
     // hit-testing must fail.
     return PR_FALSE;

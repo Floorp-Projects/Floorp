@@ -18,23 +18,6 @@
 
 /* ::::: Identity Indicator Styling ::::: */
 
-#urlbar:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 9px;
-}
-
-#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: -7px;
-}
-
-#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
-  -moz-border-radius: 11px 0 2px 11px / 15px 0 2px 15px;
-}
-
-/* Match #identity-box:-moz-locale-dir(ltr)'s -moz-margin-start */
-#identity-popup:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 7px;
-}
-
 /* Bug 413060, comment 16: Vista Aero is a special case where we use a
    tooltip appearance for the address bar popup panels */
 #identity-popup:-moz-system-metric(windows-default-theme),

@@ -13,7 +13,7 @@ import data, parserdata, process, util
 # TODO: If this ever goes from relocatable package to system-installed, this may need to be
 # a configured-in path.
 
-makepypath = os.path.normpath(os.path.join(os.path.dirname(__file__), '../make.py'))
+makepypath = util.normaljoin(os.path.dirname(__file__), '../make.py')
 
 _simpleopts = re.compile(r'^[a-zA-Z]+(\s|$)')
 def parsemakeflags(env):
@@ -221,7 +221,7 @@ def main(args, env, cwd, cb):
         if options.directory is None:
             workdir = cwd
         else:
-            workdir = os.path.join(cwd, options.directory)
+            workdir = util.normaljoin(cwd, options.directory)
 
         if options.jobcount != 1:
             longflags.append('-j%i' % (options.jobcount,))
@@ -239,7 +239,7 @@ def main(args, env, cwd, cb):
             sys.stdout.flush()
 
         if len(options.makefiles) == 0:
-            if os.path.exists(os.path.join(workdir, 'Makefile')):
+            if os.path.exists(util.normaljoin(workdir, 'Makefile')):
                 options.makefiles.append('Makefile')
             else:
                 print "No makefile found"

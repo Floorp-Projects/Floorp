@@ -851,9 +851,6 @@ nsXBLBinding::InstallEventHandlers()
             eventAtom == nsGkAtoms::keypress)
           continue;
 
-        nsAutoString type;
-        eventAtom->ToString(type);
-
         // If this is a command, add it in the system event group, otherwise 
         // add it to the standard event group.
 
@@ -879,7 +876,9 @@ nsXBLBinding::InstallEventHandlers()
             flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
           }
 
-          manager->AddEventListenerByType(handler, type, flags, eventGroup);
+          manager->AddEventListenerByType(handler,
+                                          nsDependentAtomString(eventAtom),
+                                          flags, eventGroup);
         }
       }
 
@@ -1015,9 +1014,6 @@ nsXBLBinding::UnhookEventHandlers()
           eventAtom == nsGkAtoms::keypress)
         continue;
 
-      nsAutoString type;
-      eventAtom->ToString(type);
-
       // Figure out if we're using capturing or not.
       PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
         NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -1035,7 +1031,9 @@ nsXBLBinding::UnhookEventHandlers()
         eventGroup = systemEventGroup;
       }
 
-      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
+      manager->RemoveEventListenerByType(handler,
+                                         nsDependentAtomString(eventAtom),
+                                         flags, eventGroup);
     }
 
     const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =

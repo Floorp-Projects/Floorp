@@ -81,22 +81,6 @@ NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsCanvasFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
-NS_IMETHODIMP
-nsCanvasFrame::Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-
-  nsIScrollableFrame* sf =
-    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
-  if (sf) {
-    sf->AddScrollPositionListener(this);
-  }
-
-  return rv;
-}
-
 void
 nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
@@ -126,6 +110,13 @@ nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
     PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
+
+    if (!mAddedScrollPositionListener) {
+      mAddedScrollPositionListener = PR_TRUE;
+      nsIScrollableFrame* sf =
+        PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+      sf->AddScrollPositionListener(this);
+    }
   }
   return NS_OK;
 }

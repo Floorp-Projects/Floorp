@@ -113,6 +113,9 @@
 #define NS_FAVICONSERVICE_CONTRACTID \
   "@mozilla.org/browser/favicon-service;1"
 
+#define NS_APPSTARTUP_CONTRACTID \
+  "@mozilla.org/toolkit/app-startup;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}

@@ -43,7 +43,12 @@
 #include "nsIObserver.h"
 
 class nsIFile;
-class nsICSSLoader;
+
+namespace mozilla {
+namespace css {
+class Loader;
+}
+}
 
 class nsLayoutStylesheetCache
  : public nsIObserver
@@ -71,7 +76,7 @@ private:
                         PRBool aEnableUnsafeRules);
 
   static nsLayoutStylesheetCache* gStyleCache;
-  static nsICSSLoader* gCSSLoader;
+  static mozilla::css::Loader* gCSSLoader;
   nsCOMPtr<nsICSSStyleSheet> mScrollbarsSheet;
   nsCOMPtr<nsICSSStyleSheet> mFormsSheet;
   nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;

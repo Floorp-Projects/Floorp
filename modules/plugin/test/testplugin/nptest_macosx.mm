@@ -330,9 +330,15 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   case mouseDown:
   case mouseUp:
   case osEvt:
-    instanceData->lastMouseX = carbonEvent->where.h - w->x;
-    instanceData->lastMouseY = carbonEvent->where.v - w->y;
+    {
+    Rect globalBounds = {0};
+    WindowRef nativeWindow = static_cast<WindowRef>(static_cast<NP_CGContext*>(w->window)->window);
+    if (nativeWindow)
+      ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
+    instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
+    instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
     return 1;
+    }
   default:
     return 0;
   }

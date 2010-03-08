@@ -42,20 +42,19 @@ function run_test() {
   dump("Testing: removal of an update download in progress for an older " +
        "version of the application on startup - bug 485624\n");
   removeUpdateDirsAndFiles();
-  var defaults = getPrefBranch().QueryInterface(AUS_Ci.nsIPrefService).
-                 getDefaultBranch(null);
-  defaults.setCharPref("app.update.channel", "bogus_channel");
+  setUpdateChannel();
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+  var patches, updates;
 
-  var patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_DOWNLOADING);
-  var updates = getLocalUpdateString(patches, null, null, "0.9", null, "0.9");
+  patches = getLocalPatchString(null, null, null, null, null, null,
+                                STATE_DOWNLOADING);
+  updates = getLocalUpdateString(patches, null, null, "version 0.9", "0.9");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
-  startAUS();
-  startUpdateManager();
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+
+  standardInit();
 
   do_check_eq(gUpdateManager.activeUpdate, null);
   do_check_eq(gUpdateManager.updateCount, 0);

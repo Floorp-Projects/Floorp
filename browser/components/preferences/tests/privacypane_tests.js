@@ -67,7 +67,7 @@ function controlChanged(element) {
   element.doCommand();
 }
 
-function test_locbar_emptyText(win) {
+function test_locbar_placeholder(win) {
   let texts = ["none", "bookmarkhistory", "history", "bookmark"];
 
   let locbarlist = win.document.getElementById("locationBarSuggestion");
@@ -76,8 +76,8 @@ function test_locbar_emptyText(win) {
   for (let level = -1; level <= 2; ++level) {
     locbarlist.value = level;
     controlChanged(locbarlist);
-    is(gURLBar.emptyText, gURLBar.getAttribute(texts[level + 1] + "emptytext"),
-      "location bar empty text for for level " + level + " is correctly set");
+    is(gURLBar.placeholder, gURLBar.getAttribute(texts[level + 1] + "placeholder"),
+       "location bar placeholder for for level " + level + " is correctly set");
   }
 }
 

@@ -51,10 +51,8 @@ nsSMILCompositor::KeyEquals(KeyTypePointer aKey) const
 nsSMILCompositor::HashKey(KeyTypePointer aKey)
 {
   // Combine the 3 values into one numeric value, which will be hashed
-  const char *attrName = nsnull;
-  aKey->mAttributeName->GetUTF8String(&attrName);
-  return NS_PTR_TO_UINT32(aKey->mElement.get()) +
-    HashString(attrName) +
+  return NS_PTR_TO_UINT32(aKey->mElement.get()) >> 4 +
+    NS_PTR_TO_INT32(aKey->mAttributeName.get()) +
     (aKey->mIsCSS ? 1 : 0);
 }
 
@@ -151,9 +149,8 @@ nsISMILAttr*
 nsSMILCompositor::CreateSMILAttr()
 {
   if (mKey.mIsCSS) {
-    nsAutoString name;
-    mKey.mAttributeName->ToString(name);
-    nsCSSProperty propId = nsCSSProps::LookupProperty(name);
+    nsCSSProperty propId =
+      nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName));
     if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
       return new nsSMILCSSProperty(propId, mKey.mElement.get());
     }

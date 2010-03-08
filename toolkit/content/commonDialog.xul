@@ -57,7 +57,7 @@
         <vbox id="infoContainer">
 #ifdef XP_MACOSX
           <!-- Dialog title is inside dialog for OS X -->
-          <description id="info.title" class="dialogTitle"/>
+          <description id="info.title"/>
 #endif
           <description id="info.header" class="header"/>
           <description id="info.body" context="contentAreaContextMenu" noinitialfocus="true"/>

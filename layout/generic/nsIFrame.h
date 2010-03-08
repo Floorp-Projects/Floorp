@@ -804,8 +804,8 @@ public:
 
   /**
    * Return the distance between the border edge of the frame and the
-   * margin edge of the frame.  Can only be called after Reflow for the
-   * frame has at least *started*.
+   * margin edge of the frame.  Like GetRect(), returns the dimensions
+   * as of the most recent reflow.
    *
    * This doesn't include any margin collapsing that may have occurred.
    *
@@ -817,8 +817,8 @@ public:
 
   /**
    * Return the distance between the border edge of the frame (which is
-   * its rect) and the padding edge of the frame.  Can only be called
-   * after Reflow for the frame has at least *started*.
+   * its rect) and the padding edge of the frame. Like GetRect(), returns
+   * the dimensions as of the most recent reflow.
    *
    * Note that this differs from GetStyleBorder()->GetBorder() in that
    * this describes region of the frame's box, and
@@ -829,8 +829,8 @@ public:
 
   /**
    * Return the distance between the padding edge of the frame and the
-   * content edge of the frame.  Can only be called after Reflow for the
-   * frame has at least *started*.
+   * content edge of the frame.  Like GetRect(), returns the dimensions
+   * as of the most recent reflow.
    */
   virtual nsMargin GetUsedPadding() const;
 

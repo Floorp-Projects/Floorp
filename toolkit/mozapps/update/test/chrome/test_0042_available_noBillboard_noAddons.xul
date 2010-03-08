@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Test update available wizard pages (no billboard, no add-ons)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript" 
+        src="chrome://mochikit/content/MochiKit/packed.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/chrome/toolkit/mozapps/update/test/chrome/utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * test preparation
+ */
+function test01() {
+  ok(true, "Entering test01 - test preparation");
+
+  removeUpdateDirsAndFiles();
+  reloadUpdateManagerData();
+
+  gPref.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
+  var queryString = "?showLicense=1&showDetails=1&showPrompt=1";
+  setUpdateURLOverride(URL_UPDATE + queryString);
+
+  gNextFunc = test02;
+  gPageId = PAGEID_FOUND_BASIC;
+  gAUS.notify(null);
+}
+
+/**
+ * updates found basic page
+ */
+function test02() {
+  ok(true, "Entering test02 - updates found basic page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_FOUND_BASIC,
+     "Page ID should be " + PAGEID_FOUND_BASIC);
+
+  gNextFunc = test03;
+  gPageId = PAGEID_LICENSE;
+  addPageShowListener();
+  // go forward to the license page
+  gDocElem.getButton("next").click();
+}
+
+/**
+ * license page
+ */
+function test03() {
+  ok(true, "Entering test03 - license page");
+
+  var licenseContent = gWin.document.getElementById("licenseContent");
+  var acceptDeclineLicense = gWin.document.getElementById("acceptDeclineLicense");
+
+  is(gDocElem.currentPage.pageid, PAGEID_LICENSE,
+     "Page ID should be " + PAGEID_LICENSE);
+  isnot(licenseContent.getAttribute("state"), "loaded",
+        "licenseContent state attribute value should not equal loaded");
+  is(acceptDeclineLicense.selectedIndex, 1,
+     "acceptDeclineLicense selectedIndex should be 1");
+
+  gNextFunc = test04;
+  // wait until the remote content has loaded
+  licenseContent.addEventListener("load", nextFuncListener, false);
+}
+
+/**
+ * license page
+ */
+function test04(aEvent) {
+  // Return early until licenseContent has loaded.
+  var licenseContent = gWin.document.getElementById("licenseContent");
+  if (licenseContent.getAttribute("state") != "loaded" ||
+      !aEvent.originalTarget.isSameNode(licenseContent))
+    return;
+
+  ok(true, "Entering test04 - license page");
+
+  var licenseContent = gWin.document.getElementById("licenseContent");
+  licenseContent.removeEventListener("load", nextFuncListener, false);
+  var acceptDeclineLicense = gWin.document.getElementById("acceptDeclineLicense");
+
+  is(gDocElem.currentPage.pageid, PAGEID_LICENSE,
+     "Page ID should be " + PAGEID_LICENSE);
+  is(licenseContent.getAttribute("state"), "loaded",
+     "licenseContent state attribute value should equal loaded");
+  is(acceptDeclineLicense.selectedIndex, 1,
+     "acceptDeclineLicense selectedIndex should be 1");
+
+  gNextFunc = test05;
+  acceptDeclineLicense.addEventListener("select", nextFuncListener, false);
+  // accept the license agreement
+  gWin.document.getElementById("accept").click();
+}
+
+/**
+ * license page
+ */
+function test05() {
+  ok(true, "Entering test05 - license page");
+
+  var acceptDeclineLicense = gWin.document.getElementById("acceptDeclineLicense");
+  acceptDeclineLicense.removeEventListener("select", nextFuncListener, false);
+
+  is(gDocElem.currentPage.pageid, PAGEID_LICENSE,
+     "Page ID should be " + PAGEID_LICENSE);
+  is(acceptDeclineLicense.selectedIndex, 0,
+     "acceptDeclineLicense selectedIndex should be 0");
+
+  gNextFunc = test06;
+  gPageId = PAGEID_DOWNLOADING;
+  addPageShowListener();
+  // go forward to the downloading page
+  gDocElem.getButton("next").click();
+}
+
+/**
+ * downloading page
+ */
+function test06() {
+  ok(true, "Entering test06 - downloading page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_DOWNLOADING,
+     "Page ID should be " + PAGEID_DOWNLOADING);
+
+  gNextFunc = test07;
+  gPageId = PAGEID_FINISHED;
+  addPageShowListener();
+  // The downloading page will automatically go to the finish page.
+}
+
+/**
+ * finished page
+ */
+function test07() {
+  ok(true, "Entering test07 - finished page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_FINISHED,
+     "Page ID should be " + PAGEID_FINISHED);
+
+  gNextFunc = finishTestDefault;
+  // exit by clicking the extra1 (restart later) button
+  gDocElem.getButton("extra1").click();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

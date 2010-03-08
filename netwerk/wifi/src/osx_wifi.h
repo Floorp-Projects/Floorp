@@ -29,8 +29,8 @@
 //
 // Copyright (c) 02006, Alf Watt (alf@istumbler.net). All rights reserved.
 //
-// Redistribution and use in source and binary forms, with or without 
-// modification, are permitted provided that the following conditions 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
 // are met:
 //
 // * Redistributions of source code must retain the above copyright
@@ -108,7 +108,7 @@ struct WirelessNetworkInfo
 // Note: An adhoc network created on the computer the scan is running on will
 // not be found. WirelessGetInfo can be used to find info about a local adhoc
 // network.
-// 
+//
 // If stripDups != 0 only one bases tation for each SSID will be returned.
 typedef WIErr (*WirelessScanSplitFunction)(WirelessContextPtr inContext,
                                            CFArrayRef *apList,

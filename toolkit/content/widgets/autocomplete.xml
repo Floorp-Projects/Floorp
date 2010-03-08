@@ -64,7 +64,7 @@
           <children/>
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
@@ -254,18 +254,10 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <property name="value"
-                onget="return this.hasAttribute('isempty') ? '' : this.inputField.value;">
+                onget="return this.inputField.value;">
         <setter><![CDATA[
           this.mIgnoreInput = true;
-          if (val) {
-            // clear the emptyText _before_ setting a new non-empty value
-            this._clearEmptyText();
-            this.inputField.value = val;
-          } else {
-            // display the emptyText _after_ setting a value that's an empty string
-            this.inputField.value = val;
-            this._updateVisibleText();
-          }
+          this.inputField.value = val;
           this.mIgnoreInput = false;
           var event = document.createEvent('Events');
           event.initEvent('ValueChange', true, true);
