@@ -5538,7 +5538,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   // set up gecko event
   nsDragEvent geckoEvent(PR_TRUE, aMessage, nsnull);
-  [self convertGenericCocoaEvent:nil toGeckoEvent:&geckoEvent];
+  [self convertGenericCocoaEvent:[NSApp currentEvent] toGeckoEvent:&geckoEvent];
 
   // Use our own coordinates in the gecko event.
   // Convert event from gecko global coords to gecko view coords.
