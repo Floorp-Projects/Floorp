@@ -70,9 +70,9 @@ function handleCmd(evt) {
     win.childWin.x = testNum;
     try {
       if (win.childWin.opener == win) {
-        win.childWin.document.write('<script>window.opener.opener.postMessage(window.opener.testNum + " - " + window.x, "http://localhost:8888/"); window.opener.close(); window.close();<' + '/script>');
+        win.childWin.document.write('<script>window.opener.opener.postMessage(window.opener.testNum + " - " + window.x, "http://mochi.test:8888/"); window.opener.close(); window.close();<' + '/script>');
       } else {
-        win.childWin.document.write('<script>window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://localhost:8888/"); window.parent.close();<' + '/script>');
+        win.childWin.document.write('<script>window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://mochi.test:8888/"); window.parent.close();<' + '/script>');
       }
     } catch (e if (e.name == "NS_ERROR_DOM_SECURITY_ERR" && e.code == 1000)) {
       // Security error on cross-site write() is fine
@@ -172,10 +172,10 @@ wins[4] = window.open('bug346659-opener.html?{"write":4}');
 wins[5] = window.open('bug346659-parent.html?{"load":5}');
 wins[6] = window.open('bug346659-parent.html?{"write":6}');
 
-is(location.host, "localhost:8888", "Unexpected host");
+is(location.host, "mochi.test:8888", "Unexpected host");
 
 function startSecondBatch() {
-  var baseurl = window.location.href.replace(/localhost:8888/, "example.com");
+  var baseurl = window.location.href.replace(/mochi.test:8888/, "example.com");
   wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
   wins[8] = window.open(r(baseurl, 'bug346659-opener.html?{"write":8}'));
   wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
@@ -183,7 +183,7 @@ function startSecondBatch() {
 }
 
 function startThirdBatch() {
-  var baseurl = window.location.href.replace(/localhost:8888/, "example.com");
+  var baseurl = window.location.href.replace(/mochi.test:8888/, "example.com");
   wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
   wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
 }
