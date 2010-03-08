@@ -74,140 +74,43 @@ static nsDataHashtable<nsStringHashKey, nsIAtom*>* gStaticAtomTable = 0;
  */
 static PRBool gStaticAtomTableSealed = PR_FALSE;
 
-// The |key| pointer in the various PLDHashTable callbacks we use is an
-// AtomTableClearEntry*.  These pointers can come from two places: either a
-// (probably stack-allocated) string key being passed to PL_DHashTableOperate,
-// or an actual entry in the atom table. PLDHashTable reseves the keyHash
-// values 0 and 1 for internal use, which means that the *PLDHashTable code*
-// will never pass an entry whose keyhash is 0 or 1 to our hooks. That means we
-// can use those values to tell whether an AtomTableEntry is a string key
-// created by a PLDHashTable code caller or an actual live AtomTableEntry used
-// by our PLDHashTable.
-//
-// Evil? Yes, but kinda neat too :-)
-//
-// An AtomTableEntry is a UTF-8 string key if keyHash is 0, in that
-// case mBits points to a UTF-8 encoded char *. If keyHash is 1 the
-// AtomTableEntry is a UTF-16 encoded string key and mBits points to a
-// UTF-16 encoded PRUnichar *.
-//
-// If keyHash is any other value (> 1), the AtomTableEntry is an
-// actual live entry in the table, and then mBits & ~0x1 in the
-// AtomTableEntry points to an AtomImpl or a nsStaticAtomWrapper,
-// indicated by the first bit of PtrBits.
-// XXX This whole mess could be vastly simplified now that pldhash
-// no longer has a getKey callback.
-typedef PRUword PtrBits;
+//----------------------------------------------------------------------
 
 struct AtomTableEntry : public PLDHashEntryHdr {
-  // If keyHash > 1, mBits & 0x1 means (mBits & ~0x1) points to an
-  // nsStaticAtomWrapper else it points to an nsAtomImpl
-  PtrBits mBits;
+  AtomImpl* mAtom;
+};
+
+struct AtomTableKey
+{
+  AtomTableKey(const PRUnichar* aUTF16String, PRUint32 aLength)
+    : mUTF16String(aUTF16String),
+      mUTF8String(nsnull),
+      mLength(aLength)
+  {
+  }
+
+  AtomTableKey(const char* aUTF8String, PRUint32 aLength)
+    : mUTF16String(nsnull),
+      mUTF8String(aUTF8String),
+      mLength(aLength)
+  {
+  }
+
+  const PRUnichar* mUTF16String;
+  const char* mUTF8String;
   PRUint32 mLength;
-
-  inline AtomTableEntry(const char *aString, PRUint32 aLength)
-    : mBits(PtrBits(aString)), mLength(aLength)
-  {
-    keyHash = 0;
-  }
-
-  inline AtomTableEntry(const PRUnichar *aString, PRUint32 aLength)
-    : mBits(PtrBits(aString)), mLength(aLength)
-  {
-    keyHash = 1;
-  }
-
-  inline PRBool IsUTF8String() const {
-    return keyHash == 0;
-  }
-
-  inline PRBool IsUTF16String() const {
-    return keyHash == 1;
-  }
-
-  inline void SetAtomImpl(AtomImpl* aAtom) {
-    NS_ASSERTION(keyHash > 1,
-                 "SetAtomImpl() called on non-atom AtomTableEntry!");
-    NS_ASSERTION(aAtom, "Setting null atom");
-    mBits = PtrBits(aAtom);
-    mLength = aAtom->GetLength();
-  }
-
-  inline void ClearAtom() {
-    mBits = nsnull;
-  }
-
-  inline PRBool HasValue() const {
-    NS_ASSERTION(keyHash > 1,
-                 "HasValue() called on non-atom AtomTableEntry!");
-    return (mBits & ~0x1) != 0;
-  }
-
-  // these accessors assume that you already know the type
-  inline AtomImpl *GetAtomImpl() const {
-    NS_ASSERTION(keyHash > 1,
-                 "GetAtomImpl() called on non-atom AtomTableEntry!");
-    return (AtomImpl*) (mBits & ~0x1);
-  }
-
-  // type-agnostic accessors
-
-  // get the string buffer
-  inline const PRUnichar* getAtomString() const {
-    NS_ASSERTION(keyHash > 1,
-                 "getAtomString() called on non-atom AtomTableEntry!");
-
-    return GetAtomImpl()->GetUTF16String();
-  }
-
-  // get the string buffer
-  inline const char* getUTF8String() const {
-    NS_ASSERTION(keyHash == 0,
-                 "getUTF8String() called on non-UTF8 AtomTableEntry!");
-
-    return (char *)mBits;
-  }
-
-  // get the string buffer
-  inline const PRUnichar* getUTF16String() const {
-    NS_ASSERTION(keyHash == 1,
-                 "getUTF16String() called on non-UTF16 AtomTableEntry!");
-
-    return (PRUnichar *)mBits;
-  }
-
-  // get the string length
-  inline PRUint32 getLength() const {
-    return mLength;
-  }
-
-  // get an addreffed nsIAtom - not using already_AddRef'ed atom
-  // because the callers are not (and should not be) using nsCOMPtr
-  inline nsIAtom* GetAtom() const {
-    NS_ASSERTION(keyHash > 1,
-                 "GetAtom() called on non-atom AtomTableEntry!");
-
-    nsIAtom* result;
-    
-    NS_ADDREF(result = GetAtomImpl());
-    
-    return result;
-  }
 };
 
 static PLDHashNumber
 AtomTableGetHash(PLDHashTable *table, const void *key)
 {
-  const AtomTableEntry *e = static_cast<const AtomTableEntry*>(key);
+  const AtomTableKey *k = static_cast<const AtomTableKey*>(key);
 
-  if (e->IsUTF8String()) {
-    return nsCRT::HashCodeAsUTF16(e->getUTF8String(), e->getLength());;
+  if (k->mUTF8String) {
+    return nsCRT::HashCodeAsUTF16(k->mUTF8String, k->mLength);;
   }
 
-  NS_ASSERTION(e->IsUTF16String(),
-               "AtomTableGetHash() called on non-string-key AtomTableEntry!");
-
-  return nsCRT::HashCode(e->getUTF16String(), e->getLength());
+  return nsCRT::HashCode(k->mUTF16String, k->mLength);
 }
 
 static PRBool
@@ -215,62 +118,47 @@ AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                   const void *key)
 {
   const AtomTableEntry *he = static_cast<const AtomTableEntry*>(entry);
-  const AtomTableEntry *strKey = static_cast<const AtomTableEntry*>(key);
+  const AtomTableKey *k = static_cast<const AtomTableKey*>(key);
 
-  const PRUnichar *atomString = he->getAtomString();
-
-  if (strKey->IsUTF8String()) {
+  if (k->mUTF8String) {
     return
-      CompareUTF8toUTF16(nsDependentCSubstring(strKey->getUTF8String(),
-                                               strKey->getUTF8String() + strKey->getLength()),
-                         nsDependentSubstring(atomString, atomString + he->getLength())) == 0;
+      CompareUTF8toUTF16(nsDependentCSubstring(k->mUTF8String,
+                                               k->mUTF8String + k->mLength),
+                         nsDependentAtomString(he->mAtom)) == 0;
   }
 
-  PRUint32 length = he->getLength();
-  if (length != strKey->getLength()) {
+  PRUint32 length = he->mAtom->GetLength();
+  if (length != k->mLength) {
     return PR_FALSE;
   }
 
-  const PRUnichar *str;
-
-  if (strKey->IsUTF16String()) {
-    str = strKey->getUTF16String();
-  } else {
-    str = strKey->getAtomString();
-  }
-
-  return memcmp(atomString, str, length * sizeof(PRUnichar)) == 0;
+  return memcmp(he->mAtom->GetUTF16String(),
+                k->mUTF16String, length * sizeof(PRUnichar)) == 0;
 }
 
 static void
 AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
-  
-  AtomImpl *atom = he->GetAtomImpl();
   // Normal |AtomImpl| atoms are deleted when their refcount hits 0, and
   // they then remove themselves from the table.  In other words, they
   // are owned by the callers who own references to them.
   // |PermanentAtomImpl| permanent atoms ignore their refcount and are
   // deleted when they are removed from the table at table destruction.
   // In other words, they are owned by the atom table.
-  if (atom->IsPermanent()) {
-    he->keyHash = 0;
 
+  AtomImpl *atom = static_cast<AtomTableEntry*>(entry)->mAtom;
+  if (atom->IsPermanent()) {
+    // Note that the cast here is important since AtomImpls doesn't have a
+    // virtual dtor.
     delete static_cast<PermanentAtomImpl*>(atom);
   }
-  
-  he->ClearAtom();
 }
 
 static PRBool
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
-  AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
-  const AtomTableEntry *strKey = static_cast<const AtomTableEntry*>(key);
-
-  he->mLength = strKey->getLength();
+  static_cast<AtomTableEntry*>(entry)->mAtom = nsnull;
 
   return PR_TRUE;
 }
@@ -295,7 +183,7 @@ DumpAtomLeaks(PLDHashTable *table, PLDHashEntryHdr *he,
 {
   AtomTableEntry *entry = static_cast<AtomTableEntry*>(he);
   
-  AtomImpl* atom = entry->GetAtomImpl();
+  AtomImpl* atom = entry->mAtom;
   if (!atom->IsPermanent()) {
     ++*static_cast<PRUint32*>(arg);
     nsCAutoString str;
@@ -383,7 +271,7 @@ AtomImpl::~AtomImpl()
   // don't want to remove them twice.  See comment above in
   // |AtomTableClearEntry|.
   if (!IsPermanentInDestructor()) {
-    AtomTableEntry key(mString, mLength);
+    AtomTableKey key(mString, mLength);
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_REMOVE);
     if (gAtomTable.entryCount == 0) {
       PL_DHashTableFinish(&gAtomTable);
@@ -484,7 +372,7 @@ GetAtomHashEntry(const char* aString, PRUint32 aLength)
     return nsnull;
   }
 
-  AtomTableEntry key(aString, aLength);
+  AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
 }
@@ -500,7 +388,7 @@ GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
     return nsnull;
   }
 
-  AtomTableEntry key(aString, aLength);
+  AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
 }
@@ -550,22 +438,22 @@ NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, PRUint32 aAtomCount)
       GetAtomHashEntry((PRUnichar*)aAtoms[i].mStringBuffer->Data(),
                        stringLen);
 
-    if (he->HasValue()) {
+    if (he->mAtom) {
       // there already is an atom with this name in the table.. but we
       // still have to update mBits
-      if (!he->GetAtomImpl()->IsPermanent()) {
+      if (!he->mAtom->IsPermanent()) {
         // since we wanted to create a static atom but there is
         // already one there, we convert it to a non-refcounting
         // permanent atom
-        PromoteToPermanent(he->GetAtomImpl());
+        PromoteToPermanent(he->mAtom);
       }
       
-      *aAtoms[i].mAtom = he->GetAtom();
+      *aAtoms[i].mAtom = he->mAtom;
     }
     else {
       AtomImpl* atom = new PermanentAtomImpl(aAtoms[i].mStringBuffer,
                                              stringLen);
-      he->SetAtomImpl(atom);
+      he->mAtom = atom;
       *aAtoms[i].mAtom = atom;
 
       if (!gStaticAtomTableSealed) {
@@ -604,12 +492,12 @@ NS_NewAtom(const nsACString& aUTF8String)
   AtomTableEntry *he = GetAtomHashEntry(aUTF8String.Data(),
                                         aUTF8String.Length());
 
-  if (!he) {
-    return nsnull;
-  }
+  if (he->mAtom) {
+    nsIAtom* atom;
+    NS_ADDREF(atom = he->mAtom);
 
-  if (he->HasValue())
-    return he->GetAtom();
+    return atom;
+  }
 
   // This results in an extra addref/release of the nsStringBuffer.
   // Unfortunately there doesn't seem to be any APIs to avoid that.
@@ -617,7 +505,7 @@ NS_NewAtom(const nsACString& aUTF8String)
   CopyUTF8toUTF16(aUTF8String, str);
   AtomImpl* atom = new AtomImpl(str);
 
-  he->SetAtomImpl(atom);
+  he->mAtom = atom;
   NS_ADDREF(atom);
 
   return atom;
@@ -635,11 +523,15 @@ NS_NewAtom(const nsAString& aUTF16String)
   AtomTableEntry *he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length());
 
-  if (he->HasValue())
-    return he->GetAtom();
+  if (he->mAtom) {
+    nsIAtom* atom;
+    NS_ADDREF(atom = he->mAtom);
+
+    return atom;
+  }
 
   AtomImpl* atom = new AtomImpl(aUTF16String);
-  he->SetAtomImpl(atom);
+  he->mAtom = atom;
   NS_ADDREF(atom);
 
   return atom;
@@ -651,19 +543,18 @@ NS_NewPermanentAtom(const nsAString& aUTF16String)
   AtomTableEntry *he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length());
 
-  if (he->HasValue()) {
-    AtomImpl* atom = he->GetAtomImpl();
+  AtomImpl* atom = he->mAtom;
+  if (atom) {
     if (!atom->IsPermanent()) {
       PromoteToPermanent(atom);
     }
-    return atom;
   }
-  
-  AtomImpl* atom = new PermanentAtomImpl(aUTF16String);
-  he->SetAtomImpl(atom);
+  else {
+    atom = new PermanentAtomImpl(aUTF16String);
+    he->mAtom = atom;
+  }
 
   // No need to addref since permanent atoms aren't refcounted anyway
-
   return atom;
 }
 
