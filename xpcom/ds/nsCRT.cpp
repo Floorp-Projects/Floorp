@@ -253,17 +253,19 @@ PRUint32 nsCRT::HashCode(const PRUnichar* start, PRUint32 length)
   return h;
 }
 
-PRUint32 nsCRT::HashCodeAsUTF16(const char* start, PRUint32 length)
+PRUint32 nsCRT::HashCodeAsUTF16(const char* start, PRUint32 length,
+                                PRBool* err)
 {
   PRUint32 h = 0;
   const char* s = start;
   const char* end = start + length;
 
+  *err = PR_FALSE;
+
   while ( s < end )
     {
-      PRBool err;
-      PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&s, end, &err);
-      if (err) {
+      PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&s, end, err);
+      if (*err) {
 	return 0;
       }
 

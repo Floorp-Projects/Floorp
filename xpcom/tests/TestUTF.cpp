@@ -145,21 +145,27 @@ test_hashas16()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
+    PRBool err;
     if (nsCRT::HashCode(ValidStrings[i].m16) !=
-        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()))
+        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
+        err)
       return PR_FALSE;
   }
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
     nsDependentCString str8(Invalid8Strings[i].m8);
+    PRBool err;
     if (nsCRT::HashCode(Invalid8Strings[i].m16) !=
-        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()))
+        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
+        err)
       return PR_FALSE;
   }
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
-    if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()) != 0)
+    PRBool err;
+    if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) != 0 ||
+        !err)
       return PR_FALSE;
   }
 
