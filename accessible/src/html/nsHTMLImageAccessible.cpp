@@ -165,15 +165,17 @@ nsHTMLImageAccessible::CacheChildren()
   PRUint32 areaCount = 0;
   mapAreas->GetLength(&areaCount);
 
-  nsRefPtr<nsAccessible> areaAccessible;
+  nsCOMPtr<nsIAccessible> areaAccessible;
+  nsRefPtr<nsAccessible> areaAcc;
 
   for (PRUint32 areaIdx = 0; areaIdx < areaCount; areaIdx++) {
     areaAccessible = GetAreaAccessible(mapAreas, areaIdx);
     if (!areaAccessible)
       return;
 
-    mChildren.AppendElement(areaAccessible);
-    areaAccessible->SetParent(this);
+    areaAcc = nsAccUtils::QueryObject<nsAccessible>(areaAccessible);
+    mChildren.AppendElement(areaAcc);
+    areaAcc->SetParent(this);
   }
 }
 
@@ -286,7 +288,8 @@ nsHTMLImageAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible)
 
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
   if (mapAreas) {
-    nsRefPtr<nsAccessible> accessible = GetAreaAccessible(mapAreas, aIndex);
+    nsCOMPtr<nsIAccessible> accessible;
+    accessible = GetAreaAccessible(mapAreas, aIndex);
     if (!accessible)
       return NS_ERROR_INVALID_ARG;
 
@@ -371,7 +374,7 @@ nsHTMLImageAccessible::GetAreaCollection()
   return mapAreas;
 }
 
-already_AddRefed<nsAccessible>
+already_AddRefed<nsIAccessible>
 nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
                                          PRInt32 aAreaNum)
 {
@@ -384,28 +387,21 @@ nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
     return nsnull;
 
   void* key = reinterpret_cast<void*>(aAreaNum);
-  nsRefPtr<nsAccessible> accessible =
-    nsAccUtils::QueryObject<nsAccessible>(mAccessNodeCache->GetWeak(key));
+  nsRefPtr<nsAccessNode> accessNode = mAccessNodeCache->GetWeak(key);
 
-  if (!accessible) {
-    accessible = new nsHTMLAreaAccessible(domNode, this, mWeakShell);
-    if (!accessible)
+  if (!accessNode) {
+    accessNode = new nsHTMLAreaAccessible(domNode, this, mWeakShell);
+    if (!accessNode)
       return nsnull;
 
-    nsresult rv = accessible->Init();
-    if (NS_FAILED(rv)) {
-      accessible->Shutdown();
+    nsresult rv = accessNode->Init();
+    if (NS_FAILED(rv))
       return nsnull;
-    }
 
-    // We should respect ARIA on area elements (for the canvas map technique)
-    accessible->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(domNode));
-
-    if (!mAccessNodeCache->Put(key, accessible)) {
-      return nsnull;
-    }
+    mAccessNodeCache->Put(key, accessNode);
   }
 
+  nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(accessNode);
   return accessible.forget();
 }
 
