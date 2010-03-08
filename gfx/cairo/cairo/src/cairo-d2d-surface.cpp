@@ -1438,6 +1438,10 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
 
     CD3D10_TEXTURE2D_DESC softDesc(desc.Format, desc.Width, desc.Height);
 
+    image_rect->width = desc.Width;
+    image_rect->height = desc.Height;
+    image_rect->x = image_rect->y = 0;
+
     softDesc.MipLevels = 1;
     softDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE | D3D10_CPU_ACCESS_READ;
     softDesc.Usage = D3D10_USAGE_STAGING;
