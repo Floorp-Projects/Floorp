@@ -155,6 +155,7 @@ static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t a
 static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -195,6 +196,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "checkGCRace",
   "hang",
   "getClipboardText",
+  "callOnDestroy",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -236,6 +238,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   checkGCRace,
   hangPlugin,
   getClipboardText,
+  callOnDestroy,
 };
 
 struct URLNotifyData
@@ -592,6 +595,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->testFunction = FUNCTION_NONE;
   instanceData->functionToFail = FUNCTION_NONE;
   instanceData->failureCode = 0;
+  instanceData->callOnDestroy = NULL;
   instanceData->streamChunkSize = 1024;
   instanceData->streamBuf = NULL;
   instanceData->streamBufSize = 0;
@@ -785,6 +789,13 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 
   if (instanceData->crashOnDestroy)
     IntentionalCrash();
+
+  if (instanceData->callOnDestroy) {
+    NPVariant result;
+    NPN_InvokeDefault(instance, instanceData->callOnDestroy, NULL, 0, &result);
+    NPN_ReleaseVariantValue(&result);
+    NPN_ReleaseObject(instanceData->callOnDestroy);
+  }
 
   if (instanceData->streamBuf) {
     free(instanceData->streamBuf);
@@ -2629,3 +2640,24 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   return false;
 }
 #endif
+
+bool
+callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  if (id->callOnDestroy)
+    return false;
+
+  if (1 != argCount || !NPVARIANT_IS_OBJECT(args[0]))
+    return false;
+
+  id->callOnDestroy = NPVARIANT_TO_OBJECT(args[0]);
+  NPN_RetainObject(id->callOnDestroy);
+
+  return true;
+}
+
+  
+  

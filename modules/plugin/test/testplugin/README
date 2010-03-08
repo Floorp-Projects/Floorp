@@ -80,6 +80,8 @@ arguments passed to the method.
   the object is passed to the same plugin instance, and false when passed
   to other plugin instances, see bug 532246 and
   test_multipleinstanceobjects.html.
+
+* callOnDestroy(fn) - Calls `fn` when the plugin instance is being destroyed
   
 * getAuthInfo(protocol, host, port, scheme, realm) - a wrapper for 
 NPN_GetAuthenticationInfo().  Returns a string "username|password" for
