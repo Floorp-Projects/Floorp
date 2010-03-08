@@ -699,8 +699,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMAttr> domAttr;
-  nsAutoString attrStr;
-  aAttribute->ToString(attrStr);
+  nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {
     nsCOMPtr<nsINameSpaceManager> nsm =
       do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);

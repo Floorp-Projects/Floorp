@@ -244,12 +244,12 @@ nsMappedAttributes::RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue)
 }
 
 const nsAttrName*
-nsMappedAttributes::GetExistingAttrNameFromQName(const nsACString& aName) const
+nsMappedAttributes::GetExistingAttrNameFromQName(const nsAString& aName) const
 {
   PRUint32 i;
   for (i = 0; i < mAttrCount; ++i) {
     if (Attrs()[i].mName.IsAtom()) {
-      if (Attrs()[i].mName.Atom()->EqualsUTF8(aName)) {
+      if (Attrs()[i].mName.Atom()->Equals(aName)) {
         return &Attrs()[i].mName;
       }
     }

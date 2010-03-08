@@ -595,9 +595,8 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
       NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
                    "without a prefix?");
-      nsAutoString prefix;
-      prefixAtom->ToString(prefix);
-      nsStyleUtil::AppendEscapedCSSIdent(prefix, aString);
+      nsStyleUtil::AppendEscapedCSSIdent(nsDependentAtomString(prefixAtom),
+                                         aString);
       aString.Append(PRUnichar('|'));
       wroteNamespace = PR_TRUE;
     } else {

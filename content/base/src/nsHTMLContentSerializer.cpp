@@ -111,7 +111,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
     return;
 
   nsresult rv;
-  nsAutoString nameStr, valueStr;
+  nsAutoString valueStr;
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
   for (PRInt32 index = count; index > 0;) {
@@ -179,7 +179,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
       }
     }
 
-    attrName->ToString(nameStr);
+    nsDependentAtomString nameStr(attrName);
 
     // Expand shorthand attribute.
     if (IsShorthandAttr(attrName, aTagName) && valueStr.IsEmpty()) {
@@ -235,9 +235,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   AppendToString(kLessThan, aStr);
 
-  nsAutoString nameStr;
-  name->ToString(nameStr);
-  AppendToString(nameStr.get(), -1, aStr);
+  AppendToString(nsDependentAtomString(name), aStr);
 
   MaybeEnterInPreContent(content);
 
@@ -375,11 +373,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     mAddSpace = PR_FALSE;
   }
 
-  nsAutoString nameStr;
-  name->ToString(nameStr);
-
   AppendToString(kEndTag, aStr);
-  AppendToString(nameStr.get(), -1, aStr);
+  AppendToString(nsDependentAtomString(name), aStr);
   AppendToString(kGreaterThan, aStr);
 
   MaybeLeaveFromPreContent(content);

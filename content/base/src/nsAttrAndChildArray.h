@@ -114,8 +114,7 @@ public:
   // Returns attribute name at given position or null if aPos is out-of-bounds
   const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
 
-  // aName is UTF-8 encoded
-  const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
+  const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
 
   nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,

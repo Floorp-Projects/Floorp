@@ -1818,8 +1818,7 @@ nsPlainTextSerializer::GetAttributeValue(const nsIParserNode* aNode,
     }
   }
   else if (aNode) {
-    nsAutoString name; 
-    aName->ToString(name);
+    nsDependentAtomString name(aName); 
 
     PRInt32 count = aNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {

@@ -64,9 +64,7 @@ nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
 {
   aAttrValue.Truncate();
 
-  nsCAutoString attrName;
-  aAttrName->ToUTF8String(attrName);
-  aAttributes->GetStringProperty(attrName, aAttrValue);
+  aAttributes->GetStringProperty(nsAtomCString(aAttrName), aAttrValue);
 }
 
 void
@@ -76,8 +74,7 @@ nsAccUtils::SetAccAttr(nsIPersistentProperties *aAttributes,
   nsAutoString oldValue;
   nsCAutoString attrName;
 
-  aAttrName->ToUTF8String(attrName);
-  aAttributes->SetStringProperty(attrName, aAttrValue, oldValue);
+  aAttributes->SetStringProperty(nsAtomCString(aAttrName), aAttrValue, oldValue);
 }
 
 void
