@@ -2015,9 +2015,10 @@ JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
 
 
 struct JSSecurityCallbacks {
-  JSCheckAccessOp            checkObjectAccess;
-  JSPrincipalsTranscoder     principalsTranscoder;
-  JSObjectPrincipalsFinder   findObjectPrincipals;
+    JSCheckAccessOp            checkObjectAccess;
+    JSPrincipalsTranscoder     principalsTranscoder;
+    JSObjectPrincipalsFinder   findObjectPrincipals;
+    JSCSPEvalChecker           contentSecurityPolicyAllows;
 };
 
 extern JS_PUBLIC_API(JSSecurityCallbacks *)

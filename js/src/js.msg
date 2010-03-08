@@ -326,3 +326,4 @@ MSG_DEF(JSMSG_CANT_DEFINE_ARRAY_INDEX,243, 0, JSEXN_TYPEERR, "can't define array
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,  244, 0, JSEXN_ERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG, 245, 1, JSEXN_ERR, "argument {0} must be >= 0")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,   246, 0, JSEXN_ERR, "invalid arguments")
+MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,   247, 0, JSEXN_ERR, "call to Function() blocked by CSP")
