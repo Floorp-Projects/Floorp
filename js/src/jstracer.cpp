@@ -3403,28 +3403,6 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
 #endif
 }
 
-class ImportGlobalSlotVisitor : public SlotVisitorBase
-{
-    TraceRecorder &mRecorder;
-    LIns *mBase;
-    TraceType *mTypemap;
-public:
-    ImportGlobalSlotVisitor(TraceRecorder &recorder,
-                            LIns *base,
-                            TraceType *typemap) :
-        mRecorder(recorder),
-        mBase(base),
-        mTypemap(typemap)
-    {}
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
-        JS_ASSERT(*mTypemap != TT_JSVAL);
-        mRecorder.import(mBase, mRecorder.nativeGlobalOffset(vp),
-                         vp, *mTypemap++, "global", n, NULL);
-    }
-};
-
 class ImportBoxedStackSlotVisitor : public SlotVisitorBase
 {
     TraceRecorder &mRecorder;
