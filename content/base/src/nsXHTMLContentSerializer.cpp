@@ -346,10 +346,9 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     nsIAtom* attrPrefix = name->GetPrefix();
 
     // Filter out any attribute starting with [-|_]moz
-    const char* sharedName;
-    attrName->GetUTF8String(&sharedName);
-    if ((('_' == *sharedName) || ('-' == *sharedName)) &&
-        !nsCRT::strncmp(sharedName+1, kMozStr, PRUint32(sizeof(kMozStr)-1))) {
+    nsDependentAtomString attrNameStr(attrName);
+    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
+        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
       continue;
     }
 

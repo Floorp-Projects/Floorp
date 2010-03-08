@@ -1491,9 +1491,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     const nsAttrName *attr = content->GetAttrNameAt(count);
     if (attr && attr->NamespaceEquals(kNameSpaceID_None)) {
       nsIAtom *attrAtom = attr->Atom();
-      const char *attrStr;
-      attrAtom->GetUTF8String(&attrStr);
-      if (PL_strncmp(attrStr, "aria-", 5)) 
+      nsDependentAtomString attrStr(attrAtom);
+      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-"))) 
         continue; // Not ARIA
       PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
       if (attrFlags & ATTR_BYPASSOBJ)
@@ -1503,7 +1502,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         continue; // only expose token based attributes if they are defined
       nsAutoString value;
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
-        attributes->SetStringProperty(nsDependentCString(attrStr + 5), value, oldValueUnused);
+        attributes->SetStringProperty(NS_ConvertUTF16toUTF8(Substring(attrStr, 5)), value, oldValueUnused);
       }
     }
   }

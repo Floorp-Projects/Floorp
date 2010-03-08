@@ -6734,11 +6734,13 @@ static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
            char* aResult)
 {
-  const char *nameStr = "";
   if (aContent) {
-    aContent->Tag()->GetUTF8String(&nameStr);
+    PR_snprintf(aResult, aResultSize, "%s@%p",
+                nsAtomCString(aContent->Tag()).get(), aFrame);
   }
-  PR_snprintf(aResult, aResultSize, "%s@%p", nameStr, aFrame);
+  else {
+    PR_snprintf(aResult, aResultSize, "@%p", aFrame);
+  }
 }
 
 void

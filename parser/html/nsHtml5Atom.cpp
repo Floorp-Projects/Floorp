@@ -82,9 +82,16 @@ nsHtml5Atom::ToUTF8String(nsACString& aReturn)
 }
 
 NS_IMETHODIMP
-nsHtml5Atom::GetUTF8String(const char **aReturn)
+nsHtml5Atom::GetUTF16String(const PRUnichar **aReturn)
 {
-  NS_NOTREACHED("Should not attempt to get a UTF-8 string from nsHtml5Atom");
+  NS_NOTREACHED("Should not attempt to get a UTF-16 string from nsHtml5Atom");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRUint32)
+nsHtml5Atom::GetLength()
+{
+  NS_NOTREACHED("Should not attempt to get a length from nsHtml5Atom");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

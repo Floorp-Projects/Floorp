@@ -431,13 +431,19 @@ nsPresContext::GetFontPreferences()
   mDefaultFixedFont.size = CSSPixelsToAppUnits(13);
 
   // the font prefs are based on langGroup, not actual language
-  const char *langGroup = "x-western"; // Assume x-western is safe...
+  nsCAutoString langGroup;
   if (mLanguage && mLangService) {
     nsresult rv;
     nsIAtom *group = mLangService->GetLanguageGroup(mLanguage, &rv);
     if (NS_SUCCEEDED(rv) && group) {
-      group->GetUTF8String(&langGroup);
+      group->ToUTF8String(langGroup);
     }
+    else {
+      langGroup.AssignLiteral("x-western"); // Assume x-western is safe...
+    }
+  }
+  else {
+    langGroup.AssignLiteral("x-western"); // Assume x-western is safe...
   }
 
   nsCAutoString pref;
