@@ -5067,36 +5067,28 @@ dnl = QT support
 dnl ========================================================
 if test "$MOZ_ENABLE_QT"
 then
-    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
-    AC_SUBST(MOZ_QT_CFLAGS)
-    AC_SUBST(MOZ_QT_LIBS)
-
     MOZ_ARG_WITH_STRING(qtdir,
     [  --with-qtdir=\$dir       Specify Qt directory ],
     [ QTDIR=$withval])
 
     if test -z "$QTDIR"; then
-      QTDIR="/usr"
-    fi
-    QTINCDIR="/include/qt"
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include/X11/qt"
-    fi
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include"
-    fi
-
-    if test -x "$QTDIR/bin/moc-qt4"; then
-      HOST_MOC="$QTDIR/bin/moc-qt4"
-    else
-      if test -x "$QTDIR/bin/moc"; then
-        HOST_MOC="$QTDIR/bin/moc"
-      else
+        PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
         AC_CHECK_PROGS(HOST_MOC, moc, "")
-      fi
+    else
+        MOZ_QT_LIBS="-L$QTDIR/qt/lib/ -lQtGui -lQtNetwork -lQtCore"
+
+        MOZ_QT_CFLAGS="-DQT_SHARED"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/Qt"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtGui"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtCore"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtNetwork"
+
+        HOST_MOC="$QTDIR/qt/bin/moc"
     fi
     if test -z "$HOST_MOC"; then
-      AC_MSG_ERROR([no acceptable moc preprocessor found])
+        AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
+incorrect])
     fi
     MOC=$HOST_MOC
 fi
