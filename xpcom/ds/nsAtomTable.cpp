@@ -269,7 +269,9 @@ AtomImpl::AtomImpl(nsStringBuffer* aStringBuffer, PRUint32 aLength)
   aStringBuffer->AddRef();
 
   NS_ASSERTION(mString[mLength] == PRUnichar(0), "null terminated");
-  NS_ASSERTION(aStringBuffer && aStringBuffer->StorageSize() == (mLength+1) * 2, "correct storage");
+  NS_ASSERTION(aStringBuffer &&
+               aStringBuffer->StorageSize() == (mLength+1) * sizeof(PRUnichar),
+               "correct storage");
 }
 
 AtomImpl::~AtomImpl()
