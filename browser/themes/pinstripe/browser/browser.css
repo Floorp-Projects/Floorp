@@ -1654,13 +1654,11 @@ tabbrowser > tabbox {
   cursor: default;
 }
 
-.tab-close-button:hover,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover {
+.tab-close-button:hover {
   list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
 }
 
-.tab-close-button:hover:active,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
+.tab-close-button:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
