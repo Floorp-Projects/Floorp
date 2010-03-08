@@ -634,7 +634,7 @@ else
 ELF_DYNSTR_GC	= :
 endif
 
-ifeq($(MOZ_WIDGET_TOOLKIT),qt)
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 OS_LIBS += $(MOZ_QT_LIBS)
 endif
 
