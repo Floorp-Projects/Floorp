@@ -73,7 +73,7 @@ stage/javaconnect/.done:
 javaconnect.js: stage/javaconnect/.done
 	@echo Creating $@...
 	rm -f javaconnect.js
-	@if ! test -e "javaconnect.jst"; then             \
+	@if test ! -e "javaconnect.jst"; then             \
 		$(INSTALL) -m 644 $(srcdir)/javaconnect.jst .; \
 	fi
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl javaconnect.jst \
