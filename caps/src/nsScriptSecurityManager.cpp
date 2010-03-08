@@ -93,6 +93,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIChromeRegistry.h"
 #include "nsPrintfCString.h"
+#include "nsIContentSecurityPolicy.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -513,6 +514,50 @@ NS_IMPL_ISUPPORTS5(nsScriptSecurityManager,
 ///////////////////////////////////////////////////
 
 ///////////////// Security Checks /////////////////
+JSBool
+nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
+{
+    // Get the security manager
+    nsScriptSecurityManager *ssm =
+        nsScriptSecurityManager::GetScriptSecurityManager();
+
+    NS_ASSERTION(ssm, "Failed to get security manager service");
+    if (!ssm)
+        return JS_FALSE;
+
+    nsresult rv;
+    nsIPrincipal* subjectPrincipal = ssm->GetSubjectPrincipal(cx, &rv);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "CSP: Failed to get nsIPrincipal from js context");
+    if (NS_FAILED(rv))
+        return JS_FALSE; // Not just absence of principal, but failure.
+
+    if (!subjectPrincipal)
+        return JS_FALSE;
+
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "CSP: Failed to get CSP from principal.");
+
+    // don't do anything unless there's a CSP
+    if (!csp)
+        return JS_TRUE;
+
+    PRBool evalOK = PR_TRUE;
+    // this call will send violation reports as warranted (and return true if
+    // reportOnly is set).
+    rv = csp->GetAllowsEval(&evalOK);
+
+    if (NS_FAILED(rv))
+    {
+        NS_WARNING("CSP: failed to get allowsEval");
+        return JS_TRUE; // fail open to not break sites.
+    }
+
+    return evalOK;
+}
+
+
 JSBool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
                                            jsval id, JSAccessMode mode,
@@ -3361,9 +3406,10 @@ nsresult nsScriptSecurityManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     static JSSecurityCallbacks securityCallbacks = {
-      CheckObjectAccess,
-      NULL,
-      NULL
+        CheckObjectAccess,
+        NULL,
+        NULL,
+        ContentSecurityPolicyPermitsJSAction
     };
 
 #ifdef DEBUG

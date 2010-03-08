@@ -50,6 +50,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsDOMError.h"
 #include "nsGlobalWindow.h"
+#include "nsIContentSecurityPolicy.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -203,7 +204,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
   JSAutoRequest ar(cx);
 
   if (argc < 1) {
-    ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
+    ::JS_ReportError(cx, "Function %s requires at least 2 parameter",
                      *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
     return NS_ERROR_DOM_TYPE_ERR;
   }
@@ -243,6 +244,32 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
   }
 
   if (expr) {
+    // if CSP is enabled, and setTimeout/setInterval was called with a string
+    // or object, disable the registration and log an error
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+
+    if (doc) {
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      nsresult rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (csp) {
+        PRBool allowsEval;
+        // this call will send violation reports as warranted (and return true if
+        // reportOnly is set).
+        rv = csp->GetAllowsEval(&allowsEval);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!allowsEval) {
+          ::JS_ReportError(cx, "call to %s blocked by CSP",
+                            *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+
+          // Note: Our only caller knows to turn NS_ERROR_DOM_TYPE_ERR into NS_OK.
+          return NS_ERROR_DOM_TYPE_ERR;
+        }
+      }
+    } // if there's no document, we don't have to do anything.
+
     rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
     NS_ENSURE_SUCCESS(rv, rv);
 
