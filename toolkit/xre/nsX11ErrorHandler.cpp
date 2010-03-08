@@ -51,6 +51,8 @@ using mozilla::plugins::PluginThreadChild;
 #include <X11/Xlib.h>
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
+#elif defined(MOZ_WIDGET_QT)
+#include <QX11Info>
 #endif
 
 #define BUFSIZE 2048 // What Xlib uses with XGetErrorDatabaseText
