@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,24 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "MoreTestingAtoms.h"
-#include "nsStaticAtom.h"
-#include "nsMemory.h"
-
-// define storage for all atoms
-#define MORE_TESTING_ATOM(_name, _value) nsIAtom* MoreTestingAtoms::_name;
-#include "MoreTestingAtomList.h"
-#undef MORE_TESTING_ATOM
-
-static const nsStaticAtom MoreTestingAtoms_info[] = {
-
-#define MORE_TESTING_ATOM(name_, value_) NS_STATIC_ATOM(value_, &MoreTestingAtoms::name_),
-#include "MoreTestingAtomList.h"
-#undef MORE_TESTING_ATOM
-};
-
-void MoreTestingAtoms::AddRefAtoms()
-{
-  NS_RegisterStaticAtoms(MoreTestingAtoms_info, 
-                         NS_ARRAY_LENGTH(MoreTestingAtoms_info));
-}
+RDF_ATOM(kAboutAtom, "about")
+RDF_ATOM(kIdAtom, "ID")
+RDF_ATOM(kNodeIdAtom, "nodeID")
+RDF_ATOM(kAboutEachAtom, "aboutEach")
+RDF_ATOM(kResourceAtom, "resource")
+RDF_ATOM(kRDFAtom, "RDF")
+RDF_ATOM(kDescriptionAtom, "Description")
+RDF_ATOM(kBagAtom, "Bag")
+RDF_ATOM(kSeqAtom, "Seq")
+RDF_ATOM(kAltAtom, "Alt")
+RDF_ATOM(kLiAtom, "li")
+RDF_ATOM(kXMLNSAtom, "xmlns")
+RDF_ATOM(kParseTypeAtom, "parseType")
