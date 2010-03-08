@@ -107,7 +107,15 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
   const AtomTableKey *k = static_cast<const AtomTableKey*>(key);
 
   if (k->mUTF8String) {
-    return nsCRT::HashCodeAsUTF16(k->mUTF8String, k->mLength);;
+    PRBool err;
+    PRUint32 hash = nsCRT::HashCodeAsUTF16(k->mUTF8String, k->mLength, &err);
+    if (err) {
+      AtomTableKey* mutableKey = const_cast<AtomTableKey*>(k);
+      mutableKey->mUTF8String = nsnull;
+      mutableKey->mLength = 0;
+      hash = 0;
+    }
+    return hash;
   }
 
   return nsCRT::HashCode(k->mUTF16String, k->mLength);
