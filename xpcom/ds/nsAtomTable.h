@@ -85,12 +85,6 @@ public:
 
   // for |#ifdef NS_BUILD_REFCNT_LOGGING| access to reference count
   nsrefcnt GetRefCount() { return mRefCnt; }
-
-  // The length of the string in the atom.
-  PRUint32 mLength;
-
-  // This always points to the data owned by a nsStringBuffer
-  PRUnichar* mString;
 };
 
 /**
