@@ -549,13 +549,20 @@ gfxPlatform::GetFontPrefLangFor(PRUint8 aUnicodeRange)
     }
 }
 
-const PRUint32 kFontPrefLangCJKMask = (1 << (PRUint32) eFontPrefLang_Japanese) | (1 << (PRUint32) eFontPrefLang_ChineseTW)
-                                      | (1 << (PRUint32) eFontPrefLang_ChineseCN) | (1 << (PRUint32) eFontPrefLang_ChineseHK)
-                                      | (1 << (PRUint32) eFontPrefLang_Korean) | (1 << (PRUint32) eFontPrefLang_CJKSet);
 PRBool 
 gfxPlatform::IsLangCJK(eFontPrefLang aLang)
 {
-    return kFontPrefLangCJKMask & (1 << (PRUint32) aLang);
+    switch (aLang) {
+        case eFontPrefLang_Japanese:
+        case eFontPrefLang_ChineseTW:
+        case eFontPrefLang_ChineseCN:
+        case eFontPrefLang_ChineseHK:
+        case eFontPrefLang_Korean:
+        case eFontPrefLang_CJKSet:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
 }
 
 void 
