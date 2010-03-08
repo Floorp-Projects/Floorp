@@ -36,97 +36,223 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIAtom.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
-#include "prprf.h"
-#include "prtime.h"
-#include <stdio.h>
+#include "UTFStrings.h"
+#include "nsIServiceManager.h"
+#include "nsStaticAtom.h"
 
-extern "C" int _CrtSetDbgFlag(int);
+namespace TestAtoms {
 
-int main(int argc, char** argv)
+PRBool
+test_basic()
 {
-  FILE* fp = fopen("words.txt", "r");
-  if (nsnull == fp) {
-    printf("can't open words.txt\n");
-    return -1;
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
+    nsDependentString str16(ValidStrings[i].m16);
+    nsDependentCString str8(ValidStrings[i].m8);
+
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(str16);
+    
+    if (!atom->Equals(str16) || !atom->EqualsUTF8(str8))
+      return PR_FALSE;
+
+    nsString tmp16;
+    nsCString tmp8;
+    atom->ToString(tmp16);
+    atom->ToUTF8String(tmp8);
+    if (!str16.Equals(tmp16) || !str8.Equals(tmp8))
+      return PR_FALSE;
+
+    if (!nsDependentString(atom->GetUTF16String()).Equals(str16))
+      return PR_FALSE;
+
+    if (!nsAtomString(atom).Equals(str16) ||
+        !nsDependentAtomString(atom).Equals(str16) ||
+        !nsAtomCString(atom).Equals(str8))
+      return PR_FALSE;
   }
-
-  PRInt32 count = 0;
-  PRUnichar** strings = new PRUnichar*[60000];
-  nsIAtom** ids = new nsIAtom*[60000];
-  nsAutoString s1, s2;
-  PRTime start = PR_Now();
-  PRInt32 i;
-  for (i = 0; i < 60000; i++) {
-    char buf[1000];
-    char* s = fgets(buf, sizeof(buf), fp);
-    if (nsnull == s) {
-      break;
-    }
-    nsCAutoString sb;
-    sb.Assign(buf);
-    strings[count++] = ToNewUnicode(sb);
-    ToUpperCase(sb);
-    strings[count++] = ToNewUnicode(sb);
-  }
-  PRTime end0 = PR_Now();
-
-  // Find and create idents
-  for (i = 0; i < count; i++) {
-    ids[i] = NS_NewAtom(strings[i]);
-  }
-  PRUnichar qqs[1]; qqs[0] = 0;
-  nsIAtom* qq = NS_NewAtom(qqs);
-  PRTime end1 = PR_Now();
-
-  // Now make sure we can find all the idents we just made
-  for (i = 0; i < count; i++) {
-    const PRUnichar *utf16String;
-    ids[i]->GetUTF16String(&utf16String);
-    nsIAtom* id = NS_NewAtom(utf16String);
-    if (id != ids[i]) {
-      id->ToString(s1);
-      ids[i]->ToString(s2);
-      printf("find failed: id='%s' ids[%d]='%s'\n",
-             NS_LossyConvertUTF16toASCII(s1).get(), i, NS_LossyConvertUTF16toASCII(s2).get());
-      return -1;
-    }
-    NS_RELEASE(id);
-  }
-  PRTime end2 = PR_Now();
-
-  // Destroy all the atoms we just made
-  NS_RELEASE(qq);
-  for (i = 0; i < count; i++) {
-    NS_RELEASE(ids[i]);
-  }
-
-  // Print out timings
-  PRTime end3 = PR_Now();
-  PRTime creates, finds, lookups, dtor, ustoms;
-  LL_I2L(ustoms, 1000);
-  LL_SUB(creates, end0, start);
-  LL_DIV(creates, creates, ustoms);
-  LL_SUB(finds, end1, end0);
-  LL_DIV(finds, finds, ustoms);
-  LL_SUB(lookups, end2, end1);
-  LL_DIV(lookups, lookups, ustoms);
-  LL_SUB(dtor, end3, end2);
-  char buf[500];
-  PR_snprintf(buf, sizeof(buf), "making %d ident strings took %lldms",
-              count, creates);
-  puts(buf);
-  PR_snprintf(buf, sizeof(buf), "%d new idents took %lldms",
-              count, finds);
-  puts(buf);
-  PR_snprintf(buf, sizeof(buf), "%d ident lookups took %lldms",
-              count, lookups);
-  puts(buf);
-  PR_snprintf(buf, sizeof(buf), "dtor took %lldusec", dtor);
-  puts(buf);
-
-  printf("%d live atoms\n", NS_GetNumberOfAtoms());
-  NS_POSTCONDITION(0 == NS_GetNumberOfAtoms(), "dangling atoms");
-
-  return 0;
+  
+  return PR_TRUE;
 }
+
+PRBool
+test_16vs8()
+{
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
+    nsCOMPtr<nsIAtom> atom16 = do_GetAtom(ValidStrings[i].m16);
+    nsCOMPtr<nsIAtom> atom8 = do_GetAtom(ValidStrings[i].m8);
+    if (atom16 != atom8)
+      return PR_FALSE;
+  }
+  
+  return PR_TRUE;
+}
+
+PRBool
+test_buffersharing()
+{
+  nsString unique;
+  unique.AssignLiteral("this is a unique string !@#$");
+  
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(unique);
+  
+  return unique.get() == atom->GetUTF16String();
+}
+
+PRBool
+test_null()
+{
+  nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));
+  nsDependentString strCut(str.get());
+
+  if (str.Equals(strCut))
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIAtom> atomCut = do_GetAtom(strCut);
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(str);
+  
+  return atom->GetLength() == str.Length() &&
+         atom->Equals(str) &&
+         atom->EqualsUTF8(NS_ConvertUTF16toUTF8(str)) &&
+         atom != atomCut &&
+         atomCut->Equals(strCut);
+}
+
+PRBool
+test_invalid()
+{
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid16Strings); ++i) {
+    nsrefcnt count = NS_GetNumberOfAtoms();
+
+    {
+      nsCOMPtr<nsIAtom> atom16 = do_GetAtom(Invalid16Strings[i].m16);
+      if (!atom16->Equals(nsDependentString(Invalid16Strings[i].m16)))
+        return PR_FALSE;
+    }
+    
+    if (count != NS_GetNumberOfAtoms())
+      return PR_FALSE;
+  }
+
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
+    nsrefcnt count = NS_GetNumberOfAtoms();
+
+    {
+      nsCOMPtr<nsIAtom> atom8 = do_GetAtom(Invalid8Strings[i].m8);
+      nsCOMPtr<nsIAtom> atom16 = do_GetAtom(Invalid8Strings[i].m16);
+      if (atom16 != atom8 ||
+          !atom16->Equals(nsDependentString(Invalid8Strings[i].m16)))
+        return PR_FALSE;
+    }
+    
+    if (count != NS_GetNumberOfAtoms())
+      return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIAtom> emptyAtom = do_GetAtom("");
+
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
+    nsrefcnt count = NS_GetNumberOfAtoms();
+
+    nsCOMPtr<nsIAtom> atom8 = do_GetAtom(Malformed8Strings[i]);
+    if (atom8 != emptyAtom ||
+        count != NS_GetNumberOfAtoms())
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+#define FIRST_ATOM_STR "first static atom. Hello!"
+#define SECOND_ATOM_STR "second static atom. @World!"
+#define THIRD_ATOM_STR "third static atom?!"
+
+static nsIAtom* sAtom1 = 0;
+static nsIAtom* sAtom2 = 0;
+static nsIAtom* sAtom3 = 0;
+NS_STATIC_ATOM_BUFFER(sAtom1_buffer, FIRST_ATOM_STR)
+NS_STATIC_ATOM_BUFFER(sAtom2_buffer, SECOND_ATOM_STR)
+NS_STATIC_ATOM_BUFFER(sAtom3_buffer, THIRD_ATOM_STR)
+static const nsStaticAtom sAtoms_info[] = {
+  NS_STATIC_ATOM(sAtom1_buffer, &sAtom1),
+  NS_STATIC_ATOM(sAtom2_buffer, &sAtom2),
+  NS_STATIC_ATOM(sAtom3_buffer, &sAtom3),
+};
+
+PRBool
+isStaticAtom(nsIAtom* atom)
+{
+  return atom->Release() == 1 &&
+         atom->Release() == 1 &&
+         atom->Release() == 1 &&
+         atom->AddRef() == 2 &&
+         atom->AddRef() == 2;
+}
+
+PRBool
+test_atomtable()
+{
+  nsrefcnt count = NS_GetNumberOfAtoms();
+  
+  nsCOMPtr<nsIAtom> thirdNonPerm = do_GetAtom(THIRD_ATOM_STR);
+  
+  if (thirdNonPerm->AddRef() != 2 ||
+      thirdNonPerm->AddRef() != 3 ||
+      thirdNonPerm->Release() != 2 ||
+      thirdNonPerm->Release() != 1)
+    return PR_FALSE;
+
+  if (!thirdNonPerm || NS_GetNumberOfAtoms() != count + 1)
+    return PR_FALSE;
+
+  NS_RegisterStaticAtoms(sAtoms_info, NS_ARRAY_LENGTH(sAtoms_info));
+
+  return sAtom1 &&
+         sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)) &&
+         isStaticAtom(sAtom1) &&
+         sAtom2 &&
+         sAtom2->Equals(NS_LITERAL_STRING(SECOND_ATOM_STR)) &&
+         isStaticAtom(sAtom2) &&
+         sAtom3 &&
+         sAtom3->Equals(NS_LITERAL_STRING(THIRD_ATOM_STR)) &&
+         isStaticAtom(sAtom3) &&
+         NS_GetNumberOfAtoms() == count + 3 &&
+         thirdNonPerm == sAtom3;
+}
+
+typedef PRBool (*TestFunc)();
+
+static const struct Test
+  {
+    const char* name;
+    TestFunc    func;
+  }
+tests[] =
+  {
+    { "test_basic", test_basic },
+    { "test_16vs8", test_16vs8 },
+    { "test_buffersharing", test_buffersharing },
+    { "test_null", test_null },
+    { "test_invalid", test_invalid },
+    { "test_atomtable", test_atomtable },
+    { nsnull, nsnull }
+  };
+
+}
+
+using namespace TestAtoms;
+
+int main()
+  {
+    {
+      nsCOMPtr<nsIServiceManager> servMan;
+      NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  
+      for (const Test* t = tests; t->name != nsnull; ++t)
+        {
+          printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE <--");
+        }
+    }
+
+    NS_ShutdownXPCOM(nsnull);
+
+    return 0;
+  }
