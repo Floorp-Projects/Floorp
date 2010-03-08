@@ -119,15 +119,7 @@ SimpleTest.waitForExplicitFinish();
 
 // save this for last so that our listeners are registered.
 // ... this loads the testbed of good and bad requests.
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"].getService();
-
-var uri = ios.newURI("http://example.com", null, null);
-var pi = pps.resolve(uri, 0);
-var proxy = pi.host + ":" + pi.port;
-document.getElementById('cspframe').src = 'file_CSP.sjs?main=1&proxy=' + proxy;
+document.getElementById('cspframe').src = 'file_CSP.sjs?main=1';
 
 </script>
 </pre>

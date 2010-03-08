@@ -27,7 +27,7 @@ function run()
       message += " ip-address-mutated-on-throw(" + domain + ")";
   }
 
-  window.parent.postMessage(message, "http://mochi.test:8888");
+  window.parent.postMessage(message, "http://localhost:8888");
 }
 
 window.addEventListener("load", run, false);

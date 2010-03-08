@@ -68,7 +68,7 @@ function runTest() {
 
   // Test preflight-less requests
   basePath = "/tests/content/base/test/file_CrossSiteXHR_server.sjs?"
-  baseURL = "http://mochi.test:8888" + basePath;
+  baseURL = "http://localhost:8888" + basePath;
 
   if (!runOriginTests) {
     origins = [];

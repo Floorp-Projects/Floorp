@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_helper.html" 
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_helper.html"
         name="otherSameDomain"></iframe>
 <iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_helper.html"
         name="otherCrossDomain"></iframe>
@@ -106,7 +106,7 @@ function messageReceiver(evt)
 
 function respondToSelf(evt)
 {
-  is(evt.origin, "http://mochi.test:8888", "event has wrong origin");
+  is(evt.origin, "http://localhost:8888", "event has wrong origin");
   is(evt.source, window, "we posted this message!");
   
   evt.source.postMessage("post-to-self-response", evt.origin);
@@ -119,16 +119,16 @@ function respondToSelf(evt)
 
 function receiveSelf(evt)
 {
-  is(evt.origin, "http://mochi.test:8888", "event has wrong origin");
+  is(evt.origin, "http://localhost:8888", "event has wrong origin");
   is(evt.source, window, "we posted this message!");
 
   window.frames.otherSameDomain.postMessage("post-to-other-same-domain",
-                                            "http://mochi.test:8888");
+                                            "http://localhost:8888");
 }
 
 function receiveOtherSameDomain(evt)
 {
-  is(evt.origin, "http://mochi.test:8888",
+  is(evt.origin, "http://localhost:8888",
      "same-domain response event has wrong origin");
   is(evt.source, window.frames.otherSameDomain,
      "wrong source for same-domain message!");
@@ -155,7 +155,7 @@ function receiveOtherCrossDomain(evt)
 
 function start()
 {
-  window.postMessage("post-to-self", "http://mochi.test:8888");
+  window.postMessage("post-to-self", "http://localhost:8888");
 }
 
 window.addEventListener("load", start, false);

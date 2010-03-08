@@ -171,7 +171,7 @@
 
       <textbox id="autocomplete" type="autocomplete"
                autocompletesearch="history"
-               value="http://mochi.test:8888/redirect-a11y.html"/>
+               value="http://localhost:8888/redirect-a11y.html"/>
 
       <textbox id="autocomplete2" type="autocomplete">
         <menupopup>

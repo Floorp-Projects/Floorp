@@ -13,8 +13,8 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash"
-        name="kid"</iframe>
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash"
+        name="kid"></iframe>
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.origin, "http://mochi.test:8888", "wrong origin");
+  is(evt.origin, "http://localhost:8888", "wrong origin");
   ok(evt.source === window.frames.kid, "wrong source");
   is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 
@@ -36,7 +36,7 @@ window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.frames.kid.postMessage("from-parent", "http://mochi.test:8888");
+  window.frames.kid.postMessage("from-parent", "http://localhost:8888");
 }
 
 window.addEventListener("load", run, false);
