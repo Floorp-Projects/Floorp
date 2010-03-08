@@ -1448,7 +1448,6 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
 nsIntSize
 nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 {
-  nsAutoDisableGetUsedXAssertions disableAssert;
   nsSize docSizeAppUnits;
   nsPresContext* presContext = aIFrame->PresContext();
   nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = 
