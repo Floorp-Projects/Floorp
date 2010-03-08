@@ -4265,8 +4265,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
 const nsAttrName*
 nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  return mAttrsAndChildren.GetExistingAttrNameFromQName(
-    NS_ConvertUTF16toUTF8(aStr));
+  return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
 }
 
 nsresult
@@ -4423,12 +4422,11 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-    nsAutoString attrName;
-    aName->ToString(attrName);
     nsCOMPtr<nsIDOMAttr> attrNode;
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+    GetAttributeNodeNS(ns, nsDependentAtomString(aName),
+                       getter_AddRefs(attrNode));
     mutation.mRelatedNode = attrNode;
 
     mutation.mAttrName = aName;
@@ -4626,11 +4624,10 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // Grab the attr node if needed before we remove it from the attr map
   nsCOMPtr<nsIDOMAttr> attrNode;
   if (hasMutationListeners) {
-    nsAutoString attrName;
-    aName->ToString(attrName);
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+    GetAttributeNodeNS(ns, nsDependentAtomString(aName),
+                       getter_AddRefs(attrNode));
   }
 
   // Clear binding to nsIDOMNamedNodeMap

@@ -468,7 +468,6 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
     return NS_OK;
   }
 
-  NS_ConvertUTF16toUTF8 utf8Name(aLocalName);
   PRInt32 nameSpaceID = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
@@ -487,7 +486,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
     nsIAtom* nameAtom = name->LocalName();
 
     if (nameSpaceID == attrNS &&
-        nameAtom->EqualsUTF8(utf8Name)) {
+        nameAtom->Equals(aLocalName)) {
       nsCOMPtr<nsINodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID);

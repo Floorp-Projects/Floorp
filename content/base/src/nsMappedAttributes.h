@@ -98,7 +98,7 @@ public:
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.
   void RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue);
-  const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
+  const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const;
   
 

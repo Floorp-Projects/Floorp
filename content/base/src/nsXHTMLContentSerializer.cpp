@@ -271,7 +271,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 {
   nsresult rv;
   PRUint32 index, count;
-  nsAutoString nameStr, prefixStr, uriStr, valueStr;
+  nsAutoString prefixStr, uriStr, valueStr;
   nsAutoString xmlnsStr;
   xmlnsStr.AssignLiteral(kXMLNS);
 
@@ -367,7 +367,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
     aContent->GetAttr(namespaceID, attrName, valueStr);
 
-    attrName->ToString(nameStr);
+    nsDependentAtomString nameStr(attrName);
 
     // XXX Hack to get around the fact that MathML can add
     //     attributes starting with '-', which makes them

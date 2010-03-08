@@ -1161,9 +1161,8 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
 const nsAttrName*
 nsXULElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-    NS_ConvertUTF16toUTF8 name(aStr);
     const nsAttrName* attrName =
-        mAttrsAndChildren.GetExistingAttrNameFromQName(name);
+        mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
     if (attrName) {
         return attrName;
     }
@@ -1172,7 +1171,7 @@ nsXULElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
         PRUint32 i;
         for (i = 0; i < mPrototype->mNumAttributes; ++i) {
             attrName = &mPrototype->mAttributes[i].mName;
-            if (attrName->QualifiedNameEquals(name)) {
+            if (attrName->QualifiedNameEquals(aStr)) {
                 return attrName;
             }
         }
@@ -1320,11 +1319,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     nsCOMPtr<nsIDOMAttr> attrNode;
     if (hasMutationListeners) {
-        nsAutoString attrName;
-        aName->ToString(attrName);
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-        GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+        GetAttributeNodeNS(ns, nsDependentAtomString(aName), getter_AddRefs(attrNode));
     }
 
     nsDOMSlots *slots = GetExistingDOMSlots();

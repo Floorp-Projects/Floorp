@@ -250,9 +250,7 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
     mCachedType = aType;
     return NS_OK;
   } else if (mEvent->message == NS_USER_DEFINED_EVENT && mEvent->userType) {
-    nsAutoString name;
-    mEvent->userType->ToString(name);
-    aType = Substring(name, 2, name.Length() - 2); // Remove "on"
+    aType = Substring(nsDependentAtomString(mEvent->userType), 2); // Remove "on"
     mCachedType = aType;
     return NS_OK;
   }

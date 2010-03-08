@@ -2999,12 +2999,10 @@ nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr
   if (IsInHTMLDocument()) {
     nsAutoString lower;
     nsContentUtils::ASCIIToLower(aStr, lower);
-    return mAttrsAndChildren.GetExistingAttrNameFromQName(
-      NS_ConvertUTF16toUTF8(lower));
+    return mAttrsAndChildren.GetExistingAttrNameFromQName(lower);
   }
 
-  return mAttrsAndChildren.GetExistingAttrNameFromQName(
-    NS_ConvertUTF16toUTF8(aStr));
+  return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
 }
 
 nsresult

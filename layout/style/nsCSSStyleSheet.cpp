@@ -375,8 +375,6 @@ nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
 void
 nsMediaQuery::AppendToString(nsAString& aString) const
 {
-  nsAutoString buffer;
-
   if (mHadUnknownExpression) {
     aString.AppendLiteral("not all");
     return;
@@ -391,9 +389,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
     } else if (mHasOnly) {
       aString.AppendLiteral("only ");
     }
-    mMediaType->ToString(buffer);
-    aString.Append(buffer);
-    buffer.Truncate();
+    aString.Append(nsDependentAtomString(mMediaType));
   }
 
   for (PRUint32 i = 0, i_end = mExpressions.Length(); i < i_end; ++i) {
@@ -409,9 +405,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
     }
 
     const nsMediaFeature *feature = expr.mFeature;
-    (*feature->mName)->ToString(buffer);
-    aString.Append(buffer);
-    buffer.Truncate();
+    aString.Append(nsDependentAtomString(*feature->mName));
 
     if (expr.mValue.GetUnit() != eCSSUnit_Null) {
       aString.AppendLiteral(": ");
@@ -450,15 +444,18 @@ nsMediaQuery::AppendToString(nsAString& aString) const
           }
           break;
         case nsMediaFeature::eResolution:
-          buffer.AppendFloat(expr.mValue.GetFloatValue());
-          aString.Append(buffer);
-          buffer.Truncate();
-          if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
-            aString.AppendLiteral("dpi");
-          } else {
-            NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
-                         "bad unit");
-            aString.AppendLiteral("dpcm");
+          {
+            nsAutoString buffer;
+            buffer.AppendFloat(expr.mValue.GetFloatValue());
+            aString.Append(buffer);
+            buffer.Truncate();
+            if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
+              aString.AppendLiteral("dpi");
+            } else {
+              NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
+                           "bad unit");
+              aString.AppendLiteral("dpcm");
+            }
           }
           break;
         case nsMediaFeature::eEnumerated:

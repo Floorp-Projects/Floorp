@@ -1087,16 +1087,13 @@ nsSVGElement::UpdateContentStyleRule()
       }
     }
 
-    nsAutoString name;
-    attrName->Atom()->ToString(name);
-
     nsAutoString value;
     mAttrsAndChildren.AttrAt(i)->ToString(value);
 
     PRBool changed;
-    parser.ParseProperty(nsCSSProps::LookupProperty(name), value,
-                         docURI, baseURI, NodePrincipal(),
-                         declaration, &changed);
+    parser.ParseProperty(
+      nsCSSProps::LookupProperty(nsAtomString(attrName->Atom())), value,
+      docURI, baseURI, NodePrincipal(), declaration, &changed);
   }
 
   if (declaration) {
@@ -1736,10 +1733,9 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue)
 {
-  nsAutoString attributeName;
-  aAttribute->ToString(attributeName);
   const nsAFlatString& attributeValue = PromiseFlatString(aValue);
-  const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
+  const PRUnichar *strings[] = { aAttribute->GetUTF16String(),
+                                 attributeValue.get() };
   return nsSVGUtils::ReportToConsole(aDocument,
                                      "AttributeParseWarning",
                                      strings, NS_ARRAY_LENGTH(strings));
