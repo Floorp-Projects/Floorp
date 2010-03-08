@@ -40,7 +40,7 @@ function test() {
   // test setup
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
-  const baseURL = "http://mochi.test:8888/browser/" +
+  const baseURL = "http://localhost:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_447951_sample.html#";
     
   let tab = gBrowser.addTab();

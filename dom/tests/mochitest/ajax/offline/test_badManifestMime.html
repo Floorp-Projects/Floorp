@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.notmanifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.notmanifest">
 <head>
 <title>bad manifest content type</title>
 
@@ -17,9 +17,9 @@ function handleError() {
 
   // These items are listed in the manifest, but the error should have
   // prevented them from being committed to the cache.
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", false);
+  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", false);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
 
   OfflineTest.teardown();
   OfflineTest.finish();

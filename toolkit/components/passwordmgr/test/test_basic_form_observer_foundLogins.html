@@ -79,10 +79,10 @@ var nsLoginInfo =
   new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                              Components.interfaces.nsILoginInfo);
 var login1 = new nsLoginInfo();
-login1.init("http://mochi.test:8888", "http://www.example.com", null,
+login1.init("http://localhost:8888", "http://www.example.com", null,
             "testuser1", "testpass1", "uname", "pword");
 var login2 = new nsLoginInfo();
-login2.init("http://mochi.test:8888", "http://www.example.com", null,
+login2.init("http://localhost:8888", "http://www.example.com", null,
             "testuser2", "testpass2", "uname", "pword");
 var pwmgr = Cc["@mozilla.org/login-manager;1"].
             getService(Ci.nsILoginManager);

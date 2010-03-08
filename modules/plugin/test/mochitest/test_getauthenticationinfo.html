@@ -24,7 +24,7 @@ const Cc = Components.classes;
 function iframeLoad() {
   var plugin = iframe.contentDocument.getElementById("embedtest");
   // valid request
-  is(plugin.getAuthInfo("http", "mochi.test", 8888, "basic", "testrealm"), 
+  is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "testrealm"), 
       "user1|password1", 
       "correct user/pass retrieved");
   try {
@@ -39,7 +39,7 @@ function iframeLoad() {
   }
   try {
     // invalid request -- wrong port
-    is(plugin.getAuthInfo("http", "mochi.test", 90, "basic", "testrealm"), 
+    is(plugin.getAuthInfo("http", "localhost", 90, "basic", "testrealm"), 
         "user1|password1", 
         "correct user/pass retrieved");
     ok(false, "no exception was thrown");
@@ -49,7 +49,7 @@ function iframeLoad() {
   }
   try {
     // invalid request -- wrong realm
-    is(plugin.getAuthInfo("http", "mochi.test", 8888, "basic", "wrongrealm"), 
+    is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "wrongrealm"), 
         "user1|password1", 
         "correct user/pass retrieved");
     ok(false, "no exception was thrown");
@@ -64,10 +64,10 @@ SimpleTest.waitForExplicitFinish();
 var iframe = document.getElementById("iframe");
 var am = Cc["@mozilla.org/network/http-auth-manager;1"].
          getService(Ci.nsIHttpAuthManager);
-am.setAuthIdentity("http", "mochi.test", 8888, "basic", "testrealm", "", 
-    "mochi.test", "user1", "password1");
+am.setAuthIdentity("http", "localhost", 8888, "basic", "testrealm", "", 
+    "localhost", "user1", "password1");
 iframe.onload = iframeLoad;
-iframe.src = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/" +
+iframe.src = "http://localhost:8888/tests/toolkit/components/passwordmgr/" +
     "test/authenticate.sjs?user=user1&pass=password1&realm=testrealm&plugin=1";
 
 </script>

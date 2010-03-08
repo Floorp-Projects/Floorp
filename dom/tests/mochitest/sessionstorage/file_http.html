@@ -6,7 +6,7 @@ window.addEventListener("message", onMessageReceived, false);
 
 function postMsg(msg)
 {
-  parent.postMessage(msg, "http://mochi.test:8888");
+  parent.postMessage(msg, "http://localhost:8888");
 }
 
 function onMessageReceived(event)

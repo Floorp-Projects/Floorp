@@ -7,10 +7,10 @@ var success = 0;
 try {
   parent[name].success = 1;
 } catch (e) {
-  parent.postMessage(e, "http://mochi.test:8888");
+  parent.postMessage(e, "http://localhost:8888");
 }
 
-parent.postMessage(success ? "success" : "failure", "http://mochi.test:8888");
+parent.postMessage(success ? "success" : "failure", "http://localhost:8888");
 </script>
 <p>Move on, nothing to see here...</p>
 </body>

@@ -3,7 +3,7 @@
 <script>
 window.returnValue = 3;
 
-if (location.toString().match(/^http:\/\/mochi.test:8888/)) {
+if (location.toString().match(/^http:\/\/localhost:8888/)) {
   // Test that we got the right arguments.
   opener.is(window.dialogArguments, "my args",
             "dialog did not get the right arguments.");
@@ -15,7 +15,7 @@ if (location.toString().match(/^http:\/\/mochi.test:8888/)) {
   // that this cross origing dialog does *not* see the passed in
   // arguments.
   opener.postMessage("args: " + window.dialogArguments,
-                     "http://mochi.test:8888");
+                     "http://localhost:8888");
 
   close();
 }
