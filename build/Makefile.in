@@ -117,7 +117,7 @@ check::
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \
         fi
-	@if ! test -f ./unify-test-universal; then \
+	@if test ! -f ./unify-test-universal; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \
         fi
@@ -136,7 +136,7 @@ check::
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
           false; \
         fi
-	@if ! test -f ./unifytestc.class; then \
+	@if test ! -f ./unifytestc.class; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
           false; \
         fi
