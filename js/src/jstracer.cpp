@@ -3497,20 +3497,20 @@ TraceRecorder::isValidSlot(JSScope* scope, JSScopeProperty* sprop)
     uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
 
     if (setflags) {
-        if (!SPROP_HAS_STUB_SETTER(sprop))
+        if (!sprop->hasDefaultSetter())
             RETURN_VALUE("non-stub setter", false);
-        if (sprop->attrs & JSPROP_READONLY)
+        if (!sprop->writable())
             RETURN_VALUE("writing to a read-only property", false);
     }
 
     /* This check applies even when setflags == 0. */
-    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
+    if (setflags != JOF_SET && !sprop->hasDefaultGetter()) {
         JS_ASSERT(!sprop->isMethod());
         RETURN_VALUE("non-stub getter", false);
     }
 
     if (!SPROP_HAS_VALID_SLOT(sprop, scope))
-        RETURN_VALUE("slotless obj property", false);
+        RETURN_VALUE("invalid-slot obj property", false);
 
     return true;
 }
@@ -5233,8 +5233,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
         JSScope* scope = OBJ_SCOPE(pobj);
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
-        if (SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
-            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+        if (sprop->hasDefaultGetterOrIsMethod() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
@@ -7863,7 +7862,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
 
     JSOp op = JSOp(*cx->fp->regs->pc);
     uint32 setflags = (js_CodeSpec[op].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-    if (setflags && (sprop->attrs & JSPROP_READONLY))
+    if (setflags && !sprop->writable())
         RETURN_STOP("writing to a read-only property");
 
     uintN slot = uint16(sprop->shortid);
@@ -10479,8 +10478,8 @@ JS_REQUIRES_STACK void
 TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns* obj_ins,
                                     bool setflag, LIns* boxed_ins)
 {
-    JS_ASSERT(!(sprop->attrs & (setflag ? JSPROP_SETTER : JSPROP_GETTER)));
-    JS_ASSERT(setflag ? !SPROP_HAS_STUB_SETTER(sprop) : !SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
+    JS_ASSERT(setflag ? !sprop->hasSetterValue() : !sprop->hasGetterValue());
+    JS_ASSERT(setflag ? !sprop->hasDefaultSetter() : !sprop->hasDefaultGetterOrIsMethod());
 
     enterDeepBailCall();
 
@@ -11179,21 +11178,21 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
      * case unboxing would fail and, having called a native setter, we could
      * not just retry the instruction in the interpreter.
      */
-    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop) || slot == SPROP_INVALID_SLOT);
+    JS_ASSERT(sprop->hasDefaultSetter() || slot == SPROP_INVALID_SLOT);
 
     // Box the value to be stored, if necessary.
     LIns* boxed_ins = NULL;
-    if (!SPROP_HAS_STUB_SETTER(sprop) || (slot != SPROP_INVALID_SLOT && obj != globalObj))
+    if (!sprop->hasDefaultSetter() || (slot != SPROP_INVALID_SLOT && obj != globalObj))
         boxed_ins = box_jsval(v, v_ins);
 
     // Call the setter, if any.
-    if (!SPROP_HAS_STUB_SETTER(sprop))
+    if (!sprop->hasDefaultSetter())
         emitNativePropertyOp(scope, sprop, obj_ins, true, boxed_ins);
 
     // Store the value, if this property has a slot.
     if (slot != SPROP_INVALID_SLOT) {
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
-        JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
+        JS_ASSERT(sprop->hasSlot());
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
@@ -11223,16 +11222,16 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 {
     if (entry == JS_NO_PROP_CACHE_FILL)
         RETURN_STOP("can't trace uncacheable property set");
-    JS_ASSERT_IF(PCVCAP_TAG(entry->vcap) >= 1, sprop->attrs & JSPROP_SHARED);
-    if (!SPROP_HAS_STUB_SETTER(sprop) && sprop->slot != SPROP_INVALID_SLOT)
+    JS_ASSERT_IF(PCVCAP_TAG(entry->vcap) >= 1, !sprop->hasSlot());
+    if (!sprop->hasDefaultSetter() && sprop->slot != SPROP_INVALID_SLOT)
         RETURN_STOP("can't trace set of property with setter and slot");
-    if (sprop->attrs & JSPROP_SETTER)
+    if (sprop->hasSetterValue())
         RETURN_STOP("can't trace JavaScript function setter");
 
     // These two cases are errors and can't be traced.
-    if (sprop->attrs & JSPROP_GETTER)
+    if (sprop->hasGetterValue())
         RETURN_STOP("can't assign to property with script getter but no setter");
-    if (sprop->attrs & JSPROP_READONLY)
+    if (!sprop->writable())
         RETURN_STOP("can't assign to readonly property");
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
@@ -11263,7 +11262,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
     JS_ASSERT(scope->object == obj2);
     JS_ASSERT(scope->hasProperty(sprop));
-    JS_ASSERT_IF(obj2 != obj, sprop->attrs & JSPROP_SHARED);
+    JS_ASSERT_IF(obj2 != obj, !sprop->hasSlot());
 
     /*
      * Setting a function-valued property might need to rebrand the object, so
@@ -11284,7 +11283,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 
     // Add a property to the object if necessary.
     if (entry->adding()) {
-        JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
+        JS_ASSERT(sprop->hasSlot());
         if (obj == globalObj)
             RETURN_STOP("adding a property to the global object");
 
@@ -11671,9 +11670,9 @@ JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyWithNativeGetter,
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop, jsval* outp)
 {
-    JS_ASSERT(!(sprop->attrs & JSPROP_GETTER));
+    JS_ASSERT(!sprop->hasGetterValue());
     JS_ASSERT(sprop->slot == SPROP_INVALID_SLOT);
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
+    JS_ASSERT(!sprop->hasDefaultGetterOrIsMethod());
 
     // Call GetPropertyWithNativeGetter. See note in getPropertyByName about vp.
     // FIXME - We should call the getter directly. Using a builtin function for
@@ -12842,14 +12841,14 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pc
         sprop = PCVAL_TO_SPROP(pcval);
         JS_ASSERT(OBJ_SCOPE(obj2)->hasProperty(sprop));
 
-        if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
+        if (setflags && !sprop->hasDefaultSetter())
             RETURN_STOP_A("non-stub setter");
-        if (setflags && (sprop->attrs & JSPROP_READONLY))
+        if (setflags && !sprop->writable())
             RETURN_STOP_A("writing to a readonly property");
-        if (!SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop)) {
+        if (!sprop->hasDefaultGetterOrIsMethod()) {
             if (slotp)
                 RETURN_STOP_A("can't trace non-stub getter for this opcode");
-            if (sprop->attrs & JSPROP_GETTER)
+            if (sprop->hasGetterValue())
                 RETURN_STOP_A("script getter");
             if (sprop->slot == SPROP_INVALID_SLOT)
                 return InjectStatus(getPropertyWithNativeGetter(obj_ins, sprop, outp));

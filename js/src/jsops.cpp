@@ -611,10 +611,10 @@ END_CASE(JSOP_PICK)
 
 #define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp)                               \
     JS_BEGIN_MACRO                                                            \
-        if (SPROP_HAS_STUB_GETTER(sprop)) {                                   \
+        if (sprop->hasDefaultGetter()) {                                      \
             /* Fast path for Object instance properties. */                   \
             JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
-                      !SPROP_HAS_STUB_SETTER(sprop));                         \
+                      !sprop->hasDefaultSetter());                            \
             *vp = ((sprop)->slot != SPROP_INVALID_SLOT)                       \
                   ? LOCKED_OBJ_GET_SLOT(pobj, (sprop)->slot)                  \
                   : JSVAL_VOID;                                               \
@@ -627,7 +627,7 @@ END_CASE(JSOP_PICK)
 #define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \
     JS_BEGIN_MACRO                                                            \
         TRACE_2(SetPropHit, entry, sprop);                                    \
-        if (SPROP_HAS_STUB_SETTER(sprop) &&                                   \
+        if (sprop->hasDefaultSetter() &&                                      \
             (sprop)->slot != SPROP_INVALID_SLOT &&                            \
             !OBJ_SCOPE(obj)->brandedOrHasMethodBarrier()) {                   \
             /* Fast path for, e.g., plain Object instance properties. */      \
@@ -1715,9 +1715,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 if (js_MatchPropertyCacheShape(cx, obj, kshape)) {
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                     sprop = PCVAL_TO_SPROP(entry->vword);
-                    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                    JS_ASSERT_IF(!(sprop->attrs & JSPROP_SHARED),
-                                 PCVCAP_TAG(entry->vcap) == 0);
+                    JS_ASSERT(sprop->writable());
+                    JS_ASSERT_IF(sprop->hasSlot(), PCVCAP_TAG(entry->vcap) == 0);
 
                     JSScope *scope = OBJ_SCOPE(obj);
                     JS_ASSERT(!scope->sealed());
@@ -1729,7 +1728,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                      * scope or sprop is shared.
                      */
                     bool checkForAdd;
-                    if (sprop->attrs & JSPROP_SHARED) {
+                    if (!sprop->hasSlot()) {
                         if (PCVCAP_TAG(entry->vcap) == 0 ||
                             ((obj2 = obj->getProto()) &&
                              OBJ_IS_NATIVE(obj2) &&
@@ -1747,9 +1746,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                             NATIVE_SET(cx, obj, sprop, entry, &rval);
                             break;
                         }
-                        checkForAdd =
-                            !(sprop->attrs & JSPROP_SHARED) &&
-                            sprop->parent == scope->lastProperty();
+                        checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
                     } else {
                         /*
                          * We check that cx own obj here and will continue to
@@ -1764,8 +1761,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         checkForAdd = !sprop->parent;
                     }
 
-                    if (checkForAdd &&
-                        SPROP_HAS_STUB_SETTER(sprop) &&
+                    if (checkForAdd && sprop->hasDefaultSetter() &&
                         (slot = sprop->slot) == scope->freeslot) {
                         /*
                          * Fast path: adding a plain old property that was once
@@ -1810,7 +1806,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                             JSScopeProperty *sprop2 =
                                 scope->putProperty(cx, sprop->id,
                                                    sprop->getter(), sprop->setter(),
-                                                   slot, sprop->attrs,
+                                                   slot, sprop->attributes(),
                                                    sprop->getFlags(), sprop->shortid);
                             if (!sprop2) {
                                 js_FreeSlot(cx, obj, slot);
@@ -1853,7 +1849,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 if (obj == obj2) {
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                     sprop = PCVAL_TO_SPROP(entry->vword);
-                    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                    JS_ASSERT(sprop->writable());
                     JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
                     NATIVE_SET(cx, obj, sprop, entry, &rval);
                 }
@@ -2853,10 +2849,10 @@ BEGIN_CASE(JSOP_DEFVAR)
         obj2 == obj &&
         OBJ_IS_NATIVE(obj)) {
         sprop = (JSScopeProperty *) prop;
-        if ((sprop->attrs & JSPROP_PERMANENT) &&
+        if (!sprop->configurable() &&
             SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
-            SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
-            SPROP_HAS_STUB_SETTER(sprop)) {
+            sprop->hasDefaultGetterOrIsMethod() &&
+            sprop->hasDefaultSetter()) {
             /*
              * Fast globals use frame variables to map the global name's atom
              * index to the permanent varobj slot number, tagged as a jsval.
@@ -2996,7 +2992,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     if (prop) {
         if (parent == pobj &&
             OBJ_GET_CLASS(cx, parent) == &js_CallClass &&
-            (old = ((JSScopeProperty *) prop)->attrs,
+            (old = ((JSScopeProperty *) prop)->attributes(),
              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
             /*
@@ -3410,7 +3406,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
 
             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
             sprop = PCVAL_TO_SPROP(entry->vword);
-            JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+            JS_ASSERT(sprop->writable());
 
             /*
              * If this property has a non-stub setter, it must be __proto__,
@@ -3418,7 +3414,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
              * to save code size here and let the standard code path take care
              * of business.
              */
-            if (!SPROP_HAS_STUB_SETTER(sprop))
+            if (!sprop->hasDefaultSetter())
                 goto do_initprop_miss;
 
             /*
@@ -3452,7 +3448,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
             if (scope->table) {
                 JSScopeProperty *sprop2 =
                     scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(), slot,
-                                       sprop->attrs, sprop->getFlags(), sprop->shortid);
+                                       sprop->attributes(), sprop->getFlags(), sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
                     goto error;
