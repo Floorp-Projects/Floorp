@@ -4,7 +4,8 @@
 <!-- Test that before/after generated content stops suppression correctly,
      both statically and dynamically -->
 <style>
-body > div { border:1px solid black; margin:1em; }
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
 #d1:before { content:"Hello"; }
 #d2:after { content:"Kitty"; }
 #d3.c:before { content:"Hello"; }
