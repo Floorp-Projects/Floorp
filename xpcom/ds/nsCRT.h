@@ -242,7 +242,8 @@ public:
   // Computes a hashcode for a length number of UTF8
   // characters. Returns the same hash code as the HashCode method
   // taking a |PRUnichar*| would if the string were converted to UTF16.
-  static PRUint32 HashCodeAsUTF16(const char* start, PRUint32 length);
+  static PRUint32 HashCodeAsUTF16(const char* start, PRUint32 length,
+                                  PRBool* err);
 
   // String to longlong
   static PRInt64 atoll(const char *str);
