@@ -49,9 +49,14 @@
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
+#define CSS_PSEUDO_CLASS(name_, value_) \
+  NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsCSSPseudoClassList.h"
+#undef CSS_PSEUDO_CLASS
+
 static const nsStaticAtom CSSPseudoClasses_info[] = {
 #define CSS_PSEUDO_CLASS(name_, value_) \
-  { value_, (nsIAtom**)&nsCSSPseudoClasses::name_ },
+  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSPseudoClasses::name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
