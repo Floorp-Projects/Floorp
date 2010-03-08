@@ -44,9 +44,13 @@
 #include "nsWidgetAtomList.h"
 #undef WIDGET_ATOM
 
+#define WIDGET_ATOM(_name, _value) NS_STATIC_ATOM_BUFFER(_name##_buffer, _value)
+#include "nsWidgetAtomList.h"
+#undef WIDGET_ATOM
+
 static const nsStaticAtom widget_atoms[] = {
 // define storage for all atoms
-#define WIDGET_ATOM(_name, _value) { _value, &nsWidgetAtoms::_name },
+#define WIDGET_ATOM(_name, _value) NS_STATIC_ATOM(_name##_buffer, &nsWidgetAtoms::_name),
 #include "nsWidgetAtomList.h"
 #undef WIDGET_ATOM
 };

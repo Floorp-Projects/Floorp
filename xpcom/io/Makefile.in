@@ -101,6 +101,7 @@ endif # OS2
 EXPORTS		= \
 		nsAppDirectoryServiceDefs.h \
 		nsDirectoryService.h \
+		nsDirectoryServiceAtomList.h \
 		nsEscape.h \
 		nsFastLoadService.h \
 		nsLinebreakConverter.h \

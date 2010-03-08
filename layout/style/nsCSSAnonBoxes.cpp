@@ -50,9 +50,14 @@
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 
+#define CSS_ANON_BOX(name_, value_) \
+  NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+
 static const nsStaticAtom CSSAnonBoxes_info[] = {
 #define CSS_ANON_BOX(name_, value_) \
-  { value_, (nsIAtom**)&nsCSSAnonBoxes::name_ },
+  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSAnonBoxes::name_),
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 };

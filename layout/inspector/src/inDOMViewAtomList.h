@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,15 +14,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,24 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "MoreTestingAtoms.h"
-#include "nsStaticAtom.h"
-#include "nsMemory.h"
-
-// define storage for all atoms
-#define MORE_TESTING_ATOM(_name, _value) nsIAtom* MoreTestingAtoms::_name;
-#include "MoreTestingAtomList.h"
-#undef MORE_TESTING_ATOM
-
-static const nsStaticAtom MoreTestingAtoms_info[] = {
-
-#define MORE_TESTING_ATOM(name_, value_) NS_STATIC_ATOM(value_, &MoreTestingAtoms::name_),
-#include "MoreTestingAtomList.h"
-#undef MORE_TESTING_ATOM
-};
-
-void MoreTestingAtoms::AddRefAtoms()
-{
-  NS_RegisterStaticAtoms(MoreTestingAtoms_info, 
-                         NS_ARRAY_LENGTH(MoreTestingAtoms_info));
-}
+DOMVIEW_ATOM(kAnonymousAtom, "anonymous")
+DOMVIEW_ATOM(kElementNodeAtom, "ELEMENT_NODE")
+DOMVIEW_ATOM(kAttributeNodeAtom, "ATTRIBUTE_NODE")
+DOMVIEW_ATOM(kTextNodeAtom, "TEXT_NODE")
+DOMVIEW_ATOM(kCDataSectionNodeAtom, "CDATA_SECTION_NODE")
+DOMVIEW_ATOM(kEntityReferenceNodeAtom, "ENTITY_REFERENCE_NODE")
+DOMVIEW_ATOM(kEntityNodeAtom, "ENTITY_NODE")
+DOMVIEW_ATOM(kProcessingInstructionNodeAtom, "PROCESSING_INSTRUCTION_NODE")
+DOMVIEW_ATOM(kCommentNodeAtom, "COMMENT_NODE")
+DOMVIEW_ATOM(kDocumentNodeAtom, "DOCUMENT_NODE")
+DOMVIEW_ATOM(kDocumentTypeNodeAtom, "DOCUMENT_TYPE_NODE")
+DOMVIEW_ATOM(kDocumentFragmentNodeAtom, "DOCUMENT_FRAGMENT_NODE")
+DOMVIEW_ATOM(kNotationNodeAtom, "NOTATION_NODE")
+DOMVIEW_ATOM(kAccessibleNodeAtom, "ACCESSIBLE_NODE")

@@ -109,7 +109,7 @@ SetupTests()
                                           NS_FONT_STRETCH_NORMAL,
                                           400,
                                           16.0,
-                                          NS_NewPermanentAtom("en"),
+                                          NS_NewPermanentAtom(NS_LITERAL_CSTRING("en")),
                                           0.0,
                                           PR_FALSE, PR_FALSE, PR_FALSE);
 
@@ -117,7 +117,7 @@ SetupTests()
                                         NS_FONT_STRETCH_NORMAL,
                                         700,
                                         16.0,
-                                        NS_NewPermanentAtom("en"),
+                                        NS_NewPermanentAtom(NS_LITERAL_CSTRING("en")),
                                         0.0,
                                         PR_FALSE, PR_FALSE, PR_FALSE);
 

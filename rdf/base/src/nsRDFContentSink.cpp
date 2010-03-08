@@ -186,20 +186,9 @@ public:
     static nsIRDFResource* kRDF_Seq;
     static nsIRDFResource* kRDF_nextVal;
 
-    static nsIAtom* kAboutAtom;
-    static nsIAtom* kIdAtom;
-    static nsIAtom* kNodeIdAtom;
-    static nsIAtom* kAboutEachAtom;
-    static nsIAtom* kResourceAtom;
-    static nsIAtom* kRDFAtom;
-    static nsIAtom* kDescriptionAtom;
-    static nsIAtom* kBagAtom;
-    static nsIAtom* kSeqAtom;
-    static nsIAtom* kAltAtom;
-    static nsIAtom* kLiAtom;
-    static nsIAtom* kXMLNSAtom;
-    static nsIAtom* kParseTypeAtom;
-
+#define RDF_ATOM(name_, value_) static nsIAtom* name_;
+#include "nsRDFContentSinkAtomList.h"
+#undef RDF_ATOM
 
     typedef struct ContainerInfo {
         nsIRDFResource**  mType;
@@ -297,35 +286,20 @@ nsIRDFResource* RDFContentSinkImpl::kRDF_Bag;
 nsIRDFResource* RDFContentSinkImpl::kRDF_Seq;
 nsIRDFResource* RDFContentSinkImpl::kRDF_nextVal;
 
-nsIAtom* RDFContentSinkImpl::kAboutAtom;
-nsIAtom* RDFContentSinkImpl::kIdAtom;
-nsIAtom* RDFContentSinkImpl::kNodeIdAtom;
-nsIAtom* RDFContentSinkImpl::kAboutEachAtom;
-nsIAtom* RDFContentSinkImpl::kResourceAtom;
-nsIAtom* RDFContentSinkImpl::kRDFAtom;
-nsIAtom* RDFContentSinkImpl::kDescriptionAtom;
-nsIAtom* RDFContentSinkImpl::kBagAtom;
-nsIAtom* RDFContentSinkImpl::kSeqAtom;
-nsIAtom* RDFContentSinkImpl::kAltAtom;
-nsIAtom* RDFContentSinkImpl::kLiAtom;
-nsIAtom* RDFContentSinkImpl::kXMLNSAtom;
-nsIAtom* RDFContentSinkImpl::kParseTypeAtom;
-
 ////////////////////////////////////////////////////////////////////////
+
+#define RDF_ATOM(name_, value_) nsIAtom* RDFContentSinkImpl::name_;
+#include "nsRDFContentSinkAtomList.h"
+#undef RDF_ATOM
+
+#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsRDFContentSinkAtomList.h"
+#undef RDF_ATOM
+
 static const nsStaticAtom rdf_atoms[] = {
-    { "about", &RDFContentSinkImpl::kAboutAtom },
-    { "ID", &RDFContentSinkImpl::kIdAtom },
-    { "nodeID", &RDFContentSinkImpl::kNodeIdAtom },
-    { "aboutEach", &RDFContentSinkImpl::kAboutEachAtom },
-    { "resource", &RDFContentSinkImpl::kResourceAtom },
-    { "RDF", &RDFContentSinkImpl::kRDFAtom },
-    { "Description", &RDFContentSinkImpl::kDescriptionAtom },
-    { "Bag", &RDFContentSinkImpl::kBagAtom },
-    { "Seq", &RDFContentSinkImpl::kSeqAtom },
-    { "Alt", &RDFContentSinkImpl::kAltAtom },
-    { "li", &RDFContentSinkImpl::kLiAtom },
-    { "xmlns", &RDFContentSinkImpl::kXMLNSAtom },
-    { "parseType", &RDFContentSinkImpl::kParseTypeAtom },
+#define RDF_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &RDFContentSinkImpl::name_),
+#include "nsRDFContentSinkAtomList.h"
+#undef RDF_ATOM
 };
 
 RDFContentSinkImpl::RDFContentSinkImpl()

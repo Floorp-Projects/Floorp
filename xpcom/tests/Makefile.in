@@ -72,13 +72,6 @@ CPPSRCS		= \
 		TestArguments.cpp \
 		$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS += \
-		TestAtoms.cpp \
-		TestPermanentAtoms.cpp \
-		$(NULL)
-endif
-
 SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
