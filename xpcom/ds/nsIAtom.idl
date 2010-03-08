@@ -40,6 +40,7 @@
 %{C++
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
+#include "nsStringBuffer.h"
 %}
 
 /*
@@ -48,55 +49,50 @@
  * pointer identity.
  */
  
-[scriptable, uuid(96c82146-56f3-4b43-817f-25d6db1ad8e8)]
+[scriptable, uuid(1f341018-521a-49de-b806-1bef5c9a00b0)]
 interface nsIAtom : nsISupports
 {
   /**
    * Get the Unicode or UTF8 value for the string
    */
-  AString toString(); 
-  AUTF8String toUTF8String();
+  [binaryname(ScriptableToString)] AString toString(); 
+  [noscript] AUTF8String toUTF8String();
   
-  /**
-   * Return a pointer to a zero terminated UTF16 string.
-   */
-  [noscript] void getUTF16String([shared, retval] out wstring aResult);
-  [notxpcom] unsigned long getLength();
-
   /**
    * Compare the atom to a specific string value
    * Note that this will NEVER return/throw an error condition.
    */
-  boolean equals(in AString aString);
+  [binaryname(ScriptableEquals)] boolean equals(in AString aString);
   
-  boolean equalsUTF8(in AUTF8String aString);
+  [noscript, notxpcom] boolean equalsUTF8(in AUTF8String aString);
 
-%{C++
-  // note this is NOT virtual so this won't muck with the vtable!
-  inline PRBool Equals(const nsAString& s) {
-    PRBool result;
-    Equals(s, &result);
-    return result;
-  }
-
-  inline PRBool EqualsUTF8(const nsACString& s) {
-    PRBool result;
-    EqualsUTF8(s, &result);
-    return result;
-  }
-
-  inline const PRUnichar* GetUTF16String() {
-    const PRUnichar* result;
-    GetUTF16String(&result);
-    return result;
-  }
-
-%}
-  
   /**
    * Returns true if the atom is static and false otherwise.
    */
   [noscript, notxpcom] boolean isStaticAtom();
+
+%{C++
+  // note this is NOT virtual so this won't muck with the vtable!
+  inline PRBool Equals(const nsAString& aString) {
+    return aString.Equals(nsDependentString(mString, mLength));
+  }
+
+  inline const PRUnichar* GetUTF16String() {
+    return mString;
+  }
+
+  inline const PRUint32 GetLength() {
+    return mLength;
+  }
+
+  inline void ToString(nsAString& aBuf) {
+    nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
+  }
+
+protected:
+  PRUint32 mLength;
+  PRUnichar* mString;
+%}
 };
 
 

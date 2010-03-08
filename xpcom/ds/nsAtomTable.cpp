@@ -130,7 +130,7 @@ struct AtomTableEntry : public PLDHashEntryHdr {
                  "SetAtomImpl() called on non-atom AtomTableEntry!");
     NS_ASSERTION(aAtom, "Setting null atom");
     mBits = PtrBits(aAtom);
-    mLength = aAtom->mLength;
+    mLength = aAtom->GetLength();
   }
 
   inline void ClearAtom() {
@@ -157,7 +157,7 @@ struct AtomTableEntry : public PLDHashEntryHdr {
     NS_ASSERTION(keyHash > 1,
                  "getAtomString() called on non-atom AtomTableEntry!");
 
-    return GetAtomImpl()->mString;
+    return GetAtomImpl()->GetUTF16String();
   }
 
   // get the string buffer
@@ -344,8 +344,8 @@ NS_PurgeAtomTable()
 }
 
 AtomImpl::AtomImpl(const nsAString& aString)
-  : mLength(aString.Length())
 {
+  mLength = aString.Length();
   nsStringBuffer* buf = nsStringBuffer::FromString(aString);
   if (buf) {
     buf->AddRef();
@@ -357,15 +357,23 @@ AtomImpl::AtomImpl(const nsAString& aString)
     CopyUnicodeTo(aString, 0, mString, mLength);
     mString[mLength] = PRUnichar(0);
   }
+
+  NS_ASSERTION(mString[mLength] == PRUnichar(0), "null terminated");
+  NS_ASSERTION(buf && buf->StorageSize() >= (mLength+1) * sizeof(PRUnichar),
+               "enough storage");
+  NS_ASSERTION(Equals(aString), "correct data");
 }
 
 AtomImpl::AtomImpl(nsStringBuffer* aStringBuffer, PRUint32 aLength)
-  : mLength(aLength),
-    mString(static_cast<PRUnichar*>(aStringBuffer->Data()))
 {
+  mLength = aLength;
+  mString = static_cast<PRUnichar*>(aStringBuffer->Data());
   // Technically we could currently avoid doing this addref by instead making
   // the static atom buffers have an initial refcount of 2.
   aStringBuffer->AddRef();
+
+  NS_ASSERTION(mString[mLength] == PRUnichar(0), "null terminated");
+  NS_ASSERTION(aStringBuffer && aStringBuffer->StorageSize() == (mLength+1) * 2, "correct storage");
 }
 
 AtomImpl::~AtomImpl()
@@ -428,7 +436,7 @@ void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) CPP_THROW
 }
 
 NS_IMETHODIMP 
-AtomImpl::ToString(nsAString& aBuf)
+AtomImpl::ScriptableToString(nsAString& aBuf)
 {
   nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   return NS_OK;
@@ -441,30 +449,15 @@ AtomImpl::ToUTF8String(nsACString& aBuf)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-AtomImpl::GetUTF16String(const PRUnichar **aResult)
+NS_IMETHODIMP_(PRBool)
+AtomImpl::EqualsUTF8(const nsACString& aString)
 {
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mString;
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(PRUint32)
-AtomImpl::GetLength()
-{
-  return mLength;
+  return CompareUTF8toUTF16(aString,
+                            nsDependentString(mString, mLength)) == 0;
 }
 
 NS_IMETHODIMP
-AtomImpl::EqualsUTF8(const nsACString& aString, PRBool* aResult)
-{
-  *aResult = CompareUTF8toUTF16(aString,
-                                nsDependentString(mString, mLength)) == 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AtomImpl::Equals(const nsAString& aString, PRBool* aResult)
+AtomImpl::ScriptableEquals(const nsAString& aString, PRBool* aResult)
 {
   *aResult = aString.Equals(nsDependentString(mString, mLength));
   return NS_OK;
