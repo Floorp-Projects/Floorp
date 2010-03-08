@@ -653,6 +653,14 @@ NS_IMETHODIMP imgContainer::GetDataSize(PRUint32 *_retval)
   return NS_OK;
 }
 
+void imgContainer::DeleteImgFrame(PRUint32 framenum)
+{
+  NS_ABORT_IF_FALSE(framenum < mFrames.Length(), "Deleting invalid frame!");
+
+  delete mFrames[framenum];
+  mFrames[framenum] = nsnull;
+}
+
 nsresult imgContainer::InternalAddFrameHelper(PRUint32 framenum, imgFrame *aFrame,
                                               PRUint8 **imageData, PRUint32 *imageLength,
                                               PRUint32 **paletteData, PRUint32 *paletteLength)
@@ -859,7 +867,7 @@ NS_IMETHODIMP imgContainer::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRI
   nsIntRect rect = frame->GetRect();
   if (rect.x != aX || rect.y != aY || rect.width != aWidth || rect.height != aHeight ||
       frame->GetFormat() != aFormat) {
-    delete frame;
+    DeleteImgFrame(aFrameNum);
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
                             /* aPaletteDepth = */ 0, imageData, imageLength,
                             /* aPaletteData = */ nsnull, 
