@@ -38,12 +38,24 @@
 #include "nsHtml5Atom.h"
 
 nsHtml5Atom::nsHtml5Atom(const nsAString& aString)
-  : mData(aString)
 {
+  mLength = aString.Length();
+  nsStringBuffer* buf = nsStringBuffer::FromString(aString);
+  if (buf) {
+    buf->AddRef();
+    mString = static_cast<PRUnichar*>(buf->Data());
+  }
+  else {
+    buf = nsStringBuffer::Alloc((mLength + 1) * sizeof(PRUnichar));
+    mString = static_cast<PRUnichar*>(buf->Data());
+    CopyUnicodeTo(aString, 0, mString, mLength);
+    mString[mLength] = PRUnichar(0);
+  }
 }
 
 nsHtml5Atom::~nsHtml5Atom()
 {
+  nsStringBuffer::FromData(mString)->Release();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -67,31 +79,17 @@ nsHtml5Atom::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
-nsHtml5Atom::ToString(nsAString& aReturn)
+NS_IMETHODIMP 
+nsHtml5Atom::ScriptableToString(nsAString& aBuf)
 {
-  aReturn.Assign(mData);
-  return NS_OK;
+  NS_NOTREACHED("Should not call ScriptableToString.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHtml5Atom::ToUTF8String(nsACString& aReturn)
 {
   NS_NOTREACHED("Should not attempt to convert to an UTF-8 string.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHtml5Atom::GetUTF16String(const PRUnichar **aReturn)
-{
-  NS_NOTREACHED("Should not attempt to get a UTF-16 string from nsHtml5Atom");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP_(PRUint32)
-nsHtml5Atom::GetLength()
-{
-  NS_NOTREACHED("Should not attempt to get a length from nsHtml5Atom");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -102,15 +100,15 @@ nsHtml5Atom::IsStaticAtom()
 }
 
 NS_IMETHODIMP
-nsHtml5Atom::Equals(const nsAString& aString, PRBool *aReturn)
+nsHtml5Atom::ScriptableEquals(const nsAString& aString, PRBool* aResult)
 {
-  *aReturn = mData.Equals(aString);
-  return NS_OK;
+  NS_NOTREACHED("Should not call ScriptableEquals.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHtml5Atom::EqualsUTF8(const nsACString& aString, PRBool *aReturn)
+NS_IMETHODIMP_(PRBool)
+nsHtml5Atom::EqualsUTF8(const nsACString& aString)
 {
   NS_NOTREACHED("Should not attempt to compare with an UTF-8 string.");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return PR_FALSE;
 }
