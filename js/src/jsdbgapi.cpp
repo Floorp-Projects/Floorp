@@ -473,9 +473,9 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
          */
         JSScopeProperty *wprop = scope->lookup(sprop->id);
         if (wprop &&
-            ((wprop->attrs ^ sprop->attrs) & JSPROP_SETTER) == 0 &&
+            wprop->hasSetterValue() == sprop->hasSetterValue() &&
             IsWatchedProperty(cx, wprop)) {
-            sprop = scope->changeProperty(cx, wprop, 0, wprop->attrs,
+            sprop = scope->changeProperty(cx, wprop, 0, wprop->attributes(),
                                           wprop->getter(), wp->setter);
             if (!sprop)
                 ok = JS_FALSE;
@@ -505,7 +505,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
             wp->sprop->trace(trc);
-            if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
+            if (wp->sprop->hasSetterValue() && wp->setter) {
                 JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
                                       "wp->setter");
             }
@@ -732,7 +732,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     argv = NULL;    /* suppress bogus gcc warnings */
 #endif
                 ok = !wp->setter ||
-                     ((sprop->attrs & JSPROP_SETTER)
+                     (sprop->hasSetterValue()
                       ? js_InternalCall(cx, obj,
                                         js_CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
@@ -771,7 +771,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static bool
 IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
-    if (sprop->attrs & JSPROP_SETTER) {
+    if (sprop->hasSetterValue()) {
         JSObject *funobj = sprop->setterObject();
         if (!funobj->isFunction())
             return false;
@@ -879,7 +879,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
                     : JSVAL_VOID;
             getter = sprop->getter();
             setter = sprop->setter();
-            attrs = sprop->attrs;
+            attrs = sprop->attributes();
             flags = sprop->getFlags();
             shortid = sprop->shortid;
         } else {
@@ -911,7 +911,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
         DBG_UNLOCK(rt);
-        watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter());
+        watcher = js_WrapWatchedSetter(cx, propid, sprop->attributes(), sprop->setter());
         if (!watcher) {
             ok = JS_FALSE;
             goto out;
@@ -930,7 +930,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         wp->flags = JSWP_LIVE;
 
         /* XXXbe nest in obj lock here */
-        sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
+        sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attributes(),
                                              sprop->getter(), watcher);
         if (!sprop) {
             /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
@@ -1485,9 +1485,9 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     if (wasThrowing)
         cx->exception = lastException.value();
 
-    pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
-              | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
-              | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0);
+    pd->flags |= (sprop->enumerable() ? JSPD_ENUMERATE : 0)
+              |  (!sprop->writable()  ? JSPD_READONLY  : 0)
+              |  (!sprop->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
     if (sprop->getter() == js_GetCallArg) {
         pd->slot = sprop->shortid;

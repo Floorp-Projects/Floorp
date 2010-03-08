@@ -3039,7 +3039,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
         sprop = (JSScopeProperty *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
                                    sprop->getter(), sprop->setter(), sprop->slot,
-                                   sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
+                                   sprop->attributes(), sprop->getFlags() | JSScopeProperty::ALIAS,
                                    sprop->shortid)
               != NULL);
     }
@@ -3712,7 +3712,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     sprop = (JSScopeProperty *)prop;
     ok = (js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
                                sprop->getter(), sprop->setter(), sprop->slot,
-                               sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
+                               sprop->attributes(), sprop->getFlags() | JSScopeProperty::ALIAS,
                                sprop->shortid)
           != NULL);
     obj->dropProperty(cx, prop);

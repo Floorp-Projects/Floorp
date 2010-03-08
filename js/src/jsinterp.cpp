@@ -209,7 +209,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             }
 
             if (!scope->generic() &&
-                SPROP_HAS_STUB_GETTER(sprop) &&
+                sprop->hasDefaultGetter() &&
                 SPROP_HAS_VALID_SLOT(sprop, scope)) {
                 v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
                 if (VALUE_IS_FUNCTION(cx, v)) {
@@ -248,7 +248,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 
         /* If getting a value via a stub getter, we can cache the slot. */
         if (!(cs->format & (JOF_SET | JOF_INCDEC | JOF_FOR)) &&
-            SPROP_HAS_STUB_GETTER(sprop) &&
+            sprop->hasDefaultGetter() &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
             vword = SLOT_TO_PCVAL(sprop->slot);
@@ -2778,7 +2778,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
         JS_ASSERT(entry->vword != PCVAL_NULL);
         JS_ASSERT(OBJ_SCOPE(pobj)->brandedOrHasMethodBarrier());
-        JS_ASSERT(SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
+        JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
         JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
