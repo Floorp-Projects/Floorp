@@ -513,7 +513,7 @@ nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
 }
 
 const nsAttrName*
-nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsACString& aName) const
+nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
 {
   PRUint32 i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {

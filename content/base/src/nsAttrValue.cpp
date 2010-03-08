@@ -716,10 +716,11 @@ nsAttrValue::Equals(const nsAString& aValue,
       return aValue.IsEmpty();
     }
     case eAtomBase:
-      // Need a way to just do case-insensitive compares on atoms..
       if (aCaseSensitive == eCaseMatters) {
-        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);;
+        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);
       }
+      return nsDependentAtomString(static_cast<nsIAtom*>(GetPtr())).
+        Equals(aValue, nsCaseInsensitiveStringComparator());
     default:
       break;
   }
@@ -749,7 +750,7 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
                               str->StorageSize()/sizeof(PRUnichar) - 1);
         return aValue->Equals(dep);
       }
-      return aValue->EqualsUTF8(EmptyCString());
+      return aValue == nsGkAtoms::_empty;
     }
     case eAtomBase:
     {

@@ -175,9 +175,9 @@ public:
     return IsAtom() ? nsnull : NodeInfo()->GetPrefixAtom();
   }
 
-  PRBool QualifiedNameEquals(const nsACString& aName) const
+  PRBool QualifiedNameEquals(const nsAString& aName) const
   {
-    return IsAtom() ? Atom()->EqualsUTF8(aName) :
+    return IsAtom() ? Atom()->Equals(aName) :
                       NodeInfo()->QualifiedNameEquals(aName);
   }
 

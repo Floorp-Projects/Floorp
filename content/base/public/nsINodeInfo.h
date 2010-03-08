@@ -270,13 +270,13 @@ public:
     if (!GetPrefixAtom())
       return Equals(aNameAtom);
 
-    return QualifiedNameEqualsInternal(nsAtomCString(aNameAtom));
+    return QualifiedNameEqualsInternal(nsDependentAtomString(aNameAtom));
   }
 
-  PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const
+  PRBool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {
     if (!GetPrefixAtom())
-      return mInner.mName->EqualsUTF8(aQualifiedName);
+      return mInner.mName->Equals(aQualifiedName);
 
     return QualifiedNameEqualsInternal(aQualifiedName);    
   }
@@ -291,7 +291,7 @@ public:
 
 protected:
   virtual PRBool
-    QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const = 0;
+    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const = 0;
 
   /*
    * nsNodeInfoInner is used for two things:
