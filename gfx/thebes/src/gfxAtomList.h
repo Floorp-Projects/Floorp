@@ -86,8 +86,12 @@ GFX_ATOM(x_orya, "x-orya")
 GFX_ATOM(x_telu, "x-telu")
 GFX_ATOM(x_knda, "x-knda")
 GFX_ATOM(x_sinh, "x-sinh")
+GFX_ATOM(x_tibt, "x-tibt")
 
 // used in gfxGDIFontList.h
 GFX_ATOM(ko_xxx, "ko-xxx")
 GFX_ATOM(x_central_euro, "x-central-euro")
 GFX_ATOM(x_symbol, "x-symbol")
+
+// referenced in all.js
+GFX_ATOM(x_user_def, "x-user-def")

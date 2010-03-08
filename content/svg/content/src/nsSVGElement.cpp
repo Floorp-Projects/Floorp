@@ -60,8 +60,7 @@
 #include "nsRuleWalker.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
-#include "nsICSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSParser.h"
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
@@ -1035,30 +1034,47 @@ void
 nsSVGElement::UpdateContentStyleRule()
 {
   NS_ASSERTION(!mContentStyleRule, "we already have a content style rule");
-  
+
+  PRUint32 attrCount = mAttrsAndChildren.AttrCount();
+  if (!attrCount) {
+    // nothing to do
+    return;
+  }
+
   nsIDocument* doc = GetOwnerDoc();
   if (!doc) {
     NS_ERROR("SVG element without owner document");
     return;
   }
-  
+
+  // Try to fetch the CSS Parser from the document.
+  nsCSSParser parser(doc->CSSLoader());
+  if (!parser) {
+    NS_WARNING("failed to get a css parser");
+    return;
+  }
+
+  // SVG and CSS differ slightly in their interpretation of some of
+  // the attributes.  SVG allows attributes of the form: font-size="5"
+  // (style="font-size: 5" if using a style attribute)
+  // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
+  // Set a flag to pass information to the parser so that we can use
+  // the CSS parser to parse the font-size attribute.  Note that this
+  // does *not* affect the use of CSS stylesheets, which will still
+  // require units.
+  parser.SetSVGMode(PR_TRUE);
+
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsIURI *docURI = doc->GetDocumentURI();
-  nsICSSLoader* cssLoader = doc->CSSLoader();
-
   nsCSSDeclaration* declaration = nsnull;
-  nsCOMPtr<nsICSSParser> parser;
 
-  nsresult rv = NS_OK; 
-
-  PRUint32 attrCount = mAttrsAndChildren.AttrCount();
   for (PRUint32 i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
 
+    // Create the nsCSSDeclaration if we haven't already.
     if (!declaration) {
-      // Create the nsCSSDeclaration.
       declaration = new nsCSSDeclaration();
       if (!declaration) {
         NS_WARNING("Failed to allocate nsCSSDeclaration");
@@ -1069,48 +1085,24 @@ nsSVGElement::UpdateContentStyleRule()
         declaration->RuleAbort();  // deletes declaration
         return;
       }
-
-      // Try to fetch the CSS Parser from the document.
-      rv = cssLoader->GetParserFor(nsnull, getter_AddRefs(parser));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("failed to get a css parser");
-        declaration->RuleAbort();  // deletes declaration
-        return;
-      }
-
-      // SVG and CSS differ slightly in their interpretation of some of
-      // the attributes.  SVG allows attributes of the form: font-size="5" 
-      // (style="font-size: 5" if using a style attribute)
-      // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
-      // Set a flag to pass information to the parser so that we can use
-      // the CSS parser to parse the font-size attribute.  Note that this
-      // does *not* affect the use of CSS stylesheets, which will still
-      // require units.
-      parser->SetSVGMode(PR_TRUE);
     }
-
-    nsAutoString name;
-    attrName->Atom()->ToString(name);
 
     nsAutoString value;
     mAttrsAndChildren.AttrAt(i)->ToString(value);
 
     PRBool changed;
-    parser->ParseProperty(nsCSSProps::LookupProperty(name), value,
-                          docURI, baseURI, NodePrincipal(),
-                          declaration, &changed);
+    parser.ParseProperty(
+      nsCSSProps::LookupProperty(nsAtomString(attrName->Atom())), value,
+      docURI, baseURI, NodePrincipal(), declaration, &changed);
   }
 
   if (declaration) {
-    rv = NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule), nsnull, declaration);
+    nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule),
+                                     nsnull, declaration);
     if (NS_FAILED(rv)) {
       NS_WARNING("could not create contentstylerule");
       declaration->RuleAbort();  // deletes declaration
     }
-
-    // Recycle the parser
-    parser->SetSVGMode(PR_FALSE);
-    cssLoader->RecycleParser(parser);
   }
 }
 
@@ -1235,10 +1227,6 @@ nsSVGElement::DidAnimateLength(PRUint8 aAttrEnum)
 void
 nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
 {
-#ifdef MOZ_SMIL
-  FlushAnimations();
-#endif
-
   LengthAttributesInfo info = GetLengthInfo();
 
   NS_ASSERTION(info.mLengthCount > 0,
@@ -1608,6 +1596,18 @@ nsSVGElement::DidAnimatePreserveAspectRatio()
   }
 }
 
+void
+nsSVGElement::DidAnimateTransform()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None,
+                            nsGkAtoms::transform,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGElement::StringAttributesInfo
 nsSVGElement::GetStringInfo()
 {
@@ -1733,10 +1733,9 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue)
 {
-  nsAutoString attributeName;
-  aAttribute->ToString(attributeName);
   const nsAFlatString& attributeValue = PromiseFlatString(aValue);
-  const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
+  const PRUnichar *strings[] = { aAttribute->GetUTF16String(),
+                                 attributeValue.get() };
   return nsSVGUtils::ReportToConsole(aDocument,
                                      "AttributeParseWarning",
                                      strings, NS_ARRAY_LENGTH(strings));
@@ -1782,7 +1781,7 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
       = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
     NS_ENSURE_TRUE(list, nsnull);
 
-    return new nsSVGTransformSMILAttr(list);
+    return new nsSVGTransformSMILAttr(list, this);
   }
 
   // Lengths:
@@ -1870,11 +1869,8 @@ void
 nsSVGElement::AnimationNeedsResample()
 {
   nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsSMILAnimationController* smilController = doc->GetAnimationController();
-    if (smilController) {
-      smilController->SetResampleNeeded();
-    }
+  if (doc && doc->HasAnimationController()) {
+    doc->GetAnimationController()->SetResampleNeeded();
   }
 }
 
@@ -1882,11 +1878,8 @@ void
 nsSVGElement::FlushAnimations()
 {
   nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsSMILAnimationController* smilController = doc->GetAnimationController();
-    if (smilController) {
-      smilController->FlushResampleRequests();
-    }
+  if (doc && doc->HasAnimationController()) {
+    doc->GetAnimationController()->FlushResampleRequests();
   }
 }
 #endif // MOZ_SMIL

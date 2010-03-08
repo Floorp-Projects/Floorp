@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(LOCALGL_H_) && !defined(__gl_h_)
+#if !defined(LOCALGL_H_)
 
 #define LOCALGL_H_
+
+#if !defined(__gl_h_)
 #define __gl_h_
 
 #if defined(__APPLE__XXX)
@@ -66,8 +68,8 @@ typedef double GLclampd;
 typedef void GLvoid;
 
 typedef char GLchar;
-typedef PRInt32 GLsizeiptr;
-typedef PRInt32 GLintptr;
+typedef ptrdiff_t GLsizeiptr;
+typedef ptrdiff_t GLintptr;
 
 #ifndef GLAPIENTRY
 # ifdef WIN32
@@ -78,6 +80,8 @@ typedef PRInt32 GLintptr;
 #  define GLAPI
 # endif
 #endif
+
+#endif /* __gl_h_ */
 
 #define LOCAL_GL_VERSION_1_1 1
 #define LOCAL_GL_ACCUM 0x0100
@@ -845,9 +849,7 @@ typedef PRInt32 GLintptr;
 #define LOCAL_GL_DYNAMIC_COPY 0x88EA
 #define LOCAL_GL_SAMPLES_PASSED 0x8914
 #define LOCAL_GL_VERSION_2_0 1
-#ifndef GL_BLEND_EQUATION_RGB
-#define LOCAL_GL_BLEND_EQUATION_RGB GL_BLEND_EQUATION
-#endif
+#define LOCAL_GL_BLEND_EQUATION_RGB 0x8009
 #define LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED 0x8622
 #define LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE 0x8623
 #define LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE 0x8624

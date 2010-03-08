@@ -755,7 +755,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
-NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
+NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
 NS_IMPL_URI_ATTR(nsHTMLInputElement, Src, src)
@@ -1080,10 +1080,12 @@ nsHTMLInputElement::UpdateFileList()
   if (mFileList) {
     mFileList->Clear();
 
+    nsIDocument* doc = GetOwnerDoc();
+
     nsCOMArray<nsIFile> files;
     GetFileArray(files);
     for (PRUint32 i = 0; i < (PRUint32)files.Count(); ++i) {
-      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(files[i]);
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(files[i], doc);
       if (domFile) {
         if (!mFileList->Append(domFile)) {
           return NS_ERROR_FAILURE;
@@ -2204,7 +2206,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::maxlength) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+      return aResult.ParseNonNegativeIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::size) {
       return aResult.ParseIntWithBounds(aValue, 0);

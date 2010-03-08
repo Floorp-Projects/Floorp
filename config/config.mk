@@ -225,6 +225,7 @@ else
   endif
 endif
 
+MOZALLOC_LIB = $(call EXPAND_MOZLIBNAME,mozalloc)
 
 # append debug flags 
 # (these might have been above when processing MOZ_DBGRINFO_MODULES)
@@ -631,6 +632,10 @@ ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
 else
 ELF_DYNSTR_GC	= :
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+OS_LIBS += $(MOZ_QT_LIBS)
 endif
 
 ifndef CROSS_COMPILE

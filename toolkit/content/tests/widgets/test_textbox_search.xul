@@ -14,7 +14,7 @@
     <textbox id="searchbox"
              type="search"
              oncommand="doSearch(this.value);"
-             emptytext="random emptytext"
+             placeholder="random placeholder"
              timeout="1"/>
   </hbox>
 
@@ -40,8 +40,8 @@ function doTests() {
   ok(clearIcon, "clear icon found");
   is(icons.selectedPanel, searchIcon, "search icon is displayed");
 
-  is(textbox.emptyText, "random emptytext", "search textbox supports emptytext");
-  is(textbox.value, "", "emptytext doesn't interfere with the real value");
+  is(textbox.placeholder, "random placeholder", "search textbox supports placeholder");
+  is(textbox.value, "", "placeholder doesn't interfere with the real value");
 
   function iconClick(aIcon) {
     is(icons.selectedPanel, aIcon, aIcon.className + " icon must be displayed in order to be clickable");

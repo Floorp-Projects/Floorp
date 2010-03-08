@@ -107,6 +107,7 @@ function closeTab() {
 
 function startSearch() {
   allTabs.filterField.value = pickOne(chars);
+  info(allTabs.filterField.value);
   allTabs.filter();
   next();
   return allTabs.filterField.value;

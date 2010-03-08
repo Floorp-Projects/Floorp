@@ -176,9 +176,10 @@ function test()
     checkThrows(function() new Int32Array(-100));
 
     a = new Uint8Array(3);
-    checkThrows(function() a[5000] = 0);
-    checkThrows(function() a["hello"] = 0);
-    checkThrows(function() a[-10] = 0);
+    // XXX these are ignored now and return undefined
+    //checkThrows(function() a[5000] = 0);
+    //checkThrows(function() a["hello"] = 0);
+    //checkThrows(function() a[-10] = 0);
     check(function() (a[0] = "10") && (a[0] == 10));
 
 

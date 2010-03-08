@@ -38,7 +38,7 @@ function checkTextArea(textArea) {
   } else if (htmlMaxLength < 0) {
     // Per the HTML5 spec, out-of-range values are supposed to translate to -1,
     // not 0, but they don't?
-    todo_is(domMaxLength, -1,
+    is(domMaxLength, -1,
       'maxlength is out of range but maxLength DOM attribute is not -1');
   } else {
     is(domMaxLength, parseInt(htmlMaxLength),
@@ -71,7 +71,7 @@ SimpleTest.waitForFocus(function() {
       caught = true;
     }
     if (testNums[i] < 0) {
-      todo(caught, 'Setting negative maxLength should throw exception');
+      ok(caught, 'Setting negative maxLength should throw exception');
     } else {
       ok(!caught, 'Setting nonnegative maxLength should not throw exception');
     }

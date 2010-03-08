@@ -37,13 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsScreenQt.h"
-
 #include <qcolor.h>
 #include <qcolormap.h>
 #include <qrect.h>
 #include <qdesktopwidget.h>
 #include <qapplication.h>
+
+#include "nsScreenQt.h"
 
 nsScreenQt::nsScreenQt(int aScreen)
     : mScreen(aScreen)

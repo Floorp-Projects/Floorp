@@ -40,25 +40,43 @@
 #define nsStaticAtom_h__
 
 #include "nsIAtom.h"
+#include "nsStringBuffer.h"
+#include "prlog.h"
 
-// see http://www.mozilla.org/projects/xpcom/atoms.html to use this stuff
+#if defined(HAVE_CPP_CHAR16_T)
+#define NS_STATIC_ATOM_USE_WIDE_STRINGS
+typedef char16_t nsStaticAtomStringType;
+#elif defined(HAVE_CPP_2BYTE_WCHAR_T)
+#define NS_STATIC_ATOM_USE_WIDE_STRINGS
+typedef wchar_t nsStaticAtomStringType;
+#else
+typedef char nsStaticAtomStringType;
+#endif
 
-// class for declaring a static list of atoms, for use with gperf
-// Keep this VERY simple
-// mString: the value of the atom - the policy is that this is only
-//          ASCII, in order to avoid unnecessary conversions if
-//          someone asks for this in unicode
-// mAtom:   a convienience pointer - if you want to store the value of
-//          the atom created by this structure somewhere, put its
-//          address here
+#define NS_STATIC_ATOM(buffer_name, atom_ptr)  { (nsStringBuffer*) &buffer_name, atom_ptr }
+#define NS_STATIC_ATOM_BUFFER(buffer_name, str_data) static nsFakeStringBuffer< sizeof(str_data) > buffer_name = { 1, sizeof(str_data) * sizeof(nsStaticAtomStringType), NS_L(str_data) };
+
+/**
+ * Holds data used to initialize large number of atoms during startup. Use
+ * the above macros to initialize these structs. They should never be accessed
+ * directly other than from AtomTable.cpp
+ */
 struct nsStaticAtom {
-    const char* mString;
+    nsStringBuffer* mStringBuffer;
     nsIAtom ** mAtom;
 };
 
+/**
+ * This is a struct with the same binary layout as a nsStringBuffer.
+ */
+template <PRUint32 size>
+struct nsFakeStringBuffer {
+    PRInt32 mRefCnt;
+    PRUint32 mSize;
+    nsStaticAtomStringType mStringData[size];
+};
 
-// register your lookup function with the atom table. Your function
-// will be called when at atom is not found in the main atom table.
+// Register static atoms with the atom table
 NS_COM nsresult
 NS_RegisterStaticAtoms(const nsStaticAtom*, PRUint32 aAtomCount);
 

@@ -4677,6 +4677,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
         nsAutoRef<pixman_region32> newRegion;
         InitRegion(&newRegion, aRects);
         nsAutoRef<pixman_region32> intersectRegion;
+        pixman_region32_init(&intersectRegion);
         pixman_region32_intersect(&intersectRegion,
                                   &newRegion, &existingRegion);
 

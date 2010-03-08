@@ -689,7 +689,7 @@ var allTabs = {
 
   setupGUI: function allTabs_setupGUI() {
     this.filterField.focus();
-    this.filterField.setAttribute("emptytext", this.filterField.tooltipText);
+    this.filterField.placeholder = this.filterField.tooltipText;
 
     this.panel.addEventListener("keypress", this, false);
     this.panel.addEventListener("keypress", this, true);
@@ -697,7 +697,7 @@ var allTabs = {
   },
 
   suspendGUI: function allTabs_suspendGUI() {
-    this.filterField.removeAttribute("emptytext");
+    this.filterField.placeholder = "";
     this.filterField.value = "";
     this._currentFilter = null;
 
@@ -820,15 +820,18 @@ var allTabs = {
       this.container.appendChild(document.createElement("hbox"));
 
     var row = this.container.firstChild;
-    var i = 0;
+    var colCount = 0;
     previews.forEach(function (preview) {
+      if (!preview.hidden &&
+          ++colCount > this._columns) {
+        row = row.nextSibling;
+        colCount = 1;
+      }
       preview.setAttribute("minwidth", outerWidth);
       preview.setAttribute("height", outerHeight);
       preview.setAttribute("canvasstyle", canvasStyle);
       preview.removeAttribute("closebuttonhover");
       row.appendChild(preview);
-      if (!preview.hidden)
-        row = this.container.childNodes[Math.floor(++i / this._columns)];
     }, this);
 
     this._stack.width = maxWidth;

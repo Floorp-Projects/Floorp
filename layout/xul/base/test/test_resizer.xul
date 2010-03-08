@@ -17,7 +17,6 @@ XUL <resizer> tests
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    // we can't test GTK and Windows native drag resizing implementations
     SimpleTest.waitForExplicitFinish();
 
     function openPopup()
@@ -74,6 +73,9 @@ XUL <resizer> tests
         window.open("window_resizer.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome");
       }
       else {
+        // Skip window_resizer.xul tests.
+        todo(false, "We can't test GTK and Windows native drag resizing implementations.");
+        // Run window_resizer_element.xul test only.
         lastResizerTest();
       }
     }

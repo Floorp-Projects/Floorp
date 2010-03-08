@@ -342,10 +342,6 @@ nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
   command.Trim(" ", PR_TRUE, PR_TRUE);
   ToLowerCase(command);
 
-#ifdef DEBUG_bsmedberg
-  printf("Processing xremote command: %s\n", command.get());
-#endif
-
   if (!command.EqualsLiteral("ping")) {
     nsCAutoString desktopStartupID;
     nsDependentCString cmd(aCommand);
@@ -393,13 +389,6 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
   PRInt32 argc = TO_LITTLE_ENDIAN32(*reinterpret_cast<PRInt32*>(aBuffer));
   char *wd   = aBuffer + ((argc + 1) * sizeof(PRInt32));
 
-#ifdef DEBUG_bsmedberg
-  printf("Receiving command line:\n"
-         "  wd:\t%s\n"
-         "  argc:\t%i\n",
-         wd, argc);
-#endif
-
   nsCOMPtr<nsILocalFile> lf;
   rv = NS_NewNativeLocalFile(nsDependentCString(wd), PR_TRUE,
                              getter_AddRefs(lf));
@@ -422,9 +411,6 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
                                       cmd, ' ',
                                       &desktopStartupID);
     }
-#ifdef DEBUG_bsmedberg
-    printf("  argv[%i]:\t%s\n", i, argv[i]);
-#endif
   }
 
   rv = cmdline->Init(argc, argv, lf, nsICommandLine::STATE_REMOTE_AUTO);
@@ -524,10 +510,6 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
                                  (unsigned char **)&data); /* prop_return
                                                               (we only care
                                                               about the first ) */
-
-#ifdef DEBUG_bsmedberg
-    printf("Handling command: %s\n", data);
-#endif
 
     // Failed to get property off the window?
     if (result != Success)

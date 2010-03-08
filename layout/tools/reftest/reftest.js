@@ -312,6 +312,14 @@ function ReadManifest(aURL)
     sandbox.windowsDefaultTheme = (getComputedStyle(box, null).display == "none");
     document.documentElement.removeChild(box);
 
+    var prefs = CC["@mozilla.org/preferences-service;1"].
+                getService(CI.nsIPrefBranch2);
+    try {
+        sandbox.nativeThemePref = !prefs.getBoolPref("mozilla.widget.disable-native-theme");
+    } catch (e) {
+        sandbox.nativeThemePref = true;
+    }
+
     var line = {value:null};
     var lineNo = 0;
     var urlprefix = "";

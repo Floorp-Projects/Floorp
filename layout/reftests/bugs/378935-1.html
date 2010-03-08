@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase, border-collapse invalidation/repaint bug</title>
+<link rel="copyright" href="http://www.gnu.org/copyleft/fdl.html">
+<!--
+Reduced from
+http://en.wikipedia.org/wiki/French_presidential_election%2C_2007
+-->
+<style type="text/css">
+
+html, body { height: 100%; }
+col { border: thin solid; }
+
+</style>
+</head>
+<body>
+
+
+<table style="width: 95%; height: 95%; border-collapse: collapse;">
+<col></col>
+<col></col>
+<col></col>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+</table>
+
+</body>
+</html>

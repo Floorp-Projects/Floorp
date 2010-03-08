@@ -272,7 +272,8 @@ nsHTMLEditor::CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn)
 
   // add the mouse listener so we can detect a click on a resizer
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMouseListenerP, PR_FALSE);
+  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
+                              mEventListener, PR_FALSE);
 
   return res;
 }

@@ -163,6 +163,7 @@ public:
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
   virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
+  virtual void DidAnimateTransform();
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);

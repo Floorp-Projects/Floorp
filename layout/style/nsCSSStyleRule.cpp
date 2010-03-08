@@ -50,8 +50,7 @@
 #include "nsICSSGroupRule.h"
 #include "nsCSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
-#include "nsICSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIURL.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -596,9 +595,8 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
       NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
                    "without a prefix?");
-      nsAutoString prefix;
-      prefixAtom->ToString(prefix);
-      nsStyleUtil::AppendEscapedCSSIdent(prefix, aString);
+      nsStyleUtil::AppendEscapedCSSIdent(nsDependentAtomString(prefixAtom),
+                                         aString);
       aString.Append(PRUnichar('|'));
       wroteNamespace = PR_TRUE;
     } else {
@@ -913,8 +911,7 @@ public:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            nsICSSLoader** aCSSLoader,
-                                            nsICSSParser** aCSSParser);
+                                            mozilla::css::Loader** aCSSLoader);
   virtual nsresult DeclarationChanged();
   virtual nsIDocument* DocToUpdate();
 
@@ -1018,19 +1015,17 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
  * being initialized.
  */
 nsresult
-DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI, 
+DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                 nsIURI** aBaseURI,
                                                 nsIPrincipal** aSheetPrincipal,
-                                                nsICSSLoader** aCSSLoader,
-                                                nsICSSParser** aCSSParser)
+                                                mozilla::css::Loader** aCSSLoader)
 {
   // null out the out params since some of them may not get initialized below
   *aSheetURI = nsnull;
   *aBaseURI = nsnull;
   *aSheetPrincipal = nsnull;
   *aCSSLoader = nsnull;
-  *aCSSParser = nsnull;
-  nsresult result;
+
   nsCOMPtr<nsIStyleSheet> sheet;
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
@@ -1050,14 +1045,9 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
       }
     }
   }
-  // XXXldb Why bother if |mRule| is null?
-  if (*aCSSLoader) {
-    result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
-  } else {
-    result = NS_NewCSSParser(aCSSParser);
-  }
 
-  if (NS_SUCCEEDED(result) && !*aSheetPrincipal) {
+  nsresult result = NS_OK;
+  if (!*aSheetPrincipal) {
     result = CallCreateInstance("@mozilla.org/nullprincipal;1",
                                 aSheetPrincipal);
   }

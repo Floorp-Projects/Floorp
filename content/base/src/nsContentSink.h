@@ -69,7 +69,6 @@ class nsIDocument;
 class nsIURI;
 class nsIChannel;
 class nsIDocShell;
-class nsICSSLoader;
 class nsIParser;
 class nsIAtom;
 class nsIChannel;
@@ -78,6 +77,12 @@ class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
 class nsIApplicationCache;
+
+namespace mozilla {
+namespace css {
+class Loader;
+}
+}
 
 #ifdef NS_DEBUG
 
@@ -303,7 +308,7 @@ protected:
   nsCOMPtr<nsIURI>              mDocumentURI;
   nsCOMPtr<nsIURI>              mDocumentBaseURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
-  nsCOMPtr<nsICSSLoader>        mCSSLoader;
+  nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
   nsRefPtr<nsScriptLoader>      mScriptLoader;
 

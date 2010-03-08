@@ -185,9 +185,6 @@ protected:
   void        BeginEditorInit();
   nsresult    EndEditorInit();
 
-  // Create the event listeners for the editor to install.
-  virtual nsresult CreateEventListeners();
-
   // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
                                   PRUint32 aFlags,

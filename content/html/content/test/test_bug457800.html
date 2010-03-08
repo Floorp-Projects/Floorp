@@ -41,6 +41,14 @@ function testPlaceholderForElement(element)
   element.value = 'value';
   is(element.placeholder, 'ph', "placeholder in DOM interface has changed when value has changed");
   is(element.getAttribute('placeholder'), 'ph', "placeholder attribute has changed when value has changed");
+
+  // check new lines are managed correctly (shouldn't be shown but kept in the DOM)
+  element.placeholder = 'place\nholder';
+  is(element.placeholder, 'place\nholder', "\\n shouldn't be stripped");
+  is(element.getAttribute('placeholder'), 'place\nholder', "\\n shouldn't be stripped");
+  element.placeholder = 'place\rholder';
+  is(element.placeholder, 'place\rholder', "\\r shouldn't be stripped");
+  is(element.getAttribute('placeholder'), 'place\rholder', "\\r shouldn't be stripped");
 }
 
 testPlaceholderForElement(document.getElementById('inputtext'));

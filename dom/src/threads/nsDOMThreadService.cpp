@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
+
 #include "nsDOMThreadService.h"
 
 // Interfaces
@@ -60,7 +62,6 @@
 #include "nsPIDOMWindow.h"
 
 // Other includes
-#include "jscntxt.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"

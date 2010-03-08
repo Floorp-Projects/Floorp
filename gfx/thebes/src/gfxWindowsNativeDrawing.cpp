@@ -283,6 +283,8 @@ gfxWindowsNativeDrawing::PaintToContext()
         nsRefPtr<gfxImageSurface> alphaSurface =
             gfxAlphaRecovery::RecoverAlpha(black, white, mTempSurfaceSize);
 
+        mNativeRect.Round();
+
         mContext->Save();
         mContext->Translate(mNativeRect.pos);
         mContext->NewPath();

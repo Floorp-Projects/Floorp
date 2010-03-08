@@ -23,7 +23,7 @@ function contentHandler(metadata, response)
 {
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.writeFrom(metadata.bodyInputStream,
-				      metadata.bodyInputStream.available());
+                                      metadata.bodyInputStream.available());
 }
 
 function noRedirectStreamObserver(request, buffer)
@@ -34,8 +34,8 @@ function noRedirectStreamObserver(request, buffer)
                        .createInstance(Ci.nsIStringInputStream);
   uploadStream.setData(requestBody, requestBody.length);
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
-							   "text/plain",
-							   -1);
+                                                           "text/plain",
+                                                           -1);
   chan.asyncOpen(new ChannelListener(noHeaderStreamObserver, null), null);
 }
 
@@ -75,8 +75,8 @@ function run_test()
                        .createInstance(Ci.nsIStringInputStream);
   uploadStream.setData(requestBody, requestBody.length);
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
-							   "text/plain",
-							   -1);
+                                                           "text/plain",
+                                                           -1);
   chan.asyncOpen(new ChannelListener(noRedirectStreamObserver, null), null);
   do_test_pending();
 }

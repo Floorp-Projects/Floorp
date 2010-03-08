@@ -89,7 +89,8 @@ public:
 
   void LogAction(Object* aObj, const char* aAction) {
     if (logging) {
-      printf("%d %p(%d): %s\n", PR_IntervalNow(), aObj, aObj->mLastUsed, aAction);
+      printf("%d %p(%d): %s\n", PR_IntervalNow(),
+             static_cast<void*>(aObj), aObj->mLastUsed, aAction);
     }
   }
 

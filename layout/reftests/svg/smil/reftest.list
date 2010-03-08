@@ -162,4 +162,4 @@ fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 == inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
 == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
-== smil-transitions-interaction-1.svg lime.svg
+random == smil-transitions-interaction-1.svg lime.svg  # bug 549705

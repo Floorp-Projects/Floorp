@@ -138,7 +138,7 @@ parent:
     returns (nsCString username, nsCString password, NPError result);
 
 both:
-  rpc PPluginScriptableObject();
+  async PPluginScriptableObject();
 
 child:
   /* NPP_NewStream */

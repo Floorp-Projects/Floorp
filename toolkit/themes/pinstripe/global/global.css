@@ -53,7 +53,7 @@ menulist > menupopup,
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
-progressmeter[mode="undetermined"] {
+progressmeter {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-periodic-redraw");
 }
 

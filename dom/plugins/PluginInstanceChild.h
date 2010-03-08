@@ -96,8 +96,8 @@ protected:
     virtual bool
     DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject);
 
-    virtual bool
-    AnswerPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
+    NS_OVERRIDE virtual bool
+    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
 
     virtual PBrowserStreamChild*
     AllocPBrowserStream(const nsCString& url,

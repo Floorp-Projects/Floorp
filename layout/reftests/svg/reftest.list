@@ -22,6 +22,8 @@ include svg-integration/reftest.list
 == clipPath-advanced-01.svg pass.svg
 == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
 == clipPath-basic-01.svg pass.svg
+== clipPath-basic-02.svg pass.svg
+== clipPath-basic-03.svg pass.svg
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg
@@ -38,7 +40,7 @@ include svg-integration/reftest.list
 == dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-gradient-contents-02.svg pass.svg
-fails == dynamic-link-style-01.svg pass.svg # https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
+== dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 == dynamic-mask-contents-01.svg pass.svg
@@ -152,3 +154,4 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
 fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
+== href-attr-removal-restyles.svg href-attr-removal-restyles-ref.svg

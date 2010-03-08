@@ -43,18 +43,6 @@
 #include "Module.h"
 #include "nsTArray.h"
 #include "prlink.h"
-
-// Define __i386__ and __x86_64__ as appropriate for the Sun Pro compiler,
-// before #including ffi.h. (libffi itself is built with gcc on Solaris.)
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#ifdef __i386
-#define __i386__
-#endif
-#ifdef __x86_64
-#define __x86_64__
-#endif
-#endif
-
 #include "ffi.h"
 
 namespace mozilla {

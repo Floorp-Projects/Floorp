@@ -1897,10 +1897,7 @@ static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
 {
   NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
 
-  const char* atomString = nsnull;
-  aAtom->GetUTF8String(&atomString);
-
-  KeyAppendString(nsDependentCString(atomString), aKey);
+  KeyAppendString(nsAtomCString(aAtom), aKey);
 }
 
 static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
@@ -3216,8 +3213,7 @@ nsAutoGCRoot::RemoveJSGCRoot(void* aPtr)
 PRBool
 nsContentUtils::IsEventAttributeName(nsIAtom* aName, PRInt32 aType)
 {
-  const char* name;
-  aName->GetUTF8String(&name);
+  const PRUnichar* name = aName->GetUTF16String();
   if (name[0] != 'o' || name[1] != 'n')
     return PR_FALSE;
 
@@ -4257,6 +4253,14 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
   return aLoadingPrincipal->CheckMayLoad(aURIToLoad, PR_TRUE);
 }
 
+PRBool
+nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
+{
+  PRBool isSystem;
+  nsresult rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
+  return NS_SUCCEEDED(rv) && isSystem;
+}
+
 /* static */
 void
 nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
@@ -4928,6 +4932,43 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
   }
 }
 
+PRBool
+nsContentUtils::EqualsIgnoreASCIICase(const nsAString& aStr1,
+                                      const nsAString& aStr2)
+{
+  PRUint32 len = aStr1.Length();
+  if (len != aStr2.Length()) {
+    return PR_FALSE;
+  }
+
+  const PRUnichar* str1 = aStr1.BeginReading();
+  const PRUnichar* str2 = aStr2.BeginReading();
+  const PRUnichar* end = str1 + len;
+
+  while (str1 < end) {
+    PRUnichar c1 = *str1++;
+    PRUnichar c2 = *str2++;
+
+    // First check if any bits other than the 0x0020 differs
+    if ((c1 ^ c2) & 0xffdf) {
+      return PR_FALSE;
+    }
+
+    // We know they only differ in the 0x0020 bit.
+    // Likely the two chars are the same, so check that first
+    if (c1 != c2) {
+      // They do differ, but since it's only in the 0x0020 bit, check if it's
+      // the same ascii char, but just differing in case
+      PRUnichar c1Upper = c1 & 0xffdf;
+      if (!('A' <= c1Upper && c1Upper <= 'Z')) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
 /* static */
 void
 nsAutoGCRoot::Shutdown()
@@ -5326,6 +5367,28 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   }
 
   return rv;
+}
+
+void
+nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
+{
+  // In common cases where we don't have nulls in the
+  // string we can simple simply bypass the checking code.
+  PRInt32 firstNullPos = aInStr.FindChar('\0');
+  if (firstNullPos == kNotFound) {
+    aOutStr.Assign(aInStr);
+    return;
+  }
+
+  aOutStr.SetCapacity(aInStr.Length() - 1);
+  nsAString::const_iterator start, end;
+  aInStr.BeginReading(start);
+  aInStr.EndReading(end);
+  while (start != end) {
+    if (*start != '\0')
+      aOutStr.Append(*start);
+    ++start;
+  }
 }
 
 #ifdef DEBUG

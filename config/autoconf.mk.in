@@ -579,7 +579,6 @@ MOZ_OS2_HIGH_MEMORY = @MOZ_OS2_HIGH_MEMORY@
 
 HAVE_XIE=@HAVE_XIE@
 
-MOZ_MOVEMAIL=@MOZ_MOVEMAIL@
 MOZ_PSM=@MOZ_PSM@
 
 # Gssapi (krb5) libraries and headers for the Negotiate auth method

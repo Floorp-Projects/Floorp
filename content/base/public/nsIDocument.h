@@ -59,7 +59,7 @@
 #include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #ifdef MOZ_SMIL
-class nsSMILAnimationController;
+#include "nsSMILAnimationController.h"
 #endif // MOZ_SMIL
 
 class nsIContent;
@@ -69,6 +69,7 @@ class nsIDocShell;
 class nsStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
+class nsICSSStyleSheet;
 class nsIViewManager;
 class nsIScriptGlobalObject;
 class nsPIDOMWindow;
@@ -89,7 +90,6 @@ class nsIDOMDocumentType;
 class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
-class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
@@ -105,15 +105,18 @@ class nsFrameLoader;
 class nsIBoxObject;
 
 namespace mozilla {
+namespace css {
+class Loader;
+} // namespace css
+
 namespace dom {
 class Link;
 } // namespace dom
 } // namespace mozilla
 
-// IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0xd7978655, 0x9b7d, 0x41e6, \
-    { 0xad, 0x48, 0xdf, 0x32, 0x0b, 0x06, 0xb4, 0xda } }
+{ 0x36f0a42c, 0x089b, 0x4909, \
+  { 0xb3, 0xee, 0xc5, 0xa4, 0x00, 0x90, 0x30, 0x02 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -567,7 +570,7 @@ public:
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
    */
-  nsICSSLoader* CSSLoader() const {
+  mozilla::css::Loader* CSSLoader() const {
     return mCSSLoader;
   }
 
@@ -1161,7 +1164,14 @@ public:
                                   void* aData);
 
 #ifdef MOZ_SMIL
-  // Getter for this document's SMIL Animation Controller
+  // Indicates whether mAnimationController has been (lazily) initialized.
+  // If this returns PR_TRUE, we're promising that GetAnimationController()
+  // will have a non-null return value.
+  PRBool HasAnimationController()  { return !!mAnimationController; }
+
+  // Getter for this document's SMIL Animation Controller. Performs lazy
+  // initialization, if this document supports animation and if
+  // mAnimationController isn't yet initialized.
   virtual nsSMILAnimationController* GetAnimationController() = 0;
 #endif // MOZ_SMIL
 
@@ -1207,6 +1217,23 @@ public:
    * parser-module is linked with gklayout-module.
    */
   virtual void MaybePreLoadImage(nsIURI* uri) = 0;
+
+  /**
+   * Called by nsParser to preload style sheets.  Can also be merged into
+   * the parser if and when the parser is merged with libgklayout.
+   */
+  virtual void PreloadStyle(nsIURI* aURI, const nsAString& aCharset) = 0;
+
+  /**
+   * Called by the chrome registry to load style sheets.  Can be put
+   * back there if and when when that module is merged with libgklayout.
+   *
+   * This always does a synchronous load.  If aIsAgentSheet is true,
+   * it also uses the system principal and enables unsafe rules.
+   * DO NOT USE FOR UNTRUSTED CONTENT.
+   */
+  virtual nsresult LoadChromeSheetSync(nsIURI* aURI, PRBool aIsAgentSheet,
+                                       nsICSSStyleSheet** aSheet) = 0;
 
   /**
    * Returns true if the locale used for the document specifies a direction of
@@ -1275,6 +1302,14 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
+  /**
+   * Register a filedata uri as being "owned" by this document. I.e. that its
+   * lifetime is connected with this document. When the document goes away it
+   * should "kill" the uri by calling
+   * nsFileDataProtocolHandler::RemoveFileDataEntry
+   */
+  virtual void RegisterFileDataUri(nsACString& aUri) = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -1315,13 +1350,18 @@ protected:
   // additional headers that we don't want to expose.
   // The cleanup is handled by the nsDocument destructor.
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
-  nsICSSLoader* mCSSLoader; // [STRONG]
+  mozilla::css::Loader* mCSSLoader; // [STRONG]
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
+
+#ifdef MOZ_SMIL
+  // SMIL Animation Controller, lazily-initialized in GetAnimationController
+  nsAutoPtr<nsSMILAnimationController> mAnimationController;
+#endif // MOZ_SMIL
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

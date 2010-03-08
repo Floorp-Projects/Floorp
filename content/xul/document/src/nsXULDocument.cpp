@@ -113,6 +113,7 @@
 #include "nsIParser.h"
 #include "nsIParserService.h"
 #include "nsICSSStyleSheet.h"
+#include "nsCSSLoader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsEventDispatcher.h"
@@ -1070,12 +1071,8 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
     nsAutoString persist;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
     if (!persist.IsEmpty()) {
-        nsAutoString attr;
-        rv = aAttribute->ToString(attr);
-        if (NS_FAILED(rv)) return;
-
         // XXXldb This should check that it's a token, not just a substring.
-        if (persist.Find(attr) >= 0) {
+        if (persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
             rv = Persist(aElement, kNameSpaceID_None, aAttribute);
             if (NS_FAILED(rv)) return;
         }
@@ -1407,20 +1404,17 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 
     // Ick. Construct a property from the attribute. Punt on
     // namespaces for now.
-    const char* attrstr;
-    rv = aAttribute->GetUTF8String(&attrstr);
-    if (NS_FAILED(rv)) return rv;
-
     // Don't bother with unreasonable attributes. We clamp long values,
     // but truncating attribute names turns it into a different attribute
     // so there's no point in persisting anything at all
-    if (!attrstr || strlen(attrstr) > kMaxAttrNameLength) {
+    nsAtomCString attrstr(aAttribute);
+    if (attrstr.Length() > kMaxAttrNameLength) {
         NS_WARNING("Can't persist, Attribute name too long");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
     nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetResource(nsDependentCString(attrstr),
+    rv = gRDFService->GetResource(attrstr,
                                   getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
@@ -4188,17 +4182,12 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
             attribute.AssignLiteral("*");
         }
 
-        nsAutoString tagStr;
-        rv = tag->ToString(tagStr);
-        if (NS_FAILED(rv)) return;
-
-        nsCAutoString tagstrC, attributeC,broadcasteridC;
-        tagstrC.AssignWithConversion(tagStr);
+        nsCAutoString attributeC,broadcasteridC;
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_WARNING,
                ("xul: broadcaster hookup failed <%s attribute='%s'> to %s",
-                tagstrC.get(),
+                nsAtomCString(tag).get(),
                 attributeC.get(),
                 broadcasteridC.get()));
     }
@@ -4368,17 +4357,12 @@ nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement,
         if (! content)
             return rv;
 
-        nsAutoString tagStr;
-        rv = content->Tag()->ToString(tagStr);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString tagstrC, attributeC,broadcasteridC;
-        tagstrC.AssignWithConversion(tagStr);
+        nsCAutoString attributeC,broadcasteridC;
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_NOTICE,
                ("xul: broadcaster hookup <%s attribute='%s'> to %s",
-                tagstrC.get(),
+                nsAtomCString(content->Tag()).get(),
                 attributeC.get(),
                 broadcasteridC.get()));
     }

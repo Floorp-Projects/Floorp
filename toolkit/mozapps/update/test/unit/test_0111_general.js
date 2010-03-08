@@ -183,7 +183,7 @@ function run_test() {
 
   updatesDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
   var mar = do_get_file("data/aus-0111_general.mar");
-  mar.copyTo(updatesDir, "update.mar");
+  mar.copyTo(updatesDir, FILE_UPDATE_ARCHIVE);
 
   // apply the partial mar and check the innards of the files
   var exitValue = runUpdate(updatesDir, updater);
@@ -193,7 +193,7 @@ function run_test() {
 
   dump("Testing: update.status should be set to STATE_SUCCEEDED\n");
   testFile = updatesDir.clone();
-  testFile.append("update.status");
+  testFile.append(FILE_UPDATE_STATUS);
   do_check_eq(readFile(testFile).split("\n")[0], STATE_SUCCEEDED);
 
   dump("Testing: removal of files and contents of added / modified files by " +

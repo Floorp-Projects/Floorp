@@ -827,13 +827,13 @@ txXPathNativeNode::getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
 
     const nsAttrName* name = aNode.Content()->GetAttrNameAt(aNode.mIndex);
 
-    nsAutoString namespaceURI, localname;
+    nsAutoString namespaceURI;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(name->NamespaceID(), namespaceURI);
-    name->LocalName()->ToString(localname);
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode.mNode);
     nsCOMPtr<nsIDOMAttr> attr;
-    element->GetAttributeNodeNS(namespaceURI, localname,
+    element->GetAttributeNodeNS(namespaceURI,
+                                nsDependentAtomString(name->LocalName()),
                                 getter_AddRefs(attr));
 
     return CallQueryInterface(attr, aResult);

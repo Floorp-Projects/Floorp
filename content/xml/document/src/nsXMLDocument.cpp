@@ -85,6 +85,8 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIJSContextStack.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
 #include "nsNodeUtils.h"
@@ -335,10 +337,6 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     return rv;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  nsCOMPtr<nsIURI> codebase;
-  principal->GetURI(getter_AddRefs(codebase));
-
   // Check to see whether the current document is allowed to load this URI.
   // It's important to use the current document's principal for this check so
   // that we don't end up in a case where code with elevated privileges is
@@ -347,9 +345,26 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // Enforce same-origin even for chrome loaders to avoid someone accidentally
   // using a document that content has a reference to and turn that into a
   // chrome document.
-  if (codebase) {
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  if (!nsContentUtils::IsSystemPrincipal(principal)) {
     rv = principal->CheckMayLoad(uri, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                                   uri,
+                                   principal,
+                                   callingDoc ? callingDoc.get() :
+                                     static_cast<nsIDocument*>(this),
+                                   NS_LITERAL_CSTRING("application/xml"),
+                                   nsnull,
+                                   &shouldLoad,
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_CP_REJECTED(shouldLoad)) {
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
   } else {
     // We're called from chrome, check to make sure the URI we're
     // about to load is also chrome.

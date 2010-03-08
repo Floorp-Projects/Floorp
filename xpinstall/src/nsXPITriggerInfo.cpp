@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "nscore.h"
 #include "plstr.h"
 #include "nsXPITriggerInfo.h"
@@ -50,7 +51,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICryptoHash.h"
 #include "nsIX509Cert.h"
-#include "jscntxt.h"
 
 //
 // nsXPITriggerItem
