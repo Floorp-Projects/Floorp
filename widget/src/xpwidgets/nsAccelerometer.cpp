@@ -104,15 +104,21 @@ nsAccelerometer::nsAccelerometer()
   mLastY(10),
   mLastZ(10),
   mStarted(PR_FALSE),
+  mEnabled(PR_TRUE),
   mNewListener(PR_FALSE),
   mUpdateInterval(50) /* default to 50 ms */
 {
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  PRInt32 value;
   if (prefSrv) {
+    PRInt32 value;
     nsresult rv = prefSrv->GetIntPref("accelerometer.update.interval", &value);
     if (NS_SUCCEEDED(rv))
       mUpdateInterval = value;
+
+    PRBool bvalue;
+    rv = prefSrv->GetBoolPref("accelerometer.enabled", &bvalue);
+    if (NS_SUCCEEDED(rv) && bvalue == PR_FALSE)
+      mEnabled = PR_FALSE;
   }
 }
 
@@ -197,6 +203,9 @@ NS_IMETHODIMP nsAccelerometer::RemoveWindowListener(nsIDOMWindow *aWindow)
 void 
 nsAccelerometer::AccelerationChanged(double x, double y, double z)
 {
+  if (!mEnabled)
+    return;
+
   if (x > 1)
     x = 1;
   if (y > 1)
