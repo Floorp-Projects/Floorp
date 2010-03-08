@@ -48,7 +48,7 @@
  * pointer identity.
  */
  
-[scriptable, uuid(fbffe332-0856-421a-9b83-aaed0081fc40)]
+[scriptable, uuid(96c82146-56f3-4b43-817f-25d6db1ad8e8)]
 interface nsIAtom : nsISupports
 {
   /**
@@ -58,9 +58,10 @@ interface nsIAtom : nsISupports
   AUTF8String toUTF8String();
   
   /**
-   * Return a pointer to a zero terminated UTF8 string.
+   * Return a pointer to a zero terminated UTF16 string.
    */
-  [noscript] void getUTF8String([shared, retval] out string aResult);
+  [noscript] void getUTF16String([shared, retval] out wstring aResult);
+  [notxpcom] unsigned long getLength();
 
   /**
    * Compare the atom to a specific string value
@@ -83,6 +84,13 @@ interface nsIAtom : nsISupports
     EqualsUTF8(s, &result);
     return result;
   }
+
+  inline const PRUnichar* GetUTF16String() {
+    const PRUnichar* result;
+    GetUTF16String(&result);
+    return result;
+  }
+
 %}
   
   /**
@@ -123,7 +131,6 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
  * Find an atom that matches the given UTF-8 string.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& aUTF8String);
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
     { return NS_NewAtom(aUTF8String); }
 
@@ -139,6 +146,7 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
  * Find an atom that matches the given UTF-16 string.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
     { return NS_NewAtom(aUTF16String); }
 
@@ -158,5 +166,32 @@ extern NS_COM nsIAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
  * Seal the static atom table
  */
 extern NS_COM void NS_SealStaticAtomTable();
+
+class nsAtomString : public nsString
+{
+public:
+  nsAtomString(nsIAtom* aAtom)
+  {
+    aAtom->ToString(*this);
+  }
+};
+
+class nsAtomCString : public nsCString
+{
+public:
+  nsAtomCString(nsIAtom* aAtom)
+  {
+    aAtom->ToUTF8String(*this);
+  }
+};
+
+class nsDependentAtomString : public nsDependentString
+{
+public:
+  nsDependentAtomString(nsIAtom* aAtom)
+    : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength())
+  {
+  }
+};
 
 %}

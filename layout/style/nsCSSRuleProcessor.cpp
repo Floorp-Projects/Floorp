@@ -196,11 +196,13 @@ RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   if (match_atom == entry_atom)
     return PR_TRUE;
 
-  const char *match_str, *entry_str;
-  match_atom->GetUTF8String(&match_str);
-  entry_atom->GetUTF8String(&entry_str);
+  // Use EqualsIgnoreASCIICase instead of full on unicode case conversion
+  // in order to save on performance. This is only used in quirks mode
+  // anyway.
 
-  return (nsCRT::strcasecmp(entry_str, match_str) == 0);
+  return
+    nsContentUtils::EqualsIgnoreASCIICase(nsDependentAtomString(entry_atom),
+                                          nsDependentAtomString(match_atom));
 }
 
 static PRBool
@@ -1834,13 +1836,13 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           IDList = IDList->mNext;
         } while (IDList);
       } else {
-        const char* id1Str;
-        data.mContentID->GetUTF8String(&id1Str);
-        nsDependentCString id1(id1Str);
+        // Use EqualsIgnoreASCIICase instead of full on unicode case conversion
+        // in order to save on performance. This is only used in quirks mode
+        // anyway.
+        nsDependentAtomString id1Str(data.mContentID);
         do {
-          const char* id2Str;
-          IDList->mAtom->GetUTF8String(&id2Str);
-          if (!id1.Equals(id2Str, nsCaseInsensitiveCStringComparator())) {
+          if (!nsContentUtils::EqualsIgnoreASCIICase(id1Str,
+                 nsDependentAtomString(IDList->mAtom))) {
             return PR_FALSE;
           }
           IDList = IDList->mNext;

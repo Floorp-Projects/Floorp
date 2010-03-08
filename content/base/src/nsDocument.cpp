@@ -6718,9 +6718,7 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
     aPrefix->ToString(qName);
     qName.Append(':');
   }
-  const char *name;
-  aName->GetUTF8String(&name);
-  AppendUTF8toUTF16(name, qName);
+  qName.Append(nsAtomString(aName));
 
   // Note: "a:b:c" is a valid name in non-namespaces XML, and
   // nsDocument::CreateElement can call us with such a name and no prefix,

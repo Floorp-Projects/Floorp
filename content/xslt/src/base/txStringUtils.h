@@ -49,10 +49,7 @@
 inline PRBool
 TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
 {
-    const char* ASCIIAtom;
-    aAtom->GetUTF8String(&ASCIIAtom);
-
-    return aString.EqualsASCII(ASCIIAtom);
+  return aAtom->Equals(aString);
 }
 
 #ifndef TX_EXE

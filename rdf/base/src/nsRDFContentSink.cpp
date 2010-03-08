@@ -1026,11 +1026,8 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
           }
       }
 
-      const char* attrName;
-      localName->GetUTF8String(&attrName);
-
       NS_ConvertUTF16toUTF8 propertyStr(nameSpaceURI);    
-      propertyStr.Append(attrName);
+      propertyStr.Append(nsAtomCString(localName));
 
       // Add the assertion to RDF
       nsCOMPtr<nsIRDFResource> property;
@@ -1158,11 +1155,8 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     }
 
     if (isaTypedNode) {
-        const char* attrName;
-        localName->GetUTF8String(&attrName);
-
         NS_ConvertUTF16toUTF8 typeStr(nameSpaceURI);
-        typeStr.Append(attrName);
+        typeStr.Append(nsAtomCString(localName));
 
         nsCOMPtr<nsIRDFResource> type;
         nsresult rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
@@ -1190,11 +1184,8 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     const nsDependentSubstring& nameSpaceURI =
         SplitExpatName(aName, getter_AddRefs(localName));
 
-    const char* attrName;
-    localName->GetUTF8String(&attrName);
-
     NS_ConvertUTF16toUTF8 propertyStr(nameSpaceURI);
-    propertyStr.Append(attrName);
+    propertyStr.Append(nsAtomCString(localName));
 
     nsCOMPtr<nsIRDFResource> property;
     rv = gRDFService->GetResource(propertyStr, getter_AddRefs(property));

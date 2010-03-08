@@ -1456,6 +1456,13 @@ public:
   static JSContext *GetCurrentJSContext();
 
   /**
+   * Case insensitive comparison between two strings. However it only ignores
+   * case for ASCII characters a-z.
+   */
+  static PRBool EqualsIgnoreASCIICase(const nsAString& aStr1,
+                                      const nsAString& aStr2);
+
+  /**
    * Convert ASCII A-Z to a-z.
    */
   static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);

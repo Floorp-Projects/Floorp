@@ -48,7 +48,7 @@
 
 class AtomImpl : public nsIAtom {
 public:
-  AtomImpl(const nsACString& aString);
+  AtomImpl(const nsAString& aString);
 
   // This is currently only used during startup when creating a permanent atom
   // from NS_RegisterStaticAtoms
@@ -60,7 +60,7 @@ protected:
   AtomImpl() {
     // We can't really assert that mString is a valid nsStringBuffer string,
     // so do the best we can do and check for some consistencies.
-    NS_ASSERTION((mLength + 1) * sizeof(char) <=
+    NS_ASSERTION((mLength + 1) * sizeof(PRUnichar) <=
                  nsStringBuffer::FromData(mString)->StorageSize() &&
                  mString[mLength] == 0,
                  "Not initialized atom");
@@ -90,7 +90,7 @@ public:
   PRUint32 mLength;
 
   // This always points to the data owned by a nsStringBuffer
-  char* mString;
+  PRUnichar* mString;
 };
 
 /**
@@ -99,7 +99,7 @@ public:
 
 class PermanentAtomImpl : public AtomImpl {
 public:
-  PermanentAtomImpl(const nsACString& aString)
+  PermanentAtomImpl(const nsAString& aString)
     : AtomImpl(aString)
   {}
   PermanentAtomImpl(nsStringBuffer* aData, PRUint32 aLength)

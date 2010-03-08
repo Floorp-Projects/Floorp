@@ -78,9 +78,7 @@ PRBool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
 /* static */ PRBool
 nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
 {
-  const char* str;
-  aPseudo->GetUTF8String(&str);
-  static const char moz_tree[] = ":-moz-tree-";
-  return nsCRT::strncmp(str, moz_tree, PRInt32(sizeof(moz_tree)-1)) == 0;
+  return StringBeginsWith(nsDependentAtomString(aPseudo),
+                          NS_LITERAL_STRING(":-moz-tree-"));
 }
 #endif

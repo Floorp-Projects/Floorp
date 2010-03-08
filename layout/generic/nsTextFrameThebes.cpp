@@ -2164,10 +2164,10 @@ static PRBool IsChineseOrJapanese(nsIFrame* aFrame)
   if (!language) {
     return PR_FALSE;
   }
-  const char *lang;
-  language->GetUTF8String(&lang);
-  return (!strncmp(lang, "ja", 2) || !strncmp(lang, "zh", 2)) &&
-         (lang[2] == '\0' || lang[2] == '-');
+  const PRUnichar *lang = language->GetUTF16String();
+  return (!nsCRT::strncmp(lang, NS_LITERAL_STRING("ja").get(), 2) ||
+          !nsCRT::strncmp(lang, NS_LITERAL_STRING("zh").get(), 2)) &&
+         (language->GetLength() == 2 || lang[2] == '-');
 }
 
 #ifdef DEBUG
