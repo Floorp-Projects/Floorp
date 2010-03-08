@@ -381,7 +381,7 @@ nsFileDataProtocolHandler::NewURI(const nsACString& aSpec,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsFileDataURI> uri =
-    new nsFileDataURI(info ? info->mPrincipal : nsnull, inner);
+    new nsFileDataURI(info ? info->mPrincipal.get() : nsnull, inner);
 
   NS_TryToSetImmutable(uri);
   *aResult = uri.forget().get();

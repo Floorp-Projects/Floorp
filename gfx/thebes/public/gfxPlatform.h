@@ -67,6 +67,7 @@ class nsIAtom;
 
 // pref lang id's for font prefs
 // !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
+// !!! don't use as bit mask, this may grow larger !!!
 
 enum eFontPrefLang {
     eFontPrefLang_Western     =  0,
