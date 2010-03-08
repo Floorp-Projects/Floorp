@@ -2160,7 +2160,7 @@ WebGLContext::UseProgram(nsIWebGLProgram *prog)
 NS_IMETHODIMP
 WebGLContext::ValidateProgram(nsIWebGLProgram *prog)
 {
-    if (!prog && static_cast<WebGLProgram*>(prog)->Deleted())
+    if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("glValidateProgram: program is null or has already been deleted!");
 
     GLuint program = static_cast<WebGLProgram*>(prog)->GLName();
