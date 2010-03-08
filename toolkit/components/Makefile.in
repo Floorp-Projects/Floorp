@@ -63,6 +63,7 @@ PARALLEL_DIRS += \
   passwordmgr \
   places \
   startup \
+  statusfilter \
   typeaheadfind \
   urlformatter \
   viewconfig \

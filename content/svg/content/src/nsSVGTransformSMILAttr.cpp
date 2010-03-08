@@ -113,7 +113,6 @@ nsSVGTransformSMILAttr::SetAnimValue(const nsSMILValue& aValue)
   nsresult rv = NS_OK;
 
   // Create the anim value if necessary
-  mVal->WillModify(nsISVGValue::mod_other);
   if (!mVal->mAnimVal) {
     rv = nsSVGTransformList::Create(getter_AddRefs(mVal->mAnimVal));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -128,7 +127,7 @@ nsSVGTransformSMILAttr::SetAnimValue(const nsSMILValue& aValue)
   }
   NS_ENSURE_SUCCESS(rv,rv);
 
-  mVal->DidModify(nsISVGValue::mod_other);
+  mSVGElement->DidAnimateTransform();
   return NS_OK;
 }
 

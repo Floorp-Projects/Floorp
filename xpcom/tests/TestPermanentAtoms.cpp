@@ -51,9 +51,7 @@ static void Assert(PRBool aCondition, const char* aStatement)
 
 static void AssertString(nsIAtom *aAtom, const nsACString& aString)
 {
-    const char *str;
-    static_cast<AtomImpl*>(aAtom)->GetUTF8String(&str);
-    Assert(nsDependentCString(str) == aString, "string is correct");
+    Assert(aAtom->EqualsUTF8(aString), "string is correct");
 }
 
 static void AssertPermanence(nsIAtom *aAtom, PRBool aPermanence)
@@ -68,13 +66,13 @@ int main()
     AssertString(foo, NS_LITERAL_CSTRING("foo"));
     AssertPermanence(foo, PR_FALSE);
 
-    nsCOMPtr<nsIAtom> foop = do_GetPermanentAtom("foo");
+    nsCOMPtr<nsIAtom> foop = NS_NewPermanentAtom(NS_LITERAL_STRING("foo"));
     AssertString(foop, NS_LITERAL_CSTRING("foo"));
     AssertPermanence(foop, PR_TRUE);
     
     Assert(foo == foop, "atoms are equal");
     
-    nsCOMPtr<nsIAtom> barp = do_GetPermanentAtom("bar");
+    nsCOMPtr<nsIAtom> barp = NS_NewPermanentAtom(NS_LITERAL_STRING("bar"));
     AssertString(barp, NS_LITERAL_CSTRING("bar"));
     AssertPermanence(barp, PR_TRUE);
     

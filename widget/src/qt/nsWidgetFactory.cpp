@@ -39,26 +39,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsWindow.h"
+#include "nsAppShell.h"
+
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-#include "nsAppShell.h"
-#include "nsWindow.h"
 #include "nsToolkit.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
 #include "nsLookAndFeel.h"
 #include "nsAppShellSingleton.h"
 #include "nsScreenManagerQt.h"
-
-// #include "nsIComponentRegistrar.h"
-// #include "nsComponentManagerUtils.h"
-// #include "nsAutoPtr.h"
-// 
-
-
 #include "nsFilePicker.h"
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -67,16 +61,9 @@
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 #include "nsNativeThemeQt.h"
-// #include "nsScrollbar.h"
-// 
-// #include "nsGUIEvent.h"
-// #include "nsQtEventDispatcher.h"
-// #include "nsIRenderingContext.h"
-// #include "nsIServiceManager.h"
-// #include "nsGfxCIID.h"
-// #include "nsIPrefBranch.h"
-// #include "nsIPrefService.h"
-// 
+
+// from nsWindow.cpp
+extern PRBool gDisableNativeTheme;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
@@ -86,23 +73,38 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
-
-/*
-static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
-*/
-
-
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 
+static NS_IMETHODIMP
+nsNativeThemeQtConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
+{
+    nsresult rv;
+    nsNativeThemeQt *inst;
+
+    if (gDisableNativeTheme)
+        return NS_ERROR_NO_INTERFACE;
+
+    *aResult = NULL;
+    if (NULL != aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    NS_NEWXPCOM(inst, nsNativeThemeQt);
+    if (NULL == inst)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
 
 static const nsModuleComponentInfo components[] =
 {

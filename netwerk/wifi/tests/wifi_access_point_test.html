@@ -21,8 +21,7 @@ test.prototype =
       var a = accessPoints[i];
       d.innerHTML = d.innerHTML + "<p>" + a.mac + " " + a.ssid + " " + a.signal + "</p>";
     }
-                                         
-                                         
+
     var c = document.getElementById("c");
     c.innerHTML = "<p>" + count++ + "</p>";
 
@@ -46,7 +45,7 @@ test.prototype =
 
   var listener = new test();
   var wifi_service = Components.classes["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
-              
+
   wifi_service.startWatching(listener);
 
 

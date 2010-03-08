@@ -225,6 +225,7 @@ else
   endif
 endif
 
+MOZALLOC_LIB = $(call EXPAND_MOZLIBNAME,mozalloc)
 
 # append debug flags 
 # (these might have been above when processing MOZ_DBGRINFO_MODULES)
@@ -548,6 +549,9 @@ endif # MOZ_OPTIMIZE == 1
 endif # MOZ_OPTIMIZE
 endif # CROSS_COMPILE
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+OS_LIBS += $(MOZ_QT_LIBS)
+endif
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded

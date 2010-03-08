@@ -54,7 +54,7 @@
 #include "nsIPromptService.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-#include "nsXPFEComponentsCID.h"
+#include "nsToolkitCompsCID.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "prmem.h"

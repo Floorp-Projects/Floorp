@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: set sw=2 sts=2 et cin: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -34,321 +37,282 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK *****
+ *
  * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 03/23/2000       IBM Corp.      Added InvalidateRegion method.
- * 04/12/2000       IBM Corp.      Changed params on DispatchMouseEvent to match Windows..
- * 04/14/2000       IBM Corp.      Declared EventIsInsideWindow for CaptureRollupEvents
- * 06/15/2000       IBM Corp.      Added NS2PM for rectangles
- * 06/21/2000       IBM Corp.      Added CaptureMouse
+ * Modifications made by IBM are
+ * Copyright (c) International Business Machines Corporation, 2000
  *
  */
+
+//=============================================================================
+/*
+ * nsWindow derives from nsIWidget via nsBaseWindow.  With the aid
+ * of a helper class (os2FrameWindow) and a subclass (nsChildWindow),
+ * it implements the functionality of both toplevel and child widgets.
+ *
+ * Top-level widgets (windows surrounded by a frame with a titlebar, etc.)
+ * are created when NS_WINDOW_CID is used to identify the type of object
+ * needed.  Child widgets (windows that either are children of other windows
+ * or are popups such as menus) are created when NS_CHILD_CID is specified.
+ * Since Mozilla expects these to be different classes, NS_CHILD_CID is
+ * mapped to a subclass (nsChildWindow) which acts solely as a wrapper for
+ * nsWindow and adds no functionality.
+ *
+ * While most of the methods inherited from nsIWidget are generic, some
+ * apply only to toplevel widgets (e.g. setting a title or icon).  The
+ * nature of toplevel windows on OS/2 with their separate frame & client
+ * windows introduces the need for additional toplevel-specific methods,
+ * as well as for special handling in otherwise generic methods.
+ *
+ * Rather than incorporating these toplevel functions into the body of
+ * the class, nsWindow delegates them to a helper class, os2FrameWindow.
+ * An instance of this class is created when nsWindow is told to create
+ * a toplevel native window and is destroyed in nsWindow's destructor.
+ * The class's methods operate exclusively on the frame window and never
+ * deal with the frame's client other than to create it.  Similarly,
+ * nsWindow never operates on frame windows except for a few trivial
+ * methods (e.g. Enable()).  Neither class accesses the other's data
+ * though, of necessity, both call the other's methods.
+ *
+ */
+//=============================================================================
 
 #ifndef _nswindow_h
 #define _nswindow_h
 
-#include "nsWidgetDefs.h"
 #include "nsBaseWidget.h"
-#include "nsToolkit.h"
-#include "gfxOS2Surface.h"
-#include "gfxContext.h"
+#include "gfxASurface.h"
 
-class imgIContainer;
+#define INCL_DOS
+#define INCL_WIN
+#define INCL_NLS
+#define INCL_GPI
+#include <os2.h>
+
+//-----------------------------------------------------------------------------
+// Items that may not be in the OS/2 Toolkit headers
+
+// For WM_MOUSEENTER/LEAVE, mp2 is the other window.
+#ifndef WM_MOUSEENTER
+#define WM_MOUSEENTER   0x041E
+#endif
+
+#ifndef WM_MOUSELEAVE
+#define WM_MOUSELEAVE   0x041F
+#endif
+
+#ifndef WM_FOCUSCHANGED
+#define WM_FOCUSCHANGED 0x000E
+#endif
+
+extern "C" {
+  PVOID  APIENTRY WinQueryProperty(HWND hwnd, PCSZ pszNameOrAtom);
+  PVOID  APIENTRY WinRemoveProperty(HWND hwnd, PCSZ pszNameOrAtom);
+  BOOL   APIENTRY WinSetProperty(HWND hwnd, PCSZ pszNameOrAtom,
+                                 PVOID pvData, ULONG ulFlags);
+  APIRET APIENTRY DosQueryModFromEIP(HMODULE* phMod, ULONG* pObjNum,
+                                     ULONG BuffLen,  PCHAR pBuff,
+                                     ULONG* pOffset, ULONG Address);
+}
+
+//-----------------------------------------------------------------------------
+// Macros
+
+// nsWindow's PM window class name
+#define kWindowClassName            "MozillaWindowClass"
+#define QWL_NSWINDOWPTR             (QWL_USER+4)
+
+// Miscellaneous global flags stored in gOS2Flags
+#define kIsInitialized              0x0001
+#define kIsDBCS                     0x0002
+#define kIsTrackPoint               0x0004
+
+// Possible states of the window
+#define nsWindowState_ePrecreate    0x0001      // Create() not called yet
+#define nsWindowState_eInCreate     0x0002      // processing Create() method
+#define nsWindowState_eLive         0x0004      // active, existing window
+#define nsWindowState_eClosing      0x0008      // processing Close() method
+#define nsWindowState_eDoingDelete  0x0010      // object destructor running
+#define nsWindowState_eDead         0x0100      // window destroyed
+
+//-----------------------------------------------------------------------------
+// Debug
 
 //#define DEBUG_FOCUS
 
-#ifdef DEBUG_FOCUS
-  #define DEBUGFOCUS(what) fprintf(stderr, "[%8x]  %8lx  (%02d)  "#what"\n", (int)this, mWnd, mWindowIdentifier)
-#else
-  #define DEBUGFOCUS(what)
-#endif
+//-----------------------------------------------------------------------------
+// Forward declarations
 
-// Base widget class.
-// This is abstract.  Controls (labels, radio buttons, listboxen) derive
-// from here.  A thing called a child window derives from here, and the
-// frame window class derives from the child.
-// nsFrameWindow is separate because work needs to be done there to decide
-// whether methods apply to frame or client.
+class imgIContainer;
+class gfxOS2Surface;
+class os2FrameWindow;
 
-/* Possible states of the window, used to emulate windows better... */
-   // default state; Create() not called 
-   #define   nsWindowState_ePrecreate      0x00000001
-   // processing Create() method          
-   #define   nsWindowState_eInCreate       0x00000002
-   // active, existing window             
-   #define      nsWindowState_eLive        0x00000004
-   //processing Close() method            
-   #define      nsWindowState_eClosing     0x00000008
-   // object destructor running 
-   #define      nsWindowState_eDoingDelete 0x00000010
-   // window destroyed 
-   #define      nsWindowState_eDead        0x00000100         
+MRESULT EXPENTRY fnwpNSWindow(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
+MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 
-MRESULT EXPENTRY fnwpNSWindow( HWND, ULONG, MPARAM, MPARAM);
-MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
+//=============================================================================
+//  nsWindow
+//=============================================================================
 
 class nsWindow : public nsBaseWidget
 {
- public:
-   // Scaffolding
-   nsWindow();
-   virtual ~nsWindow();
+public:
+  nsWindow();
+  virtual ~nsWindow();
 
-   static void ReleaseGlobals();
+  // from nsIWidget
+  NS_IMETHOD            Create(nsIWidget* aParent,
+                               nsNativeWidget aNativeParent,
+                               const nsIntRect& aRect,
+                               EVENT_CALLBACK aHandleEventFunction,
+                               nsIDeviceContext* aContext,
+                               nsIAppShell* aAppShell = nsnull,
+                               nsIToolkit* aToolkit = nsnull,
+                               nsWidgetInitData* aInitData = nsnull);
+  NS_IMETHOD            Destroy();
+  virtual nsIWidget*    GetParent();
+  NS_IMETHOD            Enable(PRBool aState);
+  NS_IMETHOD            IsEnabled(PRBool* aState);
+  NS_IMETHOD            Show(PRBool aState);
+  NS_IMETHOD            IsVisible(PRBool& aState);
+  NS_IMETHOD            SetFocus(PRBool aRaise);
+  NS_IMETHOD            Invalidate(const nsIntRect& aRect,
+                                   PRBool aIsSynchronous);
+  NS_IMETHOD            Update();
+  gfxASurface*          GetThebesSurface();
+  virtual void*         GetNativeData(PRUint32 aDataType);
+  virtual void          FreeNativeData(void* aDatum, PRUint32 aDataType);
+  NS_IMETHOD            CaptureMouse(PRBool aCapture);
+  virtual PRBool        HasPendingInputEvent();
+  virtual void          Scroll(const nsIntPoint& aDelta,
+                               const nsTArray<nsIntRect>& aDestRects,
+                               const nsTArray<Configuration>& aReconfigureChildren);
+  NS_IMETHOD            GetBounds(nsIntRect& aRect);
+  NS_IMETHOD            GetClientBounds(nsIntRect& aRect);
+  virtual nsIntPoint    WidgetToScreenOffset();
+  NS_IMETHOD            Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD            Resize(PRInt32 aWidth, PRInt32 aHeight,
+                               PRBool  aRepaint);
+  NS_IMETHOD            Resize(PRInt32 aX, PRInt32 aY,
+                               PRInt32 aWidth, PRInt32 aHeight,
+                               PRBool  aRepaint);
+  NS_IMETHOD            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                    nsIWidget* aWidget, PRBool aActivate);
+  NS_IMETHOD            SetZIndex(PRInt32 aZIndex);
+  virtual nsresult      ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
+  NS_IMETHOD            SetSizeMode(PRInt32 aMode);
+  NS_IMETHOD            HideWindowChrome(PRBool aShouldHide);
+  NS_IMETHOD            SetTitle(const nsAString& aTitle); 
+  NS_IMETHOD            SetIcon(const nsAString& aIconSpec); 
+  NS_IMETHOD            ConstrainPosition(PRBool aAllowSlop,
+                                          PRInt32* aX, PRInt32* aY);
+  NS_IMETHOD            SetCursor(nsCursor aCursor);
+  NS_IMETHOD            SetCursor(imgIContainer* aCursor,
+                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
+  NS_IMETHOD            CaptureRollupEvents(nsIRollupListener* aListener,
+                                            nsIMenuRollup* aMenuRollup,
+                                            PRBool aDoCapture, PRBool aConsumeRollupEvent);
+  NS_IMETHOD            GetToggledKeyState(PRUint32 aKeyCode,
+                                           PRBool* aLEDState);
+  NS_IMETHOD            DispatchEvent(nsGUIEvent* event,
+                                      nsEventStatus& aStatus);
 
-   // nsIWidget
-
-   // Creation from native widget parent or nsIWidget parent, destroy
-   NS_IMETHOD Create( nsIWidget *aParent,
-                      nsNativeWidget aNativeParent,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell = nsnull,
-                      nsIToolkit *aToolkit = nsnull,
-                      nsWidgetInitData *aInitData = nsnull);
-   gfxASurface* GetThebesSurface();
-   NS_IMETHOD Destroy(); // call before releasing
-
-   // Hierarchy: only interested in widget children (it seems)
-   virtual nsIWidget *GetParent();
-
-   NS_IMETHOD SetSizeMode(PRInt32 aMode);
-
-   // Physical properties
-   NS_IMETHOD Show( PRBool bState);
-   NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
-   NS_IMETHOD Move( PRInt32 aX, PRInt32 aY);
-   NS_IMETHOD Resize( PRInt32 aWidth,
-                      PRInt32 aHeight,
-                      PRBool   aRepaint);
-   NS_IMETHOD Resize( PRInt32 aX,
-                      PRInt32 aY,
-                      PRInt32 aWidth,
-                      PRInt32 aHeight,
-                      PRBool   aRepaint);
-   NS_IMETHOD GetClientBounds( nsIntRect &aRect);
-   NS_IMETHOD Enable( PRBool aState);
-   NS_IMETHOD IsEnabled(PRBool *aState);
-   NS_IMETHOD SetFocus(PRBool aRaise);
-   NS_IMETHOD GetBounds(nsIntRect &aRect);
-   NS_IMETHOD IsVisible( PRBool &aState);
-   NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                          nsIWidget *aWidget, PRBool aActivate);
-   NS_IMETHOD SetZIndex(PRInt32 aZIndex);
-
-   NS_IMETHOD CaptureMouse(PRBool aCapture);
-
-   virtual nsIntPoint WidgetToScreenOffset();
-   NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
-   NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
-                                  PRBool aDoCapture, PRBool aConsumeRollupEvent);
-
-   virtual PRBool          HasPendingInputEvent();
-
-   // Widget appearance
-   NS_IMETHOD              SetCursor( nsCursor aCursor);
-   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
-                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
-   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-   NS_IMETHOD              SetTitle( const nsAString& aTitle); 
-   NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
-   NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
-   NS_IMETHOD              Update();
-   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-   virtual void            Scroll(const nsIntPoint& aDelta,
-                                  const nsTArray<nsIntRect>& aDestRects,
-                                  const nsTArray<Configuration>& aReconfigureChildren);
-   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
-
-   // Get a HWND or a HPS.
-   virtual void  *GetNativeData( PRUint32 aDataType);
-   virtual void   FreeNativeData( void *aDatum, PRUint32 aDataType);
-   virtual HWND   GetMainWindow() const           { return mWnd; }
-
-   // PM methods which need to be public (menus, etc)
-   ULONG  GetNextID()    { return mNextID++; }
-   void   NS2PM_PARENT( POINTL &ptl);
-   void   NS2PM( POINTL &ptl);
-   void   NS2PM( RECTL &rcl);
+  // nsWindow
+  static void           ReleaseGlobals();
 
 protected:
-   static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
+  // from nsBaseWidget
+  virtual void          OnDestroy();
 
-   static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+  // nsWindow
+  static void           InitGlobals();
+  nsresult              CreateWindow(nsWindow* aParent,
+                                     HWND aParentWnd,
+                                     const nsIntRect& aRect,
+                                     nsWidgetInitData* aInitData);
+  HWND                  GetMainWindow();
+  static nsWindow*      GetNSWindowPtr(HWND aWnd);
+  static PRBool         SetNSWindowPtr(HWND aWnd, nsWindow* aPtr);
+  void                  NS2PM(POINTL& ptl);
+  void                  NS2PM(RECTL& rcl);
+  void                  NS2PM_PARENT(POINTL& ptl);
+  void                  ActivatePlugin(HWND aWnd);
+  void                  SetPluginClipRegion(const Configuration& aConfiguration);
+  HWND                  GetPluginClipWindow(HWND aParentWnd);
+  void                  ActivateTopLevelWidget();
+  HBITMAP               DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
+                                     PRUint32 aHeight, PRUint32 aDepth);
+  HBITMAP               CreateBitmapRGB(PRUint8* aImageData,
+                                        PRUint32 aWidth, PRUint32 aHeight);
+  HBITMAP               CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+                                               PRUint8* aImageData,
+                                               PRUint32 aWidth, PRUint32 aHeight);
+  static PRBool         EventIsInsideWindow(nsWindow* aWindow); 
+  static PRBool         RollupOnButtonDown(ULONG aMsg);
+  static void           RollupOnFocusLost(HWND aFocus);
+  MRESULT               ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2);
+  PRBool                OnReposition(PSWP pNewSwp);
+  PRBool                OnPaint();
+  PRBool                OnMouseChord(MPARAM mp1, MPARAM mp2);
+  PRBool                OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2,
+                                      MRESULT& mr);
+  PRBool                CheckDragStatus(PRUint32 aAction, HPS* aHps);
+  PRBool                ReleaseIfDragHPS(HPS aHps);
+  PRBool                OnTranslateAccelerator(PQMSG pQmsg);
+  PRBool                DispatchKeyEvent(MPARAM mp1, MPARAM mp2);
+  void                  InitEvent(nsGUIEvent& event, nsIntPoint* pt = 0);
+  PRBool                DispatchWindowEvent(nsGUIEvent* event);
+  PRBool                DispatchWindowEvent(nsGUIEvent* event,
+                                            nsEventStatus& aStatus);
+  PRBool                DispatchCommandEvent(PRUint32 aEventCommand);
+  PRBool                DispatchDragDropEvent(PRUint32 aMsg);
+  PRBool                DispatchMoveEvent(PRInt32 aX, PRInt32 aY);
+  PRBool                DispatchResizeEvent(PRInt32 aClientX, 
+                                            PRInt32 aClientY);
+  PRBool                DispatchMouseEvent(PRUint32 aEventType,
+                                           MPARAM mp1, MPARAM mp2, 
+                                           PRBool aIsContextMenuKey = PR_FALSE,
+                                           PRInt16 aButton = nsMouseEvent::eLeftButton);
+  PRBool                DispatchActivationEvent(PRUint32 aEventType);
+  PRBool                DispatchScrollEvent(ULONG msg, MPARAM mp1, MPARAM mp2);
 
-   static  nsWindow *      GetNSWindowPtr(HWND aWnd);
-   static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+  friend MRESULT EXPENTRY fnwpNSWindow(HWND hwnd, ULONG msg,
+                                       MPARAM mp1, MPARAM mp2);
+  friend MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg,
+                                    MPARAM mp1, MPARAM mp2);
+  friend class os2FrameWindow;
 
-   static  nsWindow*   gCurrentWindow;
-   // nsWindow methods subclasses must provide for creation to work
-   virtual PCSZ  WindowClass();
-   virtual ULONG WindowStyle();
-
-   // hooks subclasses may wish to override!
-   virtual void     PostCreateWidget()            {}
-   virtual PRInt32  GetClientHeight()             { return mBounds.height; }
-   virtual void     SetupForPrint( HWND /*hwnd*/) {}
-
-   // Useful functions for subclasses to use, threaded as necessary.
-   virtual nsresult GetWindowText( nsString &str, PRUint32 *rc);
-   virtual void     AddToStyle( ULONG style);
-   virtual void     RemoveFromStyle( ULONG style);
-
-   // Message handlers - may wish to override.  Default implementation for
-   // control, paint & scroll is to do nothing.
-
-   // Return whether message has been processed.
-   virtual PRBool ProcessMessage( ULONG m, MPARAM p1, MPARAM p2, MRESULT &r);
-
-           void   ActivatePlugin(HWND aWnd);
-   virtual void   ActivateTopLevelWidget();
-   virtual PRBool OnPaint();
-   virtual void   OnDestroy();
-   virtual PRBool OnReposition( PSWP pNewSwp);
-   virtual PRBool OnResize( PRInt32 aX, PRInt32 aY);
-   virtual PRBool OnMove( PRInt32 aX, PRInt32 aY);
-   virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
-   virtual PRBool DispatchFocus( PRUint32 aEventType);
-   virtual PRBool OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnVScroll( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnHScroll( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnControl( MPARAM mp1, MPARAM mp2);
-   // called after param has been set...
-   virtual PRBool OnPresParamChanged( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr);
-
-   static BOOL sIsRegistered;
-
-   // PM data members
-   HWND      mWnd;            // window handle
-   HWND      mFrameWnd;       // frame window handle
-   PFNWP     mPrevWndProc;    // previous window procedure
-   nsWindow *mParent;         // parent widget
-   ULONG     mNextID;         // next child window id
-   HPOINTER  mFrameIcon;      // current frame icon
-   VDKEY     mDeadKey;        // dead key from previous keyevent
-   BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
-   QMSG      mQmsg;
-   PRBool    mIsTopWidgetWindow;
-   BOOL      mIsScrollBar;
-   BOOL      mIsDestroying;
-   BOOL      mInSetFocus;
-   BOOL      mChromeHidden;
-   nsContentType mContentType;
-   HPS       mDragHps;        // retrieved by DrgGetPS() during a drag
-   PRUint32  mDragStatus;     // set while this object is being dragged over
-   HPOINTER  mCssCursorHPtr;  // created by SetCursor(imgIContainer*)
-   nsCOMPtr<imgIContainer> mCssCursorImg;  // saved by SetCursor(imgIContainer*)
-   HWND      mClipWnd;        // used to clip plugin windows
-
-   HWND      GetParentHWND() const;
-   HWND      GetHWND() const   { return mWnd; }
-   PFNWP     GetPrevWP() const { return mPrevWndProc; }
-
-   // nglayout data members
-   nsToolkit     *mOS2Toolkit;
-   PRInt32        mWindowState;
-   nsRefPtr<gfxOS2Surface> mThebesSurface;
-
-   // Implementation ------------------------------
-   void DoCreate( HWND hwndP, nsWindow *wndP, const nsIntRect &rect,
-                  EVENT_CALLBACK aHandleEventFunction,
-                  nsIDeviceContext *aContext, nsIAppShell *aAppShell,
-                  nsIToolkit *aToolkit, nsWidgetInitData *aInitData);
-
-   virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,
-                              const nsIntRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
-                              nsWidgetInitData *aInitData,
-                              HWND hwndOwner = 0);
-
-   // hook so dialog can be created looking like a dialog
-   virtual ULONG GetFCFlags();
-
-   virtual void SubclassWindow(BOOL bState);
-
-   PRBool  ConvertStatus( nsEventStatus aStatus)
-                        { return aStatus == nsEventStatus_eConsumeNoDefault; }
-   void    InitEvent( nsGUIEvent &event, nsIntPoint *pt = 0);
-   virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
-   virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
-   PRBool  DispatchStandardEvent( PRUint32 aMsg);
-   PRBool  DispatchCommandEvent(PRUint32 aEventCommand);
-   PRBool  DispatchDragDropEvent( PRUint32 aMsg);
-   virtual PRBool DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2, 
-                                     PRBool aIsContextMenuKey = PR_FALSE,
-                                     PRInt16 aButton = nsMouseEvent::eLeftButton);
-   virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
-   void GetNonClientBounds(nsIntRect &aRect);
-   void ConstrainZLevel(HWND *aAfter);
-
-   PRBool   CheckDragStatus(PRUint32 aAction, HPS * oHps);
-   PRBool   ReleaseIfDragHPS(HPS aHps);
-
-   HBITMAP DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
-                        PRUint32 aHeight, PRUint32 aDepth);
-   HBITMAP CreateBitmapRGB(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-   HBITMAP CreateTransparencyMask(gfxASurface::gfxImageFormat format,
-                                  PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-
-   void SetPluginClipRegion(const Configuration& aConfiguration);
-   HWND GetPluginClipWindow(HWND aParentWnd);
-
-   // Enumeration of the methods which are accessible on the PM thread
-   enum {
-      CREATE,
-      DESTROY,
-      SET_FOCUS,
-      UPDATE_WINDOW,
-      SET_TITLE,
-      GET_TITLE
-   };
-   friend MRESULT EXPENTRY fnwpNSWindow( HWND, ULONG, MPARAM, MPARAM);
-   friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
+  HWND          mWnd;               // window handle
+  nsWindow*     mParent;            // parent widget
+  os2FrameWindow* mFrame;           // ptr to os2FrameWindow helper object
+  PRInt32       mWindowState;       // current nsWindowState_* value
+  PRBool        mIsDestroying;      // in destructor
+  PRBool        mInSetFocus;        // prevent recursive calls
+  HPS           mDragHps;           // retrieved by DrgGetPS() during a drag
+  PRUint32      mDragStatus;        // set when object is being dragged over
+  HWND          mClipWnd;           // used to clip plugin windows
+  HPOINTER      mCssCursorHPtr;     // created by SetCursor(imgIContainer*)
+  nsCOMPtr<imgIContainer> mCssCursorImg;// saved by SetCursor(imgIContainer*)
+  nsRefPtr<gfxOS2Surface> mThebesSurface;
 #ifdef DEBUG_FOCUS
-   int mWindowIdentifier;
+  int           mWindowIdentifier;  // a serial number for each new window
 #endif
 };
 
-#define PM2NS_PARENT NS2PM_PARENT
-#define PM2NS NS2PM
+//=============================================================================
+//  nsChildWindow
+//=============================================================================
 
-#define PMSCAN_PADMULT      0x37
-#define PMSCAN_PAD7         0x47
-#define PMSCAN_PAD8         0x48
-#define PMSCAN_PAD9         0x49
-#define PMSCAN_PADMINUS     0x4A
-#define PMSCAN_PAD4         0x4B
-#define PMSCAN_PAD5         0x4C
-#define PMSCAN_PAD6         0x4D
-#define PMSCAN_PADPLUS      0x4E
-#define PMSCAN_PAD1         0x4F
-#define PMSCAN_PAD2         0x50
-#define PMSCAN_PAD3         0x51
-#define PMSCAN_PAD0         0x52
-#define PMSCAN_PADPERIOD    0x53
-#define PMSCAN_PADDIV       0x5c
+// This only purpose of this subclass is to map NS_CHILD_CID to
+// some class other than nsWindow which is mapped to NS_WINDOW_CID.
 
-#define isNumPadScanCode(scanCode) !( (scanCode < PMSCAN_PAD7) ||      \
-                                      (scanCode > PMSCAN_PADPERIOD) || \
-                                      (scanCode == PMSCAN_PADMULT) ||  \
-                                      (scanCode == PMSCAN_PADDIV) ||   \
-                                      (scanCode == PMSCAN_PADMINUS) || \
-                                      (scanCode == PMSCAN_PADPLUS) )
-#define isNumlockOn (BOOL)WinGetKeyState(HWND_DESKTOP, VK_NUMLOCK) & 0x0001
+class nsChildWindow : public nsWindow {
+public:
+  nsChildWindow()       {}
+  ~nsChildWindow()      {}
+};
 
-extern PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2);
+#endif // _nswindow_h
 
-extern nsWindow *NS_HWNDToWindow( HWND hwnd);
+//=============================================================================
 
-#endif

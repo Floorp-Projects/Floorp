@@ -49,6 +49,18 @@ XPCOMUtils.defineLazyGetter(Services, "prefs", function () {
            .QueryInterface(Ci.nsIPrefBranch2);
 });
 
+XPCOMUtils.defineLazyGetter(Services, "appinfo", function () {
+  return Cc["@mozilla.org/xre/app-info;1"]
+           .getService(Ci.nsIXULAppInfo)
+           .QueryInterface(Ci.nsIXULRuntime);
+});
+
+XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
+  return Cc["@mozilla.org/file/directory_service;1"]
+           .getService(Ci.nsIDirectoryService)
+           .QueryInterface(Ci.nsIProperties);
+});
+
 XPCOMUtils.defineLazyServiceGetter(Services, "wm",
                                    "@mozilla.org/appshell/window-mediator;1",
                                    "nsIWindowMediator");
@@ -72,3 +84,27 @@ XPCOMUtils.defineLazyServiceGetter(Services, "prompt",
 XPCOMUtils.defineLazyServiceGetter(Services, "search",
                                    "@mozilla.org/browser/search-service;1",
                                    "nsIBrowserSearchService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "storage",
+                                   "@mozilla.org/storage/service;1",
+                                   "mozIStorageService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "vc",
+                                   "@mozilla.org/xpcom/version-comparator;1",
+                                   "nsIVersionComparator");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "locale",
+                                   "@mozilla.org/intl/nslocaleservice;1",
+                                   "nsILocaleService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "scriptloader",
+                                   "@mozilla.org/moz/jssubscript-loader;1",
+                                   "mozIJSSubScriptLoader");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "ww",
+                                   "@mozilla.org/embedcomp/window-watcher;1",
+                                   "nsIWindowWatcher");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "tm",
+                                   "@mozilla.org/thread-manager;1",
+                                   "nsIThreadManager");

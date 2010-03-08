@@ -43,8 +43,6 @@
 #include "nsHTMLEditUtils.h"
 #include "nsWSRunObject.h"
 
-#include "nsEditorEventListeners.h"
-
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -64,7 +62,6 @@
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
 
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"

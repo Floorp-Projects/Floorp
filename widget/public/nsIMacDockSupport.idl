@@ -42,11 +42,22 @@ interface nsIStandaloneNativeMenu;
  * Allow applications to interface with the Mac OS X Dock.
  */
 
-[scriptable, uuid(6BA6103B-633C-473A-9E24-425301BF6A78)]
+[scriptable, uuid(CBC8A835-0733-470B-A51D-B7EBBFA88689)]
 interface nsIMacDockSupport : nsISupports
 {
   /**
    * Menu to use for application-specific dock menu items.
    */
   attribute nsIStandaloneNativeMenu dockMenu;
+
+  /**
+   * Activate the application. This should be used by an application to
+   * activate itself when a dock menu is selected as selection of a dock menu
+   * item does not automatically activate the application.
+   *
+   * @param aIgnoreOtherApplications If false, the application is activated
+   *        only if no other application is currently active. If true, the
+   *        application activates regardless. 
+   */
+  void activateApplication(in boolean aIgnoreOtherApplications);
 };

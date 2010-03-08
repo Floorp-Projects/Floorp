@@ -55,6 +55,7 @@
 #include "nsIServiceManager.h"
 #include "nsCharTraits.h"
 #include "prbit.h"
+#include "nsUTF8Utils.h"
 
 #define ADD_TO_HASHVAL(hashval, c) \
     hashval = PR_ROTATE_LEFT32(hashval, 4) ^ (c);
@@ -237,125 +238,46 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
   return h;
 }
 
-PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* start, PRUint32 length)
+PRUint32 nsCRT::HashCode(const PRUnichar* start, PRUint32 length)
 {
   PRUint32 h = 0;
   const PRUnichar* s = start;
   const PRUnichar* end = start + length;
 
-  PRUint16 W1 = 0;      // the first UTF-16 word in a two word tuple
-  PRUint32 U = 0;       // the current char as UCS-4
-  int code_length = 0;  // the number of bytes in the UTF-8 sequence for the current char
-
-  PRUint16 W;
-  while ( s < end )
-    {
-      W = *s++;
-        /*
-         * On the fly, decoding from UTF-16 (and/or UCS-2) into UTF-8 as per
-         *  http://www.ietf.org/rfc/rfc2781.txt
-         *  http://www.ietf.org/rfc/rfc3629.txt
-         */
-
-      if ( !W1 )
-        {
-          if ( !IS_SURROGATE(W) )
-            {
-              U = W;
-              if ( W <= 0x007F )
-                code_length = 1;
-              else if ( W <= 0x07FF )
-                code_length = 2;
-              else
-                code_length = 3;
-            }
-          else if ( NS_IS_HIGH_SURROGATE(W) && s < end)
-            {
-              W1 = W;
-
-              continue;
-            }
-          else
-            {
-              // Treat broken characters as the Unicode replacement
-              // character 0xFFFD
-              U = 0xFFFD;
-
-              code_length = 3;
-
-              NS_WARNING("Got low surrogate but no previous high surrogate");
-            }
-        }
-      else
-        {
-          // as required by the standard, this code is careful to
-          // throw out illegal sequences
-
-          if ( NS_IS_LOW_SURROGATE(W) )
-            {
-              U = SURROGATE_TO_UCS4(W1, W);
-              NS_ASSERTION(IS_VALID_CHAR(U), "How did this happen?");
-              code_length = 4;
-            }
-          else
-            {
-              // Treat broken characters as the Unicode replacement
-              // character 0xFFFD
-              U = 0xFFFD;
-
-              code_length = 3;
-
-              NS_WARNING("High surrogate not followed by low surrogate");
-
-              // The pointer to the next character points to the second 16-bit
-              // value, not beyond it, as per Unicode 5.0.0 Chapter 3 C10, only
-              // the first code unit of an illegal sequence must be treated as
-              // an illegally terminated code unit sequence (also Chapter 3
-              // D91, "isolated [not paired and ill-formed] UTF-16 code units
-              // in the range D800..DFFF are ill-formed").
-              --s;
-            }
-
-          W1 = 0;
-        }
-
-
-      static const PRUint16 sBytePrefix[5]  = { 0x0000, 0x0000, 0x00C0, 0x00E0, 0x00F0  };
-      static const PRUint16 sShift[5]       = { 0, 0, 6, 12, 18 };
-
-      /*
-       *  Unlike the algorithm in
-       *  http://www.ietf.org/rfc/rfc3629.txt we must calculate the
-       *  bytes in left to right order so that our hash result
-       *  matches what the narrow version would calculate on an
-       *  already UTF-8 string.
-       */
-
-      // hash the first (and often, only, byte)
-      ADD_TO_HASHVAL(h, (sBytePrefix[code_length] | (U>>sShift[code_length])));
-
-      // an unrolled loop for hashing any remaining bytes in this
-      // sequence
-      switch ( code_length )
-        {  // falling through in each case
-          case 4:   ADD_TO_HASHVAL(h, (0x80 | ((U>>12) & 0x003F)));
-          case 3:   ADD_TO_HASHVAL(h, (0x80 | ((U>>6 ) & 0x003F)));
-          case 2:   ADD_TO_HASHVAL(h, (0x80 | ( U      & 0x003F)));
-          default:  code_length = 0;
-            break;
-        }
-    }
+  PRUnichar c;
+  while ( s < end ) {
+    c = *s++;
+    ADD_TO_HASHVAL(h, c);
+  }
 
   return h;
 }
 
-PRUint32 nsCRT::BufferHashCode(const PRUnichar* s, PRUint32 len)
+PRUint32 nsCRT::HashCodeAsUTF16(const char* start, PRUint32 length,
+                                PRBool* err)
 {
   PRUint32 h = 0;
-  const PRUnichar* done = s + len;
+  const char* s = start;
+  const char* end = start + length;
 
-  while ( s < done )
-    h = PR_ROTATE_LEFT32(h, 4) ^ PRUint16(*s++); // cast to unsigned to prevent possible sign extension
+  *err = PR_FALSE;
+
+  while ( s < end )
+    {
+      PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&s, end, err);
+      if (*err) {
+	return 0;
+      }
+
+      if (ucs4 < PLANE1_BASE) {
+        ADD_TO_HASHVAL(h, ucs4);
+      }
+      else {
+        ADD_TO_HASHVAL(h, H_SURROGATE(ucs4));
+        ADD_TO_HASHVAL(h, L_SURROGATE(ucs4));
+      }
+    }
+
   return h;
 }
 

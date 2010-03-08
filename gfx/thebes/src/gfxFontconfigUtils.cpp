@@ -352,6 +352,7 @@ const MozLangGroupData MozLangGroups[] = {
     { "x-orya",         "or" },
     { "x-sinh",         "si" },
     { "x-telu",         "te" },
+    { "x-tibt",         "bo" },
     { "x-unicode",      0    },
     { "x-user-def",     0    }
 };

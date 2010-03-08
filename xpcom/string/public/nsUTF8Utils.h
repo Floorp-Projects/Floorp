@@ -58,12 +58,6 @@ class UTF8traits
       static PRBool is6byte(char c) { return (c & 0xFE) == 0xFC; }
   };
 
-#ifdef __GNUC__
-#define NS_ALWAYS_INLINE __attribute__((always_inline))
-#else
-#define NS_ALWAYS_INLINE
-#endif
-
 /**
  * Extract the next UCS-4 character from the buffer and return it.  The
  * pointer passed in is advanced to the start of the next character in the

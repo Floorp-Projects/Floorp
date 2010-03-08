@@ -1,20 +1,10 @@
 .searchbar-textbox {
-  min-height: 22px;
   width: 6em;
   min-width: 6em;
 }
 
 .autocomplete-textbox-container {
   -moz-box-align: stretch;
-}
-
-.searchbar-textbox:-moz-system-metric(windows-default-theme) {
-  -moz-appearance: none;
-  border-width: 1px;
-  -moz-border-top-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow;
 }
 
 .textbox-input-box {
@@ -35,29 +25,11 @@
   -moz-appearance: none;
   min-width: 0;
   margin: 0;
-  -moz-margin-end: 3px;
   padding: 0;
+  -moz-padding-end: 2px;
   -moz-box-align: center;
-  background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
-  border: 0 solid;
-  -moz-border-end-width: 1px;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow;
-  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.4) inset,
-                   0 -1px 0 rgba(255,255,255,.4) inset;
-}
-
-.searchbar-engine-button:-moz-system-metric(windows-default-theme):-moz-locale-dir(ltr) {
-  -moz-border-right-colors: rgba(0,0,0,.05);
-}
-
-.searchbar-engine-button:hover {
-  background-position: 0 -60px;
-}
-
-.searchbar-engine-button[open="true"] {
-  background-position: 0 -120px;
-  -moz-box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset;
+  background: none;
+  border: none;
 }
 
 .searchbar-engine-button > .button-box {

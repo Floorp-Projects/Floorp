@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_update
 
+DIRS = \
+  chrome \
+  $(NULL)
+
 XPCSHELL_TESTS = \
   unit \
   $(NULL)

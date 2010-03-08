@@ -113,7 +113,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(9d6a388b-2e0c-4d0e-9a60-5c9739a7ada5)]
+[scriptable, uuid(31eced2b-8adb-46f9-992b-26858ab3d558)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -129,9 +129,15 @@ interface nsIUpdate : nsISupports
   attribute AString name;
 
   /**
+   * The string to display in the user interface for the version. If you want
+   * a real version number use appVersion.
+   */
+  attribute AString displayVersion;
+
+  /**
    * The Application version of this update.
    */
-  attribute AString version;
+  attribute AString appVersion;
 
   /**
    * The Toolkit version of this update.
@@ -139,10 +145,9 @@ interface nsIUpdate : nsISupports
   attribute AString platformVersion;
 
   /**
-   * The Addon version of this update. Used by the Extension System to track
-   * compatibility of installed addons with this update.
+   * The Application version prior to the application being updated.
    */
-  attribute AString extensionVersion;
+  attribute AString previousAppVersion;
 
   /**
    * The Build ID of this update. Used to determine a particular build, down
@@ -161,6 +166,12 @@ interface nsIUpdate : nsISupports
   attribute AString detailsURL;
 
   /**
+   * The URL to a page that is typically localized to display in the update
+   * prompt.
+   */
+  attribute AString billboardURL;
+
+  /**
    * The URL to a HTML fragment that contains a license for this update. If
    * this is specified, the user is shown the license file after they choose
    * to install the update and they must agree to it before the download
@@ -177,6 +188,37 @@ interface nsIUpdate : nsISupports
    * The channel used to retrieve this update from the Update Service.
    */
   attribute AString channel;
+
+  /**
+   * Stores custom string data provided by the update xml for use by the
+   * application.
+   *
+   * Implementation Note: After an update has been successfully applied this
+   * value will be added to the app.update.extra preference and if an
+   * application uses this preference to determine that an update has been
+   * applied it should also delete the preference.
+   */
+  attribute AString extra1;
+
+  /**
+   * Whether to show the update prompt which requires user confirmation when an
+   * update is found during a background update check. This overrides the
+   * default setting to download the update in the background.
+   */
+  attribute boolean showPrompt;
+
+  /**
+   * Whether to show the "No Thanks" button in the update prompt. This allows
+   * the user to never receive a notification for that specific update version
+   * again.
+   */
+  attribute boolean showNeverForVersion;
+
+  /**
+   * Whether to show the survey link in the update prompt. The url must also be
+   * present in the app.update.surveyURL preference.
+   */
+  attribute boolean showSurvey;
 
   /**
    * Whether or not the update being downloaded is a complete replacement of

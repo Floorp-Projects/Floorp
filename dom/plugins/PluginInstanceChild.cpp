@@ -1245,7 +1245,7 @@ PluginInstanceChild::DeallocPPluginScriptableObject(
 }
 
 bool
-PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
+PluginInstanceChild::RecvPPluginScriptableObjectConstructor(
                                            PPluginScriptableObjectChild* aActor)
 {
     AssertPluginThread();
@@ -1385,7 +1385,7 @@ PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
     }
 
     actor = new PluginScriptableObjectChild(LocalObject);
-    if (!CallPPluginScriptableObjectConstructor(actor)) {
+    if (!SendPPluginScriptableObjectConstructor(actor)) {
         NS_ERROR("Failed to send constructor message!");
         return nsnull;
     }

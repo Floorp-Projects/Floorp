@@ -510,7 +510,7 @@ nsAttrValue::HashValue() const
       nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         PRUint32 len = str->StorageSize()/sizeof(PRUnichar) - 1;
-        return nsCRT::BufferHashCode(static_cast<PRUnichar*>(str->Data()), len);
+        return nsCRT::HashCode(static_cast<PRUnichar*>(str->Data()), len);
       }
 
       return 0;
@@ -716,10 +716,11 @@ nsAttrValue::Equals(const nsAString& aValue,
       return aValue.IsEmpty();
     }
     case eAtomBase:
-      // Need a way to just do case-insensitive compares on atoms..
       if (aCaseSensitive == eCaseMatters) {
-        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);;
+        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);
       }
+      return nsDependentAtomString(static_cast<nsIAtom*>(GetPtr())).
+        Equals(aValue, nsCaseInsensitiveStringComparator());
     default:
       break;
   }
@@ -749,7 +750,7 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
                               str->StorageSize()/sizeof(PRUnichar) - 1);
         return aValue->Equals(dep);
       }
-      return aValue->EqualsUTF8(EmptyCString());
+      return aValue == nsGkAtoms::_empty;
     }
     case eAtomBase:
     {
@@ -776,11 +777,11 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
         return aValue == atom;
       }
 
-      const char *val1, *val2;
-      aValue->GetUTF8String(&val1);
-      atom->GetUTF8String(&val2);
-
-      return nsCRT::strcasecmp(val1, val2) == 0;
+      // For performance reasons, don't do a full on unicode case insensitive
+      // string comparison. This is only used for quirks mode anyway.
+      return
+        nsContentUtils::EqualsIgnoreASCIICase(nsDependentAtomString(aValue),
+                                              nsDependentAtomString(atom));
     }
     default:
     {
@@ -790,12 +791,14 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
           return array->IndexOf(aValue) >= 0;
         }
 
-        const char *val1, *val2;
-        aValue->GetUTF8String(&val1);
+        nsDependentAtomString val1(aValue);
 
         for (PRInt32 i = 0, count = array->Count(); i < count; ++i) {
-          array->ObjectAt(i)->GetUTF8String(&val2);
-          if (nsCRT::strcasecmp(val1, val2) == 0) {
+          // For performance reasons, don't do a full on unicode case
+          // insensitive string comparison. This is only used for quirks mode
+          // anyway.
+          if (nsContentUtils::EqualsIgnoreASCIICase(val1,
+                nsDependentAtomString(array->ObjectAt(i)))) {
             return PR_TRUE;
           }
         }
@@ -1052,6 +1055,25 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
 
   PRInt32 val = NS_MAX(originalVal, aMin);
   val = NS_MIN(val, aMax);
+  strict = strict && (originalVal == val);
+  SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
+
+  return PR_TRUE;
+}
+
+PRBool
+nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
+{
+  ResetIfSet();
+
+  PRInt32 ec;
+  PRBool strict;
+  PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
+  if (NS_FAILED(ec)) {
+    return PR_FALSE;
+  }
+
+  PRInt32 val = PR_MAX(originalVal, -1);
   strict = strict && (originalVal == val);
   SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
 

@@ -42,6 +42,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QtGui/QApplication>
+#include <QtGui/QDesktopWidget>
+#include <QtGui/QCursor>
+#include <QtGui/QIcon>
+#include <QtGui/QX11Info>
+#include <QtGui/QGraphicsScene>
+#include <QtGui/QGraphicsView>
+#include <QtGui/QGraphicsSceneContextMenuEvent>
+#include <QtGui/QGraphicsSceneDragDropEvent>
+#include <QtGui/QGraphicsSceneMouseEvent>
+#include <QtGui/QGraphicsSceneHoverEvent>
+#include <QtGui/QGraphicsSceneWheelEvent>
+#include <QtGui/QGraphicsSceneResizeEvent>
+#include <QtGui/QStyleOptionGraphicsItem>
+
+#include <QtCore/QDebug>
+#include <QtCore/QEvent>
+#include <QtCore/QVariant>
+
 #include "prlink.h"
 
 #include "nsWindow.h"
@@ -66,30 +85,14 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 
-#include <QtGui/QApplication>
-#include <QtGui/QDesktopWidget>
-#include <QtGui/QCursor>
-#include <QtGui/QIcon>
-#include <QtGui/QX11Info>
-#include <QtGui/QGraphicsScene>
-#include <QtGui/QGraphicsView>
-#include <QtGui/QGraphicsSceneContextMenuEvent>
-#include <QtGui/QGraphicsSceneDragDropEvent>
-#include <QtGui/QGraphicsSceneMouseEvent>
-#include <QtGui/QGraphicsSceneHoverEvent>
-#include <QtGui/QGraphicsSceneWheelEvent>
-#include <QtGui/QGraphicsSceneResizeEvent>
-#include <QtGui/QStyleOptionGraphicsItem>
-
-#include <QtCore/QDebug>
-#include <QtCore/QEvent>
-#include <QtCore/QVariant>
-
 #include "gfxQtPlatform.h"
 #include "gfxXlibSurface.h"
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
 #include "gfxSharedImageSurface.h"
+
+// imported in nsWidgetFactory.cpp
+PRBool gDisableNativeTheme = PR_FALSE;
 
 // Buffered Pixmap stuff
 static QPixmap *gBufferPixmap = nsnull;
@@ -986,7 +989,8 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     else
         r = mWidget->boundingRect();
 
-    mDirtyScrollArea = QRegion();
+    if (!mDirtyScrollArea.isEmpty())
+        mDirtyScrollArea = QRegion();
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     // Prepare offscreen buffers if RenderMode Xlib or Image
@@ -1065,11 +1069,12 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         Display *disp = gBufferPixmap->x11Info().display();
         XGCValues gcv;
         gcv.graphics_exposures = False;
-        GC gc = XCreateGC (disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
+        GC gc = XCreateGC(disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
         XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
                      rect.x, rect.y, rect.x, rect.y, rect.width, rect.height,
                      False);
-        XFreeGC (disp, gc);
+        XSync(disp, False);
+        XFreeGC(disp, gc);
     }
 
     if (renderMode != gfxQtPlatform::RENDER_QPAINTER) {
@@ -1869,7 +1874,9 @@ initialize_prefs(void)
 
     PRBool val = PR_TRUE;
     nsresult rv;
-    rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
+    rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
+    if (NS_SUCCEEDED(rv))
+        gDisableNativeTheme = val;
 
     return NS_OK;
 }

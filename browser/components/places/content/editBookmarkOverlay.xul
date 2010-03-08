@@ -198,7 +198,7 @@
                      showcommentcolumn="true"
                      onblur="gEditItemOverlay.onTagsFieldBlur();"
                      observes="paneElementsBroadcaster"
-                     emptytext="&editBookmarkOverlay.tagsEmptyDesc.label;"/>
+                     placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"/>
             <button id="editBMPanel_tagsSelectorExpander"
                     class="expander-down"
                     tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"

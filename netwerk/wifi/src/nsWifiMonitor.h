@@ -68,7 +68,7 @@ class nsWifiListener
     mHasSentData = PR_FALSE;
   }
   ~nsWifiListener() {}
-  
+
   nsCOMPtr<nsIWifiListener> mListener;
   PRBool mHasSentData;
 };

@@ -452,9 +452,6 @@ protected:
   static PRBool         sTrackPointHack;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
-  static PRUint32       sOOPPGetBaseMessageEvent;
-  static PRInt32        sCallDepth;
-  static UINT           sBaseMsg;
 #endif
 
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the

@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xpcJSWeakReference.h"
 #include "xpcprivate.h"
+#include "xpcJSWeakReference.h"
 
 xpcJSWeakReference::xpcJSWeakReference()
 {

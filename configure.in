@@ -129,7 +129,6 @@ W32API_VERSION=3.8
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
-LIBGNOME_VERSION=2.0
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
@@ -214,10 +213,9 @@ esac
 fi
 
 COMPILE_ENVIRONMENT=1
-MOZ_ARG_ENABLE_BOOL(compile-environment,
+MOZ_ARG_DISABLE_BOOL(compile-environment,
 [  --disable-compile-environment
                            Disable compiler/library checks.],
-    COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 AC_SUBST(COMPILE_ENVIRONMENT)
 
@@ -473,14 +471,15 @@ dnl ========================================================
 case "$target" in
 *-wince|*-winmo)
     WINVER=500
+    WINSDK_TARGETVER=502
     ;;
 *)
     WINVER=502
+    dnl Target the Windows 7 SDK by default
+    WINSDK_TARGETVER=601
     ;;
 esac
 
-dnl Target the Windows 7 SDK by default
-WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
@@ -1006,8 +1005,6 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-dnl Be sure the make we use is GNU make.
-dnl on win32, gmake.exe is the generally the wrong version
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then
      NOT_PYMAKE=$MAKE
@@ -1067,9 +1064,9 @@ MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
-DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
+DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core -lmozalloc'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
-XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom'
+XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom -lmozalloc'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
 XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
@@ -2063,6 +2060,10 @@ case "$target" in
     AR_EXTRACT="$AR -extract"
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
+    MOZ_MEMORY=1
+    NSS_DISABLE_DBM=1
+    MOZ_OGG=
+    ac_configure_args="$ac_configure_args --enable-win32-target=WINCE"
 
     if test "$AS_BIN"; then
         AS="$AS_BIN"
@@ -2095,11 +2096,12 @@ case "$target" in
     DLL_PREFIX=
     DOXYGEN=:
     DSO_LDOPTS=-SUBSYSTEM:WINDOWSCE
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
+    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     GARBAGE=
     IMPORT_LIB_SUFFIX=lib
-    LIBS="$LIBS"
-    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    dnl Need to force-link against mozalloc because it's used in the shunt
+    LIBS="$LIBS \$(LIBXUL_DIST)/lib/mozalloc.lib"
+    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     LIB_PREFIX=
     LIB_SUFFIX=lib 
     MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
@@ -2118,7 +2120,7 @@ case "$target" in
     TARGET_NSPR_MDCPUCFG='\"md/_wince.cfg\"'
     UNZIP=unzip
     XARGS=xargs
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
+    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     ZIP=zip
     LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
     LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
@@ -2177,8 +2179,8 @@ case "$target" in
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
         MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
-        XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
+        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core -lmozalloc'
+        XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
@@ -2221,9 +2223,9 @@ case "$target" in
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
-        XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
-        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+        XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -NXCOMPAT"
@@ -2537,8 +2539,8 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
@@ -2638,7 +2640,7 @@ alpha*-*-osf*)
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -4247,6 +4249,53 @@ if test "$ac_cv_thread_keyword" = yes; then
   AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
 fi
 
+dnl Check for the existence of various allocation headers/functions
+
+MALLOC_H=
+AC_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
+if test "$MALLOC_H" = ""; then
+  AC_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
+  if test "$MALLOC_H" = ""; then
+    AC_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+  fi
+fi
+if test "$MALLOC_H" != ""; then
+   AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+fi
+
+MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
+AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
+
+dnl See if compiler supports some gcc-style attributes
+
+AC_CACHE_CHECK(for __attribute__((always_inline)),
+               ac_cv_attribute_always_inline,
+               [AC_TRY_COMPILE([],
+                               [inline void f(void) __attribute__((always_inline));],
+                               ac_cv_attribute_always_inline=yes,
+                               ac_cv_attribute_always_inline=no)])
+
+AC_CACHE_CHECK(for __attribute__((malloc)),
+               ac_cv_attribute_malloc,
+               [AC_TRY_COMPILE([],
+                               [void* f(int) __attribute__((malloc));],
+                               ac_cv_attribute_malloc=yes,
+                               ac_cv_attribute_malloc=no)])
+
+AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
+               ac_cv_attribute_warn_unused,
+               [AC_TRY_COMPILE([],
+                               [int f(void) __attribute__((warn_unused_result));],
+                               ac_cv_attribute_warn_unused=yes,
+                               ac_cv_attribute_warn_unused=no)])
+
+AC_CACHE_CHECK(for __attribute__((noreturn)),
+               ac_cv_attribute_noreturn,
+               [AC_TRY_COMPILE([],
+                               [void f(void) __attribute__((noreturn));],
+                               ac_cv_attribute_noreturn=yes,
+                               ac_cv_attribute_noreturn=no)])
+ 
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -4281,6 +4330,40 @@ dnl ========================================================
 dnl The macros used for command line options
 dnl are defined in build/autoconf/altoptions.m4.
 
+dnl If the compiler supports these attributes, define them as
+dnl convenience macros.
+if test "$ac_cv_attribute_always_inline" = yes ; then
+  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
+else
+  AC_DEFINE(NS_ALWAYS_INLINE,)
+fi
+
+if test "$ac_cv_attribute_malloc" = yes ; then
+  AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
+else
+  AC_DEFINE(NS_ATTR_MALLOC,)
+fi
+
+if test "$ac_cv_attribute_warn_unused" = yes ; then
+  AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
+else
+  AC_DEFINE(NS_WARN_UNUSED_RESULT,)
+fi
+
+if test "$ac_cv_attribute_noreturn" = yes ; then
+  AC_DEFINE(NS_NORETURN, [__attribute__((noreturn))])
+else
+  AC_DEFINE(NS_NORETURN,)
+fi
+
+dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
+dnl features that Windows actually does support.
+
+if test -n "$SKIP_COMPILER_CHECKS"; then
+   dnl Windows has malloc.h
+   AC_DEFINE(MALLOC_H, [<malloc.h>])
+   AC_DEFINE(HAVE_FORCEINLINE)
+fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl =
@@ -4631,6 +4714,7 @@ MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -4645,7 +4729,6 @@ MOZ_FASTSTART=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
-MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
 MOZ_SVG=1
 MOZ_TIMELINE=
@@ -4670,7 +4753,7 @@ XPC_IDISPATCH_SUPPORT=
 
 
 case "$target_os" in
-darwin*)
+darwin*|*wince*|*winmo*)
     ACCESSIBILITY=
     ;;
 *)
@@ -4837,6 +4920,11 @@ photon)
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
     MOZ_WEBGL=1
+    case "${target}" in
+    *-wince*)
+        NS_PRINTING=
+        ;;
+    esac
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -4979,36 +5067,28 @@ dnl = QT support
 dnl ========================================================
 if test "$MOZ_ENABLE_QT"
 then
-    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
-    AC_SUBST(MOZ_QT_CFLAGS)
-    AC_SUBST(MOZ_QT_LIBS)
-
     MOZ_ARG_WITH_STRING(qtdir,
     [  --with-qtdir=\$dir       Specify Qt directory ],
     [ QTDIR=$withval])
 
     if test -z "$QTDIR"; then
-      QTDIR="/usr"
-    fi
-    QTINCDIR="/include/qt"
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include/X11/qt"
-    fi
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include"
-    fi
-
-    if test -x "$QTDIR/bin/moc-qt4"; then
-      HOST_MOC="$QTDIR/bin/moc-qt4"
-    else
-      if test -x "$QTDIR/bin/moc"; then
-        HOST_MOC="$QTDIR/bin/moc"
-      else
+        PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
         AC_CHECK_PROGS(HOST_MOC, moc, "")
-      fi
+    else
+        MOZ_QT_LIBS="-L$QTDIR/qt/lib/ -lQtGui -lQtNetwork -lQtCore"
+
+        MOZ_QT_CFLAGS="-DQT_SHARED"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/Qt"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtGui"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtCore"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtNetwork"
+
+        HOST_MOC="$QTDIR/qt/bin/moc"
     fi
     if test -z "$HOST_MOC"; then
-      AC_MSG_ERROR([no acceptable moc preprocessor found])
+        AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
+incorrect])
     fi
     MOC=$HOST_MOC
 fi
@@ -5104,12 +5184,10 @@ AC_SUBST(MOZ_DISTRIBUTION_ID)
 dnl ========================================================
 dnl complex text support off by default
 dnl ========================================================
-MOZ_PANGO=1
 MOZ_ARG_DISABLE_BOOL(pango,
 [  --disable-pango Disable usage of Pango ],
     MOZ_PANGO=,
     MOZ_PANGO=1)
-
 
 dnl ========================================================
 dnl = Pango
@@ -5120,21 +5198,35 @@ then
 
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+    AC_SUBST(MOZ_PANGO_CFLAGS)
+    AC_SUBST(MOZ_PANGO_LIBS)
     if test "$MOZ_PANGO"
     then
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-        AC_SUBST(MOZ_PANGO_CFLAGS)
-        AC_SUBST(MOZ_PANGO_LIBS)
         AC_DEFINE(MOZ_PANGO)
     else
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-        AC_SUBST(MOZ_PANGO_CFLAGS)
-        AC_SUBST(MOZ_PANGO_LIBS)
-
         PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0 fontconfig)
         AC_SUBST(FT2_CFLAGS)
         AC_SUBST(FT2_LIBS)
     fi
+fi
+
+if test "$MOZ_ENABLE_QT"
+then
+    if test "$MOZ_PANGO"
+    then
+        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION],
+        [
+            AC_SUBST(MOZ_PANGO_CFLAGS)
+            AC_SUBST(MOZ_PANGO_LIBS)
+            AC_DEFINE(MOZ_PANGO)
+        ],
+        [
+            echo "Pango library not found, will use FT2 font engine"
+            MOZ_PANGO=
+        ])
+    fi
+    AC_SUBST(MOZ_PANGO)
 fi
 
 dnl ========================================================
@@ -5692,6 +5784,12 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
 dnl ========================================================
 dnl JavaXPCOM
 dnl ========================================================
+case "${target}" in
+*-wince*)
+    MOZ_JAVAXPCOM=
+    ;;
+esac
+
 MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
@@ -6820,6 +6918,13 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
+
+  if test "$OS_ARCH" != "Darwin"; then
+    dnl NB: this must be kept in sync with jemalloc.h
+    AC_DEFINE(HAVE_JEMALLOC_VALLOC)
+    AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
+    AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
+  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
@@ -7277,13 +7382,8 @@ dnl Sun Studio on Solaris
 if test "$SOLARIS_SUNPRO_CC"; then
   PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
   PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  if test "$CPU_ARCH" != "sparc"; then
-    PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
-  else
-    PROFILE_USE_CFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-  fi
+  PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
+  PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
 fi
 
 AC_SUBST(PROFILE_GEN_CFLAGS)
@@ -7961,6 +8061,7 @@ fi
 if test "$NECKO_WIFI" -a \
         "$OS_ARCH" != "Linux" -a \
         "$OS_ARCH" != "Darwin" -a \
+        "$OS_ARCH" != "SunOS" -a \
         "$OS_ARCH" != "WINNT" -a \
         "$OS_ARCH" != "WINCE"; then
   AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
@@ -8361,19 +8462,15 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 fi
-AC_SUBST(MOZ_MOVEMAIL)
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
@@ -8627,30 +8724,34 @@ ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 # Build jsctypes on the platforms we can.
 if test "$BUILD_CTYPES"; then
-  # Run the libffi 'configure' script on platforms that it supports.
-  if test -z "$_MSC_VER"; then
-    ac_configure_args="--disable-shared --enable-static --disable-raw-api"
-    if test "$MOZ_DEBUG"; then
-      ac_configure_args="$ac_configure_args --enable-debug"
-    fi
-    if test -n "$DSO_PIC_CFLAGS"; then
-      ac_configure_args="$ac_configure_args --with-pic"
-    fi
-    if test -n "$CROSS_COMPILE"; then
-      ac_configure_args="$ac_configure_args --build=$build --host=$target"
-    fi
-    if test "$SOLARIS_SUNPRO_CC"; then
-      # Always use gcc for libffi on Solaris
-      old_cache_file=$cache_file
-      cache_file=js/ctypes/libffi/config.cache
-      ac_configure_args="$ac_configure_args CC=gcc"
-      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
-      cache_file=$old_cache_file
-    else
-      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
-    fi
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  # Run the libffi 'configure' script.
+  ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+  if test "$MOZ_DEBUG"; then
+    ac_configure_args="$ac_configure_args --enable-debug"
   fi
+  if test "$DSO_PIC_CFLAGS"; then
+    ac_configure_args="$ac_configure_args --with-pic"
+  fi
+  if test "$CROSS_COMPILE"; then
+    ac_configure_args="$ac_configure_args --build=$build --host=$target"
+  fi
+  if test "$_MSC_VER"; then
+    # Use a wrapper script for cl and ml that looks more like gcc.
+    # autotools can't quite handle an MSVC build environment yet.
+    ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/ctypes/libffi/msvcc.sh LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
+  fi
+  if test "$SOLARIS_SUNPRO_CC"; then
+    # Always use gcc for libffi on Solaris
+    ac_configure_args="$ac_configure_args CC=gcc"
+  fi
+
+  # Use a separate cache file for libffi, since it does things differently
+  # from our configure.
+  old_cache_file=$cache_file
+  cache_file=js/ctypes/libffi/config.cache
+  AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+  cache_file=$old_cache_file
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR

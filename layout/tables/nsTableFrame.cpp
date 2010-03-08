@@ -4563,8 +4563,7 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
   // and hence possibly completely bogus for GetStyle* purposes.
   // We use PeekStyleData instead.
 
-  const nsStyleBorder* oldStyleData = static_cast<const nsStyleBorder*>
-                        (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+  const nsStyleBorder* oldStyleData = aOldStyleContext->PeekStyleBorder();
   if (!oldStyleData)
     return PR_FALSE;
 
@@ -5071,12 +5070,6 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
   }
 }
 
-#define MAX_TABLE_BORDER_WIDTH 255
-static PRUint8
-LimitBorderWidth(PRUint16 aWidth)
-{
-  return NS_MIN(PRUint16(MAX_TABLE_BORDER_WIDTH), aWidth);
-}
 
 #define ADJACENT    PR_TRUE
 #define HORIZONTAL  PR_TRUE
@@ -5247,8 +5240,7 @@ BCMapCellInfo::SetRowRightContBCBorder()
 void
 BCMapCellInfo::SetTableTopBorderWidth(BCPixelSize aWidth)
 {
-  mTableBCData->mTopBorderWidth =
-     LimitBorderWidth(NS_MAX(mTableBCData->mTopBorderWidth, aWidth));
+  mTableBCData->mTopBorderWidth = NS_MAX(mTableBCData->mTopBorderWidth, aWidth);
 }
 
 void
@@ -5263,8 +5255,8 @@ BCMapCellInfo::SetTableLeftBorderWidth(PRInt32 aRowY, BCPixelSize aWidth)
       mTableBCData->mRightCellBorderWidth = aWidth;
     }
   }
-  mTableBCData->mLeftBorderWidth =
-               LimitBorderWidth(NS_MAX(mTableBCData->mLeftBorderWidth, aWidth));
+  mTableBCData->mLeftBorderWidth = NS_MAX(mTableBCData->mLeftBorderWidth,
+                                          aWidth);
 }
 
 void
@@ -5279,8 +5271,8 @@ BCMapCellInfo::SetTableRightBorderWidth(PRInt32 aRowY, BCPixelSize aWidth)
       mTableBCData->mLeftCellBorderWidth = aWidth;
     }
   }
-  mTableBCData->mRightBorderWidth =
-              LimitBorderWidth(NS_MAX(mTableBCData->mRightBorderWidth, aWidth));
+  mTableBCData->mRightBorderWidth = NS_MAX(mTableBCData->mRightBorderWidth,
+                                           aWidth);
 }
 
 void
@@ -5342,8 +5334,8 @@ BCMapCellInfo::SetLeftBorderWidths(BCPixelSize aWidth)
 void
 BCMapCellInfo::SetTableBottomBorderWidth(BCPixelSize aWidth)
 {
-  mTableBCData->mBottomBorderWidth =
-             LimitBorderWidth(NS_MAX(mTableBCData->mBottomBorderWidth, aWidth));
+  mTableBCData->mBottomBorderWidth = NS_MAX(mTableBCData->mBottomBorderWidth,
+                                            aWidth);
 }
 
 void
@@ -6418,7 +6410,8 @@ BCPaintBorderIterator::SetNewRowGroup()
   mIsRepeatedHeader = PR_FALSE;
   mIsRepeatedFooter = PR_FALSE;
 
-  if (mRgIndex < mRowGroups.Length()) {
+  NS_ASSERTION(mRgIndex >= 0, "mRgIndex out of bounds");
+  if (PRUint32(mRgIndex) < mRowGroups.Length()) {
     mPrevRg = mRg;
     mRg = mRowGroups[mRgIndex];
     mFifRgFirstRowIndex = ((nsTableRowGroupFrame*)mRg->GetFirstInFlow())->GetStartRowIndex();
@@ -6904,7 +6897,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
                                                      NS_SIDE_TOP;
   nsIFrame* rg   = aIter.mRg;  if (!rg) ABORT0();
   nsIFrame* row  = aIter.mRow; if (!row) ABORT0();
-  nsIFrame* cell = mFirstCell; if (!cell) ABORT0(); // ????
+  nsIFrame* cell = mFirstCell;
   nsIFrame* col;
   nsIFrame* owner = nsnull;
 

@@ -1015,7 +1015,7 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_MARATHI",    "x-devanagari" }, // mar
     { "LANG_SANSKRIT",   "x-devanagari" }, // san
     { "LANG_MONGOLIAN",  "mon" },
-    { "TIBETAN",         "tib" }, // tib/bod
+    { "TIBETAN",         "x-tibt" }, // tib/bod
     { nsnull, nsnull },
     { "KHMER",           "x-khmr" }, // khm
     { "LAO",             "lao" },
@@ -1860,9 +1860,7 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
                 nsIAtom *langGroup = LangGroupFromUnicodeRange(unicodeRange);
                 if (langGroup) {
 #ifdef PR_LOGGING
-                    const char *langGroupStr;
-                    langGroup->GetUTF8String(&langGroupStr);
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroupStr));
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", nsAtomCString(langGroup).get()));
 #endif
                     nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
                     this->GetPrefFonts(langGroup, fonts);

@@ -47,6 +47,7 @@
 interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
+interface nsIPrincipal;
 
 [scriptable, uuid(e1c028bc-c478-11da-95a8-00e08161165f)]
 interface nsIZipEntry : nsISupports
@@ -90,7 +91,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute boolean          isSynthetic;
 };
 
-[scriptable, uuid(5cce7f53-23b3-47f8-be05-122c0ba703fd)]
+[scriptable, uuid(27067432-cb21-437e-99d1-f85858522bb1)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -198,6 +199,18 @@ interface nsIZipReader : nsISupports
      * @param zipEntry the name of the entry to open the stream from
      */
     nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in string zipEntry);
+
+     /**
+     * Returns an object describing the entity which signed 
+     * an entry. parseManifest must be called first. If aEntryName is an
+     * entry in the jar, getInputStream must be called after parseManifest.
+     * If aEntryName is an external file which has meta-information 
+     * stored in the jar, verifyExternalFile (not yet implemented) must 
+     * be called before getPrincipal.
+     */
+    nsIPrincipal getCertificatePrincipal(in string aEntryName);   
+    
+    readonly attribute PRUint32 manifestEntriesCount;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

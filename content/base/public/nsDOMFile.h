@@ -48,6 +48,9 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsIDocument.h"
 
 class nsIDOMDocument;
 class nsIFile;
@@ -62,8 +65,9 @@ public:
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIDOMFILEINTERNAL
 
-  nsDOMFile(nsIFile *aFile)
-    : mFile(aFile)
+  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc)
+    : mFile(aFile),
+      mRelatedDoc(do_GetWeakReference(aRelatedDoc))
   {}
   ~nsDOMFile() {}
 
@@ -72,7 +76,9 @@ public:
 
 private:
   nsCOMPtr<nsIFile> mFile;
+  nsWeakPtr mRelatedDoc;
   nsString mContentType;
+  nsString mURL;
   nsCString mCharset;
 
   nsresult GuessCharset(nsIInputStream *aStream,

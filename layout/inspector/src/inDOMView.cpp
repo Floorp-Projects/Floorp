@@ -106,21 +106,6 @@ inDOMViewNode::~inDOMViewNode()
 
 ////////////////////////////////////////////////////////////////////////
 
-nsIAtom* inDOMView::kAnonymousAtom = nsnull;
-nsIAtom* inDOMView::kElementNodeAtom = nsnull;
-nsIAtom* inDOMView::kAttributeNodeAtom = nsnull;
-nsIAtom* inDOMView::kTextNodeAtom = nsnull;
-nsIAtom* inDOMView::kCDataSectionNodeAtom = nsnull;
-nsIAtom* inDOMView::kEntityReferenceNodeAtom = nsnull;
-nsIAtom* inDOMView::kEntityNodeAtom = nsnull;
-nsIAtom* inDOMView::kProcessingInstructionNodeAtom = nsnull;
-nsIAtom* inDOMView::kCommentNodeAtom = nsnull;
-nsIAtom* inDOMView::kDocumentNodeAtom = nsnull;
-nsIAtom* inDOMView::kDocumentTypeNodeAtom = nsnull;
-nsIAtom* inDOMView::kDocumentFragmentNodeAtom = nsnull;
-nsIAtom* inDOMView::kNotationNodeAtom = nsnull;
-nsIAtom* inDOMView::kAccessibleNodeAtom = nsnull;
-
 inDOMView::inDOMView() :
   mShowAnonymous(PR_FALSE),
   mShowSubDocuments(PR_FALSE),
@@ -135,21 +120,18 @@ inDOMView::~inDOMView()
   SetRootNode(nsnull);
 }
 
+#define DOMVIEW_ATOM(name_, value_) nsIAtom* inDOMView::name_ = nsnull;
+#include "inDOMViewAtomList.h"
+#undef DOMVIEW_ATOM
+
+#define DOMVIEW_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "inDOMViewAtomList.h"
+#undef DOMVIEW_ATOM
+
 /* static */ const nsStaticAtom inDOMView::Atoms_info[] = {
-  {"anonymous", &inDOMView::kAnonymousAtom},
-  {"ELEMENT_NODE", &inDOMView::kElementNodeAtom},
-  {"ATTRIBUTE_NODE", &inDOMView::kAttributeNodeAtom},
-  {"TEXT_NODE", &inDOMView::kTextNodeAtom},
-  {"CDATA_SECTION_NODE", &inDOMView::kCDataSectionNodeAtom},
-  {"ENTITY_REFERENCE_NODE", &inDOMView::kEntityReferenceNodeAtom},
-  {"ENTITY_NODE", &inDOMView::kEntityNodeAtom},
-  {"PROCESSING_INSTRUCTION_NODE", &inDOMView::kProcessingInstructionNodeAtom},
-  {"COMMENT_NODE", &inDOMView::kCommentNodeAtom},
-  {"DOCUMENT_NODE", &inDOMView::kDocumentNodeAtom},
-  {"DOCUMENT_TYPE_NODE", &inDOMView::kDocumentTypeNodeAtom},
-  {"DOCUMENT_FRAGMENT_NODE", &inDOMView::kDocumentFragmentNodeAtom},
-  {"NOTATION_NODE", &inDOMView::kNotationNodeAtom},
-  {"ACCESSIBLE_NODE", &inDOMView::kAccessibleNodeAtom}
+#define DOMVIEW_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &inDOMView::name_),
+#include "inDOMViewAtomList.h"
+#undef DOMVIEW_ATOM
 };
 
 /* static */ void
@@ -717,8 +699,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMAttr> domAttr;
-  nsAutoString attrStr;
-  aAttribute->ToString(attrStr);
+  nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {
     nsCOMPtr<nsINameSpaceManager> nsm =
       do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);

@@ -37,11 +37,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsLookAndFeel.h"
 
 #include <QPalette>
 #include <QApplication>
 #include <QStyle>
+
+#include "nsLookAndFeel.h"
+
 #include <qglobal.h>
 
 #undef NS_LOOKANDFEEL_DEBUG

@@ -53,9 +53,6 @@
 extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
-extern const PRUnichar* kOOPPGetBaseMessageEventId;
-UINT gOOPPGetBaseMessageEvent =
-    RegisterWindowMessage(kOOPPGetBaseMessageEventId);
 UINT gOOPPSpinNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
 UINT gOOPPStopNativeLoopEvent =
@@ -563,27 +560,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
               }
             }
             break;
-
-            case WM_IME_SETCONTEXT:
-            {
-              // Children can activate the underlying parent browser window
-              // generating nested events that arrive here. Check the base
-              // event this event was triggered by and unlock the child using
-              // ReplyMessage if needed.
-              HWND hwnd = NULL;
-              UINT baseMsg = 0;
-              mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &hwnd);
-              NS_ASSERTION(GetWindowThreadProcessId(hwnd, nsnull) ==
-                           GetCurrentThreadId(),
-                           "hwnd belongs to another thread!");
-              if (hwnd &&
-                  SendMessage(hwnd, gOOPPGetBaseMessageEvent,
-                              (WPARAM)&baseMsg, 0) &&
-                  baseMsg == WM_ACTIVATE) {
-                  ReplyMessage(0);
-              }
-            }
-            break;
         }
         if (!CallNPP_HandleEvent(npremoteevent, &handled))
             return 0;
@@ -735,7 +711,7 @@ PluginInstanceParent::DeallocPPluginScriptableObject(
 }
 
 bool
-PluginInstanceParent::AnswerPPluginScriptableObjectConstructor(
+PluginInstanceParent::RecvPPluginScriptableObjectConstructor(
                                           PPluginScriptableObjectParent* aActor)
 {
     // This is only called in response to the child process requesting the
@@ -806,7 +782,7 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
         return nsnull;
     }
 
-    if (!CallPPluginScriptableObjectConstructor(actor)) {
+    if (!SendPPluginScriptableObjectConstructor(actor)) {
         NS_WARNING("Failed to send constructor message!");
         return nsnull;
     }

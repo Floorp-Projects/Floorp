@@ -48,6 +48,10 @@ ifdef NS_TRACE_MALLOC
 tier_platform_dirs = tools/trace-malloc/lib
 endif
 
+ifdef MOZ_TREE_FREETYPE
+tier_platform_dirs += modules/freetype2
+endif
+
 tier_platform_dirs += xpcom
 
 ifndef MOZ_NATIVE_ZLIB
@@ -112,11 +116,9 @@ tier_platform_dirs += \
 		$(NULL)
 
 ifdef BUILD_CTYPES
-ifndef _MSC_VER
 tier_platform_staticdirs += \
 		js/ctypes/libffi \
 		$(NULL)
-endif
 endif
 
 ifdef MOZ_ENABLE_GTK2

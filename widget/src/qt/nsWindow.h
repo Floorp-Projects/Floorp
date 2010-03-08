@@ -41,16 +41,17 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
+#include <QKeyEvent>
+#include <qgraphicswidget.h>
+
 #include "nsAutoPtr.h"
 
 #include "nsBaseWidget.h"
 #include "nsGUIEvent.h"
-#include <QKeyEvent>
 
 #include "nsWeakReference.h"
 
 #include "nsWidgetAtoms.h"
-#include <qgraphicswidget.h>
 
 #ifdef MOZ_LOGGING
 

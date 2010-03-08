@@ -1059,7 +1059,7 @@ chains_main()
 {
     while read LINE 
     do
-        [ `echo ${LINE} | cut -b 1` == "#" ] && continue
+        [ `echo ${LINE} | cut -b 1` != "#" ] || continue
 
         > ${AIA_FILES}
 

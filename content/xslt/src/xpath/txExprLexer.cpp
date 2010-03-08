@@ -179,17 +179,17 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
         }
       }
       if (nextIsOperatorToken(prevToken)) {
-        NS_ConvertUTF16toUTF8 opUTF8(Substring(start, mPosition));
-        if (txXPathAtoms::_and->EqualsUTF8(opUTF8)) {
+        nsDependentSubstring op(Substring(start, mPosition));
+        if (txXPathAtoms::_and->Equals(op)) {
           defType = Token::AND_OP;
         }
-        else if (txXPathAtoms::_or->EqualsUTF8(opUTF8)) {
+        else if (txXPathAtoms::_or->Equals(op)) {
           defType = Token::OR_OP;
         }
-        else if (txXPathAtoms::mod->EqualsUTF8(opUTF8)) {
+        else if (txXPathAtoms::mod->Equals(op)) {
           defType = Token::MODULUS_OP;
         }
-        else if (txXPathAtoms::div->EqualsUTF8(opUTF8)) {
+        else if (txXPathAtoms::div->Equals(op)) {
           defType = Token::DIVIDE_OP;
         }
         else {

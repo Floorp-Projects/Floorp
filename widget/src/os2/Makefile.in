@@ -61,7 +61,7 @@ CPPSRCS		= \
 		nsBidiKeyboard.cpp \
 		nsClipboard.cpp \
 		nsFilePicker.cpp \
-		nsFrameWindow.cpp \
+		os2FrameWindow.cpp \
 		nsLookAndFeel.cpp \
 		nsOS2Uni.cpp \
 		nsPrintOS2.cpp \
@@ -89,6 +89,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
+		-llayers \
 		$(QCMS_LIBS) \
 		$(NULL)
 

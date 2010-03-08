@@ -54,12 +54,12 @@
 
 
 typedef int (*iw_open_t)(void);
-  
+
 typedef void (*iw_enum_t)(int	skfd,
 			  iw_enum_handler fn,
 			  char *args[],
 			  int count);
-  
+
 typedef  int (*iw_stats_t)(int skfd,
 			   const char *ifname,
 			   iwstats *stats,
@@ -94,7 +94,7 @@ static int scan_wifi(int skfd, char* ifname, char* args[], int count)
     delete ap;
     return 0;
   }
-  
+
   ap->setSSID(buffer, wrq.u.essid.length);
 
   result = iw_get_ext(skfd, ifname, SIOCGIWAP, &wrq);
@@ -160,19 +160,19 @@ nsWifiMonitor::DoScan()
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
   char* args[] = {(char*) &accessPoints, (char*) iw_stats, nsnull };
- 
+
   while (mKeepGoing) {
 
     accessPoints.Clear();
 
     (*iw_enum)(skfd, &scan_wifi, args, 1);
-    
+
     PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
     nsCOMArray<nsIWifiListener> currentListeners;
 
     {
       nsAutoMonitor mon(mMonitor);
-    
+
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
           mListeners[i].mHasSentData = PR_TRUE;
@@ -196,9 +196,9 @@ nsWifiMonitor::DoScan()
         result[i] = lastAccessPoints[i];
 
       for (PRInt32 i = 0; i < currentListeners.Count(); i++) {
-        
+
         LOG(("About to send data to the wifi listeners\n"));
-        
+
         nsCOMPtr<nsIWifiListener> proxy;
         nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
         proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
@@ -220,8 +220,7 @@ nsWifiMonitor::DoScan()
     }
 
     LOG(("waiting on monitor\n"));
-    
-    
+
     nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }

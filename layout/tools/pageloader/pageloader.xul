@@ -46,11 +46,11 @@
   screenX="0" screenY="0"
   onload="plInit()">
 
-  <script type="application/x-javascript" 
+  <script type="application/javascript"
           src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="report.js"></script>
-  <script type="application/x-javascript" src="pageloader.js"></script>
-  <script type="application/x-javascript" src="quit.js"></script>
+  <script type="application/javascript" src="report.js"/>
+  <script type="application/javascript" src="pageloader.js"/>
+  <script type="application/javascript" src="quit.js"/>
 
   <browser id="contentPageloader" src="about:blank" 
     type="content" flex="1"/>

@@ -60,7 +60,7 @@ typedef long           GLfixed;
 //typedef signed octet GLbyte;
 
 //typedef unsigned long  GLintptr;
-typedef long  GLsizeiptr;
+//typedef long  GLsizeiptr;
 
 %{C++
 namespace js {
@@ -599,15 +599,15 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void blendFunc (in GLenum sfactor, in GLenum dfactor);
   void blendFuncSeparate (in GLenum srcRGB, in GLenum dstRGB, in GLenum srcAlpha, in GLenum dstAlpha);
 
-  // Modified: void glBufferData (GLenum target, GLsizeiptr size, const void* data, GLenum usage);
+  // Modified: void glBufferData (GLenum target, long size, const void* data, GLenum usage);
   void bufferData([optional] in long dummy);
   [noscript] void bufferData_size (in GLenum target, in GLsizei size, in GLenum usage);
   [noscript] void bufferData_buf (in GLenum target, in WebGLArrayBufferPtr data, in GLenum usage);
   [noscript] void bufferData_array (in GLenum target, in WebGLArrayPtr data, in GLenum usage);
 
   void bufferSubData([optional] in long dummy);
-  [noscript] void bufferSubData_buf (in GLenum target, in GLsizeiptr offset, in WebGLArrayBufferPtr data);
-  [noscript] void bufferSubData_array (in GLenum target, in GLsizeiptr offset, in WebGLArrayPtr data);
+  [noscript] void bufferSubData_buf (in GLenum target, in long offset, in WebGLArrayBufferPtr data);
+  [noscript] void bufferSubData_array (in GLenum target, in long offset, in WebGLArrayPtr data);
 
   GLenum checkFramebufferStatus (in GLenum target);
   void clear (in GLbitfield mask);

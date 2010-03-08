@@ -164,7 +164,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     PRInt32 rmode;
     if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
-        if (rmode >= 0 || rmode < RENDER_MODE_MAX) {
+        if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
 #ifndef CAIRO_HAS_DDRAW_SURFACE
             if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
                 rmode = RENDER_IMAGE_STRETCH24;
@@ -173,6 +173,9 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 #ifndef CAIRO_HAS_D2D_SURFACE
                 return;
 #else
+                if (!cairo_d2d_has_support()) {
+                    return;
+                }
 #ifdef CAIRO_HAS_DWRITE_FONT
                 if (!GetDWriteFactory()) {
 #endif

@@ -46,7 +46,7 @@
 
 static const nsStaticAtom MoreTestingAtoms_info[] = {
 
-#define MORE_TESTING_ATOM(name_, value_) { value_, &MoreTestingAtoms::name_ },
+#define MORE_TESTING_ATOM(name_, value_) NS_STATIC_ATOM(value_, &MoreTestingAtoms::name_),
 #include "MoreTestingAtomList.h"
 #undef MORE_TESTING_ATOM
 };

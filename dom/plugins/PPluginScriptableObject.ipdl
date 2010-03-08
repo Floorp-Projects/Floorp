@@ -65,7 +65,7 @@ rpc protocol PPluginScriptableObject
   manager PPluginInstance;
 
 both:
-  rpc __delete__();
+  async __delete__();
 
 parent:
   rpc NPN_Evaluate(nsCString aScript)
@@ -118,8 +118,8 @@ both:
   // are protected after an NPObject has been associated with the protocol
   // object. Sending the protocol object as an argument to the other process
   // temporarily protects the protocol object again for the duration of the call.
-  rpc Protect();
-  rpc Unprotect();
+  async Protect();
+  async Unprotect();
 };
 
 } // namespace plugins
