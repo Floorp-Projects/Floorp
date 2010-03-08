@@ -27,7 +27,7 @@ window.onerror = function(message, uri, line) {
 <script type="application/javascript">
 window.onerror = function(message, uri, line) {
   is(message, "c is not defined", "Should have correct error message");
-  is(uri, "http://mochi.test:8888/tests/content/base/test/bug461735-post-redirect.js", "Unexpected error location URI");
+  is(uri, "http://localhost:8888/tests/content/base/test/bug461735-post-redirect.js", "Unexpected error location URI");
   is(line, 3, "Should have a line here");
 }
 </script>

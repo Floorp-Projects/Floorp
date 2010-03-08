@@ -52,7 +52,7 @@ var sink = {
   }
 };
 
-var transport = socketTransportService.createTransport(["ssl"], 1, "127.0.0.1", 4443, null);
+var transport = socketTransportService.createTransport(["ssl"], 1, "localhost", 4443, null);
 
 transport.setEventSink(sink, currentThread);
 

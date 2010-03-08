@@ -215,7 +215,6 @@ class XPCShellTests(object):
       cmdT = ", ".join(['"' + f.replace('\\', '/') + '"'
                  for f in testTailFiles])
       cmdH = xpcsCmd + \
-                ['-e', 'const _SERVER_ADDR = "localhost";'] + \
                 ['-e', 'const _HEAD_FILES = [%s];' % cmdH] + \
                 ['-e', 'const _TAIL_FILES = [%s];' % cmdT]
 

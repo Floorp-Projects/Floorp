@@ -39,7 +39,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  let testURL = "http://mochi.test:8888/browser/" +
+  let testURL = "http://localhost:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_461743_sample.html";
 
   let frameCount = 0;
