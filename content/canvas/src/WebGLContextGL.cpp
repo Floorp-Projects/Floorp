@@ -932,7 +932,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 
     MakeContextCurrent();
 
-    gl->fFramebufferTexture2D(target, attachment, textarget, tex->GLName(), level);
+    gl->fFramebufferTexture2D(target, attachment, textarget, tex ? tex->GLName() : 0, level);
 
     return NS_OK;
 }
