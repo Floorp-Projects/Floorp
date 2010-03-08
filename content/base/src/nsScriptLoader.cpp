@@ -584,7 +584,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("New ScriptLoader i ****with CSP****"));
       PRBool inlineOK;
       // this call will send violation reports when necessary
-      rv = NS_SUCCEEDED(csp->GetAllowsInlineScript(&inlineOK));
+      rv = csp->GetAllowsInlineScript(&inlineOK);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!inlineOK) {
