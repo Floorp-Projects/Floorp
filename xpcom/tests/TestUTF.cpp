@@ -140,6 +140,32 @@ test_malformed8()
   return PR_TRUE;
 }
 
+PRBool
+test_hashas16()
+{
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
+    nsDependentCString str8(ValidStrings[i].m8);
+    if (nsCRT::HashCode(ValidStrings[i].m16) !=
+        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()))
+      return PR_FALSE;
+  }
+
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
+    nsDependentCString str8(Invalid8Strings[i].m8);
+    if (nsCRT::HashCode(Invalid8Strings[i].m16) !=
+        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()))
+      return PR_FALSE;
+  }
+
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
+    nsDependentCString str8(Malformed8Strings[i]);
+    if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length()) != 0)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 typedef PRBool (*TestFunc)();
 
 static const struct Test
@@ -156,6 +182,7 @@ tests[] =
     // Don't run this test in debug builds as that intentionally asserts
     { "test_malformed8", test_malformed8 },
 #endif
+    { "test_hashas16", test_hashas16 },
     { nsnull, nsnull }
   };
 

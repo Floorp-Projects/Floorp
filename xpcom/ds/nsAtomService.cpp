@@ -59,7 +59,7 @@ nsAtomService::GetAtom(const nsAString& aString, nsIAtom ** aResult)
 nsresult
 nsAtomService::GetPermanentAtom(const nsAString& aString, nsIAtom ** aResult)
 {
-  *aResult = NS_NewPermanentAtom(NS_ConvertUTF16toUTF8(aString));
+  *aResult = NS_NewPermanentAtom(aString);
 
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -81,7 +81,7 @@ nsAtomService::GetAtomUTF8(const char *aValue, nsIAtom* *aResult)
 NS_IMETHODIMP
 nsAtomService::GetPermanentAtomUTF8(const char *aValue, nsIAtom* *aResult)
 {
-    *aResult = NS_NewPermanentAtom(nsDependentCString(aValue));
+    *aResult = NS_NewPermanentAtom(NS_ConvertUTF8toUTF16(aValue));
 
     if (!*aResult)
         return NS_ERROR_OUT_OF_MEMORY;

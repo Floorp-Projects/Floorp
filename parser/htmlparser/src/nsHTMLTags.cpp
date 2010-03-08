@@ -368,12 +368,12 @@ nsHTMLTags::AddRefTable(void)
 
 
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(NS_STATIC_ATOM_USE_WIDE_STRINGS)
     {
       // let's verify that all names in the the table are lowercase...
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-        nsCAutoString temp1((char*)sTagAtoms_info[i].mStringBuffer->Data());
-        nsCAutoString temp2((char*)sTagAtoms_info[i].mStringBuffer->Data());
+        nsAutoString temp1((PRUnichar*)sTagAtoms_info[i].mStringBuffer->Data());
+        nsAutoString temp2((PRUnichar*)sTagAtoms_info[i].mStringBuffer->Data());
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
@@ -382,7 +382,7 @@ nsHTMLTags::AddRefTable(void)
       // correct.
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
         nsAutoString temp1(sTagUnicodeTable[i]);
-        nsAutoString temp2; temp2.AssignWithConversion((char*)sTagAtoms_info[i].mStringBuffer->Data());
+        nsAutoString temp2((PRUnichar*)sTagAtoms_info[i].mStringBuffer->Data());
         NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
       }
 

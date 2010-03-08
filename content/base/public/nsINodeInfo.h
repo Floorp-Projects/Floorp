@@ -270,9 +270,7 @@ public:
     if (!GetPrefixAtom())
       return Equals(aNameAtom);
 
-    const char* utf8;
-    aNameAtom->GetUTF8String(&utf8);
-    return QualifiedNameEqualsInternal(nsDependentCString(utf8));
+    return QualifiedNameEqualsInternal(nsAtomCString(aNameAtom));
   }
 
   PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const

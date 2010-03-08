@@ -942,13 +942,10 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 #ifdef NS_DEBUG
       {
         // Tracing code
-        const char *tagStr;
-        mStack[mStackPos].mContent->Tag()->GetUTF8String(&tagStr);
-
         SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                    ("SinkContext::CloseContainer: reflow on notifyImmediate "
                     "tag=%s newIndex=%d stackPos=%d",
-                    tagStr,
+                    nsAtomCString(mStack[mStackPos].mContent->Tag()).get(),
                     mStack[mStackPos].mNumFlushed, mStackPos));
       }
 #endif
@@ -1353,12 +1350,10 @@ SinkContext::FlushTags()
 #ifdef NS_DEBUG
         {
           // Tracing code
-          const char* tagStr;
-          mStack[stackPos].mContent->Tag()->GetUTF8String(&tagStr);
-
           SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                      ("SinkContext::FlushTags: tag=%s from newindex=%d at "
-                      "stackPos=%d", tagStr,
+                      "stackPos=%d",
+                      nsAtomCString(mStack[stackPos].mContent->Tag()).get(),
                       mStack[stackPos].mNumFlushed, stackPos));
         }
 #endif

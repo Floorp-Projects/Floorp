@@ -236,15 +236,13 @@ public:
   static PRUint32 HashCode(const PRUnichar* str,
                            PRUint32* resultingStrLen = nsnull);
 
-  // Computes a hashcode for a length number of UTF16
-  // characters. Returns the same hash code as the HashCode method
-  // taking a |char*| would if the string were converted to UTF8. This
-  // hash function treats invalid UTF16 data as 0xFFFD (0xEFBFBD in
-  // UTF-8).
-  static PRUint32 HashCodeAsUTF8(const PRUnichar* start, PRUint32 length);
-
   // Computes the hashcode for a buffer with a specified length.
-  static PRUint32 BufferHashCode(const PRUnichar* str, PRUint32 strLen);
+  static PRUint32 HashCode(const PRUnichar* str, PRUint32 strLen);
+
+  // Computes a hashcode for a length number of UTF8
+  // characters. Returns the same hash code as the HashCode method
+  // taking a |PRUnichar*| would if the string were converted to UTF16.
+  static PRUint32 HashCodeAsUTF16(const char* start, PRUint32 length);
 
   // String to longlong
   static PRInt64 atoll(const char *str);

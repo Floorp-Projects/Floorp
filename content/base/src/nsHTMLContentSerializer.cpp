@@ -69,8 +69,6 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 
-static const char kMozStr[] = "moz";
-
 static const PRInt32 kLongLineLen = 128;
 
 nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
@@ -123,10 +121,9 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
     nsIAtom* attrName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
-    const char* sharedName;
-    attrName->GetUTF8String(&sharedName);
-    if ((('_' == *sharedName) || ('-' == *sharedName)) &&
-        !nsCRT::strncmp(sharedName+1, kMozStr, PRUint32(sizeof(kMozStr)-1))) {
+    nsDependentAtomString attrNameStr(attrName);
+    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
+        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
       continue;
     }
     aContent->GetAttr(namespaceID, attrName, valueStr);

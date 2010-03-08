@@ -1408,20 +1408,17 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 
     // Ick. Construct a property from the attribute. Punt on
     // namespaces for now.
-    const char* attrstr;
-    rv = aAttribute->GetUTF8String(&attrstr);
-    if (NS_FAILED(rv)) return rv;
-
     // Don't bother with unreasonable attributes. We clamp long values,
     // but truncating attribute names turns it into a different attribute
     // so there's no point in persisting anything at all
-    if (!attrstr || strlen(attrstr) > kMaxAttrNameLength) {
+    nsAtomCString attrstr(aAttribute);
+    if (attrstr.Length() > kMaxAttrNameLength) {
         NS_WARNING("Can't persist, Attribute name too long");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
     nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetResource(nsDependentCString(attrstr),
+    rv = gRDFService->GetResource(attrstr,
                                   getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
