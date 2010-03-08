@@ -549,9 +549,6 @@ endif # MOZ_OPTIMIZE == 1
 endif # MOZ_OPTIMIZE
 endif # CROSS_COMPILE
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-OS_LIBS += $(MOZ_QT_LIBS)
-endif
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
@@ -635,6 +632,10 @@ ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
 else
 ELF_DYNSTR_GC	= :
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+OS_LIBS += $(MOZ_QT_LIBS)
 endif
 
 ifndef CROSS_COMPILE
