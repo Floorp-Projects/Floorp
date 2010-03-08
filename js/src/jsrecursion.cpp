@@ -156,9 +156,20 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     unsigned exitTypeMapLen = downPostSlots + 1 + ngslots;
     TraceType* exitTypeMap = (TraceType*)alloca(sizeof(TraceType) * exitTypeMapLen);
     TraceType* typeMap = downFrame->get_typemap();
+
+
+    /* Add stack slots. */
     for (unsigned i = 0; i < downPostSlots; i++)
         exitTypeMap[i] = typeMap[i];
-    exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
+
+    /* Add the return type. */
+    JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
+    if (*cx->fp->regs->pc == JSOP_RETURN)
+        exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
+    else
+        exitTypeMap[downPostSlots] = TT_PSEUDOBOOLEAN;
+
+    /* Add global types. */
     determineGlobalTypes(&exitTypeMap[downPostSlots + 1]);
 
     VMSideExit* exit = (VMSideExit*)
@@ -246,9 +257,9 @@ TraceRecorder::upRecursion()
          * This is always safe because this point is only reached on simple "call myself"
          * recursive functions.
          */
-        #if defined DEBUG
+#if defined DEBUG
         AssertDownFrameIsConsistent(cx, anchor, fi);
-        #endif
+#endif
         fi = anchor->recursive_down;
     } else if (recursive_pc != fragment->root->ip) {
         /*
@@ -296,12 +307,19 @@ TraceRecorder::upRecursion()
      */
     exit = downSnapshot(fi);
 
-    LIns* rval_ins = (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) ?
-                     get(&stackval(-1)) :
-                     NULL;
-    JS_ASSERT(rval_ins != NULL);
+    LIns* rval_ins;
+    if (*cx->fp->regs->pc == JSOP_RETURN) {
+        rval_ins = (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) ?
+                   get(&stackval(-1)) :
+                   NULL;
+        JS_ASSERT(rval_ins);
+    } else {
+        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+    }
+
     TraceType returnType = exit->stackTypeMap()[downPostSlots];
     if (returnType == TT_INT32) {
+        JS_ASSERT(*cx->fp->regs->pc == JSOP_RETURN);
         JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
         JS_ASSERT(isPromoteInt(rval_ins));
         rval_ins = demote(lir, rval_ins);
@@ -310,7 +328,10 @@ TraceRecorder::upRecursion()
     UpRecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(exit->stackType(i));
-    slotMap.addSlot(&stackval(-1));
+    if (*cx->fp->regs->pc == JSOP_RETURN)
+        slotMap.addSlot(&stackval(-1));
+    else
+        slotMap.addSlot(TT_PSEUDOBOOLEAN);
     VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     if (recursive_pc == (jsbytecode*)fragment->root->ip) {
         debug_only_print0(LC_TMTracer, "Compiling up-recursive loop...\n");
@@ -447,10 +468,15 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     cx->fp->regs->pc = exit->pc;
     CaptureStackTypes(cx, frameDepth, typeMap);
     cx->fp->regs->pc = oldpc;
-    if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT)
-        typeMap[downPostSlots] = determineSlotType(&stackval(-1));
-    else
+    if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
+        JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
+        if (*cx->fp->regs->pc == JSOP_RETURN)
+            typeMap[downPostSlots] = determineSlotType(&stackval(-1));
+        else
+            typeMap[downPostSlots] = TT_PSEUDOBOOLEAN;
+    } else {
         typeMap[downPostSlots] = anchor->stackTypeMap()[anchor->numStackSlots - 1];
+    }
     determineGlobalTypes(&typeMap[exit->numStackSlots]);
 #if defined JS_JIT_SPEW
     TreevisLogExit(cx, exit);
@@ -466,39 +492,43 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * grabbed safely.
      */
     LIns* rval_ins;
-    TraceType returnType = exit->stackTypeMap()[downPostSlots];
-    if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        rval_ins = get(&stackval(-1));
-        if (returnType == TT_INT32) {
-            JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
-            JS_ASSERT(isPromoteInt(rval_ins));
-            rval_ins = demote(lir, rval_ins);
+    if (*cx->fp->regs->pc == JSOP_RETURN) {
+        TraceType returnType = exit->stackTypeMap()[downPostSlots];
+        if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
+            rval_ins = get(&stackval(-1));
+            if (returnType == TT_INT32) {
+                JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
+                JS_ASSERT(isPromoteInt(rval_ins));
+                rval_ins = demote(lir, rval_ins);
+            }
+            /*
+             * The return value must be written out early, before slurping can fail,
+             * otherwise it will not be available when there's a type mismatch.
+             */
+            lir->insStorei(rval_ins, lirbuf->sp, exit->sp_adj - sizeof(double));
+        } else {
+            switch (returnType)
+            {
+              case TT_PSEUDOBOOLEAN:
+              case TT_INT32:
+                rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, exit->sp_adj - sizeof(double));
+                break;
+              case TT_DOUBLE:
+                rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, exit->sp_adj - sizeof(double));
+                break;
+              case TT_FUNCTION:
+              case TT_OBJECT:
+              case TT_STRING:
+              case TT_NULL:
+                rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, exit->sp_adj - sizeof(double));
+                break;
+              default:
+                JS_NOT_REACHED("unknown type");
+                RETURN_STOP_A("unknown type"); 
+            }
         }
-        /*
-         * The return value must be written out early, before slurping can fail,
-         * otherwise it will not be available when there's a type mismatch.
-         */
-        lir->insStorei(rval_ins, lirbuf->sp, exit->sp_adj - sizeof(double));
     } else {
-        switch (returnType)
-        {
-          case TT_PSEUDOBOOLEAN:
-          case TT_INT32:
-            rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, exit->sp_adj - sizeof(double));
-            break;
-          case TT_DOUBLE:
-            rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, exit->sp_adj - sizeof(double));
-            break;
-          case TT_FUNCTION:
-          case TT_OBJECT:
-          case TT_STRING:
-          case TT_NULL:
-            rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, exit->sp_adj - sizeof(double));
-            break;
-          default:
-            JS_NOT_REACHED("unknown type");
-            RETURN_STOP_A("unknown type"); 
-        }
+        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
     }
 
     /* Slurp */
@@ -560,7 +590,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     RecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(typeMap[i]);
-    slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
+    if (*cx->fp->regs->pc == JSOP_RETURN)
+        slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
+    else
+        slotMap.addSlot(TT_PSEUDOBOOLEAN);
     VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     debug_only_print0(LC_TMTracer, "Compiling up-recursive slurp...\n");
     exit = copy(exit);
