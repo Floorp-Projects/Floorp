@@ -4594,7 +4594,8 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      * case this loop was blacklisted in the meantime, JSOP_NOP.
      */
     JS_ASSERT((*cx->fp->regs->pc == JSOP_TRACE || *cx->fp->regs->pc == JSOP_NOP ||
-               *cx->fp->regs->pc == JSOP_RETURN) && !cx->fp->imacpc);
+               *cx->fp->regs->pc == JSOP_RETURN || *cx->fp->regs->pc == JSOP_STOP) &&
+              !cx->fp->imacpc);
 
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
@@ -14617,6 +14618,11 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
+    if (callDepth == 0 && IsTraceableRecursion(cx) &&
+        tree->recursion != Recursion_Disallowed &&
+        tree->script == cx->fp->script) {
+        return InjectStatus(upRecursion());
+    }
     JSStackFrame *fp = cx->fp;
 
     if (fp->imacpc) {
