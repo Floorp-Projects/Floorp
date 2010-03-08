@@ -194,6 +194,8 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (BOOL)isFirstResponder;
 
+- (BOOL)isDragInProgress;
+
 - (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown;
 
 @end
@@ -970,6 +972,9 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([mView isDragInProgress])
+    return NS_OK; // Don't change the cursor during dragging.
 
   nsBaseWidget::SetCursor(aCursor);
   [[nsCursorManager sharedInstance] setCursor: aCursor];
@@ -5370,6 +5375,16 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
+- (BOOL)isDragInProgress
+{
+  if (!mDragService)
+    return NO;
+
+  nsCOMPtr<nsIDragSession> dragSession;
+  mDragService->GetCurrentSession(getter_AddRefs(dragSession));
+  return dragSession != nsnull;
+}
+
 - (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -5476,16 +5491,28 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 // drag'n'drop stuff
 #define kDragServiceContractID "@mozilla.org/widget/dragservice;1"
 
+- (NSDragOperation)dragOperationForSession:(nsIDragSession*)aDragSession
+{
+  PRUint32 dragAction;
+  aDragSession->GetDragAction(&dragAction);
+  if (nsIDragService::DRAGDROP_ACTION_LINK & dragAction)
+    return NSDragOperationLink;
+  if (nsIDragService::DRAGDROP_ACTION_COPY & dragAction)
+    return NSDragOperationCopy;
+  if (nsIDragService::DRAGDROP_ACTION_MOVE & dragAction)
+    return NSDragOperationGeneric;
+  return NSDragOperationNone;
+}
+
 // This is a utility function used by NSView drag event methods
 // to send events. It contains all of the logic needed for Gecko
-// dragging to work. Returns YES if the event was handled, NO
-// if it wasn't.
-- (BOOL)doDragAction:(PRUint32)aMessage sender:(id)aSender
+// dragging to work. Returns the appropriate cocoa drag operation code.
+- (NSDragOperation)doDragAction:(PRUint32)aMessage sender:(id)aSender
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (!mGeckoChild)
-    return NO;
+    return NSDragOperationNone;
 
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView doDragAction: entered\n"));
 
@@ -5493,7 +5520,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     CallGetService(kDragServiceContractID, &mDragService);
     NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
     if (!mDragService)
-      return NO;
+      return NSDragOperationNone;
   }
 
   if (aMessage == NS_DRAGDROP_ENTER)
@@ -5520,7 +5547,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         if (!sourceNode) {
           mDragService->EndDragSession(PR_FALSE);
         }
-        return NO;
+        return NSDragOperationNone;
       }
     }
     
@@ -5549,24 +5576,31 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
-    return YES;
+    return NSDragOperationNone;
 
-  if ((aMessage == NS_DRAGDROP_EXIT || aMessage == NS_DRAGDROP_DROP) &&
-      dragSession) {
-    nsCOMPtr<nsIDOMNode> sourceNode;
-    dragSession->GetSourceNode(getter_AddRefs(sourceNode));
-    if (!sourceNode) {
-      // We're leaving a window while doing a drag that was
-      // initiated in a different app. End the drag session,
-      // since we're done with it for now (until the user
-      // drags back into mozilla).
-      mDragService->EndDragSession(PR_FALSE);
+  if (dragSession) {
+    switch (aMessage) {
+      case NS_DRAGDROP_ENTER:
+      case NS_DRAGDROP_OVER:
+        return [self dragOperationForSession:dragSession];
+      case NS_DRAGDROP_EXIT:
+      case NS_DRAGDROP_DROP: {
+        nsCOMPtr<nsIDOMNode> sourceNode;
+        dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+        if (!sourceNode) {
+          // We're leaving a window while doing a drag that was
+          // initiated in a different app. End the drag session,
+          // since we're done with it for now (until the user
+          // drags back into mozilla).
+          mDragService->EndDragSession(PR_FALSE);
+        }
+      }
     }
   }
 
-  return YES;
+  return NSDragOperationGeneric;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
@@ -5584,9 +5618,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   // the view or a drop happens within the view).
   globalDragPboard = [[sender draggingPasteboard] retain];
 
-  BOOL handled = [self doDragAction:NS_DRAGDROP_ENTER sender:sender];
-
-  return handled ? NSDragOperationGeneric : NSDragOperationNone;
+  return [self doDragAction:NS_DRAGDROP_ENTER sender:sender];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
@@ -5595,8 +5627,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingUpdated: entered\n"));
 
-  BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
-  return handled ? NSDragOperationGeneric : NSDragOperationNone;
+  return [self doDragAction:NS_DRAGDROP_OVER sender:sender];
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
@@ -5611,7 +5642,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  BOOL handled = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+  BOOL handled = [self doDragAction:NS_DRAGDROP_DROP sender:sender] != NSDragOperationNone;
   NS_IF_RELEASE(mDragService);
   return handled;
 }
