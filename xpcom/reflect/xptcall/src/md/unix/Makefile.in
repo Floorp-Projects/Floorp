@@ -55,6 +55,14 @@ CPPSRCS = $(error XPTCall not implemented on this platform!)
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+ifeq ($(OS_ARCH),SunOS)
+ifneq (86,$(findstring 86,$(OS_TEST)))
+# disable PGO for this directory with Sun Studio on SPARC because
+# compiling with xprofile=collect will insert code into nsXPTCStubBase::Stub##n
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+endif
+
 include $(topsrcdir)/config/config.mk
 
 ######################################################################
@@ -434,10 +442,6 @@ else
 ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
 endif
 else
-
-# disable PGO for this directory with Sun Studio on SPARC
-# because compiling with xprofile=collect will insert code into nsXPTCStubBase::Stub##n
-NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 ifdef HAVE_64BIT_OS
 ASFILES		:= xptcinvoke_asm_sparcv9_solaris_SUNW.s xptcstubs_asm_sparcv9_solaris.s
