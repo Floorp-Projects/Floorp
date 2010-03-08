@@ -85,7 +85,11 @@ protected:
 
   // nsHTMLImageAccessible
   already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
-  already_AddRefed<nsIAccessible>
+
+  /*
+   * Return the accessible for the area element.
+   */
+  already_AddRefed<nsAccessible>
     GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
 
   // Reference on linked map element if any.

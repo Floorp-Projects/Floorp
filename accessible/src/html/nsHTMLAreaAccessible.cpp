@@ -139,6 +139,18 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 // nsAccessible public implementation
 
 nsresult
+nsHTMLAreaAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  // Bypass the link states specialization for non links.
+  if (mRoleMapEntry && mRoleMapEntry->role != nsIAccessibleRole::ROLE_NOTHING
+                    && mRoleMapEntry->role != nsIAccessibleRole::ROLE_LINK) {
+    return nsAccessible::GetStateInternal(aState,aExtraState);
+  }
+
+  return nsHTMLLinkAccessible::GetStateInternal(aState,aExtraState);
+}
+
+nsresult
 nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                       PRBool aDeepestChild,
                                       nsIAccessible **aChild)
