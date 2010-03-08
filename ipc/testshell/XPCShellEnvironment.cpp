@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "XPCShellEnvironment.h"
-
 #include <stdlib.h>
 #include <errno.h>
 #ifdef HAVE_IO_H
@@ -45,10 +43,14 @@
 #include <unistd.h>     /* for isatty() */
 #endif
 
+#include "base/basictypes.h"
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
+
+#include "XPCShellEnvironment.h"
 
 #include "mozilla/XPCOM.h"
 
