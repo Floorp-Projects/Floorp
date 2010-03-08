@@ -567,8 +567,8 @@ private:
                                            if sprop->isMethod() */
 public:
     uint32          slot;               /* abstract index in object slots */
-    uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
 private:
+    uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
     uint8           flags;              /* flags, see below for defines */
 public:
     int16           shortid;            /* tinyid, or local arg/var index */
@@ -647,30 +647,30 @@ public:
     JSPropertyOp getter() const { return rawGetter; }
     bool hasDefaultGetter() const { return !rawGetter; }
     JSPropertyOp getterOp() const {
-        JS_ASSERT(!(attrs & JSPROP_GETTER));
+        JS_ASSERT(!hasGetterValue());
         return rawGetter;
     }
     JSObject *getterObject() const {
-        JS_ASSERT(attrs & JSPROP_GETTER);
+        JS_ASSERT(hasGetterValue());
         return js_CastAsObject(rawGetter);
     }
     jsval getterValue() const {
-        JS_ASSERT(attrs & JSPROP_GETTER);
+        JS_ASSERT(hasGetterValue());
         return rawGetter ? js_CastAsObjectJSVal(rawGetter) : JSVAL_VOID;
     }
 
     JSPropertyOp setter() const { return rawSetter; }
     bool hasDefaultSetter() const { return !rawSetter; }
     JSPropertyOp setterOp() const {
-        JS_ASSERT(!(attrs & JSPROP_SETTER));
+        JS_ASSERT(!hasSetterValue());
         return rawSetter;
     }
     JSObject *setterObject() const {
-        JS_ASSERT((attrs & JSPROP_SETTER) && rawSetter);
+        JS_ASSERT(hasSetterValue() && rawSetter);
         return js_CastAsObject(rawSetter);
     }
     jsval setterValue() const {
-        JS_ASSERT(attrs & JSPROP_SETTER);
+        JS_ASSERT(hasSetterValue());
         return rawSetter ? js_CastAsObjectJSVal(rawSetter) : JSVAL_VOID;
     }
 
@@ -684,14 +684,26 @@ public:
 
     void trace(JSTracer *trc);
 
-    bool configurable() { return (attrs & JSPROP_PERMANENT) == 0; }
-    bool enumerable() { return (attrs & JSPROP_ENUMERATE) != 0; }
-    bool writable() { return (attrs & JSPROP_READONLY) == 0; }
+    bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
-    bool isDataDescriptor() {
+    uint8 attributes() const { return attrs; }
+    bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }
+    bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
+    bool writable() const {
+        // JS_ASSERT(isDataDescriptor());
+        return (attrs & JSPROP_READONLY) == 0;
+    }
+    bool hasGetterValue() const { return attrs & JSPROP_GETTER; }
+    bool hasSetterValue() const { return attrs & JSPROP_SETTER; }
+
+    bool hasDefaultGetterOrIsMethod() const {
+        return hasDefaultGetter() || isMethod();
+    }
+
+    bool isDataDescriptor() const {
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) == 0;
     }
-    bool isAccessorDescriptor() {
+    bool isAccessorDescriptor() const {
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
     }
 
@@ -818,12 +830,6 @@ JSScope::insertDictionaryProperty(JSScopeProperty *sprop, JSScopeProperty **chil
 #define SLOT_IN_SCOPE(slot,scope)         ((slot) < (scope)->freeslot)
 #define SPROP_HAS_VALID_SLOT(sprop,scope) SLOT_IN_SCOPE((sprop)->slot, scope)
 
-#define SPROP_HAS_STUB_GETTER(sprop)    ((sprop)->hasDefaultGetter())
-#define SPROP_HAS_STUB_SETTER(sprop)    ((sprop)->hasDefaultSetter())
-
-#define SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop)                             \
-    (SPROP_HAS_STUB_GETTER(sprop) || (sprop)->isMethod())
-
 #ifndef JS_THREADSAFE
 # define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
 #endif
@@ -896,10 +902,10 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp)
 inline bool
 JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
 {
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(this));
     JS_ASSERT(!JSVAL_IS_NULL(this->id));
+    JS_ASSERT(!hasDefaultGetter());
 
-    if (attrs & JSPROP_GETTER) {
+    if (hasGetterValue()) {
         JS_ASSERT(!isMethod());
         jsval fval = getterValue();
         return js_InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
@@ -927,7 +933,7 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
 inline bool
 JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
 {
-    JS_ASSERT_IF(SPROP_HAS_STUB_SETTER(this), attrs & JSPROP_GETTER);
+    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
         jsval fval = setterValue();
@@ -944,8 +950,11 @@ JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
 }
 
 /* Macro for common expression to test for shared permanent attributes. */
-#define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
-    ((~(sprop)->attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0)
+inline bool
+SPROP_IS_SHARED_PERMANENT(JSScopeProperty *sprop)
+{
+    return !sprop->hasSlot() && !sprop->configurable();
+}
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);

@@ -1681,7 +1681,8 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
              * the property, there is no way to tell whether it is directly
              * owned, or indirectly delegated.
              */
-            if (!SPROP_IS_SHARED_PERMANENT((JSScopeProperty *) *propp)) {
+            JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(*propp);
+            if (!SPROP_IS_SHARED_PERMANENT(sprop)) {
                 (*objp)->dropProperty(cx, *propp);
                 *propp = NULL;
             }
@@ -1884,7 +1885,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, jsval *vp)
     if (prop) {
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
-            if (sprop->attrs & JSPROP_GETTER)
+            if (sprop->hasGetterValue())
                 *vp = sprop->getterValue();
         }
         pobj->dropProperty(cx, prop);
@@ -1909,7 +1910,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
     if (prop) {
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
-            if (sprop->attrs & JSPROP_SETTER)
+            if (sprop->hasSetterValue())
                 *vp = sprop->setterValue();
         }
         pobj->dropProperty(cx, prop);
@@ -2302,17 +2303,13 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
 
             if (desc.hasGet &&
                 !js_SameValue(desc.getterValue(),
-                              (sprop->attrs & JSPROP_GETTER)
-                              ? sprop->getterValue()
-                              : JSVAL_VOID, cx)) {
+                              sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID, cx)) {
                 break;
             }
 
             if (desc.hasSet &&
                 !js_SameValue(desc.setterValue(),
-                              (sprop->attrs & JSPROP_SETTER)
-                              ? sprop->setterValue()
-                              : JSVAL_VOID, cx)) {
+                              sprop->hasSetterValue() ? sprop->setterValue() : JSVAL_VOID, cx)) {
                 break;
             }
         } else {
@@ -2348,7 +2345,7 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
                  * for now we'll simply forbid their redefinition.
                  */
                 if (!sprop->configurable() &&
-                    (!SPROP_HAS_STUB_GETTER(sprop) || !SPROP_HAS_STUB_SETTER(sprop))) {
+                    (!sprop->hasDefaultGetter() || !sprop->hasDefaultSetter())) {
                     return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                                   throwError, desc.id, rval);
                 }
@@ -2424,12 +2421,11 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
         if (!sprop->configurable()) {
             if ((desc.hasSet &&
                  !js_SameValue(desc.setterValue(),
-                               (sprop->attrs & JSPROP_SETTER) ? sprop->setterValue() : JSVAL_VOID,
+                               sprop->hasSetterValue() ? sprop->setterValue() : JSVAL_VOID,
                                cx)) ||
                 (desc.hasGet &&
                  !js_SameValue(desc.getterValue(),
-                               (sprop->attrs & JSPROP_GETTER) ? sprop->getterValue() : JSVAL_VOID,
-                               cx)))
+                               sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID, cx)))
             {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
@@ -2447,7 +2443,7 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
         if (desc.hasEnumerable)
             changed |= JSPROP_ENUMERATE;
 
-        attrs = (sprop->attrs & ~changed) | (desc.attrs & changed);
+        attrs = (sprop->attributes() & ~changed) | (desc.attrs & changed);
         getter = sprop->getter();
         setter = sprop->setter();
     } else if (desc.isDataDescriptor()) {
@@ -2461,7 +2457,7 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
 
         if (desc.hasValue)
             v = desc.value;
-        attrs = (desc.attrs & ~unchanged) | (sprop->attrs & unchanged);
+        attrs = (desc.attrs & ~unchanged) | (sprop->attributes() & unchanged);
         getter = setter = JS_PropertyStub;
     } else {
         JS_ASSERT(desc.isAccessorDescriptor());
@@ -2488,7 +2484,7 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
         if (desc.hasSet)
             changed |= JSPROP_SETTER | JSPROP_SHARED;
 
-        attrs = (desc.attrs & changed) | (sprop->attrs & ~changed);
+        attrs = (desc.attrs & changed) | (sprop->attributes() & ~changed);
         if (desc.hasGet)
             getter = desc.getterObject() ? desc.getter() : JS_PropertyStub;
         else
@@ -4417,9 +4413,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
             return JS_FALSE;
         sprop = (JSScopeProperty *) prop;
-        if (sprop &&
-            pobj == obj &&
-            (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+        if (sprop && pobj == obj && sprop->isAccessorDescriptor()) {
             sprop = OBJ_SCOPE(obj)->changeProperty(cx, sprop, attrs,
                                                    JSPROP_GETTER | JSPROP_SETTER,
                                                    (attrs & JSPROP_GETTER)
@@ -4904,7 +4898,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     *vp = (slot != SPROP_INVALID_SLOT)
           ? LOCKED_OBJ_GET_SLOT(pobj, slot)
           : JSVAL_VOID;
-    if (SPROP_HAS_STUB_GETTER(sprop))
+    if (sprop->hasDefaultGetter())
         return true;
 
     if (JS_UNLIKELY(sprop->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
@@ -4955,7 +4949,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
         OBJ_CHECK_SLOT(obj, slot);
 
         /* If sprop has a stub setter, keep scope locked and just store *vp. */
-        if (SPROP_HAS_STUB_SETTER(sprop)) {
+        if (sprop->hasDefaultSetter()) {
             if (!added && !scope->methodWriteBarrier(cx, sprop, *vp)) {
                 JS_UNLOCK_SCOPE(cx, scope);
                 return false;
@@ -4970,7 +4964,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
          * not writable, so attempting to set such a property should do nothing
          * or throw if we're in strict mode.
          */
-        if (!(sprop->attrs & JSPROP_GETTER) && SPROP_HAS_STUB_SETTER(sprop))
+        if (!sprop->hasGetterValue() && sprop->hasDefaultSetter())
             return js_ReportGetterOnlyAssignment(cx);
     }
 
@@ -5227,9 +5221,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          */
         scope = OBJ_SCOPE(pobj);
 
-        attrs = sprop->attrs;
-        if ((attrs & JSPROP_READONLY) ||
-            (scope->sealed() && (attrs & JSPROP_SHARED))) {
+        if (!sprop->writable() || (scope->sealed() && !sprop->hasSlot())) {
             JS_UNLOCK_SCOPE(cx, scope);
 
             /*
@@ -5241,7 +5233,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * read_only_error;' case.
              */
             flags = JSREPORT_ERROR;
-            if (attrs & JSPROP_READONLY) {
+            if (!sprop->writable()) {
                 if (!JS_HAS_STRICT_OPTION(cx)) {
                     /* Just return true per ECMA if not in strict mode. */
                     PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
@@ -5262,6 +5254,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             goto read_only_error;
         }
 
+        attrs = sprop->attributes();
         if (pobj != obj) {
             /*
              * We found id in a prototype object: prepare to share or shadow.
@@ -5272,8 +5265,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              */
             JS_UNLOCK_SCOPE(cx, scope);
 
-            /* Don't clone a shared prototype property. */
-            if (attrs & JSPROP_SHARED) {
+            /* Don't clone a prototype property that doesn't have a slot. */
+            if (!sprop->hasSlot()) {
                 if (defineHow & JSDNP_CACHE_RESULT) {
                     JS_ASSERT_NOT_ON_TRACE(cx);
                     JSPropCacheEntry *entry;
@@ -5281,10 +5274,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                     TRACE_2(SetPropHit, entry, sprop);
                 }
 
-                if (SPROP_HAS_STUB_SETTER(sprop) &&
-                    !(sprop->attrs & JSPROP_GETTER)) {
+                if (sprop->hasDefaultSetter() && !sprop->hasGetterValue())
                     return JS_TRUE;
-                }
 
                 return sprop->set(cx, obj, vp);
             }
@@ -5424,7 +5415,7 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
         }
     }
     sprop = (JSScopeProperty *)prop;
-    *attrsp = sprop->attrs;
+    *attrsp = sprop->attributes();
     if (noprop)
         obj->dropProperty(cx, prop);
     return JS_TRUE;
@@ -5501,7 +5492,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     }
 
     sprop = (JSScopeProperty *)prop;
-    if (sprop->attrs & JSPROP_PERMANENT) {
+    if (!sprop->configurable()) {
         obj->dropProperty(cx, prop);
         *rval = JSVAL_FALSE;
         return JS_TRUE;
@@ -5555,9 +5546,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
                 }
             }
 
-            if (sprop &&
-                SPROP_HAS_STUB_GETTER(sprop) &&
-                SPROP_HAS_VALID_SLOT(sprop, scope)) {
+            if (sprop && sprop->hasDefaultGetter() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
                 jsval fval = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
 
                 if (VALUE_IS_FUNCTION(cx, fval)) {
@@ -5938,7 +5927,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         }
 
         sprop = (JSScopeProperty *)prop;
-        *attrsp = sprop->attrs;
+        *attrsp = sprop->attributes();
         if (!writing) {
             *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
                   ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
@@ -6897,7 +6886,7 @@ static void
 dumpScopeProp(JSScopeProperty *sprop)
 {
     jsid id = sprop->id;
-    uint8 attrs = sprop->attrs;
+    uint8 attrs = sprop->attributes();
 
     fprintf(stderr, "    ");
     if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
