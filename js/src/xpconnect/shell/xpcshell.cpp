@@ -45,11 +45,6 @@
 
 /* XPConnect JavaScript interactive shell. */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentProcessParent.h"
-#include "mozilla/ipc/TestShellParent.h"
-#endif
-
 #include <stdio.h>
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -92,6 +87,11 @@
 #endif
 #ifdef __SYMBIAN32__
 #include <unistd.h>
+#endif
+
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/ipc/TestShellParent.h"
 #endif
 
 #ifndef XPCONNECT_STANDALONE

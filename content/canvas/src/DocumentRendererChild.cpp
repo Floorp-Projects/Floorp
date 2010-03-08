@@ -46,7 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
@@ -118,9 +118,9 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window, const PRInt32& x, co
         return false;
 
     nscolor bgColor;
-    nsCOMPtr<nsICSSParser> parser = do_CreateInstance("@mozilla.org/content/css-parser;1");
-    nsresult rv = parser->ParseColorString(PromiseFlatString(aBGColor),
-                                           nsnull, 0, &bgColor);
+    nsCSSParser parser;
+    nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
+                                          nsnull, 0, &bgColor);
     if (NS_FAILED(rv))
         return false;
 
@@ -138,10 +138,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window, const PRInt32& x, co
                                                          4 * _width, gfxASurface::ImageFormatARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
 
-    PRBool oldDisableValue = nsLayoutUtils::sDisableGetUsedXAssertions;
-    nsLayoutUtils::sDisableGetUsedXAssertions = oldDisableValue || !flush;
     presShell->RenderDocument(r, flags, bgColor, ctx);
-    nsLayoutUtils::sDisableGetUsedXAssertions = oldDisableValue;
 
     return true;
 }
