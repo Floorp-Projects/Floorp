@@ -63,7 +63,25 @@ if __name__ == '__main__':
   t.setDaemon(True) # don't hang on exit
   t.start()
 
-  automation.initializeProfile(PROFILE_DIRECTORY)
+  # since this requires localhost, we cannot use automation.initializeProfile
+  try:
+    os.makedirs(PROFILE_DIRECTORY)
+  except:
+    pass # leaf directory already exists
+
+  prefsFile = open(PROFILE_DIRECTORY + "/" + "user.js", "w")
+  prefsFile.write('user_pref("dom.popup_maximum", -1);')
+  prefsFile.write('user_pref("dom.disable_open_during_load", false);')
+  prefsFile.write('user_pref("browser.shell.checkDefaultBrowser", false);')
+  prefsFile.write('user_pref("browser.warnOnQuit", false);')
+  prefsFile.write('user_pref("dom.allow_scripts_to_close_windows", true);')
+  prefsFile.write('user_pref("capability.principal.codebase.p0.granted", \
+                  "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
+                   UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");\n')
+  prefsFile.write('user_pref("capability.principal.codebase.p0.id", "http://localhost:%s");\n' % PORT)
+  prefsFile.write('user_pref("capability.principal.codebase.p0.subjectName", "");\n')
+  prefsFile.close()
+
   browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
 
