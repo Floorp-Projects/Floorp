@@ -40,6 +40,7 @@
 
 #include "nsHtml5StreamParser.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 #include "nsServiceManagerUtils.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
@@ -214,7 +215,7 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
   if (aConf == eBestAnswer || aConf == eSureAnswer) {
     mCharset.Assign(aCharset);
     mCharsetSource = kCharsetFromAutoDetection;
-    mTreeBuilder->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   }
   return NS_OK;
 }
@@ -233,7 +234,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
     mCharset.Assign("windows-1252"); // lower case is the raw form
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
     rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
-    mTreeBuilder->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   }
   NS_ENSURE_SUCCESS(rv, rv);
   mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
@@ -271,7 +272,7 @@ nsHtml5StreamParser::SetupDecodingFromBom(const char* aCharsetName, const char* 
   NS_ENSURE_SUCCESS(rv, rv);
   mCharset.Assign(aCharsetName);
   mCharsetSource = kCharsetFromByteOrderMark;
-  mTreeBuilder->SetDocumentCharset(mCharset);
+  mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   mSniffingBuffer = nsnull;
   mMetaScanner = nsnull;
   mBomState = BOM_SNIFFING_OVER;
@@ -309,7 +310,7 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
     // Hopefully this case is never needed, but dealing with it anyway
     mCharset.Assign("windows-1252");
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
-    mTreeBuilder->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   }
   return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
 }
@@ -404,7 +405,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
       mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
       // meta scan successful
       mCharsetSource = kCharsetFromMetaPrescan;
-      mTreeBuilder->SetDocumentCharset(mCharset);
+      mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
       mMetaScanner = nsnull;
       return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
     }
@@ -417,7 +418,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   if (mUnicodeDecoder) {
     // meta scan successful
     mCharsetSource = kCharsetFromMetaPrescan;
-    mTreeBuilder->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
     mMetaScanner = nsnull;
     return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
   }
