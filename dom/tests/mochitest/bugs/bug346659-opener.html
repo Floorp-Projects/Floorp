@@ -8,7 +8,7 @@
       } else if ("write" in cmd) {
         window.testNum = cmd.write;
       }
-      window.opener.postMessage(s, "http://mochi.test:8888");
+      window.opener.postMessage(s, "http://localhost:8888/");
     }
     var childWin = window.open();
   </script>

@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
   let tab = gBrowser.selectedTab = gBrowser.addTab(
-    "http://mochi.test:8888/browser/browser/base/content/test/browser_bug479408_sample.html");
+    "http://localhost:8888/browser/browser/base/content/test/browser_bug479408_sample.html");
   
   gBrowser.addEventListener("DOMLinkAdded", function(aEvent) {
     gBrowser.removeEventListener("DOMLinkAdded", arguments.callee, true);
