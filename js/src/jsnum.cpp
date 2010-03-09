@@ -73,6 +73,7 @@
 #include "jsstrinlines.h"
 #include "jsvector.h"
 
+using namespace js;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
 
@@ -943,7 +944,6 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
 {
     jsval v;
     JSString *str;
-    const jschar *bp, *end, *ep;
     jsdouble d;
     JSObject *obj;
 
@@ -956,26 +956,8 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
         if (JSVAL_IS_STRING(v)) {
             str = JSVAL_TO_STRING(v);
 
-            /*
-             * Note that ECMA doesn't treat a string beginning with a '0' as
-             * an octal number here. This works because all such numbers will
-             * be interpreted as decimal by js_strtod and will never get
-             * passed to js_strtointeger (which would interpret them as
-             * octal).
-             */
-            str->getCharsAndEnd(bp, end);
-
-            /* ECMA doesn't allow signed hex numbers (bug 273467). */
-            bp = js_SkipWhiteSpace(bp, end);
-            if (bp + 2 < end && (*bp == '-' || *bp == '+') &&
-                bp[1] == '0' && (bp[2] == 'X' || bp[2] == 'x')) {
-                break;
-            }
-
-            if ((!js_strtod(cx, bp, end, &ep, &d) ||
-                 js_SkipWhiteSpace(ep, end) != end) &&
-                (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
-                 js_SkipWhiteSpace(ep, end) != end)) {
+            d = StringToNumberType<jsdouble>(cx, str);
+            if (JSDOUBLE_IS_NaN(d)) {
                 break;
             }
 

@@ -187,45 +187,14 @@ JS_DEFINE_CALLINFO_1(extern, UINT32, js_DoubleToUint32, DOUBLE, 1, ACC_NONE)
 jsdouble FASTCALL
 js_StringToNumber(JSContext* cx, JSString* str)
 {
-    const jschar* bp;
-    const jschar* end;
-    const jschar* ep;
-    jsdouble d;
-
-    str->getCharsAndEnd(bp, end);
-    if ((!js_strtod(cx, bp, end, &ep, &d) ||
-         js_SkipWhiteSpace(ep, end) != end) &&
-        (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
-         js_SkipWhiteSpace(ep, end) != end)) {
-        return js_NaN;
-    }
-    return d;
+    return StringToNumberType<jsdouble>(cx, str);
 }
 JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_StringToNumber, CONTEXT, STRING, 1, ACC_NONE)
 
 int32 FASTCALL
 js_StringToInt32(JSContext* cx, JSString* str)
 {
-    const jschar* bp;
-    const jschar* end;
-    const jschar* ep;
-    jsdouble d;
-
-    if (str->length() == 1) {
-        jschar c = str->chars()[0];
-        if ('0' <= c && c <= '9')
-            return c - '0';
-        return 0;	
-    }
-
-    str->getCharsAndEnd(bp, end);
-    if ((!js_strtod(cx, bp, end, &ep, &d) ||
-         js_SkipWhiteSpace(ep, end) != end) &&
-        (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
-         js_SkipWhiteSpace(ep, end) != end)) {
-        return 0;
-    }
-    return js_DoubleToECMAInt32(d);
+    return StringToNumberType<int32>(cx, str);
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACC_NONE)
 
