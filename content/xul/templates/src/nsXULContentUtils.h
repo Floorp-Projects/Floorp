@@ -106,6 +106,18 @@ class nsICollation;
         "XPath expression in <assign> could not be parsed"
 #define ERROR_TEMPLATE_BAD_BINDING_XPATH                                \
         "XPath expression in <binding> could not be parsed"
+#define ERROR_TEMPLATE_STORAGE_BAD_URI                                  \
+        "only profile: or file URI are allowed"
+#define ERROR_TEMPLATE_STORAGE_CANNOT_OPEN_DATABASE                     \
+        "cannot open given database"
+#define ERROR_TEMPLATE_STORAGE_BAD_QUERY                                \
+        "syntax error in the SQL query"
+#define ERROR_TEMPLATE_STORAGE_UNKNOWN_QUERY_PARAMETER                   \
+        "the given named parameter is unknown in the SQL query"
+#define ERROR_TEMPLATE_STORAGE_WRONG_TYPE_QUERY_PARAMETER               \
+        "the type of a query parameter is wrong"
+#define ERROR_TEMPLATE_STORAGE_QUERY_PARAMETER_NOT_BOUND                \
+        "a query parameter cannot be bound to the SQL query"
 
 class nsXULContentUtils
 {

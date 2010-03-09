@@ -159,6 +159,9 @@ _TEST_FILES = \
 		test_tmpl_sortquerymemberandtwotriples.xul \
 		test_tmpl_storage_baddatasource.xul \
 		test_tmpl_storage_badquery.xul \
+		test_tmpl_storage_bad_parameters.xul \
+		test_tmpl_storage_bad_parameters_2.xul \
+		test_tmpl_storage_bad_parameters_3.xul \
 		test_tmpl_storage_dynamicparameters.xul \
 		test_tmpl_storage_listbox.xul \
 		test_tmpl_storage_multiqueries.xul \
