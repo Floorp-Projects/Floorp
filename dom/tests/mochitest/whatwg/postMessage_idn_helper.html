@@ -9,7 +9,7 @@
 
       if (!(evt instanceof MessageEvent))
         response += " not-a-MessageEvent";
-      if (evt.origin !== "http://mochi.test:8888")
+      if (evt.origin !== "http://localhost:8888")
         response += " wrong-sender-origin(" + evt.origin + ")";
       if (evt.data !== "idn-message")
         response += " wrong-data(" + evt.data + ")";

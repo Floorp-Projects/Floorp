@@ -12,10 +12,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=465263
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=465263">Mozilla Bug 465263</a>
 <p id="display">
-  <iframe src="http://mochi.test:8888"></iframe>
-  <iframe src="http://mochi.test:8888"></iframe>
-  <iframe src="http://mochi.test:8888"></iframe>
-  <iframe src="http://mochi.test:8888"></iframe>
+  <iframe src="http://localhost:8888/"></iframe>
+  <iframe src="http://localhost:8888/"></iframe>
+  <iframe src="http://localhost:8888/"></iframe>
+  <iframe src="http://localhost:8888/"></iframe>
 </p>
 <div id="content" style="display: none">
   
@@ -27,16 +27,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=465263
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   window.frames[0].location.hash = '';
-  is(window.frames[0].location.href, "http://mochi.test:8888/#",
+  is(window.frames[0].location.href, "http://localhost:8888/#",
      "Should have '#' in href now");
   window.frames[1].location.hash = '#';
-  is(window.frames[1].location.href, "http://mochi.test:8888/#",
+  is(window.frames[1].location.href, "http://localhost:8888/#",
      "Should have only one '#' in href");
   window.frames[2].location.hash = 'foo';
-  is(window.frames[2].location.href, "http://mochi.test:8888/#foo",
+  is(window.frames[2].location.href, "http://localhost:8888/#foo",
      "Should have '#foo' in href");
   window.frames[3].location.hash = '#foo';
-  is(window.frames[3].location.href, "http://mochi.test:8888/#foo",
+  is(window.frames[3].location.href, "http://localhost:8888/#foo",
      "Should have only one '#' in href here too");
   SimpleTest.finish();
 });

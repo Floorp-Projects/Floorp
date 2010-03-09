@@ -104,7 +104,7 @@ function loaded() {
   var win = wm.getMostRecentWindow("navigator:browser");
   var notificationBox = win.gBrowser.getNotificationBox();
 
-  var notification = notificationBox.getNotificationWithValue("offline-app-requested-mochi.test");
+  var notification = notificationBox.getNotificationWithValue("offline-app-requested-localhost");
   notification.childNodes[0].click();
 
   notification = notificationBox.getNotificationWithValue("offline-app-requested-example.com");

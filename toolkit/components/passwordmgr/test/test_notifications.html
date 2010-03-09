@@ -112,7 +112,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        is(true, pwmgr.getLoginSavingEnabled("http://mochi.test:8888"),
+        is(true, pwmgr.getLoginSavingEnabled("http://localhost:8888"),
            "Checking for login saving enabled");
         clickNotificationButton(bar, kNeverButton);
         break;
@@ -123,10 +123,10 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(!bar, "checking for no notification bar");
-        is(false, pwmgr.getLoginSavingEnabled("http://mochi.test:8888"),
+        is(false, pwmgr.getLoginSavingEnabled("http://localhost:8888"),
            "Checking for login saving disabled");
         // reenable login saving.
-        pwmgr.setLoginSavingEnabled("http://mochi.test:8888", true);
+        pwmgr.setLoginSavingEnabled("http://localhost:8888", true);
         break;
 
       case 4:
@@ -387,13 +387,13 @@ ok(prefs != null, "Access pref branch");
 
 var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
-var login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+var login1 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
                              "notifyu1", "notifyp1", "user", "pass");
-var login2 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+var login2 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
                              "", "notifyp1", "", "pass");
-var login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+var login1B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
                               "notifyu1B", "notifyp1B", "user", "pass");
-var login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+var login2B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
                               "", "notifyp1B", "", "pass");
 
 var iframe = document.getElementById("iframe");
