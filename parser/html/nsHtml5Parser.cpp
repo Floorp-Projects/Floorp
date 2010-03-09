@@ -60,6 +60,9 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
+#include "nsICharsetAlias.h"
+
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -139,7 +142,8 @@ nsHtml5Parser::SetDocumentCharset(const nsACString& aCharset, PRInt32 aCharsetSo
                   "Document charset set too late.");
   NS_PRECONDITION(mStreamParser, "Tried to set charset on a script-only parser.");
   mStreamParser->SetDocumentCharset(aCharset, aCharsetSource);
-  mExecutor->SetDocumentCharset((nsACString&)aCharset);
+  mExecutor->SetDocumentCharsetAndSource((nsACString&)aCharset, aCharsetSource);
+  mCharsetSource = aCharsetSource; // used for the document.open() case only
 }
 
 NS_IMETHODIMP_(void)
@@ -266,7 +270,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   if (!mExecutor->HasStarted()) {
     NS_ASSERTION(!mStreamParser,
                  "Had stream parser but document.write started life cycle.");
+    // This is the first document.write() on a document.open()ed document
     mExecutor->SetParser(this);
+    mTokenizer->setEncodingDeclarationHandler(this);
     mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
     mTokenizer->start();
     mExecutor->Start();
@@ -687,4 +693,36 @@ nsHtml5Parser::ContinueAfterFailedCharsetSwitch()
   NS_PRECONDITION(mStreamParser, 
     "Tried to continue after failed charset switch without a stream parser");
   mStreamParser->ContinueAfterFailedCharsetSwitch();
+}
+
+void
+nsHtml5Parser::internalEncodingDeclaration(nsString* aEncoding)
+{
+  // Note: This handler is only installed when parsing a document.open()ed doc
+  // See bug 539887 and bug 255820.
+  if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
+    return;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
+  if (NS_FAILED(rv)) {
+    NS_NOTREACHED("Charset alias service not available.");
+    return;
+  }
+  nsCAutoString newEncoding;
+  CopyUTF16toUTF8(*aEncoding, newEncoding);
+  
+  // XXX check HTML5 non-IANA aliases here
+  
+  nsCAutoString preferred;
+  
+  rv = calias->GetPreferred(newEncoding, preferred);
+  if (NS_FAILED(rv)) {
+    // the encoding name is bogus
+    return;
+  }
+  
+  mCharsetSource = kCharsetFromMetaTag;
+  mTreeBuilder->SetDocumentCharset(preferred, mCharsetSource);
 }

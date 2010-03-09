@@ -201,9 +201,13 @@ nsHtml5TreeOpExecutor::FlushPendingNotifications(mozFlushType aType)
 {
 }
 
-NS_IMETHODIMP
-nsHtml5TreeOpExecutor::SetDocumentCharset(nsACString& aCharset)
+void
+nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, PRInt32 aCharsetSource)
 {
+  if (mDocument) {
+    mDocument->SetDocumentCharacterSetSource(aCharsetSource);
+    mDocument->SetDocumentCharacterSet(aCharset);
+  }
   if (mDocShell) {
     // the following logic to get muCV is copied from
     // nsHTMLDocument::StartDocumentLoad
@@ -220,7 +224,9 @@ nsHtml5TreeOpExecutor::SetDocumentCharset(nsACString& aCharset)
       // parent and parentContentViewer
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
         do_QueryInterface(mDocShell);
-      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+      if (!docShellAsItem) {
+    	  return;
+      }
       nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
       docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
       nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
@@ -237,10 +243,6 @@ nsHtml5TreeOpExecutor::SetDocumentCharset(nsACString& aCharset)
       muCV->SetPrevDocCharacterSet(aCharset);
     }
   }
-  if (mDocument) {
-    mDocument->SetDocumentCharacterSet(aCharset);
-  }
-  return NS_OK;
 }
 
 nsISupports*

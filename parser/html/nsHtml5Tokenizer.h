@@ -47,6 +47,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5StreamParser;
 class nsHtml5SpeculativeLoader;
@@ -85,7 +86,7 @@ class nsHtml5Tokenizer
     static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
   protected:
     nsHtml5TreeBuilder* tokenHandler;
-    nsHtml5StreamParser* encodingDeclarationHandler;
+    nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler;
     PRBool lastCR;
     PRInt32 stateSave;
   private:
@@ -265,7 +266,7 @@ class nsHtml5Tokenizer
     void resetToDataState();
     void loadState(nsHtml5Tokenizer* other);
     void initializeWithoutStarting();
-    void setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler);
+    void setEncodingDeclarationHandler(nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler);
     static void initializeStatics();
     static void releaseStatics();
 };
