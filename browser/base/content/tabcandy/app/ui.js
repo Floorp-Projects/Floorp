@@ -25,7 +25,7 @@ var Page = {
     var isDragging = false;
     
     var zIndex = 100;
-    function mod($div){
+    function mod($div, tab){
       $div.draggable({
         start:function(){ isDragging = true; },
         stop: function(){
@@ -47,8 +47,22 @@ var Page = {
         }
       });
       
-      $("<div class='close'>x</div>").appendTo($div)
-        
+      $("<div class='close'>x</div>").appendTo($div);
+      
+      // TODO: Figure out this really weird bug?
+      // Why is that:
+      //    $div.find("canvas").data("link").tab.url
+      // returns chrome://tabcandy/content/candies/original/index.html for
+      // every $div (which isn't right), but that
+      //   $div.bind("test", function(){
+      //      var url = $(this).find("canvas").data("link").tab.url;
+      //   });
+      //   $div.trigger("test")
+      // returns the right result (i.e., the per-tab URL)?
+      // I'm so confused...
+      // Although I can use the trigger trick, I was thinking about
+      // adding code in here which sorted the tabs into groups.
+      // -- Aza
     }
     
     window.TabMirror.customize(mod);
@@ -172,6 +186,7 @@ var grid = new ArrangeClass("Grid", function(){
 var Arrange = {
   init: function(){
     grid.arrange();
+    
   }
 }
 
@@ -188,7 +203,6 @@ UIClass.prototype = {
 
 var UI = new UIClass();
 window.UI = UI;
-window.aza = ArrangeClass
 
 
 })();
