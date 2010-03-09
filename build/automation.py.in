@@ -51,7 +51,10 @@ import sys
 import threading
 import tempfile
 
-
+_DEFAULT_WEB_SERVER = "127.0.0.1"
+_DEFAULT_HTTP_PORT = 8888
+_DEFAULT_SSL_PORT = 4443
+  
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0
 #expand _IS_MAC = __IS_MAC__ != 0
@@ -130,6 +133,10 @@ class Automation(object):
   # timeout, in seconds
   DEFAULT_TIMEOUT = 60.0
 
+  DEFAULT_WEB_SERVER = _DEFAULT_WEB_SERVER
+  DEFAULT_HTTP_PORT = _DEFAULT_HTTP_PORT
+  DEFAULT_SSL_PORT = _DEFAULT_SSL_PORT
+
   log = logging.getLogger()
 
   def __init__(self):
@@ -140,6 +147,13 @@ class Automation(object):
     handler = logging.StreamHandler(sys.stdout)
     self.log.setLevel(logging.INFO)
     self.log.addHandler(handler)
+
+    self.setServerInfo()
+
+  def setServerInfo(self, webServer = _DEFAULT_WEB_SERVER, httpPort = _DEFAULT_HTTP_PORT, sslPort = _DEFAULT_SSL_PORT):
+    self.webServer = webServer
+    self.httpPort = httpPort
+    self.sslPort = sslPort
 
   @property
   def __all__(self):
@@ -303,7 +317,7 @@ user_pref("capability.principal.codebase.p%(i)d.granted",
 user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
 user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
 """  % { "i": i,
-         "origin": (l.scheme + "://" + l.host + ":" + l.port) }
+         "origin": (l.scheme + "://" + l.host + ":" + str(l.port)) }
       prefs.append(part)
 
     # We need to proxy every server but the primary one.
@@ -335,11 +349,14 @@ function FindProxyForURL(url, host)
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
   if (isHttp)
-    return 'PROXY 127.0.0.1:8888';
+    return 'PROXY %(remote)s:%(httpport)s';
   if (isHttps)
-    return 'PROXY 127.0.0.1:4443';
+    return 'PROXY %(remote)s:%(sslport)s';
   return 'DIRECT';
-}""" % { "origins": origins }
+}""" % { "origins": origins,
+         "remote":self.webServer,
+         "httpport":self.httpPort,
+         "sslport":self.sslPort }
     pacURL = "".join(pacURL.splitlines())
 
     part = """
@@ -385,8 +402,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   
     sslTunnelConfig.write("httpproxy:1\n")
     sslTunnelConfig.write("certdbdir:%s\n" % certPath)
-    sslTunnelConfig.write("forward:127.0.0.1:8888\n")
-    sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
+    sslTunnelConfig.write("forward:127.0.0.1:%s\n" % self.httpPort)
+    sslTunnelConfig.write("listen:*:%s:pgo server certificate\n" % self.sslPort)
 
     # Configure automatic certificate and bind custom certificates, client authentication
     locations = self.readLocations()
@@ -399,14 +416,14 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
           match = customCertRE.match(option)
           if match:
             customcert = match.group("nickname");
-            sslTunnelConfig.write("listen:%s:%s:4443:%s\n" %
-                      (loc.host, loc.port, customcert))
+            sslTunnelConfig.write("listen:%s:%s:%s:%s\n" %
+                      (loc.host, loc.port, self.sslPort, customcert))
 
           match = clientAuthRE.match(option)
           if match:
             clientauth = match.group("clientauth");
-            sslTunnelConfig.write("clientauth:%s:%s:4443:%s\n" %
-                      (loc.host, loc.port, clientauth))
+            sslTunnelConfig.write("clientauth:%s:%s:%s:%s\n" %
+                      (loc.host, loc.port, self.sslPort, clientauth))
 
     sslTunnelConfig.close()
 
