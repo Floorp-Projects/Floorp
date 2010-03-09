@@ -357,6 +357,10 @@ function Tabs() {
       // make a new one?
       return browserWindow.addTab(url);
     },
+    tab: function tab(value) {
+      // assuming value is a DOM element for the time being
+      return $(value).find("canvas").data("link").tab;
+    },
     toString: function toString() {
       return "[Tabs]";
     }
