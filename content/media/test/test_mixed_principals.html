@@ -53,7 +53,7 @@ var key = Math.floor(Math.random()*100000000);
 
 // In v1, try loading from same-origin first and then getting redirected to
 // another origin.
-v1.src = "http://localhost:8888/tests/content/media/test/dynamic_redirect.sjs?key=v1_" + key;
+v1.src = "http://mochi.test:8888/tests/content/media/test/dynamic_redirect.sjs?key=v1_" + key;
 v1.load();
 
 // In v2, try loading cross-origin first and then getting redirected to

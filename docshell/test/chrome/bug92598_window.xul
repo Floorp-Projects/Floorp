@@ -118,7 +118,7 @@
     function testsIterator() {
       // Load a page with a no-cache header, followed by a simple page
       // On pagehide, first page should report it is not being persisted
-      var test1DocURI = "http://localhost:8888/tests/docshell/test/chrome/92598_nostore.html";
+      var test1DocURI = "http://mochi.test:8888/tests/docshell/test/chrome/92598_nostore.html";
 
       gExpected = [{type: "pagehide", persisted: true},
                    {type: "load", title: "test1"},

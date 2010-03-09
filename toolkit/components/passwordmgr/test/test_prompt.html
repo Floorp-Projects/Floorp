@@ -63,11 +63,11 @@ function initLogins() {
                "100@beef", "user3pass", "", "");
   login2E.init("http://example2.com", null, "http://example2.com",
                "100%beef", "user3pass", "", "");
-  login3A.init("http://localhost:8888", null, "mochitest",
+  login3A.init("http://mochi.test:8888", null, "mochitest",
                "mochiuser1", "mochipass1", "", "");
-  login3B.init("http://localhost:8888", null, "mochitest2",
+  login3B.init("http://mochi.test:8888", null, "mochitest2",
                "mochiuser2", "mochipass2", "", "");
-  login4.init("http://localhost:8888", null, "mochitest3",
+  login4.init("http://mochi.test:8888", null, "mochitest3",
                "mochiuser3", "mochipass3-old", "", "");
 
   pwmgr.addLogin(login1);
@@ -380,7 +380,7 @@ function handleLoad() {
         clickNotificationButton(bar, kChangeButton);
 
         // Housekeeping: change it back
-        tmpLogin.init("http://localhost:8888", null, "mochitest",
+        tmpLogin.init("http://mochi.test:8888", null, "mochitest",
                       "mochiuser1", "mochipass1-new", "", "");
         pwmgr.modifyLogin(tmpLogin, login3A);
 
@@ -404,7 +404,7 @@ function handleLoad() {
 
         // Housekeeping: change it back to the original login4. Actually,
         // just delete it and we'll re-add it as the next test.
-        tmpLogin.init("http://localhost:8888", null, "mochitest3",
+        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
                       "mochiuser3", "mochipass3-new", "", "");
         pwmgr.removeLogin(tmpLogin);
         // Clear cached auth from this subtest, and avoid leaking due to bug 459620.

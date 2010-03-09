@@ -88,13 +88,13 @@
   <p class="vcard" id="12-img-src-url">
     <span class="fn n"><span class="given-name">John</span> <span class="family-name">Doe</span></span>
     <!-- take the @src, ignore the @type -->
-    <img class="url" src="http://localhost:8888/tests/browser/microformats/test/picture.png" type="image/png" />
+    <img class="url" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" type="image/png" />
   </p>
 
   <p class="vcard" id="13-photo-logo">
     <span class="fn n"><span class="given-name">John</span> <span class="family-name">Doe</span></span>
     <!-- take the @src, ignore the @type -->
-    <img class="photo logo" src="http://localhost:8888/tests/browser/microformats/test/picture.png" type="image/png" />
+    <img class="photo logo" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" type="image/png" />
   </p>
 
   <p class="vcard" id="14-img-src-data-url">
@@ -132,7 +132,7 @@
 
   <p class="vcard" id="18-object-data-http-uri">
     <span class="fn">John Doe</span>
-    <object class="url photo logo" data="http://localhost:8888/tests/browser/microformats/test/picture.png" type="image/png"></object>
+    <object class="url photo logo" data="http://mochi.test:8888/tests/browser/microformats/test/picture.png" type="image/png"></object>
   </p>
 
   <p class="vcard" id="19-object-data-data-uri">
@@ -143,7 +143,7 @@
   <p class="vcard" id="20-image-alt">
 <!-- only testing 'fn' here, but you should be able to parse any text value out of the img@alt -->
 <!-- also note, the fn should only be used to infer n, when there's no explicit n in the hcard -->
-    <img class="fn photo logo" src="http://localhost:8888/tests/browser/microformats/test/picture.png" alt="John Doe" />
+    <img class="fn photo logo" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" alt="John Doe" />
   </p>
   
   <div class="vcard" id="21-tel">
@@ -383,15 +383,15 @@
     <div class="org">W3C</div>
   </div>
   <div class="vcard" id="30-fn-org.3">
-    <img class="fn" src="http://localhost:8888/tests/browser/microformats/test/picture.png" alt="W3C" />
+    <img class="fn" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" alt="W3C" />
     <div class="org">W3C</div>
   </div>
   <div class="vcard" id="30-fn-org.4">
-    <img class="fn org" src="http://localhost:8888/tests/browser/microformats/test/picture.png"
+    <img class="fn org" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png"
          alt="World Wide Web Consortium" />
   </div>
   <div class="vcard" id="30-fn-org.5">
-    <object data="http://localhost:8888/tests/browser/microformats/test/w3c_home">
+    <object data="http://mochi.test:8888/tests/browser/microformats/test/w3c_home">
       <abbr class="fn org" title="World Wide Web Consortium">W3C</abbr>
     </object>
   </div>
@@ -448,7 +448,7 @@
       <area class="fn email" href="mailto:joe@example.com" alt="Joe Public"/>
       <area class="url" href="http://example.com/" alt="my website!" />
     </map>
-    <img class="org" src="http://localhost:8888/tests/browser/microformats/test/picture.png" alt="Joe Public" />
+    <img class="org" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" alt="Joe Public" />
   </div>
   <div class="vcard" id="33-area.4">
     <map id="mailto-test-4">
@@ -496,7 +496,7 @@
     <abbr class="category" title="C1">C1a</abbr>
     <a class="category" href="http://example.com" title="C2">C2a</a>
     <a class="category" href="http://example.com/C3" rel="tag" title="C3a">C3b</a>
-    <img class="category" src="http://localhost:8888/tests/browser/microformats/test/picture.png" alt="C4"/>
+    <img class="category" src="http://mochi.test:8888/tests/browser/microformats/test/picture.png" alt="C4"/>
     <a class="category" href="http://example.com/C5/" rel="tag" title="C5a">C5b</a>
     <a class="category" href="http://example.com/C6?tag=false" rel="tag" title="C6a">C6b</a>
     <a class="category" href="http://example.com/C7#anchor" rel="tag" title="C7a">C7b</a>
@@ -534,11 +534,11 @@
   </div>
   <div class="vcard" id="38-uid.2">
     <span class="fn">Ryan King</span>
-    <object class="url uid" data="http://localhost:8888/tests/browser/microformats/test/contact/">My other hCard</object>
+    <object class="url uid" data="http://mochi.test:8888/tests/browser/microformats/test/contact/">My other hCard</object>
   </div>
   <div class="vcard" id="38-uid.3">
     <span class="fn">Ryan King</span>
-    <img class="url uid" src="http://localhost:8888/tests/browser/microformats/test/contact/" alt="my other hcard" />
+    <img class="url uid" src="http://mochi.test:8888/tests/browser/microformats/test/contact/" alt="my other hcard" />
   </div>
   <div class="vcard" id="38-uid.4">
     <span class="fn">Ryan King</span>
@@ -691,7 +691,7 @@ function test_hCard() {
   is(hcard.n["given-name"][0], "John", "07-relative-url - given-name");
   is(hcard.n["family-name"][0], "Doe", "07-relative-url - family-name");
 //  is(hcard.url[0], "http://microformats.org/home/blah", "07-relative-url - url");
-  is(hcard.url, "http://localhost:8888/home/blah", "07-relative-url - url");
+  is(hcard.url, "http://mochi.test:8888/home/blah", "07-relative-url - url");
 
   hcard = new hCard(document.getElementById("11-multiple-urls"));
 
@@ -706,15 +706,15 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "12-img-src-url - fn");
   is(hcard.n["given-name"][0], "John", "12-img-src-url - given-name");
   is(hcard.n["family-name"][0], "Doe", "12-img-src-url - family-name");
-  is(hcard.url[0], "http://localhost:8888/tests/browser/microformats/test/picture.png", "12-img-src-url - url");
+  is(hcard.url[0], "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "12-img-src-url - url");
 
   hcard = new hCard(document.getElementById("13-photo-logo"));
 
   is(hcard.fn, "John Doe", "13-photo-logo - fn");
   is(hcard.n["given-name"][0], "John", "13-photo-logo - given-name");
   is(hcard.n["family-name"][0], "Doe", "13-photo-logo - family-name");
-  is(hcard.logo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - logo");
-  is(hcard.photo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - photo");
+  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - logo");
+  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - photo");
 
   hcard = new hCard(document.getElementById("14-img-src-data-url"));
 
@@ -757,9 +757,9 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "18-object-data-http-uri - fn");
   is(hcard.n["given-name"][0], "John", "18-object-data-http-uri - given-name");
   is(hcard.n["family-name"][0], "Doe", "18-object-data-http-uri - family-name");
-  is(hcard.logo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - logo");
-  is(hcard.photo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - photo");
-  is(hcard.url, "http://localhost:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - url");
+  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - logo");
+  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - photo");
+  is(hcard.url, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - url");
 
   hcard = new hCard(document.getElementById("19-object-data-data-uri"));
 
@@ -775,8 +775,8 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "20-image-alt - fn");
   is(hcard.n["given-name"][0], "John", "20-image-alt - given-name");
   is(hcard.n["family-name"][0], "Doe", "20-image-alt - family-name");
-  is(hcard.logo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "20-image-alt - logo");
-  is(hcard.photo, "http://localhost:8888/tests/browser/microformats/test/picture.png", "20-image-alt - photo");
+  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - logo");
+  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - photo");
 
   hcard = new hCard(document.getElementById("21-tel"));
 
@@ -1148,16 +1148,16 @@ function test_hCard() {
   is(hcard.fn, "Ryan King", "38-uid.2 - fn");
   is(hcard.n["given-name"][0], "Ryan", "38-uid.2 - given-name");
   is(hcard.n["family-name"][0], "King", "38-uid.2 - family-name");
-  is(hcard.uid, "http://localhost:8888/tests/browser/microformats/test/contact/", "38-uid.2 - uid");
-  is(hcard.url[0], "http://localhost:8888/tests/browser/microformats/test/contact/", "38-uid.2 - url");
+  is(hcard.uid, "http://mochi.test:8888/tests/browser/microformats/test/contact/", "38-uid.2 - uid");
+  is(hcard.url[0], "http://mochi.test:8888/tests/browser/microformats/test/contact/", "38-uid.2 - url");
 
   hcard = new hCard(document.getElementById("38-uid.3"));
 
   is(hcard.fn, "Ryan King", "38-uid.3 - fn");
   is(hcard.n["given-name"][0], "Ryan", "38-uid.3 - given-name");
   is(hcard.n["family-name"][0], "King", "38-uid.3 - family-name");
-  is(hcard.uid, "http://localhost:8888/tests/browser/microformats/test/contact/", "38-uid.3 - uid");
-  is(hcard.url[0], "http://localhost:8888/tests/browser/microformats/test/contact/", "38-uid.3 - url");
+  is(hcard.uid, "http://mochi.test:8888/tests/browser/microformats/test/contact/", "38-uid.3 - uid");
+  is(hcard.url[0], "http://mochi.test:8888/tests/browser/microformats/test/contact/", "38-uid.3 - url");
 
   hcard = new hCard(document.getElementById("38-uid.4"));
 

@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.cacheManifest">
 <head>
 <title>Fallback on different origin redirect test</title>
 
@@ -8,10 +8,9 @@
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script class="testbody" type="text/javascript">
-
 function manifestUpdated()
 {
-  fallbackFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/redirectToDifferentOrigin.sjs";
+  fallbackFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/redirectToDifferentOrigin.sjs";
   // Invokes load of fallback.html
 }
 

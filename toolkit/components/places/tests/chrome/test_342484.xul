@@ -83,10 +83,10 @@ function runTest() {
   SimpleTest.finish();
 }
 
-const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
+const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
 
 gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
-                                             uri("http:/localhost/"),
+                                             uri("http:/mochi.test/"),
                                              uri(FEEDSPEC), -1);
 bmsvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);

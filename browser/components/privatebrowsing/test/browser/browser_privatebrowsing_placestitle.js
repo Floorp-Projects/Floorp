@@ -51,7 +51,7 @@ function test() {
            getService(Ci.nsICookieManager);
   waitForExplicitFinish();
 
-  const TEST_URL = "http://localhost:8888/browser/browser/components/privatebrowsing/test/browser/title.sjs";
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/title.sjs";
 
   function cleanup() {
     // delete all history items

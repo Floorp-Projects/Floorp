@@ -11,7 +11,7 @@ function start_test_prefNotSet() {
   isnot(zoomLevel, 1, "zoom level should have changed");
 
   content.location = 
-    "http://localhost:8888/browser/browser/base/content/test/moz.png";
+    "http://mochi.test:8888/browser/browser/base/content/test/moz.png";
 }
 
 function continue_test_prefNotSet () {
@@ -22,7 +22,7 @@ function continue_test_prefNotSet () {
   FullZoom.reset();
 
   content.location = 
-    "http://localhost:8888/browser/browser/base/content/test/zoom_test.html";
+    "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html";
 }
 
 function end_test_prefNotSet() {
@@ -44,6 +44,6 @@ function test() {
   tabElm.linkedBrowser.addEventListener("load", start_test_prefNotSet, true);
 
   content.location = 
-    "http://localhost:8888/browser/browser/base/content/test/zoom_test.html";
+    "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html";
 
 }
