@@ -5,6 +5,17 @@
 Pulls performance data on parsing via the js shell.
 Displays the average number of milliseconds it took to parse each file.
 
+For comparison, something apparently approximating a t-test is performed:
+"Faster" means that:
+
+    t_baseline_goodrun = (t_baseline_avg - t_baseline_stddev)
+    t_current_badrun = (t_current_avg + t_current_stddev) 
+    t_current_badrun < t_baseline_goodrun
+
+Effectively, a bad run from the current data is better than a good run from the
+baseline data, we're probably faster. A similar computation is used for
+determining the "slower" designation.
+
 Arguments:
   dirpath               directory filled with parsilicious js files
 """
@@ -74,7 +85,7 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
             warmup_run_count=warmup_runs, real_run_count=counted_runs)
     proc = subp.Popen([shellpath, '-e', code], stdout=subp.PIPE)
     stdout, _ = proc.communicate()
-    milliseconds = [int(val) for val in stdout.split(',')]
+    milliseconds = [float(val) for val in stdout.split(',')]
     mean = avg(milliseconds)
     sigma = stddev(milliseconds, mean)
     if not stfu:
@@ -95,7 +106,7 @@ def parsemark(filepaths, fbench, stfu=False):
     print '{'
     for i, (filename, (avg, stddev)) in enumerate(bench_map.iteritems()):
         assert '"' not in filename
-        fmt = '    %30s: {"average_ms": %4d, "stddev_ms": %6.2f}'
+        fmt = '    %30s: {"average_ms": %6.2f, "stddev_ms": %6.2f}'
         if i != len(bench_map) - 1:
             fmt += ','
         filename_str = '"%s"' % filename
@@ -107,8 +118,7 @@ def parsemark(filepaths, fbench, stfu=False):
 def compare(current, baseline):
     for key, (avg, stddev) in current.iteritems():
         try:
-            base_avg, base_stddev = itemgetter('average_ms',
-                    'stddev_ms')(baseline.get(key, None))
+            base_avg, base_stddev = itemgetter('average_ms', 'stddev_ms')(baseline.get(key, None))
         except TypeError:
             print key, 'missing from baseline'
             continue
@@ -116,9 +126,13 @@ def compare(current, baseline):
         base_t_best, base_t_worst = base_avg - base_stddev, base_avg + base_stddev
         fmt = '%30s: %s'
         if t_worst < base_t_best: # Worst takes less time (better) than baseline's best.
-            result = 'FASTER: worst time %.2f < baseline best time %.2f' % (t_worst, base_t_best)
+            speedup = -((t_worst - base_t_best) / base_t_best) * 100
+            result = 'faster: %6.2fms < baseline %6.2fms (%+6.2f%%)' % \
+                    (t_worst, base_t_best, speedup)
         elif t_best > base_t_worst: # Best takes more time (worse) than baseline's worst.
-            result = 'SLOWER: best time %.2f > baseline worst time %.2f' % (t_best, base_t_worst)
+            slowdown = -((t_best - base_t_worst) / base_t_worst) * 100
+            result = 'SLOWER: %6.2fms > baseline %6.2fms (%+6.2f%%) ' % \
+                    (t_best, base_t_worst, slowdown)
         else:
             result = 'Meh.'
         print '%30s: %s' % (key, result)
@@ -153,12 +167,18 @@ def main():
     try:
         dirpath = args.pop(0)
     except IndexError:
-        parser.error('dirpath required')
+        parser.print_help()
+        print
+        print >> sys.stderr, 'error: dirpath required'
+        return -1
     shellpath = options.shell or find_shell()
     if not shellpath:
         print >> sys.stderr, 'Could not find shell'
         return -1
     if options.baseline_path:
+        if not os.path.isfile(options.baseline_path):
+            print >> sys.stderr, 'Baseline file does not exist'
+            return -1
         json = try_import_json()
         if not json:
             print >> sys.stderr, 'You need a json lib for baseline comparison'
