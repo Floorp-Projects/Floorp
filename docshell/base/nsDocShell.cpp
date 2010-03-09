@@ -7940,7 +7940,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (mOSHE) {
                 mOSHE->GetOwner(getter_AddRefs(owner));
             }
-            OnNewURI(aURI, nsnull, owner, mLoadType, PR_TRUE);
+            OnNewURI(aURI, nsnull, owner, mLoadType, PR_TRUE, PR_TRUE);
 
             nsCOMPtr<nsIInputStream> postData;
             PRUint32 pageIdent = PR_UINT32_MAX;
@@ -8023,6 +8023,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
                 if (shEntry)
                     shEntry->SetTitle(mTitle);
+            }
+
+            /* Set the title for the Global History entry for this anchor url.
+             */
+            if (mGlobalHistory) {
+                mGlobalHistory->SetPageTitle(aURI, mTitle);
             }
 
             if (sameDocIdent) {
