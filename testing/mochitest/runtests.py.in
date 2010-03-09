@@ -226,6 +226,7 @@ class MochitestServer:
     self._xrePath = options.xrePath
     self._profileDir = profileDir
     self.shutdownURL = shutdownURL
+    self.webServer = "127.0.0.1"
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -238,6 +239,7 @@ class MochitestServer:
     args = ["-g", self._xrePath,
             "-v", "170",
             "-f", "./" + "httpd.js",
+            '-e', 'const _SERVER_ADDR="' + self.webServer + '";',
             "-f", "./" + "server.js"]
 
     xpcshell = os.path.join(self._utilityPath,
@@ -276,7 +278,7 @@ class MochitestServer:
 
 class Mochitest(object):
   # Path to the test script on the server
-  TEST_SERVER_HOST = "localhost:8888"
+  TEST_SERVER_HOST = "mochi.test:8888"
   TEST_PATH = "/tests/"
   CHROME_PATH = "/redirect.html";
   A11Y_PATH = "/redirect-a11y.html"

@@ -67,10 +67,10 @@ var observer =
 
 };
 
-const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
+const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
 
 gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
-                                             uri("http:/localhost/"),
+                                             uri("http:/mochi.test/"),
                                              uri(FEEDSPEC), -1);
 bmsvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);

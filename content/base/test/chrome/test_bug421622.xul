@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421622
   <script type="application/javascript"><![CDATA[
 
     /** Test for Bug 421622 **/
-    const SJS_URL = "http://localhost:8888/tests/content/base/test/chrome/bug421622-referer.sjs";
+    const SJS_URL = "http://mochi.test:8888/tests/content/base/test/chrome/bug421622-referer.sjs";
     const REFERER_URL = "http://www.mozilla.org/";
 
     var req = new XMLHttpRequest();

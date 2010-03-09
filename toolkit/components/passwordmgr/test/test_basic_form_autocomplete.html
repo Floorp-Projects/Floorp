@@ -102,52 +102,52 @@ ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
 // login0 has no username, so should be filtered out from the autocomplete list.
 var login0 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete:8888", null,
+    "http://mochi.test:8888", "http://autocomplete:8888", null,
     "", "user0pass", "", "pword");
 
 var login1 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete:8888", null,
+    "http://mochi.test:8888", "http://autocomplete:8888", null,
     "tempuser1", "temppass1", "uname", "pword");
 
 var login2 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete:8888", null,
+    "http://mochi.test:8888", "http://autocomplete:8888", null,
     "testuser2", "testpass2", "uname", "pword");
 
 var login3 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete:8888", null,
+    "http://mochi.test:8888", "http://autocomplete:8888", null,
     "testuser3", "testpass3", "uname", "pword");
 
 var login4 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete:8888", null,
+    "http://mochi.test:8888", "http://autocomplete:8888", null,
     "zzzuser4", "zzzpass4", "uname", "pword");
 
 // login 5 only used in the single-user forms
 var login5 = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete2", null,
+    "http://mochi.test:8888", "http://autocomplete2", null,
     "singleuser5", "singlepass5", "uname", "pword");
 
 var login6A = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete3", null,
+    "http://mochi.test:8888", "http://autocomplete3", null,
     "form7user1", "form7pass1", "uname", "pword");
 var login6B = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete3", null,
+    "http://mochi.test:8888", "http://autocomplete3", null,
     "form7user2", "form7pass2", "uname", "pword");
 
 var login7  = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete4", null,
+    "http://mochi.test:8888", "http://autocomplete4", null,
     "form8user", "form8pass", "uname", "pword");
 
 var login8A = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete5", null,
+    "http://mochi.test:8888", "http://autocomplete5", null,
     "form9userAB", "form9pass", "uname", "pword");
 
 var login8B = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete5", null,
+    "http://mochi.test:8888", "http://autocomplete5", null,
     "form9userAAB", "form9pass", "uname", "pword");
 
 // login8C is added later
 var login8C = new nsLoginInfo(
-    "http://localhost:8888", "http://autocomplete5", null,
+    "http://mochi.test:8888", "http://autocomplete5", null,
     "form9userAABz", "form9pass", "uname", "pword");
 // try/catch in case someone runs the tests manually, twice.
 try {
@@ -396,7 +396,7 @@ function runTest(testNum) {
         // Delete the first entry (of 4), "tempuser1"
         doKey("down");
         var numLogins;
-        numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
+        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
         is(numLogins, 5, "Correct number of logins before deleting one");
 
         // On OS X, shift-backspace and shift-delete work, just delete does not.
@@ -404,7 +404,7 @@ function runTest(testNum) {
         doKey("delete", shiftModifier);
 
         checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
+        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
         is(numLogins, 4, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("testuser2", "testpass2");
@@ -431,7 +431,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("delete", shiftModifier);
         checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
+        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
         is(numLogins, 3, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("zzzuser4", "zzzpass4");
@@ -458,7 +458,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("delete", shiftModifier);
         checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
+        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
         is(numLogins, 2, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("testuser2", "testpass2");
@@ -485,7 +485,7 @@ function runTest(testNum) {
         doKey("delete", shiftModifier);
         //doKey("return");
         checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
+        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
         is(numLogins, 1, "Correct number of logins after deleting one");
         pwmgr.removeLogin(login0); // remove the login that's not shown in the list.
         testNum = 99;

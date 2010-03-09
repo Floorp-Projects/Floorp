@@ -208,10 +208,10 @@ ok(nsLoginInfo != null, "nsLoginInfo constructor");
 pwlogin1 = new nsLoginInfo();
 pwlogin2 = new nsLoginInfo();
 
-pwlogin1.init("http://localhost:8888", "http://localhost:1111", null,
+pwlogin1.init("http://mochi.test:8888", "http://localhost:1111", null,
     "", "1234", "uname", "pword");
 
-pwlogin2.init("http://localhost:8888", "http://localhost:8888", null,
+pwlogin2.init("http://mochi.test:8888", "http://mochi.test:8888", null,
     "", "1234", "uname", "pword");
 
 try {
