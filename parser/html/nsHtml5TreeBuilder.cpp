@@ -239,6 +239,7 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
           case ' ':
           case '\t':
           case '\n':
+          case '\r':
           case '\f': {
             switch(mode) {
               case NS_HTML5TREE_BUILDER_INITIAL:
@@ -3820,6 +3821,7 @@ nsHtml5TreeBuilder::charBufferContainsNonWhitespace()
       case ' ':
       case '\t':
       case '\n':
+      case '\r':
       case '\f': {
         continue;
       }
