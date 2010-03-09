@@ -957,9 +957,8 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             str = JSVAL_TO_STRING(v);
 
             d = StringToNumberType<jsdouble>(cx, str);
-            if (JSDOUBLE_IS_NaN(d)) {
+            if (JSDOUBLE_IS_NaN(d))
                 break;
-            }
 
             /*
              * JSVAL_TRUE indicates that double jsval was never constructed
@@ -972,10 +971,9 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             if (JSVAL_TO_BOOLEAN(v)) {
                 *vp = JSVAL_ONE;
                 return 1.0;
-            } else {
-                *vp = JSVAL_ZERO;
-                return 0.0;
             }
+            *vp = JSVAL_ZERO;
+            return 0.0;
         }
         if (JSVAL_IS_NULL(v)) {
             *vp = JSVAL_ZERO;
