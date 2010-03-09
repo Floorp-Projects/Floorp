@@ -74,14 +74,6 @@ function readFileData(aFile) {
 }
 
 var result;
-var resultObserver = {
-  itemChanged: function(item) {
-    // The favicon should not be set on the containing query.
-    if (item.uri.substr(0,5) == "place")
-      print("Testing itemChanged on: " + item.uri);
-    do_check_eq(item.icon.spec, null);
-  }
-};
 
 // main
 function run_test() {
@@ -113,7 +105,15 @@ function run_test() {
   options.excludeQueries = 1;
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   result = histsvc.executeQuery(query, options);
-  result.addObserver(resultObserver, false);
+  // Associate a viewer to our result
+  result.viewer = {
+                    itemChanged: function(item) {
+                      // The favicon should not be set on the containing query.
+                      if (item.uri.substr(0,5) == "place")
+                        dump("\nTesting itemChanged on: \n " + item.uri + "\n\n");
+                        do_check_eq(item.icon.spec, null);
+                    }
+                  };
   var root = result.root;
   root.containerOpen = true;
 
@@ -130,7 +130,7 @@ function run_test() {
 function end_test() {
   var root = result.root;
   root.containerOpen = false;
-  result.removeObserver(resultObserver);
+  result.viewer = null;
 
   do_test_finished();
 }

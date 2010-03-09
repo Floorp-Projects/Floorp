@@ -1097,29 +1097,24 @@ var PlacesUtils = {
     if (!this.nodeIsContainer(aNode))
       return false;
 
-    let root = this.getContainerNodeWithOptions(aNode, false, true);
-    let result = root.parentResult;
-    let suppressNotificationsOld = false;
-    let wasOpen = root.containerOpen;
+    var root = this.getContainerNodeWithOptions(aNode, false, true);
+    var oldViewer = root.parentResult.viewer;
+    var wasOpen = root.containerOpen;
     if (!wasOpen) {
-      suppressNotificationsOld = result.suppressNotifications;
-      if (!suppressNotificationsOld)
-        result.suppressNotifications = true;
-
+      root.parentResult.viewer = null;
       root.containerOpen = true;
     }
 
-    let found = false;
-    for (let i = 0; i < root.childCount && !found; i++) {
-      let child = root.getChild(i);
+    var found = false;
+    for (var i = 0; i < root.childCount && !found; i++) {
+      var child = root.getChild(i);
       if (this.nodeIsURI(child))
         found = true;
     }
 
     if (!wasOpen) {
       root.containerOpen = false;
-      if (!suppressNotificationsOld)
-        result.suppressNotifications = false;
+      root.parentResult.viewer = oldViewer;
     }
     return found;
   },
@@ -1133,32 +1128,27 @@ var PlacesUtils = {
    * @returns array of uris in the first level of the container.
    */
   getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
-    let urls = [];
+    var urls = [];
     if (!this.nodeIsContainer(aNode))
       return urls;
 
-    let root = this.getContainerNodeWithOptions(aNode, false, true);
-    let result = root.parentResult;
-    let wasOpen = root.containerOpen;
-    let suppressNotificationsOld = false;
+    var root = this.getContainerNodeWithOptions(aNode, false, true);
+    var oldViewer = root.parentResult.viewer;
+    var wasOpen = root.containerOpen;
     if (!wasOpen) {
-      suppressNotificationsOld = result.suppressNotifications;
-      if (!suppressNotificationsOld)
-        result.suppressNotifications = true;
-
+      root.parentResult.viewer = null;
       root.containerOpen = true;
     }
 
-    for (let i = 0; i < root.childCount; ++i) {
-      let child = root.getChild(i);
+   for (var i = 0; i < root.childCount; ++i) {
+      var child = root.getChild(i);
       if (this.nodeIsURI(child))
         urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
     }
 
     if (!wasOpen) {
       root.containerOpen = false;
-      if (!suppressNotificationsOld)
-        result.suppressNotifications = false;
+      root.parentResult.viewer = oldViewer;
     }
     return urls;
   },
