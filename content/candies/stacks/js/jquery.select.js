@@ -9,15 +9,39 @@ Selector.prototype = {
     this.lasso = new Lasso(options);
   },
   
-  hideMenu: function(){
-    if( this.menu ) this.menu.remove();
+  startFadeOutTimer: function() {
+    var self = this;
+    this.timeout = setTimeout(function() { 
+      self.timeout = null;
+      self.hideMenu(); 
+    }, 2000);
+  }, 
+  
+  cancelFadeOutTimer: function() {
+    if(this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  },
+    
+  hideMenu: function() {
+    var self = this;
+    if(this.menu) {
+      this.menu.fadeOut(2000, function() {
+        self.menu.remove();
+        self.menu = null;
+      });
+    }
+    
+    this.cancelFadeOutTimer();
   },
   
   showMenu: function( selectedEls, pos ){
     if( pos == null || selectedEls.length == 0 ) return;
     var self = this;
     
-    self.updateSelection(selectedEls);
+    this.updateSelection(selectedEls);
+    this.cancelFadeOutTimer();
     
     this.menu = $("<div class='lasso-menu'>").appendTo("body");
     this.menu.css({
@@ -25,11 +49,28 @@ Selector.prototype = {
       zIndex: 9999,
       top:pos.y-this.menu.height()/2,
       left:pos.x-this.menu.width()/2
-    })
-    .text("Group")
-    .mouseout( function(){self.hideMenu()} )
-    .mousedown( function(){group(selectedEls)} )
-  }, 
+    });
+    
+    this.menu.mouseover(function() { 
+      self.cancelFadeOutTimer(); 
+    });
+    
+    this.menu.mouseout(function() {
+      self.startFadeOutTimer(); 
+    });
+    
+    $('<div>Group</div>')
+      .appendTo(this.menu)
+      .mousedown(function() {
+        group(selectedEls);
+      });
+       
+    $('<div>Close</div>')
+      .appendTo(this.menu)
+      .mousedown(function() {
+        close(selectedEls);
+      }); 
+  },
   
   updateSelection: function(els) {
 	  for( var i=0; i<els.length; i++){
@@ -54,7 +95,15 @@ function group(els){
     var el = els[i];
     var pos = startEl.position();
     $(el).css("z-index", i*10);
-    $(el).animate({top: pos.top+i*15, left: pos.left+i*15, position: "absolute"}, 250);
+    $(el).animate({top: pos.top, left: pos.left, position: "absolute"}, 250);
+  }
+}
+
+function close(els){
+  for( var i=0; i<els.length; i++){
+    var el = els[i];
+    var tab = Tabs.tab(el);
+    tab.close();
   }
 }
 
