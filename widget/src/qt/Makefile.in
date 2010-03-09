@@ -88,10 +88,12 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		-lthebes \
+		-llayers \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_QT_LIBS) \
 		$(GLIB_LIBS) \
 		$(QCMS_LIBS) \
+		$(XEXT_LIBS) \
 		$(NULL)
 
 
