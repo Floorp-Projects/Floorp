@@ -58,7 +58,7 @@
         // the viewer's reference to our treeBoxObject.
         var result = this.getResult();
         if (result) {
-          result.removeObserver(this.view);
+          result.viewer = null;
           result.root.containerOpen = false;
         }
         this.view = null;
@@ -122,22 +122,22 @@
         <parameter name="options"/>
         <body><![CDATA[
           // Cleanup old result if exists.
-          let oldResult = this.getResult();
+          var oldResult = this.getResult();
           if (oldResult)
             oldResult.root.containerOpen = false;
 
-          let result = PlacesUtils.history
+          var result = PlacesUtils.history
                                   .executeQueries(queries, queries.length,
                                                   options);
           var callback;
           if (this.flatList) {
-            let onOpenFlatContainer = this.onOpenFlatContainer;
+            var onOpenFlatContainer = this.onOpenFlatContainer;
             if (onOpenFlatContainer)
               callback = new Function("aContainer", onOpenFlatContainer);
           }
 
-          let treeView = new PlacesTreeView(this.flatList, callback);
-          result.addObserver(treeView, false);
+          var treeView = new PlacesTreeView(this.flatList, callback);
+          result.viewer = treeView;
           this.view = treeView;
           if (!this._controller) {
             this._controller = new PlacesController(this);
@@ -278,7 +278,7 @@
       <method name="getResult">
         <body><![CDATA[
           try {
-            return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
+            return this.view.QueryInterface(Ci.nsINavHistoryResultViewer).result;
           }
           catch (e) {
             return null;
@@ -640,18 +640,12 @@
             return foundOne;
           }
 
-          // Disable notifications while looking for nodes.
-          let result = this.getResult();
-          let suppressNotificationsOld = result.suppressNotifications;
-          if (!suppressNotificationsOld)
-            result.suppressNotifications = true
-          try {
-            findNodes(this.getResultNode());
-          }
-          finally {
-            if (!suppressNotificationsOld)
-              result.suppressNotifications = false;
-          }
+          // Null the viewer while looking for nodes
+          var result = this.getResult();
+          var oldViewer = result.viewer;
+          result.viewer = null;
+          findNodes(this.getResultNode());
+          result.viewer = oldViewer;
 
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
