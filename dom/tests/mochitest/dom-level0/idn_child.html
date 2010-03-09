@@ -12,7 +12,7 @@ function run()
 
 function receiveMessage(evt)
 {
-  if (evt.origin !== "http://localhost:8888")
+  if (evt.origin !== "http://mochi.test:8888")
     return;
 
   var message = evt.data + "-response";

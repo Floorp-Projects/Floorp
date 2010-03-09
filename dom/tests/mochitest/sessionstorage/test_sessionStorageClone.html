@@ -32,7 +32,7 @@ function doNextTest()
     case 1:
       // Open a window from the same origin and check data
       // are copied but not further modified on our side
-      slaveOrigin = "http://localhost:8888";
+      slaveOrigin = "http://mochi.test:8888";
       slave = window.open(slaveOrigin + slavePath + "frameEqual.html");
       break;
 
