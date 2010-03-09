@@ -502,18 +502,11 @@ nsHttpServer.prototype =
   //
   start: function(port)
   {
-    this._start(port, "localhost")
-  },
-
-  _start: function(port, host)
-  {
     if (this._socket)
       throw Cr.NS_ERROR_ALREADY_INITIALIZED;
 
     this._port = port;
     this._doQuit = this._socketClosed = false;
-
-    this._host = host;
 
     // The listen queue needs to be long enough to handle
     // network.http.max-connections-per-server concurrent connections,
@@ -525,18 +518,13 @@ nsHttpServer.prototype =
 
     try
     {
-      var loopback = true;
-      if (this._host != "127.0.0.1" && this._host != "localhost") {
-        var loopback = false;
-      }
-
       var socket = new ServerSocket(this._port,
-                                    loopback, // true = localhost, false = everybody
+                                    true, // loopback only
                                     maxConnections);
       dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
             " pending connections");
       socket.asyncListen(this);
-      this._identity._initialize(port, host, true);
+      this._identity._initialize(port, true);
       this._socket = socket;
     }
     catch (e)
@@ -933,7 +921,7 @@ ServerIdentity.prototype =
       // Always keep at least one identity in existence at any time, unless
       // we're in the process of shutting down (the last condition above).
       this._primaryPort = -1;
-      this._initialize(this._defaultPort, host, false);
+      this._initialize(this._defaultPort, false);
     }
 
     return present;
@@ -999,17 +987,16 @@ ServerIdentity.prototype =
    * Initializes the primary name for the corresponding server, based on the
    * provided port number.
    */
-  _initialize: function(port, host, addSecondaryDefault)
+  _initialize: function(port, addSecondaryDefault)
   {
-    this._host = host;
     if (this._primaryPort !== -1)
-      this.add("http", host, port);
+      this.add("http", "localhost", port);
     else
       this.setPrimary("http", "localhost", port);
     this._defaultPort = port;
 
     // Only add this if we're being called at server startup
-    if (addSecondaryDefault && host != "127.0.0.1")
+    if (addSecondaryDefault)
       this.add("http", "127.0.0.1", port);
   },
 
@@ -1020,22 +1007,20 @@ ServerIdentity.prototype =
    */
   _teardown: function()
   {
-    if (this._host != "127.0.0.1") {
-      // Not the default primary location, nothing special to do here
-      this.remove("http", "127.0.0.1", this._defaultPort);
-    }
-    
+    // Not the default primary location, nothing special to do here
+    this.remove("http", "127.0.0.1", this._defaultPort);
+
     // This is a *very* tricky bit of reasoning here; make absolutely sure the
     // tests for this code pass before you commit changes to it.
     if (this._primaryScheme == "http" &&
-        this._primaryHost == this._host &&
+        this._primaryHost == "localhost" &&
         this._primaryPort == this._defaultPort)
     {
       // Make sure we don't trigger the readding logic in .remove(), then remove
       // the default location.
       var port = this._defaultPort;
       this._defaultPort = -1;
-      this.remove("http", this._host, port);
+      this.remove("http", "localhost", port);
 
       // Ensure a server start triggers the setPrimary() path in ._initialize()
       this._primaryPort = -1;
@@ -1043,7 +1028,7 @@ ServerIdentity.prototype =
     else
     {
       // No reason not to remove directly as it's not our primary location
-      this.remove("http", this._host, this._defaultPort);
+      this.remove("http", "localhost", this._defaultPort);
     }
   },
 
