@@ -6,15 +6,20 @@
     a, link {
       display:block;
     }
-    link::before {
-      content:"Test link";
+    #link2::before {
+      content:"Test link 1";
+    }
+    #link4::before {
+      content:"Test link 2";
     }
   </style>
 </head>
 <body>
 <p>
-  <a>Test anchor</a>
-  <link/>
+  <a>Test anchor 1</a>
+  <link id="link2"/>
+  <a href="http://example.com/1">Test anchor 2</a>
+  <link id="link4" href="http://example.com/1"/>
 </p>
 </body>
 </html>

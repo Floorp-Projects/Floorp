@@ -6,8 +6,11 @@
     link {
       display:block;
     }
-    link::before {
-      content:"Test link";
+    #link2::before {
+      content:"Test link 1";
+    }
+    #link4::before {
+      content:"Test link 2";
     }
   </style>
 </head>
@@ -19,11 +22,17 @@ function run_test()
   // non-links.
   document.getElementById("link1").removeAttribute("href");
   document.getElementById("link2").removeAttribute("href");
+
+  // Add the href attribute to the links so they should be restyled as links.
+  document.getElementById("link3").href = "http://example.com/1";
+  document.getElementById("link4").href = "http://example.com/1";
 }
 </script>
 <p>
-  <a id="link1" href="http://example.com/1">Test anchor</a>
+  <a id="link1" href="http://example.com/1">Test anchor 1</a>
   <link id="link2" href="http://example.com/1"/>
+  <a id="link3">Test anchor 2</a>
+  <link id="link4"/>
 </p>
 </body>
 </html>
