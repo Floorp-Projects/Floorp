@@ -50,6 +50,8 @@ let (ios = Cc["@mozilla.org/network/io-service;1"]
 }
 
 const SERVER_PORT = 8888;
+var gServerAddress = "127.0.0.1";
+
 var server; // for use in the shutdown handler, if necessary
 
 //
@@ -150,7 +152,29 @@ function runServer()
 {
   serverBasePath = __LOCATION__.parent;
   server = createMochitestServer(serverBasePath);
-  server.start(SERVER_PORT);
+
+  //verify server address
+  //if a.b.c.d or 'localhost'
+  if (typeof(_SERVER_ADDR) != "undefined") {
+    if (_SERVER_ADDR == "localhost") {
+      gServerAddress = _SERVER_ADDR;      
+    } else {
+      var quads = _SERVER_ADDR.split('.');
+      if (quads.length == 4) {
+        var invalid = false;
+        for (var i=0; i < 4; i++) {
+          if (quads[i] < 0 || quads[i] > 255)
+            invalid = true;
+        }
+        if (!invalid)
+          gServerAddress = _SERVER_ADDR;
+        else
+          dumpn("WARNING: invalid server address ('" + _SERVER_ADDR + "'), using localhost");
+      }
+    }
+  }
+
+  server._start(SERVER_PORT, gServerAddress);
 
   // touch a file in the profile directory to indicate we're alive
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"]

@@ -47,7 +47,7 @@
       else
       {
         response += " unexpected-message-to(" + window.location.href + ")";
-        window.parent.postMessage(response, "http://localhost:8888");
+        window.parent.postMessage(response, "http://mochi.test:8888");
         return;
       }
     }
@@ -57,7 +57,7 @@
       var source = evt.source;
       try
       {
-        if (evt.origin != "http://localhost:8888")
+        if (evt.origin != "http://mochi.test:8888")
           response += " unexpected-origin(" + evt.origin + ")";
           
         try
@@ -82,7 +82,7 @@
     function receiveCross(evt, response)
     {
       var source = evt.source;
-      if (evt.origin != "http://localhost:8888")
+      if (evt.origin != "http://mochi.test:8888")
         response += " unexpected-origin(" + evt.origin + ")";
         
       try

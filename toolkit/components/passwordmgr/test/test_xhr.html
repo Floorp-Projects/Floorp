@@ -33,9 +33,9 @@ function initLogins() {
   login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
 
-  login1.init("http://localhost:8888", null, "xhr",
+  login1.init("http://mochi.test:8888", null, "xhr",
                "xhruser1", "xhrpass1", "", "");
-  login2.init("http://localhost:8888", null, "xhr2",
+  login2.init("http://mochi.test:8888", null, "xhr2",
                "xhruser2", "xhrpass2", "", "");
 
   pwmgr.addLogin(login1);
