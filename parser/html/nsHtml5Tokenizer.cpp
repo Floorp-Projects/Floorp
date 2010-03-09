@@ -3394,9 +3394,6 @@ nsHtml5Tokenizer::handleNcrValue(PRInt32 returnState)
 
       PRUnichar* val = nsHtml5NamedCharacters::WINDOWS_1252[value - 0x80];
       emitOrAppendOne(val, returnState);
-    } else if (value == 0x0D) {
-
-      emitOrAppendOne(nsHtml5Tokenizer::LF, returnState);
     } else if (value == 0x0) {
 
       emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
