@@ -2123,7 +2123,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
      * malloc'd vector.
      */
 #if JS_BITS_PER_WORD == 32
-    if (size_t(len) > SIZE_MAX / (2 * sizeof(jsval))) {
+    if (size_t(len) > size_t(-1) / (2 * sizeof(jsval))) {
         js_ReportAllocationOverflow(cx);
         return false;
     }
