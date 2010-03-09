@@ -48,7 +48,7 @@ function test() {
     createInstance(Components.interfaces.nsIWebHandlerApp);
   webHandler.name = "Test Web Handler App";
   webHandler.uriTemplate =
-      "http://localhost:8888/tests/uriloader/exthandler/tests/mochitest/" + 
+      "http://mochi.test:8888/tests/uriloader/exthandler/tests/mochitest/" + 
       "handlerApp.xhtml?uri=%s";
   
   // set up the uri to test with

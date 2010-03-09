@@ -52,7 +52,7 @@
     }
 
     const text="MOZILLA";
-    const nostoreURI = "http://localhost:8888/tests/docshell/test/chrome/" +
+    const nostoreURI = "http://mochi.test:8888/tests/docshell/test/chrome/" +
                        "215405_nostore.html";
     const nocacheURI = "https://example.com:443/tests/docshell/test/chrome/" +
                        "215405_nocache.html";
