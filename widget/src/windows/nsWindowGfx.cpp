@@ -252,24 +252,14 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
     return nsIntRegion(nsWindowGfx::ToIntRect(paintRect));
   }
 
-#ifndef WINCE
+#if defined(WINCE_WINDOWS_MOBILE) || !defined(WINCE)
   HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
   if (paintRgn != NULL) {
-    int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
-    if (result == 1) {
-      POINT pt = {0,0};
-      ::MapWindowPoints(NULL, mWnd, &pt, 1);
-      ::OffsetRgn(paintRgn, pt.x, pt.y);
-    }
-    nsIntRegion rgn(nsWindowGfx::ConvertHRGNToRegion(paintRgn));
-    ::DeleteObject(paintRgn);
-    return rgn;
-  }
-#else
-# ifdef WINCE_WINDOWS_MOBILE
-  HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-  if (paintRgn != NULL) {
+# ifdef WINCE
     int result = GetUpdateRgn(mWnd, paintRgn, FALSE);
+# else
+    int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
+# endif
     if (result == 1) {
       POINT pt = {0,0};
       ::MapWindowPoints(NULL, mWnd, &pt, 1);
@@ -277,9 +267,11 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
     }
     nsIntRegion rgn(nsWindowGfx::ConvertHRGNToRegion(paintRgn));
     ::DeleteObject(paintRgn);
-    return rgn;
-  }
+# ifdef WINCE
+    if (!rgn.IsEmpty())
 # endif
+      return rgn;
+  }
 #endif
   return nsIntRegion(nsWindowGfx::ToIntRect(ps.rcPaint));
 }
