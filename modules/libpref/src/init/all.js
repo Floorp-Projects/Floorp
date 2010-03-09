@@ -190,6 +190,10 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
 
+// Forcibly disable a11y on win32, even if something attempts
+// to enable it.
+pref("accessibility.win32.force_disabled", false);
+
 // On OS X, we follow the "Click in the scrollbar to:" system preference
 // unless this preference was set manually
 pref("ui.scrollToClick", 0);

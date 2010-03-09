@@ -6487,6 +6487,30 @@ nsWindow::OnIMESelectionChange(void)
 #ifdef ACCESSIBILITY
 already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
 {
+  // We want the ability to forcibly disable a11y on windows, because
+  // some non-a11y-related components attempt to bring it up.  See bug
+  // 538530 for details; we have a pref here that allows it to be disabled
+  // for performance and testing resons.
+  //
+  // This pref is checked only once, and the browser needs a restart to
+  // pick up any changes.
+  static int accForceDisable = -1;
+
+  if (accForceDisable == -1) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    PRBool b = PR_FALSE;
+    nsresult rv = prefs->GetBoolPref("accessibility.win32.force_disabled", &b);
+    if (NS_SUCCEEDED(rv) && b) {
+      accForceDisable = 1;
+    } else {
+      accForceDisable = 0;
+    }
+  }
+
+  // If the pref was true, return null here, disabling a11y.
+  if (accForceDisable)
+      return nsnull;
+
   nsWindow::sIsAccessibilityOn = TRUE;
 
   if (mInDtor || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
