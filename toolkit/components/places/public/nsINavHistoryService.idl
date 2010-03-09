@@ -447,12 +447,10 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 /**
  * Allows clients to observe what is happening to a result as it updates itself
  * according to history and bookmark system events. Register this observer on a
- * result using registerView
- *
- * @see nsINavHistoryResult for where this fits in
+ * result using nsINavHistoryResult::addObserver.
  */
-[scriptable, uuid(af4ac418-a687-4775-8ffa-97c160196432)]
-interface nsINavHistoryResultViewer : nsISupports
+[scriptable, uuid(9a229620-1faf-11df-8a39-0800200c9a66)]
+interface nsINavHistoryResultObserver : nsISupports
 {
   /**
    * Called when 'aItem' is inserted into 'aParent' at index 'aNewIndex'.
@@ -650,9 +648,7 @@ interface nsINavHistoryResultViewer : nsISupports
   void sortingChanged(in unsigned short sortingMode);
 
   /**
-   * Called by the result when this object is set using
-   * nsINavHistoryResult.viewer. This will be set to NULL when the result
-   * is being deallocated. This should not be set by other code.
+   * Called by the result when this observer is added.
    */
   attribute nsINavHistoryResult result;
 };
@@ -669,8 +665,8 @@ interface nsINavHistoryResultViewer : nsISupports
  * object, attach it to a result, never attach it to a tree, and forget about
  * it, it will leak!
  */
-[scriptable, uuid(fa77e4e9-9fc8-45d2-9507-0fe4f0602505)]
-interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
+[scriptable, uuid(f8b518c0-1faf-11df-8a39-0800200c9a66)]
+interface nsINavHistoryResultTreeViewer : nsINavHistoryResultObserver
 {
   /**
    * This allows you to get at the real node for a given row index. This is
@@ -697,23 +693,8 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
 
 /**
  * The result of a history/bookmark query.
- *
- * Use the "root" element to access the children of this query.
- *
- * The basic design of the system is a model-view-controller. This result object
- * represents the model where the data is stored. External components
- * provide the view and controller which define how the data looks and how
- * interaction happens.
- *   [RESULT]----->[viewer]----->[controller]
- *             |
- *             +-- nsINavHistoryResultViewer
- *
- * The result indicates to the view when something changes through the
- * nsINavHistoryResultViewer interface. The viewer is set through
- * the nsINavHistoryResult.viewer property.
  */
-
-[scriptable, uuid(d1562f6f-8d5a-4042-8524-72f747a51b18)]
+[scriptable, uuid(c2229ce3-2159-4001-859c-7013c52f7619)]
 interface nsINavHistoryResult : nsISupports
 {
   /**
@@ -731,13 +712,37 @@ interface nsINavHistoryResult : nsISupports
   attribute AUTF8String sortingAnnotation;
 
   /**
-   * The viewer for this result (see comment for the class for how these
-   * objects are related). This may be null, in which case you can still
-   * manually walk the tree using the root node. When this is non-null, you
-   * can access the flattened list of items (flatItemCount, nodeForFlatIndex,
-   * flatIndexForNode).
+   * Whether or not notifications on result changes are suppressed.
+   * Initially set to false.
+   *
+   * Use this to avoid flickering and to improve performance when you
+   * do temporary changes to the result structure (e.g. when searching for a
+   * node recursively).
    */
-  attribute nsINavHistoryResultViewer viewer;
+  attribute boolean suppressNotifications;
+
+  /**
+   * Adds an observer for changes done in the result.
+   *
+   * @param aObserver
+   *        a result observer.
+   * @param aOwnsWeak
+   *        If false, the result will keep an owning reference to the observer,
+   *        which must be removed using removeObserver.
+   *        If true, the result will keep a weak reference to the observer, which
+   *        must implement nsISupportsWeakReference.
+   *
+   * @see nsINavHistoryResultObserver
+   */
+  void addObserver(in nsINavHistoryResultObserver aObserver, in boolean aOwnsWeak);
+
+  /**
+   * Removes an observer that was added by addObserver.
+   *
+   * @param aObserver
+   *        a result observer that was added by addObserver.
+   */
+  void removeObserver(in nsINavHistoryResultObserver aObserver);
 
   /**
    * This is the root of the results. Remember that you need to open all

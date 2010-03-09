@@ -58,7 +58,7 @@
         // the viewer's reference to our treeBoxObject.
         var result = this.getResult();
         if (result) {
-          result.viewer = null;
+          result.removeObserver(this.view);
           result.root.containerOpen = false;
         }
         this.view = null;
@@ -122,22 +122,22 @@
         <parameter name="options"/>
         <body><![CDATA[
           // Cleanup old result if exists.
-          var oldResult = this.getResult();
+          let oldResult = this.getResult();
           if (oldResult)
             oldResult.root.containerOpen = false;
 
-          var result = PlacesUtils.history
+          let result = PlacesUtils.history
                                   .executeQueries(queries, queries.length,
                                                   options);
           var callback;
           if (this.flatList) {
-            var onOpenFlatContainer = this.onOpenFlatContainer;
+            let onOpenFlatContainer = this.onOpenFlatContainer;
             if (onOpenFlatContainer)
               callback = new Function("aContainer", onOpenFlatContainer);
           }
 
-          var treeView = new PlacesTreeView(this.flatList, callback);
-          result.viewer = treeView;
+          let treeView = new PlacesTreeView(this.flatList, callback);
+          result.addObserver(treeView, false);
           this.view = treeView;
           if (!this._controller) {
             this._controller = new PlacesController(this);
@@ -278,7 +278,7 @@
       <method name="getResult">
         <body><![CDATA[
           try {
-            return this.view.QueryInterface(Ci.nsINavHistoryResultViewer).result;
+            return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
           }
           catch (e) {
             return null;
@@ -640,12 +640,18 @@
             return foundOne;
           }
 
-          // Null the viewer while looking for nodes
-          var result = this.getResult();
-          var oldViewer = result.viewer;
-          result.viewer = null;
-          findNodes(this.getResultNode());
-          result.viewer = oldViewer;
+          // Disable notifications while looking for nodes.
+          let result = this.getResult();
+          let suppressNotificationsOld = result.suppressNotifications;
+          if (!suppressNotificationsOld)
+            result.suppressNotifications = true
+          try {
+            findNodes(this.getResultNode());
+          }
+          finally {
+            if (!suppressNotificationsOld)
+              result.suppressNotifications = false;
+          }
 
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
