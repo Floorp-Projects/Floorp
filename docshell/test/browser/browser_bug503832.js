@@ -26,6 +26,7 @@ function test() {
                 // If titles for fragment URLs aren't set, this code
                 // branch won't be called and the test will timeout,
                 // resulting in a failure
+                historyService.removeObserver(historyObserver, false);
                 finish();
             }
         },
