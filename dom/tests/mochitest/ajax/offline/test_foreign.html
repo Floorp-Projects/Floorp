@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest">
 <head>
 <title>Foreign test</title>
 
@@ -26,12 +26,12 @@ function manifestUpdated()
     .getService(Components.interfaces.nsIApplicationCacheService);
 
   foreign1cache = appCacheService.chooseApplicationCache(
-    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
 
   OfflineTest.ok(foreign1cache, "foreign2.html chosen from foreign1 cache");
-  OfflineTest.is(foreign1cache.groupID, "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest")
+  OfflineTest.is(foreign1cache.groupID, "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest")
 
-  window.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html";
+  window.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html";
 }
 
 SimpleTest.waitForExplicitFinish();

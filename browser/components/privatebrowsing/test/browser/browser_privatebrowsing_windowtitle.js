@@ -44,7 +44,7 @@ function test() {
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
-  const testPageURL = "http://mochi.test:8888/browser/" +
+  const testPageURL = "http://localhost:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle_page.html";
   waitForExplicitFinish();
 
