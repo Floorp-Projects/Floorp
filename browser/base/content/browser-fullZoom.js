@@ -77,12 +77,6 @@ var FullZoom = {
                        getService(Ci.nsIContentPrefService);
   },
 
-  get _prefBranch FullZoom_get__prefBranch() {
-    delete this._prefBranch;
-    return this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                              getService(Ci.nsIPrefBranch2);
-  },
-
   // browser.zoom.siteSpecific preference cache
   _siteSpecificPref: undefined,
 
@@ -135,19 +129,19 @@ var FullZoom = {
                               privateBrowsingEnabled;
 
     this._siteSpecificPref =
-      this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+      gPrefService.getBoolPref("browser.zoom.siteSpecific");
     this.updateBackgroundTabs = 
-      this._prefBranch.getBoolPref("browser.zoom.updateBackgroundTabs");
+      gPrefService.getBoolPref("browser.zoom.updateBackgroundTabs");
     // Listen for changes to the browser.zoom branch so we can enable/disable
     // updating background tabs and per-site saving and restoring of zoom levels.
-    this._prefBranch.addObserver("browser.zoom.", this, true);
+    gPrefService.addObserver("browser.zoom.", this, true);
   },
 
   destroy: function FullZoom_destroy() {
     let os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.removeObserver(this, "private-browsing");
-    this._prefBranch.removeObserver("browser.zoom.", this);
+    gPrefService.removeObserver("browser.zoom.", this);
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
     delete this._cps;
@@ -213,11 +207,11 @@ var FullZoom = {
         switch (aData) {
           case "browser.zoom.siteSpecific":
             this._siteSpecificPref =
-              this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+              gPrefService.getBoolPref("browser.zoom.siteSpecific");
             break;
           case "browser.zoom.updateBackgroundTabs":
             this.updateBackgroundTabs =
-              this._prefBranch.getBoolPref("browser.zoom.updateBackgroundTabs");
+              gPrefService.getBoolPref("browser.zoom.updateBackgroundTabs");
             break;
         }
         break;
