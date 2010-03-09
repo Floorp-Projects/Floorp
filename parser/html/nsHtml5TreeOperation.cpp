@@ -579,8 +579,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpSetDocumentCharset: {
       char* str = mOne.charPtr;
+      PRInt32 charsetSource = mInt;
       nsDependentCString dependentString(str);
-      aBuilder->SetDocumentCharset(dependentString);
+      aBuilder->SetDocumentCharsetAndSource(dependentString, charsetSource);
       return rv;
     }
     case eTreeOpNeedsCharsetSwitchTo: {
