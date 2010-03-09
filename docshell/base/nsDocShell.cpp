@@ -7897,7 +7897,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
         PRBool wasAnchor = PR_FALSE;
         PRBool doHashchange = PR_FALSE;
-        nscoord cx, cy;
+        nscoord cx = 0, cy = 0;
 
         if (allowScroll) {
             NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx,
