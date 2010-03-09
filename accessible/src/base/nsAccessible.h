@@ -302,7 +302,8 @@ public:
                                 PRUint32 aLength);
 
   /**
-   * Assert if child not in parent's cache.
+   * Assert if child not in parent's cache if the cache was initialized at this
+   * point.
    */
   void TestChildCache(nsAccessible *aCachedChild);
 
