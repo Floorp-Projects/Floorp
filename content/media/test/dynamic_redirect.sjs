@@ -5,7 +5,7 @@ function handleRequest(request, response)
   var key = request.queryString.match(/^key=(.*)$/);
 
   if (getState(key[1]) == "redirect") {
-    var origin = request.host == "localhost" ? "example.org" : "localhost:8888";
+    var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
     response.setStatusLine(request.httpVersion, 303, "See Other");
     response.setHeader("Location", "http://" + origin + "/tests/content/media/test/seek.ogv");
     response.setHeader("Content-Type", "text/html");

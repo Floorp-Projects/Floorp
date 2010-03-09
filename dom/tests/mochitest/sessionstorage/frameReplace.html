@@ -9,17 +9,17 @@ var shell;
 function ok(a, message)
 {
   if (!a)
-    shell.postMessage("FAILURE: " + message, "http://localhost:8888");
+    shell.postMessage("FAILURE: " + message, "http://mochi.test:8888");
   else
-    shell.postMessage(message, "http://localhost:8888");
+    shell.postMessage(message, "http://mochi.test:8888");
 }
 
 function is(a, b, message)
 {
   if (a != b)
-    shell.postMessage("FAILURE: " + message + ", expected "+b+" got "+a, "http://localhost:8888");
+    shell.postMessage("FAILURE: " + message + ", expected "+b+" got "+a, "http://mochi.test:8888");
   else
-    shell.postMessage(message + ", expected "+b+" got "+a, "http://localhost:8888");
+    shell.postMessage(message + ", expected "+b+" got "+a, "http://mochi.test:8888");
 }
 
 function doTest()
@@ -64,7 +64,7 @@ function doTest()
       break;
   }
 
-  shell.postMessage(action + "_done", "http://localhost:8888");
+  shell.postMessage(action + "_done", "http://mochi.test:8888");
 }
 
 </script>

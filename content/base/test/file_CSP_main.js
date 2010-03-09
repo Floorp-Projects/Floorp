@@ -3,7 +3,7 @@
 
 try {
   var xhr_good = new XMLHttpRequest();
-  var xhr_good_uri ="http://localhost:8888/tests/content/base/test/file_CSP.sjs?testid=xhr_good";
+  var xhr_good_uri ="http://mochi.test:8888/tests/content/base/test/file_CSP.sjs?testid=xhr_good";
   xhr_good.open("GET", xhr_good_uri, true);
   xhr_good.send(null);
 } catch(e) {}

@@ -115,7 +115,7 @@ function test() {
           this.removeEventListener("load", arguments.callee, true);
 
           // private browsing session, add new tab: (C)
-          const testURL_C = "http://localhost:8888/";
+          const testURL_C = "http://mochi.test:8888/";
           let tab_C = gBrowser.addTab(testURL_C);
 
           tab_C.linkedBrowser.addEventListener("load", function (aEvent) {

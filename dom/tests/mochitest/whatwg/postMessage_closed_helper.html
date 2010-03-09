@@ -15,7 +15,7 @@ function setup()
   var query = location.search.substring(1);
 
   if (query == "opener")
-    window.opener.postMessage("message", "http://localhost:8888");
+    window.opener.postMessage("message", "http://mochi.test:8888");
 }
 
 window.addEventListener("load", setup, false);
