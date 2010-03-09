@@ -1235,8 +1235,12 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
       return NPERR_INVALID_PARAM;
 
     // This will release the wrapped nsIOutputStream.
+    // pstream should always be a subobject of wrapper.  See bug 548441.
+    NS_ASSERTION((char*)wrapper <= (char*)pstream && 
+                 ((char*)pstream) + sizeof(*pstream)
+                     <= ((char*)wrapper) + sizeof(*wrapper),
+                 "pstream is not a subobject of wrapper");
     delete wrapper;
-    pstream->ndata = nsnull;
   }
 
   return NPERR_NO_ERROR;
