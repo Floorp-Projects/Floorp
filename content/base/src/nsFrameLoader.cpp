@@ -44,6 +44,12 @@
  * handling of loads in it, recursion-checking).
  */
 
+#ifdef MOZ_WIDGET_QT
+#include <QtGui/QX11EmbedWidget>
+#include <QGraphicsWidget>
+#include <QGraphicsProxyWidget>
+#endif
+
 #ifdef MOZ_IPC
 #  include "base/basictypes.h"
 #endif
@@ -101,12 +107,6 @@
 #include "nsIView.h"
 
 #include "nsIDOMChromeWindow.h"
-
-#ifdef MOZ_WIDGET_QT
-#include <QtGui/QX11EmbedWidget>
-#include <QGraphicsWidget>
-#include <QGraphicsProxyWidget>
-#endif
 
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
