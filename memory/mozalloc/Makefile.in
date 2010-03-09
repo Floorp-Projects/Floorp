@@ -51,10 +51,8 @@ FORCE_SHARED_LIB= 1
 DIST_INSTALL 	= 1
 
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
-# The wince shunt relies on this library in a somewhat complicated
-# way.  In wince builds, jemalloc replaces the wince libc allocators
-# and moz_* will end up using those symbols at run time.
-export NO_SHUNT	= 1
+# mozalloc gets its allocation methods from the shunt, which gets their 
+# implementation by direcly linking with jemalloc.obj
 OS_LIBS		=
 endif
 
