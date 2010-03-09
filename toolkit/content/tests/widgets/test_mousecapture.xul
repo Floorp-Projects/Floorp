@@ -88,7 +88,7 @@ function selectionScrollCheck()
 
       // check to ensure that selection dragging scrolls the right scrollable area
       otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
-      SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
+      otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
     }
   }
 
@@ -186,7 +186,7 @@ function runTests()
   // check to ensure that selection dragging scrolls the right scrollable area.
   // This should open the page in a new tab.
   otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
-  SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
+  otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
 }
 
 function runCaptureTest(element, callback)
