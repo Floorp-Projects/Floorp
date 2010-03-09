@@ -5174,7 +5174,7 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
    * cheaper than heap-allocating all the datas and keeping track of them all,
    * and helps a good bit in the common cases.  We also keep track of the whole
    * parent data chain, since we have those Around anyway */
-  char databuf[2 * sizeof(RuleProcessorData)];
+  union { char c[2 * sizeof(RuleProcessorData)]; void *p; } databuf;
   RuleProcessorData* prevSibling = nsnull;
   RuleProcessorData* data = reinterpret_cast<RuleProcessorData*>(databuf);
 
