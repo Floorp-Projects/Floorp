@@ -1,4 +1,4 @@
-README for libpng version 1.4.0 - January 3, 2010 (shared library 14.0)
+README for libpng version 1.4.1 - February 25, 2010 (shared library 14.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -185,9 +185,9 @@ Files in this distribution:
        makefile.std     =>  Generic UNIX makefile (cc, creates static
                             libpng.a)
        makefile.elf     =>  Linux/ELF makefile symbol versioning,
-                            gcc, creates libpng14.so.14.1.4.0)
+                            gcc, creates libpng14.so.14.1.4.1)
        makefile.linux   =>  Linux/ELF makefile
-                            (gcc, creates libpng14.so.14.1.4.0)
+                            (gcc, creates libpng14.so.14.1.4.1)
        makefile.gcc     =>  Generic makefile (gcc, creates static libpng.a)
        makefile.knr     =>  Archaic UNIX Makefile that converts files with
                             ansi2knr (Requires ansi2knr.c from
@@ -209,12 +209,12 @@ Files in this distribution:
        makefile.openbsd =>  OpenBSD makefile
        makefile.sgi     =>  Silicon Graphics IRIX (cc, creates static lib)
        makefile.sggcc   =>  Silicon Graphics
-                            (gcc, creates libpng14.so.14.1.4.0)
+                            (gcc, creates libpng14.so.14.1.4.1)
        makefile.sunos   =>  Sun makefile
        makefile.solaris =>  Solaris 2.X makefile
-                            (gcc, creates libpng14.so.14.1.4.0)
+                            (gcc, creates libpng14.so.14.1.4.1)
        makefile.so9     =>  Solaris 9 makefile
-                            (gcc, creates libpng14.so.14.1.4.0)
+                            (gcc, creates libpng14.so.14.1.4.1)
        makefile.32sunu  =>  Sun Ultra 32-bit makefile
        makefile.64sunu  =>  Sun Ultra 64-bit makefile
        makefile.sco     =>  For SCO OSr5  ELF and Unixware 7 with Native cc
