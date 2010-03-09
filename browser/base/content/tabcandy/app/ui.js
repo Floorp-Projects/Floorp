@@ -22,23 +22,17 @@ var Tabbar = {
 
 var Page = {
   init: function(){
-    var isDragging = false;
-    
-    var zIndex = 100;
     function mod($div, tab){
-      $div.draggable({
-        start:function(){ isDragging = true; },
-        stop: function(){
-          isDragging = false;
-          $(this).css({zIndex: zIndex});
-          zIndex += 1;
-        },
-        zIndex: 999,
-      }).mouseup(function(e){
+      if(window.Groups) {        
+        $div.draggable(window.Groups.dragOptions);
+        $div.droppable(window.Groups.dropOptions);
+      }
+        
+      $div.mouseup(function(e){
         if( e.target.className == "close" ){
           $(this).find("canvas").data("link").tab.close(); }
         else {
-          if( !isDragging ){
+          if(!$(this).data('isDragging')) {
             Navbar.show();
             $(this).find("canvas").data("link").tab.focus();            
           } else {
