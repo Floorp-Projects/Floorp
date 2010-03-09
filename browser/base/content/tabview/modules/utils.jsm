@@ -138,7 +138,17 @@ var Utils = {
     this.trace('this is a trace');
     this.log(1, null, {'foo': 'hello', 'bar': 2}, 'whatever');
     this.log('ending logging test');
-  }      
+  }, 
+  
+  // ___ Event
+  isRightClick: function(event) {
+    if(event.which)
+      return (event.which == 3);
+    else if(event.button) 
+      return (event.button == 2);
+    
+    return false;
+  }     
 };
 
 window.Utils = Utils;
