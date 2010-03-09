@@ -50,7 +50,7 @@
 
     function receiveSubDomain(evt)
     {
-      if (evt.origin !== "http://mochi.test:8888")
+      if (evt.origin !== "http://localhost:8888")
       {
         fail("wrong top-domain origin: " + evt.origin);
         return;
@@ -90,7 +90,7 @@
 
     function testSiblingPostMessage()
     {
-      window.parent.postMessage("test-finished", "http://mochi.test:8888");
+      window.parent.postMessage("test-finished", "http://localhost:8888");
     }
 
     function setup()

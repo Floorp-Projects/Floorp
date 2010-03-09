@@ -50,7 +50,7 @@ applicationCache.oncached = function() {
 
   // Make the obsoleting.sjs return 404 NOT FOUND code
   var req = new XMLHttpRequest();
-  req.open("GET", "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/obsoletingManifest.sjs?state=");
+  req.open("GET", "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/obsoletingManifest.sjs?state=");
   var channel = req.channel
     .QueryInterface(Components.interfaces.nsIApplicationCacheChannel);
   channel.chooseApplicationCache = false;
