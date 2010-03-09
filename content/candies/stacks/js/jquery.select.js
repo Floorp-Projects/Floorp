@@ -3,7 +3,7 @@ Selector.prototype = {
   init: function(options){
     var self = this;
     options.onSelect = function(a,b){ self.showMenu(a,b); };
-    options.onStart = function(){ self.hideMenu() };
+    options.onStart = function(){ self.hideMenu(250) };
 /*     options.onMove = function(a){ self.updateSelection(a) }; */
     options.acceptMouseDown = function(a){ return self.acceptMouseDown(a); };
     this.lasso = new Lasso(options);
@@ -13,8 +13,8 @@ Selector.prototype = {
     var self = this;
     this.timeout = setTimeout(function() { 
       self.timeout = null;
-      self.hideMenu(); 
-    }, 2000);
+      self.hideMenu(2000); 
+    }, 1000);
   }, 
   
   cancelFadeOutTimer: function() {
@@ -24,12 +24,14 @@ Selector.prototype = {
     }
   },
     
-  hideMenu: function() {
+  hideMenu: function(time) {
     var self = this;
     if(this.menu) {
-      this.menu.fadeOut(2000, function() {
-        self.menu.remove();
-        self.menu = null;
+      this.menu.fadeOut(time, function() {
+        if(self.menu) {
+          self.menu.remove();
+          self.menu = null;
+        }
       });
     }
     
@@ -52,6 +54,8 @@ Selector.prototype = {
     });
     
     this.menu.mouseover(function() { 
+      self.menu.stop();
+      self.menu.css({'opacity':1}); 
       self.cancelFadeOutTimer(); 
     });
     
