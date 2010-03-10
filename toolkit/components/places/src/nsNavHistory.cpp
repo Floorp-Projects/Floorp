@@ -2780,13 +2780,17 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Get the place id for the referrer, if it exists.
+  // Get the visit id for the referrer, if it exists.
   PRInt64 referringVisitID = 0;
   PRInt64 referringSessionID;
   PRTime referringTime;
+  PRBool referrerIsSame;
   if (aReferringURI &&
+      NS_SUCCEEDED(aReferringURI->Equals(aURI, &referrerIsSame)) &&
+      !referrerIsSame &&
       !FindLastVisit(aReferringURI, &referringVisitID, &referringTime, &referringSessionID)) {
-    // Add the referrer
+    // The referrer is not in the database and is not the same as aURI, so it
+    // must be added.
     rv = AddVisit(aReferringURI, aTime - 1, nsnull, TRANSITION_LINK, PR_FALSE,
                   aSessionID, &referringVisitID);
     if (NS_FAILED(rv))
@@ -5153,7 +5157,8 @@ nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRInt64 redirectBookmark = 0;
-  PRInt64 visitID, sessionID;
+  PRInt64 visitID = 0;
+  PRInt64 sessionID = 0;
   nsresult rv = AddVisitChain(aURI, aTime, aToplevel, aRedirect, aReferrer,
                               &visitID, &sessionID, &redirectBookmark);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5236,6 +5241,12 @@ nsNavHistory::AddVisitChain(nsIURI* aURI,
     rv = NS_NewURI(getter_AddRefs(redirectSourceURI), redirectSourceUrl);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Don't add a new visit if a page redirects to itself.
+    PRBool redirectIsSame;
+    if (NS_SUCCEEDED(aURI->Equals(redirectSourceURI, &redirectIsSame)) &&
+        redirectIsSame)
+      return NS_OK;
+
     // remember if any redirect sources were bookmarked
     nsNavBookmarks *bookmarkService = nsNavBookmarks::GetBookmarksService();
     PRBool isBookmarked;
@@ -5276,12 +5287,31 @@ nsNavHistory::AddVisitChain(nsIURI* aURI,
   else if (aReferrerURI) {
     // This page does not come from a redirect and had a referrer.
 
+    // Check if the referrer has a previous visit.
+    PRTime lastVisitTime;
+    PRInt64 referringVisitId;
+    PRBool referrerHasPreviousVisit =
+      FindLastVisit(aReferrerURI, &referringVisitId, &lastVisitTime, aSessionID);
+
     // Don't add a new visit if the referring site is the same as
     // the new site.  This happens when a page refreshes itself.
+    // Otherwise, if the page has never been added, the visit should be
+    // registered regardless.
     PRBool referrerIsSame;
     if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) &&
-        referrerIsSame)
+        referrerIsSame && referrerHasPreviousVisit) {
+      // Ensure a valid session id to the chain.
+      if (aIsRedirect)
+        *aSessionID = GetNewSessionID();
       return NS_OK;
+    }
+
+    if (!referrerHasPreviousVisit ||
+        aTime - lastVisitTime > RECENT_EVENT_THRESHOLD) {
+      // Either the referrer has no visits or the last visit is too
+      // old to be part of this session.  Thus start a new session.
+      *aSessionID = GetNewSessionID();
+    }
 
     // Since referrer is set, this visit comes from an originating page.
     // For top-level windows, visit is considered user-initiated and it should
@@ -5294,17 +5324,6 @@ nsNavHistory::AddVisitChain(nsIURI* aURI,
       transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
     else
       transitionType = nsINavHistoryService::TRANSITION_LINK;
-
-    // Check if the referrer has a visit,
-    // This also populates the session id.
-    PRTime lastVisitTime;
-    PRInt64 referringVisitId;
-    if (!FindLastVisit(aReferrerURI, &referringVisitId, &lastVisitTime, aSessionID) ||
-        aTime - lastVisitTime > RECENT_EVENT_THRESHOLD) {
-      // Either referrer does not have any visit, or that visit is too
-      // old to be part of this session.  Start a new session then.
-      *aSessionID = GetNewSessionID();
-    }
   }
   else {
     // When there is no referrer:
