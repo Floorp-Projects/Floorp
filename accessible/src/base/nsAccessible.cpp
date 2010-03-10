@@ -3035,7 +3035,7 @@ nsAccessible::EnsureChildren()
   return PR_FALSE;
 }
 
-nsIAccessible*
+nsAccessible*
 nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
 {
   if (IsDefunct()) {
