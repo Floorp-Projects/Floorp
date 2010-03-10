@@ -1364,7 +1364,7 @@ js_ReportOutOfMemory(JSContext *cx)
     const char *msg = efs ? efs->format : "Out of memory";
 
     /* Fill out the report, but don't do anything that requires allocation. */
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = JSREPORT_ERROR;
     report.errorNumber = JSMSG_OUT_OF_MEMORY;
     PopulateReportBlame(cx, &report);
@@ -1455,7 +1455,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
         return JS_FALSE;
     messagelen = strlen(message);
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
     report.ucmessage = ucmessage = js_InflateString(cx, message, &messagelen);
@@ -1647,7 +1647,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
         return JS_TRUE;
     warning = JSREPORT_IS_WARNING(flags);
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = flags;
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);

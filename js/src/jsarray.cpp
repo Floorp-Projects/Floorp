@@ -2202,7 +2202,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
          * initialization using memset.
          */
         jsval *mergesort_tmp = vec + newlen;
-        memset(mergesort_tmp, 0, newlen * sizeof(jsval));
+        PodZero(mergesort_tmp, newlen);
         tvr.changeLength(newlen * 2);
 
         /* Here len == 2 * (newlen + undefs + number_of_holes). */
@@ -2265,7 +2265,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
                     return false;
                 }
                 mergesort_tmp = vec + 2 * newlen;
-                memset(mergesort_tmp, 0, newlen * 2 * sizeof(jsval));
+                PodZero(mergesort_tmp, newlen * 2);
                 tvr.changeArray(vec, newlen * 4);
                 elemsize = 2 * sizeof(jsval);
             }

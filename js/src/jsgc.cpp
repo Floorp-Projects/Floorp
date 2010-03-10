@@ -359,7 +359,7 @@ struct JSGCArena {
     }
 
     void clearMarkBitmap() {
-        memset(markBitmap, 0, sizeof(markBitmap));
+        PodArrayZero(markBitmap);
     }
 
     jsbitmap *getMarkBitmapEnd() {
@@ -947,7 +947,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      */
     rt->setGCLastBytes(8192);
 
-    METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
+    METER(PodZero(&rt->gcStats));
     return true;
 }
 
@@ -1402,7 +1402,7 @@ JSGCFreeLists::moveTo(JSGCFreeLists *another)
 {
     *another = *this;
     doubles = NULL;
-    memset(finalizables, 0, sizeof(finalizables));
+    PodArrayZero(finalizables);
     JS_ASSERT(isEmpty());
 }
 
@@ -3088,7 +3088,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #ifdef JS_TRACER
     if (gckind == GC_LAST_CONTEXT) {
         /* Clear builtin functions, which are recreated on demand. */
-        memset(rt->builtinFunctions, 0, sizeof rt->builtinFunctions);
+        PodArrayZero(rt->builtinFunctions);
     }
 #endif
 

@@ -317,7 +317,7 @@ js_InitLock(JSThinLock *tl)
     tl->owner = 0;
     tl->fat = (JSFatLock*)JS_NEW_LOCK();
 #else
-    memset(tl, 0, sizeof(JSThinLock));
+    PodZero(tl);
 #endif
 }
 
@@ -1352,7 +1352,7 @@ js_InitTitle(JSContext *cx, JSTitle *title)
 {
 #ifdef JS_THREADSAFE
     title->ownercx = cx;
-    memset(&title->lock, 0, sizeof title->lock);
+    PodZero(&title->lock);
 
     /*
      * Set u.link = NULL, not u.count = 0, in case the target architecture's
