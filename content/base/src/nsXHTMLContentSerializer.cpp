@@ -368,13 +368,6 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     aContent->GetAttr(namespaceID, attrName, valueStr);
 
     nsDependentAtomString nameStr(attrName);
-
-    // XXX Hack to get around the fact that MathML can add
-    //     attributes starting with '-', which makes them
-    //     invalid XML. see Bug 475518
-    if (!nameStr.IsEmpty() && nameStr.First() == '-')
-      continue;
-
     PRBool isJS = PR_FALSE;
 
     if (kNameSpaceID_XHTML == contentNamespaceID) {
