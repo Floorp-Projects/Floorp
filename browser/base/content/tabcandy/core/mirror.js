@@ -125,13 +125,25 @@ TabMirror.prototype = {
 /*   	Utils.log('creating tab mirror'); */
     var self = this;
     
+/*     Utils.log(Tabs); */
+    
+    Tabs.onOpen(function(evt) {
+      Utils.log('mirror onOpen', evt.tab.url);
+    });
+    
+    Tabs.onLoad(function(evt) {
+      Utils.log('mirror onLoad', evt.tab.url);
+    });
+
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
+      Utils.log('mirror onready');
       self.update(evt.tab);
     });
     
     // When a tab is closed, unlink.    
     Tabs.onClose( function(){
+      Utils.log('mirror onclose');
       self.unlink(this);
     });
     
@@ -159,6 +171,7 @@ TabMirror.prototype = {
   },
   
   _createEl: function(tab){
+/*     Utils.trace('_createEl'); */
     var div = $("<div class='tab'><span class='name'>&nbsp;</span><img class='fav'/><canvas class='thumb'/></div>")
       .data("tab", tab)
       .appendTo("body");
@@ -176,7 +189,10 @@ TabMirror.prototype = {
       $name = $('.name', div);
       
       if(iconUrl != $fav.attr("src")) $fav.attr("src", iconUrl);
-      if( $name.text() != label ) $name.text(label);
+      if( $name.text() != label ) {
+        $name.text(label);
+/*         Utils.trace('update', label); */
+      }
     }    
     
     var timer = setInterval( updateAttributes, 500 );
@@ -186,12 +202,16 @@ TabMirror.prototype = {
   },
   
   _updateEl: function(tab){
+/*     Utils.log('_udateEl', tab.url); */
     var el = this._getEl(tab);
     
-    new TabCanvas(tab, $('.thumb', el).get(0) );    
+    var canvas = $('.thumb', el).get(0);
+    if(!$(canvas).data("link"))
+      new TabCanvas(tab, canvas);    
   },
   
   update: function(tab){
+/*     Utils.log('update'); */
     var doc = tab.contentDocument;
     this.link(tab);
 
