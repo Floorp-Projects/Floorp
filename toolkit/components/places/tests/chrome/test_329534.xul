@@ -47,14 +47,14 @@ var secondURL = "";
 lmsvc.stopUpdateLivemarks();
 
 // add 2 feeds
-const FEED1 = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
+const FEED1 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
 gLivemarkId1 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "foo",
-                                             uri("http:/mochi.test:8888/"),
+                                             uri("http:/localhost:8888/"),
                                              uri(FEED1), -1);
 
-const FEED2 = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
+const FEED2 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
 gLivemarkId2 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "bar",
-                                             uri("http:/mochi.test:8888/"),
+                                             uri("http:/localhost:8888/"),
                                              uri(FEED2), -1);
 
 var observer =

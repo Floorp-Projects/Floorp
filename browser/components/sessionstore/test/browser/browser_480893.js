@@ -57,9 +57,9 @@ function test() {
 
       is(doc.URL, "about:blank", "loaded page is about:blank");
 
-      // Test that starting a new session loads the homepage (set to http://mochi.test:8888)
+      // Test that starting a new session loads the homepage (set to http://localhost:8888)
       // if Firefox is configured to display a homepage at startup (browser.startup.page = 1)
-      let homepage = "http://mochi.test:8888/";
+      let homepage = "http://localhost:8888/";
       gPrefService.setCharPref("browser.startup.homepage", homepage);
       gPrefService.setIntPref("browser.startup.page", 1);
       gBrowser.loadURI("about:sessionrestore");

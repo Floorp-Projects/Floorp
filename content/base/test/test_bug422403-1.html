@@ -114,7 +114,7 @@ function testHtmlSerializer_1 () {
   //------------ OutputAbsoluteLinks
   encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_links.xhtml").trim('\n');
+  expected = loadFileContent("file_xhtmlserializer_1_links.xhtml");
   is(out, expected, "test OutputAbsoluteLinks");
 
   //------------ OutputLFLineBreak

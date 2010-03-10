@@ -410,7 +410,7 @@ function enableBFCache(enable) {
  * directory.
  */
 function getHttpUrl(filename) {
-  return "http://mochi.test:8888/chrome/docshell/test/chrome/" + filename;
+  return "http://localhost:8888/chrome/docshell/test/chrome/" + filename;
 }
 
 /**
