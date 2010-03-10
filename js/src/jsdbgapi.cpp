@@ -697,9 +697,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                     argv[0] = OBJECT_TO_JSVAL(closure);
                     argv[1] = JSVAL_NULL;
-                    memset(argv + 2, 0, (nslots - 2) * sizeof(jsval));
+                    PodZero(argv + 2, nslots - 2);
 
-                    memset(&frame, 0, sizeof(frame));
+                    PodZero(&frame);
                     frame.script = script;
                     frame.regs = NULL;
                     frame.fun = fun;
