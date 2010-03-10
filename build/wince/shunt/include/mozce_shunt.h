@@ -99,7 +99,7 @@ inline void *operator new[](size_t, void *p) {
   return p;
 }
 
-
+#ifndef IN_SHUNT
 // for Gecko, include infallible mozalloc allocators.  elsewhere, define
 // operator new() normally.
 // NB: this include guard needs to be kept in sync with the one in nscore.h
@@ -121,7 +121,7 @@ inline void operator delete[](void* ptr) throw() {
 }
 
 #endif  // if defined(_MOZILLA_CONFIG_H_)
-
+#endif
 
 extern "C" {
 #endif
