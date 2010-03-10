@@ -274,6 +274,8 @@
 
     <!-- popup for form helper -->
     <vbox id="form-helper-container" class="window-width" hidden="true" top="0" pack="end">
+      <arrowscrollbox id="form-helper-autofill" hidden="true" align="center" flex="1" orient="horizontal"
+                      onclick="FormHelper.doAutoFill(event.target);"/>
       <hbox id="form-buttons" class="panel-dark" pack="center">
         <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
         <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>

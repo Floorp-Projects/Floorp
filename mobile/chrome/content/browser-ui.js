@@ -1086,6 +1086,11 @@ var FormHelper = {
     return this._selectContainer = document.getElementById("select-container");
   },
 
+  get _autofillContainer() {
+    delete this._autofillContainer;
+    return this._autofillContainer = document.getElementById("form-helper-autofill");
+  },
+
   _getRectForElement: function formHelper_getRectForElement(aElement) {
     const kDistanceMax = 100;
     let elRect = Browser.getBoundingContentRect(aElement);
@@ -1108,6 +1113,14 @@ var FormHelper = {
 
   _update: function(aPreviousElement, aNewElement) {
     this._updateSelect(aPreviousElement, aNewElement);
+
+    // Setup autofill UI
+    if (aNewElement instanceof HTMLInputElement && aNewElement.type == "text") {
+      let suggestions = this._getSuggestions();
+      this._setSuggestions(suggestions);
+    } else {
+      this._autofillContainer.hidden = true;
+    }
 
     let height = Math.floor(this._container.getBoundingClientRect().height);
     this._container.top = window.innerHeight - height;
@@ -1216,6 +1229,44 @@ var FormHelper = {
     return (index != -1 ? this._nodes[++index] : null);
   },
 
+  _fac: Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete),
+  _getSuggestions: function() {
+    let suggestions = [];
+    let currentValue = this._currentElement.value;
+    let results = this._fac.autoCompleteSearch(this._currentElement.name, currentValue, this._currentElement, null);
+    if (results.matchCount > 0) {
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
+        suggestions.push(value);
+      }
+    }
+
+    return suggestions;
+  },
+
+  _setSuggestions: function(aSuggestions) {
+    let autofill = this._autofillContainer;
+    while (autofill.hasChildNodes())
+      autofill.removeChild(autofill.lastChild);
+
+    let fragment = document.createDocumentFragment();
+    for (let i = 0; i < aSuggestions.length; i++) {
+      let value = aSuggestions[i];
+      let button = document.createElement("label");
+      button.setAttribute("value", value);
+      fragment.appendChild(button);
+    }
+    autofill.appendChild(fragment);
+    autofill.hidden = !aSuggestions.length;
+  },
+
+  doAutoFill: function formHelperDoAutoFill(aElement) {
+    if (!this._currentElement)
+     return;
+
+    this._currentElement.value = aElement.value;
+  },
+
   getLabelsFor: function(aElement) {
     let associatedLabels = [];
     if (this._isValidElement(aElement)) {
@@ -1268,7 +1319,6 @@ var FormHelper = {
       return false;
 
     this._open = true;
-    window.addEventListener("keypress", this, true);
     window.addEventListener("keyup", this, false);
     let bv = Browser._browserView;
     bv.ignorePageScroll(true);
@@ -1288,6 +1338,7 @@ var FormHelper = {
     this._updateSelect(this._currentElement, null);
 
     this._helperSpacer.hidden = true;
+
     // give the form spacer area back to the content
     let bv = Browser._browserView;
     Browser.forceChromeReflow();
@@ -1296,7 +1347,6 @@ var FormHelper = {
 
     bv.ignorePageScroll(false);
 
-    window.removeEventListener("keypress", this, true);
     window.removeEventListener("keyup", this, false);
     this._container.hidden = true;
     this._currentElement = null;
@@ -1309,41 +1359,55 @@ var FormHelper = {
       return;
 
     let currentElement = this.getCurrentElement();
-    if (aEvent.type == "keypress") {
-      switch (aEvent.keyCode) {
-        case aEvent.DOM_VK_DOWN:
-          if (currentElement instanceof HTMLTextAreaElement) {
-            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-            let isEnd = (currentElement.textLength == currentElement.selectionEnd);
-            if (!isEnd || existSelection)
-              return;
+    switch (aEvent.keyCode) {
+      case aEvent.DOM_VK_DOWN:
+        if (currentElement instanceof HTMLTextAreaElement) {
+          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+          let isEnd = (currentElement.textLength == currentElement.selectionEnd);
+          if (!isEnd || existSelection)
+            return;
+        }
+
+        this.goToNext();
+        break;
+
+      case aEvent.DOM_VK_UP:
+        if (currentElement instanceof HTMLTextAreaElement) {
+          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+          let isStart = (currentElement.selectionEnd == 0);
+          if (!isStart || existSelection)
+            return;
+        }
+
+        this.goToPrevious();
+        break;
+
+      case aEvent.DOM_VK_RETURN:
+        break;
+
+      default:
+        let target = aEvent.target;
+        if (currentElement instanceof HTMLInputElement && currentElement.type == "text") {
+          let suggestions = this._getSuggestions();
+          this._setSuggestions(suggestions);
+
+          let height = Math.floor(this._container.getBoundingClientRect().height);
+          this._container.top = window.innerHeight - height;
+          this._helperSpacer.setAttribute("height", height);
+        
+          // XXX if we are at the bottom of the page we need to give back the content
+          // area by refreshing it
+          if (suggestions.length == 0) {
+            let bv = Browser._browserView;
+            Browser.forceChromeReflow();
+            Browser.contentScrollboxScroller.scrollBy(0, 0);
+            bv.onAfterVisibleMove();
           }
-
-          this.goToNext();
-          aEvent.preventDefault();
-          aEvent.stopPropagation();
-          break;
-
-        case aEvent.DOM_VK_UP:
-          if (currentElement instanceof HTMLTextAreaElement) {
-            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-            let isStart = (currentElement.selectionEnd == 0);
-            if (!isStart || existSelection)
-              return;
-          }
-
-          this.goToPrevious();
-          aEvent.preventDefault();
-          aEvent.stopPropagation();
-          break;
-      }
-    }
-    else if (aEvent.type == "keyup") {
-      let target = aEvent.target;
-      if (currentElement == target && this._isValidSelectElement(target)) {
-        SelectHelper.unselectAll();
-        SelectHelper.selectByIndex(target.selectedIndex);
-      }
+        } else if (currentElement == target && this._isValidSelectElement(target)) {
+          SelectHelper.unselectAll();
+          SelectHelper.selectByIndex(target.selectedIndex);
+        }
+        break;
     }
   },
 
