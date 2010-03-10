@@ -75,7 +75,7 @@ math[display="inline"] {
 /* If the textual content of an <mi> consists of a single character
    with a corresponding mathematical italic alphanumeric character,
    then try to emulate that character */
-[-moz-math-font-style="italic"] {
+[_moz-math-font-style="italic"] {
   font-style: italic;
   font-weight: normal;
 }
@@ -90,11 +90,11 @@ math[display="inline"] {
     (non-slanted) for all tokens except mi. ... (The deprecated fontslant
     attribute also behaves this way.)"   
  */
-[-moz-math-font-style="normal"] {
+[_moz-math-font-style="normal"] {
   font-style: normal;
 }
 /* A style-invariant character preserves its own style */
-[-moz-math-font-style="invariant"] {
+[_moz-math-font-style="invariant"] {
   font-style: normal;
   font-weight: normal;
 }
@@ -256,15 +256,15 @@ mtd {
 /***********************/
 /* -- mtd: columnalign */
 
-mtd[-moz-math-columnalign="left"],
+mtd[_moz-math-columnalign="left"],
 mtd[columnalign="left"] {
   text-align: left;
 }
-mtd[-moz-math-columnalign="right"],
+mtd[_moz-math-columnalign="right"],
 mtd[columnalign="right"] {
   text-align: right;
 }
-mtd[-moz-math-columnalign="center"],
+mtd[_moz-math-columnalign="center"],
 mtd[columnalign="center"] {
   text-align: -moz-center;
 }
@@ -272,28 +272,28 @@ mtd[columnalign="center"] {
 /*************************/
 /* -- mtr, mtd: rowalign */
 
-mtr[-moz-math-rowalign="top"],
+mtr[_moz-math-rowalign="top"],
 mtr[rowalign="top"],
 mtd[rowalign="top"] {
   vertical-align: top;
 }
-mtr[-moz-math-rowalign="bottom"],
+mtr[_moz-math-rowalign="bottom"],
 mtr[rowalign="bottom"],
 mtd[rowalign="bottom"] {
   vertical-align: bottom;
 }
-mtr[-moz-math-rowalign="center"],
+mtr[_moz-math-rowalign="center"],
 mtr[rowalign="center"],
 mtd[rowalign="center"] {
   vertical-align: middle;
 }
-mtr[-moz-math-rowalign="baseline"],
+mtr[_moz-math-rowalign="baseline"],
 mtr[rowalign="baseline"],
 mtd[rowalign="baseline"] {
   vertical-align: baseline;
 }
 /* -- not yet supported --
-mtr[-moz-math-rowalign="axis"],
+mtr[_moz-math-rowalign="axis"],
 mtr[rowalign="axis"],
 mtd[rowalign="axis"] {
   vertical-align: mathline;
@@ -349,22 +349,22 @@ mtable[frame="dashed"] > mtr > mtd:last-child {
    unsuitable rules on the cells on the first row and the first column.
    In general, however, authors can use the 'border' property of CSS to
    achieve varying effects down to the level of the table cell. */
-mtr[-moz-math-rowline="none"] > mtd {
+mtr[_moz-math-rowline="none"] > mtd {
   border-top: none;
 }
-mtr[-moz-math-rowline="solid"] > mtd {
+mtr[_moz-math-rowline="solid"] > mtd {
   border-top: solid thin;
 }
-mtr[-moz-math-rowline="dashed"] > mtd {
+mtr[_moz-math-rowline="dashed"] > mtd {
   border-top: dashed thin;
 }
-mtd[-moz-math-columnline="none"] {
+mtd[_moz-math-columnline="none"] {
   border-left: none;
 }
-mtd[-moz-math-columnline="solid"] {
+mtd[_moz-math-columnline="solid"] {
   border-left: solid thin;
 }
-mtd[-moz-math-columnline="dashed"] {
+mtd[_moz-math-columnline="dashed"] {
   border-left: dashed thin;
 }
 
