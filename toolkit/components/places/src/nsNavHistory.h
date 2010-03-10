@@ -622,6 +622,7 @@ protected:
   // recent events
   typedef nsDataHashtable<nsCStringHashKey, PRInt64> RecentEventHash;
   RecentEventHash mRecentTyped;
+  RecentEventHash mRecentLink;
   RecentEventHash mRecentBookmark;
 
   PRBool CheckIsRecentEvent(RecentEventHash* hashTable,
@@ -670,6 +671,7 @@ protected:
   PRInt32 mFourthBucketWeight;
   PRInt32 mDefaultWeight;
   PRInt32 mEmbedVisitBonus;
+  PRInt32 mFramedLinkVisitBonus;
   PRInt32 mLinkVisitBonus;
   PRInt32 mTypedVisitBonus;
   PRInt32 mBookmarkVisitBonus;

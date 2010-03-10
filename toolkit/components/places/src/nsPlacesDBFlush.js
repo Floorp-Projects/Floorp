@@ -339,6 +339,8 @@ nsPlacesDBFlush.prototype = {
       case kQuerySyncHistoryVisitsId:
         // For history table we want to leave embed visits in memory, since
         // those are expired with current session, so we are filtering them out.
+        // Notice that instead we _want_ to sync framed_link visits, since those
+        // come from user's actions.
         this._cachedStatements[aQueryType] = this._db.createStatement(
           "DELETE FROM moz_historyvisits_temp " +
           "WHERE visit_type <> :transition_type"

@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(b333c6dd-3dbe-4c0b-8062-92ed92b7e7c9)]
+[scriptable, uuid(124a8db3-59da-48ac-a563-6dcf58e035b4)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -148,4 +148,12 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * the user, so it's okay to be an autocomplete result.
      */
     void markPageAsTyped(in nsIURI aURI);
+
+    /**
+     * markPageAsFollowedLink
+     *
+     * Designate the url as coming from a link explicitly followed by
+     * the user (for example by clicking on it).
+     */
+    void markPageAsFollowedLink(in nsIURI aURI);
 };
