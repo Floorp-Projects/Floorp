@@ -1967,7 +1967,9 @@ nsNavHistory::InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
 //    This is used to compute the referring visit.
 
 PRBool
-nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
+nsNavHistory::FindLastVisit(nsIURI* aURI,
+                            PRInt64* aVisitID,
+                            PRTime* aTime,
                             PRInt64* aSessionID)
 {
   mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
@@ -1978,8 +1980,12 @@ nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
   rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   if (hasMore) {
-    *aVisitID = mDBRecentVisitOfURL->AsInt64(0);
-    *aSessionID = mDBRecentVisitOfURL->AsInt64(1);
+    rv = mDBRecentVisitOfURL->GetInt64(0, aVisitID);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    rv = mDBRecentVisitOfURL->GetInt64(1, aSessionID);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    rv = mDBRecentVisitOfURL->GetInt64(2, aTime);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -2768,11 +2774,12 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Get the place id for the referrer, if we have one
+  // Get the place id for the referrer, if it exists.
   PRInt64 referringVisitID = 0;
   PRInt64 referringSessionID;
+  PRTime referringTime;
   if (aReferringURI &&
-      !FindLastVisit(aReferringURI, &referringVisitID, &referringSessionID)) {
+      !FindLastVisit(aReferringURI, &referringVisitID, &referringTime, &referringSessionID)) {
     // Add the referrer
     rv = AddVisit(aReferringURI, aTime - 1, nsnull, TRANSITION_LINK, PR_FALSE,
                   aSessionID, &referringVisitID);
@@ -4186,10 +4193,9 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   addParams.EnumerateRead(BindAdditionalParameter, statement.get());
 
-  // optimize the case where we just use the results as is
-  // and we don't need to do any post-query filtering
+  // Optimize the case where there is no need for any post-query filtering.
   if (NeedToFilterResultSet(aQueries, aOptions)) {
-    // generate the toplevel results
+    // Generate the top-level results.
     nsCOMArray<nsNavHistoryResultNode> toplevel;
     rv = ResultsAsList(statement, aOptions, &toplevel);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -5147,103 +5153,117 @@ nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
 //    hashtable.
 
 nsresult
-nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
-                            PRBool aToplevel, PRBool aIsRedirect,
-                            nsIURI* aReferrerURI, PRInt64* aVisitID,
-                            PRInt64* aSessionID, PRInt64* aRedirectBookmark)
+nsNavHistory::AddVisitChain(nsIURI* aURI,
+                            PRTime aTime,
+                            PRBool aToplevel,
+                            PRBool aIsRedirect,
+                            nsIURI* aReferrerURI,
+                            PRInt64* aVisitID,
+                            PRInt64* aSessionID,
+                            PRInt64* aRedirectBookmark)
 {
-  PRUint32 transitionType = 0;
-  PRInt64 referringVisit = 0;
-  PRTime visitTime = 0;
+  // This is the address that will be saved to from_visit column, will be
+  // overwritten later if needed.
   nsCOMPtr<nsIURI> fromVisitURI = aReferrerURI;
 
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString redirectSource;
-  if (GetRedirectFor(spec, redirectSource, &visitTime, &transitionType)) {
-    // this was a redirect: See GetRedirectFor for info on how this works
-    nsCOMPtr<nsIURI> redirectURI;
-    rv = NS_NewURI(getter_AddRefs(redirectURI), redirectSource);
+  // Check if this visit came from a redirect.
+  PRUint32 transitionType = 0;
+  PRTime redirectTime = 0;
+  nsCAutoString redirectSourceUrl;
+  if (GetRedirectFor(spec, redirectSourceUrl, &redirectTime, &transitionType)) {
+    // redirectSourceUrl redirected to aURL, at redirectTime, with
+    // a transitionType redirect.
+    nsCOMPtr<nsIURI> redirectSourceURI;
+    rv = NS_NewURI(getter_AddRefs(redirectSourceURI), redirectSourceUrl);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // remember if any redirect sources were bookmarked
     nsNavBookmarks *bookmarkService = nsNavBookmarks::GetBookmarksService();
     PRBool isBookmarked;
     if (bookmarkService &&
-        NS_SUCCEEDED(bookmarkService->IsBookmarked(redirectURI, &isBookmarked))
+        NS_SUCCEEDED(bookmarkService->IsBookmarked(redirectSourceURI, &isBookmarked))
         && isBookmarked) {
-      GetUrlIdFor(redirectURI, aRedirectBookmark, PR_FALSE);
+      GetUrlIdFor(redirectSourceURI, aRedirectBookmark, PR_FALSE);
     }
 
-    // Find the visit for the source. Note that we decrease the time counter,
-    // which will ensure that the referrer and this page will appear in history
-    // in the correct order. Since the times are in microseconds, it should not
-    // normally be possible to get two pages within one microsecond of each
-    // other so the referrer won't appear before a previous page viewed.
-    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrerURI,
-                       &referringVisit, aSessionID, aRedirectBookmark);
+    // Recusively call addVisitChain to walk up the chain till the first
+    // not-redirected URI.
+    // Ensure that the sources have a visit time smaller than aTime, otherwise
+    // visits would end up incorrectly ordered.
+    PRTime sourceTime = NS_MIN(redirectTime, aTime - 1);
+    PRInt64 sourceVisitId = 0;
+    rv = AddVisitChain(redirectSourceURI, sourceTime, aToplevel,
+                       PR_TRUE, // Is a redirect.
+                       aReferrerURI, // This one is the originating source.
+                       &sourceVisitId, // Get back the visit id of the source.
+                       aSessionID,
+                       aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // for redirects in frames, we don't want to see those items in history
-    // see bug #381453 for more details
+    // All the visits for preceding pages in the redirects chain have been
+    // added, now add the visit to aURI.
+    // This page comes from a redirect and is in a frame, it should not appear
+    // in history views so mark the visit as EMBED.
+    // See bug 381453 for details.
     if (!aToplevel) {
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
     }
 
-    // We have been redirected, if the previous site was not a redirect
-    // update the referrer so we can walk up the redirect chain.
-    // See bug 411966 and Bug 428690 for details.
-    fromVisitURI = redirectURI;
-  } else if (aReferrerURI) {
-    // We do not want to add a new visit if the referring site is the same as
-    // the new site.  This is the situation where a page refreshes itself to
-    // give the user updated information.
+    // This page is result of a redirect, save the source page in from_visit,
+    // to be able to walk up the chain.
+    // See bug 411966 and bug 428690 for details.
+    // TODO: Add a closure table with a chain id to easily reconstruct chains
+    // without having to recurse through the table.  See bug 468710.
+    fromVisitURI = redirectSourceURI;
+  }
+  else if (aReferrerURI) {
+    // This page does not come from a redirect and had a referrer.
+
+    // Don't add a new visit if the referring site is the same as
+    // the new site.  This happens when a page refreshes itself.
     PRBool referrerIsSame;
-    if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) && referrerIsSame)
+    if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) &&
+        referrerIsSame)
       return NS_OK;
 
-    // If there is a referrer, we know you came from somewhere, either manually
-    // or automatically. For toplevel windows, assume its manual and you want
-    // to see this in history. For other things, it's some kind of embedded
-    // navigation. This is true of images and other content the user doesn't
-    // want to see in their history, but also of embedded frames that the user
-    // navigated manually and probably DOES want to see in history.
-    // Unfortunately, there isn't any easy way to distinguish these.
-    //
-    // Generally, it boils down to the problem of detecting whether a frame
-    // content change is the result of a user action, which isn't well defined
-    // since script could change a frame's source as a result of user request,
-    // or just because it feels like loading a new ad. The "back" button will
-    // undo either of these actions.
+    // Since referrer is set, this visit comes from an originating page.
+    // For top-level windows, visit is considered user-initiated and it should
+    // appear in history views.
+    // Visits to framed pages instead should be distinguished between
+    // user-initiated ones and automatic ones.
+    // The former should be shown, while the latter hidden.
+    // Unfortunately, the docshell does not provide enough information to
+    // distinguish them, so both are marked as EMBED visits.
+    // This is bad since link coloring will be active only for the session,
+    // while user wants it to persist for explicitly clicked links.
     if (aToplevel)
       transitionType = nsINavHistoryService::TRANSITION_LINK;
     else
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
 
-    // Note that here we should NOT use the GetNow function. That function
-    // caches the value of "now" until next time the event loop runs. This
-    // gives better performance, but here we may get many notifications without
-    // running the event loop. We must preserve these events' ordering. This
-    // most commonly happens on redirects.
-    visitTime = PR_Now();
-
-    // Try to turn the referrer into a visit.
+    // Check if the referrer has a visit,
     // This also populates the session id.
-    if (!FindLastVisit(aReferrerURI, &referringVisit, aSessionID)) {
-      // we couldn't find a visit for the referrer, don't set it
+    PRTime lastVisitTime;
+    PRInt64 referringVisitId;
+    if (!FindLastVisit(aReferrerURI, &referringVisitId, &lastVisitTime, aSessionID) ||
+        aTime - lastVisitTime > RECENT_EVENT_THRESHOLD) {
+      // Either referrer does not have any visit, or that visit is too
+      // old to be part of this session.  Start a new session then.
       *aSessionID = GetNewSessionID();
     }
-  } else {
-    // When there is no referrer, we know the user must have gotten the link
-    // from somewhere, so check our sources to see if it was recently typed or
-    // has a bookmark selected. We don't handle drag-and-drop operations.
-    // note:  the link may have also come from a new window (set to load a homepage)
-    // or on start up (if we've set to load the home page or restore tabs)
-    // we treat these as TRANSITION_LINK (if they are top level) or
-    // TRANSITION_EMBED (if not top level).  We don't want to to add visits to 
-    // history without a transition type.
+  }
+  else {
+    // When there is no referrer:
+    // - Check recent events for a typed-in uri.
+    // - Check recent events for a bookmark selection.
+    // - Otherwise mark as TRANSITION_LINK or TRANSITION_EMBED depending on
+    //   whether it happens in a frame (see above for reasoning about this).
+    // Drag and drop operations are not handled, so they will most likely
+    // be marked as links.
     if (CheckIsRecentEvent(&mRecentTyped, spec))
       transitionType = nsINavHistoryService::TRANSITION_TYPED;
     else if (CheckIsRecentEvent(&mRecentBookmark, spec))
@@ -5253,12 +5273,13 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     else
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
 
-    visitTime = PR_Now();
+    // Since there is no referrer, there is no way to continue am existing
+    // session.
     *aSessionID = GetNewSessionID();
   }
 
-  // this call will create the visit and create/update the page entry
-  return AddVisit(aURI, visitTime, fromVisitURI, transitionType,
+  // Create the visit and update the page entry.
+  return AddVisit(aURI, aTime, fromVisitURI, transitionType,
                   aIsRedirect, *aSessionID, aVisitID);
 }
 
@@ -5419,7 +5440,9 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
   NS_ENSURE_ARG(aOldChannel);
   NS_ENSURE_ARG(aNewChannel);
 
-  // ignore internal redirects
+  // Ignore internal redirects.
+  // These redirects are not initiated by the remote server, but specific to the
+  // channel implementation, so they are ignored.
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)
     return NS_OK;
 
@@ -5437,7 +5460,7 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRecentRedirects.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH) {
-    // expire out-of-date ones
+    // Expire outdated cached redirects.
     PRInt64 threshold = PR_Now() - RECENT_EVENT_THRESHOLD;
     mRecentRedirects.Enumerate(ExpireNonrecentRedirects,
                                reinterpret_cast<void*>(&threshold));
@@ -5445,11 +5468,11 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
 
   RedirectInfo info;
 
-  // remove any old entries for this redirect destination
+  // Remove any old entries for this redirect destination, since they are going
+  // to be replaced.
   if (mRecentRedirects.Get(newSpec, &info))
     mRecentRedirects.Remove(newSpec);
-
-  // save the new redirect info
+  // Save the new redirect info.
   info.mSourceURI = oldSpec;
   info.mTimeCreated = PR_Now();
   if (aFlags & nsIChannelEventSink::REDIRECT_TEMPORARY)
@@ -6693,11 +6716,13 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 
 PRBool
 nsNavHistory::GetRedirectFor(const nsACString& aDestination,
-                             nsACString& aSource, PRTime* aTime,
+                             nsACString& aSource,
+                             PRTime* aTime,
                              PRUint32* aRedirectType)
 {
   RedirectInfo info;
   if (mRecentRedirects.Get(aDestination, &info)) {
+    // Consume the redirect entry, it's no longer useful.
     mRecentRedirects.Remove(aDestination);
     if (info.mTimeCreated < GetNow() - RECENT_EVENT_THRESHOLD)
       return PR_FALSE; // too long ago, probably invalid
