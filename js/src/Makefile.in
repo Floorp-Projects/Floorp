@@ -365,6 +365,7 @@ check-valgrind::
 endif
 
 ifdef ENABLE_TRACEJIT
+ifndef CROSS_COMPILE
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
@@ -372,6 +373,7 @@ check::
 check-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
 	        --valgrind --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
+endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \

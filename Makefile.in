@@ -85,6 +85,11 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
+ifdef CROSS_COMPILE
+check::
+	$(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy $(DIST)/bin
+endif
+
 default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
