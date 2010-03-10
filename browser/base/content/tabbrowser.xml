@@ -67,12 +67,6 @@
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
-        <xul:hbox class="tab-drop-indicator-bar" collapsed="true"
-                  ondragover="this.parentNode.parentNode._onDragOver(event);"
-                  ondragleave="this.parentNode.parentNode._onDragLeave(event);"
-                  ondrop="this.parentNode.parentNode._onDrop(event);">
-          <xul:hbox class="tab-drop-indicator" mousethrough="always"/>
-        </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
                   ondragstart="this.parentNode.parentNode._onDragStart(event);"
@@ -80,6 +74,9 @@
                   ondrop="this.parentNode.parentNode._onDrop(event);"
                   ondragend="this.parentNode.parentNode._onDragEnd(event);"
                   ondragleave="this.parentNode.parentNode._onDragLeave(event);">
+          <xul:hbox align="start">
+            <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
+          </xul:hbox>
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
@@ -160,8 +157,8 @@
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
-      <field name="mTabDropIndicatorBar">
-        this.mTabBox.childNodes[0]
+      <field name="_tabDropIndicator">
+        document.getAnonymousElementByAttribute(this, "anonid", "tab-drop-indicator");
       </field>
       <field name="mStrip" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "strip");
@@ -2033,9 +2030,9 @@
           <![CDATA[
             var effects = this._setEffectAllowedForDataTransfer(aEvent);
 
-            var ib = this.mTabDropIndicatorBar;
+            var ind = this._tabDropIndicator;
             if (effects == "" || effects == "none") {
-              ib.collapsed = "true";
+              ind.collapsed = true;
               return;
             }
             aEvent.preventDefault();
@@ -2074,21 +2071,11 @@
             }
 
             var newIndex = this.getNewIndex(aEvent);
-            var ib = this.mTabDropIndicatorBar;
-            var ind = ib.firstChild;
             var scrollRect = tabStrip.scrollClientRect;
             var rect = this.getBoundingClientRect();
             var minMargin = scrollRect.left - rect.left;
-            // make sure we don't place the tab drop indicator past the
-            // edge, or the containing box will flex and stretch
-            // the tab drop indicator bar, which will flex the url bar.  
-            // XXX todo
-            // just use first value if you can figure out how to get
-            // the tab drop indicator to crop instead of flex and stretch
-            // the tab drop indicator bar.
             var maxMargin = Math.min(minMargin + scrollRect.width, 
-                                     ib.getBoundingClientRect().right -
-                                     ind.clientWidth);
+                                     scrollRect.right);
             if (!ltr)
               [minMargin, maxMargin] = [this.clientWidth - maxMargin,
                                         this.clientWidth - minMargin];
@@ -2120,9 +2107,15 @@
                 newMargin = maxMargin;
             }
 
-            ind.style.MozMarginStart = newMargin + 'px';
+            ind.collapsed = false;
+ 
+            newMargin += ind.clientWidth / 2;
+            if (!ltr)
+              newMargin *= -1;
 
-            ib.collapsed = false;
+            ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
+            ind.style.MozMarginStart = (-ind.clientWidth) + "px";
+            ind.style.marginTop = (-ind.clientHeight) + "px";
           ]]>
         </body>
       </method>
@@ -2141,7 +2134,7 @@
                 return;
             }
 
-            this.mTabDropIndicatorBar.collapsed = true;
+            this._tabDropIndicator.collapsed = true;
             aEvent.stopPropagation();
 
             if (draggedTab && (dropEffect == "copy" ||
@@ -2310,7 +2303,7 @@
             if (target)
               return;
 
-            this.mTabDropIndicatorBar.collapsed = true;
+            this._tabDropIndicator.collapsed = true;
             aEvent.stopPropagation();
           ]]>
         </body>
