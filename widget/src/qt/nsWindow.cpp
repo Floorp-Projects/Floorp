@@ -663,13 +663,6 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 NS_IMETHODIMP
 nsWindow::Update()
 {
-    if (!mWidget)
-        return NS_OK;
-
-    // Just proceed all pending paints
-    if (GetViewWidget())
-        GetViewWidget()->repaint();
-
     return NS_OK;
 }
 
