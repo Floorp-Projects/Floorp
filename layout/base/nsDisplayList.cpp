@@ -675,7 +675,7 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       nscoord appUnitsPerDevPixel =
         item->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
       layerItems->mVisibleRect.UnionRect(layerItems->mVisibleRect,
-        item->mVisibleRect.ToOutsidePixels(appUnitsPerDevPixel));
+        item->mVisibleRect.ToNearestPixels(appUnitsPerDevPixel));
       layerItems->mLayer->SetVisibleRegion(nsIntRegion(layerItems->mVisibleRect));
     }
   }
