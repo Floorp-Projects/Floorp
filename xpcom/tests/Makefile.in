@@ -184,7 +184,7 @@ endif
 
 abs_srcdir = $(shell cd $(srcdir) && pwd)
 
-ifdef CROSS_COMPILE
+ifdef WINCE
 DM_RM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py delete
 DM_CP = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy
 
