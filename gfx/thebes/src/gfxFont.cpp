@@ -796,7 +796,9 @@ gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, PRBool aOtherIsOnLeft
 }
 
 gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle) :
-    mFontEntry(aFontEntry), mIsValid(PR_TRUE), mStyle(*aFontStyle), mSyntheticBoldOffset(0)
+    mFontEntry(aFontEntry), mIsValid(PR_TRUE),
+    mStyle(*aFontStyle), mSyntheticBoldOffset(0),
+    mShaper(nsnull)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
@@ -1792,7 +1794,7 @@ gfxFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     nsAutoString utf16;
     AppendASCIItoUTF16(cString, utf16);
 
-    InitTextRun(textRun, utf16.get(), utf16.Length());
+    InitTextRun(aParams->mContext, textRun, utf16.get(), utf16.Length());
 
     textRun->FetchGlyphExtents(aParams->mContext);
 
@@ -1810,7 +1812,7 @@ gfxFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
 
     gfxPlatform::GetPlatform()->SetupClusterBoundaries(textRun, aString);
 
-    InitTextRun(textRun, aString, aLength);
+    InitTextRun(aParams->mContext, textRun, aString, aLength);
 
     textRun->FetchGlyphExtents(aParams->mContext);
 
@@ -1822,7 +1824,8 @@ gfxFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                             // without requiring a separate allocation
 
 void
-gfxFontGroup::InitTextRun(gfxTextRun *aTextRun,
+gfxFontGroup::InitTextRun(gfxContext *aContext,
+                          gfxTextRun *aTextRun,
                           const PRUnichar *aString,
                           PRUint32 aLength)
 {
@@ -1845,8 +1848,9 @@ gfxFontGroup::InitTextRun(gfxTextRun *aTextRun,
             // create the glyph run for this range
             aTextRun->AddGlyphRun(matchedFont, runStart, (matchedLength > 0));
 
-            // do glyph layout and record the resulting positioned glyphs in the run
-            matchedFont->InitTextRun(aTextRun, aString, runStart, matchedLength);
+            // do glyph layout and record the resulting positioned glyphs
+            matchedFont->InitTextRun(aContext, aTextRun, aString,
+                                     runStart, matchedLength);
         } else {
             // no font available, so record missing glyph info instead
             if (unmatched == NULL) {
