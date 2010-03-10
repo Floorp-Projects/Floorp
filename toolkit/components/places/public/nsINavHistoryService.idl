@@ -1298,8 +1298,8 @@ interface nsINavHistoryService : nsISupports
   /**
    * This transition type is set when some inner content is loaded. This is
    * true of all images on a page, and the contents of the iframe. It is also
-   * true of any content in a frame, regardless if whether or not the user
-   * clicked something to get there.
+   * true of any content in a frame if the user did not explicitly follow
+   * a link to get there.
    */
   const unsigned long TRANSITION_EMBED = 4;
 
@@ -1317,6 +1317,12 @@ interface nsINavHistoryService : nsISupports
    * Set when the transition is a download.
    */
   const unsigned long TRANSITION_DOWNLOAD = 7;
+
+  /**
+   * This transition type means the user followed a link and got a visit in
+   * a frame.
+   */
+  const unsigned long TRANSITION_FRAMED_LINK = 8;
 
   /**
    * Set when database is coherent
