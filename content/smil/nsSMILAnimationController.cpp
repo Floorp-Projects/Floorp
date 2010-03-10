@@ -51,14 +51,16 @@
 //----------------------------------------------------------------------
 // nsSMILAnimationController implementation
 
-// Helper method
-static nsPresContext*
-GetPresContextForDoc(nsIDocument* aDoc)
-{
-  nsIPresShell* shell = aDoc->GetPrimaryShell();
-  return shell ? shell->GetPresContext() : nsnull;
-}
-
+// In my testing the minimum needed for smooth animation is 36 frames per
+// second which seems like a lot (Flash traditionally uses 14fps).
+//
+// Redrawing is synchronous. This is deliberate so that later we can tune the
+// timer based on how long the callback takes. To achieve 36fps we'd need 28ms
+// between frames. For now we set the timer interval to be a little less than
+// this (to allow for the render itself) and then let performance decay as the
+// image gets more complicated and render times increase.
+//
+const PRUint32 nsSMILAnimationController::kTimerInterval = 22;
 
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
@@ -73,7 +75,11 @@ nsSMILAnimationController::nsSMILAnimationController()
 
 nsSMILAnimationController::~nsSMILAnimationController()
 {
-  StopTimer();
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
                " elements when it dies");
@@ -98,6 +104,9 @@ nsresult
 nsSMILAnimationController::Init(nsIDocument* aDoc)
 {
   NS_ENSURE_ARG_POINTER(aDoc);
+
+  mTimer = do_CreateInstance("@mozilla.org/timer;1");
+  NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
 
   // Keep track of document, so we can traverse its set of animation elements
   mDocument = aDoc;
@@ -137,20 +146,6 @@ nsSMILAnimationController::GetParentTime() const
 {
   // Our parent time is wallclock time
   return PR_Now() / PR_USEC_PER_MSEC;
-}
-
-//----------------------------------------------------------------------
-// nsARefreshObserver methods:
-NS_IMPL_ADDREF(nsSMILAnimationController)
-NS_IMPL_RELEASE(nsSMILAnimationController)
-
-void
-nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
-{
-  // XXXdholbert Eventually we should be sampling based on aTime. For now,
-  // though, we keep track of the time on our own, and we just use
-  // nsRefreshDriver for scheduling samples.
-  Sample();
 }
 
 //----------------------------------------------------------------------
@@ -219,38 +214,42 @@ nsSMILAnimationController::Unlink()
 //----------------------------------------------------------------------
 // Timer-related implementation helpers
 
+/*static*/ void
+nsSMILAnimationController::Notify(nsITimer* timer, void* aClosure)
+{
+  nsSMILAnimationController* controller = (nsSMILAnimationController*)aClosure;
+
+  NS_ASSERTION(controller->mTimer == timer,
+               "nsSMILAnimationController::Notify called with incorrect timer");
+
+  controller->Sample();
+}
+
 nsresult
 nsSMILAnimationController::StartTimer()
 {
+  NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
   NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused");
 
   // Run the first sample manually
   Sample();
 
-  // Register with PresContext's refresh driver for future samples
-  nsPresContext* presContext = GetPresContextForDoc(mDocument);
-  if (!presContext) {
-    NS_WARNING("Starting timer but have no pres context");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefreshDriver* rd = presContext->RefreshDriver();
-  return rd->AddRefreshObserver(this, Flush_Style) ?
-    NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  //
+  // XXX Make this self-tuning. Sounds like control theory to me and not
+  // something I'm familiar with.
+  //
+  return mTimer->InitWithFuncCallback(nsSMILAnimationController::Notify,
+                                      this,
+                                      kTimerInterval,
+                                      nsITimer::TYPE_REPEATING_SLACK);
 }
 
 nsresult
 nsSMILAnimationController::StopTimer()
 {
-  nsPresContext* presContext = GetPresContextForDoc(mDocument);
-  if (!presContext) {
-    NS_WARNING("Stopping timer but have no pres context");
-    return NS_ERROR_FAILURE;
-  }
-  nsRefreshDriver* rd = presContext->RefreshDriver();
-  rd->RemoveRefreshObserver(this, Flush_Style); // may fail, if already stopped
+  NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
 
-  return NS_OK;
+  return mTimer->Cancel();
 }
 
 //----------------------------------------------------------------------
