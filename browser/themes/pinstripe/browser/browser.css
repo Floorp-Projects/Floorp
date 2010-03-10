@@ -1618,20 +1618,9 @@ tabbrowser > tabbox {
  * Tab Drag and Drop
  */
 
-.tab-drop-indicator-bar {
-  height: 10px;
-  margin-top: -10px;
-  position: relative;
-  /* set -moz-margin-start to -1/2 indicator width: */
-  -moz-margin-start: -4px;
-}
-
 .tab-drop-indicator {
-  height: 33px;
-  width: 10px;
-  margin-bottom: -24px;
-  position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 40% no-repeat;
+  margin-top: -8px !important;
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
 }
 
 /**
