@@ -56,6 +56,8 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+using namespace js;
+
 #define ReadWord(W) (W)
 
 #if !defined(__GNUC__)

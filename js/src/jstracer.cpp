@@ -7431,7 +7431,7 @@ InitJIT(TraceMonitor *tm)
     verbose_only( tm->branches = NULL; )
 
 #if !defined XP_WIN
-    PodZero(&jitstats);
+    debug_only(PodZero(&jitstats));
 #endif
 
 #ifdef JS_JIT_SPEW
