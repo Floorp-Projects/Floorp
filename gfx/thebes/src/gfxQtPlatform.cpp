@@ -39,7 +39,7 @@
 #include <QPixmap>
 #include <QX11Info>
 #include <QApplication>
-#include <QWidget>
+#include <QDesktopWidget>
 
 #include "gfxQtPlatform.h"
 
@@ -582,4 +582,13 @@ gfxQtPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFo
     mPrefFonts.Put(aKey, array);
 }
 #endif
+
+void
+gfxQtPlatform::InitDisplayCaps()
+{
+    QDesktopWidget* rootWindow = qApp->desktop();
+    sDPI = rootWindow->logicalDpiY(); // y-axis DPI for fonts
+    if (sDPI <= 0)
+        sDPI = 96; // something more sensible
+}
 
