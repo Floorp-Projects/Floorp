@@ -77,6 +77,8 @@
 #include "jsxml.h"
 #endif
 
+using namespace js;
+
 #define JS_KEYWORD(keyword, type, op, version) \
     const char js_##keyword##_str[] = #keyword;
 #include "jskeyword.tbl"
@@ -511,7 +513,7 @@ ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
         warning = false;
     }
 
-    memset(&report, 0, sizeof report);
+    PodZero(&report);
     report.flags = flags;
     report.errorNumber = errorNumber;
     message = NULL;

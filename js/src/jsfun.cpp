@@ -1678,7 +1678,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                 ok = false;
                 goto release_mark;
             }
-            memset(bitmap, 0, bitmapLength * sizeof *bitmap);
+            PodZero(bitmap, bitmapLength);
             for (i = 0; i != n; ++i) {
                 if (i < fun->nargs
                     ? JS_LOCAL_NAME_TO_ATOM(names[i]) != NULL
@@ -3035,7 +3035,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
 
 #if JS_HAS_DESTRUCTURING
     /* Some parameter names can be NULL due to destructuring patterns. */
-    memset(names, 0, fun->nargs * sizeof *names);
+    PodZero(names, fun->nargs);
 #endif
     map = fun->u.i.names.map;
     args.fun = fun;

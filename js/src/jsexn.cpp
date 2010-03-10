@@ -988,7 +988,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
 
-    memset(roots, 0, sizeof(roots));
+    PodArrayZero(roots);
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
 #ifdef __GNUC__
@@ -1146,7 +1146,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     cx->generatingError = JS_TRUE;
 
     /* Protect the newly-created strings below from nesting GCs. */
-    memset(tv, 0, sizeof tv);
+    PodArrayZero(tv);
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(tv), tv);
 
     /*
@@ -1211,7 +1211,7 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_GetPendingException(cx, &exn))
         return false;
 
-    memset(roots, 0, sizeof roots);
+    PodArrayZero(roots);
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     /*
@@ -1269,7 +1269,7 @@ js_ReportUncaughtException(JSContext *cx)
             return false;
 
         reportp = &report;
-        memset(&report, 0, sizeof report);
+        PodZero(&report);
         report.filename = filename;
         report.lineno = (uintN) lineno;
     }

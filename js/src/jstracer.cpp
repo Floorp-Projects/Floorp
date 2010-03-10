@@ -610,8 +610,8 @@ FragProfiling_showResults(TraceMonitor* tm)
     uint64_t totCount = 0, cumulCount;
     uint32_t totSE = 0;
     size_t   totCodeB = 0, totExitB = 0;
-    memset(topFragID, 0, sizeof(topFragID));
-    memset(topPI,     0, sizeof(topPI));
+    PodArrayZero(topFragID);
+    PodArrayZero(topPI);
     FragStatsMap::Iter iter(*tm->profTab);
     while (iter.next()) {
         uint32_t fragID  = iter.key();
@@ -2699,7 +2699,7 @@ TraceMonitor::flush()
     assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &LogController, avmplus::AvmCore::config);
     verbose_only( branches = NULL; )
 
-    memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
+    PodArrayZero(vmfragments);
     reFragments = new (alloc) REHashMap(alloc);
 
     needFlush = JS_FALSE;
@@ -7382,7 +7382,7 @@ InitJIT(TraceMonitor *tm)
     }
     tm->lastFragID = 0;
 #else
-    memset(&LogController, 0, sizeof(LogController));
+    PodZero(&LogController);
 #endif
 
     if (!did_we_check_processor_features) {
@@ -7431,7 +7431,7 @@ InitJIT(TraceMonitor *tm)
     verbose_only( tm->branches = NULL; )
 
 #if !defined XP_WIN
-    debug_only(memset(&jitstats, 0, sizeof(jitstats)));
+    PodZero(&jitstats);
 #endif
 
 #ifdef JS_JIT_SPEW
@@ -7526,7 +7526,7 @@ FinishJIT(TraceMonitor *tm)
     }
 #endif
 
-    memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
+    PodArrayZero(tm->vmfragments);
 
     if (tm->frameCache) {
         delete tm->frameCache;
@@ -9822,12 +9822,9 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                     RETURN_STOP_A("inner recursive tree is blacklisted");
                 JSContext* _cx = cx;
                 SlotList* globalSlots = tree->globalSlots;
-                TraceMonitor* tm = traceMonitor;
                 AbortRecording(cx, "trying to compile inner recursive tree");
                 JS_ASSERT(_cx->fp->argc == first->argc);
-                if (RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame)) {
-                    JS_ASSERT(tm->recorder);
-                }
+                RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame);
                 break;
             }
         }

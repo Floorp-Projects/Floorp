@@ -689,7 +689,7 @@ struct JSSetSlotRequest {
 
 /* Caching Class.prototype lookups for the standard classes. */
 struct JSClassProtoCache {
-    void purge() { memset(entries, 0, sizeof(entries)); }
+    void purge() { js::PodArrayZero(entries); }
 
 #ifdef JS_PROTO_CACHE_METERING
     struct Stats {

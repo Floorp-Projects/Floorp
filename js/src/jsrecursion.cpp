@@ -175,7 +175,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     VMSideExit* exit = (VMSideExit*)
         traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(TraceType) * exitTypeMapLen);
 
-    memset(exit, 0, sizeof(VMSideExit));
+    PodZero(exit);
     exit->from = fragment;
     exit->calldepth = 0;
     JS_ASSERT(unsigned(exit->calldepth) == callDepth);
@@ -450,7 +450,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
     VMSideExit* exit = (VMSideExit*)
         traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(TraceType) * safeSlots);
-    memset(exit, 0, sizeof(VMSideExit));
+    PodZero(exit);
     exit->pc = (jsbytecode*)recursive_pc;
     exit->from = fragment;
     exit->exitType = RECURSIVE_SLURP_FAIL_EXIT;

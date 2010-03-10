@@ -504,7 +504,7 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         return;
     }
 
-    memset(cache->table, 0, sizeof cache->table);
+    PodArrayZero(cache->table);
     cache->empty = JS_TRUE;
 
 #ifdef JS_PROPERTY_CACHE_METERING

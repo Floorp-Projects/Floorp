@@ -851,7 +851,7 @@ struct JSCompiler : private js::AutoGCRooter {
         aleFreeList(NULL), tokenStream(cx), principals(NULL),
         callerFrame(cfp), nodeList(NULL), functionCount(0), traceListHead(NULL)
     {
-        memset(tempFreeList, 0, sizeof tempFreeList);
+        js::PodArrayZero(tempFreeList);
         setPrincipals(prin);
         JS_ASSERT_IF(cfp, cfp->script);
     }

@@ -829,7 +829,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     script = (JSScript *) cx->malloc(size);
     if (!script)
         return NULL;
-    memset(script, 0, sizeof(JSScript));
+    PodZero(script);
     script->length = length;
     script->version = cx->version;
 
