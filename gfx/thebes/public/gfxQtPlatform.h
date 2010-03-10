@@ -135,6 +135,7 @@ public:
 
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
+    void InitDisplayCaps();
 
 private:
     virtual qcms_profile *GetPlatformCMSOutputProfile();
