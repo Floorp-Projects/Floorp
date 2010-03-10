@@ -357,8 +357,10 @@ static ID3D10Texture2D*
 _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface) 
 {
     if (!surface->bufferTexture) {
+	IDXGISurface *surf;
 	DXGI_SURFACE_DESC surfDesc;
-	surface->backBuf->GetDesc(&surfDesc);
+	surface->surface->QueryInterface(&surf);
+	surf->GetDesc(&surfDesc);
 	CD3D10_TEXTURE2D_DESC softDesc(surfDesc.Format, surfDesc.Width, surfDesc.Height);
         softDesc.MipLevels = 1;
 	softDesc.Usage = D3D10_USAGE_DEFAULT;
@@ -1138,24 +1140,114 @@ _cairo_d2d_create_path_geometry_for_path(cairo_path_fixed_t *path,
 }
 
 /**
- * We use this to clear out a certain geometry on a surface. This will respect
+ * We use this to clear out a certain path on a surface. This will respect
  * the existing clip.
  *
  * \param d2dsurf Surface we clear
- * \param geometry Geometry of the area to clear
+ * \param geometry Geometry of the area to clear, NULL means entire surface.
  */
 static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
-				      ID2D1Geometry *geometry)
+				      ID2D1Geometry *pathGeometry)
 {
     if (!d2dsurf->helperLayer) {
 	d2dsurf->rt->CreateLayer(&d2dsurf->helperLayer);
     }
 
-    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
-						 geometry),
-			   d2dsurf->helperLayer);
+    if (!d2dsurf->clipMask && !pathGeometry) {
+	/**
+	 * We have an axis aligned rectangular clip and no pathGeometry, we can
+	 * just clear the surface.
+	 */
+	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	return;
+    }
+
+    IDXGISurface *dxgiSurface;
+    ID2D1Bitmap *bitmp;
+
+    /** Create a temporary buffer for our surface content */
+    ID3D10Texture2D *bufTexture = _cairo_d2d_get_buffer_texture(d2dsurf);
+
+    /** Copy our contents into the temporary buffer */
+    D3D10Factory::Device()->CopyResource(bufTexture, d2dsurf->surface);
+
+    /** Make the temporary buffer available as a D2D Bitmap */
+    bufTexture->QueryInterface(&dxgiSurface);
+    D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+									    D2D1_ALPHA_MODE_PREMULTIPLIED));
+    HRESULT hr = d2dsurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+						 dxgiSurface,
+						 &props,
+						 &bitmp);
+
+    /** Clear our original surface */
     d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+
+    DXGI_SURFACE_DESC desc;
+    dxgiSurface->GetDesc(&desc);
+
+    ID2D1RectangleGeometry *rectGeom;
+    ID2D1PathGeometry *inverse;
+    ID2D1Geometry *clearGeometry;
+    ID2D1GeometrySink *sink;
+
+    if (!d2dsurf->clipMask) {
+	/** No clip mask, our clear geometry is equal to our path geometry. */
+	clearGeometry = pathGeometry;
+	clearGeometry->AddRef();
+    } else if (!pathGeometry) {
+	/** No path geometry, our clear geometry is equal to our clip mask. */
+	clearGeometry = d2dsurf->clipMask;
+	clearGeometry->AddRef();
+    } else {
+	/**
+	 * A clipping mask and a pathGeometry, the intersect of the two
+	 * geometries is the area of the surface that we want to clear.
+	 */
+	ID2D1PathGeometry *clipPathUnion;
+	D2DSurfFactory::Instance()->CreatePathGeometry(&clipPathUnion);
+	clipPathUnion->Open(&sink);
+	pathGeometry->CombineWithGeometry(d2dsurf->clipMask,
+					  D2D1_COMBINE_MODE_INTERSECT,
+					  D2D1::IdentityMatrix(),
+					  sink);
+	sink->Close();
+	sink->Release();
+	clearGeometry = clipPathUnion;
+    }
+
+    if (d2dsurf->clipMask) {
+	/** If we have a clip mask, we'll need to pop the surface clip */
+	_cairo_d2d_surface_pop_clip(d2dsurf);
+    }
+
+    /**
+     * Calculate the inverse of the geometry to clear. This is the clip mask
+     * when drawing our original content back to the surface.
+     */
+    D2DSurfFactory::Instance()->CreatePathGeometry(&inverse);
+    inverse->Open(&sink);
+    D2DSurfFactory::Instance()->CreateRectangleGeometry(D2D1::RectF(0, 0, (FLOAT)desc.Width, (FLOAT)desc.Height), &rectGeom);
+    rectGeom->CombineWithGeometry(clearGeometry, D2D1_COMBINE_MODE_EXCLUDE, D2D1::IdentityMatrix(), sink);
+    sink->Close();
+    sink->Release();
+    rectGeom->Release();
+    clearGeometry->Release();
+
+    /** Clip by the inverse and draw our content back to the surface */
+    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), inverse),
+			   d2dsurf->helperLayer);
+    d2dsurf->rt->DrawBitmap(bitmp);
     d2dsurf->rt->PopLayer();
+
+    bitmp->Release();
+    dxgiSurface->Release();
+    inverse->Release();
+
+    if (d2dsurf->clipMask) {
+	/** If we have a clip mask, we'll need to push back the surface clip */
+	_cairo_d2d_surface_push_clip(d2dsurf);
+    }
 }
 
 static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
@@ -1655,7 +1747,7 @@ _cairo_d2d_paint(void			*surface,
     op = _cairo_d2d_simplify_operator(op, source);
 
     if (op == CAIRO_OPERATOR_CLEAR) {
-	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	_cairo_d2d_clear_geometry(d2dsurf, NULL);
 	return CAIRO_INT_STATUS_SUCCESS;
     }
 
@@ -1951,8 +2043,20 @@ _cairo_d2d_fill(void			*surface,
     unsigned int runs_remaining = 1;
     unsigned int last_run = 0;
     bool pushed_clip = false;
+    cairo_box_t box;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
+	if (_cairo_path_fixed_is_box(path, &box) && !d2dsurf->clipMask) {
+	    /** No layers needed! We can clear using out axis aligned clips */
+	    d2dsurf->rt->PushAxisAlignedClip(D2D1::RectF(_cairo_fixed_to_float(box.p1.x),
+							 _cairo_fixed_to_float(box.p1.y),
+							 _cairo_fixed_to_float(box.p2.x),
+							 _cairo_fixed_to_float(box.p2.y)),
+					     D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	    d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	    d2dsurf->rt->PopAxisAlignedClip();
+	    return CAIRO_INT_STATUS_SUCCESS;
+	}
 	ID2D1Geometry *d2dpath = _cairo_d2d_create_path_geometry_for_path(path,
 									  fill_rule,
 									  D2D1_FIGURE_BEGIN_FILLED);
@@ -1962,7 +2066,6 @@ _cairo_d2d_fill(void			*surface,
 	return CAIRO_INT_STATUS_SUCCESS;
     }
 
-    cairo_box_t box;
     if (_cairo_path_fixed_is_box(path, &box)) {
 	float x1 = _cairo_fixed_to_float(box.p1.x);
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
