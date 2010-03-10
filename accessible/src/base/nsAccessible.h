@@ -325,8 +325,8 @@ protected:
   /**
    * Return sibling accessible at the given offset.
    */
-  virtual nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                            nsresult* aError = nsnull);
+  virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                           nsresult *aError = nsnull);
 
   //////////////////////////////////////////////////////////////////////////////
   // Miscellaneous helpers
