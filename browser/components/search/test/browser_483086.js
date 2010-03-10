@@ -58,7 +58,7 @@ function test() {
   }
 
   gObs.addObserver(observer, "browser-search-engine-modified", false);
-  gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-1.xml",
+  gSS.addEngine("http://localhost:8888/browser/browser/components/search/test/483086-1.xml",
                 Ci.nsISearchEngine.DATA_XML, "data:image/x-icon;%00",
                 false);
 }
@@ -80,7 +80,7 @@ function test2() {
   }
 
   gObs.addObserver(observer, "browser-search-engine-modified", false);
-  gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-2.xml",
+  gSS.addEngine("http://localhost:8888/browser/browser/components/search/test/483086-2.xml",
                 Ci.nsISearchEngine.DATA_XML, "data:image/x-icon;%00",
                 false);
 }

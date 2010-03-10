@@ -54,7 +54,7 @@ function startTest()
       is(keyNames[i], localStorage.key(i), "key "+keyNames[i]+" on same index");
 
     keyNamesStringify = "[\"" + keyNames.join("\",\"") + "\"]";
-    frame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/localstorage/frameOrder.html?" +
+    frame.location = "http://localhost:8888/tests/dom/tests/mochitest/localstorage/frameOrder.html?" +
       keyNamesStringify;
   }
   catch (ex)

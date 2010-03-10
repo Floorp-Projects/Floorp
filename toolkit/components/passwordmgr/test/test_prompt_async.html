@@ -88,23 +88,15 @@
                 logins.push(login);
             }
 
-            //need to allow for arbitrary network servers, hardcoded for 8888, although PAC might h$
-            var ios = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-            var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
-
-            var uri = ios.newURI("http://example.com", null, null);
-            var pi = pps.resolve(uri, 0);
-            var mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
-
-            addLogin(mozproxy, "proxy_realm",
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm",
                      "proxy_user", "proxy_pass");
-            addLogin(mozproxy, "proxy_realm2",
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm2",
                      "proxy_user2", "proxy_pass2");
-            addLogin(mozproxy, "proxy_realm3",
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm3",
                      "proxy_user3", "proxy_pass3");
-            addLogin(mozproxy, "proxy_realm4",
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm4",
                      "proxy_user4", "proxy_pass4");
-            addLogin(mozproxy, "proxy_realm5",
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm5",
                      "proxy_user5", "proxy_pass5");
             addLogin("http://example.com", "mochirealm",
                      "user1name", "user1pass");
@@ -274,7 +266,7 @@
             case 6:
                 // Reload the frame from the previous step and let the proxy
                 // authentication pass but WWW fail. We expect two dialogs
-                // and an unathenticated page content load.
+                // and an unathentiocated page content load.
                 ok(true, "doTest testNum 6");
                 expectedLoads = 1;
                 expectedDialogs = 2;

@@ -66,8 +66,8 @@ var observer =
   onPageAnnotationRemoved: function(aUri, aAnnotationName) {}
 };
 
-const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
-const INITIALSITESPEC = "http://mochi.test:8888/";
+const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
+const INITIALSITESPEC = "http://localhost:8888/";
 const FEEDSITESPEC = "http://example.org/"; 
 
 gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",

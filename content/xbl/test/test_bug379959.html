@@ -29,7 +29,7 @@ var messages = 0;
 
 function receiveMessage(e)
 {
-  is(e.origin, "http://mochi.test:8888", "wrong sender!");
+  is(e.origin, "http://localhost:8888", "wrong sender!");
   messages++;
   gen.send(e.data);
 }
