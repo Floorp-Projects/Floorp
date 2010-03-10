@@ -56,7 +56,8 @@
 #include "nsMIMEInfoMac.h"
 #include "nsEmbedCID.h"
 
-#import <Carbon/Carbon.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <ApplicationServices/ApplicationServices.h>
 
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
