@@ -496,7 +496,9 @@ protected:
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                             PRInt64 aSessionID, PRTime aTime,
                             PRInt32 aTransitionType, PRInt64* aVisitID);
-  PRBool FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
+  PRBool FindLastVisit(nsIURI* aURI,
+                       PRInt64* aVisitID,
+                       PRTime* aTime,
                        PRInt64* aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
 
