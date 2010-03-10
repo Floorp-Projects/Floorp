@@ -202,20 +202,23 @@ class RegularFramePaintCallback : public nsSVGFilterPaintCallback
 public:
   RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
                             nsDisplayList* aInnerList,
+                            nsIFrame* aFrame,
                             const nsPoint& aOffset)
-    : mBuilder(aBuilder), mInnerList(aInnerList), mOffset(aOffset) {}
+    : mBuilder(aBuilder), mInnerList(aInnerList), mFrame(aFrame),
+      mOffset(aOffset) {}
 
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
     nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
     nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset.x, -mOffset.y);
-    mInnerList->Paint(mBuilder, ctx, nsDisplayList::PAINT_DEFAULT);
+    mInnerList->PaintForFrame(mBuilder, ctx, mFrame, nsDisplayList::PAINT_DEFAULT);
   }
 
 private:
   nsDisplayListBuilder* mBuilder;
   nsDisplayList* mInnerList;
+  nsIFrame* mFrame;
   nsPoint mOffset;
 };
 
@@ -298,12 +301,14 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
 
   /* Paint the child */
   if (filterFrame) {
-    RegularFramePaintCallback paint(aBuilder, aInnerList, userSpaceRect.TopLeft());
+    RegularFramePaintCallback paint(aBuilder, aInnerList, aEffectsFrame,
+                                    userSpaceRect.TopLeft());
     nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
     filterFrame->FilterPaint(&svgContext, aEffectsFrame, &paint, &r);
   } else {
     gfx->SetMatrix(savedCTM);
-    aInnerList->Paint(aBuilder, aCtx, nsDisplayList::PAINT_DEFAULT);
+    aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
+                              nsDisplayList::PAINT_DEFAULT);
     aCtx->Translate(userSpaceRect.x, userSpaceRect.y);
   }
 

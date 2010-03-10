@@ -316,6 +316,8 @@ nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
                "Should have aVisibleRegionBeforeMove when there are moving frames");
 
+  mVisibleRect = aVisibleRegion->GetBounds();
+
   nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
 
@@ -706,8 +708,6 @@ already_AddRefed<Layer>
 nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
                           LayerManager* aManager,
                           nsTArray<LayerItems>* aLayers) const {
-  BuildLayers(aBuilder, aManager, aLayers);
-
   // If there's only one layer, then in principle we can try to flatten
   // things by returning that layer here. But that adds complexity to
   // retained layer management so we don't do it. Layer backends can
@@ -717,19 +717,23 @@ nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (!container)
     return nsnull;
 
+  BuildLayers(aBuilder, aManager, aLayers);
+
   Layer* lastChild = nsnull;
-  nsIntRect visibleRect;
   for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
-    LayerItems* layerItems = &aLayers->ElementAt(i);
-    visibleRect.UnionRect(visibleRect, layerItems->mVisibleRect);
-    Layer* child = layerItems->mLayer;
+    Layer* child = aLayers->ElementAt(i).mLayer;
     container->InsertAfter(child, lastChild);
     lastChild = child;
   }
-  container->SetVisibleRegion(nsIntRegion(visibleRect));
   container->SetIsOpaqueContent(mIsOpaque);
   nsRefPtr<Layer> layer = container.forget();
   return layer.forget();
+}
+
+void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
+                              nsIRenderingContext* aCtx,
+                              PRUint32 aFlags) const {
+  PaintForFrame(aBuilder, aCtx, aBuilder->ReferenceFrame(), aFlags);
 }
 
 /**
@@ -737,9 +741,10 @@ nsDisplayList::BuildLayer(nsDisplayListBuilder* aBuilder,
  * single layer representing the display list, and then making it the
  * root of the layer manager, drawing into the ThebesLayers.
  */
-void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder,
-                          nsIRenderingContext* aCtx,
-                          PRUint32 aFlags) const {
+void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
+                                  nsIRenderingContext* aCtx,
+                                  nsIFrame* aForFrame,
+                                  PRUint32 aFlags) const {
   NS_ASSERTION(mDidComputeVisibility,
                "Must call ComputeVisibility before calling Paint");
 
@@ -773,6 +778,10 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder,
   nsRefPtr<Layer> root = BuildLayer(aBuilder, layerManager, &layers);
   if (!root)
     return;
+
+  nsIntRect visible =
+    mVisibleRect.ToNearestPixels(aForFrame->PresContext()->AppUnitsPerDevPixel());
+  root->SetVisibleRegion(nsIntRegion(visible));
 
   layerManager->SetRoot(root);
   layerManager->EndConstruction();
@@ -1533,7 +1542,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (!layer)
     return nsnull;
 
-  layer->SetOpacity(mFrame->GetStyleDisplay()->mOpacity*layer->GetOpacity());
+  layer->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
   return layer.forget();
 }
 
@@ -1853,7 +1862,8 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
 
   /* Now, send the paint call down.
    */    
-  mStoredList.GetList()->Paint(aBuilder, aCtx, nsDisplayList::PAINT_DEFAULT);
+  mStoredList.GetList()->
+      PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
 
   /* The AutoSaveRestore object will clean things up. */
 }
