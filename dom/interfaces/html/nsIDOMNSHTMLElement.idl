@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(bd365f77-3af4-4248-98ce-5eb98dc3b222)]
+[scriptable, uuid(2eeec2e5-a48f-4251-b2e2-adfb87929d18)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -51,6 +51,7 @@ interface nsIDOMNSHTMLElement : nsISupports
            attribute long             tabIndex;
 
            attribute DOMString        contentEditable;
+  readonly attribute boolean          isContentEditable;
 
            // for WHAT-WG drag and drop
            attribute boolean          draggable;
