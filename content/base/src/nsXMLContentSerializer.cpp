@@ -65,6 +65,8 @@
 #include "nsAttrName.h"
 #include "nsILineBreaker.h"
 
+static const char kMozStr[] = "moz";
+
 #define kXMLNS "xmlns"
 
 // to be readable, we assume that an indented line contains
@@ -853,6 +855,13 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     nsIAtom* attrName = name->LocalName();
     nsIAtom* attrPrefix = name->GetPrefix();
 
+    // Filter out any attribute starting with [-|_]moz
+    nsDependentAtomString attrNameStr(attrName);
+    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
+        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+      continue;
+    }
+
     if (attrPrefix) {
       attrPrefix->ToString(prefixStr);
     }
@@ -867,14 +876,8 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     }
     
     aContent->GetAttr(namespaceID, attrName, valueStr);
+
     nsDependentAtomString nameStr(attrName);
-
-    // XXX Hack to get around the fact that MathML can add
-    //     attributes starting with '-', which makes them
-    //     invalid XML. see Bug 475518
-    if (!nameStr.IsEmpty() && nameStr.First() == '-')
-      continue;
-
     PRBool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
 
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, !isJS);
