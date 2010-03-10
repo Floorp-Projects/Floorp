@@ -1525,9 +1525,10 @@ AssertTreeIsUnique(TraceMonitor* tm, TreeFragment* f)
 #endif
 
 static void
-AttemptCompilation(JSContext *cx, TraceMonitor* tm, JSObject* globalObj, jsbytecode* pc,
-                   uint32 argc)
+AttemptCompilation(JSContext *cx, JSObject* globalObj, jsbytecode* pc, uint32 argc)
 {
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+
     /* If we already permanently blacklisted the location, undo that. */
     JS_ASSERT(*pc == JSOP_NOP || *pc == JSOP_TRACE || *pc == JSOP_CALL);
     if (*pc == JSOP_NOP)
@@ -4611,8 +4612,9 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     JS_ASSERT_IF(exit->exitType == RECURSIVE_UNLINKED_EXIT,
                  exit->recursive_pc != fragment->root->ip);
 
+    JS_ASSERT(fragment->root == tree);
+
     TreeFragment* peer = NULL;
-    TreeFragment* root = fragment->root;
 
     TypeConsensus consensus = TypeConsensus_Bad;
 
@@ -4620,7 +4622,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         consensus = selfTypeStability(slotMap);
     if (consensus != TypeConsensus_Okay) {
         const void* ip = exit->exitType == RECURSIVE_UNLINKED_EXIT ?
-                         exit->recursive_pc : fragment->root->ip;
+                         exit->recursive_pc : tree->ip;
         TypeConsensus peerConsensus = peerTypeStability(slotMap, ip, &peer);
         /* If there was a semblance of a stable peer (even if not linkable), keep the result. */
         if (peerConsensus != TypeConsensus_Bad)
@@ -4693,8 +4695,11 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS CLOSELOOP EXIT=%p PEER=%p\n", (void*)exit, (void*)peer);
 
-    peer = LookupLoop(traceMonitor, root->ip, root->globalObj, root->globalShape, root->argc);
-    JS_ASSERT(peer);
+    JS_ASSERT(LookupLoop(traceMonitor, tree->ip, tree->globalObj, tree->globalShape, tree->argc) ==
+              tree->first);
+    JS_ASSERT(tree->first);
+
+    peer = tree->first;
     joinEdgesToEntry(peer);
 
     debug_only_stmt(DumpPeerStability(traceMonitor, peer->ip, peer->globalObj,
@@ -4702,7 +4707,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
-    if (fragment->root->code())
+    if (tree->code())
         SpecializeTreesToMissingGlobals(cx, globalObj, fragment->root);
 
     /*
@@ -4710,7 +4715,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      * should try to compile the outer tree again.
      */
     if (outer)
-        AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
+        AttemptCompilation(cx, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via closeLoop (FragID=%06u)\n",
@@ -4843,9 +4848,11 @@ TraceRecorder::endLoop()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::endLoop(VMSideExit* exit)
 {
+    JS_ASSERT(fragment->root == tree);
+
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer, "Blacklisted: stack depth mismatch, possible recursion.\n");
-        Blacklist((jsbytecode*) fragment->root->ip);
+        Blacklist((jsbytecode*)tree->ip);
         trashSelf = true;
         return ARECORD_STOP;
     }
@@ -4860,11 +4867,13 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS ENDLOOP EXIT=%p\n", (void*)exit);
 
-    TreeFragment* root = fragment->root;
-    joinEdgesToEntry(LookupLoop(traceMonitor, root->ip, root->globalObj,
-                                root->globalShape, root->argc));
-    debug_only_stmt(DumpPeerStability(traceMonitor, root->ip, root->globalObj,
-                                      root->globalShape, root->argc);)
+    JS_ASSERT(LookupLoop(traceMonitor, tree->ip, tree->globalObj, tree->globalShape, tree->argc) ==
+              tree->first);
+
+    joinEdgesToEntry(tree->first);
+
+    debug_only_stmt(DumpPeerStability(traceMonitor, tree->ip, tree->globalObj,
+                                      tree->globalShape, tree->argc);)
 
     /*
      * Note: this must always be done, in case we added new globals on trace
@@ -4872,7 +4881,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
      */
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
-    if (fragment->root->code())
+    if (tree->code())
         SpecializeTreesToMissingGlobals(cx, globalObj, fragment->root);
 
     /*
@@ -4880,7 +4889,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
      * yet, we should try to compile the outer tree again.
      */
     if (outer)
-        AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
+        AttemptCompilation(cx, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via endLoop (FragID=%06u)\n",
@@ -5573,10 +5582,11 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
 }
 
 static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, TraceMonitor* tm, TreeFragment* peer, jsbytecode* outer,
-           uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
-           SlotList* globalSlots, uint32 argc, RecordReason reason)
+RecordTree(JSContext* cx, TreeFragment* peer, jsbytecode* outer,
+           uint32 outerArgc, SlotList* globalSlots, RecordReason reason)
 {
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
     /* Try to find an unused peer fragment, or allocate a new one. */
     TreeFragment* f = peer;
     while (f->code() && f->peer)
@@ -5589,7 +5599,7 @@ RecordTree(JSContext* cx, TraceMonitor* tm, TreeFragment* peer, jsbytecode* oute
     const void* localRootIP = f->root->ip;
 
     /* Make sure the global type map didn't change on us. */
-    if (!CheckGlobalObjectShape(cx, tm, globalObj)) {
+    if (!CheckGlobalObjectShape(cx, tm, f->globalObj)) {
         Backoff(cx, (jsbytecode*) localRootIP);
         return false;
     }
@@ -5748,9 +5758,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
     if (*(jsbytecode*)from->ip == JSOP_NOP)
         return false;
 
-    return RecordTree(cx, tm, from->first, outer, outerArgc, globalObj,
-                      globalShape, globalSlots, cx->fp->argc,
-                      Record_Branch);
+    return RecordTree(cx, from->first, outer, outerArgc, globalSlots, Record_Branch);
 }
 
 static JS_REQUIRES_STACK VMFragment*
@@ -5931,11 +5939,10 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
-        uint32 argc = cx->fp->argc;
+        JS_ASSERT(cx->fp->argc == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
-        return RecordTree(cx, tm, first, outer, outerArgc, globalObj, globalShape,
-                          globalSlots, argc, Record_Branch);
+        return RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch);
     }
 
     return r->attemptTreeCall(f, inlineCallCount) == ARECORD_CONTINUE;
@@ -6909,8 +6916,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
          * it will walk the peer list and find us a free slot or allocate a new
          * tree if needed.
          */
-        bool rv = RecordTree(cx, tm, f->first, NULL, 0, globalObj, globalShape,
-                             globalSlots, argc, reason);
+        bool rv = RecordTree(cx, f->first, NULL, 0, globalSlots, reason);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
@@ -9818,8 +9824,8 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                 SlotList* globalSlots = tree->globalSlots;
                 TraceMonitor* tm = traceMonitor;
                 AbortRecording(cx, "trying to compile inner recursive tree");
-                if (RecordTree(_cx, tm, first, NULL, 0, first->globalObj, first->globalShape,
-                               globalSlots, _cx->fp->argc, Record_EnterFrame)) {
+                JS_ASSERT(_cx->fp->argc == first->argc);
+                if (RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame)) {
                     JS_ASSERT(tm->recorder);
                 }
                 break;
