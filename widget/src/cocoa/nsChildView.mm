@@ -5808,16 +5808,18 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       // Determine if there is a selection (if sending to the service).
       if (sendType) {
         nsQueryContentEvent event(PR_TRUE, NS_QUERY_CONTENT_STATE, mGeckoChild);
+        // This might destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(event);
-        if (!event.mSucceeded || !event.mReply.mHasSelection)
+        if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
           result = nil;
       }
 
       // Determine if we can paste (if receiving data from the service).
-      if (returnType) {
+      if (mGeckoChild && returnType) {
         nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, mGeckoChild, PR_TRUE);
+        // This might possibly destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(command);
-        if (!command.mSucceeded || !command.mIsEnabled)
+        if (!mGeckoChild || !command.mSucceeded || !command.mIsEnabled)
           result = nil;
       }
     }
