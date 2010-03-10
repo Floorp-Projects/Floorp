@@ -9,7 +9,8 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="300px" height="200px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="300px" height="200px"
+     onload="this.pauseAnimations()">
   <!--  At 50% through the animation, the following should be true:
    * First <g> has font-size = 5px (1/2 between 0px and 10px)
    * Next <g> has font-size = 10px (1/2 between inherit=5px and 15px)
@@ -64,7 +65,8 @@ function main() {
 
   // Pause & seek to halfway through animation
   var svg = SMILUtil.getSVGRoot();
-  svg.pauseAnimations();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
   svg.setCurrentTime(0.5);
 
   var text = document.getElementsByTagName("text")[0];

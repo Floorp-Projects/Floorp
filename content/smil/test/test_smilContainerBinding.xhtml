@@ -9,7 +9,8 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <circle cx="-20" cy="20" r="15" fill="blue" id="circle">
     <set attributeName="cy" to="120" begin="0s; 2s" dur="1s" id="b"/>
   </circle>
@@ -24,8 +25,8 @@ SimpleTest.waitForExplicitFinish();
 
 function main() {
   var svg = getElement("svg");
-  svg.pauseAnimations();
-  svg.setCurrentTime(0);
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
   // Create animation and check initial state
   var anim = createAnim();
