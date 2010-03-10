@@ -48,6 +48,7 @@
 #include "nsSMILTimeContainer.h"
 #include "nsSMILCompositorTable.h"
 #include "nsSMILMilestone.h"
+#include "nsRefreshDriver.h"
 
 struct nsSMILTargetIdentifier;
 class nsISMILAnimationElement;
@@ -66,7 +67,8 @@ class nsIDocument;
 // a compound document. These time containers can be paused individually or
 // here, at the document level.
 //
-class nsSMILAnimationController : public nsSMILTimeContainer
+class nsSMILAnimationController : public nsSMILTimeContainer,
+                                  public nsARefreshObserver
 {
 public:
   nsSMILAnimationController();
@@ -77,6 +79,12 @@ public:
   virtual void Resume(PRUint32 aType);
   virtual nsSMILTime GetParentTime() const;
 
+  // nsARefreshObserver
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
+  
   // Methods for registering and enumerating animation elements
   void RegisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
   void UnregisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
@@ -165,8 +173,10 @@ protected:
   virtual void     RemoveChild(nsSMILTimeContainer& aChild);
 
   // Members
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
   static const PRUint32      kTimerInterval;
-  nsCOMPtr<nsITimer>         mTimer;
   AnimationElementHashtable  mAnimationElementTable;
   TimeContainerHashtable     mChildContainerTable;
   PRPackedBool               mResampleNeeded;
