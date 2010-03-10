@@ -122,6 +122,8 @@ test_invalid8()
 PRBool
 test_malformed8()
 {
+// Don't run this test in debug builds as that intentionally asserts.
+#ifndef DEBUG
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
 
@@ -136,6 +138,7 @@ test_malformed8()
     if (CompareUTF8toUTF16(str8, EmptyString()) == 0)
       return PR_FALSE;
   }
+#endif
   
   return PR_TRUE;
 }
@@ -161,6 +164,8 @@ test_hashas16()
       return PR_FALSE;
   }
 
+// Don't run this test in debug builds as that intentionally asserts.
+#ifndef DEBUG
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
     PRBool err;
@@ -168,6 +173,7 @@ test_hashas16()
         !err)
       return PR_FALSE;
   }
+#endif
 
   return PR_TRUE;
 }
@@ -184,10 +190,7 @@ tests[] =
     { "test_valid", test_valid },
     { "test_invalid16", test_invalid16 },
     { "test_invalid8", test_invalid8 },
-#ifndef DEBUG
-    // Don't run this test in debug builds as that intentionally asserts
     { "test_malformed8", test_malformed8 },
-#endif
     { "test_hashas16", test_hashas16 },
     { nsnull, nsnull }
   };
