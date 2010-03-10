@@ -472,7 +472,10 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     return true;
 #endif
 
-    *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+    if (!mPluginIface->event)
+        *handled = false;
+    else
+        *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
     if (GraphicsExpose == event.event.type) {
@@ -521,8 +524,7 @@ XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
 #endif
 
 bool
-PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
-                                         NPError* rv)
+PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 {
     PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
                       FULLFUNCTION,
@@ -561,7 +563,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
 #endif
     }
 
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+    if (mPluginIface->setwindow)
+        (void) mPluginIface->setwindow(&mData, &mWindow);
 
 #elif defined(OS_WIN)
     switch (aWindow.type) {
@@ -580,8 +583,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
           mWindow.height = aWindow.height;
           mWindow.type = aWindow.type;
 
-          *rv = mPluginIface->setwindow(&mData, &mWindow);
-          if (*rv == NPERR_NO_ERROR) {
+          if (mPluginIface->setwindow) {
+              (void) mPluginIface->setwindow(&mData, &mWindow);
               WNDPROC wndProc = reinterpret_cast<WNDPROC>(
                   GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
               if (wndProc != PluginWindowProc) {
@@ -594,7 +597,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
       break;
 
       case NPWindowTypeDrawable:
-          return SharedSurfaceSetWindow(aWindow, rv);
+          return SharedSurfaceSetWindow(aWindow);
       break;
 
       default:
@@ -964,6 +967,9 @@ IsMouseInputEvent(UINT msg)
 int16_t
 PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 {
+    if (!mPluginIface->event)
+        return false;
+
     // Winless Silverlight quirk: winposchanged events are not used in
     // determining the position of the plugin within the parent window,
     // NPP_SetWindow values are used instead. Due to shared memory dib
@@ -1023,8 +1029,7 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 /* windowless drawing helpers */
 
 bool
-PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
-                                            NPError* rv)
+PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
 {
     // If the surfaceHandle is empty, parent is telling us we can reuse our cached
     // memory surface and hdc. Otherwise, we need to reset, usually due to a
@@ -1052,7 +1057,9 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
     mWindow.type   = aWindow.type;
 
     mWindow.window = reinterpret_cast<void*>(mSharedSurfaceDib.GetHDC());
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+
+    if (mPluginIface->setwindow)
+        mPluginIface->setwindow(&mData, &mWindow);
 
     return true;
 }
@@ -1127,6 +1134,9 @@ PluginInstanceChild::UpdatePaintClipRect(RECT* aRect)
 int16_t
 PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 {
+    if (!mPluginIface->event)
+        return false;
+
     RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
 
     switch(mAlphaExtract.doublePass) {

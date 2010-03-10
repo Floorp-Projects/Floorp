@@ -430,10 +430,10 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     window.colormap = ws_info->colormap;
 #endif
 
-    NPError prv;
-    if (!CallNPP_SetWindow(window, &prv))
+    if (!CallNPP_SetWindow(window))
         return NPERR_GENERIC_ERROR;
-    return prv;
+
+    return NPERR_NO_ERROR;
 }
 
 NPError
