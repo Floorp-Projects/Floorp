@@ -488,7 +488,7 @@ protected:
   nsresult AddVisitChain(nsIURI* aURI, PRTime aTime,
                          PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
-                         PRInt64* aSessionID, PRInt64* aRedirectBookmark);
+                         PRInt64* aSessionID);
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRBool aCalculateFrecency,

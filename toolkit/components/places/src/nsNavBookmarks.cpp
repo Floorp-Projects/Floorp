@@ -286,52 +286,6 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "WHERE content = ?1 "
     "LIMIT 1"));
 
-  // input = page ID, time threshold; output = unique ID input has redirected to
-  RETURN_IF_STMT(mDBGetRedirectDestinations, NS_LITERAL_CSTRING(
-    "SELECT DISTINCT dest_v.place_id "
-    "FROM moz_historyvisits_temp source_v "
-    "JOIN moz_historyvisits_temp dest_v ON dest_v.from_visit = source_v.id "
-    "WHERE source_v.place_id = ?1 "
-      "AND source_v.visit_date >= ?2 "
-      "AND dest_v.visit_type IN (") +
-      nsPrintfCString("%d,%d",
-                      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") "
-    "UNION "
-    "SELECT DISTINCT dest_v.place_id "
-    "FROM moz_historyvisits_temp source_v "
-    "JOIN moz_historyvisits dest_v ON dest_v.from_visit = source_v.id "
-    "WHERE source_v.place_id = ?1 "
-      "AND source_v.visit_date >= ?2 "
-      "AND dest_v.visit_type IN (") +
-      nsPrintfCString("%d,%d",
-                      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") "
-    "UNION "
-    "SELECT DISTINCT dest_v.place_id "
-    "FROM moz_historyvisits source_v "
-    "JOIN moz_historyvisits_temp dest_v ON dest_v.from_visit = source_v.id "
-    "WHERE source_v.place_id = ?1 "
-      "AND source_v.visit_date >= ?2 "
-      "AND dest_v.visit_type IN (") +
-      nsPrintfCString("%d,%d",
-                      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") "
-    "UNION "
-    "SELECT DISTINCT dest_v.place_id "
-    "FROM moz_historyvisits source_v "
-    "JOIN moz_historyvisits dest_v ON dest_v.from_visit = source_v.id "
-    "WHERE source_v.place_id = ?1 "
-      "AND source_v.visit_date >= ?2 "
-      "AND dest_v.visit_type IN (") +
-      nsPrintfCString("%d,%d",
-                      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") "));
-
   RETURN_IF_STMT(mDBInsertBookmark, NS_LITERAL_CSTRING(
     "INSERT INTO moz_bookmarks "
       "(id, fk, type, parent, position, title, folder_type, "
@@ -341,9 +295,17 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // Just select position since it's just an int32 and may be faster.
   // We don't actually care about the data, just whether there is any.
   RETURN_IF_STMT(mDBIsBookmarkedInDatabase, NS_LITERAL_CSTRING(
-    "SELECT position FROM moz_bookmarks WHERE fk = ?1 AND type = ?2"));
+    "SELECT 1 FROM moz_bookmarks WHERE fk = ?1"));
 
-  // Checks to make sure a place_id is a bookmark, and isn't a livemark.
+  RETURN_IF_STMT(mDBIsURIBookmarkedInDatabase, NS_LITERAL_CSTRING(
+    "SELECT 1 FROM moz_bookmarks WHERE fk = ("
+      "SELECT id FROM moz_places_temp WHERE url = ?1 "
+      "UNION ALL "
+      "SELECT id FROM moz_places WHERE url = ?1 "
+      "LIMIT 1"
+    ")"));
+
+  // Checks to make sure a place id is a bookmark, and isn't a livemark.
   RETURN_IF_STMT(mDBIsRealBookmark, NS_LITERAL_CSTRING(
     "SELECT id "
     "FROM moz_bookmarks "
@@ -429,6 +391,85 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBChangeBookmarkURI, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET fk = ?1, lastModified = ?2 WHERE id = ?3 "));
 
+  // The next query finds the bookmarked ancestors in a redirects chain.
+  // It won't go further than 3 levels of redirects (a->b->c->your_place_id).
+  // To make this path 100% correct (up to any level) we would need either:
+  //  - A separate hash, build through recursive querying of the database.
+  //    This solution was previously implemented, but it had a negative effect
+  //    on startup since at each startup we have to recursively query the
+  //    database to rebuild a hash that is always the same across sessions.
+  //    It must be updated at each visit and bookmarks change too.  The code to
+  //    manage it is complex and prone to errors, sometimes causing incorrect
+  //    data fetches (for example wrong favicon for a redirected bookmark).
+  //  - A better way to track redirects for a visit.
+  //    We would need a separate table to track redirects, in the table we would
+  //    have visit_id, redirect_session.  To get all sources for
+  //    a visit then we could just join this table and get all visit_id that
+  //    are in the same redirect_session as our visit.  This has the drawback
+  //    that we can't ensure data integrity in the downgrade -> upgrade path,
+  //    since an old version would not update the table on new visits.
+  //
+  // For most cases these levels of redirects should be fine though, it's hard
+  // to hit a page that is 4 or 5 levels of redirects below a bookmarked page.
+  //
+  // Moreover this query does not mix-up all possible cases of disk and temp
+  // tables.  This is because we expect a redirects chain to be completely on
+  // disk or completely in memory.  We never bring back visits from disk to
+  // memory, we sync visits on a timer (the chained visits have narrow times),
+  // or on bookmarks changes.  The likely possiblity that we break a chain in
+  // the middle is so much smaller than the perf and readability hit we would
+  // get making complete crossing joins.
+  //
+  // As a bonus the query also checks first if place_id is already a bookmark,
+  // so you don't have to check that apart.
+
+#define COALESCE_PLACEID \
+  "COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id) "
+
+  nsCString redirectsFragment =
+    nsPrintfCString(3, "%d,%d",
+                    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+                    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
+
+  RETURN_IF_STMT(mDBFindRedirectedBookmark, NS_LITERAL_CSTRING(
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = ?1), "
+      "(SELECT url FROM moz_places WHERE id = ?1) "
+    ") "
+    "FROM moz_bookmarks b "
+    "WHERE b.fk = ?1 "
+    "UNION ALL " // Not directly bookmarked.
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
+      "(SELECT url FROM moz_places WHERE id = " COALESCE_PLACEID ") "
+    ") "
+    "FROM moz_historyvisits_temp self "
+    "JOIN moz_bookmarks b ON b.fk = " COALESCE_PLACEID
+    "LEFT JOIN moz_historyvisits_temp parent ON parent.id = self.from_visit "
+    "LEFT JOIN moz_historyvisits_temp grandparent ON parent.from_visit = grandparent.id "
+      "AND parent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "LEFT JOIN moz_historyvisits_temp greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
+      "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+      "AND self.place_id = ?1 "
+    "UNION ALL " // Not in the temp table.
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
+      "(SELECT url FROM moz_places WHERE id = " COALESCE_PLACEID ") "
+    ") "
+    "FROM moz_historyvisits self "
+    "JOIN moz_bookmarks b ON b.fk = " COALESCE_PLACEID
+    "LEFT JOIN moz_historyvisits parent ON parent.id = self.from_visit "
+    "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
+      "AND parent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "LEFT JOIN moz_historyvisits greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
+      "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+      "AND self.place_id = ?1 "
+    "LIMIT 1 " // Stop at the first result.
+  ));
+#undef COALESCE_PLACEID
+
   return nsnull;
 }
 
@@ -444,7 +485,6 @@ nsNavBookmarks::FinalizeStatements() {
     mDBGetChildAt,
     mDBGetItemProperties,
     mDBGetItemIdForGUID,
-    mDBGetRedirectDestinations,
     mDBInsertBookmark,
     mDBIsBookmarkedInDatabase,
     mDBIsRealBookmark,
@@ -461,6 +501,8 @@ nsNavBookmarks::FinalizeStatements() {
     mDBMoveItem,
     mDBSetItemTitle,
     mDBChangeBookmarkURI,
+    mDBIsURIBookmarkedInDatabase,
+    mDBFindRedirectedBookmark,
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
@@ -678,271 +720,24 @@ nsNavBookmarks::CreateRoot(mozIStorageStatement* aGetRootStatement,
 }
 
 
-// nsNavBookmarks::GetBookmarksHash
-//
-//    Getter and lazy initializer of the bookmarks redirect hash.
-//    See FillBookmarksHash for more information.
-
-nsDataHashtable<nsTrimInt64HashKey, PRInt64>*
-nsNavBookmarks::GetBookmarksHash()
-{
-  if (!mBookmarksHash.IsInitialized()) {
-    nsresult rv = FillBookmarksHash();
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "FillBookmarksHash() failed!");
-  }
-
-  return &mBookmarksHash;
-}
-
-
-// nsNavBookmarks::FillBookmarksHash
-//
-//    This initializes the bookmarks hashtable that tells us which bookmark
-//    a given URI redirects to. This hashtable includes all URIs that
-//    redirect to bookmarks.
-
-nsresult
-nsNavBookmarks::FillBookmarksHash()
-{
-  PRBool hasMore;
-
-  // first init the hashtable
-  NS_ENSURE_TRUE(mBookmarksHash.Init(1024), NS_ERROR_OUT_OF_MEMORY);
-
-  // first populate the hashtable with all bookmarks
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk "
-      "FROM moz_bookmarks b "
-      "WHERE b.type = ?1 "
-      "AND b.fk NOTNULL"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(0, TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
-    PRInt64 pageID;
-    rv = statement->GetInt64(0, &pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(mBookmarksHash.Put(pageID, pageID), NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  // Find all pages h2 that have been redirected to from a bookmarked URI:
-  //    bookmarked -> url (h1)         url (h2)
-  //                    |                 ^
-  //                    .                 |
-  //                 visit (v1) -> destination visit (v2)
-  // This should catch most redirects, which are only one level. More levels of
-  // redirection will be handled separately.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT v1.place_id, v2.place_id "
-        "FROM moz_bookmarks b "
-        "LEFT JOIN moz_historyvisits_temp v1 on b.fk = v1.place_id "
-        "LEFT JOIN moz_historyvisits v2 on v2.from_visit = v1.id "
-        "WHERE b.fk IS NOT NULL AND b.type = ?1 "
-        "AND v2.visit_type IN (") +
-        nsPrintfCString("%d,%d",
-                        nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                        nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-        NS_LITERAL_CSTRING(") GROUP BY v2.place_id "
-      "UNION "
-      "SELECT v1.place_id, v2.place_id "
-        "FROM moz_bookmarks b "
-        "LEFT JOIN moz_historyvisits v1 on b.fk = v1.place_id "
-        "LEFT JOIN moz_historyvisits_temp v2 on v2.from_visit = v1.id "
-        "WHERE b.fk IS NOT NULL AND b.type = ?1 "
-        "AND v2.visit_type IN (") +
-        nsPrintfCString("%d,%d",
-                        nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                        nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-        NS_LITERAL_CSTRING(") GROUP BY v2.place_id "
-      "UNION "
-      "SELECT v1.place_id, v2.place_id "
-        "FROM moz_bookmarks b "
-        "LEFT JOIN moz_historyvisits v1 on b.fk = v1.place_id "
-        "LEFT JOIN moz_historyvisits v2 on v2.from_visit = v1.id "
-        "WHERE b.fk IS NOT NULL AND b.type = ?1 "
-        "AND v2.visit_type IN (") +
-        nsPrintfCString("%d,%d",
-                        nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                        nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-        NS_LITERAL_CSTRING(") GROUP BY v2.place_id "
-      "UNION "
-        "SELECT v1.place_id, v2.place_id "
-        "FROM moz_bookmarks b "
-        "LEFT JOIN moz_historyvisits_temp v1 on b.fk = v1.place_id "
-        "LEFT JOIN moz_historyvisits_temp v2 on v2.from_visit = v1.id "
-        "WHERE b.fk IS NOT NULL AND b.type = ?1 "
-        "AND v2.visit_type IN (") +
-        nsPrintfCString("%d,%d",
-                        nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                        nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-        NS_LITERAL_CSTRING(") GROUP BY v2.place_id "),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(0, TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
-    PRInt64 fromId, toId;
-    rv = statement->GetInt64(0, &fromId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->GetInt64(1, &toId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(mBookmarksHash.Put(toId, fromId), NS_ERROR_OUT_OF_MEMORY);
-
-    // handle redirects deeper than one level
-    rv = RecursiveAddBookmarkHash(fromId, toId, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-
-// nsNavBookmarks::AddBookmarkToHash
-//
-//    Given a bookmark that was potentially added, this goes through all
-//    redirects that this page may have resulted in and adds them to our hash.
-//    Note that this takes the ID of the URL in the history system, which we
-//    generally have when calling this function and which makes it faster.
-//
-//    For better performance, this call should be in a DB transaction.
-//
-//    @see RecursiveAddBookmarkHash
-
-nsresult
-nsNavBookmarks::AddBookmarkToHash(PRInt64 aPlaceId, PRTime aMinTime)
-{
-  if (!GetBookmarksHash()->Put(aPlaceId, aPlaceId))
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = RecursiveAddBookmarkHash(aPlaceId, aPlaceId, aMinTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-
-// nsNavBookmkars::RecursiveAddBookmarkHash
-//
-//    Used to add a new level of redirect information to the bookmark hash.
-//    Given a source bookmark 'aBookmark' and 'aCurrentSource' that has already
-//    been added to the hashtable, this will add all redirect destinations of
-//    'aCurrentSource'. Will call itself recursively to walk down the chain.
-//
-//    'aMinTime' is the minimum time to consider visits from. Visits previous
-//    to this will not be considered. This allows the search to be much more
-//    efficient if you know something happened recently. Use 0 for the min time
-//    to search all history for redirects.
-
-nsresult
-nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aPlaceID,
-                                         PRInt64 aCurrentSource,
-                                         PRTime aMinTime)
-{
-  nsresult rv;
-  nsTArray<PRInt64> found;
-
-  // scope for the DB statement. The statement must be reset by the time we
-  // recursively call ourselves again, because our recursive call will use the
-  // same statement.
-  {
-    DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetRedirectDestinations);
-    rv = stmt->BindInt64Parameter(0, aCurrentSource);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64Parameter(1, aMinTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasMore;
-    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-      // add this newly found redirect destination to the hashtable
-      PRInt64 curID;
-      rv = stmt->GetInt64(0, &curID);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // It is very important we ignore anything already in our hashtable. It
-      // is actually pretty common to get loops of redirects. For example,
-      // a restricted page will redirect you to a login page, which will
-      // redirect you to the restricted page again with the proper cookie.
-      PRInt64 alreadyExistingOne;
-      if (GetBookmarksHash()->Get(curID, &alreadyExistingOne))
-        continue;
-
-      if (!GetBookmarksHash()->Put(curID, aPlaceID))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      // save for recursion later
-      found.AppendElement(curID);
-    }
-  }
-
-  // recurse on each found item now that we're done with the statement
-  for (PRUint32 i = 0; i < found.Length(); i ++) {
-    rv = RecursiveAddBookmarkHash(aPlaceID, found[i], aMinTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-
-// nsNavBookmarks::UpdateBookmarkHashOnRemove
-//
-//    Call this when a bookmark is removed. It will see if the bookmark still
-//    exists anywhere in the system, and, if not, remove all references to it
-//    in the bookmark hashtable.
-//
-//    The callback takes a pointer to what bookmark is being removed (as
-//    an Int64 history page ID) as the userArg and removes all redirect
-//    destinations that reference it.
-
-static PLDHashOperator
-RemoveBookmarkHashCallback(nsTrimInt64HashKey::KeyType aKey,
-                           PRInt64& aPlaceId, void* aUserArg)
-{
-  const PRInt64* removeThisOne = reinterpret_cast<const PRInt64*>(aUserArg);
-  if (aPlaceId == *removeThisOne)
-    return PL_DHASH_REMOVE;
-  return PL_DHASH_NEXT;
-}
-nsresult
-nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
-{
-  // note we have to use the DB version here since the hashtable may be
-  // out-of-date
-  PRBool inDB;
-  nsresult rv = IsBookmarkedInDatabase(aPlaceId, &inDB);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!inDB) {
-    // Bookmark does not exist anymore, remove it from hashtable
-    GetBookmarksHash()->Enumerate(RemoveBookmarkHashCallback,
-                                  reinterpret_cast<void*>(&aPlaceId));
-  }
-  return NS_OK;
-}
-
-
 PRBool
 nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
 {
-  // Fast path is to check the hash table first.  If it is in the hash table,
-  // then verify that it is a real bookmark.
-  PRInt64 bookmarkId;
-  PRBool isBookmark = GetBookmarksHash()->Get(aPlaceId, &bookmarkId);
-  if (isBookmark) {
-    DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBIsRealBookmark);
-    nsresult rv = stmt->BindInt64Parameter(0, aPlaceId);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
-    rv = stmt->BindInt32Parameter(1, TYPE_BOOKMARK);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
-    rv = stmt->BindUTF8StringParameter(2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBIsRealBookmark);
+  nsresult rv = stmt->BindInt64Parameter(0, aPlaceId);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
+  rv = stmt->BindInt32Parameter(1, TYPE_BOOKMARK);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
+  rv = stmt->BindUTF8StringParameter(2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
 
-    // If we get any rows, then there exists at least one bookmark corresponding
-    // to aPlaceId that is not a livemark item.
-    rv = stmt->ExecuteStep(&isBookmark);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "ExecuteStep failed");
-    if (NS_SUCCEEDED(rv))
-      return isBookmark;
-  }
+  // If we get any rows, then there exists at least one bookmark corresponding
+  // to aPlaceId that is not a livemark item.
+  PRBool isBookmark;
+  rv = stmt->ExecuteStep(&isBookmark);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "ExecuteStep failed");
+  if (NS_SUCCEEDED(rv))
+    return isBookmark;
 
   return PR_FALSE;
 }
@@ -951,7 +746,6 @@ nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
 // nsNavBookmarks::IsBookmarkedInDatabase
 //
 //    This checks to see if the specified place_id is actually bookmarked.
-//    This does not check for redirects in the hashtable.
 
 nsresult
 nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
@@ -959,8 +753,6 @@ nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
 {
   DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBIsBookmarkedInDatabase);
   nsresult rv = stmt->BindInt64Parameter(0, aPlaceId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(1, TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->ExecuteStep(aIsBookmarked);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1202,9 +994,6 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddBookmarkToHash(childID, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewBookmarkId, aFolder, index, TYPE_BOOKMARK));
@@ -1308,9 +1097,6 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = UpdateBookmarkHashOnRemove(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (itemType == TYPE_BOOKMARK) {
@@ -1881,7 +1667,6 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
     folderChildrenInfo child = folderChildrenArray[i];
     if (child.itemType == TYPE_BOOKMARK) {
       PRInt64 placeId = child.placeId;
-      UpdateBookmarkHashOnRemove(placeId);
 
       // UpdateFrecency needs to know whether placeId is still bookmarked.
       // Although we removed a child of aFolderId that bookmarked it, it may
@@ -2618,36 +2403,11 @@ nsNavBookmarks::IsBookmarked(nsIURI* aURI, PRBool* aBookmarked)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(aBookmarked);
 
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  // convert the URL to an ID
-  PRInt64 urlID;
-  nsresult rv = history->GetUrlIdFor(aURI, &urlID, PR_FALSE);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBIsURIBookmarkedInDatabase);
+  nsresult rv = BindStatementURI(stmt, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!urlID) {
-    // never seen this before, not even in history
-    *aBookmarked = PR_FALSE;
-    return NS_OK;
-  }
-
-  PRInt64 bookmarkedID;
-  PRBool foundOne = GetBookmarksHash()->Get(urlID, &bookmarkedID);
-
-  // IsBookmarked only tests if this exact URI is bookmarked, so we need to
-  // check that the destination matches
-  if (foundOne)
-    *aBookmarked = (urlID == bookmarkedID);
-  else
-    *aBookmarked = PR_FALSE;
-
-#ifdef DEBUG
-  // sanity check for the bookmark hashtable
-  PRBool realBookmarked;
-  rv = IsBookmarkedInDatabase(urlID, &realBookmarked);
-  NS_ASSERTION(realBookmarked == *aBookmarked,
-               "Bookmark hash table out-of-sync with the database");
-#endif
+  rv = stmt->ExecuteStep(aBookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -2663,33 +2423,32 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  // convert the URL to an ID
-  PRInt64 urlID;
-  nsresult rv = history->GetUrlIdFor(aURI, &urlID, PR_FALSE);
+  PRInt64 placeId;
+  nsresult rv = history->GetUrlIdFor(aURI, &placeId, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!urlID) {
-    // never seen this before, not even in history, leave result NULL
+  if (!placeId) {
+    // This URI is unknown, just return null.
     return NS_OK;
   }
 
-  PRInt64 bookmarkID;
-  if (GetBookmarksHash()->Get(urlID, &bookmarkID)) {
-    // found one, convert ID back to URL. This statement is NOT refcounted
-    mozIStorageStatement* statement = history->DBGetIdPageInfo();
-    NS_ENSURE_STATE(statement);
-    mozStorageStatementScoper scoper(statement);
-
-    rv = statement->BindInt64Parameter(0, bookmarkID);
+  // Check if a bookmark exists in the redirects chain for this URI.
+  // The query will also check if the page is directly bookmarked, and return
+  // the first found bookmark in case.  The check is directly on moz_bookmarks
+  // without special filtering.
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBFindRedirectedBookmark);
+  rv = stmt->BindInt64Parameter(0, placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool hasBookmarkedOrigin;
+  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasBookmarkedOrigin)) &&
+      hasBookmarkedOrigin) {
+    nsCAutoString spec;
+    rv = stmt->GetUTF8String(0, spec);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasMore;
-    if (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
-      nsCAutoString spec;
-      statement->GetUTF8String(nsNavHistory::kGetInfoIndex_URL, spec);
-      return NS_NewURI(_retval, spec);
-    }
+    rv = NS_NewURI(_retval, spec);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // If there is no bookmarked origin, we will just return null.
   return NS_OK;
 }
 
@@ -2732,14 +2491,6 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI* aNewURI)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add new URI to bookmark hash.
-  rv = AddBookmarkToHash(placeId, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Remove old URI from bookmark hash.
-  rv = UpdateBookmarkHashOnRemove(oldPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Upon changing the URI for a bookmark, update the frecency for the new place.
