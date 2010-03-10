@@ -170,7 +170,8 @@ CPPSRCS	+= \
 	gfxQuartzImageSurface.cpp \
 	gfxQuartzPDFSurface.cpp \
 	gfxPlatformMac.cpp \
-	gfxCoreTextFonts.cpp \
+	gfxMacFont.cpp \
+	gfxCoreTextShaper.cpp \
 	$(NULL)
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=      nsUnicodeRange.cpp

@@ -44,6 +44,7 @@
 
 #include "gfxPlatformMac.h"
 #include "gfxMacPlatformFontList.h"
+#include "gfxMacFont.h"
 #include "gfxUserFontSet.h"
 
 #include "nsServiceManagerUtils.h"
@@ -311,7 +312,7 @@ MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 gfxFont*
 MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
 {
-    return new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
+    return new gfxMacFont(this, aFontStyle, aNeedsBold);
 }
 
 
