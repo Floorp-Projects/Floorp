@@ -364,7 +364,8 @@ nsIntRect nsIView::CalcWidgetBounds(nsWindowType aType)
 
   nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
                         NSIntPixelsToAppUnits(newBounds.y, p2a));
-  mViewToWidgetOffset = viewBounds.TopLeft() - roundedOffset;
+  // mViewToWidgetOffset is added to view coordinates to get widget coordinates
+  mViewToWidgetOffset = roundedOffset - viewBounds.TopLeft();
 
   return newBounds;
 }
