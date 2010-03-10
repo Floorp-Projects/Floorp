@@ -44,13 +44,10 @@
 #include "nsMenuBaseX.h"
 
 #import <Cocoa/Cocoa.h>
-#import <Carbon/Carbon.h>
 
 class nsIContent;
 class nsString;
 class nsMenuBarX;
-
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
 // Namespace containing utility functions used in our native menu implementation.
 namespace nsMenuUtilsX
