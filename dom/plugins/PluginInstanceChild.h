@@ -73,7 +73,7 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window);
 
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
@@ -273,7 +273,7 @@ private:
 #if defined(OS_WIN)
 private:
     // Shared dib rendering management for windowless plugins.
-    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow, NPError* rv);
+    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow);
     int16_t SharedSurfacePaint(NPEvent& evcopy);
     void SharedSurfaceRelease();
     bool AlphaExtractCacheSetup();
