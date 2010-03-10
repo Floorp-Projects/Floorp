@@ -53,6 +53,7 @@
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
   NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
 #include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
 
 static const nsStaticAtom CSSPseudoElements_info[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
