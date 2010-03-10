@@ -448,7 +448,9 @@ StringToNumberType(JSContext *cx, JSString *str)
     if (str->length() == 1) {
         jschar c = str->chars()[0];
         if ('0' <= c && c <= '9')
-            return NumberTraits<T>::toSelfType(int32(c - '0'));
+            return NumberTraits<T>::toSelfType(T(c - '0'));
+        if (JS_ISSPACE(c))
+            return NumberTraits<T>::toSelfType(T(0));
         return NumberTraits<T>::NaN();
     }
 
