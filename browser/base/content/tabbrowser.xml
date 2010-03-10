@@ -2024,6 +2024,20 @@
         </body>
       </method>
 
+      <method name="_continueScroll">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // Workaround for bug 481904: Dragging a tab stops scrolling at
+          // the tab's position when dragging to the first/last tab and back.
+          var t = this.selectedTab;
+          if (aEvent.screenX >= t.boxObject.screenX &&
+              aEvent.screenX <= t.boxObject.screenX + t.boxObject.width &&
+              aEvent.screenY >= t.boxObject.screenY &&
+              aEvent.screenY <= t.boxObject.screenY + t.boxObject.height)
+            this.tabContainer.mTabstrip.ensureElementIsVisible(t);
+        ]]></body>
+      </method>
+
       <method name="_onDragOver">
         <parameter name="aEvent"/>
         <body>
@@ -2033,6 +2047,7 @@
             var ind = this._tabDropIndicator;
             if (effects == "" || effects == "none") {
               ind.collapsed = true;
+              this._continueScroll(aEvent);
               return;
             }
             aEvent.preventDefault();
@@ -2304,6 +2319,7 @@
               return;
 
             this._tabDropIndicator.collapsed = true;
+            this._continueScroll(aEvent);
             aEvent.stopPropagation();
           ]]>
         </body>
