@@ -39,7 +39,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  let testURL = "http://mochi.test:8888/browser/" +
+  let testURL = "http://localhost:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_459906_sample.html";
   let uniqueValue = "<b>Unique:</b> " + Date.now();
 
@@ -81,7 +81,7 @@ function test() {
           innerDomain = iframes[0].document.domain;
         }
         catch (ex) { /* throws for chrome: documents */ }
-        is(innerDomain, "mochi.test", "XSS exploit prevented!");
+        is(innerDomain, "localhost", "XSS exploit prevented!");
 
         // clean up
         gBrowser.removeTab(tab2);

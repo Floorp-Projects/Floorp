@@ -4,28 +4,28 @@ function start_sending_garbage()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=respond-garbage");
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=respond-garbage");
 }
 
 function stop_sending_garbage()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 }
 
 function stop_geolocationProvider()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=stop-responding");
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=stop-responding");
 }
 
 function resume_geolocationProvider()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 }
 
 function check_geolocation(location) {

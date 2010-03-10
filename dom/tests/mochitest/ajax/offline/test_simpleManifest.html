@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest">
 <head>
 <title>simple manifest test</title>
 
@@ -18,30 +18,30 @@ ok(applicationCache.mozItems.length == 0,
 function addFinished()
 {
   // Check that the entry was added successfully
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          true);
 
   OfflineTest.ok(applicationCache.mozLength == 1, "applicationCache should have one dynamic entry (deprecated API)");
-  OfflineTest.ok(applicationCache.mozItem(0) == "http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.ok(applicationCache.mozItem(0) == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect (deprecated API)");
 
   OfflineTest.ok(applicationCache.mozItems.length == 1, "applicationCache should have one dynamic entry");
-  OfflineTest.ok(applicationCache.mozItems[0] == "http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.ok(applicationCache.mozItems[0] == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect");
 
-  OfflineTest.ok(applicationCache.mozHasItem("http://mochi.test:8888/tests/SimpleTest/EventUtils.js"),
+  OfflineTest.ok(applicationCache.mozHasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
                  "applicationCache.mozHasItem() should see the dynamic entry");
 
   // Now test that removes work
-  applicationCache.mozRemove("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
+  applicationCache.mozRemove("http://localhost:8888/tests/SimpleTest/EventUtils.js");
 
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          false);
   OfflineTest.ok(applicationCache.mozLength == 0,
                  "applicationCache should have no dynamic entries (deprecated API)");
   OfflineTest.ok(applicationCache.mozItems.length == 0,
                  "applicationCache should have no dynamic entries");
-  OfflineTest.ok(!applicationCache.mozHasItem("http://mochi.test:8888/tests/SimpleTest/EventUtils.js"),
+  OfflineTest.ok(!applicationCache.mozHasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
                  "applicationCache.mozHasItem() should not see the removed dynamic entry");
 
   // We're done
@@ -57,18 +57,18 @@ function manifestUpdated()
   OfflineTest.ok(gGotDownloading, "Should get a downloading event");
 
   // The manifest itself should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
 
   // The document that requested the manifest should be in the cache
   OfflineTest.checkCache(window.location.href, true);
 
   // The entries from the manifest should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", true);
+  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
 
   // The bad entries from the manifest should not be in the cache
-  OfflineTest.checkCache("https://mochi.test:8888/MochiKit/packed.js", false);
+  OfflineTest.checkCache("https://localhost:8888/MochiKit/packed.js", false);
   OfflineTest.checkCache("bad:/uri/invalid", false);
 
   OfflineTest.is(applicationCache.status, 1, "Cache status should be 1 (CACHED)");
@@ -83,10 +83,10 @@ function manifestUpdated()
   // XXX: make sure that the previous version went away after the swapCache().
 
   // Now add a file using the applicationCache API
-  applicationCache.mozAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
+  applicationCache.mozAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js");
 
   // Wait for the add() to be downloaded
-  OfflineTest.waitForAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          OfflineTest.priv(addFinished));
 }
 

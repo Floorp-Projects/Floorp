@@ -22,11 +22,9 @@ function handleRequest(request, response)
     // -- anything served from other hosts (example.com:80) will be blocked.
     // -- XHR tests are set up in the file_CSP_main.js file which is sourced.
     response.setHeader("X-Content-Security-Policy", 
-                       "allow mochi.test",
+                       "allow 'self'",
                        false);
-
-    var proxyURI = "http://" + query["proxy"];
-    xhr.open("GET", proxyURI + "/tests/content/base/test/file_CSP_main.html", false);
+    xhr.open("GET", "http://localhost:8888/tests/content/base/test/file_CSP_main.html", false);
     xhr.send(null);
     if(xhr.status == 200) {
       response.write(xhr.responseText);

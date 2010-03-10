@@ -52,20 +52,9 @@ var checkTestResults = function() {
 // set up and go
 SimpleTest.waitForExplicitFinish();
 
-//need to allow for arbitrary network servers, when PAC doesn't work
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var ios = Components.classes["@mozilla.org/network/io-service;1"].
-          getService(Components.interfaces.nsIIOService);
-var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"].
-          getService();
-
-var uri = ios.newURI("http://example.com", null, null);
-var pi = pps.resolve(uri, 0);
-var mozproxy = pi.host + ":" + pi.port;
-
 // save this for last so that our listeners are registered.
 // ... this loads the testbed of good and bad requests.
-document.getElementById('cspframe').src = 'file_CSP_evalscript.sjs?main&proxy=' + mozproxy;
+document.getElementById('cspframe').src = 'file_CSP_evalscript.sjs?main';
 
 </script>
 </pre>

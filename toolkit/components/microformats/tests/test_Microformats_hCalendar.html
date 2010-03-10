@@ -230,7 +230,7 @@ function test_hCard() {
   is(hcalendar.location, "Argent Hotel, San Francisco, CA", "05-calendar-simple - location");
 
   hcalendar = new hCalendar(document.getElementById("06-component-vevent-uri-relative"));
-  is(hcalendar.url, "http://mochi.test:8888/squidlist/calendar/12279/2006/1/15", "06-component-vevent-uri-relative - url");
+  is(hcalendar.url, "http://localhost:8888/squidlist/calendar/12279/2006/1/15", "06-component-vevent-uri-relative - url");
   is(hcalendar.summary, "Bad Movie Night - Gigli (blame mike spiegelman)", "06-component-vevent-uri-relative - summary");
   is(hcalendar.dtstart, "2006-01-15T00:00:00", "06-component-vevent-uri-relative - dtstart");
 
