@@ -662,11 +662,8 @@ gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
         } else {
             nsIAtom *langGroup = LangGroupFromUnicodeRange(unicodeRange);
             if (langGroup) {
-#ifdef PR_LOGGING
-                const char *langGroupStr;
-                langGroup->GetUTF8String(&langGroupStr);
-                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroupStr));
-#endif
+                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", nsAtomCString(langGroup).get()));
+
                 nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
                 GetPrefFonts(langGroup, fonts);
                 selectedFont = WhichFontSupportsChar(fonts, aCh);
