@@ -112,7 +112,6 @@ EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzImageSurface.h \
 		gfxQuartzPDFSurface.h \
 		gfxQuartzNativeDrawing.h \
-		gfxCoreTextFonts.h \
 		$(NULL)
 
 endif
