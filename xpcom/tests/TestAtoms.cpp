@@ -147,10 +147,10 @@ test_invalid()
       return PR_FALSE;
   }
 
+// Don't run this test in debug builds as that intentionally asserts.
+#ifndef DEBUG
   nsCOMPtr<nsIAtom> emptyAtom = do_GetAtom("");
 
-#ifndef DEBUG
-    // Don't run these tests in debug builds as that intentionally asserts
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
