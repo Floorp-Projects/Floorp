@@ -2020,7 +2020,7 @@ static jsint
 find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
            JSSubString *sep)
 {
-    jsint i, j, k;
+    jsint i;
     size_t length;
     jschar *chars;
 
@@ -2106,17 +2106,8 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * occurrence of all of sep's chars.  If we find them, return the index of
      * the first separator char.  Otherwise, return length.
      */
-    j = 0;
-    while ((size_t)(k = i + j) < length) {
-        if (chars[k] == sep->chars[j]) {
-            if ((size_t)++j == sep->length)
-                return i;
-        } else {
-            i++;
-            j = 0;
-        }
-    }
-    return k;
+    jsint match = StringMatch(chars + i, length - i, sep->chars, sep->length);
+    return match == -1 ? length : match + i;
 }
 
 static JSBool
