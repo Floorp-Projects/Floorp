@@ -67,8 +67,7 @@ rpc protocol PPluginInstance
 child:
   rpc __delete__();
 
-  rpc NPP_SetWindow(NPRemoteWindow window)
-    returns (NPError rv);
+  rpc NPP_SetWindow(NPRemoteWindow window);
 
   // this message is not used on non-X platforms
   rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
