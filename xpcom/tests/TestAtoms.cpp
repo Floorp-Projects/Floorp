@@ -149,6 +149,8 @@ test_invalid()
 
   nsCOMPtr<nsIAtom> emptyAtom = do_GetAtom("");
 
+#ifndef DEBUG
+    // Don't run these tests in debug builds as that intentionally asserts
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
@@ -157,6 +159,7 @@ test_invalid()
         count != NS_GetNumberOfAtoms())
       return PR_FALSE;
   }
+#endif
 
   return PR_TRUE;
 }
@@ -180,11 +183,15 @@ static const nsStaticAtom sAtoms_info[] = {
 PRBool
 isStaticAtom(nsIAtom* atom)
 {
-  return atom->Release() == 1 &&
-         atom->Release() == 1 &&
-         atom->Release() == 1 &&
-         atom->AddRef() == 2 &&
-         atom->AddRef() == 2;
+  // Don't use logic && in order to ensure that all addrefs/releases are always
+  // run, even if one of the tests fail. This allows us to run this code on a
+  // non-static atom without affecting its refcount.
+  return atom->AddRef() == 2 &
+         atom->AddRef() == 2 &
+         atom->AddRef() == 2 &
+         atom->Release() == 1 &
+         atom->Release() == 1 &
+         atom->Release() == 1;
 }
 
 PRBool
@@ -194,10 +201,7 @@ test_atomtable()
   
   nsCOMPtr<nsIAtom> thirdNonPerm = do_GetAtom(THIRD_ATOM_STR);
   
-  if (thirdNonPerm->AddRef() != 2 ||
-      thirdNonPerm->AddRef() != 3 ||
-      thirdNonPerm->Release() != 2 ||
-      thirdNonPerm->Release() != 1)
+  if (isStaticAtom(thirdNonPerm))
     return PR_FALSE;
 
   if (!thirdNonPerm || NS_GetNumberOfAtoms() != count + 1)
@@ -218,6 +222,43 @@ test_atomtable()
          thirdNonPerm == sAtom3;
 }
 
+#define FIRST_PERM_ATOM_STR "first permanent atom. Hello!"
+#define SECOND_PERM_ATOM_STR "second permanent atom. @World!"
+
+PRBool
+test_permanent()
+{
+  nsrefcnt count = NS_GetNumberOfAtoms();
+
+  {
+    nsCOMPtr<nsIAtom> first = do_GetAtom(FIRST_PERM_ATOM_STR);
+    if (!first->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)) ||
+        isStaticAtom(first))
+      return PR_FALSE;
+  
+    nsCOMPtr<nsIAtom> first_p =
+      NS_NewPermanentAtom(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR));
+    if (!first_p->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)) ||
+        !isStaticAtom(first_p) ||
+        first != first_p)
+      return PR_FALSE;
+  
+    nsCOMPtr<nsIAtom> second_p =
+      NS_NewPermanentAtom(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR));
+    if (!second_p->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)) ||
+        !isStaticAtom(second_p))
+      return PR_FALSE;
+  
+    nsCOMPtr<nsIAtom> second = do_GetAtom(SECOND_PERM_ATOM_STR);
+    if (!second->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)) ||
+        !isStaticAtom(second) ||
+        second != second_p)
+      return PR_FALSE;
+  }
+
+  return NS_GetNumberOfAtoms() == count + 2;
+}
+
 typedef PRBool (*TestFunc)();
 
 static const struct Test
@@ -233,6 +274,7 @@ tests[] =
     { "test_null", test_null },
     { "test_invalid", test_invalid },
     { "test_atomtable", test_atomtable },
+    { "test_permanent", test_permanent },
     { nsnull, nsnull }
   };
 
