@@ -647,7 +647,7 @@ fi
 # Check to see if we are running in a broken QEMU scratchbox.
 # We know that anything below 1.0.16 is broken.
 AC_CHECK_PROGS(SBCONF, sb-conf ve, "")
-if test -n "SBCONF"; then
+if test -n "$SBCONF"; then
     _sb_version=`$SBCONF ve`
     _sb_version_major=`echo $_sb_version | cut -f1 -d.`
     _sb_version_minor=`echo $_sb_version | cut -f2 -d.`
