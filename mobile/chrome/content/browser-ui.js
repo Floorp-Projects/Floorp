@@ -556,8 +556,9 @@ var BrowserUI = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    var submission = button.engine.getSubmission(this._edit.value, null);
-    getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
+    let submission = button.engine.getSubmission(this._edit.value, null);
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    getBrowser().loadURIWithFlags(submission.uri.spec, flags, null, null, submission.postData);
   },
 
   updateStar : function() {
