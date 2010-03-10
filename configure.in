@@ -8733,7 +8733,7 @@ if test "$BUILD_CTYPES"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
   if test "$CROSS_COMPILE"; then
-    ac_configure_args="$ac_configure_args --build=$build --host=$host --target=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
   fi
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.
@@ -8742,7 +8742,7 @@ if test "$BUILD_CTYPES"; then
     case "${target_cpu}" in
     x86_64)
       # Need target since MSYS tools into mozilla-build may be 32bit
-      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$host target=$target"
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
       ;;
     *)
       ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/ctypes/libffi/msvcc.sh"
