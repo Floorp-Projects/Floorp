@@ -48,8 +48,6 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
-const endl = '\n';
-
 Cu.import("resource://gre/modules/SpatialNavigation.js");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 
@@ -58,6 +56,11 @@ function getBrowser() {
 }
 
 const kDefaultBrowserWidth = 800;
+
+// how many milliseconds before the mousedown and the overlay of an element
+const kTapOverlayTimeout = 200;
+
+const endl = '\n';
 
 function debug() {
   let bv = Browser._browserView;
@@ -134,7 +137,6 @@ function debug() {
     dump('-----------------------------------------------------\n');
   }
 }
-
 
 function debugTile(i, j) {
   let bv = Browser._browserView;
@@ -1708,6 +1710,7 @@ const BrowserSearch = {
 function ContentCustomClicker(browserView) {
   this._browserView = browserView;
   this._overlay = document.getElementById("content-overlay");
+  this._overlayTimeout = 0;
   this._width = 0;
   this._height = 0;
 }
@@ -1732,29 +1735,9 @@ ContentCustomClicker.prototype = {
       return null;
     },
 
-    /** Stop highlighting current element. */
-    _hideCanvas: function _hideCanvas() {
-      let overlay = this._overlay;
-      overlay.style.display = "none";
-      overlay.getContext("2d").clearRect(0, 0, this._width, this._height);
-    },
-
-    /** Make sure canvas is at least width x height. */
-    _ensureSize: function _ensureSize(width, height) {
-      if (this._width <= width) {
-        this._width = width;
-        this._overlay.width = width;
-      }
-      if (this._height <= height) {
-        this._height = height;
-        this._overlay.height = height;
-      }
-    },
-
-    mouseDown: function mouseDown(cX, cY) {
+    _showCanvas: function _showCanvas(cX, cY) {
       // This code is sensitive to performance. Please profile changes you make to
       // keep this running fast.
-
       let bv = this._browserView;
       let overlay = this._overlay;
       let ctx = overlay.getContext("2d");
@@ -1787,6 +1770,35 @@ ContentCustomClicker.prototype = {
       }
       ctx.restore();
       overlay.style.display = "block";
+    },
+
+    /** Stop highlighting current element. */
+    _hideCanvas: function _hideCanvas() {
+      let overlay = this._overlay;
+      overlay.style.display = "none";
+      overlay.getContext("2d").clearRect(0, 0, this._width, this._height);
+
+      if (this._overlayTimeout) {
+        clearTimeout(this._overlayTimeout);
+        this._overlayTimeout = 0;
+      }
+    },
+
+    /** Make sure canvas is at least width x height. */
+    _ensureSize: function _ensureSize(width, height) {
+      if (this._width <= width) {
+        this._width = width;
+        this._overlay.width = width;
+      }
+      if (this._height <= height) {
+        this._height = height;
+        this._overlay.height = height;
+      }
+    },
+
+    mouseDown: function mouseDown(cX, cY) {
+      if (!this._overlayTimeout)
+        this._overlayTimeout = setTimeout(function(self) { self._showCanvas(cX, cY); }, kTapOverlayTimeout, this);
     },
 
     mouseUp: function mouseUp(cX, cY) {
