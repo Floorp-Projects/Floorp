@@ -55,6 +55,13 @@ class RPCChannel : public SyncChannel
     friend class CxxStackFrame;
 
 public:
+    // What happens if RPC calls race?
+    enum RacyRPCPolicy {
+        RRPError,
+        RRPChildWins,
+        RRPParentWins
+    };
+
     class /*NS_INTERFACE_CLASS*/ RPCListener :
         public SyncChannel::SyncListener
     {
@@ -78,17 +85,16 @@ public:
         virtual void OnExitedCxxStack()
         {
             NS_RUNTIMEABORT("default impl shouldn't be invoked");
-        }   
+        }
+
+        virtual RacyRPCPolicy MediateRPCRace(const Message& parent,
+                                             const Message& child)
+        {
+            return RRPChildWins;
+        }
     };
 
-    // What happens if RPC calls race?
-    enum RacyRPCPolicy {
-        RRPError,
-        RRPChildWins,
-        RRPParentWins
-    };
-
-    RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins);
+    RPCChannel(RPCListener* aListener);
 
     virtual ~RPCChannel();
 
@@ -167,6 +173,10 @@ protected:
   private:
     // Called on worker thread only
 
+    RPCListener* Listener() const {
+        return static_cast<RPCListener*>(mListener);
+    }
+
     bool EventOccurred();
 
     void MaybeProcessDeferredIncall();
@@ -185,12 +195,12 @@ protected:
     // for when the depth goes from non-zero to zero;
     void EnteredCxxStack()
     {
-        static_cast<RPCListener*>(mListener)->OnEnteredCxxStack();
+        Listener()->OnEnteredCxxStack();
     }
 
     void ExitedCxxStack()
     {
-        static_cast<RPCListener*>(mListener)->OnExitedCxxStack();
+        Listener()->OnExitedCxxStack();
     }
 
     class NS_STACK_CLASS CxxStackFrame
@@ -327,7 +337,6 @@ protected:
     // detect the same race.
     //
     size_t mRemoteStackDepthGuess;
-    RacyRPCPolicy mRacePolicy;
 
     // True iff the parent has put us in a |BlockChild()| state.
     bool mBlockedOnParent;
