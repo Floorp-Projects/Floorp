@@ -918,14 +918,14 @@ class TraceRecorder
 {
     /*************************************************************** Recording session constants */
 
-    /* Cached oracle keeps track of hit counts for program counter locations */
-    Oracle*                         oracle;
-
     /* The context in which recording started. */
     JSContext* const                cx;
 
     /* Cached value of JS_TRACE_MONITOR(cx). */
     TraceMonitor* const             traceMonitor;
+
+    /* Cached oracle keeps track of hit counts for program counter locations */
+    Oracle*                         oracle;
 
     /* The Fragment being recorded by this recording session. */
     VMFragment* const               fragment;
