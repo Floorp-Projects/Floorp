@@ -112,10 +112,12 @@ nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
     PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
 
     if (!mAddedScrollPositionListener) {
-      mAddedScrollPositionListener = PR_TRUE;
       nsIScrollableFrame* sf =
         PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
-      sf->AddScrollPositionListener(this);
+      if (sf) {
+        sf->AddScrollPositionListener(this);
+        mAddedScrollPositionListener = PR_TRUE;
+      }
     }
   }
   return NS_OK;
