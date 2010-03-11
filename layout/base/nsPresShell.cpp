@@ -964,8 +964,6 @@ protected:
 
   friend class nsPresShellEventCB;
 
-  nsIScrollableFrame* GetFrameToScroll(nsLayoutUtils::Direction aDirection);
-
   PRBool mCaretEnabled;
 #ifdef NS_DEBUG
   nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
@@ -2929,7 +2927,8 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
-  nsIScrollableFrame *scrollableFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  nsIScrollableFrame *scrollableFrame =
+    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (!scrollableFrame)
     return NS_OK;
 
@@ -2944,7 +2943,8 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  nsIScrollableFrame* scrollFrame =
+    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::PAGES,
@@ -2956,7 +2956,8 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  nsIScrollableFrame* scrollFrame =
+    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (scrollFrame) {
     PRInt32 lineCount = 1;
 #ifdef MOZ_WIDGET_COCOA
@@ -2985,7 +2986,8 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eHorizontal);
+  nsIScrollableFrame* scrollFrame =
+    GetFrameToScrollAsScrollable(nsIPresShell::eHorizontal);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
                           nsIScrollableFrame::LINES,
@@ -3007,7 +3009,8 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  nsIScrollableFrame* scrollFrame =
+    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::WHOLE,
@@ -3401,7 +3404,8 @@ PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
 }
 
 nsIScrollableFrame*
-PresShell::GetFrameToScroll(nsLayoutUtils::Direction aDirection)
+nsIPresShell::GetFrameToScrollAsScrollable(
+                nsIPresShell::ScrollDirection aDirection)
 {
   nsIScrollableFrame* scrollFrame = nsnull;
 
@@ -3430,8 +3434,15 @@ PresShell::GetFrameToScroll(nsLayoutUtils::Direction aDirection)
       if (scrollFrame) {
         startFrame = scrollFrame->GetScrolledFrame();
       }
-      scrollFrame =
-        nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame, aDirection);
+      if (aDirection == nsIPresShell::eEither) {
+        scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(startFrame);
+      } else {
+        scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame,
+            aDirection == eVertical ? nsLayoutUtils::eVertical :
+                                      nsLayoutUtils::eHorizontal);
+      }
     }
   }
   if (!scrollFrame) {
