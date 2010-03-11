@@ -50,12 +50,22 @@ MODULE_NAME     = nsChromeModule
 GRE_MODULE      = 1
 LIBXUL_LIBRARY  = 1
 
+EXPORTS_NAMESPACES = mozilla/chrome
+
+EXPORTS_mozilla/chrome = \
+		RegistryMessageUtils.h \
+		$(NULL)
 
 CPPSRCS		= \
 		nsChromeFactory.cpp \
 		nsChromeRegistry.cpp \
+		nsChromeRegistryChrome.cpp \
 		nsChromeProtocolHandler.cpp \
 		$(NULL)
+
+ifdef MOZ_IPC
+CPPSRCS += nsChromeRegistryContent.cpp
+endif
 
 EXTRA_DSO_LDOPTS = \
                 $(MOZ_UNICHARUTIL_LIBS) \
@@ -70,7 +80,14 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += \
+		-I$(topsrcdir)/netwerk/protocol/res/src \
+		-I$(topsrcdir)/netwerk/base/src \
+		$(NULL)
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS          += $(MOZ_GTK2_CFLAGS)

@@ -41,6 +41,11 @@ include protocol "PTestShell.ipdl";
 include protocol "PNecko.ipdl";
 
 include "mozilla/TabTypes.h";
+include "mozilla/chrome/RegistryMessageUtils.h";
+
+using ChromePackage;
+using ResourceMapping;
+using OverrideMapping;
 
 namespace mozilla {
 namespace dom {
@@ -55,6 +60,9 @@ child:
     PIFrameEmbedding();
 
     PTestShell();
+
+    RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
+                   OverrideMapping[] overrides);
 
 parent:
     PNecko();
