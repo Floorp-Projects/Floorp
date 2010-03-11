@@ -45,6 +45,9 @@
 // how many msecs elapse before two taps are not a double tap
 const kDoubleClickInterval = 400;
 
+// threshold in ms to detect if the click is possibly a dblClick
+const kDoubleClickThreshold = 200;
+
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = 25;
 
@@ -326,9 +329,9 @@ InputHandler.prototype = {
 /**
  * Helper class to InputHandler.  Wraps a DOM event with some additional data.
  */
-InputHandler.EventInfo = function EventInfo(aEvent, timestamp) {
+InputHandler.EventInfo = function EventInfo(aEvent) {
   this.event = aEvent;
-  this.time = timestamp || Date.now();
+  this.time = Date.now();
 };
 
 InputHandler.EventInfo.prototype = {
@@ -679,8 +682,12 @@ MouseModule.prototype = {
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
     } else {
-      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
-                                             kDoubleClickInterval, this);
+      let time = this._downUpEvents[1].time - this._downUpEvents[0].time;
+      if (time >= kDoubleClickThreshold)
+        this._doSingleClick();
+      else
+        this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
+                                               kDoubleClickInterval, this);
     }
   },
 
