@@ -910,6 +910,8 @@ struct JSFunctionBoxQueue {
 
 class JSTreeContext;
 
+typedef struct BindData BindData;
+
 struct JSCompiler : private js::AutoGCRooter {
     JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     JSAtomListElement   *aleFreeList;
@@ -981,6 +983,69 @@ struct JSCompiler : private js::AutoGCRooter {
 
     void trace(JSTracer *trc);
 
+private:
+    /*
+     * JS parsers, from lowest to highest precedence.
+     *
+     * Each parser takes tree context struct.
+     * Each returns a parse node tree or null on error.
+     */
+    JSParseNode *functionStmt(JSTreeContext *tc);
+    JSParseNode *functionExpr(JSTreeContext *tc);
+    JSParseNode *statements(JSTreeContext *tc);
+    JSParseNode *statement(JSTreeContext *tc);
+    JSParseNode *variables(JSTreeContext *tc, bool inLetHead);
+    JSParseNode *expr(JSTreeContext *tc);
+    JSParseNode *assignExpr(JSTreeContext *tc);
+    JSParseNode *condExpr(JSTreeContext *tc);
+    JSParseNode *orExpr(JSTreeContext *tc);
+    JSParseNode *andExpr(JSTreeContext *tc);
+    JSParseNode *bitOrExpr(JSTreeContext *tc);
+    JSParseNode *bitXorExpr(JSTreeContext *tc);
+    JSParseNode *bitAndExpr(JSTreeContext *tc);
+    JSParseNode *eqExpr(JSTreeContext *tc);
+    JSParseNode *relExpr(JSTreeContext *tc);
+    JSParseNode *shiftExpr(JSTreeContext *tc);
+    JSParseNode *addExpr(JSTreeContext *tc);
+    JSParseNode *mulExpr(JSTreeContext *tc);
+    JSParseNode *unaryExpr(JSTreeContext *tc);
+    JSParseNode *memberExpr(JSTreeContext *tc, JSBool allowCallSyntax);
+    JSParseNode *primaryExpr(JSTreeContext *tc, JSTokenType tt, JSBool afterDot);
+    JSParseNode *parenExpr(JSTreeContext *tc, JSParseNode *pn1, JSBool *genexp);
+
+    /*
+     * Additional JS parsers.
+     */
+    bool recognizeDirectivePrologue(JSTreeContext *tc, JSParseNode *pn);
+    JSParseNode *functionBody(JSTreeContext *tc);
+    JSParseNode *functionDef(JSTreeContext *tc, uintN lambda);
+    JSParseNode *condition(JSTreeContext *tc);
+    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
+                                   JSTokenType type = TOK_SEMI, JSOp op = JSOP_NOP);
+    JSParseNode *generatorExpr(JSParseNode *pn, JSParseNode *kid, JSTreeContext *tc);
+    JSBool argumentList(JSTreeContext *tc, JSParseNode *listNode);
+    JSParseNode *bracketedExpr(JSTreeContext *tc);
+    JSParseNode *letBlock(JSTreeContext *tc, JSBool statement);
+    JSParseNode *returnOrYield(JSTreeContext *tc, bool useAssignExpr);
+    JSParseNode *destructuringExpr(BindData *data, JSTreeContext *tc, JSTokenType tt);
+
+#if JS_HAS_XML_SUPPORT
+    JSParseNode *endBracketedExpr(JSTreeContext *tc);
+
+    JSParseNode *propertySelector(JSTreeContext *tc);
+    JSParseNode *qualifiedSuffix(JSParseNode *pn, JSTreeContext *tc);
+    JSParseNode *qualifiedIdentifier(JSTreeContext *tc);
+    JSParseNode *attributeIdentifier(JSTreeContext *tc);
+    JSParseNode *xmlExpr(JSBool inTag, JSTreeContext *tc);
+    JSParseNode *xmlAtomNode(JSTreeContext *tc);
+    JSParseNode *xmlNameExpr(JSTreeContext *tc);
+    JSParseNode *xmlTagContent(JSTreeContext *tc, JSTokenType tagtype, JSAtom **namep);
+    JSBool xmlElementContent(JSParseNode *pn, JSTreeContext *tc);
+    JSParseNode *xmlElementOrList(JSTreeContext *tc, JSBool allowList);
+    JSParseNode *xmlElementOrListRoot(JSTreeContext *tc, JSBool allowList);
+#endif /* JS_HAS_XML_SUPPORT */
+
+public:
     static bool
     compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                         const jschar *chars, size_t length,
