@@ -121,8 +121,8 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
 };
 
 #if defined DEBUG
-static JS_REQUIRES_STACK void
-AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
+JS_REQUIRES_STACK void
+TraceRecorder::AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
 {
     JS_ASSERT(anchor->recursive_down);
     JS_ASSERT(anchor->recursive_down->callerHeight == fi->callerHeight);

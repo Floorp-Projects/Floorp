@@ -99,6 +99,7 @@ js_PurgeGSNCache(JSGSNCache *cache);
 #define JS_PURGE_GSN_CACHE(cx)      js_PurgeGSNCache(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
+#ifdef JS_TRACER
 /* Forward declarations of nanojit types. */
 namespace nanojit {
 
@@ -110,9 +111,11 @@ template<typename K, typename V, typename H> class HashMap;
 template<typename T> class Seq;
 
 }  /* namespace nanojit */
+#endif
 
 namespace js {
 
+#ifdef JS_TRACER
 /* Tracer constants. */
 static const size_t MONITOR_N_GLOBAL_STATES = 4;
 static const size_t FRAGMENT_TABLE_SIZE = 512;
@@ -217,6 +220,7 @@ struct TraceNativeStorage
     double *global() { return stack_global_buf + MAX_NATIVE_STACK_SLOTS; }
     FrameInfo **callstack() { return callstack_buf; }
 };
+#endif
 
 /* Holds data to track a single globa. */
 struct GlobalState {
@@ -326,11 +330,14 @@ class CallStack
     }
 };
 
+#ifdef JS_TRACER
 /* Holds the number of recording attemps for an address. */
 typedef HashMap<jsbytecode*,
                 size_t,
                 DefaultHasher<jsbytecode*>,
                 SystemAllocPolicy> RecordAttemptMap;
+
+class Oracle;
 
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
@@ -393,6 +400,7 @@ struct TraceMonitor {
     nanojit::Assembler*     assembler;
     FrameInfoCache*         frameCache;
 
+    Oracle*                 oracle;
     TraceRecorder*          recorder;
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
@@ -451,6 +459,7 @@ struct TraceMonitor {
 };
 
 } /* namespace js */
+#endif
 
 /*
  * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
