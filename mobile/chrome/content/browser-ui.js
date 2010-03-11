@@ -1265,7 +1265,9 @@ var FormHelper = {
     if (!this._currentElement)
      return;
 
-    this._currentElement.value = aElement.value;
+    // Suggestions are only in <label>s. Ignore the rest.
+    if (aElement instanceof Ci.nsIDOMXULLabelElement)
+      this._currentElement.value = aElement.value;
   },
 
   getLabelsFor: function(aElement) {
