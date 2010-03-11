@@ -1,0 +1,17 @@
+The BrowserScope project provides a set of cross-browser HTML editor tests,
+which we import in our test suite in order to run them as part of our
+continuous integration system.
+
+We pull tests occasionally from their Subversion repository using the pull
+script which can be found in this directory.  We also record the revision ID
+which we've used in the current_revision file inside this directory.
+
+Using the pull script is quite easy, just switch to this directory, and say:
+
+sh update_from_upstream
+
+There are tests which we're currently failing on, and there will probably be
+more of those in the future.  We should maintain a list of the failing tests
+manually in currentStatus.js (which can also be found in this directory), to
+make sure that the suite passes entirely, with failing tests marked as todo
+items.

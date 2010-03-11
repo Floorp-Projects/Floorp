@@ -340,12 +340,15 @@
         <parameter name="column"/>
         <body>
           <![CDATA[
+            if (!this.editable)
+              return false;
             if (row < 0 || row >= this.view.rowCount || !column)
-              return;
+              return false;
             if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT ||
                 column.cycler || !this.view.isEditable(row, column))
-              return;
+              return false;
 
+            // Beyond this point, we are going to edit the cell.
             if (this._editingColumn)
               this.stopEditing();
 
@@ -398,6 +401,7 @@
             this._editingColumn = column;
 
             this.setAttribute("editing", "true");
+            return true;
           ]]>
         </body>
       </method>
@@ -656,6 +660,28 @@
           ]]>
         </body>
       </method>
+      <method name="_handleEnter">
+        <parameter name="event"/>
+        <body><![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(true);
+            this.focus();
+            return true;
+          }
+
+#ifdef XP_MACOSX
+          // See if we can edit the cell.
+          var row = this.currentIndex;
+          if (this._cellSelType) {
+            var column = this.view.selection.currentColumn;
+            var startedEditing = this.startEditing(row, column);
+            if (startedEditing)
+              return true;
+          }
+#endif
+          return this.changeOpenState(this.currentIndex);
+        ]]></body>
+      </method>
     </implementation>
     
     <handlers>
@@ -709,33 +735,30 @@
       <handler event="blur" phase="capturing"
                action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
       <handler event="keypress" keycode="VK_ENTER">
-        <![CDATA[
-          if (this._editingColumn) {
-            this.stopEditing(true);
-            this.focus();
-          }
-          else {
-            if (!this.changeOpenState(this.currentIndex))
-              return; // don't consume the event if the open state wasn't changed
-          }
+        if (this._handleEnter(event)) {
           event.stopPropagation();
           event.preventDefault();
-        ]]>
+        }
       </handler>
       <handler event="keypress" keycode="VK_RETURN">
-        <![CDATA[
-          if (this._editingColumn) {
-            this.stopEditing(true);
-            this.focus();
-          }
-          else {
-            if (!this.changeOpenState(this.currentIndex))
-              return; // don't consume the event if the open state wasn't changed
-          }
+        if (this._handleEnter(event)) {
           event.stopPropagation();
           event.preventDefault();
+        }
+      </handler>
+#ifndef XP_MACOSX
+      <!-- Use F2 key to enter text editing. -->
+      <handler event="keypress" keycode="VK_F2">
+        <![CDATA[
+          if (!this._cellSelType)
+            return;
+          var row = this.currentIndex;
+          var column = this.view.selection.currentColumn;
+          this.startEditing(row, column);
         ]]>
       </handler>
+#endif // XP_MACOSX
+
       <handler event="keypress" keycode="VK_ESCAPE">
         <![CDATA[
           if (this._editingColumn) {
@@ -1130,7 +1153,7 @@
         var obj = {};
         tbo.getCellAt(event.clientX, event.clientY, {}, col, obj);
 
-        if (this.parentNode.editable && obj.value != "twisty")
+        if (obj.value != "twisty")
           this.parentNode.startEditing(row, col.value);
 
         if (this.parentNode._editingColumn || !tbo.view.isContainer(row))

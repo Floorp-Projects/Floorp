@@ -30,13 +30,20 @@ var notWorkingYet = false;
 var notWorkingYetDynamic = false;
 var expectedOutput =<output></output>;
 
+Components.classes["@mozilla.org/consoleservice;1"]
+          .getService(Components.interfaces.nsIConsoleService)
+          .reset();
+
+expectedConsoleMessages.push("Error parsing template: only profile: or file URI are allowed");
+
+
 var changes = [];
 ]]>
 </script>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
               flex="1" rows="8"
-              datasources="animalsqsdqsdqsdq.sqlite" ref="." querytype="storage">
+              datasources="http://foo.local/animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animals WHERE species_id = 2 ORDER BY name

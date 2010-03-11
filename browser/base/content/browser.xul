@@ -405,6 +405,7 @@
                  noneplaceholder="&urlbar.none.emptyText;"
                  type="autocomplete"
                  autocompletesearch="history"
+                 autocompletesearchparam="enable-actions"
                  autocompletepopup="PopupAutoCompleteRichResult"
                  completeselectedindex="true"
                  tabscrolling="true"
@@ -443,6 +444,7 @@
               </hbox>
             </hbox>
           </box>
+          <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
           <hbox id="urlbar-icons">
             <button type="menu"
                     style="-moz-user-focus: none"

@@ -63,13 +63,19 @@
 static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
 static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
                                 png_uint_32 row_num, int pass);
+#ifdef PNG_APNG_SUPPORTED
 static void PNGAPI frame_info_callback(png_structp png_ptr,
                                        png_uint_32 frame_num);
+#endif
 static void PNGAPI end_callback(png_structp png_ptr, png_infop info_ptr);
 static void PNGAPI error_callback(png_structp png_ptr,
                                   png_const_charp error_msg);
 static void PNGAPI warning_callback(png_structp png_ptr,
                                     png_const_charp warning_msg);
+#if defined(PNG_USER_MEM_SUPPORTED) && !defined(PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED)
+static png_voidp PNGAPI malloc_callback(png_structp png_ptr,
+                                        png_alloc_size_t size);
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
@@ -245,7 +251,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
                                  imgIDecoderObserver *aObserver,
                                  PRUint32 aFlags)
 {
-#if defined(PNG_HANDLE_AS_UNKNOWN_SUPPORTED)
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   static png_byte color_chunks[]=
        { 99,  72,  82,  77, '\0',   /* cHRM */
         105,  67,  67,  80, '\0'};  /* iCCP */
@@ -285,8 +291,20 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
   /* Initialize the container's source image header. */
   /* Always decode to 24 bit pixdepth */
 
-  mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                NULL, error_callback, warning_callback);
+#if defined(PNG_USER_MEM_SUPPORTED) && !defined(PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED)
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+    mPNG = png_create_read_struct_2(PNG_LIBPNG_VER_STRING,
+                                    NULL,
+                                    error_callback,
+                                    warning_callback,
+                                    NULL,
+                                    malloc_callback,
+                                    NULL);
+  } else
+#endif
+    mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+                                  NULL, error_callback,
+                                  warning_callback);
   if (!mPNG)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -296,13 +314,27 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-#if defined(PNG_HANDLE_AS_UNKNOWN_SUPPORTED)
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   /* Ignore unused chunks */
   if (gfxPlatform::GetCMSMode() == eCMSMode_Off)
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
 
   png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
-     (int)sizeof(unused_chunks)/5);
+     (int)sizeof(unused_chunks)/5);   
+#endif
+
+#ifndef MOZPNGCONF_H
+# if defined(PNG_WRITE_SUPPORTED)
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+    /* Increase speed of decompressing large iCCP chunks (default buffer
+       size is 8192) */
+    png_set_compression_buffer_size(mPNG, (png_size_t)32768L);
+  }
+
+#   if defined PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
+       png_set_user_chunk_malloc_max(mPNG, 4000000L);
+#   endif
+# endif
 #endif
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
@@ -721,6 +753,25 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
 
+#if defined PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
+  /* Revert to the default memory limit */
+       png_set_user_chunk_malloc_max(decoder->mPNG, PNG_USER_CHUNK_MALLOC_MAX);
+#endif
+#if defined(PNG_USER_MEM_SUPPORTED) && !defined(PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED)
+  /* Revert to the default memory allocator */
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off)
+     png_set_mem_fn(decoder->mPNG, NULL, NULL, NULL);
+#endif
+
+#ifndef MOZPNGCONF_H
+/* Revert to the default zlib buffer size */
+# if defined(PNG_WRITE_SUPPORTED)
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+    png_set_compression_buffer_size(decoder->mPNG, (png_size_t)8192);
+  }
+# endif
+#endif
+
   /* Reject any ancillary chunk after IDAT with a bad CRC (bug #397593).
    * It would be better to show the default frame (if one has already been
    * successfully decoded) before bailing, but it's simpler to just bail
@@ -936,3 +987,44 @@ warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
+
+#if defined(PNG_USER_MEM_SUPPORTED) && !defined(PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED)
+/* Replacement libpng memory allocator that has a 4MB limit */
+png_voidp malloc_callback(png_structp png_ptr, png_alloc_size_t size) {
+
+  png_voidp ret;
+
+  if (png_ptr == NULL || size == 0)
+    return (png_voidp) (NULL);
+
+#ifdef PNG_MAX_MALLOC_64K
+  if (size > (png_uint_32)65536L) {
+         return NULL;
+  }
+#endif
+  if (size > (png_uint_32)4000000L) {
+         return NULL;
+  }
+#if defined(__TURBOC__) && !defined(__FLAT__)
+   if (size != (unsigned long)size)
+      ret = NULL;
+   else
+      ret = farmalloc(size);
+#else
+#  if defined(_MSC_VER) && defined(MAXSEG_64K)
+   if (size != (unsigned long)size)
+      ret = NULL;
+   else
+      ret = halloc(size, 1);
+#  else
+   if (size != (size_t)size)
+      ret = NULL;
+   else
+      ret = malloc((size_t)size);
+#  endif
+#endif
+
+   return (ret);
+}
+#endif /* PNG_USER_MEM_SUPPORTED */
+

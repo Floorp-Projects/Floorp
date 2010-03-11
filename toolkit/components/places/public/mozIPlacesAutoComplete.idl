@@ -107,4 +107,13 @@ interface mozIPlacesAutoComplete : nsISupports
    * Search javascript: URLs.
    */
   const long BEHAVIOR_JAVASCRIPT = 1 << 6;
+
+  /**
+   * Search for pages that have been marked as being opened, such as a tab
+   * in a tabbrowser, via:
+   *   nsIBrowserHistory.registerOpenPage(url)
+   *
+   * @see nsIBrowserHistory.idl
+   */
+  const long BEHAVIOR_OPENPAGE = 1 << 7;
 };

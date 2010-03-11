@@ -30,6 +30,13 @@ var notWorkingYet = false;
 var notWorkingYetDynamic = false;
 var expectedOutput =<output></output>;
 
+Components.classes["@mozilla.org/consoleservice;1"]
+          .getService(Components.interfaces.nsIConsoleService)
+          .reset();
+
+expectedConsoleMessages.push("Error parsing template: syntax error in the SQL query");
+
+
 var changes = [];
 ]]>
 </script>

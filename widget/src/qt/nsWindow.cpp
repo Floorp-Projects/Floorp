@@ -101,6 +101,7 @@ static int gBufferPixmapUsageCount = 0;
 // Buffered shared image + pixmap
 static gfxSharedImageSurface *gBufferImage = nsnull;
 static gfxSharedImageSurface *gBufferImageTemp = nsnull;
+static QSize gBufferMaxSize(0, 0);
 PRBool gNeedColorConversion = PR_FALSE;
 extern "C" {
 #include "pixman.h"
@@ -222,14 +223,16 @@ UpdateOffScreenBuffers(QSize aSize, int aDepth)
 {
     gfxIntSize size(aSize.width(), aSize.height());
     if (gBufferPixmap) {
-        if (gBufferPixmap->size().width() < size.width ||
-            gBufferPixmap->size().height() < size.height) {
+        if (gBufferMaxSize.width() < size.width ||
+            gBufferMaxSize.height() < size.height) {
             FreeOffScreenBuffers();
         } else
             return true;
     }
 
-    gBufferPixmap = new QPixmap(size.width, size.height);
+    gBufferMaxSize.setWidth(PR_MAX(gBufferMaxSize.width(), size.width));
+    gBufferMaxSize.setHeight(PR_MAX(gBufferMaxSize.height(), size.height));
+    gBufferPixmap = new QPixmap(gBufferMaxSize.width(), gBufferMaxSize.height());
     if (!gBufferPixmap)
         return false;
 
@@ -989,13 +992,16 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     else
         r = mWidget->boundingRect();
 
+    if (r.isEmpty())
+        return nsEventStatus_eIgnore;
+
     if (!mDirtyScrollArea.isEmpty())
         mDirtyScrollArea = QRegion();
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     // Prepare offscreen buffers if RenderMode Xlib or Image
     if (renderMode != gfxQtPlatform::RENDER_QPAINTER)
-        if (!UpdateOffScreenBuffers(r.size().toSize(), QX11Info().depth()))
+        if (!UpdateOffScreenBuffers(QSize(r.width(), r.height()), QX11Info().depth()))
             return nsEventStatus_eIgnore;
 
     nsRefPtr<gfxASurface> targetSurface = nsnull;
@@ -1012,6 +1018,10 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         return nsEventStatus_eIgnore;
 
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+
+    // We will paint to 0, 0 position in offscrenn buffer
+    if (renderMode != gfxQtPlatform::RENDER_QPAINTER)
+        ctx->Translate(gfxPoint(-r.x(), -r.y()));
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
@@ -1060,8 +1070,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
                                    0, 0,
                                    0, 0,
                                    0, 0,
-                                   gBufferImageTemp->GetSize().width,
-                                   gBufferImageTemp->GetSize().height);
+                                   rect.width, rect.height);
             pixman_image_unref(src_image);
             pixman_image_unref(dst_image);
         }
@@ -1071,7 +1080,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         gcv.graphics_exposures = False;
         GC gc = XCreateGC(disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
         XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
-                     rect.x, rect.y, rect.x, rect.y, rect.width, rect.height,
+                     0, 0, 0, 0, rect.width, rect.height,
                      False);
         XSync(disp, False);
         XFreeGC(disp, gc);
@@ -1080,7 +1089,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     if (renderMode != gfxQtPlatform::RENDER_QPAINTER) {
         if (gBufferPixmap->handle())
             aPainter->drawPixmap(QPoint(rect.x, rect.y), *gBufferPixmap,
-                                 QRect(rect.x, rect.y, rect.width, rect.height));
+                                 QRect(0, 0, rect.width, rect.height));
         else {
             QImage img(gBufferImage->Data(),
                        gBufferImage->Width(),
@@ -1088,7 +1097,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
                        gBufferImage->Stride(),
                        QImage::Format_RGB32);
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
-                                QRect(rect.x, rect.y, rect.width, rect.height));
+                                QRect(0, 0, rect.width, rect.height));
         }
     }
 
@@ -1680,9 +1689,12 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     class_hint->res_name[0] = toupper(class_hint->res_name[0]);
     if (!role) role = class_hint->res_name;
 
-    XSetClassHint(GetViewWidget()->x11Info().display(),
-                  GetViewWidget()->handle(),
-                  class_hint);
+    QWidget *widget = GetViewWidget();
+    // If widget not show, handle might be null
+    if (widget && widget->handle())
+        XSetClassHint(widget->x11Info().display(),
+                      widget->handle(),
+                      class_hint);
 
     nsMemory::Free(class_hint->res_class);
     nsMemory::Free(class_hint->res_name);

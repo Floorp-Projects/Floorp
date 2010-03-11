@@ -49,7 +49,7 @@ nsHtml5ReleasableAttributeName::cloneAttributeName(nsHtml5AtomTable* aInterner)
 {
   nsIAtom* l = getLocal(0);
   if (aInterner) {
-    if (l->IsStaticAtom()) {
+    if (!l->IsStaticAtom()) {
       nsAutoString str;
       l->ToString(str);
       l = aInterner->GetAtom(str);

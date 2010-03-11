@@ -15,7 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=508206
      where we don't handle percentage lengths when the whole fragment is
      display: none properly. -->
 <div id="content" style="visibility: hidden">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"
+     onload="this.pauseAnimations()">
   <g font-size="10px">
     <circle cx="0" cy="0" r="15" fill="blue" id="circle">
       <animate attributeName="cx" from="0" to="10em" dur="10s" begin="0s"
@@ -39,8 +40,10 @@ var circle = document.getElementById('circle');
 SimpleTest.waitForExplicitFinish();
 
 function main() {
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
   // Sample mid-way through the animation
-  svg.pauseAnimations();
   svg.setCurrentTime(5);
 
   // (1) Check values mid-way

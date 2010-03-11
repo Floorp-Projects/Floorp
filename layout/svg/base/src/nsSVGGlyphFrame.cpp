@@ -912,7 +912,6 @@ NS_IMETHODIMP_(void)
 nsSVGGlyphFrame::SetGlyphPosition(float x, float y, PRBool aForceGlobalTransform)
 {
   mPosition.MoveTo(x, y - GetBaselineOffset(aForceGlobalTransform));
-  nsSVGUtils::UpdateGraphic(this);
 }
 
 NS_IMETHODIMP

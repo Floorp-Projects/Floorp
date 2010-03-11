@@ -38,29 +38,35 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Tests bug 449406 to ensure that TRANSITION_DOWNLOAD and TRANSITION_EMBED
- * bookmarked uri's show up in the location bar.
+ * Tests bug 449406 to ensure that TRANSITION_DOWNLOAD, TRANSITION_EMBED and
+ * TRANSITION_FRAMED_LINK bookmarked uri's show up in the location bar.
  */
 
 // Define some shared uris and titles (each page needs its own uri)
 let kURIs = [
   "http://download/bookmarked",
   "http://embed/bookmarked",
+  "http://framed/bookmarked",
   "http://download",
   "http://embed",
+  "http://framed",
 ];
 let kTitles = [
   "download-bookmark",
   "embed-bookmark",
+  "framed-bookmark",
   "download2",
   "embed2",
+  "framed2",
 ];
 
 // Add download and embed uris
 addPageBook(0, 0, 0, undefined, undefined, TRANSITION_DOWNLOAD);
 addPageBook(1, 1, 1, undefined, undefined, TRANSITION_EMBED);
-addPageBook(2, 2, undefined, undefined, undefined, TRANSITION_DOWNLOAD);
-addPageBook(3, 3, undefined, undefined, undefined, TRANSITION_EMBED);
+addPageBook(2, 2, 2, undefined, undefined, TRANSITION_FRAMED_LINK);
+addPageBook(3, 3, undefined, undefined, undefined, TRANSITION_DOWNLOAD);
+addPageBook(4, 4, undefined, undefined, undefined, TRANSITION_EMBED);
+addPageBook(5, 5, undefined, undefined, undefined, TRANSITION_FRAMED_LINK);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
@@ -69,8 +75,12 @@ let gTests = [
    kTitles[0], [0]],
   ["1: Searching for bookmarked embed uri matches",
    kTitles[1], [1]],
-  ["2: Searching for download uri does not match",
-   kTitles[2], []],
-  ["3: Searching for embed uri does not match",
+  ["2: Searching for bookmarked framed uri matches",
+   kTitles[2], [2]],
+  ["3: Searching for download uri does not match",
    kTitles[3], []],
+  ["4: Searching for embed uri does not match",
+   kTitles[4], []],
+  ["5: Searching for framed uri does not match",
+   kTitles[5], []],
 ];

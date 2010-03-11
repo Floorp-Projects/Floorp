@@ -7332,13 +7332,6 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
   }
 }
 
-static PRUint32 GetURIHash(nsIURI* aURI)
-{
-  nsCAutoString str;
-  aURI->GetSpec(str);
-  return HashString(str);
-}
-
 void
 nsDocument::AddStyleRelevantLink(Link* aLink)
 {

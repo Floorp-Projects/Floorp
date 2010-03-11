@@ -40,7 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Carbon/Carbon.h>
+#import <ApplicationServices/ApplicationServices.h>
 
 #include "nsObjCExceptions.h"
 #include "nsMIMEInfoMac.h"

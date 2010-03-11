@@ -39,7 +39,6 @@
 #include "npapi.h"
 #include "npfunctions.h"
 
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 #pragma GCC visibility push(default)

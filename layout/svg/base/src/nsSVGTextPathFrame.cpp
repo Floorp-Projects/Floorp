@@ -136,11 +136,7 @@ nsSVGTextPathFrame::GetPathFrame()
       return nsnull;
   }
 
-  nsIFrame *result = property->GetReferencedFrame();
-  if (!result || result->GetType() != nsGkAtoms::svgPathGeometryFrame)
-    return nsnull;
-
-  return result;
+  return property->GetReferencedFrame(nsGkAtoms::svgPathGeometryFrame, nsnull);
 }
 
 already_AddRefed<gfxFlattenedPath>
