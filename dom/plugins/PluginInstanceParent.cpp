@@ -365,7 +365,7 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
     if (!streamDestroyed) {
         static_cast<StreamNotifyParent*>(actor)->ClearDestructionFlag();
         if (*result != NPERR_NO_ERROR)
-            PStreamNotifyParent::Call__delete__(actor, NPERR_GENERIC_ERROR);
+            PStreamNotifyParent::Send__delete__(actor, NPERR_GENERIC_ERROR);
     }
 
     return true;
@@ -733,7 +733,7 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
 
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);
-    PStreamNotifyParent::Call__delete__(streamNotify, reason);
+    PStreamNotifyParent::Send__delete__(streamNotify, reason);
 }
 
 bool

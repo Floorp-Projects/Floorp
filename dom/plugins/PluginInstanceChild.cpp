@@ -1354,8 +1354,8 @@ StreamNotifyChild::ActorDestroy(ActorDestroyReason why)
         NS_ERROR("Pending NPP_URLNotify not called when closing an instance.");
 
         // reclaim responsibility for deleting ourself
-        mBrowserStream = NULL;
         mBrowserStream->mStreamNotify = NULL;
+        mBrowserStream = NULL;
     }
 }
 
