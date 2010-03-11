@@ -536,7 +536,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             {
                 RECT rect;
                 SharedSurfaceBeforePaint(rect, npremoteevent);
-                CallNPP_HandleEvent(npremoteevent, &handled);
+                CallPaint(npremoteevent, &handled);
                 SharedSurfaceAfterPaint(npevent);
                 return handled;
             }
@@ -561,12 +561,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             }
             break;
         }
-        if (!CallNPP_HandleEvent(npremoteevent, &handled))
-            return 0;
-    }
-    else {
-        if (!CallNPP_HandleEvent(npremoteevent, &handled))
-            return 0;
     }
 #endif
 
@@ -586,11 +580,14 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 #  elif defined(MOZ_WIDGET_QT)
         XSync(QX11Info::display(), False);
 #  endif
+
+        if (!CallPaint(npremoteevent, &handled))
+            return 0;
     }
+#endif
 
     if (!CallNPP_HandleEvent(npremoteevent, &handled))
         return 0; // no good way to handle errors here...
-#endif
 
     return handled;
 }
