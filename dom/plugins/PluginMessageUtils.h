@@ -42,6 +42,8 @@
 #include "IPC/IPCMessageUtils.h"
 #include "base/message_loop.h"
 
+#include "mozilla/ipc/RPCChannel.h"
+
 #include "npapi.h"
 #include "npruntime.h"
 #include "npfunctions.h"
@@ -72,6 +74,10 @@ enum ScriptableObjectType
   LocalObject,
   Proxy
 };
+
+mozilla::ipc::RPCChannel::RacyRPCPolicy
+MediateRace(const mozilla::ipc::RPCChannel::Message& parent,
+            const mozilla::ipc::RPCChannel::Message& child);
 
 extern PRLogModuleInfo* gPluginLog;
 

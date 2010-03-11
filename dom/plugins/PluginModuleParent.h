@@ -126,6 +126,13 @@ public:
 
 protected:
     NS_OVERRIDE
+    virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
+    MediateRPCRace(const Message& parent, const Message& child)
+    {
+        return MediateRace(parent, child);
+    }
+
+    NS_OVERRIDE
     virtual bool ShouldContinueFromReplyTimeout();
 
     virtual bool
