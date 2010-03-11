@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <glib.h>
+#endif
+
 #include "base/process_util.h"
 
 #include "mozilla/ipc/SyncChannel.h"
@@ -45,7 +49,6 @@
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsNPAPIPlugin.h"
-#include "nsThreadUtils.h"
 
 using base::KillProcess;
 
@@ -875,17 +878,12 @@ PluginModuleParent::AnswerProcessSomeEvents()
 {
     PLUGIN_LOG_DEBUG(("Spinning mini nested loop ..."));
 
-    // XXX it would seem sensical to make the condition be
-    // |NS_HasPendingEvents() && i < kMaxEventsToProcess|.  The
-    // problem is, the native appshell is just an observer of our
-    // nsThread, and processes native events as a side effect of
-    // nsThread::ProcessNextEvent().  Since native events are the ones
-    // we really care about here, we need to go straight to
-    // NS_ProcessNextEvent().
-    for (int i = 0; i < kMaxChancesToProcessEvents; ++i)
-        NS_ProcessNextEvent(nsnull, PR_FALSE);
+    int i = 0;
+    for (; i < kMaxChancesToProcessEvents; ++i)
+        if (!g_main_context_iteration(NULL, FALSE))
+            break;
 
-    PLUGIN_LOG_DEBUG(("... quitting mini nested loop"));
+    PLUGIN_LOG_DEBUG(("... quitting mini nested loop; processed %i tasks", i));
 
     return true;
 }
