@@ -62,6 +62,7 @@ function onLoad()
 function InitWithToolbox(aToolbox)
 {
   gToolbox = aToolbox;
+  dispatchCustomizationEvent("beforecustomization");
   gToolboxDocument = gToolbox.ownerDocument;
   gToolbox.customizing = true;
 
@@ -147,6 +148,7 @@ function notifyParentComplete()
 {
   if ("customizeDone" in gToolbox)
     gToolbox.customizeDone(gToolboxChanged);
+  dispatchCustomizationEvent("aftercustomization");
 }
 
 /**
@@ -164,6 +166,13 @@ function toolboxChanged(aEvent)
   gToolboxChanged = true;
   if ("customizeChange" in gToolbox)
     gToolbox.customizeChange(aEvent);
+  dispatchCustomizationEvent("customizationchange");
+}
+
+function dispatchCustomizationEvent(aEventName) {
+  var evt = document.createEvent("Events");
+  evt.initEvent(aEventName, true, true);
+  gToolbox.dispatchEvent(evt);
 }
 
 function getToolbarAt(i)
