@@ -112,7 +112,7 @@ public:
   void FinishDelivery() {
     NS_ASSERTION(mInstanceDying, "Should only be called after InstanceDying");
     NS_ASSERTION(DELETING != mState, "InstanceDying didn't work?");
-    mStreamStatus = NPRES_NETWORK_ERR;
+    mStreamStatus = NPRES_USER_BREAK;
     Deliver();
     NS_ASSERTION(!mStreamNotify, "Didn't deliver NPN_URLNotify?");
   }
