@@ -181,16 +181,6 @@ RPCChannel::Call(Message* msg, Message* reply)
         NewRunnableMethod(this, &RPCChannel::OnSend, msg));
 
     while (1) {
-        // if a handler invoked by *Dispatch*() spun a nested event
-        // loop, and the connection was broken during that loop, we
-        // might have already processed the OnError event. if so,
-        // trying another loop iteration will be futile because
-        // channel state will have been cleared
-        if (!Connected()) {
-            ReportConnectionError("RPCChannel");
-            return false;
-        }
-
         // now might be the time to process a message deferred because
         // of race resolution
         MaybeProcessDeferredIncall();
