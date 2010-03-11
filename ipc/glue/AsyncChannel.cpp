@@ -247,13 +247,7 @@ AsyncChannel::OnDispatchMessage(const Message& msg)
 bool
 AsyncChannel::OnSpecialMessage(uint16 id, const Message& msg)
 {
-    switch (id) {
-    case GOODBYE_MESSAGE_TYPE:
-        return ProcessGoodbyeMessage();
-
-    default:
-        return false;
-    }
+    return false;
 }
 
 void
@@ -264,20 +258,6 @@ AsyncChannel::SendSpecialMessage(Message* msg)
     mIOLoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &AsyncChannel::OnSend, msg));
-}
-
-bool
-AsyncChannel::ProcessGoodbyeMessage()
-{
-    MutexAutoLock lock(mMutex);
-    // TODO sort out Close() on this side racing with Close() on the
-    // other side
-    mChannelState = ChannelClosing;
-
-    printf("NOTE: %s process received `Goodbye', closing down\n",
-           mChild ? "child" : "parent");
-
-    return true;
 }
 
 void
@@ -413,10 +393,13 @@ AsyncChannel::OnMessageReceived(const Message& msg)
     AssertIOThread();
     NS_ASSERTION(mChannelState != ChannelError, "Shouldn't get here!");
 
-    // wake up the worker, there's work to do
-    mWorkerLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &AsyncChannel::OnDispatchMessage, msg));
+    MutexAutoLock lock(mMutex);
+
+    if (!MaybeInterceptSpecialIOMessage(msg))
+        // wake up the worker, there's work to do
+        mWorkerLoop->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &AsyncChannel::OnDispatchMessage, msg));
 }
 
 void
@@ -475,6 +458,34 @@ AsyncChannel::OnCloseChannel()
     MutexAutoLock lock(mMutex);
     mChannelState = ChannelClosed;
     mCvar.Notify();
+}
+
+bool
+AsyncChannel::MaybeInterceptSpecialIOMessage(const Message& msg)
+{
+    AssertIOThread();
+    mMutex.AssertCurrentThreadOwns();
+
+    if (MSG_ROUTING_NONE == msg.routing_id()
+        && GOODBYE_MESSAGE_TYPE == msg.type()) {
+        ProcessGoodbyeMessage();
+        return true;
+    }
+    return false;
+}
+
+void
+AsyncChannel::ProcessGoodbyeMessage()
+{
+    AssertIOThread();
+    mMutex.AssertCurrentThreadOwns();
+
+    // TODO sort out Close() on this side racing with Close() on the
+    // other side
+    mChannelState = ChannelClosing;
+
+    printf("NOTE: %s process received `Goodbye', closing down\n",
+           mChild ? "child" : "parent");
 }
 
 
