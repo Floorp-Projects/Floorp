@@ -58,8 +58,8 @@
 #endif
       </field>
 
-      <!-- _tabs and _tabpanels are deprecated , there are here for
-           backwards compatibility, -->
+      <!-- _tabs and _tabpanels are deprecated, they exist only for
+           backwards compatibility. -->
       <property name="_tabs" readonly="true" onget="return this.tabs;"/>
       <property name="_tabpanels" readonly="true" onget="return this.tabpanels;"/>
 
@@ -256,8 +256,8 @@
         if (!this.hasAttribute("orient"))
           this.setAttribute("orient", "horizontal");
 
-        if (this._tabbox && this._tabbox.hasAttribute("selectedIndex")) {
-          let selectedIndex = parseInt(this._tabbox.getAttribute("selectedIndex"));
+        if (this.tabbox && this.tabbox.hasAttribute("selectedIndex")) {
+          let selectedIndex = parseInt(this.tabbox.getAttribute("selectedIndex"));
           this.selectedIndex = selectedIndex > 0 ? selectedIndex : 0;
           return;
         }
@@ -306,7 +306,7 @@
         </setter>
       </property>
 
-      <field name="_tabbox"><![CDATA[
+      <field name="tabbox" readonly="true"><![CDATA[
         var parent = this.parentNode;
         while (parent) {
           if (parent.localName == "tabbox")
@@ -314,6 +314,11 @@
           parent = parent.parentNode;
         }
         parent;
+      ]]></field>
+
+      <!-- _tabbox is deprecated, it exists only for backwards compatibility. -->
+      <field name="_tabbox" readonly="true"><![CDATA[
+        this.tabbox;
       ]]></field>
 
       <property name="selectedIndex">
@@ -342,9 +347,9 @@
 
             this.setAttribute("value", tab.value);
 
-            if (this._tabbox) {
-              this._tabbox.setAttribute("selectedIndex", val);
-              var tabpanels = this._tabbox.tabpanels;
+            if (this.tabbox) {
+              this.tabbox.setAttribute("selectedIndex", val);
+              var tabpanels = this.tabbox.tabpanels;
               // This will cause an onselect event to fire for the tabpanel element.
               if (tabpanels) {
                 // find an id
@@ -451,12 +456,12 @@
             document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
             
             // Make sure that the focus doesn't move outside the tabbox
-            if (this._tabbox) {
+            if (this.tabbox) {
               try {
                 let el = document.commandDispatcher.focusedElement;
-                while (el && el != this._tabbox)
+                while (el && el != this.tabbox)
                   el = el.parentNode;
-                if (el != this._tabbox)
+                if (el != this.tabbox)
                   aNewTab.focus();
               } catch(e) {
               }
