@@ -782,9 +782,6 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   // first, determine at which corner of the anchor the popup should appear
   nsPoint pnt;
   switch (popupAnchor) {
-    case POPUPALIGNMENT_TOPLEFT:
-      pnt = anchorRect.TopLeft();
-      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt = anchorRect.TopRight();
       break;
@@ -793,6 +790,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
       break;
     case POPUPALIGNMENT_BOTTOMRIGHT:
       pnt = anchorRect.BottomRight();
+      break;
+    case POPUPALIGNMENT_TOPLEFT:
+    default:
+      pnt = anchorRect.TopLeft();
       break;
   }
 
@@ -803,9 +804,6 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   nsMargin margin(0, 0, 0, 0);
   GetStyleMargin()->GetMargin(margin);
   switch (popupAlign) {
-    case POPUPALIGNMENT_TOPLEFT:
-      pnt.MoveBy(margin.left, margin.top);
-      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt.MoveBy(-mRect.width - margin.right, margin.top);
       break;
@@ -814,6 +812,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
       break;
     case POPUPALIGNMENT_BOTTOMRIGHT:
       pnt.MoveBy(-mRect.width - margin.right, -mRect.height - margin.bottom);
+      break;
+    case POPUPALIGNMENT_TOPLEFT:
+    default:
+      pnt.MoveBy(margin.left, margin.top);
       break;
   }
 
