@@ -1,7 +1,7 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.4.0 [January 3, 2010]
+ * Last changed in libpng 1.4.1 [February 25, 2010]
  * Copyright (c) 1998-2010 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -1032,17 +1032,16 @@ png_get_user_chunk_ptr(png_structp png_ptr)
 }
 #endif
 
-#ifdef PNG_WRITE_SUPPORTED
 png_size_t PNGAPI
 png_get_compression_buffer_size(png_structp png_ptr)
 {
    return (png_ptr ? png_ptr->zbuf_size : 0L);
 }
-#endif
 
 
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
-/* These functions were added to libpng 1.2.6 */
+/* These functions were added to libpng 1.2.6 and were enabled
+ * by default in libpng-1.4.0 */
 png_uint_32 PNGAPI
 png_get_user_width_max (png_structp png_ptr)
 {
@@ -1053,15 +1052,23 @@ png_get_user_height_max (png_structp png_ptr)
 {
     return (png_ptr? png_ptr->user_height_max : 0);
 }
+
 /* This function was added to libpng 1.4.0 */
 png_uint_32 PNGAPI
 png_get_chunk_cache_max (png_structp png_ptr)
 {
-    return (png_ptr? png_ptr->user_chunk_cache_max? 0x7fffffffL :
-       png_ptr->user_chunk_cache_max - 1 : 0);
+    return (png_ptr? png_ptr->user_chunk_cache_max : 0);
+}
+/* This function was added to libpng 1.4.1 */
+png_alloc_size_t PNGAPI
+png_get_chunk_malloc_max (png_structp png_ptr)
+{
+    return (png_ptr?
+       png_ptr->user_chunk_malloc_max : 0);
 }
 #endif /* ?PNG_SET_USER_LIMITS_SUPPORTED */
 
+/* These functions were added to libpng 1.4.0 */
 #ifdef PNG_IO_STATE_SUPPORTED
 png_uint_32 PNGAPI
 png_get_io_state (png_structp png_ptr)

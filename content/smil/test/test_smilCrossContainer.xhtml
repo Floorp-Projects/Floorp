@@ -9,10 +9,12 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svga" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svga" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <circle cx="-20" cy="20" r="15" fill="blue" id="circlea"/>
 </svg>
-<svg id="svgb" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svgb" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <circle cx="-20" cy="20" r="15" fill="blue" id="circleb">
     <set attributeName="cy" to="120" begin="4s" dur="1s" id="syncb"/>
   </circle>
@@ -27,11 +29,13 @@ SimpleTest.waitForExplicitFinish();
 
 function main() {
   var svga = getElement("svga");
-  svga.pauseAnimations();
+  ok(svga.animationsPaused(), "should be paused by <svg> load handler");
+  is(svga.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
   svga.setCurrentTime(1);
 
   var svgb = getElement("svgb");
-  svgb.pauseAnimations();
+  ok(svgb.animationsPaused(), "should be paused by <svg> load handler");
+  is(svgb.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
   svgb.setCurrentTime(1);
 
   // Create animation and check initial state

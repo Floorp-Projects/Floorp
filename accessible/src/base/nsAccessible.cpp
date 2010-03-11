@@ -3000,20 +3000,15 @@ void
 nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 {
 #ifdef DEBUG
-  // All cached accessible nodes should be in the parent
-  // It will assert if not all the children were created
-  // when they were first cached, and no invalidation
-  // ever corrected parent accessible's child cache.
   PRUint32 childCount = mChildren.Length();
   if (childCount == 0) {
-    NS_ASSERTION(mAreChildrenInitialized,
-                 "Children are stored but not initialized!");
+    NS_ASSERTION(!mAreChildrenInitialized, "No children but initialized!");
     return;
   }
 
-  nsAccessible *child;
+  nsAccessible *child = nsnull;
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    child = GetChildAt(childIdx);
+    child = mChildren[childIdx];
     if (child == aCachedChild)
       break;
   }
@@ -3040,7 +3035,7 @@ nsAccessible::EnsureChildren()
   return PR_FALSE;
 }
 
-nsIAccessible*
+nsAccessible*
 nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
 {
   if (IsDefunct()) {

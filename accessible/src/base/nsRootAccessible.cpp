@@ -725,8 +725,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         nsRefPtr<nsXULTreeAccessible> treeAcc =
           nsAccUtils::QueryAccessibleTree(accessible);
         if (treeAcc) {
-          treeAcc->GetTreeItemAccessible(treeIndex,
-                                         getter_AddRefs(treeItemAccessible));
+          treeItemAccessible = treeAcc->GetTreeItemAccessible(treeIndex);
           if (treeItemAccessible)
             accessible = treeItemAccessible;
         }

@@ -40,38 +40,13 @@
 // https://wiki.mozilla.org/Firefox3.1/PrivateBrowsing/TestPlan#History
 // http://developer.mozilla.org/en/Using_the_Places_history_service
 
-// Get global history service
-try {
-  var bhist = Cc["@mozilla.org/browser/global-history;2"].
-                getService(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get global history service");
-}
-
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service");
-}
-
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service");
-}
-
-// Get the IO service
-try {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Components.interfaces.nsIIOService);
-} catch(ex) {
-  do_throw("Could not get the io service");
-}
-
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+            getService(Ci.nsINavBookmarksService);
+var ios = Cc["@mozilla.org/network/io-service;1"].
+          getService(Components.interfaces.nsIIOService);
 
 /**
  * Function prohibits an attempt to pop up a confirmation
@@ -137,6 +112,7 @@ var visited_URIs = ["http://www.test-link.com/",
                     "http://www.test-redirect-permanent.com/",
                     "http://www.test-redirect-temporary.com/",
                     "http://www.test-embed.com",
+                    "http://www.test-framed.com",
                     "http://www.test-download.com"];
 
 var nonvisited_URIs = ["http://www.google.ca/",
@@ -144,6 +120,7 @@ var nonvisited_URIs = ["http://www.google.ca/",
                        "http://www.google.co.il/",
                        "http://www.google.fr/",
                        "http://www.google.es",
+                       "http://www.google.it",
                        "http://www.google.com.tr",
                        "http://www.google.de"];
 /**
@@ -155,10 +132,11 @@ function fill_history_visitedURI() {
   add_visit(visited_URIs[0], histsvc.TRANSITION_LINK);
   add_visit(visited_URIs[1], histsvc.TRANSITION_TYPED);
   add_visit(visited_URIs[2], histsvc.TRANSITION_BOOKMARK);
-  add_visit(visited_URIs[3], histsvc.TRANSITION_EMBED);
-  add_visit(visited_URIs[4], histsvc.TRANSITION_REDIRECT_PERMANENT);
-  add_visit(visited_URIs[5], histsvc.TRANSITION_REDIRECT_TEMPORARY);
-  add_visit(visited_URIs[6], histsvc.TRANSITION_DOWNLOAD);
+  add_visit(visited_URIs[3], histsvc.TRANSITION_REDIRECT_PERMANENT);
+  add_visit(visited_URIs[4], histsvc.TRANSITION_REDIRECT_TEMPORARY);
+  add_visit(visited_URIs[5], histsvc.TRANSITION_EMBED);
+  add_visit(visited_URIs[6], histsvc.TRANSITION_FRAMED_LINK);
+  add_visit(visited_URIs[7], histsvc.TRANSITION_DOWNLOAD);
 }
 
 /**
@@ -173,15 +151,16 @@ function fill_history_nonvisitedURI() {
   add_visit(nonvisited_URIs[2], histsvc.TRANSITION_LINK);
   add_visit(nonvisited_URIs[3], histsvc.TRANSITION_DOWNLOAD);
   add_visit(nonvisited_URIs[4], histsvc.TRANSITION_EMBED);
-  add_visit(nonvisited_URIs[5], histsvc.TRANSITION_REDIRECT_PERMANENT);
-  add_visit(nonvisited_URIs[6], histsvc.TRANSITION_REDIRECT_TEMPORARY);
+  add_visit(nonvisited_URIs[5], histsvc.TRANSITION_FRAMED_LINK);
+  add_visit(nonvisited_URIs[6], histsvc.TRANSITION_REDIRECT_PERMANENT);
+  add_visit(nonvisited_URIs[7], histsvc.TRANSITION_REDIRECT_TEMPORARY);
 }
 
 // Initial batch of history items (7) + Bookmark_A (1)
 // This number should not change after tests enter private browsing
-// it will be set to 9 with the addition of Bookmark-B during private
+// it will be set to 10 with the addition of Bookmark-B during private
 // browsing mode.
-var num_places_entries = 8; 
+var num_places_entries = 9;
 
 /**
  * Function performs a really simple query on our places entries,
@@ -331,7 +310,7 @@ function run_test() {
 
         // A check on the history count should be same as before, 7 history entries with
         // now 2 bookmark items (A) and bookmark (B), so we set num_places_entries to 9
-        num_places_entries = 9; // Bookmark-B successfully added but not the history entries.
+        num_places_entries = 10; // Bookmark-B successfully added but not the history entries.
         check_placesItem_Count();
 
         // Exit Private Browsing Mode

@@ -59,7 +59,6 @@ var html5Exceptions = {
   "<!DoctypE html><!-- XXX - XXX -->": true,
   "<!DoctypE html><!-- XXX - XXX": true,
   "<!DoctypE html><!-- XXX - XXX - XXX -->": true,
-  "<isindex test=x name=x>": true,
   " \n ": true,
   "<!doctype html>  <html>": true,
   "<!doctype html><!--x--": true,

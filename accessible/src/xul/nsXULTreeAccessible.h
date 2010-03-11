@@ -102,9 +102,8 @@ public:
    * in the cache then create and cache it.
    *
    * @param aRow         [in] the given row index
-   * @param aAccessible  [out] tree item accessible
    */
-  void GetTreeItemAccessible(PRInt32 aRow, nsIAccessible **aAccessible);
+  nsAccessible* GetTreeItemAccessible(PRInt32 aRow);
 
   /**
    * Invalidates the number of cached treeitem accessibles.
@@ -137,12 +136,11 @@ protected:
   /**
    * Creates tree item accessible for the given row index.
    */
-  virtual void CreateTreeItemAccessible(PRInt32 aRowIndex,
-                                        nsAccessNode** aAccessNode);
+  virtual already_AddRefed<nsAccessible> CreateTreeItemAccessible(PRInt32 aRow);
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
-  nsAccessNodeHashtable mAccessNodeCache;
+  nsAccessibleHashtable mAccessibleCache;
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
@@ -215,9 +213,8 @@ public:
    * Return cell accessible for the given column. If XUL tree accessible is not
    * accessible table then return null.
    */
-  virtual void GetCellAccessible(nsITreeColumn *aColumn,
-                                 nsIAccessible **aCellAcc)
-    { *aCellAcc = nsnull; }
+  virtual nsAccessible* GetCellAccessible(nsITreeColumn *aColumn)
+    { return nsnull; }
 
   /**
    * Proccess row invalidation. Used to fires name change events.
@@ -229,8 +226,8 @@ protected:
 
   // nsAccessible
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
-  virtual nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                            nsresult* aError = nsnull);
+  virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                           nsresult *aError = nsnull);
 
   // nsXULTreeItemAccessibleBase
 
@@ -293,7 +290,8 @@ public:
 protected:
 
   // nsAccessible
-  nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError = nsnull);
+  virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                           nsresult *aError = nsnull);
 };
 
 #endif

@@ -12,7 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507067
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507067">Mozilla Bug 507067</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <g font-size="10px">
     <circle cx="-100" cy="20" r="15" fill="blue" id="circle">
       <animate attributeName="cx" from="0em" to="10em" dur="8s" begin="1s"
@@ -43,9 +44,8 @@ SimpleTest.waitForExplicitFinish();
 // 
 
 function main() {
-  // Initialise timeline
-  svg.pauseAnimations();
-  svg.setCurrentTime(0);
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
   // Sanity check: check initial values
   is(circle.cx.baseVal.valueInSpecifiedUnits, -100,

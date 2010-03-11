@@ -69,6 +69,7 @@ function run_test() {
       // because these are embedded visits, they should not show up on our
       // query results.  If they do, we have a problem.
       add_visit("http://www.hidden.com/hidden.gif", histsvc.TRANSITION_EMBED);
+      add_visit("http://www.alsohidden.com/hidden.gif", histsvc.TRANSITION_FRAMED_LINK);
     }
   }
 

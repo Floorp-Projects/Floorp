@@ -46,6 +46,7 @@ const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
 const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
 const TRANSITION_BOOKMARK = Ci.nsINavHistoryService.TRANSITION_BOOKMARK;
 const TRANSITION_EMBED = Ci.nsINavHistoryService.TRANSITION_EMBED;
+const TRANSITION_FRAMED_LINK = Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK;
 const TRANSITION_REDIRECT_PERMANENT = Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT;
 const TRANSITION_REDIRECT_TEMPORARY = Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
 const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
@@ -97,6 +98,9 @@ function ensure_results(aSearch, aExpected)
   let input = new AutoCompleteInput(["history"]);
 
   controller.input = input;
+
+  if (typeof kSearchParam == "string")
+    input.searchParam = kSearchParam;
 
   let numSearchesStarted = 0;
   input.onSearchBegin = function() {

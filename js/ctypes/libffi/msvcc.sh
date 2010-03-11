@@ -44,7 +44,7 @@
 
 # Disable specific warnings, and enable warnings-as-errors so we catch any
 # mistranslated args.
-nowarn="-wd4127 -wd4820 -wd4706 -wd4100 -wd4255 -wd4668 -wd4053 -wd4324"
+nowarn="-wd4127 -wd4820 -wd4706 -wd4100 -wd4255 -wd4668 -wd4053 -wd4324 -wd4267 -wd4054"
 args="-nologo -W3 -WX $nowarn"
 md=-MD
 cl="cl"

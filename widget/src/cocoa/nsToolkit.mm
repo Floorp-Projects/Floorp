@@ -48,7 +48,6 @@
 #include <mach/mach_init.h>
 
 #import <Cocoa/Cocoa.h>
-#import <Carbon/Carbon.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <IOKit/IOMessage.h>
 

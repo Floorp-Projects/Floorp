@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(b333c6dd-3dbe-4c0b-8062-92ed92b7e7c9)]
+[scriptable, uuid(540aca25-1e01-467f-b24c-df89cbe40f8d)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -148,4 +148,26 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * the user, so it's okay to be an autocomplete result.
      */
     void markPageAsTyped(in nsIURI aURI);
+
+    /**
+     * markPageAsFollowedLink
+     *
+     * Designate the url as coming from a link explicitly followed by
+     * the user (for example by clicking on it).
+     */
+    void markPageAsFollowedLink(in nsIURI aURI);
+
+    /**
+     * Mark a page as being currently open.
+     */
+    void registerOpenPage(in nsIURI aURI);
+
+    /**
+     * Mark a page as no longer being open (either by closing the window or tab,
+     * or by navigating away from that page).
+     *
+     * Note that when Private Browsing mode is entered/exited, pages need to be
+     * manually unregistered/registered.
+     */
+    void unregisterOpenPage(in nsIURI aURI);
 };

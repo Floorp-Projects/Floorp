@@ -55,6 +55,9 @@ installer:
 package:
 	@$(MAKE) -C browser/installer
 
+package-compare:
+	@$(MAKE) -C browser/installer package-compare
+
 install::
 	@$(MAKE) -C browser/installer install
 

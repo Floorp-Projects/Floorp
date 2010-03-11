@@ -53,6 +53,7 @@ XPCSHELL_TESTS = \
 	bookmarks \
 	queries \
 	unit \
+	network \
 	$(NULL)
 
 # Simple MochiTests

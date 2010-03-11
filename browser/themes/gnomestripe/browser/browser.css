@@ -800,6 +800,17 @@ toolbar[iconsize="small"] #fullscreen-button {
   display: none;
 }
 
+#urlbar-display {
+  margin-top: -2px;
+  margin-bottom: -2px;
+  padding-top: 3px;
+  padding-bottom: 2px;
+  -moz-padding-end: 3px;
+  color: GrayText;
+  -moz-border-end: 1px solid #AAA;
+  -moz-margin-end: 3px;
+}
+
 #PopupAutoComplete,
 #PopupAutoCompleteRichResult {
   direction: ltr !important;
@@ -998,6 +1009,10 @@ toolbar[iconsize="small"] #fullscreen-button {
   color: -moz-nativehyperlinktext;
 }
 
+richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+  list-style-image: url("chrome://browser/skin/actionicon-tab.png");
+}
+
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: GrayText;
 }
@@ -1190,20 +1205,8 @@ statusbarpanel#statusbar-display {
 }
 
 /* Tab drag and drop */
-.tab-drop-indicator-bar {
-  height: 11px;
-  margin-top: -11px;
-  position: relative;
-  /* set -moz-margin-start to -1/2 indicator width: */
-  -moz-margin-start: -5px;
-}
-
 .tab-drop-indicator {
-  height: 11px;
-  width: 11px;
-  margin-bottom: -5px;
-  position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
 }
 
 /* In-tab close button */

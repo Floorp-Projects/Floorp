@@ -9,7 +9,8 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-  <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="200px">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="200px"
+       onload="this.pauseAnimations()">
     <text y="100px" x="0px" style="font-size: 5px">
       abc
       <animate attributeName="font-size" attributeType="CSS" fill="freeze"
@@ -41,10 +42,11 @@ function main()
     return;
   }
 
-  // Start out paused
+  // Start out pause
   var svg = SMILUtil.getSVGRoot();
-  svg.pauseAnimations();
-
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+  
   // Get handle on nsIMarkupDocumentViewer
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   const CI = Components.interfaces;
@@ -66,7 +68,6 @@ function main()
     var text = document.getElementsByTagName("text")[0];
     var rect = document.getElementsByTagName("rect")[0];
 
-    svg.setCurrentTime(0);
     verifyStyle(text, "font-size",    "10px");
     verifyStyle(rect, "stroke-width", "5px");
     svg.setCurrentTime(1);

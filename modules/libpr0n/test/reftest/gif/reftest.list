@@ -7,3 +7,7 @@
 
 # a GIF file that uses the comment extension
 == comment.gif comment.png
+
+# a GIF file with a background smaller than the size of the canvas
+== small-background-size.gif small-background-size-ref.gif
+== small-background-size-2.gif small-background-size-2-ref.gif

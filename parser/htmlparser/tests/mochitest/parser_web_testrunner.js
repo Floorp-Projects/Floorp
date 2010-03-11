@@ -100,6 +100,8 @@ function nextTest(testframe) {
     testframe.onload = makeTestChecker(input, output, errors);
     testframe.src = dataURL;
   } catch (err if err instanceof StopIteration) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    prefService.setBoolPref("html5.enable", origPref);
     SimpleTest.finish();
   }
 }
@@ -130,5 +132,11 @@ function makeIFrames() {
   appendChildNodes($("display"), BR(), "Results: ", HR());
 }
 
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch)
+                  .QueryInterface(Components.interfaces.nsIPrefService);
+var origPref = prefService.getBoolPref("html5.enable");
+prefService.setBoolPref("html5.enable", true);
 addLoadEvent(makeIFrames);
 SimpleTest.waitForExplicitFinish();

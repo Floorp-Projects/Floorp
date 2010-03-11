@@ -190,6 +190,10 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
 
+// Forcibly disable a11y on win32, even if something attempts
+// to enable it.
+pref("accessibility.win32.force_disabled", false);
+
 // On OS X, we follow the "Click in the scrollbar to:" system preference
 // unless this preference was set manually
 pref("ui.scrollToClick", 0);
@@ -2072,8 +2076,6 @@ pref("font.single-face-list", "Osaka-Mono");
 // optimization hint for fonts with localized names to be read in at startup, otherwise read in at lookup miss
 // names are canonical family names (typically English names)
 pref("font.preload-names-list", "Hiragino Kaku Gothic Pro,Hiragino Mincho Pro,STSong");
-
-pref("browser.urlbar.clickAtEndSelects", false);
 
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
 // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none

@@ -8,7 +8,8 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <circle cx="20" cy="20" r="15" fill="blue">
     <animate attributeName="cx" attributeType="XML" 
       from="20" to="100" begin="indefinite" dur="1s" id="anim"/>
@@ -20,16 +21,14 @@
 <![CDATA[
 /** Test for getStartTime Behavior  **/
 
-/* Global Variables */
-var svg = document.getElementById("svg");
-var anim = document.getElementById("anim");
-
 SimpleTest.waitForExplicitFinish();
 
 function main() {
-  svg.pauseAnimations();
-  svg.setCurrentTime(0);
+  var svg = document.getElementById("svg");
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
+  var anim = document.getElementById("anim");
   // indefinite 
   var exceptionCaught = false;
   try {

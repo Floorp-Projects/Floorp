@@ -4732,6 +4732,7 @@ MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
 MOZ_TIMELINE=
+MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
@@ -8202,6 +8203,7 @@ AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_PLACES_BOOKMARKS)
 AC_SUBST(MOZ_STORAGE)
+AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
@@ -8733,12 +8735,21 @@ if test "$BUILD_CTYPES"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
   if test "$CROSS_COMPILE"; then
-    ac_configure_args="$ac_configure_args --build=$build --host=$target"
+    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
   fi
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.
     # autotools can't quite handle an MSVC build environment yet.
-    ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/ctypes/libffi/msvcc.sh LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
+    ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
+    case "${target_cpu}" in
+    x86_64)
+      # Need target since MSYS tools into mozilla-build may be 32bit
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/ctypes/libffi/msvcc.sh"
+      ;;
+    esac
   fi
   if test "$SOLARIS_SUNPRO_CC"; then
     # Always use gcc for libffi on Solaris

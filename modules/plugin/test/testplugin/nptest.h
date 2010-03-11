@@ -108,6 +108,7 @@ typedef struct InstanceData {
   TestFunction testFunction;
   TestFunction functionToFail;
   NPError failureCode;
+  NPObject* callOnDestroy;
   PostMode postMode;
   std::string testUrl;
   std::string frame;
