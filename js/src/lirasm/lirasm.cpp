@@ -89,11 +89,10 @@ struct LasmSideExit : public SideExit {
 
 /* LIR SPI implementation */
 
-void
-nanojit::StackFilter::getTops(LIns*, int& spTop, int& rpTop)
+int
+nanojit::StackFilter::getTop(LIns*)
 {
-    spTop = 0;
-    rpTop = 0;
+    return 0;
 }
 
 #if defined NJ_VERBOSE

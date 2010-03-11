@@ -1050,56 +1050,50 @@ namespace nanojit
 
     using namespace avmplus;
 
-    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LInsp sp, LInsp rp)
-        : LirFilter(in), sp(sp), rp(rp), spStk(alloc), rpStk(alloc), spTop(0), rpTop(0)
+    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LInsp sp)
+        : LirFilter(in), sp(sp), stk(alloc), top(0)
     {}
 
-    bool StackFilter::ignoreStore(LInsp ins, int top, BitSet* stk)
-    {
-        bool ignore = false;
-        int d = ins->disp() >> 2;
-        if (d >= top) {
-            ignore = true;
-        } else {
-            d = top - d;
-            if (ins->oprnd1()->isN64()) {
-                // storing 8 bytes
-                if (stk->get(d) && stk->get(d-1)) {
-                    ignore = true;
-                } else {
-                    stk->set(d);
-                    stk->set(d-1);
-                }
-            }
-            else {
-                // storing 4 bytes
-                NanoAssert(ins->oprnd1()->isI32());
-                if (stk->get(d)) {
-                    ignore = true;
-                } else {
-                    stk->set(d);
-                }
-            }
-        }
-        return ignore;
-    }
-
+    // If we see a sequence like this:
+    //
+    //   sti sp[0]
+    //   ...
+    //   sti sp[0]
+    //
+    // where '...' contains no guards, we can remove the first store.  Also,
+    // because stack entries are eight bytes each (we check this), if we have
+    // this:
+    //
+    //   stfi sp[0]
+    //   ...
+    //   sti sp[0]
+    //
+    // we can again remove the first store -- even though the second store
+    // doesn't clobber the high four bytes -- because we know the entire value
+    // stored by the first store is dead.
+    //
     LInsp StackFilter::read()
     {
-        for (;;)
-        {
-            LInsp i = in->read();
-            if (i->isStore())
-            {
-                LInsp base = i->oprnd2();
+        for (;;) {
+            LInsp ins = in->read();
 
+            if (ins->isStore()) {
+                LInsp base = ins->oprnd2();
                 if (base == sp) {
-                    if (ignoreStore(i, spTop, &spStk))
-                        continue;
+                    // 'disp' must be eight-aligned because each stack entry is 8 bytes.
+                    NanoAssert((ins->disp() & 0x7) == 0);
 
-                } else if (base == rp) {
-                    if (ignoreStore(i, rpTop, &rpStk))
+                    int d = ins->disp() >> 3;
+                    if (d >= top) {
                         continue;
+                    } else {
+                        d = top - d;
+                        if (stk.get(d)) {
+                            continue;
+                        } else {
+                            stk.set(d);
+                        }
+                    }
                 }
             }
             /*
@@ -1107,16 +1101,13 @@ namespace nanojit
              * going to be wrong. Unfortunately there doesn't seem to be an easy way to detect
              * such branches. Just do not create any.
              */
-            else if (i->isGuard())
-            {
-                spStk.reset();
-                rpStk.reset();
-                getTops(i, spTop, rpTop);
-                spTop >>= 2;
-                rpTop >>= 2;
+            else if (ins->isGuard()) {
+                stk.reset();
+                top = getTop(ins);
+                top >>= 3;
             }
 
-            return i;
+            return ins;
         }
     }
 
