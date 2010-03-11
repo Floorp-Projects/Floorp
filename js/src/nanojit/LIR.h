@@ -1897,19 +1897,18 @@ namespace nanojit
 
     verbose_only(void live(LirFilter* in, Allocator& alloc, Fragment* frag, LogControl*);)
 
+    // WARNING: StackFilter assumes that all stack entries are eight bytes.
+    // Some of its optimisations aren't valid if that isn't true.  See
+    // StackFilter::read() for more details.
     class StackFilter: public LirFilter
     {
         LInsp sp;
-        LInsp rp;
-        BitSet spStk;
-        BitSet rpStk;
-        int spTop;
-        int rpTop;
-        void getTops(LInsp br, int& spTop, int& rpTop);
+        BitSet stk;
+        int top;
+        int getTop(LInsp br);
 
     public:
-        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp, LInsp rp);
-        bool ignoreStore(LInsp ins, int top, BitSet* stk);
+        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp);
         LInsp read();
     };
 
