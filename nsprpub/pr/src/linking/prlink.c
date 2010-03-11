@@ -614,16 +614,16 @@ pr_LoadCFBundle(const char *name, PRLibrary *lm)
 {
     CFURLRef bundleURL;
     CFBundleRef bundle = NULL;
-    char *resolvedPath;
+    char pathBuf[PATH_MAX];
+    const char *resolvedPath;
     CFStringRef pathRef;
 
     /* Takes care of relative paths and symlinks */
-    resolvedPath = realpath(name, NULL);
+    resolvedPath = realpath(name, pathBuf);
     if (!resolvedPath)
         return PR_FAILURE;
         
-    pathRef = CFStringCreateWithCString(NULL, resolvedPath, kCFStringEncodingUTF8);
-    free(resolvedPath);
+    pathRef = CFStringCreateWithCString(NULL, pathBuf, kCFStringEncodingUTF8);
     if (pathRef) {
         bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef,
                                                   kCFURLPOSIXPathStyle, true);
