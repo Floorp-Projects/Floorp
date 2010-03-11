@@ -200,7 +200,7 @@ struct JSArenaPool {
         if ((pool)->current == (a)) (pool)->current = &(pool)->first;         \
         *(pnext) = (a)->next;                                                 \
         JS_CLEAR_ARENA(a);                                                    \
-        free(a);                                                              \
+        js_free(a);                                                              \
         (a) = NULL;                                                           \
     JS_END_MACRO
 
