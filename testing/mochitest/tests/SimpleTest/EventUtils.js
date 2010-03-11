@@ -446,8 +446,8 @@ function synthesizeDragStart(element, expectedDragData, aWindow)
       result = null;
       if (!dataTransfer)
         throw  "no dataTransfer";
-      if (dataTransfer.mozItemCount != expectedDragData.length ||
-          expectedDragData == null)
+      if (expectedDragData == null ||
+          dataTransfer.mozItemCount != expectedDragData.length)
         throw dataTransfer;
       for (var i = 0; i < dataTransfer.mozItemCount; i++) {
         var dtTypes = dataTransfer.mozTypesAt(i);

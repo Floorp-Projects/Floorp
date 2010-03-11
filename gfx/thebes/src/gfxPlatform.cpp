@@ -1003,7 +1003,7 @@ static nsIUGenCategory*
 GetGenCategory()
 {
     if (!gGenCategory) {
-        nsresult rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gGenCategory);
+        nsresult rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &gGenCategory);
         if (NS_FAILED(rv)) {
             NS_ERROR("Failed to get the Unicode character category service!");
             gGenCategory = nsnull;

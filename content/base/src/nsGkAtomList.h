@@ -1301,12 +1301,14 @@ GK_ATOM(XML, "XML")
 #endif
 
 #ifdef MOZ_MATHML
-GK_ATOM(MOZcolumnalign, "-moz-math-columnalign")
-GK_ATOM(MOZcolumnline, "-moz-math-columnline") // different from columnlines_
-GK_ATOM(MOZfontsize, "-moz-math-font-size") // different from fontsize_
-GK_ATOM(MOZfontstyle, "-moz-math-font-style") // different from fontstyle_
-GK_ATOM(MOZrowalign, "-moz-math-rowalign")
-GK_ATOM(MOZrowline, "-moz-math-rowline") // different from rowlines_
+// internal MathML attributes: different from columnalign_, columnlines_,
+// fontstyle_, rowalign_ and rowlines_
+GK_ATOM(_moz_math_columnalign_, "_moz-math-columnalign")
+GK_ATOM(_moz_math_columnline_, "_moz-math-columnline")
+GK_ATOM(_moz_math_fontstyle_, "_moz-math-font-style")
+GK_ATOM(_moz_math_rowalign_, "_moz-math-rowalign")
+GK_ATOM(_moz_math_rowline_, "_moz-math-rowline")
+
 GK_ATOM(abs_, "abs")
 GK_ATOM(accent_, "accent")
 GK_ATOM(accentunder_, "accentunder")

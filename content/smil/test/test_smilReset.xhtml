@@ -8,7 +8,8 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
   <circle cx="20" cy="20" r="15" fill="blue">
     <animate attributeName="cx" from="20" to="100" begin="2s" dur="4s"
              id="anim1" attributeType="XML"/>
@@ -20,15 +21,14 @@
 <![CDATA[
 /** Tests for SMIL Reset Behavior  **/
 
-/* Global Variables */
-var svg = document.getElementById("svg");
-
 SimpleTest.waitForExplicitFinish();
 
 function main() {
-  var anim = document.getElementById("anim1");
+  var svg = document.getElementById("svg");
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  svg.pauseAnimations();
+  var anim = document.getElementById("anim1");
   is(anim.getStartTime(), 2, "Unexpected initial start time");
 
   svg.setCurrentTime(1);

@@ -48,7 +48,7 @@
 #if defined(XP_WIN)
 #include <windows.h>
 #elif defined(XP_MACOSX)
-#include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #elif defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
 #endif

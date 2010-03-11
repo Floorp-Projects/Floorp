@@ -205,6 +205,16 @@ private:
     }
   };
 
+  /**
+   * Deletes and nulls out the frame in mFrames[framenum].
+   *
+   * Does not change the size of mFrames.
+   *
+   * @param framenum The index of the frame to be deleted. 
+   *                 Must lie in [0, mFrames.Length() )
+   */
+  void DeleteImgFrame(PRUint32 framenum);
+
   imgFrame* GetImgFrame(PRUint32 framenum);
   imgFrame* GetDrawableImgFrame(PRUint32 framenum);
   imgFrame* GetCurrentImgFrame();

@@ -44,6 +44,11 @@ tabpanels {
   background-color: white;
 }
 
+.tab-drop-indicator {
+  position: relative;
+  z-index: 1;
+}
+
 %ifdef MOZ_WIDGET_GTK2
 /* Favicons override the "images-in-menus" metric in xul.css */
 .alltabs-item > .menu-iconic-left {

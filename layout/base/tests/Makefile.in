@@ -208,6 +208,6 @@ libs:: $(_TEST_FILES)
 
 check::
 	@$(EXIT_ON_ERROR) \
-	  for f in $(subst .cpp,,$(BARE_UNIT_TESTS)); do \
+	  for f in $(subst .cpp,$(BIN_SUFFIX),$(BARE_UNIT_TESTS)); do \
 	    $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
 	  done

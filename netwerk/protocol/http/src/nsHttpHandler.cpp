@@ -90,7 +90,7 @@
 #endif
 
 #if defined(XP_MACOSX)
-#include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #endif
 
 #if defined(XP_OS2)

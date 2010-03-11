@@ -41,7 +41,7 @@
  * TEST DESCRIPTION:
  *
  * This test checks that in a basic history query all transition types visits
- * appear but TRANSITION_EMBED ones.
+ * appear but TRANSITION_EMBED and TRANSITION_FRAMED_LINK ones.
  */
 
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -63,6 +63,7 @@ var  transitions = [ hs.TRANSITION_LINK,
                      hs.TRANSITION_TYPED,
                      hs.TRANSITION_BOOKMARK,
                      hs.TRANSITION_EMBED,
+                     hs.TRANSITION_FRAMED_LINK,
                      hs.TRANSITION_REDIRECT_PERMANENT,
                      hs.TRANSITION_REDIRECT_TEMPORARY,
                      hs.TRANSITION_DOWNLOAD ];
@@ -76,12 +77,13 @@ function runQuery(aResultType) {
 
   root.containerOpen = true;
   var cc = root.childCount;
-  do_check_eq(cc, transitions.length-1);
+  do_check_eq(cc, transitions.length-2);
 
   for (var i = 0; i < cc; i++) {
     var node = root.getChild(i);
-    // Check that all transition types but TRANSITION_EMBED appear in results
+    // Check that all transition types but EMBED and FRAMED appear in results
     do_check_neq(node.uri.substr(6,1), hs.TRANSITION_EMBED);
+    do_check_neq(node.uri.substr(6,1), hs.TRANSITION_FRAMED_LINK);
   }
   root.containerOpen = false;
 }

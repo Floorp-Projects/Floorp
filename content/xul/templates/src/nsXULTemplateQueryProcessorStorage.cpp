@@ -53,6 +53,7 @@
 
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateResultStorage.h"
+#include "nsXULContentUtils.h"
 
 #include "mozIStorageService.h"
 
@@ -248,7 +249,10 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);
-        NS_ENSURE_SUCCESS(rv, rv); // if it fails, not a file url
+        if (NS_FAILED(rv)) { // if it fails, not a file url
+            nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_BAD_URI);
+            return rv;
+        }
 
         nsCOMPtr<nsIFile> file;
         rv = fileChannel->GetFile(getter_AddRefs(databaseFile));
@@ -258,7 +262,10 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
     // ok now we have an URI of a sqlite file
     nsCOMPtr<mozIStorageConnection> connection;
     rv = storage->OpenDatabase(databaseFile, getter_AddRefs(connection));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_CANNOT_OPEN_DATABASE);
+        return rv;
+    }
 
     NS_ADDREF(*aReturn = connection);
     return NS_OK;
@@ -314,7 +321,10 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
 
     nsresult rv = mStorageConnection->CreateStatement(NS_ConvertUTF16toUTF8(sqlQuery),
                                                               getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_BAD_QUERY);
+        return rv;
+    }
 
     PRUint32 parameterCount = 0;
     PRUint32 count = queryContent->GetChildCount();
@@ -332,7 +342,10 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
             if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
                 rv = statement->GetParameterIndex(NS_ConvertUTF16toUTF8(name),
                                                   &index);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (NS_FAILED(rv)) {
+                    nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_UNKNOWN_QUERY_PARAMETER);
+                    return rv;
+                }
                 parameterCount++;
             }
             else if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::index, indexValue)) {
@@ -348,7 +361,8 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
                 { &nsGkAtoms::int32, &nsGkAtoms::integer, &nsGkAtoms::int64,
                   &nsGkAtoms::null, &nsGkAtoms::double_, &nsGkAtoms::string, nsnull };
 
-            PRInt32 typeError, typeValue = child->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+            PRInt32 typeError = 1;
+            PRInt32 typeValue = child->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                                        sTypeValues, eCaseMatters);
             rv = NS_ERROR_ILLEGAL_VALUE;
             PRInt32 valInt32 = 0;
@@ -379,8 +393,19 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
               case nsIContent::ATTR_MISSING:
                 rv = statement->BindStringParameter(index, value);
                 break;
+              default:
+                typeError = 0;
             }
-            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (typeError <= 0) {
+                nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_WRONG_TYPE_QUERY_PARAMETER);
+                return rv;
+            }
+
+            if (NS_FAILED(rv)) {
+                nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_STORAGE_QUERY_PARAMETER_NOT_BOUND);
+                return rv;
+            }
         }
     }
 

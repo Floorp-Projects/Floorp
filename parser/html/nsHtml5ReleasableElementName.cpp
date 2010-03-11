@@ -53,7 +53,7 @@ nsHtml5ReleasableElementName::cloneElementName(nsHtml5AtomTable* aInterner)
 {
   nsIAtom* l = name;
   if (aInterner) {
-    if (l->IsStaticAtom()) {
+    if (!l->IsStaticAtom()) {
       nsAutoString str;
       l->ToString(str);
       l = aInterner->GetAtom(str);

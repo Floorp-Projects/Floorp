@@ -41,6 +41,9 @@
 #include <qfile.h>
 #include <qstringlist.h>
 #include <qapplication.h>
+#include <qgraphicsproxywidget.h>
+#include <qgraphicswidget.h>
+#include <qgraphicsscene.h>
 
 #include "nsFilePicker.h"
 
@@ -276,10 +279,13 @@ void nsFilePicker::InitNative(nsIWidget *parent, const nsAString &title, PRInt16
 {
     qDebug("nsFilePicker::InitNative()");
 
-    QWidget *parentWidget = (parent)?
-        static_cast<QWidget*>(parent->GetNativeData(NS_NATIVE_SHELLWIDGET)):0;
-
     nsAutoString str(title);
-    mDialog = new QFileDialog(parentWidget, QString::fromUtf16(str.get()));
+    mDialog = new QFileDialog(0, QString::fromUtf16(str.get()));
+
+    QGraphicsWidget *parentWidget = static_cast<QGraphicsWidget*>(parent->GetNativeData(NS_NATIVE_WIDGET));
+    if (parentWidget && parentWidget->scene()) {
+        parentWidget->scene()->addWidget(mDialog);
+    }
+
     mMode = mode;
 }

@@ -43,8 +43,9 @@
 #include "gfxQuartzImageSurface.h"
 
 #include "gfxMacPlatformFontList.h"
+#include "gfxMacFont.h"
+#include "gfxCoreTextShaper.h"
 #include "gfxUserFontSet.h"
-#include "gfxCoreTextFonts.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -64,7 +65,7 @@ gfxPlatformMac::gfxPlatformMac()
 
 gfxPlatformMac::~gfxPlatformMac()
 {
-    gfxCoreTextFont::Shutdown();
+    gfxCoreTextShaper::Shutdown();
 }
 
 gfxPlatformFontList*
@@ -327,35 +328,3 @@ fail_close:
     CMCloseProfile(cmProfile);
     return profile;
 }
-
-void
-gfxPlatformMac::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
-{
-    TextBreakLocatorRef locator;
-    OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakClusterMask,
-                                               &locator);
-    if (status != noErr)
-        return;
-    UniCharArrayOffset breakOffset = 0;
-    UCTextBreakOptions options = kUCTextBreakLeadingEdgeMask;
-    PRUint32 length = aTextRun->GetLength();
-    while (breakOffset < length) {
-        UniCharArrayOffset next;
-        status = UCFindTextBreak(locator, kUCTextBreakClusterMask, options,
-                                 aString, length, breakOffset, &next);
-        if (status != noErr)
-            break;
-        options |= kUCTextBreakIterateMask;
-        PRUint32 i;
-        for (i = breakOffset + 1; i < next; ++i) {
-            gfxTextRun::CompressedGlyph g;
-            // Remember that this character is not the start of a cluster by
-            // setting its glyph data to "not a cluster start", "is a
-            // ligature start", with no glyphs.
-            aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
-        }
-        breakOffset = next;
-    }
-    UCDisposeTextBreakLocator(&locator);
-}
-

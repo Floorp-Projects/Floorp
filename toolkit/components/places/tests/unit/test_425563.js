@@ -38,24 +38,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Get history services
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get history services\n");
-}
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
 
 // adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aType) {
-  var placeID = histsvc.addVisit(uri(aURI),
+  var visitID = histsvc.addVisit(uri(aURI),
                                  Date.now() * 1000,
                                  null, // no referrer
                                  aType,
                                  false, // not redirect
                                  0);
-  do_check_true(placeID > 0);
-  return placeID;
+  do_check_true(visitID > 0);
+  return visitID;
 }
 
 // main
@@ -67,13 +63,15 @@ function run_test() {
                             "http://www.test-redirect-temporary.com/"];
 
   var notcount_visited_URIs = ["http://www.test-embed.com/",
-                               "http://www.test-download.com/"];
+                               "http://www.test-download.com/",
+                               "http://www.test-framed.com/"];
 
   // add visits, one for each transition type
   add_visit("http://www.test-link.com/", histsvc.TRANSITION_LINK);
   add_visit("http://www.test-typed.com/", histsvc.TRANSITION_TYPED);
   add_visit("http://www.test-bookmark.com/", histsvc.TRANSITION_BOOKMARK);
   add_visit("http://www.test-embed.com/", histsvc.TRANSITION_EMBED);
+  add_visit("http://www.test-framed.com/", histsvc.TRANSITION_FRAMED_LINK);
   add_visit("http://www.test-redirect-permanent.com/", histsvc.TRANSITION_REDIRECT_PERMANENT);
   add_visit("http://www.test-redirect-temporary.com/", histsvc.TRANSITION_REDIRECT_TEMPORARY);
   add_visit("http://www.test-download.com/", histsvc.TRANSITION_DOWNLOAD);

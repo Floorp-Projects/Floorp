@@ -63,6 +63,13 @@ interface nsIPluginInstanceOwner : nsISupports
    */
   void getInstance(in nsIPluginInstanceRef aInstance);
 
+%{C++
+  // make getter_AddRefs work
+  inline nsresult GetInstance(nsIPluginInstance** aInstance) {
+    return GetInstance(*aInstance);
+  }
+%}
+
   /**
    * Get a handle to the window structure of the owner.
    * This pointer cannot be made persistent by the caller.

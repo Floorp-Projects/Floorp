@@ -3681,28 +3681,40 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
   NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                "Failed to prevent a nonqueued message from running!");
 
-  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
-  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
-      ::GetPropW(mWnd, L"PluginInstanceParentProperty")) {
-      ::ReplyMessage(0);
-      return;
-  }
-
   // Modal UI being displayed in windowless plugins.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() &&
-      (::InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     LRESULT res;
     if (IsAsyncResponseEvent(msg, res)) {
-      ::ReplyMessage(res);
+      ReplyMessage(res);
     }
+    return;
   }
 
-  // Windowless flash plugins sending WM_ACTIVATE events to the main window
-  // via child calls to ShowWindow. Unblock the child to prevent lock ups.
+  // Handle certain sync plugin events sent to the parent which
+  // trigger ipc calls that result in deadlocks.
+
+  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
+  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
+    GetPropW(mWnd, L"PluginInstanceParentProperty")) {
+    ReplyMessage(0);
+    return;
+  }
+
+  // Windowless flash sending WM_ACTIVATE events to the main window
+  // via calls to ShowWindow.
   if (msg == WM_ACTIVATE && lParam != 0 &&
       LOWORD(wParam) == WA_ACTIVE && IsWindow((HWND)lParam) &&
-      (::InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-    ::ReplyMessage(0);
+      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+    ReplyMessage(0);
+    return;
+  }
+
+  // Windowed plugins that pass sys key events to defwndproc generate
+  // WM_SYSCOMMAND events to the main window.
+  if (msg == WM_SYSCOMMAND &&
+      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+    ReplyMessage(0);
     return;
   }
 }
@@ -6487,6 +6499,30 @@ nsWindow::OnIMESelectionChange(void)
 #ifdef ACCESSIBILITY
 already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
 {
+  // We want the ability to forcibly disable a11y on windows, because
+  // some non-a11y-related components attempt to bring it up.  See bug
+  // 538530 for details; we have a pref here that allows it to be disabled
+  // for performance and testing resons.
+  //
+  // This pref is checked only once, and the browser needs a restart to
+  // pick up any changes.
+  static int accForceDisable = -1;
+
+  if (accForceDisable == -1) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    PRBool b = PR_FALSE;
+    nsresult rv = prefs->GetBoolPref("accessibility.win32.force_disabled", &b);
+    if (NS_SUCCEEDED(rv) && b) {
+      accForceDisable = 1;
+    } else {
+      accForceDisable = 0;
+    }
+  }
+
+  // If the pref was true, return null here, disabling a11y.
+  if (accForceDisable)
+      return nsnull;
+
   nsWindow::sIsAccessibilityOn = TRUE;
 
   if (mInDtor || mOnDestroyCalled || mWindowType == eWindowType_invisible) {

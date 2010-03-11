@@ -197,7 +197,7 @@ NS_IMETHODIMP nsGIFDecoder2::Flush()
 nsresult
 nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
 {
-  nsIntRect r(0, fromRow, mGIFStruct.width, rows);
+  nsIntRect r(mGIFStruct.x_offset, mGIFStruct.y_offset + fromRow, mGIFStruct.width, rows);
 
   // Update image  
   nsresult rv = mImageContainer->FrameUpdated(mGIFStruct.images_decoded, r);
@@ -210,7 +210,6 @@ nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
   if (!mGIFStruct.images_decoded && mObserver) {
     PRUint32 imgCurFrame;
     mImageContainer->GetCurrentFrameIndex(&imgCurFrame);
-    r.y += mGIFStruct.y_offset;
     mObserver->OnDataAvailable(nsnull, imgCurFrame == PRUint32(mGIFStruct.images_decoded), &r);
   }
   return NS_OK;

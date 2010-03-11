@@ -38,7 +38,7 @@
 
 #include "nsString.h"
 
-#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 #import <Cocoa/Cocoa.h>
 
 #include "nsCOMPtr.h"
@@ -59,24 +59,32 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 
-const OSType kNSCreator = 'MOSS';
-const OSType kMozCreator = 'MOZZ';
-const SInt16 kNSCanRunStrArrayID = 1000;
-const SInt16 kAnotherVersionStrIndex = 1;
-
 nsresult
-GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *window, NSWindow **nativeWindow);
+GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, NSWindow **a_nativeWindow)
+{
+  *a_nativeWindow = nil;
+  if (!a_window)
+    return NS_ERROR_INVALID_ARG;
 
-const SInt16 kNSOSVersErrsStrArrayID = 1001;
+  nsCOMPtr<nsIWebNavigation> mruWebNav(do_GetInterface(a_window));
+  if (mruWebNav) {
+    nsCOMPtr<nsIDocShellTreeItem> mruTreeItem(do_QueryInterface(mruWebNav));
+    nsCOMPtr<nsIDocShellTreeOwner> mruTreeOwner = nsnull;
+    mruTreeItem->GetTreeOwner(getter_AddRefs(mruTreeOwner));
+    if(mruTreeOwner) {
+      nsCOMPtr<nsIBaseWindow> mruBaseWindow(do_QueryInterface(mruTreeOwner));
+      if (mruBaseWindow) {
+        nsCOMPtr<nsIWidget> mruWidget = nsnull;
+        mruBaseWindow->GetMainWidget(getter_AddRefs(mruWidget));
+        if (mruWidget) {
+          *a_nativeWindow = (NSWindow*)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
+        }
+      }
+    }
+  }
 
-enum {
-        eOSXVersTooOldErrIndex = 1,
-        eOSXVersTooOldExplanationIndex,
-        eContinueButtonTextIndex,
-        eQuitButtonTextIndex,
-        eCarbonLibVersTooOldIndex,
-        eCarbonLibVersTooOldExplanationIndex
-     };
+  return NS_OK;
+}
 
 class nsNativeAppSupportCocoa : public nsNativeAppSupportBase
 {
@@ -208,31 +216,6 @@ nsNativeAppSupportCocoa::ReOpen()
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-nsresult
-GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, NSWindow **a_nativeWindow)
-{
-    *a_nativeWindow = nil;
-    if (!a_window) return NS_ERROR_INVALID_ARG;
-    
-    nsCOMPtr<nsIWebNavigation> mruWebNav(do_GetInterface(a_window));
-    if (mruWebNav) {
-      nsCOMPtr<nsIDocShellTreeItem> mruTreeItem(do_QueryInterface(mruWebNav));
-      nsCOMPtr<nsIDocShellTreeOwner> mruTreeOwner = nsnull;
-      mruTreeItem->GetTreeOwner(getter_AddRefs(mruTreeOwner));
-      if(mruTreeOwner) {
-        nsCOMPtr<nsIBaseWindow> mruBaseWindow(do_QueryInterface(mruTreeOwner));
-        if (mruBaseWindow) {
-          nsCOMPtr<nsIWidget> mruWidget = nsnull;
-          mruBaseWindow->GetMainWidget(getter_AddRefs(mruWidget));
-          if (mruWidget) {
-            *a_nativeWindow = (NSWindow*)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
-          }
-        }
-      }
-    }
-    return NS_OK;
 }
 
 #pragma mark -

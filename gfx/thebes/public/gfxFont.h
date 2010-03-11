@@ -634,6 +634,42 @@ private:
     PRUint32                mAppUnitsPerDevUnit;
 };
 
+/**
+ * gfxFontShaper
+ *
+ * This class implements text shaping (character to glyph mapping and
+ * glyph layout). There is a gfxFontShaper subclass for each text layout
+ * technology (uniscribe, core text, harfbuzz,....) we support.
+ *
+ * The shaper is responsible for setting up glyph data in gfxTextRuns.
+ *
+ * A generic, platform-independent shaper relies only on the standard
+ * gfxFont interface and can work with any concrete subclass of gfxFont.
+ *
+ * Platform-specific implementations designed to interface to platform
+ * shaping APIs such as Uniscribe or CoreText may rely on features of a
+ * specific font subclass to access native font references
+ * (such as CTFont, HFONT, DWriteFont, etc).
+ */
+
+class gfxFontShaper {
+public:
+    gfxFontShaper(gfxFont *aFont)
+        : mFont(aFont) { }
+
+    virtual ~gfxFontShaper() { }
+
+    virtual void InitTextRun(gfxContext *aContext,
+                             gfxTextRun *aTextRun,
+                             const PRUnichar *aString,
+                             PRUint32 aRunStart,
+                             PRUint32 aRunLength) = 0;
+
+protected:
+    // the font this shaper is working with
+    gfxFont * mFont;
+};
+
 /* a SPECIFIC single font family */
 class THEBES_API gfxFont {
 public:
@@ -680,7 +716,7 @@ protected:
 public:
     virtual ~gfxFont();
 
-    PRBool Valid() {
+    PRBool Valid() const {
         return mIsValid;
     }
 
@@ -714,7 +750,7 @@ public:
     const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-    virtual nsString GetUniqueName() = 0;
+    virtual nsString GetUniqueName() { return GetName(); }
 
     // Font metrics
     struct Metrics {
@@ -873,11 +909,16 @@ public:
         return mFontEntry->HasCharacter(ch); 
     }
 
-    virtual void InitTextRun(gfxTextRun *aTextRun,
-                             const PRUnichar *aString,
-                             PRUint32 aRunStart,
-                             PRUint32 aRunLength) {
-        NS_NOTREACHED("oops, somebody didn't override InitTextRun");
+    void InitTextRun(gfxContext *aContext,
+                     gfxTextRun *aTextRun,
+                     const PRUnichar *aString,
+                     PRUint32 aRunStart,
+                     PRUint32 aRunLength) {
+        NS_ASSERTION(mShaper != nsnull, "no shaper?!");
+        if (!mShaper) {
+            return;
+        }
+        mShaper->InitTextRun(aContext, aTextRun, aString, aRunStart, aRunLength);
     }
 
 protected:
@@ -890,6 +931,8 @@ protected:
 
     // synthetic bolding for environments where this is not supported by the platform
     PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
+
+    nsAutoPtr<gfxFontShaper>   mShaper;
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
@@ -1866,7 +1909,8 @@ protected:
     // you should call this with the *first* bad font.
     void InitMetricsForBadFont(gfxFont* aBadFont);
 
-    void InitTextRun(gfxTextRun *aTextRun,
+    void InitTextRun(gfxContext *aContext,
+                     gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aLength);
 

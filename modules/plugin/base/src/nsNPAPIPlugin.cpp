@@ -682,8 +682,8 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
 
   PluginDestructionGuard guard(npp);
 
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-  if (!inst)
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
+  if (!inst || !inst->IsRunning())
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
@@ -1235,8 +1235,12 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
       return NPERR_INVALID_PARAM;
 
     // This will release the wrapped nsIOutputStream.
+    // pstream should always be a subobject of wrapper.  See bug 548441.
+    NS_ASSERTION((char*)wrapper <= (char*)pstream && 
+                 ((char*)pstream) + sizeof(*pstream)
+                     <= ((char*)wrapper) + sizeof(*wrapper),
+                 "pstream is not a subobject of wrapper");
     delete wrapper;
-    pstream->ndata = nsnull;
   }
 
   return NPERR_NO_ERROR;
@@ -2380,8 +2384,13 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   if (streamtype != NP_SEEK)
     return NPERR_STREAM_NOT_SEEKABLE;
 
-  if (streamlistener->mStreamInfo)
-    streamlistener->mStreamInfo->RequestRead((NPByteRange *)rangeList);
+  if (!streamlistener->mStreamInfo)
+    return NPERR_GENERIC_ERROR;
+
+  nsresult rv = streamlistener->mStreamInfo
+    ->RequestRead((NPByteRange *)rangeList);
+  if (NS_FAILED(rv))
+    return NPERR_GENERIC_ERROR;
 
   return NS_OK;
 }

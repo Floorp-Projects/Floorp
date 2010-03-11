@@ -60,7 +60,6 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug502091.html \
 		bug_502091_iframe.html \
 		test_compatmode.html \
-		regressions.txt \
 		invalidchar.xml \
 		$(NULL)
 

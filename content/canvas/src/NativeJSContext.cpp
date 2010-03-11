@@ -11,7 +11,8 @@ NativeJSContext::AddGCRoot(void *aPtr, const char *aName)
   if (!sJSScriptRuntime) {
     nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
                                  &sJSRuntimeService);
-    NS_ENSURE_TRUE(sJSRuntimeService, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ABORT_IF_FALSE(sJSRuntimeService, "CallGetService succeeded but returned a null pointer?");
 
     sJSRuntimeService->GetRuntime(&sJSScriptRuntime);
     if (!sJSScriptRuntime) {
