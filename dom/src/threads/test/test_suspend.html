@@ -1,0 +1,113 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<iframe id="workerFrame" src="suspend_iframe.html" onload="subframeLoaded();">
+</iframe>
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  var iframe;
+  var lastCount;
+
+  var suspended;
+  var resumed;
+
+  var interval;
+  var oldMessageCount;
+  var waitCount = 0;
+
+  function setCachePref(enabled) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch);
+    if (enabled) {
+      prefBranch.setBoolPref("browser.sessionhistory.cache_subframes", true);
+    }
+    else {
+      try {
+        prefBranch.clearUserPref("browser.sessionhistory.cache_subframes");
+      } catch (e) { /* Pref didn't exist, meh */ }
+    }
+  }
+
+  function finishTest() {
+    setCachePref(false);
+    iframe.terminateWorker();
+    SimpleTest.finish();
+  }
+
+  function waitInterval() {
+    is(iframe.location, "about:blank", "Wrong url!");
+    is(suspended, true, "Not suspended?");
+    is(lastCount, oldMessageCount, "Received a message while suspended!");
+    if (++waitCount == 5) {
+      clearInterval(interval);
+      iframe.history.back();
+      resumed = true;
+    }
+  }
+
+  function badOnloadCallback() {
+    ok(false, "iframe didn't go into fastback cache!");
+    finishTest();
+  }
+
+  function suspendCallback() {
+    is(iframe.location, "about:blank", "Wrong url!");
+    is(suspended, true, "Not suspended?");
+    iframe.onload = badOnloadCallback;
+    oldMessageCount = lastCount;
+    interval = setInterval(waitInterval, 1000);
+  }
+
+  function messageCallback(data) {
+    if (!suspended) {
+      ok(lastCount === undefined || lastCount == data - 1,
+         "Data is inconsistent");
+      lastCount = data;
+      if (lastCount == 50) {
+        setCachePref(true);
+        iframe.location = "about:blank";
+        suspended = true;
+      }
+    }
+    else {
+      var newLocation =
+        window.location.toString().replace("test_suspend.html",
+                                           "suspend_iframe.html");
+      is(iframe.location, newLocation, "Wrong url!");
+      ok(suspended && resumed, "Got message before resumed!");
+      is(lastCount, data - 1, "Missed a message, suspend failed!");
+      finishTest();
+    }
+  }
+
+  function errorCallback(data) {
+    ok(false, "Iframe had an error: '" + data + "'");
+    finishTest();
+  }
+
+  function subframeLoaded() {
+    var iframeElement = document.getElementById("workerFrame");
+    iframeElement.onload = suspendCallback;
+
+    iframe = iframeElement.contentWindow;
+    ok(iframe, "No iframe?!");
+
+    iframe.startWorker(messageCallback, errorCallback);
+  }
+
+</script>
+</pre>
+</body>
+</html>
