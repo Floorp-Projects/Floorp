@@ -623,9 +623,6 @@
 
       <field name="mIconURL">null</field>
 
-      <!-- This is managed by the tabbrowser -->
-      <field name="lastURI">null</field>
-
       <field name="mDestroyed">false</field>
 
       <constructor>
@@ -701,8 +698,6 @@
           
           // The feeds cache can keep the document inside this browser alive.
           this.feeds = null;
-
-          this.lastURI = null;
 
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
