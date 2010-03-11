@@ -1248,12 +1248,6 @@ IsSlotUndemotable(Oracle* oracle, JSContext* cx, LinkableFragment* f, unsigned s
     return oracle->isGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
 }
 
-static JS_REQUIRES_STACK bool
-IsSlotUndemotable(Oracle* oracle, JSContext* cx, LinkableFragment* f, unsigned slot)
-{
-    return IsSlotUndemotable(oracle, cx, f, slot, cx->fp->regs->pc);
-}
-
 class FrameInfoCache
 {
     struct HashPolicy
