@@ -48,6 +48,10 @@
 class QApplication;
 #endif
 
+struct ChromePackage;
+struct ResourceMapping;
+struct OverrideMapping;
+
 namespace mozilla {
 namespace dom {
 
@@ -74,6 +78,10 @@ public:
 
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
+
+    virtual bool RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
+                                    const nsTArray<ResourceMapping>& resources,
+                                    const nsTArray<OverrideMapping>& overrides);
 
 private:
     NS_OVERRIDE

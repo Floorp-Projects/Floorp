@@ -51,6 +51,9 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 
+#include "nsChromeRegistryContent.h"
+#include "mozilla/chrome/RegistryMessageUtils.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 
@@ -138,6 +141,18 @@ bool
 ContentProcessChild::DeallocPNecko(PNeckoChild* necko)
 {
     delete necko;
+    return true;
+}
+
+bool
+ContentProcessChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
+                                        const nsTArray<ResourceMapping>& resources,
+                                        const nsTArray<OverrideMapping>& overrides)
+{
+    nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
+    nsChromeRegistryContent* chromeRegistry =
+        static_cast<nsChromeRegistryContent*>(registrySvc.get());
+    chromeRegistry->RegisterRemoteChrome(packages, resources, overrides);
     return true;
 }
 

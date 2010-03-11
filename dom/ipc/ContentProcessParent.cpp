@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsChromeRegistryChrome.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -130,6 +131,11 @@ ContentProcessParent::ContentProcessParent()
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
     mSubprocess->AsyncLaunch();
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
+
+    nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
+    nsChromeRegistryChrome* chromeRegistry =
+        static_cast<nsChromeRegistryChrome*>(registrySvc.get());
+    chromeRegistry->SendRegisteredChrome(this);
 }
 
 ContentProcessParent::~ContentProcessParent()
