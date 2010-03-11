@@ -45,8 +45,37 @@
 #include "nscore.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsChromeRegistry.h"
+#include "nsChromeRegistryChrome.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#include "nsChromeRegistryContent.h"
+#endif
+
+static nsChromeRegistry* GetSingleton()
+{
+    nsChromeRegistry* chromeRegistry = nsChromeRegistry::gChromeRegistry;
+    if (chromeRegistry) {
+        NS_ADDREF(chromeRegistry);
+        return chromeRegistry;
+    }
+    
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content)
+        chromeRegistry = new nsChromeRegistryContent;
+#endif
+    if (!chromeRegistry)
+        chromeRegistry = new nsChromeRegistryChrome;
+
+    if (chromeRegistry) {
+        NS_ADDREF(chromeRegistry);
+        if (NS_FAILED(chromeRegistry->Init()))
+            NS_RELEASE(chromeRegistry);
+    }
+    return chromeRegistry;
+}
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry, GetSingleton);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
 // The list of components we register
