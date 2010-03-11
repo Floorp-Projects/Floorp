@@ -370,6 +370,11 @@ RPCChannel::OnMaybeDequeueOne()
     {
         MutexAutoLock lock(mMutex);
 
+        if (!Connected()) {
+            ReportConnectionError("RPCChannel");
+            return;
+        }
+
         if (!mDeferred.empty())
             return MaybeProcessDeferredIncall();
 
@@ -633,6 +638,9 @@ RPCChannel::OnMessageReceived(const Message& msg)
 {
     AssertIOThread();
     MutexAutoLock lock(mMutex);
+
+    if (MaybeInterceptSpecialIOMessage(msg))
+        return;
 
     // regardless of the RPC stack, if we're awaiting a sync reply, we
     // know that it needs to be immediately handled to unblock us.
