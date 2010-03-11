@@ -43,6 +43,10 @@
 #include <queue>
 #include <stack>
 
+#include "base/basictypes.h"
+
+#include "pratom.h"
+
 #include "mozilla/ipc/SyncChannel.h"
 #include "nsAutoPtr.h"
 
@@ -361,9 +365,13 @@ private:
         ~RefCountedTask() { delete mTask; }
         void Run() { mTask->Run(); }
         void Cancel() { mTask->Cancel(); }
-        void AddRef() { ++mRefCnt; }
+        void AddRef() {
+            PR_AtomicIncrement(reinterpret_cast<PRInt32*>(&mRefCnt));
+        }
         void Release() {
-            if (--mRefCnt == 0)
+            nsrefcnt count =
+                PR_AtomicDecrement(reinterpret_cast<PRInt32*>(&mRefCnt));
+            if (0 == count)
                 delete this;
         }
 
