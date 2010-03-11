@@ -581,8 +581,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         XSync(QX11Info::display(), False);
 #  endif
 
-        if (!CallPaint(npremoteevent, &handled))
-            return 0;
+        return CallPaint(npremoteevent, &handled) ? handled : 0;
     }
 #endif
 
