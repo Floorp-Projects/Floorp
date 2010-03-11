@@ -5124,6 +5124,36 @@ nsNavHistory::UnregisterOpenPage(nsIURI* aURI)
 }
 
 
+NS_IMETHODIMP
+nsNavHistory::UnregisterOpenPage(nsIURI* aURI)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+
+  // Entering Private Browsing mode will unregister all open pages, therefore
+  // there shouldn't be anything in the moz_openpages_temp table. So we can stop
+  // now without doing any unnecessary work.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
+  PRInt64 placeId;
+  nsresult rv = GetUrlIdFor(aURI, &placeId, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (placeId == 0)
+    return NS_OK;
+
+  mozStorageStatementScoper scoper(mDBUnregisterOpenPage);
+
+  rv = mDBUnregisterOpenPage->BindInt64Parameter(0, placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBUnregisterOpenPage->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
 // nsNavHistory::SetCharsetForURI
 //
 // Sets the character-set for a URI.
