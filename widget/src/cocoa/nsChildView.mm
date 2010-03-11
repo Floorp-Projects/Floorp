@@ -977,8 +977,7 @@ NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
     return NS_OK; // Don't change the cursor during dragging.
 
   nsBaseWidget::SetCursor(aCursor);
-  [[nsCursorManager sharedInstance] setCursor: aCursor];
-  return NS_OK;
+  return [[nsCursorManager sharedInstance] setCursor:aCursor];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -987,7 +986,12 @@ NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
 NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
                                       PRUint32 aHotspotX, PRUint32 aHotspotY)
 {
-  return nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
+  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor hotSpotX:aHotspotX hotSpotY:aHotspotY];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 #pragma mark -

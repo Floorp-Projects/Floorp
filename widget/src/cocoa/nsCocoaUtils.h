@@ -45,6 +45,7 @@
 
 #include "nsRect.h"
 #include "nsObjCExceptions.h"
+#include "imgIContainer.h"
 
 class nsIWidget;
 
@@ -130,6 +131,37 @@ class nsCocoaUtils
 
   static void PrepareForNativeAppModalDialog();
   static void CleanUpAfterNativeAppModalDialog();
+
+  // 3 utility functions to go from a frame of imgIContainer to CGImage and then to NSImage
+  // Convert imgIContainer -> CGImageRef, caller owns result
+  
+  /** Creates a <code>CGImageRef</code> from a frame contained in an <code>imgIContainer</code>.
+      Copies the pixel data from the indicated frame of the <code>imgIContainer</code> into a new <code>CGImageRef</code>.
+      The caller owns the <code>CGImageRef</code>. 
+      @param aImage the image to extract a frame from
+      @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aResult the resulting CGImageRef
+      @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
+   */
+  static nsresult CreateCGImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, CGImageRef *aResult);
+  
+  /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
+      Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.
+      The caller owns the <code>NSImage</code>. 
+      @param aInputImage the image to convert
+      @param aResult the resulting NSImage
+      @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
+   */
+  static nsresult CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage **aResult);
+
+  /** Creates a Cocoa <code>NSImage</code> from a frame of an <code>imgIContainer</code>.
+      Combines the two methods above. The caller owns the <code>NSImage</code>.
+      @param aImage the image to extract a frame from
+      @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aResult the resulting NSImage
+      @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
+   */  
+  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult);
 };
 
 #endif // nsCocoaUtils_h_
