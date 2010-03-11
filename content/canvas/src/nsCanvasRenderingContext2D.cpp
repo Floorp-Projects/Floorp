@@ -3020,7 +3020,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     NS_ENSURE_ARG(imgElt);
 
     nsresult rv;
-    gfxRect dirty;
+    gfxRect dirty(0.0, 0.0, 0.0, 0.0);
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
