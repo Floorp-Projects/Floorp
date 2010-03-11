@@ -45,15 +45,8 @@
 #endif
 
 #if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-#include <CodeFragments.h>
-#include <TextUtils.h>
-#include <Types.h>
-#include <Aliases.h>
-#include <CFURL.h>
-#include <CFBundle.h>
-#include <CFString.h>
-#include <CFDictionary.h>
-#include <CFData.h>
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #ifdef XP_UNIX
@@ -621,16 +614,16 @@ pr_LoadCFBundle(const char *name, PRLibrary *lm)
 {
     CFURLRef bundleURL;
     CFBundleRef bundle = NULL;
-    char pathBuf[PATH_MAX];
-    const char *resolvedPath;
+    char *resolvedPath;
     CFStringRef pathRef;
 
     /* Takes care of relative paths and symlinks */
-    resolvedPath = realpath(name, pathBuf);
+    resolvedPath = realpath(name, NULL);
     if (!resolvedPath)
         return PR_FAILURE;
         
-    pathRef = CFStringCreateWithCString(NULL, pathBuf, kCFStringEncodingUTF8);
+    pathRef = CFStringCreateWithCString(NULL, resolvedPath, kCFStringEncodingUTF8);
+    free(resolvedPath);
     if (pathRef) {
         bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef,
                                                   kCFURLPOSIXPathStyle, true);

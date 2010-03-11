@@ -2791,9 +2791,6 @@ strtod
 		if (e1 &= ~15) {
 			if (e1 > DBL_MAX_10_EXP) {
  ovfl:
-#ifndef NO_ERRNO
-				errno = ERANGE;
-#endif
 				/* Can't trust HUGE_VAL */
 #ifdef IEEE_Arith
 #ifdef Honor_FLT_ROUNDS
@@ -2820,6 +2817,17 @@ strtod
 				word0(&rv) = Big0;
 				word1(&rv) = Big1;
 #endif /*IEEE_Arith*/
+ range_err:
+				if (bd0) {
+					Bfree(bb);
+					Bfree(bd);
+					Bfree(bs);
+					Bfree(bd0);
+					Bfree(delta);
+					}
+#ifndef NO_ERRNO
+				errno = ERANGE;
+#endif
 				goto ret;
 				}
 			e1 >>= 4;
@@ -2884,10 +2892,7 @@ strtod
 				if (!dval(&rv)) {
  undfl:
 					dval(&rv) = 0.;
-#ifndef NO_ERRNO
-					errno = ERANGE;
-#endif
-					goto ret;
+					goto range_err;
 					}
 #ifndef Avoid_Underflow
 				word0(&rv) = Tiny0;
@@ -3123,7 +3128,7 @@ strtod
 			adj.d *= ulp(&rv);
 			if (bc.dsign) {
 				if (word0(&rv) == Big0 && word1(&rv) == Big1)
-					goto ovflfree;
+					goto ovfl;
 				dval(&rv) += adj.d;
 				}
 			else
@@ -3174,6 +3179,8 @@ strtod
 #endif
 						   0xffffffff)) {
 					/*boundary case -- increment exponent*/
+					if (word0(&rv) == Big0 && word1(&rv) == Big1)
+						goto ovfl;
 					word0(&rv) = (word0(&rv) & Exp_mask)
 						+ Exp_msk1
 #ifdef IBM
@@ -3338,17 +3345,8 @@ strtod
 			dval(&rv) += adj.d;
 			if ((word0(&rv) & Exp_mask) >=
 					Exp_msk1*(DBL_MAX_EXP+Bias-P)) {
-				if (word0(&rv0) == Big0 && word1(&rv0) == Big1) {
-#ifdef Honor_FLT_ROUNDS
- ovflfree:
-#endif
-					Bfree(bb);
-					Bfree(bd);
-					Bfree(bs);
-					Bfree(bd0);
-					Bfree(delta);
+				if (word0(&rv0) == Big0 && word1(&rv0) == Big1)
 					goto ovfl;
-					}
 				word0(&rv) = Big0;
 				word1(&rv) = Big1;
 				goto cont;
@@ -3468,8 +3466,14 @@ strtod
 	Bfree(delta);
 #ifndef NO_STRTOD_BIGCOMP
 	if (bc.nd > nd && bc.dsign) {
+		bd0 = 0;
 		bc.e0 += nz1;
 		bigcomp(&rv, s0, &bc);
+		y = word0(&rv) & Exp_mask;
+		if (y == Exp_mask)
+			goto ovfl;
+		if (y == 0 && rv.d == 0.)
+			goto undfl;
 		}
 #endif
 #ifdef SET_INEXACT
