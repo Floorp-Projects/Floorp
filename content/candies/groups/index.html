@@ -1,8 +1,10 @@
 <html>
   <head>
     <title>Stacks!</title>
+    <script src="../../js/firebuglite/firebug-lite.js"></script>
     <script src="../../js/core/jquery.js"></script>
     <script src="../../js/core/utils.js"></script>  
+    <link rel="stylesheet" href="../../js/firebuglite/firebug-lite.css"/>
     <style>
       body{ margin: 0px, padding: 0px; }
       .tab{ width: 160px; height: 120px; background-color: #222; -moz-box-shadow: 1px 1px 8px rgba(0,0,0,.8); border:1px solid white; z-index: 0;}
@@ -25,6 +27,15 @@
       .willGroup{
         -moz-box-shadow: 0px 0px 10px rgba(255,0,0,1);
       }
+      
+      .group{
+        background-color: #DDD;
+        border: 1px solid #CCC;
+        cursor: move;
+      }    
+
+
+      
     </style>
   </head>
   
@@ -34,8 +45,10 @@
       <div class="tab">B</div>
       <div class="tab">C</div>
       <div class="tab">D</div>
-      <div class="tab">E</div>      
-      <div class="tab">z</div>      
+      <div class="tab">E</div>
+      <div class="tab">F</div>
+      <div class="tab">G</div>
+      <div class="tab">z</div>
     </div>
   <script>
     function randInt(num){
