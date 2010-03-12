@@ -206,7 +206,6 @@ function test() {
     let oldState_wins = JSON.parse(oldState).windows.length;
     if (oldState_wins != 1) {
       ok(false, "oldState in test_purge has " + oldState_wins + " windows instead of 1");
-      info(oldState);
     }
 
     // create a new state for testing
