@@ -442,6 +442,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
             else {
                 // OOM. adjust numSlots so we don't free unallocated memory. 
                 numSlots = i;
+                PK11_FreeSlotListElement(slotList, slotElement);
                 rv = NS_ERROR_OUT_OF_MEMORY;
                 goto loser;
             }
@@ -477,6 +478,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
         while (slotElement) {
             if (tokenStr.Equals(NS_ConvertUTF8toUTF16(PK11_GetTokenName(slotElement->slot)))) {
                 *aSlot = slotElement->slot;
+                PK11_FreeSlotListElement(slotList, slotElement);
                 break;
             }
             slotElement = PK11_GetNextSafe(slotList, slotElement, PR_FALSE);
