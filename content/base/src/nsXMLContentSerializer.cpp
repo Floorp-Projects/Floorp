@@ -1484,7 +1484,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
   PRBool thisSequenceStartsAtBeginningOfLine = !mColPos;
   PRBool onceAgainBecauseWeAddedBreakInFront = PR_FALSE;
   PRBool foundWhitespaceInLoop;
-  PRInt32 length, colPos;
+  PRUint32 length, colPos;
 
   do {
 
