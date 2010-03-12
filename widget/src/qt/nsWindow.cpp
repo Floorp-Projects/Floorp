@@ -1941,7 +1941,8 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     switch (mWindowType) {
     case eWindowType_dialog:
         windowName = "topLevelDialog";
-        mIsTopLevel = PR_TRUE;
+        if (!parent)
+            mIsTopLevel = PR_TRUE;
         break;
     case eWindowType_popup:
         windowName = "topLevelPopup";
@@ -1972,35 +1973,24 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 
     // create a QGraphicsView if this is a new toplevel window
 
-    if (eWindowType_dialog == mWindowType ||
-        eWindowType_toplevel == mWindowType)
-    {
-        MozQGraphicsView* newView = 0;
-        QGraphicsScene *scene = new QGraphicsScene();
-        if (!scene) {
-            delete widget;
-            return nsnull;
-        }
-
-        newView = new MozQGraphicsView(scene);
+    if (mIsTopLevel) {
+        QGraphicsView* newView = nsnull;
+        newView = new MozQGraphicsView(widget);
         if (!newView) {
-            delete scene;
             delete widget;
             return nsnull;
         }
-        newView->setTopLevel(widget);
 
         newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        newView->show();
-        newView->raise();
+        newView->showNormal();
 
-        scene->addItem(widget);
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         // Top level widget is just container, and should not be painted
         widget->setFlag(QGraphicsItem::ItemHasNoContents);
 #endif
-    }
+    } else if (eWindowType_dialog == mWindowType && parent)
+        parent->scene()->addItem(widget);
 
     if (mWindowType == eWindowType_popup) {
         widget->setZValue(100);
