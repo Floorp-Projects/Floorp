@@ -162,14 +162,15 @@ gfxFontFamily::HasOtherFamilyNames()
 }
 
 gfxFontEntry*
-gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBold)
+gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
+                                PRBool& aNeedsSyntheticBold)
 {
     if (!mHasStyles)
         FindStyleVariations(); // collect faces for the family, if not already done
 
     NS_ASSERTION(mAvailableFonts.Length() > 0, "font family with no faces!");
 
-    aNeedsBold = PR_FALSE;
+    aNeedsSyntheticBold = PR_FALSE;
 
     PRInt8 baseWeight, weightDistance;
     aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
@@ -181,7 +182,7 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
     // If the family has only one face, we simply return it; no further checking needed
     if (mAvailableFonts.Length() == 1) {
         gfxFontEntry *fe = mAvailableFonts[0];
-        aNeedsBold = wantBold && !fe->IsBold();
+        aNeedsSyntheticBold = wantBold && !fe->IsBold();
         return fe;
     }
 
@@ -204,7 +205,7 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
         // if the desired style is available, return it directly
         gfxFontEntry *fe = mAvailableFonts[faceIndex];
         if (fe) {
-            // no need to set aNeedsBold here as we matched the boldness request
+            // no need to set aNeedsSyntheticBold here as we matched the boldness request
             return fe;
         }
 
@@ -226,7 +227,7 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
                         NS_ConvertUTF16toUTF8(mName).get(),
                         aFontStyle.style, aFontStyle.weight, aFontStyle.size,
                         NS_ConvertUTF16toUTF8(fe->Name()).get(), trial));
-                aNeedsBold = wantBold && !fe->IsBold();
+                aNeedsSyntheticBold = wantBold && !fe->IsBold();
                 return fe;
             }
         }
@@ -288,6 +289,13 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
     direction = (weightDistance >= 0) ? 1 : -1;
     PRInt8 i, wghtSteps = 0;
 
+    // synthetic bolding occurs when font itself is not a bold-face and
+    // either the absolute weight is at least 600 or the relative weight
+    // (e.g. 402) implies a darker face than the ones available.
+    // note: this means that (1) lighter styles *never* synthetic bold and
+    // (2) synthetic bolding always occurs at the first bolder step beyond
+    // available faces, no matter how light the boldest face
+
     // account for synthetic bold in lighter case
     // if lighter is applied with an inherited bold weight,
     // and no actual bold faces exist, synthetic bold is used
@@ -305,10 +313,13 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
             break;
     }
 
-    if ((weightDistance > 0 && wghtSteps <= absDistance) ||
-        (baseWeight >= 6 && !matchFE->IsBold() &&
-          (wghtSteps - 1) <= weightDistance)) {
-        aNeedsBold = PR_TRUE;
+    NS_ASSERTION(matchFE, "we should always be able to return something here");
+
+    if (!matchFE->IsBold() &&
+        ((weightDistance == 0 && baseWeight >= 6) ||
+         (weightDistance > 0 && wghtSteps <= absDistance)))
+    {
+        aNeedsSyntheticBold = PR_TRUE;
     }
 
     PR_LOG(gFontSelection, PR_LOG_DEBUG,
@@ -316,7 +327,6 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
             NS_ConvertUTF16toUTF8(mName).get(),
             aFontStyle.style, aFontStyle.weight, aFontStyle.size,
             NS_ConvertUTF16toUTF8(matchFE->Name()).get()));
-    NS_ASSERTION(matchFE, "we should always be able to return something here");
     return matchFE;
 }
 

@@ -318,11 +318,12 @@ public:
     void SetHasStyles(PRBool aHasStyles) { mHasStyles = aHasStyles; }
 
     // choose a specific face to match a style using CSS font matching
-    // rules (weight matching occurs here)
-    // may return a face that doesn't precisely match (e.g. normal face when no italic face exists)
-    // aNeedsBold is set to true when bolder face couldn't be found, false otherwise
+    // rules (weight matching occurs here).  may return a face that doesn't
+    // precisely match (e.g. normal face when no italic face exists).
+    // aNeedsSyntheticBold is set to true when synthetic bolding is
+    // needed, false otherwise
     gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                   PRBool& aNeedsBold);
+                                   PRBool& aNeedsSyntheticBold);
 
     // iterates over faces looking for a match with a given characters
     // used as part of the font fallback process
