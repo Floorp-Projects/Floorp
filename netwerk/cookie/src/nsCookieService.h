@@ -174,11 +174,11 @@ class nsCookieService : public nsICookieService
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     void                          GetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aRequireHostMatch, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
-    void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
-    void                          RemoveCookieFromList(const nsListIter &aIter);
-    PRBool                        AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
-    void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aRequireHostMatch, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp, mozIStorageBindingParamsArray *aParamsArray = NULL);
+    void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp, mozIStorageBindingParamsArray *aParamsArray = NULL);
+    void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
+    PRBool                        AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, mozIStorageBindingParamsArray *aParamsArray, PRBool aWriteToDB = PR_TRUE);
+    void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed, mozIStorageBindingParamsArray *aParamsArray);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     PRBool                        IsForeign(const nsCString &aBaseDomain, PRBool aRequireHostMatch, nsIURI *aFirstURI);
