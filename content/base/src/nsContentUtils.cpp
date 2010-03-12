@@ -4568,7 +4568,7 @@ nsContentUtils::RemoveScriptBlocker()
   }
 
   PRUint32 firstBlocker = sRunnersCountAtFirstBlocker;
-  PRUint32 lastBlocker = sBlockedScriptRunners->Count();
+  PRUint32 lastBlocker = (PRUint32)sBlockedScriptRunners->Count();
   sRunnersCountAtFirstBlocker = 0;
   NS_ASSERTION(firstBlocker <= lastBlocker,
                "bad sRunnersCountAtFirstBlocker");
