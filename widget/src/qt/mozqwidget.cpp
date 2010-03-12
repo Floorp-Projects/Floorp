@@ -139,11 +139,13 @@ void MozQWidget::closeEvent(QCloseEvent* aEvent)
 void MozQWidget::hideEvent(QHideEvent* aEvent)
 {
     mReceiver->hideEvent(aEvent);
+    QGraphicsWidget::hideEvent(aEvent);
 }
 
 void MozQWidget::showEvent(QShowEvent* aEvent)
 {
     mReceiver->showEvent(aEvent);
+    QGraphicsWidget::showEvent(aEvent);
 }
 
 bool MozQWidget::SetCursor(nsCursor aCursor)
@@ -219,3 +221,9 @@ void MozQWidget::setModal(bool modal)
     LOG(("Modal QGraphicsWidgets not supported in Qt < 4.6\n"));
 #endif
 }
+
+QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
+{
+    return QGraphicsWidget::inputMethodQuery(aQuery);
+}
+
