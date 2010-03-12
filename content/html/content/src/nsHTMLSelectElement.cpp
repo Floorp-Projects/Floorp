@@ -746,7 +746,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
       rv = AppendChild(node, getter_AddRefs(tmpNode));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (i < ((PRInt32)aLength - 1)) {
+      if (i + 1 < aLength) {
         nsCOMPtr<nsIDOMNode> newNode;
 
         rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
@@ -2006,7 +2006,7 @@ nsHTMLOptionCollection::Remove(PRInt32 aIndex)
 
   PRUint32 len = 0;
   mSelect->GetLength(&len);
-  if (aIndex < 0 || aIndex >= len)
+  if (aIndex < 0 || (PRUint32)aIndex >= len)
     aIndex = 0;
 
   return mSelect->Remove(aIndex);
