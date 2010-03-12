@@ -60,8 +60,6 @@
 #define PLUGIN_VERSION     "1.0.0.0"
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
-#define STATIC_ASSERT(condition)                                \
-    extern void np_static_assert(int arg[(condition) ? 1 : -1])
 
 //
 // Intentional crash
@@ -69,7 +67,7 @@
 
 int gCrashCount = 0;
 
-void
+static void
 NoteIntentionalCrash()
 {
   char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
@@ -89,9 +87,11 @@ NoteIntentionalCrash()
   }
 }
 
-void
+static void
 IntentionalCrash()
 {
+  NoteIntentionalCrash();
+
   int *pi = NULL;
   *pi = 55; // Crash dereferencing null pointer
   ++gCrashCount;
@@ -155,7 +155,6 @@ static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t a
 static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -196,10 +195,9 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "checkGCRace",
   "hang",
   "getClipboardText",
-  "crashInNestedLoop",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
-static const ScriptableFunction sPluginMethodFunctions[] = {
+static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
   npnEvaluateTest,
   npnInvokeTest,
   npnInvokeDefaultTest,
@@ -238,11 +236,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   checkGCRace,
   hangPlugin,
   getClipboardText,
-  crashPluginInNestedLoop,
 };
-
-STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
-              ARRAY_LENGTH(sPluginMethodFunctions));
 
 struct URLNotifyData
 {
@@ -707,7 +701,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       instanceData->npnNewStream = true;
     }
     if (strcmp(argn[i], "newcrash") == 0) {
-      NoteIntentionalCrash();
       IntentionalCrash();
     }
   }
@@ -790,10 +783,8 @@ NPP_Destroy(NPP instance, NPSavedData** save)
   printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
 
-  if (instanceData->crashOnDestroy) {
-    NoteIntentionalCrash();
+  if (instanceData->crashOnDestroy)
     IntentionalCrash();
-  }
 
   if (instanceData->streamBuf) {
     free(instanceData->streamBuf);
@@ -2146,7 +2137,6 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  NoteIntentionalCrash();
   IntentionalCrash();
   VOID_TO_NPVARIANT(*result);
   return true;
@@ -2633,29 +2623,12 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   return true;
 }
 
-bool
-crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
-                        uint32_t argCount, NPVariant* result)
-{
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  return pluginCrashInNestedLoop(id);
-}
-
 #else
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
                  NPVariant* result)
 {
-  // XXX Not implemented!
-  return false;
-}
-
-bool
-crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
-                        uint32_t argCount, NPVariant* result)
-{
-  // XXX Not implemented!
+  /// XXX Not implemented!
   return false;
 }
 #endif
