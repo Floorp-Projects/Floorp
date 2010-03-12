@@ -3002,14 +3002,13 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
 
   if (aNotify) {
     nsIDocument* doc = GetCurrentDoc();
-    // Only need to notify PresContexts if we're in a document.  (We might not
+    // Only need to request a restyle if we're in a document.  (We might not
     // be in a document, if we're clearing animation effects on a target node
     // that's been detached since the previous animation sample.)
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
       if (shell) {
-        nsPresContext* presContext = shell->GetPresContext();
-        presContext->SMILOverrideStyleChanged(this);
+        shell->RestyleForAnimation(this);
       }
     }
   }
