@@ -4342,13 +4342,17 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   }
 
   nsGlobalWindow *win = nsGlobalWindow::FromSupports(globalNative);
+  if (win->IsClosedOrClosing()) {
+    return NS_OK;
+  }
   if (win->IsOuterWindow()) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
     win = win->GetCurrentInnerWindowInternal();
 
-    if (!win || !(global = win->GetGlobalJSObject())) {
+    if (!win || !(global = win->GetGlobalJSObject()) ||
+        win->IsClosedOrClosing()) {
       return NS_OK;
     }
   }

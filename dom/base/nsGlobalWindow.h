@@ -452,10 +452,18 @@ public:
 
   static PRBool DOMWindowDumpEnabled();
 
+  void MaybeForgiveSpamCount();
+  PRBool IsClosedOrClosing() {
+    return (mIsClosed ||
+            mInClose ||
+            mHavePendingClose ||
+            mCleanedUp);
+  }
+
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
-  void CleanUp();
+  void CleanUp(PRBool aIgnoreModalDialog);
   void ClearControllers();
   nsresult FinalClose();
 
@@ -784,6 +792,8 @@ protected:
   PRUint32 mSerial;
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
+
+  PRBool mCleanedUp, mCallCleanUpAfterModalDialogCloses;
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
