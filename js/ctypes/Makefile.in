@@ -62,6 +62,7 @@ IS_COMPONENT = 1
 CPPSRCS = \
     Function.cpp \
     Library.cpp \
+    CTypes.cpp \
     Module.cpp \
     $(NULL)
 
