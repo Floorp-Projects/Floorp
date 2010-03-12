@@ -2,15 +2,10 @@
 
 #include "BrowserStreamParent.h"
 #include "PluginInstanceParent.h"
-#include "PluginModuleParent.h"
 
-template<>
-struct RunnableMethodTraits<mozilla::plugins::BrowserStreamParent>
-{
-  typedef mozilla::plugins::BrowserStreamParent Cls;
-    static void RetainCallee(Cls* obj) { }
-    static void ReleaseCallee(Cls* obj) { }
-};
+// How much data are we willing to send across the wire
+// in one chunk?
+static const int32_t kSendDataChunk = 0x1000;
 
 namespace mozilla {
 namespace plugins {
@@ -19,33 +14,13 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
                                          NPStream* stream)
   : mNPP(npp)
   , mStream(stream)
-  , mDeleteTask(nsnull)
+  , mState(ALIVE)
 {
   mStream->pdata = static_cast<AStream*>(this);
 }
 
 BrowserStreamParent::~BrowserStreamParent()
 {
-  if (mDeleteTask) {
-    mDeleteTask->Cancel();
-    // MessageLoop::current() owns this
-    mDeleteTask = nsnull;
-  }
-}
-
-NPError
-BrowserStreamParent::NPP_DestroyStream(NPReason reason)
-{
-  PLUGIN_LOG_DEBUG(("%s (reason=%i)", FULLFUNCTION, reason));
-
-  if (!mDeleteTask) {
-    mDeleteTask = NewRunnableMethod(this, &BrowserStreamParent::Delete);
-    MessageLoop::current()->PostTask(FROM_HERE, mDeleteTask);
-  }
-
-  NPError err = NPERR_NO_ERROR;
-  CallNPP_DestroyStream(reason, &err);
-  return err;
 }
 
 bool
@@ -53,6 +28,19 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                            NPError* result)
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
+
+  switch (mState) {
+  case ALIVE:
+    break;
+
+  case DYING:
+    *result = NPERR_GENERIC_ERROR;
+    return true;
+
+  default:
+    NS_ERROR("Unexpected state");
+    return false;
+  }
 
   if (!mStream)
     return false;
@@ -72,16 +60,50 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   return true;
 }
 
+bool
+BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
+{
+  switch (mState) {
+  case ALIVE:
+    break;
+
+  case DYING:
+    return true;
+
+  default:
+    NS_ERROR("Unexpected state");
+    return false;
+  };
+
+  mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
+  return true;
+}
+
+void
+BrowserStreamParent::NPP_DestroyStream(NPReason reason)
+{
+  NS_ASSERTION(ALIVE == mState, "NPP_DestroyStream called twice?");
+  mState = DYING;
+  SendNPP_DestroyStream(reason);
+}
+
+bool
+BrowserStreamParent::RecvStreamDestroyed()
+{
+  if (DYING != mState) {
+    NS_ERROR("Unexpected state");
+    return false;
+  }
+
+  mState = DELETING;
+  Send__delete__(this);
+  return true;
+}
+
 int32_t
 BrowserStreamParent::WriteReady()
 {
-  PLUGIN_LOG_DEBUG_FUNCTION;
-
-  int32_t result;
-  if (!CallNPP_WriteReady(mStream->end, &result))
-    return -1;
-
-  return result;
+  return kSendDataChunk;
 }
 
 int32_t
@@ -91,13 +113,17 @@ BrowserStreamParent::Write(int32_t offset,
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
-  int32_t result;
-  if (!CallNPP_Write(offset,
-                     nsCString(static_cast<char*>(buffer), len),
-                     &result))
-    return -1;
+  NS_ASSERTION(ALIVE == mState, "Sending data after NPP_DestroyStream?");
+  NS_ASSERTION(len > 0, "Non-positive length to NPP_Write");
 
-  return result;
+  if (len > kSendDataChunk)
+    len = kSendDataChunk;
+
+  SendWrite(offset,
+    nsCString(static_cast<char*>(buffer), len),
+    mStream->end);
+
+  return len;
 }
 
 void
@@ -105,24 +131,11 @@ BrowserStreamParent::StreamAsFile(const char* fname)
 {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
+  NS_ASSERTION(ALIVE == mState,
+               "Calling streamasfile after NPP_DestroyStream?");
+
   CallNPP_StreamAsFile(nsCString(fname));
-}
-
-bool
-BrowserStreamParent::AnswerNPN_DestroyStream(const NPReason& reason,
-                                             NPError* result)
-{
-  PLUGIN_LOG_DEBUG_FUNCTION;
-
-  *result = mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
-  return true;
-}
-
-void
-BrowserStreamParent::Delete()
-{
-  PBrowserStreamParent::Send__delete__(this);
-  // |this| just got deleted
+  return;
 }
 
 } // namespace plugins

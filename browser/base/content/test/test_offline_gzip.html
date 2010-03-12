@@ -37,7 +37,7 @@ function finishTest() {
   var pm = Components.classes["@mozilla.org/permissionmanager;1"].
            getService(Components.interfaces.nsIPermissionManager);
 
-  pm.remove("localhost", "offline-app");
+  pm.remove("mochi.test", "offline-app");
   
   window.removeEventListener("message", handleMessageEvents, false);
 
@@ -103,7 +103,7 @@ function loaded() {
   var notificationBox = win.gBrowser.getNotificationBox();
 
   var notification = notificationBox
-    .getNotificationWithValue("offline-app-requested-localhost");
+    .getNotificationWithValue("offline-app-requested-mochi.test");
   notification.childNodes[0].click();
 }
 

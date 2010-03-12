@@ -336,6 +336,7 @@ protected:
   void FillInEventFromGestureDown(nsMouseEvent* aEvent);
 
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
+  nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
   PRInt32     mLockCursor;
 

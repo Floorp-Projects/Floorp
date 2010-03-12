@@ -6882,7 +6882,7 @@ CSSParserImpl::ParseBorderImage()
   // [stretch | repeat | round]{0,2}
   // missing keywords are handled in nsRuleNode::ComputeBorderData()
   if (ParseEnum(horizontalKeyword, nsCSSProps::kBorderImageKTable)) {
-    ParseEnum(verticalKeyword, nsCSSProps::kBorderImageKTable);
+    (void)ParseEnum(verticalKeyword, nsCSSProps::kBorderImageKTable);
   }
 
   if (!ExpectEndProperty()) {
@@ -7170,7 +7170,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect)
       }
       if (3 != side) {
         // skip optional commas between elements
-        ExpectSymbol(',', PR_TRUE);
+        (void)ExpectSymbol(',', PR_TRUE);
       }
     }
     if (!ExpectSymbol(')', PR_TRUE)) {
@@ -9083,8 +9083,8 @@ CSSParserImpl::ParseDasharray()
           eCSSUnit_None    == value.GetUnit())
         break;
 
-       // skip optional commas between elements
-      ExpectSymbol(',', PR_TRUE);
+      // skip optional commas between elements
+      (void)ExpectSymbol(',', PR_TRUE);
 
       if (!ParseVariant(value,
                         VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,

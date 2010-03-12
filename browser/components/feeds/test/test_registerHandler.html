@@ -40,12 +40,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
   ok(navigator.registerContentHandler, "navigator.registerContentHandler should be defined");
 
   // testing a generic case
-  is(true, testRegisterHandler(true, "foo", "http://localhost:8888/%s", "Foo handler"), "registering a foo protocol handler should work");
-  is(true, testRegisterHandler(false, "application/rss+xml", "http://localhost:8888/%s", "Foo handler"), "registering a foo content handler should work");
+  is(true, testRegisterHandler(true, "foo", "http://mochi.test:8888/%s", "Foo handler"), "registering a foo protocol handler should work");
+  is(true, testRegisterHandler(false, "application/rss+xml", "http://mochi.test:8888/%s", "Foo handler"), "registering a foo content handler should work");
 
   // testing with wrong uris
-  is(false, testRegisterHandler(true, "foo", "http://localhost:8888/", "Foo handler"), "a protocol handler uri should contain %s");
-  is(false, testRegisterHandler(false, "application/rss+xml", "http://localhost:8888/", "Foo handler"), "a content handler uri should contain %s");
+  is(false, testRegisterHandler(true, "foo", "http://mochi.test:8888/", "Foo handler"), "a protocol handler uri should contain %s");
+  is(false, testRegisterHandler(false, "application/rss+xml", "http://mochi.test:8888/", "Foo handler"), "a content handler uri should contain %s");
 
   // the spec says we should not throw here, but it probably needs to be changed
   is(false, testRegisterHandler(true, "foo", "foo/%s", "Foo handler"), "a protocol handler uri should be valid");
@@ -57,28 +57,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
 
   // restriction to http(s) for the uri of the handler (bug 401343)
   // https should work (http already tested in the generic case)
-  is(true, testRegisterHandler(true, "foo", "https://localhost:8888/%s", "Foo handler"), "registering a foo protocol handler with https scheme should work");
-  is(true, testRegisterHandler(false, "application/rss+xml", "https://localhost:8888/%s", "Foo handler"), "registering a foo content handler with https scheme should work");
+  is(true, testRegisterHandler(true, "foo", "https://mochi.test:8888/%s", "Foo handler"), "registering a foo protocol handler with https scheme should work");
+  is(true, testRegisterHandler(false, "application/rss+xml", "https://mochi.test:8888/%s", "Foo handler"), "registering a foo content handler with https scheme should work");
   // ftp should not work
-  is(false, testRegisterHandler(true, "foo", "ftp://localhost:8888/%s", "Foo handler"), "registering a foo protocol handler with ftp scheme should not work");
-  is(false, testRegisterHandler(false, "application/rss+xml", "ftp://localhost:8888/%s", "Foo handler"), "registering a foo content handler with ftp scheme should not work");
+  is(false, testRegisterHandler(true, "foo", "ftp://mochi.test:8888/%s", "Foo handler"), "registering a foo protocol handler with ftp scheme should not work");
+  is(false, testRegisterHandler(false, "application/rss+xml", "ftp://mochi.test:8888/%s", "Foo handler"), "registering a foo content handler with ftp scheme should not work");
   // chrome should not work 
-  is(false, testRegisterHandler(true, "foo", "chrome://localhost:8888/%s", "Foo handler"), "registering a foo protocol handler with chrome scheme should not work");
-  is(false, testRegisterHandler(false, "application/rss+xml", "chrome://localhost:8888/%s", "Foo handler"), "registering a foo content handler with chrome scheme should not work");
+  is(false, testRegisterHandler(true, "foo", "chrome://mochi.test:8888/%s", "Foo handler"), "registering a foo protocol handler with chrome scheme should not work");
+  is(false, testRegisterHandler(false, "application/rss+xml", "chrome://mochi.test:8888/%s", "Foo handler"), "registering a foo content handler with chrome scheme should not work");
   // foo should not work 
-  is(false, testRegisterHandler(true, "foo", "foo://localhost:8888/%s", "Foo handler"), "registering a foo protocol handler with foo scheme should not work");
-  is(false, testRegisterHandler(false, "application/rss+xml", "foo://localhost:8888/%s", "Foo handler"), "registering a foo content handler with foo scheme should not work");
+  is(false, testRegisterHandler(true, "foo", "foo://mochi.test:8888/%s", "Foo handler"), "registering a foo protocol handler with foo scheme should not work");
+  is(false, testRegisterHandler(false, "application/rss+xml", "foo://mochi.test:8888/%s", "Foo handler"), "registering a foo content handler with foo scheme should not work");
 
   // for security reasons, protocol handlers should never be registered for some schemes (chrome, vbscript, ...) (bug 402788)
-  is(false, testRegisterHandler(true, "chrome", "http://localhost:8888/%s", "chrome handler"), "registering a chrome protocol handler should not work");
-  is(false, testRegisterHandler(true, "vbscript", "http://localhost:8888/%s", "vbscript handler"), "registering a vbscript protocol handler should not work");
-  is(false, testRegisterHandler(true, "javascript", "http://localhost:8888/%s", "javascript handler"), "registering a javascript protocol handler should not work");
-  is(false, testRegisterHandler(true, "moz-icon", "http://localhost:8888/%s", "moz-icon handler"), "registering a moz-icon protocol handler should not work");
+  is(false, testRegisterHandler(true, "chrome", "http://mochi.test:8888/%s", "chrome handler"), "registering a chrome protocol handler should not work");
+  is(false, testRegisterHandler(true, "vbscript", "http://mochi.test:8888/%s", "vbscript handler"), "registering a vbscript protocol handler should not work");
+  is(false, testRegisterHandler(true, "javascript", "http://mochi.test:8888/%s", "javascript handler"), "registering a javascript protocol handler should not work");
+  is(false, testRegisterHandler(true, "moz-icon", "http://mochi.test:8888/%s", "moz-icon handler"), "registering a moz-icon protocol handler should not work");
 
   // for security reasons, content handlers should never be registered for some types (html, ...)
-  is(true, testRegisterHandler(false, "application/rss+xml", "http://localhost:8888/%s", "Foo handler"), "registering rss content handlers should work");
-  is(true, testRegisterHandler(false, "application/atom+xml", "http://localhost:8888/%s", "Foo handler"), "registering atom content handlers should work");
-  todo(false, testRegisterHandler(false, "text/html", "http://localhost:8888/%s", "Foo handler"), "registering html content handlers should not work"); // bug 403798
+  is(true, testRegisterHandler(false, "application/rss+xml", "http://mochi.test:8888/%s", "Foo handler"), "registering rss content handlers should work");
+  is(true, testRegisterHandler(false, "application/atom+xml", "http://mochi.test:8888/%s", "Foo handler"), "registering atom content handlers should work");
+  todo(false, testRegisterHandler(false, "text/html", "http://mochi.test:8888/%s", "Foo handler"), "registering html content handlers should not work"); // bug 403798
 
 </script>
 </pre>

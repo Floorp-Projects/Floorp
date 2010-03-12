@@ -59,11 +59,13 @@ namespace plugins {
 
 class PBrowserStreamChild;
 class BrowserStreamChild;
+class StreamNotifyChild;
 
 class PluginInstanceChild : public PPluginInstanceChild
 {
     friend class BrowserStreamChild;
     friend class PluginStreamChild;
+    friend class StreamNotifyChild; 
 
 #ifdef OS_WIN
     friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
@@ -73,7 +75,7 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window);
 
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
@@ -86,6 +88,13 @@ protected:
 
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
+
+    NS_OVERRIDE
+    virtual bool
+    AnswerPaint(const NPRemoteEvent& event, int16_t* handled)
+    {
+        return AnswerNPP_HandleEvent(event, handled);
+    }
 
     virtual bool
     AnswerNPP_Destroy(NPError* result);
@@ -176,8 +185,6 @@ public:
 
     void InvalidateRect(NPRect* aInvalidRect);
 
-    bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
-
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
@@ -266,7 +273,7 @@ private:
 #if defined(OS_WIN)
 private:
     // Shared dib rendering management for windowless plugins.
-    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow, NPError* rv);
+    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow);
     int16_t SharedSurfacePaint(NPEvent& evcopy);
     void SharedSurfaceRelease();
     bool AlphaExtractCacheSetup();

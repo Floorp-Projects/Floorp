@@ -1079,10 +1079,6 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
     zip->ClearReleaseTime();
   }
   else {
-    if (zip) {
-      antiLockZipGrip = zip;
-      mZips.Remove(&key);
-    }
     zip = new nsJAR();
     if (zip == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;

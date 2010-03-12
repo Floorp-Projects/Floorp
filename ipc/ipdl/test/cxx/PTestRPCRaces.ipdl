@@ -5,11 +5,18 @@ rpc protocol PTestRPCRaces {
 both:
     rpc Race() returns (bool hasReply);
     rpc StackFrame() returns ();
+    rpc StackFrame3() returns ();
+
 parent:
     sync StartRace();
+    rpc Parent();
+    sync GetAnsweredParent() returns (bool answeredParent);
+
 child:
     Start();
     Wakeup();
+    Wakeup3();
+    rpc Child();
     __delete__();
 
 state START:
@@ -37,9 +44,26 @@ state RACE2:
     call Race goto DUMMY2_1;
     answer Race goto DUMMY2_2;
 state DUMMY2_1:
-    answer Race goto DYING;
+    answer Race goto TEST3;
 state DUMMY2_2:
-    call Race goto DYING;
+    call Race goto TEST3;
+
+// Third test: resolve race using custom policy
+state TEST3:
+    call StackFrame3 goto MORESTACK3;
+state MORESTACK3:
+    answer StackFrame3 goto STARTRACE3;
+state STARTRACE3:
+    send Wakeup3 goto RACE3;
+state RACE3:
+    call Child goto DUMMY3_1;
+    answer Parent goto DUMMY3_2;
+state DUMMY3_1:
+    answer Parent goto CHECK;
+state DUMMY3_2:
+    call Child goto CHECK;
+state CHECK:
+    recv GetAnsweredParent goto DYING;
 
 state DYING:
     send __delete__;

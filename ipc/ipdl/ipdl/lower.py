@@ -2662,7 +2662,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 Whitespace.NL ])
 
         self.cls.addstmts((
-            [ Label.PRIVATE ]
+            [ Label.PUBLIC ]
             + self.standardTypedefs()
             + [ Whitespace.NL ]
         ))

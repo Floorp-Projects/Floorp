@@ -58,7 +58,7 @@ function loadEvent(window, callback)
 
 function loadTestTarget(callback)
 {
-  gTargetWindow = window.open("http://localhost:8888", "bug369814target");
+  gTargetWindow = window.open("http://mochi.test:8888", "bug369814target");
   loadEvent(gTargetWindow, callback);
 }
 
@@ -126,37 +126,37 @@ function anchorTest(test) {
 
 var gTests = [
   { "name" : "iframes.html loaded from non-jar type, pref disabled",
-    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/iframes.html",
+    "url" : "jar:http://mochi.test:8888/tests/docshell/test/bug369814.zip!/iframes.html",
     "pref" : false,
     "pokes" : { },
     "func" : loadErrorTest,
   },
   { "name" : "refresh.html loaded from non-jar type, pref enabled",
-    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/refresh.html",
+    "url" : "jar:http://mochi.test:8888/tests/docshell/test/bug369814.zip!/refresh.html",
     "pref" : true,
     "pokes" : { },
     "func" : refreshTest,
   },
   { "name" : "iframes.html loaded from non-jar type, pref enabled",
-    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/iframes.html",
+    "url" : "jar:http://mochi.test:8888/tests/docshell/test/bug369814.zip!/iframes.html",
     "pref" : true,
     "pokes" : { },
     "func" : iframeTest,
   },
   { "name" : "anchors.html loaded from non-jar type, pref enabled",
-    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/anchors.html",
+    "url" : "jar:http://mochi.test:8888/tests/docshell/test/bug369814.zip!/anchors.html",
     "pref" : true,
     "pokes" : { },
     "func" : anchorTest,
   },
   { "name" : "iframes.html loaded from view-source jar type, pref disabled",
-    "url" : "jar:view-source:http://localhost:8888/tests/docshell/test/bug369814.jar!/iframes.html",
+    "url" : "jar:view-source:http://mochi.test:8888/tests/docshell/test/bug369814.jar!/iframes.html",
     "pref" : false,
     "pokes" : { },
     "func" : loadErrorTest
   },
   { "name" : "iframes.html loaded from view-source jar type, pref enabled",
-    "url" : "jar:view-source:http://localhost:8888/tests/docshell/test/bug369814.jar!/iframes.html",
+    "url" : "jar:view-source:http://mochi.test:8888/tests/docshell/test/bug369814.jar!/iframes.html",
     "pref" : true,
     "pokes" : { },
     "func" : loadErrorTest

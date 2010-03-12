@@ -1669,6 +1669,10 @@ pref("ui.panel.default_level_parent", false);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
+// If your mouse drive sends WM_*SCROLL messages when you turn your mouse wheel,
+// set this to true.  Then, gecko processes them as mouse wheel messages.
+pref("mousewheel.emulate_at_wm_scroll", false);
+
 // Bug 514927
 // Enables or disabled the TrackPoint hack, -1 is autodetect, 0 is off,
 // and 1 is on.  Set this to 1 if TrackPoint scrolling is not working.

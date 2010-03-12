@@ -4102,7 +4102,11 @@ DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
   if (mContainer) {
     nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
     NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
-    SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
+    if (docShellTreeNode) {
+      SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
+    } else {
+      NS_WARNING("Bug 549251 Did you close a window while printing?");
+    }
   }
 #endif
 }

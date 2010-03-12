@@ -343,6 +343,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_CSP.html \
 		file_CSP.sjs \
 		file_CSP_main.html \
+		file_CSP_main.html^headers^ \
 		file_CSP_main.js \
  		test_CSP_frameancestors.html \
  		file_CSP_frameancestors.sjs \
@@ -352,8 +353,8 @@ _TEST_FILES = 	test_bug5141.html \
  		file_CSP_inlinescript_main.html \
  		file_CSP_inlinescript_main.html^headers^ \
  		test_CSP_evalscript.html \
- 		file_CSP_evalscript.sjs \
  		file_CSP_evalscript_main.html \
+ 		file_CSP_evalscript_main.html^headers^ \
  		file_CSP_evalscript_main.js \
 		test_bug540854.html \
 		bug540854.sjs \

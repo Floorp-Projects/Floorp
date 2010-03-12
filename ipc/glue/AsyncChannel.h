@@ -161,18 +161,25 @@ protected:
 
     // Run on the worker thread
 
-    bool ProcessGoodbyeMessage();
-
+    void OnNotifyMaybeChannelError();
+    virtual bool ShouldDeferNotifyMaybeError() {
+        return false;
+    }
     void NotifyChannelClosed();
     void NotifyMaybeChannelError();
 
-    void Clear();
+    virtual void Clear();
 
     // Run on the IO thread
 
     void OnChannelOpened();
     void OnSend(Message* aMsg);
     void OnCloseChannel();
+
+    // Return true if |msg| is a special message targeted at the IO
+    // thread, in which case it shouldn't be delivered to the worker.
+    bool MaybeInterceptSpecialIOMessage(const Message& msg);
+    void ProcessGoodbyeMessage();
 
     Transport* mTransport;
     AsyncListener* mListener;

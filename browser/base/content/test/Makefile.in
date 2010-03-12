@@ -149,7 +149,6 @@ _BROWSER_FILES = \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
-                 browser_tabMatchesInAwesomebar.js \
     $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

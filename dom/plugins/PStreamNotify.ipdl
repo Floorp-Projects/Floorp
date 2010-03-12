@@ -20,7 +20,7 @@ child:
   /**
    * Represents NPP_URLNotify
    */
-  rpc __delete__(NPReason reason);
+  async __delete__(NPReason reason);
 };
 
 } // namespace plugins

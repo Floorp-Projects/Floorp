@@ -63,11 +63,11 @@ PlacesTreeView.prototype = {
 
   QueryInterface: function PTV_QueryInterface(aIID) {
     if (aIID.equals(Ci.nsITreeView) ||
-        aIID.equals(Ci.nsINavHistoryResultViewer) ||
+        aIID.equals(Ci.nsINavHistoryResultObserver) ||
         aIID.equals(Ci.nsINavHistoryResultTreeViewer) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
         aIID.equals(Ci.nsISupports))
       return this;
-
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
@@ -591,7 +591,7 @@ PlacesTreeView.prototype = {
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
 
-  // nsINavHistoryResultViewer
+  // nsINavHistoryResultObserver
   nodeInserted: function PTV_nodeInserted(aParentNode, aNode, aNewIndex) {
     NS_ASSERT(this._result, "Got a notification but have no result!");
     if (!this._tree || !this._result)
@@ -995,22 +995,18 @@ PlacesTreeView.prototype = {
 
   get result() this._result,
   set result(val) {
-    // Some methods (e.g. getURLsFromContainer) temporarily null out the
-    // viewer when they do temporary changes to the view, this does _not_
-    // call setResult(null), but then, we're called again with the result
-    // object which is already set for this viewer. At that point,
-    // we should do nothing.
-    if (this._result != val) {
-      if (this._result)
-        this._rootNode.containerOpen = false;
-
-      this._result = val;
-      this._rootNode = val ? val.root : null;
-
-      // If the tree is not set yet, setTree will call finishInit.
-      if (this._tree && val)
-        this._finishInit();
+    if (this._result) {
+      this._result.removeObserver(this);
+      this._rootNode.containerOpen = false;
     }
+
+    this._result = val;
+    this._rootNode = val ? val.root : null;
+
+    // If the tree is not set yet, setTree will call finishInit.
+    if (this._tree && val)
+      this._finishInit();
+
     return val;
   },
 
@@ -1363,8 +1359,10 @@ PlacesTreeView.prototype = {
       if (hasOldTree) {
         // detach from result when we are detaching from the tree.
         // This breaks the reference cycle between us and the result.
-        if (!aTree)
-          this._result.viewer = null;
+        if (!aTree) {
+          this._result.removeObserver(this);
+          this._rootNode.containerOpen = false;
+        }
       }
       if (aTree)
         this._finishInit();
