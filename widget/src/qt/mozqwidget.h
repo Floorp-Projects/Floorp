@@ -65,6 +65,7 @@ protected:
     virtual void closeEvent(QCloseEvent* aEvent);
     virtual void hideEvent(QHideEvent* aEvent);
     virtual void showEvent(QShowEvent* aEvent);
+    virtual bool event(QEvent* aEvent);
 
     bool SetCursor(const QPixmap& aPixmap, int, int);
 

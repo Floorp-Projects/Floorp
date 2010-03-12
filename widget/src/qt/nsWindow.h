@@ -273,6 +273,13 @@ protected:
     virtual nsEventStatus showEvent(QShowEvent *);
     virtual nsEventStatus hideEvent(QHideEvent *);
 
+//Gestures are only supported in qt > 4.6
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+    virtual nsEventStatus OnTouchEvent(QTouchEvent *event, PRBool &handled);
+    virtual nsEventStatus OnGestureEvent(QGestureEvent *event, PRBool &handled);
+    double DistanceBetweenPoints(const QPointF &aFirstPoint, const QPointF &aSecondPoint);
+#endif
+
     void               NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,
                                     PRBool  aRepaint);
@@ -359,6 +366,12 @@ private:
 
     // Remember dirty area caused by ::Scroll
     QRegion mDirtyScrollArea;
+
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+    double mTouchPointDistance;
+    double mLastPinchDistance;
+    PRBool mMouseEventsDisabled;
+ #endif
 };
 
 class nsChildWindow : public nsWindow
