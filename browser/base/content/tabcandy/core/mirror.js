@@ -77,8 +77,10 @@ TabCanvas.prototype = {
     // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
     var now = getMilliseconds();
 /*     Utils.log('now', now - this.lastDraw); */
+/*
     if( this.lastDraw == null || now - this.lastDraw > this.RATE_LIMIT ){
       var startTime = getMilliseconds();
+*/
       ctx.save();
       ctx.scale(scaler, scaler);
       try{
@@ -88,10 +90,12 @@ TabCanvas.prototype = {
       }
       
       ctx.restore();
+/*
       var elapsed = (getMilliseconds()) - startTime;
       //Utils.log( this.window.location.host + " " + elapsed );
       this.lastDraw = getMilliseconds();
     }
+*/
     ctx.restore();      
   },
   
@@ -191,7 +195,7 @@ TabMirror.prototype = {
   */
           mirror.tabCanvas.paint();
   
-          if(mirror.needsPaint + 5000 < now)
+/*           if(mirror.needsPaint + 5000 < now) */
             mirror.needsPaint = 0;
         }
       }
