@@ -305,7 +305,9 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
             break;
     }
 
-    if (weightDistance > 0 && wghtSteps <= absDistance) {
+    if ((weightDistance > 0 && wghtSteps <= absDistance) ||
+        (baseWeight >= 6 && !matchFE->IsBold() &&
+          (wghtSteps - 1) <= weightDistance)) {
         aNeedsBold = PR_TRUE;
     }
 

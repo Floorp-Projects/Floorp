@@ -48,7 +48,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFont
 gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
-                             const gfxFontStyle *aFontStyle)
+                             const gfxFontStyle *aFontStyle,
+                             PRBool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle)
     , mMetrics(nsnull)
     , mCairoFontFace(nsnull)
@@ -67,8 +68,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     }
     PRInt8 baseWeight, weightDistance;
     GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-    if (((weightDistance == 0 && baseWeight >= 6) 
-        || (weightDistance > 0)) && !fe->IsBold()) {
+    if (aNeedsBold) {
         sims |= DWRITE_FONT_SIMULATIONS_BOLD;
     }
 
@@ -88,37 +88,6 @@ gfxDWriteFont::~gfxDWriteFont()
         cairo_scaled_font_destroy(mCairoScaledFont);
     }
     delete mMetrics;
-}
-
-already_AddRefed<gfxDWriteFont>
-gfxDWriteFont::GetOrMakeFont(gfxFontEntry *aFontEntry,
-                             const gfxFontStyle *aStyle,
-                             PRBool aNeedsBold)
-{
-    // because we know the FontEntry has the weight we really want, use it for 
-    // matching things in the cache so we don't end up with things like 402 in
-    // there.
-    gfxFontStyle style(*aStyle);
-
-    if (aFontEntry->mIsUserFont && !aFontEntry->IsBold()) {
-        // determine whether synthetic bolding is needed
-        PRInt8 baseWeight, weightDistance;
-        aStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-        if ((weightDistance == 0 && baseWeight >= 6) || 
-            (weightDistance > 0 && aNeedsBold)) {
-            style.weight = 700;  
-        } else {
-            style.weight = aFontEntry->mWeight;
-        }
-    } else {
-        style.weight = aFontEntry->mWeight;
-    }
-
-    nsRefPtr<gfxFont> font = aFontEntry->FindOrMakeFont(aStyle, aNeedsBold);
-
-    font->AddRef();
-    return static_cast<gfxDWriteFont*>(font.get());
 }
 
 nsString
