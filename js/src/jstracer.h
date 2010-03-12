@@ -455,7 +455,7 @@ struct VMSideExit : public nanojit::SideExit
     uint32 numStackSlotsBelowCurrentFrame;
     ExitType exitType;
     uintN lookupFlags;
-    void* recursive_pc;
+    jsbytecode* recursive_pc;
     FrameInfo* recursive_down;
     unsigned hitcount;
     unsigned slurpFailSlot;
