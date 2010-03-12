@@ -4230,11 +4230,11 @@ TraceRecorder::compile()
     }
     if (tree->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_print0(LC_TMTracer, "Blacklist: excessive stack use.\n");
-        Blacklist((jsbytecode*) fragment->root->ip);
+        Blacklist((jsbytecode*)tree->ip);
         return ARECORD_STOP;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
-        ++fragment->root->branchCount;
+        ++tree->branchCount;
     if (outOfMemory())
         return ARECORD_STOP;
 
@@ -4257,14 +4257,14 @@ TraceRecorder::compile()
     if (assm->error() != nanojit::None) {
         assm->setError(nanojit::None);
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
-        Blacklist((jsbytecode*) fragment->root->ip);
+        Blacklist((jsbytecode*)tree->ip);
         return ARECORD_STOP;
     }
 
     if (outOfMemory())
         return ARECORD_STOP;
-    ResetRecordingAttempts(cx, (jsbytecode*) fragment->ip);
-    ResetRecordingAttempts(cx, (jsbytecode*) fragment->root->ip);
+    ResetRecordingAttempts(cx, (jsbytecode*)fragment->ip);
+    ResetRecordingAttempts(cx, (jsbytecode*)tree->ip);
     if (anchor) {
 #ifdef NANOJIT_IA32
         if (anchor->exitType == CASE_EXIT)
@@ -4539,11 +4539,11 @@ JS_REQUIRES_STACK TypeConsensus
 TraceRecorder::peerTypeStability(SlotMap& slotMap, const void* ip, TreeFragment** pPeer)
 {
     /* See if there are any peers that would make this stable */
-    TreeFragment* root = fragment->root;
-    TreeFragment* peer = LookupLoop(traceMonitor, ip, root->globalObj, root->globalShape, root->argc);
+    JS_ASSERT(fragment->root == tree);
+    TreeFragment* peer = LookupLoop(traceMonitor, ip, tree->globalObj, tree->globalShape, tree->argc);
 
     /* This condition is possible with recursion */
-    JS_ASSERT_IF(!peer, fragment->root->ip != ip);
+    JS_ASSERT_IF(!peer, tree->ip != ip);
     if (!peer)
         return TypeConsensus_Bad;
     bool onlyUndemotes = false;
@@ -4600,7 +4600,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
                           "Blacklisted: stack depth mismatch, possible recursion.\n");
-        Blacklist((jsbytecode*) fragment->root->ip);
+        Blacklist((jsbytecode*)tree->ip);
         trashSelf = true;
         return ARECORD_STOP;
     }
@@ -4609,7 +4609,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
                  exit->numStackSlots == tree->nStackTypes);
     JS_ASSERT_IF(exit->exitType != UNSTABLE_LOOP_EXIT, exit->exitType == RECURSIVE_UNLINKED_EXIT);
     JS_ASSERT_IF(exit->exitType == RECURSIVE_UNLINKED_EXIT,
-                 exit->recursive_pc != fragment->root->ip);
+                 exit->recursive_pc != tree->ip);
 
     JS_ASSERT(fragment->root == tree);
 
@@ -4672,7 +4672,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
             debug_only_printf(LC_TMTracer,
                               "Joining type-unstable trace to target fragment %p.\n",
                               (void*)peer);
-            peer->dependentTrees.addUnique(fragment->root);
+            peer->dependentTrees.addUnique(tree);
             tree->linkedTrees.addUnique(peer);
         }
     } else {
@@ -4686,7 +4686,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
             lir->ins1(LIR_plive, lirbuf->state);
         }
 
-        exit->target = fragment->root;
+        exit->target = tree;
         fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
@@ -4707,7 +4707,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
     if (tree->code())
-        SpecializeTreesToMissingGlobals(cx, globalObj, fragment->root);
+        SpecializeTreesToMissingGlobals(cx, globalObj, tree);
 
     /*
      * If this is a newly formed tree, and the outer tree has not been compiled yet, we
@@ -4800,7 +4800,7 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
             /* Build the full typemap for this unstable exit */
             FullMapFromExit(typeMap, uexit->exit);
             /* Check its compatibility against this tree */
-            TypeConsensus consensus = TypeMapLinkability(cx, typeMap, fragment->root);
+            TypeConsensus consensus = TypeMapLinkability(cx, typeMap, tree);
             JS_ASSERT_IF(consensus == TypeConsensus_Okay, peer != fragment);
             if (consensus == TypeConsensus_Okay) {
                 debug_only_printf(LC_TMTracer,
@@ -5144,7 +5144,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
 {
     ExitType exitType;
-    if (IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
+    if (IsLoopEdge(pc, (jsbytecode*)tree->ip)) {
         exitType = LOOP_EXIT;
 
         /*
@@ -5190,7 +5190,7 @@ TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::checkTraceEnd(jsbytecode *pc)
 {
-    if (IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
+    if (IsLoopEdge(pc, (jsbytecode*)tree->ip)) {
         /*
          * If we compile a loop, the trace should have a zero stack balance at
          * the loop edge. Currently we are parked on a comparison op or
@@ -5202,7 +5202,7 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
             bool fused = pc != cx->fp->regs->pc;
             JSFrameRegs orig = *cx->fp->regs;
 
-            cx->fp->regs->pc = (jsbytecode*)fragment->root->ip;
+            cx->fp->regs->pc = (jsbytecode*)tree->ip;
             cx->fp->regs->sp -= fused ? 2 : 1;
 
             JSContext* localcx = cx;
@@ -6003,7 +6003,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
         return ARECORD_ABORTED;
     }
 
-    TreeFragment* outerFragment = fragment->root;
+    TreeFragment* outerFragment = tree;
     jsbytecode* outer = (jsbytecode*) outerFragment->ip;
     switch (lr->exitType) {
       case RECURSIVE_LOOP_EXIT:
@@ -9800,9 +9800,8 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         RETURN_STOP_A("recursion started inlining");
     }
 
-    TreeFragment* root = fragment->root;
-    TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), fp->regs->pc, root->globalObj,
-                                   root->globalShape, fp->argc);
+    TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), fp->regs->pc, tree->globalObj,
+                                     tree->globalShape, fp->argc);
     if (!first)
         return ARECORD_CONTINUE;
     TreeFragment* f = findNestedCompatiblePeer(first);
