@@ -97,6 +97,55 @@ NS_EXTERN_C
   NS_EXPORT const PRUnichar* test_wide_ret();
   NS_EXPORT char* test_ansi_echo(const char*);
 
+  struct ONE_BYTE {
+    char a;
+  };
+
+  struct TWO_BYTE {
+    char a;
+    char b;
+  };
+
+  struct THREE_BYTE {
+    char a;
+    char b;
+    char c;
+  };
+
+  struct FOUR_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+  };
+
+  struct FIVE_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+  };
+
+  struct SIX_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+    char f;
+  };
+
+  struct SEVEN_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+    char f;
+    char g;
+  };
+
   struct POINT {
     PRInt32 x;
     PRInt32 y;
@@ -128,5 +177,13 @@ NS_EXTERN_C
 
   NS_EXPORT PRInt32 test_nested_struct(NESTED);
   NS_EXPORT POINT test_struct_return(RECT);
+  NS_EXPORT RECT test_large_struct_return(RECT, RECT);
+  NS_EXPORT ONE_BYTE test_1_byte_struct_return(RECT);
+  NS_EXPORT TWO_BYTE test_2_byte_struct_return(RECT);
+  NS_EXPORT THREE_BYTE test_3_byte_struct_return(RECT);
+  NS_EXPORT FOUR_BYTE test_4_byte_struct_return(RECT);
+  NS_EXPORT FIVE_BYTE test_5_byte_struct_return(RECT);
+  NS_EXPORT SIX_BYTE test_6_byte_struct_return(RECT);
+  NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(RECT);
 }
 

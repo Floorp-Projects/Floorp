@@ -93,7 +93,7 @@ static JSFunctionSpec sModuleFunctions[] = {
   JS_FS_END
 };
 
-bool
+JSBool
 Module::Init(JSContext* cx, JSObject* aGlobal)
 {
   // attach ctypes property to global object

@@ -61,7 +61,7 @@ public:
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static PRLibrary* GetLibrary(JSContext* cx, JSObject* obj);
-  static bool AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction);
+  static JSBool AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction);
 
   // JSFastNative functions
   static JSBool Open(JSContext* cx, uintN argc, jsval* vp);
