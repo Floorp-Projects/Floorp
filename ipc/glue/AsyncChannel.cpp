@@ -261,6 +261,32 @@ AsyncChannel::SendSpecialMessage(Message* msg)
 }
 
 void
+AsyncChannel::OnNotifyMaybeChannelError()
+{
+    AssertWorkerThread();
+    mMutex.AssertNotCurrentThreadOwns();
+
+    // OnChannelError holds mMutex when it posts this task and this
+    // task cannot be allowed to run until OnChannelError has
+    // exited. We enforce that order by grabbing the mutex here which
+    // should only continue once OnChannelError has completed.
+    {
+        MutexAutoLock lock(mMutex);
+        // nothing to do here
+    }
+
+    if (ShouldDeferNotifyMaybeError()) {
+        mChannelErrorTask =
+            NewRunnableMethod(this, &AsyncChannel::OnNotifyMaybeChannelError);
+        // 10 ms delay is completely arbitrary
+        mWorkerLoop->PostDelayedTask(FROM_HERE, mChannelErrorTask, 10);
+        return;
+    }
+
+    NotifyMaybeChannelError();
+}
+
+void
 AsyncChannel::NotifyChannelClosed()
 {
     mMutex.AssertNotCurrentThreadOwns();
@@ -279,15 +305,6 @@ void
 AsyncChannel::NotifyMaybeChannelError()
 {
     mMutex.AssertNotCurrentThreadOwns();
-
-    // OnChannelError holds mMutex when it posts this task and this task cannot
-    // be allowed to run until OnChannelError has exited. We enforce that order
-    // by grabbing the mutex here which should only continue once OnChannelError
-    // has completed.
-    {
-        MutexAutoLock lock(mMutex);
-        // Nothing to do here!
-    }
 
     // TODO sort out Close() on this side racing with Close() on the
     // other side
@@ -436,7 +453,7 @@ AsyncChannel::OnChannelError()
 
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
-        NewRunnableMethod(this, &AsyncChannel::NotifyMaybeChannelError);
+        NewRunnableMethod(this, &AsyncChannel::OnNotifyMaybeChannelError);
     mWorkerLoop->PostTask(FROM_HERE, mChannelErrorTask);
 }
 

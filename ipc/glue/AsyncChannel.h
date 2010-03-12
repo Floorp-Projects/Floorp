@@ -161,6 +161,10 @@ protected:
 
     // Run on the worker thread
 
+    void OnNotifyMaybeChannelError();
+    virtual bool ShouldDeferNotifyMaybeError() {
+        return false;
+    }
     void NotifyChannelClosed();
     void NotifyMaybeChannelError();
 
