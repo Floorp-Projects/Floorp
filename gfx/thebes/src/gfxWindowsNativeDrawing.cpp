@@ -116,6 +116,10 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         if (mRenderState == RENDER_STATE_INIT) {
             mRenderState = RENDER_STATE_ALPHA_RECOVERY_BLACK;
 
+            // We round out our native rect here, that way the snapping will
+            // happen correctly.
+            mNativeRect.RoundOut();
+
             // we only do the scale bit if we can do an axis aligned
             // scale; otherwise we scale (if necessary) after
             // rendering with cairo.  Note that if we're doing alpha recovery,
@@ -282,8 +286,6 @@ gfxWindowsNativeDrawing::PaintToContext()
         nsRefPtr<gfxImageSurface> white = mWhiteSurface->GetImageSurface();
         nsRefPtr<gfxImageSurface> alphaSurface =
             gfxAlphaRecovery::RecoverAlpha(black, white, mTempSurfaceSize);
-
-        mNativeRect.Round();
 
         mContext->Save();
         mContext->Translate(mNativeRect.pos);
