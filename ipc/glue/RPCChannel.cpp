@@ -394,18 +394,7 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
     // mRemoteStackDepthGuess in RPCChannel.h.  "Remote" stack depth
     // means our side, and "local" means other side.
     if (call.rpc_remote_stack_depth_guess() != stackDepth) {
-        //NS_WARNING("RPC in-calls have raced!");
-#ifndef OS_WIN
-        RPC_ASSERT(call.rpc_remote_stack_depth_guess() < stackDepth,
-                   "fatal logic error");
-        RPC_ASSERT(1 == (stackDepth - call.rpc_remote_stack_depth_guess()),
-                   "got more than 1 RPC message out of sync???");
-        RPC_ASSERT(1 == (call.rpc_local_stack_depth() - mRemoteStackDepthGuess),
-                   "RPC unexpected not symmetric");
-#else
-        // See WindowsEventLoop, windows can race heavily when modal ui
-        // loops are displayed by plugins.
-#endif
+        // RPC in-calls have raced.
         // the "winner", if there is one, gets to defer processing of
         // the other side's in-call
         bool defer;
