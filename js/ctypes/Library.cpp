@@ -118,23 +118,30 @@ Library::Create(JSContext* cx, jsval aPath)
     libSpec.type = PR_LibSpec_Pathname;
 #endif
     library = PR_LoadLibraryWithFlags(libSpec, 0);
-    if (!library)
+    if (!library) {
+      JS_ReportError(cx, "couldn't open library");
       return NULL;
+    }
 
-  } else if (JSVAL_IS_OBJECT(aPath)) {
+  } else if (!JSVAL_IS_PRIMITIVE(aPath)) {
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
 
     nsISupports* file = xpc->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(aPath));
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file);
-    if (!localFile)
+    if (!localFile) {
+      JS_ReportError(cx, "open takes a string or nsIFile argument");
       return NULL;
+    }
 
     rv = localFile->Load(&library);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      JS_ReportError(cx, "couldn't open library");
       return NULL;
+    }
 
   } else {
     // don't convert the argument
+    JS_ReportError(cx, "open takes a string or nsIFile argument");
     return NULL;
   }
 
@@ -166,13 +173,13 @@ GetFunctionList(JSContext* cx, JSObject* obj)
   return static_cast<Function*>(JSVAL_TO_PRIVATE(slot));
 }
 
-bool
+JSBool
 Library::AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction)
 {
   // add the new Function instance to the head of the list
   aFunction->Next() = GetFunctionList(cx, aLibrary);
   return JS_SetReservedSlot(cx, aLibrary, SLOT_FUNCTIONLIST,
-           PRIVATE_TO_JSVAL(aFunction)) != JS_FALSE;
+           PRIVATE_TO_JSVAL(aFunction));
 }
 
 void
@@ -213,10 +220,8 @@ Library::Open(JSContext* cx, uintN argc, jsval *vp)
   }
 
   JSObject* library = Create(cx, JS_ARGV(cx, vp)[0]);
-  if (!library) {
-    JS_ReportError(cx, "couldn't open library");
+  if (!library)
     return JS_FALSE;
-  }
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(library));
   return JS_TRUE;
@@ -273,6 +278,9 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
   }
 
   const char* name = JS_GetStringBytesZ(cx, JSVAL_TO_STRING(argv[0]));
+  if (!name)
+    return JS_FALSE;
+
   PRFuncPtr func = PR_FindFunctionSymbol(library, name);
   if (!func) {
     JS_ReportError(cx, "couldn't find function symbol in library");

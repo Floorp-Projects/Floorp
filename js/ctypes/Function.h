@@ -66,7 +66,7 @@ struct AutoValue
 
   ~AutoValue()
   {
-    delete static_cast<char*>(mData);
+    delete[] static_cast<char*>(mData);
   }
 
   bool SizeToType(JSContext* cx, JSObject* type)
@@ -95,8 +95,8 @@ public:
   ~Function();
 
 private:
-  bool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  bool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
+  JSBool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  JSBool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
 
 protected:
   PRFuncPtr mFunc;

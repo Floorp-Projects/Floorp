@@ -53,7 +53,7 @@ namespace ctypes {
 static bool
 GetABI(JSContext* cx, jsval aCallType, ffi_abi& aResult)
 {
-  if (!JSVAL_IS_OBJECT(aCallType) || JSVAL_IS_NULL(aCallType))
+  if (JSVAL_IS_PRIMITIVE(aCallType))
     return false;
 
   ABICode abi = GetABICode(cx, JSVAL_TO_OBJECT(aCallType));
@@ -76,11 +76,10 @@ GetABI(JSContext* cx, jsval aCallType, ffi_abi& aResult)
   return false;
 }
 
-static bool
+static JSBool
 PrepareType(JSContext* aContext, jsval aType, Type& aResult)
 {
-  if (!JSVAL_IS_OBJECT(aType) ||
-      JSVAL_IS_NULL(aType) ||
+  if (JSVAL_IS_PRIMITIVE(aType) ||
       !CType::IsCType(aContext, JSVAL_TO_OBJECT(aType))) {
     JS_ReportError(aContext, "not a ctypes type");
     return false;
@@ -94,10 +93,9 @@ PrepareType(JSContext* aContext, jsval aType, Type& aResult)
     // ImplicitConvert will do the same, when passing an array as data.
     JSObject* baseType = ArrayType::GetBaseType(aContext, typeObj);
     typeObj = PointerType::CreateInternal(aContext, NULL, baseType, NULL);
-    if (!typeObj) {
-      JS_ReportError(aContext, "couldn't create pointer type from array");
+    if (!typeObj)
       return false;
-    }
+
   } else if (typeCode == TYPE_void_t) {
     // disallow void argument types
     JS_ReportError(aContext, "Cannot have void argument type");
@@ -112,11 +110,10 @@ PrepareType(JSContext* aContext, jsval aType, Type& aResult)
   return true;
 }
 
-static bool
+static JSBool
 PrepareResultType(JSContext* aContext, jsval aType, Type& aResult)
 {
-  if (!JSVAL_IS_OBJECT(aType) ||
-      JSVAL_IS_NULL(aType) ||
+  if (JSVAL_IS_PRIMITIVE(aType) ||
       !CType::IsCType(aContext, JSVAL_TO_OBJECT(aType))) {
     JS_ReportError(aContext, "not a ctypes type");
     return false;
@@ -130,15 +127,6 @@ PrepareResultType(JSContext* aContext, jsval aType, Type& aResult)
     JS_ReportError(aContext, "Result type cannot be an array");
     return false;
   }
-
-#ifdef _MSC_VER
-  // Our libffi_msvc fork doesn't support returning structs by value yet.
-  if (typeCode == TYPE_struct) {
-    JS_ReportError(aContext,
-      "Returning structs by value is unsupported on Windows");
-    return false;
-  }
-#endif
 
   // libffi cannot pass types of zero size by value.
   JS_ASSERT(typeCode == TYPE_void_t || CType::GetSize(aContext, typeObj) != 0);
@@ -161,7 +149,7 @@ Function::~Function()
 {
 }
 
-bool
+JSBool
 Function::Init(JSContext* aContext,
                PRFuncPtr aFunc,
                jsval aCallType,
@@ -208,7 +196,7 @@ Function::Init(JSContext* aContext,
   }
 }
 
-bool
+JSBool
 Function::Execute(JSContext* cx, PRUint32 argc, jsval* vp)
 {
   if (argc != mArgTypes.Length()) {
@@ -290,8 +278,10 @@ Function::Create(JSContext* aContext,
 {
   // create new Function instance
   nsAutoPtr<Function> self(new Function());
-  if (!self)
+  if (!self) {
+    JS_ReportOutOfMemory(aContext);
     return NULL;
+  }
 
   // deduce and check the ABI and parameter types
   if (!self->Init(aContext, aFunc, aCallType, aResultType, aArgTypes, aArgLength))

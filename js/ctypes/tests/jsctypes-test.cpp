@@ -228,3 +228,88 @@ test_struct_return(RECT r)
   return p;
 }
 
+RECT
+test_large_struct_return(RECT a, RECT b)
+{
+  RECT r;
+  r.left = a.left; r.right = a.right;
+  r.top = b.top; r.bottom = b.bottom;
+  return r;
+}
+
+ONE_BYTE
+test_1_byte_struct_return(RECT r)
+{
+  ONE_BYTE s;
+  s.a = r.top;
+  return s;
+}
+
+TWO_BYTE
+test_2_byte_struct_return(RECT r)
+{
+  TWO_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  return s;
+}
+
+THREE_BYTE
+test_3_byte_struct_return(RECT r)
+{
+  THREE_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  s.c = r.bottom;
+  return s;
+}
+
+FOUR_BYTE
+test_4_byte_struct_return(RECT r)
+{
+  FOUR_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  s.c = r.bottom;
+  s.d = r.right;
+  return s;
+}
+
+FIVE_BYTE
+test_5_byte_struct_return(RECT r)
+{
+  FIVE_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  s.c = r.bottom;
+  s.d = r.right;
+  s.e = r.top;
+  return s;
+}
+
+SIX_BYTE
+test_6_byte_struct_return(RECT r)
+{
+  SIX_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  s.c = r.bottom;
+  s.d = r.right;
+  s.e = r.top;
+  s.f = r.left;
+  return s;
+}
+
+SEVEN_BYTE
+test_7_byte_struct_return(RECT r)
+{
+  SEVEN_BYTE s;
+  s.a = r.top;
+  s.b = r.left;
+  s.c = r.bottom;
+  s.d = r.right;
+  s.e = r.top;
+  s.f = r.left;
+  s.g = r.bottom;
+  return s;
+}
