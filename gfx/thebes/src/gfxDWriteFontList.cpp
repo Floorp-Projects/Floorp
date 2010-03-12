@@ -301,9 +301,9 @@ gfxDWriteFontEntry::ReadCMAP()
 
 gfxFont *
 gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
-                                       PRBool /*aNeedsBold*/)
+                                       PRBool aNeedsBold)
 {
-    return new gfxDWriteFont(this, aFontStyle);
+    return new gfxDWriteFont(this, aFontStyle, aNeedsBold);
 }
 
 nsresult
