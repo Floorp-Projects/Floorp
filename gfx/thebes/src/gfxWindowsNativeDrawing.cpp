@@ -215,7 +215,7 @@ gfxWindowsNativeDrawing::IsDoublePass()
     nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
     if (!surf || surf->CairoStatus())
         return false;
-    if (surf->GetType() != gfxASurface::SurfaceTypeWin32 ||
+    if (surf->GetType() != gfxASurface::SurfaceTypeWin32 &&
 	surf->GetType() != gfxASurface::SurfaceTypeWin32Printing) {
 	return PR_TRUE;
     }
