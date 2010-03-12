@@ -492,43 +492,41 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * grabbed safely.
      */
     LIns* rval_ins;
-    if (*cx->fp->regs->pc == JSOP_RETURN) {
-        TraceType returnType = exit->stackTypeMap()[downPostSlots];
-        if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-            rval_ins = get(&stackval(-1));
-            if (returnType == TT_INT32) {
-                JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
-                JS_ASSERT(isPromoteInt(rval_ins));
-                rval_ins = demote(lir, rval_ins);
-            }
-            /*
-             * The return value must be written out early, before slurping can fail,
-             * otherwise it will not be available when there's a type mismatch.
-             */
-            lir->insStorei(rval_ins, lirbuf->sp, exit->sp_adj - sizeof(double));
-        } else {
-            switch (returnType)
-            {
-              case TT_PSEUDOBOOLEAN:
-              case TT_INT32:
-                rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, exit->sp_adj - sizeof(double));
-                break;
-              case TT_DOUBLE:
-                rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, exit->sp_adj - sizeof(double));
-                break;
-              case TT_FUNCTION:
-              case TT_OBJECT:
-              case TT_STRING:
-              case TT_NULL:
-                rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, exit->sp_adj - sizeof(double));
-                break;
-              default:
-                JS_NOT_REACHED("unknown type");
-                RETURN_STOP_A("unknown type"); 
-            }
+    intptr_t offset = exit->sp_adj - sizeof(double);
+    TraceType returnType = exit->stackTypeMap()[downPostSlots];
+
+    if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
+        rval_ins = get(&stackval(-1));
+        if (returnType == TT_INT32) {
+            JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
+            JS_ASSERT(isPromoteInt(rval_ins));
+            rval_ins = demote(lir, rval_ins);
         }
+        /*
+         * The return value must be written out early, before slurping can fail,
+         * otherwise it will not be available when there's a type mismatch.
+         */
+        lir->insStorei(rval_ins, lirbuf->sp, offset);
     } else {
-        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        switch (returnType)
+        {
+          case TT_PSEUDOBOOLEAN:
+          case TT_INT32:
+            rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, offset);
+            break;
+          case TT_DOUBLE:
+            rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, offset);
+            break;
+          case TT_FUNCTION:
+          case TT_OBJECT:
+          case TT_STRING:
+          case TT_NULL:
+            rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, offset);
+            break;
+          default:
+            JS_NOT_REACHED("unknown type");
+            RETURN_STOP_A("unknown type"); 
+        }
     }
 
     /* Slurp */
