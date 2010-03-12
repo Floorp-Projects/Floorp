@@ -176,6 +176,11 @@ protected:
         return static_cast<RPCListener*>(mListener);
     }
 
+    NS_OVERRIDE
+    virtual bool ShouldDeferNotifyMaybeError() {
+        return 0 < mCxxStackFrames;
+    }
+
     bool EventOccurred();
 
     void MaybeProcessDeferredIncall();
