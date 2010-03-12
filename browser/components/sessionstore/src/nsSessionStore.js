@@ -694,7 +694,7 @@ SessionStoreService.prototype = {
     if (!isFullyLoaded) {
       if (!aWindow.__SSi)
         aWindow.__SSi = "window" + Date.now();
-      this._window[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
+      this._windows[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
     }
