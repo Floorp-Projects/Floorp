@@ -924,14 +924,6 @@ public:
    */
   PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
-#ifdef MOZ_SMIL
-  /**
-   * Indicates that the given element's SMIL Override Style has changed,
-   * and as a result, we need to update our display.
-   */
-  void SMILOverrideStyleChanged(nsIContent* aContent);
-#endif // MOZ_SMIL
-
   /**
    * If we have a presshell, and if the given content's current
    * document is the same as our presshell's document, return the
