@@ -2740,20 +2740,20 @@ void FlipSlashes(char *cp, int len)
 **
 */
 
-PRStatus
+PRInt32
 _PR_MD_CLOSE_DIR(_MDDir *d)
 {
     if ( d ) {
         if (FindClose( d->d_hdl )) {
             d->magic = (PRUint32)-1;
-            return PR_SUCCESS;
+            return 0;
         } else {
             _PR_MD_MAP_CLOSEDIR_ERROR(GetLastError());
-            return PR_FAILURE;
+            return -1;
         }
     }
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-    return PR_FAILURE;
+    return -1;
 }
 
 

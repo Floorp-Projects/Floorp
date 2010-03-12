@@ -314,18 +314,41 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         if ( JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) )
         {
           jsval v2;
-          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ) && !JSVAL_IS_VOID(v2))
-            URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ) && !JSVAL_IS_VOID(v2)) {
+            JSString *str = JS_ValueToString(cx, v2);
+            if (!str) {
+              abortLoad = PR_TRUE;
+              break;
+            }
+            URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
+          }
 
-          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ) && !JSVAL_IS_VOID(v2))
-            iconURL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ) && !JSVAL_IS_VOID(v2)) {
+            JSString *str = JS_ValueToString(cx, v2);
+            if (!str) {
+              abortLoad = PR_TRUE;
+              break;
+            }
+            iconURL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
+          }
 
-          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2))
-            hash = reinterpret_cast<const char*>(JS_GetStringBytes( JS_ValueToString( cx, v2 ) ));
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2)) {
+            JSString *str = JS_ValueToString(cx, v2);
+            if (!str) {
+              abortLoad = PR_TRUE;
+              break;
+            }
+            hash = reinterpret_cast<const char*>(JS_GetStringBytes(str));
+          }
         }
         else
         {
-          URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v ) ));
+          JSString *str = JS_ValueToString(cx, v);
+          if (!str) {
+            abortLoad = PR_TRUE;
+            break;
+          }
+          URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
         }
 
         if ( URL )

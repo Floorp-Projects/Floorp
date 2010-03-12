@@ -800,17 +800,6 @@ toolbar[iconsize="small"] #fullscreen-button {
   display: none;
 }
 
-#urlbar-display {
-  margin-top: -2px;
-  margin-bottom: -2px;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  -moz-padding-end: 3px;
-  color: GrayText;
-  -moz-border-end: 1px solid #AAA;
-  -moz-margin-end: 3px;
-}
-
 #PopupAutoComplete,
 #PopupAutoCompleteRichResult {
   direction: ltr !important;
@@ -853,7 +842,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 /* Identity indicator */
 #identity-box {
-  background-color: -moz-dialog;
+  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
   color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
 }
@@ -866,13 +855,13 @@ toolbar[iconsize="small"] #fullscreen-button {
   outline: 1px dotted -moz-DialogText;
 }
 
-#identity-box:hover > #identity-box-inner {
-  background-color: rgba(255, 255, 255, .2);
+#identity-box:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
-#identity-box:hover:active > #identity-box-inner,
-#identity-box[open="true"] > #identity-box-inner {
-  background-color: rgba(0, 0, 0, .1);
+#identity-box:hover:active,
+#identity-box[open="true"] {
+  background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
 #identity-icon-labels {
@@ -1007,10 +996,6 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 .ac-url-text {
   color: -moz-nativehyperlinktext;
-}
-
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
-  list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {

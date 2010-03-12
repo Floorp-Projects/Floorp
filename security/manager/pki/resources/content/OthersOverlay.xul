@@ -45,8 +45,13 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="othersCerts">
-    <description>&certmgr.others;</description>
-    <separator class="thin"/>
+    <hbox>
+      <vbox>
+        <label id="others-searchlabel">&certmgr.others.search;</label>
+      </vbox>
+      <textbox type="search" flex="1" id="others-search" oncommand="emailTreeView.search(this)"/>
+    </hbox>
+    <description id="others-description">&certmgr.others.description;</description>
     <tree id="email-tree" flex="1"
               onselect="email_enableButtons()">
       <treecols>

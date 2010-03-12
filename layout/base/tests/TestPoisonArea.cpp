@@ -486,7 +486,8 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
         if (should_succeed) {
           printf("TEST-PASS | %s %s\n", oplabel, pagelabel);
         } else {
-          printf("TEST-UNEXPECTED-FAIL | %s %s\n", oplabel, pagelabel);
+          printf("TEST-UNEXPECTED-FAIL | %s %s | unexpected successful exit\n",
+                 oplabel, pagelabel);
           failed = true;
         }
       } else if (WIFEXITED(status)) {
@@ -495,12 +496,12 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
         exit(2);
       } else if (WIFSIGNALED(status)) {
         if (should_succeed) {
-          printf("TEST-UNEXPECTED-FAIL | %s %s | %s\n",
-                 oplabel, pagelabel, strsignal(WTERMSIG(status)));
+          printf("TEST-UNEXPECTED-FAIL | %s %s | unexpected signal %d\n",
+                 oplabel, pagelabel, WTERMSIG(status));
           failed = true;
         } else {
-          printf("TEST-PASS | %s %s | %s\n",
-                 oplabel, pagelabel, strsignal(WTERMSIG(status)));
+          printf("TEST-PASS | %s %s | signal %d (as expected)\n",
+                 oplabel, pagelabel, WTERMSIG(status));
         }
       } else {
         printf("ERROR | %s %s | unexpected exit status %d\n",

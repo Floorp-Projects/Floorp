@@ -933,6 +933,17 @@ public:
       return NS_ERROR_ABORT;
     }
 
+    // If the worker is suspended and we're running on the main thread then we
+    // can't actually dispatch the event yet. Instead we queue it for whenever
+    // we resume.
+    if (mWorker->IsSuspended() && NS_IsMainThread()) {
+      if (!mWorker->QueueSuspendedRunnable(this)) {
+        NS_ERROR("Out of memory?!");
+        return NS_ERROR_ABORT;
+      }
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMEventTarget> target = mToInner ?
       static_cast<nsDOMWorkerMessageHandler*>(mWorker->GetInnerScope()) :
       static_cast<nsDOMWorkerMessageHandler*>(mWorker);
@@ -1044,6 +1055,7 @@ nsDOMWorker::~nsDOMWorker()
   }
 
   NS_ASSERTION(!mFeatures.Length(), "Live features!");
+  NS_ASSERTION(!mQueuedRunnables.Length(), "Events that never ran!");
 
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
@@ -1349,6 +1361,9 @@ nsDOMWorker::Kill()
     features[index]->Cancel();
   }
 
+  // Make sure we kill any queued runnables that we never had a chance to run.
+  mQueuedRunnables.Clear();
+
   // We no longer need to keep our inner scope.
   mInnerScope = nsnull;
   mScopeWN = nsnull;
@@ -1400,6 +1415,13 @@ nsDOMWorker::Resume()
   if (shouldResumeFeatures) {
     ResumeFeatures();
   }
+
+  // Repost any events that were queued for the main thread while suspended.
+  PRUint32 count = mQueuedRunnables.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_DispatchToCurrentThread(mQueuedRunnables[index]);
+  }
+  mQueuedRunnables.Clear();
 }
 
 PRBool
@@ -1933,6 +1955,13 @@ nsDOMWorker::GetExpirationTime()
   return mExpirationTime;
 }
 #endif
+
+PRBool
+nsDOMWorker::QueueSuspendedRunnable(nsIRunnable* aRunnable)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  return mQueuedRunnables.AppendElement(aRunnable) ? PR_TRUE : PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsDOMWorker::AddEventListener(const nsAString& aType,

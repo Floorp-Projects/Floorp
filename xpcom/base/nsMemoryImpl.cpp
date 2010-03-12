@@ -168,7 +168,7 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void **aResult)
 nsresult
 nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (aImmediate) {
         // They've asked us to run the flusher *immediately*. We've

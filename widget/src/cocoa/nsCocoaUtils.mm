@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfxImageSurface.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuBarX.h"
 #include "nsCocoaWindow.h"
@@ -243,3 +244,84 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+
+nsresult nsCocoaUtils::CreateCGImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, CGImageRef *aResult)
+{
+  nsRefPtr<gfxImageSurface> frame;
+  nsresult rv = aImage->CopyFrame(aWhichFrame,
+                                  imgIContainer::FLAG_SYNC_DECODE,
+                                  getter_AddRefs(frame));
+  if (NS_FAILED(rv) || !frame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 width = frame->Width();
+  PRInt32 stride = frame->Stride();
+  PRInt32 height = frame->Height();
+  if ((stride % 4 != 0) || (height < 1) || (width < 1)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a CGImageRef with the bits from the image, taking into account
+  // the alpha ordering and endianness of the machine so we don't have to
+  // touch the bits ourselves.
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(NULL,
+                                                                  frame->Data(),
+                                                                  stride * height,
+                                                                  NULL);
+  CGColorSpaceRef colorSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+  *aResult = ::CGImageCreate(width,
+                             height,
+                             8,
+                             32,
+                             stride,
+                             colorSpace,
+                             kCGBitmapByteOrder32Host | kCGImageAlphaFirst,
+                             dataProvider,
+                             NULL,
+                             0,
+                             kCGRenderingIntentDefault);
+  ::CGColorSpaceRelease(colorSpace);
+  ::CGDataProviderRelease(dataProvider);
+  return *aResult ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage **aResult)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  PRInt32 width = ::CGImageGetWidth(aInputImage);
+  PRInt32 height = ::CGImageGetHeight(aInputImage);
+  NSRect imageRect = ::NSMakeRect(0.0, 0.0, width, height);
+
+  // Create a new image to receive the Quartz image data.
+  *aResult = [[NSImage alloc] initWithSize:imageRect.size];
+
+  [*aResult lockFocus];
+
+  // Get the Quartz context and draw.
+  CGContextRef imageContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  ::CGContextDrawImage(imageContext, *(CGRect*)&imageRect, aInputImage);
+
+  [*aResult unlockFocus];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult)
+{
+  CGImageRef imageRef = NULL;
+  nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(aImage, aWhichFrame, &imageRef);
+  if (NS_FAILED(rv) || !imageRef) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = nsCocoaUtils::CreateNSImageFromCGImage(imageRef, aResult);
+  if (NS_FAILED(rv) || !aResult) {
+    return NS_ERROR_FAILURE;
+  }
+  ::CGImageRelease(imageRef);
+  return NS_OK;
+}
+

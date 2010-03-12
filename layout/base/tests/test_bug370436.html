@@ -63,13 +63,13 @@ function startTest()
 	synthesizeKey("VK_UP", {})
 	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
 
-	is(words.pop(), "welcome");	
-	is(words.pop(), "world");	
-	is(words.pop(), "hello");	
-	is(words.pop(), "hello");	
-	is(words.pop(), "sheep");	
-	is(words.pop(), "sheep");	
-	is(words.pop(), "sheep");
+	is(words.pop(), "welcome", "Word 1 selected correctly");	
+	is(words.pop(), "world"  , "Word 2 selected correctly");	
+	is(words.pop(), "hello"  , "Word 3 selected correctly");	
+	is(words.pop(), "hello"  , "Word 4 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 5 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 6 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 7 selected correctly");
 
 	SimpleTest.finish();
 }

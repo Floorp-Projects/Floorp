@@ -93,6 +93,13 @@ class PluginInstanceChild;
 class PluginModuleChild : public PPluginModuleChild
 {
 protected:
+    NS_OVERRIDE
+    virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
+    MediateRPCRace(const Message& parent, const Message& child)
+    {
+        return MediateRace(parent, child);
+    }
+
     // Implement the PPluginModuleChild interface
     virtual bool AnswerNP_Initialize(NPError* rv);
 

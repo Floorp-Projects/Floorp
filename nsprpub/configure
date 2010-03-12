@@ -695,7 +695,7 @@ test "$host_alias" != "$target_alias" &&
 
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=4
+MOD_PATCH_VERSION=5
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -3575,6 +3575,7 @@ EOF
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
+        ASFLAGS="$ASFLAGS -x assembler-with-cpp"
     fi
 
     if test -n "$MOZILLA_CLIENT"; then
@@ -4180,8 +4181,7 @@ EOF
 EOF
 
 
-    AR='lib -NOLOGO -OUT:"$@"'
-    AR_FLAGS=
+    AR_FLAGS='-NOLOGO -OUT:"$@"'
 
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
@@ -4196,7 +4196,7 @@ EOF
     LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
 
     DLLFLAGS='-OUT:"$@"'
-    if test -n "$MOZ_DEBUG_SYMBOLS"; then
+    if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
         OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
         DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
@@ -5367,10 +5367,13 @@ case "$target_os" in
 darwin*)
     _HAVE_PTHREADS=1
     ;;
+wince*)
+    _HAVE_PTHREADS=
+    ;;
 *)
     
 echo $ac_n "checking for pthread_create in -lpthreads""... $ac_c" 1>&6
-echo "configure:5374: checking for pthread_create in -lpthreads" >&5
+echo "configure:5377: checking for pthread_create in -lpthreads" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5392,7 +5395,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
-echo "configure:5396: checking for pthread_create in -lpthread" >&5
+echo "configure:5399: checking for pthread_create in -lpthread" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5414,7 +5417,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lc_r""... $ac_c" 1>&6
-echo "configure:5418: checking for pthread_create in -lc_r" >&5
+echo "configure:5421: checking for pthread_create in -lc_r" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5436,7 +5439,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lc""... $ac_c" 1>&6
-echo "configure:5440: checking for pthread_create in -lc" >&5
+echo "configure:5443: checking for pthread_create in -lc" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5568,7 +5571,7 @@ if test -n "$USE_PTHREADS"; then
       rm -f conftest*
    ac_cv_have_dash_pthread=no
    echo $ac_n "checking whether ${CC-cc} accepts -pthread""... $ac_c" 1>&6
-echo "configure:5572: checking whether ${CC-cc} accepts -pthread" >&5
+echo "configure:5575: checking whether ${CC-cc} accepts -pthread" >&5
    echo 'int main() { return 0; }' | cat > conftest.c
    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
    if test $? -eq 0; then
@@ -5591,7 +5594,7 @@ echo "configure:5572: checking whether ${CC-cc} accepts -pthread" >&5
 			    ac_cv_have_dash_pthreads=no
     if test "$ac_cv_have_dash_pthread" = "no"; then
 	    echo $ac_n "checking whether ${CC-cc} accepts -pthreads""... $ac_c" 1>&6
-echo "configure:5595: checking whether ${CC-cc} accepts -pthreads" >&5
+echo "configure:5598: checking whether ${CC-cc} accepts -pthreads" >&5
     	echo 'int main() { return 0; }' | cat > conftest.c
 	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
     	if test $? -eq 0; then
@@ -5879,7 +5882,7 @@ if test -n "$MOZ_OPTIMIZE"; then
     CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
 fi
 
-if test -n "$MOZ_DEBUG"; then
+if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
     CFLAGS="$CFLAGS $_DEBUG_FLAGS"
     CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
 fi

@@ -46,11 +46,23 @@
 <!ENTITY certmgr.ca.builtins                  "Built-in CAs">
 <!ENTITY certmgr.ca.mycas                     "CAs Managed By You">
 
-<!ENTITY certmgr.mine                         "You have certificates from these organizations that identify you:">
-<!ENTITY certmgr.others                       "You have certificates on file that identify these people:">
-<!ENTITY certmgr.websites2                    "You have certificates on file that identify these servers:">
-<!ENTITY certmgr.cas                          "You have certificates on file that identify these certificate authorities:">
-<!ENTITY certmgr.orphans                      "You have certificates on file that do not fit in any of the other categories:">
+<!ENTITY certmgr.mine.search                  "Search:">
+<!ENTITY certmgr.others.search                "Search:">
+<!ENTITY certmgr.websites.search              "Search:">
+<!ENTITY certmgr.cas.search                   "Search:">
+<!ENTITY certmgr.orphans.search               "Search:">
+
+<!ENTITY certmgr.mine.description             "You have certificates from these organizations that identify you:">
+<!ENTITY certmgr.others.description           "You have certificates on file that identify these people:">
+<!ENTITY certmgr.websites.description         "You have certificates on file that identify these servers:">
+<!ENTITY certmgr.cas.description              "You have certificates on file that identify these certificate authorities:">
+<!ENTITY certmgr.orphans.description          "You have certificates on file that do not fit in any of the other categories:">
+
+<!ENTITY certmgr.mine.filtered                "Matching certificates from these organizations that identify you:">
+<!ENTITY certmgr.others.filtered              "Matching certificates on file that identify these people:">
+<!ENTITY certmgr.websites.filtered            "Matching certificates on file that identify these servers:">
+<!ENTITY certmgr.cas.filtered                 "Matching certificates on file that identify these certificate authorities:">
+<!ENTITY certmgr.orphans.filtered             "Matching certificates on file that do not fit in any of the other categories:">
 
 <!ENTITY certmgr.detail.general_tab.title     "General">
 <!ENTITY certmgr.detail.general_tab.accesskey "G">

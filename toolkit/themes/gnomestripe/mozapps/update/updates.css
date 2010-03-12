@@ -1,93 +1,72 @@
-/**
- * General
- */
-.wizard-button[heed="true"] {
-  font-weight: bold;
+/* General */
+/* Specify the size for the wizardpage so the billboard has a fixed size. 3rd
+   party themes should typically specify the same values. */
+wizardpage {
+  height: 360px;
+  width: 700px;
 }
 
-.wizard-button > .button-box {
-  padding-left: 15px !important;
-  padding-right: 15px !important;
+/* Remove margin and padding so the billboard will extend to the edge of the
+   window. 3rd party themes should typically specify the same values. */
+#updates, .wizard-page-box {
+  margin: 0;
+  padding: 0;
 }
 
-link {
-  color: -moz-nativehyperlinktext;
-  border: 1px solid transparent;
-  margin-top: 1px;
-  margin-bottom: 4px;
-  -moz-margin-start: 5px;
-  -moz-margin-end: 5px;
-  text-decoration: underline !important;
+.update-content {
+  padding: 10px;
 }
 
-link > label {
-  margin: 0px;
-  padding: 1px;
-  text-decoration: underline !important;
-}
-
-link:focus {
-  border: 1px dotted -moz-DialogText;
-}
-
-remotecontent {
-  margin-top: 1px;
-  margin-bottom: 2px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
-  -moz-appearance: listbox;
-  padding-bottom: 1px;
-}
-
-/**
- * License Page
- */
 .loadingBox {
   padding: 3px 5px 3px 5px;
 }
+
 .remoteLoadingThrobber {
   margin-top: 3px;
 }
+
 .remoteLoadingThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
+
 .remoteLoadingThrobber[state="error"] {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
-/**
- * Update Found Page
- */
-#moreDetails {
-  margin: 1px 5px 4px 3px;
+.wizard-buttons-separator {
+  margin-top: 0 !important;
 }
 
-#updateForMoreInfo {
-  margin-left: 5px;
+#updates[currentpageid="updatesfoundbasic"] .wizard-button[dlgtype="next"],
+#updates[currentpageid="updatesfoundbillboard"] .wizard-button[dlgtype="next"],
+#updates[currentpageid="finished"] .wizard-button[dlgtype="finish"],
+#updates[currentpageid="finishedBackground"] .wizard-button[dlgtype="finish"] {
+  font-weight: bold;
 }
 
+#licenseContent, #incompatibleListbox {
+  -moz-margin-start: 6px;
+  -moz-margin-end: 6px;
+}
+
+/* Update Found Basic Page */
 #updateName, #updateFinishedName {
   font-weight: bold;
   font-size: larger;
 }
 
-#alertImage {
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dnd");
-  margin-right: 5px;
+/* License Page */
+#licenseContent {
+  -moz-appearance: listbox;
 }
 
-#incompatibleWarning {
-  background-color: InfoBackground;
-  color: InfoText;
-  border: 1px solid ThreeDShadow;
-  padding: 3px;
-  margin: 1px 5px 4px 5px;
+/* Incompatible List Page */
+#incompatibleListbox {
+  margin-bottom: 6px;
 }
 
-/**
- * Downloading Page
- */
-#downloadStatusTop, #downloadStatusLine {
+/* Downloading Page */
+#downloadStatusLine {
   -moz-box-align: center;
 }
 
@@ -95,17 +74,8 @@ remotecontent {
   height: 3em !important;
 }
 
-#downloadThrobber {
-  margin-left: 5px;
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-
 #downloadStatusProgress {
   padding-right: 5px;
-}
-
-#downloadThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 #pauseButton {
@@ -113,10 +83,10 @@ remotecontent {
   -moz-appearance: none;
   background-color: transparent;
   border: none;
-  padding: 0;
-  margin: 0;
   min-width: 0;
   min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 /* !Important must be used otherwise this won't immediately take affect */
@@ -141,9 +111,7 @@ remotecontent {
   list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
 }
 
-/**
- * Error Page
- */
+/* Error Page */
 #errorReason {
   margin-top: 1px;
   margin-bottom: 2px;
@@ -152,9 +120,7 @@ remotecontent {
   font-weight: bold;
 }
 
-/**
- * Update History Window
- */
+/* Update History Window */
 update {
   border-bottom: 1px dotted #C0C0C0;
 }
@@ -165,10 +131,6 @@ update {
 
 .update-label-column {
   -moz-box-align: end;
-}
-
-.update-details-link {
-  margin: 0px;
 }
 
 .update-type {
@@ -184,10 +146,4 @@ update {
 
 #historyItems > scrollbox {
   margin-bottom: 1px;
-}
-
-.updatePrefsInfo {
-  font-size: smaller;
-  margin-left: 27px;
-  margin-bottom: 10px;
 }
