@@ -69,7 +69,7 @@ tabpanels {
 tab {
   position: relative;
   -moz-appearance: tab;
-  margin-top: 2px;
+  margin-top: 1px;
   border: 2px solid;
   border-bottom: none;
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
