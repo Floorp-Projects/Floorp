@@ -34,7 +34,7 @@ function runTest() {
     SimpleTest.finish();
   }
 
-  testFrame.src = "jar:http://example.org:80/tests/modules/libjar/test/mochitest/openredirect.sjs?http://localhost:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
+  testFrame.src = "jar:http://example.org:80/tests/modules/libjar/test/mochitest/openredirect.sjs?http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
 }
 
 addLoadEvent(runTest);

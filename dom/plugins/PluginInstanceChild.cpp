@@ -75,11 +75,11 @@ using mozilla::gfx::SharedDIB;
 #endif // defined(OS_WIN)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
-                                         const nsCString& aMimeType) :
-    mPluginIface(aPluginIface)
+                                         const nsCString& aMimeType)
+    : mPluginIface(aPluginIface)
+    , mQuirks(0)
     , mCachedWindowActor(nsnull)
     , mCachedElementActor(nsnull)
-    , mQuirks(0)
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -472,7 +472,10 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     return true;
 #endif
 
-    *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+    if (!mPluginIface->event)
+        *handled = false;
+    else
+        *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
     if (GraphicsExpose == event.event.type) {
@@ -521,8 +524,7 @@ XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
 #endif
 
 bool
-PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
-                                         NPError* rv)
+PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 {
     PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
                       FULLFUNCTION,
@@ -561,7 +563,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
 #endif
     }
 
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+    if (mPluginIface->setwindow)
+        (void) mPluginIface->setwindow(&mData, &mWindow);
 
 #elif defined(OS_WIN)
     switch (aWindow.type) {
@@ -580,8 +583,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
           mWindow.height = aWindow.height;
           mWindow.type = aWindow.type;
 
-          *rv = mPluginIface->setwindow(&mData, &mWindow);
-          if (*rv == NPERR_NO_ERROR) {
+          if (mPluginIface->setwindow) {
+              (void) mPluginIface->setwindow(&mData, &mWindow);
               WNDPROC wndProc = reinterpret_cast<WNDPROC>(
                   GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
               if (wndProc != PluginWindowProc) {
@@ -594,7 +597,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
       break;
 
       case NPWindowTypeDrawable:
-          return SharedSurfaceSetWindow(aWindow, rv);
+          return SharedSurfaceSetWindow(aWindow);
       break;
 
       default:
@@ -964,6 +967,9 @@ IsMouseInputEvent(UINT msg)
 int16_t
 PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 {
+    if (!mPluginIface->event)
+        return false;
+
     // Winless Silverlight quirk: winposchanged events are not used in
     // determining the position of the plugin within the parent window,
     // NPP_SetWindow values are used instead. Due to shared memory dib
@@ -1023,8 +1029,7 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 /* windowless drawing helpers */
 
 bool
-PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
-                                            NPError* rv)
+PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
 {
     // If the surfaceHandle is empty, parent is telling us we can reuse our cached
     // memory surface and hdc. Otherwise, we need to reset, usually due to a
@@ -1052,7 +1057,9 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
     mWindow.type   = aWindow.type;
 
     mWindow.window = reinterpret_cast<void*>(mSharedSurfaceDib.GetHDC());
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+
+    if (mPluginIface->setwindow)
+        mPluginIface->setwindow(&mData, &mWindow);
 
     return true;
 }
@@ -1127,6 +1134,9 @@ PluginInstanceChild::UpdatePaintClipRect(RECT* aRect)
 int16_t
 PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 {
+    if (!mPluginIface->event)
+        return false;
+
     RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
 
     switch(mAlphaExtract.doublePass) {
@@ -1278,9 +1288,7 @@ PluginInstanceChild::AnswerPBrowserStreamConstructor(
 {
     AssertPluginThread();
     *rv = static_cast<BrowserStreamChild*>(aActor)
-          ->StreamConstructed(url, length, lastmodified,
-                              notifyData, headers, mimeType, seekable,
-                              stype);
+          ->StreamConstructed(mimeType, seekable, stype);
     return true;
 }
 
@@ -1296,7 +1304,8 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          uint16_t *stype)
 {
     AssertPluginThread();
-    return new BrowserStreamChild(this, url, length, lastmodified, notifyData,
+    return new BrowserStreamChild(this, url, length, lastmodified,
+                                  static_cast<StreamNotifyChild*>(notifyData),
                                   headers, mimeType, seekable, rv, stype);
 }
 
@@ -1338,29 +1347,58 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
     return NULL;
 }
 
-bool
-StreamNotifyChild::Answer__delete__(const NPReason& reason)
+void
+StreamNotifyChild::ActorDestroy(ActorDestroyReason why)
 {
-    AssertPluginThread();
-    return static_cast<PluginInstanceChild*>(Manager())
-        ->NotifyStream(this, reason);
+    if (AncestorDeletion == why && mBrowserStream) {
+        NS_ERROR("Pending NPP_URLNotify not called when closing an instance.");
+
+        // reclaim responsibility for deleting ourself
+        mBrowserStream->mStreamNotify = NULL;
+        mBrowserStream = NULL;
+    }
+}
+
+
+void
+StreamNotifyChild::SetAssociatedStream(BrowserStreamChild* bs)
+{
+    NS_ASSERTION(bs, "Shouldn't be null");
+    NS_ASSERTION(!mBrowserStream, "Two streams for one streamnotify?");
+
+    mBrowserStream = bs;
 }
 
 bool
-PluginInstanceChild::NotifyStream(StreamNotifyChild* notifyData,
-                                  NPReason reason)
+StreamNotifyChild::Recv__delete__(const NPReason& reason)
 {
-    if (notifyData->mClosure)
-        mPluginIface->urlnotify(&mData, notifyData->mURL.get(), reason,
-                                notifyData->mClosure);
+    AssertPluginThread();
+
+    if (mBrowserStream)
+        mBrowserStream->NotifyPending();
+    else
+        NPP_URLNotify(reason);
+
     return true;
+}
+
+void
+StreamNotifyChild::NPP_URLNotify(NPReason reason)
+{
+    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(Manager());
+
+    if (mClosure)
+        instance->mPluginIface->urlnotify(instance->GetNPP(), mURL.get(),
+                                          reason, mClosure);
 }
 
 bool
 PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData)
 {
     AssertPluginThread();
-    delete notifyData;
+
+    if (!static_cast<StreamNotifyChild*>(notifyData)->mBrowserStream)
+        delete notifyData;
     return true;
 }
 
@@ -1495,6 +1533,19 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+
+    nsTArray<PBrowserStreamChild*> streams;
+    ManagedPBrowserStreamChild(streams);
+
+    // First make sure none of these streams become deleted
+    for (PRUint32 i = 0; i < streams.Length(); ) {
+        if (static_cast<BrowserStreamChild*>(streams[i])->InstanceDying())
+            ++i;
+        else
+            streams.RemoveElementAt(i);
+    }
+    for (PRUint32 i = 0; i < streams.Length(); ++i)
+        static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
     for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
         mPendingAsyncCalls[i]->Cancel();

@@ -48,9 +48,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFont
 gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
-                             const gfxFontStyle *aFontStyle)
+                             const gfxFontStyle *aFontStyle,
+                             PRBool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle)
-    , mMetrics(nsnull)
+    , mAdjustedSize(0.0f)
     , mCairoFontFace(nsnull)
     , mCairoScaledFont(nsnull)
     , mNeedsOblique(PR_FALSE)
@@ -67,12 +68,13 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     }
     PRInt8 baseWeight, weightDistance;
     GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-    if (((weightDistance == 0 && baseWeight >= 6) 
-        || (weightDistance > 0)) && !fe->IsBold()) {
+    if (aNeedsBold) {
         sims |= DWRITE_FONT_SIMULATIONS_BOLD;
     }
 
     rv = fe->CreateFontFace(getter_AddRefs(mFontFace), sims);
+
+    ComputeMetrics();
 
     if (NS_FAILED(rv)) {
         mIsValid = PR_FALSE;
@@ -87,38 +89,6 @@ gfxDWriteFont::~gfxDWriteFont()
     if (mCairoScaledFont) {
         cairo_scaled_font_destroy(mCairoScaledFont);
     }
-    delete mMetrics;
-}
-
-already_AddRefed<gfxDWriteFont>
-gfxDWriteFont::GetOrMakeFont(gfxFontEntry *aFontEntry,
-                             const gfxFontStyle *aStyle,
-                             PRBool aNeedsBold)
-{
-    // because we know the FontEntry has the weight we really want, use it for 
-    // matching things in the cache so we don't end up with things like 402 in
-    // there.
-    gfxFontStyle style(*aStyle);
-
-    if (aFontEntry->mIsUserFont && !aFontEntry->IsBold()) {
-        // determine whether synthetic bolding is needed
-        PRInt8 baseWeight, weightDistance;
-        aStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-        if ((weightDistance == 0 && baseWeight >= 6) || 
-            (weightDistance > 0 && aNeedsBold)) {
-            style.weight = 700;  
-        } else {
-            style.weight = aFontEntry->mWeight;
-        }
-    } else {
-        style.weight = aFontEntry->mWeight;
-    }
-
-    nsRefPtr<gfxFont> font = aFontEntry->FindOrMakeFont(aStyle, aNeedsBold);
-
-    font->AddRef();
-    return static_cast<gfxDWriteFont*>(font.get());
 }
 
 nsString
@@ -130,90 +100,90 @@ gfxDWriteFont::GetUniqueName()
 const gfxFont::Metrics&
 gfxDWriteFont::GetMetrics()
 {
-    if (!mMetrics) {
-        ComputeMetrics();
-    }
-
-    return *mMetrics;
+    return mMetrics;
 }
 
 void
 gfxDWriteFont::ComputeMetrics()
 {
-    if (!mMetrics) {
-        mMetrics = new gfxFont::Metrics;
-    }
-
     DWRITE_FONT_METRICS fontMetrics;
     mFontFace->GetMetrics(&fontMetrics);
 
-    mMetrics->xHeight = 
+    if (mStyle.sizeAdjust != 0.0) {
+        gfxFloat aspect = (gfxFloat)fontMetrics.xHeight /
+                   fontMetrics.designUnitsPerEm;
+        mAdjustedSize = mStyle.GetAdjustedSize(aspect);
+    } else {
+        mAdjustedSize = mStyle.size;
+    }
+
+    mMetrics.xHeight =
         ((gfxFloat)fontMetrics.xHeight /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->emAscent = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.emAscent = 
         ((gfxFloat)fontMetrics.ascent /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->emDescent = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.emDescent = 
         ((gfxFloat)fontMetrics.descent /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->emHeight = mStyle.size;
-    mMetrics->maxAscent = mMetrics->emAscent;
-    mMetrics->maxDescent = mMetrics->emDescent;
-    mMetrics->maxHeight = mMetrics->emHeight;
-    mMetrics->maxAdvance = mStyle.size;
-    mMetrics->internalLeading = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.emHeight = mAdjustedSize;
+    mMetrics.maxAscent = mMetrics.emAscent;
+    mMetrics.maxDescent = mMetrics.emDescent;
+    mMetrics.maxHeight = mMetrics.emHeight;
+    mMetrics.maxAdvance = mAdjustedSize;
+    mMetrics.internalLeading = 
         ((gfxFloat)(fontMetrics.ascent + 
                     fontMetrics.descent - 
                     fontMetrics.designUnitsPerEm) / 
-                    fontMetrics.designUnitsPerEm) * mStyle.size;
+                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
     
-    mMetrics->externalLeading = 
+    mMetrics.externalLeading = 
         ((gfxFloat)fontMetrics.lineGap /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
 
     UINT16 glyph = (PRUint16)GetSpaceGlyph();
     DWRITE_GLYPH_METRICS metrics;
     mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics);
-    mMetrics->spaceWidth = 
+    mMetrics.spaceWidth = 
         ((gfxFloat)metrics.advanceWidth /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
     UINT32 ucs = L'x';
     if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
         SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {    
-        mMetrics->aveCharWidth = 
+        mMetrics.aveCharWidth = 
             ((gfxFloat)metrics.advanceWidth /
-                       fontMetrics.designUnitsPerEm) * mStyle.size;
+                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
     } else {
         // Let's just assume the X is square.
-        mMetrics->aveCharWidth = 
+        mMetrics.aveCharWidth = 
             ((gfxFloat)fontMetrics.xHeight /
-                       fontMetrics.designUnitsPerEm) * mStyle.size;
+                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
     }
     ucs = L'0';
     if (FAILED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
         SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {
-        mMetrics->zeroOrAveCharWidth = 
+        mMetrics.zeroOrAveCharWidth = 
             ((gfxFloat)metrics.advanceWidth /
-                       fontMetrics.designUnitsPerEm) * mStyle.size;
+                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
     } else {
-        mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+        mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
     }
-    mMetrics->underlineOffset = 
+    mMetrics.underlineOffset = 
         ((gfxFloat)fontMetrics.underlinePosition /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->underlineSize = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.underlineSize = 
         ((gfxFloat)fontMetrics.underlineThickness /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->strikeoutOffset = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.strikeoutOffset = 
         ((gfxFloat)fontMetrics.strikethroughPosition /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->strikeoutSize = 
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.strikeoutSize = 
         ((gfxFloat)fontMetrics.strikethroughThickness /
-                   fontMetrics.designUnitsPerEm) * mStyle.size;
-    mMetrics->subscriptOffset = 0;
-    mMetrics->subscriptOffset = 0;
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics.subscriptOffset = 0;
+    mMetrics.subscriptOffset = 0;
 
-    SanitizeMetrics(mMetrics, PR_FALSE);
+    SanitizeMetrics(&mMetrics, PR_FALSE);
  }
 
 PRUint32
@@ -263,7 +233,7 @@ gfxDWriteFont::CairoScaledFont()
         cairo_matrix_t sizeMatrix;
         cairo_matrix_t identityMatrix;
 
-        cairo_matrix_init_scale(&sizeMatrix, mStyle.size, mStyle.size);
+        cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
         cairo_matrix_init_identity(&identityMatrix);
 
         cairo_font_options_t *fontOptions = cairo_font_options_create();
@@ -288,7 +258,7 @@ gfxDWriteFont::CairoScaledFont()
         cairo_font_options_destroy(fontOptions);
     }
 
-    NS_ASSERTION(mStyle.size == 0.0 ||
+    NS_ASSERTION(mAdjustedSize == 0.0 ||
                  cairo_scaled_font_status(mCairoScaledFont) 
                    == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
@@ -467,7 +437,7 @@ trymoreglyphs:
                                           glyphProperties.Elements(),
                                           actualGlyphs,
                                           font->mFontFace,
-                                          (float)mStyle.size,
+                                          (float)font->GetAdjustedSize(),
                                           FALSE,
                                           FALSE,
                                           &runHead->mScript,

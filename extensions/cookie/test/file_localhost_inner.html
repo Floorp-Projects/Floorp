@@ -6,9 +6,9 @@
     document.cookie = "can=has";
 
     // send a message to our test document, to say we're done loading
-    window.opener.postMessage("message", "http://localhost:8888");
+    window.opener.postMessage("message", "http://mochi.test:8888");
   </script>
 <body>
-<iframe name="frame1" src="http://localhost:8888/tests/extensions/cookie/test/file_domain_inner_inner.html"></iframe>
+<iframe name="frame1" src="http://mochi.test:8888/tests/extensions/cookie/test/file_domain_inner_inner.html"></iframe>
 </body>
 </html>

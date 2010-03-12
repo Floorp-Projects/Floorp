@@ -804,7 +804,7 @@ nsresult nsXPInstallManager::InstallItems()
 
 NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     mContentLength = 0;
 
     if (mCancelled)
@@ -1188,7 +1188,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     {
         // Download error!
         // -- first clean up partially downloaded file
-        if ( mItem->mFile )
+        if ( mItem && mItem->mFile )
         {
             PRBool flagExists;
             nsresult rv2 ;
@@ -1206,7 +1206,8 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             mDlg->OnStateChange( mNextItem-1,
                                  nsIXPIProgressDialog::INSTALL_DONE,
                                  errorcode );
-        mTriggers->SendStatus( mItem->mURL.get(), errorcode );
+        if (mItem)
+            mTriggers->SendStatus( mItem->mURL.get(), errorcode );
     }
     else if (mDlg)
     {

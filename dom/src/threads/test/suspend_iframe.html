@@ -1,0 +1,40 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads Suspending</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="output"></div>
+<script class="testbody" type="text/javascript">
+
+  var output = document.getElementById("output");
+
+  var worker;
+
+  function terminateWorker() {
+    if (worker) {
+      worker.terminate();
+      worker = null;
+    }
+  }
+
+  function startWorker(messageCallback, errorCallback) {
+    worker = new Worker("suspend_worker.js");
+
+    worker.onmessage = function(event) {
+      output.textContent = output.textContent + event.data + "\n";
+      messageCallback(event.data);
+    };
+
+    worker.onerror = function(event) {
+      this.terminate();
+      errorCallback(event.message);
+    };
+  }
+
+</script>
+</pre>
+</body>
+</html>

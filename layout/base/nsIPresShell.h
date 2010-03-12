@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0x20b82adf, 0x1f5c, 0x44f7, \
-    { 0x9b, 0x74, 0xc0, 0xa3, 0x14, 0xd8, 0xcf, 0x91 } }
+  { 0xe5e070ce, 0xbc17, 0x4b5f, \
+    { 0xb2, 0x21, 0xbf, 0xc3, 0xe1, 0x68, 0xbe, 0x9b } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -361,6 +361,16 @@ public:
    * Can be called by code not linked into gklayout.
    */
   virtual nsIScrollableFrame* GetRootScrollFrameAsScrollableExternal() const;
+
+  /*
+   * Gets nearest scrollable frame from current focused content or DOM
+   * selection if there is no focused content. The frame is scrollable with
+   * overflow:scroll or overflow:auto in some direction when aDirection is
+   * eEither.  Otherwise, this returns a nearest frame that is scrollable in
+   * the specified direction.
+   */
+  enum ScrollDirection { eHorizontal, eVertical, eEither };
+  nsIScrollableFrame* GetFrameToScrollAsScrollable(ScrollDirection aDirection);
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.

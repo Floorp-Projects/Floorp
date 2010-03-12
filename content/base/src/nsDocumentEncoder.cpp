@@ -671,11 +671,11 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
   // get start and end nodes for this recursion level
   nsCOMPtr<nsIContent> startNode, endNode;
   PRInt32 start = mStartRootIndex - aDepth;
-  if (start >= 0 && start <= mStartNodes.Length())
+  if (start >= 0 && (PRUint32)start <= mStartNodes.Length())
     startNode = mStartNodes[start];
 
   PRInt32 end = mEndRootIndex - aDepth;
-  if (end >= 0 && end <= mEndNodes.Length())
+  if (end >= 0 && (PRUint32)end <= mEndNodes.Length())
     endNode = mEndNodes[end];
 
   if ((startNode != content) && (endNode != content))

@@ -140,6 +140,30 @@ function popupShown()
 function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
 function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
 
+var oldx, oldy, waitSteps = 0;
+function moveWindowTo(x, y, callback, arg)
+{
+  if (!waitSteps) {
+    oldx = window.screenX;
+    oldy = window.screenY;
+    window.moveTo(x, y);
+  }
+
+  if (window.screenX == oldx && window.screenY == oldy) {
+    if (waitSteps++ > 10) {
+      ok(false, "Window never moved properly to " + x + "," + y);
+      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.close();
+    }
+
+    setTimeout(moveWindowTo, 100, x, y, callback, arg);
+  }
+  else {
+    waitSteps = 0;
+    callback(arg);
+  }
+}
+
 function popupHidden()
 {
   gTestIndex++;
@@ -149,8 +173,8 @@ function popupHidden()
   }
   else if (gTests[gTestIndex] == "context menu enough space below") {
     gContextMenuTests = true;
-    window.moveTo(window.screenX, screen.availTop + 10);
-    synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 });
+    moveWindowTo(window.screenX, screen.availTop + 10,
+      function () synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 }));
   }
   else if (gTests[gTestIndex] == "menu movement") {
     document.getElementById("popup").openPopup(
@@ -205,18 +229,19 @@ function contextMenuPopupHidden()
 {
   var screenAvailBottom = screen.availTop + screen.availHeight;
 
-  var desiredHeight = -1;
   if (gTests[gTestIndex] == "context menu more space above") {
-    window.moveTo(window.screenX, screenAvailBottom - 80);
+    moveWindowTo(window.screenX, screenAvailBottom - 80, nextContextMenuTest, -1);
   }
-  if (gTests[gTestIndex] == "context menu too big either side") {
-    window.moveTo(window.screenX, screenAvailBottom / 2 - 80);
-    desiredHeight = screenAvailBottom / 2 + 120;
+  else if (gTests[gTestIndex] == "context menu too big either side") {
+    moveWindowTo(window.screenX, screenAvailBottom / 2 - 80, nextContextMenuTest, screenAvailBottom / 2 + 120);
   }
   else if (gTests[gTestIndex] == "context menu larger than screen") {
-    desiredHeight = screen.availHeight + 80;
+    nextContextMenuTest(screen.availHeight + 80);
   }
+}
 
+function nextContextMenuTest(desiredHeight)
+{
   if (desiredHeight >= 0) {
     var popup = document.getElementById("popup");
     var height = popup.getBoundingClientRect().height;

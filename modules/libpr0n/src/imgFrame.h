@@ -140,6 +140,13 @@ private: // methods
     return ((1 << mPaletteDepth) * sizeof(PRUint32));
   }
 
+  /**
+   * This returns the fastest operator to use for solid surfaces which have no
+   * alpha channel or their alpha channel is uniformly opaque.
+   * This differs per render mode.
+   */
+  gfxContext::GraphicsOperator OptimalFillOperator();
+
 private: // data
   nsRefPtr<gfxImageSurface> mImageSurface;
   nsRefPtr<gfxASurface> mOptSurface;

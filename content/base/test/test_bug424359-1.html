@@ -120,7 +120,7 @@ function testHtmlSerializer_1 () {
   //------------ OutputAbsoluteLinks
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_htmlserializer_1_links.html");
+  expected = loadFileContent("file_htmlserializer_1_links.html").trim('\n');
   isRoughly(out, expected, "test OutputAbsoluteLinks");
 
   //------------ OutputLFLineBreak

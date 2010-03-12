@@ -48,12 +48,13 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_APP_UPDATE_ENABLED       = "app.update.enabled";
-const PREF_APP_UPDATE_LOG           = "app.update.log";
-const PREF_APP_UPDATE_MANUAL_URL    = "app.update.url.manual";
-const PREF_APP_UPDATE_NEVER_BRANCH  = "app.update.never.";
-const PREF_APP_UPDATE_TEST_LOOP     = "app.update.test.loop";
-const PREF_PLUGINS_UPDATEURL        = "plugins.update.url";
+const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
+const PREF_APP_UPDATE_ENABLED            = "app.update.enabled";
+const PREF_APP_UPDATE_LOG                = "app.update.log";
+const PREF_APP_UPDATE_MANUAL_URL         = "app.update.url.manual";
+const PREF_APP_UPDATE_NEVER_BRANCH       = "app.update.never.";
+const PREF_APP_UPDATE_TEST_LOOP          = "app.update.test.loop";
+const PREF_PLUGINS_UPDATEURL             = "plugins.update.url";
 
 const UPDATE_TEST_LOOP_INTERVAL     = 2000;
 
@@ -464,6 +465,23 @@ var gUpdates = {
         return document.getElementById("downloading");
       }
     }
+
+    // Provide the ability to test the billboard html
+    var billboardTestURL = getPref("getCharPref", PREF_APP_UPDATE_BILLBOARD_TEST_URL, null);
+    if (billboardTestURL) {
+      var updatesFoundBillboardPage = document.getElementById("updatesfoundbillboard");
+      updatesFoundBillboardPage.setAttribute("next", "dummy");
+      gUpdatesFoundBillboardPage.onExtra1 = function(){ gUpdates.wiz.cancel(); };
+      gUpdatesFoundBillboardPage.onExtra2 = function(){ gUpdates.wiz.cancel(); };
+      this.onWizardNext = function() { gUpdates.wiz.cancel(); };
+      this.update = { billboardURL        : billboardTestURL,
+                      brandName           : this.brandName,
+                      displayVersion      : "Billboard Test 1.0",
+                      showNeverForVersion : true,
+                      type                : "major" };
+      return updatesFoundBillboardPage;
+    }
+
     return document.getElementById("checking");
   },
 
@@ -843,7 +861,6 @@ var gUpdatesFoundBasicPage = {
                         update.showNeverForVersion ? "noThanksButton" : null,
                         "updateButton_" + update.type, true);
     var btn = gUpdates.wiz.getButton("next");
-    btn.classList.add("heed");
     btn.focus();
 
     var updateName = update.name;
@@ -870,10 +887,7 @@ var gUpdatesFoundBasicPage = {
 
     var updateTitle = gUpdates.getAUSString("updatesfound_" + update.type +
                                             ".title");
-    gUpdates.wiz.currentPage.setAttribute("label", updateTitle);
-    // this is necessary to make this change to the label of the current
-    // wizard page show up
-    gUpdates.wiz._adjustWizardHeader();
+    document.getElementById("updatesFoundBasicHeader").setAttribute("label", updateTitle);
 
     // Clear all of the "never" prefs to handle the scenario where the user
     // clicked "never" for an update, selected "Check for Updates...", and
@@ -888,10 +902,6 @@ var gUpdatesFoundBasicPage = {
 
   onExtra2: function() {
     gUpdates.never();
-  },
-
-  onWizardNext: function() {
-    gUpdates.wiz.getButton("next").classList.remove("heed");
   }
 };
 
@@ -910,19 +920,10 @@ var gUpdatesFoundBillboardPage = {
    */
   onPageShow: function() {
     var update = gUpdates.update;
-    var updateTitle = gUpdates.getAUSString("updatesfound_" + update.type +
-                                            ".title");
-    gUpdates.wiz.currentPage.setAttribute("label", updateTitle);
-    // this is necessary to make this change to the label of the current
-    // wizard page show up
-    gUpdates.wiz._adjustWizardHeader();
-
     gUpdates.setButtons("askLaterButton",
                         update.showNeverForVersion ? "noThanksButton" : null,
                         "updateButton_" + update.type, true);
-    var btn = gUpdates.wiz.getButton("next");
-    btn.classList.add("heed");
-    btn.focus();
+    gUpdates.wiz.getButton("next").focus();
 
     if (this._billboardLoaded)
       return;
@@ -933,13 +934,21 @@ var gUpdatesFoundBillboardPage = {
     // the formatted "Download..." string
     remoteContent.update_name = gUpdates.brandName;
     remoteContent.update_version = update.displayVersion;
-    remoteContent.url = update.billboardURL;
 
-    var introText = gUpdates.getAUSString("intro_" + update.type,
-                                          [gUpdates.brandName, update.displayVersion]);
-    var introElem = document.getElementById("updatesFoundBillboardIntro");
-    introElem.setAttribute("severity", update.type);
-    introElem.textContent = introText;
+    var billboardTestURL = getPref("getCharPref", PREF_APP_UPDATE_BILLBOARD_TEST_URL, null);
+    if (billboardTestURL) {
+      var ioServ = CoC["@mozilla.org/network/io-service;1"].
+               getService(CoI.nsIIOService);
+      // Allow file urls when testing the billboard and fallback to the
+      // normal method if the URL isn't a file.
+      var scheme = ioServ.newURI(billboardTestURL, null, null).scheme;
+      if (scheme == "file")
+        remoteContent.testFileUrl = update.billboardURL;
+      else
+        remoteContent.url = update.billboardURL;
+    }
+    else
+      remoteContent.url = update.billboardURL;
 
     // Clear all of the "never" prefs to handle the scenario where the user
     // clicked "never" for an update, selected "Check for Updates...", and
@@ -958,10 +967,6 @@ var gUpdatesFoundBillboardPage = {
   onExtra2: function() {
     this.onWizardCancel();
     gUpdates.never();
-  },
-
-  onWizardNext: function() {
-    gUpdates.wiz.getButton("next").classList.remove("heed");
   },
 
   /**
@@ -1108,7 +1113,7 @@ var gIncompatibleListPage = {
    */
   onPageShow: function() {
     gUpdates.setButtons("backButton", null, "okButton", true);
-    var listbox = document.getElementById("incompatibleList.listbox");
+    var listbox = document.getElementById("incompatibleListbox");
     if (listbox.children.length > 0)
       return;
 
@@ -1144,10 +1149,8 @@ var gDownloadingPage = {
   /**
    * DOM Elements
    */
-  _downloadName: null,
   _downloadStatus: null,
   _downloadProgress: null,
-  _downloadThrobber: null,
   _pauseButton: null,
 
   /**
@@ -1171,10 +1174,8 @@ var gDownloadingPage = {
    * Initialize
    */
   onPageShow: function() {
-    this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
-    this._downloadThrobber = document.getElementById("downloadThrobber");
     this._pauseButton = document.getElementById("pauseButton");
     this._label_downloadStatus = this._downloadStatus.textContent;
 
@@ -1230,12 +1231,6 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onPageShow - error: " + e);
     }
 
-    var link = document.getElementById("downloadDetailsLink");
-    if (gUpdates.update.detailsURL)
-      link.setAttribute("url", gUpdates.update.detailsURL);
-    else
-      link.hidden = true;
-
     gUpdates.setButtons("hideButton", null, null, false);
     gUpdates.wiz.getButton("extra1").focus();
   },
@@ -1285,29 +1280,21 @@ var gDownloadingPage = {
   _setUIState: function(paused) {
     var u = gUpdates.update;
     if (paused) {
-      if (this._downloadThrobber.hasAttribute("state"))
-        this._downloadThrobber.removeAttribute("state");
       if (this._downloadProgress.mode != "normal")
         this._downloadProgress.mode = "normal";
-      this._downloadName.value = gUpdates.getAUSString("pausedName", [u.name]);
       this._pauseButton.setAttribute("tooltiptext",
                                      gUpdates.getAUSString("pauseButtonResume"));
       this._pauseButton.setAttribute("paused", "true");
       var p = u.selectedPatch.QueryInterface(CoI.nsIPropertyBag);
       var status = p.getProperty("status");
       if (status) {
-        let pausedStatus = gUpdates.getAUSString("pausedStatus", [status]);
+        let pausedStatus = gUpdates.getAUSString("downloadPausedStatus", [status]);
         this._setStatus(pausedStatus);
       }
     }
     else {
-      if (!(this._downloadThrobber.hasAttribute("state") &&
-           (this._downloadThrobber.getAttribute("state") == "loading")))
-        this._downloadThrobber.setAttribute("state", "loading");
       if (this._downloadProgress.mode != "undetermined")
         this._downloadProgress.mode = "undetermined";
-      this._downloadName.value = gUpdates.getAUSString("downloadingPrefix",
-                                                       [u.name]);
       this._pauseButton.setAttribute("paused", "false");
       this._pauseButton.setAttribute("tooltiptext",
                                      gUpdates.getAUSString("pauseButtonPause"));
@@ -1403,9 +1390,6 @@ var gDownloadingPage = {
     if (this._paused)
       return;
 
-    if (!(this._downloadThrobber.hasAttribute("state") &&
-          (this._downloadThrobber.getAttribute("state") == "loading")))
-      this._downloadThrobber.setAttribute("state", "loading");
     if (this._downloadProgress.mode != "undetermined")
       this._downloadProgress.mode = "undetermined";
     this._setStatus(this._label_downloadStatus);
@@ -1425,7 +1409,6 @@ var gDownloadingPage = {
   onProgress: function(request, context, progress, maxProgress) {
     LOG("gDownloadingPage", "onProgress - progress: " + progress + "/" +
         maxProgress);
-    var name = gUpdates.getAUSString("downloadingPrefix", [gUpdates.update.name]);
     let status = this._updateDownloadStatus(progress, maxProgress);
     var currentProgress = Math.round(100 * (progress / maxProgress));
 
@@ -1439,17 +1422,12 @@ var gDownloadingPage = {
     if (this._paused)
       return;
 
-    if (!(this._downloadThrobber.hasAttribute("state") &&
-         (this._downloadThrobber.getAttribute("state") == "loading")))
-      this._downloadThrobber.setAttribute("state", "loading");
     if (this._downloadProgress.mode != "normal")
       this._downloadProgress.mode = "normal";
     if (this._downloadProgress.value != currentProgress)
       this._downloadProgress.value = currentProgress;
     if (this._pauseButton.disabled)
       this._pauseButton.disabled = false;
-    if (this._downloadName.value != name)
-      this._downloadName.value = name;
 
     // If the update has completed downloading and the download status contains
     // the original text return early to avoid an assertion in debug builds.
@@ -1495,8 +1473,6 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onStopRequest - spec: " + request.URI.spec +
           ", status: " + status);
 
-    if (this._downloadThrobber.hasAttribute("state"))
-      this._downloadThrobber.removeAttribute("state");
     if (this._downloadProgress.mode != "normal")
       this._downloadProgress.mode = "normal";
 
@@ -1564,9 +1540,11 @@ var gErrorsPage = {
    * Initialize
    */
   onPageShow: function() {
-    // If opened after a download completes the cancel button needs to be hidden
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
+
+    var errorsTitle = gUpdates.getAUSString("errorsPageHeader");
+    document.getElementById("errorsHeader").setAttribute("label", errorsTitle);
 
     var statusText = gUpdates.update.statusText;
     LOG("gErrorsPage" , "onPageShow - update.statusText: " + statusText);
@@ -1619,9 +1597,7 @@ var gFinishedPage = {
   onPageShow: function() {
     gUpdates.setButtons("restartLaterButton", null, "restartNowButton",
                         true);
-    var btn = gUpdates.wiz.getButton("finish");
-    btn.classList.add("heed");
-    btn.focus();
+    gUpdates.wiz.getButton("finish").focus();
   },
 
   /**

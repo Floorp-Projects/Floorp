@@ -35,15 +35,12 @@
 
 #include "nptest_platform.h"
 #include "npapi.h"
-#include <pthread.h>
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include <X11/extensions/shape.h>
 #endif
-#include <glib.h>
 #include <gtk/gtk.h>
-#include <unistd.h>
 
  using namespace std;
 
@@ -638,6 +635,7 @@ pluginGetClipboardText(InstanceData* instanceData)
 
   return retText;
 }
+<<<<<<< local
 
 //-----------------------------------------------------------------------------
 // NB: this test is quite gross in that it's not only
@@ -710,3 +708,5 @@ pluginCrashInNestedLoop(InstanceData* instanceData)
   // if we get here without crashing, then we'll trigger a test failure
   return true;
 }
+=======
+>>>>>>> other

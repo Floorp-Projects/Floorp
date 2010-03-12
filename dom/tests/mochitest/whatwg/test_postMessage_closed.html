@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.origin, "http://localhost:8888", "wrong origin");
+  is(evt.origin, "http://mochi.test:8888", "wrong origin");
   ok(evt.source === openedWindow, "wrong source");
   is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 

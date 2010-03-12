@@ -50,7 +50,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=4
+MOD_PATCH_VERSION=5
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1200,6 +1200,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
+        ASFLAGS="$ASFLAGS -x assembler-with-cpp"
     fi
 
     if test -n "$MOZILLA_CLIENT"; then
@@ -1650,8 +1651,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(WINCE)
     AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
 
-    AR='lib -NOLOGO -OUT:"$@"'
-    AR_FLAGS=
+    AR_FLAGS='-NOLOGO -OUT:"$@"'
 
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
@@ -1666,7 +1666,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
 
     DLLFLAGS='-OUT:"$@"'
-    if test -n "$MOZ_DEBUG_SYMBOLS"; then
+    if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
         OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
         DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
@@ -2403,6 +2403,9 @@ case "$target_os" in
 darwin*)
     _HAVE_PTHREADS=1
     ;;
+wince*)
+    _HAVE_PTHREADS=
+    ;;
 *)
     MOZ_CHECK_PTHREADS(pthreads,
         _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
@@ -2723,7 +2726,7 @@ if test -n "$MOZ_OPTIMIZE"; then
     CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
 fi
 
-if test -n "$MOZ_DEBUG"; then
+if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
     CFLAGS="$CFLAGS $_DEBUG_FLAGS"
     CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
 fi

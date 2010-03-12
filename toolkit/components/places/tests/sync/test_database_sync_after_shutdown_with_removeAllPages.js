@@ -139,10 +139,11 @@ function check_results() {
     do_check_false(stmt.executeStep());
     stmt.finalize();
 
-    dbConn.close();
-    do_check_false(dbConn.connectionReady);
+    dbConn.asyncClose(function() {
+      do_check_false(dbConn.connectionReady);
 
-    do_test_finished();
+      do_test_finished();
+    });
 }
 
 function run_test()

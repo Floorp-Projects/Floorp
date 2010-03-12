@@ -40,23 +40,28 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
-#include "Function.h"
-#include "jsapi.h"
-
 struct PRLibrary;
-class Function;
 
 namespace mozilla {
 namespace ctypes {
+
+class Function;
+
+enum LibrarySlot {
+  SLOT_LIBRARY = 0,
+  SLOT_FUNCTIONLIST = 1,
+  LIBRARY_SLOTS
+};
 
 class Library
 {
 public:
   static JSObject* Create(JSContext* cx, jsval aPath);
+  static void Trace(JSTracer *trc, JSObject* obj);
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static PRLibrary* GetLibrary(JSContext* cx, JSObject* obj);
-  static bool AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction);
+  static JSBool AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction);
 
   // JSFastNative functions
   static JSBool Open(JSContext* cx, uintN argc, jsval* vp);

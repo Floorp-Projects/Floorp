@@ -44,6 +44,8 @@
 namespace mozilla {
 namespace plugins {
 
+class BrowserStreamChild;
+
 class StreamNotifyChild : public PStreamNotifyChild
 {
   friend class PluginInstanceChild;
@@ -53,17 +55,37 @@ public:
   StreamNotifyChild(const nsCString& aURL)
     : mURL(aURL)
     , mClosure(NULL)
+    , mBrowserStream(NULL)
   { }
+
+  NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
 
   void SetValid(void* aClosure) {
     mClosure = aClosure;
   }
 
-  bool Answer__delete__(const NPReason& reason);
+  void NPP_URLNotify(NPReason reason);
 
 private:
+  NS_OVERRIDE virtual bool Recv__delete__(const NPReason& reason);
+
+  /**
+   * If a stream is created for this this URLNotify, we associate the objects
+   * so that the NPP_URLNotify call is not fired before the stream data is
+   * completely delivered. The BrowserStreamChild takes responsibility for
+   * calling NPP_URLNotify and deleting this object.
+   */
+  void SetAssociatedStream(BrowserStreamChild* bs);
+
   nsCString mURL;
   void* mClosure;
+
+  /**
+   * If mBrowserStream is true, it is responsible for deleting this C++ object
+   * and DeallocPStreamNotify is not, so that the delayed delivery of
+   * NPP_URLNotify is possible.
+   */
+  BrowserStreamChild* mBrowserStream;
 };
 
 } // namespace plugins

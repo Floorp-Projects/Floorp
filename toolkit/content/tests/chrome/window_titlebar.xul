@@ -34,46 +34,79 @@ var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 
 SimpleTest.waitForFocus(test_titlebar, window);
 
+var mouseDownTarget;
+var origoldx, origoldy, oldx, oldy, waitSteps = 0;
+function waitForWindowMove(element, x, y, callback, arg)
+{
+  var isPanel = (element.id == "panellabel");
+  if (!waitSteps) {
+    oldx = isPanel ? document.getElementById("panel").getBoundingClientRect().left : window.screenX;
+    oldy = isPanel ? document.getElementById("panel").getBoundingClientRect().top : window.screenY;
+    synthesizeMouse(element, x, y, { type: "mousemove" });
+  }
+
+  var newx = isPanel ? document.getElementById("panel").getBoundingClientRect().left : window.screenX; 
+  var newy = isPanel ? document.getElementById("panel").getBoundingClientRect().top : window.screenY; 
+  if (newx == oldx && newy == oldy) {
+    if (waitSteps++ > 10) {
+      SimpleTest.is(window.screenX + "," + window.screenY, oldx + "," + oldy + " ",
+                    "Window never moved properly to " + x + "," + y);
+      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.close();
+    }
+
+    setTimeout(waitForWindowMove, 100, element, x, y, callback, arg);
+  }
+  else {
+    waitSteps = 0;
+    callback(arg);
+  }
+}
+
 function test_titlebar()
 {
   var titlebar = document.getElementById("titlebar");
   var label = document.getElementById("label");
-
-  var oldx, oldy;
 
   // on Mac, the window can also be moved with the statusbar
   if (navigator.platform.indexOf("Mac") >= 0) {
     var statuslabel = document.getElementById("statuslabel");
     var statuslabelnodrag = document.getElementById("statuslabelnodrag");
 
-    oldx = window.screenX;
-    oldy = window.screenY;
+    origoldx = window.screenX;
+    origoldy = window.screenY;
 
     synthesizeMouse(statuslabel, 2, 2, { type: "mousedown" });
     synthesizeMouse(statuslabel, 22, 22, { type: "mousemove" });
-    SimpleTest.is(window.screenX, oldx + 20, "move window with statusbar horizontal");
-    SimpleTest.is(window.screenY, oldy + 20, "move window with statusbar vertical");
+    SimpleTest.is(window.screenX, origoldx + 20, "move window with statusbar horizontal");
+    SimpleTest.is(window.screenY, origoldy + 20, "move window with statusbar vertical");
     synthesizeMouse(statuslabel, 22, 22, { type: "mouseup" });
 
     // event was cancelled so the drag should not have occurred
     synthesizeMouse(statuslabelnodrag, 2, 2, { type: "mousedown" });
     synthesizeMouse(statuslabelnodrag, 22, 22, { type: "mousemove" });
-    SimpleTest.is(window.screenX, oldx + 20, "move window with statusbar cancelled mousedown horizontal");
-    SimpleTest.is(window.screenY, oldy + 20, "move window with statusbar cancelled mousedown vertical");
+    SimpleTest.is(window.screenX, origoldx + 20, "move window with statusbar cancelled mousedown horizontal");
+    SimpleTest.is(window.screenY, origoldy + 20, "move window with statusbar cancelled mousedown vertical");
     synthesizeMouse(statuslabelnodrag, 22, 22, { type: "mouseup" });
   }
 
-  oldx = window.screenX;
-  oldy = window.screenY;
+  origoldx = window.screenX;
+  origoldy = window.screenY;
 
-  var target;
-  var mousedownListener = function (event) target = event.originalTarget;
+  var mousedownListener = function (event) mouseDownTarget = event.originalTarget;
   window.addEventListener("mousedown", mousedownListener, false);
   synthesizeMouse(label, 2, 2, { type: "mousedown" });
-  SimpleTest.is(target, titlebar, "movedown on titlebar");
-  synthesizeMouse(label, 22, 22, { type: "mousemove" });
-  SimpleTest.is(window.screenX, oldx + 20, "move window horizontal");
-  SimpleTest.is(window.screenY, oldy + 20, "move window vertical");
+  SimpleTest.is(mouseDownTarget, titlebar, "movedown on titlebar");
+  waitForWindowMove(label, 22, 22, test_titlebar_step2, mousedownListener);
+}
+
+function test_titlebar_step2(mousedownListener)
+{
+  var titlebar = document.getElementById("titlebar");
+  var label = document.getElementById("label");
+
+  SimpleTest.is(window.screenX, origoldx + 20, "move window horizontal");
+  SimpleTest.is(window.screenY, origoldy + 20, "move window vertical");
   synthesizeMouse(label, 22, 22, { type: "mouseup" });
 
   // with allowEvents set to true, the mouse should target the label instead
@@ -81,10 +114,10 @@ function test_titlebar()
   titlebar.allowEvents = true;
 
   synthesizeMouse(label, 2, 2, { type: "mousedown" });
-  SimpleTest.is(target, label, "movedown on titlebar with allowevents");
+  SimpleTest.is(mouseDownTarget, label, "movedown on titlebar with allowevents");
   synthesizeMouse(label, 22, 22, { type: "mousemove" });
-  SimpleTest.is(window.screenX, oldx + 20, "mouse on label move window horizontal");
-  SimpleTest.is(window.screenY, oldy + 20, "mouse on label move window vertical");
+  SimpleTest.is(window.screenX, origoldx + 20, "mouse on label move window horizontal");
+  SimpleTest.is(window.screenY, origoldy + 20, "mouse on label move window vertical");
   synthesizeMouse(label, 22, 22, { type: "mouseup" });
 
   window.removeEventListener("mousedown", mousedownListener, false);
@@ -99,14 +132,20 @@ function popupshown()
   var oldrect = panel.getBoundingClientRect();
 
   synthesizeMouse(panellabel, 2, 2, { type: "mousedown" });
-  synthesizeMouse(panellabel, 22, 22, { type: "mousemove" });
+  waitForWindowMove(panellabel, 22, 22, popupshown_step2, oldrect);
+}
+
+function popupshown_step2(oldrect)
+{
+  var panel = document.getElementById("panel");
 
   var newrect = panel.getBoundingClientRect();
   SimpleTest.is(newrect.left, oldrect.left + 20, "move popup horizontal");
   SimpleTest.is(newrect.top, oldrect.top + 20, "move popup vertical");
-  synthesizeMouse(panellabel, 22, 22, { type: "mouseup" });
+  synthesizeMouse(document.getElementById("panellabel"), 22, 22, { type: "mouseup" });
 
   synthesizeMouse(document.getElementById("button"), 5, 5, { type: "mousemove" });
+  newrect = panel.getBoundingClientRect();
   SimpleTest.is(newrect.left, oldrect.left + 20, "popup horizontal after mouse on button");
   SimpleTest.is(newrect.top, oldrect.top + 20, "popup vertical after mouse on button");
 
