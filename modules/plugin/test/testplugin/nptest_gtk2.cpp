@@ -667,7 +667,7 @@ bool
 pluginCrashInNestedLoop(InstanceData* instanceData)
 {
   // wait at least long enough for nested loop detector task to be pending ...
-  while(sleep(1)) {}
+  sleep(1);
 
   // Run the nested loop detector by processing all events that are waiting.
   bool found_event = false;
@@ -681,7 +681,7 @@ pluginCrashInNestedLoop(InstanceData* instanceData)
 
   // wait at least long enough for the "process browser events" task to be
   // pending ...
-  while(sleep(1)) {}
+  sleep(1);
 
   // we'll be crashing soon, note that fact now to avoid messing with
   // timing too much
