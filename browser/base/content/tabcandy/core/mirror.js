@@ -11,6 +11,10 @@ function _isIframe(doc){
   return win.parent != win;
 }
 
+function getMilliseconds() {
+	var date = new Date();
+	return date.getTime();
+}     
 
 var TabCanvas = function(tab, canvas){ this.init(tab, canvas) }
 TabCanvas.prototype = {
@@ -28,16 +32,18 @@ TabCanvas.prototype = {
     var h = $(canvas).height();
     $(canvas).attr({width:w, height:h});
     
-    this.paint(null);
+/*     this.paint(null); */
     
     var self = this;
-    var paintIt = function(evt){self.onPaint(evt) };
+    this.paintIt = function(evt) { 
+      self.onPaint(evt); 
+    };
     
     // Don't mirror chrome tabs.
     //if( window.location.protocol == "chrome:" ) return;
     
 /*     Utils.log('attaching', tab.contentWindow.location.href); */
-    tab.contentWindow.addEventListener("MozAfterPaint", paintIt, false);
+    tab.contentWindow.addEventListener("MozAfterPaint", this.paintIt, false);
 
 /*
     tab.contentDocument.addEventListener("onload", function() { 
@@ -45,11 +51,14 @@ TabCanvas.prototype = {
     }, false);
 */
     
-    $(window).unload(function(){
-      tab.contentWindow.removeEventListener("MozAfterPaint", paintIt, false);
-    })
+    $(window).unload(function() {
+      self.detach();
+    });
   },
-
+  
+  detach: function() {
+    this.tab.contentWindow.removeEventListener("MozAfterPaint", this.paintIt, false);
+  },
   
   paint: function(evt){
     var $ = this.window.$;
@@ -62,13 +71,14 @@ TabCanvas.prototype = {
   
     var fromWin = this.tab.contentWindow;
     if( fromWin == null || fromWin.location.protocol == "chrome:") return;
-/*     Utils.trace('paint: ' + this.tab.url); */
+/*     Utils.log('paint: ' + this.tab.url); */
     var scaler = w/fromWin.innerWidth;
   
     // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
-    var now = new Date();
+    var now = getMilliseconds();
+/*     Utils.log('now', now - this.lastDraw); */
     if( this.lastDraw == null || now - this.lastDraw > this.RATE_LIMIT ){
-      var startTime = new Date();
+      var startTime = getMilliseconds();
       ctx.save();
       ctx.scale(scaler, scaler);
       try{
@@ -78,9 +88,9 @@ TabCanvas.prototype = {
       }
       
       ctx.restore();
-      var elapsed = (new Date()) - startTime;
+      var elapsed = (getMilliseconds()) - startTime;
       //Utils.log( this.window.location.host + " " + elapsed );
-      this.lastDraw = new Date();
+      this.lastDraw = getMilliseconds();
     }
     ctx.restore();      
   },
@@ -90,7 +100,12 @@ TabCanvas.prototype = {
     if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
       Utils.trace('on paint', this.tab.contentWindow.location.href);
 */
-    this.paint(evt);    
+/*     this.paint(evt);     */
+    
+    if(!this.tab.mirror.needsPaint) {
+      if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
+        this.tab.mirror.needsPaint = getMilliseconds();
+    }
   },
   
   animate: function(options, duration){
@@ -151,8 +166,48 @@ TabMirror.prototype = {
     Tabs.forEach(function(tab){
       self.link(tab);
     });    
-    
+     
+    this.heartbeatIndex = 0;  
+    this._fireNextHeartbeat();    
   },
+  
+  _heartbeat: function() {
+    try {
+      var now = getMilliseconds();
+      var count = Tabs.length;
+      if(count) {
+        this.heartbeatIndex++;
+        if(this.heartbeatIndex >= count)
+          this.heartbeatIndex = 0;
+          
+        var tab = Tabs[this.heartbeatIndex];
+        var mirror = tab.mirror; 
+        if(mirror && mirror.needsPaint) {
+/*           Utils.log('needsPaint', now - mirror.needsPaint, tab.url); */
+  /*
+          var canvas = $('.thumb', mirror.el).get(0);
+          var tabCanvas = $(canvas).data("link");
+          tabCanvas.paint();
+  */
+          mirror.tabCanvas.paint();
+  
+          if(mirror.needsPaint + 5000 < now)
+            mirror.needsPaint = 0;
+        }
+      }
+    } catch(e) {
+      Utils.error(e);
+    }
+    
+    this._fireNextHeartbeat();
+  },
+  
+  _fireNextHeartbeat: function() {
+    var self = this;
+    window.setTimeout(function() {
+      self._heartbeat();
+    }, 100);
+  },   
   
   _getEl: function(tab){
     mirror = null;
@@ -181,7 +236,17 @@ TabMirror.prototype = {
     }     
     
     this._customize(div);
+    
+    tab.mirror = {}; 
+    tab.mirror.needsPaint = 0;
+    tab.mirror.el = div.get(0);
+/*
+    tab.mirror.favEl = $('.fav', div).get(0);
+    tab.mirror.nameEl = $('.name', div).get(0);
+*/
 
+    var self = this;
+    
     function updateAttributes(){
       var iconUrl = tab.raw.linkedBrowser.mIconURL;
       var label = tab.raw.label;
@@ -191,6 +256,13 @@ TabMirror.prototype = {
       if(iconUrl != $fav.attr("src")) $fav.attr("src", iconUrl);
       if( $name.text() != label ) {
         $name.text(label);
+/*         self._updateEl(tab);  */
+/*
+        var canvas = $('.thumb', el).get(0);
+        var tabCanvas = $(canvas).data("link");
+        tabCanvas.paint();
+*/
+        
 /*         Utils.trace('update', label); */
       }
     }    
@@ -203,15 +275,22 @@ TabMirror.prototype = {
   
   _updateEl: function(tab){
 /*     Utils.log('_udateEl', tab.url); */
-    var el = this._getEl(tab);
+    var mirror = tab.mirror;
+/*
+    if(mirror.tabCanvas)
+      mirror.tabCanvas.detach();
+*/
+  
+    if(!mirror.tabCanvas) {     
+      var canvas = $('.thumb', mirror.el).get(0);
+      mirror.tabCanvas = new TabCanvas(tab, canvas);    
+    }
     
-    var canvas = $('.thumb', el).get(0);
-    if(!$(canvas).data("link"))
-      new TabCanvas(tab, canvas);    
+    mirror.needsPaint = getMilliseconds();
   },
   
   update: function(tab){
-/*     Utils.log('update'); */
+/*     Utils.log('update', tab.url); */
     var doc = tab.contentDocument;
     this.link(tab);
 
@@ -221,8 +300,7 @@ TabMirror.prototype = {
   },
   
   link: function(tab){
-/*   	Utils.trace('link'); */
-/*   	Utils.log('link: ' + tab.url); */
+/*   	Utils.log('link', tab.url); */
     // Don't add duplicates
     var dup = this._getEl(tab)
     if( dup ) return false;
