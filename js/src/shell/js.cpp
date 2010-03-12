@@ -3534,7 +3534,9 @@ CancelExecution(JSRuntime *rt)
     static const char msg[] = "Script runs for too long, terminating.\n";
 #if defined(XP_UNIX) && !defined(JS_THREADSAFE)
     /* It is not safe to call fputs from signals. */
-    write(2, msg, sizeof(msg) - 1);
+    /* Dummy assignment avoids GCC warning on "attribute warn_unused_result" */
+    ssize_t dummy = write(2, msg, sizeof(msg) - 1);
+    (void)dummy;
 #else
     fputs(msg, stderr);
 #endif
