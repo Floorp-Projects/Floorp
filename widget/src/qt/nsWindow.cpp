@@ -2240,3 +2240,32 @@ nsWindow::AreBoundsSane(void)
 
     return PR_FALSE;
 }
+
+NS_IMETHODIMP
+nsWindow::SetIMEEnabled(PRUint32 aState)
+{
+    NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
+
+    switch (aState) {
+        case nsIWidget::IME_STATUS_ENABLED:
+        case nsIWidget::IME_STATUS_PASSWORD:
+            mWidget->showVKB();
+            break;
+        default:
+            mWidget->hideVKB();
+            break;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetIMEEnabled(PRUint32* aState)
+{
+    NS_ENSURE_ARG_POINTER(aState);
+    NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
+
+    *aState = mWidget->isVKBOpen() ? IME_STATUS_ENABLED : IME_STATUS_DISABLED;
+    return NS_OK;
+}
+
