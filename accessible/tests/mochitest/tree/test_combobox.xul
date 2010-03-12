@@ -78,7 +78,11 @@
           }
         ]
       };
-      testAccessibleTree("menulist2", accTree);
+
+      // XXX Bug 551957
+      if (!MAC) {
+        testAccessibleTree("menulist2", accTree);
+      }
 
       //////////////////////////////////////////////////////////////////////////
       // textbox@type=autocomplete #1 (history)
