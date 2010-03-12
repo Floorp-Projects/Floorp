@@ -194,15 +194,8 @@
   <wizardpage id="downloading" pageid="downloading" next="finished"
               object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
               onpageshow="gDownloadingPage.onPageShow();">
-    <updateheader label="&downloading.title;"/>
+    <updateheader label="&downloadPage.title;"/>
     <vbox class="update-content" flex="1">
-      <hbox id="downloadStatusTop">
-        <label id="downloadName" crop="right">&downloading.intro;</label>
-        <spacer flex="1"/>
-        <label id="downloadDetailsLink" class="text-link"
-               value="&details.link;" onclick="openUpdateURL(event);"/>
-      </hbox>
-      <separator class="thin"/>
       <hbox id="downloadStatusProgress">
         <progressmeter id="downloadProgress" mode="undetermined" flex="1"/>
         <button id="pauseButton" oncommand="gDownloadingPage.onPause();"

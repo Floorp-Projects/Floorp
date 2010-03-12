@@ -1149,7 +1149,6 @@ var gDownloadingPage = {
   /**
    * DOM Elements
    */
-  _downloadName: null,
   _downloadStatus: null,
   _downloadProgress: null,
   _pauseButton: null,
@@ -1175,7 +1174,6 @@ var gDownloadingPage = {
    * Initialize
    */
   onPageShow: function() {
-    this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
     this._pauseButton = document.getElementById("pauseButton");
@@ -1233,12 +1231,6 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onPageShow - error: " + e);
     }
 
-    var link = document.getElementById("downloadDetailsLink");
-    if (gUpdates.update.detailsURL)
-      link.setAttribute("url", gUpdates.update.detailsURL);
-    else
-      link.hidden = true;
-
     gUpdates.setButtons("hideButton", null, null, false);
     gUpdates.wiz.getButton("extra1").focus();
   },
@@ -1290,22 +1282,19 @@ var gDownloadingPage = {
     if (paused) {
       if (this._downloadProgress.mode != "normal")
         this._downloadProgress.mode = "normal";
-      this._downloadName.value = gUpdates.getAUSString("pausedName", [u.name]);
       this._pauseButton.setAttribute("tooltiptext",
                                      gUpdates.getAUSString("pauseButtonResume"));
       this._pauseButton.setAttribute("paused", "true");
       var p = u.selectedPatch.QueryInterface(CoI.nsIPropertyBag);
       var status = p.getProperty("status");
       if (status) {
-        let pausedStatus = gUpdates.getAUSString("pausedStatus", [status]);
+        let pausedStatus = gUpdates.getAUSString("downloadPausedStatus", [status]);
         this._setStatus(pausedStatus);
       }
     }
     else {
       if (this._downloadProgress.mode != "undetermined")
         this._downloadProgress.mode = "undetermined";
-      this._downloadName.value = gUpdates.getAUSString("downloadingPrefix",
-                                                       [u.name]);
       this._pauseButton.setAttribute("paused", "false");
       this._pauseButton.setAttribute("tooltiptext",
                                      gUpdates.getAUSString("pauseButtonPause"));
@@ -1420,7 +1409,6 @@ var gDownloadingPage = {
   onProgress: function(request, context, progress, maxProgress) {
     LOG("gDownloadingPage", "onProgress - progress: " + progress + "/" +
         maxProgress);
-    var name = gUpdates.getAUSString("downloadingPrefix", [gUpdates.update.name]);
     let status = this._updateDownloadStatus(progress, maxProgress);
     var currentProgress = Math.round(100 * (progress / maxProgress));
 
@@ -1440,8 +1428,6 @@ var gDownloadingPage = {
       this._downloadProgress.value = currentProgress;
     if (this._pauseButton.disabled)
       this._pauseButton.disabled = false;
-    if (this._downloadName.value != name)
-      this._downloadName.value = name;
 
     // If the update has completed downloading and the download status contains
     // the original text return early to avoid an assertion in debug builds.
