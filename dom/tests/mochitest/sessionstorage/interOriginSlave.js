@@ -1,6 +1,6 @@
 function postMsg(message)
 {
-  opener.postMessage(message, "http://localhost:8888");
+  opener.postMessage(message, "http://mochi.test:8888");
 }
 
 window.addEventListener("message", onMessageReceived, false);
