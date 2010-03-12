@@ -8733,7 +8733,14 @@ if test "$BUILD_CTYPES"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
   if test "$CROSS_COMPILE"; then
-    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+    case "$target" in
+    *-mingw*)
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    esac
   fi
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.
