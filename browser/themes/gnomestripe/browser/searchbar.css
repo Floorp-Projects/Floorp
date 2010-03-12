@@ -33,10 +33,8 @@
   -moz-margin-end: 2px;
   border: 0;
   -moz-box-align: center;
-  background-color: -moz-dialog;
-  -moz-border-end: 1px solid;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow;
+  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
+  -moz-border-end: 1px solid ThreeDShadow;
 }
 
 .searchbar-engine-button > .button-box {
@@ -46,17 +44,17 @@
   border: 0;
 }
 
-.searchbar-engine-button:hover > .button-box {
-  background-color: rgba(255, 255, 255, .2);
+.searchbar-engine-button:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
-.searchbar-engine-button:hover:active > .button-box,
-.searchbar-engine-button[open="true"] > .button-box {
-  background-color: rgba(0, 0, 0, .1);
+.searchbar-engine-button:hover:active,
+.searchbar-engine-button[open="true"] {
+  background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
 .searchbar-engine-button[addengines="true"] {
-  -moz-box-shadow: 0 0 5px Highlight inset, 0 0 20px Highlight inset;
+  -moz-box-shadow: 0 -5px 20px Highlight inset;
 }
 
 .searchbar-dropmarker-image {
