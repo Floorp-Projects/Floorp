@@ -804,7 +804,7 @@ nsresult nsXPInstallManager::InstallItems()
 
 NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     mContentLength = 0;
 
     if (mCancelled)
