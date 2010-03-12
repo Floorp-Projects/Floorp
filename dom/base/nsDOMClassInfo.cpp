@@ -5193,6 +5193,9 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       if (func) {
         rv = func(getter_AddRefs(native));
       }
+      else {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
     }
   } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     native = do_CreateInstance(name_struct->mCID, &rv);
