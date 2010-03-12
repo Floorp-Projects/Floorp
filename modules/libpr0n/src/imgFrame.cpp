@@ -630,7 +630,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
 
   if ((op == gfxContext::OPERATOR_OVER || pushedGroup) &&
       format == gfxASurface::ImageFormatRGB24) {
-    aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+    aContext->SetOperator(OptimalFillOperator());
   }
 
   // Phew! Now we can actually draw this image
@@ -954,4 +954,19 @@ PRBool imgFrame::GetCompositingFailed() const
 void imgFrame::SetCompositingFailed(PRBool val)
 {
   mCompositingFailed = val;
+}
+
+gfxContext::GraphicsOperator imgFrame::OptimalFillOperator()
+{
+#ifdef XP_WIN
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+        // D2D -really- hates operator source.
+        return gfxContext::OPERATOR_OVER;
+  } else {
+#endif
+    return gfxContext::OPERATOR_SOURCE;
+#ifdef XP_WIN
+  }
+#endif
 }
