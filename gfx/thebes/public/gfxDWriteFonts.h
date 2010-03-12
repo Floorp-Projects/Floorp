@@ -51,13 +51,9 @@ class gfxDWriteFont : public gfxFont
 {
 public:
     gfxDWriteFont(gfxFontEntry *aFontEntry,
-                         const gfxFontStyle *aFontStyle);
+                  const gfxFontStyle *aFontStyle,
+                  PRBool aNeedsBold = PR_FALSE);
     ~gfxDWriteFont();
-
-    static already_AddRefed<gfxDWriteFont>
-        GetOrMakeFont(gfxFontEntry *aFontEntry, 
-                      const gfxFontStyle *aStyle,
-                      PRBool aNeedsBold = PR_FALSE);
 
     virtual nsString GetUniqueName();
 
