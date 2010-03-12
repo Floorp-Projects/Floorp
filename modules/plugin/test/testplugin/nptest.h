@@ -127,7 +127,4 @@ typedef struct InstanceData {
 
 void notifyDidPaint(InstanceData* instanceData);
 
-void NoteIntentionalCrash();
-void IntentionalCrash();
-
 #endif // nptest_h_
