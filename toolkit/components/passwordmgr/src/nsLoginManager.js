@@ -40,6 +40,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function LoginManager() {
     this.init();
@@ -57,24 +58,6 @@ LoginManager.prototype = {
     /* ---------- private memebers ---------- */
 
 
-    __logService : null, // Console logging service, used for debugging.
-    get _logService() {
-        if (!this.__logService)
-            this.__logService = Cc["@mozilla.org/consoleservice;1"].
-                                getService(Ci.nsIConsoleService);
-        return this.__logService;
-    },
-
-
-    __ioService: null, // IO service for string -> nsIURI conversion
-    get _ioService() {
-        if (!this.__ioService)
-            this.__ioService = Cc["@mozilla.org/network/io-service;1"].
-                               getService(Ci.nsIIOService);
-        return this.__ioService;
-    },
-
-
     __formFillService : null, // FormFillController, for username autocompleting
     get _formFillService() {
         if (!this.__formFillService)
@@ -82,15 +65,6 @@ LoginManager.prototype = {
                             Cc["@mozilla.org/satchel/form-fill-controller;1"].
                             getService(Ci.nsIFormFillController);
         return this.__formFillService;
-    },
-
-
-    __observerService : null, // Observer Service, for notifications
-    get _observerService() {
-        if (!this.__observerService)
-            this.__observerService = Cc["@mozilla.org/observer-service;1"].
-                                     getService(Ci.nsIObserverService);
-        return this.__observerService;
     },
 
 
@@ -173,8 +147,7 @@ LoginManager.prototype = {
         this._observer._pwmgr            = this;
 
         // Preferences. Add observer so we get notified of changes.
-        this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefService).getBranch("signon.");
+        this._prefBranch = Services.prefs.getBranch("signon.");
         this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
         this._prefBranch.addObserver("", this._observer, false);
 
@@ -190,8 +163,8 @@ LoginManager.prototype = {
 
 
         // Form submit observer checks forms for new logins and pw changes.
-        this._observerService.addObserver(this._observer, "earlyformsubmit", false);
-        this._observerService.addObserver(this._observer, "xpcom-shutdown", false);
+        Services.obs.addObserver(this._observer, "earlyformsubmit", false);
+        Services.obs.addObserver(this._observer, "xpcom-shutdown", false);
 
         // WebProgressListener for getting notification of new doc loads.
         var progress = Cc["@mozilla.org/docloaderservice;1"].
@@ -212,7 +185,7 @@ LoginManager.prototype = {
         if (!this._debug)
             return;
         dump("Login Manager: " + message + "\n");
-        this._logService.logStringMessage("Login Manager: " + message);
+        Services.console.logStringMessage("Login Manager: " + message);
     },
 
 
@@ -960,7 +933,7 @@ LoginManager.prototype = {
     _getPasswordOrigin : function (uriString, allowJS) {
         var realm = "";
         try {
-            var uri = this._ioService.newURI(uriString, null, null);
+            var uri = Services.io.newURI(uriString, null, null);
 
             if (allowJS && uri.scheme == "javascript")
                 return "javascript:"
@@ -971,7 +944,7 @@ LoginManager.prototype = {
             // it's not the default. (We never want "http://foo.com:80")
             var port = uri.port;
             if (port != -1) {
-                var handler = this._ioService.getProtocolHandler(uri.scheme);
+                var handler = Services.io.getProtocolHandler(uri.scheme);
                 if (port != handler.defaultPort)
                     realm += ":" + port;
             }
@@ -1192,13 +1165,13 @@ LoginManager.prototype = {
             // For when autofillForm is false, but we still have the information
             // to fill a form, we notify observers.
             didntFillReason = "noAutofillForms";
-            this._observerService.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
+            Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
             this.log("autofillForms=false but form can be filled; notified observers");
         } else if (selectedLogin && isFormDisabled) {
             // For when autocomplete is off, but we still have the information
             // to fill a form, we notify observers.
             didntFillReason = "autocompleteOff";
-            this._observerService.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
+            Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
             this.log("autocomplete=off but form can be filled; notified observers");
         }
 
@@ -1259,9 +1232,7 @@ LoginManager.prototype = {
         formInfo.setProperty("foundLogins", foundLogins.concat());
         formInfo.setPropertyAsInterface("selectedLogin", selectedLogin);
 
-        this._observerService.notifyObservers(formInfo,
-                                              "passwordmgr-found-logins",
-                                              null);
+        Services.obs.notifyObservers(formInfo, "passwordmgr-found-logins", null);
     },
 
     /*
