@@ -422,7 +422,7 @@ var gSanitizePromptDialog = {
 
     var view = gContiguousSelectionTreeHelper.setTree(this.placesTree,
                                                       new PlacesTreeView());
-    result.viewer = view;
+    result.addObserver(view, false);
     this.initDurationDropdown();
   },
 
@@ -529,8 +529,8 @@ var gSanitizePromptDialog = {
    */
   unload: function ()
   {
-    var view = this.placesTree.view;
-    view.QueryInterface(Ci.nsINavHistoryResultViewer).result.viewer = null;
+    let result = this.placesTree.getResult();
+    result.removeObserver(this.placesTree.view);
     this.placesTree.view = null;
   },
 
