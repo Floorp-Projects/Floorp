@@ -60,6 +60,9 @@
 #include <QtCore/QDebug>
 #include <QtCore/QEvent>
 #include <QtCore/QVariant>
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+#include <QPinchGesture>
+#endif // QT version check
 
 #include "prlink.h"
 
@@ -90,6 +93,8 @@
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
 #include "gfxSharedImageSurface.h"
+
+#include "nsIDOMSimpleGestureEvent.h" //Gesture support
 
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
@@ -169,7 +174,9 @@ nsWindow::nsWindow()
     mIsDestroyed      = PR_FALSE;
     mIsShown          = PR_FALSE;
     mEnabled          = PR_TRUE;
-
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+    mMouseEventsDisabled = PR_FALSE;
+#endif // qt version check
     mWidget              = nsnull;
     mIsVisible           = PR_FALSE;
     mActivatePending     = PR_FALSE;
@@ -1186,6 +1193,14 @@ nsWindow::OnLeaveNotifyEvent(QGraphicsSceneHoverEvent *aEvent)
 nsEventStatus
 nsWindow::OnMotionNotifyEvent(QGraphicsSceneMouseEvent *aEvent)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+    if (mMouseEventsDisabled) {
+        // Block the mouse events if currently executing pinch gesture; otherwise there
+        // will be also some panning during the zooming
+        return nsEventStatus_eIgnore;
+    }
+#endif
+
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
     event.refPoint.x = nscoord(aEvent->pos().x());
@@ -1493,6 +1508,94 @@ nsWindow::hideEvent(QHideEvent *)
     mIsVisible = PR_FALSE;
     return nsEventStatus_eConsumeDoDefault;
 }
+
+//Gestures are only supported in 4.6.0 >
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
+{
+    handled = PR_FALSE;
+    const QList<QTouchEvent::TouchPoint> &touchPoints = event->touchPoints();
+
+    if (event->type() == QEvent::TouchBegin) {
+        handled = PR_TRUE;
+        for (int i = touchPoints.count() -1; i >= 0; i--) {
+            QPointF fpos = touchPoints[i].pos();
+            nsGestureNotifyEvent gestureNotifyEvent(PR_TRUE, NS_GESTURENOTIFY_EVENT_START, this);
+            gestureNotifyEvent.refPoint = nsIntPoint(fpos.x(), fpos.y());
+            DispatchEvent(&gestureNotifyEvent);
+        }
+    }
+    if (touchPoints.count() == 2) {
+        mTouchPointDistance = DistanceBetweenPoints(touchPoints.at(0).scenePos(),
+                                                    touchPoints.at(1).scenePos());
+        if (event->type() == QEvent::TouchBegin) {
+            mLastPinchDistance = mTouchPointDistance;
+        }
+    }
+
+    //Disable mouse events when gestures are used, because they cause problems with
+    //Fennec
+    mMouseEventsDisabled = touchPoints.count() >= 2;
+
+    return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsWindow::OnGestureEvent(QGestureEvent *event, PRBool &handled)
+{
+    handled = PR_FALSE;
+    nsSimpleGestureEvent mozGesture(PR_TRUE, 0, this, 0, 0.0);
+
+    if (QGesture *gesture = event->gesture(Qt::PinchGesture)) {
+        QPinchGesture *pinch = static_cast<QPinchGesture*>(gesture);
+        handled = PR_TRUE;
+
+        QPointF centerPoint = pinch->centerPoint();
+        mozGesture.refPoint.x = nscoord(centerPoint.x());
+        mozGesture.refPoint.y = nscoord(centerPoint.y());
+
+        if (pinch->state() == Qt::GestureStarted) {
+            mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            mozGesture.delta = 0.0;
+            mLastPinchDistance = mTouchPointDistance;
+            event->accept();
+        }
+        else if (pinch->state() == Qt::GestureUpdated) {
+            mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            //-1 because zoom in is positive
+            mozGesture.delta = -1.0 * (mLastPinchDistance - mTouchPointDistance);
+            mLastPinchDistance = mTouchPointDistance;
+        }
+        else {
+            handled = PR_FALSE;
+        }
+    }
+
+    if (handled) {
+        Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+
+        mozGesture.isShift   = (modifiers & Qt::ShiftModifier) ? PR_TRUE : PR_FALSE;
+        mozGesture.isControl = (modifiers & Qt::ControlModifier) ? PR_TRUE : PR_FALSE;
+        mozGesture.isMeta    = PR_FALSE;
+        mozGesture.isAlt     = (modifiers & Qt::AltModifier) ? PR_TRUE : PR_FALSE;
+        mozGesture.button    = 0;
+        mozGesture.time      = 0;
+
+        return DispatchEvent(&mozGesture);
+    }
+    return nsEventStatus_eIgnore;
+}
+
+double
+nsWindow::DistanceBetweenPoints(const QPointF &aFirstPoint, const QPointF &aSecondPoint)
+{
+    double result = 0;
+    double deltaX = abs(aFirstPoint.x() - aSecondPoint.x());
+    double deltaY = abs(aFirstPoint.y() - aSecondPoint.y());
+    result = sqrt(deltaX*deltaX + deltaY*deltaY);
+    return result;
+}
+
+#endif //qt version check
 
 void
 nsWindow::ThemeChanged()
@@ -1981,6 +2084,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             return nsnull;
         }
 
+        // Enable gestures:
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+        newView->grabGesture(Qt::PinchGesture);
+        newView->viewport()->grabGesture(Qt::PinchGesture);
+#endif
         newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->showNormal();

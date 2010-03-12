@@ -19,6 +19,12 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
       mReceiver(aReceiver)
 {
     setFlag(QGraphicsItem::ItemAcceptsInputMethod);
+
+    // Enable gestures: only available in qt > 4.6
+ #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+     setAcceptTouchEvents(true);
+     grabGesture(Qt::PinchGesture);
+ #endif
 }
 
 MozQWidget::~MozQWidget()
@@ -125,6 +131,35 @@ void MozQWidget::mousePressEvent(QGraphicsSceneMouseEvent* aEvent)
 void MozQWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent)
 {
     mReceiver->OnButtonReleaseEvent(aEvent);
+}
+
+bool MozQWidget::event ( QEvent * event )
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+    switch (event->type())
+    {
+    case QEvent::TouchBegin:
+    case QEvent::TouchEnd:
+    case QEvent::TouchUpdate:
+    {
+        // Do not send this event to other handlers, this is needed
+        // to be able to receive the gesture events
+        PRBool handled = PR_FALSE;
+        mReceiver->OnTouchEvent(static_cast<QTouchEvent *>(event),handled);
+        return handled;
+    }
+    case (QEvent::Gesture):
+    {
+        PRBool handled = PR_FALSE;
+        mReceiver->OnGestureEvent(static_cast<QGestureEvent*>(event),handled);
+        return handled;
+    }
+
+    default:
+        break;
+    }
+#endif
+    return QGraphicsWidget::event(event);
 }
 
 void MozQWidget::wheelEvent(QGraphicsSceneWheelEvent* aEvent)
