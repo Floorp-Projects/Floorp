@@ -131,12 +131,11 @@ nanojit::Allocator::postReset() {
     vma->mSize = 0;
 }
 
-void
-StackFilter::getTops(LIns* guard, int& spTop, int& rpTop)
+int
+StackFilter::getTop(LIns* guard)
 {
     VMSideExit* e = (VMSideExit*)guard->record()->exit;
-    spTop = e->sp_adj;
-    rpTop = e->rp_adj;
+    return e->sp_adj;
 }
 
 #if defined NJ_VERBOSE
