@@ -175,10 +175,10 @@ public:
   static size_t GetAlignment(JSContext* cx, JSObject* obj);
   static ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
   static JSString* GetName(JSContext* cx, JSObject* obj);
-  static JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
+  static JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj);
   static JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
 
-  static JSBool ProtoGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool NameGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
@@ -196,7 +196,7 @@ public:
 
   static JSObject* GetBaseType(JSContext* cx, JSObject* obj);
 
-  static JSBool TargetGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool TargetTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool ContentsGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
 };

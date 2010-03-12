@@ -1111,7 +1111,7 @@ function run_jschar_tests(library, t, name, limits) {
 
   do_check_true(d.address().constructor === t.ptr);
   do_check_eq(d.address().contents, "a");
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + toprimitive(d.value) + ")");
+  do_check_eq(d.toSource(), "ctypes." + name + "(\"" + d.value + "\")");
   do_check_eq(d.toSource(), d.toString());
 
   // Test string autoconversion (and lack thereof).

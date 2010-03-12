@@ -129,7 +129,7 @@ Library::Create(JSContext* cx, jsval aPath)
     nsISupports* file = xpc->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(aPath));
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file);
     if (!localFile) {
-      JS_ReportError(cx, "open takes a string or nsIFile argument");
+      JS_ReportError(cx, "open takes a string or nsILocalFile argument");
       return NULL;
     }
 
