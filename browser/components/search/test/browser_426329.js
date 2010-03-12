@@ -33,7 +33,7 @@ function test() {
   }
 
   obs.addObserver(observer, "browser-search-engine-modified", false);
-  ss.addEngine("http://localhost:8888/browser/browser/components/search/test/426329.xml",
+  ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
                Ci.nsISearchEngine.DATA_XML, "data:image/x-icon,%00",
                false);
 
