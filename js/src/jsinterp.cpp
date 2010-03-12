@@ -2697,7 +2697,7 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL_CONSTEXPR(JSVAL_INT_MAX)));
 #ifdef JS_REPRMETER
 # define METER_REPR(fp)         (reprmeter::MeterRepr(fp))
 #else
-# define METER_REPR(fp)
+# define METER_REPR(fp)         ((void) 0)
 #endif /* JS_REPRMETER */
 
 /*
