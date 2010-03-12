@@ -18,6 +18,7 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
 {
+    setFlag(QGraphicsItem::ItemAcceptsInputMethod);
 }
 
 MozQWidget::~MozQWidget()
@@ -225,5 +226,55 @@ void MozQWidget::setModal(bool modal)
 QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 {
     return QGraphicsWidget::inputMethodQuery(aQuery);
+}
+
+void MozQWidget::showVKB()
+{
+    QWidget* focusWidget = qApp->focusWidget();
+
+    if (focusWidget) {
+        QInputContext *inputContext = qApp->inputContext();
+        if (!inputContext) {
+            NS_WARNING("Requesting SIP: but no input context");
+            return;
+        }
+
+        QEvent request(QEvent::RequestSoftwareInputPanel);
+        inputContext->filterEvent(&request);
+        focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
+        inputContext->setFocusWidget(focusWidget);
+    }
+}
+
+void MozQWidget::hideVKB()
+{
+    QInputContext *inputContext = qApp->inputContext();
+    if (!inputContext) {
+        NS_WARNING("Closing SIP: but no input context");
+        return;
+    }
+
+    QEvent request(QEvent::CloseSoftwareInputPanel);
+    inputContext->filterEvent(&request);
+    inputContext->reset();
+}
+
+/**
+    This method checks the state of the virtual keyboard by checking the list
+    of occupied rectangles. If this list is empty, the keyboard is considered
+    to be closed.
+
+    @return true, if opened; false if closed
+*/
+bool MozQWidget::isVKBOpen()
+{
+    QVariantList areas;
+    QInputContext* input_context = qApp->inputContext();
+
+    if (input_context)
+        areas = input_context->property("InputMethodArea").toList();
+
+    // if it is empty, no VKB visible; otherwise it is
+    return areas.empty();
 }
 
