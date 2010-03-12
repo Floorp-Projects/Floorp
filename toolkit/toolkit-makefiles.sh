@@ -277,7 +277,6 @@ MAKEFILES_layout="
   layout/build/Makefile
   layout/forms/Makefile
   layout/generic/Makefile
-  layout/html/tests/Makefile
   layout/inspector/public/Makefile
   layout/inspector/src/Makefile
   layout/printing/Makefile
