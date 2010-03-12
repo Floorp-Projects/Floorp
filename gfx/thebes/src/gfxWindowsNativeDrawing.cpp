@@ -212,13 +212,14 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 PRBool
 gfxWindowsNativeDrawing::IsDoublePass()
 {
-    // this is the same test we use in BeginNativeDrawing.
     nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
     if (!surf || surf->CairoStatus())
         return false;
-    if ((surf->GetType() == gfxASurface::SurfaceTypeWin32 ||
-         surf->GetType() == gfxASurface::SurfaceTypeWin32Printing) &&
-        (surf->GetContentType() != gfxASurface::CONTENT_COLOR ||
+    if (surf->GetType() != gfxASurface::SurfaceTypeWin32 ||
+	surf->GetType() != gfxASurface::SurfaceTypeWin32Printing) {
+	return PR_TRUE;
+    }
+    if ((surf->GetContentType() != gfxASurface::CONTENT_COLOR ||
          (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
           !(mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
         return PR_TRUE;
