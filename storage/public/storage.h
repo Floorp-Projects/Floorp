@@ -43,7 +43,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Public Interfaces
 
-#include "mozStorageCID.h"
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageError.h"
@@ -55,13 +54,12 @@
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageStatementCallback.h"
-#include "mozIStorageBindingParamsArray.h"
-#include "mozIStorageBindingParams.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Native Language Helpers
 
 #include "mozStorageHelper.h"
+#include "mozStorageCID.h"
 
 #include "mozilla/storage/Variant.h"
 
