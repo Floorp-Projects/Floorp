@@ -1360,7 +1360,7 @@ protected:
 
 #ifdef MOZ_SMIL
   // SMIL Animation Controller, lazily-initialized in GetAnimationController
-  nsRefPtr<nsSMILAnimationController> mAnimationController;
+  nsAutoPtr<nsSMILAnimationController> mAnimationController;
 #endif // MOZ_SMIL
 
   // Table of element properties for this document.
