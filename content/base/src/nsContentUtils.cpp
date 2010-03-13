@@ -933,7 +933,7 @@ nsContentUtils::Shutdown()
   // Clean up c-style's observer 
   if (sPrefCallbackList) {
     while (sPrefCallbackList->Count() > 0) {
-      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
+      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
       NS_ABORT_IF_FALSE(callback, "Invalid c-style callback is appended");
       if (sPrefBranch)
         sPrefBranch->RemoveObserver(callback->mPref.get(), callback);
@@ -2672,7 +2672,7 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 
     int i;
     for (i = 0; i < sPrefCallbackList->Count(); i++) {
-      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
+      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
       if (callback && callback->IsEqual(aPref, aCallback, aClosure)) {
         sPrefBranch->RemoveObserver(aPref, callback);
         sPrefCallbackList->RemoveObject(callback);
