@@ -41,7 +41,7 @@
 #include "prlog.h"
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIURI.h"
 #include "nsContentCID.h"
@@ -52,8 +52,6 @@
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsLayoutStatics.h"
-
-static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 nsStyleSheetService *nsStyleSheetService::gInstance = nsnull;
 
@@ -171,7 +169,9 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID);
+  nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
+  NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
+
   nsCOMPtr<nsICSSStyleSheet> sheet;
   // Allow UA sheets, but not user sheets, to use unsafe rules
   nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,

@@ -170,6 +170,12 @@ pref("gfx.color_management.rendering_intent", 0);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
+#ifdef XP_WIN
+#ifndef WINCE
+pref("gfx.font_rendering.directwrite.enabled", false);
+#endif
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
@@ -183,6 +189,10 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 // unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
+
+// Forcibly disable a11y on win32, even if something attempts
+// to enable it.
+pref("accessibility.win32.force_disabled", false);
 
 // On OS X, we follow the "Click in the scrollbar to:" system preference
 // unless this preference was set manually
@@ -218,9 +228,6 @@ pref("gfx.use_text_smoothing_setting", false);
 
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
-
-// form submission
-pref("browser.forms.submit.backwards_compatible", true);
 
 // Number of characters to consider emphasizing for rich autocomplete results
 pref("toolkit.autocomplete.richBoundaryCutoff", 200);
@@ -1070,13 +1077,6 @@ pref("bidi.direction", 1);
 // 3 = visualtexttypeBidi
 pref("bidi.texttype", 1);
 // ------------------
-//  Controls Text Mode
-// ------------------
-// 1 = logicalcontrolstextmodeBidiCmd
-// 2 = visualcontrolstextmodeBidi <-- NO LONGER SUPPORTED
-// 3 = containercontrolstextmodeBidi *
-pref("bidi.controlstextmode", 1);
-// ------------------
 //  Numeral Style
 // ------------------
 // 0 = nominalnumeralBidi *
@@ -1178,12 +1178,6 @@ pref("browser.popups.showPopupBlocker", true);
 // See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
 pref("viewmanager.do_doublebuffering", true);
 
-// which files will be selected for roaming by default.
-// See sroaming/content/prefs/all.js
-pref("roaming.default.files", "bookmarks.html,abook.mab,cookies.txt");
-// display some general warning to the user about making backups, security etc.
-pref("roaming.showInitialWarning", true);
-
 // whether use prefs from system
 pref("config.use_system_prefs", false);
 
@@ -1226,6 +1220,14 @@ pref("dom.ipc.plugins.timeoutSecs", 10);
 pref("dom.ipc.plugins.timeoutSecs", 0);
 #endif
 
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+// Linux plugins using Xt instead of Xembed don't work out-of-process yet.
+pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
+pref("dom.ipc.plugins.enabled.nppdf.so", false);
+#endif
+#endif
+
 pref("svg.enabled", true);
 pref("svg.smil.enabled", true);
 
@@ -1254,6 +1256,7 @@ pref("font.minimum-size.x-orya", 0);
 pref("font.minimum-size.x-sinh", 0);
 pref("font.minimum-size.x-tamil", 0);
 pref("font.minimum-size.x-telu", 0);
+pref("font.minimum-size.x-tibt", 0);
 pref("font.minimum-size.th", 0);
 pref("font.minimum-size.tr", 0);
 pref("font.minimum-size.x-cans", 0);
@@ -1457,6 +1460,13 @@ pref("font.name-list.serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.sans-serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.monospace.x-sinh", "Iskoola Pota, AksharUnicode");
 
+pref("font.name.serif.x-tibt", "Tibetan Machine Uni");
+pref("font.name.sans-serif.x-tibt", "Tibetan Machine Uni");
+pref("font.name.monospace.x-tibt", "Tibetan Machine Uni");
+pref("font.name-list.serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+pref("font.name-list.sans-serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
+
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -1558,6 +1568,10 @@ pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
 
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
@@ -1655,6 +1669,10 @@ pref("ui.panel.default_level_parent", false);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
+// If your mouse drive sends WM_*SCROLL messages when you turn your mouse wheel,
+// set this to true.  Then, gecko processes them as mouse wheel messages.
+pref("mousewheel.emulate_at_wm_scroll", false);
+
 // Bug 514927
 // Enables or disabled the TrackPoint hack, -1 is autodetect, 0 is off,
 // and 1 is on.  Set this to 1 if TrackPoint scrolling is not working.
@@ -1667,11 +1685,6 @@ pref("ui.trackpoint_hack.enabled", -1);
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 pref("ui.click_hold_context_menus", false);
-
-#ifndef __LP64__
-// whether to always use ATSUI for text even if CoreText is available
-pref("gfx.force_atsui_text", false);
-#endif
 
 // default fonts (in UTF8 and using canonical names)
 // to determine canonical font names, use a debug build and 
@@ -1881,6 +1894,14 @@ pref("font.name-list.serif.x-tamil", "InaiMathi");
 pref("font.name-list.sans-serif.x-tamil", "InaiMathi");
 pref("font.name-list.monospace.x-tamil", "InaiMathi");
 
+// Kailasa ships with mac os x >= 10.5
+pref("font.name.serif.x-tibt", "Kailasa");
+pref("font.name.sans-serif.x-tibt", "Kailasa");
+pref("font.name.monospace.x-tibt", "Kailasa");
+pref("font.name-list.serif.x-tibt", "Kailasa");
+pref("font.name-list.sans-serif.x-tibt", "Kailasa");
+pref("font.name-list.monospace.x-tibt", "Kailasa");
+
 pref("font.name.serif.x-unicode", "Times");
 pref("font.name.sans-serif.x-unicode", "Helvetica");
 pref("font.name.monospace.x-unicode", "Courier");
@@ -2025,6 +2046,10 @@ pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
 
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
@@ -2055,8 +2080,6 @@ pref("font.single-face-list", "Osaka-Mono");
 // optimization hint for fonts with localized names to be read in at startup, otherwise read in at lookup miss
 // names are canonical family names (typically English names)
 pref("font.preload-names-list", "Hiragino Kaku Gothic Pro,Hiragino Mincho Pro,STSong");
-
-pref("browser.urlbar.clickAtEndSelects", false);
 
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
 // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
@@ -2637,6 +2660,10 @@ pref("font.default.x-sinh", "serif");
 pref("font.size.variable.x-sinh", 16);
 pref("font.size.fixed.x-sinh", 13);
 
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
 pref("print.postscript.paper_size",    "letter");
@@ -2833,8 +2860,14 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
+// Initialize default render-mode.
+pref("mozilla.widget.render-mode", -1);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
+
+// Enable/Disable the orientation API for content
+pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.enable", false);

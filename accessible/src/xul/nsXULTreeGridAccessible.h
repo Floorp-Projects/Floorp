@@ -65,8 +65,7 @@ public:
 protected:
 
   // nsXULTreeAccessible
-  virtual void CreateTreeItemAccessible(PRInt32 aRow,
-                                        nsAccessNode** aAccessNode);
+  virtual already_AddRefed<nsAccessible> CreateTreeItemAccessible(PRInt32 aRow);
 };
 
 
@@ -100,7 +99,7 @@ public:
   virtual PRInt32 GetIndexOf(nsIAccessible *aChild);
 
   // nsXULTreeItemAccessibleBase
-  virtual void GetCellAccessible(nsITreeColumn *aColumn, nsIAccessible **aCell);
+  virtual nsAccessible* GetCellAccessible(nsITreeColumn *aColumn);
   virtual void RowInvalidated(PRInt32 aStartColIdx, PRInt32 aEndColIdx);
 
 protected:
@@ -109,7 +108,7 @@ protected:
   virtual void CacheChildren();
 
   // nsXULTreeItemAccessibleBase
-  nsAccessNodeHashtable mAccessNodeCache;
+  nsAccessibleHashtable mAccessibleCache;
 };
 
 
@@ -182,8 +181,8 @@ public:
 
 protected:
   // nsAccessible
-  virtual nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                            nsresult* aError = nsnull);
+  virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                           nsresult *aError = nsnull);
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
 
   // nsXULTreeGridCellAccessible

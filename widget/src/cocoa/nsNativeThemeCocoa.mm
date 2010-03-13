@@ -109,48 +109,6 @@ extern "C" {
 
 @end
 
-static void DrawFocusRing(NSRect rect, float radius)
-{
-  NSSetFocusRingStyle(NSFocusRingOnly);
-  NSBezierPath* path = [NSBezierPath bezierPath];
-  rect = NSInsetRect(rect, radius, radius);
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
-  [path closePath];
-  [path fill];
-}
-
-// On 10.4, NSSearchFieldCells and NSComboBoxCells can't draw focus rings.
-@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
-
-@implementation SearchFieldCellWithFocusRing
-
-- (void) drawWithFrame:(NSRect)rect inView:(NSView*)controlView
-{
-  [super drawWithFrame:rect inView:controlView];
-  if (!nsToolkit::OnLeopardOrLater() && [self showsFirstResponder]) {
-    DrawFocusRing(rect, NSHeight(rect) / 2);
-  }
-}
-
-@end
-
-@interface ComboBoxCellWithFocusRing : NSComboBoxCell {} @end
-
-@implementation ComboBoxCellWithFocusRing
-
-- (void) drawWithFrame:(NSRect)rect inView:(NSView*)controlView
-{
-  [super drawWithFrame:rect inView:controlView];
-  if (!nsToolkit::OnLeopardOrLater() && [self showsFirstResponder]) {
-    DrawFocusRing(NSMakeRect(rect.origin.x, rect.origin.y + 2, rect.size.width - 3, rect.size.height - 4), 0);
-  }
-}
-
-@end
-
 // Copied from nsLookAndFeel.h
 // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
 static const int kThemeScrollBarArrowsBoth = 2;
@@ -160,7 +118,6 @@ static const int kThemeScrollBarArrowsBoth = 2;
 
 // These enums are for indexing into the margin array.
 enum {
-  tigerOS,
   leopardOS
 };
 
@@ -190,7 +147,8 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
 {
   if (!marginSet)
     return;
-  static int osIndex = nsToolkit::OnLeopardOrLater() ? leopardOS : tigerOS;
+
+  static int osIndex = leopardOS;
   int controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
   rect->origin.x -= buttonMargins[leftMargin];
@@ -252,7 +210,7 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
-  mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
+  mSearchFieldCell = [[NSSearchFieldCell alloc] initTextCell:@""];
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
   [mSearchFieldCell setEditable:YES];
@@ -260,7 +218,7 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 
   mDropdownCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:NO];
 
-  mComboBoxCell = [[ComboBoxCellWithFocusRing alloc] initTextCell:@""];
+  mComboBoxCell = [[NSComboBoxCell alloc] initTextCell:@""];
   [mComboBoxCell setBezeled:YES];
   [mComboBoxCell setEditable:YES];
   [mComboBoxCell setFocusRingType:NSFocusRingTypeExterior];
@@ -1199,12 +1157,10 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
   // selected tab shouldn't draw its left separator.
   tdi.adornment = kHIThemeTabAdornmentNone;
   if (isRTL ? IsBeforeSelectedTab(aFrame) : IsAfterSelectedTab(aFrame)) {
-    if (nsToolkit::OnLeopardOrLater()) {
-      // On Leopard, the tab's left edge must be shifted 1px to the right.
-      // On Tiger, this happens automatically when no leading separator is drawn.
-      inBoxRect.origin.x += 1;
-      inBoxRect.size.width -= 1;
-    }
+    // On Leopard, the tab's left edge must be shifted 1px to the right.
+    // On Tiger, this happens automatically when no leading separator is drawn.
+    inBoxRect.origin.x += 1;
+    inBoxRect.size.width -= 1;
   }
   else {
     tdi.adornment = kHIThemeTabAdornmentLeadingSeparator;
@@ -1212,11 +1168,9 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
 
   if (isSelected && !isLast) {
     tdi.adornment |= kHIThemeTabAdornmentTrailingSeparator;
-    if (nsToolkit::OnLeopardOrLater()) {
-      // On Tiger, the right separator is drawn outside of the frame.
-      // On Leopard, the right edge must be shifted 1px to the right.
-      inBoxRect.size.width += 1;
-    }
+    // On Tiger, the right separator is drawn outside of the frame.
+    // On Leopard, the right edge must be shifted 1px to the right.
+    inBoxRect.size.width += 1;
   }
   
   if (inState & NS_EVENT_STATE_FOCUS)

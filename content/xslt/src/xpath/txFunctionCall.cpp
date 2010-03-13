@@ -146,15 +146,15 @@ void
 FunctionCall::toString(nsAString& aDest)
 {
     nsCOMPtr<nsIAtom> functionNameAtom;
-    nsAutoString functionName;
-    if (NS_FAILED(getNameAtom(getter_AddRefs(functionNameAtom))) ||
-        NS_FAILED(functionNameAtom->ToString(functionName))) {
+    if (NS_FAILED(getNameAtom(getter_AddRefs(functionNameAtom)))) {
         NS_ERROR("Can't get function name.");
         return;
     }
 
-    aDest.Append(functionName);
-    aDest.Append(PRUnichar('('));
+
+
+    aDest.Append(nsDependentAtomString(functionNameAtom) +
+                 NS_LITERAL_STRING("("));
     for (PRUint32 i = 0; i < mParams.Length(); ++i) {
         if (i != 0) {
             aDest.Append(PRUnichar(','));

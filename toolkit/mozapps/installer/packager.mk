@@ -78,8 +78,12 @@ PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 
 # By default, the SDK uses the same packaging type as the main bundle,
 # but on mac it is a .tar.bz2
+SDK_PATH      = $(PKG_PATH)
+ifeq ($(MOZ_APP_NAME),xulrunner)
+SDK_PATH = sdk/
+endif
 SDK_SUFFIX    = $(PKG_SUFFIX)
-SDK           = $(PKG_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
+SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 MAKE_CAB	= $(error Don't know how to make a CAB!);
@@ -92,7 +96,7 @@ ifdef MOZ_FASTSTART
 CABARGS += -faststart
 endif
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
-MAKE_CAB	= $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py \
+MAKE_CAB	= $(PYTHON) $(MOZILLA_DIR)/build/package/wince/make_wince_cab.py \
 	$(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" \
 	"$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab"
 endif
@@ -193,6 +197,9 @@ UNMAKE_PACKAGE	= \
 # individual dmg and are created by hdiutil.
 SDK_SUFFIX = .tar.bz2
 SDK = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
+ifeq ($(MOZ_APP_NAME),xulrunner)
+SDK = $(SDK_PATH)$(MOZ_APP_NAME).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
+endif
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
@@ -213,7 +220,7 @@ ifeq ($(OS_ARCH),OS2)
 NSS_DLL_SUFFIX	= .DLL
 SIGN_CMD	= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/sign.cmd $(DIST)
 else
-SIGN_CMD	= $(RUN_TEST_PROGRAM) $(DIST)/bin/shlibsign -v -i
+SIGN_CMD	= $(RUN_TEST_PROGRAM) $(DIST)/bin/shlibsign$(BIN_SUFFIX) -v -i
 endif
 endif
 
@@ -437,6 +444,7 @@ make-package: stage-package $(PACKAGE_XULRUNNER)
 	@echo "Compressing..."
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(MAKE_PACKAGE)
+	@echo "$(BUILDID) $(MOZ_SOURCE_STAMP)" > $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt
 
 # The install target will install the application to prefix/lib/appname-version
 # In addition if INSTALL_SDK is set, it will install the development headers,
@@ -501,6 +509,7 @@ make-sdk:
 # sdk/lib is the same as sdk/sdk/lib
 	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(SDK_PATH)
 	cd $(DIST) && $(MAKE_SDK)
 
 ifeq ($(OS_TARGET), WINNT)
@@ -526,6 +535,7 @@ upload:
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt) \
 		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 ifndef MOZ_PKG_SRCDIR

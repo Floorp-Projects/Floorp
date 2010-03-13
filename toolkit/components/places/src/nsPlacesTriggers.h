@@ -47,9 +47,9 @@
  *  0 - invalid
  *  4 - EMBED
  *  7 - DOWNLOAD
+ *  7 - FRAMED_LINK
  **/
-#define EXCLUDED_VISIT_TYPES "0, 4, 7"
-
+#define EXCLUDED_VISIT_TYPES "0, 4, 7, 8"
 /**
  * Trigger checks to ensure that at least one bookmark is still using a keyword
  * when any bookmark is deleted.  If there are no more bookmarks using it, the

@@ -1604,6 +1604,11 @@ static const nsCSSProperty gBorderSubpropTable[] = {
   eCSSProperty_border_left_color_value,
   eCSSProperty_border_left_color_ltr_source,
   eCSSProperty_border_left_color_rtl_source,
+  eCSSProperty_border_top_colors,
+  eCSSProperty_border_right_colors,
+  eCSSProperty_border_bottom_colors,
+  eCSSProperty_border_left_colors,
+  eCSSProperty_border_image,
   eCSSProperty_UNKNOWN
 };
 

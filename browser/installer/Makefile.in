@@ -108,20 +108,38 @@ endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-ifeq (Darwin, $(OS_ARCH))
-DEFINES += \
-  -DBINPATH=$(_BINPATH) \
-  -DAPPNAME=$(_APPNAME) \
-  $(NULL)
+ifeq (bundle, $(MOZ_FS_LAYOUT))
+BINPATH = $(_BINPATH)
+DEFINES += -DAPPNAME=$(_APPNAME)
 else
 # Every other platform just winds up in dist/bin
-DEFINES += -DBINPATH=bin
+BINPATH = bin
 endif
+DEFINES += -DBINPATH=$(BINPATH)
 
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack PKG_LANGPACK_PATH=
 
 UPLOAD_EXTRA_FILES += $(PKG_LANGPACK_BASENAME).xpi
+
+ifeq (WINNT,$(OS_ARCH))
+PKGCOMP_FIND_OPTS =
+else
+PKGCOMP_FIND_OPTS = -L
+endif
+ifeq (Darwin, $(OS_ARCH))
+FINDPATH = $(_APPNAME)/Contents/MacOS
+else
+FINDPATH=bin
+endif
+
+package-compare:: $(MOZ_PKG_MANIFEST)
+ifdef MOZ_PKG_MANIFEST_P
+	cd $(DIST); find $(PKGCOMP_FIND_OPTS) $(FINDPATH) -type f | sort > bin-list.txt
+	grep "^$(BINPATH)" $(MOZ_PKG_MANIFEST) | sed -e 's/^\///' | sort > $(DIST)/pack-list.txt
+	-diff -u $(DIST)/pack-list.txt $(DIST)/bin-list.txt
+	rm -f $(DIST)/pack-list.txt $(DIST)/bin-list.txt
+endif
 
 installer:: removed-files
 ifdef INSTALLER_DIR

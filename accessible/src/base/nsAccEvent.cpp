@@ -213,7 +213,7 @@ nsAccEvent::GetAccessibleByNode()
         nsRefPtr<nsXULTreeAccessible> treeAcc =
           nsAccUtils::QueryAccessibleTree(accessible);
         if (treeAcc)
-          treeAcc->GetTreeItemAccessible(treeIndex, getter_AddRefs(accessible));
+          accessible = treeAcc->GetTreeItemAccessible(treeIndex);
       }
     }
   }

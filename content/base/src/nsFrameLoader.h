@@ -111,6 +111,8 @@ private:
   NS_HIDDEN_(nsresult) EnsureDocShell();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
+  void FireErrorEvent();
+  nsresult ReallyStartLoadingInternal();
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;

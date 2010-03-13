@@ -43,7 +43,12 @@
 #include <queue>
 #include <stack>
 
+#include "base/basictypes.h"
+
+#include "pratom.h"
+
 #include "mozilla/ipc/SyncChannel.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -51,7 +56,16 @@ namespace ipc {
 
 class RPCChannel : public SyncChannel
 {
+    friend class CxxStackFrame;
+
 public:
+    // What happens if RPC calls race?
+    enum RacyRPCPolicy {
+        RRPError,
+        RRPChildWins,
+        RRPParentWins
+    };
+
     class /*NS_INTERFACE_CLASS*/ RPCListener :
         public SyncChannel::SyncListener
     {
@@ -66,21 +80,40 @@ public:
                                          Message*& aReply) = 0;
         virtual Result OnCallReceived(const Message& aMessage,
                                       Message*& aReply) = 0;
+
+        virtual void OnEnteredCxxStack()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
+        virtual void OnExitedCxxStack()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
+        virtual RacyRPCPolicy MediateRPCRace(const Message& parent,
+                                             const Message& child)
+        {
+            return RRPChildWins;
+        }
     };
 
-    // What happens if RPC calls race?
-    enum RacyRPCPolicy {
-        RRPError,
-        RRPChildWins,
-        RRPParentWins
-    };
-
-    RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins);
+    RPCChannel(RPCListener* aListener);
 
     virtual ~RPCChannel();
 
+    NS_OVERRIDE
+    void Clear();
+
     // Make an RPC to the other side of the channel
     bool Call(Message* msg, Message* reply);
+
+    // RPCChannel overrides these so that the async and sync messages
+    // can be counted against mStackFrames
+    NS_OVERRIDE
+    virtual bool Send(Message* msg);
+    NS_OVERRIDE
+    virtual bool Send(Message* msg, Message* reply);
 
     // Asynchronously, send the child a message that puts it in such a
     // state that it can't send messages to the parent unless the
@@ -104,6 +137,11 @@ public:
     //
     // Return true iff successful.
     bool UnblockChild();
+
+    // Return true iff this has code on the C++ stack.
+    bool IsOnCxxStack() const {
+        return 0 < mCxxStackFrames;
+    }
 
     NS_OVERRIDE
     virtual bool OnSpecialMessage(uint16 id, const Message& msg);
@@ -139,6 +177,15 @@ protected:
   private:
     // Called on worker thread only
 
+    RPCListener* Listener() const {
+        return static_cast<RPCListener*>(mListener);
+    }
+
+    NS_OVERRIDE
+    virtual bool ShouldDeferNotifyMaybeError() {
+        return 0 < mCxxStackFrames;
+    }
+
     bool EventOccurred();
 
     void MaybeProcessDeferredIncall();
@@ -150,6 +197,53 @@ protected:
 
     void BlockOnParent();
     void UnblockFromParent();
+
+    // This helper class managed RPCChannel.mCxxStackDepth on behalf
+    // of RPCChannel.  When the stack depth is incremented from zero
+    // to non-zero, it invokes an RPCChannel callback, and similarly
+    // for when the depth goes from non-zero to zero;
+    void EnteredCxxStack()
+    {
+        Listener()->OnEnteredCxxStack();
+    }
+
+    void ExitedCxxStack()
+    {
+        Listener()->OnExitedCxxStack();
+    }
+
+    class NS_STACK_CLASS CxxStackFrame
+    {
+    public:
+        CxxStackFrame(RPCChannel& that) : mThat(that) {
+            NS_ABORT_IF_FALSE(0 <= mThat.mCxxStackFrames,
+                              "mismatched CxxStackFrame ctor/dtor");
+            mThat.AssertWorkerThread();
+
+            if (0 == mThat.mCxxStackFrames++)
+                mThat.EnteredCxxStack();
+        }
+
+        ~CxxStackFrame() {
+            bool exitingStack = (0 == --mThat.mCxxStackFrames);
+
+            // mListener could have gone away if Close() was called while
+            // RPCChannel code was still on the stack
+            if (!mThat.mListener)
+                return;
+
+            mThat.AssertWorkerThread();
+            if (exitingStack)
+                mThat.ExitedCxxStack();
+        }
+    private:
+        RPCChannel& mThat;
+
+        // disable harmful methods
+        CxxStackFrame();
+        CxxStackFrame(const CxxStackFrame&);
+        CxxStackFrame& operator=(const CxxStackFrame&);
+    };
 
     // Called from both threads
     size_t StackDepth() {
@@ -252,10 +346,66 @@ protected:
     // detect the same race.
     //
     size_t mRemoteStackDepthGuess;
-    RacyRPCPolicy mRacePolicy;
 
     // True iff the parent has put us in a |BlockChild()| state.
     bool mBlockedOnParent;
+
+    // Approximation of number of Sync/RPCChannel-code frames on the
+    // C++ stack.  It can only be interpreted as the implication
+    //
+    //  mCxxStackDepth > 0 => RPCChannel code on C++ stack
+    //
+    // This member is only accessed on the worker thread, and so is
+    // not protected by mMutex.  It is managed exclusively by the
+    // helper |class CxxStackFrame|.
+    int mCxxStackFrames;
+    
+private:
+
+    //
+    // All dequeuing tasks require a single point of cancellation,
+    // which is handled via a reference-counted task.
+    //
+    class RefCountedTask
+    {
+      public:
+        RefCountedTask(CancelableTask* aTask)
+        : mTask(aTask)
+        , mRefCnt(0) {}
+        ~RefCountedTask() { delete mTask; }
+        void Run() { mTask->Run(); }
+        void Cancel() { mTask->Cancel(); }
+        void AddRef() {
+            PR_AtomicIncrement(reinterpret_cast<PRInt32*>(&mRefCnt));
+        }
+        void Release() {
+            nsrefcnt count =
+                PR_AtomicDecrement(reinterpret_cast<PRInt32*>(&mRefCnt));
+            if (0 == count)
+                delete this;
+        }
+
+      private:
+        CancelableTask* mTask;
+        nsrefcnt mRefCnt;
+    };
+
+    //
+    // Wrap an existing task which can be cancelled at any time
+    // without the wrapper's knowledge.
+    //
+    class DequeueTask : public Task
+    {
+      public:
+        DequeueTask(RefCountedTask* aTask) : mTask(aTask) {}
+        void Run() { mTask->Run(); }
+        
+      private:
+        nsRefPtr<RefCountedTask> mTask;
+    };
+
+    // A task encapsulating dequeuing one pending task
+    nsRefPtr<RefCountedTask> mDequeueOneTask;
 };
 
 

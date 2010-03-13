@@ -203,11 +203,11 @@ protected: // new functions
                                 void *closure);
     PRBool mEnableKerning;
 
-    void GetPrefFonts(const char *aLangGroup,
+    void GetPrefFonts(nsIAtom *aLangGroup,
                       nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
     void GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
     void FamilyListToArrayList(const nsString& aFamilies,
-                               const nsCString& aLangGroup,
+                               nsIAtom *aLangGroup,
                                nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
     already_AddRefed<gfxFT2Font> WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList,
                                                        PRUint32 aCh);

@@ -957,7 +957,7 @@ var gCSSProperties = {
 		domProp: "border",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width" ],
+		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "-moz-border-top-colors", "-moz-border-right-colors", "-moz-border-bottom-colors", "-moz-border-left-colors", "-moz-border-image" ],
 		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
 		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
 		invalid_values: [ "5%" ]

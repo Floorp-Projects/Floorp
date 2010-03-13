@@ -12084,6 +12084,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                   case js::TypedArray::TYPE_UINT8_CLAMPED:
                     addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
                     lir->insStore(LIR_stb, lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins), addr_ins, 0);
+                    break;
                   default:
                     JS_NOT_REACHED("Unknown typed array type in tracer");
                 }

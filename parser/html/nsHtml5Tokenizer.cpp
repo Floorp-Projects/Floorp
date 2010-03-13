@@ -3871,6 +3871,7 @@ nsHtml5Tokenizer::resetToDataState()
   prevValue = -1;
   value = 0;
   seenDigits = PR_FALSE;
+  endTag = PR_FALSE;
   shouldSuspend = PR_FALSE;
   initDoctypeFields();
   if (!!tagName) {
@@ -3918,6 +3919,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   prevValue = other->prevValue;
   value = other->value;
   seenDigits = other->seenDigits;
+  endTag = other->endTag;
   shouldSuspend = PR_FALSE;
   nsHtml5Portability::releaseLocal(doctypeName);
   if (!other->doctypeName) {

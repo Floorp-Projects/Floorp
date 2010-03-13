@@ -83,15 +83,18 @@ private:
         PRBool MoveForward(nsINode *aRoot, nsINode *aParent, PRInt32 aChildNum);
         void MoveBackward(nsINode *aParent, PRInt32 aChildNum);
 
-        void AdjustAfterInsertion(nsINode *aContainer, PRInt32 aIndexInContainer);
+        void AdjustAfterInsertion(nsINode *aRoot, nsINode *aContainer, PRInt32 aIndexInContainer);
         void AdjustAfterRemoval(nsINode *aRoot, nsINode *aContainer, nsIContent *aChild, PRInt32 aIndexInContainer);
-        
+
         void Clear() { mNode = nsnull; }
 
         nsINode *mNode;
-        // pointer to the parent of mNode. Can be dangling if mNode is null or points to the root
+        // pointer to the parent of mNode. Can be dangling if mNode is null or
+        // points to the root
         nsINode *mNodeParent;
         PRBool mBeforeNode;
+        // mNode's index in mNodeParent. Uninitialized if mNodeParent is null
+        // or dangling (per above comment).
         PRInt32 mIndexInParent;
     };
 

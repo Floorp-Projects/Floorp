@@ -1,31 +1,38 @@
-/**
- * General
- */
-wizard[description=""] .wizard-header-description {
+/* Stop animations when the page they are on are not displayed (bug 341749). */
+#updates:not([currentpageid="checking"]) #checkingProgress,
+#updates:not([currentpageid="incompatibleCheck"]) #incompatibleCheckProgress,
+#updates:not([currentpageid="downloading"]) #downloadProgress {
   display: none;
 }
 
-link {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#link");
-  -moz-user-focus: normal;
-  cursor: pointer;
+/* Hide the wizard's header so the size of the billboard can size the window 
+   on creation. A custom header will be used in its place when a header is
+   needed. */
+.wizard-header {
+  display: none;
 }
 
-link > label {
-  cursor: inherit;
+/* Display the custom header */
+.update-header {
+  display: -moz-box !important;
 }
 
-/**
- * Remote Content
- */
+/* Custom header implementation based on the Wizard's header. This allows the
+   size of the billboard's remotecontent to size the window since it does not
+   have an updateheader on the billboard page. */
+updateheader {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateheader");
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+}
+
+/* Remote content displayed in the billboard and license pages. */
 remotecontent {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#remotecontent");
   display: -moz-deck;
 }
 
-/**
- * Update History Window
- */
+/* Update History Window */
 update {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
   display: -moz-box;

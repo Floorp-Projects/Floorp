@@ -41,6 +41,7 @@
 #include "time_conversions.h"
 #include <stdlib.h>
 #include <Windows.h>
+#include <altcecrt.h>
 
 ////////////////////////////////////////////////////////
 //  Time Stuff
@@ -77,12 +78,22 @@ static struct tm tmStorage;
 
 size_t strftime(char *out, size_t maxsize, const char *pat, const struct tm *time)
 {
-  WCHAR* tmpBuf = (WCHAR*)malloc(sizeof(WCHAR) * maxsize);
-  if (!tmpBuf)
-    return 0;
-  wcsftime(tmpBuf, maxsize, pat, time);
-  size_t ret = ::WideCharToMultiByte(CP_ACP, 0, tmpBuf, -1, out, maxsize, 0, 0);
-  free(tmpBuf);
+  size_t ret = 0;
+  size_t wpatlen = MultiByteToWideChar(CP_ACP, 0, pat, -1, 0, 0);
+  if (wpatlen) {
+    wchar_t* wpat = (wchar_t*)calloc(wpatlen, sizeof(wchar_t));
+    if (wpat) {
+      wchar_t* tmpBuf = (wchar_t*)calloc(maxsize, sizeof(wchar_t));
+      if (tmpBuf) {
+        if (MultiByteToWideChar(CP_ACP, 0, pat, -1, wpat, wpatlen)) {
+          if (wcsftime(tmpBuf, maxsize, wpat, time))
+            ret = ::WideCharToMultiByte(CP_ACP, 0, tmpBuf, -1, out, maxsize, 0, 0);
+        }
+        free(tmpBuf);
+      }
+      free(wpat);
+    }
+  }
   return ret;
 }
 

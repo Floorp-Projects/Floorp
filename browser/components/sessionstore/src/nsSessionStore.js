@@ -676,9 +676,9 @@ SessionStoreService.prototype = {
       this.onTabAdd(aWindow, tabbrowser.browsers[i], true);
     }
     // notification of tab add/remove/selection
-    tabbrowser.addEventListener("TabOpen", this, true);
-    tabbrowser.addEventListener("TabClose", this, true);
-    tabbrowser.addEventListener("TabSelect", this, true);
+    tabbrowser.tabContainer.addEventListener("TabOpen", this, true);
+    tabbrowser.tabContainer.addEventListener("TabClose", this, true);
+    tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
   },
 
   /**
@@ -694,7 +694,7 @@ SessionStoreService.prototype = {
     if (!isFullyLoaded) {
       if (!aWindow.__SSi)
         aWindow.__SSi = "window" + Date.now();
-      this._window[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
+      this._windows[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
     }
@@ -710,9 +710,9 @@ SessionStoreService.prototype = {
     
     var tabbrowser = aWindow.gBrowser;
 
-    tabbrowser.removeEventListener("TabOpen", this, true);
-    tabbrowser.removeEventListener("TabClose", this, true);
-    tabbrowser.removeEventListener("TabSelect", this, true);
+    tabbrowser.tabContainer.removeEventListener("TabOpen", this, true);
+    tabbrowser.tabContainer.removeEventListener("TabClose", this, true);
+    tabbrowser.tabContainer.removeEventListener("TabSelect", this, true);
     
     let winData = this._windows[aWindow.__SSi];
     if (this._loadState == STATE_RUNNING) { // window not closed during a regular shut-down 

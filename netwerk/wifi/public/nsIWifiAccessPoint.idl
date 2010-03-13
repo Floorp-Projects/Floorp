@@ -39,7 +39,7 @@
 [scriptable, uuid(E28E614F-8F86-44FF-BCF5-5F18225834A0)]
 interface nsIWifiAccessPoint : nsISupports
 {
-  
+
   /*
    * The mac address of the WiFi node.  The format of this string is:
    * XX-XX-XX-XX-XX-XX

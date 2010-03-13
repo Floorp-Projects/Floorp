@@ -55,10 +55,6 @@ textbox {
   color: black;
 }
 
-textbox[isempty="true"] {
-  color: #999999;
-}
-
 html|*.textbox-input, 
 html|*.textbox-textarea {
   margin: 0px !important;

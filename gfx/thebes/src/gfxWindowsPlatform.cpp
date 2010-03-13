@@ -58,16 +58,23 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include "gfxFT2Fonts.h"
+#include "gfxFT2FontList.h"
 #include "cairo-ft.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "gfxFT2FontList.h"
 #else
 #include "gfxWindowsFonts.h"
 #include "gfxGDIFontList.h"
+#ifdef CAIRO_HAS_DWRITE_FONT
+#include "gfxDWriteFontList.h"
+#include "gfxDWriteFonts.h"
+#include "gfxDWriteCommon.h"
+#include <dwrite.h>
+#endif
 #endif
 
-/*XXX to get CAIRO_HAS_DDRAW_SURFACE */
-#include "cairo.h"
+#ifdef CAIRO_HAS_D2D_SURFACE
+#include "gfxD2DSurface.h"
+#endif
 
 #ifdef WINCE
 #include <shlwapi.h>
@@ -83,6 +90,16 @@
 
 #ifdef MOZ_FT2_FONTS
 static FT_Library gPlatformFTLibrary = NULL;
+#endif
+
+#ifdef CAIRO_HAS_DWRITE_FONT
+// DirectWrite is not available on all platforms, we need to use the function
+// pointer.
+typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
+  __in   DWRITE_FACTORY_TYPE factoryType,
+  __in   REFIID iid,
+  __out  IUnknown **factory
+);
 #endif
 
 static __inline void
@@ -114,13 +131,61 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
+#ifdef CAIRO_HAS_DWRITE_FONT
+    nsresult rv;
+    PRBool useDirectWrite = PR_FALSE;
+
+    rv = pref->GetBoolPref(
+        "gfx.font_rendering.directwrite.enabled", &useDirectWrite);
+    if (NS_FAILED(rv)) {
+        useDirectWrite = PR_FALSE;
+    }
+            
+    if (useDirectWrite) {
+        DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
+            GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
+
+        if (createDWriteFactory) {
+            /**
+             * I need a direct pointer to be able to cast to IUnknown**, I also
+             * need to remember to release this because the nsRefPtr will
+             * AddRef it.
+             */
+            IDWriteFactory *factory;
+            HRESULT hr = createDWriteFactory(
+                DWRITE_FACTORY_TYPE_SHARED,
+                __uuidof(IDWriteFactory),
+                reinterpret_cast<IUnknown**>(&factory));
+            mDWriteFactory = factory;
+            factory->Release();
+        }
+    }
+#endif
+
     PRInt32 rmode;
     if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
-        if (rmode >= 0 || rmode < RENDER_MODE_MAX) {
+        if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
 #ifndef CAIRO_HAS_DDRAW_SURFACE
             if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
                 rmode = RENDER_IMAGE_STRETCH24;
 #endif
+            if (rmode == RENDER_DIRECT2D) {
+#ifndef CAIRO_HAS_D2D_SURFACE
+                return;
+#else
+                if (!cairo_d2d_has_support()) {
+                    return;
+                }
+#ifdef CAIRO_HAS_DWRITE_FONT
+                if (!GetDWriteFactory()) {
+#endif
+                    // D2D doesn't work without DirectWrite.
+                    return;
+#ifdef CAIRO_HAS_DWRITE_FONT
+                }
+#endif
+#endif
+            }
             mRenderMode = (RenderMode) rmode;
         }
     }
@@ -138,10 +203,18 @@ gfxWindowsPlatform::CreatePlatformFontList()
 #ifdef MOZ_FT2_FONTS
     return new gfxFT2FontList();
 #else
-    return new gfxGDIFontList();
+#ifdef CAIRO_HAS_DWRITE_FONT
+    if (!GetDWriteFactory()) {
+#endif
+        return new gfxGDIFontList();
+#ifdef CAIRO_HAS_DWRITE_FONT
+    } else {
+        return new gfxDWriteFontList();
+    }
+#endif
 #endif
 }
- 
+
 already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                            gfxASurface::gfxImageFormat imageFormat)
@@ -158,6 +231,11 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
         surf = new gfxWindowsSurface(size, imageFormat);
 #endif
 
+#ifdef CAIRO_HAS_D2D_SURFACE
+    if (mRenderMode == RENDER_DIRECT2D)
+        surf = new gfxD2DSurface(size, imageFormat);
+#endif
+
     if (surf == nsnull)
         surf = new gfxImageSurface(size, imageFormat);
 
@@ -167,7 +245,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 }
 
 nsresult
-gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
+gfxWindowsPlatform::GetFontList(nsIAtom *aLangGroup,
                                 const nsACString& aGenericFamily,
                                 nsTArray<nsString>& aListOfFonts)
 {
@@ -183,7 +261,6 @@ RemoveCharsetFromFontSubstitute(nsAString &aName)
     if (comma >= 0)
         aName.Truncate(comma);
 }
-
 
 nsresult
 gfxWindowsPlatform::UpdateFontList()
@@ -209,7 +286,8 @@ struct ResolveData {
 nsresult
 gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
                                     FontResolverCallback aCallback,
-                                    void *aClosure, PRBool& aAborted)
+                                    void *aClosure,
+                                    PRBool& aAborted)
 {
     nsAutoString resolvedName;
     if (!gfxPlatformFontList::PlatformFontList()->
@@ -236,7 +314,15 @@ gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
 #ifdef MOZ_FT2_FONTS
     return new gfxFT2FontGroup(aFamilies, aStyle);
 #else
-    return new gfxWindowsFontGroup(aFamilies, aStyle, aUserFontSet);
+#ifdef CAIRO_HAS_DWRITE_FONT
+    if (GetDWriteFactory()) {
+        return new gfxDWriteFontGroup(aFamilies, aStyle, aUserFontSet);
+    } else {
+#endif
+        return new gfxWindowsFontGroup(aFamilies, aStyle, aUserFontSet);
+#ifdef CAIRO_HAS_DWRITE_FONT
+    }
+#endif
 #endif
 }
 
@@ -427,4 +513,3 @@ gfxWindowsPlatform::InitDisplayCaps()
 
     ReleaseDC((HWND)nsnull, dc);
 }
-

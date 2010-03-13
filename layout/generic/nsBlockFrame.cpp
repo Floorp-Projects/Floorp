@@ -595,9 +595,11 @@ nsBlockFrame::IsContainingBlock() const
   // of an element's containing block.
   // Since the parent of such a block is either a normal block or
   // another such pseudo, this shouldn't cause anything bad to happen.
+  // Also the anonymous blocks inside table cells are not containing blocks.
   nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
   return pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
-         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock;
+         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock &&
+         pseudoType != nsCSSAnonBoxes::cellContent;
 }
 
 /* virtual */ PRBool
@@ -6919,17 +6921,13 @@ nsBlockFrame::ResolveBidi()
 PRBool
 nsBlockFrame::IsVisualFormControl(nsPresContext* aPresContext)
 {
-  // This check is only necessary on visual bidi pages, because most
-  // visual pages use logical order for form controls so that they will
-  // display correctly on native widgets in OSs with Bidi support.
-  // So bail out if the page is not visual, or if the pref is
-  // set to use visual order on forms in visual pages
-  if (!aPresContext->IsVisualMode()) {
-    return PR_FALSE;
-  }
+  // We always use logical order on form controls, so that they will display
+  // correctly in native widgets in OSs with Bidi support.
+  // If the page uses logical ordering we can bail out immediately, but on
+  // visual pages we need to drill up in content to detect whether this block
+  // is a descendant of a form control.
 
-  PRUint32 options = aPresContext->GetBidi();
-  if (IBMBIDI_CONTROLSTEXTMODE_LOGICAL != GET_BIDI_OPTION_CONTROLSTEXTMODE(options)) {
+  if (!aPresContext->IsVisualMode()) {
     return PR_FALSE;
   }
 

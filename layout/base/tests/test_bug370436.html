@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+	https://bugzilla.mozilla.org/show_bug.cgi?id=370436
+-->
+<head>
+	<title>Test for Bug 370436</title>
+	<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+	<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+	<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>        
+	<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="application/javascript">
+<!--
+words = new Array()
+
+function expandStringOffsetToWord(data, offset)
+{
+	if (data == undefined) return "";
+
+	var m1 = data.substr(0, offset).match(/\w+$/) || "";
+	var m2 = data.substr(offset).match(/^\w+/) || "";
+	return m1 + m2;
+}
+
+function onContextMenu(e)
+{
+	netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+	var node = e.rangeParent;
+	var offset = e.rangeOffset;
+
+	var word = expandStringOffsetToWord(node.data, offset);
+	words.push(word);
+}
+
+function startTest()
+{
+	ta = document.getElementById('blah');
+	ta.focus();
+
+	/* Put cursor at start and middle of "sheep" */
+	synthesizeKey("VK_UP", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+
+	/* Put cursor at the end of "hello" */
+	synthesizeKey("VK_UP", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeKey("VK_RIGHT", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+
+	/* Put cursor on "welcome" */
+	synthesizeKey("VK_UP", {})
+	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+
+	is(words.pop(), "welcome", "Word 1 selected correctly");	
+	is(words.pop(), "world"  , "Word 2 selected correctly");	
+	is(words.pop(), "hello"  , "Word 3 selected correctly");	
+	is(words.pop(), "hello"  , "Word 4 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 5 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 6 selected correctly");	
+	is(words.pop(), "sheep"  , "Word 7 selected correctly");
+
+	SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish()
+SimpleTest.waitForFocus(startTest)
+-->
+</script>
+
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=370436">Mozilla Bug 370436</a></p>
+
+<textarea id="blah" rows="10" cols="80" oncontextmenu="onContextMenu(event); return false;">
+welcome
+hello world
+sheep
+</textarea>
+</body>
+</html>
+

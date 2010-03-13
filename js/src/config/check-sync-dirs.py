@@ -65,6 +65,10 @@ def check(copy, original, ignore):
     os.chdir(copy)
     for (dirpath, dirnames, filenames) in os.walk('.'):
         exceptions = read_exceptions(join(dirpath, 'check-sync-exceptions'))
+        for dirname in dirnames:
+            if (dirname in exceptions):
+                dirnames.remove(dirname)
+                break
         for filename in filenames:
             if (filename in exceptions) or fnmatch_any(filename, ignore):
                 continue

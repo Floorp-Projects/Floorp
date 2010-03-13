@@ -44,10 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = browser
 
-ifndef MOZ_SUNBIRD
-DIRS += browser
-endif
-
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required
 # by layout and the dom.  This MOZ_XPFE_COMPONENTS, if 

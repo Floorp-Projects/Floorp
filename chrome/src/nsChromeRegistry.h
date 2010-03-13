@@ -58,8 +58,6 @@
 
 struct PRFileDesc;
 class nsIAtom;
-class nsICSSLoader;
-class nsICSSStyleSheet;
 class nsIDOMWindowInternal;
 class nsILocalFile;
 class nsIPrefBranch;
@@ -119,8 +117,7 @@ protected:
 private:
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
 
-  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow,
-                                nsICSSLoader* aCSSLoader);
+  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 

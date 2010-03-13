@@ -159,7 +159,7 @@ interface nsIProtocolHandler : nsISupports
     /**
      * +-------------------------------------------------------------------+
      * |                                                                   |
-     * |  ALL PROTOCOL HANDLERS MUST SET ONE OF THE FOLLOWING FOUR FLAGS.  |
+     * |  ALL PROTOCOL HANDLERS MUST SET ONE OF THE FOLLOWING FIVE FLAGS.  |
      * |                                                                   |
      * +-------------------------------------------------------------------+
      *
@@ -167,7 +167,7 @@ interface nsIProtocolHandler : nsISupports
      * protocol.  Note that if a URI is nested, only the flags for the
      * innermost URI matter.  See nsINestedURI.
      *
-     * If none of these four flags are set, the URI must be treated as if it
+     * If none of these five flags are set, the URI must be treated as if it
      * had the URI_LOADABLE_BY_ANYONE flag set, for compatibility with protocol
      * handlers written against Gecko 1.8 or earlier.  In this case, there may
      * be run-time warning messages indicating that a "default insecure"
@@ -210,6 +210,13 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_IS_LOCAL_FILE = (1<<9);
 
     /**
+     * The URIs for this protocol can be loaded only by callers with a
+     * principal that subsumes this uri. For example, privileged code and
+     * websites that are same origin as this uri.
+     */
+    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<14);
+
+    /**
      * Loading channels from this protocol has side-effects that make
      * it unsuitable for saving to a local file.
      */
@@ -233,6 +240,8 @@ interface nsIProtocolHandler : nsISupports
      * URIs for this protocol execute script when they are opened.
      */
     const unsigned long URI_OPENING_EXECUTES_SCRIPT = (1<<13);
+
+    // Note that 1 << 14 is used above
 
     /**
      * This protocol handler can be proxied via a proxy (socks or http)

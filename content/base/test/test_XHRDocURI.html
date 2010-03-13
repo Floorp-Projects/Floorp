@@ -31,13 +31,13 @@ function runTest() {
   is(document.baseURI, "http://example.org/", "wrong doc baseURI");
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/content/base/test/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML)
       return;
-    is(xhr.responseXML.documentURI, "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml",
+    is(xhr.responseXML.documentURI, "http://mochi.test:8888/tests/content/base/test/file_XHRDocURI.xml",
        "wrong url");
-    is(xhr.responseXML.baseURI, "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml",
+    is(xhr.responseXML.baseURI, "http://mochi.test:8888/tests/content/base/test/file_XHRDocURI.xml",
        "wrong base");
     if (xhr.readyState == 4) {
       gen.next();
@@ -48,7 +48,7 @@ function runTest() {
 
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://localhost:8888/tests/content/base/test/file_XHRDocURI.text");
+  xhr.open("GET", "http://mochi.test:8888/tests/content/base/test/file_XHRDocURI.text");
   xhr.onreadystatechange = function(e) {
     is(xhr.responseXML, null, "should not have document");
     if (xhr.readyState == 4)

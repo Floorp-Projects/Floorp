@@ -124,7 +124,7 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 
   float totalLength = flat->GetLength();
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::pathLength)) {
-    float pathLength = mPathLength.GetAnimValue(this);
+    float pathLength = mPathLength.GetAnimValue();
     distance *= totalLength / pathLength;
   }
   distance = NS_MAX(0.f,         distance);

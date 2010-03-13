@@ -47,7 +47,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSKeywords.h"
-#include "nsCSSLoader.h"
+#include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
@@ -255,7 +255,11 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  nsCSSRuleProcessor::Startup();
+  rv = nsCSSRuleProcessor::Startup();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsCSSRuleProcessor");
+    return rv;
+  }
 
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
@@ -307,8 +311,8 @@ nsLayoutStatics::Shutdown()
   nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
-  CSSLoaderImpl::Shutdown();
-  nsCSSRuleProcessor::FreeSystemMetrics();
+  nsCSSParser::Shutdown();
+  nsCSSRuleProcessor::Shutdown();
   nsTextFrameTextRunCache::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
@@ -329,7 +333,6 @@ nsLayoutStatics::Shutdown()
   nsXULContentUtils::Finish();
   nsXULElement::ReleaseGlobals();
   nsXULPrototypeCache::ReleaseGlobals();
-  nsXULPrototypeElement::ReleaseGlobals();
   nsSprocketLayout::Shutdown();
 #endif
 
@@ -391,6 +394,9 @@ nsLayoutStatics::Shutdown()
 void
 nsLayoutStatics::AddRef()
 {
+  NS_ASSERTION(NS_IsMainThread(),
+               "nsLayoutStatics reference counting must be on main thread");
+
   NS_ASSERTION(sLayoutStaticRefcnt,
                "nsLayoutStatics already dropped to zero!");
 
@@ -402,6 +408,9 @@ nsLayoutStatics::AddRef()
 void
 nsLayoutStatics::Release()
 {
+  NS_ASSERTION(NS_IsMainThread(),
+               "nsLayoutStatics reference counting must be on main thread");
+
   --sLayoutStaticRefcnt;
   NS_LOG_RELEASE(&sLayoutStaticRefcnt, sLayoutStaticRefcnt,
                  "nsLayoutStatics");

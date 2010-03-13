@@ -66,13 +66,7 @@
     <content>
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
-                  onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
-        <xul:hbox class="tab-drop-indicator-bar" collapsed="true"
-                  ondragover="this.parentNode.parentNode._onDragOver(event);"
-                  ondragleave="this.parentNode.parentNode._onDragLeave(event);"
-                  ondrop="this.parentNode.parentNode._onDrop(event);">
-          <xul:hbox class="tab-drop-indicator" mousethrough="always"/>
-        </xul:hbox>
+                  onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
                   ondragstart="this.parentNode.parentNode._onDragStart(event);"
@@ -80,6 +74,9 @@
                   ondrop="this.parentNode.parentNode._onDrop(event);"
                   ondragend="this.parentNode.parentNode._onDragEnd(event);"
                   ondragleave="this.parentNode.parentNode._onDragLeave(event);">
+          <xul:hbox align="start">
+            <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
+          </xul:hbox>
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
@@ -127,11 +124,7 @@
                     anonid="tabcontainer"
                     setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
-                    onclosetab="var node = this.parentNode;
-                                while (node.localName != 'tabbrowser')
-                                  node = node.parentNode;
-                                node.removeCurrentTab();">
+                    ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);">
             <xul:tab selected="true" validate="never"
                      onerror="this.removeAttribute('image');"
                      maxwidth="250" width="0" minwidth="100" flex="100"
@@ -147,7 +140,7 @@
       </xul:tabbox>
       <children/>
     </content>
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
@@ -164,8 +157,8 @@
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
-      <field name="mTabDropIndicatorBar">
-        this.mTabBox.childNodes[0]
+      <field name="_tabDropIndicator">
+        document.getAnonymousElementByAttribute(this, "anonid", "tab-drop-indicator");
       </field>
       <field name="mStrip" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "strip");
@@ -272,11 +265,8 @@
         <parameter name="aDocument"/>
         <body>
           <![CDATA[
-            var browsers = this.browsers;
-            for (var i = 0; i < browsers.length; i++)
-              if (browsers[i].contentDocument == aDocument)
-                return i;
-            return -1;
+            var tab = this._getTabForContentWindow(aDocument.defaultView);
+            return tab ? tab._tPos : -1;
           ]]>
         </body>
       </method>
@@ -285,11 +275,22 @@
         <parameter name="aDocument"/>
         <body>
           <![CDATA[
-            var index = this.getBrowserIndexForDocument(aDocument);
-            if (index < 0)
-              return null;
-            return this.getBrowserAtIndex(index);
+            var tab = this._getTabForContentWindow(aDocument.defaultView);
+            return tab ? tab.linkedBrowser : null;
           ]]>
+        </body>
+      </method>
+
+      <method name="_getTabForContentWindow">
+        <parameter name="aWindow"/>
+        <body>
+        <![CDATA[
+          for (let i = 0; i < this.browsers.length; i++) {
+            if (this.browsers[i].contentWindow == aWindow)
+              return this.mTabs[i];
+          }
+          return null;
+        ]]>
         </body>
       </method>
 
@@ -297,11 +298,7 @@
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
-            if (aBrowser)
-              return aBrowser.parentNode;
-            else if (this.mCurrentBrowser)
-              return this.mCurrentBrowser.parentNode;
-            return null;
+            return (aBrowser || this.mCurrentBrowser).parentNode;
           ]]>
         </body>
       </method>
@@ -805,7 +802,8 @@
         </body>
       </method>
 
-      <method name="updateTitlebar">
+      <method name="getWindowTitleForBrowser">
+        <parameter name="aBrowser"/>
         <body>
           <![CDATA[
             var newTitle = "";
@@ -813,8 +811,8 @@
             var docElement = this.ownerDocument.documentElement;
             var sep = docElement.getAttribute("titlemenuseparator");
 
-            if (this.docShell.contentViewer)
-              docTitle = this.contentTitle;
+            if (aBrowser.docShell.contentViewer)
+              docTitle = aBrowser.contentTitle;
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -834,7 +832,7 @@
             try {
               if (docElement.getAttribute("chromehidden").indexOf("location") != -1) {
                 var uri = this.mURIFixup.createExposableURI(
-                            this.mCurrentBrowser.currentURI);
+                            aBrowser.currentURI);
                 if (uri.scheme == "about")
                   newTitle = uri.spec + sep + newTitle;
                 else
@@ -842,7 +840,15 @@
               }
             } catch (e) {}
 
-            this.ownerDocument.title = newTitle;
+            return newTitle;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTitlebar">
+        <body>
+          <![CDATA[
+            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
           ]]>
         </body>
       </method>
@@ -930,12 +936,12 @@
                 }
             }
 
-            // Don't switch the fast find - this tab switch is temporary
-            if (!this._previewMode)
+            // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
+            if (!this._previewMode) {
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
-            // Update the window title.
-            this.updateTitlebar();
+              this.updateTitlebar();
+            }
 
             // If the new tab is busy, and our current state is not busy, then
             // we need to fire a start to all progress listeners.
@@ -1014,24 +1020,6 @@
               this.removeTab(event.target);
 
             event.stopPropagation();
-          ]]>
-        </body>
-      </method>
-
-      <method name="onTitleChanged">
-        <parameter name="evt"/>
-        <body>
-          <![CDATA[
-            if (evt.target != this.contentDocument)
-              return;
-
-            var tabBrowser = this.parentNode.parentNode.parentNode.parentNode;
-
-            var tab = document.getAnonymousElementByAttribute(tabBrowser, "linkedpanel", this.parentNode.id);
-            tabBrowser.setTabTitle(tab);
-
-            if (tab == tabBrowser.mCurrentTab)
-              tabBrowser.updateTitlebar();
           ]]>
         </body>
       </method>
@@ -1120,16 +1108,12 @@
           <![CDATA[
             this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
-            // Get the first tab all hooked up with a title listener and popup blocking listener.
-            this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
-
             if (XULBrowserWindow.isBusy) {
               this.mCurrentTab.setAttribute("busy", "true");
               this.mIsBusy = true;
               this.setTabTitleLoading(this.mCurrentTab);
               this.updateIcon(this.mCurrentTab);
             } else {
-              this.setTabTitle(this.mCurrentTab);
               this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
             }
 
@@ -1341,8 +1325,6 @@
             notificationbox.appendChild(b);
             b.setAttribute("flex", "1");
             this.mPanelContainer.appendChild(notificationbox);
-
-            b.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             if (this.mStrip.collapsed &&
                 this.mTabs.length - this._removingTabs.length > 1)
@@ -1582,9 +1564,6 @@
             browser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
-
-            // Remove our title change and blocking listeners
-            browser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             // We are no longer the primary content area.
             browser.setAttribute("type", "content-targetable");
@@ -2045,15 +2024,30 @@
         </body>
       </method>
 
+      <method name="_continueScroll">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // Workaround for bug 481904: Dragging a tab stops scrolling at
+          // the tab's position when dragging to the first/last tab and back.
+          var t = this.selectedTab;
+          if (aEvent.screenX >= t.boxObject.screenX &&
+              aEvent.screenX <= t.boxObject.screenX + t.boxObject.width &&
+              aEvent.screenY >= t.boxObject.screenY &&
+              aEvent.screenY <= t.boxObject.screenY + t.boxObject.height)
+            this.tabContainer.mTabstrip.ensureElementIsVisible(t);
+        ]]></body>
+      </method>
+
       <method name="_onDragOver">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
             var effects = this._setEffectAllowedForDataTransfer(aEvent);
 
-            var ib = this.mTabDropIndicatorBar;
+            var ind = this._tabDropIndicator;
             if (effects == "" || effects == "none") {
-              ib.collapsed = "true";
+              ind.collapsed = true;
+              this._continueScroll(aEvent);
               return;
             }
             aEvent.preventDefault();
@@ -2092,21 +2086,11 @@
             }
 
             var newIndex = this.getNewIndex(aEvent);
-            var ib = this.mTabDropIndicatorBar;
-            var ind = ib.firstChild;
             var scrollRect = tabStrip.scrollClientRect;
             var rect = this.getBoundingClientRect();
             var minMargin = scrollRect.left - rect.left;
-            // make sure we don't place the tab drop indicator past the
-            // edge, or the containing box will flex and stretch
-            // the tab drop indicator bar, which will flex the url bar.  
-            // XXX todo
-            // just use first value if you can figure out how to get
-            // the tab drop indicator to crop instead of flex and stretch
-            // the tab drop indicator bar.
             var maxMargin = Math.min(minMargin + scrollRect.width, 
-                                     ib.getBoundingClientRect().right -
-                                     ind.clientWidth);
+                                     scrollRect.right);
             if (!ltr)
               [minMargin, maxMargin] = [this.clientWidth - maxMargin,
                                         this.clientWidth - minMargin];
@@ -2138,9 +2122,15 @@
                 newMargin = maxMargin;
             }
 
-            ind.style.MozMarginStart = newMargin + 'px';
+            ind.collapsed = false;
+ 
+            newMargin += ind.clientWidth / 2;
+            if (!ltr)
+              newMargin *= -1;
 
-            ib.collapsed = false;
+            ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
+            ind.style.MozMarginStart = (-ind.clientWidth) + "px";
+            ind.style.marginTop = (-ind.clientHeight) + "px";
           ]]>
         </body>
       </method>
@@ -2159,7 +2149,7 @@
                 return;
             }
 
-            this.mTabDropIndicatorBar.collapsed = true;
+            this._tabDropIndicator.collapsed = true;
             aEvent.stopPropagation();
 
             if (draggedTab && (dropEffect == "copy" ||
@@ -2328,7 +2318,8 @@
             if (target)
               return;
 
-            this.mTabDropIndicatorBar.collapsed = true;
+            this._tabDropIndicator.collapsed = true;
+            this._continueScroll(aEvent);
             aEvent.stopPropagation();
           ]]>
         </body>
@@ -2690,10 +2681,9 @@
         </body>
       </method>
 
-      <field name="_keyEventHandler" readonly="true">
-      <![CDATA[({
-        tabbrowser: this,
-        handleEvent: function handleEvent(aEvent) {
+      <method name="_handleKeyEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
           if (!aEvent.isTrusted) {
             // Don't let untrusted events mess with tabs.
             return;
@@ -2708,10 +2698,10 @@
               case '}'.charCodeAt(0):
                 offset *= -1;
               case '{'.charCodeAt(0):
-                if (window.getComputedStyle(this.tabbrowser, null).direction == "ltr")
+                if (window.getComputedStyle(this, null).direction == "ltr")
                   offset *= -1;
 
-                this.tabbrowser.mTabContainer.advanceSelectedTab(offset, true);
+                this.mTabContainer.advanceSelectedTab(offset, true);
                 aEvent.stopPropagation();
                 aEvent.preventDefault();
                 return;
@@ -2723,31 +2713,31 @@
               !('shiftKey' in aEvent && aEvent.shiftKey) &&
               !('metaKey' in aEvent && aEvent.metaKey)) {
             if (aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-                this.tabbrowser.mTabBox.handleCtrlPageUpDown) {
-              this.tabbrowser.removeCurrentTab();
+                this.mTabBox.handleCtrlPageUpDown) {
+              this.removeCurrentTab();
 
               aEvent.stopPropagation();
               aEvent.preventDefault();
               return;
             }
 #endif
-            if (aEvent.target.localName == "tabbrowser") {
+            if (aEvent.target == this) {
               switch (aEvent.keyCode) {
                 case KeyEvent.DOM_VK_UP:
-                  this.tabbrowser.moveTabBackward();
+                  this.moveTabBackward();
                   break;
                 case KeyEvent.DOM_VK_DOWN:
-                  this.tabbrowser.moveTabForward();
+                  this.moveTabForward();
                   break;
                 case KeyEvent.DOM_VK_RIGHT:
                 case KeyEvent.DOM_VK_LEFT:
-                  this.tabbrowser.moveTabOver(aEvent);
+                  this.moveTabOver(aEvent);
                   break;
                 case KeyEvent.DOM_VK_HOME:
-                  this.tabbrowser.moveTabToStart();
+                  this.moveTabToStart();
                   break;
                 case KeyEvent.DOM_VK_END:
-                  this.tabbrowser.moveTabToEnd();
+                  this.moveTabToEnd();
                   break;
                 default:
                   // Stop the keypress event for the above keyboard
@@ -2758,9 +2748,8 @@
               aEvent.preventDefault();
             }
           }
-        }
-      })]]>
-      </field>
+        ]]></body>
+      </method>
 
       <property name="userTypedClear"
                 onget="return this.mCurrentBrowser.userTypedClear;"
@@ -2791,11 +2780,22 @@
         </body>
       </method>
 
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "keypress":
+              this._handleKeyEvent(aEvent);
+              break;
+          }
+        ]]></body>
+      </method>
+
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild;
           this.mCurrentTab = this.mTabContainer.firstChild;
-          document.addEventListener("keypress", this._keyEventHandler, false);
+          document.addEventListener("keypress", this, false);
 
           var uniqueId = "panel" + Date.now();
           this.mPanelContainer.childNodes[0].id = uniqueId;
@@ -2819,9 +2819,8 @@
             this.mTabFilters[i] = null;
             this.mTabListeners[i].destroy();
             this.mTabListeners[i] = null;
-            this.getBrowserAtIndex(i).removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
           }
-          document.removeEventListener("keypress", this._keyEventHandler, false);
+          document.removeEventListener("keypress", this, false);
         ]]>
       </destructor>
     </implementation>
@@ -2832,27 +2831,13 @@
           if (!event.isTrusted)
             return;
 
-          const browsers = this.mPanelContainer.childNodes;
-          if (browsers.length == 1) {
-            // There's only one browser left. If a window is being
-            // closed and the window is *not* the window in the
-            // browser that's still around, prevent the event's default
-            // action to prevent closing a window that's being closed
-            // already.
-            if (this.getBrowserAtIndex(0).contentWindow != event.target)
-              event.preventDefault();
-
+          if (this.mTabs.length == 1)
             return;
-          }
 
-          var i = 0;
-          for (; i < browsers.length; ++i) {
-            if (this.getBrowserAtIndex(i).contentWindow == event.target) {
-              this.removeTab(this.mTabContainer.childNodes[i]);
-              event.preventDefault();
-
-              break;
-            }
+          var tab = this._getTabForContentWindow(event.target);
+          if (tab) {
+            this.removeTab(tab);
+            event.preventDefault();
           }
         ]]>
       </handler>
@@ -2863,16 +2848,22 @@
 
           // We're about to open a modal dialog, make sure the opening
           // tab is brought to the front.
+          this.selectedTab = this._getTabForContentWindow(event.target.top);
+        ]]>
+      </handler>
+      <handler event="DOMTitleChanged">
+        <![CDATA[
+          if (!event.isTrusted)
+            return;
 
-          var targetTop = event.target.top;
+          var contentWin = event.target.defaultView;
+          if (contentWin != contentWin.top)
+            return;
 
-          for (var i = 0; i < browsers.length; ++i) {
-            if (this.getBrowserAtIndex(i).contentWindow == targetTop) {
-              this.selectedTab = this.mTabContainer.childNodes[i];
-
-              break;
-            }
-          }
+          var tab = this._getTabForContentWindow(contentWin);
+          this.setTabTitle(tab);
+          if (tab == this.mCurrentTab)
+            this.updateTitlebar();
         ]]>
       </handler>
     </handlers>

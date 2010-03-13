@@ -2809,7 +2809,6 @@ ExtensionManager.prototype = {
             var prettyName = "";
             try {
               var zipReader = getZipReaderForFile(entry);
-              zipReader.QueryInterface(Ci.nsIJAR);
               var principal = zipReader.getCertificatePrincipal(null);
               if (principal && principal.hasCertificate) {
                 if (verifyZipSigning(zipReader, principal)) {

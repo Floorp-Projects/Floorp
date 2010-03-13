@@ -188,7 +188,8 @@ nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
 
   rv = nsNSSDialogHelper::openDialog(nsnull,
                              "chrome://pippki/content/crlImportDialog.xul",
-                             block);
+                             block,
+                             PR_FALSE);
   return NS_OK;
 }
 
@@ -476,7 +477,8 @@ nsNSSDialogs::ViewCert(nsIInterfaceRequestor *ctx,
 
   rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/certViewer.xul",
-                                     block);
+                                     block,
+                                     PR_FALSE);
   return rv;
 }
 

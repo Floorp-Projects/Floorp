@@ -1782,6 +1782,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               }
             }
           }
+          case NS_HTML5TREE_BUILDER_TEXT: {
+
+            goto starttagloop_end;
+          }
         }
       }
     }

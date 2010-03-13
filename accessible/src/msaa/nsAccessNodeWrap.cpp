@@ -249,12 +249,10 @@ __try{
   for (PRUint32 index = 0; index < numAttribs; index++) {
     aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
     nsAutoString attributeValue;
-    const char *pszAttributeName; 
 
     const nsAttrName* name = content->GetAttrNameAt(index);
     aNameSpaceIDs[index] = static_cast<short>(name->NamespaceID());
-    name->LocalName()->GetUTF8String(&pszAttributeName);
-    aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUTF16(pszAttributeName).get());
+    aAttribNames[index] = ::SysAllocString(name->LocalName()->GetUTF16String());
     content->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
     aAttribValues[index] = ::SysAllocString(attributeValue.get());
   }

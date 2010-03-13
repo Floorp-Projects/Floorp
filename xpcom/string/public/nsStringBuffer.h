@@ -39,6 +39,7 @@
 #ifndef nsStringBuffer_h__
 #define nsStringBuffer_h__
 
+
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
  * case that nsTAString::mData does not point to one of these special
@@ -51,6 +52,7 @@
 class nsStringBuffer
   {
     private:
+      friend class CheckStaticAtomSizes;
 
       PRInt32  mRefCount;
       PRUint32 mStorageSize;

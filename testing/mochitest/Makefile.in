@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS =	MochiKit \
 	static \
+	dynamic \
 	tests \
 	chrome \
 	ssltunnel \
@@ -60,6 +61,8 @@ include $(topsrcdir)/build/automation-build.mk
 _SERV_FILES = 	\
 		runtests.py \
 		automation.py \
+		runtestsremote.py \
+		$(topsrcdir)/build/mobile/devicemanager.py \
 		$(topsrcdir)/build/automationutils.py \
 		gen_template.pl \
 		server.js \

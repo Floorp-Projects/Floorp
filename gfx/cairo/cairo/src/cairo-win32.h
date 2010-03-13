@@ -164,6 +164,15 @@ void cairo_d2d_present_backbuffer(cairo_surface_t *surface);
  * scrolling.
  */
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip);
+
+/**
+ * Verify if D2D surfaces are actually supported. This will confirm the needed
+ * hardware is available.
+ *
+ * \return True if the support is available. If false surface creation will
+ * return error surfaces.
+ */
+cairo_bool_t cairo_d2d_has_support();
 #endif
 
 CAIRO_END_DECLS

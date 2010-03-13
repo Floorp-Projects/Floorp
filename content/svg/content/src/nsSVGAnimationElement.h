@@ -88,6 +88,8 @@ public:
   virtual const nsIContent& Content() const;
   virtual nsIContent& Content();
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
+  virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
+  virtual PRBool HasAnimAttr(nsIAtom* aAttName) const;
   virtual nsIContent* GetTargetElementContent();
   virtual nsIAtom* GetTargetAttributeName() const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;

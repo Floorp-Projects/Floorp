@@ -88,6 +88,7 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "nsInt64.h"
 #include "nsINetUtil.h"
+#include "nsIURIWithPrincipal.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIAuthPromptAdapterFactory.h"
@@ -1560,6 +1561,17 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     // If either URI is a nested URI, get the base URI
     nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(aSourceURI);
     nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
+
+    // If either uri is an nsIURIWithPrincipal
+    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(sourceBaseURI);
+    if (uriPrinc) {
+        uriPrinc->GetPrincipalUri(getter_AddRefs(sourceBaseURI));
+    }
+
+    uriPrinc = do_QueryInterface(targetBaseURI);
+    if (uriPrinc) {
+        uriPrinc->GetPrincipalUri(getter_AddRefs(targetBaseURI));
+    }
 
     if (!sourceBaseURI || !targetBaseURI)
         return PR_FALSE;

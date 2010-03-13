@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -x
+
+if test -d richtext; then
+  rm -drf richtext;
+fi
+
+svn checkout http://browserscope.googlecode.com/svn/trunk/categories/richtext/static richtext | tail -1 | sed 's/[^0-9]//g' > current_revision
+
+find richtext -type d -name .svn -exec rm -drf \{\} \; 2> /dev/null
+
+hg add current_revision richtext
+
+hg stat .
+

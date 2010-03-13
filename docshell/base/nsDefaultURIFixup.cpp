@@ -800,6 +800,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     // "docshell site:mozilla.org" - has no dot/colon in the first space-separated substring
     // "?mozilla" - anything that begins with a question mark
     // "?site:mozilla.org docshell"
+    // Things that have a quote before the first dot/colon
 
     // These are not keyword formatted strings
     // "www.blah.com" - first space-separated substring contains a dot, doesn't start with "?"
@@ -810,14 +811,24 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     // "nonQualifiedHost?args"
     // "nonQualifiedHost?some args"
 
-    PRInt32 dotLoc   = aURIString.FindChar('.');
-    PRInt32 colonLoc = aURIString.FindChar(':');
-    PRInt32 spaceLoc = aURIString.FindChar(' ');
-    PRInt32 qMarkLoc = aURIString.FindChar('?');
+    // Note: PRUint32(kNotFound) is greater than any actual location
+    // in practice.  So if we cast all locations to PRUint32, then a <
+    // b guarantees that either b is kNotFound and a is found, or both
+    // are found and a found before b.
+    PRUint32 dotLoc   = PRUint32(aURIString.FindChar('.'));
+    PRUint32 colonLoc = PRUint32(aURIString.FindChar(':'));
+    PRUint32 spaceLoc = PRUint32(aURIString.FindChar(' '));
+    if (spaceLoc == 0) {
+        // Treat this as not found
+        spaceLoc = PRUint32(kNotFound);
+    }
+    PRUint32 qMarkLoc = PRUint32(aURIString.FindChar('?'));
+    PRUint32 quoteLoc = NS_MIN(PRUint32(aURIString.FindChar('"')),
+                               PRUint32(aURIString.FindChar('\'')));
 
-    if ((dotLoc == kNotFound || (spaceLoc > 0 && spaceLoc < dotLoc)) &&
-        (colonLoc == kNotFound || (spaceLoc > 0 && spaceLoc < colonLoc)) &&
-        (spaceLoc > 0 && (qMarkLoc == kNotFound || spaceLoc < qMarkLoc)) ||
+    if (((spaceLoc < dotLoc || quoteLoc < dotLoc) &&
+         (spaceLoc < colonLoc || quoteLoc < colonLoc) &&
+         (spaceLoc < qMarkLoc || quoteLoc < qMarkLoc)) ||
         qMarkLoc == 0)
     {
         KeywordToURI(aURIString, aURI);

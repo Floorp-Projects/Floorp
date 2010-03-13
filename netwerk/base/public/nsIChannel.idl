@@ -52,7 +52,9 @@ interface nsIStreamListener;
  *
  * After a request has been completed, the channel is still valid for accessing
  * protocol-specific results.  For example, QI'ing to nsIHttpChannel allows
- * response headers to be retrieved for the corresponding http transaction. 
+ * response headers to be retrieved for the corresponding http transaction.
+ *
+ * This interface must be used only from the XPCOM main thread.
  *
  * @status FROZEN
  */
@@ -166,7 +168,9 @@ interface nsIChannel : nsIRequest
      *
      * NOTE: nsIChannel implementations are not required to implement this
      * method.  Moreover, since this method may block the calling thread, it
-     * should not be called on a thread that processes UI events.
+     * should not be called on a thread that processes UI events.  Like any
+     * other nsIChannel method it must not be called on any thread other
+     * than the XPCOM main thread.
      *
      * NOTE: Implementations should throw NS_ERROR_IN_PROGRESS if the channel
      * is reopened.

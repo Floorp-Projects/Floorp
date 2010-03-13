@@ -58,12 +58,6 @@ class UTF8traits
       static PRBool is6byte(char c) { return (c & 0xFE) == 0xFC; }
   };
 
-#ifdef __GNUC__
-#define NS_ALWAYS_INLINE __attribute__((always_inline))
-#else
-#define NS_ALWAYS_INLINE
-#endif
-
 /**
  * Extract the next UCS-4 character from the buffer and return it.  The
  * pointer passed in is advanced to the start of the next character in the
@@ -76,16 +70,16 @@ class UTF8CharEnumerator
 {
 public:
   static PRUint32 NextChar(const char **buffer, const char *end,
-                           PRBool *err = nsnull, PRBool* overlong = nsnull)
+                           PRBool *err)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
 
     const char *p = *buffer;
+    *err = PR_FALSE;
 
     if (p >= end)
       {
-        if (err)
-          *err = PR_TRUE;
+        *err = PR_TRUE;
 
         return 0;
       }
@@ -94,10 +88,6 @@ public:
 
     if ( UTF8traits::isASCII(c) )
       {
-        if (err)
-          *err = PR_FALSE;
-        if (overlong)
-          *overlong = PR_FALSE;
         *buffer = p;
         return c;
       }
@@ -108,8 +98,8 @@ public:
 
     if (!CalcState(c, ucs4, minUcs4, state)) {
         NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-        if (err)
-          *err = PR_TRUE;
+        *err = PR_TRUE;
+
         return 0;
     }
 
@@ -117,8 +107,7 @@ public:
       {
         if (p == end)
           {
-            if (err)
-              *err = PR_TRUE;
+            *err = PR_TRUE;
 
             return 0;
           }
@@ -127,87 +116,27 @@ public:
 
         if (!AddByte(c, state, ucs4))
           {
-            NS_ERROR("not a UTF8 string");
-            if (err)
-              *err = PR_TRUE;
+            *err = PR_TRUE;
+
             return 0;
           }
       }
 
-    if (err)
-      *err = PR_FALSE;
-    if (overlong)
-      *overlong = ucs4 < minUcs4;
+      if ( ucs4 < minUcs4 )
+        {
+          // Overlong sequence
+          ucs4 = UCS2_REPLACEMENT_CHAR;
+        }
+      else if ( ucs4 >= 0xD800 &&
+                (ucs4 <= 0xDFFF || ucs4 >= UCS_END))
+        {
+          // Surrogates and code points outside the Unicode range.
+          ucs4 = UCS2_REPLACEMENT_CHAR;
+        }
+
     *buffer = p;
     return ucs4;
   }
-
-#ifdef MOZILLA_INTERNAL_API
-
-  static PRUint32 NextChar(nsACString::const_iterator& iter,
-                           const nsACString::const_iterator& end,
-                           PRBool *err = nsnull, PRBool *overlong = nsnull)
-  {
-    if ( iter == end )
-      {
-        NS_ERROR("No input to work with");
-        if (err)
-          *err = PR_TRUE;
-
-        return 0;
-      }
-
-    char c = *iter++;
-
-    if ( UTF8traits::isASCII(c) )
-      {
-        if (err)
-          *err = PR_FALSE;
-        if (overlong)
-          *overlong = PR_FALSE;
-        return c;
-      }
-
-    PRUint32 ucs4;
-    PRUint32 minUcs4;
-    PRInt32 state = 0;
-
-    if (!CalcState(c, ucs4, minUcs4, state)) {
-        NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-        if (err)
-          *err = PR_TRUE;
-        return 0;
-    }
-
-    while ( state-- )
-      {
-        if (iter == end)
-          {
-            NS_ERROR("Buffer ended in the middle of a multibyte sequence");
-            if (err)
-              *err = PR_TRUE;
-
-            return 0;
-          }
-
-        c = *iter++;
-
-        if (!AddByte(c, state, ucs4))
-          {
-            NS_ERROR("not a UTF8 string");
-            if (err)
-              *err = PR_TRUE;
-            return 0;
-          }
-      }
-
-    if (err)
-      *err = PR_FALSE;
-    if (overlong)
-      *overlong = ucs4 < minUcs4;
-    return ucs4;
-  }
-#endif // MOZILLA_INTERNAL_API
 
 private:
   static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
@@ -387,6 +316,8 @@ class ConvertUTF8toUTF16
 
     size_t Length() const { return mBuffer - mStart; }
 
+    PRBool ErrorEncountered() const { return mErrorEncountered; }
+
     void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         if ( mErrorEncountered )
@@ -399,9 +330,8 @@ class ConvertUTF8toUTF16
         buffer_type* out = mBuffer;
         for ( ; p != end /* && *p */; )
           {
-            PRBool overlong, err;
-            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err,
-                                                         &overlong);
+            PRBool err;
+            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err);
 
             if ( err )
               {
@@ -410,33 +340,10 @@ class ConvertUTF8toUTF16
                 return;
               }
 
-            if ( overlong )
+            if ( ucs4 >= PLANE1_BASE )
               {
-                // Overlong sequence
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 <= 0xD7FF )
-              {
-                *out++ = ucs4;
-              }
-            else if ( /* ucs4 >= 0xD800 && */ ucs4 <= 0xDFFF )
-              {
-                // Surrogates
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 == 0xFFFE || ucs4 == 0xFFFF )
-              {
-                // Prohibited characters
-                *out++ = UCS2_REPLACEMENT_CHAR;
-              }
-            else if ( ucs4 >= PLANE1_BASE )
-              {
-                if ( ucs4 >= UCS_END )
-                  *out++ = UCS2_REPLACEMENT_CHAR;
-                else {
-                  *out++ = (buffer_type)H_SURROGATE(ucs4);
-                  *out++ = (buffer_type)L_SURROGATE(ucs4);
-                }
+                *out++ = (buffer_type)H_SURROGATE(ucs4);
+                *out++ = (buffer_type)L_SURROGATE(ucs4);
               }
             else
               {
@@ -489,18 +396,47 @@ class CalculateUTF8Length
             else if ( UTF8traits::is3byte(*p) )
                 p += 3;
             else if ( UTF8traits::is4byte(*p) ) {
-                p += 4;
                 // Because a UTF-8 sequence of 4 bytes represents a codepoint
                 // greater than 0xFFFF, it will become a surrogate pair in the
                 // UTF-16 string, so add 1 more to mLength.
                 // This doesn't happen with is5byte and is6byte because they
                 // are illegal UTF-8 sequences (greater than 0x10FFFF) so get
                 // converted to a single replacement character.
-                //
-                // XXX: if the 4-byte sequence is an illegal non-shortest form,
-                //      it also gets converted to a replacement character, so
-                //      mLength will be off by one in this case.
-                ++mLength;
+
+                // However, there is one case when a 4 byte UTF-8 sequence will
+                // only generate 2 UTF-16 bytes. If we have a properly encoded
+                // sequence, but with an invalid value (too small or too big),
+                // that will result in a replacement character being written
+                // This replacement character is encoded as just 1 single
+                // UTF-16 character, which is 2 bytes.
+
+                // The below code therefore only adds 1 to mLength if the UTF8
+                // data will produce a decoded character which is greater than
+                // or equal to 0x010000 and less than 0x0110000.
+
+                // A 4byte UTF8 character is encoded as
+                // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                // Bit 1-3 on the first byte, and bit 5-6 on the second byte,
+                // map to bit 17-21 in the final result. If these bits are
+                // between 0x01 and 0x11, that means that the final result is
+                // between 0x010000 and 0x110000. The below code reads these
+                // bits out and assigns them to c, but shifted up 4 bits to
+                // avoid having to shift twice.
+
+                // It doesn't matter what to do in the case where p + 4 > end
+                // since no UTF16 characters will be written in that case by
+                // ConvertUTF8toUTF16. Likewise it doesn't matter what we do if
+                // any of the surrogate bits are wrong since no UTF16
+                // characters will be written in that case either.
+
+                if (p + 4 <= end) {
+                  PRUint32 c = ((PRUint32)(p[0] & 0x07)) << 6 |
+                               ((PRUint32)(p[1] & 0x30));
+                  if (c >= 0x010 && c < 0x110)
+                    ++mLength;
+                }
+
+                p += 4;
             }
             else if ( UTF8traits::is5byte(*p) )
                 p += 5;

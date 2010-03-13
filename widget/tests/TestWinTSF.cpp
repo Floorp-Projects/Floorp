@@ -96,6 +96,7 @@ template<class T> class nsReadingIterator;
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMNSElement.h"
 #include "nsISelectionController.h"
 #include "nsIViewManager.h"
 #include "nsTArray.h"
@@ -144,6 +145,7 @@ protected:
   PRBool TestNotification(void);
   PRBool TestContentEvents(void);
   PRBool TestEditMessages(void);
+  PRBool TestScrollMessages(void);
 
   PRBool TestSelectionInternal(char* aTestName,
                                         LONG aStart,
@@ -1664,6 +1666,8 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
       passed("TestContentEvents");
     if (RunTest(&TestApp::TestEditMessages))
       passed("TestEditMessages");
+    if (RunTest(&TestApp::TestScrollMessages))
+      passed("TestScrollMessages");
 
     if (RunTest(&TestApp::TestFocus, PR_FALSE))
       passed("TestFocus");
@@ -3034,6 +3038,264 @@ TestApp::TestEditMessages(void)
     return PR_FALSE;
   }
 
+  return PR_TRUE;
+}
+
+PRBool
+TestApp::TestScrollMessages(void)
+{
+  NS_NAMED_LITERAL_STRING(kLine, "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n");
+  mTestString.Truncate();
+  for (PRUint32 i = 0; i < 30; i++) {
+    mTestString.Append(kLine);
+  }
+
+  mTextArea->SetAttribute(NS_LITERAL_STRING("style"),
+    NS_LITERAL_STRING("width:3em;height:3em;word-wrap:normal;"));
+  mTextArea->SetValue(mTestString);
+  mTextArea->Focus();
+
+  nsCOMPtr<nsIWidget> widget;
+  if (!GetWidget(getter_AddRefs(widget))) {
+    fail("TestScrollMessages: get nsIWidget");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDOMNSElement> textAreaNS(do_QueryInterface(mTextArea));
+  if (!textAreaNS) {
+    fail("TestScrollMessages: get nsIDOMNSElement");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+#define DO_CHECK(aFailureCondition, aDescription) \
+  if (aFailureCondition) { \
+    nsCAutoString str(aDescription); \
+    str.Append(": "); \
+    str.Append(#aFailureCondition); \
+    fail(str.get()); \
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString()); \
+    return PR_FALSE; \
+  }
+
+  HWND wnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
+
+  textAreaNS->SetScrollTop(0);
+  textAreaNS->SetScrollLeft(0);
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_LINEDOWN, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #1");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  PRInt32 x, y, prevX, prevY;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0, "TestScrollMessages: SendMessage WM_VSCROLL #1");
+  DO_CHECK(y == 0, "TestScrollMessages: SendMessage WM_VSCROLL #1");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_LINERIGHT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #1");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  const PRInt32 kLineWidth  = x;
+  const PRInt32 kLineHeight = y;
+
+  DO_CHECK(x == 0,     "TestScrollMessages: SendMessage WM_HSCROLL #1");
+  DO_CHECK(y != prevY, "TestScrollMessages: SendMessage WM_HSCROLL #1");
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_LINEUP, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #2");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "TestScrollMessages: SendMessage WM_VSCROLL #2");
+  DO_CHECK(y != 0,     "TestScrollMessages: SendMessage WM_VSCROLL #2");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_LINELEFT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #2");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0, "TestScrollMessages: SendMessage WM_HSCROLL #2");
+  DO_CHECK(y != 0, "TestScrollMessages: SendMessage WM_HSCROLL #2");
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_PAGEDOWN, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #3");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0,           "TestScrollMessages: SendMessage WM_VSCROLL #3");
+  DO_CHECK(y <= kLineHeight, "TestScrollMessages: SendMessage WM_VSCROLL #3");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_PAGERIGHT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #3");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x <= kLineWidth, "TestScrollMessages: SendMessage WM_HSCROLL #3");
+  DO_CHECK(y != prevY,      "TestScrollMessages: SendMessage WM_HSCROLL #3");
+
+  const PRInt32 kPageWidth  = x;
+  const PRInt32 kPageHeight = y;
+
+  ::SendMessage(wnd, WM_VSCROLL, SB_LINEDOWN, 0);
+  ::SendMessage(wnd, WM_VSCROLL, SB_LINEUP, 0);
+  ::SendMessage(wnd, WM_HSCROLL, SB_LINERIGHT, 0);
+  ::SendMessage(wnd, WM_HSCROLL, SB_LINELEFT, 0);
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "TestScrollMessages: SB_LINELEFT scrolled wrong amount");
+  DO_CHECK(y != prevY, "TestScrollMessages: SB_LINEUP scrolled wrong amount");
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_PAGEUP, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #4");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "TestScrollMessages: SendMessage WM_VSCROLL #4");
+  DO_CHECK(y != 0,     "TestScrollMessages: SendMessage WM_VSCROLL #4");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_PAGELEFT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #4");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0, "TestScrollMessages: SendMessage WM_HSCROLL #4");
+  DO_CHECK(y != 0, "TestScrollMessages: SendMessage WM_HSCROLL #4");
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_BOTTOM, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #5");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0,           "TestScrollMessages: SendMessage WM_VSCROLL #5");
+  DO_CHECK(y <= kPageHeight, "TestScrollMessages: SendMessage WM_VSCROLL #5");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_RIGHT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #6");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x <= kPageWidth, "TestScrollMessages: SendMessage WM_HSCROLL #5");
+  DO_CHECK(y != prevY,      "TestScrollMessages: SendMessage WM_HSCROLL #5");
+
+  ::SendMessage(wnd, WM_VSCROLL, SB_LINEDOWN, 0);
+  ::SendMessage(wnd, WM_HSCROLL, SB_LINERIGHT, 0);
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "SB_RIGHT didn't scroll to right most");
+  DO_CHECK(y != prevY, "SB_BOTTOM didn't scroll to bottom most");
+
+  ::SendMessage(wnd, WM_VSCROLL, SB_PAGEUP, 0);
+  ::SendMessage(wnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+  ::SendMessage(wnd, WM_HSCROLL, SB_PAGELEFT, 0);
+  ::SendMessage(wnd, WM_HSCROLL, SB_PAGERIGHT, 0);
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "TestScrollMessages: SB_PAGELEFT scrolled wrong amount");
+  DO_CHECK(y != prevY, "TestScrollMessages: SB_PAGEUP scrolled wrong amount");
+
+  if (::SendMessage(wnd, WM_VSCROLL, SB_TOP, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_VSCROLL #6");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != prevX, "TestScrollMessages: SendMessage WM_VSCROLL #6");
+  DO_CHECK(y != 0,     "TestScrollMessages: SendMessage WM_VSCROLL #6");
+
+  if (::SendMessage(wnd, WM_HSCROLL, SB_LEFT, 0) != 0) {
+    fail("TestScrollMessages: SendMessage WM_HSCROLL #4");
+    mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
+    return PR_FALSE;
+  }
+
+  prevX = x;
+  prevY = y;
+  textAreaNS->GetScrollTop(&y);
+  textAreaNS->GetScrollLeft(&x);
+
+  DO_CHECK(x != 0, "TestScrollMessages: SendMessage WM_HSCROLL #6");
+  DO_CHECK(y != 0, "TestScrollMessages: SendMessage WM_HSCROLL #6");
+#undef DO_CHECK
+
+  mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString());
   return PR_TRUE;
 }
 

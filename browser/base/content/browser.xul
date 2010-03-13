@@ -101,6 +101,10 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
+<!-- This is still used for dragDropSecurityCheck and transferUtils.  Since we
+     rely on the new Drag and Drop API these dependencies should be removed. -->
+<script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
@@ -331,10 +335,20 @@
       </toolbaritem>
     </toolbar>
 
-    <toolbarpalette id="BrowserToolbarPalette">
+    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
+             toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
+             fullscreentoolbar="true" mode="icons" customizable="true"
+#ifdef WINCE
+             iconsize="small" defaulticonsize="small"
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,navigator-throbber,fullscreenflex,window-controls"
+#else
+             iconsize="large"
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
+#endif
+             context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-                   context="backForwardMenu">
+                   context="backForwardMenu" removable="true">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
                        label="&backCmd.label;"
                        command="Browser:BackOrBackDuplicate"
@@ -363,18 +377,18 @@
       </toolbaritem>
 
       <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&reloadCmd.label;"
+                     label="&reloadCmd.label;" removable="true"
                      command="Browser:ReloadOrDuplicate"
                      onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&reloadButton.tooltip;"/>
 
       <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&stopCmd.label;"
+                     label="&stopCmd.label;" removable="true"
                      command="Browser:Stop"
                      tooltiptext="&stopButton.tooltip;"/>
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     persist="class"
+                     persist="class" removable="true"
                      label="&homeButton.label;"
                      ondragover="homeButtonObserver.onDragOver(event)"
                      ondragenter="homeButtonObserver.onDragOver(event)"
@@ -383,12 +397,12 @@
                      onclick="BrowserGoHome(event);"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
-                   title="&locationItem.title;" class="chromeclass-location">
+                   title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 bookmarkhistoryemptytext="&urlbar.bookmarkhistory.emptyText;"
-                 bookmarkemptytext="&urlbar.bookmark.emptyText;"
-                 historyemptytext="&urlbar.history.emptyText;"
-                 noneemptytext="&urlbar.none.emptyText;"
+                 bookmarkhistoryplaceholder="&urlbar.bookmarkhistory.emptyText;"
+                 bookmarkplaceholder="&urlbar.bookmark.emptyText;"
+                 historyplaceholder="&urlbar.history.emptyText;"
+                 noneplaceholder="&urlbar.none.emptyText;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletepopup="PopupAutoCompleteRichResult"
@@ -456,105 +470,10 @@
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
-                   flex="100" persist="width">
+                   flex="100" persist="width" removable="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
 
-      <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&printButton.label;" command="cmd_print"
-                     tooltiptext="&printButton.tooltip;"/>
-
-      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
-                   mousethrough="always">
-        <image/>
-      </toolbaritem>
-
-      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
-         <hbox id="bookmarksBarContent" flex="1"
-               type="places"
-               place="place:folder=TOOLBAR"
-               context="placesContext"
-               onclick="BookmarksEventHandler.onClick(event);"
-               oncommand="BookmarksEventHandler.onCommand(event);"
-               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="bhTooltip" popupsinherittooltip="true"/>
-      </toolbaritem>
-
-        <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       observes="Tools:Downloads"
-                       ondrop="DownloadsButtonDNDObserver.onDrop(event)"
-                       ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
-                       ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
-                       ondragleave="DownloadsButtonDNDObserver.onDragLeave(event)"
-                       label="&downloads.label;"
-                       tooltiptext="&downloads.tooltip;"/>
-
-        <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       observes="viewHistorySidebar" label="&historyButton.label;"
-                       tooltiptext="&historyButton.tooltip;"/>
-
-        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       observes="viewBookmarksSidebar"
-                       tooltiptext="&bookmarksButton.tooltip;"
-                       ondrop="bookmarksButtonObserver.onDrop(event)"
-                       ondragover="bookmarksButtonObserver.onDragOver(event)"
-                       ondragenter="bookmarksButtonObserver.onDragOver(event)"
-                       ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
-
-        <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&tabCmd.label;"
-                       command="cmd_newNavigatorTab"
-                       tooltiptext="&newTabButton.tooltip;"
-                       ondrop="newTabButtonObserver.onDrop(event)"
-                       ondragover="newTabButtonObserver.onDragOver(event)"
-                       ondragenter="newTabButtonObserver.onDragOver(event)"
-                       ondragleave="newTabButtonObserver.onDragLeave(event)"/>
-
-        <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&newNavigatorCmd.label;"
-                       command="key_newNavigator"
-                       tooltiptext="&newWindowButton.tooltip;"
-                       ondrop="newWindowButtonObserver.onDrop(event)"
-                       ondragover="newWindowButtonObserver.onDragOver(event)"
-                       ondragenter="newWindowButtonObserver.onDragOver(event)"
-                       ondragleave="newWindowButtonObserver.onDragLeave(event)"/>
-
-        <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&cutCmd.label;"
-                       command="cmd_cut"
-                       tooltiptext="&cutButton.tooltip;"/>
-
-        <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&copyCmd.label;"
-                       command="cmd_copy"
-                       tooltiptext="&copyButton.tooltip;"/>
-
-        <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&pasteCmd.label;"
-                       command="cmd_paste"
-                       tooltiptext="&pasteButton.tooltip;"/>
-        <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       observes="View:FullScreen"
-                       type="checkbox"
-                       label="&fullScreenCmd.label;"
-                       tooltiptext="&fullScreenButton.tooltip;"/>
-    </toolbarpalette>
-
-    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
-             toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
-             fullscreentoolbar="true" mode="icons"
-#ifdef WINCE
-             iconsize="small" defaulticonsize="small"
-#else
-             iconsize="large"
-#endif
-             customizable="true"
-#ifdef WINCE
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,navigator-throbber,fullscreenflex,window-controls"
-#else
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
-#endif
-             context="toolbar-context-menu">
       <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button"
@@ -583,7 +502,90 @@
 #ifdef WINCE
              collapsed="true"
 #endif
-             customizable="true"/>
+             customizable="true">
+      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
+                   removable="true">
+         <hbox id="bookmarksBarContent" flex="1"
+               type="places"
+               place="place:folder=TOOLBAR"
+               context="placesContext"
+               onclick="BookmarksEventHandler.onClick(event);"
+               oncommand="BookmarksEventHandler.onCommand(event);"
+               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               tooltip="bhTooltip" popupsinherittooltip="true"/>
+      </toolbaritem>
+    </toolbar>
+
+    <toolbarpalette id="BrowserToolbarPalette">
+
+      <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&printButton.label;" command="cmd_print"
+                     tooltiptext="&printButton.tooltip;"/>
+
+      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
+                   mousethrough="always">
+        <image/>
+      </toolbaritem>
+
+      <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     observes="Tools:Downloads"
+                     ondrop="DownloadsButtonDNDObserver.onDrop(event)"
+                     ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
+                     ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
+                     ondragleave="DownloadsButtonDNDObserver.onDragLeave(event)"
+                     label="&downloads.label;"
+                     tooltiptext="&downloads.tooltip;"/>
+
+      <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     observes="viewHistorySidebar" label="&historyButton.label;"
+                     tooltiptext="&historyButton.tooltip;"/>
+
+      <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     observes="viewBookmarksSidebar"
+                     tooltiptext="&bookmarksButton.tooltip;"
+                     ondrop="bookmarksButtonObserver.onDrop(event)"
+                     ondragover="bookmarksButtonObserver.onDragOver(event)"
+                     ondragenter="bookmarksButtonObserver.onDragOver(event)"
+                     ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
+
+      <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCmd.label;"
+                     command="cmd_newNavigatorTab"
+                     tooltiptext="&newTabButton.tooltip;"
+                     ondrop="newTabButtonObserver.onDrop(event)"
+                     ondragover="newTabButtonObserver.onDragOver(event)"
+                     ondragenter="newTabButtonObserver.onDragOver(event)"
+                     ondragleave="newTabButtonObserver.onDragLeave(event)"/>
+
+      <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&newNavigatorCmd.label;"
+                     command="key_newNavigator"
+                     tooltiptext="&newWindowButton.tooltip;"
+                     ondrop="newWindowButtonObserver.onDrop(event)"
+                     ondragover="newWindowButtonObserver.onDragOver(event)"
+                     ondragenter="newWindowButtonObserver.onDragOver(event)"
+                     ondragleave="newWindowButtonObserver.onDragLeave(event)"/>
+
+      <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&cutCmd.label;"
+                     command="cmd_cut"
+                     tooltiptext="&cutButton.tooltip;"/>
+
+      <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&copyCmd.label;"
+                     command="cmd_copy"
+                     tooltiptext="&copyButton.tooltip;"/>
+
+      <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&pasteCmd.label;"
+                     command="cmd_paste"
+                     tooltiptext="&pasteButton.tooltip;"/>
+      <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     observes="View:FullScreen"
+                     type="checkbox"
+                     label="&fullScreenCmd.label;"
+                     tooltiptext="&fullScreenButton.tooltip;"/>
+    </toolbarpalette>
   </toolbox>
 
   <hbox flex="1" id="browser">
@@ -643,7 +645,11 @@
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.42" cy="0.5" r="0.63" id="circle"/>
+      <svg:circle cx="-0.46" cy="0.5" r="0.63"/>
+    </svg:mask>
+    <svg:mask id="winstripe-keyhole-forward-mask-hover" maskContentUnits="objectBoundingBox">
+      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
+      <svg:circle cx="-0.35" cy="0.5" r="0.58"/>
     </svg:mask>
   </svg:svg>
 #endif

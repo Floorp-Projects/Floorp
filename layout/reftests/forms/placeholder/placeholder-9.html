@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when focused, value reset shouldn't show placeholder
+       Using a readonly input text to disable caret -->
+  <script type="text/javascript">
+    function focusPlaceholder()
+    {
+      document.getElementById('p1').focus();
+    }
+    function resetValue()
+    {
+      document.getElementById('p1').value = '';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="focusPlaceholder(); resetValue(); disableReftestWait();">
+    <input type="text" id="p1" value="my value" placeholder="my placeholder" readonly>
+  </body>
+</html>

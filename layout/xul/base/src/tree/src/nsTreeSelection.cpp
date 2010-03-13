@@ -660,7 +660,7 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
 
   nsRefPtr<nsPLDOMEvent> event =
     new nsPLDOMEvent(treeDOMNode, NS_LITERAL_STRING("DOMMenuItemActive"),
-                     PR_FALSE);
+                     PR_TRUE, PR_FALSE);
   if (!event)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -845,7 +845,7 @@ nsTreeSelection::FireOnSelectHandler()
   NS_ENSURE_STATE(node);
 
   nsRefPtr<nsPLDOMEvent> event =
-    new nsPLDOMEvent(node, NS_LITERAL_STRING("select"), PR_FALSE);
+    new nsPLDOMEvent(node, NS_LITERAL_STRING("select"), PR_TRUE, PR_FALSE);
   event->RunDOMEventWhenSafe();
   return NS_OK;
 }

@@ -46,13 +46,15 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-const char* nsNSSDialogHelper::kDefaultOpenWindowParam = "centerscreen,chrome,modal,titlebar";
+static const char kOpenDialogParam[] = "centerscreen,chrome,modal,titlebar";
+static const char kOpenWindowParam[] = "centerscreen,chrome,titlebar";
 
 nsresult
 nsNSSDialogHelper::openDialog(
     nsIDOMWindowInternal *window,
     const char *url,
-    nsISupports *params)
+    nsISupports *params,
+    PRBool modal)
 {
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher = 
@@ -75,7 +77,9 @@ nsNSSDialogHelper::openDialog(
   rv = windowWatcher->OpenWindow(parent,
                                  url,
                                  "_blank",
-                                 nsNSSDialogHelper::kDefaultOpenWindowParam,
+                                 modal
+                                 ? kOpenDialogParam
+                                 : kOpenWindowParam,
                                  params,
                                  getter_AddRefs(newWindow));
   return rv;

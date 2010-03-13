@@ -109,10 +109,6 @@ public:
   const nsString* GetLang();
   PRUint32 ContentState();
   PRBool IsLink();
-  nsLinkState LinkState() {
-    NS_ASSERTION(mGotLinkInfo && mIsLink, "Why am I being called?");
-    return mLinkState;
-  }
 
   // Returns a 1-based index of the child in its parent.  If the child
   // is not in its parent's child list (i.e., it is anonymous content),
@@ -157,11 +153,7 @@ private:
   // mContentState, mLinkState, mIsLink are initialized lazily.
   PRInt32 mContentState;  // eventStateMgr->GetContentState() or
                           // mContent->IntrinsicState() if we have no ESM
-  nsLinkState mLinkState; // if a link, this is the state, otherwise unknown
-  PRPackedBool mIsLink;   // nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
   PRPackedBool mGotContentState;
-  PRPackedBool mGotLinkInfo; // Whether we've gotten the right values
-                             // for mLinkState and mIsLink.
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {

@@ -357,8 +357,10 @@ static ID3D10Texture2D*
 _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface) 
 {
     if (!surface->bufferTexture) {
+	IDXGISurface *surf;
 	DXGI_SURFACE_DESC surfDesc;
-	surface->backBuf->GetDesc(&surfDesc);
+	surface->surface->QueryInterface(&surf);
+	surf->GetDesc(&surfDesc);
 	CD3D10_TEXTURE2D_DESC softDesc(surfDesc.Format, surfDesc.Width, surfDesc.Height);
         softDesc.MipLevels = 1;
 	softDesc.Usage = D3D10_USAGE_DEFAULT;
@@ -846,15 +848,15 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		    D2DSurfFactory::Instance()->CreateRectangleGeometry(D2D1::RectF(0, 0, (float)width, (float)height),
 									&clipRect);
 
-		    if (!d2dsurf->tilingLayer) {
-			d2dsurf->rt->CreateLayer(&d2dsurf->tilingLayer);
+		    if (!d2dsurf->helperLayer) {
+			d2dsurf->rt->CreateLayer(&d2dsurf->helperLayer);
 		    }
 		    
 		    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
 								 clipRect,
 								 D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
 								 _cairo_d2d_matrix_from_matrix(&mat)),
-					   d2dsurf->tilingLayer);
+					   d2dsurf->helperLayer);
 		    *pushed_clip = true;
 		    clipRect->Release();
 		}
@@ -1137,6 +1139,139 @@ _cairo_d2d_create_path_geometry_for_path(cairo_path_fixed_t *path,
     return d2dpath;
 }
 
+/**
+ * We use this to clear out a certain path on a surface. This will respect
+ * the existing clip.
+ *
+ * \param d2dsurf Surface we clear
+ * \param geometry Geometry of the area to clear, NULL means entire surface.
+ */
+static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
+				      ID2D1Geometry *pathGeometry)
+{
+    if (!d2dsurf->helperLayer) {
+	d2dsurf->rt->CreateLayer(&d2dsurf->helperLayer);
+    }
+
+    if (!d2dsurf->clipMask && !pathGeometry) {
+	/**
+	 * We have an axis aligned rectangular clip and no pathGeometry, we can
+	 * just clear the surface.
+	 */
+	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	return;
+    }
+
+    IDXGISurface *dxgiSurface;
+    ID2D1Bitmap *bitmp;
+
+    /** Create a temporary buffer for our surface content */
+    ID3D10Texture2D *bufTexture = _cairo_d2d_get_buffer_texture(d2dsurf);
+
+    /** Copy our contents into the temporary buffer */
+    D3D10Factory::Device()->CopyResource(bufTexture, d2dsurf->surface);
+
+    /** Make the temporary buffer available as a D2D Bitmap */
+    bufTexture->QueryInterface(&dxgiSurface);
+    D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+									    D2D1_ALPHA_MODE_PREMULTIPLIED));
+    HRESULT hr = d2dsurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+						 dxgiSurface,
+						 &props,
+						 &bitmp);
+
+    /** Clear our original surface */
+    d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+
+    DXGI_SURFACE_DESC desc;
+    dxgiSurface->GetDesc(&desc);
+
+    ID2D1RectangleGeometry *rectGeom;
+    ID2D1PathGeometry *inverse;
+    ID2D1Geometry *clearGeometry;
+    ID2D1GeometrySink *sink;
+
+    if (!d2dsurf->clipMask) {
+	/** No clip mask, our clear geometry is equal to our path geometry. */
+	clearGeometry = pathGeometry;
+	clearGeometry->AddRef();
+    } else if (!pathGeometry) {
+	/** No path geometry, our clear geometry is equal to our clip mask. */
+	clearGeometry = d2dsurf->clipMask;
+	clearGeometry->AddRef();
+    } else {
+	/**
+	 * A clipping mask and a pathGeometry, the intersect of the two
+	 * geometries is the area of the surface that we want to clear.
+	 */
+	ID2D1PathGeometry *clipPathUnion;
+	D2DSurfFactory::Instance()->CreatePathGeometry(&clipPathUnion);
+	clipPathUnion->Open(&sink);
+	pathGeometry->CombineWithGeometry(d2dsurf->clipMask,
+					  D2D1_COMBINE_MODE_INTERSECT,
+					  D2D1::IdentityMatrix(),
+					  sink);
+	sink->Close();
+	sink->Release();
+	clearGeometry = clipPathUnion;
+    }
+
+    if (d2dsurf->clipMask) {
+	/** If we have a clip mask, we'll need to pop the surface clip */
+	_cairo_d2d_surface_pop_clip(d2dsurf);
+    }
+
+    /**
+     * Calculate the inverse of the geometry to clear. This is the clip mask
+     * when drawing our original content back to the surface.
+     */
+    D2DSurfFactory::Instance()->CreatePathGeometry(&inverse);
+    inverse->Open(&sink);
+    D2DSurfFactory::Instance()->CreateRectangleGeometry(D2D1::RectF(0, 0, (FLOAT)desc.Width, (FLOAT)desc.Height), &rectGeom);
+    rectGeom->CombineWithGeometry(clearGeometry, D2D1_COMBINE_MODE_EXCLUDE, D2D1::IdentityMatrix(), sink);
+    sink->Close();
+    sink->Release();
+    rectGeom->Release();
+    clearGeometry->Release();
+
+    /** Clip by the inverse and draw our content back to the surface */
+    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), inverse),
+			   d2dsurf->helperLayer);
+    d2dsurf->rt->DrawBitmap(bitmp);
+    d2dsurf->rt->PopLayer();
+
+    bitmp->Release();
+    dxgiSurface->Release();
+    inverse->Release();
+
+    if (d2dsurf->clipMask) {
+	/** If we have a clip mask, we'll need to push back the surface clip */
+	_cairo_d2d_surface_push_clip(d2dsurf);
+    }
+}
+
+static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
+						     const cairo_pattern_t *source)
+{
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	/** Operator over is easier for D2D! If the source if opaque, change */
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    const cairo_surface_pattern_t *surfpattern =
+		reinterpret_cast<const cairo_surface_pattern_t*>(source);
+	    if (surfpattern->surface->content == CAIRO_CONTENT_COLOR) {
+		return CAIRO_OPERATOR_OVER;
+	    }
+	} else if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
+	    const cairo_solid_pattern_t *solidpattern =
+		reinterpret_cast<const cairo_solid_pattern_t*>(source);
+	    if (solidpattern->color.alpha == 1.0) {
+		return CAIRO_OPERATOR_OVER;
+	    }
+	}
+    }
+    return op;
+}
+
 // Implementation
 static cairo_surface_t*
 _cairo_d2d_create_similar(void			*surface,
@@ -1289,8 +1424,8 @@ _cairo_d2d_finish(void	    *surface)
     if (d2dsurf->surface) {
 	d2dsurf->surface->Release();
     }
-    if (d2dsurf->tilingLayer) {
-	d2dsurf->tilingLayer->Release();
+    if (d2dsurf->helperLayer) {
+	d2dsurf->helperLayer->Release();
     }
     if (d2dsurf->bufferTexture) {
 	d2dsurf->bufferTexture->Release();
@@ -1339,8 +1474,7 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	d2dsurf->surface->Release();
-	d2dsurf->surface = NULL;
+	softTexture->Release();
 	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
     }
     *image_out = 
@@ -1364,9 +1498,6 @@ _cairo_d2d_release_source_image(void                   *abstract_surface,
     }
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(abstract_surface);
 
-    if (!d2dsurf->surface) {
-	return;
-    }
     ID3D10Texture2D *softTexture = (ID3D10Texture2D*)image_extra;
     
     softTexture->Unmap(0);
@@ -1399,6 +1530,10 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
 
     CD3D10_TEXTURE2D_DESC softDesc(desc.Format, desc.Width, desc.Height);
 
+    image_rect->width = desc.Width;
+    image_rect->height = desc.Height;
+    image_rect->x = image_rect->y = 0;
+
     softDesc.MipLevels = 1;
     softDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE | D3D10_CPU_ACCESS_READ;
     softDesc.Usage = D3D10_USAGE_STAGING;
@@ -1412,8 +1547,7 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	d2dsurf->surface->Release();
-	d2dsurf->surface = NULL;
+	softTexture->Release();
 	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
     }
     *image_out = 
@@ -1609,11 +1743,11 @@ _cairo_d2d_paint(void			*surface,
 {
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
+
+    op = _cairo_d2d_simplify_operator(op, source);
+
     if (op == CAIRO_OPERATOR_CLEAR) {
-	cairo_solid_pattern_t *sourcePattern =
-	    (cairo_solid_pattern_t*)source;
-	d2dsurf->rt->Clear(
-	    _cairo_d2d_color_from_cairo_color(sourcePattern->color));
+	_cairo_d2d_clear_geometry(d2dsurf, NULL);
 	return CAIRO_INT_STATUS_SUCCESS;
     }
 
@@ -1755,14 +1889,16 @@ _cairo_d2d_stroke(void			*surface,
 {
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_SOURCE &&
-	op != CAIRO_OPERATOR_ADD) {
-	    /** 
-	     * We don't really support SOURCE and ADD yet. Source won't be
-	     * too hard, true ADD support requires getting the tesselated
-	     * mesh from D2D, and blending that using D3D which has an add
-	     * operator available.
-	     */
+
+    op = _cairo_d2d_simplify_operator(op, source);
+
+    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
+	op != CAIRO_OPERATOR_CLEAR) {
+	/** 
+	 * We don't really support ADD yet. True ADD support requires getting
+	 * the tesselated mesh from D2D, and blending that using D3D which has
+	 * an add operator available.
+	 */
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -1779,6 +1915,29 @@ _cairo_d2d_stroke(void			*surface,
     D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(ctm);
 
     _cairo_path_fixed_transform(path, ctm_inverse);
+
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	ID2D1Geometry *d2dpath = _cairo_d2d_create_path_geometry_for_path(path,
+									  CAIRO_FILL_RULE_WINDING,
+									  D2D1_FIGURE_BEGIN_FILLED);
+
+        ID2D1PathGeometry *strokeGeometry;
+	D2DSurfFactory::Instance()->CreatePathGeometry(&strokeGeometry);
+
+	ID2D1GeometrySink *sink;
+	strokeGeometry->Open(&sink);
+	d2dpath->Widen((FLOAT)style->line_width, strokeStyle, mat, (FLOAT)tolerance, sink);
+	sink->Close();
+	sink->Release();
+
+	_cairo_d2d_clear_geometry(d2dsurf, strokeGeometry);
+
+	strokeGeometry->Release();
+	d2dpath->Release();
+
+        return CAIRO_INT_STATUS_SUCCESS;
+    }
+
     d2dsurf->rt->SetTransform(mat);
 
     unsigned int runs_remaining = 1;
@@ -1828,6 +1987,7 @@ _cairo_d2d_stroke(void			*surface,
 
 	    if (!brush) {
 		strokeStyle->Release();
+		d2dpath->Release();
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 	    }
 	    d2dsurf->rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
@@ -1862,13 +2022,14 @@ _cairo_d2d_fill(void			*surface,
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     _begin_draw_state(d2dsurf);
 
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_SOURCE &&
-	op != CAIRO_OPERATOR_ADD) {
+    op = _cairo_d2d_simplify_operator(op, source);
+
+    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
+	op != CAIRO_OPERATOR_CLEAR) {
 	/** 
-	 * We don't really support SOURCE and ADD yet. Source won't be
-	 * too hard, true ADD support requires getting the tesselated
-	 * mesh from D2D, and blending that using D3D which has an add
-	 * operator available.
+	 * We don't really support ADD yet. True ADD support requires getting
+	 * the tesselated mesh from D2D, and blending that using D3D which has
+	 * an add operator available.
 	 */
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -1882,8 +2043,29 @@ _cairo_d2d_fill(void			*surface,
     unsigned int runs_remaining = 1;
     unsigned int last_run = 0;
     bool pushed_clip = false;
-
     cairo_box_t box;
+
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (_cairo_path_fixed_is_box(path, &box) && !d2dsurf->clipMask) {
+	    /** No layers needed! We can clear using out axis aligned clips */
+	    d2dsurf->rt->PushAxisAlignedClip(D2D1::RectF(_cairo_fixed_to_float(box.p1.x),
+							 _cairo_fixed_to_float(box.p1.y),
+							 _cairo_fixed_to_float(box.p2.x),
+							 _cairo_fixed_to_float(box.p2.y)),
+					     D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	    d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	    d2dsurf->rt->PopAxisAlignedClip();
+	    return CAIRO_INT_STATUS_SUCCESS;
+	}
+	ID2D1Geometry *d2dpath = _cairo_d2d_create_path_geometry_for_path(path,
+									  fill_rule,
+									  D2D1_FIGURE_BEGIN_FILLED);
+	_cairo_d2d_clear_geometry(d2dsurf, d2dpath);
+	
+	d2dpath->Release();
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
     if (_cairo_path_fixed_is_box(path, &box)) {
 	float x1 = _cairo_fixed_to_float(box.p1.x);
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
@@ -1985,6 +2167,14 @@ _cairo_d2d_getextents(void		       *surface,
 cairo_surface_t*
 cairo_d2d_surface_create_for_hwnd(HWND wnd)
 {
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	/**
+	 * FIXME: In the near future we can use cairo_device_t to pass in a
+	 * device.
+	 */
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
+    }
+
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
 
     memset(newSurf, 0, sizeof(cairo_d2d_surface_t));
@@ -2103,6 +2293,13 @@ cairo_d2d_surface_create(cairo_format_t format,
                          int width,
                          int height)
 {
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	/**
+	 * FIXME: In the near future we can use cairo_device_t to pass in a
+	 * device.
+	 */
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
+    }
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
 
     memset(newSurf, 0, sizeof(cairo_d2d_surface_t));
@@ -2202,6 +2399,24 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
     rect.front = 0;
     rect.back = 1;
 
+    IDXGISurface *dxgiSurface;
+    d2dsurf->surface->QueryInterface(&dxgiSurface);
+    DXGI_SURFACE_DESC desc;
+
+    dxgiSurface->GetDesc(&desc);
+    dxgiSurface->Release();
+
+    /**
+     * It's important we constrain the size of the clip region to the area of
+     * the surface. If we don't we might get a box that goes outside the
+     * surface, and CopySubresourceRegion will become very angry with us.
+     * It will cause a device failure and subsequent drawing will break.
+     */
+    clip->x = MAX(clip->x, 0);
+    clip->y = MAX(clip->y, 0);
+    clip->width = MIN(clip->width, desc.Width - clip->x);
+    clip->height = MIN(clip->height, desc.Height - clip->y);
+
     if (x < 0) {
 	point.x = (UINT32)clip->x;
 	rect.left = (UINT)(clip->x - x);
@@ -2232,4 +2447,17 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
 						  0,
 						  &rect);
 
+}
+
+cairo_bool_t
+cairo_d2d_has_support()
+{
+    /**
+     * FIXME: We should be able to fix this in the near future when we pass in
+     * a cairo_device_t to our surface creation functions.
+     */
+    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
+	return false;
+    }
+    return true;
 }

@@ -1,5 +1,16 @@
 <html>
 <head>
+<style>
+/* explicitly load a font that supports the "fi" ligature */
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+body {
+  font-family: test, serif;
+  padding: 20px;
+}
+</style>
 <script>
 function m()
 {
@@ -11,6 +22,6 @@ function m()
 </head>
 
 <body onload="m();">
-<div id="div" style="font-size: 180px"><span>f</span><span id="parent"></span></div>
+<div id="div" style="font-size: 180px"><span>if</span><span id="parent"></span></div>
 </body>
 </html>

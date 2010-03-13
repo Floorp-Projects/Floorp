@@ -49,3 +49,4 @@ cp $1/AUTHORS ./AUTHORS
 patch -p3 < ./alloca.diff
 patch -p3 <bug487519.patch
 patch -p3 <bug498855.patch
+patch -p3 <bug550184.patch

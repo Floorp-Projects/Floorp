@@ -2,6 +2,7 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 
+using mozilla::ipc::RPCChannel;
 
 template<>
 struct RunnableMethodTraits<mozilla::_ipdltest::TestRPCRacesParent>
@@ -13,6 +14,14 @@ struct RunnableMethodTraits<mozilla::_ipdltest::TestRPCRacesParent>
 
 namespace mozilla {
 namespace _ipdltest {
+
+RPCChannel::RacyRPCPolicy
+MediateRace(const RPCChannel::Message& parent,
+            const RPCChannel::Message& child)
+{
+    return (PTestRPCRaces::Msg_Child__ID == parent.type()) ?
+        RPCChannel::RRPParentWins : RPCChannel::RRPChildWins;
+}
 
 //-----------------------------------------------------------------------------
 // parent
@@ -70,7 +79,9 @@ TestRPCRacesParent::Test2()
 
     puts("  passed");
 
-    Close();
+    MessageLoop::current()->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &TestRPCRacesParent::Test3));
 }
 
 bool
@@ -86,6 +97,45 @@ TestRPCRacesParent::AnswerStackFrame()
     if (!mChildHasReply)
         fail("child should have got a reply already");
 
+    return true;
+}
+
+void
+TestRPCRacesParent::Test3()
+{
+    puts("Test 3");
+
+    if (!CallStackFrame3())
+        fail("can't set up a stack frame");
+
+    puts("  passed");
+
+    Close();
+}
+
+bool
+TestRPCRacesParent::AnswerStackFrame3()
+{
+    if (!SendWakeup3())
+        fail("can't wake up the child");
+
+    if (!CallChild())
+        fail("can't set up race condition");
+
+    return true;
+}
+
+bool
+TestRPCRacesParent::AnswerParent()
+{
+    mAnsweredParent = true;
+    return true;
+}
+
+bool
+TestRPCRacesParent::RecvGetAnsweredParent(bool* answeredParent)
+{
+    *answeredParent = mAnsweredParent;
     return true;
 }
 
@@ -141,6 +191,38 @@ TestRPCRacesChild::RecvWakeup()
         fail("can't set up race condition");
 
     mHasReply = true;
+    return true;
+}
+
+bool
+TestRPCRacesChild::AnswerStackFrame3()
+{
+    if (!CallStackFrame3())
+        fail("can't set up stack frame");
+    return true;
+}
+
+bool
+TestRPCRacesChild::RecvWakeup3()
+{
+    if (!CallParent())
+        fail("can't set up race condition");
+    return true;
+}
+
+bool
+TestRPCRacesChild::AnswerChild()
+{
+    bool parentAnsweredParent;
+    // the parent is supposed to win the race, which means its
+    // message, Child(), is supposed to be processed before the
+    // child's message, Parent()
+    if (!SendGetAnsweredParent(&parentAnsweredParent))
+        fail("sending GetAnsweredParent");
+
+    if (parentAnsweredParent)
+        fail("parent was supposed to win the race!");
+
     return true;
 }
 

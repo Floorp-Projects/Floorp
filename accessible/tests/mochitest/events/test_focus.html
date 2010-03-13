@@ -19,40 +19,36 @@
           src="chrome://mochikit/content/a11y/accessible/events.js"></script>
 
   <script type="application/javascript">
-    /**
-     * Checker for invokers.
-     */
-    function actionChecker(aDescription)
+    function openCloseDialog(aID)
     {
-      this.check = function actionChecker_check(aEvent)
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function openCloseDialog_invoke()
       {
-        var target = aEvent.accessible;
-        is(target.description, aDescription,
-           "Wrong description for " + prettyName(target));
+        var wnd = window.open("focus.html");
+        wnd.close();
+      }
+
+      this.getID = function openCloseDialog_getID()
+      {
+        return "Open close dialog on " + prettyName(aID);
       }
     }
 
-    var gFocusHandler = {
-      handleEvent: function gFocusHandler_handleEvent(aEvent) {
-        var elm = aEvent.target;
-        if (elm.nodeType != nsIDOMNode.ELEMENT_NODE)
-          return;
+    function focusDocument(aFrameID)
+    {
+      this.DOMNode = getNode(aFrameID).contentDocument;
 
-        gTooltipElm.style.display = "block";
-
-        elm.setAttribute("aria-describedby", "tooltip");
+      this.invoke = function focusDocument_invoke()
+      {
+        this.DOMNode.body.focus();
       }
-    };
 
-    var gBlurHandler = {
-      handleEvent: function gBlurHandler_handleEvent(aEvent) {
-        gTooltipElm.style.display = "none";
-
-        var elm = aEvent.target;
-        if (elm.nodeType == nsIDOMNode.ELEMENT_NODE)
-          elm.removeAttribute("aria-describedby");
+      this.getID = function focusDocument_getID()
+      {
+        return "Focus document of " + prettyName(aFrameID);
       }
-    };
+    }
 
     /**
      * Do tests.
@@ -62,35 +58,19 @@
 
     var gQueue = null;
 
-    var gButtonElm = null;
-    var gTextboxElm = null;
-    var gTooltipElm = null;
-
     function doTests()
     {
-      gButtonElm = getNode("button");
-      gTextboxElm = getNode("textbox");
-      gTooltipElm = getNode("tooltip");
-
-      gButtonElm.addEventListener("focus", gFocusHandler, false);
-      gButtonElm.addEventListener("blur", gBlurHandler, false);
-      gTextboxElm.addEventListener("focus", gFocusHandler, false);
-      gTextboxElm.addEventListener("blur", gBlurHandler, false);
-
-      // The aria-describedby is changed on DOM focus. Accessible description
-      // should be updated when a11y focus is fired.
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
-      gQueue.onFinish = function()
-      {
-        gButtonElm.removeEventListener("focus", gFocusHandler, false);
-        gButtonElm.removeEventListener("blur", gBlurHandler, false);
-        gTextboxElm.removeEventListener("focus", gFocusHandler, false);
-        gTextboxElm.removeEventListener("blur", gBlurHandler, false);
-      }
 
-      var checker = new actionChecker("It's a tooltip");
-      gQueue.push(new synthFocus("button", checker));
-      gQueue.push(new synthTab("textbox", checker));
+      gQueue.push(new synthFocus("editablearea"));
+      gQueue.push(new synthFocus("textbox"));
+
+      gQueue.push(new synthFocus("button"));
+      gQueue.push(new openCloseDialog("button"));
+
+      var frameNode = getNode("editabledoc");
+      gQueue.push(new focusDocument(frameNode));
+      gQueue.push(new openCloseDialog(frameNode.contentDocument));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -103,18 +83,19 @@
 <body>
 
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=520709"
-     title="mochitest to ensure name/description are updated on a11y focus if they were changed on DOM focus">
-    Mozilla Bug 520709
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=551679"
+     title="focus is not fired for focused document when switching between windows">
+    Mozilla Bug 551679
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="tooltip" style="display: none" aria-hidden="true">It's a tooltip</div>
-  <button id="button">button</button>
+  <div id="editablearea" contentEditable="true">editable area</div>
   <input id="textbox">
+  <button id="button">button</button>
+  <iframe id="editabledoc" src="focus.html"></iframe>
 
   <div id="eventdump"></div>
 </body>

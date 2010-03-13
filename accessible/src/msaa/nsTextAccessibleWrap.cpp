@@ -261,7 +261,7 @@ __try {
 
   const nsStyleVisibility *visibility = frame->GetStyleVisibility();
 
-  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup,
+  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLanguage,
                             presShell->GetPresContext()->GetUserFontSet()))) {
     return E_FAIL;
   }

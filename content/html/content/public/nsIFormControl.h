@@ -44,7 +44,7 @@ class nsPresState;
 class nsIContent;
 class nsString;
 class nsIFormProcessor;
-class nsIFormSubmission;
+class nsFormSubmission;
 
 #define NS_FORM_BUTTON_BUTTON   1
 #define NS_FORM_BUTTON_RESET    2
@@ -129,7 +129,7 @@ public:
    * @param aSubmitElement the element that was pressed to submit (possibly
    *                       null)
    */
-  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement) = 0;
 
   /**

@@ -89,7 +89,11 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
     nsresult rv;
 
     if (!mInputTee) {
-        rv = NS_NewInputStreamTee(getter_AddRefs(tee), input, mSink);
+        if (mEventTarget)
+            rv = NS_NewInputStreamTeeAsync(getter_AddRefs(tee), input,
+                                           mSink, mEventTarget);
+        else
+            rv = NS_NewInputStreamTee(getter_AddRefs(tee), input, mSink);
         if (NS_FAILED(rv)) return rv;
 
         mInputTee = do_QueryInterface(tee, &rv);
@@ -112,8 +116,21 @@ nsStreamListenerTee::Init(nsIStreamListener *listener,
                           nsIOutputStream *sink,
                           nsIRequestObserver *requestObserver)
 {
+    NS_ENSURE_ARG_POINTER(listener);
+    NS_ENSURE_ARG_POINTER(sink);
     mListener = listener;
     mSink = sink;
     mObserver = requestObserver;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamListenerTee::InitAsync(nsIStreamListener *listener,
+                               nsIEventTarget *eventTarget,
+                               nsIOutputStream *sink,
+                               nsIRequestObserver *requestObserver)
+{
+    NS_ENSURE_ARG_POINTER(eventTarget);
+    mEventTarget = eventTarget;
+    return Init(listener, sink, requestObserver);
 }

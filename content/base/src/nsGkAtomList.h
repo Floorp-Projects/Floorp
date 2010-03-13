@@ -63,12 +63,14 @@
 
 GK_ATOM(_empty, "")
 GK_ATOM(moz, "_moz")
+GK_ATOM(moztype, "_moz-type")
 GK_ATOM(mozdirty, "_moz_dirty")
 GK_ATOM(mozeditorbogusnode, "_moz_editor_bogus_node")
 GK_ATOM(mozgeneratedcontentbefore, "_moz_generated_content_before")
 GK_ATOM(mozgeneratedcontentafter, "_moz_generated_content_after")
 GK_ATOM(mozgeneratedcontentimage, "_moz_generated_content_image")
 GK_ATOM(_moz_target, "_moz_target")
+GK_ATOM(_moz_type, "_moz-type")
 GK_ATOM(menuactive, "_moz-menuactive")
 GK_ATOM(_poundDefault, "#default")
 GK_ATOM(_asterix, "*")
@@ -721,6 +723,7 @@ GK_ATOM(ping, "ping")
 #ifdef MOZ_MEDIA
 GK_ATOM(pixelratio, "pixelratio")
 #endif
+GK_ATOM(placeholder, "placeholder")
 GK_ATOM(plaintext, "plaintext")
 #ifdef MOZ_MEDIA
 GK_ATOM(playbackrate, "playbackrate")
@@ -1298,12 +1301,14 @@ GK_ATOM(XML, "XML")
 #endif
 
 #ifdef MOZ_MATHML
-GK_ATOM(MOZcolumnalign, "-moz-math-columnalign")
-GK_ATOM(MOZcolumnline, "-moz-math-columnline") // different from columnlines_
-GK_ATOM(MOZfontsize, "-moz-math-font-size") // different from fontsize_
-GK_ATOM(MOZfontstyle, "-moz-math-font-style") // different from fontstyle_
-GK_ATOM(MOZrowalign, "-moz-math-rowalign")
-GK_ATOM(MOZrowline, "-moz-math-rowline") // different from rowlines_
+// internal MathML attributes: different from columnalign_, columnlines_,
+// fontstyle_, rowalign_ and rowlines_
+GK_ATOM(_moz_math_columnalign_, "_moz-math-columnalign")
+GK_ATOM(_moz_math_columnline_, "_moz-math-columnline")
+GK_ATOM(_moz_math_fontstyle_, "_moz-math-font-style")
+GK_ATOM(_moz_math_rowalign_, "_moz-math-rowalign")
+GK_ATOM(_moz_math_rowline_, "_moz-math-rowline")
+
 GK_ATOM(abs_, "abs")
 GK_ATOM(accent_, "accent")
 GK_ATOM(accentunder_, "accentunder")
@@ -1683,6 +1688,7 @@ GK_ATOM(tableBCProperty, "TableBCProperty")                // table border colla
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
+GK_ATOM(usedBorderProperty, "UsedBorderProperty") // nsMargin*
 GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
 GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
 GK_ATOM(viewProperty, "ViewProperty")                      

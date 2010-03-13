@@ -112,7 +112,11 @@ UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aOddByte,
     if (dest == destEnd)
       goto error;
 
+#if !defined(__sparc__) && !defined(__arm__)
     u = *(const PRUnichar*)src;
+#else
+    memcpy(&u, src, 2);
+#endif
     src += 2;
 
 have_codepoint:

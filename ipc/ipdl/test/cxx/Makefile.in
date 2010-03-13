@@ -57,15 +57,16 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
-# Please keep these organized in the order "easy"-to-"hard"
 IPDLTESTS = \
   TestSanity  \
   TestRPCErrorCleanup \
   TestCrashCleanup \
+  TestStackHooks \
   TestSyncWakeup \
   TestLatency \
   TestRPCRaces \
   TestRacyRPCReplies  \
+  TestRPCShutdownRace \
   TestHangs \
   TestBlockChild \
   TestManyChildAllocs  \

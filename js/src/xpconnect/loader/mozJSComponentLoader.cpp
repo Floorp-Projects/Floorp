@@ -309,11 +309,14 @@ public:
 
     operator JSContext*() const {return mContext;}
 
-    JSCLContextHelper(); // not implemnted
 private:
     JSContext* mContext;
     intN       mContextThread;
     nsIThreadJSContextStack* mContextStack;
+
+    // prevent copying and assignment
+    JSCLContextHelper(const JSCLContextHelper &); // not implemented
+    const JSCLContextHelper& operator=(const JSCLContextHelper &); // not implemented
 };
 
 
@@ -324,10 +327,12 @@ public:
         {mContext = cx; mOldReporter = JS_SetErrorReporter(cx, reporter);}
     ~JSCLAutoErrorReporterSetter()
         {JS_SetErrorReporter(mContext, mOldReporter);} 
-    JSCLAutoErrorReporterSetter(); // not implemented
 private:
     JSContext* mContext;
     JSErrorReporter mOldReporter;
+    // prevent copying and assignment
+    JSCLAutoErrorReporterSetter(const JSCLAutoErrorReporterSetter &); // not implemented
+    const JSCLAutoErrorReporterSetter& operator=(const JSCLAutoErrorReporterSetter &); // not implemented
 };
 
 static nsresult

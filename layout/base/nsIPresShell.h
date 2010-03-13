@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0x20b82adf, 0x1f5c, 0x44f7, \
-    { 0x9b, 0x74, 0xc0, 0xa3, 0x14, 0xd8, 0xcf, 0x91 } }
+  { 0xe5e070ce, 0xbc17, 0x4b5f, \
+    { 0xb2, 0x21, 0xbf, 0xc3, 0xe1, 0x68, 0xbe, 0x9b } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -361,6 +361,16 @@ public:
    * Can be called by code not linked into gklayout.
    */
   virtual nsIScrollableFrame* GetRootScrollFrameAsScrollableExternal() const;
+
+  /*
+   * Gets nearest scrollable frame from current focused content or DOM
+   * selection if there is no focused content. The frame is scrollable with
+   * overflow:scroll or overflow:auto in some direction when aDirection is
+   * eEither.  Otherwise, this returns a nearest frame that is scrollable in
+   * the specified direction.
+   */
+  enum ScrollDirection { eHorizontal, eVertical, eEither };
+  nsIScrollableFrame* GetFrameToScrollAsScrollable(ScrollDirection aDirection);
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
@@ -824,6 +834,13 @@ public:
    * clipping/scrolling/scrollbar painting due to scrolling in the viewport
    *   set RENDER_CARET to draw the caret if one would be visible
    * (by default the caret is never drawn)
+   *   set RENDER_USE_LAYER_MANAGER to force rendering to go through
+   * the layer manager for the window. This may be unexpectedly slow
+   * (if the layer manager must read back data from the GPU) or low-quality
+   * (if the layer manager reads back pixel data and scales it
+   * instead of rendering using the appropriate scaling). It may also
+   * slow everything down if the area rendered does not correspond to the
+   * normal visible area of the window.
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
@@ -832,7 +849,8 @@ public:
   enum {
     RENDER_IS_UNTRUSTED = 0x01,
     RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
-    RENDER_CARET = 0x04
+    RENDER_CARET = 0x04,
+    RENDER_USE_WIDGET_LAYERS = 0x08
   };
   NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                             nscolor aBackgroundColor,

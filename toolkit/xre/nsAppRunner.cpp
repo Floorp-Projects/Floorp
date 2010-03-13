@@ -48,13 +48,13 @@
 
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
-#include "nsAppRunner.h"
-#include "nsUpdateDriver.h"
-
 #if defined(MOZ_WIDGET_QT)
 #include <qwidget.h>
 #include <qapplication.h>
 #endif
+
+#include "nsAppRunner.h"
+#include "nsUpdateDriver.h"
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
@@ -130,7 +130,6 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsXPIDLString.h"
-#include "nsXPFEComponentsCID.h"
 #include "nsVersionComparator.h"
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -240,6 +239,7 @@ protected:
 #endif
 
 extern void InstallSignalHandlers(const char *ProgramName);
+#include "nsX11ErrorHandler.h"
 
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 
@@ -1848,6 +1848,53 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
   }
 }
 
+static nsresult
+ProfileMissingDialog(nsINativeAppSupport* aNative)
+{
+  nsresult rv;
+
+  ScopedXPCOMStartup xpcom;
+  rv = xpcom.Initialize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = xpcom.DoAutoreg();
+  rv |= xpcom.SetWindowCreator(aNative);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  { //extra scoping is needed so we release these components before xpcom shutdown
+    nsCOMPtr<nsIStringBundleService> sbs
+      (do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
+  
+    nsCOMPtr<nsIStringBundle> sb;
+    sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
+    NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
+  
+    NS_ConvertUTF8toUTF16 appName(gAppData->name);
+    const PRUnichar* params[] = {appName.get(), appName.get()};
+  
+    nsXPIDLString missingMessage;
+  
+    // profileMissing  
+    static const PRUnichar kMissing[] = {'p','r','o','f','i','l','e','M','i','s','s','i','n','g','\0'};
+    sb->FormatStringFromName(kMissing, params, 2, getter_Copies(missingMessage));
+  
+    nsXPIDLString missingTitle;
+    sb->FormatStringFromName(NS_LITERAL_STRING("profileMissingTitle").get(),
+                             params, 1, getter_Copies(missingTitle));
+  
+    if (missingMessage && missingTitle) {
+      nsCOMPtr<nsIPromptService> ps
+        (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+      NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
+  
+      ps->Alert(nsnull, missingTitle, missingMessage);
+    }
+
+    return NS_ERROR_ABORT;
+  }
+}
+
 static const char kProfileManagerURL[] =
   "chrome://mozapps/content/profile/profileSelection.xul";
 
@@ -2069,6 +2116,9 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
   nsCOMPtr<nsIToolkitProfileService> profileSvc;
   rv = NS_NewToolkitProfileService(getter_AddRefs(profileSvc));
+  if (rv == NS_ERROR_FILE_ACCESS_DENIED)
+    PR_fprintf(PR_STDERR, "Error: Access was denied while trying to open files in " \
+                "your profile directory.\n"); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   ar = CheckArg("createprofile", PR_TRUE, &arg);
@@ -3133,6 +3183,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
 #endif /* MOZ_WIDGET_GTK2 */
+#ifdef MOZ_X11
+    // Do this after initializing GDK, or GDK will install its own handler.
+    InstallX11ErrorHandler();
+#endif
 
     // Call the code to install our handler
 #ifdef MOZ_JPROF
@@ -3177,7 +3231,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                        &profileName);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ||
         rv == NS_ERROR_ABORT) return 0;
-    if (NS_FAILED(rv)) return 1;
+
+    if (NS_FAILED(rv)) {
+      // We failed to choose or create profile - notify user and quit
+      ProfileMissingDialog(nativeApp);
+      return 1;
+    }
 
     nsCOMPtr<nsILocalFile> profD;
     rv = profileLock->GetDirectory(getter_AddRefs(profD));

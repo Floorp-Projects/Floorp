@@ -258,6 +258,12 @@ PreviewController.prototype = {
     this.dirtyRegion.unionRect(r.x, r.y, r.width, r.height);
   },
 
+  updateTitleAndTooltip: function () {
+    let title = this.win.tabbrowser.getWindowTitleForBrowser(this.linkedBrowser);
+    this.preview.title = title;
+    this.preview.tooltip = title;
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// nsITaskbarPreviewController 
 
@@ -282,8 +288,8 @@ PreviewController.prototype = {
     let self = this;
     this.win.tabbrowser.previewTab(this.tab, function () self.previewTabCallback(ctx));
 
-    // We want a frame drawn around the preview
-    return true;
+    // We must avoid having the frame drawn around the window. See bug 520807
+    return false;
   },
 
   previewTabCallback: function (ctx) {
@@ -345,9 +351,7 @@ PreviewController.prototype = {
         // The tab's label is sometimes empty when dragging tabs between windows
         // so we force the tab title to be updated (see bug 520579)
         this.win.tabbrowser.setTabTitle(this.tab);
-        let title = this.tab.label;
-        this.preview.title = title;
-        this.preview.tooltip = title;
+        this.updateTitleAndTooltip();
         break;
     }
   }
@@ -419,9 +423,11 @@ TabWindow.prototype = {
   // Invoked when the given tab is added to this window
   newTab: function (tab) {
     let controller = new PreviewController(this, tab);
-    let preview = AeroPeek.taskbar.createTaskbarTabPreview(tab.linkedBrowser.docShell, controller);
-    preview.title = tab.label;
-    preview.tooltip = tab.label;
+    let docShell = this.win
+                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIWebNavigation)
+                  .QueryInterface(Ci.nsIDocShell);
+    let preview = AeroPeek.taskbar.createTaskbarTabPreview(docShell, controller);
     preview.visible = AeroPeek.enabled;
     preview.active = this.tabbrowser.selectedTab == tab;
     // Grab the default favicon
@@ -435,6 +441,9 @@ TabWindow.prototype = {
     // It's OK to add the preview now while the favicon still loads.
     this.previews.splice(tab._tPos, 0, preview);
     AeroPeek.addPreview(preview);
+    // updateTitleAndTooltip relies on having controller.preview which is lazily resolved.
+    // Now that we've updated this.previews, it will resolve successfully.
+    controller.updateTitleAndTooltip();
   },
 
   // Invoked when the given tab is closed

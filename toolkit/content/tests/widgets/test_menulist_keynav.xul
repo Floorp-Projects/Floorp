@@ -3,18 +3,15 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Menulist Key Navigation Tests"
-  onload="setTimeout(runTests, 0);"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Menulist Key Navigation Tests</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
 
 <button id="button1" label="One"/>
 <menulist id="list">
-  <menupopup id="popup" onpopupshowing="return false;">
+  <menupopup id="popup" onpopupshowing="return gShowPopup;">
     <menuitem id="i1" label="One"/>
     <menuitem id="i2" label="Two"/>
     <menuitem id="i2b" disabled="true" label="Two and a Half"/>
@@ -28,6 +25,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
+
+var gShowPopup = false;
 
 var iswin = (navigator.platform.indexOf("Win") == 0);
 
@@ -70,14 +69,41 @@ function pressedAgain()
 
 function differentPressed()
 {
-  keyCheck($("list"), "O", 1, "different letter pressed");
+  var list = $("list");
+  keyCheck(list, "O", 1, "different letter pressed");
 
   if (navigator.platform.indexOf("Mac") == -1) {
     $("button1").focus();
-    synthesizeKeyExpectEvent("VK_TAB", { }, $("list"), "focus", "focus to menulist");
+    synthesizeKeyExpectEvent("VK_TAB", { }, list, "focus", "focus to menulist");
     synthesizeKeyExpectEvent("VK_TAB", { }, $("button2"), "focus", "focus to button");
     is(document.activeElement, $("button2"), "tab from menulist focused button");
   }
+
+  // now make sure that using a key scrolls the menu correctly
+  gShowPopup = true;
+
+  for (let i = 0; i < 15; i++) {
+    list.appendItem("Item" + i, "item" + i);
+  }
+  list.menupopup.maxHeight = 100;
+  list.open = true;
+
+  var rowdiff = list.getItemAtIndex(1).getBoundingClientRect().top -
+                list.getItemAtIndex(0).getBoundingClientRect().top;
+
+  var item = list.getItemAtIndex(10);
+  var originalPosition = item.getBoundingClientRect().top;
+
+  list.menuBoxObject.activeChild = item;
+  ok(item.getBoundingClientRect().top < originalPosition,
+    "position of item 1: " + item.getBoundingClientRect().top + " -> " + originalPosition);
+
+  originalPosition = item.getBoundingClientRect().top;
+
+  synthesizeKey("VK_DOWN", { });
+  is(item.getBoundingClientRect().top, originalPosition - rowdiff, "position of item 10");
+
+  list.open = false;
 
   SimpleTest.finish();
 }
@@ -88,6 +114,8 @@ function keyCheck(list, key, index, testname)
   synthesizeKeyExpectEvent(key, { }, item, "command", testname);
   is(list.selectedItem, item, testname + " selectedItem");
 }
+
+SimpleTest.waitForFocus(runTests);
 
 ]]>
 </script>

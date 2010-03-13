@@ -62,7 +62,8 @@ if __name__ == '__main__':
   t = threading.Thread(target=httpd.serve_forever)
   t.setDaemon(True) # don't hang on exit
   t.start()
-
+  
+  automation.setServerInfo("localhost", PORT)
   automation.initializeProfile(PROFILE_DIRECTORY)
   browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"

@@ -247,6 +247,7 @@ public:
     virtual void Scroll(const nsIntPoint& aDelta,
                         const nsTArray<nsIntRect>& aDestRects,
                         const nsTArray<Configuration>& aConfigurations);
+    virtual LayerManager* GetLayerManager();
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
                                    PRBool aDoCapture, PRBool aConsumeRollupEvent);

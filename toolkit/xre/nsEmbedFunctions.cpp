@@ -72,10 +72,10 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsWidgetsCID.h"
-#include "nsXPFEComponentsCID.h"
 #include "nsXREDirProvider.h"
 
 #ifdef MOZ_IPC
+#include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
@@ -489,6 +489,14 @@ XRE_ShutdownChildProcess()
 
   ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 }
+
+#ifdef MOZ_X11
+void
+XRE_InstallX11ErrorHandler()
+{
+  InstallX11ErrorHandler();
+}
+#endif
 
 #endif // MOZ_IPC
 

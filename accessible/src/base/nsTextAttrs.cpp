@@ -657,7 +657,7 @@ nsFontWeightTextAttr::GetFontWeight(nsIFrame *aFrame)
 
   nsCOMPtr<nsIFontMetrics> fm;
   aFrame->PresContext()->DeviceContext()->
-    GetMetricsFor(styleFont->mFont, aFrame->GetStyleVisibility()->mLangGroup,
+    GetMetricsFor(styleFont->mFont, aFrame->GetStyleVisibility()->mLanguage,
                   fs, *getter_AddRefs(fm));
 
   nsCOMPtr<nsIThebesFontMetrics> tfm = do_QueryInterface(fm);

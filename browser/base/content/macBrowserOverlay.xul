@@ -61,6 +61,14 @@
 #include global-scripts.inc
 
 <script type="application/javascript">
+  function OpenBrowserWindowFromDockMenu() {
+    let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+                      .getService(Ci.nsIMacDockSupport);
+    dockSupport.activateApplication(true);
+
+    return OpenBrowserWindow();
+  }
+
   addEventListener("load", nonBrowserWindowStartup, false);
   addEventListener("unload", nonBrowserWindowShutdown, false);
 </script>
@@ -72,5 +80,14 @@
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
 #include browser-menubar.inc
+
+<!-- Dock menu -->
+<popupset>
+  <menupopup id="menu_mac_dockmenu">
+    <!-- The command cannot be cmd_newNavigator because we need to activate
+         the application. -->
+    <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();" />
+  </menupopup>
+</popupset>
 
 </overlay>

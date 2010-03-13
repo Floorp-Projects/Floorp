@@ -342,9 +342,7 @@ nsSVGLength::GetValueAsString(nsAString & aValueAsString)
       return NS_ERROR_UNEXPECTED;
   }
 
-  nsAutoString unitString;
-  UnitAtom->ToString(unitString);
-  aValueAsString.Append(unitString);
+  aValueAsString.Append(nsDependentAtomString(UnitAtom));
 
   return NS_OK;
 }

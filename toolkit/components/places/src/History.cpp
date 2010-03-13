@@ -51,6 +51,13 @@ namespace mozilla {
 namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Global Defines
+
+#define URI_VISITED "visited"
+#define URI_NOT_VISITED "not visited"
+#define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
+
+////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 
 namespace {
@@ -105,6 +112,24 @@ public:
     if (mIsVisited) {
       History::GetService()->NotifyVisited(mURI);
     }
+
+    // Notify any observers about that we have resolved the visited state of
+    // this URI.
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      nsAutoString status;
+      if (mIsVisited) {
+        status.AssignLiteral(URI_VISITED);
+      }
+      else {
+        status.AssignLiteral(URI_NOT_VISITED);
+      }
+      (void)observerService->NotifyObservers(mURI,
+                                             URI_VISITED_RESOLUTION_TOPIC,
+                                             status.get());
+    }
+
     return NS_OK;
   }
 private:
@@ -138,6 +163,12 @@ History::History()
 History::~History()
 {
   gService = NULL;
+#ifdef DEBUG
+  if (mObservers.IsInitialized()) {
+    NS_ASSERTION(mObservers.Count() == 0,
+                 "Not all Links were removed before we disappear!");
+  }
+#endif
 }
 
 void
@@ -216,18 +247,24 @@ History::RegisterVisitedCallback(nsIURI* aURI,
   }
 
   // Obtain our array of observers for this URI.
+#ifdef DEBUG
+  bool keyAlreadyExists = !!mObservers.GetEntry(aURI);
+#endif
   KeyClass* key = mObservers.PutEntry(aURI);
   NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
   ObserverArray& observers = key->array;
 
   if (observers.IsEmpty()) {
+    NS_ASSERTION(!keyAlreadyExists,
+                 "An empty key was kept around in our hashtable!");
+
     // We are the first Link node to ask about this URI, or there are no pending
     // Links wanting to know about this URI.  Therefore, we should query the
     // database now.
     nsresult rv = VisitedQuery::Start(aURI);
     if (NS_FAILED(rv)) {
-      // Curses - unregister and return failure.
-      (void)UnregisterVisitedCallback(aURI, aLink);
+      // Remove our array from the hashtable so we don't keep it around.
+      mObservers.RemoveEntry(aURI);
       return rv;
     }
   }

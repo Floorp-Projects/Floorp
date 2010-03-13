@@ -82,7 +82,6 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
-#include "nsICSSLoader.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
 #include "nsILayoutHistoryState.h"
@@ -136,87 +135,6 @@ struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
 class nsChildContentList;
-#ifdef MOZ_SMIL
-class nsSMILAnimationController;
-#endif // MOZ_SMIL
-
-/**
- * Hashentry using a PRUint32 key and a cheap set of nsIContent* owning
- * pointers for the value.
- *
- * @see nsTHashtable::EntryType for specification
- */
-class nsUint32ToContentHashEntry : public PLDHashEntryHdr
-{
-  public:
-    typedef const PRUint32& KeyType;
-    typedef const PRUint32* KeyTypePointer;
-
-    nsUint32ToContentHashEntry(const KeyTypePointer key) :
-      mValue(*key), mValOrHash(nsnull) { }
-    nsUint32ToContentHashEntry(const nsUint32ToContentHashEntry& toCopy) :
-      mValue(toCopy.mValue), mValOrHash(toCopy.mValOrHash)
-    {
-      // Pathetic attempt to not die: clear out the other mValOrHash so we're
-      // effectively stealing it. If toCopy is destroyed right after this,
-      // we'll be OK.
-      const_cast<nsUint32ToContentHashEntry&>(toCopy).mValOrHash = nsnull;
-      NS_ERROR("Copying not supported. Fasten your seat belt.");
-    }
-    ~nsUint32ToContentHashEntry() { Destroy(); }
-
-    KeyType GetKey() const { return mValue; }
-
-    PRBool KeyEquals(KeyTypePointer aKey) const { return mValue == *aKey; }
-
-    static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-    static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
-    enum { ALLOW_MEMMOVE = PR_TRUE };
-
-    // Content set methods
-    nsresult PutContent(nsIContent* aContent);
-
-    void RemoveContent(nsIContent* aContent);
-
-    struct Visitor {
-      virtual void Visit(nsIContent* aContent) = 0;
-    };
-    void VisitContent(Visitor* aVisitor);
-
-    PRBool IsEmpty() { return mValOrHash == nsnull; }
-
-  private:
-    typedef PRUptrdiff PtrBits;
-    typedef nsTHashtable<nsISupportsHashKey> HashSet;
-    /** Get the hash pointer (or null if we're not a hash) */
-    HashSet* GetHashSet()
-    {
-      return (PtrBits(mValOrHash) & 0x1) ? nsnull : (HashSet*)mValOrHash;
-    }
-    /** Find out whether it is an nsIContent (returns weak) */
-    nsIContent* GetContent()
-    {
-      return (PtrBits(mValOrHash) & 0x1)
-             ? (nsIContent*)(PtrBits(mValOrHash) & ~0x1)
-             : nsnull;
-    }
-    /** Set the single element, adding a reference */
-    nsresult SetContent(nsIContent* aVal)
-    {
-      NS_IF_ADDREF(aVal);
-      mValOrHash = (void*)(PtrBits(aVal) | 0x1);
-      return NS_OK;
-    }
-    /** Initialize the hash */
-    nsresult InitHashSet(HashSet** aSet);
-
-    void Destroy();
-
-  private:
-    const PRUint32 mValue;
-    /** A hash or nsIContent ptr, depending on the lower bit (0=hash, 1=ptr) */
-    void* mValOrHash;
-};
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -943,9 +861,8 @@ public:
   virtual NS_HIDDEN_(void) BlockOnload();
   virtual NS_HIDDEN_(void) UnblockOnload(PRBool aFireSync);
 
-  virtual NS_HIDDEN_(void) AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI);
-  virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
-  virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
+  virtual NS_HIDDEN_(void) AddStyleRelevantLink(mozilla::dom::Link* aLink);
+  virtual NS_HIDDEN_(void) ForgetLink(mozilla::dom::Link* aLink);
 
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
   NS_IMETHOD GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
@@ -973,7 +890,11 @@ public:
   virtual NS_HIDDEN_(void)
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
+  nsTArray<nsCString> mFileDataUris;
+
 #ifdef MOZ_SMIL
+  // Returns our (lazily-initialized) animation controller.
+  // If HasAnimationController is true, this is guaranteed to return non-null.
   nsSMILAnimationController* GetAnimationController();
 #endif // MOZ_SMIL
 
@@ -1011,7 +932,14 @@ public:
 
   virtual void MaybePreLoadImage(nsIURI* uri);
 
+  virtual void PreloadStyle(nsIURI* uri, const nsAString& charset);
+
+  virtual nsresult LoadChromeSheetSync(nsIURI* uri, PRBool isAgentSheet,
+                                       nsICSSStyleSheet** sheet);
+
   virtual nsISupports* GetCurrentContentSink();
+
+  virtual void RegisterFileDataUri(nsACString& aUri);
 
 protected:
   friend class nsNodeUtils;
@@ -1038,7 +966,6 @@ protected:
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
 
-  void UpdateLinkMap();
   // Call this before the document does something that will unbind all content.
   // That will stop us from resolving URIs for all links as they are removed.
   void DestroyLinkMap();
@@ -1243,11 +1170,15 @@ private:
   PRUint32 mOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
   ReadyState mReadyState;
-  
-  // A map from unvisited URI hashes to content elements
-  nsTHashtable<nsUint32ToContentHashEntry> mLinkMap;
-  // URIs whose visitedness has changed while we were hidden
-  nsCOMArray<nsIURI> mVisitednessChangedURIs;
+
+  // A hashtable of styled links keyed by address pointer.
+  nsTHashtable<nsPtrHashKey<mozilla::dom::Link> > mStyledLinks;
+#ifdef DEBUG
+  // Indicates whether mStyledLinks was cleared or not.  This is used to track
+  // state so we can provide useful assertions to consumers of ForgetLink and
+  // AddStyleRelevantLink.
+  bool mStyledLinksCleared;
+#endif
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
@@ -1265,10 +1196,6 @@ private:
   nsCOMArray<imgIRequest> mPreloadingImages;
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
-
-#ifdef MOZ_SMIL
-  nsAutoPtr<nsSMILAnimationController> mAnimationController;
-#endif // MOZ_SMIL
 
 #ifdef DEBUG
 protected:

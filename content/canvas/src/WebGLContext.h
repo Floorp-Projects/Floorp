@@ -55,8 +55,9 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
 
-#include "SimpleBuffer.h"
 #include "nsGLPbuffer.h"
+
+#include "localgl.h"
 
 class nsIDocShell;
 

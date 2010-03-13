@@ -39,7 +39,7 @@
 
 interface nsIDOMFileError;
 
-[scriptable, uuid(16753172-6890-4e6a-8c10-a7ff30c5ef22)]
+[scriptable, uuid(b10293e1-d531-4bdd-9b2b-4d8c1c9bc633)]
 interface nsIDOMFile : nsISupports
 {
   //fileName and fileSize are now deprecated attributes
@@ -50,6 +50,8 @@ interface nsIDOMFile : nsISupports
   readonly attribute DOMString mozFullPath;
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
+
+  readonly attribute DOMString url;
 
   DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
   DOMString getAsDataURL();             // raises(FileException) on retrieval

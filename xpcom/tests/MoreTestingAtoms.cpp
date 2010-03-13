@@ -44,9 +44,13 @@
 #include "MoreTestingAtomList.h"
 #undef MORE_TESTING_ATOM
 
+#define MORE_TESTING_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "MoreTestingAtomList.h"
+#undef MORE_TESTING_ATOM
+
 static const nsStaticAtom MoreTestingAtoms_info[] = {
 
-#define MORE_TESTING_ATOM(name_, value_) { value_, &MoreTestingAtoms::name_ },
+#define MORE_TESTING_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &MoreTestingAtoms::name_),
 #include "MoreTestingAtomList.h"
 #undef MORE_TESTING_ATOM
 };

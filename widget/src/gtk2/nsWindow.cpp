@@ -48,7 +48,6 @@
 #include "nsGTKToolkit.h"
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMNode.h"
@@ -2333,13 +2332,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel)
         return FALSE;
 
-    static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
-    nsCOMPtr<nsIRegion> updateRegion = do_CreateInstance(kRegionCID);
-    if (!updateRegion)
-        return FALSE;
-
-    updateRegion->Init();
+    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+    event.refPoint.x = aEvent->area.x;
+    event.refPoint.y = aEvent->area.y;
 
     GdkRectangle *rects;
     gint nrects;
@@ -2360,7 +2355,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     GdkRectangle *r;
     GdkRectangle *r_end = rects + nrects;
     for (r = rects; r < r_end; ++r) {
-        updateRegion->Union(r->x, r->y, r->width, r->height);
+        event.region.Or(event.region, nsIntRect(r->x, r->y, r->width, r->height));
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
 
@@ -2378,33 +2373,33 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 kid->GetBounds(bounds);
                 for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
                     nsIntRect r = clipRects[i] + bounds.TopLeft();
-                    updateRegion->Subtract(r.x, r.y, r.width, r.height);
+                    event.region.Sub(event.region, r);
                 }
             }
             children = children->next;
         }
     }
 
-    if (updateRegion->IsEmpty()) {
+    if (event.region.IsEmpty()) {
         g_free(rects);
         return TRUE;
     }
 
-#ifdef MOZ_DFB
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-    if (NS_UNLIKELY(!rc)) {
+    nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
+    if (NS_UNLIKELY(!ctx)) {
         g_free(rects);
         return FALSE;
     }
 
-    // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
+    // The context that we'll actually paint into. When we're double-
+    // buffering, this can be different from ctx.
+    nsRefPtr<gfxContext> paintCtx = ctx;
 
+#ifdef MOZ_DFB
     gfxPlatformGtk::GetPlatform()->SetGdkDrawable(ctx->OriginalSurface(),
                                                   GDK_DRAWABLE(mGdkWindow));
 
     // clip to the update region
-    ctx->Save();
     ctx->NewPath();
     for (r = rects; r < r_end; ++r) {
         ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
@@ -2413,25 +2408,13 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 #endif
 
 #ifdef MOZ_X11
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-    if (NS_UNLIKELY(!rc)) {
-        g_free(rects);
-        return FALSE;
-    }
-
-    nsIntRect boundsRect;
+    nsIntRect boundsRect = event.region.GetBounds();
 
     GdkPixmap* bufferPixmap = nsnull;
     gfxIntSize bufferPixmapSize;
 
     nsRefPtr<gfxASurface> bufferPixmapSurface;
 
-    updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
-                                 &boundsRect.width, &boundsRect.height);
-
-    // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
-    ctx->Save();
     ctx->NewPath();
     if (translucent) {
         // Collapse update area to the bounding box. This is so we only have to
@@ -2515,18 +2498,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                         GDK_DRAWABLE(bufferPixmap));
 
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-                nsCOMPtr<nsIRenderingContext> newRC;
-                nsresult rv = GetDeviceContext()->
-                    CreateRenderingContextInstance(*getter_AddRefs(newRC));
-                if (NS_FAILED(rv)) {
-                    bufferPixmapSurface = nsnull;
+                nsRefPtr<gfxContext> newCtx = new gfxContext(bufferPixmapSurface);
+                if (newCtx) {
+                    paintCtx = newCtx.forget();
                 } else {
-                    rv = newRC->Init(GetDeviceContext(), bufferPixmapSurface);
-                    if (NS_FAILED(rv)) {
-                        bufferPixmapSurface = nsnull;
-                    } else {
-                        rc = newRC;
-                    }
+                    bufferPixmapSurface = nsnull;
                 }
             }
         }
@@ -2544,15 +2520,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
 #endif // MOZ_X11
 
-    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.refPoint.x = aEvent->area.x;
-    event.refPoint.y = aEvent->area.y;
-    event.rect = nsnull;
-    event.region = updateRegion;
-    event.renderingContext = rc;
-
     nsEventStatus status;
-    DispatchEvent(&event, status);
+    {
+      AutoLayerManagerSetup setupLayerManager(this, paintCtx);
+      DispatchEvent(&event, status);
+    }
 
 #ifdef MOZ_X11
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
@@ -2598,14 +2570,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         // if we had to allocate a local pixmap, free it here
         if (bufferPixmap && bufferPixmap != gBufferPixmap)
             g_object_unref(G_OBJECT(bufferPixmap));
-
-        ctx->Restore();
     }
 #endif // MOZ_X11
-
-#ifdef MOZ_DFB
-    ctx->Restore();
-#endif
 
     g_free(rects);
 
@@ -4711,6 +4677,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
         nsAutoRef<pixman_region32> newRegion;
         InitRegion(&newRegion, aRects);
         nsAutoRef<pixman_region32> intersectRegion;
+        pixman_region32_init(&intersectRegion);
         pixman_region32_intersect(&intersectRegion,
                                   &newRegion, &existingRegion);
 

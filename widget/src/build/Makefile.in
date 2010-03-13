@@ -55,6 +55,7 @@ CPPSRCS		= nsWinWidgetFactory.cpp
 
 EXTRA_DSO_LIBS	= gkgfx \
 		  thebes \
+		  layers \
 		  $(NULL)
 
 LOCAL_INCLUDES	= \
@@ -63,10 +64,13 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../windows \
 		$(NULL)
 
-OS_LIBS		+= $(call EXPAND_LIBNAME, uuid ole32 oleaut32 winspool)
+OS_LIBS += $(call EXPAND_LIBNAME, uuid ole32 oleaut32)
 
 ifneq ($(OS_ARCH), WINCE)
-OS_LIBS		+= $(call EXPAND_LIBNAME, comctl32 comdlg32 shell32 imm32 shlwapi)
+OS_LIBS += $(call EXPAND_LIBNAME, comctl32 comdlg32 shell32 imm32 shlwapi winspool)
+else
+OS_LIBS += $(call EXPAND_LIBNAME, aygshell ddraw)
+EXTRA_DSO_LDOPTS += $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib
 endif
 
 SHARED_LIBRARY_LIBS = \
@@ -74,7 +78,7 @@ SHARED_LIBRARY_LIBS = \
 		../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
+EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \

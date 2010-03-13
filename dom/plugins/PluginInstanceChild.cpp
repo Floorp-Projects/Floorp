@@ -61,6 +61,7 @@ using namespace mozilla::plugins;
 using mozilla::gfx::SharedDIB;
 
 #include <windows.h>
+#include <windowsx.h>
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 
@@ -73,10 +74,12 @@ using mozilla::gfx::SharedDIB;
 
 #endif // defined(OS_WIN)
 
-PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-    mPluginIface(aPluginIface),
-    mCachedWindowActor(nsnull),
-    mCachedElementActor(nsnull)
+PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+                                         const nsCString& aMimeType)
+    : mPluginIface(aPluginIface)
+    , mQuirks(0)
+    , mCachedWindowActor(nsnull)
+    , mCachedElementActor(nsnull)
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -104,12 +107,26 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
     mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
 #endif // OS_WIN
+    InitQuirksModes(aMimeType);
 }
 
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
+#endif
+}
+
+void
+PluginInstanceChild::InitQuirksModes(const nsCString& aMimeType)
+{
+#ifdef OS_WIN
+    // application/x-silverlight
+    // application/x-silverlight-2
+    NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+    if (FindInReadable(silverlight, aMimeType)) {
+        mQuirks |= QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION;
+    }
 #endif
 }
 
@@ -455,7 +472,10 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     return true;
 #endif
 
-    *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+    if (!mPluginIface->event)
+        *handled = false;
+    else
+        *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
     if (GraphicsExpose == event.event.type) {
@@ -504,8 +524,7 @@ XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
 #endif
 
 bool
-PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
-                                         NPError* rv)
+PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 {
     PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
                       FULLFUNCTION,
@@ -544,7 +563,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
 #endif
     }
 
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+    if (mPluginIface->setwindow)
+        (void) mPluginIface->setwindow(&mData, &mWindow);
 
 #elif defined(OS_WIN)
     switch (aWindow.type) {
@@ -563,8 +583,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
           mWindow.height = aWindow.height;
           mWindow.type = aWindow.type;
 
-          *rv = mPluginIface->setwindow(&mData, &mWindow);
-          if (*rv == NPERR_NO_ERROR) {
+          if (mPluginIface->setwindow) {
+              (void) mPluginIface->setwindow(&mData, &mWindow);
               WNDPROC wndProc = reinterpret_cast<WNDPROC>(
                   GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
               if (wndProc != PluginWindowProc) {
@@ -577,7 +597,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
       break;
 
       case NPWindowTypeDrawable:
-          return SharedSurfaceSetWindow(aWindow, rv);
+          return SharedSurfaceSetWindow(aWindow);
       break;
 
       default:
@@ -791,23 +811,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
 /* winless modal ui loop logic */
 
-static bool
-IsUserInputEvent(UINT msg)
-{
-  // Events we assume some sort of modal ui *might* be generated.
-  switch (msg) {
-      case WM_LBUTTONUP:
-      case WM_RBUTTONUP:
-      case WM_MBUTTONUP:
-      case WM_LBUTTONDOWN:
-      case WM_RBUTTONDOWN:
-      case WM_MBUTTONDOWN:
-      case WM_CONTEXTMENU:
-          return true;
-  }
-  return false;
-}
-
 VOID CALLBACK
 PluginInstanceChild::PumpTimerProc(HWND hwnd,
                                    UINT uMsg,
@@ -923,49 +926,110 @@ PluginInstanceChild::InternalCallSetNestedEventState(bool aState)
     }
 }
 
+/* windowless handle event helpers */
+
+static bool
+NeedsNestedEventCoverage(UINT msg)
+{
+    // Events we assume some sort of modal ui *might* be generated.
+    switch (msg) {
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_CONTEXTMENU:
+            return true;
+    }
+    return false;
+}
+
+static bool
+IsMouseInputEvent(UINT msg)
+{
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+        case WM_MBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
+            return true;
+    }
+    return false;
+}
+
 int16_t
 PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 {
-  if (!IsUserInputEvent(event.event)) {
-      return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-  }
+    if (!mPluginIface->event)
+        return false;
 
-  int16_t handled;
+    // Winless Silverlight quirk: winposchanged events are not used in
+    // determining the position of the plugin within the parent window,
+    // NPP_SetWindow values are used instead. Due to shared memory dib
+    // rendering, the origin of NPP_SetWindow is 0x0, so we trap
+    // winposchanged events here and do the translation internally for
+    // mouse input events.
+    if (mQuirks & QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION) {
+        if (event.event == WM_WINDOWPOSCHANGED && event.lParam) {
+            WINDOWPOS* pos = reinterpret_cast<WINDOWPOS*>(event.lParam);
+            mPluginOffset.x = pos->x;
+            mPluginOffset.y = pos->y;
+        }
+        else if (IsMouseInputEvent(event.event)) {
+            event.lParam =
+                MAKELPARAM((GET_X_LPARAM(event.lParam) - mPluginOffset.x),
+                           (GET_Y_LPARAM(event.lParam) - mPluginOffset.y));
+        }
+    }
 
-  mNestedEventLevelDepth++;
-  PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
+    if (!NeedsNestedEventCoverage(event.event)) {
+        return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
+    }
 
-  // On the first, non-reentrant call, setup our modal ui detection hook.
-  if (mNestedEventLevelDepth == 1) {
-      NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
-      gTempChildPointer = this;
-      SetNestedInputEventHook();
-  }
+    // Events that might generate nested event dispatch loops need
+    // special handling during delivery.
+    int16_t handled;
 
-  bool old_state = MessageLoop::current()->NestableTasksAllowed();
-  MessageLoop::current()->SetNestableTasksAllowed(true);
-  handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-  MessageLoop::current()->SetNestableTasksAllowed(old_state);
+    mNestedEventLevelDepth++;
+    PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
 
-  gTempChildPointer = NULL;
+    // On the first, non-reentrant call, setup our modal ui detection hook.
+    if (mNestedEventLevelDepth == 1) {
+        NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
+        gTempChildPointer = this;
+        SetNestedInputEventHook();
+    }
 
-  mNestedEventLevelDepth--;
-  PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
+    bool old_state = MessageLoop::current()->NestableTasksAllowed();
+    MessageLoop::current()->SetNestableTasksAllowed(true);
+    handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
+    MessageLoop::current()->SetNestableTasksAllowed(old_state);
 
-  NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
-  if (mNestedEventLevelDepth <= 0) {
-      ResetNestedEventHook();
-      ResetPumpHooks();
-      InternalCallSetNestedEventState(false);
-  }
-  return handled;
+    gTempChildPointer = NULL;
+
+    mNestedEventLevelDepth--;
+    PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
+
+    NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
+    if (mNestedEventLevelDepth <= 0) {
+        ResetNestedEventHook();
+        ResetPumpHooks();
+        InternalCallSetNestedEventState(false);
+    }
+    return handled;
 }
 
 /* windowless drawing helpers */
 
 bool
-PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
-                                            NPError* rv)
+PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
 {
     // If the surfaceHandle is empty, parent is telling us we can reuse our cached
     // memory surface and hdc. Otherwise, we need to reset, usually due to a
@@ -993,7 +1057,9 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
     mWindow.type   = aWindow.type;
 
     mWindow.window = reinterpret_cast<void*>(mSharedSurfaceDib.GetHDC());
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
+
+    if (mPluginIface->setwindow)
+        mPluginIface->setwindow(&mData, &mWindow);
 
     return true;
 }
@@ -1068,6 +1134,9 @@ PluginInstanceChild::UpdatePaintClipRect(RECT* aRect)
 int16_t
 PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 {
+    if (!mPluginIface->event)
+        return false;
+
     RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
 
     switch(mAlphaExtract.doublePass) {
@@ -1186,7 +1255,7 @@ PluginInstanceChild::DeallocPPluginScriptableObject(
 }
 
 bool
-PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
+PluginInstanceChild::RecvPPluginScriptableObjectConstructor(
                                            PPluginScriptableObjectChild* aActor)
 {
     AssertPluginThread();
@@ -1219,9 +1288,7 @@ PluginInstanceChild::AnswerPBrowserStreamConstructor(
 {
     AssertPluginThread();
     *rv = static_cast<BrowserStreamChild*>(aActor)
-          ->StreamConstructed(url, length, lastmodified,
-                              notifyData, headers, mimeType, seekable,
-                              stype);
+          ->StreamConstructed(mimeType, seekable, stype);
     return true;
 }
 
@@ -1237,7 +1304,8 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          uint16_t *stype)
 {
     AssertPluginThread();
-    return new BrowserStreamChild(this, url, length, lastmodified, notifyData,
+    return new BrowserStreamChild(this, url, length, lastmodified,
+                                  static_cast<StreamNotifyChild*>(notifyData),
                                   headers, mimeType, seekable, rv, stype);
 }
 
@@ -1279,29 +1347,58 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
     return NULL;
 }
 
-bool
-StreamNotifyChild::Answer__delete__(const NPReason& reason)
+void
+StreamNotifyChild::ActorDestroy(ActorDestroyReason why)
 {
-    AssertPluginThread();
-    return static_cast<PluginInstanceChild*>(Manager())
-        ->NotifyStream(this, reason);
+    if (AncestorDeletion == why && mBrowserStream) {
+        NS_ERROR("Pending NPP_URLNotify not called when closing an instance.");
+
+        // reclaim responsibility for deleting ourself
+        mBrowserStream->mStreamNotify = NULL;
+        mBrowserStream = NULL;
+    }
+}
+
+
+void
+StreamNotifyChild::SetAssociatedStream(BrowserStreamChild* bs)
+{
+    NS_ASSERTION(bs, "Shouldn't be null");
+    NS_ASSERTION(!mBrowserStream, "Two streams for one streamnotify?");
+
+    mBrowserStream = bs;
 }
 
 bool
-PluginInstanceChild::NotifyStream(StreamNotifyChild* notifyData,
-                                  NPReason reason)
+StreamNotifyChild::Recv__delete__(const NPReason& reason)
 {
-    if (notifyData->mClosure)
-        mPluginIface->urlnotify(&mData, notifyData->mURL.get(), reason,
-                                notifyData->mClosure);
+    AssertPluginThread();
+
+    if (mBrowserStream)
+        mBrowserStream->NotifyPending();
+    else
+        NPP_URLNotify(reason);
+
     return true;
+}
+
+void
+StreamNotifyChild::NPP_URLNotify(NPReason reason)
+{
+    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(Manager());
+
+    if (mClosure)
+        instance->mPluginIface->urlnotify(instance->GetNPP(), mURL.get(),
+                                          reason, mClosure);
 }
 
 bool
 PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData)
 {
     AssertPluginThread();
-    delete notifyData;
+
+    if (!static_cast<StreamNotifyChild*>(notifyData)->mBrowserStream)
+        delete notifyData;
     return true;
 }
 
@@ -1326,7 +1423,7 @@ PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
     }
 
     actor = new PluginScriptableObjectChild(LocalObject);
-    if (!CallPPluginScriptableObjectConstructor(actor)) {
+    if (!SendPPluginScriptableObjectConstructor(actor)) {
         NS_ERROR("Failed to send constructor message!");
         return nsnull;
     }
@@ -1398,17 +1495,73 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
     mTimers.RemoveElement(id, ChildTimer::IDComparator());
 }
 
+static PLDHashOperator
+InvalidateObject(DeletingObjectEntry* e, void* userArg)
+{
+    NPObject* o = e->GetKey();
+    if (!e->mDeleted && o->_class && o->_class->invalidate)
+        o->_class->invalidate(o);
+
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+DeleteObject(DeletingObjectEntry* e, void* userArg)
+{
+    NPObject* o = e->GetKey();
+    if (!e->mDeleted) {
+        e->mDeleted = true;
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+        {
+            int32_t refcnt = o->referenceCount;
+            while (refcnt) {
+                --refcnt;
+                NS_LOG_RELEASE(o, refcnt, "NPObject");
+            }
+        }
+#endif
+
+        PluginModuleChild::DeallocNPObject(o);
+    }
+
+    return PL_DHASH_NEXT;
+}
+
 bool
 PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
+    PLUGIN_LOG_DEBUG_METHOD;
+    AssertPluginThread();
+
+    nsTArray<PBrowserStreamChild*> streams;
+    ManagedPBrowserStreamChild(streams);
+
+    // First make sure none of these streams become deleted
+    for (PRUint32 i = 0; i < streams.Length(); ) {
+        if (static_cast<BrowserStreamChild*>(streams[i])->InstanceDying())
+            ++i;
+        else
+            streams.RemoveElementAt(i);
+    }
+    for (PRUint32 i = 0; i < streams.Length(); ++i)
+        static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
+
     for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
         mPendingAsyncCalls[i]->Cancel();
     mPendingAsyncCalls.TruncateLength(0);
 
     mTimers.Clear();
 
-    PluginModuleChild* module = PluginModuleChild::current();
-    bool retval = module->PluginInstanceDestroyed(this, aResult);
+    PluginModuleChild::current()->NPP_Destroy(this);
+    mData.ndata = 0;
+
+    mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
+    mDeletingHash->Init();
+    PluginModuleChild::current()->FindNPObjectsForInstance(this);
+
+    mDeletingHash->EnumerateEntries(InvalidateObject, NULL);
+    mDeletingHash->EnumerateEntries(DeleteObject, NULL);
 
     // Null out our cached actors as they should have been killed in the
     // PluginInstanceDestroyed call above.
@@ -1421,5 +1574,5 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     ResetPumpHooks();
 #endif
 
-    return retval;
+    return true;
 }

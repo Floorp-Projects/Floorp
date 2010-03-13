@@ -7,10 +7,10 @@ function receiveMessage(evt)
 {
   var response = "response-message";
 
-  if (window.location.href !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash")
+  if (window.location.href !== "http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash")
     response += " kid-at-wrong-uri(" + window.location.href + ")";
 
-  if (evt.origin !== "http://localhost:8888")
+  if (evt.origin !== "http://mochi.test:8888")
     response += " wrong-origin(" + evt.origin + ")";
   if (evt.source !== window.parent)
     response += " wrong-source";
@@ -19,7 +19,7 @@ function receiveMessage(evt)
   if (evt.lastEventId !== "")
     response += " wrong-lastEventId(" + evt.lastEventId + ")";
 
-  window.parent.postMessage(response, "http://localhost:8888");
+  window.parent.postMessage(response, "http://mochi.test:8888");
 }
 
 window.addEventListener("message", receiveMessage, false);

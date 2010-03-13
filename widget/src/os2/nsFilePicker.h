@@ -43,14 +43,18 @@
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
-
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
-#include "nsdefs.h"
+
+#define INCL_DOS
+#define INCL_NLS
+#define INCL_WIN
+#define INCL_WINSTDFILE
+#include <os2.h>
 
 /**
- * Native Windows FileSelector wrapper
+ * Native OS/2 FileSelector wrapper
  */
 
 class nsFilePicker : public nsBaseFilePicker

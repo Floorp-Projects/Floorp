@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.origin, "http://localhost:8888", "wrong sender");
+  is(evt.origin, "http://mochi.test:8888", "wrong sender");
   ok(evt.source === window, "wrong source");
 
   is(evt.data, "generate-event", "wrong data");
@@ -37,7 +37,7 @@ window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.postMessage("generate-event", "http://localhost:8888");
+  window.postMessage("generate-event", "http://mochi.test:8888");
 }
 
 window.addEventListener("load", run, false);

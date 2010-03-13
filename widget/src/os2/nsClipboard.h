@@ -38,14 +38,14 @@
 #ifndef _nsClipboard_h
 #define _nsClipboard_h
 
-#include "nsWidgetDefs.h"
 #include "nsBaseClipboard.h"
 #include "nsIObserver.h"
 
+#define INCL_DOSERRORS
+#define INCL_WIN
+#include <os2.h>
+
 class nsITransferable;
-class nsIClipboardOwner;
-class nsIWidget;
-struct IDataObject;
 
 /**
  * Native OS/2 Clipboard wrapper

@@ -1350,6 +1350,11 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       DoContentCommandEvent(static_cast<nsContentCommandEvent*>(aEvent));
     }
     break;
+  case NS_CONTENT_COMMAND_SCROLL:
+    {
+      DoContentCommandScrollEvent(static_cast<nsContentCommandEvent*>(aEvent));
+    }
+    break;
   }
   return NS_OK;
 }
@@ -4427,5 +4432,52 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
     }
   }
   aEvent->mSucceeded = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
+{
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
+  nsIPresShell* ps = mPresContext->GetPresShell();
+  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(aEvent->mScroll.mAmount != 0, NS_ERROR_INVALID_ARG);
+
+  nsIScrollableFrame::ScrollUnit scrollUnit;
+  switch (aEvent->mScroll.mUnit) {
+    case nsContentCommandEvent::eCmdScrollUnit_Line:
+      scrollUnit = nsIScrollableFrame::LINES;
+      break;
+    case nsContentCommandEvent::eCmdScrollUnit_Page:
+      scrollUnit = nsIScrollableFrame::PAGES;
+      break;
+    case nsContentCommandEvent::eCmdScrollUnit_Whole:
+      scrollUnit = nsIScrollableFrame::WHOLE;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  aEvent->mSucceeded = PR_TRUE;
+
+  nsIScrollableFrame* sf =
+    ps->GetFrameToScrollAsScrollable(nsIPresShell::eEither);
+  aEvent->mIsEnabled = sf ? CanScrollOn(sf, aEvent->mScroll.mAmount,
+                                        aEvent->mScroll.mIsHorizontal) :
+                            PR_FALSE;
+
+  if (!aEvent->mIsEnabled || aEvent->mOnlyEnabledCheck) {
+    return NS_OK;
+  }
+
+  nsIntPoint pt(0, 0);
+  if (aEvent->mScroll.mIsHorizontal) {
+    pt.x = aEvent->mScroll.mAmount;
+  } else {
+    pt.y = aEvent->mScroll.mAmount;
+  }
+
+  // The caller may want synchronous scrolling.
+  sf->ScrollBy(pt, scrollUnit, nsIScrollableFrame::INSTANT);
   return NS_OK;
 }

@@ -42,6 +42,8 @@
 #include "IPC/IPCMessageUtils.h"
 #include "base/message_loop.h"
 
+#include "mozilla/ipc/RPCChannel.h"
+
 #include "npapi.h"
 #include "npruntime.h"
 #include "npfunctions.h"
@@ -50,6 +52,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
+#include "nsHashKeys.h"
 
 namespace mozilla {
 
@@ -71,6 +74,10 @@ enum ScriptableObjectType
   LocalObject,
   Proxy
 };
+
+mozilla::ipc::RPCChannel::RacyRPCPolicy
+MediateRace(const mozilla::ipc::RPCChannel::Message& parent,
+            const mozilla::ipc::RPCChannel::Message& child);
 
 extern PRLogModuleInfo* gPluginLog;
 
@@ -226,6 +233,16 @@ NullableStringGet(const nsCString& str)
 
   return str.get();
 }
+
+struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
+{
+  DeletingObjectEntry(const NPObject* key)
+    : nsPtrHashKey<NPObject>(key)
+    , mDeleted(false)
+  { }
+
+  bool mDeleted;
+};
 
 } /* namespace plugins */
 

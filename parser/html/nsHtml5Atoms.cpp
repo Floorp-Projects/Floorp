@@ -50,9 +50,12 @@
 #include "nsHtml5AtomList.h"
 #undef HTML5_ATOM
 
-static const nsStaticAtom Html5Atoms_info[] = {
+#define HTML5_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsHtml5AtomList.h"
+#undef HTML5_ATOM
 
-#define HTML5_ATOM(name_, value_) { value_, &nsHtml5Atoms::name_ },
+static const nsStaticAtom Html5Atoms_info[] = {
+#define HTML5_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &nsHtml5Atoms::name_),
 #include "nsHtml5AtomList.h"
 #undef HTML5_ATOM
 };

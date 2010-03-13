@@ -644,6 +644,20 @@ else
     CROSS_COMPILE=
 fi
 
+# Check to see if we are running in a broken QEMU scratchbox.
+# We know that anything below 1.0.16 is broken.
+AC_CHECK_PROGS(SBCONF, sb-conf ve, "")
+if test -n "$SBCONF"; then
+    _sb_version=`$SBCONF ve`
+    _sb_version_major=`echo $_sb_version | cut -f1 -d.`
+    _sb_version_minor=`echo $_sb_version | cut -f2 -d.`
+    _sb_version_point=`echo $_sb_version | cut -f3 -d.`
+    if test $_sb_version_major -eq 1 && test $_sb_version_minor -eq 0 && test $_sb_version_point -le 16; then
+        QEMU_CANT_RUN_JS_SHELL=1
+    fi
+fi
+AC_SUBST(QEMU_CANT_RUN_JS_SHELL)
+
 AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_AS)
@@ -1596,6 +1610,7 @@ case "$target" in
     if test "$COMPILE_ENVIRONMENT"; then
         AC_CHECK_HEADERS(sys/inttypes.h)
     fi
+    AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
@@ -1655,8 +1670,6 @@ case "$target" in
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
     MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
-    # set MACOSX to generate lib/mac/MoreFiles/Makefile
-    MACOSX=1
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
@@ -1780,7 +1793,7 @@ case "$target" in
         # -Os has been broken on Intel's C/C++ compilers for quite a
         # while; Intel recommends against using it.
         MOZ_OPTIMIZE_FLAGS="-O2"
-        MOZ_DEBUG_FLAGS="-g -fno-inline"
+        MOZ_DEBUG_FLAGS="-g"
     elif test "$GNU_CXX"; then
         GCC_VERSION=`$CXX -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
@@ -1789,11 +1802,7 @@ case "$target" in
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
-        MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
-                                          # and that combo is not yet good at
-                                          # debugging inlined functions (even
-                                          # when using DWARF2 as the debugging
-                                          # format)
+        MOZ_DEBUG_FLAGS="-g"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -2078,15 +2087,6 @@ case "$target" in
     cygwin*|msvc*|mks*)
         AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
         ;;
-
-    *)
-        AC_CHECK_HEADERS(oleacc.idl)
-
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
-        AC_LANG_RESTORE
-        ;;
     esac
 
     case "$target" in
@@ -2226,8 +2226,8 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
@@ -2331,7 +2331,7 @@ alpha*-*-osf*)
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2446,17 +2446,6 @@ case "$target" in
     ;;
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
-
-dnl
-dnl Indicate that platform requires special thread safe 
-dnl locking when starting up the OJI JVM 
-dnl (see mozilla/modules/oji/src/nsJVMManager.cpp)
-dnl ========================================================
-case "$target" in
-    *-hpux*)      
-        AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
-        ;;
-esac
 
 dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
@@ -3919,7 +3908,6 @@ MOZ_ARG_HEADER(Application)
 
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
-MOZ_DBGRINFO_MODULES=
 
 dnl ========================================================
 dnl =
@@ -3992,8 +3980,9 @@ MOZ_ARG_ENABLE_STRING(debug,
                           (Using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
     MOZ_DEBUG=1
-    if test -n "$enableval" && test "$enableval" != "yes"; then
+    if test -n "$enableval" -a "$enableval" != "yes"; then
         MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+        _MOZ_DEBUG_FLAGS_SET=1
     fi
   else
     MOZ_DEBUG=
@@ -4074,33 +4063,37 @@ AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
-dnl = Enable/disable debug for specific modules only
-dnl =   module names beginning with ^ will be disabled 
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-modules,
-[  --enable-debug-modules  Enable/disable debug info for specific modules],
-[ MOZ_DEBUG_MODULES=`echo $enableval| sed 's/,/ /g'` ] )
-
-dnl ========================================================
-dnl = Enable/disable generation of debugger info for specific modules only
-dnl =    the special module name ALL_MODULES can be used to denote all modules
-dnl =    module names beginning with ^ will be disabled
+dnl = (Deprecated) generation of debugger info for specific modules
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(debugger-info-modules,
 [  --enable-debugger-info-modules
                           Enable/disable debugger info for specific modules],
-[ for i in `echo $enableval | sed 's/,/ /g'`; do
-      dnl note that the list of module names is reversed as it is copied
-      dnl this is important, as it will allow config.mk to interpret stuff like
-      dnl "^ALL_MODULES xpcom" properly
-      if test "$i" = "no"; then
-        i="^ALL_MODULES"
+[ if test "$enableval" != "no"; then
+    AC_MSG_WARN([--enable-debugger-info-modules is deprecated, use --enable-debug-symbols instead])
+    MOZ_DEBUG_SYMBOLS=1
+  fi ])
+
+dnl ========================================================
+dnl = Enable generation of debug symbols
+dnl ========================================================
+MOZ_ARG_ENABLE_STRING(debug-symbols,
+[  --enable-debug-symbols[=DBG]    Enable debugging symbols
+                                   (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+      MOZ_DEBUG_SYMBOLS=1
+      if test -n "$enableval" -a "$enableval" != "yes"; then
+          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
+              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+          else
+              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
+          fi
       fi
-      if test "$i" = "yes"; then
-        i="ALL_MODULES"
-      fi
-      MOZ_DBGRINFO_MODULES="$i $MOZ_DBGRINFO_MODULES";
-    done ])
+  fi ])
+
+if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
+    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
+    export MOZ_DEBUG_SYMBOLS
+fi
 
 dnl ========================================================
 dnl Enable Narcissus
@@ -4552,13 +4545,8 @@ dnl Sun Studio on Solaris
 if test "$SOLARIS_SUNPRO_CC"; then
   PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
   PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  if test "$CPU_ARCH" != "sparc"; then
-    PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
-  else
-    PROFILE_USE_CFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-    PROFILE_USE_LDFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
-  fi
+  PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
+  PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
 fi
 
 AC_SUBST(PROFILE_GEN_CFLAGS)
@@ -4885,13 +4873,12 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
-AC_SUBST(MOZ_DEBUG_MODULES)
+AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
-AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
@@ -4938,7 +4925,6 @@ AC_SUBST(MOZ_PKG_SPECIAL)
 AC_SUBST(MOZILLA_OFFICIAL)
 
 dnl win32 options
-AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
@@ -5075,19 +5061,15 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  MOZ_MOVEMAIL=1
 fi
-AC_SUBST(MOZ_MOVEMAIL)
 
 AC_ARG_ENABLE(threadsafe,
               [  --enable-threadsafe     Enable support for multiple threads.],

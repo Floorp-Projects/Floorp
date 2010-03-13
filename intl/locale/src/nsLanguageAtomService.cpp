@@ -42,12 +42,13 @@
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
 #include "nsIServiceManager.h"
+#include "nsIAtom.h"
 
 NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
 
 nsLanguageAtomService::nsLanguageAtomService()
 {
-  mLangs.Init();
+  mLangToGroup.Init();
 }
 
 nsresult
@@ -60,7 +61,6 @@ nsLanguageAtomService::InitLangGroupTable()
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-
   rv = bundleService->CreateBundle("resource://gre/res/langGroups.properties",
                                    getter_AddRefs(mLangGroups));
   return rv;
@@ -70,57 +70,11 @@ nsIAtom*
 nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
                                       nsresult *aError)
 {
-  nsresult res = NS_OK;
-
   nsAutoString lowered(aLanguage);
   ToLowerCase(lowered);
 
-  nsIAtom *lang = mLangs.GetWeak(lowered);
-
-  if (!lang) {
-    nsXPIDLString langGroupStr;
-
-    if (lowered.EqualsLiteral("en-us")) {
-      langGroupStr.AssignLiteral("x-western");
-    } else if (lowered.EqualsLiteral("de-de")) {
-      langGroupStr.AssignLiteral("x-western");
-    } else if (lowered.EqualsLiteral("ja-jp")) {
-      langGroupStr.AssignLiteral("ja");
-    } else {
-      if (!mLangGroups) {
-        if (NS_FAILED(InitLangGroupTable())) {
-          if (aError)
-            *aError = NS_ERROR_FAILURE;
-
-          return nsnull;
-        }
-      }
-      res = mLangGroups->GetStringFromName(lowered.get(), getter_Copies(langGroupStr));
-      if (NS_FAILED(res)) {
-        PRInt32 hyphen = lowered.FindChar('-');
-        if (hyphen >= 0) {
-          nsAutoString truncated(lowered);
-          truncated.Truncate(hyphen);
-          res = mLangGroups->GetStringFromName(truncated.get(), getter_Copies(langGroupStr));
-          if (NS_FAILED(res)) {
-            langGroupStr.AssignLiteral("x-unicode");
-          }
-        } else {
-          langGroupStr.AssignLiteral("x-unicode");
-        }
-      }
-    }
-    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
-
-    // The hashtable will keep an owning reference to the atom
-    mLangs.Put(lowered, langGroup);
-    lang = langGroup;
-  }
-
-  if (aError)
-    *aError = res;
-
-  return lang;
+  nsCOMPtr<nsIAtom> lang = do_GetAtom(lowered);
+  return GetLanguageGroup(lang, aError);
 }
 
 already_AddRefed<nsIAtom>
@@ -156,12 +110,12 @@ nsLanguageAtomService::LookupCharSet(const char *aCharSet, nsresult *aError)
 }
 
 nsIAtom*
-nsLanguageAtomService::GetLocaleLanguageGroup(nsresult *aError)
+nsLanguageAtomService::GetLocaleLanguage(nsresult *aError)
 {
   nsresult res = NS_OK;
 
   do {
-    if (!mLocaleLangGroup) {
+    if (!mLocaleLanguage) {
       nsCOMPtr<nsILocaleService> localeService;
       localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID);
       if (!localeService) {
@@ -181,12 +135,67 @@ nsLanguageAtomService::GetLocaleLanguageGroup(nsresult *aError)
       if (NS_FAILED(res))
         break;
 
-      mLocaleLangGroup = LookupLanguage(loc, &res);
+      ToLowerCase(loc); // use lowercase for all language atoms
+      mLocaleLanguage = do_GetAtom(loc);
     }
   } while (0);
 
   if (aError)
     *aError = res;
 
-  return mLocaleLangGroup;
+  return mLocaleLanguage;
+}
+
+nsIAtom*
+nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage,
+                                        nsresult *aError)
+{
+  nsIAtom *retVal;
+  nsresult res = NS_OK;
+
+  retVal = mLangToGroup.GetWeak(aLanguage);
+
+  if (!retVal) {
+    if (!mLangGroups) {
+      if (NS_FAILED(InitLangGroupTable())) {
+        if (aError) {
+          *aError = NS_ERROR_FAILURE;
+        }
+        return nsnull;
+      }
+    }
+
+    nsString langStr;
+    aLanguage->ToString(langStr);
+
+    nsXPIDLString langGroupStr;
+    res = mLangGroups->GetStringFromName(langStr.get(),
+                                         getter_Copies(langGroupStr));
+    if (NS_FAILED(res)) {
+      PRInt32 hyphen = langStr.FindChar('-');
+      if (hyphen >= 0) {
+        nsAutoString truncated(langStr);
+        truncated.Truncate(hyphen);
+        res = mLangGroups->GetStringFromName(truncated.get(),
+                                             getter_Copies(langGroupStr));
+        if (NS_FAILED(res)) {
+          langGroupStr.AssignLiteral("x-unicode");
+        }
+      } else {
+        langGroupStr.AssignLiteral("x-unicode");
+      }
+    }
+
+    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
+
+    // The hashtable will keep an owning reference to the atom
+    mLangToGroup.Put(aLanguage, langGroup);
+    retVal = langGroup.get();
+  }
+
+  if (aError) {
+    *aError = res;
+  }
+
+  return retVal;
 }

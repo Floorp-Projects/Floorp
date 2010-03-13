@@ -38,6 +38,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsMacDockSupport.h"
+#include "nsObjCExceptions.h"
 
 NS_IMPL_ISUPPORTS1(nsMacDockSupport, nsIMacDockSupport)
 
@@ -58,4 +59,15 @@ nsMacDockSupport::SetDockMenu(nsIStandaloneNativeMenu * aDockMenu)
   nsresult rv;
   mDockMenu = do_QueryInterface(aDockMenu, &rv);
   return rv;
+}
+
+NS_IMETHODIMP
+nsMacDockSupport::ActivateApplication(PRBool aIgnoreOtherApplications)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  [[NSApplication sharedApplication] activateIgnoringOtherApps:aIgnoreOtherApplications];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

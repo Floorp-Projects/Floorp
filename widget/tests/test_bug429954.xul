@@ -42,7 +42,6 @@ SimpleTest.waitForFocus(function () {
               "screenX=" + maxX + "screenY=" + maxY);
 });
 
-
 ]]>
 </script>
 

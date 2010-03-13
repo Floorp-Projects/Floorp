@@ -66,7 +66,7 @@
 #include "nsDOMError.h"
 #include "nsIScriptError.h"
 
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 #include "nsICSSStyleRule.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
@@ -177,8 +177,8 @@ class nsCanvasGradient : public nsIDOMCanvasGradient
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
 
-    nsCanvasGradient(gfxPattern* pat, nsICSSParser* cssparser)
-        : mPattern(pat), mCSSParser(cssparser)
+    nsCanvasGradient(gfxPattern* pat)
+        : mPattern(pat)
     {
     }
 
@@ -198,7 +198,9 @@ public:
         if (offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-        nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, &color);
+        nsCSSParser parser;
+        nsresult rv = parser.ParseColorString(nsString(colorstr),
+                                              nsnull, 0, &color);
         if (NS_FAILED(rv))
             return NS_ERROR_DOM_SYNTAX_ERR;
 
@@ -211,7 +213,6 @@ public:
 
 protected:
     nsRefPtr<gfxPattern> mPattern;
-    nsCOMPtr<nsICSSParser> mCSSParser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradient, NS_CANVASGRADIENT_PRIVATE_IID)
@@ -372,7 +373,9 @@ protected:
     void Destroy();
 
     // Some helpers.  Doesn't modify acolor on failure.
-    nsresult SetStyleFromVariant(nsIVariant* aStyle, Style aWhichStyle);
+    nsresult SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
+    nsresult GetStyleAsStringOrInterface(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType, Style aWhichStyle);
+
     void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
     void DirtyAllStyles();
@@ -404,9 +407,6 @@ protected:
 
     // If mCanvasElement is not provided, then a docshell is
     nsCOMPtr<nsIDocShell> mDocShell;
-
-    // our CSS parser, for colors and whatnot
-    nsCOMPtr<nsICSSParser> mCSSParser;
 
     // yay thebes
     nsRefPtr<gfxContext> mThebes;
@@ -723,27 +723,16 @@ nsCanvasRenderingContext2D::Destroy()
 }
 
 nsresult
-nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhichStyle)
+nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
+                                                          nsISupports *aInterface,
+                                                          Style aWhichStyle)
 {
     nsresult rv;
     nscolor color;
 
-    PRUint16 paramType;
-    rv = aStyle->GetDataType(&paramType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (paramType == nsIDataType::VTYPE_DOMSTRING ||
-        paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
-        nsAutoString str;
-
-        if (paramType == nsIDataType::VTYPE_DOMSTRING) {
-            rv = aStyle->GetAsDOMString(str);
-        } else {
-            rv = aStyle->GetAsAString(str);
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mCSSParser->ParseColorString(str, nsnull, 0, &color);
+    if (!aStr.IsVoid()) {
+        nsCSSParser parser;
+        rv = parser.ParseColorString(aStr, nsnull, 0, &color);
         if (NS_FAILED(rv)) {
             // Error reporting happens inside the CSS parser
             return NS_OK;
@@ -753,21 +742,17 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhich
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
         return NS_OK;
-    } else if (paramType == nsIDataType::VTYPE_INTERFACE ||
-               paramType == nsIDataType::VTYPE_INTERFACE_IS)
-    {
-        nsID *iid;
-        nsCOMPtr<nsISupports> iface;
-        rv = aStyle->GetAsInterface(&iid, getter_AddRefs(iface));
+    }
 
-        nsCOMPtr<nsCanvasGradient> grad(do_QueryInterface(iface));
+    if (aInterface) {
+        nsCOMPtr<nsCanvasGradient> grad(do_QueryInterface(aInterface));
         if (grad) {
             CurrentState().SetGradientStyle(aWhichStyle, grad);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
             return NS_OK;
         }
 
-        nsCOMPtr<nsCanvasPattern> pattern(do_QueryInterface(iface));
+        nsCOMPtr<nsCanvasPattern> pattern(do_QueryInterface(aInterface));
         if (pattern) {
             CurrentState().SetPatternStyle(aWhichStyle, pattern);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
@@ -783,6 +768,29 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, Style aWhich
         EmptyString(), 0, 0,
         nsIScriptError::warningFlag,
         "Canvas");
+
+    return NS_OK;
+}
+
+nsresult
+nsCanvasRenderingContext2D::GetStyleAsStringOrInterface(nsAString& aStr,
+                                                        nsISupports **aInterface,
+                                                        PRInt32 *aType,
+                                                        Style aWhichStyle)
+{
+    if (CurrentState().patternStyles[aWhichStyle]) {
+        aStr.SetIsVoid(PR_TRUE);
+        NS_ADDREF(*aInterface = CurrentState().patternStyles[aWhichStyle]);
+        *aType = CMG_STYLE_PATTERN;
+    } else if (CurrentState().gradientStyles[aWhichStyle]) {
+        aStr.SetIsVoid(PR_TRUE);
+        NS_ADDREF(*aInterface = CurrentState().gradientStyles[aWhichStyle]);
+        *aType = CMG_STYLE_GRADIENT;
+    } else {
+        StyleColorToString(CurrentState().colorStyles[aWhichStyle], aStr);
+        *aInterface = nsnull;
+        *aType = CMG_STYLE_STRING;
+    }
 
     return NS_OK;
 }
@@ -937,11 +945,6 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
         mThebes = new gfxContext(mSurface);
     } else {
         mValid = PR_TRUE;
-    }
-
-    // set up our css parser, if necessary
-    if (!mCSSParser) {
-        mCSSParser = do_CreateInstance("@mozilla.org/content/css-parser;1");
     }
 
     // set up the initial canvas defaults
@@ -1127,8 +1130,6 @@ nsCanvasRenderingContext2D::Restore()
 {
     if (mSaveCount == 0)
         return NS_OK;
-    if (mSaveCount < 0)
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
 
     mStyleStack.RemoveElementAt(mSaveCount);
     mThebes->Restore();
@@ -1226,73 +1227,146 @@ nsCanvasRenderingContext2D::GetGlobalAlpha(float *aGlobalAlpha)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant* aStyle)
+nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant *aValue)
 {
-    return SetStyleFromVariant(aStyle, STYLE_STROKE);
+    if (!aValue)
+        return NS_ERROR_FAILURE;
+
+    nsString str;
+
+    nsresult rv;
+    PRUint16 vtype;
+    rv = aValue->GetDataType(&vtype);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (vtype == nsIDataType::VTYPE_INTERFACE ||
+        vtype == nsIDataType::VTYPE_INTERFACE_IS)
+    {
+        nsIID *iid;
+        nsCOMPtr<nsISupports> sup;
+        rv = aValue->GetAsInterface(&iid, getter_AddRefs(sup));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        str.SetIsVoid(PR_TRUE);
+        return SetStrokeStyle_multi(str, sup);
+    }
+
+    rv = aValue->GetAsAString(str);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetStrokeStyle_multi(str, nsnull);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
+nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant **aResult)
 {
-    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> wv = do_CreateInstance(NS_VARIANT_CONTRACTID);
 
-    nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
-    if (!var)
-        return NS_ERROR_FAILURE;
-    rv = var->SetWritable(PR_TRUE);
+    nsCOMPtr<nsISupports> sup;
+    nsString str;
+    PRInt32 t;
+    nsresult rv = GetStrokeStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (CurrentState().patternStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_STROKE]);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else if (CurrentState().gradientStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_STROKE]);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (t == CMG_STYLE_STRING) {
+        rv = wv->SetAsAString(str);
+    } else if (t == CMG_STYLE_PATTERN) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasPattern),
+                                sup);
+    } else if (t == CMG_STYLE_GRADIENT) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasGradient),
+                                sup);
     } else {
-        nsString styleStr;
-        StyleColorToString(CurrentState().colorStyles[STYLE_STROKE], styleStr);
-
-        rv = var->SetAsDOMString(styleStr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ERROR("Unknown type from GetStroke/FillStyle_multi!");
+        return NS_ERROR_FAILURE;
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *aStyle = var.forget().get();
+    NS_IF_ADDREF(*aResult = wv.get());
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetFillStyle(nsIVariant* aStyle)
+nsCanvasRenderingContext2D::SetFillStyle(nsIVariant *aValue)
 {
-    return SetStyleFromVariant(aStyle, STYLE_FILL);
+    if (!aValue)
+        return NS_ERROR_FAILURE;
+
+    nsString str;
+    nsresult rv;
+    PRUint16 vtype;
+    rv = aValue->GetDataType(&vtype);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (vtype == nsIDataType::VTYPE_INTERFACE ||
+        vtype == nsIDataType::VTYPE_INTERFACE_IS)
+    {
+        nsIID *iid;
+        nsCOMPtr<nsISupports> sup;
+        rv = aValue->GetAsInterface(&iid, getter_AddRefs(sup));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        str.SetIsVoid(PR_TRUE);
+        return SetFillStyle_multi(str, sup);
+    }
+
+    rv = aValue->GetAsAString(str);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetFillStyle_multi(str, nsnull);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetFillStyle(nsIVariant** aStyle)
+nsCanvasRenderingContext2D::GetFillStyle(nsIVariant **aResult)
 {
-    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> wv = do_CreateInstance(NS_VARIANT_CONTRACTID);
 
-    nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
-    if (!var)
-        return NS_ERROR_FAILURE;
-    rv = var->SetWritable(PR_TRUE);
+    nsCOMPtr<nsISupports> sup;
+    nsString str;
+    PRInt32 t;
+    nsresult rv = GetFillStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (CurrentState().patternStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_FILL]);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else if (CurrentState().gradientStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_FILL]);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (t == CMG_STYLE_STRING) {
+        rv = wv->SetAsAString(str);
+    } else if (t == CMG_STYLE_PATTERN) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasPattern),
+                                sup);
+    } else if (t == CMG_STYLE_GRADIENT) {
+        rv = wv->SetAsInterface(NS_GET_IID(nsIDOMCanvasGradient),
+                                sup);
     } else {
-        nsString styleStr;
-        StyleColorToString(CurrentState().colorStyles[STYLE_FILL], styleStr);
-
-        rv = var->SetAsDOMString(styleStr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ERROR("Unknown type from GetStroke/FillStyle_multi!");
+        return NS_ERROR_FAILURE;
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *aStyle = var.forget().get();
+    NS_IF_ADDREF(*aResult = wv.get());
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetStrokeStyle_multi(const nsAString& aStr, nsISupports *aInterface)
+{
+    return SetStyleFromStringOrInterface(aStr, aInterface, STYLE_STROKE);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+{
+    return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_STROKE);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetFillStyle_multi(const nsAString& aStr, nsISupports *aInterface)
+{
+    return SetStyleFromStringOrInterface(aStr, aInterface, STYLE_FILL);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+{
+    return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_FILL);
 }
 
 //
@@ -1309,7 +1383,7 @@ nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, f
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat, mCSSParser);
+    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat);
     if (!grad)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1328,7 +1402,7 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat, mCSSParser);
+    nsRefPtr<nsIDOMCanvasGradient> grad = new nsCanvasGradient(gradpat);
     if (!grad)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1435,9 +1509,9 @@ nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowColor(const nsAString& colorstr)
 {
+    nsCSSParser parser;
     nscolor color;
-
-    nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, &color);
+    nsresult rv = parser.ParseColorString(colorstr, nsnull, 0, &color);
     if (NS_FAILED(rv)) {
         // Error reporting happens inside the CSS parser
         return NS_OK;
@@ -1862,61 +1936,40 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 /**
  * Helper function for SetFont that creates a style rule for the given font.
  * @param aFont The CSS font string
- * @param aCSSParser The CSS parser of the canvas rendering context
  * @param aNode The canvas element
  * @param aResult Pointer in which to place the new style rule.
  * @remark Assumes all pointer arguments are non-null.
  */
 static nsresult
 CreateFontStyleRule(const nsAString& aFont,
-                    nsICSSParser* aCSSParser,
                     nsINode* aNode,
                     nsICSSStyleRule** aResult)
 {
-    nsresult rv;
+    nsCSSParser parser;
+    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsICSSStyleRule> rule;
-    PRBool changed;
+    // aFont is to be parsed as the value of a CSS 'font' shorthand,
+    // and then any line-height setting in that shorthand is to be
+    // overridden with "normal".  Because of the way style rules are
+    // stored, it is more efficient to fabricate a text string that
+    // can be processed in one go with ParseStyleAttribute than to
+    // make two calls to ParseDeclaration.
+
+    nsAutoString styleAttr(NS_LITERAL_STRING("font:"));
+    styleAttr.Append(aFont);
+    styleAttr.AppendLiteral(";line-height:normal");
 
     nsIPrincipal* principal = aNode->NodePrincipal();
     nsIDocument* document = aNode->GetOwnerDoc();
-
     nsIURI* docURL = document->GetDocumentURI();
     nsIURI* baseURL = document->GetBaseURI();
 
-    rv = aCSSParser->ParseStyleAttribute(
-            EmptyString(),
-            docURL,
-            baseURL,
-            principal,
-            getter_AddRefs(rule));
+    nsresult rv = parser.ParseStyleAttribute(styleAttr, docURL, baseURL,
+                                             principal, aResult);
     if (NS_FAILED(rv))
         return rv;
 
-    rv = aCSSParser->ParseProperty(eCSSProperty_font,
-                                   aFont,
-                                   docURL,
-                                   baseURL,
-                                   principal,
-                                   rule->GetDeclaration(),
-                                   &changed);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // set line height to normal, as per spec
-    rv = aCSSParser->ParseProperty(eCSSProperty_line_height,
-                                   NS_LITERAL_STRING("normal"),
-                                   docURL,
-                                   baseURL,
-                                   principal,
-                                   rule->GetDeclaration(),
-                                   &changed);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rule->RuleMatched();
-
-    rule.forget(aResult);
+    (*aResult)->RuleMatched();
     return NS_OK;
 }
 
@@ -1944,13 +1997,10 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
       return NS_ERROR_FAILURE;
     nsIDocument* document = presShell->GetDocument();
 
-    nsCString langGroup;
-    presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
-
     nsCOMArray<nsIStyleRule> rules;
 
     nsCOMPtr<nsICSSStyleRule> rule;
-    rv = CreateFontStyleRule(font, mCSSParser.get(), document, getter_AddRefs(rule));
+    rv = CreateFontStyleRule(font, document, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1972,7 +2022,6 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
         // otherwise inherit from default (10px sans-serif)
         nsCOMPtr<nsICSSStyleRule> parentRule;
         rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
-                                 mCSSParser.get(),
                                  document,
                                  getter_AddRefs(parentRule));
         if (NS_FAILED(rv))
@@ -1998,6 +2047,11 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
 
+    nsIAtom* language = sc->GetStyleVisibility()->mLanguage;
+    if (!language) {
+        language = presShell->GetPresContext()->GetLanguageFromCharset();
+    }
+
     // use CSS pixels instead of dev pixels to avoid being affected by page zoom
     const PRUint32 aupcp = nsPresContext::AppUnitsPerCSSPixel();
     // un-zoom the font size to avoid being affected by text-only zoom
@@ -2010,13 +2064,16 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.weight,
                        fontStyle->mFont.stretch,
                        NSAppUnitsToFloatPixels(fontSize, aupcp),
-                       langGroup,
+                       language,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks,
                        printerFont);
 
-    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style, presShell->GetPresContext()->GetUserFontSet());
+    CurrentState().fontGroup =
+        gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
+                                                    &style,
+                                                    presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
     CurrentState().font = font;
     return NS_OK;
@@ -2973,7 +3030,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     NS_ENSURE_ARG(imgElt);
 
     nsresult rv;
-    gfxRect dirty;
+    gfxRect dirty(0.0, 0.0, 0.0, 0.0);
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
@@ -3285,9 +3342,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     }
 
     // Flush layout updates
-    PRBool skipFlush =
-        (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) != 0;
-    if (!skipFlush)
+    if (!(flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH))
         FlushLayoutForTree(aWindow);
 
     nsCOMPtr<nsPresContext> presContext;
@@ -3302,8 +3357,10 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
         return NS_ERROR_FAILURE;
 
     nscolor bgColor;
-    nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
-                                               nsnull, 0, &bgColor);
+    nsCSSParser parser;
+    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
+                                          nsnull, 0, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsIPresShell* presShell = presContext->PresShell();
@@ -3320,11 +3377,11 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
         renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
     }
+    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_USE_WIDGET_LAYERS) {
+        renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
+    }
 
-    PRBool oldDisableValue = nsLayoutUtils::sDisableGetUsedXAssertions;
-    nsLayoutUtils::sDisableGetUsedXAssertions = oldDisableValue || skipFlush;
     presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
-    nsLayoutUtils::sDisableGetUsedXAssertions = oldDisableValue;
 
     // get rid of the pattern surface ref, just in case
     mThebes->SetColor(gfxRGBA(1,1,1,1));
@@ -3379,9 +3436,16 @@ nsCanvasRenderingContext2D::EnsureUnpremultiplyTable() {
 }
 
 
-// ImageData getImageData (in float x, in float y, in float width, in float height);
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetImageData()
+{
+    /* Should never be called -- GetImageData_explicit is the QS entry point */
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
+                                                  PRUint8 *aData, PRUint32 aDataLen)
 {
     if (!mValid)
         return NS_ERROR_FAILURE;
@@ -3391,42 +3455,15 @@ nsCanvasRenderingContext2D::GetImageData()
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsAXPCNativeCallContext *ncc = nsnull;
-    nsresult rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(&ncc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!ncc)
-        return NS_ERROR_FAILURE;
-
-    JSContext *ctx = nsnull;
-
-    rv = ncc->GetJSContext(&ctx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 argc;
-    jsval *argv = nsnull;
-
-    ncc->GetArgc(&argc);
-    ncc->GetArgvPtr(&argv);
-
-    JSAutoRequest ar(ctx);
-
-    int32 x, y, w, h;
-    if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
     if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    nsAutoArrayPtr<PRUint8> surfaceData (new (std::nothrow) PRUint8[w * h * 4]);
-    int surfaceDataStride = w*4;
-    int surfaceDataOffset = 0;
+    PRUint32 len = w * h * 4;
+    if (aDataLen != len)
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (!surfaceData)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsRefPtr<gfxImageSurface> tmpsurf = new gfxImageSurface(surfaceData,
+    /* Copy the surface contents to the buffer */
+    nsRefPtr<gfxImageSurface> tmpsurf = new gfxImageSurface(aData,
                                                             gfxIntSize(w, h),
                                                             w * 4,
                                                             gfxASurface::ImageFormatARGB32);
@@ -3442,97 +3479,37 @@ nsCanvasRenderingContext2D::GetImageData()
     tmpctx->SetSource(mSurface, gfxPoint(-(int)x, -(int)y));
     tmpctx->Paint();
 
-    tmpctx = nsnull;
-    tmpsurf = nsnull;
-
-    PRUint32 len = w * h * 4;
-    if (len > (((PRUint32)0xfff00000)/sizeof(jsval)))
-        return NS_ERROR_INVALID_ARG;
-
-    jsval *dest;
-    JSObject *dataArray = js_NewArrayObjectWithCapacity(ctx, len, &dest);
-    if (!dataArray)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsAutoGCRoot arrayGCRoot(&dataArray, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    // make sure sUnpremultiplyTable has been created
     EnsureUnpremultiplyTable();
 
-    PRUint8 *row;
-    for (int j = 0; j < h; j++) {
-        row = surfaceData + surfaceDataOffset + (surfaceDataStride * j);
-        for (int i = 0; i < w; i++) {
+    // NOTE! dst is the same as src, and this relies on reading
+    // from src and advancing that ptr before writing to dst.
+    PRUint8 *src = aData;
+    PRUint8 *dst = aData;
+
+    for (PRUint32 j = 0; j < h; j++) {
+        for (PRUint32 i = 0; i < w; i++) {
+            // XXX Is there some useful swizzle MMX we can use here?
 #ifdef IS_LITTLE_ENDIAN
-            PRUint8 b = *row++;
-            PRUint8 g = *row++;
-            PRUint8 r = *row++;
-            PRUint8 a = *row++;
+            PRUint8 b = *src++;
+            PRUint8 g = *src++;
+            PRUint8 r = *src++;
+            PRUint8 a = *src++;
 #else
-            PRUint8 a = *row++;
-            PRUint8 r = *row++;
-            PRUint8 g = *row++;
-            PRUint8 b = *row++;
+            PRUint8 a = *src++;
+            PRUint8 r = *src++;
+            PRUint8 g = *src++;
+            PRUint8 b = *src++;
 #endif
             // Convert to non-premultiplied color
-
-            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][r]);
-            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][g]);
-            *dest++ = INT_TO_JSVAL(sUnpremultiplyTable[a][b]);
-            *dest++ = INT_TO_JSVAL(a);
+            *dst++ = sUnpremultiplyTable[a][r];
+            *dst++ = sUnpremultiplyTable[a][g];
+            *dst++ = sUnpremultiplyTable[a][b];
+            *dst++ = a;
         }
     }
 
-    // Allocate result object after array, so if we have to trigger gc
-    // we do it now.
-    JSObject *result = JS_NewObject(ctx, NULL, NULL, NULL);
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsAutoGCRoot resultGCRoot(&result, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!JS_DefineProperty(ctx, result, "width", INT_TO_JSVAL(w), NULL, NULL, 0) ||
-        !JS_DefineProperty(ctx, result, "height", INT_TO_JSVAL(h), NULL, NULL, 0) ||
-        !JS_DefineProperty(ctx, result, "data", OBJECT_TO_JSVAL(dataArray), NULL, NULL, 0))
-        return NS_ERROR_FAILURE;
-
-    jsval *retvalPtr;
-    ncc->GetRetValPtr(&retvalPtr);
-    *retvalPtr = OBJECT_TO_JSVAL(result);
-    ncc->SetReturnValueWasSet(PR_TRUE);
-
     return NS_OK;
-}
-
-static inline PRUint8 ToUint8(jsint aInput)
-{
-    if (PRUint32(aInput) > 255)
-        return (aInput < 0) ? 0 : 255;
-    return PRUint8(aInput);
-}
-
-static inline PRUint8 ToUint8(double aInput)
-{
-    if (!(aInput >= 0)) /* Not < so that NaN coerces to 0 */
-        return 0;
-    if (aInput > 255)
-        return 255;
-    double toTruncate = aInput + 0.5;
-    PRUint8 retval = PRUint8(toTruncate);
-
-    // now retval is rounded to nearest, ties rounded up.  We want
-    // rounded to nearest ties to even, so check whether we had a tie.
-    if (retval == toTruncate) {
-        // It was a tie (since adding 0.5 gave us the exact integer we want).
-        // Since we rounded up, we either already have an even number or we
-        // have an odd number but the number we want is one less.  So just
-        // unconditionally masking out the ones bit should do the trick to get
-        // us the value we want.
-        return (retval & ~1);
-    }
-
-    return retval;
 }
 
 void
@@ -3558,161 +3535,56 @@ nsCanvasRenderingContext2D::EnsurePremultiplyTable() {
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::PutImageData()
 {
-    nsresult rv;
+    /* Should never be called -- PutImageData_explicit is the QS entry point */
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
+                                                  unsigned char *aData, PRUint32 aDataLen)
+{
     if (!mValid)
         return NS_ERROR_FAILURE;
-
-    nsAXPCNativeCallContext *ncc = nsnull;
-    rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(&ncc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!ncc)
-        return NS_ERROR_FAILURE;
-
-    JSContext *ctx = nsnull;
-
-    rv = ncc->GetJSContext(&ctx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 argc;
-    jsval *argv = nsnull;
-
-    ncc->GetArgc(&argc);
-    ncc->GetArgvPtr(&argv);
-
-    JSAutoRequest ar(ctx);
-
-    JSObject *dataObject;
-    int32 x, y;
-
-    if (!JS_ConvertArguments (ctx, argc, argv, "ojj", &dataObject, &x, &y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    if (!dataObject)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    int32 w, h;
-    JSObject *dataArray;
-    jsval v;
-
-    if (!JS_GetProperty(ctx, dataObject, "width", &v) ||
-        !JS_ValueToInt32(ctx, v, &w))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    if (!JS_GetProperty(ctx, dataObject, "height", &v) ||
-        !JS_ValueToInt32(ctx, v, &h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    if (!JS_GetProperty(ctx, dataObject, "data", &v) ||
-        !JSVAL_IS_OBJECT(v))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-    dataArray = JSVAL_TO_OBJECT(v);
 
     if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    jsuint arrayLen;
-    if (!JS_IsArrayObject(ctx, dataArray) ||
-        !JS_GetArrayLength(ctx, dataArray, &arrayLen) ||
-        arrayLen < (jsuint)(w * h * 4))
+    PRUint32 len = w * h * 4;
+    if (aDataLen != len)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[w * h * 4]);
-    if (!imageBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PRUint8 *imgPtr = imageBuffer.get();
-
-    EnsurePremultiplyTable();
-
-    JSBool canFastPath =
-        js_CoerceArrayToCanvasImageData(dataArray, 0, w*h*4, imageBuffer);
-
-    // no fast path? go slow.  We sadly need this for now, instead of just
-    // throwing, because dataArray might not be dense in case someone stuck
-    // their own array on the imageData.
-    // FIXME: it'd be awfully nice if we could prevent such modification of
-    // imageData objects, since it's likely the spec won't allow it anyway.
-    // Bug 497110 covers this.
-    if (!canFastPath) {
-        jsval vr, vg, vb, va;
-        PRUint8 ir, ig, ib, ia;
-        for (int32 j = 0; j < h; j++) {
-            int32 lineOffset = (j*w*4);
-            for (int32 i = 0; i < w; i++) {
-                int32 pixelOffset = lineOffset + i*4;
-                if (!JS_GetElement(ctx, dataArray, pixelOffset + 0, &vr) ||
-                    !JS_GetElement(ctx, dataArray, pixelOffset + 1, &vg) ||
-                    !JS_GetElement(ctx, dataArray, pixelOffset + 2, &vb) ||
-                    !JS_GetElement(ctx, dataArray, pixelOffset + 3, &va))
-                    return NS_ERROR_DOM_SYNTAX_ERR;
-
-                if (JSVAL_IS_INT(vr))         ir = ToUint8(JSVAL_TO_INT(vr));
-                else if (JSVAL_IS_DOUBLE(vr)) ir = ToUint8(*JSVAL_TO_DOUBLE(vr));
-                else return NS_ERROR_DOM_SYNTAX_ERR;
-
-                if (JSVAL_IS_INT(vg))         ig = ToUint8(JSVAL_TO_INT(vg));
-                else if (JSVAL_IS_DOUBLE(vg)) ig = ToUint8(*JSVAL_TO_DOUBLE(vg));
-                else return NS_ERROR_DOM_SYNTAX_ERR;
-
-                if (JSVAL_IS_INT(vb))         ib = ToUint8(JSVAL_TO_INT(vb));
-                else if (JSVAL_IS_DOUBLE(vb)) ib = ToUint8(*JSVAL_TO_DOUBLE(vb));
-                else return NS_ERROR_DOM_SYNTAX_ERR;
-
-                if (JSVAL_IS_INT(va))         ia = ToUint8(JSVAL_TO_INT(va));
-                else if (JSVAL_IS_DOUBLE(va)) ia = ToUint8(*JSVAL_TO_DOUBLE(va));
-                else return NS_ERROR_DOM_SYNTAX_ERR;
-
-                // Convert to premultiplied color (losslessly if the input came from getImageData)
-                ir = sPremultiplyTable[ia][ir];
-                ig = sPremultiplyTable[ia][ig];
-                ib = sPremultiplyTable[ia][ib];
-
-#ifdef IS_LITTLE_ENDIAN
-                *imgPtr++ = ib;
-                *imgPtr++ = ig;
-                *imgPtr++ = ir;
-                *imgPtr++ = ia;
-#else
-                *imgPtr++ = ia;
-                *imgPtr++ = ir;
-                *imgPtr++ = ig;
-                *imgPtr++ = ib;
-#endif
-            }
-        }
-    } else {
-        /* Walk through and premultiply and swap rgba */
-        PRUint8 ir, ig, ib, ia;
-        PRUint8 *ptr = imgPtr;
-        for (int32 i = 0; i < w*h; i++) {
-            ir = ptr[0];
-            ig = ptr[1];
-            ib = ptr[2];
-            ia = ptr[3];
-
-#ifdef IS_LITTLE_ENDIAN
-            ptr[0] = sPremultiplyTable[ia][ib];
-            ptr[1] = sPremultiplyTable[ia][ig];
-            ptr[2] = sPremultiplyTable[ia][ir];
-#else
-            ptr[0] = ia;
-            ptr[1] = sPremultiplyTable[ia][ir];
-            ptr[2] = sPremultiplyTable[ia][ig];
-            ptr[3] = sPremultiplyTable[ia][ib];
-#endif
-            ptr += 4;
-        }
-    }
-
-    nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(imageBuffer.get(),
-                                                            gfxIntSize(w, h),
-                                                            w * 4,
+    nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(w, h),
                                                             gfxASurface::ImageFormatARGB32);
     if (!imgsurf || imgsurf->CairoStatus())
         return NS_ERROR_FAILURE;
+
+    // ensure premultiply table has been created
+    EnsurePremultiplyTable();
+
+    PRUint8 *src = aData;
+    PRUint8 *dst = imgsurf->Data();
+
+    for (PRUint32 j = 0; j < h; j++) {
+        for (PRUint32 i = 0; i < w; i++) {
+            PRUint8 r = *src++;
+            PRUint8 g = *src++;
+            PRUint8 b = *src++;
+            PRUint8 a = *src++;
+
+            // Convert to premultiplied color (losslessly if the input came from getImageData)
+#ifdef IS_LITTLE_ENDIAN
+            *dst++ = sPremultiplyTable[a][b];
+            *dst++ = sPremultiplyTable[a][g];
+            *dst++ = sPremultiplyTable[a][r];
+            *dst++ = a;
+#else
+            *dst++ = a;
+            *dst++ = sPremultiplyTable[a][r];
+            *dst++ = sPremultiplyTable[a][g];
+            *dst++ = sPremultiplyTable[a][b];
+#endif
+        }
+    }
 
     gfxContextPathAutoSaveRestore pathSR(mThebes);
     gfxContextAutoSaveRestore autoSR(mThebes);
@@ -3728,7 +3600,7 @@ nsCanvasRenderingContext2D::PutImageData()
     mThebes->SetOperator(gfxContext::OPERATOR_SOURCE);
     mThebes->Fill();
 
-    return Redraw();
+    return Redraw(gfxRect(x, y, w, h));
 }
 
 NS_IMETHODIMP
@@ -3748,79 +3620,8 @@ nsCanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateImageData()
 {
-    if (!mValid)
-        return NS_ERROR_FAILURE;
-
-    nsAXPCNativeCallContext *ncc = nsnull;
-    nsresult rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(&ncc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!ncc)
-        return NS_ERROR_FAILURE;
-
-    JSContext *ctx = nsnull;
-
-    rv = ncc->GetJSContext(&ctx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 argc;
-    jsval *argv = nsnull;
-
-    ncc->GetArgc(&argc);
-    ncc->GetArgvPtr(&argv);
-
-    JSAutoRequest ar(ctx);
-
-    int32 width, height;
-    if (!JS_ConvertArguments (ctx, argc, argv, "jj", &width, &height))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    if (width <= 0 || height <= 0)
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-    PRUint32 w = (PRUint32) width;
-    PRUint32 h = (PRUint32) height;
-
-    // check for overflow when calculating len
-    PRUint32 len0 = w * h;
-    if (len0 / w != (PRUint32) h)
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    PRUint32 len = len0 * 4;
-    if (len / 4 != len0)
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-    jsval *dest;
-    JSObject *dataArray = js_NewArrayObjectWithCapacity(ctx, len, &dest);
-    if (!dataArray)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsAutoGCRoot arrayGCRoot(&dataArray, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    for (PRUint32 i = 0; i < len; i++)
-        *dest++ = JSVAL_ZERO;
-
-    // Allocate result object after array, so if we have to trigger gc
-    // we do it now.
-    JSObject *result = JS_NewObject(ctx, NULL, NULL, NULL);
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsAutoGCRoot resultGCRoot(&result, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!JS_DefineProperty(ctx, result, "width", INT_TO_JSVAL(w), NULL, NULL, 0) ||
-        !JS_DefineProperty(ctx, result, "height", INT_TO_JSVAL(h), NULL, NULL, 0) ||
-        !JS_DefineProperty(ctx, result, "data", OBJECT_TO_JSVAL(dataArray), NULL, NULL, 0))
-        return NS_ERROR_FAILURE;
-
-    jsval *retvalPtr;
-    ncc->GetRetValPtr(&retvalPtr);
-    *retvalPtr = OBJECT_TO_JSVAL(result);
-    ncc->SetReturnValueWasSet(PR_TRUE);
-
-    return NS_OK;
+    /* Should never be called; handled entirely in the quickstub */
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

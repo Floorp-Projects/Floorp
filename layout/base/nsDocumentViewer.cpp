@@ -89,7 +89,7 @@
 #include "nsNetUtil.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewerFile.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -946,7 +946,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                               getter_AddRefs(window));
 
       if (window) {
-        window->SetNewDocument(mDocument, aState, PR_TRUE);
+        window->SetNewDocument(mDocument, aState);
 
         nsJSContext::LoadStart();
       }
@@ -1151,6 +1151,9 @@ DocumentViewerImpl::PermitUnload(PRBool aCallerClosesWindow, PRBool *aPermitUnlo
   beforeUnload->GetReturnValue(text);
   if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
       !text.IsEmpty()) {
+    nsAutoString tmp;
+    nsContentUtils::StripNullChars(text, tmp);
+    text = tmp;
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
@@ -1692,7 +1695,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     // Set the script global object on the new document
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
     if (window) {
-      window->SetNewDocument(newDoc, nsnull, PR_TRUE);
+      window->SetNewDocument(newDoc, nsnull);
     }
 
     // Clear the list of old child docshells. CChild docshells for the new
@@ -2144,8 +2147,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
-        nsCOMPtr<nsICSSLoader> cssLoader;
-        NS_NewCSSLoader(getter_AddRefs(cssLoader));
+        nsRefPtr<mozilla::css::Loader> cssLoader = new mozilla::css::Loader();
 
         char *str = ToNewCString(sheets);
         char *newStr = str;
@@ -2290,13 +2292,17 @@ DocumentViewerImpl::FindContainerView()
 {
   nsIView* containerView = nsnull;
 
+  nsCOMPtr<nsIContent> containerElement;
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
+  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+  if (pwin) {
+    containerElement = do_QueryInterface(pwin->GetFrameElementInternal());
+  }
+        
   if (mParentWidget) {
     containerView = nsIView::GetViewFor(mParentWidget);
-  } else if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
-    nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
-    if (pwin) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(pwin->GetFrameElementInternal());
+  } else {
+    if (mContainer) {
       nsCOMPtr<nsIPresShell> parentPresShell;
       if (docShellItem) {
         nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
@@ -2306,12 +2312,12 @@ DocumentViewerImpl::FindContainerView()
           parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
         }
       }
-      if (!content) {
+      if (!containerElement) {
         NS_WARNING("Subdocument container has no content");
       } else if (!parentPresShell) {
         NS_WARNING("Subdocument container has no presshell");
       } else {
-        nsIFrame* f = parentPresShell->GetRealPrimaryFrameFor(content);
+        nsIFrame* f = parentPresShell->GetRealPrimaryFrameFor(containerElement);
         if (f) {
           nsIFrame* subdocFrame = f->GetContentInsertionFrame();
           // subdocFrame might not be a subdocument frame; the frame
@@ -2337,24 +2343,15 @@ DocumentViewerImpl::FindContainerView()
   if (!containerView)
     return nsnull;
 
+  if (containerElement &&
+      containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent))
+    return containerView;
+
   nsIWidget* outerWidget = containerView->GetNearestWidget(nsnull);
   if (outerWidget &&
       outerWidget->GetTransparencyMode() == eTransparencyTransparent)
     return containerView;
 
-  // see if the containerView has already been hooked into a foreign view manager hierarchy
-  // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
-  nsIViewManager* containerVM = containerView->GetViewManager();
-  nsIView* pView = containerView;
-  do {
-    pView = pView->GetParent();
-  } while (pView && pView->GetViewManager() == containerVM);
-  if (pView)
-    return containerView;
-
-  // OK, so the container is not already hooked up into a foreign view manager hierarchy.
-  // That means we can choose not to hook ourselves up.
-  //
   // If the parent container is a chrome shell and we are a content shell
   // then we won't hook into its view
   // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
@@ -3148,27 +3145,6 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiTextType(PRUint8* aTextType)
   if (aTextType) {
     GetBidiOptions(&bidiOptions);
     *aTextType = GET_BIDI_OPTION_TEXTTYPE(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::SetBidiControlsTextMode(PRUint8 aControlsTextMode)
-{
-  PRUint32 bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions, aControlsTextMode);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::GetBidiControlsTextMode(PRUint8* aControlsTextMode)
-{
-  PRUint32 bidiOptions;
-
-  if (aControlsTextMode) {
-    GetBidiOptions(&bidiOptions);
-    *aControlsTextMode = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
   }
   return NS_OK;
 }
@@ -4126,7 +4102,11 @@ DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
   if (mContainer) {
     nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
     NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
-    SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
+    if (docShellTreeNode) {
+      SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
+    } else {
+      NS_WARNING("Bug 549251 Did you close a window while printing?");
+    }
   }
 #endif
 }

@@ -543,16 +543,15 @@ nsPlacesDBUtils.prototype = {
       "WHERE id NOT IN (SELECT id FROM moz_places_temp) " +
         "AND h.visit_count <> " +
           "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = h.id AND visit_type NOT IN (0,4,7))");
+            "WHERE place_id = h.id AND visit_type NOT IN (0,4,7,8))");
     while (detectWrongCountPlaces.executeStep()) {
       let placeId = detectWrongCountPlaces.getInt64(0);
-
       let fixCountForPlace = this._dbConn.createStatement(
         "UPDATE moz_places_view SET visit_count = ( " +
           "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7)) + " +
+            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + " +
           "(SELECT count(*) FROM moz_historyvisits_temp " +
-            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7)) + " +
+            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + " +
         ") WHERE id = :place_id");
       fixCountForPlace.params["place_id"] = placeId;
       cleanupStatements.push(fixCountForPlace);

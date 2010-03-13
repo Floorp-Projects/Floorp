@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="document.documentElement.pauseAnimations();
+             document.documentElement.setCurrentTime(1.0);
+             setTimeAndSnapshot(2.0, false)">
+  <!-- This test checks that we don't trigger a CSS transition when
+       SMIL animation effects are removed. -->
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%"
+        style="fill: lime; -moz-transition: 200s fill">
+    <set attributeName="fill" to="red" begin="1s" dur="1s"/>
+  </rect>
+</svg>

@@ -401,6 +401,9 @@ static nsIPresShell*
 GetPresShellForContent(nsIDOMNode* aDOMNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
+  if (!content)
+    return nsnull;
+
   nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
   if (document) {
     document->FlushPendingNotifications(Flush_Display);

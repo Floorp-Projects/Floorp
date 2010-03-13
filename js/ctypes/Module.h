@@ -44,27 +44,6 @@
 namespace mozilla {
 namespace ctypes {
 
-// Each internal CABI and CType class (representing ABI and type constants,
-// respectively) has a unique identifier, stored in a reserved slot on the
-// JSObject.
-enum ABICode {
-#define DEFINE_ABI(name) ABI_##name,
-#define DEFINE_TYPE(name)
-#include "types.h"
-#undef DEFINE_ABI
-#undef DEFINE_TYPE
-  INVALID_ABI
-};
-
-enum TypeCode {
-#define DEFINE_ABI(name)
-#define DEFINE_TYPE(name) TYPE_##name,
-#include "types.h"
-#undef DEFINE_ABI
-#undef DEFINE_TYPE
-  INVALID_TYPE
-};
-
 class Module : public nsIXPCScriptable
 {
 public:
@@ -74,10 +53,7 @@ public:
   Module();
 
   // Creates the ctypes object and attaches it to the global object.
-  bool Init(JSContext* aContext, JSObject* aGlobal);
-
-  static ABICode GetABICode(JSContext* cx, jsval val);
-  static TypeCode GetTypeCode(JSContext* cx, jsval val);
+  JSBool Init(JSContext* aContext, JSObject* aGlobal);
 
 private:
   ~Module();
