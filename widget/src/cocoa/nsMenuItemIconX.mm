@@ -64,6 +64,7 @@
 #include "nsMenuItemX.h"
 #include "gfxImageSurface.h"
 #include "imgIContainer.h"
+#include "nsCocoaUtils.h"
 
 static const PRUint32 kIconWidth = 16;
 static const PRUint32 kIconHeight = 16;
@@ -426,23 +427,10 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<gfxImageSurface> image;
-  nsresult rv = imageContainer->CopyFrame(imgIContainer::FRAME_CURRENT,
-                                          imgIContainer::FLAG_NONE,
-                                          getter_AddRefs(image));
-  if (NS_FAILED(rv) || !image) {
-    [mNativeMenuItem setImage:nil];
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 origHeight = image->Height();
-  PRInt32 origStride = image->Stride();
-  PRInt32 origWidth = image->Width();
-  if ((origStride % 4 != 0) || (origHeight < 1) || (origWidth < 1)) {
-    [mNativeMenuItem setImage:nil];
-    return NS_ERROR_FAILURE;
-  }
-
+  PRInt32 origWidth = 0, origHeight = 0;
+  imageContainer->GetWidth(&origWidth);
+  imageContainer->GetHeight(&origHeight);
+  
   // If the image region is invalid, don't draw the image to almost match
   // the behavior of other platforms.
   if (!mImageRegionRect.IsEmpty() &&
@@ -455,106 +443,72 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   if (mImageRegionRect.IsEmpty()) {
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
-
-  PRInt32 newStride = mImageRegionRect.width * sizeof(PRUint32);
-  PRInt32 imageLength = mImageRegionRect.height * mImageRegionRect.width;
-
-  PRUint32* origImageData = (PRUint32*)image->Data();
-  PRUint32* imageData = origImageData;
-
-  PRBool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
-                            mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
-  if (createSubImage) {
-    imageData = (PRUint32*)malloc(imageLength * sizeof(PRUint32));
-    if (!imageData) {
-      [mNativeMenuItem setImage:nil];
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    for (PRInt32 y = 0; y < mImageRegionRect.height; y++) {
-      PRInt32 srcLine = (mImageRegionRect.y + y) * (origStride / 4);
-      PRInt32 dstLine = y * mImageRegionRect.width;
-      for (PRInt32 x = 0; x < mImageRegionRect.width; x++) {
-        imageData[dstLine + x] = origImageData[srcLine + x + mImageRegionRect.x];
-      }
-    }
-  }
-
-  CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL, imageData, imageLength,
-                                                              createSubImage ? PRAllocCGFree : NULL);
-  if (!provider) {
-    if (createSubImage)
-      free(imageData);
+  
+  CGImageRef origImage = NULL;
+  nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(imageContainer, 
+                                                              imgIContainer::FRAME_CURRENT, 
+                                                              &origImage);
+  if (NS_FAILED(rv) || !origImage) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
   }
-  CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-  uint32_t byteFormat = (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-  CGImageRef cgImage = ::CGImageCreate(mImageRegionRect.width, mImageRegionRect.height,
-                                       8, 32, newStride, colorSpace, byteFormat,
-                                       provider, NULL, true, kCGRenderingIntentDefault);
-  ::CGDataProviderRelease(provider);
 
+  PRBool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
+                            mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
+  
+  CGImageRef finalImage = NULL;
+  if (createSubImage) {
+    // if mImageRegionRect is set using CSS, we need to slice a piece out of the overall 
+    // image to use as the icon
+    finalImage = ::CGImageCreateWithImageInRect(origImage, 
+                                                ::CGRectMake(mImageRegionRect.x, 
+                                                mImageRegionRect.y,
+                                                mImageRegionRect.width,
+                                                mImageRegionRect.height));
+    ::CGImageRelease(origImage);
+    if (!finalImage) {
+      [mNativeMenuItem setImage:nil];
+      return NS_ERROR_FAILURE;  
+    }
+  } else {
+    finalImage = origImage;
+  }
   // The image may not be the right size for a menu icon (16x16).
   // Create a new CGImage for the menu item.
   PRUint8* bitmap = (PRUint8*)malloc(kIconBytes);
 
-  CGImageAlphaInfo alphaInfo = ::CGImageGetAlphaInfo(cgImage);
+  CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
 
-  CGContextRef bitmapContext;
-  bitmapContext = ::CGBitmapContextCreate(bitmap, kIconWidth, kIconHeight,
-                                          kIconBitsPerComponent,
-                                          kIconBytesPerRow,
-                                          colorSpace,
-                                          alphaInfo);
-  if (!bitmapContext) {
-    ::CGImageRelease(cgImage);
-    free(bitmap);
-    ::CGColorSpaceRelease(colorSpace);
-    return NS_ERROR_FAILURE;
-  }
-
-  CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
-  ::CGContextClearRect(bitmapContext, iconRect);
-  ::CGContextDrawImage(bitmapContext, iconRect, cgImage);
-  ::CGImageRelease(cgImage);
-  ::CGContextRelease(bitmapContext);
-
-  provider = ::CGDataProviderCreateWithData(NULL, bitmap, kIconBytes,
-                                            PRAllocCGFree);
-  if (!provider) {
-    free(bitmap);
-    ::CGColorSpaceRelease(colorSpace);
-    return NS_ERROR_FAILURE;
-  }
-
-  CGImageRef iconImage =
-   ::CGImageCreate(kIconWidth, kIconHeight, kIconBitsPerComponent,
-                   kIconBitsPerPixel, kIconBytesPerRow, colorSpace, alphaInfo,
-                   provider, NULL, TRUE, kCGRenderingIntentDefault);
+  CGContextRef bitmapContext = ::CGBitmapContextCreate(bitmap, kIconWidth, kIconHeight,
+                                                       kIconBitsPerComponent,
+                                                       kIconBytesPerRow,
+                                                       colorSpace,
+                                                       kCGImageAlphaPremultipliedLast);
   ::CGColorSpaceRelease(colorSpace);
-  ::CGDataProviderRelease(provider);
+  if (!bitmapContext) {
+    ::CGImageRelease(finalImage);
+    free(bitmap);
+    ::CGColorSpaceRelease(colorSpace);
+    return NS_ERROR_FAILURE;
+  }
+  CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
+  ::CGContextDrawImage(bitmapContext, iconRect, finalImage);
+  
+  CGImageRef iconImage = ::CGBitmapContextCreateImage(bitmapContext);
+
+  ::CGImageRelease(finalImage);
+  ::CGContextRelease(bitmapContext);
+  free(bitmap);
+ 
   if (!iconImage) return NS_ERROR_FAILURE;
 
-  NSRect imageRect = NSMakeRect(0.0, 0.0, 0.0, 0.0);
-  CGContextRef imageContext = nil;
- 
-  // Get the image dimensions.
-  imageRect.size.width = kIconWidth;
-  imageRect.size.height = kIconHeight;
- 
-  // Create a new image to receive the Quartz image data.
-  NSImage* newImage = [[NSImage alloc] initWithSize:imageRect.size];
-
-  [newImage lockFocus];
- 
-  // Get the Quartz context and draw.
-  imageContext = (CGContextRef)[[NSGraphicsContext currentContext]
-                                graphicsPort];
-  CGContextDrawImage(imageContext, *(CGRect*)&imageRect, iconImage);
-  [newImage unlockFocus];
-
-  if (!mNativeMenuItem) return NS_ERROR_FAILURE;
+  NSImage *newImage = nil;
+  rv = nsCocoaUtils::CreateNSImageFromCGImage(iconImage, &newImage);
+  if (NS_FAILED(rv) || !newImage) {    
+    [mNativeMenuItem setImage:nil];
+    ::CGImageRelease(iconImage);
+    return NS_ERROR_FAILURE;
+  }
 
   [mNativeMenuItem setImage:newImage];
   
