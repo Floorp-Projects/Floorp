@@ -1452,11 +1452,13 @@ function run_PointerType_tests() {
   // Test opaque pointers.
   let f_t = ctypes.PointerType("FILE*");
   do_check_eq(f_t.name, "FILE*");
+  do_check_eq(f_t.toSource(), "ctypes.PointerType(\"FILE*\")");
   let f = new f_t();
   do_check_throws(function() { f.contents; }, Error);
   do_check_throws(function() { f.contents = 0; }, Error);
   let f = f_t(5);
   do_check_throws(function() { f.contents = 0; }, Error);
+  do_check_eq(f.toSource(), "ctypes.PointerType(\"FILE*\")(ctypes.UInt64(\"0x5\"))");
 
   do_check_throws(function() { f_t(p); }, Error);
   do_check_throws(function() { f.value = p; }, Error);
