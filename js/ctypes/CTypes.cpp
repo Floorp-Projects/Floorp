@@ -44,6 +44,9 @@
 #include "prlog.h"
 #include "prdtoa.h"
 #include "jsnum.h"
+#ifdef HAVE_SSIZE_T
+#include <sys/types.h>
+#endif
 
 namespace mozilla {
 namespace ctypes {
