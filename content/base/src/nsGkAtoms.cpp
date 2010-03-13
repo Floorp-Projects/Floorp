@@ -45,12 +45,16 @@
 #include "nsStaticAtom.h"
 
 // define storage for all atoms
-#define GK_ATOM(_name, _value) nsIAtom* nsGkAtoms::_name;
+#define GK_ATOM(name_, value_) nsIAtom* nsGkAtoms::name_;
+#include "nsGkAtomList.h"
+#undef GK_ATOM
+
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
 static const nsStaticAtom GkAtoms_info[] = {
-#define GK_ATOM(name_, value_) { value_, &nsGkAtoms::name_ },
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &nsGkAtoms::name_),
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 };

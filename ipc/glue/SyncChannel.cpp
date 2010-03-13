@@ -192,6 +192,9 @@ SyncChannel::OnMessageReceived(const Message& msg)
 
     MutexAutoLock lock(mMutex);
 
+    if (MaybeInterceptSpecialIOMessage(msg))
+        return;
+
     if (!AwaitingSyncReply()) {
         // wake up the worker, there's work to do
         mWorkerLoop->PostTask(

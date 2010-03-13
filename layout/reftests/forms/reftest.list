@@ -33,3 +33,6 @@ HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 != checkbox-checked-native-notref.html about:blank
 != radio-checked-native.html about:blank
 != radio-checked-native-notref.html about:blank
+
+# placeholder
+include placeholder/reftest.list

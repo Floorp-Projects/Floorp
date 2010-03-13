@@ -93,6 +93,14 @@ parent:
   rpc NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
     returns (NPError aError,
              bool aBoolVal);
+
+  // Wake up and process a few native events.  Periodically called by
+  // Gtk-specific code upon detecting that the plugin process has
+  // entered a nested event loop.  If the browser doesn't process
+  // native events, then "livelock" and some other glitches can occur.
+  rpc ProcessSomeEvents();
+
+  sync AppendNotesToCrashReport(nsCString aNotes);
 };
 
 } // namespace plugins

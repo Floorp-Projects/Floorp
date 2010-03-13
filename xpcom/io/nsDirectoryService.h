@@ -85,98 +85,10 @@ private:
     nsCOMPtr<nsISupportsArray> mProviders;
 
 public:
-    static nsIAtom *sCurrentProcess;
-    static nsIAtom *sComponentRegistry;
-    static nsIAtom *sComponentDirectory;
-    static nsIAtom *sXPTIRegistry;
-    static nsIAtom *sGRE_Directory;
-    static nsIAtom *sGRE_ComponentDirectory;
-    static nsIAtom *sOS_DriveDirectory;
-    static nsIAtom *sOS_TemporaryDirectory;
-    static nsIAtom *sOS_CurrentProcessDirectory;
-    static nsIAtom *sOS_CurrentWorkingDirectory;
-    static nsIAtom *sOS_DesktopDirectory;
-    static nsIAtom *sOS_HomeDirectory;
-#if defined (XP_MACOSX)
-    static nsIAtom *sDirectory;
-    static nsIAtom *sTrashDirectory;
-    static nsIAtom *sStartupDirectory;
-    static nsIAtom *sShutdownDirectory;
-    static nsIAtom *sAppleMenuDirectory;
-    static nsIAtom *sControlPanelDirectory;
-    static nsIAtom *sExtensionDirectory;
-    static nsIAtom *sFontsDirectory;
-    static nsIAtom *sPreferencesDirectory;
-    static nsIAtom *sDocumentsDirectory;
-    static nsIAtom *sInternetSearchDirectory;
-    static nsIAtom *sUserLibDirectory;
-    static nsIAtom *sDefaultDownloadDirectory;
-    static nsIAtom *sUserDesktopDirectory;
-    static nsIAtom *sLocalDesktopDirectory;
-    static nsIAtom *sUserApplicationsDirectory;
-    static nsIAtom *sLocalApplicationsDirectory;
-    static nsIAtom *sUserDocumentsDirectory;
-    static nsIAtom *sLocalDocumentsDirectory;
-    static nsIAtom *sUserInternetPlugInDirectory;
-    static nsIAtom *sLocalInternetPlugInDirectory;
-    static nsIAtom *sUserFrameworksDirectory;
-    static nsIAtom *sLocalFrameworksDirectory;
-    static nsIAtom *sUserPreferencesDirectory;
-    static nsIAtom *sLocalPreferencesDirectory;
-    static nsIAtom *sPictureDocumentsDirectory;
-    static nsIAtom *sMovieDocumentsDirectory;
-    static nsIAtom *sMusicDocumentsDirectory;
-    static nsIAtom *sInternetSitesDirectory;
-#elif defined (XP_WIN) 
-    static nsIAtom *sSystemDirectory;
-    static nsIAtom *sWindowsDirectory;
-    static nsIAtom *sWindowsProgramFiles;
-    static nsIAtom *sDesktop;
-    static nsIAtom *sPrograms;
-    static nsIAtom *sControls;
-    static nsIAtom *sPrinters;
-    static nsIAtom *sPersonal;
-    static nsIAtom *sFavorites;
-    static nsIAtom *sStartup;
-    static nsIAtom *sRecent;
-    static nsIAtom *sSendto;
-    static nsIAtom *sBitbucket;
-    static nsIAtom *sStartmenu;
-    static nsIAtom *sDesktopdirectory;
-    static nsIAtom *sDrives;
-    static nsIAtom *sNetwork;
-    static nsIAtom *sNethood;
-    static nsIAtom *sFonts;
-    static nsIAtom *sTemplates;
-    static nsIAtom *sCommon_Startmenu;
-    static nsIAtom *sCommon_Programs;
-    static nsIAtom *sCommon_Startup;
-    static nsIAtom *sCommon_Desktopdirectory;
-    static nsIAtom *sAppdata;
-    static nsIAtom *sLocalAppdata;
-    static nsIAtom *sPrinthood;
-    static nsIAtom *sWinCookiesDirectory;
-    static nsIAtom *sDefaultDownloadDirectory;
-#elif defined (XP_UNIX)
-    static nsIAtom *sLocalDirectory;
-    static nsIAtom *sLibDirectory;
-    static nsIAtom *sXDGDesktop;
-    static nsIAtom *sXDGDocuments;
-    static nsIAtom *sXDGDownload;
-    static nsIAtom *sXDGMusic;
-    static nsIAtom *sXDGPictures;
-    static nsIAtom *sXDGPublicShare;
-    static nsIAtom *sXDGTemplates;
-    static nsIAtom *sXDGVideos;
-    static nsIAtom *sDefaultDownloadDirectory;
-#elif defined (XP_OS2)
-    static nsIAtom *sSystemDirectory;
-    static nsIAtom *sOS2Directory;
-#elif defined (XP_BEOS)
-    static nsIAtom *sSettingsDirectory;
-    static nsIAtom *sSystemDirectory;
-#endif
 
+#define DIR_ATOM(name_, value_) static nsIAtom* name_;
+#include "nsDirectoryServiceAtomList.h"
+#undef DIR_ATOM
 
 };
 

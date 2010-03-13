@@ -220,6 +220,7 @@ CSRCS   += cairo-xlib-surface.c \
 	   cairo-xlib-visual.c \
 	   cairo-xlib-display.c
 EXPORTS_cairo += cairo-xlib.h cairo-xlib-xrender.h
+OS_INCLUDES += $(XCFLAGS)
 endif
 
 ifdef MOZ_ENABLE_CAIRO_FT

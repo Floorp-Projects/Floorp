@@ -198,14 +198,6 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
   nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsBoxFrame::CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIView* view = nsLeafBoxFrame::GetView();
-  if (!view->HasWidget()) {
-    view->CreateWidget(kWidgetCID);
-  }
-
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
@@ -4129,23 +4121,27 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
       PR_ABS(delta)*mRowHeight >= mRect.height) {
     Invalidate();
   } else {
-    nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
+    nsPoint viewOffset;
+    nsIView* view = GetClosestView(&viewOffset);
+    nsPoint widgetOffset;
+    nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
     if (widget) {
+      nsPresContext* presContext = PresContext();
       nscoord rowHeightAsPixels =
-        PresContext()->AppUnitsToDevPixels(mRowHeight);
+        presContext->AppUnitsToDevPixels(mRowHeight);
       nsIntPoint deltaPt = nsIntPoint(0, -delta*rowHeightAsPixels);
 
-      nsIntRect bounds;
-      widget->GetBounds(bounds);
-      bounds.x = bounds.y = 0;
+      nsRect bounds(viewOffset + widgetOffset, GetSize());
+      nsIntRect boundsPx =
+        bounds.ToNearestPixels(presContext->AppUnitsPerDevPixel());
       nsTArray<nsIntRect> destRects;
-      destRects.AppendElement(bounds);
+      destRects.AppendElement(boundsPx);
 
       // No plugins have a tree widget as a parent so we don't need
       // configurations here.
       nsTArray<nsIWidget::Configuration> emptyConfigurations;
       widget->Scroll(deltaPt, destRects, emptyConfigurations);
-      nsIntRect invalid = bounds;
+      nsIntRect invalid = boundsPx;
       if (deltaPt.y < 0) {
         invalid.y = bounds.height + deltaPt.y;
         invalid.height = -deltaPt.y;
@@ -4188,21 +4184,25 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
       PR_ABS(delta) >= mRect.width) {
     Invalidate();
   } else {
-    nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
+    nsPoint viewOffset;
+    nsIView* view = GetClosestView(&viewOffset);
+    nsPoint widgetOffset;
+    nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
     if (widget) {
-      nsIntPoint deltaPt(PresContext()->AppUnitsToDevPixels(-delta), 0);
+      nsPresContext* presContext = PresContext();
+      nsIntPoint deltaPt(presContext->AppUnitsToDevPixels(-delta), 0);
 
-      nsIntRect bounds;
-      widget->GetBounds(bounds);
-      bounds.x = bounds.y = 0;
+      nsRect bounds(viewOffset + widgetOffset, GetSize());
+      nsIntRect boundsPx =
+        bounds.ToNearestPixels(presContext->AppUnitsPerDevPixel());
       nsTArray<nsIntRect> destRects;
-      destRects.AppendElement(bounds);
+      destRects.AppendElement(boundsPx);
 
       // No plugins have a tree widget as a parent so we don't need
       // configurations here.
       nsTArray<nsIWidget::Configuration> emptyConfigurations;
       widget->Scroll(deltaPt, destRects, emptyConfigurations);
-      nsIntRect invalid = bounds;
+      nsIntRect invalid = boundsPx;
       if (deltaPt.x < 0) {
         invalid.x = bounds.width + deltaPt.x;
         invalid.width = -deltaPt.x;

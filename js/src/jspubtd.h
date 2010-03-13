@@ -584,6 +584,13 @@ typedef JSBool
 typedef JSPrincipals *
 (* JSObjectPrincipalsFinder)(JSContext *cx, JSObject *obj);
 
+/*
+ * Used to check if a CSP instance wants to disable eval() and friends.
+ * See js_CheckCSPPermitsJSAction() in jsobj.
+ */
+typedef JSBool
+(* JSCSPEvalChecker)(JSContext *cx);
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */

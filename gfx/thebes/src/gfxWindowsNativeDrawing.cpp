@@ -116,6 +116,10 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         if (mRenderState == RENDER_STATE_INIT) {
             mRenderState = RENDER_STATE_ALPHA_RECOVERY_BLACK;
 
+            // We round out our native rect here, that way the snapping will
+            // happen correctly.
+            mNativeRect.RoundOut();
+
             // we only do the scale bit if we can do an axis aligned
             // scale; otherwise we scale (if necessary) after
             // rendering with cairo.  Note that if we're doing alpha recovery,
@@ -208,13 +212,14 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 PRBool
 gfxWindowsNativeDrawing::IsDoublePass()
 {
-    // this is the same test we use in BeginNativeDrawing.
     nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
     if (!surf || surf->CairoStatus())
         return false;
-    if ((surf->GetType() == gfxASurface::SurfaceTypeWin32 ||
-         surf->GetType() == gfxASurface::SurfaceTypeWin32Printing) &&
-        (surf->GetContentType() != gfxASurface::CONTENT_COLOR ||
+    if (surf->GetType() != gfxASurface::SurfaceTypeWin32 &&
+	surf->GetType() != gfxASurface::SurfaceTypeWin32Printing) {
+	return PR_TRUE;
+    }
+    if ((surf->GetContentType() != gfxASurface::CONTENT_COLOR ||
          (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
           !(mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
         return PR_TRUE;

@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsd_xpc.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
+#include "jsd_xpc.h"
 
 #include "nsIXPConnect.h"
 #include "nsIGenericFactory.h"
@@ -1972,6 +1972,14 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
 
+    nsresult rv;
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
+    rv = stack->Push(cx);
+    if (NS_FAILED(rv))
+        return rv;
+
     *_rval = JSD_AttemptUCScriptInStackFrame (mCx, mThreadState,
                                               mStackFrameInfo,
                                               char_bytes, bytes.Length(),
@@ -1985,6 +1993,14 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     }
 
     JS_RestoreExceptionState (cx, estate);
+
+#ifdef DEBUG
+    JSContext* poppedCX;
+    rv = stack->Pop(&poppedCX);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && poppedCX == cx, "bad pop");
+#else
+    (void) stack->Pop(nsnull);
+#endif
 
     JSDValue *jsdv = JSD_NewValue (mCx, jv);
     if (!jsdv)

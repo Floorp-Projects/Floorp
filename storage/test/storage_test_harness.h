@@ -42,8 +42,8 @@
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
 
-static size_t gTotalTests = 0;
-static size_t gPassedTests = 0;
+static int gTotalTests = 0;
+static int gPassedTests = 0;
 
 #define do_check_true(aCondition) \
   PR_BEGIN_MACRO \

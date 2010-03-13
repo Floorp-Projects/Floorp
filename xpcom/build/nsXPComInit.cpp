@@ -488,6 +488,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
 
+    NS_LogInit();
+
 #ifdef MOZ_IPC
     // Set up chromium libs
     NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
@@ -515,8 +517,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         sIOThread = ioThread.release();
     }
 #endif
-
-    NS_LogInit();
 
     // Set up TimeStamp
     rv = TimeStamp::Startup();
@@ -886,8 +886,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
     TimeStamp::Shutdown();
 
-    NS_LogTerm();
-
 #ifdef MOZ_IPC
     if (sIOThread) {
         delete sIOThread;
@@ -906,6 +904,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         sExitManager = nsnull;
     }
 #endif
+
+    NS_LogTerm();
 
     return NS_OK;
 }

@@ -60,6 +60,8 @@ TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewC
     mIcon(NULL),
     mRegistered(PR_FALSE)
 {
+  WindowHook &hook = GetWindowHook();
+  hook.AddMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
 }
 
 TaskbarTabPreview::~TaskbarTabPreview() {
@@ -164,7 +166,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       mController->OnClose();
       return 0;
     case WM_ACTIVATE:
-      if (LOWORD(wParam) != WA_INACTIVE) {
+      if (LOWORD(wParam) == WA_ACTIVE) {
         PRBool activateWindow;
         nsresult rv = mController->OnActivate(&activateWindow);
         if (NS_SUCCEEDED(rv) && activateWindow) {
@@ -178,6 +180,13 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     case WM_GETICON:
       return (LRESULT)mIcon;
+    case WM_SYSCOMMAND:
+      // Forward syscommands like restore/minimize/maximize to the container
+      // window. Do not forward close since that's intended for the tab.
+      return wParam == SC_CLOSE
+           ? ::DefWindowProcW(mProxyWindow, WM_SYSCOMMAND, wParam, lParam)
+           : ::SendMessageW(mWnd, WM_SYSCOMMAND, wParam, lParam);
+      return 0;
   }
   return TaskbarPreview::WndProc(nMsg, wParam, lParam);
 }
@@ -220,10 +229,12 @@ TaskbarTabPreview::Enable() {
     RegisterClassW(&wc);
   }
   ::CreateWindowW(kWindowClass, L"TaskbarPreviewWindow",
-                  WS_CAPTION, 0, 0, 200, 60, NULL, NULL, module, this);
+                  WS_CAPTION | WS_SYSMENU, 0, 0, 200, 60, NULL, NULL, module, this);
   // GlobalWndProc will set mProxyWindow so that WM_CREATE can have a valid HWND
   if (!mProxyWindow)
     return NS_ERROR_INVALID_ARG;
+
+  UpdateProxyWindowStyle();
 
   nsresult rv = TaskbarPreview::Enable();
   nsresult rvUpdate;
@@ -257,7 +268,46 @@ void
 TaskbarTabPreview::DetachFromNSWindow(PRBool windowIsAlive) {
   (void) SetVisible(PR_FALSE);
 
+  if (windowIsAlive) {
+    WindowHook &hook = GetWindowHook();
+    hook.RemoveMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
+  }
+
   TaskbarPreview::DetachFromNSWindow(windowIsAlive);
+}
+
+/* static */
+PRBool
+TaskbarTabPreview::MainWindowHook(void *aContext,
+                                  HWND hWnd, UINT nMsg,
+                                  WPARAM wParam, LPARAM lParam,
+                                  LRESULT *aResult) {
+  if (nMsg == WM_WINDOWPOSCHANGED) {
+    TaskbarTabPreview *preview = reinterpret_cast<TaskbarTabPreview*>(aContext);
+    WINDOWPOS *pos = reinterpret_cast<WINDOWPOS*>(lParam);
+    if (SWP_FRAMECHANGED == (pos->flags & SWP_FRAMECHANGED))
+      preview->UpdateProxyWindowStyle();
+  } else {
+    NS_NOTREACHED("Style changed hook fired on non-style changed message");
+  }
+  return PR_FALSE;
+}
+
+void
+TaskbarTabPreview::UpdateProxyWindowStyle() {
+  if (!mProxyWindow)
+    return;
+
+  DWORD minMaxMask = WS_MINIMIZE | WS_MAXIMIZE;
+  DWORD windowStyle = GetWindowLongW(mWnd, GWL_STYLE);
+
+  DWORD proxyStyle = GetWindowLongW(mProxyWindow, GWL_STYLE);
+  proxyStyle &= ~minMaxMask;
+  proxyStyle |= windowStyle & minMaxMask;
+  SetWindowLongW(mProxyWindow, GWL_STYLE, proxyStyle);
+
+  DWORD exStyle = (WS_MAXIMIZE == (windowStyle & WS_MAXIMIZE)) ? WS_EX_TOOLWINDOW : 0;
+  SetWindowLongW(mProxyWindow, GWL_EXSTYLE, exStyle);
 }
 
 nsresult

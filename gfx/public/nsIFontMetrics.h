@@ -49,8 +49,8 @@ class gfxUserFontSet;
 
 // IID for the nsIFontMetrics interface
 #define NS_IFONT_METRICS_IID   \
-{ 0xc74cb770, 0xa33e, 0x11d1, \
-{ 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0x360C5575, 0xF7AC, 0x4079, \
+{ 0xB8, 0xA6, 0x56, 0x91, 0x4B, 0xEA, 0x2A, 0xEA } }
 
 //----------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ public:
    *
    * @see nsIDeviceContext#GetMetricsFor()
    */
-  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLanguage,
                    nsIDeviceContext *aContext, gfxUserFontSet *aUserFontSet = nsnull) = 0;
 
   /**
@@ -197,9 +197,9 @@ public:
   const nsFont &Font() { return mFont; }
 
   /**
-   * Returns the language group associated with these metrics
+   * Returns the language associated with these metrics
    */
-  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup) = 0;
+  NS_IMETHOD  GetLanguage(nsIAtom** aLanguage) = 0;
 
   /**
    * Returns the font handle associated with these metrics

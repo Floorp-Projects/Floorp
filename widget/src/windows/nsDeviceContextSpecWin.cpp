@@ -460,9 +460,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
     PR_PL(("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n"));
   }
 
-  LPDEVMODEW pDevMode  = NULL;
-  HGLOBAL   hDevNames = NULL;
-
   // Get the Print Name to be used
   PRUnichar * printerName = nsnull;
   if (mPrintSettings) {
@@ -601,7 +598,6 @@ MapPaperSizeToNativeEnum(LPDEVMODEW aDevMode,
   BOOL doingPaperWidth  = aDevMode->dmFields & DM_PAPERWIDTH;
 #endif
 
-  PRBool foundEnum = PR_FALSE;
   for (PRInt32 i=0;i<kNumPaperSizes;i++) {
     if (kPaperSizes[i].mWidth == aW && kPaperSizes[i].mHeight == aH) {
       aDevMode->dmPaperSize = kPaperSizes[i].mPaperSize;
@@ -960,7 +956,7 @@ void
 GlobalPrinters::FreeGlobalPrinters()
 {
   if (mPrinters != nsnull) {
-    for (int i=0;i<mPrinters->Length();i++) {
+    for (unsigned int i=0;i<mPrinters->Length();i++) {
       free(mPrinters->ElementAt(i));
     }
     delete mPrinters;
@@ -987,7 +983,7 @@ GlobalPrinters::EnumerateNativePrinters()
     LPWSTR ePtr   = szDefaultPrinterName + status;
     LPWSTR prvPtr = sPtr;
     while (sPtr < ePtr) {
-      if (*sPtr == NULL) {
+      if (*sPtr == 0) {
         LPWSTR name = wcsdup(prvPtr);
         mPrinters->AppendElement(name);
         PR_PL(("Printer Name:    %s\n", prvPtr));
@@ -1017,7 +1013,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
   if (status > 0) {
     WCHAR comma = ',';
     LPWSTR sPtr = szDefaultPrinterName;
-    while (*sPtr != comma && *sPtr != NULL) 
+    while (*sPtr != comma && *sPtr != 0) 
       sPtr++;
     if (*sPtr == comma) {
       *sPtr = NULL;
@@ -1027,7 +1023,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
     aDefaultPrinterName = NS_LITERAL_STRING("");
   }
 
-  PR_PL(("DEFAULT PRINTER [%s]\n", aDefaultPrinterName));
+  PR_PL(("DEFAULT PRINTER [%s]\n", aDefaultPrinterName.get()));
 #else
   aDefaultPrinterName = NS_LITERAL_STRING("UNKNOWN");
 #endif
@@ -1054,7 +1050,7 @@ GlobalPrinters::EnumeratePrinterList()
 
   // put the default printer at the beginning of list
   if (!defPrinterName.IsEmpty()) {
-    for (PRInt32 i=0;i<mPrinters->Length();i++) {
+    for (PRUint32 i=0;i<mPrinters->Length();i++) {
       LPWSTR name = mPrinters->ElementAt(i);
       if (defPrinterName.Equals(name)) {
         if (i > 0) {

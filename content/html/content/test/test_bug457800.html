@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=457800
+-->
+<head>
+  <title>Test for Bug 457800</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=457800">Mozilla Bug 457800</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input type="text" id="inputtext"/><br/>
+  <input type="password"id="inputpassword"/><br/>
+  <textarea id="textarea"></textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 457800 **/
+
+function testPlaceholderForElement(element)
+{
+  // init
+  element.value = ''
+
+  // check if {g,s}etAttribute are working
+  element.setAttribute('placeholder', 'placeholder');
+  is(element.getAttribute('placeholder'), 'placeholder', "element has no placeholder attribute");
+
+  // check if placeholder is working through DOM interface
+  is(element.placeholder, 'placeholder', "can't read placeholder in DOM interface");
+  element.placeholder = 'ph';
+  is(element.placeholder, 'ph', "can't write placeholder in DOM interface");
+
+  // check placeholder and value are not interfering
+  is(element.value, '', "value has changed when placeholder has changed");
+  element.value = 'value';
+  is(element.placeholder, 'ph', "placeholder in DOM interface has changed when value has changed");
+  is(element.getAttribute('placeholder'), 'ph', "placeholder attribute has changed when value has changed");
+
+  // check new lines are managed correctly (shouldn't be shown but kept in the DOM)
+  element.placeholder = 'place\nholder';
+  is(element.placeholder, 'place\nholder', "\\n shouldn't be stripped");
+  is(element.getAttribute('placeholder'), 'place\nholder', "\\n shouldn't be stripped");
+  element.placeholder = 'place\rholder';
+  is(element.placeholder, 'place\rholder', "\\r shouldn't be stripped");
+  is(element.getAttribute('placeholder'), 'place\rholder', "\\r shouldn't be stripped");
+}
+
+testPlaceholderForElement(document.getElementById('inputtext'));
+testPlaceholderForElement(document.getElementById('inputpassword'));
+testPlaceholderForElement(document.getElementById('textarea'));
+
+</script>
+</pre>
+</body>
+</html>

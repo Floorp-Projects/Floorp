@@ -65,8 +65,8 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
-#include "nsICSSParser.h"
-#include "nsICSSLoader.h"
+#include "nsCSSParser.h"
+#include "nsCSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsINameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
@@ -77,6 +77,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsCSSDeclaration.h"
 #include "nsRuleNode.h"
+
+namespace css = mozilla::css;
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -373,8 +375,6 @@ nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
 void
 nsMediaQuery::AppendToString(nsAString& aString) const
 {
-  nsAutoString buffer;
-
   if (mHadUnknownExpression) {
     aString.AppendLiteral("not all");
     return;
@@ -389,9 +389,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
     } else if (mHasOnly) {
       aString.AppendLiteral("only ");
     }
-    mMediaType->ToString(buffer);
-    aString.Append(buffer);
-    buffer.Truncate();
+    aString.Append(nsDependentAtomString(mMediaType));
   }
 
   for (PRUint32 i = 0, i_end = mExpressions.Length(); i < i_end; ++i) {
@@ -407,9 +405,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
     }
 
     const nsMediaFeature *feature = expr.mFeature;
-    (*feature->mName)->ToString(buffer);
-    aString.Append(buffer);
-    buffer.Truncate();
+    aString.Append(nsDependentAtomString(*feature->mName));
 
     if (expr.mValue.GetUnit() != eCSSUnit_Null) {
       aString.AppendLiteral(": ");
@@ -448,15 +444,18 @@ nsMediaQuery::AppendToString(nsAString& aString) const
           }
           break;
         case nsMediaFeature::eResolution:
-          buffer.AppendFloat(expr.mValue.GetFloatValue());
-          aString.Append(buffer);
-          buffer.Truncate();
-          if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
-            aString.AppendLiteral("dpi");
-          } else {
-            NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
-                         "bad unit");
-            aString.AppendLiteral("dpcm");
+          {
+            nsAutoString buffer;
+            buffer.AppendFloat(expr.mValue.GetFloatValue());
+            aString.Append(buffer);
+            buffer.Truncate();
+            if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
+              aString.AppendLiteral("dpi");
+            } else {
+              NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
+                           "bad unit");
+              aString.AppendLiteral("dpcm");
+            }
           }
           break;
         case nsMediaFeature::eEnumerated:
@@ -555,9 +554,8 @@ nsMediaList::GetText(nsAString& aMediaText)
 nsresult
 nsMediaList::SetText(const nsAString& aMediaText)
 {
-  nsCOMPtr<nsICSSParser> parser;
-  nsresult rv = NS_NewCSSParser(getter_AddRefs(parser));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCSSParser parser;
+  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool htmlMode = PR_FALSE;
   nsCOMPtr<nsIDOMStyleSheet> domSheet =
@@ -568,8 +566,8 @@ nsMediaList::SetText(const nsAString& aMediaText)
     htmlMode = !!node;
   }
 
-  return parser->ParseMediaList(nsString(aMediaText), nsnull, 0,
-                                this, htmlMode);
+  return parser.ParseMediaList(nsString(aMediaText), nsnull, 0,
+                               this, htmlMode);
 }
 
 PRBool
@@ -1844,33 +1842,24 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
 
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
-  nsCOMPtr<nsICSSLoader> loader;
+  nsRefPtr<css::Loader> loader;
   if (mDocument) {
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
-  
-  nsCOMPtr<nsICSSParser> css;
-  if (loader) {
-    result = loader->GetParserFor(this, getter_AddRefs(css));
-  }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(css));
-    if (css) {
-      css->SetStyleSheet(this);
-    }
-  }
-  if (NS_FAILED(result))
-    return result;
+
+  nsCSSParser css(loader, this);
+  if (!css)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                          mInner->mPrincipal, rules);
+  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                         mInner->mPrincipal, rules);
   if (NS_FAILED(result))
     return result;
-  
+
   PRInt32 rulecount = rules.Count();
   if (rulecount == 0) {
     // Since we know aRule was not an empty string, just throw
@@ -1967,10 +1956,6 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     if (mDocument && notify) {
       mDocument->StyleRuleAdded(this, cssRule);
     }
-  }
-  
-  if (loader) {
-    loader->RecycleParser(css);
   }
   
   *aReturn = aIndex;
@@ -2076,26 +2061,19 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     // Nothing to do here
     return NS_OK;
   }
-  
+
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
-  nsCOMPtr<nsICSSLoader> loader;
+  nsRefPtr<css::Loader> loader;
   if (mDocument) {
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
 
-  nsCOMPtr<nsICSSParser> css;
-  if (loader) {
-    result = loader->GetParserFor(this, getter_AddRefs(css));
+  nsCSSParser css(loader, this);
+  if (!css) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(css));
-    if (css) {
-      css->SetStyleSheet(this);
-    }
-  }
-  NS_ENSURE_SUCCESS(result, result);
 
   // parse and grab the rule
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
@@ -2104,8 +2082,8 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                          mInner->mPrincipal, rules);
+  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                         mInner->mPrincipal, rules);
   NS_ENSURE_SUCCESS(result, result);
 
   PRInt32 rulecount = rules.Count();
@@ -2135,10 +2113,6 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     if (mDocument) {
       mDocument->StyleRuleAdded(this, rule);
     }
-  }
-
-  if (loader) {
-    loader->RecycleParser(css);
   }
 
   *_retval = aIndex;

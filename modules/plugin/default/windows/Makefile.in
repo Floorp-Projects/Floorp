@@ -61,6 +61,8 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
+DEFINES += -DXPCOM_GLUE
+
 # plugins should always be shared, even in the "static" build
 FORCE_SHARED_LIB = 1
 

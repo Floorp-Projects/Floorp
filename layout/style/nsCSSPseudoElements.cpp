@@ -50,9 +50,14 @@
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
+#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+  NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
+
 static const nsStaticAtom CSSPseudoElements_info[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-    { value_, (nsIAtom**)&nsCSSPseudoElements::name_ },
+  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSPseudoElements::name_),
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 };

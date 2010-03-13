@@ -156,6 +156,32 @@ function check_no_bookmarks() {
 }
 
 /**
+ * Function gets current database connection, if the connection has been closed
+ * it will try to reconnect to the places.sqlite database.
+ */
+function DBConn()
+{
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
+  if (db.connectionReady)
+    return db;
+
+  // open a new connection if needed
+  let file = dirSvc.get('ProfD', Ci.nsIFile);
+  file.append("places.sqlite");
+  let storageService = Cc["@mozilla.org/storage/service;1"].
+                       getService(Ci.mozIStorageService);
+
+  try {
+    return dbConn = storageService.openDatabase(file);
+  }
+  catch(ex) {}
+
+  return null;
+}
+
+/**
  * Flushes any events in the event loop of the main thread.
  */
 function flush_main_thread_events()

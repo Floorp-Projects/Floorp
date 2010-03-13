@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  *   Peter Weilbacher (mozilla@Weilbacher.org)
+ *   Walter Meinl (wuno@lsvw.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,10 +53,13 @@ menuitem {
   -moz-margin-start: 2px !important;
   -moz-margin-end: 1px !important;
   color: MenuText;
-  background-color:  Menu;
   font: menu;
   list-style-image: none;
   -moz-image-region: auto;
+}
+
+menu:not(:-moz-lwtheme) {
+  background-color: Menu;
 }
 
 menuitem[default="true"] {
@@ -69,7 +73,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 menuitem.spell-suggestion {
-  font-weight:bold;
+  font-weight: bold;
 }
 
 /* ..... internal content .... */
@@ -142,6 +146,20 @@ menubar > menu {
 menubar > menu[_moz-menuactive="true"][open="true"] {
   color: -moz-MenuBarHoverText;
   background-color: -moz-MenuHover;
+}
+
+menubar > menu:-moz-lwtheme {
+  -moz-appearance: none;
+  border-style: none;
+}
+
+menubar > menu:-moz-lwtheme:not([disabled="true"]) {
+  color: inherit !important;
+}
+
+menubar > menu:-moz-lwtheme[_moz-menuactive="true"][open="true"] {
+  color: HighlightText !important;
+  text-shadow: none;
 }
 
 /* ..... internal content .... */

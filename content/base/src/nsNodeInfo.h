@@ -70,7 +70,7 @@ public:
                         PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
   virtual PRBool
-    QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const;
+    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const;
 
   // nsNodeInfo
   // Create objects with Create

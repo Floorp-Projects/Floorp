@@ -120,4 +120,10 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
  */
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData, std::string& error);
 
+/**
+ * Get the current clipboard item as text.  If the clipboard item
+ * isn't text, the returned value is undefined.
+ */
+std::string pluginGetClipboardText(InstanceData* instanceData);
+
 #endif // nptest_platform_h_

@@ -32,8 +32,8 @@ var iframeCw = iframe.contentWindow;
 var iframe2 = document.getElementById("iframe2");
 var iframe2Cw = iframe2.contentWindow;
 
-var unvisitedColor;
-var visitedColor;
+const unvisitedColor = "rgb(0, 0, 238)";
+const visitedColor = "rgb(85, 26, 139)";
 
 var gCallbackOnIframeLoad = false;
 var gCallbackOnPopState = false;
@@ -176,24 +176,9 @@ function runTest() {
   /**
    * PRELIMINARY:
    *  1. Clear the popstate counter
-   *  2. Get the visited and unvisited link colors.
    */
 
   clearPopStateCounter();
-
-  // Set the link's href to somewhere we haven't been so we can get the
-  // unvisited link color.
-  var rand = Date.now() + "-" + Math.random();
-  $("link").href = rand;
-  unvisitedColor = getColor($("link"));
-  statusMsg("Unvisited color is " + unvisitedColor);
-
-  // Set the link's href to our current location so we can get the visited link
-  // color.
-  $("link").href = document.location;
-  visitedColor = getColor($("link"));
-  statusMsg("Visited color is " + visitedColor);
-  isnot(visitedColor, unvisitedColor, "visited/unvisited link colors are the same?");
 
   // The URL of file_bug500328_1.html on http://localhost:8888
   var innerLoc;
@@ -303,6 +288,7 @@ function runTest() {
   statusMsg("Done loading file_bug500328_1.html for the second time.");
 
   var ifLink = iframeCw.document.getElementById("link-anchor1");
+  var rand = Date.now() + "-" + Math.random();
   ifLink.href = rand;
 
   // Poll the document until the link has the correct color, or this test times

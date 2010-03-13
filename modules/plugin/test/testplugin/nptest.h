@@ -57,7 +57,8 @@ typedef enum {
   FUNCTION_NPP_NEWSTREAM,
   FUNCTION_NPP_WRITEREADY,
   FUNCTION_NPP_WRITE,
-  FUNCTION_NPP_DESTROYSTREAM
+  FUNCTION_NPP_DESTROYSTREAM,
+  FUNCTION_NPP_WRITE_RPC
 } TestFunction;
 
 typedef struct FunctionTable {
@@ -107,6 +108,7 @@ typedef struct InstanceData {
   TestFunction testFunction;
   TestFunction functionToFail;
   NPError failureCode;
+  NPObject* callOnDestroy;
   PostMode postMode;
   std::string testUrl;
   std::string frame;

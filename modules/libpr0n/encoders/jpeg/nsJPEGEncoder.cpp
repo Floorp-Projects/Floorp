@@ -434,6 +434,7 @@ nsJPEGEncoder::errorExit(jpeg_common_struct* cinfo)
   switch (cinfo->err->msg_code) {
     case JERR_OUT_OF_MEMORY:
       error_code = NS_ERROR_OUT_OF_MEMORY;
+      break;
     default:
       error_code = NS_ERROR_FAILURE;
   }

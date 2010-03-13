@@ -163,7 +163,7 @@ function run_test() {
   }
 
   var mar = do_get_file("data/aus-0110_general.mar");
-  mar.copyTo(updatesDir, "update.mar");
+  mar.copyTo(updatesDir, FILE_UPDATE_ARCHIVE);
 
   // apply the complete mar and check the innards of the files
   var exitValue = runUpdate(updatesDir, updater);
@@ -173,7 +173,7 @@ function run_test() {
 
   dump("Testing: update.status should be set to STATE_SUCCEEDED\n");
   testFile = updatesDir.clone();
-  testFile.append("update.status");
+  testFile.append(FILE_UPDATE_STATUS);
   do_check_eq(readFile(testFile).split("\n")[0], STATE_SUCCEEDED);
 
   dump("Testing: contents of files added by a complete mar\n");

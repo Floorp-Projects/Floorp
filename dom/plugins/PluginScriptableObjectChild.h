@@ -129,10 +129,10 @@ public:
                   bool* aSuccess);
 
   virtual bool
-  AnswerProtect();
+  RecvProtect();
 
   virtual bool
-  AnswerUnprotect();
+  RecvUnprotect();
 
   NPObject*
   GetObject(bool aCanResurrect);

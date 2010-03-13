@@ -80,4 +80,17 @@
 
   </vbox>
 
+  <!-- used by TreeFilter.prototype.search -->
+  <spacer>
+    <spacer id="certmgr.mine.description" value="&certmgr.mine.description;" />
+    <spacer id="certmgr.others.description" value="&certmgr.others.description;" />
+    <spacer id="certmgr.websites.description" value="&certmgr.websites.description;" />
+    <spacer id="certmgr.cas.description" value="&certmgr.cas.description;" />
+    <spacer id="certmgr.orphans.description" value="&certmgr.orphans.description;"/>
+    <spacer id="certmgr.mine.filtered" value="&certmgr.mine.filtered;" />
+    <spacer id="certmgr.others.filtered" value="&certmgr.others.filtered;" />
+    <spacer id="certmgr.websites.filtered" value="&certmgr.websites.filtered;" />
+    <spacer id="certmgr.cas.filtered" value="&certmgr.cas.filtered;" />
+    <spacer id="certmgr.orphans.filtered" value="&certmgr.orphans.filtered;" />
+  </spacer>
 </dialog>

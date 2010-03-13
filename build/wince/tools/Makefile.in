@@ -57,4 +57,6 @@ export::
 
 tools::
 
+check::
+
 .NOTPARALLEL:

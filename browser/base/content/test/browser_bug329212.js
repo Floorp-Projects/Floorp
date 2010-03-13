@@ -26,11 +26,13 @@ function test () {
     ok(FillInHTMLTooltip(doc.getElementById("link4"), "should get title"));
     is(tooltip.getAttribute("label"), "This is an xlink:title attribute");
 
+    ok(!FillInHTMLTooltip(doc.getElementById("text5"), "should not get title"));
+
     gBrowser.removeCurrentTab();
     finish();
   }, true);
 
   content.location = 
-    "http://localhost:8888/browser/browser/base/content/test/title_test.svg";
+    "http://mochi.test:8888/browser/browser/base/content/test/title_test.svg";
 }
 

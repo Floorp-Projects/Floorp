@@ -19,14 +19,20 @@ include svg-integration/reftest.list
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
+== clipPath-advanced-01.svg pass.svg
 == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
 == clipPath-basic-01.svg pass.svg
+== clipPath-basic-02.svg pass.svg
+== clipPath-basic-03.svg pass.svg
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
+== dynamic-attr-removal-1.svg pass.svg
+== dynamic-attr-removal-2.svg pass.svg
+== dynamic-attr-change-1.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
 == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
@@ -104,7 +110,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
-fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.4$/)) == opacity-and-gradient-01.svg pass.svg # fails on OS X 10.4 (bug 379610)
+== opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == path-01.svg path-01-ref.svg
@@ -148,3 +154,4 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
 fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
+== href-attr-change-restyles.svg href-attr-change-restyles-ref.svg

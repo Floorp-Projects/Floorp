@@ -69,8 +69,6 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 
-static const char kMozStr[] = "moz";
-
 static const PRInt32 kLongLineLen = 128;
 
 nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
@@ -113,7 +111,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
     return;
 
   nsresult rv;
-  nsAutoString nameStr, valueStr;
+  nsAutoString valueStr;
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
   for (PRInt32 index = count; index > 0;) {
@@ -123,10 +121,9 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
     nsIAtom* attrName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
-    const char* sharedName;
-    attrName->GetUTF8String(&sharedName);
-    if ((('_' == *sharedName) || ('-' == *sharedName)) &&
-        !nsCRT::strncmp(sharedName+1, kMozStr, PRUint32(sizeof(kMozStr)-1))) {
+    nsDependentAtomString attrNameStr(attrName);
+    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
+        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
       continue;
     }
     aContent->GetAttr(namespaceID, attrName, valueStr);
@@ -182,7 +179,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
       }
     }
 
-    attrName->ToString(nameStr);
+    nsDependentAtomString nameStr(attrName);
 
     // Expand shorthand attribute.
     if (IsShorthandAttr(attrName, aTagName) && valueStr.IsEmpty()) {
@@ -238,9 +235,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   AppendToString(kLessThan, aStr);
 
-  nsAutoString nameStr;
-  name->ToString(nameStr);
-  AppendToString(nameStr.get(), -1, aStr);
+  AppendToString(nsDependentAtomString(name), aStr);
 
   MaybeEnterInPreContent(content);
 
@@ -378,11 +373,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     mAddSpace = PR_FALSE;
   }
 
-  nsAutoString nameStr;
-  name->ToString(nameStr);
-
   AppendToString(kEndTag, aStr);
-  AppendToString(nameStr.get(), -1, aStr);
+  AppendToString(nsDependentAtomString(name), aStr);
   AppendToString(kGreaterThan, aStr);
 
   MaybeLeaveFromPreContent(content);

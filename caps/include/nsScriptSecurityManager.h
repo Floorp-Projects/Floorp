@@ -431,6 +431,10 @@ private:
                       jsval id, JSAccessMode mode,
                       jsval *vp);
 
+    // Decides, based on CSP, whether or not eval() and stuff can be executed.
+    static JSBool
+    ContentSecurityPolicyPermitsJSAction(JSContext *cx);
+
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
     static nsIPrincipal*

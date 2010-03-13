@@ -52,6 +52,7 @@ CPP_UNIT_TESTS = \
   test_transaction_helper.cpp \
   test_statement_scoper.cpp \
   test_mutex.cpp \
+  test_binding_params.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

@@ -107,8 +107,6 @@ _TEST_FILES	= \
 		grandchild_bug260264.html \
 		utils_bug260264.js \
 		test_bug531176.html \
-		test_bug534362.html \
-		iframe_bug534362.html \
 		test_bug531542.html \
 		test_bug456151.html \
 		$(NULL)

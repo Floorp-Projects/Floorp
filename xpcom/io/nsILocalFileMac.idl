@@ -58,7 +58,7 @@ interface nsILocalFileMac : nsILocalFile
     *
     * Init this object with a CFURLRef
     *
-    * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
+    * NOTE: Supported only for XP_MACOSX
     * NOTE: If the path of the CFURL is /a/b/c, at least a/b must exist beforehand.
     *
     * @param   aCFURL         the CoreFoundation URL
@@ -71,7 +71,7 @@ interface nsILocalFileMac : nsILocalFile
     *
     * Init this object with an FSRef
     *
-    * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
+    * NOTE: Supported only for XP_MACOSX
     *
     * @param   aFSRef         the native FSRef
     *
@@ -101,7 +101,7 @@ interface nsILocalFileMac : nsILocalFile
     * the target of the alias. If followLinks is FALSE, returns
     * the unresolved alias file.
     *
-    * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
+    * NOTE: Supported only for XP_MACOSX
     *
     * @return
     *  
@@ -118,7 +118,7 @@ interface nsILocalFileMac : nsILocalFile
     * the target of the alias. If followLinks is FALSE, returns
     * the unresolved alias file.
     *
-    * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
+    * NOTE: Supported only for XP_MACOSX
     *
     * @return
     *  

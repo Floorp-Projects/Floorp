@@ -57,5 +57,5 @@ main(int aArgc,
   if (gPassedTests == gTotalTests)
     passed(TEST_FILE);
 
-  (void)printf("%zu of %zu tests passed\n", gPassedTests, gTotalTests);
+  (void)printf("%i of %i tests passed\n", gPassedTests, gTotalTests);
 }

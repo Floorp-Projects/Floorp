@@ -13,9 +13,14 @@
 
 <script><![CDATA[
 SimpleTest.waitForExplicitFinish();
-var win = window.open("data:text/html,<div style='height:200px; width:100px;'>", "_blank", "width=600,height=600");
+var loadedCalled = false;
+var win = window.open("data:text/html,<body onload='window.opener.loaded()'><div style='height:200px; width:100px;'>", "_blank", "width=600,height=600");
 
 function loaded() {
+  if (!loadedCalled) {
+    loadedCalled = true;
+    return;
+  }
   win.sizeToContent();
   win.sizeToContent();
   win.sizeToContent();

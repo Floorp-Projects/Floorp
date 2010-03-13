@@ -229,6 +229,7 @@ nsGLPbufferCGL::ThebesSurface()
         mThebesSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), gfxASurface::ImageFormatARGB32);
         if (mThebesSurface->CairoStatus() != 0) {
             fprintf (stderr, "image surface failed\n");
+            mThebesSurface = nsnull;
             return nsnull;
         }
 

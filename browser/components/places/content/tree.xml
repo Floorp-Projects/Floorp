@@ -58,7 +58,6 @@
         // the viewer's reference to our treeBoxObject.
         var result = this.getResult();
         if (result) {
-          result.viewer = null;
           result.root.containerOpen = false;
         }
         this.view = null;
@@ -71,7 +70,12 @@
       <!-- overriding -->
       <property name="view">
         <getter><![CDATA[
-          return this.treeBoxObject.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
+          try {
+            return this.treeBoxObject.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
+          }
+          catch(e) {
+            return null;
+          }
         ]]></getter>
         <setter><![CDATA[ 
           return this.treeBoxObject.view = val;
@@ -122,22 +126,24 @@
         <parameter name="options"/>
         <body><![CDATA[
           // Cleanup old result if exists.
-          var oldResult = this.getResult();
-          if (oldResult)
+          let oldResult = this.getResult();
+          if (oldResult) {
+            oldResult.removeObserver(this.view);
             oldResult.root.containerOpen = false;
+          }
 
-          var result = PlacesUtils.history
+          let result = PlacesUtils.history
                                   .executeQueries(queries, queries.length,
                                                   options);
-          var callback;
+          let callback;
           if (this.flatList) {
-            var onOpenFlatContainer = this.onOpenFlatContainer;
+            let onOpenFlatContainer = this.onOpenFlatContainer;
             if (onOpenFlatContainer)
               callback = new Function("aContainer", onOpenFlatContainer);
           }
 
-          var treeView = new PlacesTreeView(this.flatList, callback);
-          result.viewer = treeView;
+          let treeView = new PlacesTreeView(this.flatList, callback);
+          result.addObserver(treeView, false);
           this.view = treeView;
           if (!this._controller) {
             this._controller = new PlacesController(this);
@@ -261,13 +267,17 @@
             // opening each folder as we go.
             for (var i = parents.length - 1; i >= 0; --i) {
               var index = view.treeIndexForNode(parents[i]);
-              if (view.isContainer(index) && !view.isContainerOpen(index)) 
+              if (index != Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE &&
+                  view.isContainer(index) && !view.isContainerOpen(index))
                 view.toggleOpenState(index);
             }
             // Select the specified node...
           }
 
           var index = view.treeIndexForNode(node);
+          if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
+            return;
+
           view.selection.select(index);
           // ... and ensure it's visible, not scrolled off somewhere. 
           this.treeBoxObject.ensureRowIsVisible(index);
@@ -278,7 +288,7 @@
       <method name="getResult">
         <body><![CDATA[
           try {
-            return this.view.QueryInterface(Ci.nsINavHistoryResultViewer).result;
+            return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
           }
           catch (e) {
             return null;
@@ -319,22 +329,25 @@
       <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[
-          return this.view.selection.count >= 1;
+          return this.view && this.view.selection.count >= 1;
         ]]></getter>
       </property>
       
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[ 
-          var selection = this.view.selection;
-          var rc = selection.getRangeCount();
-          var nodes = [];
-          var resultview = this.view;
-          for (var i = 0; i < rc; ++i) {
-            var min = { }, max = { };
+          let nodes = [];
+          if (!this.hasSelection)
+            return nodes;
+
+          let selection = this.view.selection;
+          let rc = selection.getRangeCount();
+          let resultview = this.view;
+          for (let i = 0; i < rc; ++i) {
+            let min = { }, max = { };
             selection.getRangeAt(i, min, max);
 
-            for (var j = min.value; j <= max.value; ++j)
+            for (let j = min.value; j <= max.value; ++j)
               nodes.push(resultview.nodeForTreeIndex(j));
           }
           return nodes;
@@ -367,9 +380,12 @@
           // filter out all such redundancies since some partial amount of
           // the folder's children may be selected.          
           //
+          let nodes = [];
+          if (!this.hasSelection)
+            return nodes;
+
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
-          var nodes = [];
           var resultview = this.view;
           // This list is kept independently of the range selected (i.e. OUTSIDE
           // the for loop) since the row index of a container is unique for the
@@ -404,7 +420,7 @@
       <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
-          if (view.selection.count != 1)
+          if (!view || view.selection.count != 1)
             return null;
 
           var selection = view.selection;
@@ -449,7 +465,7 @@
           //          you must not, since the tree is nested and as your tree 
           //          index may change when folders before you are opened and
           //          closed. You must convert your tree index to a node, and
-          //          then use getIndexOfNode to find your absolute index in
+          //          then use getChildIndex to find your absolute index in
           //          the parent container instead. 
           //
           var resultView = this.view;
@@ -481,7 +497,7 @@
       <method name="_getInsertionPoint">
         <parameter name="index"/>
         <parameter name="orientation"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           var result = this.getResult();
           var resultview = this.view;
           var container = result.root;
@@ -507,12 +523,14 @@
              index = 0;
             }
             else {
-              // Use the last-selected node's container unless the root node
-              // is selected, in which case we use the root node itself as the
-              // insertion point.
-              container = lastSelected.parent || container;
+              // Use the last-selected node's container.
+              container = lastSelected.parent;
 
-              // avoid the potentially expensive call to getIndexOfNode() 
+              // See comment in the treeView.js's copy of this method
+              if (!container || !container.containerOpen)
+                return null;
+
+              // Avoid the potentially expensive call to getChildIndex
               // if we know this container doesn't allow insertion
               if (PlacesControllerDragHelper.disallowInsertion(container))
                 return null;
@@ -533,7 +551,7 @@
                 dropNearItemId = lastSelected.itemId;
               }
               else {
-                var lsi = PlacesUtils.getIndexOfNode(lastSelected);
+                var lsi = container.getChildIndex(lastSelected);
                 index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
               }
             }
@@ -638,12 +656,18 @@
             return foundOne;
           }
 
-          // Null the viewer while looking for nodes
-          var result = this.getResult();
-          var oldViewer = result.viewer;
-          result.viewer = null;
-          findNodes(this.getResultNode());
-          result.viewer = oldViewer;
+          // Disable notifications while looking for nodes.
+          let result = this.getResult();
+          let didSuppressNotifications = result.suppressNotifications;
+          if (!didSuppressNotifications)
+            result.suppressNotifications = true
+          try {
+            findNodes(this.getResultNode());
+          }
+          finally {
+            if (!didSuppressNotifications)
+              result.suppressNotifications = false;
+          }
 
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
@@ -657,102 +681,11 @@
           }
           for (var i = 0; i < nodes.length; i++) {
             var index = resultview.treeIndexForNode(nodes[i]);
+            if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
+              continue;
             selection.rangedSelect(index, index, true);
           }
           selection.selectEventsSuppressed = false;
-        ]]></body>
-      </method>
-
-      <!-- nsDragAndDrop -->
-      <method name="onDragStart">
-        <parameter name="aEvent"/>
-        <parameter name="aXferData"/>
-        <parameter name="aDragAction"/>
-        <body><![CDATA[ 
-          var nodes = this.getSelectionNodes();
-          for (var i = 0; i < nodes.length; ++i) {
-            var node = nodes[i];
-
-            // Disallow dragging the root node of a tree
-            var parent = node.parent;
-            if (!parent)
-              return;
-
-            // If this node is child of a readonly container (e.g. a livemark)
-            // or cannot be moved, we must force a copy.
-            if (!PlacesControllerDragHelper.canMoveNode(node)) {
-              aEvent.dataTransfer.effectAllowed = "copyLink";
-              break;
-            }
-          }
-
-          // Stuff the encoded selection into the transferable data object
-          this._controller.setDataTransfer(aEvent);
-        ]]></body>
-      </method>
-      
-      <!-- nsDragAndDrop -->
-      <method name="canDrop">
-        <parameter name="aEvent"/>
-        <parameter name="aDragSession"/>
-        <body><![CDATA[
-          // Cache the dataTransfer for the view
-          PlacesControllerDragHelper.currentDataTransfer = aEvent.dataTransfer;
-
-          var row = { }, col = { }, child = { };
-          this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY,
-                                       row, col, child);
-          var node = row.value != -1 ?
-                     this.view.nodeForTreeIndex(row.value) :
-                     this.getResultNode();
-          // cache the dropTarget for the view
-          PlacesControllerDragHelper.currentDropTarget = node;
-
-          // We have to calculate the orientation since view.canDrop will use
-          // it and we want to be consistent with the dropfeedback
-          var tbo = this.treeBoxObject;
-          var rowHeight = tbo.rowHeight;
-          var eventY = aEvent.clientY - tbo.treeBody.boxObject.y -
-                       rowHeight * (row.value - tbo.getFirstVisibleRow());
-
-          var orientation = Ci.nsITreeView.DROP_BEFORE;
-
-          if (row.value == -1) {
-            // If the row is not valid we try to insert inside the resultNode.
-            orientation = Ci.nsITreeView.DROP_ON;
-          }
-          else if (PlacesUtils.nodeIsContainer(node) &&
-                   eventY > rowHeight * 0.75) {
-            // If we are below the 75% of a container the treeview we try
-            // to drop after the node.
-            orientation = Ci.nsITreeView.DROP_AFTER;
-          }
-          else if (PlacesUtils.nodeIsContainer(node) &&
-                   eventY > rowHeight * 0.25) {
-            // If we are below the 25% of a container the treeview we try
-            // to drop inside the node.
-            orientation = Ci.nsITreeView.DROP_ON;
-          }
-
-          return this.view.canDrop(row.value, orientation, aEvent.dataTransfer);
-        ]]></body>
-      </method>
-      
-      <!-- nsDragAndDrop -->
-      <method name="onDragOver">
-        <parameter name="aEvent"/>
-        <parameter name="aFlavour"/>
-        <parameter name="aDragSession"/>
-        <body><![CDATA[
-          if (!this.canDrop(aEvent, aDragSession, aEvent.dataTransfer))
-            aEvent.dataTransfer.effectAllowed = "none";
-        ]]></body>
-      </method>
-
-      <!-- nsDragAndDrop -->
-      <method name="getSupportedFlavours">
-        <body><![CDATA[
-          return PlacesControllerDragHelper.flavourSet;
         ]]></body>
       </method>
 
@@ -789,21 +722,84 @@
           win = win.parent;
         }
       ]]></handler>
-      <handler event="draggesture"><![CDATA[
-        if (event.target.localName == "treechildren")
-          nsDragAndDrop.startDrag(event, this);
+
+      <handler event="dragstart"><![CDATA[
+        if (event.target.localName != "treechildren")
+          return;
+
+        let nodes = this.getSelectionNodes();
+        for (let i = 0; i < nodes.length; i++) {
+          let node = nodes[i];
+
+          // Disallow dragging the root node of a tree.
+          if (!node.parent) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+
+          // If this node is child of a readonly container (e.g. a livemark)
+          // or cannot be moved, we must force a copy.
+          if (!PlacesControllerDragHelper.canMoveNode(node)) {
+            event.dataTransfer.effectAllowed = "copyLink";
+            break;
+          }
+        }
+
+        this._controller.setDataTransfer(event);
+        event.stopPropagation();
       ]]></handler>
+
       <handler event="dragover"><![CDATA[
-        if (event.target.localName == "treechildren")
-          nsDragAndDrop.dragOver(event, this);
+        if (event.target.localName != "treechildren")
+          return;
+
+        let row = { }, col = { }, child = { };
+        this.treeBoxObject.getCellAt(event.clientX, event.clientY,
+                                     row, col, child);
+        let node = row.value != -1 ?
+                   this.view.nodeForTreeIndex(row.value) :
+                   this.getResultNode();
+        // cache the dropTarget for the view
+        PlacesControllerDragHelper.currentDropTarget = node;
+
+        // We have to calculate the orientation since view.canDrop will use
+        // it and we want to be consistent with the dropfeedback.
+        let tbo = this.treeBoxObject;
+        let rowHeight = tbo.rowHeight;
+        let eventY = event.clientY - tbo.treeBody.boxObject.y -
+                     rowHeight * (row.value - tbo.getFirstVisibleRow());
+
+        let orientation = Ci.nsITreeView.DROP_BEFORE;
+
+        if (row.value == -1) {
+          // If the row is not valid we try to insert inside the resultNode.
+          orientation = Ci.nsITreeView.DROP_ON;
+        }
+        else if (PlacesUtils.nodeIsContainer(node) &&
+                 eventY > rowHeight * 0.75) {
+          // If we are below the 75% of a container the treeview we try
+          // to drop after the node.
+          orientation = Ci.nsITreeView.DROP_AFTER;
+        }
+        else if (PlacesUtils.nodeIsContainer(node) &&
+                 eventY > rowHeight * 0.25) {
+          // If we are below the 25% of a container the treeview we try
+          // to drop inside the node.
+          orientation = Ci.nsITreeView.DROP_ON;
+        }
+
+        if (!this.view.canDrop(row.value, orientation, event.dataTransfer))
+          return;
+
+        event.preventDefault();
+        event.stopPropagation();
       ]]></handler>
-      <handler event="drop"><![CDATA[
-          PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
-      ]]></handler>
-      <handler event="dragexit"><![CDATA[
-        PlacesControllerDragHelper.currentDataTransfer = null;
+
+      <handler event="dragend"><![CDATA[
         PlacesControllerDragHelper.currentDropTarget = null;
       ]]></handler>
+
     </handlers>
   </binding>
 

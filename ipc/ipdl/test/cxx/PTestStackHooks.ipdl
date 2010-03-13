@@ -1,0 +1,56 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+rpc protocol PTestStackHooks {
+child:
+    async Start();
+
+    // These tests are more fruitful running child->parent, because
+    // children can send |sync| messages
+parent:
+    async Async();
+    sync Sync();
+    rpc Rpc();
+
+both:
+    rpc StackFrame();
+
+parent:
+    __delete__();
+
+
+state START:
+    send Start goto TEST1;
+
+state TEST1:
+    recv Async goto TEST2;
+
+state TEST2:
+    recv Sync goto TEST3;
+
+state TEST3:
+    answer Rpc goto TEST4;
+
+state TEST4:
+    answer StackFrame goto TEST4_2;
+state TEST4_2:
+    call StackFrame goto TEST4_3;
+state TEST4_3:
+    recv Async goto TEST5;
+
+state TEST5:
+    answer StackFrame goto TEST5_2;
+state TEST5_2:
+    call StackFrame goto TEST5_3;
+state TEST5_3:
+    recv Sync goto DEAD;
+
+state DEAD:
+    recv __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

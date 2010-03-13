@@ -70,12 +70,10 @@ CPPSRCS		= \
 		nsXPCOMStrings.cpp \
 		$(NULL)
 
-ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
-CPPSRCS		+= dlldeps.cpp
+ifndef MOZ_ENABLE_LIBXUL
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
+CPPSRCS += dlldeps.cpp
 endif
-
-ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),OS2)
-CPPSRCS		+= dlldeps.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \
@@ -151,7 +149,10 @@ DEFINES		+= \
 		-DEXPORT_XPT_API \
 		-DEXPORT_XPTC_API
 
-EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS +=				\
+	$(MOZALLOC_LIB)				\
+	$(NSPR_LIBS)				\
+	$(NULL)
 
 ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
@@ -187,7 +188,7 @@ endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),WINCE)
-OS_LIBS += $(call EXPAND_LIBNAME,ole32)
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 aygshell)
 endif # WINCE
 
 export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)

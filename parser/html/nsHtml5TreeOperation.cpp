@@ -58,6 +58,10 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIMutationObserver.h"
+#include "nsIFormProcessor.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 /**
  * Helper class that opens a notification batch if the current doc
@@ -363,6 +367,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       
+      PRBool isKeygen = (name == nsHtml5Atoms::keygen && ns == kNameSpaceID_XHTML);
+      if (NS_UNLIKELY(isKeygen)) {
+        name = nsHtml5Atoms::select;
+      }
+      
       nsCOMPtr<nsIContent> newContent;
       nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->GetNodeInfo(name, nsnull, ns);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
@@ -376,6 +385,44 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         if (ssle) {
           ssle->InitStyleLinkElement(PR_FALSE);
           ssle->SetEnableUpdates(PR_FALSE);
+        }
+      } else if (NS_UNLIKELY(isKeygen)) {
+        // Adapted from CNavDTD
+        nsCOMPtr<nsIFormProcessor> theFormProcessor =
+          do_GetService(kFormProcessorCID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsTArray<nsString> theContent;
+        nsAutoString theAttribute;
+         
+        (void) theFormProcessor->ProvideContent(NS_LITERAL_STRING("select"),
+                                                theContent,
+                                                theAttribute);
+
+        newContent->SetAttr(kNameSpaceID_None, 
+                            nsGkAtoms::moztype, 
+                            nsnull, 
+                            theAttribute,
+                            PR_FALSE);
+
+        nsCOMPtr<nsINodeInfo> optionNodeInfo = 
+          aBuilder->GetNodeInfoManager()->GetNodeInfo(nsHtml5Atoms::option, 
+                                                      nsnull, 
+                                                      kNameSpaceID_XHTML);
+                                                      
+        for (PRUint32 i = 0; i < theContent.Length(); ++i) {
+          nsCOMPtr<nsIContent> optionElt;
+          NS_NewElement(getter_AddRefs(optionElt), 
+                        optionNodeInfo->NamespaceID(), 
+                        optionNodeInfo, 
+                        PR_TRUE);
+          nsCOMPtr<nsIContent> optionText;
+          NS_NewTextNode(getter_AddRefs(optionText), 
+                         aBuilder->GetNodeInfoManager());
+          (void) optionText->SetText(theContent[i], PR_FALSE);
+          optionElt->AppendChildTo(optionText, PR_FALSE);
+          newContent->AppendChildTo(optionElt, PR_FALSE);
+          newContent->DoneAddingChildren(PR_FALSE);
         }
       }
 
@@ -392,6 +439,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         newContent->SetAttr(attributes->getURI(i), localName, attributes->getPrefix(i), *(attributes->getValue(i)), PR_FALSE);
         // XXX what to do with nsresult?
       }
+
       return rv;
     }
     case eTreeOpSetFormElement: {

@@ -71,6 +71,13 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+namespace mozilla {
+namespace layers {
+class LayerManager;
+}
+}
+using namespace mozilla::layers;
+
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
 
@@ -859,9 +866,12 @@ nsCocoaWindow::SetUpWindowFilter()
 
   CleanUpWindowFilter();
 
-  // Only blur the background of menus and fake sheets.
+  // Only blur the background of menus and fake sheets, but not on PPC
+  // because it results in blank windows (bug 547723).
+#ifndef __ppc__
   if (mShadowStyle != NS_STYLE_WINDOW_SHADOW_MENU &&
       mShadowStyle != NS_STYLE_WINDOW_SHADOW_SHEET)
+#endif
     return;
 
   // Create a CoreImage filter and set it up
@@ -906,6 +916,15 @@ nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
   if (mPopupContentView) {
     mPopupContentView->Scroll(aDelta, aDestRects, aConfigurations);
   }
+}
+
+LayerManager*
+nsCocoaWindow::GetLayerManager()
+{
+  if (mPopupContentView) {
+    return mPopupContentView->GetLayerManager();
+  }
+  return nsnull;
 }
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
@@ -2003,10 +2022,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:NO];
 
-#ifdef NS_LEOPARD_AND_LATER
     [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
     [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
-#endif
   }
   return self;
 
@@ -2052,9 +2069,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
 
-#ifdef NS_LEOPARD_AND_LATER
   [self setContentBorderThickness:aToolbarHeight forEdge:NSMaxYEdge];
-#endif
 
   // Since this function is only called inside painting, the repaint needs to
   // be synchronous.

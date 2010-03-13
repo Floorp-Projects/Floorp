@@ -52,6 +52,8 @@ _MOCHITEST_FILES = \
   test_npruntime_npninvokedefault.html \
   loremipsum.txt \
   loremipsum_file.txt \
+  loremipsum_nocache.txt \
+  loremipsum_nocache.txt^headers^ \
   post.sjs \
   pluginstream.js \
   plugin_window.html \
@@ -72,6 +74,12 @@ _MOCHITEST_FILES = \
   test_cookies.html \
   test_npn_timers.html \
   test_npn_asynccall.html \
+  test_bug532208.html \
+  large-pic.jpg \
+  test_twostreams.html \
+  test_streamatclose.html \
+  neverending.sjs \
+  test_newstreamondestroy.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s
@@ -103,6 +111,12 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _MOCHICHROME_FILES += \
   test_convertpoint.xul \
   $(NULL)
+endif
+
+ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_MOCHITEST_FILES += \
+		test_copyText.html \
+		$(NULL)
 endif
 
 ifdef MOZ_IPC

@@ -46,7 +46,7 @@
 #include "nsScriptLoader.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"
@@ -532,11 +532,9 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel) {
-        const char* header;
-        (void)aHeader->GetUTF8String(&header);
-        (void)httpChannel->SetResponseHeader(nsDependentCString(header),
-                                             NS_ConvertUTF16toUTF8(aValue),
-                                             PR_TRUE);
+        httpChannel->SetResponseHeader(nsAtomCString(aHeader),
+                                       NS_ConvertUTF16toUTF8(aValue),
+                                       PR_TRUE);
       }
     }
   }

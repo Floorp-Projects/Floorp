@@ -67,8 +67,7 @@ rpc protocol PPluginInstance
 child:
   rpc __delete__();
 
-  rpc NPP_SetWindow(NPRemoteWindow window)
-    returns (NPError rv);
+  rpc NPP_SetWindow(NPRemoteWindow window);
 
   // this message is not used on non-X platforms
   rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
@@ -79,6 +78,9 @@ child:
   rpc NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
 
   rpc NPP_HandleEvent(NPRemoteEvent event)
+    returns (int16_t handled);
+  // special case of HandleEvent to make mediating races simpler
+  rpc Paint(NPRemoteEvent event)
     returns (int16_t handled);
 
   rpc NPP_Destroy()
@@ -111,7 +113,7 @@ parent:
   /**
    * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
    * @TODO This would be more readable as an overloaded method,
-   *       but IPDL doesn't allow that for constructors (or any method?).
+   *       but IPDL doesn't allow that for constructors.
    */
   rpc PStreamNotify(nsCString url, nsCString target, bool post,
                     nsCString buffer, bool file)
@@ -138,7 +140,7 @@ parent:
     returns (nsCString username, nsCString password, NPError result);
 
 both:
-  rpc PPluginScriptableObject();
+  async PPluginScriptableObject();
 
 child:
   /* NPP_NewStream */

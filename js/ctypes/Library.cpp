@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "Library.h"
 #include "Function.h"
 #include "nsServiceManagerUtils.h"
@@ -55,15 +56,18 @@ namespace ctypes {
 
 static JSClass sLibraryClass = {
   "Library",
-  JSCLASS_HAS_RESERVED_SLOTS(2),
+  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS) | JSCLASS_MARK_IS_TRACE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
   JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, Library::Finalize,
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+  NULL, NULL, NULL, NULL, NULL, NULL, JS_CLASS_TRACE(Library::Trace), NULL
 };
 
+#define CTYPESFN_FLAGS \
+  (JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
+
 static JSFunctionSpec sLibraryFunctions[] = {
-  JS_FN("close",   Library::Close,   0, JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT),
-  JS_FN("declare", Library::Declare, 0, JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT),
+  JS_FN("close",   Library::Close,   0, CTYPESFN_FLAGS),
+  JS_FN("declare", Library::Declare, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
@@ -73,13 +77,15 @@ Library::Create(JSContext* cx, jsval aPath)
   JSObject* libraryObj = JS_NewObject(cx, &sLibraryClass, NULL, NULL);
   if (!libraryObj)
     return NULL;
+  JSAutoTempValueRooter root(cx, libraryObj);
 
   // initialize the library
-  if (!JS_SetReservedSlot(cx, libraryObj, 0, PRIVATE_TO_JSVAL(NULL)))
+  if (!JS_SetReservedSlot(cx, libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL)))
     return NULL;
 
   // initialize our Function list to empty
-  if (!JS_SetReservedSlot(cx, libraryObj, 1, PRIVATE_TO_JSVAL(NULL)))
+  if (!JS_SetReservedSlot(cx, libraryObj, SLOT_FUNCTIONLIST,
+         PRIVATE_TO_JSVAL(NULL)))
     return NULL;
 
   // attach API functions
@@ -92,47 +98,56 @@ Library::Create(JSContext* cx, jsval aPath)
   // get the path argument. we accept either an nsILocalFile or a string path.
   // determine which we have...
   if (JSVAL_IS_STRING(aPath)) {
-    const jschar* path = JS_GetStringChars(JSVAL_TO_STRING(aPath));
+    const PRUnichar* path = reinterpret_cast<const PRUnichar*>(
+      JS_GetStringCharsZ(cx, JSVAL_TO_STRING(aPath)));
     if (!path)
       return NULL;
 
-    // We don't use nsILocalFile.
-    // Because this interface doesn't resolve library path to use system search rule.
+    // We don't use nsILocalFile, because it doesn't use the system search
+    // rules when resolving library path.
     PRLibSpec libSpec;
 #ifdef XP_WIN
     // On Windows, converting to native charset may corrupt path string.
     // So, we have to use Unicode path directly.
-    libSpec.value.pathname_u = reinterpret_cast<const PRUnichar*>(path);
+    libSpec.value.pathname_u = path;
     libSpec.type = PR_LibSpec_PathnameU;
 #else
     nsCAutoString nativePath;
-    NS_CopyUnicodeToNative(nsDependentString(reinterpret_cast<const PRUnichar*>(path)), nativePath);
+    NS_CopyUnicodeToNative(nsDependentString(path), nativePath);
     libSpec.value.pathname = nativePath.get();
     libSpec.type = PR_LibSpec_Pathname;
 #endif
     library = PR_LoadLibraryWithFlags(libSpec, 0);
-    if (!library)
+    if (!library) {
+      JS_ReportError(cx, "couldn't open library");
       return NULL;
+    }
 
-  } else if (JSVAL_IS_OBJECT(aPath)) {
+  } else if (!JSVAL_IS_PRIMITIVE(aPath)) {
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
 
     nsISupports* file = xpc->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(aPath));
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file);
-    if (!localFile)
+    if (!localFile) {
+      JS_ReportError(cx, "open takes a string or nsILocalFile argument");
       return NULL;
+    }
 
     rv = localFile->Load(&library);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      JS_ReportError(cx, "couldn't open library");
       return NULL;
+    }
 
   } else {
     // don't convert the argument
+    JS_ReportError(cx, "open takes a string or nsIFile argument");
     return NULL;
   }
 
   // stash the library
-  if (!JS_SetReservedSlot(cx, libraryObj, 0, PRIVATE_TO_JSVAL(library)))
+  if (!JS_SetReservedSlot(cx, libraryObj, SLOT_LIBRARY,
+         PRIVATE_TO_JSVAL(library)))
     return NULL;
 
   return libraryObj;
@@ -144,7 +159,7 @@ Library::GetLibrary(JSContext* cx, JSObject* obj)
   JS_ASSERT(JS_GET_CLASS(cx, obj) == &sLibraryClass);
 
   jsval slot;
-  JS_GetReservedSlot(cx, obj, 0, &slot);
+  JS_GetReservedSlot(cx, obj, SLOT_LIBRARY, &slot);
   return static_cast<PRLibrary*>(JSVAL_TO_PRIVATE(slot));
 }
 
@@ -154,16 +169,29 @@ GetFunctionList(JSContext* cx, JSObject* obj)
   JS_ASSERT(JS_GET_CLASS(cx, obj) == &sLibraryClass);
 
   jsval slot;
-  JS_GetReservedSlot(cx, obj, 1, &slot);
+  JS_GetReservedSlot(cx, obj, SLOT_FUNCTIONLIST, &slot);
   return static_cast<Function*>(JSVAL_TO_PRIVATE(slot));
 }
 
-bool
+JSBool
 Library::AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction)
 {
   // add the new Function instance to the head of the list
   aFunction->Next() = GetFunctionList(cx, aLibrary);
-  return JS_SetReservedSlot(cx, aLibrary, 1, PRIVATE_TO_JSVAL(aFunction));
+  return JS_SetReservedSlot(cx, aLibrary, SLOT_FUNCTIONLIST,
+           PRIVATE_TO_JSVAL(aFunction));
+}
+
+void
+Library::Trace(JSTracer *trc, JSObject* obj)
+{
+  // Walk the Function list and for each Function, identify each CType
+  // associated with it to the tracer.
+  Function* current = GetFunctionList(trc->context, obj);
+  while (current) {
+    current->Trace(trc);
+    current = current->Next();
+  }
 }
 
 void
@@ -186,16 +214,14 @@ Library::Finalize(JSContext* cx, JSObject* obj)
 JSBool
 Library::Open(JSContext* cx, uintN argc, jsval *vp)
 {
-  if (argc != 1) {
+  if (argc != 1 || JSVAL_IS_VOID(JS_ARGV(cx, vp)[0])) {
     JS_ReportError(cx, "open requires a single argument");
     return JS_FALSE;
   }
 
   JSObject* library = Create(cx, JS_ARGV(cx, vp)[0]);
-  if (!library) {
-    JS_ReportError(cx, "couldn't open library");
+  if (!library)
     return JS_FALSE;
-  }
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(library));
   return JS_TRUE;
@@ -217,8 +243,8 @@ Library::Close(JSContext* cx, uintN argc, jsval* vp)
 
   // delete our internal objects
   Finalize(cx, obj);
-  JS_SetReservedSlot(cx, obj, 0, PRIVATE_TO_JSVAL(NULL));
-  JS_SetReservedSlot(cx, obj, 1, PRIVATE_TO_JSVAL(NULL));
+  JS_SetReservedSlot(cx, obj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL));
+  JS_SetReservedSlot(cx, obj, SLOT_FUNCTIONLIST, PRIVATE_TO_JSVAL(NULL));
 
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   return JS_TRUE;
@@ -251,14 +277,18 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  const char* name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+  const char* name = JS_GetStringBytesZ(cx, JSVAL_TO_STRING(argv[0]));
+  if (!name)
+    return JS_FALSE;
+
   PRFuncPtr func = PR_FindFunctionSymbol(library, name);
   if (!func) {
     JS_ReportError(cx, "couldn't find function symbol in library");
     return JS_FALSE;
   }
 
-  JSObject* fn = Function::Create(cx, obj, func, name, argv[1], argv[2], &argv[3], argc - 3);
+  JSObject* fn = Function::Create(cx, obj, func, name, argv[1], argv[2],
+                   &argv[3], argc - 3);
   if (!fn)
     return JS_FALSE;
 

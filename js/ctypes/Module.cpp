@@ -39,6 +39,7 @@
 
 #include "Module.h"
 #include "Library.h"
+#include "CTypes.h"
 #include "nsIGenericFactory.h"
 #include "nsMemory.h"
 
@@ -83,75 +84,16 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
   return NS_OK;
 }
 
-static JSClass sCABIClass = {
-  "CABI",
-  JSCLASS_HAS_RESERVED_SLOTS(1),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-  JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
-static JSClass sCTypeClass = {
-  "CType",
-  JSCLASS_HAS_RESERVED_SLOTS(1),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-  JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
+#define CTYPESFN_FLAGS \
+  (JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSFunctionSpec sModuleFunctions[] = {
-  JS_FN("open", Library::Open, 0, JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT),
+  JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
+  JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
-ABICode
-Module::GetABICode(JSContext* cx, jsval val)
-{
-  // make sure we have an object representing a CABI class,
-  // and extract the enumerated class type from the reserved slot.
-  if (!JSVAL_IS_OBJECT(val))
-    return INVALID_ABI;
-
-  JSObject* obj = JSVAL_TO_OBJECT(val);
-  if (JS_GET_CLASS(cx, obj) != &sCABIClass)
-    return INVALID_ABI;
-
-  jsval result;
-  JS_GetReservedSlot(cx, obj, 0, &result);
-
-  return ABICode(JSVAL_TO_INT(result));
-}
-
-TypeCode
-Module::GetTypeCode(JSContext* cx, jsval val)
-{
-  // make sure we have an object representing a CType class,
-  // and extract the enumerated class type from the reserved slot.
-  if (!JSVAL_IS_OBJECT(val))
-    return INVALID_TYPE;
-
-  JSObject* obj = JSVAL_TO_OBJECT(val);
-  if (JS_GET_CLASS(cx, obj) != &sCTypeClass)
-    return INVALID_TYPE;
-
-  jsval result;
-  JS_GetReservedSlot(cx, obj, 0, &result);
-
-  return TypeCode(JSVAL_TO_INT(result));
-}
-
-static bool
-DefineConstant(JSContext* cx, JSObject* parent, JSClass* clasp, const char* name, jsint code)
-{
-  JSObject* obj = JS_DefineObject(cx, parent, name, clasp, NULL,
-                    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
-  if (!obj)
-    return false;
-
-  return JS_SetReservedSlot(cx, obj, 0, INT_TO_JSVAL(code));
-}
-
-bool
+JSBool
 Module::Init(JSContext* cx, JSObject* aGlobal)
 {
   // attach ctypes property to global object
@@ -163,22 +105,16 @@ Module::Init(JSContext* cx, JSObject* aGlobal)
          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
-  // attach classes representing ABI and type constants
-#define DEFINE_ABI(name)                                                \
-  if (!DefineConstant(cx, ctypes, &sCABIClass, #name, ABI_##name))      \
+  if (!InitTypeClasses(cx, ctypes))
     return false;
-#define DEFINE_TYPE(name)                                               \
-  if (!DefineConstant(cx, ctypes, &sCTypeClass, #name, TYPE_##name))    \
-    return false;
-#include "types.h"
-#undef DEFINE_ABI
-#undef DEFINE_TYPE
 
   // attach API functions
   if (!JS_DefineFunctions(cx, ctypes, sModuleFunctions))
     return false;
 
-  return true;
+  // Seal the ctypes object, to prevent modification. (This single object
+  // instance is shared amongst everyone who imports the ctypes module.)
+  return JS_SealObject(cx, ctypes, JS_FALSE) != JS_FALSE;
 }
 
 }

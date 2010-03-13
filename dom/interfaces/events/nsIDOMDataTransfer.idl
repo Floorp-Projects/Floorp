@@ -162,7 +162,7 @@ interface nsIDOMDataTransfer : nsISupports
   void addElement(in nsIDOMElement element);
 };
 
-[scriptable, uuid(990758e9-fd38-4444-a1e8-395195802bda)]
+[scriptable, uuid(AE6DF4E2-FA37-4701-A33E-A5678F826EED)]
 interface nsIDOMNSDataTransfer : nsISupports
 {
   /*
@@ -266,4 +266,10 @@ interface nsIDOMNSDataTransfer : nsISupports
    * This property is only relevant for the dragend event.
    */
   readonly attribute boolean mozUserCancelled;
+
+  /**
+   * The node that the mouse was pressed over to begin the drag. For external
+   * drags, or if the caller cannot access this node, this will be null.
+   */
+  readonly attribute nsIDOMNode mozSourceNode;
 };

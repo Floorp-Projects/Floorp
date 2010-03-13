@@ -97,17 +97,32 @@ public:
   /**
    * Mutex used by asynchronous statements to protect state.  The mutex is
    * declared on the connection object because there is no contention between
-   * asynchronous statements (they are serialized on mAsyncExecutionThread).
+   * asynchronous statements (they are serialized on mAsyncExecutionThread).  It also
+   * protects mPendingStatements.
    */
   Mutex sharedAsyncExecutionMutex;
 
   /**
-   * References the thread this database was opened on.
+   * References the thread this database was opened on.  This MUST be thread it is
+   * closed on.
    */
   const nsCOMPtr<nsIThread> threadOpenedOn;
 
+  /**
+   * Closes the SQLite database, and warns about any non-finalized statements.
+   */
+  nsresult internalClose();
+
 private:
   ~Connection();
+
+  /**
+   * Sets the database into a closed state so no further actions can be
+   * performed.
+   *
+   * @note mDBConn is set to NULL in this method.
+   */
+  nsresult setClosedState();
 
   /**
    * Describes a certain primitive type in the database.
@@ -146,11 +161,6 @@ private:
   nsCOMPtr<nsIFile> mDatabaseFile;
 
   /**
-   * Protects access to mAsyncExecutionThread.
-   */
-  PRLock *mAsyncExecutionMutex;
-
-  /**
    * Lazily created thread for asynchronous statement execution.  Consumers
    * should use getAsyncExecutionTarget rather than directly accessing this
    * field.
@@ -162,7 +172,7 @@ private:
    * references (or to create the thread in the first place).  This variable
    * should be accessed while holding the mAsyncExecutionMutex.
    */
-  PRBool mAsyncExecutionThreadShuttingDown;
+  bool mAsyncExecutionThreadShuttingDown;
 
   /**
    * Wraps the mutex that SQLite gives us from sqlite3_db_mutex.

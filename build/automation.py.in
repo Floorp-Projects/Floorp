@@ -141,6 +141,11 @@ class Automation(object):
     self.log.setLevel(logging.INFO)
     self.log.addHandler(handler)
 
+  def setServerInfo(self, server = "mochi.test", httpPort = 8888, sslPort = 4443):
+    self.webServer = server
+    self.httpPort = httpPort
+    self.sslPort = sslPort
+
   @property
   def __all__(self):
     return [
@@ -239,15 +244,13 @@ class Automation(object):
 
     return locations
 
+  def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
+    " Sets up the standard testing profile."
 
-  def initializeProfile(self, profileDir, extraPrefs = []):
-    "Sets up the standard testing profile."
-
+    prefs = []
     # Start with a clean slate.
     shutil.rmtree(profileDir, True)
     os.mkdir(profileDir)
-
-    prefs = []
 
     part = """\
 user_pref("browser.dom.window.dump.enabled", true);
@@ -274,7 +277,7 @@ user_pref("network.http.prompt-temp-redirect", false);
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
 
-user_pref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
@@ -282,20 +285,30 @@ user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 // Make url-classifier updates so rare that they won't affect tests
 user_pref("urlclassifier.updateinterval", 172800);
 // Point the url-classifier to the local testing server for fast failures
-user_pref("browser.safebrowsing.provider.0.gethashURL", "http://localhost:8888/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.0.keyURL", "http://localhost:8888/safebrowsing-dummy/newkey");
-user_pref("browser.safebrowsing.provider.0.lookupURL", "http://localhost:8888/safebrowsing-dummy/lookup");
-user_pref("browser.safebrowsing.provider.0.updateURL", "http://localhost:8888/safebrowsing-dummy/update");
-"""
-  
+user_pref("browser.safebrowsing.provider.0.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
+user_pref("browser.safebrowsing.provider.0.keyURL", "http://%(server)s/safebrowsing-dummy/newkey");
+user_pref("browser.safebrowsing.provider.0.lookupURL", "http://%(server)s/safebrowsing-dummy/lookup");
+user_pref("browser.safebrowsing.provider.0.updateURL", "http://%(server)s/safebrowsing-dummy/update");
+""" % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
-    locations = self.readLocations()
-
-    # Grant God-power to all the privileged servers on which tests run.
-    privileged = filter(lambda loc: "privileged" in loc.options, locations)
-    for (i, l) in itertools.izip(itertools.count(1), privileged):
+    if useServerLocations == False:
       part = """
+user_pref("capability.principal.codebase.p1.granted",
+          "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
+           UniversalPreferencesRead UniversalPreferencesWrite \
+           UniversalFileRead");
+user_pref("capability.principal.codebase.p1.id", "%(origin)s");
+user_pref("capability.principal.codebase.p1.subjectName", "");
+"""  % { "origin": "http://" + self.webServer + ":" + str(self.httpPort) }
+      prefs.append(part)
+    else:
+      locations = self.readLocations()
+
+      # Grant God-power to all the privileged servers on which tests run.
+      privileged = filter(lambda loc: "privileged" in loc.options, locations)
+      for (i, l) in itertools.izip(itertools.count(1), privileged):
+        part = """
 user_pref("capability.principal.codebase.p%(i)d.granted",
           "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
            UniversalPreferencesRead UniversalPreferencesWrite \
@@ -304,14 +317,14 @@ user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
 user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
 """  % { "i": i,
          "origin": (l.scheme + "://" + l.host + ":" + l.port) }
-      prefs.append(part)
+        prefs.append(part)
 
-    # We need to proxy every server but the primary one.
-    origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
-              for l in filter(lambda l: "primary" not in l.options, locations)]
-    origins = ", ".join(origins)
+      # We need to proxy every server but the primary one.
+      origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
+                for l in filter(lambda l: "primary" not in l.options, locations)]
+      origins = ", ".join(origins)
 
-    pacURL = """data:text/plain,
+      pacURL = """data:text/plain,
 function FindProxyForURL(url, host)
 {
   var origins = [%(origins)s];
@@ -340,15 +353,15 @@ function FindProxyForURL(url, host)
     return 'PROXY 127.0.0.1:4443';
   return 'DIRECT';
 }""" % { "origins": origins }
-    pacURL = "".join(pacURL.splitlines())
+      pacURL = "".join(pacURL.splitlines())
 
-    part = """
+      part += """
 user_pref("network.proxy.type", 2);
 user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
 
 user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
 """ % {"pacURL": pacURL}
-    prefs.append(part)
+      prefs.append(part)
 
     for v in extraPrefs:
       thispref = v.split("=")
@@ -565,8 +578,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     reporting, if we know how for this platform. Otherwise just .kill() it."""
     if self.CRASHREPORTER:
       if self.UNIXISH:
-        # SEGV will get picked up by Breakpad's signal handler
-        os.kill(proc.pid, signal.SIGSEGV)
+        # ABRT will get picked up by Breakpad's signal handler
+        os.kill(proc.pid, signal.SIGABRT)
         return
       elif self.IS_WIN32:
         # We should have a "crashinject" program in our utility path

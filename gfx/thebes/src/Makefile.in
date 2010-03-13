@@ -22,6 +22,7 @@ CPPSRCS	= \
 	gfxFontMissingGlyphs.cpp \
 	gfxFontTest.cpp \
 	gfxFontUtils.cpp \
+	gfxAtoms.cpp \
 	gfxMatrix.cpp \
 	gfxPath.cpp \
 	gfxPattern.cpp \
@@ -34,9 +35,11 @@ CPPSRCS	= \
 	gfxUserFontSet.cpp \
 	$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
@@ -46,7 +49,6 @@ EXTRA_DSO_LDOPTS += \
 	$(ZLIB_LIBS) \
 	$(QCMS_LIBS) \
 	$(NULL)
-
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
@@ -62,16 +64,27 @@ CPPSRCS	+= gfxFT2Fonts.cpp \
 	   gfxDDrawSurface.cpp \
 	   gfxFT2FontList.cpp \
 	   $(NULL)
-EXTRA_DSO_LDOPTS += ddraw.lib
+
+EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+
+OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
 else
+ifdef MOZ_ENABLE_DWRITE_FONT
+CPPSRCS	+= gfxDWriteFonts.cpp \
+	   gfxDWriteTextAnalysis.cpp \
+	   gfxDWriteCommon.cpp \
+	   gfxD2DSurface.cpp \
+	   gfxDWriteFontList.cpp \
+	   $(NULL)
+endif
 CPPSRCS	+= gfxWindowsFonts.cpp \
 	   gfxGDIFontList.cpp \
 	   $(NULL)
+_OS_LIBS = usp10 msimg32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
 
-_OS_LIBS	= usp10 msimg32
 ifdef GNU_CXX
 _OS_LIBS	+= uuid
 endif
@@ -127,13 +140,17 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
-CPPSRCS +=	gfxFT2Fonts.cpp
+ifdef MOZ_PANGO
+CPPSRCS += gfxPangoFonts.cpp
+else
+CPPSRCS += gfxFT2Fonts.cpp
+endif
 CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 #CSRCS = cairo-xlib-utils.c
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -153,15 +170,12 @@ CPPSRCS	+= \
 	gfxQuartzImageSurface.cpp \
 	gfxQuartzPDFSurface.cpp \
 	gfxPlatformMac.cpp \
-	gfxAtsuiFonts.cpp \
+	gfxMacFont.cpp \
+	gfxCoreTextShaper.cpp \
 	$(NULL)
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
-
-ifdef MOZ_CORETEXT
-CPPSRCS += gfxCoreTextFonts.cpp
-endif
 
 CMMSRCS = gfxMacPlatformFontList.mm
 
@@ -199,6 +213,5 @@ CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
+CXXFLAGS += $(CAIRO_FT_CFLAGS) $(MOZ_PANGO_CFLAGS)
 endif
-

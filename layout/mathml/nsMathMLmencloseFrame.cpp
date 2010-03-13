@@ -374,7 +374,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   nsCOMPtr<nsIFontMetrics> fm;
   nscoord mEmHeight;
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
+  aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);

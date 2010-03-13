@@ -207,7 +207,8 @@ NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 
   PRInt32 id = gColorTable->Lookup(aColorName);
   if (eColorName_UNKNOWN < id) {
-    NS_ASSERTION(id < eColorName_COUNT, "LookupName mess up");
+    NS_ASSERTION(PRUint32(id) < eColorName_COUNT,
+                 "gColorTable->Lookup messed up");
     if (aResult) {
       *aResult = kColors[id];
     }

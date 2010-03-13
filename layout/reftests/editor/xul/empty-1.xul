@@ -3,20 +3,10 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="Textbox tests"
-        class="reftest-wait">
+        title="Textbox tests">
 
   <script type="text/javascript" src="platform.js"/>
 
-  <script type="text/javascript">
-  <![CDATA[
-    // Wait for one second so that the emptytext attribute kicks in
-    window.setTimeout(function() {
-      document.documentElement.removeAttribute("class");
-    }, 1000);
-  ]]>
-  </script>
-
-  <textbox emptytext="test"/>
+  <textbox placeholder="test"/>
       
 </window>

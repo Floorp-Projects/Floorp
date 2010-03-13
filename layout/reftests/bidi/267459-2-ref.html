@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Test unicode-bidi in form controls</title>
+  <meta http-equiv="Content-type" content="text/html; charset=iso-8859-8-i">
+ </head>
+ <body>
+   <p>&#x202d;פיסקה זו אמורה להיות הפוכה&#x202c;</p>
+   <p>
+   <textarea rows="3" cols="80">שורה זו לא אמורה להיות הפוכה</textarea><br>
+   <input type="text" size="80" value="שורה זו לא אמורה להיות הפוכה"><br>
+   <input type="button" value="שורה זו לא אמורה להיות הפוכה"><br>
+   <select size="6">
+    <option selected>שורות</option>
+    <optgroup label="אלה">
+     <option>לא</option>
+     <option>אמורות</option>
+    </optgroup>
+    <optgroup label="להיות">
+     <option>הפוכות</option>
+    </optgroup>
+   </select><br>
+ </body>
+</html>

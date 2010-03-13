@@ -39,6 +39,7 @@
 #define NS_SMILINTERVAL_H_
 
 #include "nsSMILInstanceTime.h"
+#include "nsTArray.h"
 
 //----------------------------------------------------------------------
 // nsSMILInterval class
@@ -52,84 +53,88 @@
 class nsSMILInterval
 {
 public:
-  void Set(nsSMILInstanceTime& aBegin, nsSMILInstanceTime& aEnd)
-  {
-    NS_ABORT_IF_FALSE(aBegin.Time().IsResolved(),
-        "Attempting to set unresolved begin time on an interval");
-    mBegin = &aBegin;
-    mEnd = &aEnd;
-  }
-
-  PRBool IsSet() const
-  {
-    NS_ABORT_IF_FALSE(!mBegin == !mEnd, "Bad interval: only one endpoint set");
-    return !!mBegin;
-  }
-
-  void Reset()
-  {
-    mBegin = nsnull;
-    mEnd = nsnull;
-  }
-
-  // Begin() and End() will be non-null so long as IsSet() is true. Otherwise,
-  // they probably shouldn't be called.
+  nsSMILInterval();
+  nsSMILInterval(const nsSMILInterval& aOther);
+  ~nsSMILInterval();
+  void NotifyChanged(const nsSMILTimeContainer* aContainer);
+  void NotifyDeleting();
 
   const nsSMILInstanceTime* Begin() const
   {
-    NS_ABORT_IF_FALSE(mBegin, "Calling Begin() on un-set interval");
+    NS_ABORT_IF_FALSE(mBegin && mEnd,
+        "Requesting Begin() on un-initialized instance time");
     return mBegin;
   }
-
-  nsSMILInstanceTime* Begin()
-  {
-    NS_ABORT_IF_FALSE(mBegin, "Calling Begin() on un-set interval");
-    return mBegin;
-  }
+  nsSMILInstanceTime* Begin();
 
   const nsSMILInstanceTime* End() const
   {
-    NS_ABORT_IF_FALSE(mEnd, "Calling End() on un-set interval");
+    NS_ABORT_IF_FALSE(mBegin && mEnd,
+        "Requesting End() on un-initialized instance time");
     return mEnd;
   }
+  nsSMILInstanceTime* End();
 
-  nsSMILInstanceTime* End()
+  void SetBegin(nsSMILInstanceTime& aBegin);
+  void SetEnd(nsSMILInstanceTime& aEnd);
+  void Set(nsSMILInstanceTime& aBegin, nsSMILInstanceTime& aEnd)
   {
-    NS_ABORT_IF_FALSE(mEnd, "Calling End() on un-set interval");
-    return mEnd;
-  }
-
-  void SetBegin(nsSMILInstanceTime& aBegin)
-  {
-    NS_ABORT_IF_FALSE(mBegin, "Calling SetBegin() on un-set interval");
-    NS_ABORT_IF_FALSE(aBegin.Time().IsResolved(),
-        "Attempting to set unresolved begin time on interval");
-    mBegin = &aBegin;
-  }
-
-  void SetEnd(nsSMILInstanceTime& aEnd)
-  {
-    NS_ABORT_IF_FALSE(mEnd, "Calling SetEnd() on un-set interval");
-    mEnd = &aEnd;
+    SetBegin(aBegin);
+    SetEnd(aEnd);
   }
 
   void FreezeBegin()
   {
-    NS_ABORT_IF_FALSE(mBegin, "Calling FreezeBegin() on un-set interval");
+    NS_ABORT_IF_FALSE(mBegin && mEnd,
+        "Freezing Begin() on un-initialized instance time");
     mBegin->MarkNoLongerUpdating();
   }
 
   void FreezeEnd()
   {
-    NS_ABORT_IF_FALSE(mEnd, "Calling FreezeEnd() on un-set interval");
+    NS_ABORT_IF_FALSE(mBegin && mEnd,
+        "Freezing End() on un-initialized instance time");
     NS_ABORT_IF_FALSE(!mBegin->MayUpdate(),
         "Freezing the end of an interval without a fixed begin");
     mEnd->MarkNoLongerUpdating();
   }
 
+  // XXX Backwards seeking support (bug 492458)
+  void Unfreeze()
+  {
+    // XXX
+    UnfreezeEnd();
+  }
+
+  void UnfreezeEnd()
+  {
+    // XXX
+  }
+
+  void AddDependentTime(nsSMILInstanceTime& aTime);
+  void RemoveDependentTime(const nsSMILInstanceTime& aTime);
+
 private:
   nsRefPtr<nsSMILInstanceTime> mBegin;
   nsRefPtr<nsSMILInstanceTime> mEnd;
+
+  typedef nsTArray<nsRefPtr<nsSMILInstanceTime> > InstanceTimeList;
+  InstanceTimeList mDependentTimes;
+
+  // When change notifications are passed around the timing model we try to
+  // filter out all changes where there is no observable difference to an
+  // instance time. Changes that may produce an observable difference are:
+  //
+  // * Changes to the time of an interval endpoint
+  // * Changes in the relative times of different time containers
+  // * Changes to the dependency chain (which may affect the animation sandwich)
+  //
+  // The nsSMILTimeValueSpec can detect the first two changes by recalculating
+  // the time but in order to help detect the third change we simply set a flag
+  // whenever the mBegin or mEnd pointers are changed. These flags are reset
+  // when the next change notification is sent.
+  PRPackedBool mBeginObjectChanged;
+  PRPackedBool mEndObjectChanged;
 };
 
 #endif // NS_SMILINTERVAL_H_

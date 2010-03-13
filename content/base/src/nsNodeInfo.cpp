@@ -248,25 +248,22 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 }
 
 PRBool
-nsNodeInfo::QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const
+nsNodeInfo::QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const
 {
   NS_PRECONDITION(mInner.mPrefix, "Must have prefix");
   
-  nsACString::const_iterator start;
+  nsAString::const_iterator start;
   aQualifiedName.BeginReading(start);
 
-  nsACString::const_iterator colon(start);
+  nsAString::const_iterator colon(start);
 
-  const char* prefix;
-  mInner.mPrefix->GetUTF8String(&prefix);
+  nsDependentAtomString prefix(mInner.mPrefix);
 
-  PRUint32 len = strlen(prefix);
-
-  if (len >= aQualifiedName.Length()) {
+  if (prefix.Length() >= aQualifiedName.Length()) {
     return PR_FALSE;
   }
 
-  colon.advance(len);
+  colon.advance(prefix.Length());
 
   // If the character at the prefix length index is not a colon,
   // aQualifiedName is not equal to this string.
@@ -275,17 +272,17 @@ nsNodeInfo::QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const
   }
 
   // Compare the prefix to the string from the start to the colon
-  if (!mInner.mPrefix->EqualsUTF8(Substring(start, colon)))
+  if (!prefix.Equals(Substring(start, colon)))
     return PR_FALSE;
 
   ++colon; // Skip the ':'
 
-  nsACString::const_iterator end;
+  nsAString::const_iterator end;
   aQualifiedName.EndReading(end);
 
   // Compare the local name to the string between the colon and the
   // end of aQualifiedName
-  return mInner.mName->EqualsUTF8(Substring(colon, end));
+  return mInner.mName->Equals(Substring(colon, end));
 }
 
 // static

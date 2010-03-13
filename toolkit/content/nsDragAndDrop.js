@@ -585,13 +585,6 @@ var nsDragAndDrop = {
    **/
   dragDropSecurityCheck: function (aEvent, aDragSession, aDraggedText)
     {
-      if (!aDragSession)
-        aDragSession = this.mDragService.getCurrentSession();
-
-      var sourceDoc = aDragSession.sourceDocument;
-      if (!sourceDoc)
-        return;
-
       // Strip leading and trailing whitespace, then try to create a
       // URI from the dropped string. If that succeeds, we're
       // dropping a URI and we need to do a security check to make
@@ -620,8 +613,16 @@ var nsDragAndDrop = {
       var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                              .getService(nsIScriptSecurityManager);
 
+      if (!aDragSession)
+        aDragSession = this.mDragService.getCurrentSession();
+
+      var sourceDoc = aDragSession.sourceDocument;
+      // Use "file:///" as the default sourceURI so that drops of file:// URIs
+      // are always allowed.
+      var sourceURI = sourceDoc ? sourceDoc.documentURI : "file:///";
+
       try {
-        secMan.checkLoadURIStr(sourceDoc.documentURI, aDraggedText,
+        secMan.checkLoadURIStr(sourceURI, aDraggedText,
                                nsIScriptSecurityManager.STANDARD);
       } catch (e) {
         // Stop event propagation right here.

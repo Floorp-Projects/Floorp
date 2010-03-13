@@ -53,10 +53,7 @@
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
         this.timeout = this._prefs.getIntPref("delay");
-        setTimeout(function (self) {
-          if (self._setEmptyText)
-            self._setEmptyText();
-        }, 0, this);
+        this._setPlaceholder();
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
@@ -368,7 +365,7 @@
                 break;
               case "autocomplete.enabled":
               case "default.behavior":
-                this._setEmptyText();
+                this._setPlaceholder();
                 break;
             }
           }
@@ -425,7 +422,7 @@
         </setter>
       </property>
 
-      <method name="_setEmptyText">
+      <method name="_setPlaceholder">
         <body><![CDATA[
           var type = "none";
           if (this._prefs.getBoolPref("autocomplete.enabled")) {
@@ -442,7 +439,7 @@
                 break;
             }
           }
-          this.emptyText = this.getAttribute(type + "emptytext");
+          this.placeholder = this.getAttribute(type + "placeholder");
         ]]></body>
       </method>
     </implementation>

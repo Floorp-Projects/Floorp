@@ -50,7 +50,7 @@
 {
   @private
   NSMutableDictionary *mCursors;
-  nsCursor mCurrentCursor;
+  nsMacCursor *mCurrentMacCursor;
 }
 
 /*! @method     setCursor:
@@ -59,7 +59,18 @@
                 Resources associated with the previous cursor are cleaned up.
     @param aCursor the cursor to use
 */
-- (void) setCursor: (nsCursor) aCursor;
+- (nsresult) setCursor: (nsCursor) aCursor;
+
+/*! @method  setCursorWithImage:hotSpotX:hotSpotY:
+ @abstract   Sets the current cursor to a custom image
+ @discussion Sets the current cursor to the cursor given by the aCursorImage argument.
+ Resources associated with the previous cursor are cleaned up.
+ @param aCursorImage the cursor image to use
+ @param aHotSpotX the x coordinate of the cursor's hotspot
+ @param aHotSpotY the y coordinate of the cursor's hotspot
+ */
+- (nsresult) setCursorWithImage: (imgIContainer*) aCursorImage hotSpotX: (PRUint32) aHotspotX hotSpotY: (PRUint32) aHotspotY;
+
 
 /*! @method     sharedInstance
     @abstract   Get the Singleton instance of the cursor manager.

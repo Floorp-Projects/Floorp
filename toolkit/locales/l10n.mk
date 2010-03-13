@@ -62,7 +62,7 @@
 #   MOZ_APP_VERSION and MOZ_LANGPACK_EID.
 
 
-run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
+run_for_effects := $(shell if test ! -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
 

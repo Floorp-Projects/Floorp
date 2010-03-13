@@ -237,6 +237,11 @@ toolbarbutton.bookmark-item[open="true"] {
   background-color: rgba(0, 0, 0, .5);
 }
 
+toolbarbutton.bookmark-item > menupopup {
+  margin-top: 2px;
+  -moz-margin-start: 3px;
+}
+
 .bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/places/livemarkFolder.png");
   -moz-image-region: rect(0, 9px, 10px, 0);
@@ -1339,9 +1344,11 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   color: inherit;
 }
 
-#editBMPanel_tagsField[isempty="true"] {
+/*
+#editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #bbb !important;
 }
+*/
 
 #editBMPanel_tagsField[focused="true"],
 #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
@@ -1611,20 +1618,9 @@ tabbrowser > tabbox {
  * Tab Drag and Drop
  */
 
-.tab-drop-indicator-bar {
-  height: 10px;
-  margin-top: -10px;
-  position: relative;
-  /* set -moz-margin-start to -1/2 indicator width: */
-  -moz-margin-start: -4px;
-}
-
 .tab-drop-indicator {
-  height: 33px;
-  width: 10px;
-  margin-bottom: -24px;
-  position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 40% no-repeat;
+  margin-top: -8px !important;
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
 }
 
 /**
@@ -1647,13 +1643,11 @@ tabbrowser > tabbox {
   cursor: default;
 }
 
-.tab-close-button:hover,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover {
+.tab-close-button:hover {
   list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
 }
 
-.tab-close-button:hover:active,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
+.tab-close-button:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 

@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Erik van der Poel
  *   Brian Ryner <bryner@brianryner.com>
+ *   Jonathan Kew <jfkthame@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,8 +43,8 @@
 #define nsILanguageAtomService_h_
 
 /*
- * The nsILanguageAtomService provides a mapping from languages or
- * character sets to language groups.
+ * The nsILanguageAtomService provides a mapping from languages or charsets
+ * to language groups, and access to the system locale language.
  */
 
 #include "nsISupports.h"
@@ -51,8 +52,8 @@
 #include "nsIAtom.h"
 
 #define NS_ILANGUAGEATOMSERVICE_IID \
-  {0x24b45737, 0x9e94, 0x4e40, \
-    { 0x9d, 0x59, 0x29, 0xcd, 0x62, 0x96, 0x3a, 0xdd }}
+  {0xE8ABCA7C, 0x3909, 0x4DBC, \
+    { 0x9D, 0x03, 0xD3, 0xB5, 0xBE, 0xE4, 0xFD, 0x3F }}
 
 #define NS_LANGUAGEATOMSERVICE_CONTRACTID \
   "@mozilla.org/intl/nslanguageatomservice;1"
@@ -67,7 +68,10 @@ class nsILanguageAtomService : public nsISupports
   virtual already_AddRefed<nsIAtom>
   LookupCharSet(const char *aCharSet, nsresult *aError = nsnull) = 0;
 
-  virtual nsIAtom* GetLocaleLanguageGroup(nsresult *aError = nsnull) = 0;
+  virtual nsIAtom* GetLocaleLanguage(nsresult *aError = nsnull) = 0;
+
+  virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
+                                    nsresult *aError = nsnull) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILanguageAtomService,

@@ -94,12 +94,16 @@
   var numPlugins = navigator.plugins.length;
 
   if (numPlugins > 0)
-    document.writeln("<h1 id=\"plugs\">" + pluginsbundle.GetStringFromName("installedplugins_label") + "<\/h1>");
+    document.writeln("<h1 id=\"plugs\">" + pluginsbundle.GetStringFromName("enabledplugins_label") + "<\/h1>");
   else
     document.writeln("<h1 id=\"noplugs\">" + pluginsbundle.GetStringFromName("nopluginsareenabled_label") + "<\/h1>");
 
   document.writeln("<div id=\"findmore\">" + pluginsbundle.GetStringFromName("findmore_label") + " ");
   document.writeln("<a href=\"" + regionbundle.GetStringFromName("more_plugins_url") + "\">" + regionbundle.GetStringFromName("more_plugins_label") + "<\/a>.");
+  document.writeln("<\/div>");
+
+  document.writeln("<div id=\"findpluginupdates\">" + pluginsbundle.GetStringFromName("findpluginupdates_label") + " ");
+  document.writeln("<a href=\"" + regionbundle.GetStringFromName("pluginupdates_url") + "\">" + regionbundle.GetStringFromName("pluginupdates_label") + "<\/a>.");
   document.writeln("<\/div>");
 
   document.writeln("<div id=\"installhelp\">" + pluginsbundle.GetStringFromName("installhelp_label") + " ");

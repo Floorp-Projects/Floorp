@@ -52,7 +52,6 @@ MODULES_LIBJAR_LEXPORTS = \
 
 MODULES_LIBJAR_LXPIDLSRCS = \
 		nsIZipReader.idl \
-		nsIJAR.idl \
 		nsIJARChannel.idl \
 		nsIJARURI.idl \
 		nsIJARProtocolHandler.idl \

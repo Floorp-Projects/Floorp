@@ -162,6 +162,22 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
+input > .placeholder,
+textarea > .placeholder {
+  color: GrayText;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+textarea > .placeholder {
+  white-space: pre-wrap;
+}
+
+input > .placeholder.hidden,
+textarea > .placeholder.hidden {
+  visibility: hidden;
+}
+
 input:-moz-read-write,
 textarea:-moz-read-write {
   -moz-user-modify: read-write !important;
@@ -406,6 +422,7 @@ input[type="file"] > input[type="button"] {
   height: inherit;
   font-size: inherit;
   letter-spacing: inherit;
+  cursor: inherit;
 }
 
 /* radio buttons */

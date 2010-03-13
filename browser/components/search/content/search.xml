@@ -314,7 +314,7 @@
 
           var name = this.currentEngine.name;
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
-          this._textbox.emptyText = name;
+          this._textbox.placeholder = name;
           this._textbox.label = text;
           this._textbox.tooltipText = text;
         ]]></body>

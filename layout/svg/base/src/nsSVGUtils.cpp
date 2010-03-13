@@ -809,8 +809,8 @@ nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
   NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  PRUint16 align = aPreserveAspectRatio.GetAnimValue(aElement).GetAlign();
-  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue(aElement).GetMeetOrSlice();
+  PRUint16 align = aPreserveAspectRatio.GetAnimValue().GetAlign();
+  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue().GetMeetOrSlice();
 
   // default to the defaults
   if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
@@ -1109,8 +1109,9 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   if (!props.mClipPath)
     return PR_TRUE;
 
-  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(nsnull);
-  if (!clipPathFrame) {
+  PRBool isOK = PR_TRUE;
+  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
+  if (!clipPathFrame || !isOK) {
     // clipPath is not a valid resource, so nothing gets painted, so
     // hit-testing must fail.
     return PR_FALSE;
@@ -1437,7 +1438,7 @@ nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix &aMatrix,
                                  nsIFrame *aFrame)
 {
   if (aFrame &&
-      aUnits->GetAnimValue(static_cast<nsSVGElement*>(aFrame->GetContent())) ==
+      aUnits->GetAnimValue() ==
       nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     gfxRect bbox = GetBBox(aFrame);
     return gfxMatrix().Scale(bbox.Width(), bbox.Height()) *

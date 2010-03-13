@@ -334,9 +334,17 @@ private:
                                 nsIDOMNode *aEndNode, PRInt32 aEndOffset);
   nsresult SelectAllOrCollapseToEndOfText(PRBool aSelect);
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
-  
+
+  // placeholder methods
+  nsresult CreatePlaceholderDiv(nsTArray<nsIContent*>& aElements, nsNodeInfoManager* pNodeInfoManager);
+  nsresult ShowPlaceholder();
+  nsresult HidePlaceholder();
+  nsresult SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
+  nsresult UpdatePlaceholderText(PRBool aNotify); 
+
 private:
-  nsCOMPtr<nsIContent> mAnonymousDiv;
+  nsCOMPtr<nsIContent> mValueDiv;
+  nsCOMPtr<nsIContent> mPlaceholderDiv;
 
   nsCOMPtr<nsIEditor> mEditor;
 

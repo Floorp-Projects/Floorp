@@ -134,7 +134,10 @@ protected:
 
   /* Do the proper refcount management to null out mListener */
   void NullOutListener();
-  
+
+  void DoRemoveFromLoadGroup() {
+    RemoveFromLoadGroup(PR_TRUE);
+  }
 private:
   friend class imgCacheValidator;
 

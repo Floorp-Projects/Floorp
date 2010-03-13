@@ -65,10 +65,11 @@ include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../downloads/src \
+	-I$(srcdir)/../feeds/src \
 	-I$(srcdir)/../startup/src \
+	-I$(srcdir)/../statusfilter \
 	-I$(srcdir)/../typeaheadfind/src \
 	-I$(srcdir)/../url-classifier/src \
-	-I$(srcdir)/../feeds/src \
 	$(NULL)
 
 ifdef ALERTS_SERVICE
@@ -78,7 +79,9 @@ LOCAL_INCLUDES += \
 endif
 
 SHARED_LIBRARY_LIBS = \
+	../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
+	../statusfilter/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
@@ -111,7 +114,6 @@ ifdef MOZ_FEEDS
 SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
 endif
 
-SHARED_LIBRARY_LIBS += ../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX)
 EXTRA_DSO_LIBS = gkgfx
 
 EXTRA_DSO_LDOPTS += \

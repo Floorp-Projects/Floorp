@@ -11,6 +11,11 @@
 }
 
 #clientBox {
+  /* Add a min-width equal to chrome://branding/content/about.png's
+   * width, to maintain the dialog layout on OS X where the dialog is
+   * align="end" to right-align the button.
+   */
+  min-width: 300px;
   background-image: url("chrome://branding/content/about.png");
   background-repeat: no-repeat;
   background-color: #FFFFFF;

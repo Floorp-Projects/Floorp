@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
+
 #include "nsDOMThreadService.h"
 
 // Interfaces
@@ -60,7 +62,6 @@
 #include "nsPIDOMWindow.h"
 
 // Other includes
-#include "jscntxt.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -880,15 +881,6 @@ nsDOMThreadService::Cleanup()
   // These must be released after the thread pool is shut down.
   NS_IF_RELEASE(gJSRuntimeService);
   NS_IF_RELEASE(gWorkerSecurityManager);
-
-  if (sStringFinalizerIndex != -1) {
-#ifdef DEBUG
-    int index =
-#endif
-    JS_RemoveExternalStringFinalizer(StringFinalizer);
-    NS_ASSERTION(index == sStringFinalizerIndex, "Bad index!");
-    sStringFinalizerIndex = -1;
-  }
 }
 
 nsresult

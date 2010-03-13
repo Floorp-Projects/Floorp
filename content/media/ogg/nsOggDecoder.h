@@ -468,11 +468,6 @@ protected:
   PRInt64 GetDownloadPosition();
 
 private:
-  // Register/Unregister with Shutdown Observer. 
-  // Call on main thread only.
-  void RegisterShutdownObserver();
-  void UnregisterShutdownObserver();
-
   // Notifies the element that decoding has failed.
   void DecodeError();
 

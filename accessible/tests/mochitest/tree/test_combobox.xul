@@ -52,7 +52,11 @@
         children: [
           {
             role: ROLE_ENTRY,
-            children: []
+            children: [
+              {
+                role: ROLE_TEXT_LEAF // HTML 5 placeholder attribute value
+              }
+            ]
           },
           {
             role: ROLE_COMBOBOX_LIST, // context menu
@@ -74,7 +78,11 @@
           }
         ]
       };
-      testAccessibleTree("menulist2", accTree);
+
+      // XXX Bug 551957
+      if (!MAC) {
+        testAccessibleTree("menulist2", accTree);
+      }
 
       //////////////////////////////////////////////////////////////////////////
       // textbox@type=autocomplete #1 (history)
@@ -114,7 +122,11 @@
           },
           {
             role: ROLE_ENTRY,
-            children: [ ]
+            children: [
+              {
+                role: ROLE_TEXT_LEAF // HTML 5 placeholder attribute value
+              }
+            ]
           },
           {
             role: ROLE_COMBOBOX_LIST, // context menu popup
@@ -163,7 +175,7 @@
 
       <textbox id="autocomplete" type="autocomplete"
                autocompletesearch="history"
-               value="http://localhost:8888/redirect-a11y.html"/>
+               value="http://mochi.test:8888/redirect-a11y.html"/>
 
       <textbox id="autocomplete2" type="autocomplete">
         <menupopup>

@@ -4294,10 +4294,9 @@ nsComputedDOMStyle::GetTransitionProperty(nsIDOMCSSValue** aValue)
       property->SetIdent(eCSSKeyword_none);
     else if (cssprop == eCSSProperty_UNKNOWN)
     {
-      const char *str;
-      transition->GetUnknownProperty()->GetUTF8String(&str);
       nsAutoString escaped;
-      nsStyleUtil::AppendEscapedCSSIdent(NS_ConvertUTF8toUTF16(str), escaped);
+      nsStyleUtil::AppendEscapedCSSIdent(
+        nsDependentAtomString(transition->GetUnknownProperty()), escaped);
       property->SetString(escaped); // really want SetIdent
     }
     else

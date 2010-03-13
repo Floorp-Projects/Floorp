@@ -40,34 +40,56 @@
 
 #include "nscore.h"
 #include "prtypes.h"
+#include "jsapi.h"
+
+#define EXPORT_CDECL(type)   NS_EXPORT type
+#define EXPORT_STDCALL(type) NS_EXPORT type NS_STDCALL
 
 NS_EXTERN_C
 {
-  NS_EXPORT void test_v();
+  EXPORT_CDECL(void) test_void_t_cdecl();
 
-  NS_EXPORT PRInt8 test_i8();
-  NS_EXPORT PRInt8 test_i8_i8(PRInt8);
-  NS_EXPORT PRInt8 test_i8_i8_sum(PRInt8, PRInt8);
+  EXPORT_CDECL(void*) get_voidptr_t_cdecl();
+  EXPORT_CDECL(void*) set_voidptr_t_cdecl(void*);
 
-  NS_EXPORT PRInt16 test_i16();
-  NS_EXPORT PRInt16 test_i16_i16(PRInt16);
-  NS_EXPORT PRInt16 test_i16_i16_sum(PRInt16, PRInt16);
+#define DEFINE_TYPE(name, type, ffiType)                                       \
+  EXPORT_CDECL(type) get_##name##_cdecl();                                     \
+  EXPORT_CDECL(type) set_##name##_cdecl(type);                                 \
+  EXPORT_CDECL(type) sum_##name##_cdecl(type, type);                           \
+  EXPORT_CDECL(type) sum_alignb_##name##_cdecl(char, type, char, type, char);  \
+  EXPORT_CDECL(type) sum_alignf_##name##_cdecl(                                \
+    float, type, float, type, float);                                          \
+  EXPORT_CDECL(type) sum_many_##name##_cdecl(                                  \
+    type, type, type, type, type, type, type, type, type,                      \
+    type, type, type, type, type, type, type, type, type);                     \
+                                                                               \
+  EXPORT_CDECL(void) get_##name##_stats(size_t* align, size_t* size,           \
+                                        size_t* nalign, size_t* nsize,         \
+                                        size_t offsets[]);
 
-  NS_EXPORT PRInt32 test_i32();
-  NS_EXPORT PRInt32 test_i32_i32(PRInt32);
-  NS_EXPORT PRInt32 test_i32_i32_sum(PRInt32, PRInt32);
+#include "../typedefs.h"
 
-  NS_EXPORT PRInt64 test_i64();
-  NS_EXPORT PRInt64 test_i64_i64(PRInt64);
-  NS_EXPORT PRInt64 test_i64_i64_sum(PRInt64, PRInt64);
+#if defined(_WIN32) && !defined(__WIN64)
+  EXPORT_STDCALL(void) test_void_t_stdcall();
 
-  NS_EXPORT float test_f();
-  NS_EXPORT float test_f_f(float);
-  NS_EXPORT float test_f_f_sum(float, float);
+  EXPORT_STDCALL(void*) get_voidptr_t_stdcall();
+  EXPORT_STDCALL(void*) set_voidptr_t_stdcall(void*);
 
-  NS_EXPORT double test_d();
-  NS_EXPORT double test_d_d(double);
-  NS_EXPORT double test_d_d_sum(double, double);
+#define DEFINE_TYPE(name, type, ffiType)                                       \
+  EXPORT_STDCALL(type) get_##name##_stdcall();                                 \
+  EXPORT_STDCALL(type) set_##name##_stdcall(type);                             \
+  EXPORT_STDCALL(type) sum_##name##_stdcall(type, type);                       \
+  EXPORT_STDCALL(type) sum_alignb_##name##_stdcall(                            \
+    char, type, char, type, char);                                             \
+  EXPORT_STDCALL(type) sum_alignf_##name##_stdcall(                            \
+    float, type, float, type, float);                                          \
+  EXPORT_STDCALL(type) sum_many_##name##_stdcall(                              \
+    type, type, type, type, type, type, type, type, type,                      \
+    type, type, type, type, type, type, type, type, type);
+
+#include "../typedefs.h"
+
+#endif /* defined(_WIN32) && !defined(__WIN64) */
 
   NS_EXPORT PRInt32 test_ansi_len(const char*);
   NS_EXPORT PRInt32 test_wide_len(const PRUnichar*);
@@ -75,6 +97,93 @@ NS_EXTERN_C
   NS_EXPORT const PRUnichar* test_wide_ret();
   NS_EXPORT char* test_ansi_echo(const char*);
 
-  NS_EXPORT PRInt32 test_floor(PRInt32, float);
+  struct ONE_BYTE {
+    char a;
+  };
+
+  struct TWO_BYTE {
+    char a;
+    char b;
+  };
+
+  struct THREE_BYTE {
+    char a;
+    char b;
+    char c;
+  };
+
+  struct FOUR_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+  };
+
+  struct FIVE_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+  };
+
+  struct SIX_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+    char f;
+  };
+
+  struct SEVEN_BYTE {
+    char a;
+    char b;
+    char c;
+    char d;
+    char e;
+    char f;
+    char g;
+  };
+
+  struct POINT {
+    PRInt32 x;
+    PRInt32 y;
+  };
+
+  struct RECT {
+    PRInt32 top;
+    PRInt32 left;
+    PRInt32 bottom;
+    PRInt32 right;
+  };
+
+  struct INNER {
+    PRUint8 i1;
+    PRInt64 i2;
+    PRUint8 i3;
+  };
+
+  struct NESTED {
+    PRInt32 n1;
+    PRInt16 n2;
+    INNER   inner;
+    PRInt64 n3;
+    PRInt32 n4;
+  };
+
+  NS_EXPORT PRInt32 test_pt_in_rect(RECT, POINT);
+  NS_EXPORT void test_init_pt(POINT* pt, PRInt32 x, PRInt32 y);
+
+  NS_EXPORT PRInt32 test_nested_struct(NESTED);
+  NS_EXPORT POINT test_struct_return(RECT);
+  NS_EXPORT RECT test_large_struct_return(RECT, RECT);
+  NS_EXPORT ONE_BYTE test_1_byte_struct_return(RECT);
+  NS_EXPORT TWO_BYTE test_2_byte_struct_return(RECT);
+  NS_EXPORT THREE_BYTE test_3_byte_struct_return(RECT);
+  NS_EXPORT FOUR_BYTE test_4_byte_struct_return(RECT);
+  NS_EXPORT FIVE_BYTE test_5_byte_struct_return(RECT);
+  NS_EXPORT SIX_BYTE test_6_byte_struct_return(RECT);
+  NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(RECT);
 }
 

@@ -75,12 +75,7 @@ public:
   float GetBaseValue(nsSVGElement* aSVGElement) const
     { return mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
   float GetAnimValue(nsSVGElement* aSVGElement) const
-  {
-  #ifdef MOZ_SMIL
-    aSVGElement->FlushAnimations();
-  #endif
-    return mAnimVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
-  }
+    { return mAnimVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
   float GetAnimValue(nsIFrame* aFrame) const
     { return mAnimVal / GetUnitScaleFactor(aFrame, mSpecifiedUnitType); }
 
@@ -198,6 +193,8 @@ private:
     nsSVGLength2* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
+    // Script may have modified animation parameters or timeline -- DOM getters
+    // need to flush any resample requests to reflect these modifications.
     NS_IMETHOD GetUnitType(PRUint16* aResult)
     {
 #ifdef MOZ_SMIL

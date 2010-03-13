@@ -59,7 +59,6 @@
 #include "nsIVariant.h"
 
 class nsIRenderingContext;
-class nsIRegion;
 class nsIMenuItem;
 class nsIAccessible;
 class nsIContent;
@@ -442,6 +441,13 @@ class nsHashKey;
 #define NS_CONTENT_COMMAND_UNDO         (NS_CONTENT_COMMAND_EVENT_START+4)
 #define NS_CONTENT_COMMAND_REDO         (NS_CONTENT_COMMAND_EVENT_START+5)
 #define NS_CONTENT_COMMAND_PASTE_TRANSFERABLE (NS_CONTENT_COMMAND_EVENT_START+6)
+// NS_CONTENT_COMMAND_SCROLL scrolls the nearest scrollable element to the
+// currently focused content or latest DOM selection. This would normally be
+// the same element scrolled by keyboard scroll commands, except that this event
+// will scroll an element scrollable in either direction.  I.e., if the nearest
+// scrollable ancestor element can only be scrolled vertically, and horizontal
+// scrolling is requested using this event, no scrolling will occur.
+#define NS_CONTENT_COMMAND_SCROLL       (NS_CONTENT_COMMAND_EVENT_START+7)
 
 // Event to gesture notification
 #define NS_GESTURENOTIFY_EVENT_START 3900
@@ -636,17 +642,12 @@ class nsPaintEvent : public nsGUIEvent
 {
 public:
   nsPaintEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
-      renderingContext(nsnull), region(nsnull), rect(nsnull)
+    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT)
   {
   }
 
-  /// Context to paint in.
-  nsIRenderingContext *renderingContext;
-  /// area to paint  (should be used instead of rect)
-  nsIRegion           *region;
-  /// x,y, width, height in pixels of area to paint
-  nsIntRect           *rect;
+  // area that needs repainting
+  nsIntRegion region;
 };
 
 /**
@@ -1237,7 +1238,28 @@ public:
   {
   }
 
+  // NS_CONTENT_COMMAND_PASTE_TRANSFERABLE
   nsCOMPtr<nsITransferable> mTransferable;                 // [in]
+
+  // NS_CONTENT_COMMAND_SCROLL
+  // for mScroll.mUnit
+  enum {
+    eCmdScrollUnit_Line,
+    eCmdScrollUnit_Page,
+    eCmdScrollUnit_Whole
+  };
+
+  struct ScrollInfo {
+    ScrollInfo() :
+      mAmount(0), mUnit(eCmdScrollUnit_Line), mIsHorizontal(PR_FALSE)
+    {
+    }
+
+    PRInt32      mAmount;                                  // [in]
+    PRUint8      mUnit;                                    // [in]
+    PRPackedBool mIsHorizontal;                            // [in]
+  } mScroll;
+
   PRPackedBool mOnlyEnabledCheck;                          // [in]
 
   PRPackedBool mSucceeded;                                 // [out]

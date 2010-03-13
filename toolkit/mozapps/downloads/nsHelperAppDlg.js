@@ -1147,16 +1147,6 @@ nsUnknownContentTypeDialog.prototype = {
         }
     },
 
-    // dumpInfo:
-    doDebug: function() {
-        const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
-        // Open new progress dialog.
-        var progress = Components.classes[ "@mozilla.org/progressdialog;1" ]
-                         .createInstance( nsIProgressDialog );
-        // Show it.
-        progress.open( this.mDialog );
-    },
-
     // dumpObj:
     dumpObj: function( spec ) {
          var val = "<undefined>";

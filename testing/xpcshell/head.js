@@ -119,7 +119,28 @@ function _do_quit() {
   _quit = true;
 }
 
+function _dump_exception_stack(stack) {
+  stack.split("\n").forEach(function(frame) {
+    if (!frame)
+      return;
+    // frame is of the form "fname(args)@file:line"
+    let frame_regexp = new RegExp("(.*)\\(.*\\)@(.*):(\\d*)", "g");
+    let parts = frame_regexp.exec(frame);
+    dump("JS frame :: " + parts[2] + " :: " + (parts[1] ? parts[1] : "anonymous") + " :: line " + parts[3] + "\n");
+  });
+}
+
 function _execute_test() {
+  // Map resource://test/ to the current working directory.
+  let (ios = Components.classes["@mozilla.org/network/io-service;1"]
+             .getService(Components.interfaces.nsIIOService)) {
+    let protocolHandler =
+      ios.getProtocolHandler("resource")
+         .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+    let curDirURI = ios.newFileURI(do_get_cwd());
+    protocolHandler.setSubstitution("test", curDirURI);
+  }
+
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
@@ -132,10 +153,21 @@ function _execute_test() {
     _do_main();
   } catch (e) {
     _passed = false;
-    // Print exception, but not do_throw() result.
-    // Hopefully, this won't mask other NS_ERROR_ABORTs.
-    if (!_quit || e != Components.results.NS_ERROR_ABORT)
-      dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e + "\n");
+    // do_check failures are already logged and set _quit to true and throw
+    // NS_ERROR_ABORT. If both of those are true it is likely this exception
+    // has already been logged so there is no need to log it again. It's
+    // possible that this will mask an NS_ERROR_ABORT that happens after a
+    // do_check failure though.
+    if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+      dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
+      if (e.stack) {
+        dump(" - See following stack:\n");
+        _dump_exception_stack(e.stack);
+      }
+      else {
+        dump("\n");
+      }
+    }
   }
 
   // _TAIL_FILES is dynamically defined by <runxpcshelltests.py>.
@@ -182,12 +214,35 @@ function do_timeout(delay, func) {
 }
 
 function do_execute_soon(callback) {
+  do_test_pending();
   var tm = Components.classes["@mozilla.org/thread-manager;1"]
                      .getService(Components.interfaces.nsIThreadManager);
 
   tm.mainThread.dispatch({
     run: function() {
-      callback();
+      try {
+        callback();
+      } catch (e) {
+        // do_check failures are already logged and set _quit to true and throw
+        // NS_ERROR_ABORT. If both of those are true it is likely this exception
+        // has already been logged so there is no need to log it again. It's
+        // possible that this will mask an NS_ERROR_ABORT that happens after a
+        // do_check failure though.
+        if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+          dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
+          if (e.stack) {
+            dump(" - See following stack:\n");
+            _dump_exception_stack(e.stack);
+          }
+          else {
+            dump("\n");
+          }
+          _do_quit();
+        }
+      }
+      finally {
+        do_test_finished();
+      }
     }
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 }

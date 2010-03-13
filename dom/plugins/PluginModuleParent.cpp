@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <glib.h>
+#endif
+
 #include "base/process_util.h"
 
 #include "mozilla/ipc/SyncChannel.h"
@@ -66,24 +70,6 @@ struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
     static void ReleaseCallee(Class* obj) { }
 };
 
-class PluginCrashed : public nsRunnable
-{
-public:
-    PluginCrashed(nsNPAPIPlugin* plugin,
-                  const nsString& dumpID)
-        : mDumpID(dumpID),
-          mPlugin(plugin) { }
-
-    NS_IMETHOD Run() {
-        mPlugin->PluginCrashed(mDumpID);
-        return NS_OK;
-    }
-
-private:
-    nsNPAPIPlugin* mPlugin;
-    nsString mDumpID;
-};
-
 // static
 PluginLibrary*
 PluginModuleParent::LoadModule(const char* aFilePath)
@@ -108,6 +94,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mNPNIface(NULL)
     , mPlugin(NULL)
     , mProcessStartTime(time(NULL))
+    , mPluginCrashedTask(NULL)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
@@ -120,6 +107,13 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 
 PluginModuleParent::~PluginModuleParent()
 {
+    NS_ASSERTION(OkToCleanup(), "unsafe destruction");
+
+    if (mPluginCrashedTask) {
+        mPluginCrashedTask->Cancel();
+        mPluginCrashedTask = 0;
+    }
+
     if (!mShutdown) {
         NS_WARNING("Plugin host deleted the module without shutting down.");
         NPError err;
@@ -191,7 +185,20 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
     // (as PluginName, PluginVersion)
     WriteExtraDataEntry(stream, "PluginName", "");
     WriteExtraDataEntry(stream, "PluginVersion", "");
+
+    if (!mCrashNotes.IsEmpty()) {
+        WriteExtraDataEntry(stream, "Notes", mCrashNotes.get());
+    }
+
     stream->Close();
+}
+
+
+bool
+PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
+{
+    mCrashNotes.Append(aNotes);
+    return true;
 }
 
 int
@@ -252,12 +259,11 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
     switch (why) {
     case AbnormalShutdown: {
         nsCOMPtr<nsIFile> dump;
-        nsAutoString dumpID;
         if (GetMinidump(getter_AddRefs(dump))) {
             WriteExtraDataForMinidump(dump);
-            if (NS_SUCCEEDED(dump->GetLeafName(dumpID))) {
-                dumpID.Replace(dumpID.Length() - 4, 4,
-                               NS_LITERAL_STRING(""));
+            if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
+                mDumpID.Replace(mDumpID.Length() - 4, 4,
+                                NS_LITERAL_STRING(""));
             }
         }
         else {
@@ -268,9 +274,9 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
         // Defer the PluginCrashed method so that we don't re-enter
         // and potentially modify the actor child list while enumerating it.
         if (mPlugin) {
-            nsCOMPtr<nsIRunnable> r =
-                new PluginCrashed(mPlugin, dumpID);
-            NS_DispatchToMainThread(r);
+            mPluginCrashedTask = NewRunnableMethod(
+                this, &PluginModuleParent::NotifyPluginCrashed);
+            MessageLoop::current()->PostTask(FROM_HERE, mPluginCrashedTask);
         }
         break;
     }
@@ -281,6 +287,16 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
     default:
         NS_ERROR("Unexpected shutdown reason for toplevel actor.");
     }
+}
+
+void
+PluginModuleParent::NotifyPluginCrashed()
+{
+    // MessageLoop owns this
+    mPluginCrashedTask = NULL;
+
+    if (mPlugin)
+        mPlugin->PluginCrashed(mDumpID);
 }
 
 PPluginInstanceParent*
@@ -609,20 +625,17 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
         return false;
     }
 
-    nsAutoTArray<NPUTF8*, 10> buffers;
-    nsAutoTArray<NPIdentifier, 10> ids;
+    nsTArray<NPUTF8*> buffers;
+    nsTArray<NPIdentifier> ids;
 
     if (!(buffers.SetLength(count) &&
-          ids.SetLength(count) &&
-          aIds->SetCapacity(count))) {
+          ids.SetLength(count))) {
         NS_ERROR("Out of memory?");
         return false;
     }
 
-    for (PRUint32 index = 0; index < count; index++) {
-        buffers[index] = const_cast<NPUTF8*>(aNames[index].BeginReading());
-        NS_ASSERTION(buffers[index], "Null pointer should be impossible!");
-    }
+    for (PRUint32 index = 0; index < count; ++index)
+        buffers[index] = const_cast<NPUTF8*>(NullableStringGet(aNames[index]));
 
     mozilla::plugins::parent::_getstringidentifiers(
         const_cast<const NPUTF8**>(buffers.Elements()), count, ids.Elements());
@@ -840,3 +853,30 @@ PluginModuleParent::AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariab
     *aBoolVal = boolVal ? true : false;
     return true;
 }
+
+#if !defined(MOZ_WIDGET_GTK2)
+bool
+PluginModuleParent::AnswerProcessSomeEvents()
+{
+    NS_RUNTIMEABORT("unreached");
+    return false;
+}
+
+#else
+static const int kMaxChancesToProcessEvents = 20;
+
+bool
+PluginModuleParent::AnswerProcessSomeEvents()
+{
+    PLUGIN_LOG_DEBUG(("Spinning mini nested loop ..."));
+
+    int i = 0;
+    for (; i < kMaxChancesToProcessEvents; ++i)
+        if (!g_main_context_iteration(NULL, FALSE))
+            break;
+
+    PLUGIN_LOG_DEBUG(("... quitting mini nested loop; processed %i tasks", i));
+
+    return true;
+}
+#endif

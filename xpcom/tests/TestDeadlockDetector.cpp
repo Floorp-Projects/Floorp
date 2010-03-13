@@ -208,15 +208,11 @@ public:
                     else
                         mStderr += buf;
                 }
+                else if (isStdout) {
+                    stdoutOpen = PR_FALSE;
+                }
                 else {
-                    if (isStdout) {
-                        stdoutOpen = PR_FALSE;
-                        PR_Close(mStdoutfd);
-                    }
-                    else {
-                        stderrOpen = PR_FALSE;
-                        PR_Close(mStderrfd);
-                    }
+                    stderrOpen = PR_FALSE;
                 }
             }
 
@@ -230,8 +226,6 @@ private:
     void Finish(PRBool normalExit) {
         if (!normalExit) {
             PR_KillProcess(mProc);
-            PR_Close(mStdoutfd);
-            PR_Close(mStderrfd);
             mExitCode = -1;
             PRInt32 dummy;
             PR_WaitProcess(mProc, &dummy);
@@ -239,6 +233,9 @@ private:
         else {
             PR_WaitProcess(mProc, &mExitCode); // this had better not block ...
         }
+
+        PR_Close(mStdoutfd);
+        PR_Close(mStderrfd);
     }
 
     PRProcess* mProc;

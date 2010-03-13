@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: value has to be shown if set via javascript -->
+  <script type="text/javascript">
+    function setValue()
+    {
+      document.getElementById('p1').value = "my value";
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setValue(); disableReftestWait();">
+    <input type="text" id="p1" value="" placeholder="my placeholder">
+  </body>
+</html>

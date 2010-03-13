@@ -1903,7 +1903,7 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
 
   *_statement = isItemAnnotation ? GetStatement(mDBGetItemAnnotationValue)
                                  : GetStatement(mDBGetPageAnnotationValue);
-  NS_ENSURE_STATE(_statement);
+  NS_ENSURE_STATE(*_statement);
   mozStorageStatementScoper getAnnoScoper(*_statement);
 
   nsresult rv;
@@ -2000,7 +2000,7 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
 
   *_statement = isItemAnnotation ? GetStatement(mDBAddItemAnnotation)
                                  : GetStatement(mDBAddPageAnnotation);
-  NS_ENSURE_STATE(_statement);
+  NS_ENSURE_STATE(*_statement);
   mozStorageStatementScoper setAnnoScoper(*_statement);
 
   // Don't replace existing annotations.

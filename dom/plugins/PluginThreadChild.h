@@ -63,6 +63,9 @@ public:
         return gInstance;
     }
 
+    // For use on the plugin thread.
+    static void AppendNotesToCrashReport(const nsCString& aNotes);
+
 private:
     static PluginThreadChild* gInstance;
 

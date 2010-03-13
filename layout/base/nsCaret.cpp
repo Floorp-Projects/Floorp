@@ -363,7 +363,7 @@ nsresult nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   viewOffset += framePos;
   outCoordinates->x = viewOffset.x;
   outCoordinates->y = viewOffset.y;
-  outCoordinates->height = theFrame->GetSize().height;
+  outCoordinates->height = theFrame->GetContentRect().height;
   outCoordinates->width = ComputeMetrics(theFrame, theFrameOffset, outCoordinates->height).mCaretWidth;
   
   return NS_OK;
@@ -405,7 +405,7 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
     return nsnull;
 
   // now add the frame offset to the view offset, and we're done
-  nscoord height = theFrame->GetSize().height;
+  nscoord height = theFrame->GetContentRect().height;
   nscoord width = ComputeMetrics(theFrame, theFrameOffset, height).mCaretWidth;
   *aRect = nsRect(framePos.x, 0, width, height);
   return theFrame;
@@ -1204,7 +1204,7 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
-  nsRect frameRect = aFrame->GetRect();
+  nsRect frameRect = aFrame->GetContentRect();
   frameRect.x = 0;
   frameRect.y = 0;
 

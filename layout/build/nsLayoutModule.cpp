@@ -46,8 +46,6 @@
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
-#include "nsICSSLoader.h"
-#include "nsICSSParser.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIContentIterator.h"
@@ -117,6 +115,8 @@
 // DOM includes
 #include "nsDOMException.h"
 #include "nsDOMFileReader.h"
+#include "nsFormData.h"
+#include "nsFileDataProtocolHandler.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
@@ -291,6 +291,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileDataProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
@@ -482,8 +484,6 @@ MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXML
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 #endif
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
-MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
-MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
 MAKE_CTOR(CreateSelection,                nsFrameSelection,            NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
@@ -1046,16 +1046,6 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateImageDocument },
 
-  { "CSS parser",
-    NS_CSSPARSER_CID,
-    "@mozilla.org/content/css-parser;1",
-    CreateCSSParser },
-
-  { "CSS loader",
-    NS_CSS_LOADER_CID,
-    nsnull,
-    CreateCSSLoader },
-
   { "Dom selection",
     NS_DOMSELECTION_CID,
     "@mozilla.org/content/dom-selection;1",
@@ -1426,6 +1416,16 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FILEREADER_CID,
     NS_FILEREADER_CONTRACTID,
     nsDOMFileReaderConstructor },
+
+  { "FormData",
+    NS_FORMDATA_CID,
+    NS_FORMDATA_CONTRACTID,
+    nsFormDataConstructor },
+
+  { "FileData Protocol Handler",
+    NS_FILEDATAPROTOCOLHANDLER_CID,
+    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FILEDATA_SCHEME,
+    nsFileDataProtocolHandlerConstructor },
 
   { "XMLHttpRequest",
     NS_XMLHTTPREQUEST_CID,

@@ -56,9 +56,16 @@ endif
 ifdef WINCE
 # We need jemalloc built before the shunt
 ifdef MOZ_MEMORY
-DIRS += wince/tools $(DEPTH)/memory/jemalloc wince/shunt
+DIRS += wince/tools \
+	$(DEPTH)/memory/jemalloc \
+	wince/shunt \
+	$(DEPTH)/memory/mozalloc \
+	$(NULL)
 else
-DIRS += wince/tools wince/shunt
+DIRS += wince/tools \
+	wince/shunt \
+	$(DEPTH)/memory/mozalloc \
+	$(NULL)
 endif
 endif
 
@@ -71,6 +78,7 @@ TARGET_DEPTH = ..
 include $(srcdir)/automation-build.mk
 
 _LEAKTEST_DIR = $(DEPTH)/_leaktest
+GARBAGE_DIRS += $(_LEAKTEST_DIR)
 
 _LEAKTEST_FILES =    \
 		automation.py \
@@ -83,6 +91,7 @@ _LEAKTEST_FILES =    \
 leaktest.py: leaktest.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
 	chmod +x $@
+GARBAGE += leaktest.py
 
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
@@ -115,7 +124,7 @@ check::
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \
         fi
-	@if ! test -f ./unify-test-universal; then \
+	@if test ! -f ./unify-test-universal; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \
         fi
@@ -134,7 +143,7 @@ check::
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
           false; \
         fi
-	@if ! test -f ./unifytestc.class; then \
+	@if test ! -f ./unifytestc.class; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
           false; \
         fi

@@ -396,9 +396,6 @@ _TEST_FILES_C	= \
 		test_HTMLInputElement20.html \
 		test_HTMLInputElement21.html \
 		test_HTMLInputElement22.html \
-		test_HTMLIsIndexElement01.html \
-		test_HTMLIsIndexElement02.html \
-		test_HTMLIsIndexElement03.html \
 		test_HTMLLabelElement01.html \
 		test_HTMLLabelElement02.html \
 		test_HTMLLabelElement03.html \

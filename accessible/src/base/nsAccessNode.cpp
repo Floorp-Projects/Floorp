@@ -708,24 +708,6 @@ nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
   return nsnull;
 }
 
-// Callback used when clearing the cache, see nsAccessNode::ClearCache() method.
-static PLDHashOperator
-ClearCacheEntry(const void* aKey, nsCOMPtr<nsAccessNode>& aAccessNode,
-                void* aUserArg)
-{
-  NS_ASSERTION(aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
-  if (aAccessNode)
-    aAccessNode->Shutdown();
-
-  return PL_DHASH_REMOVE;
-}
-
-void
-nsAccessNode::ClearCache(nsAccessNodeHashtable& aCache)
-{
-  aCache.Enumerate(ClearCacheEntry, nsnull);
-}
-
 already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
 {
   nsCOMPtr<nsIPresShell> shell = nsCoreUtils::GetPresShellFor(mDOMNode);

@@ -1171,7 +1171,7 @@ SetFontFamily(nsPresContext*       aPresContext,
     aGlyphCode.font ? aGlyphTable->FontNameFor(aGlyphCode) : aDefaultFamily;
   if (! family.Equals(aFont.name)) {
     aFont.name = family;
-    aRenderingContext.SetFont(aFont, nsnull, aPresContext->GetUserFontSet());
+    aRenderingContext.SetFont(aFont, aPresContext->GetUserFontSet());
   }
 }
 
@@ -1584,9 +1584,9 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     // Record the families in case there is no stretch.  But don't bother
     // storing families when they are just those from the StyleContext.
     mFamily = families;
-  }    
+  }
 
-  aRenderingContext.SetFont(font, nsnull, aPresContext->GetUserFontSet());
+  aRenderingContext.SetFont(font, aPresContext->GetUserFontSet());
   nsresult rv =
     aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()),
                                          aDesiredStretchSize);
@@ -2096,7 +2096,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   if (! mFamily.IsEmpty()) {
     theFont.name = mFamily;
   }
-  aRenderingContext.SetFont(theFont, nsnull, aPresContext->GetUserFontSet());
+  aRenderingContext.SetFont(theFont, aPresContext->GetUserFontSet());
 
   if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
     // normal drawing if there is nothing special about this char ...
