@@ -393,7 +393,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 {
     AssertPluginThread();
 
-    NPObject* object;
+    NPObject* object = nsnull;
     NPError result = NPERR_GENERIC_ERROR;
     if (mPluginIface->getvalue) {
         result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
@@ -412,6 +412,9 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
         }
 
         NS_ERROR("Failed to get actor!");
+        result = NPERR_GENERIC_ERROR;
+    }
+    else {
         result = NPERR_GENERIC_ERROR;
     }
 
