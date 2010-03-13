@@ -1680,7 +1680,7 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
       const jschar* baseChars = JS_GetStringChars(baseName);
       size_t baselen = JS_GetStringLength(baseName);
       result.Append(reinterpret_cast<const PRUnichar*>(baseChars), baselen);
-      result.Append('"');
+      result.Append(NS_LITERAL_STRING("\")"));
       break;
     }
 
