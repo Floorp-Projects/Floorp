@@ -565,10 +565,14 @@ JSRuntime::init(uint32 maxbytes)
 {
     if (!js_InitDtoa() ||
         !js_InitGC(this, maxbytes) ||
-        !js_InitAtomState(this) ||
-        !js_InitDeflatedStringCache(this)) {
+        !js_InitAtomState(this)) {
         return false;
     }
+
+    deflatedStringCache = new js::DeflatedStringCache();
+    if (!deflatedStringCache || !deflatedStringCache->init())
+        return false;
+
 #ifdef JS_THREADSAFE
     gcLock = JS_NEW_LOCK();
     if (!gcLock)
@@ -629,7 +633,7 @@ JSRuntime::~JSRuntime()
      * Finish the deflated string cache after the last GC and after
      * calling js_FinishAtomState, which finalizes strings.
      */
-    js_FinishDeflatedStringCache(this);
+    delete deflatedStringCache;
     js_FinishGC(this);
 #ifdef JS_THREADSAFE
     if (gcLock)
@@ -5063,7 +5067,7 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
-    if (!js_SetStringBytes(cx, str, bytes, nbytes))
+    if (!cx->runtime->deflatedStringCache->setBytes(cx, str, bytes))
         cx->free(bytes);
     return str;
 }
@@ -5192,7 +5196,7 @@ JS_GetStringChars(JSString *str)
         if (s) {
             memcpy(s, str->dependentChars(), n * sizeof *s);
             s[n] = 0;
-            str->reinitFlat(s, n);
+            str->initFlat(s, n);
         } else {
             s = str->dependentChars();
         }
