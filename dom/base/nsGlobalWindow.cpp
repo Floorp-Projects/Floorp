@@ -2061,6 +2061,20 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    nsAutoString origin;
+    nsIPrincipal* principal = aDocument->NodePrincipal();
+    nsContentUtils::GetUTFOrigin(principal, origin);
+    observerService->
+      NotifyObservers(static_cast<nsIDOMWindow*>(this),
+                      nsContentUtils::IsSystemPrincipal(principal) ?
+                        "chrome-document-global-created" :
+                        "content-document-global-created",
+                      origin.get());
+  }
+
   return NS_OK;
 }
 
