@@ -68,11 +68,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLLinkElement.h"
+#include "Link.h"
 #ifdef MOZ_SVG
-#include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGTitleElement.h"
 #include "nsIDOMSVGForeignObjectElem.h"
@@ -1048,24 +1045,14 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
           else {
             // ...ok, that didn't work, try it in the XLink namespace
             NS_NAMED_LITERAL_STRING(xlinkNS, "http://www.w3.org/1999/xlink");
-            nsCOMPtr<nsIDOMHTMLAnchorElement> anchorContent(do_QueryInterface(currElement));
-            nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(currElement));
-            nsCOMPtr<nsIDOMHTMLLinkElement> linkContent(do_QueryInterface(currElement));
-            PRBool hasHref;
-            currElement->HasAttribute(NS_LITERAL_STRING("href"), &hasHref);
-#ifdef MOZ_SVG
-            nsCOMPtr<nsIDOMSVGAElement> svgAnchorContent(do_QueryInterface(currElement));
-            PRBool hasXlinkHref;
-            currElement->HasAttributeNS(xlinkNS, NS_LITERAL_STRING("href"), &hasXlinkHref);
-
-            if (((anchorContent || areaContent || linkContent) && hasHref) ||
-                (svgAnchorContent && hasXlinkHref)) {
-#else
-            if ((anchorContent || areaContent || linkContent) && hasHref) {
-#endif
-              currElement->GetAttributeNS(xlinkNS, NS_LITERAL_STRING("title"), outText);
-              if ( outText.Length() )
-                found = PR_TRUE;
+            nsCOMPtr<mozilla::dom::Link> linkContent(do_QueryInterface(currElement));
+            if (linkContent) {
+              nsCOMPtr<nsIURI> uri(linkContent->GetURIExternal());
+              if (uri) {
+                currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
+                if ( outText.Length() )
+                  found = PR_TRUE;
+              }
             }
 #ifdef MOZ_SVG
             else {

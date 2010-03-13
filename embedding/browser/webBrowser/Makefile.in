@@ -55,6 +55,10 @@ EXPORTS         = \
                 nsCTooltipTextProvider.h \
                 $(NULL)
 
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../../../content/base/src \
+		$(NULL)
+		
 SDK_XPIDLSRCS   = \
 		nsIContextMenuListener.idl  \
 		nsIEmbeddingSiteWindow.idl  \
