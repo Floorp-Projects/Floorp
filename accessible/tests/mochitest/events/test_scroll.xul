@@ -59,7 +59,7 @@
       registerA11yEventListener(EVENT_SCROLLING_START, gScrollHandler);
 
       var url =
-        "chrome://mochikit/content/a11y/accessible/events_scroll.html#link1";
+        "chrome://mochikit/content/a11y/accessible/events/scroll.html#link1";
 
       var tabBrowser = document.getElementById("tabBrowser");
       tabBrowser.loadURI(url);

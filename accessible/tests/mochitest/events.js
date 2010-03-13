@@ -583,6 +583,7 @@ function sequence()
  * which will be called when proper event is handled. Invokers listen default
  * event type registered in event queue object until it is passed explicetly.
  *
+ * Note, checker object is optional.
  * Note, you don't need to initialize 'target' and 'type' members of checker
  * object. The 'target' member will be initialized by invoker object and you are
  * free to use it in 'check' method.
@@ -936,14 +937,16 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
 function synthAction(aNodeOrID, aChecker, aEventType)
 {
   this.DOMNode = getNode(aNodeOrID);
-  aChecker.target = this.DOMNode;
+  if (aChecker)
+    aChecker.target = this.DOMNode;
 
   if (aEventType)
     this.eventSeq = [ new invokerChecker(aEventType, this.DOMNode) ];
 
   this.check = function synthAction_check(aEvent)
   {
-    aChecker.check(aEvent);
+    if (aChecker)
+      aChecker.check(aEvent);
   }
 
   this.getID = function synthAction_getID() { return aNodeOrID + " action"; }
