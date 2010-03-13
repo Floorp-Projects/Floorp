@@ -546,8 +546,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
-            ok = js_InitRuntimeStringState(cx);
-        if (ok)
             ok = JSScope::initRuntimeState(cx);
 
 #ifdef JS_THREADSAFE
@@ -778,7 +776,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 
             JSScope::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
-            js_FinishRuntimeStringState(cx);
 
             /* Unpin all common atoms before final GC. */
             js_FinishCommonAtoms(cx);
