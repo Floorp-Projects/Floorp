@@ -77,7 +77,7 @@ Library::Create(JSContext* cx, jsval aPath)
   JSObject* libraryObj = JS_NewObject(cx, &sLibraryClass, NULL, NULL);
   if (!libraryObj)
     return NULL;
-  JSAutoTempValueRooter root(cx, libraryObj);
+  js::AutoValueRooter root(cx, libraryObj);
 
   // initialize the library
   if (!JS_SetReservedSlot(cx, libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL)))
