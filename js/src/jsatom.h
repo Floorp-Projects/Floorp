@@ -246,7 +246,6 @@ struct JSAtomState {
     JSAtom              *callerAtom;
     JSAtom              *classPrototypeAtom;
     JSAtom              *constructorAtom;
-    JSAtom              *countAtom;
     JSAtom              *eachAtom;
     JSAtom              *evalAtom;
     JSAtom              *fileNameAtom;
