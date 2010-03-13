@@ -244,6 +244,15 @@ NewUCString(JSContext* cx, const nsString& from)
     reinterpret_cast<const jschar*>(from.get()), from.Length());
 }
 
+JS_ALWAYS_INLINE const nsDependentString
+GetString(JSString* str)
+{
+  JS_ASSERT(str);
+  const jschar* chars = JS_GetStringChars(str);
+  size_t length = JS_GetStringLength(str);
+  return nsDependentString(reinterpret_cast<const PRUnichar*>(chars), length);
+}
+
 JS_ALWAYS_INLINE size_t
 Align(size_t val, size_t align)
 {
@@ -1638,9 +1647,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
 
   // Stick the base type and derived type parts together.
   JSString* baseName = CType::GetName(cx, currentType);
-  const jschar* baseChars = JS_GetStringChars(baseName);
-  size_t baselen = JS_GetStringLength(baseName);
-  result.Insert(reinterpret_cast<const PRUnichar*>(baseChars), 0, baselen);
+  result.Insert(GetString(baseName), 0);
   return result;
 }
 
@@ -1664,9 +1671,7 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
   {
     result.Append(NS_LITERAL_STRING("ctypes."));
     JSString* nameStr = CType::GetName(cx, typeObj);
-    const jschar* name = JS_GetStringChars(nameStr);
-    size_t namelen = JS_GetStringLength(nameStr);
-    result.Append(reinterpret_cast<const PRUnichar*>(name), namelen);
+    result.Append(GetString(nameStr));
     break;
   }
   case TYPE_pointer: {
@@ -1675,9 +1680,7 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
       // Opaque pointer type. Use the type's name.
       result.Append(NS_LITERAL_STRING("ctypes.PointerType(\""));
       JSString* baseName = CType::GetName(cx, typeObj);
-      const jschar* baseChars = JS_GetStringChars(baseName);
-      size_t baselen = JS_GetStringLength(baseName);
-      result.Append(reinterpret_cast<const PRUnichar*>(baseChars), baselen);
+      result.Append(GetString(baseName));
       result.Append(NS_LITERAL_STRING("\")"));
       break;
     }
@@ -1714,17 +1717,13 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
     if (makeShort) {
       // Shorten the type declaration by assuming that StructType 't' is bound
       // to an in-scope variable of name 't.name'.
-      const jschar* nameChars = JS_GetStringChars(name);
-      size_t namelen = JS_GetStringLength(name);
-      result.Append(reinterpret_cast<const PRUnichar*>(nameChars), namelen);
+      result.Append(GetString(name));
       break;
     }
 
     // Write the full struct declaration.
     result.Append(NS_LITERAL_STRING("ctypes.StructType(\""));
-    const jschar* nameChars = JS_GetStringChars(name);
-    size_t namelen = JS_GetStringLength(name);
-    result.Append(reinterpret_cast<const PRUnichar*>(nameChars), namelen);
+    result.Append(GetString(name));
     result.Append(NS_LITERAL_STRING("\", ["));
 
     nsTArray<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
@@ -1811,9 +1810,7 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
     if (!src)
       break;
 
-    const jschar* srcChars = JS_GetStringChars(src);
-    size_t srclen = JS_GetStringLength(src);
-    result.Append(reinterpret_cast<const PRUnichar*>(srcChars), srclen);
+    result.Append(GetString(src));
     break;
   }
   case TYPE_pointer: {
@@ -2405,9 +2402,7 @@ CType::ToString(JSContext* cx, uintN argc, jsval *vp)
 
   nsAutoString type(NS_LITERAL_STRING("type "));
   JSString* right = GetName(cx, obj);
-  const jschar* rightChars = JS_GetStringChars(right);
-  size_t rightlen = JS_GetStringLength(right);
-  type.Append(reinterpret_cast<const PRUnichar*>(rightChars), rightlen);
+  type.Append(GetString(right));
 
   JSString* result = NewUCString(cx, type);
   if (!result)
@@ -3145,13 +3140,13 @@ ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
     return false;
   }
 
-  JSString* nameStr = JSVAL_TO_STRING(nameVal.value());
-  const jschar* name = JS_GetStringChars(nameStr);
-  size_t namelen = JS_GetStringLength(nameStr);
-  field->mName.Assign(reinterpret_cast<const PRUnichar*>(name), namelen);
+  JSString* name = JSVAL_TO_STRING(nameVal.value());
+  const jschar* nameChars = JS_GetStringChars(name);
+  size_t namelen = JS_GetStringLength(name);
+  field->mName.Assign(reinterpret_cast<const PRUnichar*>(nameChars), namelen);
 
   JSAutoTempValueRooter propVal(cx);
-  if (!JS_GetUCProperty(cx, obj, name, namelen, propVal.addr()))
+  if (!JS_GetUCProperty(cx, obj, nameChars, namelen, propVal.addr()))
     return false;
 
   if (JSVAL_IS_PRIMITIVE(propVal.value()) ||
@@ -3483,10 +3478,7 @@ StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
   nsTArray<FieldInfo>* fields = GetFieldInfo(cx, obj);
 
   JSString* nameStr = JSVAL_TO_STRING(idval);
-  const jschar* nameChars = JS_GetStringChars(nameStr);
-  size_t namelen = JS_GetStringLength(nameStr);
-  const nsDependentString name(reinterpret_cast<const PRUnichar*>(nameChars),
-    namelen);
+  const nsDependentString name(GetString(nameStr));
 
   for (PRUint32 i = 0; i < fields->Length(); ++i) {
     if (fields->ElementAt(i).mName.Equals(name))
