@@ -811,7 +811,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireAccessibleFocusEvent(accessible, focusedItem, aEvent);
   }
   else if (eventType.EqualsLiteral("blur")) {
-    NS_IF_ADDREF(gLastFocusedNode);
+    NS_IF_RELEASE(gLastFocusedNode);
     gLastFocusedFrameType = nsnull;
     gLastFocusedAccessiblesState = 0;
   }
