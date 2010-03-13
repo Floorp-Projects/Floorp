@@ -470,7 +470,7 @@ protected:
   void FreeInnerObjects(PRBool aClearScope);
   nsGlobalWindow *CallerInnerWindow();
 
-  nsresult InnerWindowSetNewDocument(nsIDocument* aDocument);
+  nsresult InnerSetNewDocument(nsIDocument* aDocument);
 
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 

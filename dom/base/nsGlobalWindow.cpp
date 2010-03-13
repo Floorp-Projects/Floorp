@@ -2032,7 +2032,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       }
     } else {
-      rv = newInnerWindow->InnerWindowSetNewDocument(aDocument);
+      rv = newInnerWindow->InnerSetNewDocument(aDocument);
       NS_ENSURE_SUCCESS(rv, rv);
 
       NS_STID_FOR_ID(st_id) {
@@ -2112,7 +2112,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 }
 
 nsresult
-nsGlobalWindow::InnerWindowSetNewDocument(nsIDocument* aDocument)
+nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 {
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
 
