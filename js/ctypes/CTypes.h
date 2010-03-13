@@ -158,7 +158,7 @@ enum Int64FunctionSlot {
 
 class CType {
 public:
-  static JSObject* Create(JSContext* cx, JSObject* proto, TypeCode type, jsval name, jsval size, jsval align, ffi_type* ffiType, JSFunctionSpec* fs, PropertySpec* ps);
+  static JSObject* Create(JSContext* cx, JSObject* proto, TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, JSFunctionSpec* fs, PropertySpec* ps);
   static JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName, JSObject* proto, const char* name, TypeCode type, jsval size, jsval align, ffi_type* ffiType);
   static void Finalize(JSContext* cx, JSObject* obj);
 
