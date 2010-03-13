@@ -24,6 +24,7 @@
  *   Asaf Romano <mano@mozilla.com>
  *   Sungjoon Steve Won <stevewon@gmail.com>
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -486,34 +487,6 @@ var PlacesUtils = {
   },
 
   /**
-   * Gets the index of a node within its parent container
-   * @param   aNode
-   *          The node to look up
-   * @returns The index of the node within its parent container, or -1 if the
-   *          node was not found or the node specified has no parent.
-   */
-  getIndexOfNode: function PU_getIndexOfNode(aNode) {
-    var parent = aNode.parent;
-    if (!parent)
-      return -1;
-    var wasOpen = parent.containerOpen;
-    var result, oldViewer;
-    if (!wasOpen) {
-      result = parent.parentResult;
-      oldViewer = result.viewer;
-      result.viewer = null;
-      parent.containerOpen = true;
-    }
-    var cc = parent.childCount;
-    for (var i = 0; i < cc && parent.getChild(i) != aNode; ++i);
-    if (!wasOpen) {
-      parent.containerOpen = false;
-      result.viewer = oldViewer;
-    }
-    return i < cc ? i : -1;
-  },
-
-  /**
    * String-wraps a result node according to the rules of the specified
    * content type.
    * @param   aNode
@@ -529,40 +502,45 @@ var PlacesUtils = {
    * @returns A string serialization of the node
    */
   wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI, aForceCopy) {
-    var self = this;
+    let self = this;
 
     // when wrapping a node, we want all the items, even if the original
     // query options are excluding them.
     // this can happen when copying from the left hand pane of the bookmarks
     // organizer
+    // @return [node, shouldClose]
     function convertNode(cNode) {
       if (self.nodeIsFolder(cNode) && asQuery(cNode).queryOptions.excludeItems) {
-        var concreteId = self.getConcreteItemId(cNode);
-        return self.getFolderContents(concreteId, false, true).root;
+        let concreteId = self.getConcreteItemId(cNode);
+        return [self.getFolderContents(concreteId, false, true).root, true];
       }
-      return cNode;
+
+      // If we didn't create our own query, do not alter the node's open state.
+      return [cNode, false];
     }
 
     switch (aType) {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
-      case this.TYPE_X_MOZ_PLACE_CONTAINER:
-        var writer = {
+      case this.TYPE_X_MOZ_PLACE_CONTAINER: {
+        let writer = {
           value: "",
           write: function PU_wrapNode__write(aStr, aLen) {
             this.value += aStr;
           }
         };
-        var node = convertNode(aNode);
+
+        let [node, shouldClose] = convertNode(aNode);
         self.serializeNodeAsJSONToOutputStream(node, writer, true, aForceCopy);
-        // Convert node could pass an open container node.
-        if (self.nodeIsContainer(node))
+        if (shouldClose)
           node.containerOpen = false;
+
         return writer.value;
-      case this.TYPE_X_MOZ_URL:
+      }
+      case this.TYPE_X_MOZ_URL: {
         function gatherDataUrl(bNode) {
           if (self.nodeIsLivemarkContainer(bNode)) {
-            var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
+            let siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
             return siteURI + NEWLINE + bNode.title;
           }
           if (self.nodeIsURI(bNode))
@@ -570,15 +548,15 @@ var PlacesUtils = {
           // ignore containers and separators - items without valid URIs
           return "";
         }
-        var node = convertNode(aNode);
-        var dataUrl = gatherDataUrl(node);
-        // Convert node could pass an open container node.
-        if (self.nodeIsContainer(node))
-          node.containerOpen = false;
-        return dataUrl;
-        
 
-      case this.TYPE_HTML:
+        let [node, shouldClose] = convertNode(aNode);
+        let dataUrl = gatherDataUrl(node);
+        if (shouldClose)
+          node.containerOpen = false;
+
+        return dataUrl;
+      }
+      case this.TYPE_HTML: {
         function gatherDataHtml(bNode) {
           function htmlEscape(s) {
             s = s.replace(/&/g, "&amp;");
@@ -589,20 +567,20 @@ var PlacesUtils = {
             return s;
           }
           // escape out potential HTML in the title
-          var escapedTitle = bNode.title ? htmlEscape(bNode.title) : "";
+          let escapedTitle = bNode.title ? htmlEscape(bNode.title) : "";
           if (self.nodeIsLivemarkContainer(bNode)) {
-            var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
+            let siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
             return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>" + NEWLINE;
           }
           if (self.nodeIsContainer(bNode)) {
             asContainer(bNode);
-            var wasOpen = bNode.containerOpen;
+            let wasOpen = bNode.containerOpen;
             if (!wasOpen)
               bNode.containerOpen = true;
 
-            var childString = "<DL><DT>" + escapedTitle + "</DT>" + NEWLINE;
-            var cc = bNode.childCount;
-            for (var i = 0; i < cc; ++i)
+            let childString = "<DL><DT>" + escapedTitle + "</DT>" + NEWLINE;
+            let cc = bNode.childCount;
+            for (let i = 0; i < cc; ++i)
               childString += "<DD>"
                              + NEWLINE
                              + gatherDataHtml(bNode.getChild(i))
@@ -617,28 +595,31 @@ var PlacesUtils = {
             return "<HR>" + NEWLINE;
           return "";
         }
-        var node = convertNode(aNode);
-        var dataHtml = gatherDataHtml(node);
-        // Convert node could pass an open container node.
-        if (self.nodeIsContainer(node))
+
+        let [node, shouldClose] = convertNode(aNode);
+        let dataHtml = gatherDataHtml(node);
+        if (shouldClose)
           node.containerOpen = false;
+
         return dataHtml;
+      }
     }
-    // case this.TYPE_UNICODE:
+
+    // Otherwise, we wrap as TYPE_UNICODE.
     function gatherDataText(bNode) {
       if (self.nodeIsLivemarkContainer(bNode))
         return self.livemarks.getSiteURI(bNode.itemId).spec;
       if (self.nodeIsContainer(bNode)) {
         asContainer(bNode);
-        var wasOpen = bNode.containerOpen;
+        let wasOpen = bNode.containerOpen;
         if (!wasOpen)
           bNode.containerOpen = true;
 
-        var childString = bNode.title + NEWLINE;
-        var cc = bNode.childCount;
-        for (var i = 0; i < cc; ++i) {
-          var child = bNode.getChild(i);
-          var suffix = i < (cc - 1) ? NEWLINE : "";
+        let childString = bNode.title + NEWLINE;
+        let cc = bNode.childCount;
+        for (let i = 0; i < cc; ++i) {
+          let child = bNode.getChild(i);
+          let suffix = i < (cc - 1) ? NEWLINE : "";
           childString += gatherDataText(child) + suffix;
         }
         bNode.containerOpen = wasOpen;
@@ -651,11 +632,12 @@ var PlacesUtils = {
       return "";
     }
 
-    var node = convertNode(aNode);
-    var dataText = gatherDataText(node);
+    let [node, shouldClose] = convertNode(aNode);
+    let dataText = gatherDataText(node);
     // Convert node could pass an open container node.
-    if (self.nodeIsContainer(node))
+    if (shouldClose)
       node.containerOpen = false;
+
     return dataText;
   },
 
@@ -1116,24 +1098,29 @@ var PlacesUtils = {
     if (!this.nodeIsContainer(aNode))
       return false;
 
-    var root = this.getContainerNodeWithOptions(aNode, false, true);
-    var oldViewer = root.parentResult.viewer;
-    var wasOpen = root.containerOpen;
+    let root = this.getContainerNodeWithOptions(aNode, false, true);
+    let result = root.parentResult;
+    let didSuppressNotifications = false;
+    let wasOpen = root.containerOpen;
     if (!wasOpen) {
-      root.parentResult.viewer = null;
+      didSuppressNotifications = result.suppressNotifications;
+      if (!didSuppressNotifications)
+        result.suppressNotifications = true;
+
       root.containerOpen = true;
     }
 
-    var found = false;
-    for (var i = 0; i < root.childCount && !found; i++) {
-      var child = root.getChild(i);
+    let found = false;
+    for (let i = 0; i < root.childCount && !found; i++) {
+      let child = root.getChild(i);
       if (this.nodeIsURI(child))
         found = true;
     }
 
     if (!wasOpen) {
       root.containerOpen = false;
-      root.parentResult.viewer = oldViewer;
+      if (!didSuppressNotifications)
+        result.suppressNotifications = false;
     }
     return found;
   },
@@ -1147,27 +1134,32 @@ var PlacesUtils = {
    * @returns array of uris in the first level of the container.
    */
   getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
-    var urls = [];
+    let urls = [];
     if (!this.nodeIsContainer(aNode))
       return urls;
 
-    var root = this.getContainerNodeWithOptions(aNode, false, true);
-    var oldViewer = root.parentResult.viewer;
-    var wasOpen = root.containerOpen;
+    let root = this.getContainerNodeWithOptions(aNode, false, true);
+    let result = root.parentResult;
+    let wasOpen = root.containerOpen;
+    let didSuppressNotifications = false;
     if (!wasOpen) {
-      root.parentResult.viewer = null;
+      didSuppressNotifications = result.suppressNotifications;
+      if (!didSuppressNotifications)
+        result.suppressNotifications = true;
+
       root.containerOpen = true;
     }
 
-   for (var i = 0; i < root.childCount; ++i) {
-      var child = root.getChild(i);
+    for (let i = 0; i < root.childCount; ++i) {
+      let child = root.getChild(i);
       if (this.nodeIsURI(child))
         urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
     }
 
     if (!wasOpen) {
       root.containerOpen = false;
-      root.parentResult.viewer = oldViewer;
+      if (!didSuppressNotifications)
+        result.suppressNotifications = false;
     }
     return urls;
   },

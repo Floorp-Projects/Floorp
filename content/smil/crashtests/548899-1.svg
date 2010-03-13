@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <circle id="circleID" cx="20" cy="100" r="10" fill="orange" stroke="black">
+      <animateTransform attributeName="transform" type="scale"
+                        from="1" to="2" begin="0" dur="3"/>
+    </circle>
+    <rect id="rectID" fill="green" stroke="black" height="100" width="100">
+      <animate attributeName="fill" from="white" to="blue" begin="0" dur="3"/>
+    </rect>
+  </defs>
+  <use xlink:href="#circleID"/>
+</svg>

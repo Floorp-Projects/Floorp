@@ -75,7 +75,7 @@ public:
   // nsIFormControl
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_LEGEND; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
 
   NS_IMETHODIMP Focus();
@@ -284,7 +284,7 @@ nsHTMLLegendElement::PerformAccesskey(PRBool aKeyCausesActivation,
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+nsHTMLLegendElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                        nsIContent* aSubmitElement)
 {
   return NS_OK;

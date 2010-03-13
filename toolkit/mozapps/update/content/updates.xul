@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,12 +52,8 @@
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;" 
-        label="" description=""
-#ifdef XP_MACOSX
-        windowtype="Update:Wizard" style="width: &window.macWidth;;"
-#else
-        windowtype="Update:Wizard" style="width: &window.width;;"
-#endif
+        windowtype="Update:Wizard"
+        style="width: auto; height: auto"
         onwizardfinish="gUpdates.onWizardFinish();"
         onwizardcancel="gUpdates.onWizardCancel();"
         onwizardnext="gUpdates.onWizardNext();"
@@ -74,185 +71,212 @@
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
   <wizardpage id="checking" pageid="checking" next="pluginupdatesfound"
-              label="&checking.title;" object="gCheckingPage"
-              onpageshow="gCheckingPage.onPageShow();">
-    <label>&updateCheck.label;</label>
-    <separator class="thin"/>
-    <progressmeter id="checkingProgress" mode="undetermined" hidden="true"/>
+              object="gCheckingPage" onpageshow="gCheckingPage.onPageShow();">
+    <updateheader label="&checking.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&updateCheck.label;</label>
+      <separator class="thin"/>
+      <progressmeter id="checkingProgress" mode="undetermined"/>
+    </vbox>
   </wizardpage>
 
   <wizardpage id="pluginupdatesfound" pageid="pluginupdatesfound"
-              label="&pluginupdatesfound.title;"
               object="gPluginsPage" onpageshow="gPluginsPage.onPageShow();">
-    <label>&pluginupdatesfound.label;</label>
-    <separator class="thin"/>
-    <label id="pluginupdateslink" class="text-link"
-           onclick="openUpdateURL(event);">&pluginupdateslink.label;</label>
+    <updateheader label="&pluginupdatesfound.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&pluginupdatesfound.label;</label>
+      <separator class="thin"/>
+      <label id="pluginupdateslink" class="text-link"
+             onclick="openUpdateURL(event);">&pluginupdateslink.label;</label>
+    </vbox>
   </wizardpage>
 
   <wizardpage id="noupdatesfound" pageid="noupdatesfound"
-              label="&noupdatesfound.title;" object="gNoUpdatesPage"
-              onpageshow="gNoUpdatesPage.onPageShow();">
-    <label id="noUpdatesAutoEnabled" hidden="true">&noupdatesautoenabled.intro;</label>
-    <label id="noUpdatesAutoDisabled" hidden="true">&noupdatesautodisabled.intro;</label>
+              object="gNoUpdatesPage" onpageshow="gNoUpdatesPage.onPageShow();">
+    <updateheader label="&noupdatesfound.title;"/>
+    <vbox class="update-content" flex="1">
+      <label id="noUpdatesAutoEnabled" hidden="true">&noupdatesautoenabled.intro;</label>
+      <label id="noUpdatesAutoDisabled" hidden="true">&noupdatesautodisabled.intro;</label>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="manualUpdate" pageid="manualUpdate" object="gManualUpdatePage"
+              onpageshow="gManualUpdatePage.onPageShow();">
+    <updateheader label="&manualUpdate.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&manualUpdate.desc;</label>
+      <separator class="thin"/>
+      <label>&manualUpdateGetMsg.label;</label>
+      <hbox>
+        <label class="text-link" id="manualUpdateLinkLabel" value=""
+               onclick="openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
   </wizardpage>
 
   <wizardpage id="incompatibleCheck" pageid="incompatibleCheck"
-              next="updatesfound" label="&incompatibleCheck.title;"
-              object="gIncompatibleCheckPage"
+              next="updatesfoundbasic" object="gIncompatibleCheckPage"
               onpageshow="gIncompatibleCheckPage.onPageShow();">
-    <label>&incompatibleCheck.label;</label>
-    <separator class="thin"/>
-    <progressmeter id="incompatibleCheckProgress" mode="undetermined" hidden="true"/>
+    <updateheader label="&incompatibleCheck.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&incompatibleCheck.label;</label>
+      <separator class="thin"/>
+      <progressmeter id="incompatibleCheckProgress" mode="undetermined"/>
+    </vbox>
   </wizardpage>
 
-  <wizardpage id="manualUpdate" pageid="manualUpdate"
-              label="&manualUpdate.title;" object="gManualUpdatePage"
-              onpageshow="gManualUpdatePage.onPageShow();">
-    <description>&manualUpdate.desc;</description>
-    <separator class="thin"/>
-    <label>&manualUpdateGetMsg.label;</label>
-    <hbox>
-      <label class="text-link" id="manualUpdateLinkLabel" value=""
-             onclick="openUpdateURL(event);"/>
-    </hbox>
-  </wizardpage>
-
-  <wizardpage id="updatesfound" pageid="updatesfound" next="license"
-              object="gUpdatesAvailablePage" label=""
-              onpageshow="gUpdatesAvailablePage.onPageShow();"
-              onextra1="gUpdatesAvailablePage.onExtra1();"
-              onextra2="gUpdatesAvailablePage.onExtra2();">
-    <description id="updateType"/>
-    <separator class="thin"/>
-    <label id="updateName" crop="right" value=""/>
-    <separator id="updateNameSep" class="thin"/>
-    <description id="upgradeEvangelism">&evangelism.desc;</description>
-    <separator id="upgradeEvangelismSep" flex="1"/>
-    <vbox flex="1">
-      <vbox id="moreInfoContent" flex="1">
-        <!-- note, the localized properties for this are prefixed by 
-             the id.  examples:  updateMoreInfoContentNotFound
-             and updateMoreInfoContentDownloading -->
-        <remotecontent id="updateMoreInfoContent" flex="1"/>
+  <wizardpage id="updatesfoundbasic" pageid="updatesfoundbasic"
+              object="gUpdatesFoundBasicPage" next="downloading"
+              onpageshow="gUpdatesFoundBasicPage.onPageShow();"
+              onextra1="gUpdatesFoundBasicPage.onExtra1();"
+              onextra2="gUpdatesFoundBasicPage.onExtra2();">
+    <updateheader id="updatesFoundBasicHeader" label=""/>
+    <vbox class="update-content" flex="1">
+      <label id="updatesFoundInto"/>
+      <separator class="thin"/>
+      <label id="updateName" crop="right" value=""/>
+      <separator id="updateNameSep" class="thin"/>
+      <label id="upgradeEvangelism">&evangelism.desc;</label>
+      <separator id="upgradeEvangelismSep" flex="1"/>
+      <vbox flex="1">
+        <hbox id="moreInfoURL">
+          <label class="text-link" id="updateMoreInfoURL" 
+                 value="&clickHere.label;" onclick="openUpdateURL(event);"/> 
+        </hbox>
       </vbox>
-      <hbox id="moreInfoURL">
-        <label class="text-link" id="updateMoreInfoURL" 
-               value="&clickHere.label;" onclick="openUpdateURL(event);"/> 
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="updatesfoundbillboard" pageid="updatesfoundbillboard"
+              object="gUpdatesFoundBillboardPage" next="downloading"
+              onpageshow="gUpdatesFoundBillboardPage.onPageShow();"
+              onextra1="gUpdatesFoundBillboardPage.onExtra1();"
+              onextra2="gUpdatesFoundBillboardPage.onExtra2();">
+    <!-- note: the localized strings used by remotecontent are prefixed by the
+               id for the remotecontent (e.g. updateMoreInfoContentNotFound,
+               updateMoreInfoContentDownloading, etc.) -->
+    <remotecontent id="updateMoreInfoContent" flex="1"/>
+  </wizardpage>
+  
+  <wizardpage id="license" pageid="license" next="downloading"
+              object="gLicensePage" onpageshow="gLicensePage.onPageShow();"
+              onextra1="gLicensePage.onExtra1();">
+    <updateheader label="&license.titleText;"/>
+    <vbox class="update-content" flex="1">
+      <label>&license.instructionText;</label>
+      <!-- note: the localized strings used by remotecontent are prefixed by
+                 the id for the remotecontent (e.g. licenseContentNotFound,
+                 licenseContentDownloading, etc.) -->
+      <remotecontent id="licenseContent" flex="1"/>
+      <separator class="thin"/>
+      <radiogroup id="acceptDeclineLicense" align="start"
+                  onselect="gLicensePage.onAcceptDeclineRadio();">
+        <radio id="accept" label="&license.accept;" 
+               accesskey="&license.accept.accesskey;"/>
+        <radio id="decline" label="&license.decline;" 
+               accesskey="&license.decline.accesskey;"
+               selected="true"/>
+      </radiogroup>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="incompatibleList" pageid="incompatibleList"
+              next="downloading" object="gIncompatibleListPage"
+              onpageshow="gIncompatibleListPage.onPageShow();"
+              onextra1="gIncompatibleListPage.onExtra1();">
+    <updateheader label="&incompatibleList.title;"/>
+    <vbox class="update-content" flex="1">
+      <label id="incompatibleListDesc"/>
+      <listbox id="incompatibleListbox" flex="1"/>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="downloading" pageid="downloading" next="finished"
+              object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
+              onpageshow="gDownloadingPage.onPageShow();">
+    <updateheader label="&downloadPage.title;"/>
+    <vbox class="update-content" flex="1">
+      <hbox id="downloadStatusProgress">
+        <progressmeter id="downloadProgress" mode="undetermined" flex="1"/>
+        <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
+                paused="false"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox id="downloadStatusLine">
+        <label id="downloadStatus" flex="1">&connecting.label;</label>
+      </hbox>
+      <separator/>
+      <hbox id="verificationFailed" align="start" hidden="true">
+        <image id="verificationFailedIcon"/>
+        <label flex="1">&verificationFailedText.label;</label>
       </hbox>
     </vbox>
   </wizardpage>
   
-  <wizardpage id="license" pageid="license" next="incompatibleList"
-              object="gLicensePage" label="&license.titleText;"
-              onpageshow="gLicensePage.onPageShow();"
-              onextra1="gLicensePage.onExtra1();">
-    <label>&license.instructionText;</label>
-    <separator class="thin"/>
-    <!-- note, the localized properties for this are prefixed by 
-         the id.  examples:  licenseContentNotFound
-         and licenseContentDownloading -->
-    <remotecontent id="licenseContent" flex="1"/>
-    <separator class="thin"/>
-    <radiogroup id="acceptDeclineLicense" 
-       onselect="gLicensePage.onAcceptDeclineRadio();">
-      <radio id="accept" label="&license.accept;" 
-             accesskey="&license.accept.accesskey;"/>
-      <radio id="decline" label="&license.decline;" 
-             accesskey="&license.decline.accesskey;"
-             selected="true"/>
-    </radiogroup>
-  </wizardpage>
-
-  <wizardpage id="incompatibleList" pageid="incompatibleList"
-              next="downloading" label="&incompatibleList.title;"
-              object="gIncompatibleListPage"
-              onpageshow="gIncompatibleListPage.onPageShow();"
-              onextra1="gIncompatibleListPage.onExtra1();">
-    <description id="incompatibleListDesc"/>
-    <separator class="thin"/>
-    <listbox id="incompatibleList.listbox" flex="1"/>
-  </wizardpage>
-
-  <wizardpage id="downloading" pageid="downloading" next="finished"
-              object="gDownloadingPage" label="&downloading.title;"
-              onpageshow="gDownloadingPage.onPageShow();"
-              onextra1="gDownloadingPage.onHide();">
-    <hbox id="downloadStatusTop">
-      <image id="downloadThrobber"/>
-      <label id="downloadName" crop="right">&downloading.intro;</label>
-      <spacer flex="1"/>
-      <label id="downloadDetailsLink" class="text-link"
-             value="&details.link;" onclick="openUpdateURL(event);"/>
-    </hbox>
-    <separator class="thin"/>
-    <hbox id="downloadStatusProgress">
-      <progressmeter id="downloadProgress" mode="undetermined" flex="1" hidden="true"/>
-      <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
-              paused="false"/>
-    </hbox>
-    <separator class="thin"/>
-    <hbox id="downloadStatusLine">
-      <description id="downloadStatus" flex="1">&connecting.label;</description>
-    </hbox>
-    <separator/>
-    <hbox id="verificationFailed" align="start" hidden="true">
-      <image id="verificationFailedIcon"/>
-      <description flex="1">&verificationFailedText.label;</description>
-    </hbox>
-  </wizardpage>
-  
   <wizardpage id="errors" pageid="errors" object="gErrorsPage"
               onpageshow="gErrorsPage.onPageShow();">
-    <label id="errorIntro">&error.label;</label>
-    <separator/>
-    <textbox class="plain" readonly="true" id="errorReason" multiline="true"
-             rows="3"/>
-    <separator/>
-    <label id="errorManual">&errorManual.label;</label>
-    <hbox>
-      <label class="text-link" id="errorLinkLabel" value=""
-             onclick="openUpdateURL(event);"/>
-    </hbox>
+    <updateheader id="errorsHeader" label=""/>
+    <vbox class="update-content" flex="1">
+      <label id="errorIntro">&error.label;</label>
+      <separator/>
+      <textbox class="plain" readonly="true" id="errorReason" multiline="true"
+               rows="3"/>
+      <separator/>
+      <label id="errorManual">&errorManual.label;</label>
+      <hbox>
+        <label class="text-link" id="errorLinkLabel" value=""
+               onclick="openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
   </wizardpage>
   
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
-              label="&errorpatching.title;" object="gErrorsPage">
-    <label>&errorpatching.intro;</label>
+              object="gErrorPatchingPage"
+              onpageshow="gErrorPatchingPage.onPageShow();">
+    <updateheader label="&errorpatching.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&errorpatching.intro;</label>
+    </vbox>
   </wizardpage>
   
-  <wizardpage id="finished" pageid="finished"
-              label="&finishedPage.title;" object="gFinishedPage"
+  <wizardpage id="finished" pageid="finished" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();"
               onextra1="gFinishedPage.onExtra1()">
-    <label>&finishedPage.text;</label>
+    <updateheader label="&finishedPage.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&finishedPage.text;</label>
+    </vbox>
   </wizardpage>
   
   <wizardpage id="finishedBackground" pageid="finishedBackground"
-              label="&finishedPage.title;" object="gFinishedPage"
-              onpageshow="gFinishedPage.onPageShowBackground();"
-              onextra1="gFinishedPage.onExtra1()">
-    <label>&finishedBackgroundPage.text;</label>
-    <separator/>
-    <hbox align="center">
-      <label>&finishedBackground.name;</label>
-      <label id="updateFinishedName" flex="1" crop="right" value=""/>
-      <label id="finishedBackgroundLink" class="text-link" disabled="true"
-             value="&details.link;" onclick="openUpdateURL(event);"/>
-    </hbox>
-    <spacer flex="1"/>
-    <label>&finishedBackground.more;</label>
+              object="gFinishedPage" onextra1="gFinishedPage.onExtra1()"
+              onpageshow="gFinishedPage.onPageShowBackground();">
+    <updateheader label="&finishedPage.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&finishedBackgroundPage.text;</label>
+      <separator/>
+      <hbox align="center">
+        <label>&finishedBackground.name;</label>
+        <label id="updateFinishedName" flex="1" crop="right" value=""/>
+        <label id="finishedBackgroundLink" class="text-link" disabled="true"
+               value="&details.link;" onclick="openUpdateURL(event);"/>
+      </hbox>
+      <spacer flex="1"/>
+      <label id="finishedBackgroundMore">&finishedBackground.more;</label>
+    </vbox>
   </wizardpage>
   
-  <wizardpage id="installed" pageid="installed"
-              label="&installed.title;" object="gInstalledPage"
+  <wizardpage id="installed" pageid="installed" object="gInstalledPage"
               onpageshow="gInstalledPage.onPageShow();">
-    <label>&installed.intro;</label>
-    <separator/>
-    <hbox>
-      <label id="whatsnewLink" class="text-link" hidden="true"
-             value="&whatsnew.label;" onclick="openUpdateURL(event);"/>
-    </hbox>
+    <updateheader label="&installed.title;"/>
+    <vbox class="update-content" flex="1">
+      <label>&installed.intro;</label>
+      <separator/>
+      <hbox>
+        <label id="whatsnewLink" class="text-link" hidden="true"
+               value="&whatsnew.label;" onclick="openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
   </wizardpage>
   
 </wizard>

@@ -63,7 +63,7 @@ function test() {
   // the interval pref to 0
   gPrefService.setIntPref("browser.sessionstore.interval", 0);
 
-  const testURL = "http://localhost:8888/browser/" +
+  const testURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_423132_sample.html";
 
   // open a new window

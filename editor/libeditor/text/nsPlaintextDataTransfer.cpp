@@ -255,20 +255,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       if (srcdomdoc == destdomdoc)
       {
         // Within the same doc: delete if user doesn't want to copy
- 
-        // check if the user pressed the key to force a copy rather than a move
-        // if we run into problems here, we'll just assume the user doesn't want a copy
-        PRBool userWantsCopy = PR_FALSE;
-
-        nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
-        if (mouseEvent)
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          mouseEvent->GetAltKey(&userWantsCopy);
-#else
-          mouseEvent->GetCtrlKey(&userWantsCopy);
-#endif
-
-        deleteSelection = !userWantsCopy;
+        PRUint32 action;
+        dragSession->GetDragAction(&action);
+        deleteSelection = !(action & nsIDragService::DRAGDROP_ACTION_COPY);
       }
       else
       {

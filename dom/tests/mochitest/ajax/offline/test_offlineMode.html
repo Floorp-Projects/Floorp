@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
 <head>
 <title>Offline mode test</title>
 
@@ -28,27 +28,27 @@ var gGotOnError = false;
 
 function manifestUpdated()
 {
-  applicationCache.mozAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
-  OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
+  applicationCache.mozAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+  OfflineTest.waitForAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
 }
 
 function dynamicAdded()
 {
-  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+  aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
 }
 
 // Called by the dynamically added iframe on load
 function notwhitelistOnLoad()
 {
   gGotDynamicVersion = 1;
-  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs";
+  aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs";
 }
 
 // Called by the explicit iframe on load
 function frameLoad(version)
 {
   gGotExplicitVersion = version;
-  gImplicitWindow = window.open("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+  gImplicitWindow = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
 }
 
 // Called by the implicit window on load
@@ -57,7 +57,7 @@ function implicitLoaded(aWindow, errorOccured)
   aWindow.close();
 
   gGotImplicitVersion = 1;
-  OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", implicitAdded);
+  OfflineTest.waitForAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", implicitAdded);
 }
 
 function implicitAdded()
@@ -74,9 +74,9 @@ function finalize()
 
   if (!ioserv.offline)
   {
-    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true);
-    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", true);
-    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true);
+    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", true);
+    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
     OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
     OfflineTest.is(gGotImplicitVersion, 1, "Implicit entry loaded");
@@ -95,9 +95,9 @@ function finalize()
       entry = cacheSession.openCacheEntry(entryKey, Ci.nsICache.ACCESS_WRITE, false)
       entry.doom();
     }
-    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
-    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs");
-    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+    doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+    doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs");
+    doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
 
 
     ioserv.offline = true;
@@ -108,7 +108,7 @@ function finalize()
     // is correct to get error message
     applicationCache.onerror = function() {gGotOnError = true;}
 
-    aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+    aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
     // Starts the chain all over again but in offline mode.
   }
   else

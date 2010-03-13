@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=209275
   <svg width="5cm" height="3cm" viewBox="0 0 5 3" version="1.1"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
-  <a xlink:href="http://www.w3.org" id="ellipselink">
+  <a xlink:href="" id="ellipselink">
     <ellipse cx="2.5" cy="1.5" rx="2" ry="1" id="ellipse" />
   </a>
   </svg>
@@ -91,6 +91,10 @@ function setXlinkHref(elem, href) {
   elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
 }
 
+function continueTest() {
+  gGen.next();
+}
+
 var iframe = document.getElementById("iframe");
 var iframeCw = iframe.contentWindow;
 
@@ -98,29 +102,13 @@ function run() {
   var iframe = document.getElementById("iframe");
   var iframeCw = iframe.contentWindow;
 
-  // First, get the visited/unvisited link/ellipse colors.
-  var unvisitedColor;
-  var visitedColor;
-  var unvisitedFill;
-  var visitedFill;
+  // First, set the visited/unvisited link/ellipse colors.
+  const unvisitedColor = "rgb(0, 0, 238)";
+  const visitedColor = "rgb(85, 26, 139)";
+  const unvisitedFill = "rgb(0, 0, 255)";
+  const visitedFill = "rgb(128, 0, 128)";
 
-  var rand = Date.now() + "-" + Math.random();
-  // Set colorlink and ellipselink's hrefs
-  $("colorlink").href = rand;
-  setXlinkHref($("ellipselink"), rand);
-  unvisitedColor = getColor($("colorlink"));
-  unvisitedFill = getFill($("ellipse"));
-
-  // Set the link's href to our current location so we can get the visited link
-  // color.
-  $("colorlink").href = document.location;
-  setXlinkHref($("ellipselink"), document.location);
-  visitedColor = getColor($("colorlink"));
-  visitedFill = getFill($("ellipse"));
-  isnot(visitedColor, unvisitedColor,
-        "visited/unvisited link colors are the same?");
-  isnot(visitedFill, unvisitedFill,
-        "visited/unvisited ellipse fill colors are the same?");
+  const rand = Date.now() + "-" + Math.random();
 
   // Now we can start the tests in earnest.
 
@@ -131,16 +119,16 @@ function run() {
   // Set colorlink's href so we can check that it changes colors after we
   // change the base href.
   $('colorlink').href = "http://example.com/" + rand;
-  setXlinkHref($("ellipse"), "http://example.com/" + rand);
+  setXlinkHref($("ellipselink"), "http://example.com/" + rand);
 
   // Load http://example.com/${rand} into an iframe so we can test that changing
   // the document's base changes the visitedness of our links.
-  iframe.onload = function() { gGen.next(); };
+  iframe.onload = continueTest;
   iframeCw.location = "http://example.com/" + rand;
   yield; // wait for onload to fire.
 
   // Make sure things are what as we expect them at the beginning.
-  link123HrefIs("http://localhost:8888/", 1);
+  link123HrefIs("http://mochi.test:8888/", 1);
   is($('link4').href, loc + "#", "link 4 test 1");
   is($('link5').href, loc + "#", "link 5 test 1");
 
@@ -157,22 +145,32 @@ function run() {
   is(link5.href, "http://example.com/#", "link 5 test 2");
 
   // Were colorlink's color and ellipse's fill updated appropriately?
+  // Because link coloring is asynchronous, we wait until it is updated (or we
+  // timeout and fail anyway).
+  while (getColor($('colorlink')) != visitedColor) {
+    setTimeout(continueTest, 10);
+    yield;
+  }
   is(getColor($('colorlink')), visitedColor,
      "Wrong link color after base change.");
-  is(getFill($('ellipse')), visitedFill,
-     "Wrong ellipse fill after base change.");
+  while (getFill($('ellipselink')) != visitedFill) {
+    setTimeout(continueTest, 10);
+    yield;
+  }
+  is(getFill($('ellipselink')), visitedFill,
+          "Wrong ellipse fill after base change.");
 
   $('base1').href = "foo/";
   // Should be interpreted relative to current URI (not the current base), so
-  // base should now be http://localhost:8888/foo/
+  // base should now be http://mochi.test:8888/foo/
 
-  link123HrefIs("http://localhost:8888/", 3);
+  link123HrefIs("http://mochi.test:8888/", 3);
   is($('link4').href, path + "foo/#", "link 4 test 3");
 
   // Changing base2 shouldn't affect anything, because it's not the first base
   // tag.
   $('base2').href = "http://example.org/bar/";
-  link123HrefIs("http://localhost:8888/", 4);
+  link123HrefIs("http://mochi.test:8888/", 4);
   is($('link4').href, path + "foo/#", "link 4 test 4");
 
   // If we unset base1's href attribute, the document's base should come from
@@ -208,13 +206,13 @@ function run() {
   base3.parentNode.removeChild(base3);
   base4.parentNode.removeChild(base4);
 
-  link123HrefIs("http://localhost:8888/", 9);
+  link123HrefIs("http://mochi.test:8888/", 9);
   is($('link4').href, loc + "#", "link 4 test 9");
 
   // Setting the href of base0 shouldn't do anything because it's not in the
   // XHTML namespace.
   $('base0').href = "http://bar.com";
-  link123HrefIs("http://localhost:8888/", 10);
+  link123HrefIs("http://mochi.test:8888/", 10);
   is($('link4').href, loc + "#", "link 4 test 10");
 
   // We load into an iframe a document with a <base href="...">, then remove
@@ -233,7 +231,7 @@ function run() {
   iframeCw.location = "file_bug209275_2.html";
   yield; // wait for callback from child
   is(iframeCw.document.getElementById("link").href,
-     "http://localhost:8888/",
+     "http://mochi.test:8888/",
      "Wrong href after nuking document second time.");
 
   // Make sure that document.open() makes the document forget about any <base>
@@ -241,7 +239,7 @@ function run() {
   iframeCw.location = "file_bug209275_3.html";
   yield; // wait for callback from child
   is(iframeCw.document.getElementById("link").href,
-     "http://localhost:8888/",
+     "http://mochi.test:8888/",
      "Wrong href after document.open().");
 
   SimpleTest.finish();

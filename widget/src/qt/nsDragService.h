@@ -39,8 +39,9 @@
 #ifndef nsDragService_h__
 #define nsDragService_h__
 
-#include "nsBaseDragService.h"
 #include <qdrag.h>
+
+#include "nsBaseDragService.h"
 
 /* Header file */
 class nsDragService : public nsBaseDragService

@@ -395,13 +395,8 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
     if (! aAttribute)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-
-    nsAutoString attr;
-    rv = aAttribute->ToString(attr);
-    if (NS_FAILED(rv)) return rv;
-
-    return GetResource(aNameSpaceID, attr, aResult);
+    return GetResource(aNameSpaceID, nsDependentAtomString(aAttribute),
+                       aResult);
 }
 
 

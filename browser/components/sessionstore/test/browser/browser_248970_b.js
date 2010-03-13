@@ -114,7 +114,7 @@ function test() {
 
   const testURL = "chrome://mochikit/content/browser/" +
   "browser/components/sessionstore/test/browser/browser_248970_b_sample.html";
-  const testURL2 = "http://localhost:8888/browser/" +
+  const testURL2 = "http://mochi.test:8888/browser/" +
   "browser/components/sessionstore/test/browser/browser_248970_b_sample.html";
 
   // get closed tab count

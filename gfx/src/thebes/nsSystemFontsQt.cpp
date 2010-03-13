@@ -36,13 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QApplication>
+#include <QFont>
+
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
 
 #include "nsSystemFontsQt.h"
 #include "gfxQtPlatform.h"
-#include <QApplication>
-#include <QFont>
 
 nsSystemFontsQt::nsSystemFontsQt()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))

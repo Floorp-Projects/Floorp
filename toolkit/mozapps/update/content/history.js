@@ -63,7 +63,7 @@ var gUpdateHistory = {
 
         // Don't display updates that are downloading since they don't have
         // valid statusText for the UI (bug 485493).
-        if (update.statusText == "" || update.statusText == "undefined")
+        if (!update.statusText)
           continue;
 
         var element = document.createElementNS(NS_XUL, "update");
@@ -72,7 +72,10 @@ var gUpdateHistory = {
           [update.name, update.buildID]);
         element.type = bundle.getString("updateType_" + update.type);
         element.installDate = this._formatDate(update.installDate);
-        element.detailsURL = update.detailsURL;
+        if (update.detailsURL)
+          element.detailsURL = update.detailsURL;
+        else
+          element.hideDetailsURL = true;
         element.status = update.statusText;
       }
     }

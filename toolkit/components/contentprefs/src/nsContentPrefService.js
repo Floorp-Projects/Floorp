@@ -101,6 +101,12 @@ ContentPrefService.prototype = {
   _destroy: function ContentPrefService__destroy() {
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
 
+    // Finalize statements which may have been used asynchronously.
+    if (this.__stmtSelectPref)
+      this.__stmtSelectPref.finalize();
+    if (this.__stmtSelectGlobalPref)
+      this.__stmtSelectGlobalPref.finalize();
+
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).  Also delete references
     // in _observers and _genericObservers to avoid cycles with those that

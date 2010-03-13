@@ -528,6 +528,45 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         break;
       }
     }
+
+    // If we detect a change on margin, padding or border, we store the old
+    // values on the frame itself between now and reflow, so if someone
+    // calls GetUsed(Margin|Border|Padding)() before the next reflow, we
+    // can give an accurate answer.
+    // We don't want to set the property if one already exists.
+    nsMargin oldValue(0, 0, 0, 0);
+    nsMargin newValue(0, 0, 0, 0);
+    const nsStyleMargin* oldMargin = aOldStyleContext->PeekStyleMargin();
+    if (oldMargin && oldMargin->GetMargin(oldValue)) {
+      if ((!GetStyleMargin()->GetMargin(newValue) || oldValue != newValue) &&
+          !GetProperty(nsGkAtoms::usedMarginProperty)) {
+        SetProperty(nsGkAtoms::usedMarginProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
+
+    const nsStylePadding* oldPadding = aOldStyleContext->PeekStylePadding();
+    if (oldPadding && oldPadding->GetPadding(oldValue)) {
+      if ((!GetStylePadding()->GetPadding(newValue) || oldValue != newValue) &&
+          !GetProperty(nsGkAtoms::usedPaddingProperty)) {
+        SetProperty(nsGkAtoms::usedPaddingProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
+
+    const nsStyleBorder* oldBorder = aOldStyleContext->PeekStyleBorder();
+    if (oldBorder) {
+      oldValue = oldBorder->GetActualBorder();
+      newValue = GetStyleBorder()->GetActualBorder();
+      if (oldValue != newValue &&
+          !GetProperty(nsGkAtoms::usedBorderProperty)) {
+        SetProperty(nsGkAtoms::usedBorderProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
   }
 
   imgIRequest *oldBorderImage = aOldStyleContext
@@ -563,20 +602,21 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 /* virtual */ nsMargin
 nsIFrame::GetUsedMargin() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedMargin on a dirty frame not currently "
-               "being reflowed");
-
   nsMargin margin(0, 0, 0, 0);
-  if (!GetStyleMargin()->GetMargin(margin)) {
-    nsMargin *m = static_cast<nsMargin*>
-                             (GetProperty(nsGkAtoms::usedMarginProperty));
-    NS_ASSERTION(m, "used margin property missing (out of memory?)");
-    if (m) {
-      margin = *m;
-    }
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return margin;
+
+  nsMargin *m = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedMarginProperty));
+  if (m) {
+    margin = *m;
+  } else {
+#ifdef DEBUG
+    PRBool hasMargin = 
+#endif
+    GetStyleMargin()->GetMargin(margin);
+    NS_ASSERTION(hasMargin, "We should have a margin here! (out of memory?)");
   }
   return margin;
 }
@@ -584,11 +624,10 @@ nsIFrame::GetUsedMargin() const
 /* virtual */ nsMargin
 nsIFrame::GetUsedBorder() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedBorder on a dirty frame not currently "
-               "being reflowed");
+  nsMargin border(0, 0, 0, 0);
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return border;
 
   // Theme methods don't use const-ness.
   nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
@@ -600,25 +639,30 @@ nsIFrame::GetUsedBorder() const
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              mutable_this, disp->mAppearance,
                                              &result);
-    return nsMargin(presContext->DevPixelsToAppUnits(result.left),
-                    presContext->DevPixelsToAppUnits(result.top),
-                    presContext->DevPixelsToAppUnits(result.right),
-                    presContext->DevPixelsToAppUnits(result.bottom));
+    border.left = presContext->DevPixelsToAppUnits(result.left);
+    border.top = presContext->DevPixelsToAppUnits(result.top);
+    border.right = presContext->DevPixelsToAppUnits(result.right);
+    border.bottom = presContext->DevPixelsToAppUnits(result.bottom);
+    return border;
   }
 
-  return GetStyleBorder()->GetActualBorder();
+  nsMargin *b = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedBorderProperty));
+  if (b) {
+    border = *b;
+  } else {
+    border = GetStyleBorder()->GetActualBorder();
+  }
+  return border;
 }
 
 /* virtual */ nsMargin
 nsIFrame::GetUsedPadding() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedPadding on a dirty frame not currently "
-               "being reflowed");
-
   nsMargin padding(0, 0, 0, 0);
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return padding;
 
   // Theme methods don't use const-ness.
   nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
@@ -638,13 +682,17 @@ nsIFrame::GetUsedPadding() const
       return padding;
     }
   }
-  if (!GetStylePadding()->GetPadding(padding)) {
-    nsMargin *p = static_cast<nsMargin*>
-                             (GetProperty(nsGkAtoms::usedPaddingProperty));
-    NS_ASSERTION(p, "used padding property missing (out of memory?)");
-    if (p) {
-      padding = *p;
-    }
+
+  nsMargin *p = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedPaddingProperty));
+  if (p) {
+    padding = *p;
+  } else {
+#ifdef DEBUG
+    PRBool hasPadding = 
+#endif
+    GetStylePadding()->GetPadding(padding);
+    NS_ASSERTION(hasPadding, "We should have padding here! (out of memory?)");
   }
   return padding;
 }
@@ -1616,7 +1664,7 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
 
   if (target) {
     nsRefPtr<nsPLDOMEvent> event =
-      new nsPLDOMEvent(target, aDOMEventName, PR_FALSE);
+      new nsPLDOMEvent(target, aDOMEventName, PR_TRUE, PR_FALSE);
     if (!event || NS_FAILED(event->PostDOMEvent()))
       NS_WARNING("Failed to dispatch nsPLDOMEvent");
   }
@@ -3582,9 +3630,22 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
 /* virtual */ PRBool
 nsIFrame::AreAncestorViewsVisible() const
 {
-  for (nsIView* view = GetClosestView(); view; view = view->GetParent()) {
-    if (view->GetVisibility() == nsViewVisibility_kHide) {
+  const nsIFrame* parent;
+  for (const nsIFrame* f = this; f; f = parent) {
+    nsIView* view = f->GetView();
+    if (view && view->GetVisibility() == nsViewVisibility_kHide) {
       return PR_FALSE;
+    }
+    parent = f->GetParent();
+    if (!parent) {
+      parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+      if (parent && parent->PresContext()->IsChrome() &&
+          !f->PresContext()->IsChrome()) {
+        // Don't look beyond chrome/content boundary ... if the chrome
+        // has hidden a content docshell, the content in the content
+        // docshell shouldn't be affected (e.g. it should remain focusable).
+        break;
+      }
     }
   }
   return PR_TRUE;
@@ -4439,7 +4500,8 @@ NS_IMETHODIMP
 nsFrame::GetPointFromOffset(PRInt32 inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nsnull, "Null parameter");
-  nsPoint bottomLeft(0, 0);
+  nsRect contentRect = GetContentRect() - GetPosition();
+  nsPoint pt = contentRect.TopLeft();
   if (mContent)
   {
     nsIContent* newContent = mContent->GetParent();
@@ -4448,11 +4510,12 @@ nsFrame::GetPointFromOffset(PRInt32 inOffset, nsPoint* outPoint)
 
       PRBool isRTL = (NS_GET_EMBEDDING_LEVEL(this) & 1) == 1;
       if ((!isRTL && inOffset > newOffset) ||
-          (isRTL && inOffset <= newOffset))
-        bottomLeft.x = GetRect().width;
+          (isRTL && inOffset <= newOffset)) {
+        pt = contentRect.TopRight();
+      }
     }
   }
-  *outPoint = bottomLeft;
+  *outPoint = pt;
   return NS_OK;
 }
 
@@ -6671,11 +6734,13 @@ static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
            char* aResult)
 {
-  const char *nameStr = "";
   if (aContent) {
-    aContent->Tag()->GetUTF8String(&nameStr);
+    PR_snprintf(aResult, aResultSize, "%s@%p",
+                nsAtomCString(aContent->Tag()).get(), aFrame);
   }
-  PR_snprintf(aResult, aResultSize, "%s@%p", nameStr, aFrame);
+  else {
+    PR_snprintf(aResult, aResultSize, "@%p", aFrame);
+  }
 }
 
 void

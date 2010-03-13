@@ -99,6 +99,7 @@ function ContentSecurityPolicy() {
   csp._MAPPINGS[cp.TYPE_IMAGE]             = cspr_sd.IMG_SRC;
   csp._MAPPINGS[cp.TYPE_STYLESHEET]        = cspr_sd.STYLE_SRC;
   csp._MAPPINGS[cp.TYPE_OBJECT]            = cspr_sd.OBJECT_SRC;
+  csp._MAPPINGS[cp.TYPE_OBJECT_SUBREQUEST] = cspr_sd.OBJECT_SRC;
   csp._MAPPINGS[cp.TYPE_SUBDOCUMENT]       = cspr_sd.FRAME_SRC;
   csp._MAPPINGS[cp.TYPE_MEDIA]             = cspr_sd.MEDIA_SRC;
   csp._MAPPINGS[cp.TYPE_FONT]              = cspr_sd.FONT_SRC;
@@ -108,7 +109,6 @@ function ContentSecurityPolicy() {
   /* These must go through the catch-all */
   csp._MAPPINGS[cp.TYPE_XBL]               = cspr_sd.ALLOW;
   csp._MAPPINGS[cp.TYPE_PING]              = cspr_sd.ALLOW;
-  csp._MAPPINGS[cp.TYPE_OBJECT_SUBREQUEST] = cspr_sd.ALLOW;
   csp._MAPPINGS[cp.TYPE_DTD]               = cspr_sd.ALLOW;
 }
 

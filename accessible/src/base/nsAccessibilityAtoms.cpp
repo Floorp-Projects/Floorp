@@ -45,8 +45,12 @@
 #include "nsAccessibilityAtomList.h"
 #undef ACCESSIBILITY_ATOM
 
+#define ACCESSIBILITY_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsAccessibilityAtomList.h"
+#undef ACCESSIBILITY_ATOM
+
 static const nsStaticAtom atomInfo[] = {
-#define ACCESSIBILITY_ATOM(name_, value_) { value_, &nsAccessibilityAtoms::name_ },
+#define ACCESSIBILITY_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &nsAccessibilityAtoms::name_),
 #include "nsAccessibilityAtomList.h"
 #undef ACCESSIBILITY_ATOM
 };

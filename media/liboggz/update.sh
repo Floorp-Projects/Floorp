@@ -9,6 +9,10 @@ cat >./include/oggz/config.h <<EOF
 #include "config_win32.h"
 #else
 #include "config_gcc.h"
+#include "prcpucfg.h"
+#ifdef IS_BIG_ENDIAN
+#define WORDS_BIGENDIAN
+#endif
 #endif
 #undef DEBUG
 EOF
@@ -50,7 +54,6 @@ cp $1/src/liboggz/dirac.h ./src/liboggz/dirac.h
 cp $1/src/liboggz/dirac.c ./src/liboggz/dirac.c
 cp $1/AUTHORS ./AUTHORS
 patch -p3 <wince.patch
-patch -p3 <endian.patch
 patch -p3 <key_frame_seek.patch
 patch -p3 <offset_next.patch
 patch -p3 <bug487519.patch

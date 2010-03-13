@@ -2149,7 +2149,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
                                   PR_FALSE, 0, PR_FALSE, aNextContent);
   }
 
-  PRBool forward = (aType == MOVEFOCUS_FORWARD);
+  PRBool forward = (aType == MOVEFOCUS_FORWARD || aType == MOVEFOCUS_CARET);
   PRBool doNavigation = PR_TRUE;
   PRBool ignoreTabIndex = PR_FALSE;
   // when a popup is open, we want to ensure that tab navigation occurs only
@@ -2231,13 +2231,18 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
             startContent = nsnull;
         }
 
-        if (startContent) {
-          if (aType == MOVEFOCUS_CARET) {
+        if (aType == MOVEFOCUS_CARET) {
+          // GetFocusInSelection finds a focusable link near the caret.
+          // If there is no start content though, don't do this to avoid
+          // focusing something unexpected.
+          if (startContent) {
             GetFocusInSelection(aWindow, startContent,
                                 endSelectionContent, aNextContent);
-            return NS_OK;
           }
+          return NS_OK;
+        }
 
+        if (startContent) {
           // when starting from a selection, we always want to find the next or
           // previous element in the document. So the tabindex on elements
           // should be ignored.

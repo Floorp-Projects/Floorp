@@ -152,7 +152,7 @@
 
 #include "mozAutoDocUpdate.h"
 
-#include "nsICSSParser.h"
+#include "nsCSSParser.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
@@ -2646,10 +2646,6 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // anonymous content that the document is changing.
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
-    if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
-      document->ForgetLink(this);
-    }
-
     document->ClearBoxObjectFor(this);
   }
 
@@ -3006,14 +3002,13 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
 
   if (aNotify) {
     nsIDocument* doc = GetCurrentDoc();
-    // Only need to notify PresContexts if we're in a document.  (We might not
+    // Only need to request a restyle if we're in a document.  (We might not
     // be in a document, if we're clearing animation effects on a target node
     // that's been detached since the previous animation sample.)
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
       if (shell) {
-        nsPresContext* presContext = shell->GetPresContext();
-        presContext->SMILOverrideStyleChanged(this);
+        shell->RestyleForAnimation(this);
       }
     }
   }
@@ -4269,8 +4264,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
 const nsAttrName*
 nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  return mAttrsAndChildren.GetExistingAttrNameFromQName(
-    NS_ConvertUTF16toUTF8(aStr));
+  return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
 }
 
 nsresult
@@ -4298,20 +4292,6 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
-    // XLink URI(s) might be changing. Drop the link from the map. If it
-    // is still style relevant it will be re-added by
-    // nsStyleUtil::IsLink. Make sure to keep the style system
-    // consistent so this remains true! In particular if the style system
-    // were to get smarter and not restyling an XLink element if the href
-    // doesn't change in a "significant" way, we'd need to do the same
-    // significance check here.
-    if (doc) {
-      doc->ForgetLink(this);
-    }
-  }
 
   nsAutoString oldValue;
   PRBool modification = PR_FALSE;
@@ -4345,16 +4325,24 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
   }
 
+
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  PRUint8 modType = modification ?
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  if (aNotify) {
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
+  }
+
   nsAttrValue attrValue;
   if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
-                          attrValue, modification, hasListeners, aNotify,
+                          attrValue, modType, hasListeners, aNotify,
                           &aValue);
 }
   
@@ -4364,15 +4352,12 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                    nsIAtom* aPrefix,
                                    const nsAString& aOldValue,
                                    nsAttrValue& aParsedValue,
-                                   PRBool aModification,
+                                   PRUint8 aModType,
                                    PRBool aFireMutation,
                                    PRBool aNotify,
                                    const nsAString* aValueForAfterSetAttr)
 {
   nsresult rv;
-  PRUint8 modType = aModification ?
-    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
-    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
 
   nsIDocument* document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
@@ -4382,8 +4367,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   PRUint32 stateMask;
   if (aNotify) {
     stateMask = PRUint32(IntrinsicState());
-    
-    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -4421,7 +4404,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, stateMask);
     }
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
   }
 
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
@@ -4438,12 +4421,11 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-    nsAutoString attrName;
-    aName->ToString(attrName);
     nsCOMPtr<nsIDOMAttr> attrNode;
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+    GetAttributeNodeNS(ns, nsDependentAtomString(aName),
+                       getter_AddRefs(attrNode));
     mutation.mRelatedNode = attrNode;
 
     mutation.mAttrName = aName;
@@ -4455,7 +4437,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     if (!aOldValue.IsEmpty()) {
       mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
-    mutation.mAttrChange = modType;
+    mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
@@ -4626,12 +4608,6 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      nsIDOMMutationEvent::REMOVAL);
   }
 
-  if (document && kNameSpaceID_XLink == aNameSpaceID &&
-      nsGkAtoms::href == aName) {
-    // XLink URI might be changing.
-    document->ForgetLink(this);
-  }
-
   // When notifying, make sure to keep track of states whose value
   // depends solely on the value of an attribute.
   PRUint32 stateMask;
@@ -4647,11 +4623,10 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // Grab the attr node if needed before we remove it from the attr map
   nsCOMPtr<nsIDOMAttr> attrNode;
   if (hasMutationListeners) {
-    nsAutoString attrName;
-    aName->ToString(attrName);
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+    GetAttributeNodeNS(ns, nsDependentAtomString(aName),
+                       getter_AddRefs(attrNode));
   }
 
   // Clear binding to nsIDOMNamedNodeMap
@@ -5142,16 +5117,14 @@ ParseSelectorList(nsINode* aNode,
   nsIDocument* doc = aNode->GetOwnerDoc();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<nsICSSParser> parser;
-  nsresult rv = doc->CSSLoader()->GetParserFor(nsnull, getter_AddRefs(parser));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCSSParser parser(doc->CSSLoader());
+  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsCSSSelectorList* selectorList;
-  rv = parser->ParseSelectorString(aSelectorString,
-                                   doc->GetDocumentURI(),
-                                   0, // XXXbz get the right line number!
-                                   &selectorList);
-  doc->CSSLoader()->RecycleParser(parser);
+  nsresult rv = parser.ParseSelectorString(aSelectorString,
+                                           doc->GetDocumentURI(),
+                                           0, // XXXbz get the line number!
+                                           &selectorList);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Filter out pseudo-element selectors from selectorList
@@ -5200,9 +5173,9 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
    * cheaper than heap-allocating all the datas and keeping track of them all,
    * and helps a good bit in the common cases.  We also keep track of the whole
    * parent data chain, since we have those Around anyway */
-  char databuf[2 * sizeof(RuleProcessorData)];
+  union { char c[2 * sizeof(RuleProcessorData)]; void *p; } databuf;
   RuleProcessorData* prevSibling = nsnull;
-  RuleProcessorData* data = reinterpret_cast<RuleProcessorData*>(databuf);
+  RuleProcessorData* data = reinterpret_cast<RuleProcessorData*>(databuf.c);
 
   PRBool continueIteration = PR_TRUE;
   for (nsINode::ChildIterator iter(aRoot); !iter.IsDone(); iter.Next()) {

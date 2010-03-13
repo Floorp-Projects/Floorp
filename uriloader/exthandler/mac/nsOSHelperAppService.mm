@@ -56,7 +56,8 @@
 #include "nsMIMEInfoMac.h"
 #include "nsEmbedCID.h"
 
-#import <Carbon/Carbon.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <ApplicationServices/ApplicationServices.h>
 
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
@@ -257,6 +258,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     return nsnull;
   NS_ADDREF(mimeInfoMac);
 
+  NSAutoreleasePool *localPool = [[NSAutoreleasePool alloc] init];
+
   OSStatus err;
   PRBool haveAppForType = PR_FALSE;
   PRBool haveAppForExt = PR_FALSE;
@@ -349,6 +352,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
     if (!app) {
       NS_RELEASE(mimeInfoMac);
+      [localPool release];
       return nsnull;
     }
 
@@ -413,6 +417,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
   PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
 
+  [localPool release];
   return mimeInfoMac;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;

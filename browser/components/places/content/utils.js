@@ -763,11 +763,11 @@ var PlacesUIUtils = {
   },
 
   /**
-   * By calling this before we visit a URL, we will use TRANSITION_TYPED
-   * as the transition for the visit to that URL (if we don't have a referrer).
+   * By calling this before visiting an URL, the visit will be associated to a
+   * TRANSITION_TYPED transition (if there is no a referrer).
    * This is used when visiting pages from the history menu, history sidebar,
    * url bar, url autocomplete results, and history searches from the places
-   * organizer.  If we don't call this, we'll treat those visits as
+   * organizer.  If this is not called visits will be marked as
    * TRANSITION_LINK.
    */
   markPageAsTyped: function PU_markPageAsTyped(aURL) {
@@ -776,14 +776,25 @@ var PlacesUIUtils = {
   },
 
   /**
-   * By calling this before we visit a URL, we will use TRANSITION_BOOKMARK
-   * as the transition for the visit to that URL (if we don't have a referrer).
+   * By calling this before visiting an URL, the visit will be associated to a
+   * TRANSITION_BOOKMARK transition.
    * This is used when visiting pages from the bookmarks menu, 
    * personal toolbar, and bookmarks from within the places organizer.
-   * If we don't call this, we'll treat those visits as TRANSITION_LINK.
+   * If this is not called visits will be marked as TRANSITION_LINK.
    */
   markPageAsFollowedBookmark: function PU_markPageAsFollowedBookmark(aURL) {
     PlacesUtils.history.markPageAsFollowedBookmark(this.createFixedURI(aURL));
+  },
+
+  /**
+   * By calling this before visiting an URL, any visit in frames will be
+   * associated to a TRANSITION_FRAMED_LINK transition.
+   * This is actually used to distinguish user-initiated visits in frames
+   * so automatic visits can be correctly ignored.
+   */
+  markPageAsFollowedLink: function PU_markPageAsUserClicked(aURL) {
+    PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory)
+               .markPageAsFollowedLink(this.createFixedURI(aURL));
   },
 
   /**

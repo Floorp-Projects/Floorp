@@ -38,8 +38,9 @@
 #define nsIFormSubmission_h___
 
 #include "nsISupports.h"
-class nsAString;
-class nsACString;
+#include "nsString.h"
+#include "nsCOMPtr.h"
+
 class nsIURI;
 class nsIInputStream;
 class nsGenericHTMLElement;
@@ -49,80 +50,153 @@ class nsIFormControl;
 class nsIDOMHTMLElement;
 class nsIDocShell;
 class nsIRequest;
-
-#define NS_IFORMSUBMISSION_IID   \
-{ 0x7ee38e3a, 0x1dd2, 0x11b2, \
-  {0x89, 0x6f, 0xab, 0x28, 0x03, 0x96, 0x25, 0xa9} }
+class nsISaveAsCharset;
+class nsIMultiplexInputStream;
 
 /**
- * Interface for form submissions; encompasses the function to call to submit as
+ * Class for form submissions; encompasses the function to call to submit as
  * well as the form submission name/value pairs
  */
-class nsIFormSubmission : public nsISupports
+class nsFormSubmission
 {
 public:
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMSUBMISSION_IID)
-
-  /**
-   * Find out whether or not this form submission accepts files
-   *
-   * @param aAcceptsFiles the boolean output
-   */
-  virtual PRBool AcceptsFiles() const = 0;
-
-  /**
-   * Call to perform the submission
-   *
-   * @param aActionURL the URL to submit to (may be modified with GET contents)
-   * @param aTarget the target window
-   * @param aSource the element responsible for the submission (for web shell)
-   * @param aLinkHandler the link handler to use
-   * @param aDocShell (out param) the DocShell in which the submission was
-   *        loaded
-   * @param aRequest (out param) the Request for the submission
-   */
-  virtual nsresult SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                            nsIContent* aSource, nsILinkHandler* aLinkHandler,
-                            nsIDocShell** aDocShell,
-                            nsIRequest** aRequest) = 0;
+  virtual ~nsFormSubmission()
+  {
+    MOZ_COUNT_DTOR(nsFormSubmission);
+  }
 
   /**
    * Submit a name/value pair
    *
-   * @param aSource the control sending the parameter
    * @param aName the name of the parameter
    * @param aValue the value of the parameter
    */
-  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
-                                    const nsAString& aName,
+  virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) = 0;
 
   /**
    * Submit a name/file pair
    *
-   * @param aSource the control sending the parameter
    * @param aName the name of the parameter
-   * @param aFilename the name of the file (pass null to provide no name)
-   * @param aStream the stream containing the file data to be sent
-   * @param aContentType the content-type of the file data being sent
-   * @param aMoreFilesToCome true if another name/file pair with the same name
-   *        will be sent soon
+   * @param aFile the file to submit
    */
-  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
-                               const nsAString& aName,
-                               const nsAString& aFilename,
-                               nsIInputStream* aStream,
-                               const nsACString& aContentType,
-                               PRBool aMoreFilesToCome) = 0;
+  virtual nsresult AddNameFilePair(const nsAString& aName,
+                                   nsIFile* aFile) = 0;
+  
+  /**
+   * Given a URI and the current submission, create the final URI and data
+   * stream that will be submitted.  Subclasses *must* implement this.
+   *
+   * @param aURI the URI being submitted to [INOUT]
+   * @param aPostDataStream a data stream for POST data [OUT]
+   */
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream) = 0;
 
+  /**
+   * Get the charset that will be used for submission.
+   */
+  void GetCharset(nsACString& aCharset)
+  {
+    aCharset = mCharset;
+  }
+
+protected:
+  /**
+   * Can only be constructed by subclasses.
+   *
+   * @param aCharset the charset of the form as a string
+   */
+  nsFormSubmission(const nsACString& aCharset)
+    : mCharset(aCharset)
+  {
+    MOZ_COUNT_CTOR(nsFormSubmission);
+  }
+
+  // The name of the encoder charset
+  nsCString mCharset;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmission, NS_IFORMSUBMISSION_IID)
+class nsEncodingFormSubmission : public nsFormSubmission
+{
+public:
+  nsEncodingFormSubmission(const nsACString& aCharset);
 
-//
-// Factory methods
-// 
+  virtual ~nsEncodingFormSubmission();
+
+  /**
+   * Encode a Unicode string to bytes using the encoder (or just copy the input
+   * if there is no encoder).
+   * @param aStr the string to encode
+   * @param aResult the encoded string [OUT]
+   * @throws an error if UnicodeToNewBytes fails
+   */
+  nsresult EncodeVal(const nsAString& aStr, nsACString& aResult);
+
+private:
+  // The encoder that will encode Unicode names and values
+  nsCOMPtr<nsISaveAsCharset> mEncoder;
+};
+
+/**
+ * Handle multipart/form-data encoding, which does files as well as normal
+ * inputs.  This always does POST.
+ */
+class nsFSMultipartFormData : public nsEncodingFormSubmission
+{
+public:
+  /**
+   * @param aCharset the charset of the form as a string
+   */
+  nsFSMultipartFormData(const nsACString& aCharset);
+  ~nsFSMultipartFormData();
+ 
+  virtual nsresult AddNameValuePair(const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(const nsAString& aName,
+                                   nsIFile* aFile);
+  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
+                                        nsIInputStream** aPostDataStream);
+
+  void GetContentType(nsACString& aContentType)
+  {
+    aContentType =
+      NS_LITERAL_CSTRING("multipart/form-data; boundary=") + mBoundary;
+  }
+
+  nsIInputStream* GetSubmissionBody();
+
+protected:
+
+  /**
+   * Roll up the data we have so far and add it to the multiplexed data stream.
+   */
+  nsresult AddPostDataStream();
+
+private:
+  /**
+   * The post data stream as it is so far.  This is a collection of smaller
+   * chunks--string streams and file streams interleaved to make one big POST
+   * stream.
+   */
+  nsCOMPtr<nsIMultiplexInputStream> mPostDataStream;
+
+  /**
+   * The current string chunk.  When a file is hit, the string chunk gets
+   * wrapped up into an input stream and put into mPostDataStream so that the
+   * file input stream can then be appended and everything is in the right
+   * order.  Then the string chunk gets appended to again as we process more
+   * name/value pairs.
+   */
+  nsCString mPostDataChunk;
+
+  /**
+   * The boundary string to use after each "part" (the boundary that marks the
+   * end of a value).  This is computed randomly and is different for each
+   * submission.
+   */
+  nsCString mBoundary;
+};
 
 /**
  * Get a submission object based on attributes in the form (ENCTYPE and METHOD)
@@ -131,7 +205,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmission, NS_IFORMSUBMISSION_IID)
  * @param aFormSubmission the form submission object (out param)
  */
 nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                               nsIFormSubmission** aFormSubmission);
-
+                               nsFormSubmission** aFormSubmission);
 
 #endif /* nsIFormSubmission_h___ */

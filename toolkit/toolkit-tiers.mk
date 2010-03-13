@@ -41,96 +41,118 @@ endif
 
 include $(topsrcdir)/config/nspr/build.mk
 include $(topsrcdir)/config/js/build.mk
-include $(topsrcdir)/xpcom/build.mk
-include $(topsrcdir)/netwerk/build.mk
 
-TIERS += \
-	external \
-	gecko \
-	toolkit \
-	$(NULL)
+TIERS += platform
+
+ifdef NS_TRACE_MALLOC
+tier_platform_dirs = tools/trace-malloc/lib
+endif
+
+ifdef MOZ_TREE_FREETYPE
+tier_platform_dirs += modules/freetype2
+endif
+
+tier_platform_dirs += xpcom
+
+ifndef MOZ_NATIVE_ZLIB
+tier_platform_dirs += modules/zlib
+endif
+
+ifndef WINCE
+ifneq (,$(MOZ_XPINSTALL))
+tier_platform_dirs += modules/libreg
+endif
+endif
+
+tier_platform_dirs += \
+		modules/libpref \
+		intl \
+		netwerk \
+		$(NULL)
+
+ifdef MOZ_AUTH_EXTENSION
+tier_platform_dirs += extensions/auth
+endif
 
 #
-# tier "external" - 3rd party individual libraries
+# "external" - 3rd party individual libraries
 #
 
 ifndef MOZ_NATIVE_JPEG
-tier_external_dirs	+= jpeg
+tier_platform_dirs	+= jpeg
 endif
 
 # Installer needs standalone libjar, hence standalone zlib
 ifdef MOZ_INSTALLER
-tier_external_dirs	+= modules/zlib/standalone
+tier_platform_dirs	+= modules/zlib/standalone
 endif
 
 ifdef MOZ_UPDATER
 ifndef MOZ_NATIVE_BZ2
-tier_external_dirs += modules/libbz2
+tier_platform_dirs += modules/libbz2
 endif
-tier_external_dirs += modules/libmar
-tier_external_dirs += other-licenses/bsdiff
+tier_platform_dirs += modules/libmar
+tier_platform_dirs += other-licenses/bsdiff
 endif
 
-tier_external_dirs	+= gfx/qcms
+tier_platform_dirs	+= gfx/qcms
 
 ifeq ($(OS_ARCH),WINCE)
-tier_external_dirs += modules/lib7z
+tier_platform_dirs += modules/lib7z
 endif
 
 #
-# tier "gecko" - core components
+# "gecko" - core components
 #
 
 ifdef MOZ_IPC
-tier_gecko_dirs += ipc
+tier_platform_dirs += ipc
 endif
 
-tier_gecko_dirs += \
+tier_platform_dirs += \
 		js/src/xpconnect \
 		js/ctypes \
 		intl/chardet \
 		$(NULL)
 
 ifdef BUILD_CTYPES
-ifndef _MSC_VER
-tier_gecko_staticdirs += \
+tier_platform_staticdirs += \
 		js/ctypes/libffi \
 		$(NULL)
-endif
 endif
 
 ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
-tier_gecko_dirs     += widget/src/gtkxtbin
+tier_platform_dirs     += widget/src/gtkxtbin
 endif
 endif
 
-tier_gecko_dirs	+= \
+tier_platform_dirs	+= \
 		modules/libjar \
 		db \
 		$(NULL)
 
 ifdef MOZ_PERMISSIONS
-tier_gecko_dirs += \
+tier_platform_dirs += \
 		extensions/cookie \
 		extensions/permissions \
 		$(NULL)
 endif
 
 ifdef MOZ_STORAGE
-tier_gecko_dirs += storage
+tier_platform_dirs += storage
 endif
 
 ifdef MOZ_RDF
-tier_gecko_dirs += rdf
+tier_platform_dirs += rdf
 endif
 
 ifdef MOZ_JSDEBUGGER
-tier_gecko_dirs += js/jsd
+tier_platform_dirs += js/jsd
 endif
 
 ifdef MOZ_OGG
-tier_gecko_dirs += \
+tier_platform_dirs += \
 		media/libfishsound \
 		media/libogg \
 		media/liboggplay \
@@ -141,12 +163,12 @@ tier_gecko_dirs += \
 endif
 
 ifdef MOZ_SYDNEYAUDIO
-tier_gecko_dirs += \
+tier_platform_dirs += \
 		media/libsydneyaudio \
 		$(NULL)
 endif
 
-tier_gecko_dirs	+= \
+tier_platform_dirs	+= \
 		uriloader \
 		modules/libimg \
 		caps \
@@ -167,103 +189,96 @@ tier_gecko_dirs	+= \
 		$(NULL)
 
 ifdef MOZ_UNIVERSALCHARDET
-tier_gecko_dirs += extensions/universalchardet
+tier_platform_dirs += extensions/universalchardet
 endif
 
 ifdef ACCESSIBILITY
-tier_gecko_dirs    += accessible
+tier_platform_dirs    += accessible
 endif
 
-# 
-# tier "toolkit" - xpfe & toolkit
 #
-# The division of "gecko" and "toolkit" is somewhat arbitrary, and related
-# to history where "gecko" wasn't forked between seamonkey/firefox but
-# "toolkit" was.
+# "toolkit" - xpfe & toolkit
 #
 
-tier_toolkit_dirs += chrome profile
+tier_platform_dirs += chrome profile
 
 # This must preceed xpfe
 ifdef MOZ_JPROF
-tier_toolkit_dirs        += tools/jprof
+tier_platform_dirs        += tools/jprof
 endif
 
-tier_toolkit_dirs	+= \
+tier_platform_dirs	+= \
 	xpfe \
 	toolkit/components \
 	$(NULL)
 
 ifdef MOZ_ENABLE_XREMOTE
-tier_toolkit_dirs += widget/src/xremoteclient
+tier_platform_dirs += widget/src/xremoteclient
 endif
 
 ifdef MOZ_SPELLCHECK
-tier_toolkit_dirs	+= extensions/spellcheck
+tier_platform_dirs	+= extensions/spellcheck
 endif
 
-tier_toolkit_dirs	+= toolkit
+tier_platform_dirs	+= toolkit
 
 ifdef MOZ_XPINSTALL
-tier_toolkit_dirs     +=  xpinstall
+tier_platform_dirs     +=  xpinstall
 endif
 
 ifdef MOZ_PSM
-tier_toolkit_dirs	+= security/manager
+tier_platform_dirs	+= security/manager
 else
-tier_toolkit_dirs	+= security/manager/boot/public security/manager/ssl/public
+tier_platform_dirs	+= security/manager/boot/public security/manager/ssl/public
 endif
 
 ifdef MOZ_PREF_EXTENSIONS
-tier_toolkit_dirs += extensions/pref
+tier_platform_dirs += extensions/pref
 endif
 
 # JavaXPCOM JNI code is compiled into libXUL
 ifdef MOZ_JAVAXPCOM
-tier_toolkit_dirs += extensions/java/xpcom/src
+tier_platform_dirs += extensions/java/xpcom/src
 endif
 
 ifndef BUILD_STATIC_LIBS
 ifneq (,$(MOZ_ENABLE_GTK2))
-tier_toolkit_dirs += embedding/browser/gtk
+tier_platform_dirs += embedding/browser/gtk
 endif
 endif
 
 ifndef BUILD_STATIC_LIBS
-tier_toolkit_dirs += toolkit/library
+tier_platform_dirs += toolkit/library
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
-tier_toolkit_dirs += xpcom/stub
+tier_platform_dirs += xpcom/stub
 endif
 
 ifdef NS_TRACE_MALLOC
-tier_toolkit_dirs += tools/trace-malloc
+tier_platform_dirs += tools/trace-malloc
 endif
 
 ifdef MOZ_ENABLE_GNOME_COMPONENT
-tier_toolkit_dirs    += toolkit/system/gnome
+tier_platform_dirs    += toolkit/system/gnome
 endif
 
 ifndef MOZ_ENABLE_LIBCONIC
 # if libconic is present, it will do its own network monitoring
 ifdef MOZ_ENABLE_DBUS
-tier_toolkit_dirs    += toolkit/system/dbus
+tier_platform_dirs    += toolkit/system/dbus
 endif
 endif
 
 ifdef MOZ_LEAKY
-tier_toolkit_dirs        += tools/leaky
+tier_platform_dirs        += tools/leaky
 endif
 
 ifdef MOZ_MAPINFO
-tier_toolkit_dirs	+= tools/codesighs
+tier_platform_dirs	+= tools/codesighs
 endif
 
 ifdef ENABLE_TESTS
-tier_toolkit_dirs	+= testing/mochitest
+tier_platform_dirs	+= testing/mochitest
 endif
 
-ifdef MOZ_TREE_FREETYPE
-tier_external_dirs	+= modules/freetype2
-endif

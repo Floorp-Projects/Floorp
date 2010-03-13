@@ -72,6 +72,7 @@ if __name__ == '__main__':
     t.setDaemon(True)
     t.start()
 
+    automation.setServerInfo("localhost", PORT)
     automation.initializeProfile(PROFILE_DIRECTORY)
     browserEnv = automation.environment()
 

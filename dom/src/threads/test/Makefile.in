@@ -82,6 +82,9 @@ _TEST_FILES = \
   relativeLoad_import.js \
   test_scopeOnerror.html \
   scopeOnerror_worker.js \
+  test_suspend.html \
+  suspend_iframe.html \
+  suspend_worker.js \
   test_simpleThread.html \
   simpleThread_worker.js \
   test_terminate.html \

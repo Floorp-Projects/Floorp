@@ -37,6 +37,8 @@
 
 #include "nscore.h"
 
+class nsIAtom;
+
 // The following constants define unicode subranges
 // values below kRangeNum must be continuous so that we can map to 
 // lang group directly.
@@ -70,15 +72,18 @@ const PRUint8   kRangeOriya     =  22;
 const PRUint8   kRangeTelugu    =  23;
 const PRUint8   kRangeKannada   =  24;
 const PRUint8   kRangeSinhala   =  25;
+const PRUint8   kRangeTibetan   =  26;
 
-const PRUint8   kRangeSpecificItemNum = 26;
+const PRUint8   kRangeSpecificItemNum = 27;
 
-//range/rangeSet grow to this place 26-29
+//range/rangeSet grow to this place 27-29
 
-const PRUint8   kRangeSetStart  =  30;    // range set definition starts from here
+const PRUint8   kRangeSetStart  =  30;   // range set definition starts from here
 const PRUint8   kRangeSetLatin  =  30;
 const PRUint8   kRangeSetCJK    =  31;
-const PRUint8   kRangeSetEnd    =  31;   // range set definition ends here
+const PRUint8   kRangeSetEnd    =  31;   // range set definition ends here, this
+                                         // and smaller ranges are used as bit
+                                         // mask, don't increase this value.
 
 // less frequently used range definition
 const PRUint8   kRangeSurrogate            = 32;
@@ -88,21 +93,20 @@ const PRUint8   kRangeUnassigned           = 35;
 const PRUint8   kRangeSyriac               = 36;
 const PRUint8   kRangeThaana               = 37;
 const PRUint8   kRangeLao                  = 38;
-const PRUint8   kRangeTibetan              = 39;
-const PRUint8   kRangeMyanmar              = 40;
-const PRUint8   kRangeCherokee             = 41;
-const PRUint8   kRangeOghamRunic           = 42;
-const PRUint8   kRangeMongolian            = 43;
-const PRUint8   kRangeMathOperators        = 44;
-const PRUint8   kRangeMiscTechnical        = 45;
-const PRUint8   kRangeControlOpticalEnclose = 46;
-const PRUint8   kRangeBoxBlockGeometrics   = 47;
-const PRUint8   kRangeMiscSymbols          = 48;
-const PRUint8   kRangeDingbats             = 49;
-const PRUint8   kRangeBraillePattern       = 50;
-const PRUint8   kRangeYi                   = 51;
-const PRUint8   kRangeCombiningDiacriticalMarks = 52;
-const PRUint8   kRangeSpecials             = 53;
+const PRUint8   kRangeMyanmar              = 39;
+const PRUint8   kRangeCherokee             = 40;
+const PRUint8   kRangeOghamRunic           = 41;
+const PRUint8   kRangeMongolian            = 42;
+const PRUint8   kRangeMathOperators        = 43;
+const PRUint8   kRangeMiscTechnical        = 44;
+const PRUint8   kRangeControlOpticalEnclose = 45;
+const PRUint8   kRangeBoxBlockGeometrics   = 46;
+const PRUint8   kRangeMiscSymbols          = 47;
+const PRUint8   kRangeDingbats             = 48;
+const PRUint8   kRangeBraillePattern       = 49;
+const PRUint8   kRangeYi                   = 50;
+const PRUint8   kRangeCombiningDiacriticalMarks = 51;
+const PRUint8   kRangeSpecials             = 52;
 
 const PRUint8   kRangeTableBase   = 128;    //values over 127 are reserved for internal use only
 const PRUint8   kRangeTertiaryTable  = 145; // leave room for 16 subtable 
@@ -112,4 +116,4 @@ const PRUint8   kRangeTertiaryTable  = 145; // leave room for 16 subtable
 
 
 PRUint32 FindCharUnicodeRange(PRUnichar ch);
-const char* LangGroupFromUnicodeRange(PRUint8 unicodeRange);
+nsIAtom* LangGroupFromUnicodeRange(PRUint8 unicodeRange);

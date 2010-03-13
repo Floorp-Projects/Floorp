@@ -41,10 +41,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# NB: chromium/ and glue/ are in tier_xpcom
-
-# tier_gecko:
-DIRS += ipdl
+DIRS += chromium glue ipdl
 
 TOOL_DIRS = app
 

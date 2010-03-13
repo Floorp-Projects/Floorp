@@ -48,7 +48,7 @@ ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
 
-DIRS		+= thebes public idl src qcms
+DIRS		+= thebes public idl src qcms layers
 
 ifdef MOZ_IPC
 DIRS		+= ipc

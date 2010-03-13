@@ -100,6 +100,7 @@ CPPSRCS		= \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
 		nsFrameLoader.cpp \
+		nsFormData.cpp \
 		nsGenConImageContent.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericElement.cpp \
@@ -140,6 +141,7 @@ CPPSRCS		= \
 		nsXMLHttpRequest.cpp \
 		nsXMLNameSpaceMap.cpp \
 		Link.cpp \
+		nsFileDataProtocolHandler.cpp \
 		$(NULL)
 
 GQI_SRCS = contentbase.gqi

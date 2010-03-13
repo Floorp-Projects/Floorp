@@ -10,7 +10,8 @@
 <body>
 <p id="display"></p>
 <div id="content">
-<svg xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg"
+     onload="this.pauseAnimations()">
   <rect x="20" y="20" width="200" height="200"/>
 </svg>
 </div>
@@ -48,8 +49,8 @@ function main()
 
   // Start out with document paused
   var svg = SMILUtil.getSVGRoot();
-  svg.pauseAnimations();
-  svg.setCurrentTime(0);
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
   // Run the tests
   testBundleList(invalidTestcaseBundles, new SMILTimingData(1.0, 1.0));

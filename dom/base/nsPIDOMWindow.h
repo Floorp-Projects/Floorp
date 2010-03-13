@@ -78,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x2962cfa4, 0x13f9, 0x4606, \
-  { 0x84, 0x64, 0xef, 0x4c, 0xfa, 0x33, 0xcc, 0xce } }
+{ 0x81cdf500, 0x2183, 0x4af6, \
+  { 0xa4, 0x56, 0x35, 0x1f, 0x4a, 0x0d, 0x1a, 0x0b } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -353,8 +353,7 @@ public:
    * created.
    */
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
-                                  nsISupports *aState,
-                                  PRBool aClearScope) = 0;
+                                  nsISupports *aState) = 0;
 
   /**
    * Set the opener window.  aOriginalOpener is true if and only if this is the

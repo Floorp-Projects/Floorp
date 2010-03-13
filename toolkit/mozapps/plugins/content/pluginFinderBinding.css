@@ -43,5 +43,7 @@
 embed:-moz-type-unsupported,
 applet:-moz-type-unsupported,
 object:-moz-has-handlerref:-moz-type-unsupported {
+    display: inline-block;
+    overflow: hidden;
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
 }

@@ -1420,7 +1420,7 @@ nsIEProfileMigrator::CopyFavoritesBatched(PRBool aReplace)
     do_GetService("@mozilla.org/file/directory_service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIFile> favoritesDirectory;
-  (void)fileLocator->Get("Favs", NS_GET_IID(nsIFile),
+  (void)fileLocator->Get(NS_WIN_FAVORITES_DIR, NS_GET_IID(nsIFile),
                          getter_AddRefs(favoritesDirectory));
 
   // If |favoritesDirectory| is null, it means that we're on a Windows

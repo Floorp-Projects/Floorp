@@ -110,6 +110,7 @@ _TEST_FILES = \
 		file_LoadingImageReference.png \
 		file_bug514732_1.html \
 		file_bug514732_helper.html \
+		test_bug522632.html \
 		$(NULL)
 # disabled temporarily
 #		test_bug488417.html \

@@ -36,38 +36,41 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUnicodeRange.h"
+#include "nsIAtom.h"
+#include "gfxAtoms.h"
 
 // This table depends on unicode range definitions. 
 // Each item's index must correspond unicode range value
 // eg. x-cyrillic = LangGroupTable[kRangeCyrillic]
-static const char *gUnicodeRangeToLangGroupTable[] = 
+static nsIAtom **gUnicodeRangeToLangGroupAtomTable[] =
 {
-  "x-cyrillic",
-  "el",
-  "tr",
-  "he",
-  "ar",
-  "x-baltic",
-  "th",
-  "ko",
-  "ja",
-  "zh-CN",
-  "zh-TW",
-  "x-devanagari",
-  "x-tamil",
-  "x-armn",
-  "x-beng",
-  "x-cans",
-  "x-ethi",
-  "x-geor",
-  "x-gujr",
-  "x-guru",
-  "x-khmr",
-  "x-mlym",
-  "x-orya",
-  "x-telu",
-  "x-knda",
-  "x-sinh"
+  &gfxAtoms::x_cyrillic,
+  &gfxAtoms::el,
+  &gfxAtoms::tr,
+  &gfxAtoms::he,
+  &gfxAtoms::ar,
+  &gfxAtoms::x_baltic,
+  &gfxAtoms::th,
+  &gfxAtoms::ko,
+  &gfxAtoms::ja,
+  &gfxAtoms::zh_cn,
+  &gfxAtoms::zh_tw,
+  &gfxAtoms::x_devanagari,
+  &gfxAtoms::x_tamil,
+  &gfxAtoms::x_armn,
+  &gfxAtoms::x_beng,
+  &gfxAtoms::x_cans,
+  &gfxAtoms::x_ethi,
+  &gfxAtoms::x_geor,
+  &gfxAtoms::x_gujr,
+  &gfxAtoms::x_guru,
+  &gfxAtoms::x_khmr,
+  &gfxAtoms::x_mlym,
+  &gfxAtoms::x_orya,
+  &gfxAtoms::x_telu,
+  &gfxAtoms::x_knda,
+  &gfxAtoms::x_sinh,
+  &gfxAtoms::x_tibt
 };
 
 /**********************************************************************
@@ -455,9 +458,11 @@ PRUint32 FindCharUnicodeRange(PRUnichar ch)
   return gUnicodeTertiaryRangeTable[(ch - 0x0700) >> 7];
 }
 
-const char* LangGroupFromUnicodeRange(PRUint8 unicodeRange)
+nsIAtom *LangGroupFromUnicodeRange(PRUint8 unicodeRange)
 {
-  if (kRangeSpecificItemNum > unicodeRange)  
-    return gUnicodeRangeToLangGroupTable[unicodeRange];
+  if (kRangeSpecificItemNum > unicodeRange) {
+    nsIAtom **atom = gUnicodeRangeToLangGroupAtomTable[unicodeRange];
+    return *atom;
+  }
   return nsnull;
 }

@@ -39,7 +39,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  let testURL = "http://localhost:8888/browser/" +
+  let testURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_459906_sample.html";
   let uniqueValue = "<b>Unique:</b> " + Date.now();
 
@@ -64,6 +64,15 @@ function test() {
 
       executeSoon(function() {
         let iframes = tab2.linkedBrowser.contentWindow.frames;
+        if (iframes[1].document.body.innerHTML !== uniqueValue) {
+          // Poll again the value, since we can't ensure to run
+          // after SessionStore has injected innerHTML value.
+          // See bug 521802.
+          info("Polling for innerHTML value");
+          setTimeout(arguments.callee, 100);
+          return;
+        }
+
         is(iframes[1].document.body.innerHTML, uniqueValue,
            "rich textarea's content correctly duplicated");
 
@@ -72,7 +81,7 @@ function test() {
           innerDomain = iframes[0].document.domain;
         }
         catch (ex) { /* throws for chrome: documents */ }
-        is(innerDomain, "localhost", "XSS exploit prevented!");
+        is(innerDomain, "mochi.test", "XSS exploit prevented!");
 
         // clean up
         gBrowser.removeTab(tab2);

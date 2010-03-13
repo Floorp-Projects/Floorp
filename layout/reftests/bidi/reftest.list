@@ -4,8 +4,8 @@
 == bidi-001-v.html bidi-001-ref.html
 == bidi-002.html bidi-002-ref.html
 == bidi-003.html bidi-003-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004.html bidi-004-ref.html # Bug 386567 (Linux), bug 401078 (Mac)
-fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004-j.html bidi-004-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bidi-004.html bidi-004-ref.html # Bug 386567
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
 == bidi-006.html bidi-006-ref.html
 == bidi-006-j.html bidi-006-ref.html
@@ -17,8 +17,8 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == m
 == mixedChartype-00-j.html mixedChartype-00-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-01.html mixedChartype-01-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-01-j.html mixedChartype-01-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02.html mixedChartype-02-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02-j.html mixedChartype-02-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="windows") == mixedChartype-02.html mixedChartype-02-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="windows") == mixedChartype-02-j.html mixedChartype-02-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03.html mixedChartype-03-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-03-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
@@ -28,6 +28,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-0
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 258928-1.html 258928-1-ref.html
+== 267459-1.html 267459-1-ref.html
+== 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
 == 305643-1.html 305643-1-ref.html
 == 332655-1.html 332655-1-ref.html

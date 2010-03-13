@@ -131,7 +131,7 @@ nsJAR::~nsJAR()
   Close();
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsJAR, nsIZipReader, nsIJAR)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJAR, nsIZipReader)
 NS_IMPL_THREADSAFE_ADDREF(nsJAR)
 
 // Custom Release method works with nsZipReaderCache...
@@ -335,10 +335,6 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   }
   return rv;
 }
-
-//----------------------------------------------
-// nsIJAR implementation
-//----------------------------------------------
 
 NS_IMETHODIMP
 nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
@@ -1063,7 +1059,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
 {
   NS_ENSURE_ARG_POINTER(zipFile);
   nsresult rv;
-  nsCOMPtr<nsIJAR> antiLockZipGrip;
+  nsCOMPtr<nsIZipReader> antiLockZipGrip;
   nsAutoLock lock(mLock);
 
 #ifdef ZIP_CACHE_HIT_RATE
@@ -1083,10 +1079,6 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
     zip->ClearReleaseTime();
   }
   else {
-    if (zip) {
-      antiLockZipGrip = zip;
-      mZips.Remove(&key);
-    }
     zip = new nsJAR();
     if (zip == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;

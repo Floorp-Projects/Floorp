@@ -98,10 +98,14 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgILoader.h"
+#include "mozilla/IHistory.h"
+#include "nsDocShellCID.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsContentPolicyUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
@@ -201,6 +205,7 @@ nsIXTFService *nsContentUtils::sXTFService = nsnull;
 nsIPrefBranch2 *nsContentUtils::sPrefBranch = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
 imgICache *nsContentUtils::sImgCache;
+mozilla::IHistory *nsContentUtils::sHistory;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sEventTable = nsnull;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
@@ -373,6 +378,9 @@ nsContentUtils::Init()
     if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
       sImgCache = nsnull;
   }
+
+  rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
   if (!sPtrsToPtrsToRelease) {
@@ -925,7 +933,7 @@ nsContentUtils::Shutdown()
   // Clean up c-style's observer 
   if (sPrefCallbackList) {
     while (sPrefCallbackList->Count() > 0) {
-      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
+      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
       NS_ABORT_IF_FALSE(callback, "Invalid c-style callback is appended");
       if (sPrefBranch)
         sPrefBranch->RemoveObserver(callback->mPref.get(), callback);
@@ -954,6 +962,7 @@ nsContentUtils::Shutdown()
 #endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sImgCache);
+  NS_IF_RELEASE(sHistory);
   NS_IF_RELEASE(sPrefBranch);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
@@ -1888,10 +1897,7 @@ static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
 {
   NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
 
-  const char* atomString = nsnull;
-  aAtom->GetUTF8String(&atomString);
-
-  KeyAppendString(nsDependentCString(atomString), aKey);
+  KeyAppendString(nsAtomCString(aAtom), aKey);
 }
 
 static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
@@ -2666,7 +2672,7 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 
     int i;
     for (i = 0; i < sPrefCallbackList->Count(); i++) {
-      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
+      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
       if (callback && callback->IsEqual(aPref, aCallback, aClosure)) {
         sPrefBranch->RemoveObserver(aPref, callback);
         sPrefCallbackList->RemoveObject(callback);
@@ -3201,8 +3207,7 @@ nsAutoGCRoot::RemoveJSGCRoot(void* aPtr)
 PRBool
 nsContentUtils::IsEventAttributeName(nsIAtom* aName, PRInt32 aType)
 {
-  const char* name;
-  aName->GetUTF8String(&name);
+  const PRUnichar* name = aName->GetUTF16String();
   if (name[0] != 'o' || name[1] != 'n')
     return PR_FALSE;
 
@@ -3443,6 +3448,30 @@ nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
   nsReferencedElement ref;
   ref.Reset(aFromContent, aURI);
   return ref.get();
+}
+
+/* static */
+void
+nsContentUtils::RegisterShutdownObserver(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->AddObserver(aObserver, 
+                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                 PR_FALSE);
+  }
+}
+
+/* static */
+void
+nsContentUtils::UnregisterShutdownObserver(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->RemoveObserver(aObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
 }
 
 /* static */
@@ -4218,6 +4247,14 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
   return aLoadingPrincipal->CheckMayLoad(aURIToLoad, PR_TRUE);
 }
 
+PRBool
+nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
+{
+  PRBool isSystem;
+  nsresult rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
+  return NS_SUCCEEDED(rv) && isSystem;
+}
+
 /* static */
 void
 nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
@@ -4531,7 +4568,7 @@ nsContentUtils::RemoveScriptBlocker()
   }
 
   PRUint32 firstBlocker = sRunnersCountAtFirstBlocker;
-  PRUint32 lastBlocker = sBlockedScriptRunners->Count();
+  PRUint32 lastBlocker = (PRUint32)sBlockedScriptRunners->Count();
   sRunnersCountAtFirstBlocker = 0;
   NS_ASSERTION(firstBlocker <= lastBlocker,
                "bad sRunnersCountAtFirstBlocker");
@@ -4542,7 +4579,7 @@ nsContentUtils::RemoveScriptBlocker()
     --lastBlocker;
 
     runnable->Run();
-    NS_ASSERTION(lastBlocker == sBlockedScriptRunners->Count() &&
+    NS_ASSERTION(lastBlocker == (PRUint32)sBlockedScriptRunners->Count() &&
                  sRunnersCountAtFirstBlocker == 0,
                  "Bad count");
     NS_ASSERTION(!sScriptBlockerCount, "This is really bad");
@@ -4852,6 +4889,78 @@ nsContentUtils::GetCurrentJSContext()
   sThreadJSContextStack->Peek(&cx);
 
   return cx;
+}
+
+/* static */
+void
+nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
+{
+  PRUint32 len = aSource.Length();
+  aDest.SetLength(len);
+  if (aDest.Length() == len) {
+    PRUnichar* dest = aDest.BeginWriting();
+    const PRUnichar* iter = aSource.BeginReading();
+    const PRUnichar* end = aSource.EndReading();
+    while (iter != end) {
+      PRUnichar c = *iter;
+      *dest = (c >= 'A' && c <= 'Z') ?
+         c + ('a' - 'A') : c;
+      ++iter;
+      ++dest;
+    }
+  }
+}
+
+/* static */
+void
+nsContentUtils::ASCIIToUpper(nsAString& aStr)
+{
+  PRUnichar* iter = aStr.BeginWriting();
+  PRUnichar* end = aStr.EndWriting();
+  while (iter != end) {
+    PRUnichar c = *iter;
+    if (c >= 'a' && c <= 'z') {
+      *iter = c + ('A' - 'a');
+    }
+    ++iter;
+  }
+}
+
+PRBool
+nsContentUtils::EqualsIgnoreASCIICase(const nsAString& aStr1,
+                                      const nsAString& aStr2)
+{
+  PRUint32 len = aStr1.Length();
+  if (len != aStr2.Length()) {
+    return PR_FALSE;
+  }
+
+  const PRUnichar* str1 = aStr1.BeginReading();
+  const PRUnichar* str2 = aStr2.BeginReading();
+  const PRUnichar* end = str1 + len;
+
+  while (str1 < end) {
+    PRUnichar c1 = *str1++;
+    PRUnichar c2 = *str2++;
+
+    // First check if any bits other than the 0x0020 differs
+    if ((c1 ^ c2) & 0xffdf) {
+      return PR_FALSE;
+    }
+
+    // We know they only differ in the 0x0020 bit.
+    // Likely the two chars are the same, so check that first
+    if (c1 != c2) {
+      // They do differ, but since it's only in the 0x0020 bit, check if it's
+      // the same ascii char, but just differing in case
+      PRUnichar c1Upper = c1 & 0xffdf;
+      if (!('A' <= c1Upper && c1Upper <= 'Z')) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
 }
 
 /* static */
@@ -5213,27 +5322,67 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
   NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
 
-  // Keep sXPConnect and sThreadJSContextStack alive.
-  nsLayoutStaticsRef layoutStaticsRef;
+  // Keep sXPConnect and sThreadJSContextStack alive. If we're on the main
+  // thread then this can be done simply and cheaply by adding a reference to
+  // nsLayoutStatics. If we're not on the main thread then we need to add a
+  // more expensive reference sXPConnect directly. We have to use manual
+  // AddRef and Release calls so don't early-exit from this function after we've
+  // added the reference!
+  PRBool isMainThread = NS_IsMainThread();
+
+  if (isMainThread) {
+    nsLayoutStatics::AddRef();
+  }
+  else {
+    sXPConnect->AddRef();
+  }
 
   JSContext *topJSContext;
   nsresult rv = sThreadJSContextStack->Peek(&topJSContext);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool push = topJSContext != cx;
-  if (push) {
-    rv = sThreadJSContextStack->Push(cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool push = topJSContext != cx;
+    if (push) {
+      rv = sThreadJSContextStack->Push(cx);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID,
+                                         aAllowWrapping, vp, aHolder);
+      if (push) {
+        sThreadJSContextStack->Pop(nsnull);
+      }
+    }
   }
 
-  rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID, aAllowWrapping,
-                                     vp, aHolder);
-
-  if (push) {
-    sThreadJSContextStack->Pop(nsnull);
+  if (isMainThread) {
+    nsLayoutStatics::Release();
+  }
+  else {
+    sXPConnect->Release();
   }
 
   return rv;
+}
+
+void
+nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
+{
+  // In common cases where we don't have nulls in the
+  // string we can simple simply bypass the checking code.
+  PRInt32 firstNullPos = aInStr.FindChar('\0');
+  if (firstNullPos == kNotFound) {
+    aOutStr.Assign(aInStr);
+    return;
+  }
+
+  aOutStr.SetCapacity(aInStr.Length() - 1);
+  nsAString::const_iterator start, end;
+  aInStr.BeginReading(start);
+  aInStr.EndReading(end);
+  while (start != end) {
+    if (*start != '\0')
+      aOutStr.Append(*start);
+    ++start;
+  }
 }
 
 #ifdef DEBUG

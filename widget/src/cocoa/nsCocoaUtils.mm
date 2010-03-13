@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfxImageSurface.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuBarX.h"
 #include "nsCocoaWindow.h"
@@ -244,54 +245,83 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-unsigned short nsCocoaUtils::GetCocoaEventKeyCode(NSEvent *theEvent)
+nsresult nsCocoaUtils::CreateCGImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, CGImageRef *aResult)
 {
-  unsigned short keyCode = [theEvent keyCode];
-  if (nsToolkit::OnLeopardOrLater())
-    return keyCode;
-  NSEventType type = [theEvent type];
-  // GetCocoaEventKeyCode() can get called with theEvent set to a FlagsChanged
-  // event, which triggers an NSInternalInconsistencyException when
-  // charactersIgnoringModifiers is called on it.  For some reason there's no
-  // problem calling keyCode on it (as we do above).
-  if ((type != NSKeyDown) && (type != NSKeyUp))
-    return keyCode;
-  NSString *unmodchars = [theEvent charactersIgnoringModifiers];
-  if (!keyCode && ([unmodchars length] == 1)) {
-    // An OS-X-10.4.X-specific Apple bug causes the 'theEvent' parameter of
-    // all calls to performKeyEquivalent: (whether on NSMenu, NSWindow or
-    // NSView objects) to have most of its fields zeroed on a ctrl-ESC event.
-    // These include its keyCode and modifierFlags fields, but fortunately
-    // not its characters and charactersIgnoringModifiers fields.  So if
-    // charactersIgnoringModifiers has length == 1 and corresponds to the ESC
-    // character (0x1b), we correct keyCode to 0x35 (kEscapeKeyCode).
-    if ([unmodchars characterAtIndex:0] == 0x1b)
-      keyCode = 0x35;
+  nsRefPtr<gfxImageSurface> frame;
+  nsresult rv = aImage->CopyFrame(aWhichFrame,
+                                  imgIContainer::FLAG_SYNC_DECODE,
+                                  getter_AddRefs(frame));
+  if (NS_FAILED(rv) || !frame) {
+    return NS_ERROR_FAILURE;
   }
-  return keyCode;
+
+  PRInt32 width = frame->Width();
+  PRInt32 stride = frame->Stride();
+  PRInt32 height = frame->Height();
+  if ((stride % 4 != 0) || (height < 1) || (width < 1)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a CGImageRef with the bits from the image, taking into account
+  // the alpha ordering and endianness of the machine so we don't have to
+  // touch the bits ourselves.
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(NULL,
+                                                                  frame->Data(),
+                                                                  stride * height,
+                                                                  NULL);
+  CGColorSpaceRef colorSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+  *aResult = ::CGImageCreate(width,
+                             height,
+                             8,
+                             32,
+                             stride,
+                             colorSpace,
+                             kCGBitmapByteOrder32Host | kCGImageAlphaFirst,
+                             dataProvider,
+                             NULL,
+                             0,
+                             kCGRenderingIntentDefault);
+  ::CGColorSpaceRelease(colorSpace);
+  ::CGDataProviderRelease(dataProvider);
+  return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NSUInteger nsCocoaUtils::GetCocoaEventModifierFlags(NSEvent *theEvent)
+nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage **aResult)
 {
-  NSUInteger modifierFlags = [theEvent modifierFlags];
-  if (nsToolkit::OnLeopardOrLater())
-    return modifierFlags;
-  NSEventType type = [theEvent type];
-  if ((type != NSKeyDown) && (type != NSKeyUp))
-    return modifierFlags;
-  NSString *unmodchars = [theEvent charactersIgnoringModifiers];
-  if (!modifierFlags && ([unmodchars length] == 1)) {
-    // An OS-X-10.4.X-specific Apple bug causes the 'theEvent' parameter of
-    // all calls to performKeyEquivalent: (whether on NSMenu, NSWindow or
-    // NSView objects) to have most of its fields zeroed on a ctrl-ESC event.
-    // These include its keyCode and modifierFlags fields, but fortunately
-    // not its characters and charactersIgnoringModifiers fields.  So if
-    // charactersIgnoringModifiers has length == 1 and corresponds to the ESC
-    // character (0x1b), we correct modifierFlags to NSControlKeyMask.  (ESC
-    // key events don't get messed up (anywhere they're sent) on opt-ESC,
-    // shift-ESC or cmd-ESC.)
-    if ([unmodchars characterAtIndex:0] == 0x1b)
-      modifierFlags = NSControlKeyMask;
-  }
-  return modifierFlags;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  PRInt32 width = ::CGImageGetWidth(aInputImage);
+  PRInt32 height = ::CGImageGetHeight(aInputImage);
+  NSRect imageRect = ::NSMakeRect(0.0, 0.0, width, height);
+
+  // Create a new image to receive the Quartz image data.
+  *aResult = [[NSImage alloc] initWithSize:imageRect.size];
+
+  [*aResult lockFocus];
+
+  // Get the Quartz context and draw.
+  CGContextRef imageContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  ::CGContextDrawImage(imageContext, *(CGRect*)&imageRect, aInputImage);
+
+  [*aResult unlockFocus];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult)
+{
+  CGImageRef imageRef = NULL;
+  nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(aImage, aWhichFrame, &imageRef);
+  if (NS_FAILED(rv) || !imageRef) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = nsCocoaUtils::CreateNSImageFromCGImage(imageRef, aResult);
+  if (NS_FAILED(rv) || !aResult) {
+    return NS_ERROR_FAILURE;
+  }
+  ::CGImageRelease(imageRef);
+  return NS_OK;
+}
+

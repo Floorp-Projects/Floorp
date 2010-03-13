@@ -69,7 +69,6 @@ class nsIDocument;
 class nsIURI;
 class nsIChannel;
 class nsIDocShell;
-class nsICSSLoader;
 class nsIParser;
 class nsIAtom;
 class nsIChannel;
@@ -78,6 +77,12 @@ class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
 class nsIApplicationCache;
+
+namespace mozilla {
+namespace css {
+class Loader;
+}
+}
 
 #ifdef NS_DEBUG
 
@@ -303,7 +308,7 @@ protected:
   nsCOMPtr<nsIURI>              mDocumentURI;
   nsCOMPtr<nsIURI>              mDocumentBaseURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
-  nsCOMPtr<nsICSSLoader>        mCSSLoader;
+  nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
   nsRefPtr<nsScriptLoader>      mScriptLoader;
 
@@ -354,31 +359,31 @@ protected:
   PRUint32 mDeflectedCount;
 
   // How many times to deflect in interactive/perf modes
-  PRInt32 mInteractiveDeflectCount;
-  PRInt32 mPerfDeflectCount;
+  PRUint32 mInteractiveDeflectCount;
+  PRUint32 mPerfDeflectCount;
 
   // 0 = don't check for pending events
   // 1 = don't deflect if there are pending events
   // 2 = bail if there are pending events
-  PRInt32 mPendingEventMode;
+  PRUint32 mPendingEventMode;
 
   // How often to probe for pending events. 1=every token
-  PRInt32 mEventProbeRate;
+  PRUint32 mEventProbeRate;
 
   // Is there currently a pending event?
   PRBool mHasPendingEvent;
 
   // When to return to the main event loop
-  PRInt32 mCurrentParseEndTime;
+  PRUint32 mCurrentParseEndTime;
 
   // How long to stay off the event loop in interactive/perf modes
-  PRInt32 mInteractiveParseTime;
-  PRInt32 mPerfParseTime;
+  PRUint32 mInteractiveParseTime;
+  PRUint32 mPerfParseTime;
 
   // How long to be in interactive mode after an event
-  PRInt32 mInteractiveTime;
+  PRUint32 mInteractiveTime;
   // How long to stay in perf mode after initial loading
-  PRInt32 mInitialPerfTime;
+  PRUint32 mInitialPerfTime;
 
   // Should we switch between perf-mode and interactive-mode
   PRBool mEnablePerfMode;

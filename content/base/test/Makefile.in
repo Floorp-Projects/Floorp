@@ -225,6 +225,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_NodeIterator_basics_filters.xhtml \
 		test_NodeIterator_mutations_1.xhtml \
 		test_NodeIterator_mutations_2.html \
+		test_NodeIterator_mutations_3.html \
 		test_bug28293.html \
 		test_bug28293.xhtml \
 		file_bug28293.sjs \
@@ -325,8 +326,14 @@ _TEST_FILES = 	test_bug5141.html \
 		test_classList.html \
 		test_bug514487.html \
 		test_range_bounds.html \
+		test_bug543870.html \
+		file_bug543870_img.jpg \
+		file_bug543870_inner.html \
+		file_bug543870_doc.html \
+		file_bug543870_text.txt \
 		test_bug475156.html \
 		bug475156.sjs \
+		test_bug544642.html \
 		test_copypaste.html \
 		test_bug503481.html \
 		file_bug503481.sjs \
@@ -336,11 +343,19 @@ _TEST_FILES = 	test_bug5141.html \
 		test_CSP.html \
 		file_CSP.sjs \
 		file_CSP_main.html \
+		file_CSP_main.html^headers^ \
 		file_CSP_main.js \
  		test_CSP_frameancestors.html \
  		file_CSP_frameancestors.sjs \
  		file_CSP_frameancestors_main.html \
  		file_CSP_frameancestors_main.js \
+ 		test_CSP_inlinescript.html \
+ 		file_CSP_inlinescript_main.html \
+ 		file_CSP_inlinescript_main.html^headers^ \
+ 		test_CSP_evalscript.html \
+ 		file_CSP_evalscript_main.html \
+ 		file_CSP_evalscript_main.html^headers^ \
+ 		file_CSP_evalscript_main.js \
 		test_bug540854.html \
 		bug540854.sjs \
 		$(NULL)

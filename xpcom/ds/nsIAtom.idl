@@ -40,6 +40,7 @@
 %{C++
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
+#include "nsStringBuffer.h"
 %}
 
 /*
@@ -48,47 +49,50 @@
  * pointer identity.
  */
  
-[scriptable, uuid(fbffe332-0856-421a-9b83-aaed0081fc40)]
+[scriptable, uuid(1f341018-521a-49de-b806-1bef5c9a00b0)]
 interface nsIAtom : nsISupports
 {
   /**
    * Get the Unicode or UTF8 value for the string
    */
-  AString toString(); 
-  AUTF8String toUTF8String();
+  [binaryname(ScriptableToString)] AString toString(); 
+  [noscript] AUTF8String toUTF8String();
   
-  /**
-   * Return a pointer to a zero terminated UTF8 string.
-   */
-  [noscript] void getUTF8String([shared, retval] out string aResult);
-
   /**
    * Compare the atom to a specific string value
    * Note that this will NEVER return/throw an error condition.
    */
-  boolean equals(in AString aString);
+  [binaryname(ScriptableEquals)] boolean equals(in AString aString);
   
-  boolean equalsUTF8(in AUTF8String aString);
+  [noscript, notxpcom] boolean equalsUTF8(in AUTF8String aString);
 
-%{C++
-  // note this is NOT virtual so this won't muck with the vtable!
-  inline PRBool Equals(const nsAString& s) {
-    PRBool result;
-    Equals(s, &result);
-    return result;
-  }
-
-  inline PRBool EqualsUTF8(const nsACString& s) {
-    PRBool result;
-    EqualsUTF8(s, &result);
-    return result;
-  }
-%}
-  
   /**
    * Returns true if the atom is static and false otherwise.
    */
   [noscript, notxpcom] boolean isStaticAtom();
+
+%{C++
+  // note this is NOT virtual so this won't muck with the vtable!
+  inline PRBool Equals(const nsAString& aString) {
+    return aString.Equals(nsDependentString(mString, mLength));
+  }
+
+  inline const PRUnichar* GetUTF16String() {
+    return mString;
+  }
+
+  inline const PRUint32 GetLength() {
+    return mLength;
+  }
+
+  inline void ToString(nsAString& aBuf) {
+    nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
+  }
+
+protected:
+  PRUint32 mLength;
+  PRUnichar* mString;
+%}
 };
 
 
@@ -115,46 +119,32 @@ interface nsIAtom : nsISupports
  * The string is assumed to be zero terminated.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const char* aUTF8String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* aUTF8String);
 
 inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
     { return NS_NewAtom(aUTF8String); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* aUTF8String)
-    { return NS_NewPermanentAtom(aUTF8String); }
  
 /**
  * Find an atom that matches the given UTF-8 string.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& aUTF8String);
-
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
     { return NS_NewAtom(aUTF8String); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsACString& aUTF8String)
-    { return NS_NewPermanentAtom(aUTF8String); }
 
 /**
  * Find an atom that matches the given UTF-16 string.
  * The string is assumed to be zero terminated.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* aUTF16String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const PRUnichar* aUTF16String);
-
 inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
     { return NS_NewAtom(aUTF16String); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* aUTF16String)
-    { return NS_NewPermanentAtom(aUTF16String); }
 
 /**
  * Find an atom that matches the given UTF-16 string.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
 extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
-
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
     { return NS_NewAtom(aUTF16String); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAString& aUTF16String)
-    { return NS_NewPermanentAtom(aUTF16String); }
 
 /**
  * Return a count of the total number of atoms currently
@@ -172,5 +162,32 @@ extern NS_COM nsIAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
  * Seal the static atom table
  */
 extern NS_COM void NS_SealStaticAtomTable();
+
+class nsAtomString : public nsString
+{
+public:
+  nsAtomString(nsIAtom* aAtom)
+  {
+    aAtom->ToString(*this);
+  }
+};
+
+class nsAtomCString : public nsCString
+{
+public:
+  nsAtomCString(nsIAtom* aAtom)
+  {
+    aAtom->ToUTF8String(*this);
+  }
+};
+
+class nsDependentAtomString : public nsDependentString
+{
+public:
+  nsDependentAtomString(nsIAtom* aAtom)
+    : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength())
+  {
+  }
+};
 
 %}

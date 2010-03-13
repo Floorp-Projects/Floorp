@@ -153,7 +153,7 @@ function commonInit() {
     // Add a login that's used in multiple tests
     var login = Components.classes["@mozilla.org/login-manager/loginInfo;1"].
                 createInstance(Components.interfaces.nsILoginInfo);
-    login.init("http://localhost:8888", "http://localhost:8888", null,
+    login.init("http://mochi.test:8888", "http://mochi.test:8888", null,
                "testuser", "testpass", "uname", "pword");
     pwmgr.addLogin(login);
 

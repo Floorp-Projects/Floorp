@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test copying text from browser to plugin</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script class="testbody" type="text/javascript">
+function runTests() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var text = " some text \n to copy 'n paste "
+  var textElt = document.getElementById("input");
+  var plugin = document.getElementById("plugin1");
+
+  textElt.focus();
+  textElt.value = text;
+  textElt.select();
+  textElt.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+      .editor.copy();
+
+  is(plugin.getClipboardText(), text);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <textarea id="input"></textarea>
+
+</body>
+</html>

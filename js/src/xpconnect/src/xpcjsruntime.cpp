@@ -769,7 +769,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     }
 
     nsTArray<JSGCCallback> callbacks(self->extraGCCallbacks);
-    for (PRInt32 i = 0; i < callbacks.Length(); ++i) {
+    for (PRUint32 i = 0; i < callbacks.Length(); ++i) {
         if (!callbacks[i](cx, status))
             return JS_FALSE;
     }

@@ -45,7 +45,7 @@ namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
-class PStreamNotifyChild;
+class StreamNotifyChild;
 
 class BrowserStreamChild : public PBrowserStreamChild, public AStream
 {
@@ -54,36 +54,27 @@ public:
                      const nsCString& url,
                      const uint32_t& length,
                      const uint32_t& lastmodified,
-                     const PStreamNotifyChild* notifyData,
+                     StreamNotifyChild* notifyData,
                      const nsCString& headers,
                      const nsCString& mimeType,
                      const bool& seekable,
                      NPError* rv,
                      uint16_t* stype);
-  virtual ~BrowserStreamChild() { }
+  virtual ~BrowserStreamChild();
 
   NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
 
   NPError StreamConstructed(
-            const nsCString& url,
-            const uint32_t& length,
-            const uint32_t& lastmodified,
-            PStreamNotifyChild* notifyData,
-            const nsCString& headers,
             const nsCString& mimeType,
             const bool& seekable,
             uint16_t* stype);
 
-  virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
-                                        int32_t *size);
-  virtual bool AnswerNPP_Write(const int32_t& offset,
-                                   const Buffer& data,
-                                   int32_t* consumed);
-
+  virtual bool RecvWrite(const int32_t& offset,
+                         const Buffer& data,
+                         const uint32_t& newsize);
   virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
-  virtual bool Answer__delete__(const NPError& reason,
-                                const bool& artificial);
-
+  virtual bool RecvNPP_DestroyStream(const NPReason& reason);
+  virtual bool Recv__delete__();
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {
@@ -97,14 +88,115 @@ public:
   }
 
   NPError NPN_RequestRead(NPByteRange* aRangeList);
-  void NPP_DestroyStream(NPError reason);
+  void NPN_DestroyStream(NPReason reason);
+
+  void NotifyPending() {
+    NS_ASSERTION(!mNotifyPending, "Pending twice?");
+    mNotifyPending = true;
+    EnsureDeliveryPending();
+  }
+
+  /**
+   * During instance destruction, artificially cancel all outstanding streams.
+   *
+   * @return false if we are already in the DELETING state.
+   */
+  bool InstanceDying() {
+    if (DELETING == mState)
+      return false;
+
+    mInstanceDying = true;
+    return true;
+  }
+
+  void FinishDelivery() {
+    NS_ASSERTION(mInstanceDying, "Should only be called after InstanceDying");
+    NS_ASSERTION(DELETING != mState, "InstanceDying didn't work?");
+    mStreamStatus = NPRES_USER_BREAK;
+    Deliver();
+    NS_ASSERTION(!mStreamNotify, "Didn't deliver NPN_URLNotify?");
+  }
 
 private:
+  friend class StreamNotifyChild;
+  using PBrowserStreamChild::SendNPN_DestroyStream;
+
+  /**
+   * Post an event to ensure delivery of pending data/destroy/urlnotify events
+   * outside of the current RPC stack.
+   */
+  void EnsureDeliveryPending();
+
+  /**
+   * Deliver data, destruction, notify scheduling
+   * or cancelling the suspended timer as needed.
+   */
+  void Deliver();
+
+  /**
+   * Deliver one chunk of pending data.
+   * @return true if the plugin indicated a pause was necessary
+   */
+  bool DeliverPendingData();
+
+  void SetSuspendedTimer();
+  void ClearSuspendedTimer();
+
   PluginInstanceChild* mInstance;
   NPStream mStream;
-  bool mClosed;
+
+  static const NPReason kStreamOpen = -1;
+
+  /**
+   * The plugin's notion of whether a stream has been "closed" (no more
+   * data delivery) differs from the plugin host due to asynchronous delivery
+   * of data and NPN_DestroyStream. While the plugin-visible stream is open,
+   * mStreamStatus should be kStreamOpen (-1). mStreamStatus will be a
+   * failure code if either the parent or child indicates stream failure.
+   */
+  NPReason mStreamStatus;
+
+  /**
+   * Delivery of NPP_DestroyStream and NPP_URLNotify must be postponed until
+   * all data has been delivered.
+   */
+  enum {
+    NOT_DESTROYED, // NPP_DestroyStream not yet received
+    DESTROY_PENDING, // NPP_DestroyStream received, not yet delivered
+    DESTROYED // NPP_DestroyStream delivered, NPP_URLNotify may still be pending
+  } mDestroyPending;
+  bool mNotifyPending;
+
+  // When NPP_Destroy is called for our instance (manager), this flag is set
+  // cancels the stream and avoids sending StreamDestroyed.
+  bool mInstanceDying;
+
+  enum {
+    CONSTRUCTING,
+    ALIVE,
+    DYING,
+    DELETING
+  } mState;
   nsCString mURL;
   nsCString mHeaders;
+  StreamNotifyChild* mStreamNotify;
+
+  struct PendingData
+  {
+    int32_t offset;
+    Buffer data;
+    int32_t curpos;
+  };
+  nsTArray<PendingData> mPendingData;
+
+  /**
+   * Asynchronous RecvWrite messages are never delivered to the plugin
+   * immediately, because that may be in the midst of an unexpected RPC
+   * stack frame. It instead posts a runnable using this tracker to cancel
+   * in case we are destroyed.
+   */
+  ScopedRunnableMethodFactory<BrowserStreamChild> mDeliveryTracker;
+  base::RepeatingTimer<BrowserStreamChild> mSuspendedTimer;
 };
 
 } // namespace plugins

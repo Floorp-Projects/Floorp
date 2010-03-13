@@ -40,60 +40,45 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
-#include "Module.h"
+#include "CTypes.h"
 #include "nsTArray.h"
 #include "prlink.h"
-
-// Define __i386__ and __x86_64__ as appropriate for the Sun Pro compiler,
-// before #including ffi.h. (libffi itself is built with gcc on Solaris.)
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#ifdef __i386
-#define __i386__
-#endif
-#ifdef __x86_64
-#define __x86_64__
-#endif
-#endif
-
-#include "ffi.h"
 
 namespace mozilla {
 namespace ctypes {
 
-// for JS error reporting
-enum ErrorNum {
-#define MSG_DEF(name, number, count, exception, format) \
-  name = number,
-#include "ctypes.msg"
-#undef MSG_DEF
-  CTYPESERR_LIMIT
+enum FunctionSlot
+{
+  SLOT_FUNCTION = 0,
+  SLOT_LIBRARYOBJ = 1
+  // JSFunction objects always get exactly two slots.
 };
-
-const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber);
 
 struct Type
 {
   ffi_type mFFIType;
-  TypeCode mType;
+  JSObject* mType;
 };
 
-struct Value
+struct AutoValue
 {
+  AutoValue() : mData(NULL) { }
+
+  ~AutoValue()
+  {
+    delete[] static_cast<char*>(mData);
+  }
+
+  bool SizeToType(JSContext* cx, JSObject* type)
+  {
+    size_t size = CType::GetSize(cx, type);
+    mData = new char[size];
+    if (mData)
+      memset(mData, 0, size);
+    return mData != NULL;
+  }
+
   void* mData;
-  union {
-    PRInt8   mInt8;
-    PRInt16  mInt16;
-    PRInt32  mInt32;
-    PRInt64  mInt64;
-    PRUint8  mUint8;
-    PRUint16 mUint16;
-    PRUint32 mUint32;
-    PRUint64 mUint64;
-    float    mFloat;
-    double   mDouble;
-    void*    mPointer;
-  } mValue;
 };
 
 class Function
@@ -102,6 +87,7 @@ public:
   Function();
 
   Function*& Next() { return mNext; }
+  void Trace(JSTracer *trc);
 
   static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
   static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
@@ -109,8 +95,8 @@ public:
   ~Function();
 
 private:
-  bool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  bool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
+  JSBool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  JSBool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
 
 protected:
   PRFuncPtr mFunc;

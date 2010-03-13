@@ -67,12 +67,17 @@ But what about BODY, TR, TD, TH, CAPTION, COL, COLGROUP, THEAD, TFOOT, LI, DT, D
  
 
 */
+
+#define EDITOR_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsEditPropertyAtomList.h"
+#undef EDITOR_ATOM
+
 void
 nsEditProperty::RegisterAtoms()
 {
   // inline tags
   static const nsStaticAtom property_atoms[] = {
-#define EDITOR_ATOM(name_, value_) { value_, &name_ },
+#define EDITOR_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &name_),
 #include "nsEditPropertyAtomList.h"
 #undef EDITOR_ATOM
   };

@@ -123,10 +123,10 @@ public:
                      bool* aSuccess);
 
   virtual bool
-  AnswerProtect();
+  RecvProtect();
 
   virtual bool
-  AnswerUnprotect();
+  RecvUnprotect();
 
   static const NPClass*
   GetClass()

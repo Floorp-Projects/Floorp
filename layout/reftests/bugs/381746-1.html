@@ -1,0 +1,15 @@
+<html><head>
+<title>Testcase Bug 381746 – odd and changing border in frameset</title>
+<script>
+function doe() {
+document.getElementsByTagName('frame')[0].src = 'data:text/html;charset=utf-8,text';
+document.getElementsByTagName('frame')[1].src = 'data:text/html;charset=utf-8,text';
+}
+window.onload=doe;
+</script>
+</head>
+<frameset cols="48%,52%">
+  <frame src="">
+  <frame src="">
+</frameset>
+</html>

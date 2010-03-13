@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsClipboard.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
@@ -47,10 +46,8 @@
 #include "prmem.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-
 #include "nsOS2Uni.h"
-
-#include <unidef.h>     // for UniStrlen
+#include "nsClipboard.h"
 
 inline ULONG RegisterClipboardFormat(PCSZ pcszFormat)
 {

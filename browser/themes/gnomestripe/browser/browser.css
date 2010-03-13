@@ -79,8 +79,6 @@
 /* Places toolbar */
 toolbarbutton.bookmark-item {
   margin: 0;
-  min-width: 0;
-  max-width: 13em;
   padding: 2px 3px;
 }
 
@@ -844,7 +842,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 /* Identity indicator */
 #identity-box {
-  background-color: -moz-dialog;
+  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
   color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
 }
@@ -857,13 +855,13 @@ toolbar[iconsize="small"] #fullscreen-button {
   outline: 1px dotted -moz-DialogText;
 }
 
-#identity-box:hover > #identity-box-inner {
-  background-color: rgba(255, 255, 255, .2);
+#identity-box:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
-#identity-box:hover:active > #identity-box-inner,
-#identity-box[open="true"] > #identity-box-inner {
-  background-color: rgba(0, 0, 0, .1);
+#identity-box:hover:active,
+#identity-box[open="true"] {
+  background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
 #identity-icon-labels {
@@ -1192,20 +1190,8 @@ statusbarpanel#statusbar-display {
 }
 
 /* Tab drag and drop */
-.tab-drop-indicator-bar {
-  height: 11px;
-  margin-top: -11px;
-  position: relative;
-  /* set -moz-margin-start to -1/2 indicator width: */
-  -moz-margin-start: -5px;
-}
-
 .tab-drop-indicator {
-  height: 11px;
-  width: 11px;
-  margin-bottom: -5px;
-  position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
 }
 
 /* In-tab close button */

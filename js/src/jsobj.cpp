@@ -1108,6 +1108,26 @@ Object_p_valueOf(JSContext* cx, JSObject* obj, JSString *hint)
 #endif
 
 /*
+ * Check if CSP allows new Function() or eval() to run in the current
+ * principals.
+ */
+JSBool
+js_CheckContentSecurityPolicy(JSContext *cx)
+{
+    JSSecurityCallbacks *callbacks;
+    callbacks = JS_GetSecurityCallbacks(cx);
+
+    // if there are callbacks, make sure that the CSP callback is installed and
+    // that it permits eval().
+    if (callbacks) {
+        return callbacks->contentSecurityPolicyAllows &&
+               callbacks->contentSecurityPolicyAllows(cx);
+    }
+
+    return JS_TRUE;
+}
+
+/*
  * Check whether principals subsumes scopeobj's principals, and return true
  * if so (or if scopeobj has no principals, for backward compatibility with
  * the JS API, which does not require principals), and false otherwise.
@@ -1382,6 +1402,13 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
     JS_ASSERT_IF(result, result == scopeobj);
     if (!result)
         return JS_FALSE;
+
+    // CSP check: is eval() allowed at all?
+    // report errors via CSP is done in the script security mgr.
+    if (!js_CheckContentSecurityPolicy(cx)) {
+        JS_ReportError(cx, "call to eval() blocked by CSP");
+        return  JS_FALSE;
+    }
 
     JSObject *callee = JSVAL_TO_OBJECT(vp[0]);
     JSPrincipals *principals = js_EvalFramePrincipals(cx, callee, caller);

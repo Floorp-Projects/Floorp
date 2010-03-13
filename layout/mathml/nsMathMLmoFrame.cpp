@@ -24,6 +24,7 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -633,7 +634,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
   // get the axis height;
   nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
+  aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, height;
@@ -653,17 +654,18 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   nsBoundingMetrics charSize;
   nsBoundingMetrics container = aDesiredStretchSize.mBoundingMetrics;
   PRBool isVertical = PR_FALSE;
+
+  if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
+       (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
+      (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL)) {
+    isVertical = PR_TRUE;
+  }
+
+  PRUint32 stretchHint =
+    GetStretchHint(mFlags, mPresentationData, isVertical);
+
   if (useMathMLChar) {
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
-
-    if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
-         (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
-        (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL)) {
-      isVertical = PR_TRUE;
-    }
-
-    PRUint32 stretchHint =
-      GetStretchHint(mFlags, mPresentationData, isVertical);
 
     if (stretchHint != NS_STRETCH_NONE) {
 
@@ -791,6 +793,10 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     if (mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED ||
         NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
 
+      PRBool largeopOnly =
+        (NS_STRETCH_LARGEOP & stretchHint) != 0 &&
+        (NS_STRETCH_VARIABLE_MASK & stretchHint) == 0;
+
       if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
         // the desired size returned by mMathMLChar maybe different
         // from the size of the container.
@@ -802,11 +808,11 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
           // For symmetric and vertical operators, or for operators that are always
           // centered ('+', '*', etc) we want to center about the axis of the container
           mBoundingMetrics.descent = height/2 - axisHeight;
-        }
-        else {
-          // Otherwise, align the char with the bottom of the container
-          mBoundingMetrics.descent = container.descent;
-        }
+        } else if (!largeopOnly) {
+          // Align the center of the char with the center of the container
+          mBoundingMetrics.descent = height/2 +
+            (container.ascent + container.descent)/2 - container.ascent;
+        } // else align the baselines
         mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
       }
     }

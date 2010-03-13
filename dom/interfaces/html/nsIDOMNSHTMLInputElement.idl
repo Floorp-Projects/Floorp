@@ -42,7 +42,7 @@
 interface nsIControllers;
 interface nsIDOMFileList;
 
-[scriptable, uuid(2cb61f32-b21f-4b87-904c-8876d8bb5f33)]
+[scriptable, uuid(e79806b8-7788-4229-ac69-debe395cb0e1)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
 	readonly attribute nsIControllers   controllers;
@@ -57,6 +57,8 @@ interface nsIDOMNSHTMLInputElement : nsISupports
            attribute boolean          indeterminate;
 
            attribute boolean          multiple;
+
+           attribute DOMString        placeholder;
 
   void mozGetFileNameArray([optional] out unsigned long aLength,
                            [array,size_is(aLength), retval] out wstring aFileNames);

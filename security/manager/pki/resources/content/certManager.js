@@ -64,6 +64,10 @@ var emailTreeView;
 var userTreeView;
 var orphanTreeView;
 
+var CertTree = Components.Constructor(nsCertTree, nsICertTree);
+var CertCache = Components.Constructor(nsNSSCertCache, nsINSSCertCache, "cacheAllCerts");
+var FilePicker = Components.Constructor(nsFilePicker, nsIFilePicker, "init");
+
 function LoadCerts()
 {
   window.crypto.enableSmartCardEvents = true;
@@ -71,43 +75,31 @@ function LoadCerts()
   document.addEventListener("smartcard-remove", onSmartCardChange, false);
 
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
-  
-  certcache.cacheAllCerts();
+  var certcache = new CertCache;
 
-  caTreeView = Components.classes[nsCertTree]
-                    .createInstance(nsICertTree);
-  caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
-  document.getElementById('ca-tree')
-   .treeBoxObject.view = caTreeView;
+  caTreeView = new TreeFilter(certcache, nsIX509Cert.CA_CERT);
+  var treeBoxObject = document.getElementById('ca-tree').treeBoxObject;
+  treeBoxObject.view = caTreeView;
 
-  serverTreeView = Components.classes[nsCertTree]
-                        .createInstance(nsICertTree);
-  serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
-  document.getElementById('server-tree')
-   .treeBoxObject.view = serverTreeView;
+  serverTreeView = new TreeFilter(certcache, nsIX509Cert.SERVER_CERT);
+  treeBoxObject = document.getElementById('server-tree').treeBoxObject;
+  treeBoxObject.view = serverTreeView;
 
-  emailTreeView = Components.classes[nsCertTree]
-                       .createInstance(nsICertTree);
-  emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
-  document.getElementById('email-tree')
-   .treeBoxObject.view = emailTreeView; 
+  emailTreeView = new TreeFilter(certcache, nsIX509Cert.EMAIL_CERT);
+  treeBoxObject = document.getElementById('email-tree').treeBoxObject
+  treeBoxObject.view = emailTreeView;
 
-  userTreeView = Components.classes[nsCertTree]
-                      .createInstance(nsICertTree);
-  userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
-  document.getElementById('user-tree')
-   .treeBoxObject.view = userTreeView;
+  userTreeView = new TreeFilter(certcache, nsIX509Cert.USER_CERT);
+  treeBoxObject = document.getElementById('user-tree').treeBoxObject;
+  treeBoxObject.view = userTreeView;
 
-  orphanTreeView = Components.classes[nsCertTree]
-                      .createInstance(nsICertTree);
-  orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
-  document.getElementById('orphan-tree')
-   .treeBoxObject.view = orphanTreeView;
+  orphanTreeView = new TreeFilter(certcache, nsIX509Cert.UNKNOWN_CERT);
+  treeBoxObject = document.getElementById('orphan-tree').treeBoxObject;
+  treeBoxObject.view = orphanTreeView;
 
   var rowCnt = userTreeView.rowCount;
   var enableBackupAllButton=document.getElementById('mine_backupAllButton');
-  if(rowCnt < 1) {
+  if (rowCnt < 1) {
     enableBackupAllButton.setAttribute("disabled",true);
   } else  {
     enableBackupAllButton.setAttribute("enabled",true);
@@ -362,8 +354,7 @@ function backupCerts()
   if (!numcerts)
     return;
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
+  var fp = new FilePicker(window,
           bundle.GetStringFromName("chooseP12BackupFileDialog"),
           nsIFilePicker.modeSave);
   fp.appendFilter(bundle.GetStringFromName("file_browse_PKCS12_spec"),
@@ -371,7 +362,7 @@ function backupCerts()
   fp.appendFilters(nsIFilePicker.filterAll);
   var rv = fp.show();
   if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-    certdb.exportPKCS12File(null, fp.file, 
+    certdb.exportPKCS12File(null, fp.file,
                             selected_certs.length, selected_certs);
   }
 }
@@ -412,8 +403,7 @@ function editCerts()
 function restoreCerts()
 {
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
+  var fp = new FilePicker(window,
           bundle.GetStringFromName("chooseP12RestoreFileDialog"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_PKCS12_spec"),
@@ -422,8 +412,7 @@ function restoreCerts()
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importPKCS12File(null, fp.file);
 
-    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
-    certcache.cacheAllCerts();
+    var certcache = new CertCache;
     userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
     userTreeView.selection.clearSelection();
     caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
@@ -450,8 +439,8 @@ function deleteCerts()
   if (!numcerts)
     return;
 
-  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
-  
+  var params = Components.classes[nsDialogParamBlock]
+                         .createInstance(nsIDialogParamBlock);
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
@@ -459,23 +448,23 @@ function deleteCerts()
 
   params.SetNumberStrings(numcerts+1);
 
-  if (selTabID == 'mine_tab') 
-  {
-    params.SetString(0, selTabID);
-  } 
-  else if (selTabID == "websites_tab") 
-  {
-    params.SetString(0, selTabID);
-  } 
-  else if (selTabID == "ca_tab") 
+  if (selTabID == 'mine_tab')
   {
     params.SetString(0, selTabID);
   }
-  else if (selTabID == "others_tab") 
+  else if (selTabID == "websites_tab")
   {
     params.SetString(0, selTabID);
   }
-  else if (selTabID == "orphan_tab") 
+  else if (selTabID == "ca_tab")
+  {
+    params.SetString(0, selTabID);
+  }
+  else if (selTabID == "others_tab")
+  {
+    params.SetString(0, selTabID);
+  }
+  else if (selTabID == "orphan_tab")
   {
     params.SetString(0, selTabID);
   }
@@ -485,7 +474,7 @@ function deleteCerts()
   }
 
   params.SetInt(0,numcerts);
-  for (t=0; t<numcerts; t++) 
+  for (t=0; t<numcerts; t++)
   {
     var tree_item = selected_tree_items[t];
     var c = tree_item.cert;
@@ -500,7 +489,7 @@ function deleteCerts()
 
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                     'chrome,centerscreen,modal', params);
- 
+
   if (params.GetInt(1) == 1) {
     // user closed dialog with OK
     var treeView = null;
@@ -546,8 +535,7 @@ function viewCerts()
 function addCACerts()
 {
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
+  var fp = new FilePicker(window,
           bundle.GetStringFromName("importCACertsPrompt"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
@@ -562,10 +550,9 @@ function addCACerts()
 
 function onSmartCardChange()
 {
-  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+  var certcache = new CertCache;
   // We've change the state of the smart cards inserted or removed
   // that means the available certs may have changed. Update the display
-  certcache.cacheAllCerts();
   userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
   userTreeView.selection.clearSelection();
   caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
@@ -581,8 +568,7 @@ function onSmartCardChange()
 function addEmailCert()
 {
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
+  var fp = new FilePicker(window,
           bundle.GetStringFromName("importEmailCertPrompt"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
@@ -590,8 +576,7 @@ function addEmailCert()
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.EMAIL_CERT);
-    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
-    certcache.cacheAllCerts();
+    var certcache = new CertCache;
     emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
     emailTreeView.selection.clearSelection();
     caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
@@ -602,8 +587,7 @@ function addEmailCert()
 function addWebSiteCert()
 {
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
+  var fp = new FilePicker(window,
           bundle.GetStringFromName("importServerCertPrompt"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
@@ -612,8 +596,7 @@ function addWebSiteCert()
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.SERVER_CERT);
 
-    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
-    certcache.cacheAllCerts();
+    var certcache = new CertCache;
     serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
     serverTreeView.selection.clearSelection();
     caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
@@ -625,11 +608,335 @@ function addException()
 {
   window.openDialog('chrome://pippki/content/exceptionDialog.xul', "",
                     'chrome,centerscreen,modal');
-  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
-  certcache.cacheAllCerts();
+  var certcache = new CertCache;
   serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
   serverTreeView.selection.clearSelection();
   orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
   orphanTreeView.selection.clearSelection();
 }
 
+function Row(row, text, level) {
+  this.row = row;
+  this.text = text;
+  this.level = level;
+  this.collapsed = false;
+  this.children = [];
+}
+
+function TreeFilter(aCache, aType)
+{
+  this.rowMap = [];
+  this.rows = []
+  this.treeView = new CertTree;
+  this.delayed = function () {
+    this.loadCertsFromCache(aCache, aType);
+    this.delayed = null;
+  }
+}
+
+TreeFilter.prototype = {
+  constructor: TreeFilter,
+  searchSpace: null,
+  delayed: null,
+  keys:('nickname,emailAddress,subjectName,commonName,organization,' +
+        'organizationalUnit,sha1Fingerprint,md5Fingerprint,issuerName,' +
+        'issuerCommonName,issuerOrganization,issuerOrganizationUnit')
+        .split(/,/g),
+  init: function init() {
+    if (this.delayed)
+      this.delayed();
+    var searchSpace = this.searchSpace = {};
+    this.rows.length = this.rowMap.length = 0;
+    if (!this.tree)
+      return;
+    var i = 0, count = this.treeView.rowCount;
+    var pc = this.tree.columns.getPrimaryColumn();
+    var tc = pc.getNext();
+    var pk11db = Components.classes["@mozilla.org/security/pk11tokendb;1"]
+                           .getService(Components.interfaces.nsIPK11TokenDB);
+
+    var parent = -1;
+    for (; i < count; ++i) {
+      this.rowMap[i] = i;
+      var level = this.treeView.getLevel(i);
+      var text = this.treeView.getCellText(i, pc);
+      var row = new Row(i, text, level);
+      switch (level) {
+      case 0 /* issuer */:
+        parent = i;
+        break;
+      case 1 /* cert */:
+        row.parent = row.trueParent = parent;
+        this.rows[parent].children.push(i);
+        var cert = row.cert = this.treeView.getCert(i);
+        this.enhanceSpace(searchSpace, cert, i);
+        break;
+      }
+      this.rows[i] = row;
+    }
+  },
+  fixParents: function fixParents(i) {
+    if (!i)
+      i = 0;
+    var count = this.rowMap.length;
+    for (; i < count; ++i) {
+      var row = this.rows[this.rowMap[i]];
+      var level = row.level;
+      switch (level) {
+      case 0 /* issuer */:
+        var parent = i;
+        break;
+      case 1 /* cert */:
+        row.parent = parent;
+        break;
+      }
+    }
+  },
+  enhanceSpace: function enhanceSpace(searchSpace, cert, i) {
+    for each (key in this.keys) {
+      var val = cert[key];
+      if (val) {
+        var ary;
+        if (val in searchSpace) {
+          ary = searchSpace[val];
+        } else {
+          searchSpace[val] = ary = [];
+        }
+        ary.push(i);
+      }
+    }
+  },
+  search: function search(node) {
+    var hint = node.value;
+    var clazz = node.id.replace(/-search$/,"");
+    var descNode = document.getElementById(clazz + "-description");
+    descNode.firstChild.data =
+      document.getElementById(
+        "certmgr." + 
+        clazz + 
+        (hint == "" ? ".description" : ".filtered")
+      ).getAttribute("value");
+    /* TODO: convert to using a timeout otherwise the ui could hang */
+    var rowList = [], rowMap = [];
+    var searchSpace = this.searchSpace;
+    var pattern = new RegExp(hint, 'i');
+    for (var key in searchSpace) {
+      if (pattern.test(key)) {
+        var rows = searchSpace[key];
+        var j;
+        for each (j in rows)
+          rowList[j] = true;
+      }
+    }
+    var i = 0;
+    var lastParent = -1;
+    var lastIndex = -2;
+    var siblings;
+    for (j = 0; j < this.rows.length; ++j) {
+      var row = this.rows[j];
+      if ((row.collapsed = rowList[j])) {
+        if (j != lastIndex + 1) {
+          var parentNode = row.trueParent;
+          if (parentNode != lastParent) {
+            lastParent = i;
+            rowMap[i++] = lastParent = parentNode;
+            siblings = this.rows[parentNode].children;
+            siblings.length = 0;
+          }
+        }
+        siblings.push(j);
+        row = this.rows[row.parent = lastParent];
+        if (!row.collapsed)
+          rowMap[i++] = lastIndex = j;
+      } else {
+        row.children.length = 0;
+      }
+    }
+    this.tree.beginUpdateBatch();
+    j = rowMap.length - 1;
+    var last = 0;
+    for (i = this.rowMap.length - 1; i >= 0; --i) {
+      var val = this.rowMap[i];
+      if (val == last) {
+        last = rowList[--j];
+        continue;
+      }
+      if (val > last) {
+        var deleted = 1;
+        while (this.rowMap[--i] > last)
+          ++deleted;
+        this.tree.rowCountChanged(i, -deleted);
+        continue;
+      }
+      /* val < last */
+      var added = 1;
+      while (val < (last = rowMap[--j]))
+        ++added;
+      this.tree.rowCountChanged(i, -added);
+    }
+    this.rowMap = rowMap;
+    this.tree.endUpdateBatch();
+  },
+  /* nsITreeView */
+  get rowCount() {
+    return this.rowMap.length;
+  },
+  get selection() {
+    return this.mSelection;
+  },
+  set selection(sel) {
+    this.mSelection = sel;
+  },
+  getRowProperties: function getRowProperties(aRow, aProp) {
+    /* the underlying thing doesn't do anything,
+     * in order for us to share, we'd need to implement
+     * nsITreeBoxObject ourselves */
+  },
+  getCellProperties: function getCellProperties(aRow, aColumn, aProp) {
+    /* the underlying thing doesn't do anything,
+     * in order for us to share, we'd need to implement
+     * nsITreeBoxObject ourselves */
+  },
+  getColumnProperties: function getColumnProperties(aColumn, aProp) {
+    /* the underlying thing doesn't do anything,
+     * in order for us to share, we'd need to implement
+     * nsITreeBoxObject ourselves */
+  },
+  isContainer: function isContainer(aRow) {
+    var children = this.rows[this.rowMap[aRow]].children;
+    return children.length;
+  },
+  isContainerOpen: function isContainerOpen(aRow) {
+    var row = this.rows[this.rowMap[aRow]];
+    var children = row.children;
+    return children.length && !row.collapsed;
+  },
+  isContainerEmpty: function isContainerEmpty(aRow) {
+    var row = this.rowMap[aRow];
+    var children = this.rows[row].children;
+    return !children.length;
+  },
+  isSeparator: function isSeparator(aRow) {
+    return false;
+  },
+  isSorted: function isSorted() {
+    return false;
+  },
+  canDrop: function canDrop(aRow, aOrientation) {
+    return false;
+  },
+  drop: function drop(aRow, aOrientation) {
+    return false;
+  },
+  getParentIndex: function getParentIndex(aRow) {
+    var row = this.rowMap[aRow];
+    return this.rows[row].level == 1 ? this.rows[row].parent : -1;
+  },
+  hasNextSibling: function hasNextSibling(aRow, aAfterIndex) {
+    if (this.getLevel(aAfterIndex) < 1 ||
+        this.getParentIndex(aAfterIndex) >
+        this.getParentIndex(aRow))
+      return false;
+    return true;
+  },
+  getLevel: function getLevel(aRow) {
+    return this.rows[this.rowMap[aRow]].level;
+  },
+  getImageSrc: function getImageSrc(aRow, aColumn) {
+    /* XXX OptimizeMe*/
+    return this.treeView.getImageSrc(this.rowMap[aRow], aColumn);
+  },
+  getProgressMode: function getProgressMode(aRow, aColumn) {
+    /* XXX OptimizeMe*/
+    return this.treeView.getProgressMode(this.rowMap[aRow], aColumn);
+  },
+  getCellValue: function getCellValue(aRow, aColumn) {
+    /* XXX OptimizeMe*/
+    return this.treeView.getCellValue(this.rowMap[aRow], aColumn);
+  },
+  getCellText: function getCellText(aRow, aColumn) {
+    /* XXX OptimizeMe*/
+    return this.treeView.getCellText(this.rowMap[aRow], aColumn);
+  },
+  setTree: function setTree(aTree) {
+    this.tree = aTree;
+    this.init();
+    /* the underlying thing doesn't actually do much,
+     * in order for us to share, we'd need to implement
+     * nsITreeBoxObject ourselves */
+    /* we actually need to do this to support deleteEntryObject properly */
+  },
+  toggleOpenState: function toggleOpenState(aRow) {
+    var row = this.rows[this.rowMap[aRow]];
+    /* we only allow opening parents */
+    if (row.level)
+      return;
+    var i = aRow + 1;
+    var offset = row.children.length;
+    this.tree.beginUpdateBatch();
+    if (row.collapsed) {
+      for (var j = 0; j < offset; ++j)
+        this.rowMap.splice(i++, 0, row.children[j]);
+      row.collapsed = false;
+    } else {
+      this.rowMap.splice(i, offset);
+      offset = -offset;
+      row.collapsed = true;
+    }
+    this.tree.rowCountChanged(i, offset);
+    this.fixParents(aRow);
+    this.tree.endUpdateBatch();
+  },
+  cycleHeader: function cycleHeader(column) {
+    /* the underlying thing doesn't do anything,
+     * in order for us to share, we'd need to implement
+     * nsITreeBoxObject ourselves */
+  },
+  selectionChanged: function selectionChanged() {
+  },
+  cycleCell: function cycleCell(aRow, aColumn) {
+    this.treeView.cycleCell(this.rowMap[aRow], aColumn);
+  },
+  isEditable: function isEditable(aRow, aColumn) {
+    return this.treeView.isEditable(this.rowMap[aRow], aColumn);
+  },
+  isSelectable: function isSelectable(aRow, aColumn) {
+    return this.treeView.isSelectable(this.rowMap[aRow], aColumn);
+  },
+  setCellValue: function setCellValue(aRow, aColumn, aValue) {
+    this.treeView.setCellValue(this.rowMap[aRow], aColumn, aValue);
+  },
+  setCellText: function setCellText(aRow, aColumn, aValue) {
+    this.treeView.setCellText(this.rowMap[aRow], aColumn, aValue);
+  },
+  performAction: function performAction(aAction) {
+    this.treeView.performAction(aAction);
+  },
+  performActionOnRow: function performActionOnRow(aAction, aRow) {
+    this.treeView.performActionOnRow(aAction, this.rowMap[aRow]);
+  },
+  performActionOnCell: function performActionOnCell(aAction, aRow, aColumn) {
+    this.treeView.performActionOnCell(aAction, this.rowMap[aRow], aColumn);
+  },
+  /* nsICertTree */
+  loadCerts: function loadCerts(aType) {
+    this.treeView.loadCerts(aType);
+    this.init();
+  },
+  loadCertsFromCache: function loadCertsFromCache(aCache, aType) {
+    this.treeView.loadCertsFromCache(aCache, aType);
+  },
+  getCert: function getCert(aRow) {
+    return this.rows[this.rowMap[aRow]].cert;
+  },
+  getTreeItem: function getTreeItem(aRow) {
+    return this.treeView.getTreeItem(this.rowMap[aRow]);
+  },
+  isHostPortOverride: function isHostPortOverride(aRow) {
+    return this.treeView.isHostPortOverride(this.rowMap[aRow]);
+  },
+  deleteEntryObject: function deleteEntryObject(aRow) {
+    this.treeView.deleteEntryObject(this.rowMap[aRow]);
+    this.init();
+  }
+};

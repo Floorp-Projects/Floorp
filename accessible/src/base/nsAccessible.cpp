@@ -1491,9 +1491,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     const nsAttrName *attr = content->GetAttrNameAt(count);
     if (attr && attr->NamespaceEquals(kNameSpaceID_None)) {
       nsIAtom *attrAtom = attr->Atom();
-      const char *attrStr;
-      attrAtom->GetUTF8String(&attrStr);
-      if (PL_strncmp(attrStr, "aria-", 5)) 
+      nsDependentAtomString attrStr(attrAtom);
+      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-"))) 
         continue; // Not ARIA
       PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
       if (attrFlags & ATTR_BYPASSOBJ)
@@ -1503,7 +1502,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         continue; // only expose token based attributes if they are defined
       nsAutoString value;
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
-        attributes->SetStringProperty(nsDependentCString(attrStr + 5), value, oldValueUnused);
+        attributes->SetStringProperty(NS_ConvertUTF16toUTF8(Substring(attrStr, 5)), value, oldValueUnused);
       }
     }
   }
@@ -2498,7 +2497,7 @@ nsAccessible::DoCommand(nsIContent *aContent, PRUint32 aActionIndex)
 {
   nsCOMPtr<nsIContent> content = aContent;
   if (!content)
-    content = do_QueryInterface(mDOMNode);
+    content = nsCoreUtils::GetRoleContent(mDOMNode);
 
   NS_DISPATCH_RUNNABLEMETHOD_ARG2(DispatchClickEvent, this,
                                   content, aActionIndex)
@@ -3001,20 +3000,15 @@ void
 nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 {
 #ifdef DEBUG
-  // All cached accessible nodes should be in the parent
-  // It will assert if not all the children were created
-  // when they were first cached, and no invalidation
-  // ever corrected parent accessible's child cache.
   PRUint32 childCount = mChildren.Length();
   if (childCount == 0) {
-    NS_ASSERTION(mAreChildrenInitialized,
-                 "Children are stored but not initialized!");
+    NS_ASSERTION(!mAreChildrenInitialized, "No children but initialized!");
     return;
   }
 
-  nsAccessible *child;
+  nsAccessible *child = nsnull;
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    child = GetChildAt(childIdx);
+    child = mChildren[childIdx];
     if (child == aCachedChild)
       break;
   }
@@ -3041,7 +3035,7 @@ nsAccessible::EnsureChildren()
   return PR_FALSE;
 }
 
-nsIAccessible*
+nsAccessible*
 nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
 {
   if (IsDefunct()) {

@@ -2247,6 +2247,17 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
+    /*
+     * CSP check: whether new Function() is allowed at all.
+     * Report errors via CSP is done in the script security manager.
+     * js_CheckContentSecurityPolicy is defined in jsobj.cpp
+     */
+    if (!js_CheckContentSecurityPolicy(cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                             JSMSG_CSP_BLOCKED_FUNCTION);
+        return JS_FALSE;
+    }
+
     n = argc ? argc - 1 : 0;
     if (n > 0) {
         enum { OK, BAD, BAD_FORMAL } state;

@@ -1,4 +1,4 @@
-Patch libffi 3.0.9 to fix bug 528129.
+Patch libffi to fix bug 528129 and bug 538216.
 
 diff --git a/js/ctypes/libffi/Makefile.in b/js/ctypes/libffi/Makefile.in
 --- a/js/ctypes/libffi/Makefile.in
@@ -22,4 +22,25 @@ diff --git a/js/ctypes/libffi/Makefile.in b/js/ctypes/libffi/Makefile.in
  TEXINFOS = doc/libffi.texi
  TEXI2DVI = texi2dvi
  TEXI2PDF = $(TEXI2DVI) --pdf --batch
-
+diff --git a/js/ctypes/libffi/configure b/js/ctypes/libffi/configure
+--- a/js/ctypes/libffi/configure
++++ b/js/ctypes/libffi/configure
+@@ -9016,17 +9016,17 @@ if test -z "$aix_libpath"; then aix_libp
+       # Tell ltmain to make .dll files, not .so files.
+       shrext_cmds=".dll"
+       # FIXME: Setting linknames here is a bad hack.
+       archive_cmds='$CC -o $lib $libobjs $compiler_flags `$ECHO "X$deplibs" | $Xsed -e '\''s/ -lc$//'\''` -link -dll~linknames='
+       # The linker will automatically build a .lib file if we build a DLL.
+       old_archive_from_new_cmds='true'
+       # FIXME: Should let the user specify the lib program.
+       old_archive_cmds='lib -OUT:$oldlib$oldobjs$old_deplibs'
+-      fix_srcfile_path='`cygpath -w "$srcfile"`'
++      fix_srcfile_path=''
+       enable_shared_with_static_runtimes=yes
+       ;;
+ 
+     darwin* | rhapsody*)
+ 
+ 
+   archive_cmds_need_lc=no
+   hardcode_direct=no

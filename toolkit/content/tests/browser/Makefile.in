@@ -54,6 +54,7 @@ _BROWSER_TEST_FILES = \
   browser_bug471962.js \
   browser_keyevents_during_autoscrolling.js \
   browser_bug295977_autoscroll_overflow.js \
+  browser_Services.js \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

@@ -62,6 +62,7 @@ function onLoad()
 function InitWithToolbox(aToolbox)
 {
   gToolbox = aToolbox;
+  dispatchCustomizationEvent("beforecustomization");
   gToolboxDocument = gToolbox.ownerDocument;
   gToolbox.customizing = true;
 
@@ -71,8 +72,6 @@ function InitWithToolbox(aToolbox)
   gToolbox.addEventListener("drop", onToolbarDrop, false);
 
   initDialog();
-
-  notifyParentInitialized();
 }
 
 function onClose()
@@ -147,16 +146,7 @@ function notifyParentComplete()
 {
   if ("customizeDone" in gToolbox)
     gToolbox.customizeDone(gToolboxChanged);
-}
-
-/**
- * Invoke a callback on the toolbox to notify it that the dialog is fully
- * initialized.
- */
-function notifyParentInitialized()
-{
-  if ("customizeInitialized" in gToolbox)
-    gToolbox.customizeInitialized();
+  dispatchCustomizationEvent("aftercustomization");
 }
 
 function toolboxChanged(aEvent)
@@ -164,6 +154,13 @@ function toolboxChanged(aEvent)
   gToolboxChanged = true;
   if ("customizeChange" in gToolbox)
     gToolbox.customizeChange(aEvent);
+  dispatchCustomizationEvent("customizationchange");
+}
+
+function dispatchCustomizationEvent(aEventName) {
+  var evt = document.createEvent("Events");
+  evt.initEvent(aEventName, true, true);
+  gToolbox.dispatchEvent(evt);
 }
 
 function getToolbarAt(i)
@@ -806,10 +803,8 @@ function onToolbarDrop(aEvent)
     if (wrapper == gCurrentDragOverItem)
        return;
 
-    // Don't allow static kids (e.g., the menubar) to move.
-    if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
-      return;
-    if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+    // Don't allow non-removable kids (e.g., the menubar) to move.
+    if (wrapper.firstChild.getAttribute("removable") != "true")
       return;
 
     // Remove the item from its place in the toolbar.
@@ -905,10 +900,8 @@ function onPaletteDrop(aEvent)
 
   var wrapper = gToolboxDocument.getElementById("wrapper-"+itemId);
   if (wrapper) {
-    // Don't allow static kids (e.g., the menubar) to move.
-    if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
-      return;
-    if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+    // Don't allow non-removable kids (e.g., the menubar) to move.
+    if (wrapper.firstChild.getAttribute("removable") != "true")
       return;
 
     var wrapperType = wrapper.getAttribute("type");

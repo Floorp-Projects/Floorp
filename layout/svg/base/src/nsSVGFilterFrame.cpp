@@ -108,9 +108,9 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     static_cast<nsSVGFilterElement*>(aFilterFrame->GetContent());
 
   PRUint16 filterUnits =
-    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue(filter);
+    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
   PRUint16 primitiveUnits =
-    filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue(filter);
+    filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue();
 
   gfxRect bbox;
   if (aOverrideSourceBBox) {

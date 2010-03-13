@@ -42,23 +42,6 @@
 #include "nsServiceManagerUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Internal static functions
-////////////////////////////////////////////////////////////////////////////////
-
-// Callback used when traversing the cache by cycle collector.
-static PLDHashOperator
-ElementTraverser(const void *aKey, nsAccessNode *aAccessNode, void *aUserArg)
-{
-  nsCycleCollectionTraversalCallback *cb = 
-    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mAccessNodeCache of XUL tree row entry");
-  cb->NoteXPCOMChild(aAccessNode);
-  return PL_DHASH_NEXT;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -362,8 +345,7 @@ nsXULTreeGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessible> rowAccessible;
-  GetTreeItemAccessible(aRowIndex, getter_AddRefs(rowAccessible));
+  nsAccessible *rowAccessible = GetTreeItemAccessible(aRowIndex);
   if (!rowAccessible)
     return NS_ERROR_INVALID_ARG;
 
@@ -375,7 +357,7 @@ nsXULTreeGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
   nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc =
     nsAccUtils::QueryObject<nsXULTreeItemAccessibleBase>(rowAccessible);
 
-  rowAcc->GetCellAccessible(column, aCell);
+  NS_IF_ADDREF(*aCell = rowAcc->GetCellAccessible(column));
   return NS_OK;
 }
 
@@ -588,13 +570,14 @@ nsXULTreeGridAccessible::GetRoleInternal(PRUint32 *aRole)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible: nsXULTreeAccessible implementation
 
-void
-nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow,
-                                                  nsAccessNode** aAccessNode)
+already_AddRefed<nsAccessible>
+nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 {
-  *aAccessNode = new nsXULTreeGridRowAccessible(mDOMNode, mWeakShell, this,
-                                                mTree, mTreeView, aRow);
-  NS_IF_ADDREF(*aAccessNode);
+  nsRefPtr<nsAccessible> accessible =
+    new nsXULTreeGridRowAccessible(mDOMNode, mWeakShell, this, mTree,
+                                   mTreeView, aRow);
+
+  return accessible.forget();
 }
 
 
@@ -608,7 +591,7 @@ nsXULTreeGridRowAccessible::
                              nsITreeView *aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aDOMNode, aShell, aTreeAcc, aTree, aTreeView, aRow)
 {
-  mAccessNodeCache.Init(kDefaultTreeCacheSize);
+  mAccessibleCache.Init(kDefaultTreeCacheSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -618,12 +601,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeGridRowAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeGridRowAccessible,
                                                   nsAccessible)
-tmp->mAccessNodeCache.EnumerateRead(ElementTraverser, &cb);
+CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeGridRowAccessible,
                                                 nsAccessible)
-tmp->ClearCache(tmp->mAccessNodeCache);
+ClearCache(tmp->mAccessibleCache);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeGridRowAccessible)
@@ -641,7 +624,7 @@ NS_IMPL_RELEASE_INHERITED(nsXULTreeGridRowAccessible,
 nsresult
 nsXULTreeGridRowAccessible::Shutdown()
 {
-  ClearCache(mAccessNodeCache);
+  ClearCache(mAccessibleCache);
   return nsXULTreeItemAccessibleBase::Shutdown();
 }
 
@@ -685,7 +668,7 @@ nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   if (row != mRow || !column)
     return NS_OK;
 
-  GetCellAccessible(column, aChild);
+  NS_IF_ADDREF(*aChild = GetCellAccessible(column));
   return NS_OK;
 }
 
@@ -700,11 +683,7 @@ nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
   if (!column)
     return nsnull;
 
-  nsCOMPtr<nsIAccessible> cell;
-  GetCellAccessible(column, getter_AddRefs(cell));
-
-  nsRefPtr<nsAccessible> cellAcc = nsAccUtils::QueryObject<nsAccessible>(cell);
-  return cellAcc;
+  return GetCellAccessible(column);
 }
 
 PRInt32
@@ -731,31 +710,32 @@ nsXULTreeGridRowAccessible::GetIndexOf(nsIAccessible *aChild)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridRowAccessible: nsXULTreeItemAccessibleBase implementation
 
-void
-nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn,
-                                              nsIAccessible** aAccessible)
+nsAccessible*
+nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
 {
   NS_PRECONDITION(aColumn, "No tree column!");
-  *aAccessible = nsnull;
 
   void* key = static_cast<void*>(aColumn);
-  nsRefPtr<nsAccessNode> accessNode = mAccessNodeCache.GetWeak(key);
+  nsRefPtr<nsAccessible> accessible = mAccessibleCache.GetWeak(key);
 
-  if (!accessNode) {
-    accessNode =
+  if (!accessible) {
+    accessible =
       new nsXULTreeGridCellAccessibleWrap(mDOMNode, mWeakShell, this, mTree,
                                           mTreeView, mRow, aColumn);
-    if (!accessNode)
-      return;
+    if (!accessible)
+      return nsnull;
 
-    nsresult rv = accessNode->Init();
-    if (NS_FAILED(rv))
-      return;
+    nsresult rv = accessible->Init();
+    if (NS_FAILED(rv)) {
+      accessible->Shutdown();
+      return nsnull;
+    }
 
-    mAccessNodeCache.Put(key, accessNode);
+    if (!mAccessibleCache.Put(key, accessible))
+      return nsnull;
   }
 
-  CallQueryInterface(accessNode.get(), aAccessible);
+  return accessible;
 }
 
 void
@@ -771,8 +751,7 @@ nsXULTreeGridRowAccessible::RowInvalidated(PRInt32 aStartColIdx,
     nsCOMPtr<nsITreeColumn> column;
     treeColumns->GetColumnAt(colIdx, getter_AddRefs(column));
     if (column && !nsCoreUtils::IsColumnHidden(column)) {
-      nsCOMPtr<nsIAccessible> cellAccessible;
-      GetCellAccessible(column, getter_AddRefs(cellAccessible));
+      nsAccessible *cellAccessible = GetCellAccessible(column);
       if (cellAccessible) {
         nsRefPtr<nsXULTreeGridCellAccessible> cellAcc =
           nsAccUtils::QueryObject<nsXULTreeGridCellAccessible>(cellAccessible);
@@ -1274,7 +1253,7 @@ nsXULTreeGridCellAccessible::CellInvalidated()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: nsAccessible protected implementation
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeGridCellAccessible::GetSiblingAtOffset(PRInt32 aOffset,
                                                 nsresult* aError)
 {
@@ -1307,10 +1286,7 @@ nsXULTreeGridCellAccessible::GetSiblingAtOffset(PRInt32 aOffset,
   nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc =
     nsAccUtils::QueryObject<nsXULTreeItemAccessibleBase>(mParent);
 
-  nsCOMPtr<nsIAccessible> sibling;
-  rowAcc->GetCellAccessible(columnAtOffset, getter_AddRefs(sibling));
-
-  return sibling;
+  return rowAcc->GetCellAccessible(columnAtOffset);
 }
 
 void

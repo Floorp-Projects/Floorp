@@ -254,7 +254,13 @@ nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
       if (!file)
         continue;
 
-      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+      nsCOMPtr<nsIDocument> targetDoc;
+      nsCOMPtr<nsINode> targetNode = do_QueryInterface(mDragTarget);
+      if (targetNode) {
+        targetDoc = targetNode->GetOwnerDoc();
+      }
+
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file, targetDoc);
       NS_ENSURE_TRUE(domFile, NS_ERROR_OUT_OF_MEMORY);
 
       if (!mFiles->Append(domFile))
@@ -383,6 +389,24 @@ nsDOMDataTransfer::SetMozCursor(const nsAString& aCursorState)
   // Lock the cursor to an arrow during the drag.
   mCursorState = aCursorState.EqualsLiteral("default");
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDataTransfer::GetMozSourceNode(nsIDOMNode** aSourceNode)
+{
+  *aSourceNode = nsnull;
+
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (!dragSession)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+  if (sourceNode && !nsContentUtils::CanCallerAccess(sourceNode))
+    return NS_OK;
+
+  sourceNode.swap(*aSourceNode);
   return NS_OK;
 }
 
@@ -789,13 +813,7 @@ nsDOMDataTransfer::CacheExternalFormats()
   // asked for, as it may be time consuming for the source application to
   // generate it.
 
-  nsCOMPtr<nsIDragService> dragService =
-    do_GetService("@mozilla.org/widget/dragservice;1");
-  if (!dragService)
-    return;
-
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (!dragSession)
     return;
 
@@ -853,13 +871,7 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, PRUint32 aIndex)
     else if (strcmp(format, "text/uri-list") == 0)
       format = kURLDataMime;
 
-    nsCOMPtr<nsIDragService> dragService =
-      do_GetService("@mozilla.org/widget/dragservice;1");
-    if (!dragService)
-      return;
-
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
     if (!dragSession)
       return;
 

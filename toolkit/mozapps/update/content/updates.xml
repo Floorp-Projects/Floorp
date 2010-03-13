@@ -55,7 +55,7 @@
       <field name="_strings">
         document.getAnonymousElementByAttribute(this, "anonid", "strings");
       </field>
-      
+
       <field name="update_name">null</field>
       <field name="update_version">null</field>
       <field name="_remoteProgressListener">null</field>
@@ -83,6 +83,37 @@
 
       <method name="onLoad">
         <body><![CDATA[
+          // The remote html can tell us to zoom out the page if the page
+          // will create scrollbars by adding a zoomOutToFit attribute to the
+          // body of the billboard's html. Since zooming out will not always
+          // remove the scrollbars even though the page fits in the client
+          // region after zooming out the web page should hide the scrollbar(s)
+          // using css. If you choose to use zoomOutToFit you should also verify
+          // it is working the way you expect it to with the billboard you have
+          // created. Possible values for zoomOutToFit are:
+          // both: zoom out if the width or height is greater than the client
+          //       region.
+          // height: zoom out if the height is greater than the client region.
+          // width: zoom out if the width is greater than the client region.
+          var doc = this._content.contentDocument;
+          if (doc.body.hasAttribute("zoomOutToFit")) {
+            let zoomAdjustWidth = 1;
+            let zoomAdjustHeight = 1;
+            let zoomOutType = doc.body.getAttribute("zoomOutToFit");
+            if ((zoomOutType == "both" || zoomOutType == "width") &&
+                doc.width > this.clientWidth)
+              zoomAdjustWidth = Math.floor((this.clientWidth / doc.width) * 100) * .01;
+
+            if ((zoomOutType == "both" || zoomOutType == "height") &&
+                doc.height > this.clientHeight)
+              zoomAdjustHeight = Math.floor((this.clientHeight / doc.height) * 100) * .01;
+
+            var zoomAdjust = zoomAdjustWidth < zoomAdjustHeight ? zoomAdjustWidth
+                                                                : zoomAdjustHeight;
+            if (zoomAdjust < 1)
+              this._content.markupDocumentViewer.fullZoom = zoomAdjust;
+          }
+
           this.setAttribute("selectedIndex", "1");
           this.setAttribute("state", "loaded");
 
@@ -174,7 +205,17 @@
           this._content.setAttribute("src", val);
         ]]></setter>
       </property>
-      
+
+      <property name="testFileUrl">
+        <getter><![CDATA[
+          return this.getAttribute("testFileUrl");
+        ]]></getter>
+        <setter><![CDATA[
+          this._content.setAttribute("src", val);
+          this.onLoad()
+        ]]></setter>
+      </property>
+
       <method name="stopDownloading">
         <body><![CDATA[
           this._content.stop();
@@ -182,12 +223,27 @@
       </method>
     </implementation>
   </binding>
-  
+
+  <binding id="updateheader" extends="chrome://global/content/bindings/wizard.xml#wizard-header">
+    <resources>
+      <stylesheet src="chrome://global/skin/wizard.css"/>
+    </resources>
+    <content>
+      <xul:hbox class="wizard-header update-header" flex="1">
+        <xul:vbox class="wizard-header-box-1">
+          <xul:vbox class="wizard-header-box-text">
+            <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+          </xul:vbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
   <binding id="update" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content>
       <xul:hbox>
         <xul:label class="update-name" xbl:inherits="value=name" flex="1" crop="right"/>
-        <xul:label xbl:inherits="href=detailsURL" class="text-link"
+        <xul:label xbl:inherits="href=detailsURL,hidden=hideDetailsURL" class="text-link"
                    value="&update.details.label;"/>
       </xul:hbox>
       <xul:label class="update-type" xbl:inherits="value=type"/>
@@ -221,6 +277,9 @@
       <property name="type"
                 onget="return this.getAttribute('type');"
                 onset="this.setAttribute('type', val); return val;"/>
+      <property name="hideDetailsURL"
+                onget="return this.getAttribute('hideDetailsURL');"
+                onset="this.setAttribute('hideDetailsURL', val); return val;"/>
       <property name="status"
                 onget="return this.getAttribute('status');">
         <setter><![CDATA[

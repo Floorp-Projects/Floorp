@@ -245,7 +245,7 @@ var doTests = function() {
     isnot(base, canonical, "Sanity check for rule: " + testset[curTest].base);
   }
   frame.contentDocument.open();
-  frame.contentDocument.write("<html lang=en><style>" + testset[curTest].tests[curSubTest] + "</style><div id=a class='a b c' title='zxcv weeqweqeweasd&#13;&#10;a&#10;'></div>");
+  frame.contentDocument.write("<html lang=en><style>" + testset[curTest].tests[curSubTest] + "</style><div id=a class='a b c' title='zxcv weeqweqeweasd&#13;&#10;a'></div>");
   frame.contentWindow.onload = function(){setTimeout(doTests, 0);};
   frame.contentDocument.close();
 };

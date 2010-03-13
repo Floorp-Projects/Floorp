@@ -84,11 +84,13 @@ elif action in ('update_nspr'):
     if not options.cvsroot:
         options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
     do_cvs_export(NSPR_DIRS, tag, options.cvsroot, options.cvs)
+    print >>file("nsprpub/TAG-INFO", "w"), tag
 elif action in ('update_nss'):
     tag, = args[1:]
     if not options.cvsroot:
         options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
     do_cvs_export(NSS_DIRS, tag, options.cvsroot, options.cvs)
+    print >>file("security/nss/TAG-INFO", "w"), tag
 elif action in ('update_libffi'):
     tag, = args[1:]
     if not options.cvsroot:

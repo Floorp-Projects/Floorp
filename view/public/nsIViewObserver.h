@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xba1357b6, 0xe3c7, 0x426a, \
-    { 0xb3, 0x68, 0xfe, 0xe8, 0x24, 0x8c, 0x08, 0x38 } }
+  { 0xac43a985, 0xcae6, 0x499d, \
+    { 0xae, 0x8f, 0x9c, 0x92, 0xec, 0x6f, 0x2c, 0x47 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -59,36 +59,23 @@ public:
   /* called when the observer needs to paint. This paints the entire
    * frame subtree rooted at the view, including frame subtrees from
    * subdocuments.
-   * @param aRenderingContext rendering context to paint to; the origin
-   * of the view is painted at (0,0) in the rendering context's current
-   * transform. For best results this should transform to pixel-aligned
-   * coordinates.
+   * @param aViewToPaint the view for the widget that is being painted
    * @param aDirtyRegion the region to be painted, in the coordinates of
-   * aRootView
+   * aViewToPaint
+   * @param aPaintDefaultBackground just paint the default background,
+   * don't try to paint any content. This is set when the observer
+   * needs to paint something, but the view tree is unstable, so it
+   * must *not* paint, or even examine, the frame subtree rooted at the
+   * view.  (It is, however, safe to inspect the state of the view itself,
+   * and any associated widget.) The name illustrates the expected behavior,
+   * which is to paint some default background color over the dirty region.
    * @return error status
    */
-  NS_IMETHOD Paint(nsIView*             aRootView,
-                   nsIRenderingContext* aRenderingContext,
-                   const nsRegion&      aDirtyRegion) = 0;
-
-  /* called when the observer needs to paint something, but the view
-   * tree is unstable, so it must *not* paint, or even examine, the
-   * frame subtree rooted at the view.  (It is, however, safe to inspect
-   * the state of the view itself, and any associated widget.)  The name
-   * illustrates the expected behavior, which is to paint some default
-   * background color over the dirty rect.
-   *
-   * @param aRenderingContext rendering context to paint to; the origin
-   * of the view is painted at (0,0) in the rendering context's current
-   * transform. For best results this should transform to pixel-aligned
-   * coordinates.
-   * @param aDirtyRect the rectangle to be painted, in the coordinates
-   * of aRootView
-   * @return error status
-   */
-  NS_IMETHOD PaintDefaultBackground(nsIView*             aRootView,
-                                    nsIRenderingContext* aRenderingContext,
-                                    const nsRect&        aDirtyRect) = 0;
+  NS_IMETHOD Paint(nsIView*        aDisplayRoot,
+                   nsIView*        aViewToPaint,
+                   nsIWidget*      aWidgetToPaint,
+                   const nsRegion& aDirtyRegion,
+                   PRBool          aPaintDefaultBackground) = 0;
 
   /* called when the observer needs to handle an event
    * @param aView  - where to start processing the event; the root view,

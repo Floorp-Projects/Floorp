@@ -98,7 +98,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
-#include "nsICSSLoader.h"
+#include "nsCSSLoader.h"
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"
@@ -1961,7 +1961,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mWillReparent = PR_TRUE;
 #endif
 
-    rv = window->SetNewDocument(this, nsnull, PR_FALSE);
+    rv = window->SetNewDocument(this, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG

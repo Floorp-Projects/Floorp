@@ -1474,7 +1474,9 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
     CellData* data = GetDataAt(aRowIndex, startColIndex);
     if (!data) 
       break;
-    if (data->IsDead()) {
+    // The border collapse code relies on having multiple dead cell data entries
+    // in a row.
+    if (data->IsDead() && aCellFrame) {
       origData = data;
       break; 
     }

@@ -1,0 +1,19 @@
+diff -r 059e9961a122 gfx/cairo/cairo/src/cairo-xlib-display.c
+--- a/gfx/cairo/cairo/src/cairo-xlib-display.c	Thu Feb 25 03:59:05 2010 -0800
++++ b/gfx/cairo/cairo/src/cairo-xlib-display.c	Fri Feb 26 16:15:29 2010 +0100
+@@ -259,7 +259,14 @@
+      * add our hook. For now, that means Render, so we call into its
+      * QueryVersion function to ensure it gets initialized.
+      */
+-    XRenderQueryVersion (dpy, &render_major, &render_minor);
++    Status s = XRenderQueryVersion (dpy, &render_major, &render_minor);
++    if (s == 0) {
++        /* XRenderQueryVersion failed, possibly because the server
++         * doesn't have the RENDER extension.  Don't leave the version
++         * numbers uninitialised.  See #548793.
++         */
++        render_major = render_minor = 0;
++    }
+ 
+     codes = XAddExtension (dpy);
+     if (unlikely (codes == NULL)) {

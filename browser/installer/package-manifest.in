@@ -17,7 +17,6 @@
 @APPNAME@/Contents/Plug-Ins/
 @APPNAME@/Contents/Resources/
 #endif
-@BINPATH@/.autoreg
 
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@.jar
@@ -46,6 +45,7 @@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -74,9 +74,7 @@
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
-#ifndef XP_MACOSX
 @BINPATH@/@MOZ_APP_NAME@
-#endif
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
@@ -100,9 +98,9 @@
 @BINPATH@/LICENSE
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
+@BINPATH@/run-mozilla.sh
 #ifndef XP_MACOSX
 @BINPATH@/mozilla-xremote-client
-@BINPATH@/run-mozilla.sh
 #endif
 #endif
 #ifdef MOZ_SPLASHSCREEN
@@ -140,7 +138,6 @@
 @BINPATH@/components/content_xmldoc.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/content_xtf.xpt
-@BINPATH@/components/contentprefs.xpt
 @BINPATH@/components/cookie.xpt
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
@@ -219,6 +216,7 @@
 @BINPATH@/components/necko_wifi.xpt
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
+@BINPATH@/components/parentalcontrols.xpt
 @BINPATH@/components/places.xpt
 @BINPATH@/components/plugin.xpt
 @BINPATH@/components/pref.xpt
@@ -252,6 +250,9 @@
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
+#ifdef XP_MACOSX
+@BINPATH@/components/widget_cocoa.xpt
+#endif
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
 @BINPATH@/components/xpcom_base.xpt
@@ -312,10 +313,8 @@
 @BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.js
 #ifndef XP_OS2
-@BINPATH@/components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 #else
-@BINPATH@/components/brwsrdir@DLL_SUFFIX@
 @BINPATH@/components/brwsrcmp@DLL_SUFFIX@
 #endif
 @BINPATH@/components/txEXSLTRegExFunctions.js
@@ -375,8 +374,10 @@
 
 ; shell icons
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
+#endif
 #endif
 
 ; [Default Preferences]
@@ -411,9 +412,7 @@
 @BINPATH@/res/table-remove-row-active.gif
 @BINPATH@/res/table-remove-row-hover.gif
 @BINPATH@/res/table-remove-row.gif
-@BINPATH@/res/arrowd.gif
 @BINPATH@/res/grabber.gif
-@BINPATH@/res/arrow.gif
 #ifdef XP_MACOSX
 @BINPATH@/res/cursors/*
 #endif

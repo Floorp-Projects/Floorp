@@ -1,5 +1,5 @@
 $(shell \
-if ! test -f include-dynamic.inc; then \
+if test ! -f include-dynamic.inc; then \
   echo "TESTVAR = oldval" > include-dynamic.inc; \
   sleep 2; \
   echo "TESTVAR = newval" > include-dynamic.inc.in; \

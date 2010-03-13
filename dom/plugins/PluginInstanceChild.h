@@ -52,17 +52,20 @@
 #include "ChildAsyncCall.h"
 #include "ChildTimer.h"
 #include "nsRect.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PBrowserStreamChild;
 class BrowserStreamChild;
+class StreamNotifyChild;
 
 class PluginInstanceChild : public PPluginInstanceChild
 {
     friend class BrowserStreamChild;
     friend class PluginStreamChild;
+    friend class StreamNotifyChild; 
 
 #ifdef OS_WIN
     friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
@@ -72,7 +75,7 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window);
 
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
@@ -86,6 +89,13 @@ protected:
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
 
+    NS_OVERRIDE
+    virtual bool
+    AnswerPaint(const NPRemoteEvent& event, int16_t* handled)
+    {
+        return AnswerNPP_HandleEvent(event, handled);
+    }
+
     virtual bool
     AnswerNPP_Destroy(NPError* result);
 
@@ -95,8 +105,8 @@ protected:
     virtual bool
     DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject);
 
-    virtual bool
-    AnswerPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
+    NS_OVERRIDE virtual bool
+    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
 
     virtual PBrowserStreamChild*
     AllocPBrowserStream(const nsCString& url,
@@ -149,7 +159,7 @@ protected:
     AnswerUpdateWindow();
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
+    PluginInstanceChild(const NPPluginFuncs* aPluginIface, const nsCString& aMimeType);
 
     virtual ~PluginInstanceChild();
 
@@ -175,12 +185,18 @@ public:
 
     void InvalidateRect(NPRect* aInvalidRect);
 
-    bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
-
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
 private:
+    friend class PluginModuleChild;
+
+    // Quirks mode support for various plugin mime types
+    enum PluginQuirks {
+        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1, // Win32
+    };
+
+    void InitQuirksModes(const nsCString& aMimeType);
 
     NPError
     InternalGetNPObjectForValue(NPNVariable aValue,
@@ -221,6 +237,7 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+    int mQuirks;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -239,16 +256,24 @@ private:
     HWND mCachedWinlessPluginHWND;
     UINT_PTR mEventPumpTimer;
     nsIntPoint mPluginSize;
+    nsIntPoint mPluginOffset;
 #endif
 
     friend class ChildAsyncCall;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
+    /**
+     * During destruction we enumerate all remaining scriptable objects and
+     * invalidate/delete them. Enumeration can re-enter, so maintain a
+     * hash separate from PluginModuleChild.mObjectMap.
+     */
+    nsAutoPtr< nsTHashtable<DeletingObjectEntry> > mDeletingHash;
+
 #if defined(OS_WIN)
 private:
     // Shared dib rendering management for windowless plugins.
-    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow, NPError* rv);
+    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow);
     int16_t SharedSurfacePaint(NPEvent& evcopy);
     void SharedSurfaceRelease();
     bool AlphaExtractCacheSetup();

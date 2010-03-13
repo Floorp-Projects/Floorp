@@ -1189,13 +1189,13 @@ Fault(const char *msg, PtrInfo *pi)
 }
 #endif
 
-static inline bool
-CheckMainThreadIfFast()
+static inline void
+AbortIfOffMainThreadIfCheckFast()
 {
 #if defined(XP_WIN) || defined(NS_TLS)
-    return NS_IsMainThread();
-#else
-    return true;
+    if (!NS_IsMainThread()) {
+        NS_RUNTIMEABORT("Main-thread-only object used off the main thread");
+    }
 #endif
 }
 
@@ -1377,6 +1377,7 @@ public:
     GCGraphBuilder(GCGraph &aGraph,
                    nsCycleCollectionLanguageRuntime **aRuntimes);
     ~GCGraphBuilder();
+    bool Initialized();
 
     PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
 
@@ -1428,6 +1429,12 @@ GCGraphBuilder::~GCGraphBuilder()
 {
     if (mPtrToNodeMap.ops)
         PL_DHashTableFinish(&mPtrToNodeMap);
+}
+
+bool
+GCGraphBuilder::Initialized()
+{
+    return !!mPtrToNodeMap.ops;
 }
 
 PtrInfo*
@@ -2302,8 +2309,7 @@ nsCycleCollector_isScanSafe(nsISupports *s)
 PRBool
 nsCycleCollector::Suspect(nsISupports *n)
 {
-    if (!CheckMainThreadIfFast())
-        return PR_FALSE;
+    AbortIfOffMainThreadIfCheckFast();
 
     // Re-entering ::Suspect during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
@@ -2343,12 +2349,7 @@ nsCycleCollector::Suspect(nsISupports *n)
 PRBool
 nsCycleCollector::Forget(nsISupports *n)
 {
-    if (!CheckMainThreadIfFast()) {
-        if (!mParams.mDoNothing) {
-            Fault("Forget called off main thread");
-        }
-        return PR_TRUE; // it's as good as forgotten
-    }
+    AbortIfOffMainThreadIfCheckFast();
 
     // Re-entering ::Forget during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
@@ -2382,8 +2383,7 @@ nsCycleCollector::Forget(nsISupports *n)
 nsPurpleBufferEntry*
 nsCycleCollector::Suspect2(nsISupports *n)
 {
-    if (!CheckMainThreadIfFast())
-        return nsnull;
+    AbortIfOffMainThreadIfCheckFast();
 
     // Re-entering ::Suspect during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
@@ -2424,8 +2424,7 @@ nsCycleCollector::Suspect2(nsISupports *n)
 PRBool
 nsCycleCollector::Forget2(nsPurpleBufferEntry *e)
 {
-    if (!CheckMainThreadIfFast())
-        return PR_FALSE;
+    AbortIfOffMainThreadIfCheckFast();
 
     // Re-entering ::Forget during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
@@ -2581,6 +2580,8 @@ nsCycleCollector::BeginCollection()
         return PR_FALSE;
 
     GCGraphBuilder builder(mGraph, mRuntimes);
+    if (!builder.Initialized())
+        return PR_FALSE;
 
 #ifdef COLLECT_TIME_DEBUG
     PRTime now = PR_Now();

@@ -65,6 +65,8 @@
 #include "nsAttrName.h"
 #include "nsILineBreaker.h"
 
+static const char kMozStr[] = "moz";
+
 #define kXMLNS "xmlns"
 
 // to be readable, we assume that an indented line contains
@@ -718,7 +720,7 @@ nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
                                                   const nsAString& aTagNamespaceURI)
 {
   PRUint32 index, count;
-  nsAutoString nameStr, prefixStr, uriStr, valueStr;
+  nsAutoString uriStr, valueStr;
 
   count = aContent->GetAttrCount();
 
@@ -758,8 +760,8 @@ nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
         }
       }
       else {
-        attrName->ToString(nameStr);
-        PushNameSpaceDecl(nameStr, uriStr, aOriginalElement);
+        PushNameSpaceDecl(nsDependentAtomString(attrName), uriStr,
+                          aOriginalElement);
       }
     }
   }
@@ -819,7 +821,7 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                             PRBool aAddNSAttr)
 {
 
-  nsAutoString nameStr, prefixStr, uriStr, valueStr;
+  nsAutoString prefixStr, uriStr, valueStr;
   nsAutoString xmlnsStr;
   xmlnsStr.AssignLiteral(kXMLNS);
   PRUint32 index, count;
@@ -853,6 +855,13 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     nsIAtom* attrName = name->LocalName();
     nsIAtom* attrPrefix = name->GetPrefix();
 
+    // Filter out any attribute starting with [-|_]moz
+    nsDependentAtomString attrNameStr(attrName);
+    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
+        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+      continue;
+    }
+
     if (attrPrefix) {
       attrPrefix->ToString(prefixStr);
     }
@@ -867,14 +876,8 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     }
     
     aContent->GetAttr(namespaceID, attrName, valueStr);
-    attrName->ToString(nameStr);
 
-    // XXX Hack to get around the fact that MathML can add
-    //     attributes starting with '-', which makes them
-    //     invalid XML. see Bug 475518
-    if (!nameStr.IsEmpty() && nameStr.First() == '-')
-      continue;
-
+    nsDependentAtomString nameStr(attrName);
     PRBool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
 
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, !isJS);
@@ -1481,7 +1484,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
   PRBool thisSequenceStartsAtBeginningOfLine = !mColPos;
   PRBool onceAgainBecauseWeAddedBreakInFront = PR_FALSE;
   PRBool foundWhitespaceInLoop;
-  PRInt32 length, colPos;
+  PRUint32 length, colPos;
 
   do {
 

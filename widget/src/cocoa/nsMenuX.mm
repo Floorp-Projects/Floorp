@@ -131,24 +131,20 @@ nsMenuX::nsMenuX()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!gMenuMethodsSwizzled) {
-    if (nsToolkit::OnLeopardOrLater()) {
-      nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
-                                @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
-      nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
-                                @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
-      // On SnowLeopard the Shortcut framework (which contains the
-      // SCTGRLIndex class) is loaded on demand, whenever the user first opens
-      // a menu (which normally hasn't happened yet).  So we need to load it
-      // here explicitly.
-      if (nsToolkit::OnSnowLeopardOrLater())
-        dlopen("/System/Library/PrivateFrameworks/Shortcut.framework/Shortcut", RTLD_LAZY);
-      Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
-      nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
-                                @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
-    } else {
-      nsToolkit::SwizzleMethods([NSMenu class], @selector(performKeyEquivalent:),
-                                @selector(nsMenuX_NSMenu_performKeyEquivalent:));
-    }
+    nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
+                              @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
+    nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
+                              @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+    // On SnowLeopard the Shortcut framework (which contains the
+    // SCTGRLIndex class) is loaded on demand, whenever the user first opens
+    // a menu (which normally hasn't happened yet).  So we need to load it
+    // here explicitly.
+    if (nsToolkit::OnSnowLeopardOrLater())
+      dlopen("/System/Library/PrivateFrameworks/Shortcut.framework/Shortcut", RTLD_LAZY);
+    Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
+    nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
+                              @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
+
     gMenuMethodsSwizzled = PR_TRUE;
   }
 
@@ -869,130 +865,6 @@ nsresult nsMenuX::SetupIcon()
   return mIcon->SetupIcon();
 }
 
-#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
-
-//
-// Carbon event support
-//
-
-static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRef event, void* userData)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  // Don't do anything while the OS is (re)indexing our menus (on Leopard and
-  // higher).  This stops the Help menu from being able to search in our
-  // menus, but it also resolves many other problems -- including crashes and
-  // long delays while opening the Help menu.  Once we know better which
-  // operations are safe during (re)indexing, we can start allowing some
-  // operations here while it's happening.  This change resolves bmo bugs
-  // 426499 and 414699.
-  if (nsMenuX::sIndexingMenuLevel > 0)
-    return noErr;
-
-  nsMenuX* targetMenu = static_cast<nsMenuX*>(userData);
-  UInt32 kind = ::GetEventKind(event);
-
-  // On SnowLeopard, our Help menu items often get disabled when the user
-  // enters a password after waking from sleep or the screen saver.  Whether
-  // or not the user is prompted for a password is governed by the "Require
-  // password" setting in the Security pref panel.  For more information see
-  // bug 513048.
-  //
-  // This is surely an OS bug, though it's not clear exactly what triggers it.
-  // The end result is that the Help menu's items are turned off in Carbon,
-  // even though they're turned on in Cocoa.  (On SnowLeopard, system menus
-  // are still implemented in Carbon (at least for for 32-bit apps), using the
-  // undocumented NSCarbonMenuImpl class.)  The workaround for this is to do
-  // the following whenever a menu is opened:  If it's the Help menu, check
-  // Carbon and Cocoa enabled states of all its menu items.  If any of these
-  // states don't match, change the Carbon enabled state to match the Cocoa
-  // enabled state.
-  if (nsToolkit::OnSnowLeopardOrLater() && targetMenu && (kind == kEventMenuOpening)) {
-    nsCOMPtr<nsIContent> content(targetMenu->Content());
-    NSMenu *nativeMenu = static_cast<NSMenu*>(targetMenu->NativeData());
-    if (content && nativeMenu) {
-      nsAutoString id;
-      content->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, id);
-      if (id.Equals(NS_LITERAL_STRING("helpMenu"))) {
-        MenuRef helpMenuRef = _NSGetCarbonMenu(nativeMenu);
-        if (helpMenuRef) {
-          NSArray *items = [nativeMenu itemArray];
-          NSUInteger count = [items count];
-          for (NSUInteger i = 0; i < count; ++i) {
-            NSMenuItem *anItem = (NSMenuItem *) [items objectAtIndex:i];
-            BOOL cocoaEnabled = [anItem isEnabled];
-            Boolean carbonEnabled = ::IsMenuItemEnabled(helpMenuRef, i+1);
-            if (carbonEnabled != cocoaEnabled) {
-              if (!carbonEnabled) {
-                ::EnableMenuItem(helpMenuRef, i+1);
-              } else {
-                ::DisableMenuItem(helpMenuRef, i+1);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (kind == kEventMenuTargetItem) {
-    // get the position of the menu item we want
-    PRUint16 aPos;
-    ::GetEventParameter(event, kEventParamMenuItemIndex, typeMenuItemIndex, NULL, sizeof(MenuItemIndex), NULL, &aPos);
-    aPos--; // subtract 1 from aPos because Carbon menu positions start at 1 not 0
-    
-    // don't request a menu item that doesn't exist or we crash
-    // this might happen just due to some random quirks in the event system
-    nsMenuObjectX* target = targetMenu->GetVisibleItemAt((PRUint32)aPos);
-    if (!target)
-      return eventNotHandledErr;
-
-    // Send DOM event if we're over a menu item
-    if (target->MenuObjectType() == eMenuItemObjectType) {
-      nsMenuItemX* targetMenuItem = static_cast<nsMenuItemX*>(target);
-      PRBool handlerCalledPreventDefault; // but we don't actually care
-      targetMenuItem->DispatchDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"), &handlerCalledPreventDefault);
-      return noErr;
-    }
-  }
-  else if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
-    if (kind == kEventMenuOpening && gRollupListener && gRollupWidget) {
-      gRollupListener->Rollup(nsnull, nsnull);
-      return userCanceledErr;
-    }
-    if (kind == kEventMenuOpening)
-      targetMenu->MenuOpened();
-    else
-      targetMenu->MenuClosed();
-    return noErr;
-  }
-  return eventNotHandledErr;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
-}
-
-static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  static EventTypeSpec eventList[] = {
-    {kEventClassMenu, kEventMenuOpening},
-    {kEventClassMenu, kEventMenuClosed},
-    {kEventClassMenu, kEventMenuTargetItem}
-  };
-  
-  static EventHandlerUPP gMyMenuEventHandlerUPP = NewEventHandlerUPP(&MyMenuEventHandler);
-  OSStatus status = ::InstallMenuEventHandler(menuRef, gMyMenuEventHandlerUPP,
-                                   sizeof(eventList) / sizeof(EventTypeSpec), eventList,
-                                   userData, outHandler);
-  NS_ASSERTION(status == noErr,"Installing carbon menu events failed.");
-  return status;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
-}
-
-#endif
-
 //
 // MenuDelegate Objective-C class, used to set up Carbon events
 //
@@ -1006,51 +878,11 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   if ((self = [super init])) {
     NS_ASSERTION(geckoMenu, "Cannot initialize native menu delegate with NULL gecko menu! Will crash!");
     mGeckoMenu = geckoMenu;
-#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
-    mEventHandler = NULL;
-#endif
   }
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
-#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
-
-- (void)dealloc
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mEventHandler)
-    ::RemoveEventHandler(mEventHandler);
-
-  [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// You can get a MenuRef from an NSMenu*, but not until it has been made visible
-// or added to the main menu bar. Basically, Cocoa is attempting lazy loading,
-// and that doesn't work for us. We don't need any carbon events until after the
-// first time the menu is shown, so when that happens we install the carbon
-// event handler. This works because at this point we can get a MenuRef without
-// much trouble.
-- (void)menuNeedsUpdate:(NSMenu*)aMenu
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mEventHandler) {
-    MenuRef myMenuRef = _NSGetCarbonMenu(aMenu);
-    if (myMenuRef)
-      InstallMyMenuEventHandler(myMenuRef, mGeckoMenu, &mEventHandler);
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-#endif
-
-#if defined(MAC_OS_X_VERSION_10_5) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
 
 - (void)menu:(NSMenu *)menu willHighlightItem:(NSMenuItem *)item
 {
@@ -1097,8 +929,6 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 
   mGeckoMenu->MenuClosed();
 }
-
-#endif
 
 @end
 
@@ -1219,7 +1049,6 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
 @interface NSMenu (MethodSwizzling)
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable;
 + (void)nsMenuX_NSMenu_removeItem:(NSMenuItem *)aItem fromTable:(NSMapTable *)aTable;
-- (BOOL)nsMenuX_NSMenu_performKeyEquivalent:(NSEvent *)theEvent;
 @end
 
 @implementation NSMenu (MethodSwizzling)
@@ -1263,20 +1092,6 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (BOOL)nsMenuX_NSMenu_performKeyEquivalent:(NSEvent *)theEvent
-{
-  // On OS X 10.4.X (Tiger), Objective-C exceptions can occur during calls to
-  // [NSMenu performKeyEquivalent:] (from [GeckoNSMenu performKeyEquivalent:]
-  // or otherwise) that shouldn't be fatal (see bmo bug 461381).  So on Tiger
-  // we hook this system call to eat (and log) all Objective-C exceptions that
-  // occur during its execution.  Since we don't call XPCOM code from here,
-  // this will never cause XPCOM objects to be left on the stack without
-  // cleanup.
-  NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK_RETURN;
-  return [self nsMenuX_NSMenu_performKeyEquivalent:theEvent];
-  NS_OBJC_END_TRY_LOGONLY_BLOCK_RETURN(NO);
 }
 
 @end

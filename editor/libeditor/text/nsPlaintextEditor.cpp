@@ -42,7 +42,6 @@
 #include "nsCaret.h"
 #include "nsTextEditUtils.h"
 #include "nsTextEditRules.h"
-#include "nsEditorEventListeners.h"
 #include "nsIEditActionListener.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -305,49 +304,6 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
 
   return result; 
 } 
-
-nsresult
-nsPlaintextEditor::CreateEventListeners()
-{
-  nsresult rv = NS_OK;
-
-  if (!mMouseListenerP) {
-    // get a mouse listener
-    rv |= NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
-  }
-
-  if (!mKeyListenerP) {
-    // get a key listener
-    rv |= NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
-  }
-
-  if (!mTextListenerP) {
-    // get a text listener
-    rv |= NS_NewEditorTextListener(getter_AddRefs(mTextListenerP), this);
-  }
-
-  if (!mCompositionListenerP) {
-    // get a composition listener
-    rv |=
-      NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),
-                                      this);
-  }
-
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-  if (!mDragListenerP) {
-    // get a drag listener
-    rv |= NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), presShell,
-                                   this);
-  }
-
-  if (!mFocusListenerP) {
-    // get a focus listener
-    rv |= NS_NewEditorFocusListener(getter_AddRefs(mFocusListenerP),
-                                    this, presShell);
-  }
-
-  return rv;
-}
 
 NS_IMETHODIMP 
 nsPlaintextEditor::GetFlags(PRUint32 *aFlags)

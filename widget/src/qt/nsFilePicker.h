@@ -40,12 +40,12 @@
 #ifndef NSFILEPICKER_H
 #define NSFILEPICKER_H
 
+#include <qfiledialog.h>
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
-#include <qfiledialog.h>
 
 class nsIWidget;
 class nsILocalFile;

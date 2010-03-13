@@ -49,12 +49,12 @@
 class nsNSSDialogHelper
 {
 public:
-  const static char *kDefaultOpenWindowParam;
   //The params is going to be either a nsIPKIParamBlock or
   //nsIDialogParamBlock
   static nsresult openDialog(
                   nsIDOMWindowInternal *window,
                   const char *url,
-                  nsISupports *params);
+                  nsISupports *params,
+                  PRBool modal = PR_TRUE);
 };
 

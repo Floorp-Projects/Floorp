@@ -1441,10 +1441,7 @@ CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@namespace ");
   if (mPrefix) {
-    nsString atomStr;
-    mPrefix->ToString(atomStr);
-    aCssText.Append(atomStr);
-    aCssText.AppendLiteral(" ");
+    aCssText.Append(nsDependentAtomString(mPrefix) + NS_LITERAL_STRING(" "));
   }
   aCssText.AppendLiteral("url(");
   nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);

@@ -67,9 +67,14 @@
  * <stdint.h> itself is available.
  */
 
-#if defined(JS_HAVE_STDINT_H)
+#if defined(JS_HAVE_STDINT_H) || \
+    defined(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
 
+#if defined(JS_HAVE_STDINT_H)
 #include <stdint.h>
+#else
+#include <sys/types.h>
+#endif
 
 typedef int8_t   JSInt8;
 typedef int16_t  JSInt16;
