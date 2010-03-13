@@ -70,7 +70,7 @@
 
       var frameNode = getNode("editabledoc");
       gQueue.push(new focusDocument(frameNode));
-      // gQueue.push(new openCloseDialog(frameNode.contentDocument));
+      gQueue.push(new openCloseDialog(frameNode.contentDocument));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
