@@ -820,13 +820,7 @@ struct JSRuntime {
     jsval               negativeInfinityValue;
     jsval               positiveInfinityValue;
 
-#ifdef JS_THREADSAFE
-    JSLock              *deflatedStringCacheLock;
-#endif
-    JSHashTable         *deflatedStringCache;
-#ifdef DEBUG
-    uint32              deflatedStringCacheBytes;
-#endif
+    js::DeflatedStringCache *deflatedStringCache;
 
     JSString            *emptyString;
 

@@ -2622,8 +2622,6 @@ FinalizeString(JSContext *cx, JSString *str, unsigned thingKind)
          */
         cx->free(str->flatChars());
     }
-    if (str->isDeflated())
-        js_PurgeDeflatedStringCache(cx->runtime, str);
 }
 
 inline void
@@ -2643,8 +2641,6 @@ FinalizeExternalString(JSContext *cx, JSString *str, unsigned thingKind)
     JSStringFinalizeOp finalizer = str_finalizers[type];
     if (finalizer)
         finalizer(cx, str);
-    if (str->isDeflated())
-        js_PurgeDeflatedStringCache(cx->runtime, str);
 }
 
 /*
@@ -2686,8 +2682,6 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
             }
         }
     }
-    if (str->isDeflated())
-        js_PurgeDeflatedStringCache(rt, str);
 }
 
 template<typename T,
@@ -3195,6 +3189,13 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #if JS_HAS_XML_SUPPORT
     FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &emptyArenas);
 #endif
+
+    /*
+     * We sweep the deflated cache before we finalize the strings so the
+     * cache can safely use js_IsAboutToBeFinalized..
+     */
+    rt->deflatedStringCache->sweep(cx);
+
     FinalizeArenaList<JSString, FinalizeString>
         (cx, FINALIZE_STRING, &emptyArenas);
     for (unsigned i = FINALIZE_EXTERNAL_STRING0;
