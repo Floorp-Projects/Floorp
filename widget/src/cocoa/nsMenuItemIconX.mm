@@ -75,11 +75,6 @@ static const PRUint32 kIconBitsPerPixel = kIconBitsPerComponent *
 static const PRUint32 kIconBytesPerRow = kIconWidth * kIconBitsPerPixel / 8;
 static const PRUint32 kIconBytes = kIconBytesPerRow * kIconHeight;
 
-static void
-PRAllocCGFree(void* aInfo, const void* aData, size_t aSize) {
-  free((void*)aData);
-}
-
 typedef nsresult (nsIDOMRect::*GetRectSideMethod)(nsIDOMCSSPrimitiveValue**);
 
 NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
