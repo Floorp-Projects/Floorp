@@ -331,13 +331,14 @@ InitTypeConstructor(JSContext* cx,
   if (!prototype)
     return NULL;
 
+  // Define property before proceeding, for GC safety.
+  if (!JS_DefineProperty(cx, obj, "prototype", OBJECT_TO_JSVAL(prototype),
+         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+    return NULL;
+
   // Define properties on the type constructor's 'prototype' property using
   // reserved slots and getters.
   if (!JS_DefineProperties(cx, prototype, props))
-    return NULL;
-
-  if (!JS_DefineProperty(cx, obj, "prototype", OBJECT_TO_JSVAL(prototype),
-         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return NULL;
 
   if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(obj),
@@ -1965,7 +1966,7 @@ JSObject*
 CType::Create(JSContext* cx,
               JSObject* proto,
               TypeCode type,
-              jsval name,
+              JSString* name,
               jsval size,
               jsval align,
               ffi_type* ffiType,
@@ -1991,7 +1992,7 @@ CType::Create(JSContext* cx,
   // Set up the reserved slots.
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_TYPECODE, INT_TO_JSVAL(type)) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType)) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, name) ||
+      (name && !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name))) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, size) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, align))
     return NULL;
@@ -2000,6 +2001,7 @@ CType::Create(JSContext* cx,
   JSObject* prototype = JS_NewObject(cx, NULL, NULL, JS_GetParent(cx, typeObj));
   if (!prototype)
     return NULL;
+  JSAutoTempValueRooter protoroot(cx, prototype);
 
   if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
          NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
@@ -2056,7 +2058,7 @@ CType::DefineBuiltin(JSContext* cx,
   JSAutoTempValueRooter nameRoot(cx, nameStr);
 
   // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = Create(cx, proto, type, STRING_TO_JSVAL(nameStr), size,
+  JSObject* typeObj = Create(cx, proto, type, nameStr, size,
                         align, ffiType, NULL, NULL);
   if (!typeObj)
     return NULL;
@@ -2485,8 +2487,7 @@ PointerType::CreateInternal(JSContext* cx,
     proto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
 
   // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, proto, TYPE_pointer,
-                        STRING_TO_JSVAL(name),
+  JSObject* typeObj = CType::Create(cx, proto, TYPE_pointer, name,
                         INT_TO_JSVAL(sizeof(void*)),
                         INT_TO_JSVAL(ffi_type_pointer.alignment),
                         &ffi_type_pointer, NULL, sPointerInstanceProps);
@@ -2755,7 +2756,7 @@ ArrayType::CreateInternal(JSContext* cx,
   }
 
   // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, proto, TYPE_array, JSVAL_VOID,
+  JSObject* typeObj = CType::Create(cx, proto, TYPE_array, NULL,
                         sizeVal, INT_TO_JSVAL(align), ffiType,
                         sArrayInstanceFunctions, sArrayInstanceProps);
   if (!typeObj)
@@ -3349,7 +3350,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   JSObject* proto = CType::GetProtoFromCtor(cx, callee);
 
   // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, proto, TYPE_struct, name,
+  JSObject* typeObj = CType::Create(cx, proto, TYPE_struct, JSVAL_TO_STRING(name),
                         sizeVal, INT_TO_JSVAL(structAlign), ffiType,
                         sStructInstanceFunctions, instanceProps.Elements());
   if (!typeObj)
