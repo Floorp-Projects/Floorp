@@ -251,8 +251,9 @@ const char* const docEvents[] = {
   // debugging a11y objects with event viewers
   "mouseover",
 #endif
-  // capture DOM focus events 
+  // capture DOM focus and DOM blur events 
   "focus",
+  "blur",
   // capture Form change events 
   "select",
   // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
@@ -808,6 +809,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       }
     }
     FireAccessibleFocusEvent(accessible, focusedItem, aEvent);
+  }
+  else if (eventType.EqualsLiteral("blur")) {
+    gLastFocusedNode = nsnull;
+    gLastFocusedFrameType = nsnull;
+    gLastFocusedAccessiblesState = 0;
   }
   else if (eventType.EqualsLiteral("AlertActive")) { 
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
