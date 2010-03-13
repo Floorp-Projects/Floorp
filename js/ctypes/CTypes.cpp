@@ -244,6 +244,12 @@ NewUCString(JSContext* cx, const nsString& from)
     reinterpret_cast<const jschar*>(from.get()), from.Length());
 }
 
+JS_ALWAYS_INLINE size_t
+Align(size_t val, size_t align)
+{
+  return ((val - 1) | (align - 1)) + 1;
+}
+
 ABICode
 GetABICode(JSContext* cx, JSObject* obj)
 {
@@ -2038,6 +2044,11 @@ CType::Create(JSContext* cx,
       !JS_SealObject(cx, typeObj, JS_FALSE))
     return NULL;
 
+  // Assert a sanity check on size and alignment: size % alignment should always
+  // be zero.
+  JS_ASSERT_IF(IsSizeDefined(cx, typeObj),
+               GetSize(cx, typeObj) % GetAlignment(cx, typeObj) == 0);
+
   return typeObj;
 }
 
@@ -3279,26 +3290,28 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 
       size_t fieldSize = CType::GetSize(cx, info->mType);
       size_t fieldAlign = CType::GetAlignment(cx, info->mType);
-      size_t padding = (fieldAlign - structSize % fieldAlign) % fieldAlign;
-      if (structSize + padding < structSize ||
-          structSize + padding + fieldSize < structSize) {
+      size_t fieldOffset = Align(structSize, fieldAlign);
+      // Check for overflow. Since we hold invariant that fieldSize % fieldAlign
+      // be zero, we can safely check fieldOffset + fieldSize without first
+      // checking fieldOffset for overflow.
+      if (fieldOffset + fieldSize < structSize) {
         JS_ReportError(cx, "size overflow");
         return JS_FALSE;
       }
-      info->mOffset = structSize + padding;
-      structSize = structSize + padding + fieldSize;
+      info->mOffset = fieldOffset;
+      structSize = fieldOffset + fieldSize;
 
       if (fieldAlign > structAlign)
         structAlign = fieldAlign;
     }
 
     // Pad the struct tail according to struct alignment.
-    size_t delta = (structAlign - structSize % structAlign) % structAlign;
-    if (structSize + delta < structSize) {
+    size_t structTail = Align(structSize, structAlign);
+    if (structTail < structSize) {
       JS_ReportError(cx, "size overflow");
       return JS_FALSE;
     }
-    structSize = structSize + delta;
+    structSize = structTail;
 
   } else {
     // Empty structs are illegal in C, but are legal and have a size of
