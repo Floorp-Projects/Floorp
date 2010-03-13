@@ -50,8 +50,8 @@ namespace mozilla {
 namespace dom {
 
 #define MOZILLA_DOM_LINK_IMPLEMENTATION_IID \
-  { 0x0c032581, 0x1c8a, 0x4fff, \
-    { 0xbe, 0x9a, 0xfb, 0x6e, 0x2e, 0xe4, 0x22, 0x2e } }
+  { 0x2be8af0, 0x32a5, 0x41dd, \
+    { 0xa7, 0x68, 0x12, 0x55, 0xc4, 0x9a, 0xd4, 0xc5 } }
 
 class Link : public nsISupports
 {
@@ -74,6 +74,9 @@ public:
    * @return the URI this link is for, if available.
    */
   already_AddRefed<nsIURI> GetURI() const;
+  virtual already_AddRefed<nsIURI> GetURIExternal() const {
+    return GetURI();
+  }
 
   /**
    * Helper methods for modifying and obtaining parts of the URI of the Link.
