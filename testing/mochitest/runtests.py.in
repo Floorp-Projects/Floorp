@@ -199,6 +199,12 @@ class MochitestOptions(optparse.OptionParser):
                     help = "copy specified files/dirs to testing profile")
     defaults["extraProfileFiles"] = []
 
+    self.add_option("--profile-path", action = "store",
+                    type = "string", dest = "profilePath",
+                    help = "Directory where the profile will be stored."
+                           "This directory will be deleted after the tests are finished")
+    defaults["profilePath"] = tempfile.mkdtemp()
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -212,6 +218,49 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     self.set_usage(usage)
 
 
+  def verifyOptions(self, options, mochitest):
+    """ verify correct options and cleanup paths """
+
+    if options.totalChunks is not None and options.thisChunk is None:
+      self.error("thisChunk must be specified when totalChunks is specified")
+
+    if options.totalChunks:
+      if not 1 <= options.thisChunk <= options.totalChunks:
+        self.error("thisChunk must be between 1 and totalChunks")
+
+    if options.xrePath is None:
+      # default xrePath to the app path if not provided
+      # but only if an app path was explicitly provided
+      if options.app != self.defaults['app']:
+        options.xrePath = os.path.dirname(options.app)
+      else:
+        # otherwise default to dist/bin
+        options.xrePath = self._automation.DIST_BIN
+
+    # allow relative paths
+    options.xrePath = mochitest.getFullPath(options.xrePath)
+
+    options.profilePath = mochitest.getFullPath(options.profilePath)
+
+    options.app = mochitest.getFullPath(options.app)
+    if not os.path.exists(options.app):
+      msg = """\
+      Error: Path %(app)s doesn't exist.
+      Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
+      print msg % {"app": options.app}
+      return None
+
+    options.utilityPath = mochitest.getFullPath(options.utilityPath)
+    options.certPath = mochitest.getFullPath(options.certPath)
+    if options.symbolsPath:
+      options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
+
+    options.webServer = self._automation.DEFAULT_WEB_SERVER
+    options.httpPort = self._automation.DEFAULT_HTTP_PORT
+    options.sslPort = self._automation.DEFAULT_SSL_PORT
+    return options
+
+
 #######################
 # HTTP SERVER SUPPORT #
 #######################
@@ -219,14 +268,15 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
 class MochitestServer:
   "Web server used to serve Mochitests, for closer fidelity to the real web."
 
-  def __init__(self, automation, options, profileDir, shutdownURL):
+  def __init__(self, automation, options):
     self._automation = automation
     self._closeWhenDone = options.closeWhenDone
     self._utilityPath = options.utilityPath
     self._xrePath = options.xrePath
-    self._profileDir = profileDir
-    self.shutdownURL = shutdownURL
-    self.webServer = "127.0.0.1"
+    self._profileDir = options.profilePath
+    self.webServer = options.webServer
+    self.httpPort = options.httpPort
+    self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -239,7 +289,8 @@ class MochitestServer:
     args = ["-g", self._xrePath,
             "-v", "170",
             "-f", "./" + "httpd.js",
-            '-e', 'const _SERVER_ADDR="' + self.webServer + '";',
+            "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" % 
+                   {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
             "-f", "./" + "server.js"]
 
     xpcshell = os.path.join(self._utilityPath,
@@ -278,7 +329,6 @@ class MochitestServer:
 
 class Mochitest(object):
   # Path to the test script on the server
-  TEST_SERVER_HOST = "mochi.test:8888"
   TEST_PATH = "/tests/"
   CHROME_PATH = "/redirect.html";
   A11Y_PATH = "/redirect-a11y.html"
@@ -301,17 +351,13 @@ class Mochitest(object):
     self.SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
     os.chdir(self.SCRIPT_DIRECTORY)
 
-    self.PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
-
-    self.LEAK_REPORT_FILE = os.path.join(self.PROFILE_DIRECTORY, "runtests_leaks.log")
-
   def getFullPath(self, path):
-    "Get an absolute path relative to self.oldcwd."
+    " Get an absolute path relative to self.oldcwd."
     return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
   def buildTestPath(self, options):
-    """ build the url path to the specific test harness and test file or directory """
-    testHost = "http://" + self.TEST_SERVER_HOST
+    """ Build the url path to the specific test harness and test file or directory """
+    testHost = "http://mochi.test:8888"
     testURL = testHost + self.TEST_PATH + options.testPath
     if options.chrome:
       testURL = testHost + self.CHROME_PATH
@@ -326,9 +372,11 @@ class Mochitest(object):
     return testURL
 
   def startWebServer(self, options):
-    """ create the webserver and start it up """
-    shutdownURL = "http://" + self.TEST_SERVER_HOST + "/server/shutdown"
-    self.server = MochitestServer(self.automation, options, self.PROFILE_DIRECTORY, shutdownURL)
+    if options.webServer != '127.0.0.1':
+      return
+
+    """ Create the webserver and start it up """
+    self.server = MochitestServer(self.automation, options)
     self.server.start()
 
     # If we're lucky, the server has fully started by now, and all paths are
@@ -337,10 +385,13 @@ class Mochitest(object):
     # we'll try to kill the server and exit with an error.
     self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
 
-  def stopWebServer(self):
+  def stopWebServer(self, options):
     """ Server's no longer needed, and perhaps more importantly, anything it might
         spew to console shouldn't disrupt the leak information table we print next.
     """
+    if options.webServer != '127.0.0.1':
+      return
+
     self.server.stop()
 
   def getLogFilePath(self, logFile):
@@ -351,7 +402,7 @@ class Mochitest(object):
 
   def buildProfile(self, options):
     """ create the profile and add optional chrome bits and files if requested """
-    self.automation.initializeProfile(self.PROFILE_DIRECTORY, options.extraPrefs, useServerLocations = True)
+    self.automation.initializeProfile(options.profilePath, options.extraPrefs, useServerLocations = True)
     manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
     return manifest
@@ -371,7 +422,7 @@ class Mochitest(object):
         return None
       browserEnv[v[:ix]] = v[ix + 1:]
 
-    browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.LEAK_REPORT_FILE
+    browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
 
     if options.fatalAssertions:
       browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
@@ -385,7 +436,7 @@ class Mochitest(object):
     self.automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
     # Don't care about this |status|: |runApp()| reporting it should be enough.
     status = self.automation.runApp(None, browserEnv, options.app,
-                                self.PROFILE_DIRECTORY, ["-silent"],
+                                options.profilePath, ["-silent"],
                                 utilityPath = options.utilityPath,
                                 xrePath = options.xrePath,
                                 symbolsPath=options.symbolsPath)
@@ -407,7 +458,7 @@ class Mochitest(object):
   
     # allow relative paths for logFile
     if options.logFile:
-      options.logFile = self.getFullPath(options.logFile)
+      options.logFile = self.getLogFilePath(options.logFile)
     if options.browserChrome:
       self.makeTestConfig(options)
     else:
@@ -430,15 +481,17 @@ class Mochitest(object):
       if options.shuffle:
         self.urlOpts.append("shuffle=1")
 
-  def cleanup(self, manifest):
+  def cleanup(self, manifest, options):
     """ remove temporary files and profile """
     os.remove(manifest)
-    shutil.rmtree(self.PROFILE_DIRECTORY)
+    shutil.rmtree(options.profilePath)
 
   def runTests(self, options):
     """ Prepare, configure, run tests and cleanup """
     debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
                       options.debuggerInteractive);
+
+    self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
     browserEnv = self.buildBrowserEnv(options)
     if (browserEnv == None):
@@ -457,8 +510,8 @@ class Mochitest(object):
 
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.
-    if os.path.exists(self.LEAK_REPORT_FILE):
-      os.remove(self.LEAK_REPORT_FILE)
+    if os.path.exists(self.leak_report_file):
+      os.remove(self.leak_report_file)
 
     # then again to actually run mochitest
     if options.timeout:
@@ -469,7 +522,7 @@ class Mochitest(object):
       timeout = 330.0 # default JS harness timeout is 300 seconds
     self.automation.log.info("INFO | runtests.py | Running tests: start.\n")
     status = self.automation.runApp(testURL, browserEnv, options.app,
-                                self.PROFILE_DIRECTORY, options.browserArgs,
+                                options.profilePath, options.browserArgs,
                                 runSSLTunnel = self.runSSLTunnel,
                                 utilityPath = options.utilityPath,
                                 xrePath = options.xrePath,
@@ -478,11 +531,11 @@ class Mochitest(object):
                                 symbolsPath=options.symbolsPath,
                                 timeout = timeout)
 
-    self.stopWebServer()
-    processLeakLog(self.LEAK_REPORT_FILE, options.leakThreshold)
+    self.stopWebServer(options)
+    processLeakLog(self.leak_report_file, options.leakThreshold)
     self.automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
-    self.cleanup(manifest)
+    self.cleanup(manifest, options)
     return status
 
   def makeTestConfig(self, options):
@@ -505,7 +558,7 @@ class Mochitest(object):
          "logPath": logFile,
          "testPath": testPath}
 
-    config = open(os.path.join(self.PROFILE_DIRECTORY, "testConfig.js"), "w")
+    config = open(os.path.join(options.profilePath, "testConfig.js"), "w")
     config.write(content)
     config.close() 
 
@@ -513,7 +566,7 @@ class Mochitest(object):
   def addChromeToProfile(self, options):
     "Adds MochiKit chrome tests to the profile."
 
-    chromedir = os.path.join(self.PROFILE_DIRECTORY, "chrome")
+    chromedir = os.path.join(options.profilePath, "chrome")
     os.mkdir(chromedir)
 
     chrome = """
@@ -528,7 +581,7 @@ toolbar#nav-bar {
 """
 
     # write userChrome.css
-    chromeFile = open(os.path.join(self.PROFILE_DIRECTORY, "userChrome.css"), "a")
+    chromeFile = open(os.path.join(options.profilePath, "userChrome.css"), "a")
     chromeFile.write(chrome)
     chromeFile.close()
 
@@ -561,7 +614,7 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
     "Copy extra files or dirs specified on the command line to the testing profile."
     for f in options.extraProfileFiles:
       abspath = self.getFullPath(f)
-      dest = os.path.join(self.PROFILE_DIRECTORY, os.path.basename(abspath))
+      dest = os.path.join(options.profilePath, os.path.basename(abspath))
       if os.path.isdir(abspath):
         shutil.copytree(abspath, dest)
       else:
@@ -569,36 +622,12 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
 
 def main():
   automation = Automation()
-  automation.setServerInfo()
   mochitest = Mochitest(automation)
   parser = MochitestOptions(automation, mochitest.SCRIPT_DIRECTORY)
   options, args = parser.parse_args()
 
-  if options.totalChunks is not None and options.thisChunk is None:
-    parser.error("thisChunk must be specified when totalChunks is specified")
-
-  if options.totalChunks:
-    if not 1 <= options.thisChunk <= options.totalChunks:
-      parser.error("thisChunk must be between 1 and totalChunks")
-
-  if options.xrePath is None:
-    # default xrePath to the app path if not provided
-    # but only if an app path was explicitly provided
-    if options.app != parser.defaults['app']:
-      options.xrePath = os.path.dirname(options.app)
-    else:
-      # otherwise default to dist/bin
-      options.xrePath = automation.DIST_BIN
-
-  # allow relative paths
-  options.xrePath = mochitest.getFullPath(options.xrePath)
-
-  options.app = mochitest.getFullPath(options.app)
-  if not os.path.exists(options.app):
-    msg = """\
-    Error: Path %(app)s doesn't exist.
-    Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
-    print msg % {"app": options.app}
+  options = parser.verifyOptions(options, mochitest)
+  if options == None:
     sys.exit(1)
 
   options.utilityPath = mochitest.getFullPath(options.utilityPath)
@@ -606,6 +635,7 @@ def main():
   if options.symbolsPath:
     options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
+  automation.setServerInfo(options.webServer, options.httpPort, options.sslPort)
   sys.exit(mochitest.runTests(options))
 
 if __name__ == "__main__":
