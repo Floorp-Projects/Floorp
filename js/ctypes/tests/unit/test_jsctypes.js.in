@@ -1143,15 +1143,6 @@ function run_jschar_tests(library, t, name, limits) {
         18 ] ]);
 }
 
-function extreme_size()
-{
-  // Return something larger than the largest representable size value,
-  // depending on platform. (Sizes must fit in both size_t and jsdouble.)
-  return ctypes.size_t.size == 4 ?
-         0x800000000 :
-         ctypes.UInt64("0xffffffffffffffff")
-}
-
 function run_StructType_tests() {
   do_check_throws(function() { ctypes.StructType(); }, Error);
   do_check_throws(function() { ctypes.StructType("a"); }, Error);
@@ -1222,6 +1213,76 @@ function run_StructType_tests() {
   do_check_throws(function() { t_t.fields[4] = 0; }, Error);
   do_check_throws(function() { t_t.fields[4].a = 0; }, Error);
   do_check_throws(function() { t_t.fields[4].e = 0; }, Error);
+
+  // Check that struct size bounds work, and that large, but not illegal, sizes
+  // are OK. This gets tricky. The type constructor needs to allocate 'n'
+  // fields for the type descriptor, so we have to build up structs of structs
+  // to avoid trying to allocate an insane size.
+  if (ctypes.size_t.size == 4) {
+    // Test 1: overflow struct size + field padding + field size.
+    let large_t = ctypes.int8_t;
+    while (large_t.size != 0xffffffff)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
+    }, Error);
+
+    // Test 2: overflow struct size + struct tail padding.
+    // To do this, we use a struct with maximum size and alignment 2.
+    large_t = ctypes.int16_t;
+    while (large_t.size != 0xfffffffe)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": ctypes.int16_t}]);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
+    }, Error);
+
+  } else {
+    // Test 1: overflow struct size when converting from size_t to jsdouble.
+    let small_t = ctypes.int8_t.array(0x800);
+    let large_t = small_t;
+    while (large_t.size != 0xfffffffffffff800)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": small_t}]);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
+    }, Error);
+    small_t = ctypes.int8_t.array(0x400);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
+    }, Error);
+
+    large_t = ctypes.int8_t;
+    while (large_t.size != 0x1fffffffffffff)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
+    }, Error);
+
+    // Test 2: overflow struct size + field padding + field size.
+    small_t = ctypes.int8_t.array(0x800);
+    large_t = small_t;
+    while (large_t.size != 0xfffffffffffff800)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": small_t}]);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
+    }, Error);
+
+    // Test 3: overflow struct size + struct tail padding.
+    // To do this, we use a struct with maximum size and alignment 2.
+    small_t = ctypes.int16_t.array(0x800);
+    large_t = small_t;
+    while (large_t.size != 0xfffffffffffff000)
+      large_t = ctypes.StructType("large_t",
+        [{"a": large_t.array(2)}, {"b": small_t}]);
+    small_t = ctypes.int8_t.array(0xfff);
+    do_check_throws(function() {
+      ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
+    }, Error);
+  }
 
   let g = g_t();
   do_check_eq(g.a, 0);
@@ -1431,11 +1492,6 @@ function run_ArrayType_tests() {
   do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, 1, 5); }, Error);
   do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, -1); }, Error);
 
-  // Check that array size overflows are caught.
-  do_check_throws(function() {
-    ctypes.ArrayType(ctypes.int8_t, extreme_size());
-  }, Error);
-
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let g = g_t(1, 2);
@@ -1501,18 +1557,40 @@ function run_ArrayType_tests() {
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t)); }, Error);
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t), 5); }, Error);
 
-  let b_t = ctypes.int32_t.array(ctypes.UInt64(0xffff));
+  let b_t = ctypes.int8_t.array(ctypes.UInt64(0xffff));
   do_check_eq(b_t.length, 0xffff);
-  b_t = ctypes.int32_t.array(ctypes.Int64(0xffff));
+  b_t = ctypes.int8_t.array(ctypes.Int64(0xffff));
   do_check_eq(b_t.length, 0xffff);
-  do_check_throws(function() {
-    ctypes.int32_t.array(ctypes.UInt64(0xffffffffffffffff));
-  }, Error);
-  if (ctypes.size_t.size == 8) {
-    b_t = ctypes.int32_t.array(0xfffffffffffff000);
-    do_check_eq(b_t.length, 0xfffffffffffff000);
+
+  // Check that array size bounds work, and that large, but not illegal, sizes
+  // are OK. This gets tricky. The type constructor needs to allocate 'n'
+  // elements for the type descriptor, so we have to build up arrays of arrays
+  // to avoid trying to allocate an insane size.
+  if (ctypes.size_t.size == 4) {
+    do_check_throws(function() {
+      ctypes.ArrayType(ctypes.int8_t, 0x100000000);
+    }, Error);
+    do_check_throws(function() {
+      ctypes.ArrayType(ctypes.int16_t, 0x80000000);
+    }, Error);
+
+    let large_t = ctypes.int8_t;
+    while (large_t.size != 0x80000000)
+      large_t = large_t.array(2);
+    do_check_throws(function() { large_t.array(2); }, Error);
+
   } else {
-    do_check_throws(function() { ctypes.int32_t.array(0xffffffffff); }, Error);
+    do_check_throws(function() {
+      ctypes.ArrayType(ctypes.int8_t, ctypes.UInt64("0xffffffffffffffff"));
+    }, Error);
+    do_check_throws(function() {
+      ctypes.ArrayType(ctypes.int16_t, ctypes.UInt64("0x8000000000000000"));
+    }, Error);
+
+    let large_t = ctypes.int8_t;
+    while (large_t.size != 0x8000000000000000)
+      large_t = large_t.array(2);
+    do_check_throws(function() { large_t.array(2); }, Error);
   }
 
   // Test that arrays ImplicitConvert to pointers.
