@@ -72,6 +72,10 @@
 #ifdef WINCE
 #include <windows.h> // for MultiByteToWideChar
 #include "prmem.h"
+#define SHELLEXECUTEINFOW SHELLEXECUTEINFO
+#define SEE_MASK_FLAG_DDEWAIT 0
+#define SEE_MASK_NO_CONSOLE 0
+#define ShellExecuteExW ShellExecuteEx
 #endif
 
 //-------------------------------------------------------------------//
