@@ -2735,7 +2735,7 @@ __attribute__ ((aligned (8)))
 #define O24(c) 0x32, O4(c)
 #define O25(c) 0x32, O5(c)
 
-/* 
+/*
  * Array starts with 100, 101, 102... (0x31 0x30 0x30 0x00 for 100\0)
  * 100, 101, 102 also share the pointers to 0, 1, 2 ...
  * 110, 111, 112 also share the pointers to 10, 11, 12...
