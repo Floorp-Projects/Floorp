@@ -1,0 +1,9 @@
+<!ENTITY tabs.otherComputers.label               "Tabs from Other Computers">
+
+<!ENTITY tabs.searchText.label                   "Type here to find tabs…">
+
+<!ENTITY tabs.context.openTab.label              "Open This Tab">
+<!ENTITY tabs.context.openMultipleTabs.label     "Open Selected Tabs">
+<!ENTITY tabs.context.bookmarkSingleTab.label    "Bookmark This Tab…">
+<!ENTITY tabs.context.bookmarkMultipleTabs.label "Bookmark Selected Tabs…">
+<!ENTITY tabs.context.refreshList.label          "Refresh List">
