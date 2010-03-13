@@ -49,9 +49,6 @@ let (ios = Cc["@mozilla.org/network/io-service;1"]
   ios.offline = false;
 }
 
-const SERVER_PORT = 8888;
-var gServerAddress = "127.0.0.1";
-
 var server; // for use in the shutdown handler, if necessary
 
 //
@@ -169,9 +166,18 @@ function runServer()
         if (!invalid)
           gServerAddress = _SERVER_ADDR;
         else
-          dumpn("WARNING: invalid server address ('" + _SERVER_ADDR + "'), using localhost");
+          throw "invalid _SERVER_ADDR, please specify a valid IP Address";
       }
     }
+  } else {
+    throw "please defined _SERVER_ADDR (as an ip address) before running server.js";
+  }
+
+  if (typeof(_SERVER_PORT) != "undefined") {
+    if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 32000)
+      SERVER_PORT = _SERVER_PORT;
+  } else {
+    throw "please define _SERVER_PORT (as a port number) before running server.js";
   }
 
   server._start(SERVER_PORT, gServerAddress);
@@ -181,8 +187,13 @@ function runServer()
                    .createInstance(Ci.nsIFileOutputStream);
   var serverAlive = Cc["@mozilla.org/file/local;1"]
                       .createInstance(Ci.nsILocalFile);
-  serverAlive.initWithFile(serverBasePath);
-  serverAlive.append("mochitesttestingprofile");
+
+  if (typeof(_PROFILE_PATH) == "undefined") {
+    serverAlive.initWithFile(serverBasePath);
+    serverAlive.append("mochitesttestingprofile");
+  } else {
+    serverAlive.initWithPath(_PROFILE_PATH);
+  }
 
   // If we're running outside of the test harness, there might
   // not be a test profile directory present
