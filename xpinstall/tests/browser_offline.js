@@ -23,7 +23,7 @@ function test() {
 }
 
 function download_progress(addon, value, maxValue) {
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService2);
@@ -41,7 +41,7 @@ function check_xpi_install(addon, status) {
 }
 
 function finish_test() {
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService2);
