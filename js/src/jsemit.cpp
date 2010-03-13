@@ -2686,10 +2686,10 @@ static JSBool
 EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     /*
-     * Special case for obj.__proto__, obj.__parent__, obj.__count__ to
-     * deoptimize away from fast paths in the interpreter and trace recorder,
-     * which skip dense array instances by going up to Array.prototype before
-     * looking up the property name.
+     * Special case for obj.__proto__ and obj.__parent__ to deoptimize away
+     * from fast paths in the interpreter and trace recorder, which skip dense
+     * array instances by going up to Array.prototype before looking up the
+     * property name.
      */
     JSAtomListElement *ale = cg->atomList.add(cg->compiler, pn->pn_atom);
     if (!ale)
@@ -2711,11 +2711,10 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
     JS_ASSERT(pn->pn_arity == PN_NAME);
     pn2 = pn->maybeExpr();
 
-    /* Special case deoptimization on __proto__, __count__ and __parent__. */
+    /* Special case deoptimization on __proto__ and __parent__. */
     if ((op == JSOP_GETPROP || op == JSOP_CALLPROP) &&
         (pn->pn_atom == cx->runtime->atomState.protoAtom ||
-         pn->pn_atom == cx->runtime->atomState.parentAtom ||
-         pn->pn_atom == cx->runtime->atomState.countAtom)) {
+         pn->pn_atom == cx->runtime->atomState.parentAtom)) {
         if (pn2 && !js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
         return EmitSpecialPropOp(cx, pn, callContext ? JSOP_CALLELEM : JSOP_GETELEM, cg);
@@ -2802,13 +2801,12 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
             }
 
             /*
-             * Special case deoptimization on __proto__, __count__ and
-             * __parent__, as above.
+             * Special case deoptimization on __proto__ and __parent__, as
+             * above.
              */
             if (pndot->pn_arity == PN_NAME &&
                 (pndot->pn_atom == cx->runtime->atomState.protoAtom ||
-                 pndot->pn_atom == cx->runtime->atomState.parentAtom ||
-                 pndot->pn_atom == cx->runtime->atomState.countAtom)) {
+                 pndot->pn_atom == cx->runtime->atomState.parentAtom)) {
                 if (!EmitSpecialPropOp(cx, pndot, JSOP_GETELEM, cg))
                     return JS_FALSE;
             } else if (!EmitAtomOp(cx, pndot, PN_OP(pndot), cg)) {

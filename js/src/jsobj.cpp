@@ -133,17 +133,12 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 static JSBool
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-static JSBool
-obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-
 static JSPropertySpec object_props[] = {
     /* These two must come first; see object_props[slot].name usage below. */
     {js_proto_str, JSSLOT_PROTO, JSPROP_PERMANENT|JSPROP_SHARED,
                                                   obj_getSlot,  obj_setSlot},
     {js_parent_str,JSSLOT_PARENT,JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
                                                   obj_getSlot,  obj_setSlot},
-    {js_count_str, 0,            JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
-                                                  obj_getCount, NULL},
     {0,0,0,0,0}
 };
 
@@ -240,29 +235,6 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_FALSE;
 
     return js_SetProtoOrParent(cx, obj, slot, pobj, JS_TRUE);
-}
-
-static JSBool
-obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    jsid num_properties;
-
-    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, JSSLOT_COUNT))
-        return false;
-
-    /* Get the number of properties to enumerate. */
-    AutoEnumStateRooter iterState(cx, obj);
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
-        return false;
-
-    if (!JSVAL_IS_INT(num_properties)) {
-        JS_ASSERT(0);
-        *vp = JSVAL_ZERO;
-        return true;
-    }
-    *vp = num_properties;
-
-    return true;
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
