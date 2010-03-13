@@ -335,8 +335,7 @@ public:
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
-                                              nsISupports *aState,
-                                              PRBool aClearScopeHint);
+                                              nsISupports *aState);
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener,
                                            PRBool aOriginalOpener);
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
@@ -463,10 +462,8 @@ protected:
   void FreeInnerObjects(PRBool aClearScope);
   nsGlobalWindow *CallerInnerWindow();
 
-  nsresult SetNewDocument(nsIDocument *aDocument,
-                          nsISupports *aState,
-                          PRBool aClearScopeHint,
-                          PRBool aIsInternalCall);
+  nsresult InnerWindowSetNewDocument(nsIDocument* aDocument);
+
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 
   // Get the parent, returns null if this is a toplevel window
@@ -848,8 +845,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
-                                              nsISupports *aState,
-                                              PRBool aClearScopeHint);
+                                              nsISupports *aState);
 
 protected:
   nsCOMPtr<nsIVariant> mReturnValue;
