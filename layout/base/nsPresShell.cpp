@@ -6825,13 +6825,16 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
 
   // get caret position relative to some view (normally the same as the
   // event widget view, but this is not guaranteed)
-  PRBool isCollapsed;
-  nsIView* view;
   nsRect caretCoords;
-  rv = caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
-                                  domSelection, &caretCoords, &isCollapsed,
-                                  &view);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsIFrame* caretFrame = caret->GetGeometry(domSelection, &caretCoords);
+  if (!caretFrame)
+    return PR_FALSE;
+  nsPoint windowOffset;
+  nsIWidget* widget = caretFrame->GetWindowOffset(windowOffset);
+  if (!widget)
+    return PR_FALSE;
+  caretCoords.MoveBy(windowOffset);
+  nsIView* caretView = nsIView::GetViewFor(widget);
 
   // in case the view used for caret coordinates was something else, we need
   // to bring those coordinates into the space of the widget view
@@ -6839,7 +6842,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   NS_ENSURE_TRUE(widgetView, PR_FALSE);
   nsPoint viewToWidget;
   widgetView->GetNearestWidget(&viewToWidget);
-  nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
+  nsPoint viewDelta = caretView->GetOffsetTo(widgetView) + viewToWidget;
 
   // caret coordinates are in app units, convert to pixels
   nsPresContext* presContext = GetPresContext();
