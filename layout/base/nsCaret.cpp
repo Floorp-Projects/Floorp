@@ -712,8 +712,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     }
 
     // Only update the caret's rect when we're not currently drawn.
-    rv = UpdateCaretRects(theFrame, theFrameOffset);
-    if (NS_FAILED(rv))
+    if (!UpdateCaretRects(theFrame, theFrameOffset))
       return PR_FALSE;
   }
 
@@ -1073,11 +1072,14 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
   ToggleDrawnStatus();
 }
 
-nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
+PRBool
+nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (!domSelection)
+    return PR_FALSE;
   nscoord bidiIndicatorSize;
   GetGeometry(domSelection, &mCaretRect, &bidiIndicatorSize);
 
@@ -1086,27 +1088,18 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     mCaretRect.x -= mCaretRect.width;
 
-  return UpdateHookRect(domSelection, bidiIndicatorSize);
-}
-
-nsresult nsCaret::UpdateHookRect(nsISelection* aSelection,
-                                 nscoord aBidiIndicatorSize)
-{
+#ifdef IBMBIDI
   mHookRect.Empty();
 
-#ifdef IBMBIDI
   // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
-  PRBool isCaretRTL=PR_FALSE;
+  PRBool isCaretRTL = PR_FALSE;
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  if (!bidiKeyboard || NS_FAILED(bidiKeyboard->IsLangRTL(&isCaretRTL)))
-    // if bidiKeyboard->IsLangRTL() failed, there is no way to tell the
-    // keyboard direction, or the user has no right-to-left keyboard
-    // installed, so we  never draw the hook.
-    return NS_OK;
-  if (mBidiUI)
-  {
-    if (isCaretRTL != mKeyboardRTL)
-    {
+  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
+  // keyboard direction, or the user has no right-to-left keyboard
+  // installed, so we never draw the hook.
+  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL)) &&
+      mBidiUI) {
+    if (isCaretRTL != mKeyboardRTL) {
       /* if the caret bidi level and the keyboard language direction are not in
        * synch, the keyboard language must have been changed by the
        * user, and if the caret is in a boundary condition (between left-to-right and
@@ -1116,24 +1109,21 @@ nsresult nsCaret::UpdateHookRect(nsISelection* aSelection,
        * without drawing the caret in the old position.
        */ 
       mKeyboardRTL = isCaretRTL;
-      if (NS_SUCCEEDED(aSelection->SelectionLanguageChange(mKeyboardRTL)))
-      {
-        return NS_ERROR_FAILURE;
-      }
+      if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
+        return PR_FALSE;
     }
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
     mHookRect.SetRect(mCaretRect.x + ((isCaretRTL) ?
-                      aBidiIndicatorSize * -1 :
+                      bidiIndicatorSize * -1 :
                       mCaretRect.width),
-                      mCaretRect.y + aBidiIndicatorSize,
-                      aBidiIndicatorSize,
+                      mCaretRect.y + bidiIndicatorSize,
+                      bidiIndicatorSize,
                       mCaretRect.width);
   }
 #endif //IBMBIDI
-
-  return NS_OK;
+  return PR_TRUE;
 }
 
 // static
