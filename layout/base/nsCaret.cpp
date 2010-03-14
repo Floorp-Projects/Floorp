@@ -357,6 +357,57 @@ void nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
   mReadOnly = inMakeReadonly;
 }
 
+void
+nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
+                             PRInt32   aFrameOffset,
+                             nsRect*   aRect,
+                             nscoord*  aBidiIndicatorSize)
+{
+  nsPoint framePos(0, 0);
+  aFrame->GetPointFromOffset(aFrameOffset, &framePos);
+  nscoord height = aFrame->GetContentRect().height;
+  if (height == 0) {
+    nsCOMPtr<nsIFontMetrics> fm;
+    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+    if (fm) {
+      nscoord ascent, descent;
+      fm->GetMaxAscent(ascent);
+      fm->GetMaxDescent(descent);
+      height = ascent + descent;
+
+      // Place the caret on the baseline for inline frames, except when there is
+      // a frame on the line with non-zero height.  XXXmats why the exception? --
+      // I don't know but it seems to be necessary, see bug 503531.
+      if (aFrame->GetStyleDisplay()->IsInlineOutside() &&
+          !FramesOnSameLineHaveZeroHeight(aFrame))
+        framePos.y -= ascent;
+    }
+  }
+  Metrics caretMetrics = ComputeMetrics(aFrame, aFrameOffset, height);
+  *aRect = nsRect(framePos, nsSize(caretMetrics.mCaretWidth, height));
+
+  // Clamp the x-position to be within our scroll frame. If we don't, then it
+  // clips us, and we don't appear at all. See bug 335560.
+  nsIFrame *scrollFrame =
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
+  if (scrollFrame) {
+    // First, use the scrollFrame to get at the scrollable view that we're in.
+    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
+    nsIFrame *scrolled = sf->GetScrolledFrame();
+    nsRect caretInScroll = *aRect + aFrame->GetOffsetTo(scrolled);
+
+    // Now see if thet caret extends beyond the view's bounds. If it does,
+    // then snap it back, put it as close to the edge as it can.
+    nscoord overflow = caretInScroll.XMost() -
+      scrolled->GetOverflowRectRelativeToSelf().width;
+    if (overflow > 0)
+      aRect->x -= overflow;
+  }
+
+  if (aBidiIndicatorSize)
+    *aBidiIndicatorSize = caretMetrics.mBidiIndicatorSize;
+}
+
 nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
                                nscoord* aBidiIndicatorSize)
 {
@@ -374,67 +425,20 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
   if (!contentNode)
     return nsnull;
 
-  // find the frame that contains the content node that has focus
-  nsIFrame* theFrame = nsnull;
-  PRInt32   theFrameOffset = 0;
-
   nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return nsnull;
   PRUint8 bidiLevel = frameSelection->GetCaretBidiLevel();
+  nsIFrame* frame;
+  PRInt32 frameOffset;
   rv = GetCaretFrameForNodeOffset(contentNode, focusOffset,
                                   frameSelection->GetHint(), bidiLevel,
-                                  &theFrame, &theFrameOffset);
-  if (NS_FAILED(rv) || !theFrame)
-    return nsnull;
-  
-  nsPoint framePos(0, 0);
-  rv = theFrame->GetPointFromOffset(theFrameOffset, &framePos);
-  if (NS_FAILED(rv))
+                                  &frame, &frameOffset);
+  if (NS_FAILED(rv) || !frame)
     return nsnull;
 
-  nscoord height = theFrame->GetContentRect().height;
-  if (height == 0) {
-    nsCOMPtr<nsIFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(theFrame, getter_AddRefs(fm));
-    if (fm) {
-      nscoord ascent, descent;
-      fm->GetMaxAscent(ascent);
-      fm->GetMaxDescent(descent);
-      height = ascent + descent;
-
-      // Place the caret on the baseline for inline frames, except when there is
-      // a frame on the line with non-zero height.  XXXmats why the exception? --
-      // I don't know but it seems to be necessary, see bug 503531.
-      if (theFrame->GetStyleDisplay()->IsInlineOutside() &&
-          !FramesOnSameLineHaveZeroHeight(theFrame))
-        framePos.y -= ascent;
-    }
-  }
-  Metrics caretMetrics = ComputeMetrics(theFrame, theFrameOffset, height);
-  *aRect = nsRect(framePos, nsSize(caretMetrics.mCaretWidth, height));
-
-  // Clamp the x-position to be within our scroll frame. If we don't, then it
-  // clips us, and we don't appear at all. See bug 335560.
-  nsIFrame *scrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(theFrame, nsGkAtoms::scrollFrame);
-  if (scrollFrame) {
-    // First, use the scrollFrame to get at the scrolled frame that we're in.
-    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
-    nsIFrame *scrolled = sf->GetScrolledFrame();
-    nsRect caretInScroll = *aRect + theFrame->GetOffsetTo(scrolled);
-
-    // Now see if thet caret extends beyond the frame's bounds. If it does,
-    // then snap it back, put it as close to the edge as it can.
-    nscoord overflow = caretInScroll.XMost() -
-      scrolled->GetOverflowRectRelativeToSelf().width;
-    if (overflow > 0)
-      aRect->x -= overflow;
-  }
-
-  if (aBidiIndicatorSize)
-    *aBidiIndicatorSize = caretMetrics.mBidiIndicatorSize;
-  return theFrame;
+  GetGeometryForFrame(frame, frameOffset, aRect, aBidiIndicatorSize);
+  return frame;
 }
 
 void nsCaret::DrawCaretAfterBriefDelay()
@@ -1077,11 +1081,8 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
-  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-  if (!domSelection)
-    return PR_FALSE;
   nscoord bidiIndicatorSize;
-  GetGeometry(domSelection, &mCaretRect, &bidiIndicatorSize);
+  GetGeometryForFrame(aFrame, aFrameOffset, &mCaretRect, &bidiIndicatorSize);
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
@@ -1109,7 +1110,9 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
        * without drawing the caret in the old position.
        */ 
       mKeyboardRTL = isCaretRTL;
-      if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
+      nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+      if (!domSelection ||
+          NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
         return PR_FALSE;
     }
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
