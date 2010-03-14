@@ -81,6 +81,86 @@ static const PRInt32 kMinBidiIndicatorPixels = 2;
 #include "nsContentUtils.h"
 #endif //IBMBIDI
 
+/**
+ * Find the first frame in an in-order traversal of the frame subtree rooted
+ * at aFrame which is either a text frame logically at the end of a line,
+ * or which is aStopAtFrame. Return null if no such frame is found. We don't
+ * descend into the children of non-eLineParticipant frames.
+ */
+static nsIFrame*
+CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
+{
+  if (aFrame == aStopAtFrame ||
+      ((aFrame->GetType() == nsGkAtoms::textFrame &&
+       (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
+    return aFrame;
+  if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
+    return nsnull;
+
+  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling())
+  {
+    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame);
+    if (r)
+      return r;
+  }
+  return nsnull;
+}
+
+static nsLineBox*
+FindContainingLine(nsIFrame* aFrame)
+{
+  while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
+  {
+    nsIFrame* parent = aFrame->GetParent();
+    nsBlockFrame* blockParent = nsLayoutUtils::GetAsBlock(parent);
+    if (blockParent)
+    {
+      PRBool isValid;
+      nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
+      return isValid ? iter.GetLine().get() : nsnull;
+    }
+    aFrame = parent;
+  }
+  return nsnull;
+}
+
+static void
+AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
+{
+  nsLineBox* line = FindContainingLine(*aFrame);
+  if (!line)
+    return;
+  PRInt32 count = line->GetChildCount();
+  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
+  {
+    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, *aFrame);
+    if (r == *aFrame)
+      return;
+    if (r)
+    {
+      *aFrame = r;
+      NS_ASSERTION(r->GetType() == nsGkAtoms::textFrame, "Expected text frame");
+      *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
+      return;
+    }
+  }
+}
+
+static PRBool
+FramesOnSameLineHaveZeroHeight(nsIFrame* aFrame)
+{
+  nsLineBox* line = FindContainingLine(aFrame);
+  if (!line)
+    return aFrame->GetRect().height == 0;
+  PRInt32 count = line->GetChildCount();
+  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
+  {
+   if (f->GetRect().height != 0)
+     return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()
@@ -277,7 +357,8 @@ void nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
   mReadOnly = inMakeReadonly;
 }
 
-nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
+nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
+                               nscoord* aBidiIndicatorSize)
 {
   nsCOMPtr<nsIDOMNode> focusNode;
   nsresult rv = aSelection->GetFocusNode(getter_AddRefs(focusNode));
@@ -312,10 +393,47 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
   if (NS_FAILED(rv))
     return nsnull;
 
-  // now add the frame offset to the view offset, and we're done
   nscoord height = theFrame->GetContentRect().height;
-  nscoord width = ComputeMetrics(theFrame, theFrameOffset, height).mCaretWidth;
-  *aRect = nsRect(framePos.x, 0, width, height);
+  if (height == 0) {
+    nsCOMPtr<nsIFontMetrics> fm;
+    nsLayoutUtils::GetFontMetricsForFrame(theFrame, getter_AddRefs(fm));
+    if (fm) {
+      nscoord ascent, descent;
+      fm->GetMaxAscent(ascent);
+      fm->GetMaxDescent(descent);
+      height = ascent + descent;
+
+      // Place the caret on the baseline for inline frames, except when there is
+      // a frame on the line with non-zero height.  XXXmats why the exception? --
+      // I don't know but it seems to be necessary, see bug 503531.
+      if (theFrame->GetStyleDisplay()->IsInlineOutside() &&
+          !FramesOnSameLineHaveZeroHeight(theFrame))
+        framePos.y -= ascent;
+    }
+  }
+  Metrics caretMetrics = ComputeMetrics(theFrame, theFrameOffset, height);
+  *aRect = nsRect(framePos, nsSize(caretMetrics.mCaretWidth, height));
+
+  // Clamp the x-position to be within our scroll frame. If we don't, then it
+  // clips us, and we don't appear at all. See bug 335560.
+  nsIFrame *scrollFrame =
+    nsLayoutUtils::GetClosestFrameOfType(theFrame, nsGkAtoms::scrollFrame);
+  if (scrollFrame) {
+    // First, use the scrollFrame to get at the scrolled frame that we're in.
+    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
+    nsIFrame *scrolled = sf->GetScrolledFrame();
+    nsRect caretInScroll = *aRect + theFrame->GetOffsetTo(scrolled);
+
+    // Now see if thet caret extends beyond the frame's bounds. If it does,
+    // then snap it back, put it as close to the edge as it can.
+    nscoord overflow = caretInScroll.XMost() -
+      scrolled->GetOverflowRectRelativeToSelf().width;
+    if (overflow > 0)
+      aRect->x -= overflow;
+  }
+
+  if (aBidiIndicatorSize)
+    *aBidiIndicatorSize = caretMetrics.mBidiIndicatorSize;
   return theFrame;
 }
 
@@ -603,71 +721,6 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     InvalidateRects(mCaretRect, mHookRect, theFrame);
 
   return PR_TRUE;
-}
-
-/**
- * Find the first frame in an in-order traversal of the frame subtree rooted
- * at aFrame which is either a text frame logically at the end of a line,
- * or which is aStopAtFrame. Return null if no such frame is found. We don't
- * descend into the children of non-eLineParticipant frames.
- */
-static nsIFrame*
-CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
-{
-  if (aFrame == aStopAtFrame ||
-      ((aFrame->GetType() == nsGkAtoms::textFrame &&
-       (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
-    return aFrame;
-  if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
-    return nsnull;
-
-  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling())
-  {
-    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame);
-    if (r)
-      return r;
-  }
-  return nsnull;
-}
-
-static nsLineBox*
-FindContainingLine(nsIFrame* aFrame)
-{
-  while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
-  {
-    nsIFrame* parent = aFrame->GetParent();
-    nsBlockFrame* blockParent = nsLayoutUtils::GetAsBlock(parent);
-    if (blockParent)
-    {
-      PRBool isValid;
-      nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
-      return isValid ? iter.GetLine().get() : nsnull;
-    }
-    aFrame = parent;
-  }
-  return nsnull;
-}
-
-static void
-AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
-{
-  nsLineBox* line = FindContainingLine(*aFrame);
-  if (!line)
-    return;
-  PRInt32 count = line->GetChildCount();
-  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
-  {
-    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, *aFrame);
-    if (r == *aFrame)
-      return;
-    if (r)
-    {
-      *aFrame = r;
-      NS_ASSERTION(r->GetType() == nsGkAtoms::textFrame, "Expected text frame");
-      *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
-      return;
-    }
-  }
 }
 
 nsresult 
@@ -1020,103 +1073,24 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
   ToggleDrawnStatus();
 }
 
-static PRBool
-FramesOnSameLineHaveZeroHeight(nsIFrame* aFrame)
-{
-  nsLineBox* line = FindContainingLine(aFrame);
-  if (!line)
-    return aFrame->GetRect().height == 0;
-  PRInt32 count = line->GetChildCount();
-  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
-  {
-   if (f->GetRect().height != 0)
-     return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
 nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
-  nsRect frameRect = aFrame->GetContentRect();
-  frameRect.x = 0;
-  frameRect.y = 0;
-
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (!presShell) return NS_ERROR_FAILURE;
-
-  // If we got a zero-height frame we should figure out a height. We have to do
-  // this after we've got an RC.
-  if (frameRect.height == 0)
-  {
-    nsCOMPtr<nsIFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
-
-    if (fm)
-    {
-      nscoord ascent, descent;
-      fm->GetMaxAscent(ascent);
-      fm->GetMaxDescent(descent);
-      frameRect.height = ascent + descent;
-
-      // Place the caret on the baseline for inline frames, except when there is
-      // a frame on the line with non-zero height.  XXXmats why the exception? --
-      // I don't know but it seems to be necessary, see bug 503531.
-      if (aFrame->GetStyleDisplay()->IsInlineOutside() &&
-          !FramesOnSameLineHaveZeroHeight(aFrame))
-        frameRect.y -= ascent;
-    }
-  }
-
-  mCaretRect = frameRect;
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-  nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
-
-  nsPoint framePos;
-
-  // if cache in selection is available, apply it, else refresh it
-  nsresult rv = privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset,
-                                                       framePos);
-  if (NS_FAILED(rv))
-  {
-    mCaretRect.Empty();
-    return rv;
-  }
-
-  mCaretRect += framePos;
-  Metrics metrics = ComputeMetrics(aFrame, aFrameOffset, mCaretRect.height);
-  mCaretRect.width = metrics.mCaretWidth;
-
-  // Clamp our position to be within our scroll frame. If we don't, then it
-  // clips us, and we don't appear at all. See bug 335560.
-  nsIFrame *scrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
-  if (scrollFrame)
-  {
-    // First, use the scrollFrame to get at the scrolled frame that we're in.
-    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
-    nsIFrame *scrolled = sf->GetScrolledFrame();
-    nsRect caretInScroll = mCaretRect + aFrame->GetOffsetTo(scrolled);
-
-    // Now see if thet caret extends beyond the frame's bounds. If it does,
-    // then snap it back, put it as close to the edge as it can.
-    nscoord overflow = caretInScroll.XMost() -
-      scrolled->GetOverflowRectRelativeToSelf().width;
-    if (overflow > 0)
-      mCaretRect.x -= overflow;
-  }
+  nscoord bidiIndicatorSize;
+  GetGeometry(domSelection, &mCaretRect, &bidiIndicatorSize);
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     mCaretRect.x -= mCaretRect.width;
 
-  return UpdateHookRect(presShell->GetPresContext(), metrics);
+  return UpdateHookRect(domSelection, bidiIndicatorSize);
 }
 
-nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext,
-                                 const Metrics& aMetrics)
+nsresult nsCaret::UpdateHookRect(nsISelection* aSelection,
+                                 nscoord aBidiIndicatorSize)
 {
   mHookRect.Empty();
 
@@ -1142,24 +1116,19 @@ nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext,
        * without drawing the caret in the old position.
        */ 
       mKeyboardRTL = isCaretRTL;
-      nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-      if (domSelection)
+      if (NS_SUCCEEDED(aSelection->SelectionLanguageChange(mKeyboardRTL)))
       {
-        if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
-        {
-          return NS_ERROR_FAILURE;
-        }
+        return NS_ERROR_FAILURE;
       }
     }
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
-    nscoord bidiIndicatorSize = aMetrics.mBidiIndicatorSize;
     mHookRect.SetRect(mCaretRect.x + ((isCaretRTL) ?
-                      bidiIndicatorSize * -1 :
+                      aBidiIndicatorSize * -1 :
                       mCaretRect.width),
-                      mCaretRect.y + bidiIndicatorSize,
-                      bidiIndicatorSize,
+                      mCaretRect.y + aBidiIndicatorSize,
+                      aBidiIndicatorSize,
                       mCaretRect.width);
   }
 #endif //IBMBIDI
