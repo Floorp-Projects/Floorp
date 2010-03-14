@@ -371,6 +371,9 @@ public:
   // be called with the decode monitor held.
   void ClearPositionChangeFlag();
 
+  // Called by decoder and main thread.
+  nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
+
   // Must be called with the decode monitor held. Can be called by main
   // thread.
   PRBool HaveNextFrameData() const {
@@ -406,6 +409,27 @@ protected:
   // called only when the current state > DECODING_METADATA.
   void HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayDataHeader* aVideoHeader);
   void HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize);
+
+  void UpdateReadyState() {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
+
+    nsCOMPtr<nsIRunnable> event;
+    switch (GetNextFrameStatus()) {
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailableBuffering);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameAvailable);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailable);
+        break;
+      default:
+        PR_NOT_REACHED("unhandled frame state");
+    }
+
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
 
   // These methods can only be called on the decoding thread.
   void LoadOggHeaders(nsChannelReader* aReader);
@@ -1149,17 +1173,16 @@ void nsOggDecodeStateMachine::QueueDecodedFrames()
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   FrameData* frame;
   while (!mDecodedFrames.IsFull() && (frame = NextFrame())) {
-    if (mDecodedFrames.GetCount() < 2) {
+    PRUint32 oldFrameCount = mDecodedFrames.GetCount();
+    mDecodedFrames.Push(frame);
+    if (oldFrameCount < 2) {
       // Transitioning from 0 to 1 frames or from 1 to 2 frames could
       // affect HaveNextFrameData and hence what UpdateReadyStateForData does.
       // This could change us from HAVE_CURRENT_DATA to HAVE_FUTURE_DATA
       // (or even HAVE_ENOUGH_DATA), so we'd better trigger an
-      // UpdateReadyStateForData.
-      nsCOMPtr<nsIRunnable> event = 
-        NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+      // update to the ready state.
+      UpdateReadyState();
     }
-    mDecodedFrames.Push(frame);
   }
 }
 
@@ -1167,6 +1190,17 @@ void nsOggDecodeStateMachine::ClearPositionChangeFlag()
 {
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   mPositionChangeQueued = PR_FALSE;
+}
+
+nsHTMLMediaElement::NextFrameStatus nsOggDecodeStateMachine::GetNextFrameStatus()
+{
+  nsAutoMonitor mon(mDecoder->GetMonitor());
+  if (IsBuffering() || IsSeeking()) {
+    return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+  } else if (HaveNextFrameData()) {
+    return nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+  }
+  return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
 }
 
 void nsOggDecodeStateMachine::SetVolume(float volume)
@@ -1554,9 +1588,7 @@ nsresult nsOggDecodeStateMachine::Run()
           // we just trigger UpdateReadyStateForData; when it runs, it
           // will check the current state and decide whether to tell
           // the element we're buffering or not.
-          nsCOMPtr<nsIRunnable> event = 
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          UpdateReadyState();
 
           mBufferingStart = TimeStamp::Now();
           PRPackedBool reliable;
@@ -1699,9 +1731,7 @@ nsresult nsOggDecodeStateMachine::Run()
           mBufferExhausted = PR_FALSE;
           // Notify to allow blocked decoder thread to continue
           mon.NotifyAll();
-          nsCOMPtr<nsIRunnable> event = 
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          UpdateReadyState();
           if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
             if (!mPlaying) {
               ResumePlayback();
@@ -2390,23 +2420,41 @@ void nsOggDecoder::NotifyBytesConsumed(PRInt64 aBytes)
   }
 }
 
-void nsOggDecoder::UpdateReadyStateForData()
+void nsOggDecoder::NextFrameUnavailableBuffering()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mElement || mShuttingDown || !mDecodeStateMachine)
     return;
 
-  nsHTMLMediaElement::NextFrameStatus frameStatus;
-  {
-    nsAutoMonitor mon(mMonitor);
-    if (mDecodeStateMachine->IsBuffering() ||
-        mDecodeStateMachine->IsSeeking()) {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-    } else if (mDecodeStateMachine->HaveNextFrameData()) {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
-    } else {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
-    }
-  }
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING);
+}
+
+void nsOggDecoder::NextFrameAvailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_AVAILABLE);
+}
+
+void nsOggDecoder::NextFrameUnavailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE);
+}
+
+void nsOggDecoder::UpdateReadyStateForData()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  nsHTMLMediaElement::NextFrameStatus frameStatus =
+    mDecodeStateMachine->GetNextFrameStatus();
   mElement->UpdateReadyStateForData(frameStatus);
 }
 
