@@ -1974,7 +1974,6 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
     nsCOMPtr<nsIDOMRange> domRange;
     rv = domSelection->GetRangeAt(0, getter_AddRefs(domRange));
     if (domRange) {
-      PRInt32 startOffset;
       domRange->GetStartContainer(getter_AddRefs(startNode));
       domRange->GetEndContainer(getter_AddRefs(endNode));
       domRange->GetStartOffset(&startOffset);
