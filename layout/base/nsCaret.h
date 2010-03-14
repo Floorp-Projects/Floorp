@@ -108,9 +108,12 @@ class nsCaret : public nsISelectionListener
      * the focus node/offset of aSelection (assuming it would be drawn,
      * i.e., disregarding blink status). The geometry is stored in aRect,
      * and we return the frame aRect is relative to.
+     * @param aRect must be non-null
+     * @param aBidiIndicatorSize if non-null, set to the bidi indicator size.
      */
     virtual nsIFrame* GetGeometry(nsISelection* aSelection,
-                                  nsRect* aRect);
+                                  nsRect* aRect,
+                                  nscoord* aBidiIndicatorSize = nsnull);
 
     /** EraseCaret
      *  this will erase the caret if its drawn and reset drawn status
@@ -223,8 +226,8 @@ protected:
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    nsresult      UpdateHookRect(nsPresContext* aPresContext,
-                                 const Metrics& aMetrics);
+    nsresult      UpdateHookRect(nsISelection* aSelection,
+                                 nscoord aBidiIndicatorSize);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
