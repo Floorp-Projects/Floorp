@@ -24,7 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Uri Bernstein <uriber@gmail.com>
  *   Eli Friedman <sharparrow1@yahoo.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3655,6 +3655,17 @@ nsIWidget*
 nsIFrame::GetWindow() const
 {
   return GetClosestView()->GetNearestWidget(nsnull);
+}
+
+nsIWidget*
+nsIFrame::GetWindowOffset(nsPoint& aOffset) const
+{
+  nsPoint offsetToView;
+  nsPoint offsetToWidget;
+  nsIWidget* widget =
+    GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
+  aOffset = offsetToView + offsetToWidget;
+  return widget;
 }
 
 nsIAtom*
