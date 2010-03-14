@@ -218,9 +218,14 @@ function CompilerContext(inFunction) {
     this.varDecls = [];
 }
 
-var CCp = CompilerContext.prototype;
-CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
-CCp.ecmaStrictMode = CCp.inForLoopInit = false;
+CompilerContext.prototype = {
+    bracketLevel: 0,
+    curlyLevel: 0,
+    parenLevel: 0,
+    hookLevel: 0,
+    ecma3OnlyMode: false,
+    inForLoopInit: false,
+};
 
 function Script(t, x) {
     var n = Statements(t, x);
@@ -497,7 +502,7 @@ function Statement(t, x) {
                                                          ? "break"
                                                          : "continue"));
                 }
-            } while (!ss[i].isLoop && (tt != BREAK || ss[i].type != SWITCH));
+            } while (!ss[i].isLoop && !(tt == BREAK && ss[i].type == SWITCH));
         }
         n.target = ss[i];
         break;
@@ -511,7 +516,7 @@ function Statement(t, x) {
             t.mustMatch(LEFT_PAREN);
             n2.varName = t.mustMatch(IDENTIFIER).value;
             if (t.match(IF)) {
-                if (x.ecmaStrictMode)
+                if (x.ecma3OnlyMode)
                     throw t.newSyntaxError("Illegal catch guard");
                 if (n.catchClauses.length && !n.catchClauses.top().guard)
                     throw t.newSyntaxError("Guarded catch after unguarded");
@@ -911,7 +916,7 @@ loop:
                     tt = t.get();
                     if ((t.token.value == "get" || t.token.value == "set") &&
                         t.peek() == IDENTIFIER) {
-                        if (x.ecmaStrictMode)
+                        if (x.ecma3OnlyMode)
                             throw t.newSyntaxError("Illegal property accessor");
                         n.push(FunctionDefinition(t, x, true, EXPRESSED_FORM));
                     } else {
@@ -922,7 +927,7 @@ loop:
                             id = new Node(t);
                             break;
                           case RIGHT_CURLY:
-                            if (x.ecmaStrictMode)
+                            if (x.ecma3OnlyMode)
                                 throw t.newSyntaxError("Illegal trailing ,");
                             break object_init;
                           default:
