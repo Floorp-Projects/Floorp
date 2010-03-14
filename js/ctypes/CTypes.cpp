@@ -986,8 +986,8 @@ IntegerToString(IntegerType i, jsuint radix)
 {
   // The buffer must be big enough for all the bits of IntegerType to fit,
   // in base-2, including '-'.
-  jschar buffer[sizeof(IntegerType) * 8 + 1];
-  jschar *cp = buffer + sizeof(buffer) / sizeof(jschar);
+  PRUnichar buffer[sizeof(IntegerType) * 8 + 1];
+  PRUnichar* cp = buffer + sizeof(buffer) / sizeof(PRUnichar);
 
   // Build the string in reverse. We use multiplication and subtraction
   // instead of modulus because that's much faster.
@@ -1004,7 +1004,7 @@ IntegerToString(IntegerType i, jsuint radix)
     *--cp = '-';
 
   JS_ASSERT(cp >= buffer);
-  return nsAutoString(cp, buffer + sizeof(buffer) / sizeof(jschar) - cp);
+  return nsAutoString(cp, buffer + sizeof(buffer) / sizeof(PRUnichar) - cp);
 }
 
 template<class IntegerType>
@@ -3197,7 +3197,8 @@ AddFieldToArray(JSContext* cx,
          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
-  if (!JS_DefineUCProperty(cx, fieldObj, name.get(), name.Length(),
+  if (!JS_DefineUCProperty(cx, fieldObj,
+         reinterpret_cast<const jschar*>(name.get()), name.Length(),
          OBJECT_TO_JSVAL(typeObj), NULL, NULL,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
@@ -3290,7 +3291,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 
       // Fill in the PropertySpec for the field.
       PropertySpec* instanceProp = instanceProps.AppendElement();
-      instanceProp->name = info->mName.get();
+      instanceProp->name = reinterpret_cast<const jschar*>(info->mName.get());
       instanceProp->namelen = info->mName.Length();
       instanceProp->flags = JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT;
       instanceProp->getter = StructType::FieldGetter;

@@ -109,6 +109,20 @@ class RemoteOptions(MochitestOptions):
                     help = "Name of log file on the device.  PLEASE ENSURE YOU HAVE CORRECT \ or / FOR THE PATH.")
         defaults["remoteLogFile"] = None
 
+        self.add_option("--remote-webserver", action = "store",
+                    type = "string", dest = "remoteWebServer",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["remoteWebServer"] = None
+
+        self.add_option("--http-port", action = "store",
+                    type = "string", dest = "httpPort",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["httpPort"] = automation.DEFAULT_HTTP_PORT
+
+        self.add_option("--ssl-port", action = "store",
+                    type = "string", dest = "sslPort",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["sslPort"] = automation.DEFAULT_SSL_PORT
 
         defaults["logFile"] = "mochitest.log"
         if (automation._product == "fennec"):
@@ -130,9 +144,9 @@ class RemoteOptions(MochitestOptions):
         options.app = sys.argv[0]
         options = MochitestOptions.verifyOptions(self, options, mochitest)
         options.app = temp
-        
+
         if (options.remoteWebServer == None):
-          print "ERROR: you must provide a remote webserver"
+          print "ERROR: you must provide a remote webserver ip address"
           return None
 
         if (options.deviceIP == None):
