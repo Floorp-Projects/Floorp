@@ -6073,11 +6073,13 @@ js_TypeOf(JSContext *cx, JSObject *obj)
 
 #ifdef NARCISSUS
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    jsval v;
 
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
         JS_ClearPendingException(cx);
-    } else if (VALUE_IS_FUNCTION(cx, v)) {
-        return JSTYPE_FUNCTION;
+    } else {
+        if (VALUE_IS_FUNCTION(cx, v))
+            return JSTYPE_FUNCTION;
     }
 #endif
 
