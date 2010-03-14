@@ -134,7 +134,7 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
     OSStatus status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
     if (status == noErr) {
       status = ::PMGetLastPage(nativePrintSettings, &lastPage);
-      if (status == noErr && lastPage != LONG_MAX) {
+      if (status == noErr && lastPage != PR_UINT32_MAX) {
         aSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
         aSettings->SetStartPageRange(firstPage);
         aSettings->SetEndPageRange(lastPage);
