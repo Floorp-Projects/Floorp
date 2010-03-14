@@ -225,9 +225,7 @@ protected:
 
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
-    nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    nsresult      UpdateHookRect(nsISelection* aSelection,
-                                 nscoord aBidiIndicatorSize);
+    PRBool        UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
