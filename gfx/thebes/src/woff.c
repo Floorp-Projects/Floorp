@@ -663,7 +663,6 @@ sanityCheck(const uint8_t * woffData, uint32_t woffLen)
     if (tableTotal > 0xffffffffU) {
       return eWOFF_invalid;
     }
-    tableTotal += orig;
     ++dirEntry;
   }
 
