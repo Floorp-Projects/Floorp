@@ -44,11 +44,11 @@
 
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
-#include "nsIRenderingContext.h"
 #include "nsITimer.h"
 #include "nsWeakPtr.h"
 #include "nsFrameSelection.h"
 
+class nsIRenderingContext;
 class nsDisplayListBuilder;
 class nsIView;
 
@@ -164,17 +164,6 @@ class nsCaret : public nsISelectionListener
       return r;
     }
 
-    /** GetCaretContent
-     *  Get the content that the caret was last drawn in.
-     */
-    nsIContent*   GetCaretContent()
-    {
-      if (mDrawn)
-        return mLastContent;
-
-      return nsnull;
-    }
-
     /** InvalidateOutsideCaret
      *  Invalidate the area that the caret currently occupies if the caret is
      *  outside of its frame's overflow area. This is used when the content that
@@ -287,8 +276,7 @@ protected:
     nsWeakPtr             mPresShell;
     nsWeakPtr             mDomSelectionWeak;
 
-    nsCOMPtr<nsITimer>              mBlinkTimer;
-    nsCOMPtr<nsIRenderingContext>   mRendContext;
+    nsCOMPtr<nsITimer>    mBlinkTimer;
 
     // XXX these fields should go away and the values be acquired as needed,
     // probably by ComputeMetrics.
