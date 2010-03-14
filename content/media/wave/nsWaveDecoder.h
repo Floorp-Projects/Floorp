@@ -221,6 +221,12 @@ class nsWaveDecoder : public nsMediaDecoder
   // main thread only.
   virtual void Resume();
 
+  // Calls mElement->UpdateReadyStateForData, telling it which state we have
+  // entered.  Main thread only.
+  void NextFrameUnavailableBuffering();
+  void NextFrameAvailable();
+  void NextFrameUnavailable();
+
   // Change the element's ready state as necessary. Main thread only.
   void UpdateReadyStateForData();
 
