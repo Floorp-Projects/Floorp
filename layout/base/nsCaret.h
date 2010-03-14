@@ -50,7 +50,6 @@
 
 class nsIRenderingContext;
 class nsDisplayListBuilder;
-class nsIView;
 
 //-----------------------------------------------------------------------------
 class nsCaret : public nsISelectionListener
@@ -103,24 +102,8 @@ class nsCaret : public nsISelectionListener
     {
       return mReadOnly;
     }
-    /** GetCaretCoordinates
-     *  OBSOLETE use GetGeometry instead.
-     *  Get the position of the caret in coordinates relative to the typed
-     *  specified (aRelativeToType).
-     *  This function is virtual so that it can be used by nsCaretAccessible
-     *  without linking
-     *  @param outISCollapsed set to true if and only if selection is collapsed
-     *  @return Caret location if selection is collapsed, otherwise, location
-     *	    of focus position 
-     */
-    virtual nsresult    GetCaretCoordinates(EViewCoordinates aRelativeToType,
-                                      nsISelection *inDOMSel,
-                                      nsRect* outCoordinates,
-                                      PRBool* outIsCollapsed,
-                                      nsIView **outView);
 
     /**
-     * Replaces GetCaretCoordinates.
      * Gets the position and size of the caret that would be drawn for
      * the focus node/offset of aSelection (assuming it would be drawn,
      * i.e., disregarding blink status). The geometry is stored in aRect,
@@ -218,11 +201,6 @@ protected:
     void          StartBlinking();
     void          StopBlinking();
     
-    void          GetViewForRendering(nsIFrame *caretFrame,
-                                      EViewCoordinates coordType,
-                                      nsPoint &viewOffset,
-                                      nsIView **outRenderingView,
-                                      nsIView **outRelativeView);
     PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
                                          nsFrameSelection::HINT aFrameHint,
