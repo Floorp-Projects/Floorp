@@ -50,12 +50,12 @@ function test()
   }
 
   waitForExplicitFinish();
-  gBrowser.addEventListener("load", onLoad, false);
+  gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
   var dataUri = 'data:text/html,<body style="height:10000px;"></body>';
   gBrowser.loadURI(dataUri);
 
   function onLoad() {
-    gBrowser.removeEventListener("load", onLoad, false);
+    gBrowser.selectedBrowser.removeEventListener("pageshow", onLoad, false);
     waitForFocus(onFocus, content);
   }
 

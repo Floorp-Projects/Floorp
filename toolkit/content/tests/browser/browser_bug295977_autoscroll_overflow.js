@@ -63,8 +63,13 @@ function test()
     <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
     <div id="g" style="width: 99px; height: 99px; padding: 10px; border: 10px solid black; margin: 10px; overflow: auto;"><div style="width: 100px; height: 100px;"></div></div>\
     </body>';
+  gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
   gBrowser.loadURI(dataUri);
-  waitForFocus(onFocus, content);
+
+  function onLoad() {
+    gBrowser.selectedBrowser.removeEventListener("pageshow", onLoad, false);
+    waitForFocus(onFocus, content);
+  }
 
   function onFocus() {
     doc = gBrowser.contentDocument;
