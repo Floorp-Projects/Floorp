@@ -52,7 +52,7 @@
 typedef struct
 {
   const unsigned char* const charToOrderMap;    // [256] table use to find a char's order
-  const char* const precedenceMatrix;           // [SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
+  const PRUint8* const precedenceMatrix;  // [SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
   float  mTypicalPositiveRatio;     // = freqSeqs / totalSeqs 
   PRBool keepEnglishLetter;         // says if this script contains English characters (not implemented)
   const char* const charsetName;
