@@ -87,6 +87,11 @@
 #endif
 
 #if defined(HAVE_STAT64) && defined(HAVE_LSTAT64)
+    #if defined (AIX)
+        #if defined STAT
+            #undef STAT
+        #endif
+    #endif
     #define STAT stat64
     #define LSTAT lstat64
     #define HAVE_STATS64 1
