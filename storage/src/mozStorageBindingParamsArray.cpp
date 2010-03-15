@@ -109,5 +109,12 @@ BindingParamsArray::AddParams(mozIStorageBindingParams *aParameters)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BindingParamsArray::GetLength(PRUint32 *_length)
+{
+  *_length = length();
+  return NS_OK;
+}
+
 } // namespace storage
 } // namespace mozilla
