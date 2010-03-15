@@ -380,7 +380,10 @@ nsContentUtils::Init()
   }
 
   rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_RUNTIMEABORT("Cannot get the history service");
+    return rv;
+  }
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
   if (!sPtrsToPtrsToRelease) {
