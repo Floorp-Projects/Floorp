@@ -551,6 +551,12 @@ SessionStoreService.prototype = {
     var win = aEvent.currentTarget.ownerDocument.defaultView;
     switch (aEvent.type) {
       case "load":
+        // If __SS_restore_data is set, then we need to restore the document
+        // (form data, scrolling, etc.). This will only happen when a tab is
+        // first restored.
+        if (aEvent.currentTarget.__SS_restore_data)
+          this.restoreDocument(win, aEvent.currentTarget, aEvent);
+        // We still need to call onTabLoad, so fall through to "pageshow" case.
       case "pageshow":
         this.onTabLoad(win, aEvent.currentTarget, aEvent);
         break;
@@ -2143,8 +2149,6 @@ SessionStoreService.prototype = {
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = tab;
-      browser.__SS_restore = this.restoreDocument_proxy;
-      browser.addEventListener("load", browser.__SS_restore, true);
     }
 
     // Handle userTypedValue. Setting userTypedValue seems to update gURLbar
@@ -2292,33 +2296,33 @@ SessionStoreService.prototype = {
   /**
    * Restore properties to a loaded document
    */
-  restoreDocument_proxy: function sss_restoreDocument_proxy(aEvent) {
+  restoreDocument: function sss_restoreDocument(aWindow, aBrowser, aEvent) {
     // wait for the top frame to be loaded completely
     if (!aEvent || !aEvent.originalTarget || !aEvent.originalTarget.defaultView || aEvent.originalTarget.defaultView != aEvent.originalTarget.defaultView.top) {
       return;
     }
-    
+
     // always call this before injecting content into a document!
     function hasExpectedURL(aDocument, aURL)
       !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
-    
+
     function restoreFormData(aDocument, aData, aURL) {
       for (let key in aData) {
         if (!hasExpectedURL(aDocument, aURL))
           return;
-        
+
         let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
                                           XPathHelper.resolve(aDocument, key);
         if (!node)
           continue;
-        
+
         let value = aData[key];
         if (typeof value == "string" && node.type != "file") {
           if (node.value == value)
             continue; // don't dispatch an input event for no change
-          
+
           node.value = value;
-          
+
           let event = aDocument.createEvent("UIEvents");
           event.initUIEvent("input", true, true, aDocument.defaultView, 0);
           node.dispatchEvent(event);
@@ -2339,14 +2343,13 @@ SessionStoreService.prototype = {
         // NB: dispatching "change" events might have unintended side-effects
       }
     }
-    
-    let selectedPageStyle = this.__SS_restore_pageStyle;
-    let window = this.ownerDocument.defaultView;
+
+    let selectedPageStyle = aBrowser.__SS_restore_pageStyle;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       if (aData.formdata)
         restoreFormData(aContent.document, aData.formdata, aData.url);
       if (aData.innerHTML) {
-        window.setTimeout(function() {
+        aWindow.setTimeout(function() {
           if (aContent.document.designMode == "on" &&
               hasExpectedURL(aContent.document, aData.url)) {
             aContent.document.body.innerHTML = aData.innerHTML;
@@ -2366,30 +2369,28 @@ SessionStoreService.prototype = {
         }
       }
     }
-    
+
     // don't restore text data and scrolling state if the user has navigated
     // away before the loading completed (except for in-page navigation)
-    if (hasExpectedURL(aEvent.originalTarget, this.__SS_restore_data.url)) {
+    if (hasExpectedURL(aEvent.originalTarget, aBrowser.__SS_restore_data.url)) {
       var content = aEvent.originalTarget.defaultView;
-      if (this.currentURI.spec == "about:config") {
+      if (aBrowser.currentURI.spec == "about:config") {
         // unwrap the document for about:config because otherwise the properties
         // of the XBL bindings - as the textbox - aren't accessible (see bug 350718)
         content = content.wrappedJSObject;
       }
-      restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
-      this.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
-      
+      restoreTextDataAndScrolling(content, aBrowser.__SS_restore_data, "");
+      aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
+
       // notify the tabbrowser that this document has been completely restored
-      var event = this.ownerDocument.createEvent("Events");
+      var event = aBrowser.ownerDocument.createEvent("Events");
       event.initEvent("SSTabRestored", true, false);
-      this.__SS_restore_tab.dispatchEvent(event);
+      aBrowser.__SS_restore_tab.dispatchEvent(event);
     }
-    
-    this.removeEventListener("load", this.__SS_restore, true);
-    delete this.__SS_restore_data;
-    delete this.__SS_restore_pageStyle;
-    delete this.__SS_restore_tab;
-    delete this.__SS_restore;
+
+    delete aBrowser.__SS_restore_data;
+    delete aBrowser.__SS_restore_pageStyle;
+    delete aBrowser.__SS_restore_tab;
   },
 
   /**
