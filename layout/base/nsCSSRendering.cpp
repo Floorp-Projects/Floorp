@@ -3660,6 +3660,8 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
   }
 }
 
+#define MAX_BLUR_RADIUS 300
+
 // -----
 // nsContextBoxBlur
 // -----
@@ -3675,6 +3677,7 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
   }
 
   PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
+  blurRadius = PR_MIN(blurRadius, MAX_BLUR_RADIUS);
   mDestinationCtx = aDestinationCtx;
 
   // If not blurring, draw directly onto the destination device
@@ -3685,7 +3688,6 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
 
   // Convert from app units to device pixels
   gfxRect rect = RectToGfxRect(aRect, aAppUnitsPerDevPixel);
-  rect.RoundOut();
 
   gfxRect dirtyRect = RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
