@@ -671,6 +671,9 @@ Statement::BindParameters(mozIStorageBindingParamsArray *aParameters)
   if (array->getOwner() != this)
     return NS_ERROR_UNEXPECTED;
 
+  if (array->length() == 0)
+    return NS_ERROR_UNEXPECTED;
+
   mParamsArray = array;
   mParamsArray->lock();
 
