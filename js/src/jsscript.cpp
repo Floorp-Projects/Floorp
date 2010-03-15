@@ -1004,7 +1004,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
 
-    filename = cg->compiler->tokenStream.filename;
+    filename = cg->compiler->tokenStream.getFilename();
     if (filename) {
         script->filename = js_SaveScriptFilename(cx, filename);
         if (!script->filename)

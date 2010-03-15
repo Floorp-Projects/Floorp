@@ -184,7 +184,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp);
  */
 extern JSObject *
 js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
-                   jschar *chars, size_t length, uintN flags);
+                   const jschar *chars, size_t length, uintN flags);
 
 extern JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);

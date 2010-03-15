@@ -165,7 +165,7 @@ JSCompiler::init(const jschar *base, size_t length,
     JSContext *cx = context;
 
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!tokenStream.init(cx, base, length, fp, filename, lineno)) {
+    if (!tokenStream.init(base, length, fp, filename, lineno)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -182,7 +182,7 @@ JSCompiler::~JSCompiler()
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
     JS_UNKEEP_ATOMS(cx->runtime);
-    tokenStream.close(cx);
+    tokenStream.close();
     JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
 }
 
@@ -526,13 +526,10 @@ NewOrRecycledNode(JSTreeContext *tc)
 JSParseNode *
 JSParseNode::create(JSParseNodeArity arity, JSTreeContext *tc)
 {
-    JSParseNode *pn;
-    JSToken *tp;
-
-    pn = NewOrRecycledNode(tc);
+    JSParseNode *pn = NewOrRecycledNode(tc);
     if (!pn)
         return NULL;
-    tp = &CURRENT_TOKEN(&tc->compiler->tokenStream);
+    JSToken *tp = tc->compiler->tokenStream.mutableCurrentToken();
     pn->init(tp->type, JSOP_NOP, arity);
     pn->pn_pos = tp->pos;
     return pn;
@@ -646,8 +643,8 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
     JSOp op;
     const char *name;
 
-    JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_NAME);
-    atom = CURRENT_TOKEN(ts).t_atom;
+    JS_ASSERT(ts->currentToken().type == TOK_NAME);
+    atom = ts->currentToken().t_atom;
     rt = cx->runtime;
     if (atom == rt->atomState.getterAtom)
         op = JSOP_GETTER;
@@ -658,7 +655,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
     if (js_PeekTokenSameLine(cx, ts) != tt)
         return TOK_NAME;
     (void) js_GetToken(cx, ts);
-    if (CURRENT_TOKEN(ts).t_op != JSOP_NOP) {
+    if (ts->currentToken().t_op != JSOP_NOP) {
         js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_GETTER_OR_SETTER,
                                     (op == JSOP_GETTER)
@@ -666,7 +663,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
                                     : js_setter_str);
         return TOK_ERROR;
     }
-    CURRENT_TOKEN(ts).t_op = op;
+    ts->mutableCurrentToken()->t_op = op;
     if (JS_HAS_STRICT_OPTION(cx)) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
@@ -800,7 +797,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
                      &cx->scriptStackQuota);
 
-    JSCodeGenerator cg(&jsc, &codePool, &notePool, jsc.tokenStream.lineno);
+    JSCodeGenerator cg(&jsc, &codePool, &notePool, jsc.tokenStream.getLineno());
 
     MUST_FLOW_THROUGH("out");
 
@@ -1295,9 +1292,9 @@ JSCompiler::functionBody()
      * later, because we may have not peeked in tokenStream yet, so statements
      * won't acquire a valid pn->pn_pos.begin from the current token.
      */
-    firstLine = tokenStream.lineno;
+    firstLine = tokenStream.getLineno();
 #if JS_HAS_EXPR_CLOSURES
-    if (CURRENT_TOKEN(&tokenStream).type == TOK_LC) {
+    if (tokenStream.currentToken().type == TOK_LC) {
         pn = statements();
     } else {
         pn = UnaryNode::create(tc);
@@ -1577,14 +1574,14 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
     JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
                      &cx->scriptStackQuota);
 
-    JSCodeGenerator funcg(&jsc, &codePool, &notePool, jsc.tokenStream.lineno);
+    JSCodeGenerator funcg(&jsc, &codePool, &notePool, jsc.tokenStream.getLineno());
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.fun = fun;
     if (!GenerateBlockId(&funcg, funcg.bodyid))
         return NULL;
 
     /* FIXME: make Function format the source for a function definition. */
-    jsc.tokenStream.tokens[0].type = TOK_NAME;
+    jsc.tokenStream.getMutableTokenAt(0)->type = TOK_NAME;
     JSParseNode *fn = FunctionNode::create(&funcg);
     if (fn) {
         fn->pn_body = NULL;
@@ -1613,7 +1610,7 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
      * done parsing, we must fold constants, analyze any nested functions, and
      * generate code for this function, including a stop opcode at the end.
      */
-    CURRENT_TOKEN(&jsc.tokenStream).type = TOK_LC;
+    jsc.tokenStream.mutableCurrentToken()->type = TOK_LC;
     JSParseNode *pn = fn ? jsc.functionBody() : NULL;
     if (pn) {
         if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
@@ -2592,7 +2589,7 @@ JSCompiler::functionDef(uintN lambda)
 
     /* Make a TOK_FUNCTION node. */
 #if JS_HAS_GETTER_SETTER
-    op = CURRENT_TOKEN(&tokenStream).t_op;
+    op = tokenStream.currentToken().t_op;
 #endif
     pn = FunctionNode::create(tc);
     if (!pn)
@@ -2616,7 +2613,7 @@ JSCompiler::functionDef(uintN lambda)
     tt = js_GetToken(context, &tokenStream);
     tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
     if (tt == TOK_NAME) {
-        funAtom = CURRENT_TOKEN(&tokenStream).t_atom;
+        funAtom = tokenStream.currentToken().t_atom;
     } else {
         if (lambda == 0 && (context->options & JSOPTION_ANONFUNFIX)) {
             js_ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
@@ -2818,7 +2815,7 @@ JSCompiler::functionDef(uintN lambda)
 
               case TOK_NAME:
               {
-                JSAtom *atom = CURRENT_TOKEN(&tokenStream).t_atom;
+                JSAtom *atom = tokenStream.currentToken().t_atom;
                 if (!DefineArg(pn, atom, fun->nargs, &funtc))
                     return NULL;
 #ifdef JS_HAS_DESTRUCTURING
@@ -2893,7 +2890,7 @@ JSCompiler::functionDef(uintN lambda)
 #else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
 #endif
-    pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+    pn->pn_pos.end = tokenStream.currentToken().pos.end;
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -3125,7 +3122,7 @@ JSCompiler::statements()
         pn = tc->blockNode;
     tc->blockNode = saveBlock;
 
-    pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+    pn->pn_pos.end = tokenStream.currentToken().pos.end;
     return pn;
 }
 
@@ -3164,7 +3161,7 @@ MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
         return JS_FALSE;
     if (tt == TOK_NAME) {
         (void) js_GetToken(cx, ts);
-        label = CURRENT_TOKEN(ts).t_atom;
+        label = ts->currentToken().t_atom;
     } else {
         label = NULL;
     }
@@ -4236,7 +4233,7 @@ JSCompiler::returnOrYield(bool useAssignExpr)
     JSTokenType tt, tt2;
     JSParseNode *pn, *pn2;
 
-    tt = CURRENT_TOKEN(&tokenStream).type;
+    tt = tokenStream.currentToken().type;
     if (tt == TOK_RETURN && !(tc->flags & TCF_IN_FUNCTION)) {
         js_ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
@@ -4341,7 +4338,7 @@ JSCompiler::letBlock(JSBool statement)
     JSParseNode *pn, *pnblock, *pnlet;
     JSStmtInfo stmtInfo;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_LET);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_LET);
 
     /* Create the let binary node. */
     pnlet = BinaryNode::create(tc);
@@ -4705,7 +4702,7 @@ JSCompiler::statement()
         tc->blockNode = saveBlock;
         PopStatement(tc);
 
-        pn->pn_pos.end = pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+        pn->pn_pos.end = pn2->pn_pos.end = tokenStream.currentToken().pos.end;
         pn->pn_left = pn1;
         pn->pn_right = pn2;
         return pn;
@@ -4772,7 +4769,7 @@ JSCompiler::statement()
         pn->pn_op = JSOP_ITER;
         pn->pn_iflags = 0;
         if (js_MatchToken(context, &tokenStream, TOK_NAME)) {
-            if (CURRENT_TOKEN(&tokenStream).t_atom == context->runtime->atomState.eachAtom)
+            if (tokenStream.currentToken().t_atom == context->runtime->atomState.eachAtom)
                 pn->pn_iflags = JSITER_FOREACH;
             else
                 js_UngetToken(&tokenStream);
@@ -5210,7 +5207,7 @@ JSCompiler::statement()
 #endif
 
                   case TOK_NAME:
-                    label = CURRENT_TOKEN(&tokenStream).t_atom;
+                    label = tokenStream.currentToken().t_atom;
                     pn3 = NewBindingNode(label, tc, true);
                     if (!pn3)
                         return NULL;
@@ -5342,7 +5339,7 @@ JSCompiler::statement()
             }
         }
         if (label)
-            pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
 
       case TOK_CONTINUE:
@@ -5385,7 +5382,7 @@ JSCompiler::statement()
             }
         }
         if (label)
-            pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
 
       case TOK_WITH:
@@ -5479,8 +5476,8 @@ JSCompiler::statement()
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
                  */
-                CURRENT_TOKEN(&tokenStream).type = TOK_VAR;
-                CURRENT_TOKEN(&tokenStream).t_op = JSOP_DEFVAR;
+                tokenStream.mutableCurrentToken()->type = TOK_VAR;
+                tokenStream.mutableCurrentToken()->t_op = JSOP_DEFVAR;
 
                 pn = variables(false);
                 if (!pn)
@@ -5611,11 +5608,11 @@ JSCompiler::statement()
         if (!pn)
             return NULL;
         if (!js_MatchToken(context, &tokenStream, TOK_NAME) ||
-            CURRENT_TOKEN(&tokenStream).t_atom != context->runtime->atomState.xmlAtom ||
+            tokenStream.currentToken().t_atom != context->runtime->atomState.xmlAtom ||
             !js_MatchToken(context, &tokenStream, TOK_NAME) ||
-            CURRENT_TOKEN(&tokenStream).t_atom != context->runtime->atomState.namespaceAtom ||
+            tokenStream.currentToken().t_atom != context->runtime->atomState.namespaceAtom ||
             !js_MatchToken(context, &tokenStream, TOK_ASSIGN) ||
-            CURRENT_TOKEN(&tokenStream).t_op != JSOP_NOP) {
+            tokenStream.currentToken().t_op != JSOP_NOP) {
             js_ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
                                         JSMSG_BAD_DEFAULT_XML_NAMESPACE);
             return NULL;
@@ -5753,7 +5750,7 @@ JSCompiler::variables(bool inLetHead)
      * - TOK_LP: We are parsing the head of a let block.
      * - Otherwise, we're parsing var declarations.
      */
-    tt = CURRENT_TOKEN(&tokenStream).type;
+    tt = tokenStream.currentToken().type;
     let = (tt == TOK_LET || tt == TOK_LP);
     JS_ASSERT(let || tt == TOK_VAR);
 
@@ -5772,7 +5769,7 @@ JSCompiler::variables(bool inLetHead)
         JS_ASSERT(scopeStmt);
     }
 
-    data.op = let ? JSOP_NOP : CURRENT_TOKEN(&tokenStream).t_op;
+    data.op = let ? JSOP_NOP : tokenStream.currentToken().t_op;
     pn = ListNode::create(tc);
     if (!pn)
         return NULL;
@@ -5811,7 +5808,7 @@ JSCompiler::variables(bool inLetHead)
             }
 
             MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
-            if (CURRENT_TOKEN(&tokenStream).t_op != JSOP_NOP)
+            if (tokenStream.currentToken().t_op != JSOP_NOP)
                 goto bad_var_init;
 
 #if JS_HAS_BLOCK_SCOPE
@@ -5847,7 +5844,7 @@ JSCompiler::variables(bool inLetHead)
             return NULL;
         }
 
-        atom = CURRENT_TOKEN(&tokenStream).t_atom;
+        atom = tokenStream.currentToken().t_atom;
         pn2 = NewBindingNode(atom, tc, let);
         if (!pn2)
             return NULL;
@@ -5859,7 +5856,7 @@ JSCompiler::variables(bool inLetHead)
         pn->append(pn2);
 
         if (js_MatchToken(context, &tokenStream, TOK_ASSIGN)) {
-            if (CURRENT_TOKEN(&tokenStream).t_op != JSOP_NOP)
+            if (tokenStream.currentToken().t_op != JSOP_NOP)
                 goto bad_var_init;
 
 #if JS_HAS_BLOCK_SCOPE
@@ -5987,7 +5984,7 @@ JSCompiler::assignExpr()
         return pn;
     }
 
-    op = CURRENT_TOKEN(&tokenStream).t_op;
+    op = tokenStream.currentToken().t_op;
     switch (pn->pn_type) {
       case TOK_NAME:
         if (!CheckStrictAssignment(context, tc, pn))
@@ -6154,7 +6151,7 @@ JSCompiler::eqExpr()
 
     pn = relExpr();
     while (pn && js_MatchToken(context, &tokenStream, TOK_EQOP)) {
-        op = CURRENT_TOKEN(&tokenStream).t_op;
+        op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr(), tc);
     }
     return pn;
@@ -6183,8 +6180,8 @@ JSCompiler::relExpr()
              */
             (inForInitFlag == 0 && js_MatchToken(context, &tokenStream, TOK_IN)) ||
             js_MatchToken(context, &tokenStream, TOK_INSTANCEOF))) {
-        tt = CURRENT_TOKEN(&tokenStream).type;
-        op = CURRENT_TOKEN(&tokenStream).t_op;
+        tt = tokenStream.currentToken().type;
+        op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr(), tc);
     }
     /* Restore previous state of inForInit flag. */
@@ -6201,7 +6198,7 @@ JSCompiler::shiftExpr()
 
     pn = addExpr();
     while (pn && js_MatchToken(context, &tokenStream, TOK_SHOP)) {
-        op = CURRENT_TOKEN(&tokenStream).t_op;
+        op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr(), tc);
     }
     return pn;
@@ -6218,7 +6215,7 @@ JSCompiler::addExpr()
     while (pn &&
            (js_MatchToken(context, &tokenStream, TOK_PLUS) ||
             js_MatchToken(context, &tokenStream, TOK_MINUS))) {
-        tt = CURRENT_TOKEN(&tokenStream).type;
+        tt = tokenStream.currentToken().type;
         op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr(), tc);
     }
@@ -6236,8 +6233,8 @@ JSCompiler::mulExpr()
     while (pn &&
            (js_MatchToken(context, &tokenStream, TOK_STAR) ||
             js_MatchToken(context, &tokenStream, TOK_DIVOP))) {
-        tt = CURRENT_TOKEN(&tokenStream).type;
-        op = CURRENT_TOKEN(&tokenStream).t_op;
+        tt = tokenStream.currentToken().type;
+        op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
     }
     return pn;
@@ -6335,7 +6332,7 @@ JSCompiler::unaryExpr()
         if (!pn)
             return NULL;
         pn->pn_type = TOK_UNARYOP;      /* PLUS and MINUS are binary */
-        pn->pn_op = CURRENT_TOKEN(&tokenStream).t_op;
+        pn->pn_op = tokenStream.currentToken().t_op;
         pn2 = unaryExpr();
         if (!pn2)
             return NULL;
@@ -6399,7 +6396,7 @@ JSCompiler::unaryExpr()
             return NULL;
 
         /* Don't look across a newline boundary for a postfix incop. */
-        if (ON_CURRENT_LINE(&tokenStream, pn->pn_pos)) {
+        if (tokenStream.onCurrentLine(pn->pn_pos)) {
             tokenStream.flags |= TSF_OPERAND;
             tt = js_PeekTokenSameLine(context, &tokenStream);
             tokenStream.flags &= ~TSF_OPERAND;
@@ -6658,7 +6655,7 @@ JSCompiler::comprehensionTail(JSParseNode *kid, uintN blockid,
     JSTokenType tt;
     JSAtom *atom;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_FOR);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_FOR);
 
     if (type == TOK_SEMI) {
         /*
@@ -6721,7 +6718,7 @@ JSCompiler::comprehensionTail(JSParseNode *kid, uintN blockid,
         pn2->pn_op = JSOP_ITER;
         pn2->pn_iflags = JSITER_ENUMERATE;
         if (js_MatchToken(context, &tokenStream, TOK_NAME)) {
-            if (CURRENT_TOKEN(&tokenStream).t_atom == context->runtime->atomState.eachAtom)
+            if (tokenStream.currentToken().t_atom == context->runtime->atomState.eachAtom)
                 pn2->pn_iflags |= JSITER_FOREACH;
             else
                 js_UngetToken(&tokenStream);
@@ -6743,7 +6740,7 @@ JSCompiler::comprehensionTail(JSParseNode *kid, uintN blockid,
 #endif
 
           case TOK_NAME:
-            atom = CURRENT_TOKEN(&tokenStream).t_atom;
+            atom = tokenStream.currentToken().t_atom;
 
             /*
              * Create a name node with pn_op JSOP_NAME.  We can't set pn_op to
@@ -6911,7 +6908,7 @@ JSCompiler::generatorExpr(JSParseNode *pn, JSParseNode *kid)
         JS_ASSERT(!genfn->pn_body);
         genfn->pn_body = body;
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
-        genfn->pn_pos.end = body->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+        genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
 
         if (!LeaveFunction(genfn, &gentc))
             return NULL;
@@ -7100,10 +7097,10 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
             tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
             pn2->pn_op = JSOP_GETPROP;
             pn2->pn_expr = pn;
-            pn2->pn_atom = CURRENT_TOKEN(&tokenStream).t_atom;
+            pn2->pn_atom = tokenStream.currentToken().t_atom;
 #endif
             pn2->pn_pos.begin = pn->pn_pos.begin;
-            pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #if JS_HAS_XML_SUPPORT
         } else if (tt == TOK_DBLDOT) {
             pn2 = BinaryNode::create(tc);
@@ -7129,7 +7126,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
             pn2->pn_left = pn;
             pn2->pn_right = pn3;
             pn2->pn_pos.begin = pn->pn_pos.begin;
-            pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #endif
         } else if (tt == TOK_LB) {
             pn2 = BinaryNode::create(tc);
@@ -7141,7 +7138,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
             pn2->pn_pos.begin = pn->pn_pos.begin;
-            pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 
             /*
              * Optimize o['p'] to o.p by rewriting pn2, but avoid rewriting
@@ -7201,7 +7198,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
                                      JSMSG_TOO_MANY_FUN_ARGS);
                 return NULL;
             }
-            pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
         } else {
             js_UngetToken(&tokenStream);
             return pn;
@@ -7314,7 +7311,7 @@ JSCompiler::propertySelector()
         JS_ASSERT(pn->pn_type == TOK_NAME);
         pn->pn_op = JSOP_QNAMEPART;
         pn->pn_arity = PN_NAME;
-        pn->pn_atom = CURRENT_TOKEN(&tokenStream).t_atom;
+        pn->pn_atom = tokenStream.currentToken().t_atom;
         pn->pn_cookie = FREE_UPVAR_COOKIE;
     }
     return pn;
@@ -7326,7 +7323,7 @@ JSCompiler::qualifiedSuffix(JSParseNode *pn)
     JSParseNode *pn2, *pn3;
     JSTokenType tt;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_DBLCOLON);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_DBLCOLON);
     pn2 = NameNode::create(NULL, tc);
     if (!pn2)
         return NULL;
@@ -7344,7 +7341,7 @@ JSCompiler::qualifiedSuffix(JSParseNode *pn)
         pn2->pn_pos.begin = pn->pn_pos.begin;
         pn2->pn_atom = (tt == TOK_STAR)
                        ? context->runtime->atomState.starAtom
-                       : CURRENT_TOKEN(&tokenStream).t_atom;
+                       : tokenStream.currentToken().t_atom;
         pn2->pn_expr = pn;
         pn2->pn_cookie = FREE_UPVAR_COOKIE;
         return pn2;
@@ -7390,7 +7387,7 @@ JSCompiler::attributeIdentifier()
     JSParseNode *pn, *pn2;
     JSTokenType tt;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_AT);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_AT);
     pn = UnaryNode::create(tc);
     if (!pn)
         return NULL;
@@ -7422,7 +7419,7 @@ JSCompiler::xmlExpr(JSBool inTag)
     JSParseNode *pn, *pn2;
     uintN oldflag;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_LC);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_LC);
     pn = UnaryNode::create(tc);
     if (!pn)
         return NULL;
@@ -7455,13 +7452,10 @@ JSCompiler::xmlExpr(JSBool inTag)
 JSParseNode *
 JSCompiler::xmlAtomNode()
 {
-    JSParseNode *pn;
-    JSToken *tp;
-
-    pn = NullaryNode::create(tc);
+    JSParseNode *pn = NullaryNode::create(tc);
     if (!pn)
         return NULL;
-    tp = &CURRENT_TOKEN(&tokenStream);
+    JSToken *tp = tokenStream.mutableCurrentToken();
     pn->pn_op = tp->t_op;
     pn->pn_atom = tp->t_atom;
     if (tp->type == TOK_XMLPI)
@@ -7489,7 +7483,7 @@ JSCompiler::xmlNameExpr()
 
     pn = list = NULL;
     do {
-        tt = CURRENT_TOKEN(&tokenStream).type;
+        tt = tokenStream.currentToken().type;
         if (tt == TOK_LC) {
             pn2 = xmlExpr(JS_TRUE);
             if (!pn2)
@@ -7637,7 +7631,7 @@ JSCompiler::xmlElementContent(JSParseNode *pn)
         XML_CHECK_FOR_ERROR_AND_EOF(tt, JS_FALSE);
 
         JS_ASSERT(tt == TOK_XMLSPACE || tt == TOK_XMLTEXT);
-        textAtom = CURRENT_TOKEN(&tokenStream).t_atom;
+        textAtom = tokenStream.currentToken().t_atom;
         if (textAtom) {
             /* Non-zero-length XML text scanned. */
             pn2 = xmlAtomNode();
@@ -7674,7 +7668,7 @@ JSCompiler::xmlElementContent(JSParseNode *pn)
         pn->append(pn2);
     }
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_XMLETAGO);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_XMLETAGO);
     tokenStream.flags |= TSF_XMLTAGMODE;
     return JS_TRUE;
 }
@@ -7691,7 +7685,7 @@ JSCompiler::xmlElementOrList(JSBool allowList)
 
     JS_CHECK_RECURSION(context, return NULL);
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_XMLSTAGO);
+    JS_ASSERT(tokenStream.currentToken().type == TOK_XMLSTAGO);
     pn = ListNode::create(tc);
     if (!pn)
         return NULL;
@@ -7733,7 +7727,7 @@ JSCompiler::xmlElementOrList(JSBool allowList)
                                             JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
-            pn2->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 
             /* Make sure pn2 is a TOK_XMLSTAGO list containing tag contents. */
             if (pn2->pn_type != TOK_XMLSTAGO) {
@@ -7822,7 +7816,7 @@ JSCompiler::xmlElementOrList(JSBool allowList)
         return NULL;
     }
 
-    pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+    pn->pn_pos.end = tokenStream.currentToken().pos.end;
     tokenStream.flags &= ~TSF_XMLTAGMODE;
     return pn;
 }
@@ -8075,7 +8069,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
         }
-        pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+        pn->pn_pos.end = tokenStream.currentToken().pos.end;
         return pn;
       }
 
@@ -8111,7 +8105,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
                 pn3 = NullaryNode::create(tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_dval = CURRENT_TOKEN(&tokenStream).t_dval;
+                pn3->pn_dval = tokenStream.currentToken().t_dval;
                 if (tc->needStrictChecks())
                     atom = js_AtomizeDouble(context, pn3->pn_dval);
                 else
@@ -8120,7 +8114,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
                 {
-                    atom = CURRENT_TOKEN(&tokenStream).t_atom;
+                    atom = tokenStream.currentToken().t_atom;
                     if (atom == context->runtime->atomState.getAtom)
                         op = JSOP_GETTER;
                     else if (atom == context->runtime->atomState.setAtom)
@@ -8135,14 +8129,14 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
                         js_UngetToken(&tokenStream);
                         goto property_name;
                     }
-                    atom = CURRENT_TOKEN(&tokenStream).t_atom;
+                    atom = tokenStream.currentToken().t_atom;
                     pn3 = NameNode::create(atom, tc);
                     if (!pn3)
                         return NULL;
 
                     /* We have to fake a 'function' token here. */
-                    CURRENT_TOKEN(&tokenStream).t_op = JSOP_NOP;
-                    CURRENT_TOKEN(&tokenStream).type = TOK_FUNCTION;
+                    tokenStream.mutableCurrentToken()->t_op = JSOP_NOP;
+                    tokenStream.mutableCurrentToken()->type = TOK_FUNCTION;
                     pn2 = functionExpr();
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
@@ -8150,7 +8144,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
               property_name:
 #endif
               case TOK_STRING:
-                atom = CURRENT_TOKEN(&tokenStream).t_atom;
+                atom = tokenStream.currentToken().t_atom;
                 pn3 = NullaryNode::create(tc);
                 if (!pn3)
                     return NULL;
@@ -8171,7 +8165,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
                 tt = CheckGetterOrSetter(context, &tokenStream, TOK_COLON);
                 if (tt == TOK_ERROR)
                     return NULL;
-                op = CURRENT_TOKEN(&tokenStream).t_op;
+                op = tokenStream.currentToken().t_op;
             }
 #endif
 
@@ -8258,7 +8252,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
         }
 
       end_obj_init:
-        pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+        pn->pn_pos.end = tokenStream.currentToken().pos.end;
         return pn;
       }
 
@@ -8275,7 +8269,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->pn_num = (jsint) CURRENT_TOKEN(&tokenStream).t_dval;
+        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
         tokenStream.flags |= TSF_OPERAND;
         tt = js_GetToken(context, &tokenStream);
         tokenStream.flags &= ~TSF_OPERAND;
@@ -8303,7 +8297,7 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
             return NULL;
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = (jsint) CURRENT_TOKEN(&tokenStream).t_dval;
+        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
         break;
 #endif /* JS_HAS_SHARP_VARS */
 
@@ -8353,20 +8347,20 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->pn_atom = CURRENT_TOKEN(&tokenStream).t_atom;
+        pn->pn_atom = tokenStream.currentToken().t_atom;
 #if JS_HAS_XML_SUPPORT
         if (tt == TOK_XMLPI)
-            pn->pn_atom2 = CURRENT_TOKEN(&tokenStream).t_atom2;
+            pn->pn_atom2 = tokenStream.currentToken().t_atom2;
         else
 #endif
-            pn->pn_op = CURRENT_TOKEN(&tokenStream).t_op;
+            pn->pn_op = tokenStream.currentToken().t_op;
         break;
 
       case TOK_NAME:
-        pn = NameNode::create(CURRENT_TOKEN(&tokenStream).t_atom, tc);
+        pn = NameNode::create(tokenStream.currentToken().t_atom, tc);
         if (!pn)
             return NULL;
-        JS_ASSERT(CURRENT_TOKEN(&tokenStream).t_op == JSOP_NAME);
+        JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
         pn->pn_op = JSOP_NAME;
 
         if ((tc->flags & (TCF_IN_FUNCTION | TCF_FUN_PARAM_ARGUMENTS)) == TCF_IN_FUNCTION &&
@@ -8505,9 +8499,9 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
             return NULL;
 
         obj = js_NewRegExpObject(context, &tokenStream,
-                                 tokenStream.tokenbuf.begin(),
-                                 tokenStream.tokenbuf.length(),
-                                 CURRENT_TOKEN(&tokenStream).t_reflags);
+                                 tokenStream.getTokenbuf().begin(),
+                                 tokenStream.getTokenbuf().length(),
+                                 tokenStream.currentToken().t_reflags);
         if (!obj)
             return NULL;
         if (!(tc->flags & TCF_COMPILE_N_GO)) {
@@ -8528,14 +8522,14 @@ JSCompiler::primaryExpr(JSTokenType tt, JSBool afterDot)
         if (!pn)
             return NULL;
         pn->pn_op = JSOP_DOUBLE;
-        pn->pn_dval = CURRENT_TOKEN(&tokenStream).t_dval;
+        pn->pn_dval = tokenStream.currentToken().t_dval;
         break;
 
       case TOK_PRIMARY:
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->pn_op = CURRENT_TOKEN(&tokenStream).t_op;
+        pn->pn_op = tokenStream.currentToken().t_op;
         break;
 
       case TOK_ERROR:
@@ -8556,8 +8550,8 @@ JSCompiler::parenExpr(JSParseNode *pn1, JSBool *genexp)
     JSTokenPtr begin;
     JSParseNode *pn;
 
-    JS_ASSERT(CURRENT_TOKEN(&tokenStream).type == TOK_LP);
-    begin = CURRENT_TOKEN(&tokenStream).pos.begin;
+    JS_ASSERT(tokenStream.currentToken().type == TOK_LP);
+    begin = tokenStream.currentToken().pos.begin;
 
     if (genexp)
         *genexp = JS_FALSE;
@@ -8596,7 +8590,7 @@ JSCompiler::parenExpr(JSParseNode *pn1, JSBool *genexp)
                                             js_generator_str);
                 return NULL;
             }
-            pn->pn_pos.end = CURRENT_TOKEN(&tokenStream).pos.end;
+            pn->pn_pos.end = tokenStream.currentToken().pos.end;
             *genexp = JS_TRUE;
         }
     }
