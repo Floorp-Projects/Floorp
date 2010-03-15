@@ -21,11 +21,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
 
-SimpleTest.waitForExplicitFinish();
-
-// This seems to be necessary because the selection is not set up properly otherwise
-setTimeout(test, 0);
-
 function test() {
   var sel = window.getSelection();
   var editor = document.getElementById("editor");
@@ -47,6 +42,9 @@ function test() {
 
   SimpleTest.finish();
 }
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
 
 
 </script>
