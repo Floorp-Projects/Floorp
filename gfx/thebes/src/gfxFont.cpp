@@ -807,9 +807,11 @@ gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, PRBool aOtherIsOnLeft
     mAdvanceWidth += aOther.mAdvanceWidth;
 }
 
-gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle) :
+gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+                 AntialiasOption anAAOption) :
     mFontEntry(aFontEntry), mIsValid(PR_TRUE),
     mStyle(*aFontStyle), mSyntheticBoldOffset(0),
+    mAntialiasOption(anAAOption),
     mShaper(nsnull)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
@@ -1062,9 +1064,26 @@ NeedsGlyphExtents(gfxTextRun *aTextRun)
 gfxFont::RunMetrics
 gfxFont::Measure(gfxTextRun *aTextRun,
                  PRUint32 aStart, PRUint32 aEnd,
-                 BoundingBoxType aBoundingBoxType, gfxContext *aRefContext,
+                 BoundingBoxType aBoundingBoxType,
+                 gfxContext *aRefContext,
                  Spacing *aSpacing)
 {
+    // If aBoundingBoxType is TIGHT_HINTED_OUTLINE_EXTENTS
+    // and the underlying cairo font may be antialiased,
+    // we need to create a copy in order to avoid getting cached extents.
+    // This is inefficient, but only used by MathML layout at present.
+    if (aBoundingBoxType == TIGHT_HINTED_OUTLINE_EXTENTS &&
+        mAntialiasOption != kAntialiasNone) {
+        nsAutoPtr<gfxFont> tempFont(CopyWithAntialiasOption(kAntialiasNone));
+        // if font subclass doesn't implement CopyWithAntialiasOption(),
+        // it will return null and we'll proceed to use the existing font
+        if (tempFont) {
+            return tempFont->Measure(aTextRun, aStart, aEnd,
+                                     TIGHT_HINTED_OUTLINE_EXTENTS,
+                                     aRefContext, aSpacing);
+        }
+    }
+
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // Current position in appunits
     const gfxFont::Metrics& fontMetrics = GetMetrics();
@@ -1169,6 +1188,23 @@ gfxFont::Measure(gfxTextRun *aTextRun,
 
     metrics.mAdvanceWidth = x*direction;
     return metrics;
+}
+
+void
+gfxFont::InitTextRun(gfxContext *aContext,
+                     gfxTextRun *aTextRun,
+                     const PRUnichar *aString,
+                     PRUint32 aRunStart,
+                     PRUint32 aRunLength)
+{
+    NS_ASSERTION(mShaper != nsnull, "no shaper?!");
+    if (!mShaper) {
+        return;
+    }
+
+    PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
+                                     aRunStart, aRunLength);
+    NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
 }
 
 gfxGlyphExtents *

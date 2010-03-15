@@ -43,7 +43,7 @@
 #include "gfxWindowsPlatform.h"
 #include "gfxUserFontSet.h"
 #include "gfxFontUtils.h"
-#include "gfxWindowsFonts.h"
+#include "gfxGDIFont.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
@@ -54,6 +54,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWindowsRegKey.h"
+
+#include <usp10.h>
 
 #define ROUND(x) floor((x) + 0.5)
 
@@ -218,9 +220,9 @@ GDIFontEntry::ReadCMAP()
 }
 
 gfxFont *
-GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool /*aNeedsBold*/)
+GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBold)
 {
-    return new gfxWindowsFont(this, aFontStyle);
+    return new gfxGDIFont(this, aFontStyle, aNeedsBold);
 }
 
 nsresult
@@ -283,10 +285,10 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
             fakeStyle.style = FONT_STYLE_ITALIC;
         fakeStyle.weight = mWeight * 100;
 
-        nsRefPtr<gfxWindowsFont> font =
-            gfxWindowsFont::GetOrMakeFont(this, &fakeStyle);
-        if (!font->IsValid())
+        nsRefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, PR_FALSE);
+        if (!tempFont || !tempFont->Valid())
             return PR_FALSE;
+        gfxGDIFont *font = static_cast<gfxGDIFont*>(tempFont.get());
 
         HDC dc = GetDC((HWND)nsnull);
         SetGraphicsMode(dc, GM_ADVANCED);
@@ -297,14 +299,15 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
         WORD glyph[1];
 
         PRBool hasGlyph = PR_FALSE;
-        if (IsType1()) {
+        if (IsType1() || mForceGDI) {
             // Type1 fonts and uniscribe APIs don't get along.  ScriptGetCMap will return E_HANDLE
             DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
             if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
                 hasGlyph = PR_TRUE;
         } else {
             // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
-            HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
+            SCRIPT_CACHE sc = NULL;
+            HRESULT rv = ScriptGetCMap(dc, &sc, str, 1, 0, glyph);
             if (rv == S_OK)
                 hasGlyph = PR_TRUE;
         }
