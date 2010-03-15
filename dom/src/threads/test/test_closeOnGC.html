@@ -26,7 +26,6 @@
   }
 
   var interval = setInterval(function() {
-    dump("xxxben interval\n");
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "closeOnGC_server.sjs", false);
     xhr.send();
