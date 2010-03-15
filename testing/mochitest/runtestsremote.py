@@ -142,12 +142,18 @@ class RemoteOptions(MochitestOptions):
         # since we are reusing verifyOptions, it will exit if App is not found
         temp = options.app
         options.app = sys.argv[0]
+        tempPort = options.httpPort
+        tempSSL = options.sslPort
         options = MochitestOptions.verifyOptions(self, options, mochitest)
         options.app = temp
+        options.httpPort = tempPort
+        options.sslPort = tempSSL
 
         if (options.remoteWebServer == None):
           print "ERROR: you must provide a remote webserver ip address"
           return None
+        else:
+          options.webServer = options.remoteWebServer
 
         if (options.deviceIP == None):
           print "ERROR: you must provide a device IP"
@@ -197,7 +203,9 @@ class MochiRemote(Mochitest):
     def buildProfile(self, options):
         manifest = Mochitest.buildProfile(self, options)
         self.localProfile = options.profilePath
-        self._dm.pushDir(options.profilePath, self.remoteProfile)
+        if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
+            raise devicemanager.FileError("Unable to copy profile to device.")
+
         options.profilePath = self.remoteProfile
         return manifest
         
@@ -210,8 +218,9 @@ class MochiRemote(Mochitest):
 
     def installChromeFile(self, filename, options):
         path = '/'.join(options.app.split('/')[:-1])
-        manifest = path + "/chrome/" + filename
-        self._dm.pushFile(filename, manifest)
+        manifest = path + "/chrome/" + os.path.basename(filename)
+        if self._dm.pushFile(filename, manifest) == None:
+            raise devicemanager.FileError("Unable to install Chrome files on device.")
         return manifest
 
     def getLogFilePath(self, logFile):             
@@ -239,7 +248,7 @@ def main():
     if (options == None):
       sys.exit(1)
     
-    auto.setServerPort(options.webServer, options.httpPort, options.sslPort)
+    auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
     sys.exit(mochitest.runTests(options))
     
 if __name__ == "__main__":
