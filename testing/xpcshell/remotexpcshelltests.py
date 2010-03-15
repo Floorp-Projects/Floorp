@@ -52,6 +52,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device = devmgr
         self.testRoot = "/tests/xpcshell"
         xpcshell.XPCShellTests.__init__(self)
+        self.profileDir = self.testRoot + '/profile'
+        self.device.mkDir(self.profileDir)
 
     #todo: figure out the remote version of this, only used for debuggerInfo
     def getcwd(self):
@@ -88,7 +90,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         
         fileName = self.device.getAppRoot() + '/' + fileName.split('/')[-1]
         if (not self.device.fileExists(fileName)):
-            raise "No File found for: " + str(fileName)
+            raise devicemanager.FileError("No File found for: " + str(fileName))
 
         return fileName
 
@@ -106,7 +108,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         
         fileName = self.device.getDeviceRoot() + '/' + fileName.split('/')[-1]
         if (not self.device.dirExists(fileName)):
-            raise "No Dir found for: " + str(fileName)
+            raise devicemanager.FileError("No Dir found for: " + str(fileName))
         return fileName
 
     def setAbsPath(self):
@@ -126,6 +128,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def buildXpcsCmd(self, testdir):
         # <head.js> has to be loaded by xpchell: it can't load itself.
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
         self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-v', '170', '-j', '-s', \
                         "--environ:CWD='" + testdir + "'", \
                         "--environ:XPCSHELL_TEST_PROFILE_DIR='" + self.env["XPCSHELL_TEST_PROFILE_DIR"] + "'", \
@@ -171,9 +174,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         return testfiles
 
     def setupProfileDir(self):
-        profileDir = self.device.getTempDir()
-        self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
-        return profileDir
+        self.device.removeDir(self.profileDir)
+        self.device.mkDir(self.profileDir)
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
+        return self.profileDir
 
     def setupLeakLogging(self):
         filename = "runxpcshelltests_leaks.log"
@@ -265,6 +269,7 @@ def main():
     sys.exit(1)
 
   # Zip up the xpcshell directory: 7z a <zipName> xpcshell/*, assuming we are in the xpcshell directory
+  # TODO: ensure the system has 7z, this is adding a new dependency to the overall system
   zipName = 'xpcshell.7z'
   try:
     Popen(['7z', 'a', zipName, '../xpcshell']).wait()
@@ -272,8 +277,10 @@ def main():
     print "to run these tests remotely, we require 7z to be installed and in your path"
     sys.exit(1)
 
-  dm.pushFile(zipName, '/tests/xpcshell.7z')
-  dm.unpackFile('xpcshell.7z')
+  if dm.pushFile(zipName, '/tests/xpcshell.7z') == None:
+     raise devicemanager.FileError("failed to copy xpcshell.7z to device")
+  if dm.unpackFile('xpcshell.7z') == None:
+     raise devicemanager.FileError("failed to unpack xpcshell.7z on the device")
 
   if not xpcsh.runTests(args[0],
                         xrePath=options.xrePath,
