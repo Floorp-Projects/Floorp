@@ -962,7 +962,8 @@ nsCSSRuleProcessor::FreeSystemMetrics()
 nsCSSRuleProcessor::Shutdown()
 {
   FreeSystemMetrics();
-  NS_RELEASE(gPrivateBrowsingObserver);
+  // Make sure we don't crash if Shutdown is called before Init
+  NS_IF_RELEASE(gPrivateBrowsingObserver);
 }
 
 /* static */ PRBool
