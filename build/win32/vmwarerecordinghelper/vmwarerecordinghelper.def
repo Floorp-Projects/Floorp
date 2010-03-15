@@ -1,0 +1,4 @@
+LIBRARY vmwarerecordinghelper
+EXPORTS
+     StartRecording
+     StopRecording
