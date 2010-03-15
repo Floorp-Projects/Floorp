@@ -520,6 +520,7 @@ function test_bind_multiple_rows_by_index()
     bp.bindByIndex(3, null);
     bp.bindBlobByIndex(4, BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
@@ -589,6 +590,7 @@ function test_bind_multiple_rows_by_name()
     bp.bindByName("null", null);
     bp.bindBlobByName("blob", BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
