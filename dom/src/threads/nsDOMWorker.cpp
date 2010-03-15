@@ -1428,6 +1428,16 @@ PRBool
 nsDOMWorker::IsCanceled()
 {
   nsAutoLock lock(mLock);
+  return IsCanceledNoLock();
+}
+
+PRBool
+nsDOMWorker::IsCanceledNoLock()
+{
+  // If we haven't started the close process then we're not canceled.
+  if (mStatus == eRunning) {
+    return PR_FALSE;
+  }
 
   // There are several conditions under which we want JS code to abort and all
   // other functions to bail:
@@ -1988,8 +1998,18 @@ NS_IMETHODIMP
 nsDOMWorker::DispatchEvent(nsIDOMEvent* aEvent,
                            PRBool* _retval)
 {
-  if (IsCanceled()) {
-    return NS_OK;
+  {
+    nsAutoLock lock(mLock);
+    if (IsCanceledNoLock()) {
+      return NS_OK;
+    }
+    if (mStatus == eTerminated) {
+      nsCOMPtr<nsIWorkerMessageEvent> messageEvent(do_QueryInterface(aEvent));
+      if (messageEvent) {
+        // This is a message event targeted to a terminated worker. Ignore it.
+        return NS_OK;
+      }
+    }
   }
 
   return nsDOMWorkerMessageHandler::DispatchEvent(aEvent, _retval);

@@ -292,6 +292,8 @@ private:
 
   PRBool QueueSuspendedRunnable(nsIRunnable* aRunnable);
 
+  PRBool IsCanceledNoLock();
+
 private:
 
   // mParent will live as long as mParentWN but only mParentWN will keep the JS

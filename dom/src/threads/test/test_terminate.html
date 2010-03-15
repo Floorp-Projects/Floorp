@@ -17,32 +17,26 @@ Tests of DOM Worker terminate feature
 <pre id="test">
 <script class="testbody" language="javascript">
 
-  var worker = new Worker("terminate_worker.js");
 
-  var count = 0;
+  var messageCount = 0;
+  var intervalCount = 0;
+
   var interval;
 
-  function maybeFinish() {
-    if (count) {
-      count = 0;
-      return;
+  function testCount() {
+    is(messageCount, 21, "Received another message after terminated!");
+    if (intervalCount++ == 5) {
+      clearInterval(interval);
+      SimpleTest.finish();
     }
-
-    clearInterval(interval);
-    ok(true, "no more messages");
-    SimpleTest.finish();
   }
 
+  var worker = new Worker("terminate_worker.js");
   worker.onmessage = function(event) {
-    if (event.data == "Still alive!") {
-      count++;
-      if (!interval && count == 20) {
-        worker.terminate();
-      }
-    }
-    else if (event.data == "Closed!") {
-      count = 0;
-      interval = setInterval(maybeFinish, 500);
+    is(event.data, "Still alive!", "Bad message!");
+    if (messageCount++ == 20) {
+      worker.terminate();
+      interval = setInterval(testCount, 1000);
     }
   };
 
