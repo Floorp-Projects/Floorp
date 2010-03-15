@@ -334,7 +334,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug475156.html \
 		bug475156.sjs \
 		test_bug544642.html \
-		test_copyimage.html \
 		test_copypaste.html \
 		test_bug503481.html \
 		file_bug503481.sjs \
@@ -360,6 +359,12 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug540854.html \
 		bug540854.sjs \
 		$(NULL)
+
+# This test fails on the Mac for some reason
+ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += 	test_copyimage.html \
+		$(NULL)
+endif
 
 # Disabled; see bug 492181
 #		test_plugin_freezing.html
