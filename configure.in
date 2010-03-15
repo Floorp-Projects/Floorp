@@ -4758,6 +4758,7 @@ NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
 NECKO_SMALL_BUFFERS=
+BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
 
@@ -8120,12 +8121,23 @@ if test "$NECKO_COOKIES"; then
 fi
 
 dnl
-dnl Build jsctypes on the platforms we can.
+dnl Build jsctypes on the platforms we can, unless it's explicitly disabled.
 dnl
+MOZ_ARG_DISABLE_BOOL(ctypes,
+[  --disable-ctypes        Disable js-ctypes],
+    BUILD_CTYPES=,
+    BUILD_CTYPES=1)
 AC_SUBST(BUILD_CTYPES)
-if test "$OS_ARCH" != "WINCE" -o `echo $OS_TEST | grep -ic arm` != 1; then
-  BUILD_CTYPES=1
-  AC_DEFINE(BUILD_CTYPES)
+if test "$BUILD_CTYPES"; then
+  if test "$OS_ARCH" = "WINCE" -a `echo $OS_TEST | grep -ic arm` = 1; then
+    # Disable ctypes for arm/wince.
+    BUILD_CTYPES=
+  elif test "$_MSC_VER" && test -z $AS; then
+    # Disable ctypes if we're on MSVC and MASM is unavailable.
+    AC_MSG_ERROR([No suitable assembler found. An assembler is required to build js-ctypes. You may --disable-ctypes to avoid this. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK.])
+  else
+    AC_DEFINE(BUILD_CTYPES)
+  fi
 fi
 
 dnl NECKO_ configuration options are not global
