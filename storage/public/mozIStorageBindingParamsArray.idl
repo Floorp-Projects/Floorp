@@ -41,14 +41,14 @@
 
 interface mozIStorageBindingParams;
 
-[scriptable, uuid(e676e1a3-1dc6-4802-ac03-291fa9de7f93)]
+[scriptable, uuid(67eea5c3-4881-41ff-b0fe-09f2356aeadb)]
 interface mozIStorageBindingParamsArray : nsISupports {
   /**
    * Creates a new mozIStorageBindingParams object that can be added to this
    * array.
    *
-   * @returns a mozIStorageBindingParams object that can be used to specify
-   *          parameters that need to be bound.
+   * @return a mozIStorageBindingParams object that can be used to specify
+   *         parameters that need to be bound.
    */
   mozIStorageBindingParams newBindingParams();
 
@@ -59,4 +59,9 @@ interface mozIStorageBindingParamsArray : nsISupports {
    *        The parameters to add to this array.
    */
   void addParams(in mozIStorageBindingParams aParameters);
+
+  /**
+   * The number of mozIStorageBindingParams this object contains.
+   */
+  readonly attribute unsigned long length;
 };
