@@ -172,8 +172,6 @@ template <class T,
           class AllocPolicy = ContextAllocPolicy>
 class HashSet;
 
-class DeflatedStringCache;
-
 } /* namespace js */
 
 /* Common instantiations. */
