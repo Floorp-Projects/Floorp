@@ -423,5 +423,5 @@ window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) 
 }
 
 .editBMPanel_rowLabel {
-  text-align: right !important;
+  text-align: end;
 }
