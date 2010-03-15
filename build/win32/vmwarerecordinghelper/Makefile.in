@@ -11,15 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla core build scripts.
+# The Original Code is VMWare Recording Helper.
 #
 # The Initial Developer of the Original Code is
-# Benjamin Smedberg <benjamin@smedbergs.us>
+# The Mozilla Foundation
 #
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
 #
-# Contributor(s): Stefanik Gábor
+# Contributor(s):
+#   Ben Turner <bent.mozilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,59 +36,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS += \
-  crashinjectdll \
-  vmwarerecordinghelper \
-  $(NULL)
+LIBRARY_NAME = vmwarerecordinghelper
+DEFFILE = $(srcdir)/$(LIBRARY_NAME).def
 
-PROGRAM = crashinject$(BIN_SUFFIX)
+FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
-CPPSRCS = crashinject.cpp
 
-endif
+CPPSRCS = $(LIBRARY_NAME).cpp
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef WIN32_REDIST_DIR
-
-ifeq (1400,$(_MSC_VER))
-REDIST_FILES = \
-	Microsoft.VC80.CRT.manifest \
-	msvcm80.dll \
-	msvcp80.dll \
-	msvcr80.dll \
-	$(NULL)
-endif
-
-ifeq (1500,$(_MSC_VER))
-REDIST_FILES = \
-	Microsoft.VC90.CRT.manifest \
-	msvcm90.dll \
-	msvcp90.dll \
-	msvcr90.dll \
-	$(NULL)
-endif
-
-ifeq (1600,$(_MSC_VER))
-REDIST_FILES = \
-	msvcp100.dll \
-	msvcr100.dll \
-	$(NULL)
-endif
-
-endif
-
-ifdef REDIST_FILES
-libs::
-	mkdir -p $(FINAL_TARGET)
-	install --preserve-timestamps $(foreach f,$(REDIST_FILES),"$(WIN32_REDIST_DIR)"/$(f)) $(FINAL_TARGET)
-endif
-
