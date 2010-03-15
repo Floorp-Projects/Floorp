@@ -105,7 +105,11 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nsNativeAppSupportUnix.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += nsNativeAppSupportQt.cpp
+else
 CPPSRCS += nsNativeAppSupportDefault.cpp
+endif
 endif
 endif
 endif
