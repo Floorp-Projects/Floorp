@@ -65,11 +65,7 @@ datepicker, timepicker {
 }
 
 html|*.datetimepicker-input {
-  text-align: right;
-}
-
-html|*.datetimepicker-input:-moz-locale-dir(rtl) {
-  text-align: left;
+  text-align: end;
 }
 
 .datetimepicker-separator {
