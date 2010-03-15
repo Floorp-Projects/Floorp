@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for copy image</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518249">Mozilla Bug 518249</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testCopyImage () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // selection of the node
+  var node = document.getElementById('logo');
+  var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+
+  var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
+
+  docShell.chromeEventHandler.ownerDocument.popupNode = node;
+
+  // let's copy the node
+  var documentViewer = docShell.contentViewer
+                               .QueryInterface(Components.interfaces.nsIContentViewerEdit);
+  documentViewer.copyImage(documentViewer.COPY_IMAGE_ALL);
+  
+  //--------- now check the content of the clipboard
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                            .getService(Components.interfaces.nsIClipboard);
+  
+  // does the clipboard contain text/unicode data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1, clipboard.kGlobalClipboard), "clipboard contains unicode text");
+  // does the clipboard contain text/html data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/html"], 1, clipboard.kGlobalClipboard), "clipboard contains html text");
+  // does the clipboard contain image data ?
+  ok(clipboard.hasDataMatchingFlavors(["image/png"], 1, clipboard.kGlobalClipboard), "clipboard contains image");
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testCopyImage);
+
+</script>
+</pre>
+<div>
+  <img id="logo" src="about:logo">
+</div>
+</body>
+</html>
