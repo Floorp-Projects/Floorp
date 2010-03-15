@@ -558,6 +558,7 @@ nsHtml5TreeBuilder::HasScript()
 PRBool
 nsHtml5TreeBuilder::Flush()
 {
+  flushCharacters();
   FlushLoads();
   PRBool hasOps = !mOpQueue.IsEmpty();
   if (hasOps) {
