@@ -95,6 +95,9 @@ public:
     PRInt32 Count() const {
         return mArray.Count();
     }
+    // If the array grows, the newly created entries will all be null;
+    // if the array shrinks, the excess entries will all be released.
+    PRBool SetCount(PRInt32 aNewCount);
 
     nsISupports* ObjectAt(PRInt32 aIndex) const {
         return static_cast<nsISupports*>(mArray.FastElementAt(aIndex));
