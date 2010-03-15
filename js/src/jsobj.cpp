@@ -6745,6 +6745,34 @@ JSObject::isCallable()
     return !!map->ops->call;
 }
 
+void
+JSObject::setClass(const JSClass *clasp)
+{
+    JS_ASSERT((jsuword(clasp) & 3) == 0);
+    jsuword ov, nv;
+
+    do {
+        ov = classword;
+        nv = jsuword(clasp) | (ov & 3);
+    } while (!js_CompareAndSwap((jsword *)&classword, ov, nv));
+}
+
+void
+JSObject::setDelegate()
+{
+    if (classword & jsuword(1))
+        return;
+    JS_ATOMIC_SET_MASK(&classword, 1);
+}
+
+void
+JSObject::setSystem()
+{
+    if (classword & jsuword(2))
+        return;
+    JS_ATOMIC_SET_MASK(&classword, 2);
+}
+
 JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
 {

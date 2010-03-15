@@ -349,12 +349,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             /*
              * Make sure that a later shadowing assignment will enter
              * PurgeProtoChain and invalidate this entry, bug 479198.
-             *
-             * This is thread-safe even though obj is not locked. Only the
-             * DELEGATE bit of obj->classword can change at runtime, given that
-             * obj is native; and the bit is only set, never cleared. And on
-             * platforms where another CPU can fail to see this write, it's OK
-             * because the property cache and JIT cache are thread-local.
              */
             obj->setDelegate();
         }
