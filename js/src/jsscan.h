@@ -247,38 +247,60 @@ struct JSToken {
 #define t_atom2         u.p.atom2
 #define t_dval          u.dval
 
-typedef struct JSTokenBuf {
-    jschar              *base;          /* base of line or stream buffer */
-    jschar              *limit;         /* limit for quick bounds check */
-    jschar              *ptr;           /* next char to get, or slot to use */
-} JSTokenBuf;
-
 #define JS_LINE_LIMIT   256             /* logical line buffer size limit --
                                            physical line length is unlimited */
 #define NTOKENS         4               /* 1 current + 2 lookahead, rounded */
 #define NTOKENS_MASK    (NTOKENS-1)     /* to power of 2 to avoid divmod by 3 */
 
-struct JSTokenStream {
-    JSToken             tokens[NTOKENS];/* circular token buffer */
-    uintN               cursor;         /* index of last parsed token */
-    uintN               lookahead;      /* count of lookahead tokens */
-    uintN               lineno;         /* current line number */
-    uintN               ungetpos;       /* next free char slot in ungetbuf */
-    jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
-    uintN               flags;          /* flags -- see below */
-    uint32              linelen;        /* physical linebuf segment length */
-    uint32              linepos;        /* linebuf offset in physical line */
-    JSTokenBuf          linebuf;        /* line buffer for diagnostics */
-    JSTokenBuf          userbuf;        /* user input buffer if !file */
-    const char          *filename;      /* input filename or null */
-    FILE                *file;          /* stdio stream if reading from file */
-    JSSourceHandler     listener;       /* callback for source; eg debugger */
-    void                *listenerData;  /* listener 'this' data */
-    void                *listenerTSData;/* listener data for this TokenStream */
-    jschar              *saveEOL;       /* save next end of line in userbuf, to
-                                           optimize for very long lines */
-    JSCharBuffer        tokenbuf;       /* current token string buffer */
 
+enum JSTokenStreamFlags
+{
+    TSF_ERROR = 0x01,           /* fatal error while compiling */
+    TSF_EOF = 0x02,             /* hit end of file */
+    TSF_NEWLINES = 0x04,        /* tokenize newlines */
+    TSF_OPERAND = 0x08,         /* looking for operand, not operator */
+    TSF_NLFLAG = 0x20,          /* last linebuf ended with \n */
+    TSF_CRFLAG = 0x40,          /* linebuf would have ended with \r */
+    TSF_DIRTYLINE = 0x80,       /* non-whitespace since start of line */
+    TSF_OWNFILENAME = 0x100,    /* ts->filename is malloc'd */
+    TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
+    TSF_XMLTEXTMODE = 0x400,    /* scanning XMLText terminal from E4X */
+    TSF_XMLONLYMODE = 0x800,    /* don't scan {expr} within text/tag */
+
+    /* Flag indicating unexpected end of input, i.e. TOK_EOF not at top-level. */
+    TSF_UNEXPECTED_EOF = 0x1000,
+
+    /*
+     * To handle the hard case of contiguous HTML comments, we want to clear the
+     * TSF_DIRTYINPUT flag at the end of each such comment.  But we'd rather not
+     * scan for --> within every //-style comment unless we have to.  So we set
+     * TSF_IN_HTML_COMMENT when a <!-- is scanned as an HTML begin-comment, and
+     * clear it (and TSF_DIRTYINPUT) when we scan --> either on a clean line, or
+     * only if (ts->flags & TSF_IN_HTML_COMMENT), in a //-style comment.
+     *
+     * This still works as before given a malformed comment hiding hack such as:
+     *
+     *    <script>
+     *      <!-- comment hiding hack #1
+     *      code goes here
+     *      // --> oops, markup for script-unaware browsers goes here!
+     *    </script>
+     *
+     * It does not cope with malformed comment hiding hacks where --> is hidden
+     * by C-style comments, or on a dirty line.  Such cases are already broken.
+     */
+    TSF_IN_HTML_COMMENT = 0x2000,
+
+    /* Ignore keywords and return TOK_NAME instead to the parser. */
+    TSF_KEYWORD_IS_NAME = 0x4000,
+
+    /* Tokenize as appropriate for strict mode code.  */
+    TSF_STRICT_MODE_CODE = 0x8000
+};
+
+class JSTokenStream
+{
+  public:
     /*
      * To construct a JSTokenStream, first call the constructor, which is
      * infallible, then call |init|, which can fail. To destroy a JSTokenStream,
@@ -295,58 +317,139 @@ struct JSTokenStream {
      * Create a new token stream, either from an input buffer or from a file.
      * Return false on file-open or memory-allocation failure.
      */
-    bool init(JSContext *, const jschar *base, size_t length,
-              FILE *fp, const char *filename, uintN lineno);
-
-    void close(JSContext *);
+    bool init(const jschar *base, size_t length, FILE *fp, const char *filename, uintN lineno);
+    void close();
     ~JSTokenStream() {}
+
+    /* Accessors. */
+    JSContext *getContext() const { return cx; }
+    bool onCurrentLine(const JSTokenPos &pos) const { return lineno == pos.end.lineno; }
+    const JSToken &currentToken() const { return tokens[cursor]; }
+    const JSToken &getTokenAt(size_t index) const {
+        JS_ASSERT(index < NTOKENS);
+        return tokens[index];
+    }
+    const JSCharBuffer &getTokenbuf() const { return tokenbuf; }
+    const char *getFilename() const { return filename; }
+    uintN getLineno() const { return lineno; }
+
+    /* Mutators. */
+    JSToken *mutableCurrentToken() { return &tokens[cursor]; }
+    bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
+
+    JSTokenType getToken() {
+        /* Check for a pushed-back token resulting from mismatching lookahead. */
+        while (lookahead != 0) {
+            JS_ASSERT(!(flags & TSF_XMLTEXTMODE));
+            lookahead--;
+            cursor = (cursor + 1) & NTOKENS_MASK;
+            JSTokenType tt = currentToken().type;
+            if (tt != TOK_EOL || (flags & TSF_NEWLINES))
+                return tt;
+        }
+
+        /* If there was a fatal error, keep returning TOK_ERROR. */
+        if (flags & TSF_ERROR)
+            return TOK_ERROR;
+        
+        return getTokenInternal();
+    }
+
+    JSToken *getMutableTokenAt(size_t index) {
+        JS_ASSERT(index < NTOKENS);
+        return &tokens[index];
+    }
+
+    void ungetToken() {
+        JS_ASSERT(lookahead < NTOKENS_MASK);
+        lookahead++;
+        cursor = (cursor - 1) & NTOKENS_MASK;
+    }
+
+    JSTokenType peekToken() {
+        if (lookahead != 0) {
+            return tokens[(cursor + lookahead) & NTOKENS_MASK].type;
+        }
+        JSTokenType tt = getToken();
+        ungetToken();
+        return tt;
+    }
+
+    JSTokenType peekTokenSameLine() {
+        if (!onCurrentLine(currentToken().pos))
+            return TOK_EOL;
+        flags |= TSF_NEWLINES;
+        JSTokenType tt = peekToken();
+        flags &= ~TSF_NEWLINES;
+        return tt;
+    }
+
+    JSBool matchToken(JSTokenType tt) {
+        if (getToken() == tt)
+            return JS_TRUE;
+        ungetToken();
+        return JS_FALSE;
+    }
+
+  private:
+    typedef struct JSTokenBuf {
+        jschar              *base;      /* base of line or stream buffer */
+        jschar              *limit;     /* limit for quick bounds check */
+        jschar              *ptr;       /* next char to get, or slot to use */
+    } JSTokenBuf;
+
+    JSTokenType getTokenInternal();     /* doesn't check for pushback or error flag. */
+    int32 getChar();
+    void ungetChar(int32 c);
+    JSToken *newToken(ptrdiff_t adjust);
+    int32 getUnicodeEscape();
+    JSBool peekChars(intN n, jschar *cp);
+    JSBool getXMLEntity();
+
+    JSBool matchChar(int32 expect) {
+        int32 c = getChar();
+        if (c == expect)
+            return JS_TRUE;
+        ungetChar(c);
+        return JS_FALSE;
+    }
+
+    int32 peekChar() {
+        int32 c = getChar();
+        ungetChar(c);
+        return c;
+    }
+
+    void skipChars(intN n) {
+        while (--n >= 0)
+            getChar();
+    }
+
+    JSContext           * const cx;
+    JSToken             tokens[NTOKENS];/* circular token buffer */
+    uintN               cursor;         /* index of last parsed token */
+    uintN               lookahead;      /* count of lookahead tokens */
+
+    uintN               lineno;         /* current line number */
+    uintN               ungetpos;       /* next free char slot in ungetbuf */
+    jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
+  public:
+    uintN               flags;          /* flags -- see above */
+  private:
+    uint32              linelen;        /* physical linebuf segment length */
+    uint32              linepos;        /* linebuf offset in physical line */
+    JSTokenBuf          linebuf;        /* line buffer for diagnostics */
+
+    JSTokenBuf          userbuf;        /* user input buffer if !file */
+    const char          *filename;      /* input filename or null */
+    FILE                *file;          /* stdio stream if reading from file */
+    JSSourceHandler     listener;       /* callback for source; eg debugger */
+    void                *listenerData;  /* listener 'this' data */
+    void                *listenerTSData;/* listener data for this TokenStream */
+    jschar              *saveEOL;       /* save next end of line in userbuf, to
+                                           optimize for very long lines */
+    JSCharBuffer        tokenbuf;       /* current token string buffer */
 };
-
-#define CURRENT_TOKEN(ts)       ((ts)->tokens[(ts)->cursor])
-#define ON_CURRENT_LINE(ts,pos) ((ts)->lineno == (pos).end.lineno)
-
-/* JSTokenStream flags */
-#define TSF_ERROR       0x01            /* fatal error while compiling */
-#define TSF_EOF         0x02            /* hit end of file */
-#define TSF_NEWLINES    0x04            /* tokenize newlines */
-#define TSF_OPERAND     0x08            /* looking for operand, not operator */
-#define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
-#define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
-#define TSF_DIRTYLINE   0x80            /* non-whitespace since start of line */
-#define TSF_OWNFILENAME 0x100           /* ts->filename is malloc'd */
-#define TSF_XMLTAGMODE  0x200           /* scanning within an XML tag in E4X */
-#define TSF_XMLTEXTMODE 0x400           /* scanning XMLText terminal from E4X */
-#define TSF_XMLONLYMODE 0x800           /* don't scan {expr} within text/tag */
-
-/* Flag indicating unexpected end of input, i.e. TOK_EOF not at top-level. */
-#define TSF_UNEXPECTED_EOF 0x1000
-
-/*
- * To handle the hard case of contiguous HTML comments, we want to clear the
- * TSF_DIRTYINPUT flag at the end of each such comment.  But we'd rather not
- * scan for --> within every //-style comment unless we have to.  So we set
- * TSF_IN_HTML_COMMENT when a <!-- is scanned as an HTML begin-comment, and
- * clear it (and TSF_DIRTYINPUT) when we scan --> either on a clean line, or
- * only if (ts->flags & TSF_IN_HTML_COMMENT), in a //-style comment.
- *
- * This still works as before given a malformed comment hiding hack such as:
- *
- *    <script>
- *      <!-- comment hiding hack #1
- *      code goes here
- *      // --> oops, markup for script-unaware browsers goes here!
- *    </script>
- *
- * It does not cope with malformed comment hiding hacks where --> is hidden
- * by C-style comments, or on a dirty line.  Such cases are already broken.
- */
-#define TSF_IN_HTML_COMMENT 0x2000
-
-/* Ignore keywords and return TOK_NAME instead to the parser. */
-#define TSF_KEYWORD_IS_NAME 0x4000
-
-/* Tokenize as appropriate for strict mode code.  */
-#define TSF_STRICT_MODE_CODE 0x8000
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
@@ -417,29 +520,48 @@ js_ReportStrictModeError(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 /*
  * Look ahead one token and return its type.
  */
-extern JSTokenType
-js_PeekToken(JSContext *cx, JSTokenStream *ts);
+static inline JSTokenType
+js_PeekToken(JSContext *cx, JSTokenStream *ts)
+{
+    JS_ASSERT(cx == ts->getContext());
+    return ts->peekToken();
+}
 
-extern JSTokenType
-js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts);
+static inline JSTokenType
+js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
+{
+    JS_ASSERT(cx == ts->getContext());
+    return ts->peekTokenSameLine();
+}
 
 /*
  * Get the next token from ts.
  */
-extern JSTokenType
-js_GetToken(JSContext *cx, JSTokenStream *ts);
+static inline JSTokenType
+js_GetToken(JSContext *cx, JSTokenStream *ts)
+{
+    JS_ASSERT(cx == ts->getContext());
+    return ts->getToken();
+}
 
 /*
  * Push back the last scanned token onto ts.
  */
-extern void
-js_UngetToken(JSTokenStream *ts);
+static inline void
+js_UngetToken(JSTokenStream *ts)
+{
+    ts->ungetToken();
+}
 
 /*
  * Get the next token from ts if its type is tt.
  */
-extern JSBool
-js_MatchToken(JSContext *cx, JSTokenStream *ts, JSTokenType tt);
+static inline JSBool
+js_MatchToken(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
+{
+    JS_ASSERT(cx == ts->getContext());
+    return ts->matchToken(tt);
+}
 
 JS_END_EXTERN_C
 

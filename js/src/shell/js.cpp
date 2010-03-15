@@ -1921,7 +1921,7 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         /* burn the leading lines */
         line2 = JS_PCToLineNumber(cx, script, pc);
         for (line1 = 0; line1 < line2 - 1; line1++)
-            fgets(linebuf, LINE_BUF_LEN, file);
+            (void) fgets(linebuf, LINE_BUF_LEN, file); /* Intentionally unused result. */
 
         bupline = 0;
         while (pc < end) {
