@@ -5835,7 +5835,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 
 JSObject *
 js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
-                   jschar *chars, size_t length, uintN flags)
+                   const jschar *chars, size_t length, uintN flags)
 {
     JSString *str;
     JSObject *obj;

@@ -191,7 +191,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING,
                                      js_GetErrorMessage, NULL,
                                      JSMSG_STACK_UNDERFLOW,
-                                     ts->filename ? ts->filename : "stdin",
+                                     ts->getFilename() ? ts->getFilename() : "stdin",
                                      numBuf);
     }
     ndefs = cs->ndefs;

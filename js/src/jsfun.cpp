@@ -2330,7 +2330,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
-        if (!ts.init(cx, collected_args, args_length, NULL, filename, lineno)) {
+        if (!ts.init(collected_args, args_length, NULL, filename, lineno)) {
             JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
@@ -2351,7 +2351,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * stream; we're assured at this point that it's a valid
                  * identifier.
                  */
-                atom = CURRENT_TOKEN(&ts).t_atom;
+                atom = ts.currentToken().t_atom;
 
                 /* Check for a duplicate parameter name. */
                 if (js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
@@ -2393,7 +2393,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_FORMAL);
         }
-        ts.close(cx);
+        ts.close();
         JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (state != OK)
             return JS_FALSE;
