@@ -499,7 +499,6 @@ js_InitCommonAtoms(JSContext *cx)
     JS_ASSERT((uint8 *)atoms - (uint8 *)state == LAZY_ATOM_OFFSET_START);
     memset(atoms, 0, ATOM_OFFSET_LIMIT - LAZY_ATOM_OFFSET_START);
 
-    cx->runtime->emptyString = ATOM_TO_STRING(state->emptyAtom);
     return JS_TRUE;
 }
 
@@ -515,8 +514,8 @@ js_atom_unpinner(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 js_FinishCommonAtoms(JSContext *cx)
 {
-    cx->runtime->emptyString = NULL;
     JSAtomState *state = &cx->runtime->atomState;
+
     JS_DHashTableEnumerate(&state->stringAtoms, js_atom_unpinner, NULL);
 #ifdef DEBUG
     memset(COMMON_ATOMS_START(state), JS_FREE_PATTERN,
