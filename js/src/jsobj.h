@@ -263,13 +263,13 @@ struct JSObject {
         return clasp == getClass();
     }
 
+    void setClass(const JSClass *clasp);
+
     bool isDelegate() const {
         return (classword & jsuword(1)) != jsuword(0);
     }
 
-    void setDelegate() {
-        classword |= jsuword(1);
-    }
+    void setDelegate();
 
     static void setDelegateNullSafe(JSObject *obj) {
         if (obj)
@@ -280,9 +280,7 @@ struct JSObject {
         return (classword & jsuword(2)) != jsuword(0);
     }
 
-    void setSystem() {
-        classword |= jsuword(2);
-    }
+    void setSystem();
 
     JSObject *getProto() const {
         return JSVAL_TO_OBJECT(fslots[JSSLOT_PROTO]);
