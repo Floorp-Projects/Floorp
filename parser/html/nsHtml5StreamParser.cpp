@@ -1024,7 +1024,6 @@ nsHtml5StreamParser::TimerFlush()
   // that case would make the tree shape dependent on where the flush points 
   // fall.
   if (mTreeBuilder->IsDiscretionaryFlushSafe()) {
-    mTreeBuilder->flushCharacters();
     if (mTreeBuilder->Flush()) {
       if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
         NS_WARNING("failed to dispatch executor flush event");
