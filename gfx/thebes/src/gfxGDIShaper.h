@@ -12,16 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is thebes gfx code.
+ * The Original Code is Mozilla Foundation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006-2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *   John Daggett <jdaggett@mozilla.com>
  *   Jonathan Kew <jfkthame@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,60 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_CORETEXTSHAPER_H
-#define GFX_CORETEXTSHAPER_H
+#ifndef GFX_GDISHAPER_H
+#define GFX_GDISHAPER_H
 
-#include "gfxTypes.h"
-#include "gfxFont.h"
-#include "gfxFontUtils.h"
-#include "gfxPlatform.h"
-#include "gfxMacPlatformFontList.h"
+#include "gfxGDIFont.h"
 
-#include <Carbon/Carbon.h>
-
-class gfxMacFont;
-
-class gfxCoreTextShaper : public gfxFontShaper {
+class gfxGDIShaper : public gfxFontShaper
+{
 public:
-    gfxCoreTextShaper(gfxMacFont *aFont);
+    gfxGDIShaper(gfxGDIFont *aFont)
+        : gfxFontShaper(aFont) { }
 
-    virtual ~gfxCoreTextShaper();
+    virtual ~gfxGDIShaper() { }
 
     virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength);
-
-    // clean up static objects that may have been cached
-    static void Shutdown();
-
-protected:
-    CTFontRef mCTFont;
-    CFDictionaryRef mAttributesDict;
-
-    nsresult SetGlyphsFromRun(gfxTextRun *aTextRun,
-                              CTRunRef aCTRun,
-                              PRInt32 aStringOffset,
-                              PRInt32 aLayoutStart,
-                              PRInt32 aLayoutLength);
-
-    static void CreateDefaultFeaturesDescriptor();
-
-    static CTFontDescriptorRef GetDefaultFeaturesDescriptor() {
-        if (sDefaultFeaturesDescriptor == NULL) {
-            CreateDefaultFeaturesDescriptor();
-        }
-        return sDefaultFeaturesDescriptor;
-    }
-
-    static CTFontRef CreateCTFontWithDisabledLigatures(ATSFontRef aFontRef, CGFloat aSize);
-
-    // cached font descriptor, created the first time it's needed
-    static CTFontDescriptorRef    sDefaultFeaturesDescriptor;
-
-    // cached descriptor for adding disable-ligatures setting to a font
-    static CTFontDescriptorRef    sDisableLigaturesDescriptor;
 };
 
-#endif /* GFX_CORETEXTSHAPER_H */
+#endif /* GFX_GDISHAPER_H */
