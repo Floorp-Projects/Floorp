@@ -170,7 +170,7 @@ public:
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
 
 #ifdef MOZ_SMIL
-  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName);
+  virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* aName);
   void AnimationNeedsResample();
   void FlushAnimations();
 #endif
