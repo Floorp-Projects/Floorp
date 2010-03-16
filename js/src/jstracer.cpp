@@ -1662,12 +1662,6 @@ isPromote(LIns* i)
     return isPromoteInt(i) || isPromoteUint(i);
 }
 
-static bool
-IsConst(LIns* i, int32_t c)
-{
-    return i->isconst() && i->imm32() == c;
-}
-
 /*
  * Determine whether this operand is guaranteed to not overflow the specified
  * integer operation.
@@ -1726,31 +1720,6 @@ public:
                 if (v != LIR_eq)
                     v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
                 return out->ins2(v, demote(out, s0), demote(out, s1));
-            }
-        } else if (v == LIR_or &&
-                   s0->isop(LIR_lsh) && IsConst(s0->oprnd2(), 16) &&
-                   s1->isop(LIR_and) && IsConst(s1->oprnd2(), 0xffff)) {
-            LIns* msw = s0->oprnd1();
-            LIns* lsw = s1->oprnd1();
-            LIns* x;
-            LIns* y;
-            if (lsw->isop(LIR_add) &&
-                lsw->oprnd1()->isop(LIR_and) &&
-                lsw->oprnd2()->isop(LIR_and) &&
-                IsConst(lsw->oprnd1()->oprnd2(), 0xffff) &&
-                IsConst(lsw->oprnd2()->oprnd2(), 0xffff) &&
-                msw->isop(LIR_add) &&
-                msw->oprnd1()->isop(LIR_add) &&
-                msw->oprnd2()->isop(LIR_rsh) &&
-                msw->oprnd1()->oprnd1()->isop(LIR_rsh) &&
-                msw->oprnd1()->oprnd2()->isop(LIR_rsh) &&
-                IsConst(msw->oprnd2()->oprnd2(), 16) &&
-                IsConst(msw->oprnd1()->oprnd1()->oprnd2(), 16) &&
-                IsConst(msw->oprnd1()->oprnd2()->oprnd2(), 16) &&
-                (x = lsw->oprnd1()->oprnd1()) == msw->oprnd1()->oprnd1()->oprnd1() &&
-                (y = lsw->oprnd2()->oprnd1()) == msw->oprnd1()->oprnd2()->oprnd1() &&
-                lsw == msw->oprnd2()->oprnd1()) {
-                return out->ins2(LIR_add, x, y);
             }
         }
         return out->ins2(v, s0, s1);
