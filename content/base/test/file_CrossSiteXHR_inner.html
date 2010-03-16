@@ -45,6 +45,7 @@ window.addEventListener("message", function(e) {
   }
   xhr.onload = function () {
     res.status = xhr.status;
+    res.statusText = xhr.statusText;
     res.responseXML = xhr.responseXML ?
       (new XMLSerializer()).serializeToString(xhr.responseXML) :
       null;
@@ -54,6 +55,10 @@ window.addEventListener("message", function(e) {
   xhr.onerror = function () {
     res.didFail = true;
     res.status = xhr.status;
+    try {
+      res.statusText = xhr.statusText;
+    } catch (e) {
+    }
     res.responseXML = xhr.responseXML ?
       (new XMLSerializer()).serializeToString(xhr.responseXML) :
       null;
