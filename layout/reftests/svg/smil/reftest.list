@@ -165,7 +165,11 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 # interaction between xml mapped attributes and their css equivalents
 == mapped-attr-vs-css-prop-1.svg lime.svg
 
-== smil-transitions-interaction-1.svg lime.svg
-== smil-transitions-interaction-2.svg lime.svg
-== smil-transitions-interaction-3.svg lime.svg
-== smil-transitions-interaction-4.svg lime.svg
+== smil-transitions-interaction-1a.svg lime.svg
+== smil-transitions-interaction-1b.svg lime.svg
+== smil-transitions-interaction-2a.svg lime.svg
+== smil-transitions-interaction-2b.svg lime.svg
+== smil-transitions-interaction-3a.svg lime.svg
+== smil-transitions-interaction-3b.svg lime.svg
+== smil-transitions-interaction-4a.svg lime.svg
+== smil-transitions-interaction-4b.svg lime.svg

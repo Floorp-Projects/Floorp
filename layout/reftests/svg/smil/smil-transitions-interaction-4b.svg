@@ -10,12 +10,12 @@
        enough to cover up the red rect behind it. If a transition were to
        start, it would slow us down and allow some red to show.
     -->
-       <script xlink:href="smil-util.js" type="text/javascript"/>
-       <rect width="100%" height="100%" style="fill: lime"/> <rect width="30"
-       height="30" style="fill: red"/>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%" style="fill: lime"/>
+  <rect width="30" height="30" style="fill: red"/>
   <rect width="20" height="20"
         style="fill: lime; stroke: lime; -moz-transition: 200s stroke-width">
-    <animate attributeName="stroke-width" from="10px" to="30px"
-             begin="1s" dur="1s" fill="freeze"/>
+    <animate attributeName="stroke-width" attributeType="XML"
+             from="10px" to="30px" begin="1s" dur="1s" fill="freeze"/>
   </rect>
 </svg>
