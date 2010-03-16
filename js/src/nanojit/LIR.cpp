@@ -934,7 +934,17 @@ namespace nanojit
 
     LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov)
     {
-        NanoAssert(cond->isCmp());
+        // 'cond' must be a conditional, unless it has been optimized to 0 or
+        // 1.  In that case make it an ==0 test and flip the branches.  It'll
+        // get constant-folded by ExprFilter subsequently.
+        if (!cond->isCmp()) {
+            NanoAssert(cond->isconst());
+            cond = ins_eq0(cond);
+            LInsp tmp = iftrue;
+            iftrue = iffalse;
+            iffalse = tmp;
+        }
+
         if (use_cmov) {
             LOpcode op = LIR_cmov;
             if (iftrue->isI32() && iffalse->isI32()) {
