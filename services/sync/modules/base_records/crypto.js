@@ -66,7 +66,7 @@ CryptoWrapper.prototype = {
     let meta = CryptoMetas.get(this.encryption);
     let symkey = meta.getKey(privkey, passphrase);
 
-    this.ciphertext = Svc.Crypto.encrypt(JSON.stringify([this.cleartext]),
+    this.ciphertext = Svc.Crypto.encrypt(JSON.stringify(this.cleartext),
 					 symkey, meta.bulkIV);
     this.cleartext = null;
   },
@@ -82,9 +82,8 @@ CryptoWrapper.prototype = {
     let meta = CryptoMetas.get(this.encryption);
     let symkey = meta.getKey(privkey, passphrase);
 
-    // note: payload is wrapped in an array, see _encrypt
     this.cleartext = JSON.parse(Svc.Crypto.decrypt(this.ciphertext,
-							symkey, meta.bulkIV))[0];
+							symkey, meta.bulkIV));
     this.ciphertext = null;
 
     return this.cleartext;
