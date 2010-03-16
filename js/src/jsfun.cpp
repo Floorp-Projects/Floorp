@@ -231,7 +231,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      */
     JS_ASSERT(fp->fun);
     JS_ASSERT_IF(fp->fun->flags & JSFUN_HEAVYWEIGHT,
-                 fp->varobj(js_ContainingCallStack(cx, fp)));
+                 fp->varobj(cx->containingCallStack(fp)));
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)

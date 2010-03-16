@@ -170,13 +170,6 @@ struct JSStackFrame {
 };
 
 #ifdef __cplusplus
-/*
- * Perform a linear search of all frames in all callstacks in the given context
- * for the given frame, returning the callstack, if found, and NULL otherwise.
- */
-extern js::CallStack *
-js_ContainingCallStack(JSContext *cx, JSStackFrame *target);
-
 static JS_INLINE uintN
 FramePCOffset(JSStackFrame* fp)
 {
