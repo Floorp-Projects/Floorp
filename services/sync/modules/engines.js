@@ -514,8 +514,7 @@ SyncEngine.prototype = {
     let local = this._createRecord(item.id);
     if (this._log.level <= Log4Moz.Level.Trace)
       this._log.trace("Local record: " + local);
-    if (item.parentid == local.parentid &&
-        item.deleted == local.deleted &&
+    if (item.deleted == local.deleted &&
         Utils.deepEquals(item.cleartext, local.cleartext)) {
       this._log.trace("Local record is the same");
       return true;
