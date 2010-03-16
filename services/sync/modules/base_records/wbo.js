@@ -52,7 +52,6 @@ function WBORecord(uri) {
     this.uri = uri;
 }
 WBORecord.prototype = {
-  deleted: false,
   _logName: "Record.WBO",
 
   // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
@@ -77,20 +76,18 @@ WBORecord.prototype = {
   deserialize: function deserialize(json) {
     this.data = json.constructor.toString() == String ? JSON.parse(json) : json;
 
-    // Empty string payloads are deleted records
-    if (this.payload === "")
-      this.deleted = true;
-    else
+    try {
+      // The payload is likely to be JSON, but if not, keep it as a string
       this.payload = JSON.parse(this.payload);
+    }
+    catch(ex) {}
   },
 
   toJSON: function toJSON() {
-    // Copy fields from data to except payload which needs to be a string
+    // Copy fields from data to be stringified, making sure payload is a string
     let obj = {};
     for (let [key, val] in Iterator(this.data))
-      if (key != "payload")
-        obj[key] = val;
-    obj.payload = this.deleted ? "" : JSON.stringify(this.payload);
+      obj[key] = key == "payload" ? JSON.stringify(val) : val;
     return obj;
   },
 
@@ -98,7 +95,7 @@ WBORecord.prototype = {
       "id: " + this.id,
       "index: " + this.sortindex,
       "modified: " + this.modified,
-      "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.payload))
+      "payload: " + JSON.stringify(this.payload)
     ].join("\n  ") + " }",
 };
 

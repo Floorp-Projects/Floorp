@@ -56,10 +56,6 @@ CryptoWrapper.prototype = {
   _logName: "Record.CryptoWrapper",
 
   encrypt: function CryptoWrapper_encrypt(passphrase) {
-    // No need to encrypt deleted records
-    if (this.deleted)
-      return;
-
     let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
@@ -72,10 +68,6 @@ CryptoWrapper.prototype = {
   },
 
   decrypt: function CryptoWrapper_decrypt(passphrase) {
-    // Deleted records aren't encrypted
-    if (this.deleted)
-      return;
-
     let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
@@ -111,6 +103,7 @@ CryptoWrapper.prototype = {
 };
 
 Utils.deferGetSet(CryptoWrapper, "payload", ["encryption", "ciphertext"]);
+Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
 function CryptoMeta(uri) {
   WBORecord.call(this, uri);

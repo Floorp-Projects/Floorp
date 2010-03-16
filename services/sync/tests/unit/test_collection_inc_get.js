@@ -7,13 +7,13 @@ function run_test() {
   let stream = { _data: "" };
   let called, recCount, sum;
 
-  _("Parse empty string payload as deleted");
+  _("Not-JSON, string payloads are strings");
   called = false;
-  stream._data = '{"payload":""}\n';
+  stream._data = '{"payload":"hello"}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
-    do_check_true(rec.deleted);
+    do_check_eq(rec.payload, "hello");
   };
   coll._onProgress.call(stream);
   do_check_eq(stream._data, '');
