@@ -62,7 +62,7 @@ Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/status.js");
-Cu.import("resource://weave/engines/clientData.js");
+Cu.import("resource://weave/engines/clients.js");
 
 // for export
 let Weave = {};
@@ -78,7 +78,7 @@ Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
 
 Cu.import("resource://weave/engines/bookmarks.js", Weave);
-Cu.import("resource://weave/engines/clientData.js", Weave);
+Cu.import("resource://weave/engines/clients.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
 Cu.import("resource://weave/engines/prefs.js", Weave);
@@ -1143,7 +1143,7 @@ WeaveSvc.prototype = {
     Clients.sync();
 
     // Process the incoming commands if we have any
-    if (Clients.getClients()[Clients.clientID].commands) {
+    if (Clients.localCommands) {
       try {
         if (!(this.processCommands())) {
           Status.sync = ABORT_SYNC_COMMAND;
@@ -1189,16 +1189,8 @@ WeaveSvc.prototype = {
    * Process the locally stored clients list to figure out what mode to be in
    */
   _updateClientMode: function _updateClientMode() {
-    let numClients = 0;
-    let hasMobile = false;
-
-    // Check how many and what type of clients we have
-    for each (let {type} in Clients.getClients()) {
-      numClients++;
-      hasMobile = hasMobile || type == "mobile";
-    }
-
     // Nothing to do if it's the same amount
+    let {numClients, hasMobile} = Clients.stats;
     if (this.numClients == numClients)
       return;
 
@@ -1441,12 +1433,9 @@ WeaveSvc.prototype = {
    */
   processCommands: function WeaveSvc_processCommands()
     this._notify("process-commands", "", function() {
-      let info = Clients.getInfo(Clients.clientID);
-      let commands = info.commands;
-
       // Immediately clear out the commands as we've got them locally
-      delete info.commands;
-      Clients.setInfo(Clients.clientID, info);
+      let commands = Clients.localCommands;
+      Clients.clearCommands();
 
       // Process each command in order
       for each ({command: command, args: args} in commands) {
@@ -1502,40 +1491,9 @@ WeaveSvc.prototype = {
       return;
     }
 
-    // Package the command/args pair into an object
-    let action = {
-      command: command,
-      args: args,
-    };
-    let actionStr = command + "(" + args + ")";
-
-    // Convert args into a string to simplify array comparisons
-    let jsonArgs = JSON.stringify(args);
-    let notDupe = function(action) action.command != command ||
-      JSON.stringify(action.args) != jsonArgs;
-
-    this._log.info("Sending clients: " + actionStr + "; " + commandData.desc);
-
-    // Add the action to each remote client
-    for (let guid in Clients.getClients()) {
-      // Don't send commands to the local client
-      if (guid == Clients.clientID)
-        continue;
-
-      let info = Clients.getInfo(guid);
-      // Set the action to be a new commands array if none exists
-      if (info.commands == null)
-        info.commands = [action];
-      // Add the new action if there are no duplicates
-      else if (info.commands.every(notDupe))
-        info.commands.push(action);
-      // Must have been a dupe.. skip!
-      else
-        continue;
-
-      Clients.setInfo(guid, info);
-      this._log.trace("Client " + guid + " got a new action: " + actionStr);
-    }
+    // Send the command to all remote clients
+    this._log.debug("Sending clients: " + [command, args, commandData.desc]);
+    Clients.sendCommand(command, args);
   },
 };
 
