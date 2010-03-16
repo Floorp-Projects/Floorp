@@ -322,7 +322,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
 static JSHashNumber
 js_hash_object(const void *key)
 {
-    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
+    return JSHashNumber(uintptr_t(key) >> JSVAL_TAGBITS);
 }
 
 static JSHashEntry *
@@ -354,8 +354,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     he = *hep;
     if (!he) {
         sharpid = 0;
-        he = JS_HashTableRawAdd(table, hep, hash, obj,
-                                JS_UINT32_TO_PTR(sharpid));
+        he = JS_HashTableRawAdd(table, hep, hash, obj, (void *) sharpid);
         if (!he) {
             JS_ReportOutOfMemory(cx);
             return NULL;
@@ -412,10 +411,10 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
         if (!ok)
             return NULL;
     } else {
-        sharpid = JS_PTR_TO_UINT32(he->value);
+        sharpid = uintptr_t(he->value);
         if (sharpid == 0) {
             sharpid = ++map->sharpgen << SHARP_ID_SHIFT;
-            he->value = JS_UINT32_TO_PTR(sharpid);
+            he->value = (void *) sharpid;
         }
         ida = NULL;
     }
@@ -475,7 +474,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         --map->depth;
         if (!he)
             goto bad;
-        JS_ASSERT((JS_PTR_TO_UINT32(he->value) & SHARP_BIT) == 0);
+        JS_ASSERT((uintptr_t(he->value) & SHARP_BIT) == 0);
         if (!idap) {
             JS_DestroyIdArray(cx, ida);
             ida = NULL;
@@ -503,7 +502,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         }
     }
 
-    sharpid = JS_PTR_TO_UINT32(he->value);
+    sharpid = uintptr_t(he->value);
     if (sharpid != 0) {
         len = JS_snprintf(buf, sizeof buf, "#%u%c",
                           sharpid >> SHARP_ID_SHIFT,
