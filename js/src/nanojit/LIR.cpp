@@ -452,11 +452,6 @@ namespace nanojit
                           (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
     }
 
-    LIns* LirWriter::ins2i(LOpcode v, LIns* oprnd1, int32_t imm)
-    {
-        return ins2(v, oprnd1, insImm(imm));
-    }
-
     bool insIsS16(LInsp i)
     {
         if (i->isconst()) {
@@ -920,34 +915,6 @@ namespace nanojit
         return out->insLoad(op, base, off, accSet);
     }
 
-    LIns* LirWriter::ins_eq0(LIns* oprnd1)
-    {
-        return ins2i(LIR_eq, oprnd1, 0);
-    }
-
-    LIns* LirWriter::ins_peq0(LIns* oprnd1)
-    {
-        return ins2(LIR_peq, oprnd1, insImmWord(0));
-    }
-
-    LIns* LirWriter::ins_i2p(LIns* intIns)
-    {
-#ifdef NANOJIT_64BIT
-        return ins1(LIR_i2q, intIns);
-#else
-        return intIns;
-#endif
-    }
-
-    LIns* LirWriter::ins_u2p(LIns* uintIns)
-    {
-#ifdef NANOJIT_64BIT
-        return ins1(LIR_u2q, uintIns);
-#else
-        return uintIns;
-#endif
-    }
-
     LIns* LirWriter::insStorei(LIns* value, LIns* base, int32_t d, AccSet accSet)
     {
         // Determine which kind of store should be used for 'value' based on
@@ -965,42 +932,9 @@ namespace nanojit
         return insStore(op, value, base, d, accSet);
     }
 
-#if NJ_SOFTFLOAT_SUPPORTED
-    LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
-    {
-        return ins2(LIR_qjoin, lo, hi);
-    }
-#endif
-
-    LIns* LirWriter::insImmWord(intptr_t value)
-    {
-#ifdef NANOJIT_64BIT
-        return insImmq(value);
-#else
-        return insImm(value);
-#endif
-    }
-
-    LIns* LirWriter::insImmPtr(const void *ptr)
-    {
-#ifdef NANOJIT_64BIT
-        return insImmq((uint64_t)ptr);
-#else
-        return insImm((int32_t)ptr);
-#endif
-    }
-
     LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov)
     {
-        // if not a conditional, make it implicitly an ==0 test (then flop results)
-        if (!cond->isCmp())
-        {
-            cond = ins_eq0(cond);
-            LInsp tmp = iftrue;
-            iftrue = iffalse;
-            iffalse = tmp;
-        }
-
+        NanoAssert(cond->isCmp());
         if (use_cmov) {
             LOpcode op = LIR_cmov;
             if (iftrue->isI32() && iffalse->isI32()) {

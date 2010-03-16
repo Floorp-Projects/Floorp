@@ -1441,24 +1441,59 @@ namespace nanojit
         LIns* ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
 
         // Inserts an integer comparison to 0
-        LIns* ins_eq0(LIns* oprnd1);
+        LIns* ins_eq0(LIns* oprnd1) {
+            return ins2i(LIR_eq, oprnd1, 0);
+        }
 
         // Inserts a pointer comparison to 0
-        LIns* ins_peq0(LIns* oprnd1);
+        LIns* ins_peq0(LIns* oprnd1) {
+            return ins2(LIR_peq, oprnd1, insImmWord(0));
+        }
 
         // Inserts a binary operation where the second operand is an
         // integer immediate.
-        LIns* ins2i(LOpcode op, LIns *oprnd1, int32_t);
+        LIns* ins2i(LOpcode v, LIns* oprnd1, int32_t imm) {
+            return ins2(v, oprnd1, insImm(imm));
+        }
 
 #if NJ_SOFTFLOAT_SUPPORTED
-        LIns* qjoin(LInsp lo, LInsp hi);
+        LIns* qjoin(LInsp lo, LInsp hi) {
+            return ins2(LIR_qjoin, lo, hi);
+        }
 #endif
-        LIns* insImmPtr(const void *ptr);
-        LIns* insImmWord(intptr_t ptr);
+        LIns* insImmPtr(const void *ptr) {
+#ifdef NANOJIT_64BIT
+            return insImmq((uint64_t)ptr);
+#else
+            return insImm((int32_t)ptr);
+#endif
+        }
 
-        // Sign or zero extend integers to native integers. On 32-bit this is a no-op.
-        LIns* ins_i2p(LIns* intIns);
-        LIns* ins_u2p(LIns* uintIns);
+        LIns* insImmWord(intptr_t value) {
+#ifdef NANOJIT_64BIT
+            return insImmq(value);
+#else
+            return insImm(value);
+#endif
+        }
+
+        // Sign-extend integers to native integers. On 32-bit this is a no-op.
+        LIns* ins_i2p(LIns* intIns) {
+#ifdef NANOJIT_64BIT
+            return ins1(LIR_i2q, intIns);
+#else
+            return intIns;
+#endif
+        }
+
+        // Zero-extend integers to native integers. On 32-bit this is a no-op.
+        LIns* ins_u2p(LIns* uintIns) {
+    #ifdef NANOJIT_64BIT
+            return ins1(LIR_u2q, uintIns);
+    #else
+            return uintIns;
+    #endif
+        }
 
         // Chooses LIR_sti or LIR_stqi based on size of value.
         LIns* insStorei(LIns* value, LIns* base, int32_t d, AccSet accSet);
