@@ -193,6 +193,11 @@ protected:
   virtual PRBool IsEventName(nsIAtom* aName);
 
   void UpdateContentStyleRule();
+#ifdef MOZ_SMIL
+  void UpdateAnimatedContentStyleRule();
+  nsICSSStyleRule* GetAnimatedContentStyleRule();
+#endif // MOZ_SMIL
+
   nsISVGValue* GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName);
   nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
                              PRInt32 aNamespaceID = kNameSpaceID_None);

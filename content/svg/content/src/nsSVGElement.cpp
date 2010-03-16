@@ -91,6 +91,7 @@
 #include "prdtoa.h"
 #include <stdarg.h>
 #ifdef MOZ_SMIL
+#include "nsSMILMappedAttribute.h"
 #include "nsSVGTransformSMILAttr.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGTransformable.h"
@@ -738,6 +739,40 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mContentStyleRule);
   }
 
+#ifdef MOZ_SMIL
+  // Update & walk the animated content style rule, to include style from
+  // animated mapped attributes.  But first, get nsPresContext to check
+  // whether this is a "no-animation restyle". (This should match the check
+  // in nsHTMLCSSStyleSheet::RulesMatching(), where we determine whether to
+  // apply the SMILOverrideStyle.)
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ASSERTION(doc, "SVG element without doc");
+  if (doc) {
+    nsIPresShell* shell = doc->GetPrimaryShell();
+    nsPresContext* context = shell ? shell->GetPresContext() : nsnull;
+    if (context && context->IsProcessingRestyles() &&
+        !context->IsProcessingAnimationStyleChange()) {
+      // Any style changes right now could trigger CSS Transitions. We don't
+      // want that to happen from SMIL-animated value of mapped attrs, so
+      // ignore animated value for now, and request an animation restyle to
+      // get our animated value noticed.
+      context->PresShell()->RestyleForAnimation(this);
+    } else {
+      // Ok, this is an animation restyle -- go ahead and update/walk the
+      // animated content style rule.
+      nsICSSStyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
+      if (!animContentStyleRule) {
+        UpdateAnimatedContentStyleRule();
+        animContentStyleRule = GetAnimatedContentStyleRule();
+      }
+      if (animContentStyleRule) {
+        animContentStyleRule->RuleMatched();
+        aRuleWalker->Forward(animContentStyleRule);
+      }
+    }
+  }
+#endif // MOZ_SMIL
+
   return NS_OK;
 }
 
@@ -1156,6 +1191,84 @@ nsSVGElement::UpdateContentStyleRule()
   }
   mContentStyleRule = mappedAttrParser.CreateStyleRule();
 }
+
+#ifdef MOZ_SMIL
+static void
+ParseMappedAttrAnimValueCallback(void*    aObject,
+                                 nsIAtom* aPropertyName,
+                                 void*    aPropertyValue,
+                                 void*    aData)
+{
+  NS_ABORT_IF_FALSE(aPropertyName != SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                    "animated content style rule should have been removed "
+                    "from properties table already (we're rebuilding it now)");
+
+  MappedAttrParser* mappedAttrParser =
+    static_cast<MappedAttrParser*>(aData);
+
+  nsStringBuffer* valueBuf = static_cast<nsStringBuffer*>(aPropertyValue);
+  nsAutoString value;
+  PRUint32 len = NS_strlen(static_cast<PRUnichar*>(valueBuf->Data()));
+  valueBuf->ToString(len, value);
+
+  mappedAttrParser->ParseMappedAttrValue(aPropertyName, value);
+}
+
+// Callback for freeing animated content style rule, in property table.
+static void
+ReleaseStyleRule(void*    aObject,       /* unused */
+                 nsIAtom* aPropertyName,
+                 void*    aPropertyValue,
+                 void*    aData          /* unused */)
+{
+  NS_ABORT_IF_FALSE(aPropertyName == SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                    "unexpected property name, for "
+                    "animated content style rule");
+  nsICSSStyleRule* styleRule = static_cast<nsICSSStyleRule*>(aPropertyValue);
+  NS_ABORT_IF_FALSE(styleRule, "unexpected null style rule");
+  styleRule->Release();
+}
+
+void
+nsSVGElement::UpdateAnimatedContentStyleRule()
+{
+  NS_ABORT_IF_FALSE(!GetAnimatedContentStyleRule(),
+                    "Animated content style rule already set");
+
+  nsIDocument* doc = GetOwnerDoc();
+  if (!doc) {
+    NS_ERROR("SVG element without owner document");
+    return;
+  }
+
+  MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
+                                    GetBaseURI(), NodePrincipal());
+  doc->PropertyTable()->Enumerate(this, SMIL_MAPPED_ATTR_ANIMVAL,
+                                  ParseMappedAttrAnimValueCallback,
+                                  &mappedAttrParser);
+ 
+  nsRefPtr<nsICSSStyleRule>
+    animContentStyleRule(mappedAttrParser.CreateStyleRule());
+
+  if (animContentStyleRule) {
+    nsresult rv = SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                              animContentStyleRule.get(), ReleaseStyleRule);
+    animContentStyleRule.forget();
+    NS_ABORT_IF_FALSE(rv == NS_OK,
+                      "SetProperty failed (or overwrote something)");
+  }
+}
+
+nsICSSStyleRule*
+nsSVGElement::GetAnimatedContentStyleRule()
+{
+  return
+    static_cast<nsICSSStyleRule*>(GetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                                              nsnull));
+}
+#endif // MOZ_SMIL
 
 nsISVGValue*
 nsSVGElement::GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName)
@@ -1911,6 +2024,17 @@ nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
   if (aName == nsGkAtoms::preserveAspectRatio) {
     nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
     return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+  }
+
+  // Mapped attributes:
+  if (IsAttributeMapped(aName)) {
+    nsCSSProperty prop = nsCSSProps::LookupProperty(nsAtomString(aName));
+    // Check IsPropertyAnimatable to avoid attributes that...
+    //  - map to explicitly unanimatable properties (e.g. 'direction')
+    //  - map to unsupported attributes (e.g. 'glyph-orientation-horizontal')
+    if (nsSMILCSSProperty::IsPropertyAnimatable(prop)) {
+      return new nsSMILMappedAttribute(prop, this);
+    }
   }
 
   return nsnull;
