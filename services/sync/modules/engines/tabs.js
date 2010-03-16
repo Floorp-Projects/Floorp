@@ -104,13 +104,6 @@ TabStore.prototype = {
   __proto__: Store.prototype,
   _remoteClients: {},
 
-  get _sessionStore() {
-    let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
-		       getService(Ci.nsISessionStore);
-    this.__defineGetter__("_sessionStore", function() { return sessionStore;});
-    return this._sessionStore;
-  },
-
   itemExists: function TabStore_itemExists(id) {
     return id == Clients.clientID;
   },
@@ -119,33 +112,36 @@ TabStore.prototype = {
   getAllTabs: function getAllTabs(filter) {
     let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
 
-    // Iterate through each tab of each window
     let allTabs = [];
-    let wins = Svc.WinMediator.getEnumerator("navigator:browser");
-    while (wins.hasMoreElements()) {
-      // Get the tabs for both Firefox and Fennec
-      let window = wins.getNext();
-      let tabs = window.gBrowser && window.gBrowser.tabContainer.childNodes;
-      tabs = tabs || window.Browser._tabs;
-  
-      // Extract various pieces of tab data
-      Array.forEach(tabs, function(tab) {
-        let browser = tab.linkedBrowser || tab.browser;
-        let url = browser.currentURI.spec;
 
-        // Filter out some urls if necessary
-        if (filter && filteredUrls.test(url))
+    let currentState = JSON.parse(Svc.Session.getBrowserState());
+    currentState.windows.forEach(function(window) {
+      window.tabs.forEach(function(tab) {
+        // Make sure there are history entries to look at.
+        if (!tab.entries.length)
+          return;
+        // Until we store full or partial history, just grab the current entry.
+        // index is 1 based, so make sure we adjust.
+        let entry = tab.entries[tab.index - 1];
+
+        // Filter out some urls if necessary. SessionStore can return empty
+        // tabs in some cases - easiest thing is to just ignore them for now.
+        if (!entry.url || filter && filteredUrls.test(entry.url))
           return;
 
+        // weaveLastUsed will only be set if the tab was ever selected (or
+        // opened after Weave was running). So it might not ever be set.
+        // I think it's also possible that attributes[.image] might not be set
+        // so handle that as well.
         allTabs.push({
-          title: browser.contentTitle || "",
-          urlHistory: [url],
-          icon: browser.mIconURL || "",
-          lastUsed: tab.lastUsed || 0
+          title: entry.title || "",
+          urlHistory: [entry.url],
+          icon: tab.attributes && tab.attributes.image || "",
+          lastUsed: tab.extData && tab.extData.weaveLastUsed || 0
         });
       });
-    }
-  
+    });
+
     return allTabs;
   },
 
@@ -248,7 +244,8 @@ TabTracker.prototype = {
     this._changedIDs[Clients.clientID] = true;
 
     // Store a timestamp in the tab to track when it was last used
-    event.originalTarget.lastUsed = Math.floor(Date.now() / 1000);
+    Svc.Session.setTabValue(event.originalTarget, "weaveLastUsed",
+                            Math.floor(Date.now() / 1000));
   },
 
   get changedIDs() this._changedIDs,

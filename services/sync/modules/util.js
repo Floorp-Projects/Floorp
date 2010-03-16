@@ -787,6 +787,57 @@ let FakeSvc = {
   "@mozilla.org/privatebrowsing;1": {
     autoStarted: false,
     privateBrowsingEnabled: false
+  },
+  // Session Restore
+  "@mozilla.org/browser/sessionstore;1": {
+    setTabValue: function(tab, key, value) {
+      if (!tab.__SS_extdata)
+        tab.__SS_extdata = {};
+      tab.__SS_extData[key] = value;
+    },
+    getBrowserState: function() {
+      // Fennec should have only one window. Not more, not less.
+      let state = { windows: [{ tabs: [] }] };
+      let window = Svc.WinMediator.getMostRecentWindow("navigator:browser");
+
+      // Extract various pieces of tab data
+      window.Browser._tabs.forEach(function(tab) {
+        let tabState = { entries: [{}] };
+        let browser = tab.browser;
+
+        // Cases when we want to skip the tab. Could come up if we get
+        // state as a tab is opening or closing.
+        if (!browser || !browser.currentURI || !browser.sessionHistory)
+          return;
+
+        let history = browser.sessionHistory;
+        if (history.count > 0) {
+          // We're only grabbing the current history entry for now.
+          let entry = history.getEntryAtIndex(history.index, false);
+          tabState.entries[0].url = entry.URI.spec;
+          // Like SessionStore really does it...
+          if (entry.title && entry.title != entry.url)
+            tabState.entries[0].title = entry.title;
+        }
+        // index is 1-based
+        tabState.index = 1;
+
+        // Get the image for the tab. Fennec doesn't quite work the same
+        // way as Firefox, so we'll just get this from the browser object.
+        tabState.attributes = { image: browser.mIconURL };
+
+        // Collect the extdata
+        if (tab.__SS_extdata) {
+          tabState.extData = {};
+          for (let key in tab.__SS_extdata)
+            tabState.extData[key] = tab.__SS_extdata[key];
+        }
+
+        // Add the tab to the window
+        state.windows[0].tabs.push(tabState);
+      });
+      return JSON.stringify(state);
+    }
   }
 };
 
@@ -818,6 +869,7 @@ Svc.Obs = Observers;
  ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
  ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
  ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
+ ["Session", "@mozilla.org/browser/sessionstore;1", "nsISessionStore"],
 ].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], Ci[lazy[2]]));
 
 let Str = {};
