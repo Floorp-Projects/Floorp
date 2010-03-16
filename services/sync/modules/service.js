@@ -821,11 +821,13 @@ WeaveSvc.prototype = {
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
 
-    this._log.debug(["Weave Version:", WEAVE_VERSION, "Compatible:",
-      COMPATIBLE_VERSION, "Remote:", remoteVersion].join(" "));
+    this._log.debug(["Weave Version:", WEAVE_VERSION, "Local Storage:",
+      STORAGE_VERSION, "Remote Storage:", remoteVersion].join(" "));
 
+    // Check for cases that require a fresh start. When comparing remoteVersion,
+    // we need to convert it to a number as older clients used it as a string.
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
-        Svc.Version.compare(COMPATIBLE_VERSION, remoteVersion) > 0) {
+        STORAGE_VERSION > parseFloat(remoteVersion)) {
 
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.response.status;
@@ -841,8 +843,6 @@ WeaveSvc.prototype = {
         this._log.info("No metadata record, server wipe needed");
       if (meta && !meta.payload.syncID)
         this._log.warn("No sync id, server wipe needed");
-      if (Svc.Version.compare(COMPATIBLE_VERSION, remoteVersion) > 0)
-        this._log.info("Server data is older than what Weave supports, server wipe needed");
 
       if (!this._keyGenEnabled) {
         this._log.info("...and key generation is disabled.  Not wiping. " +
@@ -858,28 +858,22 @@ WeaveSvc.prototype = {
         this._log.info("Metadata record not found, server wiped to ensure " +
                        "consistency.");
       else // 200
-        this._log.info("Server data wiped to ensure consistency after client " +
-                       "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
+        this._log.info("Wiped server; incompatible metadata: " + remoteVersion);
 
-    } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
+    }
+    else if (remoteVersion > STORAGE_VERSION) {
       Status.sync = VERSION_OUT_OF_DATE;
-      this._log.warn("Server data is of a newer Weave version, this client " +
-                     "needs to be upgraded.  Aborting sync.");
+      this._log.warn("Upgrade required to access newer storage version.");
       return false;
-
     } else if (meta.payload.syncID != Clients.syncID) {
       this.resetService();
       Clients.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + Clients.syncID);
-      this._updateRemoteVersion(meta);
 
       // XXX Bug 531005 Wait long enough to allow potentially another concurrent
       // sync to finish generating the keypair and uploading them
       Sync.sleep(15000);
     }
-    // We didn't wipe the server and we're not out of date, so update remote
-    else
-      this._updateRemoteVersion(meta);
 
     let needKeys = true;
     let pubkey = PubKeys.getDefaultKey();
@@ -1242,10 +1236,14 @@ WeaveSvc.prototype = {
   _freshStart: function WeaveSvc__freshStart() {
     this.resetClient();
 
-    this._log.debug("Uploading new metadata record from freshStart");
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
-    this._updateRemoteVersion(meta);
+    meta.payload.storageVersion = STORAGE_VERSION;
+
+    this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
+    let resp = new Resource(meta.uri).put(meta);
+    if (!resp.success)
+      throw resp;
 
     // Wipe everything we know about except meta because we just uploaded it
     let collections = [Clients].concat(Engines.getAll()).map(function(engine) {
@@ -1253,19 +1251,6 @@ WeaveSvc.prototype = {
     });
     this.wipeServer(["crypto", "keys"].concat(collections));
   },
-
-  _updateRemoteVersion: function WeaveSvc__updateRemoteVersion(meta) {
-    // Don't update if the remote version is already newer
-    if (Svc.Version.compare(meta.payload.storageVersion, WEAVE_VERSION) >= 0)
-      return;
-
-    this._log.debug("Setting meta payload storage version to " + WEAVE_VERSION);
-    meta.payload.storageVersion = WEAVE_VERSION;
-    let resp = new Resource(meta.uri).put(meta);
-    if (!resp.success)
-      throw resp;
-  },
-
 
   /**
    * Check to see if this is a failure

@@ -40,9 +40,10 @@ let EXPORTED_SYMBOLS = [((this[key] = val), key) for ([key, val] in Iterator({
 WEAVE_VERSION:                         "@weave_version@",
 WEAVE_ID:                              "@weave_id@",
 
-// Last client version this client can read. If the server contains an older
-// version, this client will wipe the data on the server first.
-COMPATIBLE_VERSION:                    "@compatible_version@",
+// Version of the data format this client supports. The data format describes
+// how records are packaged; this is separate from the Server API version and
+// the per-engine cleartext formats.
+STORAGE_VERSION:                       @storage_version@,
 
 DEFAULT_SERVER:                        "@server_url@",
 
