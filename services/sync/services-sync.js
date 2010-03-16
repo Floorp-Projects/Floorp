@@ -5,7 +5,6 @@ pref("extensions.weave.miscURL", "misc/");
 pref("extensions.weave.pwChangeURL", "https://auth.services.mozilla.com/weave-password-reset");
 pref("extensions.weave.termsURL", "https://mozillalabs.com/weave/tos/");
 
-pref("extensions.weave.client.name", "Firefox");
 pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.autoconnect", true);
 

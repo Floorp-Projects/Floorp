@@ -47,7 +47,7 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/tabs.js");
-Cu.import("resource://weave/engines/clientData.js");
+Cu.import("resource://weave/engines/clients.js");
 
 function TabEngine() {
   SyncEngine.call(this, "Tabs");
@@ -102,12 +102,10 @@ function TabStore(name) {
 }
 TabStore.prototype = {
   __proto__: Store.prototype,
-  _remoteClients: {},
 
   itemExists: function TabStore_itemExists(id) {
-    return id == Clients.clientID;
+    return id == Clients.localID;
   },
-
 
   getAllTabs: function getAllTabs(filter) {
     let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
@@ -147,7 +145,7 @@ TabStore.prototype = {
 
   createRecord: function createRecord(guid) {
     let record = new TabSetRecord();
-    record.clientName = Clients.clientName;
+    record.clientName = Clients.localName;
 
     // Sort tabs in descending-used order to grab the most recently used
     record.tabs = this.getAllTabs(true).sort(function(a, b) {
@@ -162,7 +160,7 @@ TabStore.prototype = {
 
   getAllIDs: function TabStore_getAllIds() {
     let ids = {};
-    ids[Clients.clientID] = true;
+    ids[Clients.localID] = true;
     return ids;
   },
 
@@ -241,7 +239,7 @@ TabTracker.prototype = {
   onTab: function onTab(event) {
     this._log.trace(event.type);
     this.score += 1;
-    this._changedIDs[Clients.clientID] = true;
+    this._changedIDs[Clients.localID] = true;
 
     // Store a timestamp in the tab to track when it was last used
     Svc.Session.setTabValue(event.originalTarget, "weaveLastUsed",

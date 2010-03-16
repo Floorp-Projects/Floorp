@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['ClientRecord'];
+const EXPORTED_SYMBOLS = ["ClientsRec"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,10 +44,12 @@ const Cu = Components.utils;
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/crypto.js");
 
-function ClientRecord(uri) {
+function ClientsRec(uri) {
   CryptoWrapper.call(this, uri);
 }
-ClientRecord.prototype = {
+ClientsRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Client",
+  _logName: "Record.Clients",
 };
+
+Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
