@@ -4,6 +4,7 @@
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="smilTestUtils.js"></script>
+  <script type="text/javascript" src="db_smilMappedAttrList.js"></script>
   <script type="text/javascript" src="db_smilCSSPropertyList.js"></script>
   <script type="text/javascript" src="db_smilCSSPaced.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -38,10 +39,12 @@ function main()
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  testBundleList(gPacedBundles, new SMILTimingData(1.0, 6.0));
+  var testBundles = convertCSSBundlesToMappedAttr(gPacedBundles);
+  testBundleList(testBundles, new SMILTimingData(1.0, 6.0));
+
   // Set "display:none" on everything and run the tests again
-  SMILUtil.hideSubtree(SMILUtil.getSVGRoot(), false, false);
-  testBundleList(gPacedBundles, new SMILTimingData(1.0, 6.0));
+  SMILUtil.hideSubtree(SMILUtil.getSVGRoot(), false, true);
+  testBundleList(testBundles, new SMILTimingData(1.0, 6.0));
 
   SimpleTest.finish();
 }
