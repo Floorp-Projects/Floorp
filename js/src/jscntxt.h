@@ -1363,6 +1363,12 @@ struct JSContext
         currentCallStack->restore();
     }
 
+    /*
+     * Perform a linear search of all frames in all callstacks in the given context
+     * for the given frame, returning the callstack, if found, and null otherwise.
+     */
+    js::CallStack *containingCallStack(JSStackFrame *target);
+
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;

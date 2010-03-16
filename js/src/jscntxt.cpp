@@ -1925,6 +1925,39 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #endif
 }
 
+CallStack *
+JSContext::containingCallStack(JSStackFrame *target)
+{
+    /* The context may have nothing running. */
+    CallStack *cs = currentCallStack;
+    if (!cs)
+        return NULL;
+
+    /* The active callstack's top frame is cx->fp. */
+    if (fp) {
+        JS_ASSERT(activeCallStack() == cs);
+        JSStackFrame *f = fp;
+        JSStackFrame *stop = cs->getInitialFrame()->down;
+        for (; f != stop; f = f->down) {
+            if (f == target)
+                return cs;
+        }
+        cs = cs->getPrevious();
+    }
+
+    /* A suspended callstack's top frame is its suspended frame. */
+    for (; cs; cs = cs->getPrevious()) {
+        JSStackFrame *f = cs->getSuspendedFrame();
+        JSStackFrame *stop = cs->getInitialFrame()->down;
+        for (; f != stop; f = f->down) {
+            if (f == target)
+                return cs;
+        }
+    }
+
+    return NULL;
+}
+
 void
 JSContext::checkMallocGCPressure(void *p)
 {

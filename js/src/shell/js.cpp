@@ -3029,6 +3029,54 @@ out:
 }
 
 static JSBool
+EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv = JS_ARGV(cx, vp);
+    if (argc < 2 ||
+        !JSVAL_IS_INT(argv[0]) ||
+        !JSVAL_IS_STRING(argv[1])) {
+        JS_ReportError(cx, "Invalid arguments to evalInFrame");
+        return JS_FALSE;
+    }
+
+    uint32 upCount = JSVAL_TO_INT(argv[0]);
+    JSString *str = JSVAL_TO_STRING(argv[1]);
+
+    bool saveCurrent = JSVAL_IS_BOOLEAN(argv[2])
+                        ? (bool)JSVAL_TO_SPECIAL(argv[2])
+                        : false;
+
+    JS_ASSERT(cx->fp);
+
+    JSStackFrame *fp = cx->fp;
+    for (uint32 i = 0; i < upCount; ++i) {
+        if (!fp->down)
+            break;
+        fp = fp->down;
+    }
+
+    if (!fp->script) {
+        JS_ReportError(cx, "cannot eval in non-script frame");
+        return JS_FALSE;
+    }
+
+    JSStackFrame *oldfp;
+    if (saveCurrent)
+        oldfp = JS_SaveFrameChain(cx);
+
+    JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
+                                          fp->script->filename,
+                                          JS_PCToLineNumber(cx, fp->script,
+                                                            fp->regs->pc),
+                                          vp);
+
+    if (saveCurrent)
+        JS_RestoreFrameChain(cx, oldfp);
+
+    return ok;
+}
+
+static JSBool
 ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v = JS_ARGV(cx, vp)[0];
@@ -3784,6 +3832,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("getslx",         GetSLX,         1,0),
     JS_FN("toint32",        ToInt32,        1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
+    JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
 #ifdef MOZ_SHARK
     JS_FS("startShark",     js_StartShark,      0,0,0),
@@ -3885,6 +3934,8 @@ static const char *const shell_help_messages[] = {
 "  if (s == '' && !o) return new o with eager standard classes\n"
 "  if (s == 'lazy' && !o) return new o with lazy standard classes\n"
 "  if (s == 'split' && !o) return new split-object o with lazy standard classes",
+"evalInFrame(n,str,save)  Evaluate 'str' in the nth up frame.\n"
+"                         If 'save' (default false), save the frame chain",
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 #ifdef MOZ_SHARK
 "startShark()             Start a Shark session.\n"
