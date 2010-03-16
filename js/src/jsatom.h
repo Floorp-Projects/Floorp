@@ -87,7 +87,7 @@ struct JSAtomListElement {
 };
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
-#define ALE_INDEX(ale)  ((jsatomid) JS_PTR_TO_UINT32((ale)->entry.value))
+#define ALE_INDEX(ale)  (jsatomid(uintptr_t((ale)->entry.value)))
 #define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
@@ -99,7 +99,7 @@ struct JSAtomListElement {
 #define ALE_DEFN(ale)   ((JSDefinition *) (ale)->entry.value)
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
-#define ALE_SET_INDEX(ale,index)((ale)->entry.value = JS_UINT32_TO_PTR(index))
+#define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
 #define ALE_SET_DEFN(ale, dn)   ((ale)->entry.value = (void *)(dn))
 #define ALE_SET_VALUE(ale, v)   ((ale)->entry.value = (void *)(v))
 #define ALE_SET_NEXT(ale,nxt)   ((ale)->entry.next = (JSHashEntry *)(nxt))
