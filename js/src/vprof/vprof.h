@@ -145,7 +145,7 @@ extern void* _tprof_before_id;
     (id != 0) ? \
         _profileEntryValue (id, (int64_t) (v)) \
     : \
-        profileValue (&id, (char*) (e), -1, (int64_t) (v), ##__VA_ARGS__, NULL) \
+        profileValue (&id, (char*) (e), -1, (int64_t) (v), NULL) \
     ; \
 }
 
