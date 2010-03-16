@@ -49,6 +49,7 @@ _TEST_FILES = \
 	  db_smilCSSFromTo.js \
 	  db_smilCSSPaced.js \
 	  db_smilCSSPropertyList.js \
+	  db_smilMappedAttrList.js \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
 	  test_smilChangeAfterFrozen.xhtml \
@@ -60,6 +61,9 @@ _TEST_FILES = \
 	  test_smilCSSInherit.xhtml \
 	  test_smilCSSInvalidValues.xhtml \
 	  test_smilCSSPaced.xhtml \
+	  test_smilMappedAttrFromTo.xhtml \
+	  test_smilMappedAttrFromBy.xhtml \
+	  test_smilMappedAttrPaced.xhtml \
 	  test_smilReset.xhtml \
 	  test_smilRestart.xhtml \
 	  test_smilFillMode.xhtml \

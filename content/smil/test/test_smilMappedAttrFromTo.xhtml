@@ -4,6 +4,7 @@
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="smilTestUtils.js"></script>
+  <script type="text/javascript" src="db_smilMappedAttrList.js"></script>
   <script type="text/javascript" src="db_smilCSSPropertyList.js"></script>
   <script type="text/javascript" src="db_smilCSSFromTo.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -18,7 +19,7 @@
   <!-- NOTE: hard-wiring 'line-height' so that computed value of 'font' is
        more predictable. (otherwise, line-height varies depending on platform)
     -->
-  <text x="20" y="20" style="line-height: 10px !important">testing 123</text>
+  <text x="20" y="20">testing 123</text>
   <line/>
   <image/>
   <marker/>
@@ -34,22 +35,22 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function checkForUntestedProperties(bundleList)
+function checkForUntestedAttributes(bundleList)
 {
-  // Create the set of all the properties we know about
-  var propertySet = {};
-  for (propertyLabel in gPropList) {
-    // insert property
-    propertySet[gPropList[propertyLabel].attrName] = null;
+  // Create the set of all the attributes we know about
+  var attributeSet = {};
+  for (attributeLabel in gMappedAttrList) {
+    // insert attribute
+    attributeSet[gMappedAttrList[attributeLabel].attrName] = null;
   }
   // Remove tested properties from the set
   for (var bundleIdx in bundleList) {
     var bundle = bundleList[bundleIdx];
-    delete propertySet[bundle.animatedAttribute.attrName];
+    delete attributeSet[bundle.animatedAttribute.attrName];
   }
   // Warn about remaining (untested) properties
-  for (var untestedProp in propertySet) {
-    ok(false, "No tests for property '" + untestedProp + "'");
+  for (var untestedProp in attributeSet) {
+    ok(false, "No tests for attribute '" + untestedProp + "'");
   }
 }
 
@@ -66,15 +67,17 @@ function main()
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  // FIRST: Warn about any properties that are missing tests
-  checkForUntestedProperties(gFromToBundles);
+  var testBundles = convertCSSBundlesToMappedAttr(gFromToBundles);
+
+  // FIRST: Warn about any attributes that are missing tests
+  checkForUntestedAttributes(testBundles);
 
   // Run the actual tests
-  testBundleList(gFromToBundles, new SMILTimingData(1.0, 1.0));
+  testBundleList(testBundles, new SMILTimingData(1.0, 1.0));
 
   // Set "display:none" on everything and run the tests again
-  SMILUtil.hideSubtree(SMILUtil.getSVGRoot(), false, false);
-  testBundleList(gFromToBundles, new SMILTimingData(1.0, 1.0));
+  SMILUtil.hideSubtree(SMILUtil.getSVGRoot(), false, true);
+  testBundleList(testBundles, new SMILTimingData(1.0, 1.0));
 
   SimpleTest.finish();
 }
