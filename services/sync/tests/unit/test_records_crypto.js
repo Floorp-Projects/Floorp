@@ -110,6 +110,18 @@ function run_test() {
     }
     do_check_eq(error, "Server attack?! Id mismatch: crypted-resource,other");
 
+    log.info("Make sure wrong hmacs cause failures");
+    cryptoWrap.encrypt(passphrase);
+    cryptoWrap.hmac = "foo";
+    error = "";
+    try {
+      cryptoWrap.decrypt(passphrase);
+    }
+    catch(ex) {
+      error = ex;
+    }
+    do_check_eq(error, "Server attack?! SHA256 HMAC mismatch: foo");
+
     log.info("Done!");
   }
   finally { server.stop(); }
