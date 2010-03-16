@@ -475,26 +475,34 @@ let Utils = {
       throw 'checkStatus failed';
   },
 
-  sha1: function Weave_sha1(string) {
+  digest: function digest(message, hasher) {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
       createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-      .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-
-    let data = converter.convertToByteArray(string, {});
+    let data = converter.convertToByteArray(message, {});
     hasher.update(data, data.length);
-    let rawHash = hasher.finish(false);
 
-    // return the two-digit hexadecimal code for a byte
-    function toHexString(charCode) {
-      return ("0" + charCode.toString(16)).slice(-2);
-    }
+    // Convert each hashed byte into 2-hex strings then combine them
+    return [("0" + byte.charCodeAt().toString(16)).slice(-2) for each (byte in
+      hasher.finish(false))].join("");
+  },
 
-    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
-    return hash;
+  sha1: function sha1(message) {
+    let hasher = Cc["@mozilla.org/security/hash;1"].
+      createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA1);
+    return Utils.digest(message, hasher);
+  },
+
+  /**
+   * Generate a sha256 HMAC for a string message and a given nsIKeyObject
+   */
+  sha256HMAC: function sha256HMAC(message, key) {
+    let hasher = Cc["@mozilla.org/security/hmac;1"].
+      createInstance(Ci.nsICryptoHMAC);
+    hasher.init(hasher.SHA256, key);
+    return Utils.digest(message, hasher);
   },
 
   makeURI: function Weave_makeURI(URIString) {
@@ -858,6 +866,7 @@ Svc.Obs = Observers;
  ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
+ ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
  ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
  ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
  ["Observer", "@mozilla.org/observer-service;1", "nsIObserverService"],
