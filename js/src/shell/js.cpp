@@ -3042,7 +3042,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     uint32 upCount = JSVAL_TO_INT(argv[0]);
     JSString *str = JSVAL_TO_STRING(argv[1]);
 
-    bool saveCurrent = JSVAL_IS_BOOLEAN(argv[2])
+    bool saveCurrent = (argc >= 3 && JSVAL_IS_BOOLEAN(argv[2]))
                         ? (bool)JSVAL_TO_SPECIAL(argv[2])
                         : false;
 
