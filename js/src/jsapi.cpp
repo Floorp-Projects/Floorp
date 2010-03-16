@@ -2876,7 +2876,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
     JSAtom *atom;
 
     if (attrs & JSPROP_INDEX) {
-        id = INT_TO_JSID(JS_PTR_TO_INT32(name));
+        id = INT_TO_JSID(intptr_t(name));
         atom = NULL;
         attrs &= ~JSPROP_INDEX;
     } else {
