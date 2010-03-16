@@ -3060,7 +3060,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    JSStackFrame *oldfp;
+    JSStackFrame *oldfp = NULL;
     if (saveCurrent)
         oldfp = JS_SaveFrameChain(cx);
 
