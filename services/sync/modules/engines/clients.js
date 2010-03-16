@@ -213,7 +213,7 @@ ClientStore.prototype = {
 
   createRecord: function createRecord(guid) {
     let record = new ClientRecord();
-    record.payload = this.clients[guid];
+    record.cleartext = this.clients[guid];
     return record;
   },
 
@@ -228,7 +228,7 @@ ClientStore.prototype = {
 
   update: function ClientStore_update(record) {
     this._log.debug("Updating client " + record.id);
-    this.clients[record.id] = record.payload;
+    this.clients[record.id] = record.cleartext;
   },
 
   wipe: function ClientStore_wipe() {
