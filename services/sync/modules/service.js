@@ -346,7 +346,7 @@ WeaveSvc.prototype = {
     let engines = [];
     switch (Svc.AppInfo.ID) {
       case FENNEC_ID:
-        engines = ["Bookmarks", "History", "Password", "Tab"];
+        engines = ["Bookmarks", "Form", "History", "Password", "Tab"];
         break;
 
       case FIREFOX_ID:
