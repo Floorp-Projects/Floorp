@@ -85,7 +85,8 @@ PlacesItem.prototype = {
   _logName: "Record.PlacesItem",
 };
 
-Utils.deferGetSet(PlacesItem, "cleartext", ["parentName", "predecessorid", "type"]);
+Utils.deferGetSet(PlacesItem, "cleartext", ["parentid", "parentName",
+  "predecessorid", "type"]);
 
 function Bookmark(uri, type) {
   PlacesItem.call(this, uri, type || "bookmark");

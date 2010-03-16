@@ -96,15 +96,13 @@ WBORecord.prototype = {
 
   toString: function WBORec_toString() "{ " + [
       "id: " + this.id,
-      "parent: " + this.parentid,
       "index: " + this.sortindex,
       "modified: " + this.modified,
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.payload))
     ].join("\n  ") + " }",
 };
 
-Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "sortindex",
-  "payload"]);
+Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
 
 Utils.lazy(this, 'Records', RecordManager);
 
