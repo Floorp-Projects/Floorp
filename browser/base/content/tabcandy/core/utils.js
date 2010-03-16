@@ -86,12 +86,12 @@ var Utils = {
     consoleService.logStringMessage(text);
   }, 
   
-  error: function(text) { // pass as many arguments as you want, it'll print them all
+  error: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
-    Components.utils.reportError('tabcandy error: ' + text);
+    Cu.reportError('tabcandy error: ' + text);
   }, 
   
-  trace: function(text) { // pass as many arguments as you want, it'll print them all
+  trace: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
     if(typeof(printStackTrace) != 'function')
       this.log(text + ' trace: you need to include stacktrace.js');
@@ -101,7 +101,19 @@ var Utils = {
       this.log('trace: ' + text + '\n' + calls.join('\n'));
     }
   }, 
-
+  
+  assert: function(label, condition) {
+    if(!condition) {
+      var text = 'tabcandy assert: ' + label;        
+      if(typeof(printStackTrace) == 'function') {
+        var calls = printStackTrace();
+        text += '\n' + calls[3];
+      }
+      
+      Cu.reportError(text);
+    }
+  },
+  
   expandObject: function(obj) {
       var s = obj + ' = {';
       for(prop in obj) {

@@ -2,8 +2,14 @@ function Selector(options){ this.init(options) }
 Selector.prototype = {
   init: function(options){
     var self = this;
-    options.onSelect = function(a,b){ self.showMenu(a,b); };
-    options.onStart = function(){ self.hideMenu(250) };
+    options.onSelect = function(a,b){ 
+      self.showMenu(a,b); 
+      TabMirror.resumePainting();
+    };
+    options.onStart = function(){ 
+      self.hideMenu(250);
+      TabMirror.pausePainting();
+    };
 /*     options.onMove = function(a){ self.updateSelection(a) }; */
     options.acceptMouseDown = function(a){ return self.acceptMouseDown(a); };
     this.lasso = new Lasso(options);
@@ -31,6 +37,7 @@ Selector.prototype = {
         if(self.menu) {
           self.menu.remove();
           self.menu = null;
+          self.clearSelection();
         }
       });
     }
@@ -42,7 +49,8 @@ Selector.prototype = {
     if( pos == null || selectedEls.length == 0 ) return;
     var self = this;
     
-    this.updateSelection(selectedEls);
+    this.selectedEls = selectedEls;
+    this.updateSelection();
     this.cancelFadeOutTimer();
     
     this.menu = $("<div class='lasso-menu'>").appendTo("body");
@@ -76,10 +84,17 @@ Selector.prototype = {
       }); 
   },
   
-  updateSelection: function(els) {
-	  for( var i=0; i<els.length; i++){
-	    var el = els[i];
-	    $(el).css("-moz-box-shadow", "1px 1px 10px rgba(0,0,0,.5)");
+  updateSelection: function() {
+	  for( var i=0; i<this.selectedEls.length; i++){
+	    var el = this.selectedEls[i];
+	    $('.thumb', el).addClass('thumb-selected');
+	  }
+  },
+
+  clearSelection: function() {
+	  for( var i=0; i<this.selectedEls.length; i++){
+	    var el = this.selectedEls[i];
+	    $('.thumb', el).removeClass('thumb-selected');
 	  }
   },
 
@@ -99,7 +114,10 @@ function group(els){
     var el = els[i];
     var pos = startEl.position();
     $(el).css("z-index", i*10);
-    $(el).animate({top: pos.top, left: pos.left, position: "absolute"}, 250);
+    TabMirror.pausePainting();
+    $(el).animate({top: pos.top, left: pos.left, position: "absolute"}, 500, null, function() {
+      TabMirror.resumePainting();
+    });
   }
 }
 
