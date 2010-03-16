@@ -1095,71 +1095,6 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
     return -1;
 }
 
-namespace {
-
-struct MemCmp {
-    typedef jsuint Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
-        return (patlen - 1) * sizeof(jschar);
-    }
-    static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
-        return memcmp(p, t, extent) == 0;
-    }
-};
-
-struct ManualCmp {
-    typedef const jschar *Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *pat, jsuint patlen) {
-        return pat + patlen;
-    }
-    static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
-        for (; p != extent; ++p, ++t) {
-            if (*p != *t)
-                return false;
-        }
-        return true;
-    }
-};
-
-}
-
-template <class InnerMatch>
-static jsint
-Duff(const jschar *text, jsuint textlen, const jschar *pat, jsuint patlen)
-{
-    JS_ASSERT(patlen > 1 && textlen > 0);
-    const jschar *textend = text + textlen - (patlen - 1);
-    const jschar p0 = *pat;
-    const jschar *const patNext = pat + 1;
-    const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patlen);
-    uint8 fixup;
-
-    const jschar *t = text;
-    switch ((textend - t) & 7) {
-        do {
-          case 0: if (*t++ == p0) { fixup = 8; goto match; }
-          case 7: if (*t++ == p0) { fixup = 7; goto match; }
-          case 6: if (*t++ == p0) { fixup = 6; goto match; }
-          case 5: if (*t++ == p0) { fixup = 5; goto match; }
-          case 4: if (*t++ == p0) { fixup = 4; goto match; }
-          case 3: if (*t++ == p0) { fixup = 3; goto match; }
-          case 2: if (*t++ == p0) { fixup = 2; goto match; }
-          case 1: if (*t++ == p0) { fixup = 1; goto match; }
-            continue;
-            do {
-                if (*t++ == p0) {
-                  match:
-                    if (!InnerMatch::match(patNext, t, extent))
-                        goto failed_match;
-                    return t - text - 1;
-                }
-              failed_match:;
-            } while (--fixup > 0);
-        } while(t != textend);
-    }
-    return -1;
-}
-
 static JS_ALWAYS_INLINE jsint
 StringMatch(const jschar *text, jsuint textlen,
             const jschar *pat, jsuint patlen)
@@ -1203,18 +1138,50 @@ StringMatch(const jschar *text, jsuint textlen,
             return index;
     }
 
+    const jschar *textend = text + textlen - (patlen - 1);
+    const jschar *patend = pat + patlen;
+    const jschar p0 = *pat;
+    const jschar *patNext = pat + 1;
+    uint8 fixup;
+
+#if __APPLE__ && __GNUC__ && __i386__
     /*
-     * For big patterns with large potential overlap we want the SIMD-optimized
-     * speed of memcmp. For small patterns, a simple loop is faster.
-     *
-     * FIXME: Linux memcmp performance is sad and the manual loop is faster.
+     * It is critical that |t| is kept in a register. The version of gcc we use
+     * to build on 32-bit Mac does not realize this. See bug 526173.
      */
-    return
-#if !defined(__linux__)
-           patlen > 128 ? Duff<MemCmp>(text, textlen, pat, patlen)
-                        :
+    register const jschar *t asm("esi") = text;
+#else
+    const jschar *t = text;
 #endif
-                          Duff<ManualCmp>(text, textlen, pat, patlen);
+
+    /* Credit: Duff */
+    switch ((textend - text) & 7) {
+        do {
+          case 0: if (*t++ == p0) { fixup = 8; goto match; }
+          case 7: if (*t++ == p0) { fixup = 7; goto match; }
+          case 6: if (*t++ == p0) { fixup = 6; goto match; }
+          case 5: if (*t++ == p0) { fixup = 5; goto match; }
+          case 4: if (*t++ == p0) { fixup = 4; goto match; }
+          case 3: if (*t++ == p0) { fixup = 3; goto match; }
+          case 2: if (*t++ == p0) { fixup = 2; goto match; }
+          case 1: if (*t++ == p0) { fixup = 1; goto match; }
+            continue;
+            do {
+                if (*t++ == p0) {
+                  match:
+                    for (const jschar *p1 = patNext, *t1 = t;
+                         p1 != patend;
+                         ++p1, ++t1) {
+                        if (*p1 != *t1)
+                            goto failed_match;
+                    }
+                    return t - text - 1;
+                }
+              failed_match:;
+            } while (--fixup > 0);
+        } while(t != textend);
+    }
+    return -1;
 }
 
 static JSBool
