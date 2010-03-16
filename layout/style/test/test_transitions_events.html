@@ -103,7 +103,11 @@ document.documentElement.addEventListener("transitionend",
       got_body = true;
       finished_test();
     } else {
-      ok(false, "unexpected event");
+      ok(false,
+         "unexpected event on " + event.target.nodeName +
+         " element with id '" + event.target.id + "' " +
+         "elapsedTime=" + event.elapsedTime +
+         " propertyName='" + event.propertyName + "'");
     }
   }, false);
 
