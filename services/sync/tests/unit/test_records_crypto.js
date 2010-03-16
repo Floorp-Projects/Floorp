@@ -71,7 +71,6 @@ function run_test() {
     log.info("Setting up keyring");
 
     cryptoMeta = new CryptoMeta("http://localhost:8080/crypto-meta", auth);
-    cryptoMeta.generateIV();
     cryptoMeta.addUnwrappedKey(keys.pubkey, keys.symkey);
 
     log.info("Creating and encrypting a record");
@@ -80,6 +79,7 @@ function run_test() {
     cryptoWrap.encryption = "http://localhost:8080/crypto-meta";
     cryptoWrap.cleartext.stuff = "my payload here";
     cryptoWrap.encrypt(passphrase);
+    let firstIV = cryptoWrap.IV;
 
     log.info("Decrypting the record");
 
@@ -91,8 +91,12 @@ function run_test() {
 
     cryptoWrap.cleartext.stuff = "another payload";
     cryptoWrap.encrypt(passphrase);
+    let secondIV = cryptoWrap.IV;
     payload = cryptoWrap.decrypt(passphrase);
     do_check_eq(payload.stuff, "another payload");
+
+    log.info("Make sure multiple encrypts use different IVs");
+    do_check_neq(firstIV, secondIV);
 
     log.info("Make sure differing ids cause failures");
     cryptoWrap.encrypt(passphrase);

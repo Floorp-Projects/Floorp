@@ -62,8 +62,9 @@ CryptoWrapper.prototype = {
     let meta = CryptoMetas.get(this.encryption);
     let symkey = meta.getKey(privkey, passphrase);
 
+    this.IV = Svc.Crypto.generateRandomIV();
     this.ciphertext = Svc.Crypto.encrypt(JSON.stringify(this.cleartext),
-					 symkey, meta.bulkIV);
+                                         symkey, this.IV);
     this.cleartext = null;
   },
 
@@ -74,8 +75,8 @@ CryptoWrapper.prototype = {
     let meta = CryptoMetas.get(this.encryption);
     let symkey = meta.getKey(privkey, passphrase);
 
-    this.cleartext = JSON.parse(Svc.Crypto.decrypt(this.ciphertext,
-							symkey, meta.bulkIV));
+    this.cleartext = JSON.parse(Svc.Crypto.decrypt(this.ciphertext, symkey,
+                                                   this.IV));
     this.ciphertext = null;
 
     // Verify that the encrypted id matches the requested record's id
@@ -102,21 +103,16 @@ CryptoWrapper.prototype = {
   },
 };
 
-Utils.deferGetSet(CryptoWrapper, "payload", ["encryption", "ciphertext"]);
+Utils.deferGetSet(CryptoWrapper, "payload", ["ciphertext", "encryption", "IV"]);
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
 function CryptoMeta(uri) {
   WBORecord.call(this, uri);
-  this.bulkIV = null;
   this.keyring = {};
 }
 CryptoMeta.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoMeta",
-
-  generateIV: function CryptoMeta_generateIV() {
-    this.bulkIV = Svc.Crypto.generateRandomIV();
-  },
 
   getKey: function CryptoMeta_getKey(privkey, passphrase) {
     // We cache the unwrapped key, as it's expensive to generate
@@ -161,7 +157,7 @@ CryptoMeta.prototype = {
   }
 };
 
-Utils.deferGetSet(CryptoMeta, "payload", ["bulkIV", "keyring"]);
+Utils.deferGetSet(CryptoMeta, "payload", "keyring");
 
 Utils.lazy(this, 'CryptoMetas', CryptoRecordManager);
 
