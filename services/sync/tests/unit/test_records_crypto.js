@@ -78,24 +78,35 @@ function run_test() {
 
     cryptoWrap = new CryptoWrapper("http://localhost:8080/crypted-resource", auth);
     cryptoWrap.encryption = "http://localhost:8080/crypto-meta";
-    cryptoWrap.cleartext = "my payload here";
+    cryptoWrap.cleartext.stuff = "my payload here";
     cryptoWrap.encrypt(passphrase);
 
     log.info("Decrypting the record");
 
     let payload = cryptoWrap.decrypt(passphrase);
-    do_check_eq(payload, "my payload here");
+    do_check_eq(payload.stuff, "my payload here");
     do_check_neq(payload, cryptoWrap.payload); // wrap.data.payload is the encrypted one
 
     log.info("Re-encrypting the record with alternate payload");
 
-    cryptoWrap.cleartext = "another payload";
+    cryptoWrap.cleartext.stuff = "another payload";
     cryptoWrap.encrypt(passphrase);
     payload = cryptoWrap.decrypt(passphrase);
-    do_check_eq(payload, "another payload");
+    do_check_eq(payload.stuff, "another payload");
+
+    log.info("Make sure differing ids cause failures");
+    cryptoWrap.encrypt(passphrase);
+    cryptoWrap.data.id = "other";
+    let error = "";
+    try {
+      cryptoWrap.decrypt(passphrase);
+    }
+    catch(ex) {
+      error = ex;
+    }
+    do_check_eq(error, "Server attack?! Id mismatch: crypted-resource,other");
 
     log.info("Done!");
   }
-  catch (e) { do_throw(e); }
   finally { server.stop(); }
 }

@@ -46,10 +46,10 @@ Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
 
 function CryptoWrapper(uri) {
+  this.cleartext = {};
   WBORecord.call(this, uri);
   this.encryption = "";
   this.ciphertext = null;
-  this.cleartext = {};
 }
 CryptoWrapper.prototype = {
   __proto__: WBORecord.prototype,
@@ -86,6 +86,10 @@ CryptoWrapper.prototype = {
 							symkey, meta.bulkIV));
     this.ciphertext = null;
 
+    // Verify that the encrypted id matches the requested record's id
+    if (this.cleartext.id != this.id)
+      throw "Server attack?! Id mismatch: " + [this.cleartext.id, this.id];
+
     return this.cleartext;
   },
 
@@ -95,6 +99,15 @@ CryptoWrapper.prototype = {
       "modified: " + this.modified,
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.cleartext))
     ].join("\n  ") + " }",
+
+  // The custom setter below masks the parent's getter, so explicitly call it :(
+  get id() WBORecord.prototype.__lookupGetter__("id").call(this),
+
+  // Keep both plaintext and encrypted versions of the id to verify integrity
+  set id(val) {
+    WBORecord.prototype.__lookupSetter__("id").call(this, val);
+    return this.cleartext.id = val;
+  },
 };
 
 Utils.deferGetSet(CryptoWrapper, "payload", ["encryption", "ciphertext"]);
