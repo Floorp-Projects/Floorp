@@ -1466,33 +1466,6 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
     return js_InternalCall(cx, obj, fval, argc, argv, rval);
 }
 
-CallStack *
-js_ContainingCallStack(JSContext *cx, JSStackFrame *target)
-{
-    JS_ASSERT(cx->fp);
-
-    /* The active callstack's top frame is cx->fp. */
-    CallStack *cs = cx->activeCallStack();
-    JSStackFrame *f = cx->fp;
-    JSStackFrame *stop = cs->getInitialFrame()->down;
-    for (; f != stop; f = f->down) {
-        if (f == target)
-            return cs;
-    }
-
-    /* A suspended callstack's top frame is its suspended frame. */
-    for (cs = cs->getPrevious(); cs; cs = cs->getPrevious()) {
-        f = cs->getSuspendedFrame();
-        stop = cs->getInitialFrame()->down;
-        for (; f != stop; f = f->down) {
-            if (f == target)
-                return cs;
-        }
-    }
-
-    return NULL;
-}
-
 JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result)
@@ -1547,7 +1520,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (down == cx->fp) {
             callStack.setInitialVarObj(down->varobj(cx));
         } else {
-            CallStack *cs = js_ContainingCallStack(cx, down);
+            CallStack *cs = cx->containingCallStack(down);
             callStack.setInitialVarObj(down->varobj(cs));
         }
     } else {
