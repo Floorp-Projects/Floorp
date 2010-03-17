@@ -126,7 +126,6 @@
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
-#include "nsCSSFrameConstructor.h"
 
 //----------------------------------------------------------------------
 //
@@ -4665,17 +4664,11 @@ nsXULDocument::IsDocumentRightToLeft()
 int
 nsXULDocument::DirectionChanged(const char* aPrefName, void* aData)
 {
-  // reset the direction and reflow the document. This will happen if
-  // the direction isn't actually being used, but that doesn't really
-  // matter too much
+  // Reset the direction and restyle the document if necessary.
   nsXULDocument* doc = (nsXULDocument *)aData;
-  if (doc)
+  if (doc) {
       doc->ResetDocumentDirection();
-
-  nsIPresShell *shell = doc->GetPrimaryShell();
-  if (shell) {
-      shell->FrameConstructor()->
-          PostRestyleEvent(doc->GetRootContent(), eReStyle_Self, NS_STYLE_HINT_NONE);
+      doc->DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
   }
 
   return 0;

@@ -1435,6 +1435,20 @@ nsPresContext::GetBidi() const
 }
 #endif //IBMBIDI
 
+PRBool
+nsPresContext::IsTopLevelWindowInactive()
+{
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryReferent(mContainer));
+  if (!treeItem)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  nsCOMPtr<nsPIDOMWindow> domWindow(do_GetInterface(rootItem));
+
+  return domWindow && !domWindow->IsActive();
+}
+
 nsITheme*
 nsPresContext::GetTheme()
 {
