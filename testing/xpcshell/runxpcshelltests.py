@@ -83,6 +83,7 @@ class XPCShellTests(object):
       This function is overloaded for a remote solution as os.path* won't work remotely.
     """
     self.testharnessdir = os.path.dirname(os.path.abspath(__file__))
+    self.headJSPath = self.testharnessdir.replace("\\", "/") + "/head.js"
     self.xpcshell = os.path.abspath(self.xpcshell)
 
     # we assume that httpd.js lives in components/ relative to xpcshell
@@ -152,9 +153,12 @@ class XPCShellTests(object):
       Load the root head.js file as the first file in our test path, before other head, test, and tail files.
       On a remote system, we overload this to add additional command line arguments, so this gets overloaded.
     """
+    # - NOTE: if you rename/add any of the constants set here, update
+    #   do_load_child_test_harness() in head.js
     self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-j', '-s'] + \
         ['-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
-        '-f', os.path.join(self.testharnessdir, 'head.js')]
+         '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
+         '-f', os.path.join(self.testharnessdir, 'head.js')]
 
     if self.debuggerInfo:
       self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
