@@ -252,7 +252,7 @@ nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
     // case.
     // XXX We may want to move this to nsDOMImplementation::CreateDocument if
     //     we want to rely on the nodeinfo and wrappers being right before
-    //     getting into doReplaceOrInsertBefore or doInsertChildAt. That would
+    //     getting into ReplaceOrInsertBefore or doInsertChildAt. That would
     //     break inserting DOMDocumentType nodes through other DOM methods
     //     though.
     nsNodeInfoManager *nimgr = aParent ?
