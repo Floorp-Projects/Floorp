@@ -1,0 +1,28 @@
+<html><head>
+<title>More tests of propagation of text-decoration</title>
+</head>
+<body>
+<!-- t-d should not propagate to the content of a form control -->
+<form style="text-decoration:underline">
+This text should be underlined.<br>
+<textarea rows="2" cols="40">This text should not be underlined.</textarea
+><textarea rows="2" cols="40" style="text-decoration:line-through"
+>This text should be struck out.</textarea>
+<p>This text should also be underlined.</p>
+</form>
+<!-- t-d should propagate from parent elements to table-cells -->
+<div style="text-decoration:underline">
+  <table style="text-decoration:overline">
+    <tr style="text-decoration:line-through">
+      <td>underlined, overlined, and struck out</td>
+    </tr>
+  </table>
+</div>
+<!-- t-d on a float itself should apply -->
+<div style="text-decoration:underline">
+  <p>This text should be underlined.</p>
+  <p style="float:left; text-decoration:overline"
+  >This text should be overlined (only).</p>
+</div>
+</body>
+</html>
