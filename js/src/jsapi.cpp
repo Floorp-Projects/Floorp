@@ -4953,6 +4953,31 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
     return ok;
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
+{
+    CHECK_REQUEST(cx);
+
+    // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
+    // is not a simple variation of JSOP_CALL. We have to determine what class
+    // of object to create, create it, and clamp the return value to an object,
+    // among other details. js_InvokeConstructor does the hard work.
+    void *mark;
+    jsval *vp = js_AllocStack(cx, 2 + argc, &mark);
+    if (!vp)
+        return NULL;
+    vp[0] = OBJECT_TO_JSVAL(ctor);
+    vp[1] = JSVAL_NULL;
+    memcpy(vp + 2, argv, argc * sizeof(jsval));
+
+    JSBool ok = js_InvokeConstructor(cx, argc, JS_TRUE, vp);
+    JSObject *obj = ok ? JSVAL_TO_OBJECT(vp[0]) : NULL;
+
+    js_FreeStack(cx, mark);
+    LAST_FRAME_CHECKS(cx, ok);
+    return obj;
+}
+
 JS_PUBLIC_API(JSOperationCallback)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
 {
