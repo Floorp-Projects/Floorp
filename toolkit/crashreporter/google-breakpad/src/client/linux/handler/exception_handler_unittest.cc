@@ -1,4 +1,4 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 
-#include "client/linux/handler//exception_handler.h"
+#include "client/linux/handler/exception_handler.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/linux_libc_support.h"
@@ -112,8 +112,8 @@ TEST(ExceptionHandlerTest, ChildCrash) {
   ASSERT_TRUE(pfd.revents & POLLIN);
 
   uint32_t len;
-  ASSERT_EQ(read(fds[0], &len, sizeof(len)), sizeof(len));
-  ASSERT_LT(len, 2048);
+  ASSERT_EQ(read(fds[0], &len, sizeof(len)), (ssize_t)sizeof(len));
+  ASSERT_LT(len, (uint32_t)2048);
   char* filename = reinterpret_cast<char*>(malloc(len + 1));
   ASSERT_EQ(read(fds[0], filename, len), len);
   filename[len] = 0;
@@ -137,12 +137,10 @@ CrashHandler(const void* crash_context, size_t crash_context_size,
   const int fd = (intptr_t) context;
   int fds[2];
   pipe(fds);
-
   struct kernel_msghdr msg = {0};
   struct kernel_iovec iov;
   iov.iov_base = const_cast<void*>(crash_context);
   iov.iov_len = crash_context_size;
-
   msg.msg_iov = &iov;
   msg.msg_iovlen = 1;
   char cmsg[kControlMsgSize];
@@ -183,11 +181,10 @@ TEST(ExceptionHandlerTest, ExternalDumper) {
   const pid_t child = fork();
   if (child == 0) {
     close(fds[0]);
-    ExceptionHandler handler("/tmp", NULL, NULL, (void*) fds[1], true);
+    ExceptionHandler handler("/tmp1", NULL, NULL, (void*) fds[1], true);
     handler.set_crash_handler(CrashHandler);
     *reinterpret_cast<int*>(NULL) = 0;
   }
-
   close(fds[1]);
   struct msghdr msg = {0};
   struct iovec iov;

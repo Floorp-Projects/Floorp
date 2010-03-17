@@ -1,4 +1,6 @@
-// Copyright (c) 2009, Google Inc.
+// -*- mode: C++ -*-
+
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -60,17 +62,25 @@ class StackwalkerARM : public Stackwalker {
                  SymbolSupplier *supplier,
                  SourceLineResolverInterface *resolver);
 
+  // Change the context validity mask of the frame returned by
+  // GetContextFrame to VALID. This is only for use by unit tests; the
+  // default behavior is correct for all application code.
+  void SetContextFrameValidity(int valid) { context_frame_validity_ = valid; }
+
  private:
   // Implementation of Stackwalker, using arm context and stack conventions.
   // TODO: currently stubbed out, needs CFI symbol dumper support
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(
-      const CallStack *stack,
-      const vector< linked_ptr<StackFrameInfo> > &stack_frame_info);
+  virtual StackFrame* GetCallerFrame(const CallStack *stack);
 
-  // Stores the CPU context corresponding to the innermost stack frame to
+  // Stores the CPU context corresponding to the youngest stack frame, to
   // be returned by GetContextFrame.
   const MDRawContextARM *context_;
+
+  // Validity mask for youngest stack frame. This is always
+  // CONTEXT_VALID_ALL in real use; it is only changeable for the sake of
+  // unit tests.
+  int context_frame_validity_;
 };
 
 

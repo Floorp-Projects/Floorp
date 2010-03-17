@@ -1,4 +1,4 @@
-// Copyright 2006 Google Inc. All Rights Reserved.
+// Copyright (c) 2010 Google Inc. All Rights Reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -92,13 +92,13 @@ class CULineInfoHandler: public LineInfoHandler {
 
 
   // Called when the line info reader has a new line, address pair
-  // ready for us.  ADDRESS is the address of the code, FILE_NUM is
-  // the file number containing the code, LINE_NUM is the line number
-  // in that file for the code, and COLUMN_NUM is the column number
-  // the code starts at, if we know it (0 otherwise).
-  virtual void AddLine(uint64 address, uint32 file_num, uint32 line_num,
-                       uint32 column_num);
-
+  // ready for us. ADDRESS is the address of the code, LENGTH is the
+  // length of its machine code in bytes, FILE_NUM is the file number
+  // containing the code, LINE_NUM is the line number in that file for
+  // the code, and COLUMN_NUM is the column number the code starts at,
+  // if we know it (0 otherwise).
+  virtual void AddLine(uint64 address, uint64 length,
+                       uint32 file_num, uint32 line_num, uint32 column_num);
 
  private:
   LineMap* linemap_;
@@ -145,6 +145,16 @@ class CUFunctionInfoHandler: public Dwarf2Handler {
                                         enum DwarfAttribute attr,
                                         enum DwarfForm form,
                                         uint64 data);
+
+  // Called when we have an attribute with a DIE reference to give to
+  // our handler.  The attribute is for the DIE at OFFSET from the
+  // beginning of the .debug_info section, has a name of ATTR, a form of
+  // FORM, and the offset of the referenced DIE from the start of the
+  // .debug_info section is in DATA.
+  virtual void ProcessAttributeReference(uint64 offset,
+                                         enum DwarfAttribute attr,
+                                         enum DwarfForm form,
+                                         uint64 data);
 
   // Called when we have an attribute with string data to give to
   // our handler.  The attribute is for the DIE at OFFSET from the

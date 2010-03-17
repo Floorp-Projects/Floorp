@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-# Copyright (c) 2006, Google Inc.
+# Copyright (c) 2010, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,8 @@
 # This allows #includes to be relative to src/
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
+# Specify include paths for ac macros
+ACLOCAL_AMFLAGS = -I m4
 
 ## Documentation
 docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
@@ -47,7 +49,19 @@ dist_doc_DATA = \
 
 
 ## Libraries
-lib_LTLIBRARIES = src/libbreakpad.la
+lib_LTLIBRARIES = src/libbreakpad.la src/client/linux/libbreakpad_client.la
+
+src_client_linux_libbreakpad_client_la_SOURCES = \
+	src/client/linux/crash_generation/crash_generation_client.cc \
+	src/client/linux/handler/exception_handler.cc \
+	src/client/linux/minidump_writer/linux_dumper.cc \
+	src/client/linux/minidump_writer/minidump_writer.cc \
+	src/client/minidump_file_writer.cc \
+	src/common/convert_UTF.c \
+	src/common/md5.c \
+	src/common/string_conversion.cc \
+	src/common/linux/file_id.cc \
+	src/common/linux/guid_creator.cc
 
 src_libbreakpad_la_SOURCES = \
 	src/google_breakpad/common/breakpad_types.h \
@@ -74,6 +88,8 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/basic_code_modules.h \
 	src/processor/basic_source_line_resolver.cc \
 	src/processor/call_stack.cc \
+	src/processor/cfi_frame_info.cc \
+	src/processor/cfi_frame_info.h \
 	src/processor/contained_range_map-inl.h \
 	src/processor/contained_range_map.h \
 	src/processor/linked_ptr.h \
@@ -91,7 +107,7 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/scoped_ptr.h \
 	src/processor/simple_symbol_supplier.cc \
 	src/processor/simple_symbol_supplier.h \
-	src/processor/stack_frame_info.h \
+	src/processor/windows_frame_info.h \
 	src/processor/stackwalker.cc \
 	src/processor/stackwalker_amd64.cc \
 	src/processor/stackwalker_amd64.h \
@@ -107,20 +123,27 @@ src_libbreakpad_la_SOURCES = \
 
 ## Programs
 bin_PROGRAMS = \
+	src/client/linux/linux_dumper_unittest_helper \
 	src/processor/minidump_dump \
 	src/processor/minidump_stackwalk
 
-
 ## Tests
 check_PROGRAMS = \
+	src/client/linux/linux_client_unittest \
 	src/processor/address_map_unittest \
 	src/processor/basic_source_line_resolver_unittest \
+	src/processor/cfi_frame_info_unittest \
 	src/processor/contained_range_map_unittest \
 	src/processor/minidump_processor_unittest \
 	src/processor/minidump_unittest \
 	src/processor/pathname_stripper_unittest \
 	src/processor/postfix_evaluator_unittest \
-	src/processor/range_map_unittest
+	src/processor/range_map_unittest \
+	src/processor/stackwalker_amd64_unittest \
+	src/processor/stackwalker_arm_unittest \
+	src/processor/stackwalker_x86_unittest \
+	src/processor/synth_minidump_unittest \
+	src/processor/test_assembler_unittest
 
 if SELFTEST
 check_PROGRAMS += \
@@ -135,6 +158,40 @@ check_SCRIPTS = \
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 TESTS_ENVIRONMENT =
 
+src_client_linux_linux_dumper_unittest_helper_SOURCES = \
+	src/client/linux/minidump_writer/linux_dumper_unittest_helper.cc
+src_client_linux_linux_dumper_unittest_helper_CXXFLAGS=$(PTHREAD_CFLAGS)
+src_client_linux_linux_dumper_unittest_helper_LDFLAGS=$(PTHREAD_CFLAGS)
+src_client_linux_linux_dumper_unittest_helper_CC=$(PTHREAD_CC)
+
+src_client_linux_linux_client_unittest_SOURCES = \
+	src/client/linux/handler/exception_handler_unittest.cc \
+	src/client/linux/minidump_writer/directory_reader_unittest.cc \
+	src/client/linux/minidump_writer/line_reader_unittest.cc \
+	src/client/linux/minidump_writer/linux_dumper_unittest.cc \
+	src/client/linux/minidump_writer/minidump_writer_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc
+
+src_client_linux_linux_client_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_client_linux_linux_client_unittest_LDADD = \
+	src/client/linux/handler/exception_handler.lo \
+	src/client/linux/crash_generation/crash_generation_client.lo \
+	src/client/linux/minidump_writer/linux_dumper.lo \
+	src/client/linux/minidump_writer/minidump_writer.lo \
+	src/client/minidump_file_writer.lo \
+	src/common/convert_UTF.lo \
+	src/common/md5.lo \
+	src/common/linux/file_id.lo \
+	src/common/linux/guid_creator.lo \
+	src/common/string_conversion.lo
+src_client_linux_linux_client_unittest_DEPENDENCIES = src/client/linux/linux_dumper_unittest_helper src/client/linux/libbreakpad_client.la
+
 src_processor_address_map_unittest_SOURCES = \
 	src/processor/address_map_unittest.cc
 src_processor_address_map_unittest_LDADD = \
@@ -145,8 +202,24 @@ src_processor_basic_source_line_resolver_unittest_SOURCES = \
 	src/processor/basic_source_line_resolver_unittest.cc
 src_processor_basic_source_line_resolver_unittest_LDADD = \
 	src/processor/basic_source_line_resolver.lo \
+	src/processor/cfi_frame_info.lo \
 	src/processor/pathname_stripper.lo \
 	src/processor/logging.lo
+
+src_processor_cfi_frame_info_unittest_SOURCES = \
+	src/processor/cfi_frame_info_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc
+src_processor_cfi_frame_info_unittest_LDADD = \
+	src/processor/cfi_frame_info.lo \
+	src/processor/logging.lo \
+	src/processor/pathname_stripper.lo
+src_processor_cfi_frame_info_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
 
 src_processor_contained_range_map_unittest_SOURCES = \
 	src/processor/contained_range_map_unittest.cc
@@ -167,6 +240,7 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/call_stack.lo \
+	src/processor/cfi_frame_info.lo \
 	src/processor/logging.lo \
 	src/processor/minidump_processor.lo \
 	src/processor/minidump.lo \
@@ -181,7 +255,10 @@ src_processor_minidump_processor_unittest_LDADD = \
 
 src_processor_minidump_unittest_SOURCES = \
 	src/processor/minidump_unittest.cc \
+	src/processor/synth_minidump.cc \
+	src/processor/test_assembler.cc \
 	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
 src_processor_minidump_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing/include \
@@ -227,6 +304,76 @@ src_processor_stackwalker_selftest_LDADD = \
 	src/processor/stackwalker_sparc.lo \
 	src/processor/stackwalker_x86.lo
 
+src_processor_stackwalker_amd64_unittest_SOURCES = \
+	src/processor/stackwalker_amd64_unittest.cc \
+	src/processor/test_assembler.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc
+src_processor_stackwalker_amd64_unittest_LDADD = \
+	src/libbreakpad.la
+src_processor_stackwalker_amd64_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+
+src_processor_stackwalker_arm_unittest_SOURCES = \
+	src/processor/stackwalker_arm_unittest.cc \
+	src/processor/test_assembler.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc
+src_processor_stackwalker_arm_unittest_LDADD = \
+	src/libbreakpad.la
+src_processor_stackwalker_arm_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+
+src_processor_stackwalker_x86_unittest_SOURCES = \
+	src/processor/stackwalker_x86_unittest.cc \
+	src/processor/test_assembler.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc
+src_processor_stackwalker_x86_unittest_LDADD = \
+	src/libbreakpad.la
+src_processor_stackwalker_x86_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+
+src_processor_synth_minidump_unittest_SOURCES = \
+	src/processor/synth_minidump_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc \
+	src/processor/synth_minidump.cc \
+	src/processor/synth_minidump.h \
+	src/processor/test_assembler.cc \
+	src/processor/test_assembler.h
+src_processor_synth_minidump_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+
+src_processor_test_assembler_unittest_SOURCES = \
+	src/processor/test_assembler_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/gtest/src/gtest_main.cc \
+	src/testing/src/gmock-all.cc \
+	src/processor/test_assembler.cc \
+	src/processor/test_assembler.h
+src_processor_test_assembler_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+
 ## Non-installables
 noinst_PROGRAMS =
 noinst_SCRIPTS = $(check_SCRIPTS)
@@ -245,6 +392,7 @@ src_processor_minidump_stackwalk_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/call_stack.lo \
+	src/processor/cfi_frame_info.lo \
 	src/processor/logging.lo \
 	src/processor/minidump.lo \
 	src/processor/minidump_processor.lo \
@@ -399,3 +547,4 @@ EXTRA_DIST = \
 ## Additional rules
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
+
