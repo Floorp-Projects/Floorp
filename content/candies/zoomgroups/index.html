@@ -22,11 +22,21 @@
       }
       
       .group{
+        background-color: white;
         cursor: move;
-        -moz-box-shadow: 0px 0px 5px rgba(0,0,0,.2);        
+        -moz-box-shadow: inset 2px 2px 12px rgba(0,0,0,.15);        
       }    
 
 
+      /* Resizable
+      ----------------------------------*/
+      .resizer{
+        background-image: url(gfx/resizer.png);
+      }
+      .ui-resizable { position: relative;}
+      .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
+      .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
+      .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
       
     </style>
   </head>
@@ -42,11 +52,11 @@
       <div class="tab">G</div>
       <div class="tab">H</div>
       <div class="tab">I</div>
-      <div class="tab">j</div>
+      <!--<div class="tab">j</div>
       <div class="tab">k</div>
       <div class="tab">m</div>
       <div class="tab">n</div>      
-      <div class="tab">z</div>
+      <div class="tab">z</div>-->
     </div>
   <script>
     function randInt(num){
