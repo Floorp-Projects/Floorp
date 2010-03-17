@@ -38,8 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTextAccessible.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIAccessibleEvent.h"
+
+#include "nsDocAccessible.h"
+
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -86,8 +87,7 @@ nsHTMLTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsTextAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAccessible> docAccessible = 
-    do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
+  nsDocAccessible *docAccessible = GetDocAccessible();
   if (docAccessible) {
      PRUint32 state, extState;
      docAccessible->GetState(&state, &extState);
