@@ -26,6 +26,7 @@
     const Ci = Components.interfaces;
 
     // Hack to make xul:tabbrowser work.
+    Components.utils.import("resource://gre/modules/Services.jsm");
     var XULBrowserWindow = {
       isBusy: false,
       setOverLink: function (link, b) {
@@ -67,42 +68,39 @@
 
     function testAccTree()
     {
-      var accTree = {
-        role: ROLE_PANE,
+      var tabsAccTree = {
+        role: ROLE_PAGETABLIST,
         children: [
-          {
-            role: ROLE_TOOLTIP
-          },
           {
             role: ROLE_MENUPOPUP
           },
           {
-            role: ROLE_PAGETABLIST,
+            role: ROLE_PAGETAB,
             children: [
-              {
-                role: ROLE_PAGETAB,
-                children: [
-                  {
-                    role: ROLE_PUSHBUTTON
-                  }
-                ]
-              },
-              {
-                role: ROLE_PAGETAB,
-                children: [
-                  {
-                    role: ROLE_PUSHBUTTON
-                  }
-                ]
-              },
-              {
-                role: ROLE_PUSHBUTTON
-              },
               {
                 role: ROLE_PUSHBUTTON
               }
             ]
           },
+          {
+            role: ROLE_PAGETAB,
+            children: [
+              {
+                role: ROLE_PUSHBUTTON
+              }
+            ]
+          },
+          {
+            role: ROLE_PUSHBUTTON
+          },
+          {
+            role: ROLE_PUSHBUTTON
+          }
+        ]
+      };
+      var tabboxAccTree = {
+        role: ROLE_PANE,
+        children: [
           {
             role: ROLE_PROPERTYPAGE
           },
@@ -111,7 +109,8 @@
           }
         ]
       };
-      testAccessibleTree(getNode("tabbrowser").mTabBox, accTree);
+      testAccessibleTree(getNode("tabbrowser").tabContainer, tabsAccTree);
+      testAccessibleTree(getNode("tabbrowser").mTabBox, tabboxAccTree);
 
       SimpleTest.finish()
     }
@@ -121,7 +120,7 @@
   ]]>
   </script>
 
-  <hbox flex="1" style="overflow: auto;">
+  <vbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=540389"
@@ -145,8 +144,16 @@
       </menu>
     </menubar>
 
-    <tabbrowser type="content-primary" flex="1" id="tabbrowser"/>
-  </hbox>
+    <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+          tabbrowser="tabbrowser"
+          setfocus="false">
+      <tab class="tabbrowser-tab" selected="true"/>
+    </tabs>
+    <tabbrowser id="tabbrowser"
+                type="content-primary"
+                tabcontainer="tabbrowser-tabs"
+                flex="1"/>
+  </vbox>
 
 </window>
 

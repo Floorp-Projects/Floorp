@@ -453,13 +453,6 @@ public:
                           const gfxRect &aRect);
 
   /**
-   * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
-   * coordinates in the PRInt32 range) then we set aOut to that rectangle, otherwise
-   * return failure.
-   */
-  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
-
-  /**
    * Restricts aRect to pixels that intersect aGfxRect.
    */
   static void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect);

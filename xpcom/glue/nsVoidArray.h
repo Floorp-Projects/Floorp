@@ -62,6 +62,8 @@ public:
   inline PRInt32 Count() const {
     return mImpl ? mImpl->mCount : 0;
   }
+  // If the array grows, the newly created entries will all be null
+  PRBool SetCount(PRInt32 aNewCount);
   // returns the max number that can be held without allocating
   inline PRInt32 GetArraySize() const {
     return mImpl ? (PRInt32(mImpl->mBits) & kArraySizeMask) : 0;

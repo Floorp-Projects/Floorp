@@ -320,6 +320,9 @@ sa_stream_drain(sa_stream_t *s)
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
+  if (snd_pcm_state(s->output_unit) != SND_PCM_STATE_RUNNING) {
+    return SA_ERROR_INVALID;
+  }
   snd_pcm_drain(s->output_unit);
   return SA_SUCCESS;
 }

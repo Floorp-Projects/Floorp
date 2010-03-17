@@ -44,7 +44,6 @@
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEditableText.h"
-#include "nsAccEvent.h"
 #include "nsTextAttrs.h"
 
 #include "nsFrameSelection.h"

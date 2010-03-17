@@ -38,13 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessible.h"
-#include "nsAccessibleRelation.h"
-#include "nsHyperTextAccessibleWrap.h"
 
-#include "nsIAccessibleDocument.h"
-#include "nsIAccessibleHyperText.h"
 #include "nsIXBLAccessible.h"
+
 #include "nsAccTreeWalker.h"
+#include "nsAccessibleRelation.h"
+#include "nsDocAccessible.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -2900,7 +2899,7 @@ nsAccessible::GetParent()
   if (mParent)
     return mParent;
 
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  nsDocAccessible *docAccessible = GetDocAccessible();
   NS_ASSERTION(docAccessible, "No document accessible for valid accessible!");
 
   if (!docAccessible)

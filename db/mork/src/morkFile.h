@@ -136,8 +136,6 @@ public: // public static standard file creation entry point
   
 public: // non-poly morkFile methods
 
-  nsIMdbFile* AcquireFileHandle(morkEnv* ev); // mObject_Handle
-  
   mork_bool FileFrozen() const  { return mFile_Frozen == 'F'; }
   mork_bool FileDoTrace() const { return mFile_DoTrace == 'T'; }
   mork_bool FileIoOpen() const  { return mFile_IoOpen == 'O'; }

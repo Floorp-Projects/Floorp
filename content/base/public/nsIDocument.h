@@ -115,11 +115,18 @@ class Link;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x36f0a42c, 0x089b, 0x4909, \
-  { 0xb3, 0xee, 0xc5, 0xa4, 0x00, 0x90, 0x30, 0x02 } }
+{ 0x94fb5716, 0xff00, 0x4b97, \
+ { 0x90, 0x01, 0x91, 0x65, 0x1a, 0x5f, 0xbe, 0x64 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
+
+// Document states
+
+// RTL locale: specific to the XUL localedir attribute
+#define NS_DOCUMENT_STATE_RTL_LOCALE              (1 << 0)
+// Window activation status
+#define NS_DOCUMENT_STATE_WINDOW_INACTIVE         (1 << 1)
 
 //----------------------------------------------------------------------
 
@@ -676,6 +683,11 @@ public:
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask) = 0;
+
+  // Notify that a document state has changed.
+  // This should only be called by callers whose state is also reflected in the
+  // implementation of nsDocument::GetDocumentState.
+  virtual void DocumentStatesChanged(PRInt32 aStateMask) = 0;
 
   // Observation hooks for style data to propagate notifications
   // to document observers
@@ -1283,6 +1295,13 @@ public:
   virtual int GetDocumentLWTheme() { return Doc_Theme_None; }
 
   /**
+   * Returns the document state.
+   * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
+   * nsIDocument.h.
+   */
+  virtual PRInt32 GetDocumentState() = 0;
+
+  /**
    * Gets the document's cached pointer to the first <base> element in this
    * document which has an href attribute.  If the document doesn't contain any
    * <base> elements with an href, returns null.
@@ -1360,7 +1379,7 @@ protected:
 
 #ifdef MOZ_SMIL
   // SMIL Animation Controller, lazily-initialized in GetAnimationController
-  nsAutoPtr<nsSMILAnimationController> mAnimationController;
+  nsRefPtr<nsSMILAnimationController> mAnimationController;
 #endif // MOZ_SMIL
 
   // Table of element properties for this document.

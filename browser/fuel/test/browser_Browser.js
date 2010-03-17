@@ -49,11 +49,11 @@ function test() {
     is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentA.html", "Checking 'BrowserTab.uri' after opening");
     is(gPageB.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after opening");
 
+    // check event
+    is(gTabOpenCount, 2, "Checking event handler for tab open");
     // check cached values from TabOpen event
     is(gPageA.uri.spec, gTabOpenPageA.uri.spec, "Checking first browser tab open is equal to page A");
     is(gPageB.uri.spec, gTabOpenPageB.uri.spec, "Checking second browser tab open is equal to page B");
-    // check event
-    is(gTabOpenCount, 2, "Checking event handler for tab open");
 
     // test document access
     var test1 = gPageA.document.getElementById("test1");

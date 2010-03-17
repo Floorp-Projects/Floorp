@@ -50,6 +50,7 @@
 #include "nsPrintfCString.h"
 #include "nsObjCExceptions.h"
 #include "imgIContainer.h"
+#include "nsCocoaUtils.h"
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -450,40 +451,12 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         continue;
       }
 
-      nsRefPtr<gfxImageSurface> currentFrame;
-      if (NS_FAILED(image->CopyFrame(imgIContainer::FRAME_CURRENT,
-                                     imgIContainer::FLAG_SYNC_DECODE,
-                                     getter_AddRefs(currentFrame))))
+      CGImageRef imageRef = NULL;
+      nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(image, imgIContainer::FRAME_CURRENT, &imageRef);
+      if (NS_FAILED(rv) || !imageRef) {
         continue;
-
-      PRInt32 height = currentFrame->Height();
-      PRInt32 stride = currentFrame->Stride();
-      PRInt32 width = currentFrame->Width();
-      if ((stride % 4 != 0) || (height < 1) || (width < 1))
-        continue;
-
-      // Create a CGImageRef with the bits from the image, taking into account
-      // the alpha ordering and endianness of the machine so we don't have to
-      // touch the bits ourselves.
-      CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL,
-                                                                    currentFrame->Data(),
-                                                                    stride * height,
-                                                                    NULL);
-      CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-      CGImageRef imageRef = CGImageCreate(width,
-                                          height,
-                                          8,
-                                          32,
-                                          stride,
-                                          colorSpace,
-                                          kCGBitmapByteOrder32Host | kCGImageAlphaFirst,
-                                          dataProvider,
-                                          NULL,
-                                          0,
-                                          kCGRenderingIntentDefault);
-      CGColorSpaceRelease(colorSpace);
-      CGDataProviderRelease(dataProvider);
-
+      }
+      
       // Convert the CGImageRef to TIFF data.
       CFMutableDataRef tiffData = CFDataCreateMutable(kCFAllocatorDefault, 0);
       CGImageDestinationRef destRef = CGImageDestinationCreateWithData(tiffData,

@@ -22,7 +22,7 @@ function test() {
                      .getService(Components.interfaces.nsIPermissionManager);
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   prefs.setIntPref("network.cookie.cookieBehavior", 1);
 
@@ -42,7 +42,7 @@ function finish_test() {
                      .getService(Components.interfaces.nsICookieManager2);
   cm.remove("example.com", "xpinstall", "/browser/xpinstall/tests", false);
 
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   prefs.clearUserPref("network.cookie.cookieBehavior");
 

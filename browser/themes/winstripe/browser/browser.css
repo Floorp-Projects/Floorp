@@ -54,16 +54,16 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
+#nav-bar {
+  -moz-appearance: none;
+  border-style: none;
+}
+
 #personal-bookmarks {
   min-height: 24px;
 }
 
-#navigator-toolbox:-moz-system-metric(windows-default-theme):not(:-moz-lwtheme) {
-  padding-bottom: 1px; /* uxtheme border drawing fix/hack */
-}
-
-#navigator-toolbox[inFullscreen="true"],
-#navigator-toolbox[inFullscreen="true"] > #nav-bar {
+#navigator-toolbox[inFullscreen="true"] {
   border-top: none;
 }
 
@@ -890,22 +890,20 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 /* Tabstrip */
-.tabbrowser-tabs {
-  -moz-appearance: -moz-win-browsertabbar-toolbox;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
-}
-
-.tabbrowser-tabs:-moz-lwtheme {
+#TabsToolbar {
   -moz-appearance: none;
-  background: none;
+  min-height: 0;
+  padding: 0;
   border-style: none;
+  margin-bottom: 2px;
+  -moz-box-shadow: ThreeDShadow 0 -1px inset, -moz-dialog 0 2px;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
   min-height: .81cm;
 }
 
-.tabs-container:not([overflow="true"]) {
+.tabbrowser-tabs:not([overflow="true"]) {
   -moz-padding-start: 3px;
 }
 
@@ -917,7 +915,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 .tabs-alltabs-button {
   -moz-appearance: none;
   background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png") repeat-x;
-  margin: 3px 0px 4px;
+  margin: 3px 0 1px;
   border: 2px solid;
   border-right-width: 1px;
   border-bottom: none;
@@ -959,13 +957,13 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 .tabbrowser-tab:not([selected="true"]):hover {
-  margin: 2px 0px 4px;
+  margin: 2px 0 1px;
   padding: 2px 1px 1px;
   background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
 .tabbrowser-tab[selected="true"] {
-  margin: 2px 0px 3px;
+  margin: 2px 0 0;
   padding: 1px;
   background-image: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
   background-color: -moz-dialog;
@@ -1020,14 +1018,6 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.tabs-bottom {
-  height: 4px;
-  margin: 0px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabstrip-bottom.png") repeat;
-  border-top: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
 }
 
 /* tabbrowser-tab focus ring */
@@ -1150,7 +1140,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
-.tabs-container > .tabs-newtab-button:-moz-locale-dir(ltr),
+.tabbrowser-tabs > .tabs-newtab-button:-moz-locale-dir(ltr),
 .tabs-alltabs-button:-moz-locale-dir(ltr) {
   border-right-style: none;
   -moz-border-radius-topleft: 2px;
@@ -1167,7 +1157,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl),
-.tabs-container > .tabs-newtab-button:-moz-locale-dir(rtl),
+.tabbrowser-tabs > .tabs-newtab-button:-moz-locale-dir(rtl),
 .tabs-alltabs-button:-moz-locale-dir(rtl) {
   border-left-style: none;
   -moz-border-radius-topright: 2px;
@@ -1258,7 +1248,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-image-region: rect(0px, 42px, 14px, 28px);
 }
 
-.tabs-container > .tabs-closebutton {
+.tabbrowser-tabs > .tabs-closebutton {
   margin: 3px 0px 3px;
   padding: 4px 2px 2px;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
@@ -1267,7 +1257,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-border-radius-topleft: 2px;
 }
 
-.tabs-container > .tabs-closebutton:-moz-locale-dir(rtl) {
+.tabbrowser-tabs > .tabs-closebutton:-moz-locale-dir(rtl) {
   border-left: none;
   border-right: 1px solid threedshadow;
   -moz-border-radius-topleft: 0px;

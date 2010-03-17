@@ -1277,6 +1277,18 @@ nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
   nsresult rv = NS_OK;
 
   if (httpChannel) {
+    if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
+      // Make sure we don't leak status information from denied cross-site
+      // requests.
+      if (mChannel) {
+        nsresult status;
+        mChannel->GetStatus(&status);
+        if (NS_FAILED(status)) {
+          return NS_ERROR_NOT_AVAILABLE;
+        }
+      }
+    }
+
     rv = httpChannel->GetResponseStatusText(aStatusText);
   }
 

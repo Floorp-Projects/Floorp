@@ -2659,15 +2659,18 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
     return NS_OK;
   }
 
-  // Submit
-  // (for type=image, only submit if value is non-null)
   if (mType == NS_FORM_INPUT_HIDDEN && name.EqualsLiteral("_charset_")) {
     nsCString charset;
     aFormSubmission->GetCharset(charset);
     rv = aFormSubmission->AddNameValuePair(name,
                                            NS_ConvertASCIItoUTF16(charset));
   }
-  else if (mType != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
+  else if (mType == NS_FORM_INPUT_TEXT &&
+           name.EqualsLiteral("isindex") &&
+           aFormSubmission->SupportsIsindexSubmission()) {
+    rv = aFormSubmission->AddIsindex(value);
+  }
+  else {
     rv = aFormSubmission->AddNameValuePair(name, value);
   }
 

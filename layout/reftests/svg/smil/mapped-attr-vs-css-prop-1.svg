@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="document.documentElement.setCurrentTime(1);
+             setTimeAndSnapshot(1, false)">
+  <!-- XXXdholbert the above "document.documentElement.setCurrentTime" call
+       shouldn't be necessary - it's a temporary workaround for Bug 552873 -->
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!-- This test consists of a 4x3 grid, containing various cases with
+       animations that have attributeType="CSS" vs "XML", for the
+       presentational ("mapped") attribute 'fill-opacity'.
+
+       As one would expect, the "CSS" and "XML" versions are treated as
+       separate animation targets.  However, there are some interactions:
+         - When they conflict, both the inline style & any animations with
+           attributeType="CSS" will have higher priority than the XML attribute
+           and animations with attributeType="XML".
+         - However, as described in the "FIRST ROW" comment below, animations
+           with attributeType="XML" can sometimes feed in to the base value
+           used for animations with attributeType="CSS". -->
+
+  <!-- GIANT GREEN BACKGROUND -->
+  <!-- (We'll put red rects on top, and then animate them to be transparent -->
+  <rect height="100%" width="100%" fill="lime" />
+
+  <!-- FIRST ROW: Additive CSS and XML animations, with CSS or XML base values.
+
+       When the base value is set using the inline style attribute, the
+       attributeType="XML" animation should be ignored, because the XML
+       attribute gets masked by the inline style.
+
+       However, when the base value is set using the XML attribute (or more
+       generally, when attributeType="XML" animations aren't masked by a value
+       in the inline style or in a stylesheet), then the animations will
+       effectively add together, because the (animated) XML attribute feeds
+       into the computed style, which gets used as the base value for the CSS
+       animation. -->
+  <g>
+    <!-- CSS base value + CSS animation + XML animation -->
+    <rect x="0" width="50" height="50" fill="red" style="fill-opacity: 0.5">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               by="1" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               by="-0.5" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- CSS base value + XML animation + CSS animation -->
+    <rect x="50" width="50" height="50" fill="red" style="fill-opacity: 0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               by="-0.5" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="XML"
+               by="1" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + CSS animation + XML animation -->
+    <rect x="100" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               by="-0.2" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               by="-0.3" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + XML animation + CSS animation -->
+    <rect x="150" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               by="-0.2" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="XML"
+               by="-0.3" dur="1s" fill="freeze"/>
+    </rect>
+  </g>
+
+  <!-- SECOND ROW: Single animation, with CSS or XML attributeType & base value.
+       In every case except for CSS-base-value + XML animation, the animation
+       should take effect. -->
+  <g transform="translate(0, 50)">
+    <!-- CSS base value + CSS animation -->
+    <rect x="0" width="50" height="50" fill="red" style="fill-opacity: 0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- CSS base value + XML animation -->
+    <!-- (starting at fill-opacity 0, since anim shouldn't have any effect -->
+    <rect x="50" width="50" height="50" fill="red" style="fill-opacity: 0">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="0.5" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + CSS animation -->
+    <rect x="100" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + XML animation -->
+    <rect x="150" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="0" dur="1s" fill="freeze"/>
+    </rect>
+  </g>
+
+  <!-- THIRD ROW: Competing animations, with CSS or XML attributeType & base
+       value. In each case, the attributeType="CSS" animation should win. -->
+  <g transform="translate(0, 100)">
+    <!-- CSS base value + CSS animation animation vs XML animation -->
+    <rect x="0" width="50" height="50" fill="red" style="fill-opacity: 0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="1" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- CSS base value + XML animation vs CSS animation -->
+    <rect x="50" width="50" height="50" fill="red" style="fill-opacity: 0.5">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="1" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + CSS animation vs XML animation -->
+    <rect x="100" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="1" dur="1s" fill="freeze"/>
+    </rect>
+    <!-- XML base value + XML animation vs CSS animation -->
+    <rect x="150" width="50" height="50" fill="red" fill-opacity="0.5">
+      <animate attributeName="fill-opacity" attributeType="XML"
+               to="1" dur="1s" fill="freeze"/>
+      <animate attributeName="fill-opacity" attributeType="CSS"
+               to="0" dur="1s" fill="freeze"/>
+    </rect>
+  </g>
+</svg>

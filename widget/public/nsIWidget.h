@@ -109,9 +109,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x9383831, 0x1039, 0x010f9, \
-  { 0x85, 0x55, 0x9c, 0x53, 0x4b, 0x95, 0x23, 0x98 } }
-
+{ 0x42b34d98, 0x7371, 0x48e4, \
+  { 0xbf, 0x85, 0x2c, 0x02, 0x0c, 0x4a, 0x8d, 0x26 } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -716,7 +715,6 @@ class nsIWidget : public nsISupports {
     virtual void RemoveChild(nsIWidget* aChild) = 0;
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
     virtual void FreeNativeData(void * data, PRUint32 aDataType) = 0;//~~~
-    virtual nsIRenderingContext* GetRenderingContext() = 0;
 
     // GetDeviceContext returns a weak pointer to this widget's device context
     virtual nsIDeviceContext* GetDeviceContext() = 0;

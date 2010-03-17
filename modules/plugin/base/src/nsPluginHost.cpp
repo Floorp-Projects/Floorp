@@ -5035,6 +5035,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin, const nsAString& dumpID)
   nsCOMPtr<nsIWritablePropertyBag2> propbag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
   if (obsService && propbag) {
     propbag->SetPropertyAsAString(NS_LITERAL_STRING("minidumpID"), dumpID);
+    propbag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"), submittedCrashReport);
     obsService->NotifyObservers(propbag, "plugin-crashed", nsnull);
     // see if an observer submitted a crash report.
     propbag->GetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"), &submittedCrashReport);
@@ -5050,8 +5051,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin, const nsAString& dumpID)
       instanceTag->mInstance->GetDOMElement(getter_AddRefs(domElement));
       nsCOMPtr<nsIObjectLoadingContent> objectContent(do_QueryInterface(domElement));
       if (objectContent) {
-        objectContent->PluginCrashed(NS_ConvertUTF8toUTF16(pluginTag->mName),
-                                     submittedCrashReport);
+        objectContent->PluginCrashed(pluginTag, dumpID, submittedCrashReport);
       }
       
       instanceTag->mInstance->Stop();

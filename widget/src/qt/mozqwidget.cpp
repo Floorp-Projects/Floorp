@@ -18,10 +18,9 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
 {
-    setFlag(QGraphicsItem::ItemAcceptsInputMethod);
-
-    // Enable gestures: only available in qt > 4.6
  #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+     setFlag(QGraphicsItem::ItemAcceptsInputMethod);
+
      setAcceptTouchEvents(true);
      grabGesture(Qt::PinchGesture);
  #endif
@@ -265,6 +264,7 @@ QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 
 void MozQWidget::showVKB()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QWidget* focusWidget = qApp->focusWidget();
 
     if (focusWidget) {
@@ -279,10 +279,14 @@ void MozQWidget::showVKB()
         focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
         inputContext->setFocusWidget(focusWidget);
     }
+#else
+    LOG(("VKB not supported in Qt < 4.6\n"));
+#endif
 }
 
 void MozQWidget::hideVKB()
 {
+ #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QInputContext *inputContext = qApp->inputContext();
     if (!inputContext) {
         NS_WARNING("Closing SIP: but no input context");
@@ -292,6 +296,9 @@ void MozQWidget::hideVKB()
     QEvent request(QEvent::CloseSoftwareInputPanel);
     inputContext->filterEvent(&request);
     inputContext->reset();
+#else
+    LOG(("VKB not supported in Qt < 4.6\n"));
+#endif
 }
 
 /**
@@ -303,6 +310,7 @@ void MozQWidget::hideVKB()
 */
 bool MozQWidget::isVKBOpen()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QVariantList areas;
     QInputContext* input_context = qApp->inputContext();
 
@@ -311,5 +319,8 @@ bool MozQWidget::isVKBOpen()
 
     // if it is empty, no VKB visible; otherwise it is
     return areas.empty();
+#else
+    return PR_FALSE;
+#endif
 }
 

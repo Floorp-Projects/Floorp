@@ -157,8 +157,8 @@ function hc_documentgetdoctype() {
 	}
 	
 		else {
-                        // modified to uppercase per WHATWG
-			assertEquals("nodeName","HTML",docTypeName);
+			// Modified to allow lower case for the HTML5 parser and upper case for the old parser
+			assertTrue("nodeName", "HTML" == docTypeName || "html" == docTypeName);
        
 		}
 	nodeValue = docType.nodeValue;

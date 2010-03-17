@@ -56,6 +56,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsICachingChannel.h"
+#include "nsIFileChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
@@ -521,15 +522,21 @@ nsWebBrowserPersist::StartUpload(nsIStorageStream *storStream,
     nsresult rv = storStream->NewInputStream(0, getter_AddRefs(inputstream));
     NS_ENSURE_TRUE(inputstream, NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    return StartUpload(inputstream, aDestinationURI, aContentType);
+}
 
+nsresult
+nsWebBrowserPersist::StartUpload(nsIInputStream *aInputStream,
+    nsIURI *aDestinationURI, const nsACString &aContentType)
+{
     nsCOMPtr<nsIChannel> destChannel;
-    rv = CreateChannelFromURI(aDestinationURI, getter_AddRefs(destChannel));
+    CreateChannelFromURI(aDestinationURI, getter_AddRefs(destChannel));
     nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(destChannel));
     NS_ENSURE_TRUE(uploadChannel, NS_ERROR_FAILURE);
 
     // Set the upload stream
     // NOTE: ALL data must be available in "inputstream"
-    rv = uploadChannel->SetUploadStream(inputstream, aContentType, -1);
+    nsresult rv = uploadChannel->SetUploadStream(aInputStream, aContentType, -1);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     rv = destChannel->AsyncOpen(this, nsnull);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -1349,6 +1356,25 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
     NS_ENSURE_ARG_POINTER(aChannel);
     NS_ENSURE_ARG_POINTER(aFile);
 
+    // The default behaviour of SaveChannelInternal is to download the source
+    // into a storage stream and upload that to the target. MakeOutputStream
+    // special-cases a file target and creates a file output stream directly.
+    // We want to special-case a file source and create a file input stream,
+    // but we don't need to do this in the case of a file target.
+    nsCOMPtr<nsIFileChannel> fc(do_QueryInterface(aChannel));
+    nsCOMPtr<nsIFileURL> fu(do_QueryInterface(aFile));
+    if (fc && !fu) {
+        nsCOMPtr<nsIInputStream> fileInputStream, bufferedInputStream;
+        nsresult rv = aChannel->Open(getter_AddRefs(fileInputStream));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedInputStream),
+                                       fileInputStream, BUFFERED_OUTPUT_SIZE);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCAutoString contentType;
+        aChannel->GetContentType(contentType);
+        return StartUpload(bufferedInputStream, aFile, contentType);
+    }
+
     // Read from the input channel
     nsresult rv = aChannel->AsyncOpen(this, nsnull);
     if (rv == NS_ERROR_NO_CONTENT)
@@ -1357,7 +1383,8 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
         // data and just ignore it.
         return NS_SUCCESS_DONT_FIXUP;
     }
-    else if (NS_FAILED(rv))
+
+    if (NS_FAILED(rv))
     {
         // Opening failed, but do we care?
         if (mPersistFlags & PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS)
@@ -1368,13 +1395,11 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
         }
         return NS_SUCCESS_DONT_FIXUP;
     }
-    else
-    {
-        // Add the output transport to the output map with the channel as the key
-        nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aChannel);
-        nsISupportsKey key(keyPtr);
-        mOutputMap.Put(&key, new OutputData(aFile, mURI, aCalcFileExt));
-    }
+
+    // Add the output transport to the output map with the channel as the key
+    nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aChannel);
+    nsISupportsKey key(keyPtr);
+    mOutputMap.Put(&key, new OutputData(aFile, mURI, aCalcFileExt));
 
     return NS_OK;
 }

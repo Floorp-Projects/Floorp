@@ -24,6 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
  *   Neil Deakin <neil@mozdevgroup.com>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -4451,9 +4452,13 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     }
   }
   
+  nsCOMPtr<nsIDOMElement> rootElement;
+  res = aDoc->GetDocumentElement(getter_AddRefs(rootElement));
+  NS_ENSURE_SUCCESS(res, res);
+
   // process clearing any styles first
   mHTMLEditor->mTypeInState->TakeClearProperty(getter_Transfers(item));
-  while (item)
+  while (item && node != rootElement)
   {
     nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent, savedBR;
     res = mHTMLEditor->SplitStyleAbovePoint(address_of(node), &offset, item->tag, &item->attr, address_of(leftNode), address_of(rightNode));

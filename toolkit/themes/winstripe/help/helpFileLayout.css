@@ -139,7 +139,7 @@ td, th {
 th {
   background-color: #eee;    /* light grey */
   font-weight: bold;
-  text-align: left;
+  text-align: start;
 }
 
 .noTableBorder,

@@ -109,14 +109,15 @@ nsFilePicker::AppendFilter(const nsAString & aTitle, const nsAString & aFilter)
 NS_IMETHODIMP
 nsFilePicker::GetDefaultString(nsAString & aDefaultString)
 {
-    mDefault = aDefaultString;
-
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
+
 NS_IMETHODIMP
 nsFilePicker::SetDefaultString(const nsAString & aDefaultString)
 {
-    return NS_ERROR_FAILURE;
+    mDefault = aDefaultString;
+
+    return NS_OK;
 }
 
 /* attribute AString defaultExtension; */

@@ -520,6 +520,7 @@ function test_bind_multiple_rows_by_index()
     bp.bindByIndex(3, null);
     bp.bindBlobByIndex(4, BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
@@ -589,6 +590,7 @@ function test_bind_multiple_rows_by_name()
     bp.bindByName("null", null);
     bp.bindBlobByName("blob", BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
@@ -956,6 +958,32 @@ function test_not_right_owning_statement()
   run_next_test();
 }
 
+function test_bind_empty_array()
+{
+  let stmt = getOpenedDatabase().createStatement(
+    "INSERT INTO test (id) " +
+    "VALUES (:int)"
+  );
+
+  let paramsArray = stmt.newBindingParamsArray();
+
+  // We should not be able to bind this array to the statement because it is
+  // empty.
+  let exceptionCaught = false;
+  try {
+    stmt.bindParameters(paramsArray);
+    do_throw("we should have an exception!");
+  }
+  catch(e) {
+    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
+    exceptionCaught = true;
+  }
+  do_check_true(exceptionCaught);
+
+  // Run the next test.
+  run_next_test();
+}
+
 function test_multiple_results()
 {
   // First, we need to know how many rows we are expecting.
@@ -1027,6 +1055,7 @@ var tests =
   test_bind_bogus_type_by_name,
   test_bind_params_already_locked,
   test_bind_params_array_already_locked,
+  test_bind_empty_array,
   test_no_binding_params_from_locked_array,
   test_not_right_owning_array,
   test_not_right_owning_statement,
@@ -1039,7 +1068,14 @@ function run_next_test()
   if (index < tests.length) {
     do_test_pending();
     print("Running the next test: " + tests[index].name);
-    tests[index++]();
+
+    // Asynchronous tests means that exceptions don't kill the test.
+    try {
+      tests[index++]();
+    }
+    catch (e) {
+      do_throw(e);
+    }
   }
 
   do_test_finished();

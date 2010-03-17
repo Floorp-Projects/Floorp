@@ -167,7 +167,9 @@ public:
   void Suspend();
   void Resume();
 
+  // This just calls IsCanceledNoLock with an autolock around the call.
   PRBool IsCanceled();
+
   PRBool IsClosing();
   PRBool IsSuspended();
 
@@ -291,6 +293,10 @@ private:
   }
 
   PRBool QueueSuspendedRunnable(nsIRunnable* aRunnable);
+
+  // Determines if the worker should be considered "canceled". See the large
+  // comment in the implementation for more details.
+  PRBool IsCanceledNoLock();
 
 private:
 
