@@ -879,6 +879,26 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 }
 
 JS_PUBLIC_API(void)
+JS_TransferRequest(JSContext *cx, JSContext *another)
+{
+    JS_ASSERT(cx != another);
+    JS_ASSERT(cx->runtime == another->runtime);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->thread);
+    JS_ASSERT(another->thread);
+    JS_ASSERT(cx->thread == another->thread);
+    JS_ASSERT(cx->requestDepth != 0);
+    JS_ASSERT(another->requestDepth == 0);
+
+    /* Serialize access to JSContext::requestDepth from other threads. */
+    JS_LOCK_GC(cx->runtime);
+    another->requestDepth = cx->requestDepth;
+    cx->requestDepth = 0;
+    JS_UNLOCK_GC(cx->runtime);
+#endif
+}
+
+JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt)
 {
     JS_LOCK_RUNTIME(rt);
