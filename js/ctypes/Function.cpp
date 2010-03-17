@@ -236,11 +236,10 @@ Function::Execute(JSContext* cx, PRUint32 argc, jsval* vp)
 
   // suspend the request before we call into the function, since the call
   // may block or otherwise take a long time to return.
-  jsrefcount rc = JS_SuspendRequest(cx);
-
-  ffi_call(&mCIF, FFI_FN(mFunc), resultValue.mData, reinterpret_cast<void**>(values.Elements()));
-
-  JS_ResumeRequest(cx, rc);
+  {
+    JSAutoSuspendRequest suspended(cx);
+    ffi_call(&mCIF, FFI_FN(mFunc), resultValue.mData, reinterpret_cast<void**>(values.Elements()));
+  }
 
   // prepare a JS object from the result
   jsval rval;

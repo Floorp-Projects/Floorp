@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -561,6 +561,9 @@ JS_SuspendRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
+extern JS_PUBLIC_API(void)
+JS_TransferRequest(JSContext *cx, JSContext *another);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -624,6 +627,27 @@ class JSAutoSuspendRequest {
     static void *operator new(size_t) CPP_THROW_NEW { return 0; };
     static void operator delete(void *, size_t) { };
 #endif
+};
+
+class JSAutoTransferRequest
+{
+  public:
+    JSAutoTransferRequest(JSContext* cx1, JSContext* cx2)
+        : cx1(cx1), cx2(cx2) {
+        if(cx1 != cx2)
+            JS_TransferRequest(cx1, cx2);
+    }
+    ~JSAutoTransferRequest() {
+        if(cx1 != cx2)
+            JS_TransferRequest(cx2, cx1);
+    }
+  private:
+    JSContext* const cx1;
+    JSContext* const cx2;
+
+    /* Not copyable. */
+    JSAutoTransferRequest(JSAutoTransferRequest &);
+    void operator =(JSAutoTransferRequest&);
 };
 
 JS_BEGIN_EXTERN_C

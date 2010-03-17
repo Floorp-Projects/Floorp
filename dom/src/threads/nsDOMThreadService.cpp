@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -514,71 +514,49 @@ DOMWorkerOperationCallback(JSContext* aCx)
   nsDOMWorker* worker = (nsDOMWorker*)JS_GetContextPrivate(aCx);
   NS_ASSERTION(worker, "This must never be null!");
 
-  PRBool wasSuspended = PR_FALSE;
-  PRBool extraThreadAllowed = PR_FALSE;
-  jsrefcount suspendDepth = 0;
+  PRBool canceled = worker->IsCanceled();
+  if (!canceled && worker->IsSuspended()) {
+    JSAutoSuspendRequest suspended(aCx);
 
-  for (;;) {
-    // Kill execution if we're canceled.
-    if (worker->IsCanceled()) {
-      LOG(("Forcefully killing JS for worker [0x%p]",
-           static_cast<void*>(worker)));
+    // Since we're going to block this thread we should open up a new thread
+    // in the thread pool for other workers. Must check the return value to
+    // make sure we don't decrement when we failed.
+    PRBool extraThreadAllowed =
+      NS_SUCCEEDED(gDOMThreadService->ChangeThreadPoolMaxThreads(1));
 
-      if (wasSuspended) {
-        if (extraThreadAllowed) {
-          gDOMThreadService->ChangeThreadPoolMaxThreads(-1);
-        }
-        JS_ResumeRequest(aCx, suspendDepth);
+    // Flush JIT caches now before suspending to avoid holding memory that we
+    // are not going to use.
+    JS_FlushCaches(aCx);
+
+    for (;;) {
+      nsAutoMonitor mon(worker->Pool()->Monitor());
+
+      // There's a small chance that the worker was canceled after our check
+      // above in which case we shouldn't wait here. We're guaranteed not to
+      // race here because the pool reenters its monitor after canceling each
+      // worker in order to notify its condition variable.
+      canceled = worker->IsCanceled();
+      if (!canceled && worker->IsSuspended()) {
+        mon.Wait();
       }
-
-      // Kill execution of the currently running JS.
-      JS_ClearPendingException(aCx);
-      return JS_FALSE;
-    }
-
-    // Break out if we're not suspended.
-    if (!worker->IsSuspended()) {
-      if (wasSuspended) {
-        if (extraThreadAllowed) {
-          gDOMThreadService->ChangeThreadPoolMaxThreads(-1);
-        }
-        JS_ResumeRequest(aCx, suspendDepth);
+      else {
+        break;
       }
-      return JS_TRUE;
     }
 
-    if (!wasSuspended) {
-      // Make sure to suspend our request while we block like this, otherwise we
-      // prevent GC for everyone.
-      suspendDepth = JS_SuspendRequest(aCx);
-
-      // Since we're going to block this thread we should open up a new thread
-      // in the thread pool for other workers. Must check the return value to
-      // make sure we don't decrement when we failed.
-      extraThreadAllowed =
-        NS_SUCCEEDED(gDOMThreadService->ChangeThreadPoolMaxThreads(1));
-
-      // Flush JIT caches now before suspending to avoid holding memory that we
-      // are not going to use.
-      JS_FlushCaches(aCx);
-
-      // Only do all this setup once.
-      wasSuspended = PR_TRUE;
-    }
-
-    nsAutoMonitor mon(worker->Pool()->Monitor());
-
-    // There's a small chance that the worker was canceled after our check
-    // above in which case we shouldn't wait here. We're guaranteed not to race
-    // here because the pool reenters its monitor after canceling each worker
-    // in order to notify its condition variable.
-    if (worker->IsSuspended() && !worker->IsCanceled()) {
-      mon.Wait();
+    if (extraThreadAllowed) {
+      gDOMThreadService->ChangeThreadPoolMaxThreads(-1);
     }
   }
 
-  NS_NOTREACHED("Should never get here!");
-  return JS_FALSE;
+  if (canceled) {
+    LOG(("Forcefully killing JS for worker [0x%p]",
+         static_cast<void*>(worker)));
+    // Kill execution of the currently running JS.
+    JS_ClearPendingException(aCx);
+    return JS_FALSE;
+  }
+  return JS_TRUE;
 }
 
 void

@@ -2310,8 +2310,15 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
         nsISupports* qiresult = nsnull;
         {
-            AutoJSSuspendNonMainThreadRequest req(ccx.GetJSContext());
-            invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
+            if(XPCPerThreadData::IsMainThread(ccx))
+            {
+                invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
+            }
+            else
+            {
+                JSAutoSuspendRequest suspended(ccx);
+                invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
+            }
         }
 
         xpcc->SetLastResult(invokeResult);
@@ -2721,10 +2728,18 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     // do the invoke
     {
-        AutoJSSuspendNonMainThreadRequest req(ccx.GetJSContext());
-        invokeResult = NS_InvokeByIndex(callee, vtblIndex,
-                                        paramCount + wantsOptArgc,
-                                        dispatchParams);
+        uint8 allParamCount = paramCount + wantsOptArgc;
+        if(XPCPerThreadData::IsMainThread(ccx))
+        {
+            invokeResult = NS_InvokeByIndex(callee, vtblIndex,
+                                            allParamCount, dispatchParams);
+        }
+        else
+        {
+            JSAutoSuspendRequest suspended(ccx);
+            invokeResult = NS_InvokeByIndex(callee, vtblIndex,
+                                            allParamCount, dispatchParams);
+        }
     }
 
     xpcc->SetLastResult(invokeResult);
