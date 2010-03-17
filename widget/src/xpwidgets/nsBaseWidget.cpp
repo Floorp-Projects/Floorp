@@ -662,42 +662,6 @@ LayerManager* nsBaseWidget::GetLayerManager()
 
 //-------------------------------------------------------------------------
 //
-// Create a rendering context from this nsBaseWidget
-//
-//-------------------------------------------------------------------------
-nsIRenderingContext* nsBaseWidget::GetRenderingContext()
-{
-  nsresult                      rv;
-  nsCOMPtr<nsIRenderingContext> renderingCtx;
-
-  if (mOnDestroyCalled)
-    return nsnull;
-
-  rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
-  if (NS_SUCCEEDED(rv)) {
-    gfxASurface* surface = GetThebesSurface();
-    NS_ENSURE_TRUE(surface, nsnull);
-    rv = renderingCtx->Init(mContext, surface);
-    if (NS_SUCCEEDED(rv)) {
-      nsIRenderingContext *ret = renderingCtx;
-      /* Increment object refcount that the |ret| object is still a valid one
-       * after we leave this function... */
-      NS_ADDREF(ret);
-      return ret;
-    }
-    else {
-      NS_WARNING("GetRenderingContext: nsIRenderingContext::Init() failed.");
-    }  
-  }
-  else {
-    NS_WARNING("GetRenderingContext: Cannot create RenderingContext.");
-  }  
-  
-  return nsnull;
-}
-
-//-------------------------------------------------------------------------
-//
 // Return the toolkit this widget was created on
 //
 //-------------------------------------------------------------------------
