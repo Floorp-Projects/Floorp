@@ -1,5 +1,4 @@
 (function(){
-/* Utils.log('top of tab mirror file'); */
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -11,49 +10,43 @@ function _isIframe(doc){
   return win.parent != win;
 }
 
-
+// ----------
 var TabCanvas = function(tab, canvas){ this.init(tab, canvas) }
 TabCanvas.prototype = {
   init: function(tab, canvas){
     this.tab = tab;
     this.canvas = canvas;
     this.window = window;
-        
-    this.RATE_LIMIT = 250; // To refresh the thumbnail any faster than this. In ms.
-    this.lastDraw = null;
-    
+            
     $(canvas).data("link", this);
 
     var w = $(canvas).width();
     var h = $(canvas).height();
     $(canvas).attr({width:w, height:h});
-    
-    this.paint(null);
-    
+      
     var self = this;
-    var paintIt = function(evt){self.onPaint(evt) };
-    
-    // Don't mirror chrome tabs.
-    //if( window.location.protocol == "chrome:" ) return;
-    
-/*     Utils.log('attaching', tab.contentWindow.location.href); */
-    tab.contentWindow.addEventListener("MozAfterPaint", paintIt, false);
-
-/*
-    tab.contentDocument.addEventListener("onload", function() { 
-      Utils.log('onload', this.tab.contentWindow.location.href);
-    }, false);
-*/
-    
-    $(window).unload(function(){
-      tab.contentWindow.removeEventListener("MozAfterPaint", paintIt, false);
-    })
+    this.paintIt = function(evt) { 
+      // note that "window" is unreliable in this context, so we'd use self.window if needed
+      self.tab.mirror.triggerPaint();
+/*       self.window.Utils.log('paint it', self.tab.url); */
+    };
   },
-
+  
+  attach: function() {
+    this.tab.contentWindow.addEventListener("MozAfterPaint", this.paintIt, false);
+  },
+     
+  detach: function() {
+    this.tab.contentWindow.removeEventListener("MozAfterPaint", this.paintIt, false);
+  },
   
   paint: function(evt){
     var $ = this.window.$;
-    if( $ == null ) return;
+    if( $ == null ) {
+      Utils.log('null $ in paint');
+      return;
+    }
+    
     var $canvas = $(this.canvas);
     var ctx = this.canvas.getContext("2d");
   
@@ -61,36 +54,27 @@ TabCanvas.prototype = {
     var h = $canvas.height();
   
     var fromWin = this.tab.contentWindow;
-    if( fromWin == null || fromWin.location.protocol == "chrome:") return;
-/*     Utils.trace('paint: ' + this.tab.url); */
+    if(fromWin == null) {
+      Utils.log('null fromWin in paint');
+      return;
+    }
+    
+    Utils.assert('chrome windows don\'t get paint (TabCanvas.paint)', 
+      fromWin.location.protocol != "chrome:");
+
     var scaler = w/fromWin.innerWidth;
   
     // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
-    var now = new Date();
-    if( this.lastDraw == null || now - this.lastDraw > this.RATE_LIMIT ){
-      var startTime = new Date();
-      ctx.save();
-      ctx.scale(scaler, scaler);
-      try{
-        ctx.drawWindow( fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff" );
-      } catch(e){
-        
-      }
-      
-      ctx.restore();
-      var elapsed = (new Date()) - startTime;
-      //Utils.log( this.window.location.host + " " + elapsed );
-      this.lastDraw = new Date();
+
+    ctx.save();
+    ctx.scale(scaler, scaler);
+    try{
+      ctx.drawWindow( fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff" );
+    } catch(e){
+      Utils.error('paint', e);   
     }
-    ctx.restore();      
-  },
-  
-  onPaint: function(evt){
-/*
-    if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
-      Utils.trace('on paint', this.tab.contentWindow.location.href);
-*/
-    this.paint(evt);    
+    
+    ctx.restore();
   },
   
   animate: function(options, duration){
@@ -119,31 +103,19 @@ TabCanvas.prototype = {
   }
 }
 
+// ----------
 var TabMirror = function( ){ this.init() }
 TabMirror.prototype = {
   init: function(){
-/*   	Utils.log('creating tab mirror'); */
     var self = this;
     
-/*     Utils.log(Tabs); */
-    
-    Tabs.onOpen(function(evt) {
-      Utils.log('mirror onOpen', evt.tab.url);
-    });
-    
-    Tabs.onLoad(function(evt) {
-      Utils.log('mirror onLoad', evt.tab.url);
-    });
-
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
-      Utils.log('mirror onready');
       self.update(evt.tab);
     });
     
     // When a tab is closed, unlink.    
     Tabs.onClose( function(){
-      Utils.log('mirror onclose');
       self.unlink(this);
     });
     
@@ -151,86 +123,116 @@ TabMirror.prototype = {
     Tabs.forEach(function(tab){
       self.link(tab);
     });    
-    
+     
+    this.paintingPaused = 0;
+    this.heartbeatIndex = 0;  
+    this._fireNextHeartbeat();    
   },
   
-  _getEl: function(tab){
-    mirror = null;
-    $(".tab").each(function(){
-      if( $(this).data("tab") == tab ){
-        mirror = this;
-        return;
+  _heartbeat: function() {
+    try {
+      var now = Utils.getMilliseconds();
+      var count = Tabs.length;
+      if(count && this.paintingPaused <= 0) {
+        this.heartbeatIndex++;
+        if(this.heartbeatIndex >= count)
+          this.heartbeatIndex = 0;
+          
+        var tab = Tabs[this.heartbeatIndex];
+        var mirror = tab.mirror; 
+        if(mirror) {
+          var iconUrl = tab.raw.linkedBrowser.mIconURL;
+          var label = tab.raw.label;
+          $fav = $(mirror.favEl);
+          $name = $(mirror.nameEl);
+          
+          if(iconUrl != $fav.attr("src")) { 
+            $fav.attr("src", iconUrl);
+            mirror.triggerPaint();
+          }
+            
+          if($name.text() != label) {
+            $name.text(label);
+            mirror.triggerPaint();
+          }
+          
+          if(tab.url != mirror.url) {
+            mirror.url = tab.url;
+            mirror.triggerPaint();
+          }
+
+          if(mirror.needsPaint) {
+            mirror.tabCanvas.paint();
+            
+            if(Utils.getMilliseconds() - mirror.needsPaint > 5000)
+              mirror.needsPaint = 0;
+          }
+        }
       }
-    });
-    return mirror;
+    } catch(e) {
+      Utils.error('heartbeat', e);
+    }
+    
+    this._fireNextHeartbeat();
   },
   
+  _fireNextHeartbeat: function() {
+    var self = this;
+    window.setTimeout(function() {
+      self._heartbeat();
+    }, 100);
+  },   
+    
   _customize: function(func){
     // pass
     // This gets set by add-ons/extensions to MirrorTab
   },
   
   _createEl: function(tab){
-/*     Utils.trace('_createEl'); */
     var div = $("<div class='tab'><span class='name'>&nbsp;</span><img class='fav'/><canvas class='thumb'/></div>")
       .data("tab", tab)
       .appendTo("body");
       
-    if( tab.url.match("chrome:") ){
+    if( tab.url.match("chrome:") )
       div.hide();
-    }     
     
     this._customize(div);
-
-    function updateAttributes(){
-      var iconUrl = tab.raw.linkedBrowser.mIconURL;
-      var label = tab.raw.label;
-      $fav = $('.fav', div)
-      $name = $('.name', div);
-      
-      if(iconUrl != $fav.attr("src")) $fav.attr("src", iconUrl);
-      if( $name.text() != label ) {
-        $name.text(label);
-/*         Utils.trace('update', label); */
-      }
-    }    
     
-    var timer = setInterval( updateAttributes, 500 );
-    div.data("timer", timer);
+    tab.mirror = {}; 
+    tab.mirror.needsPaint = 0;
+    tab.mirror.el = div.get(0);
+    tab.mirror.favEl = $('.fav', div).get(0);
+    tab.mirror.nameEl = $('.name', div).get(0);
+    tab.mirror.canvasEl = $('.thumb', div).get(0);
     
-    this._updateEl(tab);
-  },
-  
-  _updateEl: function(tab){
-/*     Utils.log('_udateEl', tab.url); */
-    var el = this._getEl(tab);
+    tab.mirror.triggerPaint = function() {
+    	var date = new Date();
+    	this.needsPaint = date.getTime();
+    };
     
-    var canvas = $('.thumb', el).get(0);
-    if(!$(canvas).data("link"))
-      new TabCanvas(tab, canvas);    
-  },
-  
-  update: function(tab){
-/*     Utils.log('update'); */
     var doc = tab.contentDocument;
-    this.link(tab);
-
-    if( !_isIframe(doc) ){
-      this._updateEl(tab);
+    if( !_isIframe(doc) ) {
+      tab.mirror.tabCanvas = new TabCanvas(tab, tab.mirror.canvasEl);    
+      tab.mirror.tabCanvas.attach();
+      tab.mirror.triggerPaint();
     }
   },
   
+  update: function(tab){
+    this.link(tab);
+
+    if(tab.mirror && tab.mirror.tabCanvas)
+      tab.mirror.triggerPaint();
+  },
+  
   link: function(tab){
-/*   	Utils.trace('link'); */
-/*   	Utils.log('link: ' + tab.url); */
     // Don't add duplicates
-    var dup = this._getEl(tab)
-    if( dup ) return false;
-    
-    /*// Don't do anything that starts with a chrome URL
-    if( tab.contentWindow.location.protocol == "chrome:" ){
+    if(tab.mirror)
       return false;
-    }*/
+    
+    // Don't do anything that starts with a chrome URL
+    if( tab.contentWindow.location.protocol == "chrome:" )
+      return false;
     
     // Add the tab to the page
     this._createEl(tab);
@@ -238,26 +240,40 @@ TabMirror.prototype = {
   },
   
   unlink: function(tab){
-    $(".tab").each(function(){
-      if( $(this).data("tab") == tab ){
-        clearInterval( $(this).data("timer") );
-        $(this).remove();
-      }
-    });    
-  }
-  
-}
+    var mirror = tab.mirror;
+    if(mirror) {
+      var tabCanvas = mirror.tabCanvas;
+      if(tabCanvas)
+        tabCanvas.detach();
+      
+      $(mirror.el).remove();
+      
+      tab.mirror = null;
+    }
+  }  
+};
 
-new TabMirror()
-window.TabMirror = {}
-window.TabMirror.customize = function(func){
-  // Apply the custom handlers to all existing elements
-  // TODO: Make this modular: so that it only exists in one place.
-  //       No breaking DRY!
-  func($("div.tab"));
+// ----------
+window.TabMirror = {
+  _private: new TabMirror(), 
   
-  // Apply it to all future elements.
-  TabMirror.prototype._customize = func;
+  customize: function(func) {
+    // Apply the custom handlers to all existing elements
+    // TODO: Make this modular: so that it only exists in one place.
+    //       No breaking DRY!
+    func($("div.tab"));
+    
+    // Apply it to all future elements.
+    TabMirror.prototype._customize = func;
+  },
+
+  pausePainting: function() {
+    this._private.paintingPaused++;
+  },
+  
+  resumePainting: function() {
+    this._private.paintingPaused--;
+  }
 };
 
 })();
