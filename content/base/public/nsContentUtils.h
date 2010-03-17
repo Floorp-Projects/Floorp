@@ -1549,6 +1549,28 @@ public:
   }
 
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
+
+  /**
+   * Creates a structured clone of the given jsval according to the algorithm
+   * at:
+   *     http://www.whatwg.org/specs/web-apps/current-work/multipage/
+   *                                   urls.html#safe-passing-of-structured-data
+   *
+   * If the function returns a success code then rval is set to point at the
+   * cloned jsval. rval is not set if the function returns a failure code.
+   */
+  static nsresult CreateStructuredClone(JSContext* cx, jsval val, jsval* rval);
+
+  /**
+   * Reparents the given object and all subobjects to the given scope. Also
+   * fixes all the prototypes. Assumes obj is properly rooted, that obj has no
+   * getter functions that can cause side effects, and that the only types of
+   * objects nested within obj are the types that are cloneable via the
+   * CreateStructuredClone function above.
+   */
+  static nsresult ReparentClonedObjectToScope(JSContext* cx, JSObject* obj,
+                                              JSObject* scope);
+
 private:
 
   static PRBool InitializeEventTable();
