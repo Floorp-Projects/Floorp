@@ -450,8 +450,13 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                           event.event.xgraphicsexpose.drawable));
 #endif
 
+#ifdef OS_MACOSX
+    // Mac OS X does not define an NPEvent structure. It defines more specific types.
+    NPCocoaEvent evcopy = event.event;
+#else
     // Make a copy since we may modify values.
     NPEvent evcopy = event.event;
+#endif
 
 #ifdef OS_WIN
     // Painting for win32. SharedSurfacePaint handles everything.
@@ -608,7 +613,13 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     }
 
 #elif defined(OS_MACOSX)
-#  warning This is only a stub implementation IMPLEMENT ME
+
+    mWindow.x = aWindow.x;
+    mWindow.y = aWindow.y;
+    mWindow.width = aWindow.width;
+    mWindow.height = aWindow.height;
+    mWindow.clipRect = aWindow.clipRect;
+    mWindow.type = aWindow.type;
 
 #else
 #  error Implement me for your OS
