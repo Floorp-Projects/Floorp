@@ -3098,7 +3098,7 @@ class RegExpNativeCompiler {
     addName(LirBuffer* lirbuf, LIns* ins, const char* name)
     {
 #ifdef NJ_VERBOSE
-        debug_only_stmt(lirbuf->names->addName(ins, name);)
+        debug_only_stmt(lirbuf->printer->lirNameMap->addName(ins, name);)
 #endif
         return ins;
     }
@@ -3145,8 +3145,7 @@ class RegExpNativeCompiler {
     {
         fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &LogController);
-        lirbuf->names = new (tempAlloc) LirNameMap(tempAlloc, labels);
+        lirbuf->printer = new (tempAlloc) LInsPrinter(tempAlloc);
 #endif
     }
 
@@ -3188,7 +3187,7 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (LogController.lcbits & LC_TMRegexp) {
-                lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->names,
+                lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->printer,
                                                          &LogController);
             }
         )
@@ -3248,8 +3247,7 @@ class RegExpNativeCompiler {
          */
         JS_ASSERT(!lirbuf->sp && !lirbuf->rp);
 
-        assm->compile(fragment, tempAlloc, /*optimize*/true
-                      verbose_only(, lirbuf->names->labels));
+        assm->compile(fragment, tempAlloc, /*optimize*/true verbose_only(, lirbuf->printer));
         if (assm->error() != nanojit::None)
             goto fail;
 

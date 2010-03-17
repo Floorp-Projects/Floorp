@@ -140,40 +140,38 @@ StackFilter::getTop(LIns* guard)
 
 #if defined NJ_VERBOSE
 void
-LirNameMap::formatGuard(LIns *i, char *out)
+LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
 {
-    VMSideExit *x;
-
-    x = (VMSideExit *)i->record()->exit;
-    sprintf(out,
+    RefBuf b1, b2;
+    VMSideExit *x = (VMSideExit *)ins->record()->exit;
+    VMPI_snprintf(buf->buf, buf->len,
             "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld (GuardID=%03d)",
-            formatRef(i),
-            lirNames[i->opcode()],
-            i->oprnd1() ? formatRef(i->oprnd1()) : "",
+            formatRef(&b1, ins),
+            lirNames[ins->opcode()],
+            ins->oprnd1() ? formatRef(&b2, ins->oprnd1()) : "",
             (void *)x->pc,
             (void *)x->imacpc,
             (long int)x->sp_adj,
             (long int)x->rp_adj,
-            i->record()->profGuardID);
+            ins->record()->profGuardID);
 }
 
 void
-LirNameMap::formatGuardXov(LIns *i, char *out)
+LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
 {
-    VMSideExit *x;
-
-    x = (VMSideExit *)i->record()->exit;
-    sprintf(out,
+    RefBuf b1, b2, b3;
+    VMSideExit *x = (VMSideExit *)ins->record()->exit;
+    VMPI_snprintf(buf->buf, buf->len,
             "%s = %s %s, %s -> pc=%p imacpc=%p sp%+ld rp%+ld (GuardID=%03d)",
-            formatRef(i),
-            lirNames[i->opcode()],
-            formatRef(i->oprnd1()),
-            formatRef(i->oprnd2()),
+            formatRef(&b1, ins),
+            lirNames[ins->opcode()],
+            formatRef(&b2, ins->oprnd1()),
+            formatRef(&b3, ins->oprnd2()),
             (void *)x->pc,
             (void *)x->imacpc,
             (long int)x->sp_adj,
             (long int)x->rp_adj,
-            i->record()->profGuardID);
+            ins->record()->profGuardID);
 }
 #endif
 
@@ -2175,8 +2173,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 
     fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-    LabelMap* labels = new (tempAlloc()) LabelMap(tempAlloc(), &LogController);
-    lirbuf->names = new (tempAlloc()) LirNameMap(tempAlloc(), labels);
+    lirbuf->printer = new (tempAlloc()) LInsPrinter(tempAlloc());
 #endif
 
     /*
@@ -2222,7 +2219,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 #endif
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-           lir = new (tempAlloc()) VerboseWriter(tempAlloc(), lir, lirbuf->names,
+           lir = new (tempAlloc()) VerboseWriter(tempAlloc(), lir, lirbuf->printer,
                                                &LogController);
         }
     )
@@ -2417,7 +2414,7 @@ TraceRecorder::addName(LIns* ins, const char* name)
      * in adding names otherwise.
      */
     if (LogController.lcbits > 0)
-        lirbuf->names->addName(ins, name);
+        lirbuf->printer->lirNameMap->addName(ins, name);
 #endif
     return ins;
 }
@@ -4214,14 +4211,13 @@ TraceRecorder::compile()
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
     sprintf(label, "%s:%u", filename ? filename : "<stdin>",
             js_FramePCToLineNumber(cx, cx->fp));
-    lirbuf->names->labels->add(fragment, sizeof(Fragment), 0, label);
+    lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
     js_free(label);
 #endif
 
     Assembler *assm = traceMonitor->assembler;
     JS_ASSERT(assm->error() == nanojit::None);
-    assm->compile(fragment, tempAlloc(), /*optimize*/true
-                  verbose_only(, lirbuf->names->labels));
+    assm->compile(fragment, tempAlloc(), /*optimize*/true verbose_only(, lirbuf->printer));
 
     if (assm->error() != nanojit::None) {
         assm->setError(nanojit::None);
