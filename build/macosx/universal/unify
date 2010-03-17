@@ -1165,6 +1165,12 @@ sub readZipCRCs($) {
 
   package FileAttrCache;
 
+  # from /usr/include/mach-o/loader.h
+  use constant MH_MAGIC    => 0xfeedface;
+  use constant MH_CIGAM    => 0xcefaedfe;
+  use constant MH_MAGIC_64 => 0xfeedfacf;
+  use constant MH_CIGAM_64 => 0xcffaedfe;
+
   use Fcntl(':DEFAULT', ':mode');
 
   # FileAttrCache->new($path)
@@ -1243,8 +1249,10 @@ sub readZipCRCs($) {
     }
 
     # Accept Mach-O fat files or Mach-O thin files of either endianness.
-    if ($magic == 0xfeedface ||
-        $magic == 0xcefaedfe ||
+    if ($magic == MH_MAGIC ||
+        $magic == MH_CIGAM ||
+        $magic == MH_MAGIC_64 ||
+        $magic == MH_CIGAM_64 ||
         $this->isFat()) {
       return 1;
     }
