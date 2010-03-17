@@ -856,8 +856,6 @@ public:
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
-  virtual void DocumentStatesChanged(nsIDocument* aDocument,
-                                     PRInt32 aStateMask);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
                                nsIStyleSheet* aStyleSheet,
                                PRBool aDocumentSheet);
@@ -4909,23 +4907,6 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
-    VERIFY_STYLE_TREE;
-  }
-}
-
-void
-PresShell::DocumentStatesChanged(nsIDocument* aDocument,
-                                 PRInt32 aStateMask)
-{
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  if (mDidInitialReflow &&
-      mStyleSet->HasDocumentStateDependentStyle(mPresContext,
-                                                mDocument->GetRootContent(),
-                                                aStateMask)) {
-    mFrameConstructor->PostRestyleEvent(mDocument->GetRootContent(),
-                                        eReStyle_Self, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 }
