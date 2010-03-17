@@ -57,7 +57,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGClipPathElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGClipPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGClipPathElement,
                            nsIDOMSVGUnitTypes)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGClipPathElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGClipPathElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathElementBase)
 
 //----------------------------------------------------------------------

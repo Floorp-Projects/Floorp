@@ -42,7 +42,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMOrientationEvent, nsDOMEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMOrientationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMOrientationEvent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(OrientationEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(OrientationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP nsDOMOrientationEvent::InitOrientationEvent(const nsAString & eventTypeArg,

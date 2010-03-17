@@ -68,7 +68,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGAElement)
                            nsIDOMSVGAElement,
                            nsILink,
                            Link)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGAElementBase)
 
 
