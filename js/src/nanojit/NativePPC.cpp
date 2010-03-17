@@ -641,7 +641,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_int(LIns *ins) {
+    void Assembler::asm_immi(LIns *ins) {
         Register rr = deprecated_prepResultReg(ins, GpRegs);
         asm_li(rr, ins->imm32());
     }
@@ -1028,7 +1028,46 @@ namespace nanojit
     }
     #endif
     
-    void Assembler::asm_quad(LIns *ins) {
+#ifdef NANOJIT_64BIT
+    void Assembler::asm_immq(LIns *ins) {
+        Register r = ins->deprecated_getReg();
+        if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {
+            // FPR already assigned, fine, use it
+            deprecated_freeRsrcOf(ins, false);
+        } else {
+            // use a GPR register; its okay to copy doubles with GPR's
+            // but *not* okay to copy non-doubles with FPR's
+            r = deprecated_prepResultReg(ins, GpRegs);
+        }
+
+        if (rmask(r) & FpRegs) {
+            union {
+                double d;
+                struct {
+                    int32_t hi, lo;
+                } w;
+            };
+            d = ins->imm64f();
+            LFD(r, 8, SP);
+            STW(R0, 12, SP);
+            asm_li(R0, w.lo);
+            STW(R0, 8, SP);
+            asm_li(R0, w.hi);
+        }
+        else {
+            int64_t q = ins->imm64();
+            if (isS32(q)) {
+                asm_li(r, int32_t(q));
+                return;
+            }
+            RLDIMI(r,R0,32,0); // or 32,32?
+            asm_li(R0, int32_t(q>>32)); // hi bits into R0
+            asm_li(r, int32_t(q)); // lo bits into dest reg
+        }
+    }
+#endif
+
+    void Assembler::asm_immf(LIns *ins) {
     #ifdef NANOJIT_64BIT
         Register r = ins->deprecated_getReg();
         if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {

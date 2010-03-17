@@ -219,7 +219,7 @@ verbose_only( extern const char* shiftNames[]; )
     void        underrunProtect(int bytes);                                     \
     void        nativePageReset();                                              \
     void        nativePageSetup();                                              \
-    void        asm_quad_nochk(Register, int32_t, int32_t);                     \
+    void        asm_immf_nochk(Register, int32_t, int32_t);                     \
     void        asm_regarg(ArgSize, LInsp, Register);                           \
     void        asm_stkarg(LInsp p, int stkd);                                  \
     void        asm_cmpi(Register, int32_t imm);                                \

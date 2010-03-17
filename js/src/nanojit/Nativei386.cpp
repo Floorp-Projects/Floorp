@@ -148,7 +148,7 @@ namespace nanojit
         MR(SP,FP);
 
         // return value is GuardRecord*
-        asm_int(EAX, int(lr), /*canClobberCCs*/true);
+        asm_immi(EAX, int(lr), /*canClobberCCs*/true);
     }
 
     NIns *Assembler::genEpilogue()
@@ -369,11 +369,11 @@ namespace nanojit
             LEA(r, arDisp(ins), FP);
 
         } else if (ins->isconst()) {
-            asm_int(r, ins->imm32(), /*canClobberCCs*/false);
+            asm_immi(r, ins->imm32(), /*canClobberCCs*/false);
             ins->clearReg();
 
-        } else if (ins->isconstq()) {
-            asm_quad(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
+        } else if (ins->isconstf()) {
+            asm_immf(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
             ins->clearReg();
 
         } else if (ins->isop(LIR_param) && ins->paramKind() == 0 &&
@@ -1251,16 +1251,16 @@ namespace nanojit
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_int(LInsp ins)
+    void Assembler::asm_immi(LInsp ins)
     {
         Register rr = prepareResultReg(ins, GpRegs);
 
-        asm_int(rr, ins->imm32(), /*canClobberCCs*/true);
+        asm_immi(rr, ins->imm32(), /*canClobberCCs*/true);
 
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_int(Register r, int32_t val, bool canClobberCCs)
+    void Assembler::asm_immi(Register r, int32_t val, bool canClobberCCs)
     {
         if (val == 0 && canClobberCCs)
             XOR(r, r);
@@ -1268,15 +1268,15 @@ namespace nanojit
             LDi(r, val);
     }
 
-    void Assembler::asm_quad(Register r, uint64_t q, double d, bool canClobberCCs)
+    void Assembler::asm_immf(Register r, uint64_t q, double d, bool canClobberCCs)
     {
-        // Quads require non-standard handling. There is no load-64-bit-immediate
+        // Floats require non-standard handling. There is no load-64-bit-immediate
         // instruction on i386, so in the general case, we must load it from memory.
         // This is unlike most other LIR operations which can be computed directly
         // in a register. We can special-case 0.0 and various other small ints
         // (1.0 on x87, any int32_t value on SSE2), but for all other values, we
         // allocate an 8-byte chunk via dataAlloc and load from there. Note that
-        // this implies that quads never require spill area, since they will always
+        // this implies that floats never require spill area, since they will always
         // be rematerialized from const data (or inline instructions in the special cases).
 
         if (rmask(r) & XmmRegs) {
@@ -1288,7 +1288,7 @@ namespace nanojit
                 Register tr = registerAllocTmp(GpRegs);
                 SSE_CVTSI2SD(r, tr);
                 SSE_XORPDr(r, r);   // zero r to ensure no dependency stalls
-                asm_int(tr, (int)d, canClobberCCs);
+                asm_immi(tr, (int)d, canClobberCCs);
             } else {
                 const uint64_t* p = findQuadConstant(q);
                 LDSDm(r, (const double*)p);
@@ -1307,13 +1307,13 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_quad(LInsp ins)
+    void Assembler::asm_immf(LInsp ins)
     {
         NanoAssert(ins->isconstf());
         if (ins->isInReg()) {
             Register rr = ins->getReg();
             NanoAssert(rmask(rr) & FpRegs);
-            asm_quad(rr, ins->imm64(), ins->imm64f(), /*canClobberCCs*/true);
+            asm_immf(rr, ins->imm64(), ins->imm64f(), /*canClobberCCs*/true);
         } else {
             // Do nothing, will be rematerialized when necessary.
         }
@@ -1393,7 +1393,7 @@ namespace nanojit
             if (r != UnspecifiedReg) {
                 if (ins->isconst()) {
                     // Rematerialize the constant.
-                    asm_int(r, ins->imm32(), /*canClobberCCs*/true);
+                    asm_immi(r, ins->imm32(), /*canClobberCCs*/true);
                 } else if (ins->isInReg()) {
                     if (r != ins->getReg())
                         MR(r, ins->getReg());
