@@ -62,7 +62,6 @@ class nsPresContext;
 class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
-class nsDocAccessible;
 class nsRootAccessible;
 class nsApplicationAccessibleWrap;
 class nsIDocShellTreeItem;

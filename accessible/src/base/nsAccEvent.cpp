@@ -37,12 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccEvent.h"
-#include "nsAccessibilityAtoms.h"
+
 #include "nsApplicationAccessibleWrap.h"
-#include "nsCoreUtils.h"
-#include "nsIAccessibilityService.h"
-#include "nsIAccessNode.h"
-#include "nsIDocument.h"
+#include "nsDocAccessible.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIEventStateManager.h"
 #include "nsIPersistentProperties2.h"
@@ -63,7 +61,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccEvent. nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_2(nsAccEvent, mAccessible, mDocAccessible)
+NS_IMPL_CYCLE_COLLECTION_1(nsAccEvent, mAccessible)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccEvent)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEvent)
@@ -138,15 +136,8 @@ nsAccEvent::GetDOMNode(nsIDOMNode **aDOMNode)
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nsnull;
 
-  if (!mNode) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mAccessible));
-    NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMNode> DOMNode;
-    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
-
-    mNode = do_QueryInterface(DOMNode);
-  }
+  if (!mNode)
+    mNode = GetNode();
 
   if (mNode)
     CallQueryInterface(mNode, aDOMNode);
@@ -158,21 +149,39 @@ NS_IMETHODIMP
 nsAccEvent::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
 {
   NS_ENSURE_ARG_POINTER(aDocAccessible);
-  *aDocAccessible = nsnull;
 
-  if (!mDocAccessible) {
-    if (!mAccessible) {
-      nsCOMPtr<nsIAccessible> accessible;
-      GetAccessible(getter_AddRefs(accessible));
-    }
+  NS_IF_ADDREF(*aDocAccessible = GetDocAccessible());
+  return NS_OK;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+// nsAccEvent: public methods
+
+nsINode*
+nsAccEvent::GetNode()
+{
+  if (!mNode) {
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mAccessible));
-    NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
-    accessNode->GetAccessibleDocument(getter_AddRefs(mDocAccessible));
+    if (!accessNode)
+      return nsnull;
+
+    nsCOMPtr<nsIDOMNode> DOMNode;
+    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
+
+    mNode = do_QueryInterface(DOMNode);
   }
 
-  NS_IF_ADDREF(*aDocAccessible = mDocAccessible);
-  return NS_OK;
+  return mNode;
+}
+
+nsDocAccessible*
+nsAccEvent::GetDocAccessible()
+{
+  nsINode *node = GetNode();
+  if (node)
+    return nsAccessNode::GetDocAccessibleFor(node->GetOwnerDoc());
+
+  return nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
