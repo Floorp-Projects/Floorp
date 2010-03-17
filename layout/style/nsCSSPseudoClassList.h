@@ -141,9 +141,6 @@ CSS_PSEUDO_CLASS(mozLWThemeBrightText, ":-moz-lwtheme-brighttext")
 // -moz-lwtheme-darktext matches a document that has a bright lightweight theme
 CSS_PSEUDO_CLASS(mozLWThemeDarkText, ":-moz-lwtheme-darktext")
 
-// Matches anything when the containing window is inactive
-CSS_PSEUDO_CLASS(mozWindowInactive, ":-moz-window-inactive")
-
 #ifdef MOZ_MATHML
 CSS_STATE_PSEUDO_CLASS(mozMathIncrementScriptLevel,
                        ":-moz-math-increment-script-level",

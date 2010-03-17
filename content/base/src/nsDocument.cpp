@@ -4056,16 +4056,6 @@ nsDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2,
 }
 
 void
-nsDocument::DocumentStatesChanged(PRInt32 aStateMask)
-{
-  // Invalidate our cached state.
-  mGotDocumentState &= ~aStateMask;
-  mDocumentState &= ~aStateMask;
-
-  NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
-}
-
-void
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                              nsIStyleRule* aOldStyleRule,
                              nsIStyleRule* aNewStyleRule)
@@ -7623,26 +7613,6 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
   if (NS_SUCCEEDED(rv)) {
     mPreloadingImages.AppendObject(request);
   }
-}
-
-PRInt32
-nsDocument::GetDocumentState()
-{
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_RTL_LOCALE)) {
-    if (IsDocumentRightToLeft()) {
-      mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
-    }
-    mGotDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
-  }
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    nsIPresShell* shell = GetPrimaryShell();
-    if (shell && shell->GetPresContext() &&
-        shell->GetPresContext()->IsTopLevelWindowInactive()) {
-      mDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
-    }
-    mGotDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
-  }
-  return mDocumentState;
 }
 
 namespace {

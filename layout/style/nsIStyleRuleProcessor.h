@@ -110,14 +110,6 @@ public:
 #endif
 
   /**
-   * Return whether style can depend on a change of the given document state.
-   *
-   * Document states are defined in nsIDocument.h.
-   */
-  virtual PRBool
-    HasDocumentStateDependentStyle(StateRuleProcessorData* aData) = 0;
-
-  /**
    * Return how (as described by nsReStyleHint) style can depend on a
    * change of the given content state on the given content node.  This
    * test is used for optimization only, and may err on the side of
