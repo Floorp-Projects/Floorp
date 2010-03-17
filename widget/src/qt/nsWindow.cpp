@@ -768,8 +768,10 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 
 #ifdef Q_WS_X11
     case NS_NATIVE_DISPLAY:
-        QWidget *widget = GetViewWidget();
-        return widget ? widget->x11Info().display() : nsnull;
+        {
+            QWidget *widget = GetViewWidget();
+            return widget ? widget->x11Info().display() : nsnull;
+        }
         break;
 #endif
 
