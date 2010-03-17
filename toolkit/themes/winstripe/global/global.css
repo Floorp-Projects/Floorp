@@ -164,6 +164,12 @@ statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
   padding: 0 1px;
 }
 
+%ifdef XP_WIN
+window:not([active="true"]) menubar > menu {
+  color: ThreeDShadow;
+}
+%endif
+
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
