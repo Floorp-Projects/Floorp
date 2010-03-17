@@ -68,21 +68,20 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/exceptions.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/preferences.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/extensions.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/downloads.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/console.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/Util.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/TileManager.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/BrowserView.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://browser/content/commandUtil.js"/>
+  <script type="application/javascript" src="chrome://browser/content/exceptions.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-ui.js"/>
+  <script type="application/javascript" src="chrome://browser/content/sanitize.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences.js"/>
+  <script type="application/javascript" src="chrome://browser/content/extensions.js"/>
+  <script type="application/javascript" src="chrome://browser/content/downloads.js"/>
+  <script type="application/javascript" src="chrome://browser/content/console.js"/>
+  <script type="application/javascript" src="chrome://browser/content/Util.js"/>
+  <script type="application/javascript" src="chrome://browser/content/InputHandler.js"/>
+  <script type="application/javascript" src="chrome://browser/content/TileManager.js"/>
+  <script type="application/javascript" src="chrome://browser/content/BrowserView.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
