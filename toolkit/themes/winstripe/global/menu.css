@@ -169,12 +169,6 @@ menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
   text-shadow: none;
 }
 
-%ifdef XP_WIN
-menubar > menu:-moz-window-inactive {
-  color: ThreeDShadow;
-}
-%endif
-
 /* ..... internal content .... */
 
 .menubar-left {
