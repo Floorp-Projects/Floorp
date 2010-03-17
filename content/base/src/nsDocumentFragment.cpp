@@ -198,7 +198,7 @@ nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 NS_INTERFACE_TABLE_HEAD(nsDocumentFragment)
   NS_NODE_INTERFACE_TABLE2(nsDocumentFragment, nsIDOMNode,
                            nsIDOMDocumentFragment)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentFragment)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DocumentFragment)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 
 

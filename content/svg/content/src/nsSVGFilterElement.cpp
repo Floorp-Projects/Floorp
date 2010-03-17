@@ -82,7 +82,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFilterElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFilterElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGFilterElement,
                            nsIDOMSVGURIReference)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFilterElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFilterElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterElementBase)
 
 //----------------------------------------------------------------------

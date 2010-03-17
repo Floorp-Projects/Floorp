@@ -70,7 +70,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGImageElement)
                            nsIDOMSVGElement, nsIDOMSVGImageElement,
                            nsIDOMSVGURIReference, imgIDecoderObserver,
                            nsIImageLoadingContent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGImageElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 
 //----------------------------------------------------------------------

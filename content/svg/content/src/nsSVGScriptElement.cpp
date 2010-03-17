@@ -122,7 +122,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGScriptElement)
                            nsIDOMSVGElement, nsIDOMSVGScriptElement,
                            nsIDOMSVGURIReference, nsIScriptLoaderObserver,
                            nsIScriptElement, nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGScriptElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGScriptElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 
 //----------------------------------------------------------------------
