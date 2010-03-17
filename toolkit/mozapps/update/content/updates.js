@@ -584,8 +584,8 @@ var gCheckingPage = {
      */
     onProgress: function(request, position, totalSize) {
       var pm = document.getElementById("checkingProgress");
-      checkingProgress.setAttribute("mode", "normal");
-      checkingProgress.setAttribute("value", Math.floor(100 * (position / totalSize)));
+      pm.mode = "normal";
+      pm.value = Math.floor(100 * (position / totalSize));
     },
 
     /**
