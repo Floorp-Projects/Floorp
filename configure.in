@@ -1131,6 +1131,9 @@ case "$HOST_OS_ARCH" in
 cygwin*|mingw*|mks*|msvc*)
     HOST_OS_ARCH=WINNT
     ;;
+darwin*)
+    HOST_OS_ARCH=Darwin
+    ;;
 linux*)
     HOST_OS_ARCH=Linux
     ;;
