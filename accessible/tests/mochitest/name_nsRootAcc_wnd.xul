@@ -23,6 +23,7 @@
     }
 
     // Hack to make xul:tabbrowser work.
+    Components.utils.import("resource://gre/modules/Services.jsm");
     var XULBrowserWindow = {
       isBusy: false,
       setOverLink: function (link, b) {
@@ -109,6 +110,15 @@
     </menu>
   </menubar>
 
-  <tabbrowser type="content-primary" flex="1" id="content"/>
+  <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+        tabbrowser="content"
+        flex="1"
+        setfocus="false">
+    <tab class="tabbrowser-tab" selected="true"/>
+  </tabs>
+  <tabbrowser id="content"
+              type="content-primary"
+              tabcontainer="tabbrowser-tabs"
+              flex="1"/>
 
 </window>

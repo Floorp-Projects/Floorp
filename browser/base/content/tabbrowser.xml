@@ -65,72 +65,9 @@
 
     <content>
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
-      <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
+      <xul:tabbox anonid="tabbox" class="tabbrowser-tabbox"
+                  flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
-        <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
-                  anonid="strip"
-                  ondragstart="this.parentNode.parentNode._onDragStart(event);"
-                  ondragover="this.parentNode.parentNode._onDragOver(event);"
-                  ondrop="this.parentNode.parentNode._onDrop(event);"
-                  ondragend="this.parentNode.parentNode._onDragEnd(event);"
-                  ondragleave="this.parentNode.parentNode._onDragLeave(event);">
-          <xul:hbox align="start">
-            <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
-          </xul:hbox>
-          <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
-          <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
-            <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
-                          command="cmd_newNavigatorTab"/>
-            <xul:menuseparator/>
-            <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
-                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.reloadTab(tabbrowser.mContextTab);"/>
-            <xul:menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                          tbattr="tabbrowser-multiple"
-                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.reloadAllTabs(tabbrowser.mContextTab);"/>
-            <xul:menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
-                          tbattr="tabbrowser-multiple"
-                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
-            <xul:menuseparator/>
-            <xul:menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
-                          accesskey="&openTabInNewWindow.accesskey;"
-                          tbattr="tabbrowser-multiple"
-                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.replaceTabWithWindow(tabbrowser.mContextTab);"/>
-            <xul:menuseparator/>
-            <xul:menuitem id="context_bookmarkTab"
-                          label="&bookmarkThisTab.label;"
-                          accesskey="&bookmarkThisTab.accesskey;"
-                          oncommand="BookmarkThisTab();"/>
-            <xul:menuitem id="context_bookmarkAllTabs"
-                          label="&bookmarkAllTabs.label;"
-                          accesskey="&bookmarkAllTabs.accesskey;"
-                          command="Browser:BookmarkAllTabs"/>
-            <xul:menuitem id="context_undoCloseTab"
-                          label="&undoCloseTab.label;"
-                          accesskey="&undoCloseTab.accesskey;"
-                          command="History:UndoCloseTab"
-                          anonid="undoCloseTabMenuItem"/>
-            <xul:menuseparator/>
-            <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
-                          tbattr="tabbrowser-multiple"
-                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeTab(tabbrowser.mContextTab);"/>
-          </xul:menupopup>
-
-          <xul:tabs class="tabbrowser-tabs" flex="1"
-                    anonid="tabcontainer"
-                    setfocus="false"
-                    onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);">
-            <xul:tab selected="true" validate="never"
-                     onerror="this.removeAttribute('image');"
-                     maxwidth="250" width="0" minwidth="100" flex="100"
-                     class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
-          </xul:tabs>
-        </xul:hbox>
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:notificationbox flex="1">
             <xul:browser flex="1" type="content-primary" message="true" disablehistory="true"
@@ -157,14 +94,8 @@
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
-      <field name="_tabDropIndicator">
-        document.getAnonymousElementByAttribute(this, "anonid", "tab-drop-indicator");
-      </field>
-      <field name="mStrip" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "strip");
-      </field>
       <field name="mTabContainer" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "tabcontainer");
+        document.getElementById(this.getAttribute("tabcontainer"));
       </field>
       <field name="mPanelContainer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "panelcontainer");
@@ -174,9 +105,6 @@
       </field>
       <field name="mStringBundle">
         document.getAnonymousElementByAttribute(this, "anonid", "tbstringbundle");
-      </field>
-      <field name="mUndoCloseTabMenuItem">
-        document.getAnonymousElementByAttribute(this, "anonid", "undoCloseTabMenuItem");
       </field>
       <field name="mCurrentTab">
         null
@@ -205,9 +133,6 @@
       <field name="mIsBusy">
         false
       </field>
-      <field name="mContextTab">
-        null
-      </field>
       <field name="arrowKeysShouldWrap" readonly="true">
 #ifdef XP_MACOSX
         true
@@ -222,9 +147,6 @@
         null
       </field>
 
-      <field name="_blockDblClick">
-        false
-      </field>
       <field name="_autoScrollPopup">
         null
       </field>
@@ -853,28 +775,6 @@
         </body>
       </method>
 
-      <method name="updatePopupMenu">
-        <parameter name="aPopupMenu"/>
-        <body>
-          <![CDATA[
-            this.mContextTab = document.popupNode.localName == "tab" ?
-                               document.popupNode : this.selectedTab;
-            var disabled = this.mTabs.length == 1;
-            var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
-            for (var i = 0; i < menuItems.length; i++)
-              menuItems[i].disabled = disabled;
-
-            // Session store
-            // XXXzeniko should't we just disable this item as we disable
-            // the tabbrowser-multiple items above - for consistency?
-            this.mUndoCloseTabMenuItem.hidden =
-              Cc["@mozilla.org/browser/sessionstore;1"].
-              getService(Ci.nsISessionStore).
-              getClosedTabCount(window) == 0;
-          ]]>
-        </body>
-      </method>
-
       <method name="updateCurrentBrowser">
         <parameter name="aForceUpdate"/>
         <body>
@@ -1008,22 +908,6 @@
         ]]></body>
       </method>
 
-      <method name="onTabClick">
-        <parameter name="event"/>
-        <body>
-          <![CDATA[
-            if (event.button != 1 || event.target.localName != 'tab')
-              return;
-
-            if (this.mTabs.length > 1 ||
-                !this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab"))
-              this.removeTab(event.target);
-
-            event.stopPropagation();
-          ]]>
-        </body>
-      </method>
-
       <method name="setTabTitleLoading">
         <parameter name="aTab"/>
         <body>
@@ -1076,36 +960,12 @@
         </body>
       </method>
 
-      <method name="setStripVisibilityTo">
-        <parameter name="aShow"/>
-        <body>
-        <![CDATA[
-          this.mStrip.collapsed = !aShow;
-          if (aShow) {
-            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
-            document.getElementById("menu_closeWindow").hidden = false;
-            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.closeTab"));
-            if (!this.mTabbedMode)
-              this.enterTabbedMode();
-          }
-          else {
-            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
-            document.getElementById("menu_closeWindow").hidden = true;
-            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.close"));
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="getStripVisibility">
-        <body>
-          return !this.mStrip.collapsed;
-        </body>
-      </method>
-
       <method name="enterTabbedMode">
         <body>
           <![CDATA[
+            if (this.mTabbedMode)
+              return;
+
             this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
             if (XULBrowserWindow.isBusy) {
@@ -1261,8 +1121,7 @@
 
             this._browsers = null; // invalidate cache
 
-            if (!this.mTabbedMode)
-              this.enterTabbedMode();
+            this.enterTabbedMode();
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
             if (this.mCurrentTab.owner)
@@ -1326,9 +1185,7 @@
             b.setAttribute("flex", "1");
             this.mPanelContainer.appendChild(notificationbox);
 
-            if (this.mStrip.collapsed &&
-                this.mTabs.length - this._removingTabs.length > 1)
-              this.setStripVisibilityTo(true);
+            this.tabContainer.updateVisibility();
 
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
@@ -1542,14 +1399,10 @@
               newTab = true;
               l++;
             }
-            if (l == 2) {
-              let autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              let tabStripHide = !window.toolbar.visible;
-              if (autohide || tabStripHide)
-                this.setStripVisibilityTo(false);
-            }
 
             this._removingTabs.push(aTab);
+
+            this.tabContainer.updateVisibility();
 
             // We're committed to closing the tab now.
             // Dispatch a notification.
@@ -1792,18 +1645,6 @@
         </body>
       </method>
 
-      <method name="onTabBarDblClick">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            // See hack note in the tabbrowser-close-button binding
-            if (!this._blockDblClick && aEvent.button == 0 &&
-                aEvent.originalTarget.localName == "box")
-              BrowserOpenTab();
-          ]]>
-        </body>
-      </method>
-
       <method name="addProgressListener">
         <parameter name="aListener"/>
         <parameter name="aMask"/>
@@ -1811,13 +1652,10 @@
           <![CDATA[
             if (!this.mAddProgressListenerWasCalled) {
               this.mAddProgressListenerWasCalled = true;
-              var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              var tabStripHide = !window.toolbar.visible;
-              if (!autoHide && !tabStripHide)
-                this.setStripVisibilityTo(true);
+              this.tabContainer.updateVisibility();
             }
 
-            if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
+            if (this.mProgressListeners.length == 1) {
               // If we are adding a 2nd progress listener, we need to enter tabbed mode
               // because the browser status filter can only handle one progress listener.
               // In tabbed mode, mTabProgressListener is used which will iterate over all listeners.
@@ -1866,8 +1704,7 @@
       <method name="addTabsProgressListener">
         <parameter name="aListener"/>
         <body>
-          if (!this.mTabbedMode)
-            this.enterTabbedMode();
+          this.enterTabbedMode();
           this.mTabsProgressListeners.push(aListener);
         </body>
       </method>
@@ -1946,344 +1783,6 @@
         </getter>
       </property>
 
-      <method name="_onDragStart">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          var target = aEvent.target;
-          if (target.localName == "tab" &&
-              aEvent.originalTarget.localName != "toolbarbutton") {
-            var dt = aEvent.dataTransfer;
-            dt.mozSetDataAt(TAB_DROP_TYPE, target, 0);
-            var uri = this.getBrowserForTab(aEvent.target).currentURI;
-            var spec = uri ? uri.spec : "about:blank";
-
-            // We must not set text/x-moz-url or text/plain data here,
-            // otherwise trying to deatch the tab by dropping it on the desktop
-            // may result in an "internet shortcut"
-            dt.mozSetDataAt("text/x-moz-text-internal", spec, 0);
-            
-            // Set the cursor to an arrow during tab drags.
-            dt.mozCursor = "default";
-
-            var canvas = tabPreviews.capture(target, false);
-            dt.setDragImage(canvas, 0, 0);
-            aEvent.stopPropagation();
-          }
-
-          this._dragLeftWindow = false;
-        ]]>
-        </body>
-      </method>
-
-      <field name="mDragTime">0</field>
-      <field name="mDragOverDelay">350</field>
-
-      <field name="_supportedLinkDropTypes"><![CDATA[
-        ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
-      ]]></field>
-
-      <method name="_setEffectAllowedForDataTransfer">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            var dt = aEvent.dataTransfer;
-            // Disallow dropping multiple items
-            if (dt.mozItemCount > 1)
-              return dt.effectAllowed = "none";
-
-            var types = dt.mozTypesAt(0);
-            var sourceNode = null;
-            // tabs are always added as the first type
-            if (types[0] == TAB_DROP_TYPE) {
-              var sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-              if (sourceNode instanceof XULElement &&
-                  sourceNode.localName == "tab" &&
-                  (sourceNode.parentNode == this.mTabContainer ||
-                   (sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
-                    sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))) {
-                if (sourceNode.parentNode == this.mTabContainer &&
-                    (aEvent.screenX >= sourceNode.boxObject.screenX &&
-                      aEvent.screenX <= (sourceNode.boxObject.screenX +
-                                         sourceNode.boxObject.width))) {
-                  return dt.effectAllowed = "none";
-                }
-
-                return dt.effectAllowed = "copyMove";
-              }
-            }
-
-            for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
-              if (types.contains(this._supportedLinkDropTypes[i])) {
-                // Here we need to to do this manually
-                return dt.effectAllowed = dt.dropEffect = "link";
-              }
-            }
-            return dt.effectAllowed = "none";
-          ]]>
-        </body>
-      </method>
-
-      <method name="_continueScroll">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          // Workaround for bug 481904: Dragging a tab stops scrolling at
-          // the tab's position when dragging to the first/last tab and back.
-          var t = this.selectedTab;
-          if (aEvent.screenX >= t.boxObject.screenX &&
-              aEvent.screenX <= t.boxObject.screenX + t.boxObject.width &&
-              aEvent.screenY >= t.boxObject.screenY &&
-              aEvent.screenY <= t.boxObject.screenY + t.boxObject.height)
-            this.tabContainer.mTabstrip.ensureElementIsVisible(t);
-        ]]></body>
-      </method>
-
-      <method name="_onDragOver">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            var effects = this._setEffectAllowedForDataTransfer(aEvent);
-
-            var ind = this._tabDropIndicator;
-            if (effects == "" || effects == "none") {
-              ind.collapsed = true;
-              this._continueScroll(aEvent);
-              return;
-            }
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-
-            var tabStrip = this.mTabContainer.mTabstrip;
-            var ltr = (window.getComputedStyle(this.parentNode, null).direction
-                       == "ltr");
-
-            // autoscroll the tab strip if we drag over the scroll
-            // buttons, even if we aren't dragging a tab, but then
-            // return to avoid drawing the drop indicator
-            var pixelsToScroll = 0;
-            if (this.mTabContainer.getAttribute("overflow") == "true") {
-              var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
-              switch (targetAnonid) {
-                case "scrollbutton-up":
-                  pixelsToScroll = tabStrip.scrollIncrement * -1;
-                  break;
-                case "scrollbutton-down":
-                case "alltabs-button":
-                case "newtab-button":
-                  pixelsToScroll = tabStrip.scrollIncrement;
-                  break;
-              }
-              if (pixelsToScroll)
-                tabStrip.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll);
-            }
-
-            if (effects == "link" && aEvent.target.localName == "tab") {
-              if (!this.mDragTime) 
-                this.mDragTime = Date.now();
-              if (Date.now() >= this.mDragTime + this.mDragOverDelay)
-                this.mTabContainer.selectedItem = aEvent.target;
-              return;
-            }
-
-            var newIndex = this.getNewIndex(aEvent);
-            var scrollRect = tabStrip.scrollClientRect;
-            var rect = this.getBoundingClientRect();
-            var minMargin = scrollRect.left - rect.left;
-            var maxMargin = Math.min(minMargin + scrollRect.width, 
-                                     scrollRect.right);
-            if (!ltr)
-              [minMargin, maxMargin] = [this.clientWidth - maxMargin,
-                                        this.clientWidth - minMargin];
-            var newMargin;
-            if (pixelsToScroll) {
-              // if we are scrolling, put the drop indicator at the edge
-              // so that it doesn't jump while scrolling
-              newMargin = (pixelsToScroll > 0) ? maxMargin : minMargin;
-            }
-            else {
-              if (newIndex == this.mTabs.length) {
-                let tabRect = this.mTabs[newIndex-1].getBoundingClientRect();
-                if (ltr)
-                  newMargin = tabRect.right - rect.left;
-                else
-                  newMargin = rect.right - tabRect.left;
-              }
-              else {
-                let tabRect = this.mTabs[newIndex].getBoundingClientRect();
-                if (ltr)
-                  newMargin = tabRect.left - rect.left;
-                else
-                  newMargin = rect.right - tabRect.right;
-              }
-              // ensure we never place the drop indicator beyond our limits
-              if (newMargin < minMargin)
-                newMargin = minMargin;
-              else if (newMargin > maxMargin)
-                newMargin = maxMargin;
-            }
-
-            ind.collapsed = false;
- 
-            newMargin += ind.clientWidth / 2;
-            if (!ltr)
-              newMargin *= -1;
-
-            ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
-            ind.style.MozMarginStart = (-ind.clientWidth) + "px";
-            ind.style.marginTop = (-ind.clientHeight) + "px";
-          ]]>
-        </body>
-      </method>
-
-      <method name="_onDrop">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            var dt = aEvent.dataTransfer;
-            var dropEffect = dt.dropEffect;
-            var draggedTab;
-            if (dropEffect != "link") { // copy or move
-              draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-              // not our drop then
-              if (!draggedTab)
-                return;
-            }
-
-            this._tabDropIndicator.collapsed = true;
-            aEvent.stopPropagation();
-
-            if (draggedTab && (dropEffect == "copy" ||
-                draggedTab.parentNode == this.mTabContainer)) {
-              var newIndex = this.getNewIndex(aEvent);
-              if (dropEffect == "copy") {
-                // copy the dropped tab (wherever it's from)
-                var newTab = this.duplicateTab(draggedTab);
-                this.moveTabTo(newTab, newIndex);
-                if (draggedTab.parentNode != this.mTabContainer || aEvent.shiftKey)
-                  this.selectedTab = newTab;
-              }
-              else {
-                // move the dropped tab
-                if (newIndex > draggedTab._tPos)
-                  newIndex--;
-                this.moveTabTo(draggedTab, newIndex);
-              }
-            }
-            else if (draggedTab) {
-              // swap the dropped tab with a new one we create and then close
-              // it in the other window (making it seem to have moved between
-              // windows)
-              newIndex = this.getNewIndex(aEvent);
-              newTab = this.addTab("about:blank");
-              var newBrowser = this.getBrowserForTab(newTab);
-              // Stop the about:blank load
-              newBrowser.stop();
-              // make sure it has a docshell
-              newBrowser.docShell;
-              
-              this.moveTabTo(newTab, newIndex);
-              
-              this.swapBrowsersAndCloseOther(newTab, draggedTab);
-
-              // We need to set selectedTab after we've done
-              // swapBrowsersAndCloseOther, so that the updateCurrentBrowser
-              // it triggers will correctly update our URL bar.
-              this.selectedTab = newTab;
-            }
-            else {
-              var url;
-              for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
-                let dataType = this._supportedLinkDropTypes[i];
-                // uri-list: for now, support dropping of the first URL
-                // only
-                var isURLList = dataType == "text/uri-list";
-                let urlData = isURLList ?
-                              dt.mozGetDataAt("URL", 0) : dt.mozGetDataAt(dataType, 0);
-                if (urlData) {
-                  url = transferUtils.retrieveURLFromData(urlData, isURLList ? "text/plain" : dataType);
-                  break;
-                }
-              }
-              NS_ASSERT(url, "In the drop event, at least one mime-type should match our supported types");
-
-              // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
-              // Also disallow dropping javascript: or data: urls--bail out
-              if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
-                  /^\s*(javascript|data):/.test(url))
-                return;
-
-              // XXXmano: temporary fix until dragDropSecurityCheck make the
-              // drag-session an optional paramter
-              var dragService = Cc["@mozilla.org/widget/dragservice;1"].
-                                getService(Ci.nsIDragService);
-              var dragSession = dragService.getCurrentSession();
-              nsDragAndDrop.dragDropSecurityCheck(aEvent, dragSession, url);
-
-              var bgLoad = true;
-              try {
-                bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
-              }
-              catch (e) { }
-
-              if (aEvent.shiftKey)
-                bgLoad = !bgLoad;
-
-              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || dropEffect == "copy") {
-                // We're adding a new tab.
-                newIndex = this.getNewIndex(aEvent);
-                newTab = this.loadOneTab(getShortcutOrURI(url), {inBackground: bgLoad});
-                this.moveTabTo(newTab, newIndex);
-              }
-              else {
-                // Load in an existing tab.
-                var tab = aEvent.target;
-                try {
-                  this.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
-                  if (this.mCurrentTab != tab && !bgLoad)
-                    this.selectedTab = tab;
-                } catch(ex) {
-                  // Just ignore invalid urls
-                }
-              }
-            }
-          ]]>
-        </body>
-      </method>
-
-      <method name="_onDragEnd">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            // Note: while this case is correctly handled here, this event
-            // isn't dispatched when the tab is moved within the tabstrip,
-            // see bug 460801.
-
-            // * mozUserCancelled = the user pressed ESC to cancel the drag
-            var dt = aEvent.dataTransfer;
-            if (dt.mozUserCancelled || dt.dropEffect != "none")
-              return;
-
-            // Disable detach within the browser toolbox
-            var eX = aEvent.screenX;
-            var wX = window.screenX;
-            // check if the drop point is horizontally within the window
-            if (eX > wX && eX < (wX + window.outerWidth)) {
-              var bo = this.mTabContainer.mTabstrip.boxObject;
-              // also avoid detaching if the the tab was dropped too close to
-              // the tabbar (half a tab)
-              var endScreenY = bo.screenY + 1.5 * bo.height;
-              var eY = aEvent.screenY;
-              if (eY < endScreenY && eY > window.screenY)
-                return;
-            }
-
-            var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-            this.replaceTabWithWindow(draggedTab);
-            aEvent.stopPropagation();
-          ]]>
-        </body>
-      </method>
-
       <!-- Moves a tab to a new browser window, unless it's already the only tab
            in the current window, in which case this will do nothing. -->
       <method name="replaceTabWithWindow">
@@ -2301,26 +1800,6 @@
                                  null,
                                  "chrome,dialog=no,all",
                                  aTab);
-          ]]>
-        </body>
-      </method>
-
-      <method name="_onDragLeave">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            this.mDragTime = 0;
-
-            // This does not work at all (see bug 458613)
-            var target = aEvent.relatedTarget;
-            while (target && target != this)
-              target = target.parentNode;
-            if (target)
-              return;
-
-            this._tabDropIndicator.collapsed = true;
-            this._continueScroll(aEvent);
-            aEvent.stopPropagation();
           ]]>
         </body>
       </method>
@@ -2360,26 +1839,6 @@
         ]]>
         </body>
       </method>
-
-      <method name="getNewIndex">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            var i;
-            if (window.getComputedStyle(this.parentNode, null).direction == "ltr") {
-              for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
-                if (aEvent.screenX < this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2) 
-                  return i;
-            } else {
-              for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
-                if (aEvent.screenX > this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2)
-                  return i;
-            }
-            return this.mTabs.length;
-          ]]>
-        </body>
-      </method>
-
 
       <method name="moveTabForward">
         <body>
@@ -2761,23 +2220,17 @@
 
       <method name="createTooltip">
         <parameter name="event"/>
-        <body>
-          <![CDATA[
-            event.stopPropagation();
-            var tn = document.tooltipNode;
-            if (tn.localName != "tab")
-              return false; // Not a tab, so cancel the tooltip
-            if ("mOverCloseButton" in tn && tn.mOverCloseButton) {
-              event.target.setAttribute("label", tn.getAttribute("closetabtext"));
-              return true;
-            }
-            if (tn.hasAttribute("label")) {
-              event.target.setAttribute("label", tn.getAttribute("label"));
-              return true;
-            }
-            return false;
-          ]]>
-        </body>
+        <body><![CDATA[
+          event.stopPropagation();
+          var tab = document.tooltipNode;
+          if (tab.localName != "tab") {
+            event.preventDefault();
+            return;
+          }
+          event.target.setAttribute("label", tab.mOverCloseButton ?
+                                             tab.getAttribute("closetabtext") :
+                                             tab.getAttribute("label"));
+        ]]></body>
       </method>
 
       <method name="handleEvent">
@@ -2799,9 +2252,9 @@
 
           var uniqueId = "panel" + Date.now();
           this.mPanelContainer.childNodes[0].id = uniqueId;
-          this.mTabContainer.childNodes[0].linkedPanel = uniqueId;
-          this.mTabContainer.childNodes[0]._tPos = 0;
-          this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild;
+          this.mCurrentTab.linkedPanel = uniqueId;
+          this.mCurrentTab._tPos = 0;
+          this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
 
           // set up the shared autoscroll popup
           this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
@@ -2823,6 +2276,21 @@
           document.removeEventListener("keypress", this, false);
         ]]>
       </destructor>
+
+      <!-- Deprecated stuff, implemented for backwards compatibility. -->
+      <method name="setStripVisibilityTo">
+        <parameter name="aShow"/>
+        <body>
+          this.tabContainer.visible = aShow;
+        </body>
+      </method>
+      <method name="getStripVisibility">
+        <body>
+          return this.tabContainer.visible;
+        </body>
+      </method>
+      <property name="mContextTab" readonly="true"
+                onget="return this.tabContainer._contextTab;"/>
     </implementation>
 
     <handlers>
@@ -2869,6 +2337,14 @@
     </handlers>
   </binding>
 
+  <binding id="tabbrowser-tabbox"
+           extends="chrome://global/content/bindings/tabbox.xml#tabbox">
+    <implementation>
+      <property name="tabs" readonly="true"
+                onget="return document.getBindingParent(this).tabContainer;"/>
+    </implementation>
+  </binding>
+
   <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">
     <implementation>
       <!-- Override scrollbox.xml method, since our scrollbox's children are
@@ -2901,48 +2377,80 @@
 
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
-    <content>
-      <xul:stack flex="1" class="tabs-stack">
-        <xul:vbox>
-          <xul:spacer flex="1"/>
-          <xul:hbox class="tabs-bottom" align="center"/>
-        </xul:vbox>
-        <xul:hbox xbl:inherits="overflow" class="tabs-container">
-#ifdef XP_MACOSX
-          <xul:stack>
-            <xul:spacer class="tabs-left"/>
-          </xul:stack>
-#endif
-          <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
-                              style="min-width: 1px;"
+    <resources>
+      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
+    </resources>
+
+    <content context="_child">
+      <xul:hbox align="start">
+        <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
+      </xul:hbox>
+      <xul:menupopup anonid="tabContextMenu"
+                     onpopupshowing="if (event.target == this) this.parentNode._updateContextMenu(this);"
+                     onpopuphidden="if (event.target == this) this.parentNode._contextTab = null;">
+        <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
+                      command="cmd_newNavigatorTab"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('reloadTab');"/>
+        <xul:menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+                      tbattr="tabbrowser-multiple"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('reloadAllTabs');"/>
+        <xul:menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                      tbattr="tabbrowser-multiple"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('removeAllTabsBut');"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
+                      accesskey="&openTabInNewWindow.accesskey;"
+                      tbattr="tabbrowser-multiple"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('replaceTabWithWindow');"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="context_bookmarkTab"
+                      label="&bookmarkThisTab.label;"
+                      accesskey="&bookmarkThisTab.accesskey;"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('BookmarkThisTab', window);"/>
+        <xul:menuitem id="context_bookmarkAllTabs"
+                      label="&bookmarkAllTabs.label;"
+                      accesskey="&bookmarkAllTabs.accesskey;"
+                      command="Browser:BookmarkAllTabs"/>
+        <xul:menuitem id="context_undoCloseTab"
+                      label="&undoCloseTab.label;"
+                      accesskey="&undoCloseTab.accesskey;"
+                      command="History:UndoCloseTab"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+                      tbattr="tabbrowser-multiple"
+                      oncommand="this.parentNode.parentNode._contextMenuAction('removeTab');"/>
+      </xul:menupopup>
+      <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
+                          style="min-width: 1px;"
 #ifndef XP_MACOSX
-                              clicktoscroll="true"
+                          clicktoscroll="true"
 #endif
-                              class="tabbrowser-arrowscrollbox">
+                          class="tabbrowser-arrowscrollbox">
 # This is a hack to circumvent bug 472020, otherwise the tabs show up on the
 # right of the newtab button.
-            <children includes="tab"/>
+        <children includes="tab"/>
 # This is to ensure anything extensions put here will go before the newtab
 # button, necessary due to the previous hack.
-            <children/>
-            <xul:toolbarbutton class="tabs-newtab-button"
-                               command="cmd_newNavigatorTab"
-                               tooltiptext="&newTabButton.tooltip;"/>
-          </xul:arrowscrollbox>
-          <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
-                             command="cmd_newNavigatorTab"
-                             tooltiptext="&newTabButton.tooltip;"/>
-          <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
-                             type="menu"
-                             tooltiptext="&listAllTabs.label;">
-            <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                           position="after_end"/>
-          </xul:toolbarbutton>
-          <xul:toolbarbutton anonid="tabs-closebutton"
-                             class="close-button tabs-closebutton"/>
-        </xul:hbox>
-      </xul:stack>
+        <children/>
+        <xul:toolbarbutton class="tabs-newtab-button"
+                           command="cmd_newNavigatorTab"
+                           tooltiptext="&newTabButton.tooltip;"/>
+      </xul:arrowscrollbox>
+      <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
+                         command="cmd_newNavigatorTab"
+                         tooltiptext="&newTabButton.tooltip;"/>
+      <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
+                         type="menu"
+                         tooltiptext="&listAllTabs.label;">
+        <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                       position="after_end"/>
+      </xul:toolbarbutton>
+      <xul:toolbarbutton anonid="tabs-closebutton"
+                         class="close-button tabs-closebutton"/>
     </content>
+
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
@@ -2967,12 +2475,20 @@
           } catch (e) {
           }
 
-          this.firstChild.minWidth = this.mTabMinWidth;
-          this.firstChild.maxWidth = this.mTabMaxWidth;
+          var tab = this.firstChild;
+          tab.setAttribute("label",
+                           this.tabbrowser.mStringBundle.getString("tabs.untitled"));
+          tab.minWidth = this.mTabMinWidth;
+          tab.maxWidth = this.mTabMaxWidth;
+          tab.width = 0;
+          tab.setAttribute("flex", "100");
+          tab.setAttribute("crop", "end");
+          tab.setAttribute("validate", "never");
+          tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
 
-          pb2.addObserver("browser.tabs.closeButtons", 
-                          this._prefObserver, false);
+          pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
+          pb2.addObserver("browser.tabs.autoHide", this._prefObserver, false);
 
           window.addEventListener("resize", this, false);
         ]]>
@@ -2984,8 +2500,17 @@
               Components.classes['@mozilla.org/preferences-service;1'].
               getService(Components.interfaces.nsIPrefBranch2);
           pb2.removeObserver("browser.tabs.closeButtons", this._prefObserver);
+          pb2.removeObserver("browser.tabs.autoHide", this._prefObserver);
         ]]>
       </destructor>
+
+      <field name="tabbrowser" readonly="true">
+        document.getElementById(this.getAttribute("tabbrowser"));
+      </field>
+
+      <field name="tabbox" readonly="true">
+        this.tabbrowser.mTabBox;
+      </field>
 
       <field name="mTabstripWidth">0</field>
 
@@ -2997,35 +2522,68 @@
         document.getAnonymousElementByAttribute(this, "anonid", "tabs-closebutton");
       </field>
 
-      <field name="_prefObserver">({
-        tabbox: this,
-  
-        observe: function(subject, topic, data)
-        {
-          if (topic == "nsPref:changed") {
-            switch (data) {
+      <field name="_prefObserver"><![CDATA[({
+        tabContainer: this,
+
+        observe: function (subject, topic, data) {
+          switch (data) {
             case "browser.tabs.closeButtons":
               subject.QueryInterface(Components.interfaces.nsIPrefBranch);
-              this.tabbox.mCloseButtons = subject.getIntPref("browser.tabs.closeButtons");
-              this.tabbox.adjustTabstrip();
+              this.tabContainer.mCloseButtons = subject.getIntPref("browser.tabs.closeButtons");
+              this.tabContainer.adjustTabstrip();
               break;
-            }
+            case "browser.tabs.autoHide":
+              this.tabContainer.updateVisibility();
+              break;
           }
-        },
-  
-        QueryInterface: function(aIID)
-        {
-          if (aIID.equals(Components.interfaces.nsIObserver) ||
-              aIID.equals(Components.interfaces.nsISupports))
-            return this;
-          throw Components.results.NS_NOINTERFACE;
         }
-        });
-      </field>
+      });]]></field>
       <field name="mTabMinWidth">100</field>
       <field name="mTabMaxWidth">250</field>
       <field name="mTabClipWidth">140</field>
       <field name="mCloseButtons">1</field>
+      <field name="_blockDblClick">false</field>
+
+      <field name="_tabDropIndicator">
+        document.getAnonymousElementByAttribute(this, "anonid", "tab-drop-indicator");
+      </field>
+
+      <field name="_dragOverDelay">350</field>
+      <field name="_dragTime">0</field>
+
+      <field name="_supportedLinkDropTypes"><![CDATA[
+        ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
+      ]]></field>
+
+      <field name="_container" readonly="true"><![CDATA[
+        this.parentNode && this.parentNode.localName == "toolbar" ? this.parentNode : this;
+      ]]></field>
+
+      <property name="visible"
+                onget="return !this._container.collapsed;">
+        <setter><![CDATA[
+          this._container.collapsed = !val;
+
+          if (val)
+            this.tabbrowser.enterTabbedMode();
+
+          document.getElementById("menu_closeWindow").hidden = !val;
+          document.getElementById("menu_close").setAttribute("label",
+            this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
+
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="updateVisibility">
+        <body><![CDATA[
+          if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1 &&
+              window.toolbar.visible)
+            this.visible = !Services.prefs.getBoolPref("browser.tabs.autoHide");
+          else
+            this.visible = true;
+        ]]></body>
+      </method>
 
       <method name="adjustTabstrip">
         <body><![CDATA[
@@ -3147,9 +2705,410 @@
           }
         ]]></body>
       </method>
+
+      <field name="_contextTab">null</field>
+      <method name="_updateContextMenu">
+        <parameter name="aPopupMenu"/>
+        <body><![CDATA[
+          this._contextTab = document.popupNode.localName == "tab" ?
+                             document.popupNode : this.selectedItem;
+          var disabled = this.childNodes.length == 1;
+          var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
+          for (var i = 0; i < menuItems.length; i++)
+            menuItems[i].disabled = disabled;
+
+          // Session store
+          // XXXzeniko should't we just disable this item as we disable
+          // the tabbrowser-multiple items above - for consistency?
+          document.getElementById("context_undoCloseTab").hidden =
+            Cc["@mozilla.org/browser/sessionstore;1"].
+            getService(Ci.nsISessionStore).
+            getClosedTabCount(window) == 0;
+        ]]></body>
+      </method>
+
+      <method name="_contextMenuAction">
+        <parameter name="aMethod"/>
+        <parameter name="aContext"/>
+        <body><![CDATA[
+          (aContext || this.tabbrowser)[aMethod](this._contextTab);
+        ]]></body>
+      </method>
+
+      <method name="_getDragTargetTab">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var node = event.originalTarget;
+          if (node.localName == "tab")
+            return node;
+
+          node = document.getBindingParent(node);
+          if (node.localName == "tab")
+            return node;
+
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="_getDropIndex">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var tabs = this.childNodes;
+          var tab = this._getDragTargetTab(event);
+          if (window.getComputedStyle(this, null).direction == "ltr") {
+            for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
+              if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2) 
+                return i;
+          } else {
+            for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
+              if (event.screenX > tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2)
+                return i;
+          }
+          return tabs.length;
+        ]]></body>
+      </method>
+
+      <method name="_setEffectAllowedForDataTransfer">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var dt = event.dataTransfer;
+          // Disallow dropping multiple items
+          if (dt.mozItemCount > 1)
+            return dt.effectAllowed = "none";
+
+          var types = dt.mozTypesAt(0);
+          var sourceNode = null;
+          // tabs are always added as the first type
+          if (types[0] == TAB_DROP_TYPE) {
+            var sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+            if (sourceNode instanceof XULElement &&
+                sourceNode.localName == "tab" &&
+                (sourceNode.parentNode == this ||
+                 (sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
+                  sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))) {
+              if (sourceNode.parentNode == this &&
+                  (event.screenX >= sourceNode.boxObject.screenX &&
+                    event.screenX <= (sourceNode.boxObject.screenX +
+                                       sourceNode.boxObject.width))) {
+                return dt.effectAllowed = "none";
+              }
+
+              return dt.effectAllowed = "copyMove";
+            }
+          }
+
+          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
+            if (types.contains(this._supportedLinkDropTypes[i])) {
+              // Here we need to to do this manually
+              return dt.effectAllowed = dt.dropEffect = "link";
+            }
+          }
+          return dt.effectAllowed = "none";
+        ]]></body>
+      </method>
+
+      <method name="_continueScroll">
+        <parameter name="event"/>
+        <body><![CDATA[
+          // Workaround for bug 481904: Dragging a tab stops scrolling at
+          // the tab's position when dragging to the first/last tab and back.
+          var t = this.selectedItem;
+          if (event.screenX >= t.boxObject.screenX &&
+              event.screenX <= t.boxObject.screenX + t.boxObject.width &&
+              event.screenY >= t.boxObject.screenY &&
+              event.screenY <= t.boxObject.screenY + t.boxObject.height)
+            this.mTabstrip.ensureElementIsVisible(t);
+        ]]></body>
+      </method>
     </implementation>
+
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
+
+      <handler event="dblclick"><![CDATA[
+        // See hack note in the tabbrowser-close-button binding
+        if (!this._blockDblClick && event.button == 0 &&
+            event.originalTarget.localName == "box")
+          BrowserOpenTab();
+      ]]></handler>
+
+      <handler event="click"><![CDATA[
+        if (event.button != 1 || event.target.localName != "tab")
+          return;
+
+        if (this.childNodes.length > 1 ||
+            !Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab"))
+          this.tabbrowser.removeTab(event.target);
+
+        event.stopPropagation();
+      ]]></handler>
+
+      <handler event="dragstart"><![CDATA[
+        var tab = this._getDragTargetTab(event);
+        if (!tab)
+          return;
+
+        let dt = event.dataTransfer;
+        dt.mozSetDataAt(TAB_DROP_TYPE, tab, 0);
+        let uri = this.tabbrowser.getBrowserForTab(tab).currentURI;
+        let spec = uri ? uri.spec : "about:blank";
+
+        // We must not set text/x-moz-url or text/plain data here,
+        // otherwise trying to deatch the tab by dropping it on the desktop
+        // may result in an "internet shortcut"
+        dt.mozSetDataAt("text/x-moz-text-internal", spec, 0);
+        
+        // Set the cursor to an arrow during tab drags.
+        dt.mozCursor = "default";
+
+        let canvas = tabPreviews.capture(tab, false);
+        dt.setDragImage(canvas, 0, 0);
+        event.stopPropagation();
+      ]]></handler>
+
+      <handler event="dragover"><![CDATA[
+        var effects = this._setEffectAllowedForDataTransfer(event);
+
+        var ind = this._tabDropIndicator;
+        if (effects == "" || effects == "none") {
+          ind.collapsed = true;
+          this._continueScroll(event);
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        var tabStrip = this.mTabstrip;
+        var ltr = (window.getComputedStyle(this, null).direction == "ltr");
+
+        // autoscroll the tab strip if we drag over the scroll
+        // buttons, even if we aren't dragging a tab, but then
+        // return to avoid drawing the drop indicator
+        var pixelsToScroll = 0;
+        if (this.getAttribute("overflow") == "true") {
+          var targetAnonid = event.originalTarget.getAttribute("anonid");
+          switch (targetAnonid) {
+            case "scrollbutton-up":
+              pixelsToScroll = tabStrip.scrollIncrement * -1;
+              break;
+            case "scrollbutton-down":
+            case "alltabs-button":
+            case "newtab-button":
+              pixelsToScroll = tabStrip.scrollIncrement;
+              break;
+          }
+          if (pixelsToScroll)
+            tabStrip.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll);
+        }
+
+        if (effects == "link") {
+          let tab = this._getDragTargetTab(event);
+          if (tab) {
+            if (!this._dragTime)
+              this._dragTime = Date.now();
+            if (Date.now() >= this._dragTime + this._dragOverDelay)
+              this.selectedItem = tab;
+            return;
+          }
+        }
+
+        var newIndex = this._getDropIndex(event);
+        var scrollRect = tabStrip.scrollClientRect;
+        var rect = this.getBoundingClientRect();
+        var minMargin = scrollRect.left - rect.left;
+        var maxMargin = Math.min(minMargin + scrollRect.width, 
+                                 scrollRect.right);
+        if (!ltr)
+          [minMargin, maxMargin] = [this.clientWidth - maxMargin,
+                                    this.clientWidth - minMargin];
+        var newMargin;
+        if (pixelsToScroll) {
+          // if we are scrolling, put the drop indicator at the edge
+          // so that it doesn't jump while scrolling
+          newMargin = (pixelsToScroll > 0) ? maxMargin : minMargin;
+        }
+        else {
+          if (newIndex == this.childNodes.length) {
+            let tabRect = this.childNodes[newIndex-1].getBoundingClientRect();
+            if (ltr)
+              newMargin = tabRect.right - rect.left;
+            else
+              newMargin = rect.right - tabRect.left;
+          }
+          else {
+            let tabRect = this.childNodes[newIndex].getBoundingClientRect();
+            if (ltr)
+              newMargin = tabRect.left - rect.left;
+            else
+              newMargin = rect.right - tabRect.right;
+          }
+          // ensure we never place the drop indicator beyond our limits
+          if (newMargin < minMargin)
+            newMargin = minMargin;
+          else if (newMargin > maxMargin)
+            newMargin = maxMargin;
+        }
+
+        ind.collapsed = false;
+
+        newMargin += ind.clientWidth / 2;
+        if (!ltr)
+          newMargin *= -1;
+
+        ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
+        ind.style.MozMarginStart = (-ind.clientWidth) + "px";
+        ind.style.marginTop = (-ind.clientHeight) + "px";
+      ]]></handler>
+
+      <handler event="drop"><![CDATA[
+        var dt = event.dataTransfer;
+        var dropEffect = dt.dropEffect;
+        var draggedTab;
+        if (dropEffect != "link") { // copy or move
+          draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+          // not our drop then
+          if (!draggedTab)
+            return;
+        }
+
+        this._tabDropIndicator.collapsed = true;
+        event.stopPropagation();
+
+        if (draggedTab && (dropEffect == "copy" ||
+            draggedTab.parentNode == this)) {
+          let newIndex = this._getDropIndex(event);
+          if (dropEffect == "copy") {
+            // copy the dropped tab (wherever it's from)
+            let newTab = this.tabbrowser.duplicateTab(draggedTab);
+            this.tabbrowser.moveTabTo(newTab, newIndex);
+            if (draggedTab.parentNode != this || event.shiftKey)
+              this.selectedItem = newTab;
+          } else {
+            // move the dropped tab
+            if (newIndex > draggedTab._tPos)
+              newIndex--;
+            this.tabbrowser.moveTabTo(draggedTab, newIndex);
+          }
+        } else if (draggedTab) {
+          // swap the dropped tab with a new one we create and then close
+          // it in the other window (making it seem to have moved between
+          // windows)
+          let newIndex = this._getDropIndex(event);
+          let newTab = this.tabbrowser.addTab("about:blank");
+          let newBrowser = this.tabbrowser.getBrowserForTab(newTab);
+          // Stop the about:blank load
+          newBrowser.stop();
+          // make sure it has a docshell
+          newBrowser.docShell;
+
+          this.tabbrowser.moveTabTo(newTab, newIndex);
+
+          this.tabbrowser.swapBrowsersAndCloseOther(newTab, draggedTab);
+
+          // We need to select the tab after we've done
+          // swapBrowsersAndCloseOther, so that the updateCurrentBrowser
+          // it triggers will correctly update our URL bar.
+          this.tabbrowser.selectedTab = newTab;
+        } else {
+          let url;
+          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
+            let dataType = this._supportedLinkDropTypes[i];
+            // uri-list: for now, support dropping of the first URL
+            // only
+            let isURLList = dataType == "text/uri-list";
+            let urlData = isURLList ?
+                          dt.mozGetDataAt("URL", 0) : dt.mozGetDataAt(dataType, 0);
+            if (urlData) {
+              url = transferUtils.retrieveURLFromData(urlData, isURLList ? "text/plain" : dataType);
+              break;
+            }
+          }
+          NS_ASSERT(url, "In the drop event, at least one mime-type should match our supported types");
+
+          // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
+          // Also disallow dropping javascript: or data: urls--bail out
+          if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
+              /^\s*(javascript|data):/.test(url))
+            return;
+
+          // XXXmano: temporary fix until dragDropSecurityCheck make the
+          // drag-session an optional paramter
+          let dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                            getService(Ci.nsIDragService);
+          let dragSession = dragService.getCurrentSession();
+          nsDragAndDrop.dragDropSecurityCheck(event, dragSession, url);
+
+          let bgLoad = true;
+          try {
+            bgLoad = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+          }
+          catch (e) { }
+
+          if (event.shiftKey)
+            bgLoad = !bgLoad;
+
+          let tab = this._getDragTargetTab(event);
+          if (!tab || dropEffect == "copy") {
+            // We're adding a new tab.
+            let newIndex = this._getDropIndex(event);
+            let newTab = this.tabbrowser.loadOneTab(getShortcutOrURI(url), {inBackground: bgLoad});
+            this.tabbrowser.moveTabTo(newTab, newIndex);
+          } else {
+            // Load in an existing tab.
+            try {
+              this.tabbrowser.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
+              if (!bgLoad)
+                this.selectedItem = tab;
+            } catch(ex) {
+              // Just ignore invalid urls
+            }
+          }
+        }
+      ]]></handler>
+
+      <handler event="dragend"><![CDATA[
+        // Note: while this case is correctly handled here, this event
+        // isn't dispatched when the tab is moved within the tabstrip,
+        // see bug 460801.
+
+        // * mozUserCancelled = the user pressed ESC to cancel the drag
+        var dt = event.dataTransfer;
+        if (dt.mozUserCancelled || dt.dropEffect != "none")
+          return;
+
+        // Disable detach within the browser toolbox
+        var eX = event.screenX;
+        var wX = window.screenX;
+        // check if the drop point is horizontally within the window
+        if (eX > wX && eX < (wX + window.outerWidth)) {
+          let bo = this.mTabstrip.boxObject;
+          // also avoid detaching if the the tab was dropped too close to
+          // the tabbar (half a tab)
+          let endScreenY = bo.screenY + 1.5 * bo.height;
+          let eY = event.screenY;
+          if (eY < endScreenY && eY > window.screenY)
+            return;
+        }
+
+        var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+        this.tabbrowser.replaceTabWithWindow(draggedTab);
+        event.stopPropagation();
+      ]]></handler>
+
+      <handler event="dragleave"><![CDATA[
+        this._dragTime = 0;
+
+        // This does not work at all (see bug 458613)
+        var target = event.relatedTarget;
+        while (target && target != this)
+          target = target.parentNode;
+        if (target)
+          return;
+
+        this._tabDropIndicator.collapsed = true;
+        this._continueScroll(event);
+        event.stopPropagation();
+      ]]></handler>
     </handlers>
   </binding>
 
@@ -3157,71 +3116,73 @@
        This binding relies on the structure of the tabbrowser binding.
        Therefore it should only be used as a child of the tab or the tabs
        element (in both cases, when they are anonymous nodes of <tabbrowser>).
-       This binding is exposed as a pseudo-public-API so themes can customize
-       the tabbar appearance without having to be scriptable
-       (see globalBindings.xml in Pinstripe for example).
   -->
   <binding id="tabbrowser-close-tab-button"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
     <handlers>
       <handler event="click" button="0"><![CDATA[
         var bindingParent = document.getBindingParent(this);
-        if (bindingParent) {
-          var tabbedBrowser = document.getBindingParent(bindingParent);
-          if (bindingParent.localName == "tab") {
-            /* The only sequence in which a second click event (i.e. dblclik)
-             * can be dispatched on an in-tab close button is when it is shown
-             * after the first click (i.e. the first click event was dispatched
-             * on the tab). This happens when we show the close button only on
-             * the active tab. (bug 352021)
-             * The only sequence in which a third click event can be dispatched
-             * on an in-tab close button is when the tab was opened with a
-             * double click on the tabbar. (bug 378344)
-             * In both cases, it is most likely that the close button area has
-             * been accidentally clicked, therefore we do not close the tab.
-             *
-             * We don't want to ignore processing of more than one click event,
-             * though, since the user might actually be repeatedly clicking to
-             * close many tabs at once.
-             */
-            if (event.detail > 1 && !this._ignoredClick) {
-              this._ignoredClick = true;
+
+        if (bindingParent.localName == "tab") {
+          let tabContainer = bindingParent.parentNode;
+          /* The only sequence in which a second click event (i.e. dblclik)
+           * can be dispatched on an in-tab close button is when it is shown
+           * after the first click (i.e. the first click event was dispatched
+           * on the tab). This happens when we show the close button only on
+           * the active tab. (bug 352021)
+           * The only sequence in which a third click event can be dispatched
+           * on an in-tab close button is when the tab was opened with a
+           * double click on the tabbar. (bug 378344)
+           * In both cases, it is most likely that the close button area has
+           * been accidentally clicked, therefore we do not close the tab.
+           *
+           * We don't want to ignore processing of more than one click event,
+           * though, since the user might actually be repeatedly clicking to
+           * close many tabs at once.
+           */
+          if (event.detail > 1 && !this._ignoredClick) {
+            this._ignoredClick = true;
+            return;
+          }
+
+          // Reset the "ignored click" flag
+          this._ignoredClick = false;
+
+          tabContainer.tabbrowser.removeTab(bindingParent);
+          this._blockDblClick = true;
+
+          /* XXXmano hack (see bug 343628):
+           * Since we're removing the event target, if the user
+           * double-clicks this button, the dblclick event will be dispatched
+           * with the tabbar as its event target (and explicit/originalTarget),
+           * which treats that as a mouse gesture for opening a new tab.
+           * In this context, we're manually blocking the dblclick event
+           * (see dblclick handler).
+           */
+          let self = this;
+          let clickedOnce = false;
+          function enableDblClick(event) {
+            if (event.detail == 1 && !clickedOnce) {
+              clickedOnce = true;
               return;
             }
-
-            // Reset the "ignored click" flag
-            this._ignoredClick = false;
-
-            tabbedBrowser.removeTab(bindingParent);
-            tabbedBrowser._blockDblClick = true;
-
-            /* XXXmano hack (see bug 343628):
-             * Since we're removing the event target, if the user
-             * double-clicks this button, the dblclick event will be dispatched
-             * with the tabbar as its event target (and explicit/originalTarget),
-             * which treats that as a mouse gesture for opening a new tab.
-             * In this context, we're manually blocking the dblclick event
-             * (see onTabBarDblClick).
-             */
-            var clickedOnce = false;
-            function enableDblClick(event) {
-              if (event.detail == 1 && !clickedOnce) {
-                clickedOnce = true;
-                return;
-              }
-              setTimeout(function() {
-                tabbedBrowser._blockDblClick = false;
-              }, 0);
-              tabbedBrowser.removeEventListener("click", enableDblClick, false);
-            }
-            tabbedBrowser.addEventListener("click", enableDblClick, false);
+            setTimeout(function() {
+              self._blockDblClick = false;
+            }, 0);
+            tabContainer.removeEventListener("click", enableDblClick, false);
           }
-          else // "tabs"
-            tabbedBrowser.removeCurrentTab();
+          tabContainer.addEventListener("click", enableDblClick, false);
         }
+        else // "tabs"
+          bindingParent.tabbrowser.removeCurrentTab();
       ]]></handler>
+
       <handler event="dblclick" button="0" phase="capturing">
         // for the one-close-button case
+        event.stopPropagation();
+      </handler>
+
+      <handler event="dragstart">
         event.stopPropagation();
       </handler>
     </handlers>
@@ -3229,6 +3190,10 @@
 
   <binding id="tabbrowser-tab" display="xul:hbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab">
+    <resources>
+      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
+    </resources>
+
     <content closetabtext="&closeTab.label;">
       <xul:image xbl:inherits="validate,src=image"
                  class="tab-icon-image"

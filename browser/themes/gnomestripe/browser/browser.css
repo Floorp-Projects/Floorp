@@ -1105,6 +1105,13 @@ statusbarpanel#statusbar-display {
 }
 
 /* Tabs */
+#TabsToolbar {
+  -moz-appearance: none;
+  min-height: 0;
+  padding: 0;
+  -moz-box-shadow: ThreeDShadow 0 -1px inset;
+}
+
 .tabbrowser-tab {
   border: none !important;
   padding: 0px;
@@ -1154,10 +1161,6 @@ statusbarpanel#statusbar-display {
 }
 .tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
   -moz-image-region: rect(0, 144px, 16px, 128px);
-}
-
-.tabs-bottom {
-  border-bottom: 1px solid threedshadow;
 }
 
 #context_newTab {

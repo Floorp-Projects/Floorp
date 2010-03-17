@@ -270,8 +270,8 @@ function SetClickAndHoldHandlers() {
 }
 #endif
 
-function BookmarkThisTab() {
-  PlacesCommandHook.bookmarkPage(gBrowser.mContextTab.linkedBrowser,
+function BookmarkThisTab(aTab) {
+  PlacesCommandHook.bookmarkPage(aTab.linkedBrowser,
                                  PlacesUtils.bookmarksMenuFolderId, true);
 }
 
@@ -1216,9 +1216,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   initializeSanitizer();
 
   // Enable/Disable auto-hide tabbar
-  gAutoHideTabbarPrefListener.toggleAutoHideTabbar();
-  gPrefService.addObserver(gAutoHideTabbarPrefListener.domain,
-                           gAutoHideTabbarPrefListener, false);
+  gBrowser.tabContainer.updateVisibility();
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
@@ -1405,8 +1403,6 @@ function BrowserShutdown()
   PlacesStarButton.uninit();
 
   try {
-    gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
-                                gAutoHideTabbarPrefListener);
     gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
   } catch (ex) {
     Components.utils.reportError(ex);
@@ -1515,26 +1511,6 @@ function nonBrowserWindowShutdown()
   gPrivateBrowsingUI.uninit();
 }
 #endif
-
-var gAutoHideTabbarPrefListener = {
-  domain: "browser.tabs.autoHide",
-  observe: function (aSubject, aTopic, aPrefName) {
-    if (aTopic == "nsPref:changed" && aPrefName == this.domain)
-      this.toggleAutoHideTabbar();
-  },
-  toggleAutoHideTabbar: function () {
-    if (gBrowser.tabContainer.childNodes.length == 1 &&
-        window.toolbar.visible) {
-      var aVisible = false;
-      try {
-        aVisible = !gPrefService.getBoolPref(this.domain);
-      }
-      catch (e) {
-      }
-      gBrowser.setStripVisibilityTo(aVisible);
-    }
-  }
-}
 
 function initializeSanitizer()
 {
@@ -2595,8 +2571,6 @@ var PrintPreviewListener = {
     this._chromeState.sidebarOpen = !sidebar.hidden;
     this._sidebarCommand = sidebar.getAttribute("sidebarcommand");
 
-    gBrowser.mStrip.setAttribute("moz-collapsed", "true");
-
     var notificationBox = gBrowser.getNotificationBox();
     this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
     notificationBox.notificationsHidden = true;
@@ -2610,8 +2584,6 @@ var PrintPreviewListener = {
     gFindBar.close();
   },
   _showChrome: function () {
-    gBrowser.mStrip.removeAttribute("moz-collapsed");
-
     if (this._chromeState.notificationsOpen)
       gBrowser.getNotificationBox().notificationsHidden = false;
 
@@ -3676,8 +3648,7 @@ var FullScreen =
     var animateFrameAmount = 2;
     function animateUpFrame() {
       animateFrameAmount *= 2;
-      if (animateFrameAmount >=
-          (gNavToolbox.boxObject.height + gBrowser.mStrip.boxObject.height)) {
+      if (animateFrameAmount >= gNavToolbox.boxObject.height) {
         // We've animated enough
         clearInterval(FullScreen._animationInterval);
         gNavToolbox.style.marginTop = "0px";
@@ -3726,7 +3697,6 @@ var FullScreen =
                                                    this._collapseCallback, false);
     }
 
-    gBrowser.mStrip.setAttribute("moz-collapsed", !aShow);
     var allFSToolbars = document.getElementsByTagNameNS(this._XULNS, "toolbar");
     for (var i = 0; i < allFSToolbars.length; i++) {
       if (allFSToolbars[i].getAttribute("fullscreentoolbar") == "true")
