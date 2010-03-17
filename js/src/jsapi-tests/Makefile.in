@@ -55,6 +55,7 @@ CPPSRCS = \
   testIntString.cpp \
   testIsAboutToBeFinalized.cpp \
   testLookup.cpp \
+  testNewObject.cpp \
   testPropCache.cpp \
   testTrap.cpp \
   testSameValue.cpp \

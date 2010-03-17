@@ -1706,6 +1706,9 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
                                 JSObject *parent, uintN argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
+JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
+
+extern JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
                 JSObject *proto, uintN attrs);
 
