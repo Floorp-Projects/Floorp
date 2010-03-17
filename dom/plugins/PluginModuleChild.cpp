@@ -77,9 +77,9 @@ static QApplication *gQApp = nsnull;
 
 PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
-    mInitializeFunc(0),
-    mShutdownFunc(0)
-#ifdef OS_WIN
+    mShutdownFunc(0),
+    mInitializeFunc(0)
+#if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
 #elif defined(MOZ_WIDGET_GTK2)
   , mNestedLoopTimerId(0)
@@ -169,7 +169,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
         (NP_PLUGINUNIXINIT) PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
     NS_ASSERTION(mInitializeFunc, "couldn't find NP_Initialize()");
 
-#elif defined(OS_WIN)
+#elif defined(OS_WIN) || defined(OS_MACOSX)
     mShutdownFunc =
         (NP_PLUGINSHUTDOWN)PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
 
@@ -180,9 +180,6 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     mInitializeFunc =
         (NP_PLUGININIT)PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
     NS_ENSURE_TRUE(mInitializeFunc, false);
-#elif defined(OS_MACOSX)
-#  warning IMPLEMENT ME
-
 #else
 
 #  error Please copy the initialization code from nsNPAPIPlugin.cpp
@@ -1501,21 +1498,19 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return true;
 
-#elif defined(OS_WIN)
+#elif defined(OS_WIN) || defined(OS_MACOSX)
     nsresult rv = mGetEntryPointsFunc(&mFunctions);
     if (NS_FAILED(rv)) {
         return false;
     }
 
+#ifdef OS_WIN
     NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
                  "callback version is less than NP version");
+#endif
 
     *_retval = mInitializeFunc(&sBrowserFuncs);
     return true;
-#elif defined(OS_MACOSX)
-#  warning IMPLEMENT ME
-    return false;
-
 #else
 #  error Please implement me for your platform
 #endif
