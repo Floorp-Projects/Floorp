@@ -3766,13 +3766,15 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  nsIDocument *doc = container->GetOwnerDoc();
+
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
   if (!container->HasSameOwnerDoc(newContent) &&
       (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
        newContent->GetOwnerDoc())) {
-    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(aDocument);
+    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(doc);
 
     if (domDoc) {
       nsCOMPtr<nsIDOMNode> adoptedKid;
@@ -3780,6 +3782,9 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       NS_ENSURE_SUCCESS(rv, rv);
 
       NS_ASSERTION(adoptedKid == aNewChild, "Uh, adopt node changed nodes?");
+      NS_ASSERTION(container->HasSameOwnerDoc(newContent) &&
+                   doc == container->GetOwnerDoc(),
+                   "ownerDocument changed again after adopting!");
     }
   }
 
@@ -3854,12 +3859,16 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       mutated = mutated || guard.Mutated(1);
     }
 
-    // If we've had any unexpeted mutations so far we need to recheck that
+    // If we've had any unexpected mutations so far we need to recheck that
     // the child can still be inserted.
     if (mutated) {
       for (i = 0; i < count; ++i) {
         // Get the n:th child from the array.
         nsIContent* childContent = fragChildren[i];
+        if (!container->HasSameOwnerDoc(childContent) ||
+            doc != childContent->GetOwnerDoc()) {
+          return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+        }
 
         nsCOMPtr<nsIDOMNode> tmpNode = do_QueryInterface(childContent);
         PRUint16 tmpType = 0;
@@ -3911,7 +3920,6 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     }
 
     // Fire mutation events. Optimize for the case when there are no listeners
-    nsIDocument* doc = container->GetOwnerDoc();
     nsPIDOMWindow* window = nsnull;
     if (doc && (window = doc->GetInnerWindow()) &&
         window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
@@ -3969,6 +3977,10 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       }
 
       if (guard.Mutated(1)) {
+        if (doc != newContent->GetOwnerDoc()) {
+          return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+        }
+
         insPos = refContent ? container->IndexOf(refContent) :
                               container->GetChildCount();
         if (insPos < 0) {
