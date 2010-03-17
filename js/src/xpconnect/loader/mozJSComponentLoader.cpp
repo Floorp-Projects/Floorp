@@ -303,7 +303,8 @@ class JSCLContextHelper
 {
 public:
     JSCLContextHelper(mozJSComponentLoader* loader);
-    ~JSCLContextHelper() { Pop(); }
+    ~JSCLContextHelper();
+    JSBool ok();
 
     JSContext* Pop();
 
@@ -319,6 +320,13 @@ private:
     const JSCLContextHelper& operator=(const JSCLContextHelper &); // not implemented
 };
 
+JSCLContextHelper::~JSCLContextHelper()
+{
+    if (mContext) {
+        Pop();
+        JS_DestroyContext(mContext);
+    }
+}
 
 class JSCLAutoErrorReporterSetter
 {
@@ -562,6 +570,10 @@ mozJSComponentLoader::~mozJSComponentLoader()
         UnloadModules();
     }
 
+    if (mContext) {
+        JS_DestroyContext(mContext);
+    }
+
     NS_ASSERTION(!mFastLoadTimer,
                  "Fastload file should have been closed via xpcom-shutdown");
 
@@ -575,7 +587,13 @@ NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
                    nsIModuleLoader,
                    xpcIJSModuleLoader,
                    nsIObserver)
- 
+
+JSBool
+JSCLContextHelper::ok()
+{
+    return !!mContext;
+}
+
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
@@ -592,37 +610,14 @@ mozJSComponentLoader::ReallyInit()
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
 
-    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create our compilation context.
-    mContext = JS_NewContext(mRuntime, 256);
+    // This context is for use by UnloadModules
+    mContext = JS_NewContext(mozJSComponentLoader::sSelf->mRuntime, 256);
     if (!mContext)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    uint32 options = JS_GetOptions(mContext);
-    JS_SetOptions(mContext, options | JSOPTION_XML);
-
-    // Always use the latest js version
-    JS_SetVersion(mContext, JSVERSION_LATEST);
-
-    // Limit C stack consumption to a reasonable 512K
-    int stackDummy;
-    const jsuword kStackSize = 0x80000;
-    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-    stackLimit = (currentStackAddr > kStackSize)
-                 ? currentStackAddr - kStackSize
-                 : 0;
-#else
-    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
-                 ? currentStackAddr + kStackSize
-                 : (jsuword) -1;
-#endif
-    
-    JS_SetThreadStackLimit(mContext, stackLimit);
+    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
@@ -724,6 +719,8 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
         return rv;
 
     JSCLContextHelper cx(this);
+    if (!cx.ok())
+        return NS_ERROR_OUT_OF_MEMORY;
 
     JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
@@ -1115,12 +1112,14 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
 
     JSPrincipals* jsPrincipals = nsnull;
     JSCLContextHelper cx(this);
+    if (!cx.ok())
+        return NS_ERROR_OUT_OF_MEMORY;
 
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSPrincipalsHolder princHolder(mContext, jsPrincipals);
+    JSPrincipalsHolder princHolder(cx, jsPrincipals);
 #endif
 
     nsCOMPtr<nsIXPCScriptable> backstagePass;
@@ -1410,9 +1409,7 @@ mozJSComponentLoader::UnloadModules()
     mImports.Clear();
     mModules.Clear();
 
-    // Destroying our context will force a GC.
-    JS_DestroyContext(mContext);
-    mContext = nsnull;
+    // XXX We want to force a GC.
 
     mRuntimeService = nsnull;
     mContextStack = nsnull;
@@ -1584,27 +1581,29 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     jsval symbols;
     if (targetObj) {
-        JSCLContextHelper cxhelper(this);
+        JSCLContextHelper cx(this);
+        if (!cx.ok())
+            return NS_ERROR_OUT_OF_MEMORY;
 
-        if (!JS_GetProperty(mContext, mod->global,
+        if (!JS_GetProperty(cx, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
-            return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
+            return ReportOnCaller(cx, ERROR_NOT_PRESENT,
                                   PromiseFlatCString(aLocation).get());
         }
 
         JSObject *symbolsObj = nsnull;
         if (!JSVAL_IS_OBJECT(symbols) ||
             !(symbolsObj = JSVAL_TO_OBJECT(symbols)) ||
-            !JS_IsArrayObject(mContext, symbolsObj)) {
-            return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
+            !JS_IsArrayObject(cx, symbolsObj)) {
+            return ReportOnCaller(cx, ERROR_NOT_AN_ARRAY,
                                   PromiseFlatCString(aLocation).get());
         }
 
         // Iterate over symbols array, installing symbols on targetObj:
 
         jsuint symbolCount = 0;
-        if (!JS_GetArrayLength(mContext, symbolsObj, &symbolCount)) {
-            return ReportOnCaller(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
+        if (!JS_GetArrayLength(cx, symbolsObj, &symbolCount)) {
+            return ReportOnCaller(cx, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
         }
 
@@ -1616,23 +1615,23 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             jsval val;
             JSString *symbolName;
 
-            if (!JS_GetElement(mContext, symbolsObj, i, &val) ||
+            if (!JS_GetElement(cx, symbolsObj, i, &val) ||
                 !JSVAL_IS_STRING(val)) {
-                return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
+                return ReportOnCaller(cx, ERROR_ARRAY_ELEMENT,
                                       PromiseFlatCString(aLocation).get(), i);
             }
 
             symbolName = JSVAL_TO_STRING(val);
-            if (!JS_GetProperty(mContext, mod->global,
+            if (!JS_GetProperty(cx, mod->global,
                                 JS_GetStringBytes(symbolName), &val)) {
-                return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
+                return ReportOnCaller(cx, ERROR_GETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
                                       JS_GetStringBytes(symbolName));
             }
 
-            if (!JS_SetProperty(mContext, targetObj,
+            if (!JS_SetProperty(cx, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
-                return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
+                return ReportOnCaller(cx, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
                                       JS_GetStringBytes(symbolName));
             }
@@ -1684,14 +1683,43 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
 //----------------------------------------------------------------------
 
 JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
-    : mContext(loader->mContext), mContextThread(0),
+    : mContextThread(0),
       mContextStack(loader->mContextStack)
 {
+    // Create our compilation context.
+    mContext = JS_NewContext(mozJSComponentLoader::sSelf->mRuntime, 256);
+    if (!mContext)
+        return;
+
+    uint32 options = JS_GetOptions(mContext);
+    JS_SetOptions(mContext, options | JSOPTION_XML);
+
+    // Always use the latest js version
+    JS_SetVersion(mContext, JSVERSION_LATEST);
+
+    // Limit C stack consumption to a reasonable 512K
+    int stackDummy;
+    const jsuword kStackSize = 0x80000;
+
+    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
+
+#if JS_STACK_GROWTH_DIRECTION < 0
+    stackLimit = (currentStackAddr > kStackSize)
+                 ? currentStackAddr - kStackSize
+                 : 0;
+#else
+    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
+                 ? currentStackAddr + kStackSize
+                 : (jsuword) -1;
+#endif
+
+    JS_SetThreadStackLimit(mContext, stackLimit);
+
     mContextStack->Push(mContext);
     mContextThread = JS_GetContextThread(mContext);
     if (mContextThread) {
         JS_BeginRequest(mContext);
-    } 
+    }
 }
 
 // Pops the context that was pushed and then returns the context that is now at
