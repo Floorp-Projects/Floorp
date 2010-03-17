@@ -41,7 +41,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update checking wizard no updates found page"
+<window title="Test update checking wizard billboard and license not found (bug 548061)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -65,7 +65,7 @@ function test01() {
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  var queryString = "?noUpdates=1";
+  var queryString = "?billboard404=1&license404=1&showDetails=1";
   setUpdateURLOverride(URL_UPDATE + queryString);
 
   gNextFunc = test02;
@@ -83,31 +83,37 @@ function test02() {
      "Page ID should be " + PAGEID_CHECKING);
 
   gNextFunc = test03;
-  gPageId = PAGEID_NO_UPDATES_FOUND;
-  // This page will automatically go to the no updates found check page
+  gPageId = PAGEID_FOUND_BASIC;
+  // This page will automatically go to the updates found basic page after the
+  // billboard without the billboard attribute loads.
   addPageShowListener();
 }
 
 /**
- * no updates found page
+ * updates found basic page
  */
 function test03() {
-  ok(true, "Entering test03 - finished page");
+  ok(true, "Entering test03 - updates found basic page");
 
-  is(gDocElem.currentPage.pageid, PAGEID_NO_UPDATES_FOUND,
-     "Page ID should be " + PAGEID_NO_UPDATES_FOUND);
-  ok(gDocElem.getButton("extra1").hidden, "extra1 button should be hidden");
-  ok(gDocElem.getButton("extra1").disabled, "extra1 button should be disabled");
-  ok(gDocElem.getButton("extra2").hidden, "extra2 button should be hidden");
-  ok(gDocElem.getButton("extra2").disabled, "extra2 button should be disabled");
-  ok(gDocElem.getButton("back").hidden, "back button should be hidden");
-  ok(gDocElem.getButton("back").disabled, "back button should be disabled");
-  ok(gDocElem.getButton("next").hidden, "next button should not be hidden");
-  ok(gDocElem.getButton("next").disabled, "next button should not be disabled");
-  ok(!gDocElem.getButton("finish").hidden, "finish button should not be hidden");
-  ok(!gDocElem.getButton("finish").disabled, "finish button should not be disabled");
-  ok(gDocElem.getButton("cancel").hidden, "cancel button should be hidden");
-  ok(gDocElem.getButton("cancel").disabled, "cancel button should be disabled");
+  is(gDocElem.currentPage.pageid, PAGEID_FOUND_BASIC,
+     "Page ID should be " + PAGEID_FOUND_BASIC);
+
+  gNextFunc = test04;
+  gPageId = PAGEID_MANUAL_UPDATE;
+  addPageShowListener();
+  // go forward to the license page which will automatically go to the manual
+  // update page after the license without the license attribute loads.
+  gDocElem.getButton("next").click();
+}
+
+/**
+ * manual update page
+ */
+function test04(aEvent) {
+  ok(true, "Entering test04 - manual update page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_MANUAL_UPDATE,
+     "Page ID should be " + PAGEID_MANUAL_UPDATE);
 
   gNextFunc = finishTestDefault;
   // exit by clicking the finish button
