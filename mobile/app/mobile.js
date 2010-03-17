@@ -149,6 +149,9 @@ pref("xpinstall.dialog.progress.chrome", "chrome://browser/content/browser.xul")
 pref("xpinstall.dialog.progress.type.skin", "navigator:browser");
 pref("xpinstall.dialog.progress.type.chrome", "navigator:browser");
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
+
+pref("extensions.autoupdate.enabled", true);
+pref("extensions.autoupdate.interval", 86400);
 pref("extensions.update.enabled", false);
 pref("extensions.update.interval", 86400);
 pref("extensions.dss.enabled", false);
@@ -407,10 +410,11 @@ pref("browser.search.param.yahoo-fr-ja", "mozff");
 #endif
 
 /* app update prefs */
+pref("app.update.timer", 60000); // milliseconds (1 min)
+
 #ifdef MOZ_UPDATER
 pref("app.update.auto", true);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
-pref("app.update.timer", 600000);
 pref("app.update.mode", 1);
 pref("app.update.silent", false);
 pref("app.update.url", "https://aus2.mozilla.org/update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PLATFORM_VERSION%/update.xml");

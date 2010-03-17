@@ -231,6 +231,10 @@ var ExtensionsView = {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(this._dloadmgr, "xpinstall-download-started", false);
 
+    // Watch for add-on update notifications
+    os.addObserver(this, "addon-update-started", false);
+    os.addObserver(this, "addon-update-ended", false);
+
     let self = this;
     let panels = document.getElementById("panel-items");
     panels.addEventListener("select",
@@ -286,6 +290,8 @@ var ExtensionsView = {
   uninit: function ev_uninit() {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(this._dloadmgr, "xpinstall-download-started");
+    os.removeObserver(this, "addon-update-started");
+    os.removeObserver(this, "addon-update-ended");
 
     this._extmgr.removeInstallListenerAt(this._observerIndex);
   },
@@ -617,33 +623,58 @@ var ExtensionsView = {
     this.getAddonsFromRepo("");
   },
 
-  updateAll: function ev_updateAll() {
-    if (!this._isXPInstallEnabled())
+  observe: function ev_observe(aSubject, aTopic, aData) {
+    if (!document)
       return;
 
-    // Make sure we're online before attempting to load
-    Util.forceOnline();
+    let addon = aSubject.QueryInterface(Ci.nsIUpdateItem);
+    let strings = Elements.browserBundle;
+    let element = document.getElementById(PREFIX_ITEM_URI + addon.id);
+    if (!element)
+      return;
 
-    // To support custom views we check the add-ons displayed in the list
-    let items = [];
-    let start = this._localItem.nextSibling;
-    let end = this._repoItem;
+    switch (aTopic) {
+      case "addon-update-started":
+        element.setAttribute("updateStatus", strings.getString("addonUpdate.checking"));
+        break;
+      case "addon-update-ended":
+        let status = parseInt(aData);
+        let updateable = false;
+        const nsIAUCL = Ci.nsIAddonUpdateCheckListener;
+        switch (status) {
+          case nsIAUCL.STATUS_UPDATE:
+            var statusMsg = strings.getFormattedString("addonUpdate.updating", [addon.version]);
+            updateable = true;
+            break;
+          case nsIAUCL.STATUS_VERSIONINFO:
+            statusMsg = strings.getString("addonUpdate.compatibility");
+            break;
+          case nsIAUCL.STATUS_FAILURE:
+            statusMsg = strings.getString("addonUpdate.error");
+            break;
+          case nsIAUCL.STATUS_DISABLED:
+            statusMsg = strings.getString("addonUpdate.disabled");
+            break;
+          case nsIAUCL.STATUS_APP_MANAGED:
+          case nsIAUCL.STATUS_NO_UPDATE:
+            statusMsg = strings.getString("addonUpdate.noupdate");
+            break;
+          case nsIAUCL.STATUS_NOT_MANAGED:
+            statusMsg = strings.getString("addonUpdate.notsupported");
+            break;
+          case nsIAUCL.STATUS_READ_ONLY:
+            statusMsg = strings.getString("addonUpdate.notsupported");
+            break;
+          default:
+            statusMsg = strings.getString("addonUpdate.noupdate");
+        }
+        element.setAttribute("updateStatus", statusMsg);
 
-    while (start != end) {
-      if (start.getAttribute("updateable") == "true")
-        items.push(this._extmgr.getItemForID(start.getAttribute("addonID")));
-      start = start.nextSibling;
+        // Tag the add-on so the XPInstallDownloadManager knows it's an update
+        if (updateable)
+          element.setAttribute("updating", "true");
+        break;
     }
-
-    if (items.length > 0) {
-      let listener = new UpdateCheckListener();
-      this._extmgr.update(items, items.length, Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION, listener);
-    }
-
-    if (this._list.selectedItem)
-      this._list.selectedItem.focus();
-
-    this._pref.setBoolPref("extensions.update.notifyUser", false);
   }
 };
 
@@ -820,93 +851,6 @@ XPInstallDownloadManager.prototype = {
   // nsISupports
   QueryInterface: function(aIID) {
     if (!aIID.equals(Ci.nsIAddonInstallListener) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// Add-on update listener. Starts a download for any add-on with a viable
-// update waiting
-function UpdateCheckListener() {
-  this._addons = [];
-}
-
-UpdateCheckListener.prototype = {
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIAddonUpdateCheckListener
-  onUpdateStarted: function ucl_onUpdateStarted() {
-  },
-
-  onUpdateEnded: function ucl_onUpdateEnded() {
-    if (!this._addons.length)
-      return;
-
-    // If we have some updateable add-ons, let's download them
-    let items = [];
-    for (let i = 0; i < this._addons.length; i++)
-      items.push(ExtensionsView._extmgr.getItemForID(this._addons[i]));
-
-    // Start the actual downloads
-    ExtensionsView._extmgr.addDownloads(items, items.length, null);
-  },
-
-  onAddonUpdateStarted: function ucl_onAddonUpdateStarted(aAddon) {
-    if (!document)
-      return;
-
-    let strings = Elements.browserBundle;
-    let element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
-    element.setAttribute("updateStatus", strings.getString("addonUpdate.checking"));
-  },
-
-  onAddonUpdateEnded: function ucl_onAddonUpdateEnded(aAddon, aStatus) {
-    if (!document)
-      return;
-
-    let strings = Elements.browserBundle;
-    let element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
-    let updateable = false;
-    const nsIAUCL = Ci.nsIAddonUpdateCheckListener;
-    switch (aStatus) {
-      case nsIAUCL.STATUS_UPDATE:
-        var statusMsg = strings.getFormattedString("addonUpdate.updating", [aAddon.version]);
-        updateable = true;
-        break;
-      case nsIAUCL.STATUS_VERSIONINFO:
-        statusMsg = strings.getString("addonUpdate.compatibility");
-        break;
-      case nsIAUCL.STATUS_FAILURE:
-        statusMsg = strings.getString("addonUpdate.error");
-        break;
-      case nsIAUCL.STATUS_DISABLED:
-        statusMsg = strings.getString("addonUpdate.disabled");
-        break;
-      case nsIAUCL.STATUS_APP_MANAGED:
-      case nsIAUCL.STATUS_NO_UPDATE:
-        statusMsg = strings.getString("addonUpdate.noupdate");
-        break;
-      case nsIAUCL.STATUS_NOT_MANAGED:
-        statusMsg = strings.getString("addonUpdate.notsupported");
-        break;
-      case nsIAUCL.STATUS_READ_ONLY:
-        statusMsg = strings.getString("addonUpdate.notsupported");
-        break;
-      default:
-        statusMsg = strings.getString("addonUpdate.noupdate");
-    }
-    element.setAttribute("updateStatus", statusMsg);
-
-    // Save the add-on id if we can download an update
-    if (updateable) {
-      this._addons.push(aAddon.id);
-      element.setAttribute("updating", "true");
-    }
-  },
-
-  QueryInterface: function ucl_QueryInterface(aIID) {
-    if (!aIID.equals(Ci.nsIAddonUpdateCheckListener) &&
         !aIID.equals(Ci.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;

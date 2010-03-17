@@ -63,6 +63,7 @@ EXTRA_COMPONENTS = \
         BrowserCLH.js \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
+        AddonUpdateService.js \
 	$(NULL)
 
 DIRS = protocols \
