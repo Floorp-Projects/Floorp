@@ -1194,7 +1194,7 @@ var gDownloadingPage = {
    * Member variables for updating download status
    */
   _lastSec: Infinity,
-  _startTime: Date.now(),
+  _startTime: null,
   _pausedStatus: "",
 
   /**
@@ -1226,6 +1226,8 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onPageShow - no valid update to download?!");
       return;
     }
+
+    this._startTime = Date.now();
 
     try {
       // Say that this was a foreground download, not a background download,
