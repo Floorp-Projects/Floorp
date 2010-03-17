@@ -93,6 +93,22 @@ static JSFunctionSpec sModuleFunctions[] = {
   JS_FS_END
 };
 
+static JSBool
+SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
+{
+  jsval prop;
+  if (!JS_GetProperty(cx, parent, name, &prop))
+    return false;
+
+  JSObject* obj = JSVAL_TO_OBJECT(prop);
+  if (!JS_GetProperty(cx, obj, "prototype", &prop))
+    return false;
+
+  JSObject* prototype = JSVAL_TO_OBJECT(prop);
+  return JS_SealObject(cx, obj, JS_FALSE) &&
+         JS_SealObject(cx, prototype, JS_FALSE);
+}
+
 JSBool
 Module::Init(JSContext* cx, JSObject* aGlobal)
 {
@@ -114,7 +130,18 @@ Module::Init(JSContext* cx, JSObject* aGlobal)
 
   // Seal the ctypes object, to prevent modification. (This single object
   // instance is shared amongst everyone who imports the ctypes module.)
-  return JS_SealObject(cx, ctypes, JS_FALSE) != JS_FALSE;
+  if (!JS_SealObject(cx, ctypes, JS_FALSE))
+    return false;
+
+  // Seal up Object, Function, and Array and their prototypes.
+  if (!SealObjectAndPrototype(cx, aGlobal, "Object") ||
+      !SealObjectAndPrototype(cx, aGlobal, "Function") ||
+      !SealObjectAndPrototype(cx, aGlobal, "Array"))
+    return false;
+
+  // Finally, seal the global object, for good measure. (But not recursively;
+  // this breaks things.)
+  return JS_SealObject(cx, aGlobal, JS_FALSE);
 }
 
 }
