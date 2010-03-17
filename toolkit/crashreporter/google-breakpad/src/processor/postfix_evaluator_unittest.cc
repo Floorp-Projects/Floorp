@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,21 +56,21 @@ using google_breakpad::PostfixEvaluator;
 // the value.
 class FakeMemoryRegion : public MemoryRegion {
  public:
-  virtual u_int64_t GetBase() { return 0; }
-  virtual u_int32_t GetSize() { return 0; }
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int8_t  *value) {
+  virtual u_int64_t GetBase() const { return 0; }
+  virtual u_int32_t GetSize() const { return 0; }
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int8_t  *value) const {
     *value = address + 1;
     return true;
   }
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int16_t *value) {
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int16_t *value) const {
     *value = address + 1;
     return true;
   }
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int32_t *value) {
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int32_t *value) const {
     *value = address + 1;
     return true;
   }
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int64_t *value) {
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int64_t *value) const {
     *value = address + 1;
     return true;
   }
@@ -102,6 +102,18 @@ struct EvaluateTestSet {
   map<string, unsigned int> *validate_data;
 };
 
+
+struct EvaluateForValueTest {
+  // Expression passed to PostfixEvaluator::Evaluate.
+  const string expression;
+  
+  // True if the expression is expected to be evaluable, false if evaluation
+  // is expected to fail.
+  bool evaluable;
+
+  // If evaluable, the value we expect it to yield.
+  unsigned int value;
+};
 
 static bool RunTests() {
   // The first test set checks the basic operations and failure modes.
@@ -287,6 +299,84 @@ static bool RunTests() {
         return false;
       }
     }
+  }
+
+  // EvaluateForValue tests.
+  PostfixEvaluator<unsigned int>::DictionaryType dictionary_2;
+  dictionary_2["$ebp"] = 0xbfff0010;
+  dictionary_2["$eip"] = 0x10000000;
+  dictionary_2["$esp"] = 0xbfff0000;
+  dictionary_2[".cbSavedRegs"] = 4;
+  dictionary_2[".cbParams"] = 4;
+  dictionary_2[".raSearchStart"] = 0xbfff0020;
+  const EvaluateForValueTest evaluate_for_value_tests_2[] = {
+    { "28907223",               true,  28907223 },      // simple constant
+    { "89854293 40010015 +",    true,  89854293 + 40010015 }, // arithmetic
+    { "-870245 8769343 +",      true,  7899098 },       // negative constants
+    { "$ebp $esp - $eip +",     true,  0x10000010 },    // variable references
+    { "18929794 34015074",      false, 0 },             // too many values
+    { "$ebp $ebp 4 - =",        false, 0 },             // too few values
+    { "$new $eip = $new",       true,  0x10000000 },    // make new variable
+    { "$new 4 +",               true,  0x10000004 },    // see prior assignments
+    { ".cfa 42 = 10",           false, 0 }              // can't set constants
+  };
+  const int evaluate_for_value_tests_2_size
+      = (sizeof (evaluate_for_value_tests_2)
+         / sizeof (evaluate_for_value_tests_2[0]));
+  map<string, unsigned int> validate_data_2;
+  validate_data_2["$eip"] = 0x10000000;
+  validate_data_2["$ebp"] = 0xbfff000c;
+  validate_data_2["$esp"] = 0xbfff0000;
+  validate_data_2["$new"] = 0x10000000;
+  validate_data_2[".cbSavedRegs"] = 4;
+  validate_data_2[".cbParams"] = 4;
+  validate_data_2[".raSearchStart"] = 0xbfff0020;
+
+  postfix_evaluator.set_dictionary(&dictionary_2);
+  for (int i = 0; i < evaluate_for_value_tests_2_size; i++) {
+    const EvaluateForValueTest *test = &evaluate_for_value_tests_2[i];
+    unsigned int result;
+    if (postfix_evaluator.EvaluateForValue(test->expression, &result)
+        != test->evaluable) {
+      fprintf(stderr, "FAIL: evaluate for value test %d, "
+              "expected evaluation to %s, but it %s\n",
+              i, test->evaluable ? "succeed" : "fail",
+              test->evaluable ? "failed" : "succeeded");
+      return false;
+    }
+    if (test->evaluable && result != test->value) {
+      fprintf(stderr, "FAIL: evaluate for value test %d, "
+              "expected value to be 0x%x, but it was 0x%x\n",
+              i, test->value, result);
+      return false;
+    }
+  }
+
+  for (map<string, unsigned int>::iterator v = validate_data_2.begin();
+       v != validate_data_2.end(); v++) {
+    map<string, unsigned int>::iterator a = dictionary_2.find(v->first);
+    if (a == dictionary_2.end()) {
+      fprintf(stderr, "FAIL: evaluate for value dictionary check: "
+              "expected dict[\"%s\"] to be 0x%x, but it was unset\n",
+              v->first.c_str(), v->second);
+      return false;
+    } else if (a->second != v->second) {
+      fprintf(stderr, "FAIL: evaluate for value dictionary check: "
+              "expected dict[\"%s\"] to be 0x%x, but it was 0x%x\n",
+              v->first.c_str(), v->second, a->second);
+      return false;
+    } 
+    dictionary_2.erase(a);
+  }
+  
+  map<string, unsigned int>::iterator remaining = dictionary_2.begin();
+  if (remaining != dictionary_2.end()) {
+    fprintf(stderr, "FAIL: evaluation of test expressions put unexpected "
+            "values in dictionary:\n");
+    for (; remaining != dictionary_2.end(); remaining++)
+      fprintf(stderr, "    dict[\"%s\"] == 0x%x\n",
+              remaining->first.c_str(), remaining->second);
+    return false;
   }
 
   return true;

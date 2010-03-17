@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -319,6 +319,7 @@ static void Start(Options *options) {
       [manager enumeratorAtPath:minidump_path];
     NSString *current_file = nil;
     while ((current_file = [enumerator nextObject])) {
+      NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
       if ([[current_file pathExtension] isEqualTo:@"dmp"]) {
         printf("Attempting to process report: %s\n",
                [current_file cStringUsingEncoding:NSASCIIStringEncoding]);
@@ -326,6 +327,7 @@ static void Start(Options *options) {
           [minidump_path stringByAppendingPathComponent:current_file];
         ProcessSingleReport(options, full_path);
       }
+      [pool release];
     }
   } else if (file_exists) {
     ProcessSingleReport(options, minidump_path);
