@@ -36,6 +36,11 @@
           }
         ]]>
       </handler>
+      <handler event="input">
+        <![CDATA[
+          this.popup.scrollToTop();
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -164,11 +169,17 @@
           // Doing this now rather than in open() turns out to be faster,
           // possibly because it avoids scrolling too soon after we uncollapse
           // ourselves
-          if (this._items.scrollTop || this._items.scrollLeft)
-            this._scrollBoxObject.scrollTo(0, 0);
+          this.scrollToTop();
 
           BrowserUI.showToolbar(false);
           BrowserUI.popDialog();
+        ]]></body>
+      </method>
+
+      <method name="scrollToTop">
+        <body><![CDATA[
+          if (this._items.scrollTop || this._items.scrollLeft)
+            this._scrollBoxObject.scrollTo(0, 0);
         ]]></body>
       </method>
 
@@ -231,7 +242,7 @@
             let type = controller.getStyleAt(i);
             let title = controller.getCommentAt(i);
             let tags = '';
-            
+
             if (type == "tag")
               [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
             item.setAttribute("tags", tags);
@@ -273,7 +284,7 @@
       </method>
 
       <field name="_allBookmarksItem">document.getAnonymousElementByAttribute(this, "anonid", "allbookmarks");</field>
-      
+
       <property name="allBookmarksItemSelected" readonly="true"
                 onget="return this._selectedItem == this._allBookmarksItem;"/>
 
