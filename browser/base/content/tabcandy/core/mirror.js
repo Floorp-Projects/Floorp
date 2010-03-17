@@ -78,6 +78,8 @@ TabCanvas.prototype = {
   },
   
   animate: function(options, duration){
+    // TODO: This doesn't seem to scale the rest of the interface elements at the same
+    // width, leaving unfortunately long trails.
 /*
     if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
       Utils.log('on animate', this.tab.contentWindow.location.href);
