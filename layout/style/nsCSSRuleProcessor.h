@@ -104,8 +104,6 @@ public:
 
   virtual nsReStyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
 
-  virtual PRBool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
-
   virtual nsReStyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
 
