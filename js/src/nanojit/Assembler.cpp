@@ -118,49 +118,49 @@ namespace nanojit
             NanoAssert(_entries[i] == BAD_ENTRY);
     }
 
-     void AR::validate()
-     {
+    void AR::validate()
+    {
         static uint32_t validateCounter = 0;
-         if (++validateCounter >= 100)
-         {
-             validateFull();
-             validateCounter = 0;
-         }
-         else
-         {
-             validateQuick();
-         }
-     }
+        if (++validateCounter >= 100)
+        {
+            validateFull();
+            validateCounter = 0;
+        }
+        else
+        {
+            validateQuick();
+        }
+    }
 
 #endif
 
-     inline void AR::clear()
-     {
-         _highWaterMark = 0;
+    inline void AR::clear()
+    {
+        _highWaterMark = 0;
         NanoAssert(_entries[0] == NULL);
     #ifdef _DEBUG
         for (uint32_t i = 1; i < NJ_MAX_STACK_ENTRY; ++i)
             _entries[i] = BAD_ENTRY;
     #endif
-     }
+    }
 
-     bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex)
-     {
-         while (++_i <= _ar._highWaterMark)
-         {
-             if ((ins = _ar._entries[_i]) != NULL)
-             {
-                 nStackSlots = nStackSlotsFor(ins);
-                 _i += nStackSlots - 1;
-                 arIndex = _i;
-                 return true;
-             }
-         }
-         ins = NULL;
-         nStackSlots = 0;
-         arIndex = 0;
-         return false;
-     }
+    bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex)
+    {
+        while (_i <= _ar._highWaterMark) {
+            ins = _ar._entries[_i];
+            if (ins) {
+                arIndex = _i;
+                nStackSlots = nStackSlotsFor(ins);
+                _i += nStackSlots;
+                return true;
+            }
+            _i++;
+        }
+        ins = NULL;
+        nStackSlots = 0;
+        arIndex = 0;
+        return false;
+    }
 
     void Assembler::arReset()
     {
@@ -2054,7 +2054,7 @@ namespace nanojit
     void AR::checkForResourceLeaks() const
     {
         for (uint32_t i = 1; i <= _highWaterMark; i++) {
-            NanoAssertMsgf(_entries[i] == NULL, "frame entry %d wasn't freed\n",-4*i);
+            NanoAssertMsgf(_entries[i] == NULL, "frame entry %d wasn't freed\n",4*i);
         }
     }
     #endif

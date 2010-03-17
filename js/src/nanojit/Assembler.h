@@ -136,6 +136,7 @@ namespace nanojit
         {
         private:
             const AR& _ar;
+            // '_i' points to the start of the entries for an LIns, or to the first NULL entry.
             uint32_t _i;
         public:
             inline Iter(const AR& ar) : _ar(ar), _i(1) { }
