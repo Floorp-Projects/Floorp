@@ -1,7 +1,9 @@
 (function(){
 
-function min(list){ return list.sort()[0]; }
-function max(list){ return list.sort().pop(); }
+var numCmp = function(a,b){ return a-b; }
+
+function min(list){ return list.slice().sort(numCmp)[0]; }
+function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 
 function Group(){}
 Group.prototype = {
@@ -11,11 +13,12 @@ Group.prototype = {
   
   _getBoundingBox: function(){
     var els = this._children;
+    var el;
     var boundingBox = {
-      top:    min( [$(els[i]).position().top for(i in els)] ),
-      left:   min( [$(els[i]).position().left for(i in els)] ),
-      bottom: max( [$(els[i]).position().top for(i in els)] )  + $(els[0]).height(),
-      right:  max( [$(els[i]).position().left for(i in els)] ) + $(els[0]).width(),
+      top:    min( [$(el).position().top  for([,el] in Iterator(els))] ),
+      left:   min( [$(el).position().left for([,el] in Iterator(els))] ),
+      bottom: max( [$(el).position().top  for([,el] in Iterator(els))] )  + $(els[0]).height(),
+      right:  max( [$(el).position().left for([,el] in Iterator(els))] ) + $(els[0]).width(),
     };
     boundingBox.height = boundingBox.bottom - boundingBox.top;
     boundingBox.width  = boundingBox.right - boundingBox.left;
@@ -45,17 +48,19 @@ Group.prototype = {
     
     this._addHandlers(container);
     this._updateGroup();
-    console.log(this);
   },
   
   add: function(el){
     this._children.push( el );
     this._updateGroup();
+    
+
     var bb = this._getBoundingBox();
+    var padding = bb.top - $(this._container).position().top;    
     this._container.animate({
-      width: bb.width + 30*2,
-      height: bb.height + 40*2,
-    },250);
+      width: bb.width + padding*2,
+      height: bb.height + padding*2,
+    },100);
     
   },
   
