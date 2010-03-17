@@ -41,17 +41,18 @@
 
 
 #include "npapi.h"
-#include "IPC/IPCMessageUtils.h"
-
-#warning This is only a stub implementation IMPLEMENT ME
 
 namespace mozilla {
+
 namespace plugins {
+
 struct NPRemoteEvent {
-    NPEvent event;
+    NPCocoaEvent event;
 };
-}
-}
+
+} // namespace plugins
+
+} // namespace mozilla
 
 namespace IPC {
 
@@ -71,6 +72,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
     static void Log(const paramType& aParam, std::wstring* aLog)
     {
+        aLog->append(L"(NPCocoaEvent)");
     }
 };
 
