@@ -1761,7 +1761,9 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         checkForAdd = !sprop->parent;
                     }
 
-                    if (checkForAdd && sprop->hasDefaultSetter() &&
+                    if (checkForAdd &&
+                        PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape &&
+                        sprop->hasDefaultSetter() &&
                         (slot = sprop->slot) == scope->freeslot) {
                         /*
                          * Fast path: adding a plain old property that was once
