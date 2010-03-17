@@ -220,7 +220,7 @@ function test() {
       });
 
       ok(hasSH, "At least one tab has its entry in SH");
-      ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
+      //ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
 
       runNextTest();
 
