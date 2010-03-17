@@ -163,7 +163,7 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
 # interaction between xml mapped attributes and their css equivalents
-== mapped-attr-vs-css-prop-1.svg lime.svg
+random == mapped-attr-vs-css-prop-1.svg lime.svg
 
 == smil-transitions-interaction-1a.svg lime.svg
 == smil-transitions-interaction-1b.svg lime.svg
