@@ -427,7 +427,10 @@ namespace nanojit
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp i);
             void        asm_ret(LInsp p);
-            void        asm_quad(LInsp i);
+#ifdef NANOJIT_64BIT
+            void        asm_immq(LInsp i);
+#endif
+            void        asm_immf(LInsp i);
             void        asm_fcond(LInsp i);
             void        asm_cond(LInsp i);
             void        asm_arith(LInsp i);
@@ -435,7 +438,7 @@ namespace nanojit
             void        asm_load32(LInsp i);
             void        asm_cmov(LInsp i);
             void        asm_param(LInsp i);
-            void        asm_int(LInsp i);
+            void        asm_immi(LInsp i);
 #if NJ_SOFTFLOAT_SUPPORTED
             void        asm_qlo(LInsp i);
             void        asm_qhi(LInsp i);

@@ -1328,14 +1328,21 @@ namespace nanojit
                 case LIR_int:
                 {
                     countlir_imm();
-                    asm_int(ins);
+                    asm_immi(ins);
                     break;
                 }
-                case LIR_float:
-                CASE64(LIR_quad:)
+#ifdef NANOJIT_64BIT
+                case LIR_quad:
                 {
                     countlir_imm();
-                    asm_quad(ins);
+                    asm_immq(ins);
+                    break;
+                }
+#endif
+                case LIR_float:
+                {
+                    countlir_imm();
+                    asm_immf(ins);
                     break;
                 }
                 case LIR_param:

@@ -635,7 +635,7 @@ namespace nanojit
         TAG("asm_fneg(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_quad(LIns *ins)
+    void Assembler::asm_immf(LIns *ins)
     {
         int d = deprecated_disp(ins);
         Register rr = ins->deprecated_getReg();
@@ -650,7 +650,7 @@ namespace nanojit
             NanoAssert(d);
             asm_store_imm64(ins, d, FP);
         }
-        TAG("asm_quad(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_immf(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void
@@ -764,11 +764,11 @@ namespace nanojit
         TAG("asm_neg_not(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_int(LIns *ins)
+    void Assembler::asm_immi(LIns *ins)
     {
         Register rr = deprecated_prepResultReg(ins, GpRegs);
         asm_li(rr, ins->imm32());
-        TAG("asm_int(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_immi(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void Assembler::asm_cmov(LIns *ins)

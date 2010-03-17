@@ -795,7 +795,7 @@ namespace nanojit
         deprecated_prepResultReg(ins, rmask(argRegs[a]));
     }
 
-    void Assembler::asm_int(LInsp ins)
+    void Assembler::asm_immi(LInsp ins)
     {
         underrunProtect(8);
         Register rr = deprecated_prepResultReg(ins, GpRegs);
@@ -806,7 +806,7 @@ namespace nanojit
             SET32(val, rr);
     }
 
-    void Assembler::asm_quad(LInsp ins)
+    void Assembler::asm_immf(LInsp ins)
     {
         underrunProtect(64);
         Register rr = ins->deprecated_getReg();

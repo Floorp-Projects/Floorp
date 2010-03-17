@@ -392,8 +392,9 @@ namespace nanojit
         void emitxm_rel(uint64_t op, Register r, NIns* addr64);\
         bool isTargetWithinS8(NIns* target);\
         bool isTargetWithinS32(NIns* target);\
-        void asm_int(Register r, int32_t v, bool canClobberCCs);\
-        void asm_quad(Register r, uint64_t v, bool canClobberCCs);\
+        void asm_immi(Register r, int32_t v, bool canClobberCCs);\
+        void asm_immq(Register r, uint64_t v, bool canClobberCCs);\
+        void asm_immf(Register r, uint64_t v, bool canClobberCCs);\
         void asm_regarg(ArgSize, LIns*, Register);\
         void asm_stkarg(ArgSize, LIns*, int);\
         void asm_shift(LIns*);\
