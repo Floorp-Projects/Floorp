@@ -1,7 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
-     onload="setTimeAndSnapshot(1, false)">
+     onload="document.documentElement.setCurrentTime(1);
+             setTimeAndSnapshot(1, false)">
+  <!-- XXXdholbert the above "document.documentElement.setCurrentTime" call
+       shouldn't be necessary - it's a temporary workaround for Bug 552873 -->
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <!-- This test consists of a 4x3 grid, containing various cases with
        animations that have attributeType="CSS" vs "XML", for the
