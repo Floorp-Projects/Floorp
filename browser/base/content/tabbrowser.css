@@ -1,9 +1,5 @@
-.tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
-}
-
-.tabbrowser-tab {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+.tabbrowser-tabbox {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabbox");
 }
 
 .tabbrowser-arrowscrollbox {
@@ -31,8 +27,8 @@
   display: -moz-box;
 }
 
-.tabs-container:not([overflow="true"]) > .tabs-newtab-button,
-.tabs-container[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+.tabbrowser-tabs:not([overflow="true"]) > .tabs-newtab-button,
+.tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
 

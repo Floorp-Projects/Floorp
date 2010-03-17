@@ -8,7 +8,7 @@ scriptLoader.loadSubScript("chrome://mochikit/content/browser/xpinstall/tests/ha
 function test() {
   waitForExplicitFinish();
 
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   prefs.setBoolPref("xpinstall.enabled", false);
 
@@ -25,7 +25,7 @@ function test() {
 }
 
 function page_loaded() {
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   prefs.clearUserPref("xpinstall.enabled");
 

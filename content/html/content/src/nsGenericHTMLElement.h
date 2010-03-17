@@ -156,6 +156,7 @@ public:
   NS_IMETHOD GetDraggable(PRBool* aDraggable);
   NS_IMETHOD SetDraggable(PRBool aDraggable);
   nsresult GetContentEditable(nsAString &aContentEditable);
+  nsresult GetIsContentEditable(PRBool* aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
 
   // Implementation for nsIContent

@@ -39,11 +39,7 @@
 #include "nsIGenericFactory.h"
 #include "nsPrefService.h"
 #include "nsPrefBranch.h"
-#include "nsIPref.h"
 #include "prefapi.h"
-
-// remove this when nsPref goes away
-extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
@@ -74,12 +70,12 @@ static const nsModuleComponentInfo components[] =
     nsRelativeFilePrefConstructor
   },
 
-  { // remove this when nsPref goes away
-    NS_PREF_CLASSNAME, 
-    NS_PREF_CID,
-    NS_PREF_CONTRACTID, 
-    nsPrefConstructor
-  },
+  { // compatibility for extension that uses old service
+    NS_PREFSERVICE_CLASSNAME,
+    NS_PREFSERVICE_CID,
+    "@mozilla.org/preferences;1",
+    nsPrefServiceConstructor
+  }
 };
 
 static void

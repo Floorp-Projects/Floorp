@@ -123,7 +123,7 @@ Window.prototype = {
    */
   _watch : function win_watch(aType) {
     var self = this;
-    this._tabbrowser.addEventListener(aType,
+    this._tabbrowser.tabContainer.addEventListener(aType,
       this._cleanup[aType] = function(e){ self._event(e); },
       true);
   },

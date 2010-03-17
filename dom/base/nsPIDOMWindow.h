@@ -78,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x2962cfa4, 0x13f9, 0x4606, \
-  { 0x84, 0x64, 0xef, 0x4c, 0xfa, 0x33, 0xcc, 0xce } }
+{ 0xC5CB154D, 0x17C0, 0x49E9, \
+  { 0x9C, 0x83, 0xFF, 0xC7, 0x2C, 0x93, 0xAF, 0x24 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -92,6 +92,16 @@ public:
 
   // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow2::GetWindowRoot
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
+
+  virtual void SetActive(PRBool aActive)
+  {
+    mIsActive = aActive;
+  }
+
+  PRBool IsActive()
+  {
+    return mIsActive;
+  }
 
   nsPIDOMEventTarget* GetChromeEventHandler() const
   {
@@ -353,8 +363,7 @@ public:
    * created.
    */
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
-                                  nsISupports *aState,
-                                  PRBool aClearScope) = 0;
+                                  nsISupports *aState) = 0;
 
   /**
    * Set the opener window.  aOriginalOpener is true if and only if this is the
@@ -491,8 +500,8 @@ protected:
       mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
       mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
       mMayHavePaintEventListener(PR_FALSE),
-      mIsModalContentWindow(PR_FALSE), mInnerWindow(nsnull),
-      mOuterWindow(aOuterWindow)
+      mIsModalContentWindow(PR_FALSE), mIsActive(PR_FALSE),
+      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
   {
   }
 
@@ -525,6 +534,9 @@ protected:
   // This variable is used on both inner and outer windows (and they
   // should match).
   PRPackedBool           mIsModalContentWindow;
+
+  // Tracks activation state that's used for :-moz-window-inactive 
+  PRPackedBool           mIsActive;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

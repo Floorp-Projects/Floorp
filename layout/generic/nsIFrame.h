@@ -1653,6 +1653,12 @@ public:
   virtual nsIWidget* GetWindow() const;
 
   /**
+   * Same as GetWindow() with an offset out param.
+   * @param the offset of this frame in widget coordinates
+   */
+  virtual nsIWidget* GetWindowOffset(nsPoint& aOffset) const;
+
+  /**
    * Get the "type" of the frame. May return a NULL atom pointer
    *
    * @see nsGkAtoms

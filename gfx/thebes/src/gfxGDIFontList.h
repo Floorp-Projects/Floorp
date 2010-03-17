@@ -69,9 +69,12 @@ private:
 class AutoSelectFont // select a font into the given DC, and auto-restore
 {
 public:
-    AutoSelectFont(HDC aDC, LOGFONTW *aLogFont) {
+    AutoSelectFont(HDC aDC, LOGFONTW *aLogFont)
+        : mOwnsFont(PR_FALSE)
+    {
         mFont = ::CreateFontIndirectW(aLogFont);
         if (mFont) {
+            mOwnsFont = PR_TRUE;
             mDC = aDC;
             mOldFont = (HFONT)::SelectObject(aDC, mFont);
         } else {
@@ -79,7 +82,9 @@ public:
         }
     }
 
-    AutoSelectFont(HDC aDC, HFONT aFont) {
+    AutoSelectFont(HDC aDC, HFONT aFont)
+        : mOwnsFont(PR_FALSE)
+    {
         mDC = aDC;
         mFont = aFont;
         mOldFont = (HFONT)::SelectObject(aDC, aFont);
@@ -88,6 +93,9 @@ public:
     ~AutoSelectFont() {
         if (mOldFont) {
             ::SelectObject(mDC, mOldFont);
+            if (mOwnsFont) {
+                ::DeleteObject(mFont);
+            }
         }
     }
 
@@ -100,9 +108,10 @@ public:
     }
 
 private:
-    HDC mDC;
-    HFONT mFont;
-    HFONT mOldFont;
+    HDC    mDC;
+    HFONT  mFont;
+    HFONT  mOldFont;
+    PRBool mOwnsFont;
 };
 
 /**

@@ -38,7 +38,10 @@
 DEPTH       = ../..
 topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
-VPATH       = @srcdir@
+VPATH       = \
+  $(srcdir) \
+  $(srcdir)/basic \
+  $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -50,11 +53,13 @@ LIBXUL_LIBRARY = 1
 DEFINES += -DIMPL_THEBES
 
 EXPORTS = \
-        Layers.h \
         BasicLayers.h \
+        ImageLayers.h \
+        Layers.h \
         $(NULL)
 
 CPPSRCS = \
+        BasicImages.cpp \
         BasicLayers.cpp \
         $(NULL)
 
@@ -72,3 +77,5 @@ EXTRA_DSO_LDOPTS += \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

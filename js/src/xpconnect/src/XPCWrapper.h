@@ -146,9 +146,15 @@ namespace SystemOnlyWrapper {
 JSBool
 WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp);
 
+JSBool
+MakeSOW(JSContext *cx, JSObject *obj);
+
 // Used by UnwrapSOW below.
 JSBool
 AllowedToAct(JSContext *cx, jsval idval);
+
+JSBool
+CheckFilename(JSContext *cx, jsval idval, JSStackFrame *fp);
 
 }
 
@@ -170,6 +176,9 @@ namespace XPCWrapper {
 // the newResolve. It tells the addProperty hook to not worry about
 // what's being defined.
 extern const PRUint32 FLAG_RESOLVING;
+
+// When a wrapper is meant to act like a SOW, this flag will be set.
+extern const PRUint32 FLAG_SOW;
 
 // This is used by individual wrappers as a starting point to stick
 // per-wrapper flags into the flags slot. This is guaranteed to only
@@ -409,6 +418,20 @@ WrapFunction(JSContext *cx, JSObject *wrapperObj, JSObject *funobj, jsval *v,
 }
 
 /**
+ * Given a potentially-wrapped object, creates a wrapper for it.
+ */
+JSBool
+RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
+             jsval *vp);
+
+JSObject *
+UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj);
+
+JSBool
+CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
+                      WrapperType hint, jsval *vp);
+
+/**
  * Creates an iterator object that walks up the prototype of
  * wrappedObj. This is suitable for for-in loops over a wrapper. If
  * a property is not supposed to be reflected, the resolve hook
@@ -418,6 +441,14 @@ JSObject *
 CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
                   JSObject *wrapperObj, JSObject *innerObj,
                   JSBool keysonly);
+
+/**
+ * Like CreateIteratorObj, but doesn't need a security wrapper. If
+ * propertyContainer is null, creates an empty iterator.
+ */
+JSObject *
+CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
+                     JSObject *propertyContainer);
 
 /**
  * Called for the common part of adding a property to obj.
@@ -443,11 +474,14 @@ Enumerate(JSContext *cx, JSObject *wrapperObj, JSObject *innerObj);
  * Resolves a property (that may be) defined on |innerObj| onto
  * |wrapperObj|. This will also resolve random, page-defined objects
  * and is therefore unsuitable for cross-origin resolution.
+ *
+ * If |caller| is not NONE, then we will call the proper WrapObject
+ * hook for any getters or setters about to be lifted onto
+ * |wrapperObj|.
  */
 JSBool
-NewResolve(JSContext *cx, JSObject *wrapperObj,
-           JSBool preserveVal, JSObject *innerObj,
-           jsval id, uintN flags, JSObject **objp);
+NewResolve(JSContext *cx, JSObject *wrapperObj, JSBool preserveVal,
+           JSObject *innerObj, jsval id, uintN flags, JSObject **objp);
 
 /**
  * Resolve a native property named id from innerObj onto wrapperObj. The

@@ -358,6 +358,7 @@ members = [
     'nsIDOMNSHTMLDocument.getSelection',
     'nsIDOMNSHTMLDocument.designMode',
     'nsIDOMNSHTMLElement.contentEditable',
+    'nsIDOMNSHTMLElement.isContentEditable',
     'nsIDOMNSHTMLElement.offsetParent',
     'nsIDOMNSHTMLElement.innerHTML',
     'nsIDOMNSHTMLElement.offsetLeft',

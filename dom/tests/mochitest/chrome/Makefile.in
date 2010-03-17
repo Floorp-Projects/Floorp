@@ -60,6 +60,8 @@ _TEST_FILES = \
 		window_focus.xul \
 		test_focused_link_scroll.xul \
 		test_geolocation.xul \
+		test_activation.xul \
+		window_activation.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

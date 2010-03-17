@@ -159,3 +159,18 @@ nsCOMArray_base::Clear()
     mArray.Clear();
 }
 
+PRBool
+nsCOMArray_base::SetCount(PRInt32 aNewCount)
+{
+    NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
+    if (aNewCount < 0)
+      return PR_FALSE;
+
+    PRInt32 count = Count(), i;
+    for (i = aNewCount; i < count; ++i) {
+        nsISupports* obj = ObjectAt(i);
+        NS_IF_RELEASE(obj);
+    }
+    return mArray.SetCount(aNewCount);
+}
+

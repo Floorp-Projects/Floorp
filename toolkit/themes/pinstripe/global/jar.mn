@@ -27,7 +27,6 @@ toolkit.jar:
   skin/classic/global/notification.css
   skin/classic/global/netError.css
   skin/classic/global/numberbox.css
-  skin/classic/global/plugins.css         (/toolkit/empty-file)
   skin/classic/global/passwordmgr.css
   skin/classic/global/popup.css
   skin/classic/global/preferences.css
@@ -142,8 +141,6 @@ toolkit.jar:
   skin/classic/global/splitter/grip-vrt-after.gif                    (splitter/grip-vrt-after.gif)
   skin/classic/global/splitter/grip-vrt-before.gif                   (splitter/grip-vrt-before.gif)
   skin/classic/global/toolbar/spring.png                             (toolbar/spring.png)
-  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
-  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)
   skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
   skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
   skin/classic/global/tree/folder.png                                (tree/folder.png)

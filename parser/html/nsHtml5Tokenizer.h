@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2010 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -47,6 +47,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5StreamParser;
 class nsHtml5SpeculativeLoader;
@@ -85,7 +86,7 @@ class nsHtml5Tokenizer
     static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
   protected:
     nsHtml5TreeBuilder* tokenHandler;
-    nsHtml5StreamParser* encodingDeclarationHandler;
+    nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler;
     PRBool lastCR;
     PRInt32 stateSave;
   private:
@@ -96,6 +97,7 @@ class nsHtml5Tokenizer
     PRBool forceQuirks;
     PRUnichar additional;
     PRInt32 entCol;
+    PRInt32 firstCharKey;
     PRInt32 lo;
     PRInt32 hi;
     PRInt32 candidate;
@@ -156,31 +158,83 @@ class nsHtml5Tokenizer
 
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
-    void clearStrBufAndAppendCurrentC(PRUnichar c);
-    void clearStrBufAndAppendForceWrite(PRUnichar c);
-    void clearStrBufForNextState();
-    void appendStrBuf(PRUnichar c);
+    inline void clearStrBufAndAppendCurrentC(PRUnichar c)
+    {
+      strBuf[0] = c;
+      strBufLen = 1;
+    }
+
+    inline void clearStrBufAndAppendForceWrite(PRUnichar c)
+    {
+      strBuf[0] = c;
+      strBufLen = 1;
+    }
+
+    inline void clearStrBufForNextState()
+    {
+      strBufLen = 0;
+    }
+
+    inline void appendStrBuf(PRUnichar c)
+    {
+      strBuf[strBufLen++] = c;
+    }
+
   protected:
     nsString* strBufToString();
   private:
     void strBufToDoctypeName();
     void emitStrBuf();
-    void clearLongStrBufForNextState();
-    void clearLongStrBuf();
-    void clearLongStrBufAndAppendCurrentC(PRUnichar c);
-    void clearLongStrBufAndAppendToComment(PRUnichar c);
-    void appendLongStrBuf(PRUnichar c);
+    inline void clearLongStrBufForNextState()
+    {
+      longStrBufLen = 0;
+    }
+
+    inline void clearLongStrBuf()
+    {
+      longStrBufLen = 0;
+    }
+
+    inline void clearLongStrBufAndAppendCurrentC(PRUnichar c)
+    {
+      longStrBuf[0] = c;
+      longStrBufLen = 1;
+    }
+
+    inline void clearLongStrBufAndAppendToComment(PRUnichar c)
+    {
+      longStrBuf[0] = c;
+      longStrBufLen = 1;
+    }
+
+    inline void appendLongStrBuf(PRUnichar c)
+    {
+      longStrBuf[longStrBufLen++] = c;
+    }
+
     void appendSecondHyphenToBogusComment();
     void adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c);
-    void appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length);
-    void appendLongStrBuf(jArray<PRUnichar,PRInt32> arr);
-    void appendStrBufToLongStrBuf();
+    inline void appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length)
+    {
+      nsHtml5ArrayCopy::arraycopy(buffer, offset, longStrBuf, longStrBufLen, length);
+      longStrBufLen += length;
+    }
+
+    inline void appendStrBufToLongStrBuf()
+    {
+      appendLongStrBuf(strBuf, 0, strBufLen);
+    }
+
     nsString* longStrBufToString();
     void emitComment(PRInt32 provisionalHyphens, PRInt32 pos);
   protected:
     void flushChars(PRUnichar* buf, PRInt32 pos);
   private:
-    void resetAttributes();
+    inline void resetAttributes()
+    {
+      attributes = nsnull;
+    }
+
     void strBufToElementNameString();
     PRInt32 emitCurrentTagToken(PRBool selfClosing, PRInt32 pos);
     void attributeNameComplete();
@@ -192,6 +246,7 @@ class nsHtml5Tokenizer
     void start();
     PRBool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
+    void ensureBufferSpace(PRInt32 addedLength);
     PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
@@ -251,8 +306,8 @@ class nsHtml5Tokenizer
   public:
     void internalEncodingDeclaration(nsString* internalCharset);
   private:
-    void emitOrAppend(jArray<PRUnichar,PRInt32> val, PRInt32 returnState);
-    void emitOrAppendOne(PRUnichar* val, PRInt32 returnState);
+    void emitOrAppendTwo(const PRUnichar* val, PRInt32 returnState);
+    void emitOrAppendOne(const PRUnichar* val, PRInt32 returnState);
   public:
     void end();
     void requestSuspension();
@@ -265,7 +320,7 @@ class nsHtml5Tokenizer
     void resetToDataState();
     void loadState(nsHtml5Tokenizer* other);
     void initializeWithoutStarting();
-    void setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler);
+    void setEncodingDeclarationHandler(nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler);
     static void initializeStatics();
     static void releaseStatics();
 };
@@ -292,6 +347,7 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = 0;
 jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #endif
 
+#define NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD 8000
 #define NS_HTML5TOKENIZER_DATA 0
 #define NS_HTML5TOKENIZER_RCDATA 1
 #define NS_HTML5TOKENIZER_SCRIPT_DATA 2
@@ -336,7 +392,7 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #define NS_HTML5TOKENIZER_DOCTYPE_YSTEM 41
 #define NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE 42
 #define NS_HTML5TOKENIZER_CONSUME_NCR 43
-#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP 44
+#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL 44
 #define NS_HTML5TOKENIZER_HEX_NCR_LOOP 45
 #define NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP 46
 #define NS_HTML5TOKENIZER_HANDLE_NCR_VALUE 47
@@ -364,6 +420,7 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH 69
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH 70
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END 71
+#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP 72
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
 #define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 

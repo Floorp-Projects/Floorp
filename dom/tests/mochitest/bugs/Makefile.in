@@ -50,6 +50,7 @@ _TEST_FILES	= \
 		iframe_bug49312.html \
 		test_bug132255.html \
 		test_bug159849.html \
+		test_bug265203.html \
 		test_bug291377.html \
 		test_bug308856.html \
 		test_bug317448.html \

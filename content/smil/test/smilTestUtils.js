@@ -78,8 +78,20 @@ var SMILUtil =
   },
 
   // Simple wrapper for getComputedStyle
-  getComputedStyleSimple: function(elem, prop) {
+  getComputedStyleSimple: function(elem, prop)
+  {
     return window.getComputedStyle(elem, null).getPropertyValue(prop);
+  },
+
+  getAttributeValue: function(elem, attr)
+  {
+    if (attr.attrType == "CSS") {
+      return SMILUtil.getComputedStyleWrapper(elem, attr.attrName);
+    } else if (attr.attrType == "XML") {
+      // XXXdholbert This is appropriate for mapped attributes, but not
+      // for others.
+      return SMILUtil.getComputedStyleWrapper(elem, attr.attrName);
+    }
   },
 
   // Smart wrapper for getComputedStyle, which will generate a "fake" computed
@@ -136,11 +148,15 @@ var SMILUtil =
   
   // This method hides (i.e. sets "display: none" on) all of the given node's
   // descendents.  It also hides the node itself, if requested.
-  hideSubtree : function(node, hideNodeItself)
+  hideSubtree : function(node, hideNodeItself, useXMLAttribute)
   {
     // Hide node, if requested
     if (hideNodeItself) {
-      if (node.style) {
+      if (useXMLAttribute) {
+        if (node.setAttribute) {
+          node.setAttribute("display", "none");
+        }
+      } else if (node.style) {
         node.style.display = "none";
       }
     }
@@ -148,7 +164,7 @@ var SMILUtil =
     // Hide node's descendents
     var child = node.firstChild;
     while (child) {
-      SMILUtil.hideSubtree(child, true);
+      SMILUtil.hideSubtree(child, true, useXMLAttribute);
       child = child.nextSibling;
     }
   },
@@ -299,14 +315,14 @@ AnimTestcase.prototype =
    * runTest: Runs this AnimTestcase
    *
    * @param aTargetElem The node to be targeted in our test animation.
-   * @param aAnimAttr An Attribute object representing the attribute
-   *                  to be targeted in our test animation.
+   * @param aTargetAttr An Attribute object representing the attribute
+   *                    to be targeted in our test animation.
    * @param aTimeData A SMILTimingData object with timing information for
    *                  our test animation.
    * @param aIsFreeze If true, indicates that our test animation should use
    *                  fill="freeze"; otherwise, we'll default to fill="remove".
    */
-  runTest : function(aTargetElem, aAnimAttr, aTimeData, aIsFreeze)
+  runTest : function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze)
   {
     // SANITY CHECKS
     if (!SMILUtil.getSVGRoot().animationsPaused()) {
@@ -318,18 +334,17 @@ AnimTestcase.prototype =
 
     // SET UP
     // Cache initial computed value
-    var baseVal = SMILUtil.getComputedStyleWrapper(aTargetElem,
-                                                   aAnimAttr.attrName);
+    var baseVal = SMILUtil.getAttributeValue(aTargetElem, aTargetAttr);
 
     // Create & append animation element
-    var anim = this.setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze);
+    var anim = this.setupAnimationElement(aTargetAttr, aTimeData, aIsFreeze);
     aTargetElem.appendChild(anim);
 
     // Build a list of [seek-time, expectedValue, errorMessage] triplets
-    var seekList = this.buildSeekList(aAnimAttr, baseVal, aTimeData, aIsFreeze);
+    var seekList = this.buildSeekList(aTargetAttr, baseVal, aTimeData, aIsFreeze);
 
     // DO THE ACTUAL TESTING
-    this.seekAndTest(seekList, aTargetElem, aAnimAttr.attrName);
+    this.seekAndTest(seekList, aTargetElem, aTargetAttr);
 
     // CLEAN UP
     aTargetElem.removeChild(anim);
@@ -373,7 +388,7 @@ AnimTestcase.prototype =
     for (var i in aSeekList) {
       var entry = aSeekList[i];
       SMILUtil.getSVGRoot().setCurrentTime(entry[0]);
-      is(SMILUtil.getComputedStyleWrapper(aTargetElem, aTargetAttr),
+      is(SMILUtil.getAttributeValue(aTargetElem, aTargetAttr),
          entry[1], entry[2]);
     }
   },
@@ -423,6 +438,13 @@ AnimTestcaseFrom.prototype =
   {
     var seekList = new Array();
     var msgPrefix = aAnimAttr.attrName + ": ";
+    if (aTimeData.getBeginTime() > 0.1) {
+      seekList.push([aTimeData.getBeginTime() - 0.1,
+                    aBaseVal,
+                     msgPrefix + "checking that base value is set " +
+                     "before start of animation"]);
+    }
+
     seekList.push([aTimeData.getBeginTime(),
                    this.computedValMap.fromComp || this.from,
                    msgPrefix + "checking that 'from' value is set " +

@@ -471,6 +471,18 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
 void
 nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent** aElement)
 {
+  NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
+  NS_ASSERTION(aName, "Element doesn't have local name!");
+  NS_ASSERTION(aElement, "No element!");
+  if (aNamespace != kNameSpaceID_XHTML) {
+    return;
+  }
+  if (aName == nsHtml5Atoms::body || aName == nsHtml5Atoms::frameset) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    NS_ASSERTION(treeOp, "Tree op allocation failed.");
+    treeOp->Init(eTreeOpStartLayout);
+    return;
+  }
 }
 
 void
@@ -587,28 +599,14 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     treeOp->Init(eTreeOpProcessMeta, aElement);
     return;
   }
-  if (aName == nsHtml5Atoms::head) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpStartLayout);
-    return;
-  }
   return;
 }
 
 void
-nsHtml5TreeBuilder::accumulateCharacters(PRUnichar* aBuf, PRInt32 aStart, PRInt32 aLength)
+nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, PRInt32 aStart, PRInt32 aLength)
 {
-  PRInt32 newFillLen = charBufferLen + aLength;
-  if (newFillLen > charBuffer.length) {
-    PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<PRUnichar,PRInt32> newBuf(newAllocLength);
-    memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
-    charBuffer.release();
-    charBuffer = newBuf;
-  }
   memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(PRUnichar) * aLength);
-  charBufferLen = newFillLen;
+  charBufferLen += aLength;
 }
 
 nsIContent**
@@ -646,11 +644,12 @@ nsHtml5TreeBuilder::Flush()
 }
 
 void
-nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset)
+nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset, 
+                                       PRInt32 aCharsetSource)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpSetDocumentCharset, aCharset);  
+  treeOp->Init(eTreeOpSetDocumentCharset, aCharset, aCharsetSource);  
 }
 
 void

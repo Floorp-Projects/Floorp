@@ -635,7 +635,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
                          TransformBounds(gfxRect(x, y, width, height));
       bounds.RoundOut();
       nsIntRect r;
-      if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(bounds, &r))) {
+      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(bounds, &r))) {
         rect = r;
       } else {
         NS_NOTREACHED("Not going to invalidate the correct area");
@@ -953,7 +953,7 @@ public:
       gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
         gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
       dirtyBounds.RoundOut();
-      if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect))) {
+      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect))) {
         dirtyRect = &tmpDirtyRect;
       }
     }
@@ -1345,15 +1345,6 @@ nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
   r = r.Intersect(r2);
   *aRect = nsIntRect(PRInt32(r.X()), PRInt32(r.Y()),
                      PRInt32(r.Width()), PRInt32(r.Height()));
-}
-
-nsresult
-nsSVGUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
-{
-  *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
-                    PRInt32(aIn.Width()), PRInt32(aIn.Height()));
-  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height) == aIn
-    ? NS_OK : NS_ERROR_FAILURE;
 }
 
 gfxRect

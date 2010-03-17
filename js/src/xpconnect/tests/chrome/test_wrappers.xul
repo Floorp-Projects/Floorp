@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 500931"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=533596"
+     target="_blank">Mozilla Bug 533596</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 533596 **/
+
+  function go() {
+    var win = $('ifr').contentWindow;
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    todo_is(utils.getClassName(window), "XPCSafeJSObjectWrapper", "our window is wrapped correctly")
+    todo_is(utils.getClassName(location), "XPCSafeJSObjectWrapper", "our location is wrapped correctly")
+    is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
+    is(utils.getClassName(win.location), "XPCNativeWrapper", "deep wrapping works");
+    is(win.location.href, "http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
+       "can still get strings out");
+
+    var unsafeWin = win.wrappedJSObject;
+    is(utils.getClassName(unsafeWin), "XPCSafeJSObjectWrapper", "can get a SJOW");
+    is(utils.getClassName(unsafeWin.location), "XPCSafeJSObjectWrapper", "deep wrapping works");
+
+    unsafeWin.run_test(ok, win, unsafeWin);
+
+    win.setTimeout(function() {
+                       is(utils.getClassName(this), "XPCNativeWrapper",
+                          "this is wrapped correctly");
+                       SimpleTest.finish();
+                   }, 0)
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  ]]></script>
+  <iframe type="content"
+          src="http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html"
+          onload="go()"
+          id="ifr">
+  </iframe>
+</window>

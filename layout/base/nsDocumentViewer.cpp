@@ -946,7 +946,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                               getter_AddRefs(window));
 
       if (window) {
-        window->SetNewDocument(mDocument, aState, PR_TRUE);
+        window->SetNewDocument(mDocument, aState);
 
         nsJSContext::LoadStart();
       }
@@ -1695,7 +1695,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     // Set the script global object on the new document
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
     if (window) {
-      window->SetNewDocument(newDoc, nsnull, PR_TRUE);
+      window->SetNewDocument(newDoc, nsnull);
     }
 
     // Clear the list of old child docshells. CChild docshells for the new
