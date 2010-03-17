@@ -1514,33 +1514,29 @@ namespace nanojit
 #ifdef NJ_VERBOSE
     extern const char* lirNames[];
 
-    /**
-     * map address ranges to meaningful names.
-     */
-    class LabelMap
+    // Maps address ranges to meaningful names.
+    class AddrNameMap
     {
         Allocator& allocator;
         class Entry
         {
         public:
             Entry(int) : name(0), size(0), align(0) {}
-            Entry(char *n, size_t s, size_t a) : name(n),size(s),align(a) {}
+            Entry(char *n, size_t s, size_t a) : name(n), size(s), align(a) {}
             char* name;
             size_t size:29, align:3;
         };
-        TreeMap<const void*, Entry*> names;
-        LogControl *logc;
-        char buf[5000], *end;
-        void formatAddr(const void *p, char *buf);
+        TreeMap<const void*, Entry*> names;     // maps code regions to names
     public:
-        LabelMap(Allocator& allocator, LogControl* logc);
-        void add(const void *p, size_t size, size_t align, const char *name);
-        const char *dup(const char *);
-        const char *format(const void *p);
+        AddrNameMap(Allocator& allocator);
+        void addAddrRange(const void *p, size_t size, size_t align, const char *name);
+        void lookupAddr(void *p, char*& name, int32_t& offset);
     };
 
+    // Maps LIR instructions to meaningful names.
     class LirNameMap
     {
+    private:
         Allocator& alloc;
 
         template <class Key>
@@ -1556,8 +1552,12 @@ namespace nanojit
                 return c;
             }
         };
+
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
+        CountMap<const char *> namecounts;
+
+        void addNameWithSuffix(LInsp i, const char *s, int suffix, bool ignoreOneSuffix);
 
         class Entry
         {
@@ -1566,41 +1566,77 @@ namespace nanojit
             Entry(char* n) : name(n) {}
             char* name;
         };
+
         HashMap<LInsp, Entry*> names;
-        void formatImm(int32_t c, char *buf);
-        void formatImmq(uint64_t c, char *buf);
 
     public:
-        LabelMap *labels;
-        LirNameMap(Allocator& alloc, LabelMap *lm)
+        LirNameMap(Allocator& alloc)
             : alloc(alloc),
             lircounts(alloc),
             funccounts(alloc),
-            names(alloc),
-            labels(lm)
+            namecounts(alloc),
+            names(alloc)
         {}
 
-        void addName(LInsp i, const char *s);
-        void copyName(LInsp i, const char *s, int suffix);
-        char* formatAccSet(LInsp ins, bool isLoad, char* buf);
-        const char *formatRef(LIns *ref);
-        const char *formatIns(LInsp i);
-        void formatGuard(LInsp i, char *buf);
-        void formatGuardXov(LInsp i, char *buf);
+        void        addName(LInsp ins, const char *s);  // gives 'ins' a special name
+        const char* createName(LInsp ins);              // gives 'ins' a generic name
+        const char* lookupName(LInsp ins);
+    };
+
+    // We use big buffers for cases where we need to fit a whole instruction,
+    // and smaller buffers for all the others.  These should easily be long
+    // enough, but for safety the formatXyz() functions check and won't exceed
+    // those limits.
+    class InsBuf {
+    public:
+        static const size_t len = 1000;
+        char buf[len];
+    };
+    class RefBuf {
+    public:
+        static const size_t len = 200;
+        char buf[len];
+    };
+
+    class LInsPrinter
+    {
+    private:
+        Allocator& alloc;
+
+        void formatImm(RefBuf* buf, int32_t c);
+        void formatImmq(RefBuf* buf, uint64_t c);
+        void formatGuard(InsBuf* buf, LInsp ins);
+        void formatGuardXov(InsBuf* buf, LInsp ins);
+        char* formatAccSet(RefBuf* buf, LInsp ins, bool isLoad);
+
+    public:
+        LInsPrinter(Allocator& alloc)
+            : alloc(alloc)
+        {
+            addrNameMap = new (alloc) AddrNameMap(alloc);
+            lirNameMap = new (alloc) LirNameMap(alloc);
+        }
+
+        char *formatAddr(RefBuf* buf, void* p);
+        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatIns(InsBuf* buf, LInsp ins);
+
+        AddrNameMap* addrNameMap;
+        LirNameMap* lirNameMap;
     };
 
 
     class VerboseWriter : public LirWriter
     {
         InsList code;
-        LirNameMap* names;
+        LInsPrinter* printer;
         LogControl* logc;
         const char* const prefix;
         bool const always_flush;
     public:
-        VerboseWriter(Allocator& alloc, LirWriter *out,
-                      LirNameMap* names, LogControl* logc, const char* prefix = "", bool always_flush = false)
-            : LirWriter(out), code(alloc), names(names), logc(logc), prefix(prefix), always_flush(always_flush)
+        VerboseWriter(Allocator& alloc, LirWriter *out, LInsPrinter* printer, LogControl* logc,
+                      const char* prefix = "", bool always_flush = false)
+            : LirWriter(out), code(alloc), printer(printer), logc(logc), prefix(prefix), always_flush(always_flush)
         {}
 
         LInsp add(LInsp i) {
@@ -1621,9 +1657,10 @@ namespace nanojit
         void flush()
         {
             if (!code.isEmpty()) {
+                InsBuf b;
                 int32_t count = 0;
                 for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail) {
-                    logc->printf("%s    %s\n",prefix,names->formatIns(p->head));
+                    logc->printf("%s    %s\n", prefix, printer->formatIns(&b, p->head));
                     count++;
                 }
                 code.clear();
@@ -1822,7 +1859,7 @@ namespace nanojit
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
 
             debug_only (void validate() const;)
-            verbose_only(LirNameMap* names;)
+            verbose_only(LInsPrinter* printer;)
 
             int32_t insCount();
             size_t  byteCount();
@@ -2072,16 +2109,16 @@ namespace nanojit
     class ReverseLister : public LirFilter
     {
         Allocator&   _alloc;
-        LirNameMap*  _names;
+        LInsPrinter* _printer;
         const char*  _title;
         StringList   _strs;
         LogControl*  _logc;
     public:
         ReverseLister(LirFilter* in, Allocator& alloc,
-                      LirNameMap* names, LogControl* logc, const char* title)
+                      LInsPrinter* printer, LogControl* logc, const char* title)
             : LirFilter(in)
             , _alloc(alloc)
-            , _names(names)
+            , _printer(printer)
             , _title(title)
             , _strs(alloc)
             , _logc(logc)

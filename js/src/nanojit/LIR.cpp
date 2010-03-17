@@ -97,7 +97,8 @@ namespace nanojit
     LInsp ReverseLister::read()
     {
         LInsp i = in->read();
-        const char* str = _names->formatIns(i);
+        InsBuf b;
+        const char* str = _printer->formatIns(&b, i);
         char* cpy = new (_alloc) char[strlen(str)+1];
         VMPI_strcpy(cpy, str);
         _strs.insert(cpy);
@@ -114,7 +115,7 @@ namespace nanojit
     // LCompressedBuffer
     LirBuffer::LirBuffer(Allocator& alloc) :
 #ifdef NJ_VERBOSE
-          names(NULL),
+          printer(NULL),
 #endif
           abi(ABI_FASTCALL), state(NULL), param1(NULL), sp(NULL), rp(NULL),
           _allocator(alloc)
@@ -1652,10 +1653,12 @@ namespace nanojit
         logc->printf("\n");
 
         // print live exprs, going forwards
-        LirNameMap *names = frag->lirbuf->names;
+        LInsPrinter *printer = frag->lirbuf->printer;
         bool newblock = true;
         for (Seq<RetiredEntry*>* p = live.retired.get(); p != NULL; p = p->tail) {
             RetiredEntry* e = p->head;
+            InsBuf ib;
+            RefBuf rb;
             char livebuf[4000], *s=livebuf;
             *s = 0;
             if (!newblock && e->i->isop(LIR_label)) {
@@ -1663,7 +1666,7 @@ namespace nanojit
             }
             newblock = false;
             for (Seq<LIns*>* p = e->live; p != NULL; p = p->tail) {
-                VMPI_strcpy(s, names->formatRef(p->head));
+                VMPI_strcpy(s, printer->formatRef(&rb, p->head));
                 s += VMPI_strlen(s);
                 *s++ = ' '; *s = 0;
                 NanoAssert(s < livebuf+sizeof(livebuf));
@@ -1671,11 +1674,11 @@ namespace nanojit
             /* If the LIR insn is pretty short, print it and its
                live-after set on the same line.  If not, put
                live-after set on a new line, suitably indented. */
-            const char* insn_text = names->formatIns(e->i);
+            const char* insn_text = printer->formatIns(&ib, e->i);
             if (VMPI_strlen(insn_text) >= 30-2) {
-                logc->printf("  %-30s\n  %-30s %s\n", names->formatIns(e->i), "", livebuf);
+                logc->printf("  %-30s\n  %-30s %s\n", insn_text, "", livebuf);
             } else {
-                logc->printf("  %-30s %s\n", names->formatIns(e->i), livebuf);
+                logc->printf("  %-30s %s\n", insn_text, livebuf);
             }
 
             if (e->i->isGuard() || e->i->isBranch() || e->i->isRet()) {
@@ -1685,16 +1688,71 @@ namespace nanojit
         }
     }
 
-    void LirNameMap::addName(LInsp i, const char* name) {
-        if (!names.containsKey(i)) {
-            char *copy = new (alloc) char[VMPI_strlen(name)+1];
-            VMPI_strcpy(copy, name);
+
+    void LirNameMap::addNameWithSuffix(LInsp ins, const char *name, int suffix,
+                                       bool ignoreOneSuffix) {
+        // The lookup may succeed, ie. we may already have a name for this
+        // instruction.  This can happen because of CSE.  Eg. if we have this:
+        //
+        //   ins = addName("foo", insImm(0))
+        //
+        // that assigns the name "foo1" to 'ins'.  If we later do this:
+        //
+        //   ins2 = addName("foo", insImm(0))
+        //
+        // then CSE will cause 'ins' and 'ins2' to be equal.  So 'ins2'
+        // already has a name ("foo1") and there's no need to generate a new
+        // name "foo2".
+        //
+        if (!names.containsKey(ins)) {
+            const int N = 100;
+            char name2[N];
+            if (suffix == 1 && ignoreOneSuffix) {
+                VMPI_snprintf(name2, N, "%s", name);                // don't add '1' suffix
+            } else if (VMPI_isdigit(name[VMPI_strlen(name)-1])) {
+                VMPI_snprintf(name2, N, "%s_%d", name, suffix);     // use '_' to avoid confusion
+            } else {
+                VMPI_snprintf(name2, N, "%s%d", name, suffix);      // normal case
+            }
+
+            char *copy = new (alloc) char[VMPI_strlen(name2)+1];
+            VMPI_strcpy(copy, name2);
             Entry *e = new (alloc) Entry(copy);
-            names.put(i, e);
+            names.put(ins, e);
         }
     }
 
-    char* LirNameMap::formatAccSet(LInsp ins, bool isLoad, char* buf) {
+    void LirNameMap::addName(LInsp ins, const char* name) {
+        addNameWithSuffix(ins, name, namecounts.add(name), /*ignoreOneSuffix*/true);
+    }
+
+    const char* LirNameMap::createName(LInsp ins) {
+        if (ins->isCall()) {
+#if NJ_SOFTFLOAT_SUPPORTED
+            if (ins->isop(LIR_callh)) {
+                ins = ins->oprnd1();    // we've presumably seen the other half already
+            } else
+#endif
+            {
+                addNameWithSuffix(ins, ins->callInfo()->_name, funccounts.add(ins->callInfo()),
+                                  /*ignoreOneSuffix*/false);
+            }
+        } else {
+            addNameWithSuffix(ins, lirNames[ins->opcode()], lircounts.add(ins->opcode()),
+                              /*ignoreOneSuffix*/false);
+                
+        }
+        return names.get(ins)->name;
+    }
+
+    const char* LirNameMap::lookupName(LInsp ins)
+    {
+        Entry* e = names.get(ins);
+        return e ? e->name : NULL;
+    }
+
+
+    char* LInsPrinter::formatAccSet(RefBuf* buf, LInsp ins, bool isLoad) {
         AccSet accSet = ins->accSet();
         int i = 0;
         if ((isLoad && accSet == ACC_LOAD_ANY) ||
@@ -1702,120 +1760,116 @@ namespace nanojit
         {
             // boring, don't bother with a suffix
         } else {
-            buf[i++] = '.';
-            if (accSet & ACC_READONLY) { buf[i++] = 'r'; accSet &= ~ACC_READONLY; }
-            if (accSet & ACC_STACK)    { buf[i++] = 's'; accSet &= ~ACC_STACK; }
-            if (accSet & ACC_OTHER)    { buf[i++] = 'o'; accSet &= ~ACC_OTHER; }
+            buf->buf[i++] = '.';
+            if (accSet & ACC_READONLY) { buf->buf[i++] = 'r'; accSet &= ~ACC_READONLY; }
+            if (accSet & ACC_STACK)    { buf->buf[i++] = 's'; accSet &= ~ACC_STACK; }
+            if (accSet & ACC_OTHER)    { buf->buf[i++] = 'o'; accSet &= ~ACC_OTHER; }
             // This assertion will fail if we add a new accSet value but
             // forget to handle it here.
             NanoAssert(accSet == 0);
         }
-        buf[i] = 0;
-        return buf;
+        buf->buf[i] = 0;
+        return buf->buf;
     }
 
-    void LirNameMap::copyName(LInsp i, const char *s, int suffix) {
-        char s2[200];
-        if (VMPI_isdigit(s[VMPI_strlen(s)-1])) {
-            // if s ends with a digit, add '_' to clarify the suffix
-            VMPI_sprintf(s2,"%s_%d", s, suffix);
-        } else {
-            VMPI_sprintf(s2,"%s%d", s, suffix);
-        }
-        addName(i, s2);
-    }
-
-    void LirNameMap::formatImm(int32_t c, char *buf) {
+    void LInsPrinter::formatImm(RefBuf* buf, int32_t c) {
         if (-10000 < c || c < 10000) {
-            VMPI_sprintf(buf,"%d", c);
+            VMPI_snprintf(buf->buf, buf->len, "%d", c);
         } else {
 #if !defined NANOJIT_64BIT
-            VMPI_sprintf(buf, "%s", labels->format((void*)c));
+            formatAddr(buf, (void*)c);
 #else
-            VMPI_sprintf(buf, "0x%x", (unsigned int)c);
+            VMPI_snprintf(buf->buf, buf->len, "0x%x", (unsigned int)c);
 #endif
         }
     }
 
-    void LirNameMap::formatImmq(uint64_t c, char *buf) {
+    void LInsPrinter::formatImmq(RefBuf* buf, uint64_t c) {
         if (-10000 < (int64_t)c || c < 10000) {
-            VMPI_sprintf(buf, "%dLL", (int)c);
+            VMPI_snprintf(buf->buf, buf->len, "%dLL", (int)c);
         } else {
 #if defined NANOJIT_64BIT
-            VMPI_sprintf(buf, "%s", labels->format((void*)c));
+            formatAddr(buf, (void*)c);
 #else
-            VMPI_sprintf(buf, "0x%llxLL", c);
+            VMPI_snprintf(buf->buf, buf->len, "0x%llxLL", c);
 #endif
         }
     }
 
-    const char* LirNameMap::formatRef(LIns *ref)
+    char* LInsPrinter::formatAddr(RefBuf* buf, void* p)
     {
-        char buffer[200], *buf=buffer;
-        buf[0]=0;
-        if (names.containsKey(ref)) {
-            const char* name = names.get(ref)->name;
-            VMPI_strcat(buf, name);
+        char*   name;
+        int32_t offset;
+        addrNameMap->lookupAddr(p, name, offset);
+
+        if (name) {
+            if (offset != 0) {
+                VMPI_snprintf(buf->buf, buf->len, "%p %s+%d", p, name, offset);
+            } else {
+                VMPI_snprintf(buf->buf, buf->len, "%p %s", p, name);
+            }
+        } else {
+            VMPI_snprintf(buf->buf, buf->len, "%p", p);
+        }
+
+        return buf->buf;
+    }
+
+    char* LInsPrinter::formatRef(RefBuf* buf, LIns *ref)
+    {
+        // - If 'ref' already has a name, use it.
+        // - Otherwise, if it's a constant, use the constant.
+        // - Otherwise, give it a name and use it.
+        const char* name = lirNameMap->lookupName(ref);
+        if (name) {
+            VMPI_snprintf(buf->buf, buf->len, "%s", name);
         }
         else if (ref->isconstf()) {
-            VMPI_sprintf(buf, "%g", ref->imm64f());
+            VMPI_snprintf(buf->buf, buf->len, "%g", ref->imm64f());
         }
         else if (ref->isconstq()) {
-            formatImmq(ref->imm64(), buf);
+            formatImmq(buf, ref->imm64());
         }
         else if (ref->isconst()) {
-            formatImm(ref->imm32(), buf);
+            formatImm(buf, ref->imm32());
         }
         else {
-            if (ref->isCall()) {
-#if NJ_SOFTFLOAT_SUPPORTED
-                if (ref->isop(LIR_callh)) {
-                    // we've presumably seen the other half already
-                    ref = ref->oprnd1();
-                } else
-#endif
-                {
-                    copyName(ref, ref->callInfo()->_name, funccounts.add(ref->callInfo()));
-                }
-            } else {
-                NanoAssert(size_t(ref->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
-                copyName(ref, lirNames[ref->opcode()], lircounts.add(ref->opcode()));
-            }
-            const char* name = names.get(ref)->name;
-            VMPI_strcat(buf, name);
+            name = lirNameMap->createName(ref);
+            VMPI_snprintf(buf->buf, buf->len, "%s", name);
         }
-        return labels->dup(buffer);
+        return buf->buf;
     }
 
-    const char* LirNameMap::formatIns(LIns* i)
+    char* LInsPrinter::formatIns(InsBuf* buf, LIns* i)
     {
-        char sbuf[4096];
-        char *s = sbuf;
+        char *s = buf->buf;
+        size_t n = buf->len;
+        RefBuf b1, b2, b3, b4;
         LOpcode op = i->opcode();
         switch (op)
         {
             case LIR_int:
-                VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->imm32());
+                VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->imm32());
                 break;
 
             case LIR_alloc:
-                VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->size());
+                VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->size());
                 break;
 
 #ifdef NANOJIT_64BIT
             case LIR_quad:
-                VMPI_sprintf(s, "%s = %s %X:%X", formatRef(i), lirNames[op],
+                VMPI_snprintf(s, n, "%s = %s %X:%X", formatRef(&b1, i), lirNames[op],
                              i->imm64_1(), i->imm64_0());
                 break;
 #endif
 
             case LIR_float:
-                VMPI_sprintf(s, "%s = %s %g", formatRef(i), lirNames[op], i->imm64f());
+                VMPI_snprintf(s, n, "%s = %s %g", formatRef(&b1, i), lirNames[op], i->imm64f());
                 break;
 
             case LIR_start:
             case LIR_regfence:
-                VMPI_sprintf(s, "%s", lirNames[op]);
+                VMPI_snprintf(s, n, "%s", lirNames[op]);
                 break;
 
             case LIR_icall:
@@ -1823,64 +1877,68 @@ namespace nanojit
             CASE64(LIR_qcall:) {
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
+                ssize_t m = n;
                 if (call->isIndirect())
-                    VMPI_sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(--argc)));
+                    m -= VMPI_snprintf(s, m, "%s = %s [%s] ( ", formatRef(&b1, i), lirNames[op],
+                                       formatRef(&b2, i->arg(--argc)));
                 else
-                    VMPI_sprintf(s, "%s = %s #%s ( ", formatRef(i), lirNames[op], call->_name);
+                    m -= VMPI_snprintf(s, m, "%s = %s #%s ( ", formatRef(&b1, i), lirNames[op],
+                                       call->_name);
+                if (m < 0) break;
                 for (int32_t j = argc - 1; j >= 0; j--) {
                     s += VMPI_strlen(s);
-                    VMPI_sprintf(s, "%s ",formatRef(i->arg(j)));
+                    m -= VMPI_snprintf(s, m, "%s ",formatRef(&b2, i->arg(j)));
+                    if (m < 0) break;
                 }
                 s += VMPI_strlen(s);
-                VMPI_sprintf(s, ")");
+                m -= VMPI_snprintf(s, m, ")");
                 break;
             }
 
-            case LIR_jtbl:
-                VMPI_sprintf(s, "%s %s [ ", lirNames[op], formatRef(i->oprnd1()));
-                for (uint32_t j = 0, n = i->getTableSize(); j < n; j++) {
-                    if (VMPI_strlen(sbuf) + 50 > sizeof(sbuf)) {
-                        s += VMPI_strlen(s);
-                        VMPI_sprintf(s, "... ");
-                        break;
-                    }
+            case LIR_jtbl: {
+                ssize_t m = n;
+                m -= VMPI_snprintf(s, m, "%s %s [ ", lirNames[op], formatRef(&b1, i->oprnd1()));
+                if (m < 0) break;
+                for (uint32_t j = 0, sz = i->getTableSize(); j < sz; j++) {
                     LIns* target = i->getTarget(j);
                     s += VMPI_strlen(s);
-                    VMPI_sprintf(s, "%s ", target ? formatRef(target) : "unpatched");
+                    m -= VMPI_snprintf(s, m, "%s ", target ? formatRef(&b2, target) : "unpatched");
+                    if (m < 0) break;
                 }
                 s += VMPI_strlen(s);
-                VMPI_sprintf(s, "]");
+                m -= VMPI_snprintf(s, m, "]");
                 break;
+            }
 
             case LIR_param: {
                 uint32_t arg = i->paramArg();
                 if (!i->paramKind()) {
                     if (arg < sizeof(Assembler::argRegs)/sizeof(Assembler::argRegs[0])) {
-                        VMPI_sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+                        VMPI_snprintf(s, n, "%s = %s %d %s", formatRef(&b1, i), lirNames[op],
                             arg, gpn(Assembler::argRegs[arg]));
                     } else {
-                        VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], arg);
+                        VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], arg);
                     }
                 } else {
-                    VMPI_sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+                    VMPI_snprintf(s, n, "%s = %s %d %s", formatRef(&b1, i), lirNames[op],
                         arg, gpn(Assembler::savedRegs[arg]));
                 }
                 break;
             }
 
             case LIR_label:
-                VMPI_sprintf(s, "%s:", formatRef(i));
+                VMPI_snprintf(s, n, "%s:", formatRef(&b1, i));
                 break;
 
             case LIR_jt:
             case LIR_jf:
-                VMPI_sprintf(s, "%s %s -> %s", lirNames[op], formatRef(i->oprnd1()),
-                    i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
+                VMPI_snprintf(s, n, "%s %s -> %s", lirNames[op], formatRef(&b1, i->oprnd1()),
+                    i->oprnd2() ? formatRef(&b2, i->oprnd2()) : "unpatched");
                 break;
 
             case LIR_j:
-                VMPI_sprintf(s, "%s -> %s", lirNames[op],
-                    i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
+                VMPI_snprintf(s, n, "%s -> %s", lirNames[op],
+                    i->oprnd2() ? formatRef(&b1, i->oprnd2()) : "unpatched");
                 break;
 
             case LIR_live:
@@ -1889,7 +1947,7 @@ namespace nanojit
             case LIR_ret:
             CASE64(LIR_qret:)
             case LIR_fret:
-                VMPI_sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
+                VMPI_snprintf(s, n, "%s %s", lirNames[op], formatRef(&b1, i->oprnd1()));
                 break;
 
             CASESF(LIR_callh:)
@@ -1905,7 +1963,8 @@ namespace nanojit
             CASE64(LIR_u2q:)
             CASE64(LIR_q2i:)
             case LIR_f2i:
-                VMPI_sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
+                VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i), lirNames[op],
+                             formatRef(&b2, i->oprnd1()));
                 break;
 
             case LIR_x:
@@ -1913,13 +1972,13 @@ namespace nanojit
             case LIR_xf:
             case LIR_xbarrier:
             case LIR_xtbl:
-                formatGuard(i, s);
+                formatGuard(buf, i);
                 break;
 
             case LIR_addxov:
             case LIR_subxov:
             case LIR_mulxov:
-                formatGuardXov(i, s);
+                formatGuardXov(buf, i);
                 break;
 
             case LIR_add:       CASE64(LIR_qiadd:)
@@ -1951,25 +2010,20 @@ namespace nanojit
             case LIR_fle:
             case LIR_fgt:
             case LIR_fge:
-                VMPI_sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
-                    formatRef(i->oprnd1()),
-                    formatRef(i->oprnd2()));
-                break;
-
 #if NJ_SOFTFLOAT_SUPPORTED
             case LIR_qjoin:
-                VMPI_sprintf(s, "%s (%s), %s", lirNames[op],
-                     formatRef(i->oprnd1()),
-                     formatRef(i->oprnd2()));
-                 break;
 #endif
+                VMPI_snprintf(s, n, "%s = %s %s, %s", formatRef(&b1, i), lirNames[op],
+                    formatRef(&b2, i->oprnd1()),
+                    formatRef(&b3, i->oprnd2()));
+                break;
 
             CASE64(LIR_qcmov:)
             case LIR_cmov:
-                VMPI_sprintf(s, "%s = %s %s ? %s : %s", formatRef(i), lirNames[op],
-                    formatRef(i->oprnd1()),
-                    formatRef(i->oprnd2()),
-                    formatRef(i->oprnd3()));
+                VMPI_snprintf(s, n, "%s = %s %s ? %s : %s", formatRef(&b1, i), lirNames[op],
+                    formatRef(&b2, i->oprnd1()),
+                    formatRef(&b3, i->oprnd2()),
+                    formatRef(&b4, i->oprnd3()));
                 break;
 
             case LIR_ld:
@@ -1979,36 +2033,31 @@ namespace nanojit
             case LIR_ldzs:
             case LIR_ldsb:
             case LIR_ldss:
-            case LIR_ld32f: {
-                char b[32];
-                VMPI_sprintf(s, "%s = %s%s %s[%d]", formatRef(i), lirNames[op],
-                    formatAccSet(i, /*isLoad*/true, b),
-                    formatRef(i->oprnd1()),
+            case LIR_ld32f:
+                VMPI_snprintf(s, n, "%s = %s%s %s[%d]", formatRef(&b1, i), lirNames[op],
+                    formatAccSet(&b2, i, /*isLoad*/true),
+                    formatRef(&b3, i->oprnd1()),
                     i->disp());
                 break;
-            }
 
             case LIR_sti:
             CASE64(LIR_stqi:)
             case LIR_stfi:
             case LIR_stb:
             case LIR_sts:
-            case LIR_st32f: {
-                char b[32];
-                VMPI_sprintf(s, "%s%s %s[%d] = %s", lirNames[op],
-                    formatAccSet(i, /*isLoad*/false, b),
-                    formatRef(i->oprnd2()),
+            case LIR_st32f:
+                VMPI_snprintf(s, n, "%s%s %s[%d] = %s", lirNames[op],
+                    formatAccSet(&b1, i, /*isLoad*/false),
+                    formatRef(&b2, i->oprnd2()),
                     i->disp(),
-                    formatRef(i->oprnd1()));
+                    formatRef(&b3, i->oprnd1()));
                 break;
-            }
 
             default:
                 NanoAssertMsgf(0, "Can't handle opcode %s\n", lirNames[op]);
                 break;
         }
-        NanoAssert(VMPI_strlen(sbuf) < sizeof(sbuf)-1);
-        return labels->dup(sbuf);
+        return buf->buf;
     }
 #endif
 
@@ -2387,11 +2436,11 @@ namespace nanojit
     #endif /* FEATURE_NANOJIT */
 
 #if defined(NJ_VERBOSE)
-    LabelMap::LabelMap(Allocator& a, LogControl *logc)
-        : allocator(a), names(a), logc(logc), end(buf)
+    AddrNameMap::AddrNameMap(Allocator& a)
+        : allocator(a), names(a)
     {}
 
-    void LabelMap::add(const void *p, size_t size, size_t align, const char *name)
+    void AddrNameMap::addAddrRange(const void *p, size_t size, size_t align, const char *name)
     {
         if (!this || names.containsKey(p))
             return;
@@ -2401,45 +2450,28 @@ namespace nanojit
         names.put(p, e);
     }
 
-    const char *LabelMap::format(const void *p)
+    void AddrNameMap::lookupAddr(void *p, char*& name, int32_t& offset)
     {
-        char b[200];
-
         const void *start = names.findNear(p);
-        if (start != NULL) {
+        if (start) {
             Entry *e = names.get(start);
             const void *end = (const char*)start + e->size;
-            const char *name = e->name;
             if (p == start) {
-                VMPI_sprintf(b, "%p %s", p, name);
-                return dup(b);
+                name = e->name;
+                offset = 0;
             }
             else if (p > start && p < end) {
-                int32_t d = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
-                VMPI_sprintf(b, "%p %s+%d", p, name, d);
-                return dup(b);
+                name = e->name;
+                offset = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
             }
             else {
-                VMPI_sprintf(b, "%p", p);
-                return dup(b);
+                name = NULL;
+                offset = 0;
             }
+        } else {
+            name = NULL;
+            offset = 0;
         }
-        VMPI_sprintf(b, "%p", p);
-        return dup(b);
-    }
-
-    const char *LabelMap::dup(const char *b)
-    {
-        size_t need = VMPI_strlen(b)+1;
-        NanoAssert(need <= sizeof(buf));
-        char *s = end;
-        end += need;
-        if (end > buf+sizeof(buf)) {
-            s = buf;
-            end = s+need;
-        }
-        VMPI_strcpy(s, b);
-        return s;
     }
 
     // ---------------------------------------------------------------
