@@ -464,22 +464,19 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
         return nsnull;
     }
 
-    if (!entry->mDocument) {
+    if (!entry->mDocument && !entry->LoadingFailed()) {
         // open URI
         nsAutoString errMsg;
         // XXX we should get the loader from the actual node
         // triggering the load, but this will do for the time being
-        nsresult rv;
-        rv = txParseDocumentFromURI(aUri, *mLoadedDocuments.mSourceDocument,
-                                    errMsg,
-                                    getter_Transfers(entry->mDocument));
+        entry->mLoadResult =
+            txParseDocumentFromURI(aUri, *mLoadedDocuments.mSourceDocument,
+                                   errMsg, getter_Transfers(entry->mDocument));
 
-        if (NS_FAILED(rv) || !entry->mDocument) {
-            mLoadedDocuments.RawRemoveEntry(entry);
+        if (entry->LoadingFailed()) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
-                         aUri + NS_LITERAL_STRING("': ") + errMsg, rv);
-
-            return nsnull;
+                         aUri + NS_LITERAL_STRING("': ") + errMsg,
+                         entry->mLoadResult);
         }
     }
 
