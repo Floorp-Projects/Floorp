@@ -2179,7 +2179,7 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     if(!list)
         return NS_OK; // No wrappers to update.
 
-    AutoJSRequestWithNoCallContext req(aJSContext);
+    JSAutoRequest req(aJSContext);
 
     Link* cur = list;
     if(cur->obj && !PerformOp(aJSContext, aWay, cur->obj))

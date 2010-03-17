@@ -469,12 +469,15 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         size_t len = 0; /* initialize to avoid warnings */
         do {
             ScheduleWatchdog(cx->runtime, -1);
-            jsrefcount rc = JS_SuspendRequest(cx);
             gCanceled = false;
             errno = 0;
-            char *line = GetLine(file, startline == lineno ? "js> " : "");
+
+            char *line;
+            {
+                JSAutoSuspendRequest suspended(cx);
+                line = GetLine(file, startline == lineno ? "js> " : "");
+            }
             if (!line) {
-                JS_ResumeRequest(cx, rc);
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
                     free(buffer);
@@ -498,7 +501,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                     if (!newBuf) {
                         free(buffer);
                         free(line);
-                        JS_ResumeRequest(cx, rc);
                         JS_ReportOutOfMemory(cx);
                         return;
                     }
@@ -512,7 +514,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 free(line);
             }
             lineno++;
-            JS_ResumeRequest(cx, rc);
             if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
                 hitEOF = JS_TRUE;
                 break;
@@ -1920,8 +1921,15 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
         /* burn the leading lines */
         line2 = JS_PCToLineNumber(cx, script, pc);
-        for (line1 = 0; line1 < line2 - 1; line1++)
-            (void) fgets(linebuf, LINE_BUF_LEN, file); /* Intentionally unused result. */
+        for (line1 = 0; line1 < line2 - 1; line1++) {
+            char *tmp = fgets(linebuf, LINE_BUF_LEN, file);
+            if (!tmp) {
+                JS_ReportError(cx, "failed to read %s fully",
+                               script->filename);
+                ok = JS_FALSE;
+                goto bail;
+            }
+        }
 
         bupline = 0;
         while (pc < end) {
@@ -2947,7 +2955,6 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     const jschar *src;
     size_t srclen;
     JSBool lazy, split, ok;
-    jsval v;
     JSStackFrame *fp;
 
     sobj = NULL;
@@ -2963,7 +2970,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     JS_SetOptions(scx, JS_GetOptions(cx));
 
-    JS_BeginRequest(scx);
+    JS_TransferRequest(cx, scx);
     src = JS_GetStringChars(str);
     srclen = JS_GetStringLength(str);
     split = lazy = JS_FALSE;
@@ -2987,12 +2994,12 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
-        v = BOOLEAN_TO_JSVAL(lazy);
-        ok = JS_SetProperty(cx, sobj, "lazy", &v);
+        AutoValueRooter root(scx, BOOLEAN_TO_JSVAL(lazy));
+        ok = JS_SetProperty(scx, sobj, "lazy", root.addr());
         if (!ok)
             goto out;
         if (split)
-            sobj = split_outerObject(cx, sobj);
+            sobj = split_outerObject(scx, sobj);
     }
 
     if (srclen == 0) {
@@ -3002,7 +3009,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         fp = JS_GetScriptedCaller(cx, NULL);
         JS_SetGlobalObject(scx, sobj);
         JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
-        OBJ_TO_INNER_OBJECT(cx, sobj);
+        OBJ_TO_INNER_OBJECT(scx, sobj);
         if (!sobj) {
             ok = JS_FALSE;
             goto out;
@@ -3012,16 +3019,18 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                  JS_PCToLineNumber(cx, fp->script,
                                                    fp->regs->pc),
                                  rval);
-        if (!ok) {
-            if (JS_GetPendingException(scx, &v))
-                JS_SetPendingException(cx, v);
-            else
-                JS_ReportOutOfMemory(cx);
-        }
     }
 
 out:
-    JS_EndRequest(scx);
+    jsval exceptionValue = JSVAL_NULL;
+    JSBool exception = !ok && JS_GetPendingException(scx, &exceptionValue);
+
+    JS_TransferRequest(scx, cx);
+    if (exception)
+        JS_SetPendingException(cx, exceptionValue);
+    else if (!ok)
+        JS_ClearPendingException(cx);
+
     WITH_LOCKED_CONTEXT_LIST(
         JS_DestroyContextNoGC(scx)
     );
@@ -3135,7 +3144,7 @@ Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
     if (t_ticks == 0) {
         JS_YieldRequest(cx);
     } else {
-        jsrefcount rc = JS_SuspendRequest(cx);
+        JSAutoSuspendRequest suspended(cx);
         PR_Lock(gWatchdogLock);
         PRIntervalTime to_wakeup = PR_IntervalNow() + t_ticks;
         for (;;) {
@@ -3148,7 +3157,6 @@ Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
             t_ticks = to_wakeup - now;
         }
         PR_Unlock(gWatchdogLock);
-        JS_ResumeRequest(cx, rc);
     }
     return !gCanceled;
 }
@@ -3236,9 +3244,9 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     jsuint n;  /* number of threads */
     JSObject *inArr;
     JSObject *arr;
+    JSObject *global;
     ScatterData sd;
     JSBool ok;
-    jsrefcount rc;
 
     sd.lock = NULL;
     sd.cvar = NULL;
@@ -3305,6 +3313,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
+    global = JS_GetGlobalObject(cx);
     for (i = 1; i < n; i++) {
         JSContext *newcx;
         WITH_LOCKED_CONTEXT_LIST(
@@ -3312,9 +3321,11 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         );
         if (!newcx)
             goto fail;
-        JS_BeginRequest(newcx);
-        JS_SetGlobalObject(newcx, JS_GetGlobalObject(cx));
-        JS_EndRequest(newcx);
+
+        {
+            JSAutoTransferRequest transfer(cx, newcx);
+            JS_SetGlobalObject(newcx, global);
+        }
         JS_ClearContextThread(newcx);
         sd.threads[i].cx = newcx;
     }
@@ -3347,11 +3358,12 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
 
     DoScatteredWork(cx, &sd.threads[0]);
 
-    rc = JS_SuspendRequest(cx);
-    for (i = 1; i < n; i++) {
-        PR_JoinThread(sd.threads[i].thr);
+    {
+        JSAutoSuspendRequest suspended(cx);
+        for (i = 1; i < n; i++) {
+            PR_JoinThread(sd.threads[i].thr);
+        }
     }
-    JS_ResumeRequest(cx, rc);
 
 success:
     arr = JS_NewArrayObject(cx, n, sd.results);
