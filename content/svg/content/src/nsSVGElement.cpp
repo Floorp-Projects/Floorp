@@ -91,6 +91,7 @@
 #include "prdtoa.h"
 #include <stdarg.h>
 #ifdef MOZ_SMIL
+#include "nsSMILMappedAttribute.h"
 #include "nsSVGTransformSMILAttr.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGTransformable.h"
@@ -738,6 +739,40 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mContentStyleRule);
   }
 
+#ifdef MOZ_SMIL
+  // Update & walk the animated content style rule, to include style from
+  // animated mapped attributes.  But first, get nsPresContext to check
+  // whether this is a "no-animation restyle". (This should match the check
+  // in nsHTMLCSSStyleSheet::RulesMatching(), where we determine whether to
+  // apply the SMILOverrideStyle.)
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ASSERTION(doc, "SVG element without doc");
+  if (doc) {
+    nsIPresShell* shell = doc->GetPrimaryShell();
+    nsPresContext* context = shell ? shell->GetPresContext() : nsnull;
+    if (context && context->IsProcessingRestyles() &&
+        !context->IsProcessingAnimationStyleChange()) {
+      // Any style changes right now could trigger CSS Transitions. We don't
+      // want that to happen from SMIL-animated value of mapped attrs, so
+      // ignore animated value for now, and request an animation restyle to
+      // get our animated value noticed.
+      context->PresShell()->RestyleForAnimation(this);
+    } else {
+      // Ok, this is an animation restyle -- go ahead and update/walk the
+      // animated content style rule.
+      nsICSSStyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
+      if (!animContentStyleRule) {
+        UpdateAnimatedContentStyleRule();
+        animContentStyleRule = GetAnimatedContentStyleRule();
+      }
+      if (animContentStyleRule) {
+        animContentStyleRule->RuleMatched();
+        aRuleWalker->Forward(animContentStyleRule);
+      }
+    }
+  }
+#endif // MOZ_SMIL
+
   return NS_OK;
 }
 
@@ -1021,6 +1056,101 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
                           data.modType, hasListeners, PR_TRUE, nsnull);
 }
 
+//------------------------------------------------------------------------
+// Helper class: MappedAttrParser, for parsing values of mapped attributes
+class MappedAttrParser {
+public:
+  MappedAttrParser(mozilla::css::Loader* aLoader,
+                   nsIURI* aDocURI,
+                   already_AddRefed<nsIURI> aBaseURI,
+                   nsIPrincipal* aNodePrincipal);
+  ~MappedAttrParser();
+
+  // Parses a mapped attribute value.
+  void ParseMappedAttrValue(nsIAtom* aMappedAttrName,
+                            nsAString& aMappedAttrValue);
+
+  // If we've parsed any values for mapped attributes, this method returns
+  // a new already_AddRefed nsICSSStyleRule that incorporates the parsed
+  // values. Otherwise, this method returns null. 
+  already_AddRefed<nsICSSStyleRule> CreateStyleRule();
+
+private:
+  // MEMBER DATA
+  // -----------
+  nsCSSParser       mParser;
+
+  // Arguments for nsCSSParser::ParseProperty
+  nsIURI*           mDocURI;
+  nsCOMPtr<nsIURI>  mBaseURI;
+  nsIPrincipal*     mNodePrincipal;
+
+  // Declaration for storing parsed values (lazily initialized)
+  nsCSSDeclaration* mDecl;
+};
+
+MappedAttrParser::MappedAttrParser(mozilla::css::Loader* aLoader,
+                                   nsIURI* aDocURI,
+                                   already_AddRefed<nsIURI> aBaseURI,
+                                   nsIPrincipal* aNodePrincipal)
+  : mParser(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
+    mNodePrincipal(aNodePrincipal), mDecl(nsnull)
+{
+  // mParser should successfully construct, now that we have infallible malloc.
+  NS_ABORT_IF_FALSE(mParser, "parser failed to initialize?");
+
+  // SVG and CSS differ slightly in their interpretation of some of
+  // the attributes.  SVG allows attributes of the form: font-size="5"
+  // (style="font-size: 5" if using a style attribute)
+  // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
+  // Set a flag to pass information to the parser so that we can use
+  // the CSS parser to parse the font-size attribute.  Note that this
+  // does *not* affect the use of CSS stylesheets, which will still
+  // require units.
+  mParser.SetSVGMode(PR_TRUE);
+}
+
+MappedAttrParser::~MappedAttrParser()
+{
+  NS_ABORT_IF_FALSE(!mDecl,
+                    "If mDecl was initialized, it should have been converted "
+                    "into a style rule (and had its pointer cleared)");
+}
+
+void
+MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
+                                       nsAString& aMappedAttrValue)
+{
+  if (!mDecl) {
+    // Need to do lazy initializion of declaration.
+    mDecl = new nsCSSDeclaration();
+    mDecl->InitializeEmpty();
+  }
+
+  // Get the nsCSSProperty ID for our mapped attribute.
+  nsCSSProperty propertyID =
+    nsCSSProps::LookupProperty(nsAtomString(aMappedAttrName));
+  PRBool changed; // outparam for ParseProperty. (ignored)
+  mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
+                        mNodePrincipal, mDecl, &changed);
+}
+
+already_AddRefed<nsICSSStyleRule>
+MappedAttrParser::CreateStyleRule()
+{
+  if (!mDecl) {
+    return nsnull; // No mapped attributes were parsed
+  }
+
+  nsCOMPtr<nsICSSStyleRule> rule;
+  if (NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(rule), nsnull, mDecl))) {
+    NS_WARNING("could not create style rule from mapped attributes");
+    mDecl->RuleAbort(); // deletes declaration
+  }
+  mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
+  return rule.forget();
+}
+
 //----------------------------------------------------------------------
 // Implementation Helpers:
 
@@ -1047,64 +1177,98 @@ nsSVGElement::UpdateContentStyleRule()
     return;
   }
 
-  // Try to fetch the CSS Parser from the document.
-  nsCSSParser parser(doc->CSSLoader());
-  if (!parser) {
-    NS_WARNING("failed to get a css parser");
-    return;
-  }
-
-  // SVG and CSS differ slightly in their interpretation of some of
-  // the attributes.  SVG allows attributes of the form: font-size="5"
-  // (style="font-size: 5" if using a style attribute)
-  // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
-  // Set a flag to pass information to the parser so that we can use
-  // the CSS parser to parse the font-size attribute.  Note that this
-  // does *not* affect the use of CSS stylesheets, which will still
-  // require units.
-  parser.SetSVGMode(PR_TRUE);
-
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-  nsIURI *docURI = doc->GetDocumentURI();
-  nsCSSDeclaration* declaration = nsnull;
+  MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
+                                    GetBaseURI(), NodePrincipal());
 
   for (PRUint32 i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
 
-    // Create the nsCSSDeclaration if we haven't already.
-    if (!declaration) {
-      declaration = new nsCSSDeclaration();
-      if (!declaration) {
-        NS_WARNING("Failed to allocate nsCSSDeclaration");
-        return;
-      }
-      if (!declaration->InitializeEmpty()) {
-        NS_WARNING("could not initialize nsCSSDeclaration");
-        declaration->RuleAbort();  // deletes declaration
-        return;
-      }
-    }
-
     nsAutoString value;
     mAttrsAndChildren.AttrAt(i)->ToString(value);
+    mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
+  }
+  mContentStyleRule = mappedAttrParser.CreateStyleRule();
+}
 
-    PRBool changed;
-    parser.ParseProperty(
-      nsCSSProps::LookupProperty(nsAtomString(attrName->Atom())), value,
-      docURI, baseURI, NodePrincipal(), declaration, &changed);
+#ifdef MOZ_SMIL
+static void
+ParseMappedAttrAnimValueCallback(void*    aObject,
+                                 nsIAtom* aPropertyName,
+                                 void*    aPropertyValue,
+                                 void*    aData)
+{
+  NS_ABORT_IF_FALSE(aPropertyName != SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                    "animated content style rule should have been removed "
+                    "from properties table already (we're rebuilding it now)");
+
+  MappedAttrParser* mappedAttrParser =
+    static_cast<MappedAttrParser*>(aData);
+
+  nsStringBuffer* valueBuf = static_cast<nsStringBuffer*>(aPropertyValue);
+  nsAutoString value;
+  PRUint32 len = NS_strlen(static_cast<PRUnichar*>(valueBuf->Data()));
+  valueBuf->ToString(len, value);
+
+  mappedAttrParser->ParseMappedAttrValue(aPropertyName, value);
+}
+
+// Callback for freeing animated content style rule, in property table.
+static void
+ReleaseStyleRule(void*    aObject,       /* unused */
+                 nsIAtom* aPropertyName,
+                 void*    aPropertyValue,
+                 void*    aData          /* unused */)
+{
+  NS_ABORT_IF_FALSE(aPropertyName == SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                    "unexpected property name, for "
+                    "animated content style rule");
+  nsICSSStyleRule* styleRule = static_cast<nsICSSStyleRule*>(aPropertyValue);
+  NS_ABORT_IF_FALSE(styleRule, "unexpected null style rule");
+  styleRule->Release();
+}
+
+void
+nsSVGElement::UpdateAnimatedContentStyleRule()
+{
+  NS_ABORT_IF_FALSE(!GetAnimatedContentStyleRule(),
+                    "Animated content style rule already set");
+
+  nsIDocument* doc = GetOwnerDoc();
+  if (!doc) {
+    NS_ERROR("SVG element without owner document");
+    return;
   }
 
-  if (declaration) {
-    nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule),
-                                     nsnull, declaration);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("could not create contentstylerule");
-      declaration->RuleAbort();  // deletes declaration
-    }
+  MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
+                                    GetBaseURI(), NodePrincipal());
+  doc->PropertyTable()->Enumerate(this, SMIL_MAPPED_ATTR_ANIMVAL,
+                                  ParseMappedAttrAnimValueCallback,
+                                  &mappedAttrParser);
+ 
+  nsRefPtr<nsICSSStyleRule>
+    animContentStyleRule(mappedAttrParser.CreateStyleRule());
+
+  if (animContentStyleRule) {
+    nsresult rv = SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                              animContentStyleRule.get(), ReleaseStyleRule);
+    animContentStyleRule.forget();
+    NS_ABORT_IF_FALSE(rv == NS_OK,
+                      "SetProperty failed (or overwrote something)");
   }
 }
+
+nsICSSStyleRule*
+nsSVGElement::GetAnimatedContentStyleRule()
+{
+  return
+    static_cast<nsICSSStyleRule*>(GetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                                              nsnull));
+}
+#endif // MOZ_SMIL
 
 nsISVGValue*
 nsSVGElement::GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName)
@@ -1766,7 +1930,7 @@ nsSVGElement::RecompileScriptEventListeners()
 
 #ifdef MOZ_SMIL
 nsISMILAttr*
-nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
+nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
 {
   // Transforms:
   if (aName == nsGkAtoms::transform) {
@@ -1860,6 +2024,17 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
   if (aName == nsGkAtoms::preserveAspectRatio) {
     nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
     return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+  }
+
+  // Mapped attributes:
+  if (IsAttributeMapped(aName)) {
+    nsCSSProperty prop = nsCSSProps::LookupProperty(nsAtomString(aName));
+    // Check IsPropertyAnimatable to avoid attributes that...
+    //  - map to explicitly unanimatable properties (e.g. 'direction')
+    //  - map to unsupported attributes (e.g. 'glyph-orientation-horizontal')
+    if (nsSMILCSSProperty::IsPropertyAnimatable(prop)) {
+      return new nsSMILMappedAttribute(prop, this);
+    }
   }
 
   return nsnull;

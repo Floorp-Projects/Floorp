@@ -221,13 +221,16 @@ nsPluginErrorEvent::Run()
 class nsPluginCrashedEvent : public nsRunnable {
 public:
   nsCOMPtr<nsIContent> mContent;
+  nsString mMinidumpID;
   nsString mPluginName;
   PRBool mSubmittedCrashReport;
 
   nsPluginCrashedEvent(nsIContent* aContent,
+                       const nsAString& aMinidumpID,
                        const nsAString& aPluginName,
                        PRBool submittedCrashReport)
     : mContent(aContent),
+      mMinidumpID(aMinidumpID),
       mPluginName(aPluginName),
       mSubmittedCrashReport(submittedCrashReport)
   {}
@@ -265,6 +268,15 @@ nsPluginCrashedEvent::Run()
   privateEvent->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
   
   nsCOMPtr<nsIWritableVariant> variant;
+
+  // add a "minidumpID" property to this event
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create minidumpID variant for PluginCrashed event!");
+    return NS_OK;
+  }
+  variant->SetAsAString(mMinidumpID);
+  containerEvent->SetData(NS_LITERAL_STRING("minidumpID"), variant);
 
   // add a "pluginName" property to this event
   variant = do_CreateInstance("@mozilla.org/variant;1");
@@ -2008,15 +2020,23 @@ nsObjectLoadingContent::SetAbsoluteScreenPosition(nsIDOMElement* element,
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::PluginCrashed(const nsAString& pluginName,
+nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
+                                      const nsAString& minidumpID,
                                       PRBool submittedCrashReport)
 {
   AutoNotifier notifier(this, PR_TRUE);
   UnloadContent();
   mFallbackReason = ePluginCrashed;
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  // Note that aPluginTag in invalidated after we're called, so copy 
+  // out any data we need now.
+  nsCAutoString pluginName;
+  aPluginTag->GetName(pluginName);
+
   nsCOMPtr<nsIRunnable> ev = new nsPluginCrashedEvent(thisContent,
-                                                      pluginName,
+                                                      minidumpID,
+                                                      NS_ConvertUTF8toUTF16(pluginName),
                                                       submittedCrashReport);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {

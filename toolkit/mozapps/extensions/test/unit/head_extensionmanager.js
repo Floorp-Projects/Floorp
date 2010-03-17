@@ -261,7 +261,7 @@ var gDirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
 // Need to create and register a profile folder.
 var gProfD = do_get_profile();
 
-var gPrefs = Components.classes["@mozilla.org/preferences;1"]
+var gPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                    .getService(Components.interfaces.nsIPrefBranch);
 // Enable more extensive EM logging
 gPrefs.setBoolPref("extensions.logging.enabled", true);

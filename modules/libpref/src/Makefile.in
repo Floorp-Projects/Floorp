@@ -55,7 +55,7 @@ LIBXUL_LIBRARY = 1
 
 include $(topsrcdir)/config/config.mk
 
-CPPSRCS		= nsPref.cpp \
+CPPSRCS		= \
 			  nsPrefBranch.cpp	\
 			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\

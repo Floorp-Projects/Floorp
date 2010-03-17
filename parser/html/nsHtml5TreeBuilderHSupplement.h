@@ -85,7 +85,7 @@
 
     PRBool Flush();
     
-    void SetDocumentCharset(nsACString& aCharset);
+    void SetDocumentCharset(nsACString& aCharset, PRInt32 aCharsetSource);
 
     void StreamEnded();
 

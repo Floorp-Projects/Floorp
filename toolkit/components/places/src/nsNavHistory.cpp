@@ -3526,7 +3526,10 @@ PlacesSQLQueryBuilder::SelectAsDay()
         // February has not 30 days, will return March instead.
         tm.tm_mday = 1;
         tm.tm_month -= MonthIndex;
-        PR_NormalizeTime(&tm, PR_LocalTimeParameters);
+        // Notice we use GMTParameters because we just want to get the first
+        // day of each month.  Using LocalTimeParameters would instead force us
+        // to apply a DST correction that we don't really need here.
+        PR_NormalizeTime(&tm, PR_GMTParameters);
         // tm_month starts from 0 while GetMonthName expects a 1-based index.
         history->GetMonthName(tm.tm_month+1, dateName);
 

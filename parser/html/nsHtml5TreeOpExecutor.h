@@ -166,9 +166,12 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     virtual void FlushPendingNotifications(mozFlushType aType);
 
     /**
-     * Sets mCharset
+     * Don't call. For interface compat only.
      */
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) {
+    	NS_NOTREACHED("No one should call this.");
+    	return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * Returns the document.
@@ -209,6 +212,10 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mNodeInfoManager = aManager;
     }
     
+    // Not from interface
+
+    void SetDocumentCharsetAndSource(nsACString& aCharset, PRInt32 aCharsetSource);
+
     void SetStreamParser(nsHtml5StreamParser* aStreamParser) {
       mStreamParser = aStreamParser;
     }
@@ -303,13 +310,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       }
     }
 
-    void StartLayout() {
-      nsIDocument* doc = GetDocument();
-      if (doc) {
-        FlushPendingAppendNotifications();
-        nsContentSink::StartLayout(PR_FALSE);
-      }
-    }
+    void StartLayout();
     
     void DocumentMode(nsHtml5DocumentMode m);
 

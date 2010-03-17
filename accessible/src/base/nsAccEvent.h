@@ -41,18 +41,17 @@
 #ifndef _nsAccEvent_H_
 #define _nsAccEvent_H_
 
-#include "nsAutoPtr.h"
+#include "nsIAccessibleEvent.h"
+
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIAccessibleEvent.h"
-#include "nsIAccessible.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIDOMNode.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAccUtils.h"
 
-class nsIPresShell;
+#include "nsINode.h"
+#include "nsIDOMNode.h"
+
+class nsDocAccessible;
 
 // Constants used to point whether the event is from user input.
 enum EIsFromUserInput
@@ -83,13 +82,20 @@ public:
      // eAllowDupes : More than one event of the same type is allowed.
      //    This event will always be emitted.
      eAllowDupes,
+
      // eCoalesceFromSameSubtree : For events of the same type from the same
      //    subtree or the same node, only the umbrella event on the ancestor
      //    will be emitted.
      eCoalesceFromSameSubtree,
+
+    // eCoalesceFromSameDocument : For events of the same type from the same
+    //    document, only the newest event will be emitted.
+    eCoalesceFromSameDocument,
+
      // eRemoveDupes : For repeat events, only the newest event in queue
      //    will be emitted.
      eRemoveDupes,
+
      // eDoNotEmit : This event is confirmed as a duplicate, do not emit it.
      eDoNotEmit
   };
@@ -120,6 +126,9 @@ public:
   PRBool IsFromUserInput() const { return mIsFromUserInput; }
   nsIAccessible* GetAccessible() const { return mAccessible; }
 
+  nsINode* GetNode();
+  nsDocAccessible* GetDocAccessible();
+
 protected:
   /**
    * Get an accessible from event target node.
@@ -139,7 +148,6 @@ protected:
   PRPackedBool mIsAsync;
   nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsINode> mNode;
-  nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
 
   friend class nsAccEventQueue;
 };

@@ -48,10 +48,10 @@
        'enumeration over XPCNWs walks the prototype chain');
 
     let sjow_answer = [];
-    let (obj = { a: 3 }) {
+    let (obj = { a: 3, next:1 }) {
         for (let i in XPCSafeJSObjectWrapper({ __proto__: obj}))
             sjow_answer.push(i);
-        is(sjow_answer.toString(), 'a',
+        is(sjow_answer.sort().toString(), ['a', 'next'].sort().toString(),
            'enumeration over SJOWs walks the prototype chain');
     }
 

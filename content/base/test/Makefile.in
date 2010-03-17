@@ -360,6 +360,12 @@ _TEST_FILES = 	test_bug5141.html \
 		bug540854.sjs \
 		$(NULL)
 
+# This test fails on the Mac for some reason
+ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += 	test_copyimage.html \
+		$(NULL)
+endif
+
 # Disabled; see bug 492181
 #		test_plugin_freezing.html
 

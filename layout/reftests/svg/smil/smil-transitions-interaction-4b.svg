@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="document.documentElement.pauseAnimations();
+             document.documentElement.setCurrentTime(1.0);
+             setTimeAndSnapshot(1.5, false)">
+  <!-- This test checks that we don't trigger a CSS transition during
+       interpolation from-to animation. We seek to 1.5s, halfway through the
+       animation, when we're *just* to the point where the lime stroke is wide
+       enough to cover up the red rect behind it. If a transition were to
+       start, it would slow us down and allow some red to show.
+    -->
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%" style="fill: lime"/>
+  <rect width="30" height="30" style="fill: red"/>
+  <rect width="20" height="20"
+        style="fill: lime; stroke: lime; -moz-transition: 200s stroke-width">
+    <animate attributeName="stroke-width" attributeType="XML"
+             from="10px" to="30px" begin="1s" dur="1s" fill="freeze"/>
+  </rect>
+</svg>

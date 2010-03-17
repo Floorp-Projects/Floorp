@@ -38,7 +38,6 @@
 
 #include "nsRootAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccEvent.h"
 #include "nsAccessibilityService.h"
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
@@ -1334,6 +1333,11 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
 
   nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
   nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
+}
+
+void nsDocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
+                                            PRInt32 aStateMask)
+{
 }
 
 void nsDocAccessible::CharacterDataWillChange(nsIDocument *aDocument,

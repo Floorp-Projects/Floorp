@@ -856,6 +856,8 @@ public:
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
+  virtual void DocumentStatesChanged(nsIDocument* aDocument,
+                                     PRInt32 aStateMask);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
                                nsIStyleSheet* aStyleSheet,
                                PRBool aDocumentSheet);
@@ -1708,6 +1710,15 @@ PresShell::Init(nsIDocument* aDocument,
     }
 #endif
 
+#ifdef MOZ_SMIL
+  if (mDocument->HasAnimationController()) {
+    nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
+    if (!animCtrl->IsPaused()) {
+      animCtrl->StartSampling(GetPresContext()->RefreshDriver());
+    }
+  }
+#endif // MOZ_SMIL
+
   return NS_OK;
 }
 
@@ -1817,10 +1828,15 @@ PresShell::Destroy()
     mDocument->DeleteShell();
   }
 
+  nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
+  if (mDocument->HasAnimationController()) {
+    mDocument->GetAnimationController()->StopSampling(rd);
+  }
+
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
-  GetPresContext()->RefreshDriver()->RemoveRefreshObserver(this, Flush_Layout);
+  rd->RemoveRefreshObserver(this, Flush_Layout);
   mResizeEvent.Revoke();
   if (mAsyncResizeTimerIsActive) {
     mAsyncResizeEventTimer->Cancel();
@@ -4898,6 +4914,23 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
 }
 
 void
+PresShell::DocumentStatesChanged(nsIDocument* aDocument,
+                                 PRInt32 aStateMask)
+{
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
+  if (mDidInitialReflow &&
+      mStyleSet->HasDocumentStateDependentStyle(mPresContext,
+                                                mDocument->GetRootContent(),
+                                                aStateMask)) {
+    mFrameConstructor->PostRestyleEvent(mDocument->GetRootContent(),
+                                        eReStyle_Self, NS_STYLE_HINT_NONE);
+    VERIFY_STYLE_TREE;
+  }
+}
+
+void
 PresShell::AttributeWillChange(nsIDocument* aDocument,
                                nsIContent*  aContent,
                                PRInt32      aNameSpaceID,
@@ -6825,13 +6858,16 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
 
   // get caret position relative to some view (normally the same as the
   // event widget view, but this is not guaranteed)
-  PRBool isCollapsed;
-  nsIView* view;
   nsRect caretCoords;
-  rv = caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
-                                  domSelection, &caretCoords, &isCollapsed,
-                                  &view);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsIFrame* caretFrame = caret->GetGeometry(domSelection, &caretCoords);
+  if (!caretFrame)
+    return PR_FALSE;
+  nsPoint windowOffset;
+  nsIWidget* widget = caretFrame->GetWindowOffset(windowOffset);
+  if (!widget)
+    return PR_FALSE;
+  caretCoords.MoveBy(windowOffset);
+  nsIView* caretView = nsIView::GetViewFor(widget);
 
   // in case the view used for caret coordinates was something else, we need
   // to bring those coordinates into the space of the widget view
@@ -6839,7 +6875,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   NS_ENSURE_TRUE(widgetView, PR_FALSE);
   nsPoint viewToWidget;
   widgetView->GetNearestWidget(&viewToWidget);
-  nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
+  nsPoint viewDelta = caretView->GetOffsetTo(widgetView) + viewToWidget;
 
   // caret coordinates are in app units, convert to pixels
   nsPresContext* presContext = GetPresContext();

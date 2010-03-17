@@ -1258,7 +1258,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # different behavior on Linux, see bug 488364
+random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
 == 482592-1a.xhtml 482592-1-ref.html
 == 482592-1b.xhtml 482592-1-ref.html
@@ -1401,5 +1401,8 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 539323-3.html 539323-3-ref.html
 == 542620-1.html 542620-1-ref.html
 == 541382-1.html 541382-1-ref.html
-== 541406-1.html 541406-1-ref.html
+random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 == 546033-1.html 546033-1-ref.html
+== 550716-1.html 550716-1-ref.html
+== 549184-1.html 549184-1-ref.html
+random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html

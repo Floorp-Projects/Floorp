@@ -58,9 +58,17 @@
             <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
             <html:div class="msg msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
             <xul:spacer flex="1"/>
-            <!-- link hrefs set at runtime -->
-            <html:div class="msg msgSubmitted">&submittedCrashReport.pre;<html:a class="submitLink" href="">&submittedCrashReport.middle;</html:a>&submittedCrashReport.post;</html:div>
-            <html:div class="msg msgNotSubmitted">&notSubmittedCrashReport.pre;<html:a class="notSubmitLink" href="">&notSubmittedCrashReport.middle;</html:a>&notSubmittedCrashReport.post;</html:div>
+            <html:div class="msg msgBottomLinks">
+                <!-- link href set at runtime -->
+                <html:div class="msg msgPleaseSubmit"><html:a class="pleaseSubmitLink" href="">&report.please;</html:a></html:div>
+                <html:div class="msg msgSubmitting">&report.submitting;<html:span class="throbber"> </html:span></html:div>
+                <html:div class="msg msgSubmitted">&report.submitted;</html:div>
+                <html:div class="msg msgNotSubmitted">&report.disabled;</html:div>
+                <html:div class="msg msgSubmitFailed">&report.failed;</html:div>
+                <html:div class="msg msgNoCrashReport">&report.unavailable;</html:div>
+                <!-- link href set at runtime -->
+                <html:span class="helpIcon" role="link"/>
+            </html:div>
         </xul:vbox>
         <html:div style="display:none;"><children/></html:div>
     </content>

@@ -1070,6 +1070,21 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
 }
 
 void
+nsHTMLDocument::BeginLoad()
+{
+  if (IsEditingOn()) {
+    // Reset() blows away all event listeners in the document, and our
+    // editor relies heavily on those. Midas is turned on, to make it
+    // work, re-initialize it to give it a chance to add its event
+    // listeners again.
+
+    TurnEditingOff();
+    EditingStateChanged();
+  }
+  nsDocument::BeginLoad();
+}
+
+void
 nsHTMLDocument::EndLoad()
 {
   if (mParser && mWriteState != eDocumentClosed) {
@@ -1961,7 +1976,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mWillReparent = PR_TRUE;
 #endif
 
-    rv = window->SetNewDocument(this, nsnull, PR_FALSE);
+    rv = window->SetNewDocument(this, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -1983,16 +1998,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   Reset(channel, group);
   if (baseURI) {
     mDocumentBaseURI = baseURI;
-  }
-
-  if (IsEditingOn()) {
-    // Reset() blows away all event listeners in the document, and our
-    // editor relies heavily on those. Midas is turned on, to make it
-    // work, re-initialize it to give it a chance to add its event
-    // listeners again.
-
-    TurnEditingOff();
-    EditingStateChanged();
   }
 
   // Store the security info of the caller now that we're done

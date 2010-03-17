@@ -55,10 +55,6 @@
 #include "morkThumb.h"
 #endif
 
-#ifndef _ORKINTHUMB_
-#include "orkinThumb.h"
-#endif
-
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif

@@ -311,6 +311,8 @@
               style="&dialog.style;"
               hidden="true"/>
     </panel>
+
+    <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
   </popupset>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
@@ -516,6 +518,18 @@
       </toolbaritem>
     </toolbar>
 
+    <toolbar id="TabsToolbar"
+             fullscreentoolbar="true"
+             collapsed="true">
+      <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+            tabbrowser="content"
+            flex="1"
+            setfocus="false"
+            tooltip="tabbrowser-tab-tooltip">
+        <tab class="tabbrowser-tab" selected="true"/>
+      </tabs>
+    </toolbar>
+
     <toolbarpalette id="BrowserToolbarPalette">
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -603,6 +617,7 @@
     <vbox id="appcontent" flex="1">
       <tabbrowser id="content" disablehistory="true"
                   flex="1" contenttooltip="aHTMLTooltip"
+                  tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   ondrop="contentAreaDNDObserver.onDrop(event)"

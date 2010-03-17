@@ -40,6 +40,7 @@
 interface nsIFrame;
 interface nsIObjectFrame;
 interface nsIPluginInstance;
+interface nsIPluginTag;
 interface nsIDOMElement;
 interface nsIDOMClientRect;
 
@@ -124,6 +125,7 @@ interface nsIObjectLoadingContent : nsISupports
    */
   [noscript] nsIFrame getPrintFrame();
 
-  [noscript] void pluginCrashed(in AString pluginName,
+  [noscript] void pluginCrashed(in nsIPluginTag pluginTag,
+                                in AString minidumpID,
                                 in boolean submittedCrashReport);
 };

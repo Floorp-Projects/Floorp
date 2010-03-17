@@ -101,7 +101,6 @@ CSPService::ShouldLoad(PRUint32 aContentType,
 
     // find the nsDocument that initiated this request and see if it has a
     // CSP policy object
-    nsresult rv;
     nsCOMPtr<nsINode> node(do_QueryInterface(aRequestContext));
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -160,7 +159,6 @@ CSPService::ShouldProcess(PRUint32         aContentType,
 
     // find the nsDocument that initiated this request and see if it has a
     // CSP policy object
-    nsresult rv;
     nsCOMPtr<nsINode> node(do_QueryInterface(aRequestContext));
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;

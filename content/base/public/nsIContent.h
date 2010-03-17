@@ -72,8 +72,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xc19d6f16, 0xab13, 0x4dde, \
- { 0x99, 0x7a, 0x51, 0x04, 0xc3, 0x64, 0xd2, 0x51 } }
+{ 0x07734640, 0x0900, 0x480d, \
+ { 0x97, 0x5a, 0x31, 0xc7, 0x0e, 0xcd, 0x15, 0x2b } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -894,7 +894,7 @@ public:
    *
    * The CALLER OWNS the result and is responsible for deleting it.
    */
-  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName) = 0;
+  virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* aName) = 0;
 
    /**
     * Get the SMIL override style for this content node.  This is a style
