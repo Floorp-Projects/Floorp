@@ -5944,30 +5944,72 @@ var gMissingPluginInstaller = {
     return this.crashReportHelpURL;
   },
 
+  addLinkClickCallback: function (linkNode, callbackName, callbackArg) {
+    // XXX just doing (callback)(arg) was giving a same-origin error. bug?
+    let self = this;
+    linkNode.addEventListener("click",
+                              function(evt) {
+                                if (!evt.isTrusted)
+                                  return;
+                                evt.preventDefault();
+                                if (callbackArg == undefined)
+                                  callbackArg = evt;
+                                (self[callbackName])(callbackArg);
+                              },
+                              true);
+
+    linkNode.addEventListener("keydown",
+                              function(evt) {
+                                if (!evt.isTrusted)
+                                  return;
+                                if (evt.keyCode == evt.DOM_VK_RETURN) {
+                                  evt.preventDefault();
+                                  if (callbackArg == undefined)
+                                    callbackArg = evt;
+                                  evt.preventDefault();
+                                  (self[callbackName])(callbackArg);
+                                }
+                              },
+                              true);
+  },
+
+  // Callback for user clicking on a missing (unsupported) plugin.
   installSinglePlugin: function (aEvent) {
-    if (!aEvent.isTrusted)
-        return;
     var missingPluginsArray = {};
 
     var pluginInfo = getPluginInfo(aEvent.target);
     missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
 
-    if (missingPluginsArray) {
-      openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                 "PFSWindow", "chrome,centerscreen,resizable=yes",
-                 {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
-    }
-
-    aEvent.stopPropagation();
+    openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
+               "PFSWindow", "chrome,centerscreen,resizable=yes",
+               {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
   },
 
+  // Callback for user clicking on a disabled plugin
   managePlugins: function (aEvent) {
-    if (!aEvent.isTrusted)
-        return;
     BrowserOpenAddonsMgr("plugins");
-    aEvent.stopPropagation();
   },
 
+  // Callback for user clicking "submit a report" link
+  submitReport : function(minidumpID) {
+    // The crash reporter wants a DOM element it can append an IFRAME to,
+    // which it uses to submit a form. Let's just give it gBrowser.
+    this.CrashSubmit.submit(minidumpID, gBrowser, null, null);
+  },
+
+  // Callback for user clicking a "reload page" link
+  reloadPage: function (browser) {
+    browser.reload();
+  },
+
+  // Callback for user clicking the help icon
+  openHelpPage: function () {
+    openHelpLink("plugin-crashed", false);
+  },
+
+
+
+  // event listener for missing/blocklisted/outdated plugins.
   newMissingPlugin: function (aEvent) {
     // Since we are expecting also untrusted events, make sure
     // that the target is a plugin
@@ -5982,14 +6024,7 @@ var gMissingPluginInstaller = {
     if (aEvent.type != "PluginBlocklisted" &&
         aEvent.type != "PluginOutdated" &&
         !(aEvent.target instanceof HTMLObjectElement)) {
-      aEvent.target.addEventListener("click",
-                                     gMissingPluginInstaller.installSinglePlugin,
-                                     true);
-      aEvent.target.addEventListener("keydown",
-                                     function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
-                                                       gMissingPluginInstaller.installSinglePlugin(evt) },
-                                     true);
-                                                    
+          gMissingPluginInstaller.addLinkClickCallback(aEvent.target, "installSinglePlugin");
     }
 
     let hideBarPrefName = aEvent.type == "PluginOutdated" ?
@@ -6110,13 +6145,7 @@ var gMissingPluginInstaller = {
     if (!(aEvent.target instanceof Ci.nsIObjectLoadingContent))
       return;
 
-    aEvent.target.addEventListener("click",
-                                   gMissingPluginInstaller.managePlugins,
-                                   true);
-    aEvent.target.addEventListener("keydown",
-                                   function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
-                                                     gMissingPluginInstaller.managePlugins(evt) },
-                                   true);
+    gMissingPluginInstaller.addLinkClickCallback(aEvent.target, "managePlugins");
   },
 
   // Crashed-plugin observer. Notified once per plugin crash, before events
@@ -6128,17 +6157,24 @@ var gMissingPluginInstaller = {
      return;
 
 #ifdef MOZ_CRASHREPORTER
-    let minidumpID = subject.getPropertyAsAString("minidumpID");
-    let submitted = gCrashReporter.submitReports && minidumpID.length;
-    // The crash reporter wants a DOM element it can append an IFRAME to,
-    // which it uses to submit a form. Let's just give it gBrowser.
-    if (submitted)
-      submitted = gMissingPluginInstaller.CrashSubmit.submit(minidumpID, gBrowser, null, null);
-    propertyBag.setPropertyAsBool("submittedCrashReport", submitted);
+    let minidumpID   = propertyBag.getPropertyAsAString("minidumpID");
+    let shouldSubmit = gCrashReporter.submitReports;
+    let doPrompt     = true; // XXX followup to get via gCrashReporter
+
+    // Submit automatically when appropriate.
+    if (minidumpID && shouldSubmit && !doPrompt) {
+      this.submitReport(minidumpID);
+      // Submission is async, so we can't easily show failure UI.
+      propertyBag.setPropertyAsBool("submittedCrashReport", true);
+    }
 #endif
   },
 
+  // Crashed-plugin event listener. Called for every instance of a
+  // plugin in content.
   pluginInstanceCrashed: function (aEvent) {
+    let self = gMissingPluginInstaller;
+
     // Evil content could fire a fake event at us, ignore them.
     if (!aEvent.isTrusted)
       return;
@@ -6147,7 +6183,10 @@ var gMissingPluginInstaller = {
       return;
 
     let submittedReport = aEvent.getData("submittedCrashReport");
+    let doPrompt        = true; // XXX followup for .getData("doPrompt");
+    let submitReports   = true; // XXX followup for .getData("submitReports");
     let pluginName      = aEvent.getData("pluginName");
+    let minidumpID      = aEvent.getData("minidumpID");
 
     // We're expecting this to be a plugin.
     let plugin = aEvent.target;
@@ -6171,36 +6210,77 @@ var gMissingPluginInstaller = {
     overlay.removeAttribute("role");
 
 #ifdef MOZ_CRASHREPORTER
+    // Determine which message to show regarding crash reports.
     let helpClass, showClass;
-
-    // If we didn't submit a report but don't have submission disabled,
-    // we probably just didn't collect a crash report; don't put up any 
-    // special crashing text.
-    if (submittedReport) {
-      helpClass = "submitLink";
+    if (submittedReport) { // submitReports && !doPrompt, handled in observer
       showClass = "msg msgSubmitted";
     }
-    else if (!gCrashReporter.submitReports) {
-      helpClass = "notSubmitLink";
+    else if (!submitReports && !doPrompt) {
       showClass = "msg msgNotSubmitted";
     }
+    else { // doPrompt
+      showClass = "msg msgPleaseSubmit";
+      // XXX can we make the link target actually be blank?
+      let pleaseLink = doc.getAnonymousElementByAttribute(
+                            plugin, "class", "pleaseSubmitLink");
+      self.addLinkClickCallback(pleaseLink, "submitReport", minidumpID);
+    }
 
-    if (helpClass) {
-      let helpLink = doc.getAnonymousElementByAttribute(plugin, "class", helpClass);
-      helpLink.href = gMissingPluginInstaller.crashReportHelpURL;
-      let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
-      textToShow.style.display = "block";
+    // If we don't have a minidumpID, we can't (or didn't) submit anything.
+    // This can happen if the plugin is killed from the task manager.
+    if (!minidumpID) {
+        showClass = "msg msgNoCrashReport";
+    }
+
+    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
+    textToShow.style.display = "block";
+
+    let bottomLinks = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgBottomLinks");
+    bottomLinks.style.display = "block";
+    let helpIcon = doc.getAnonymousElementByAttribute(plugin, "class", "helpIcon");
+    self.addLinkClickCallback(helpIcon, "openHelpPage");
+
+    // If we're showing the link to manually trigger report submission, we'll
+    // want to be able to update all the instances of the UI for this crash to
+    // show an updated message when a report is submitted.
+    if (doPrompt) {
+      let observer = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                               Ci.nsISupportsWeakReference]),
+        observe : function(subject, topic, data) {
+          let propertyBag = subject;
+          if (!(propertyBag instanceof Ci.nsIPropertyBag2))
+            return;
+          // Ignore notifications for other crashes.
+          if (propertyBag.get("minidumpID") != minidumpID)
+            return;
+          self.updateSubmissionStatus(plugin, propertyBag, data);
+        },
+
+        handleEvent : function(event) {
+            // Not expected to be called, just here for the closure.
+        }
+      }
+
+      // Use a weak reference, so we don't have to remove it...
+      Services.obs.addObserver(observer, "crash-report-status", true);
+      // ...alas, now we need something to hold a strong reference to prevent
+      // it from being GC. But I don't want to manually manage the reference's
+      // lifetime (which should be no greater than the page).
+      // Clever solution? Use a closue with an event listener on the document.
+      // When the doc goes away, so do the listener references and the closure.
+      doc.addEventListener("mozCleverClosureHack", observer, false);
     }
 #endif
 
     let crashText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgCrashed");
     crashText.textContent = messageString;
 
-    let link = doc.getAnonymousElementByAttribute(plugin, "class", "reloadLink");
-    link.addEventListener("click", function(e) { if (e.isTrusted) browser.reload(); }, true);
+    let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
 
-    let browser = gBrowser.getBrowserForDocument(plugin.ownerDocument
-                                                       .defaultView.top.document);
+    let link = doc.getAnonymousElementByAttribute(plugin, "class", "reloadLink");
+    self.addLinkClickCallback(link, "reloadPage", browser);
+
     let notificationBox = gBrowser.getNotificationBox(browser);
 
     // Is the <object>'s size too small to hold what we want to show?
@@ -6216,7 +6296,7 @@ var gMissingPluginInstaller = {
         // If another plugin on the page was large enough to show our UI, we
         // don't want to show a notification bar.
         if (!doc.mozNoPluginCrashedNotification)
-          showNotificationBar();
+          showNotificationBar(minidumpID);
     } else {
         // If a previous plugin on the page was too small and resulted in
         // adding a notification bar, then remove it because this plugin
@@ -6231,7 +6311,7 @@ var gMissingPluginInstaller = {
         notificationBox.removeNotification(notification, true);
     }
 
-    function showNotificationBar() {
+    function showNotificationBar(minidumpID) {
       // If there's already an existing notification bar, don't do anything.
       let notification = notificationBox.getNotificationWithValue("plugin-crashed");
       if (notification)
@@ -6240,20 +6320,66 @@ var gMissingPluginInstaller = {
       // Configure the notification bar
       let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
       let iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
-      let label = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
-      let accessKey = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
+      let reloadLabel = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
+      let reloadKey   = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
+      let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
+      let submitKey   = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.accesskey");
 
-      let buttons = [{
-        label: label,
-        accessKey: accessKey,
-        popup: null,
-        callback: function() { browser.reload(); },
-      }];
+      let buttons = [
+#ifdef MOZ_CRASHREPORTER
+        {
+          label: submitLabel,
+          accessKey: submitKey,
+          popup: null,
+          callback: function() { gMissingPluginInstaller.submitReport(minidumpID); },
+        },
+#endif
+        {
+          label: reloadLabel,
+          accessKey: reloadKey,
+          popup: null,
+          callback: function() { browser.reload(); },
+        }];
 
       let notification = notificationBox.appendNotification(messageString, "plugin-crashed",
                                                             iconURL, priority, buttons);
+
+      // Add the "learn more" link.
+      let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      let link = notification.ownerDocument.createElementNS(XULNS, "label");
+      link.className = "text-link";
+      link.setAttribute("value", gNavigatorBundle.getString("crashedpluginsMessage.learnMore"));
+      link.href = gMissingPluginInstaller.crashReportHelpURL;
+      let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
+      description.appendChild(link);
     }
 
+  },
+
+  updateSubmissionStatus : function (plugin, propBag, status) {
+    let doc = plugin.ownerDocument;
+
+    // One of these two may already be visible, reset them to be hidden.
+    let pleaseText     = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgPleaseSubmit");
+    let submittingText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgSubmitting");
+    pleaseText.style.display = "";
+    submittingText.style.display = "";
+
+    let msgClass;
+    switch (status) {
+      case "submitting":
+        msgClass = "msg msgSubmitting";
+        break;
+      case "success":
+        msgClass = "msg msgSubmitted";
+        break;
+      case "failed":
+        msgClass = "msg msgSubmitFailed";
+        break;
+    }
+
+    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", msgClass);
+    textToShow.style.display = "block";
   },
 
   refreshBrowser: function (aEvent) {

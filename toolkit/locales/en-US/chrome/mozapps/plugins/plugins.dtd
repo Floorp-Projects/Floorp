@@ -29,15 +29,10 @@
 <!ENTITY reloadPlugin.pre                                    "">
 <!ENTITY reloadPlugin.middle                                 "Reload the page">
 <!ENTITY reloadPlugin.post                                   " to try again.">
-<!-- LOCALIZATION NOTE (submittedCrashReport.pre): include a trailing space as needed -->
-<!-- LOCALIZATION NOTE (submittedCrashReport.middle): avoid leading/trailing spaces, this text is a link -->
-<!-- LOCALIZATION NOTE (submittedCrashReport.post): include a starting space as needed -->
-<!ENTITY submittedCrashReport.pre                            "A ">
-<!ENTITY submittedCrashReport.middle                         "crash report">
-<!ENTITY submittedCrashReport.post                           " was submitted.">
-<!-- LOCALIZATION NOTE (notSubmittedCrashReport.pre): include a trailing space as needed -->
-<!-- LOCALIZATION NOTE (notSubmittedCrashReport.middle): avoid leading/trailing spaces, this text is a link -->
-<!-- LOCALIZATION NOTE (notSubmittedCrashReport.post): include a starting space as needed -->
-<!ENTITY notSubmittedCrashReport.pre                         "You have disabled ">
-<!ENTITY notSubmittedCrashReport.middle                      "crash report">
-<!ENTITY notSubmittedCrashReport.post                        " submission.">
+<!-- LOCALIZATION NOTE (report.please): This and the other report.* strings should be as short as possible, ideally 2-3 words. -->
+<!ENTITY report.please                                       "Send crash report">
+<!ENTITY report.submitting                                   "Sending report…">
+<!ENTITY report.submitted                                    "Crash report sent.">
+<!ENTITY report.disabled                                     "Crash reporting disabled.">
+<!ENTITY report.failed                                       "Submission failed.">
+<!ENTITY report.unavailable                                  "No report available.">
