@@ -82,7 +82,7 @@ Group.prototype = {
     this._children = this._children.filter(function(child){
       if( $(child).data("toRemove") == true ){
         $(child).data("group", null);
-        $(child).animate({width:160, height:120}, 250);
+        $(child).animate({width:160, height:137}, 250);
         $(child).droppable("enable");        
         return false;
       }
@@ -121,9 +121,11 @@ Group.prototype = {
       // This is for actual tabs. Need a better solution.
       // One that doesn't require special casing to find the linked info.
       // If I just animate the tab, the rest should happen automatically!
+/*
       if( $("canvas", tab)[0] != null ){
         $("canvas", tab).data('link').animate({height:h}, 250);
       }
+*/
             
       $(tab).animate({
         height:h, width: w,
