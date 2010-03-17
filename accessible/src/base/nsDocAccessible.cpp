@@ -1335,6 +1335,11 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
   nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
 }
 
+void nsDocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
+                                            PRInt32 aStateMask)
+{
+}
+
 void nsDocAccessible::CharacterDataWillChange(nsIDocument *aDocument,
                                               nsIContent* aContent,
                                               CharacterDataChangeInfo* aInfo)
