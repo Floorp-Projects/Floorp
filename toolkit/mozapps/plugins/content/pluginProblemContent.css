@@ -12,6 +12,10 @@ html|applet:not([height]), html|applet[height=""] {
   height: 200px;
 }
 
+:-moz-type-unsupported .mainBox {
+  cursor: pointer;
+}
+
 :-moz-type-unsupported .mainBox,
 :-moz-handler-disabled .mainBox,
 :-moz-handler-blocked .mainBox {
@@ -39,4 +43,8 @@ html|applet:not([height]), html|applet[height=""] {
 :-moz-handler-crashed .msgCrashed,
 :-moz-handler-crashed .msgReload {
   display: block;
+}
+
+.helpIcon {
+  cursor: pointer;
 }

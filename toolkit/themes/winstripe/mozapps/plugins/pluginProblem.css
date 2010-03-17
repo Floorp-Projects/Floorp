@@ -41,9 +41,35 @@ html|a {
     background-image: url(chrome://mozapps/skin/plugins/pluginCrashed.png);
 }
 
+.throbber {
+    padding-left: 16px; /* width of the background image */
+    background: url(chrome://global/skin/icons/loading_16.png) no-repeat;
+    margin-left: 5px;
+}
+
 .msg {
-    font: 12px sans-serif;
-    font-weight: bold;
+    font: message-box;
+    font-size: 12px;
     cursor: default;
     text-shadow: rgba(0,0,0,0.8) 0 0 5px;
+}
+
+.msgBottomLinks {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.msgBottomLinks div {
+    text-align: right;
+    margin-right: 4px;
+    margin-bottom: -19px;
+    min-height: 19px; /* height of biggest line (with throbber) */
+}
+
+.helpIcon {
+    float: left;
+    display: inline-block;
+    min-width: 16px;
+    min-height: 16px;
+    background: url(chrome://mozapps/skin/plugins/pluginHelp-16.png) no-repeat;
 }
