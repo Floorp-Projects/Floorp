@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,7 @@ using google_breakpad::StackFramePPC;
 using google_breakpad::StackFrameSPARC;
 using google_breakpad::StackFrameX86;
 using google_breakpad::StackFrameAMD64;
+using google_breakpad::StackFrameARM;
 
 // Separator character for machine readable output.
 static const char kOutputSeparator = '|';
@@ -162,6 +163,7 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       }
       const char *trust_name;
       switch (frame_x86->trust) {
+        default:
         case StackFrameX86::FRAME_TRUST_NONE:
           trust_name = "unknown";
           break;
@@ -194,6 +196,16 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       const StackFrameAMD64 *frame_amd64 =
         reinterpret_cast<const StackFrameAMD64*>(frame);
 
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RBX)
+        sequence = PrintRegister("rbx", frame_amd64->context.rbx, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_R12)
+        sequence = PrintRegister("r12", frame_amd64->context.r12, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_R13)
+        sequence = PrintRegister("r13", frame_amd64->context.r13, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_R14)
+        sequence = PrintRegister("r14", frame_amd64->context.r14, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_R15)
+        sequence = PrintRegister("r15", frame_amd64->context.r15, sequence);
       if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RIP)
         sequence = PrintRegister("rip", frame_amd64->context.rip, sequence);
       if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RSP)
@@ -210,6 +222,35 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
         sequence = PrintRegister("fp", frame_sparc->context.g_r[30], sequence);
       if (frame_sparc->context_validity & StackFrameSPARC::CONTEXT_VALID_PC)
         sequence = PrintRegister("pc", frame_sparc->context.pc, sequence);
+    } else if (cpu == "arm") {
+      const StackFrameARM *frame_arm =
+          reinterpret_cast<const StackFrameARM*>(frame);
+
+      // General-purpose callee-saves registers.
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R4)
+        sequence = PrintRegister("r4", frame_arm->context.iregs[4], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R5)
+        sequence = PrintRegister("r5", frame_arm->context.iregs[5], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R6)
+        sequence = PrintRegister("r6", frame_arm->context.iregs[6], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R7)
+        sequence = PrintRegister("r7", frame_arm->context.iregs[7], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R8)
+        sequence = PrintRegister("r8", frame_arm->context.iregs[8], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R9)
+        sequence = PrintRegister("r9", frame_arm->context.iregs[9], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R10)
+        sequence = PrintRegister("r10", frame_arm->context.iregs[10], sequence);
+
+      // Registers with a dedicated or conventional purpose.
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_FP)
+        sequence = PrintRegister("fp", frame_arm->context.iregs[11], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_SP)
+        sequence = PrintRegister("sp", frame_arm->context.iregs[13], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_LR)
+        sequence = PrintRegister("lr", frame_arm->context.iregs[14], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_PC)
+        sequence = PrintRegister("pc", frame_arm->context.iregs[15], sequence);
     }
     printf("\n");
   }

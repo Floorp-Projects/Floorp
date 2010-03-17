@@ -205,9 +205,8 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
     }
     handler_stack_->push_back(this);
 
-    if (handler_types & HANDLER_EXCEPTION) {
+    if (handler_types & HANDLER_EXCEPTION)
       previous_filter_ = SetUnhandledExceptionFilter(HandleException);
-    }
 
 #if _MSC_VER >= 1400  // MSVC 2005/8
     if (handler_types & HANDLER_INVALID_PARAMETER)

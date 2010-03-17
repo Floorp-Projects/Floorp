@@ -1,4 +1,4 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+
+// module.cc: Implement google_breakpad::Module.  See module.h.
+
 #include <cerrno>
 #include <cstring>
+
 #include "common/linux/module.h"
 
 namespace google_breakpad {
@@ -47,6 +52,9 @@ Module::~Module() {
   for (vector<Function *>::iterator it = functions_.begin();
        it != functions_.end(); it++)
     delete *it;
+  for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
+       it != stack_frame_entries_.end(); it++)
+    delete *it;
 }
 
 void Module::SetLoadAddress(Address address) {
@@ -60,6 +68,15 @@ void Module::AddFunction(Function *function) {
 void Module::AddFunctions(vector<Function *>::iterator begin,
                           vector<Function *>::iterator end) {
   functions_.insert(functions_.end(), begin, end);
+}
+
+void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
+  stack_frame_entries_.push_back(stack_frame_entry);
+}
+
+void Module::GetFunctions(vector<Function *> *vec,
+                          vector<Function *>::iterator i) {
+  vec->insert(i, functions_.begin(), functions_.end());
 }
 
 Module::File *Module::FindFile(const string &name) {
@@ -77,10 +94,10 @@ Module::File *Module::FindFile(const string &name) {
   if (destiny == files_.end()
       || *destiny->first != name) {  // Repeated string comparison, boo hoo.
     File *file = new File;
-    file->name_ = name;
-    file->source_id_ = -1;
+    file->name = name;
+    file->source_id = -1;
     destiny = files_.insert(destiny,
-                            FileByNameMap::value_type(&file->name_, file));
+                            FileByNameMap::value_type(&file->name, file));
   }
   return destiny->second;
 }
@@ -90,20 +107,35 @@ Module::File *Module::FindFile(const char *name) {
   return FindFile(name_string);
 }
 
+Module::File *Module::FindExistingFile(const string &name) {
+  FileByNameMap::iterator it = files_.find(&name);
+  return (it == files_.end()) ? NULL : it->second;
+}
+
+void Module::GetFiles(vector<File *> *vec) {
+  vec->clear();
+  for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); it++)
+    vec->push_back(it->second);
+}
+
+void Module::GetStackFrameEntries(vector<StackFrameEntry *> *vec) {
+  *vec = stack_frame_entries_;
+}
+
 void Module::AssignSourceIds() {
   // First, give every source file an id of -1.
   for (FileByNameMap::iterator file_it = files_.begin();
        file_it != files_.end(); file_it++)
-    file_it->second->source_id_ = -1;
+    file_it->second->source_id = -1;
 
   // Next, mark all files actually cited by our functions' line number
   // info, by setting each one's source id to zero.
   for (vector<Function *>::const_iterator func_it = functions_.begin();
        func_it != functions_.end(); func_it++) {
     Function *func = *func_it;
-    for (vector<Line>::iterator line_it = func->lines_.begin();
-         line_it != func->lines_.end(); line_it++)
-      line_it->file_->source_id_ = 0;
+    for (vector<Line>::iterator line_it = func->lines.begin();
+         line_it != func->lines.end(); line_it++)
+      line_it->file->source_id = 0;
   }
 
   // Finally, assign source ids to those files that have been marked.
@@ -113,8 +145,8 @@ void Module::AssignSourceIds() {
   int next_source_id = 0;
   for (FileByNameMap::iterator file_it = files_.begin();
        file_it != files_.end(); file_it++)
-    if (! file_it->second->source_id_)
-      file_it->second->source_id_ = next_source_id++;
+    if (! file_it->second->source_id)
+      file_it->second->source_id = next_source_id++;
 }
 
 bool Module::ReportError() {
@@ -123,20 +155,33 @@ bool Module::ReportError() {
   return false;
 }
 
+bool Module::WriteRuleMap(const RuleMap &rule_map, FILE *stream) {
+  for (RuleMap::const_iterator it = rule_map.begin();
+       it != rule_map.end(); it++) {
+    if (it != rule_map.begin() &&
+        0 > putc(' ', stream))
+      return false;
+    if (0 > fprintf(stream, "%s: %s", it->first.c_str(), it->second.c_str()))
+      return false;
+  }
+  return true;
+}
+
 bool Module::Write(FILE *stream) {
   if (0 > fprintf(stream, "MODULE %s %s %s %s\n",
                   os_.c_str(), architecture_.c_str(), id_.c_str(),
                   name_.c_str()))
     return ReportError();
 
-  // Write out files.
   AssignSourceIds();
+
+  // Write out files.
   for (FileByNameMap::iterator file_it = files_.begin();
        file_it != files_.end(); file_it++) {
     File *file = file_it->second;
-    if (file->source_id_ >= 0) {
+    if (file->source_id >= 0) {
       if (0 > fprintf(stream, "FILE %d %s\n",
-                      file->source_id_, file->name_.c_str()))
+                      file->source_id, file->name.c_str()))
         return ReportError();
     }
   }
@@ -145,20 +190,43 @@ bool Module::Write(FILE *stream) {
   for (vector<Function *>::const_iterator func_it = functions_.begin();
        func_it != functions_.end(); func_it++) {
     Function *func = *func_it;
-    if (0 > fprintf(stream, "FUNC %lx %lx %lu %s\n",
-                    (unsigned long) (func->address_ - load_address_),
-                    (unsigned long) func->size_,
-                    (unsigned long) func->parameter_size_,
-                    func->name_.c_str()))
+    if (0 > fprintf(stream, "FUNC %llx %llx %llx %s\n",
+                    (unsigned long long) (func->address - load_address_),
+                    (unsigned long long) func->size,
+                    (unsigned long long) func->parameter_size,
+                    func->name.c_str()))
       return ReportError();
-    for (vector<Line>::iterator line_it = func->lines_.begin();
-         line_it != func->lines_.end(); line_it++)
-      if (0 > fprintf(stream, "%lx %lx %d %d\n",
-                      (unsigned long) (line_it->address_ - load_address_),
-                      (unsigned long) line_it->size_,
-                      line_it->number_,
-                      line_it->file_->source_id_))
+    for (vector<Line>::iterator line_it = func->lines.begin();
+         line_it != func->lines.end(); line_it++)
+      if (0 > fprintf(stream, "%llx %llx %d %d\n",
+                      (unsigned long long) (line_it->address - load_address_),
+                      (unsigned long long) line_it->size,
+                      line_it->number,
+                      line_it->file->source_id))
         return ReportError();
+  }
+
+  // Write out 'STACK CFI INIT' and 'STACK CFI' records.
+  vector<StackFrameEntry *>::const_iterator frame_it;
+  for (frame_it = stack_frame_entries_.begin();
+       frame_it != stack_frame_entries_.end(); frame_it++) {
+    StackFrameEntry *entry = *frame_it;
+    if (0 > fprintf(stream, "STACK CFI INIT %llx %llx ",
+                    (unsigned long long) entry->address - load_address_,
+                    (unsigned long long) entry->size)
+        || !WriteRuleMap(entry->initial_rules, stream)
+        || 0 > putc('\n', stream))
+      return ReportError();
+    
+    // Write out this entry's delta rules as 'STACK CFI' records.
+    for (RuleChangeMap::const_iterator delta_it = entry->rule_changes.begin();
+         delta_it != entry->rule_changes.end(); delta_it++) {
+      if (0 > fprintf(stream, "STACK CFI %llx ",
+                      (unsigned long long) delta_it->first - load_address_)
+          || !WriteRuleMap(delta_it->second, stream)
+          || 0 > putc('\n', stream))
+        return ReportError();
+    }
   }
 
   return true;
