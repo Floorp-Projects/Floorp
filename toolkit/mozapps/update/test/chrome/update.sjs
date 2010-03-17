@@ -10,20 +10,27 @@ const SERVICE_URL = URL_HOST + URL_PATH + "empty.mar";
 
 
 function handleRequest(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "OK");
+  var params = { };
+  if (request.queryString)
+    params = parseQueryString(request.queryString);
+
+  var statusCode = params.statusCode ? parseInt(params.statusCode) : 200;
+  var statusReason = params.statusReason ? params.statusReason : "OK";
+  response.setStatusLine(request.httpVersion, statusCode, statusReason);
   response.setHeader("Cache-Control", "no-cache", false);
-  if (request.queryString.match(/^uiURL=/)) {
-    var uiURL = decodeURIComponent(request.queryString.substring(6));
+
+  if (params.uiURL) {
+    var remoteType = "";
+    if (!params.remoteNoTypeAttr &&
+        (params.uiURL == "BILLBOARD" || params.uiURL == "LICENSE"))
+      remoteType = " " + params.uiURL.toLowerCase() + "=\"1\"";
     response.write("<html><head><meta http-equiv=\"content-type\" content=" +
-                   "\"text/html; charset=utf-8\"></head><body>" + uiURL +
+                   "\"text/html; charset=utf-8\"></head><body" +
+                   remoteType + ">" + params.uiURL +
                    "<br><br>this is a test mar that will not affect your " +
                    "build.</body></html>");
     return;
   }
-
-  var params = { };
-  if (request.queryString)
-    params = parseQueryString(request.queryString);
 
   if (params.xmlMalformed) {
     response.write("xml error");
@@ -51,7 +58,15 @@ function handleRequest(request, response) {
 //  var detailsURL = params.showDetails ? URL_UPDATE + "?uiURL=DETAILS" : null;
   var detailsURL = URL_UPDATE + "?uiURL=DETAILS";
   var billboardURL = params.showBillboard ? URL_UPDATE + "?uiURL=BILLBOARD" : null;
+  if (billboardURL && params.remoteNoTypeAttr)
+    billboardURL += "&amp;remoteNoTypeAttr=1";
+  if (params.billboard404)
+    billboardURL = URL_HOST + URL_PATH + "missing.html"
   var licenseURL = params.showLicense ? URL_UPDATE + "?uiURL=LICENSE" : null;
+  if (licenseURL && params.remoteNoTypeAttr)
+    licenseURL += "&amp;remoteNoTypeAttr=1";
+  if (params.license404)
+    licenseURL = URL_HOST + URL_PATH + "missing.html"
   var showPrompt = params.showPrompt ? "true" : null;
   var showNever = params.showNever ? "true" : null;
   var showSurvey = params.showSurvey ? "true" : null;
