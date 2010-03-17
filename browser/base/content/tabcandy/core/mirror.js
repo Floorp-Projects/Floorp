@@ -50,8 +50,8 @@ TabCanvas.prototype = {
     var $canvas = $(this.canvas);
     var ctx = this.canvas.getContext("2d");
   
-    var w = $canvas.width();
-    var h = $canvas.height();
+    var w = $canvas.attr('width');
+    var h = $canvas.attr('height');
   
     var fromWin = this.tab.contentWindow;
     if(fromWin == null) {
@@ -78,10 +78,8 @@ TabCanvas.prototype = {
   },
   
   animate: function(options, duration){
-/*
-    if(this.tab.contentWindow == null || this.tab.contentWindow.location.protocol != 'chrome:')
-      Utils.log('on animate', this.tab.contentWindow.location.href);
-*/
+    Utils.log('on animate', this.tab.contentWindow.location.href);
+
     var self = this;
     if( duration == null ) duration = 0;
         
@@ -145,6 +143,7 @@ TabMirror.prototype = {
           var label = tab.raw.label;
           $fav = $(mirror.favEl);
           $name = $(mirror.nameEl);
+          $canvas = $(mirror.canvasEl);
           
           if(iconUrl != $fav.attr("src")) { 
             $fav.attr("src", iconUrl);
@@ -158,6 +157,16 @@ TabMirror.prototype = {
           
           if(tab.url != mirror.url) {
             mirror.url = tab.url;
+            mirror.triggerPaint();
+          }
+          
+          var w = $canvas.width();
+          var h = $canvas.height();
+          if(w != $canvas.attr('width') || h != $canvas.attr('height')) {
+            Utils.log(w, $canvas.attr('width'), h, $canvas.attr('height'));
+            
+            $canvas.attr('width', w);
+            $canvas.attr('height', h);
             mirror.triggerPaint();
           }
 
