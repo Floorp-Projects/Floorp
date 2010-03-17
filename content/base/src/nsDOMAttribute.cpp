@@ -384,10 +384,7 @@ nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
 NS_IMETHODIMP
 nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aOldChild);
-  PRInt32 index = IndexOf(content);
-  return (index == -1) ? NS_ERROR_DOM_NOT_FOUND_ERR :
-    RemoveChildAt(index, PR_TRUE);
+  return nsINode::RemoveChild(aOldChild, aReturn);
 }
 
 NS_IMETHODIMP

@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 #include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
+#include "nsDOMError.h"
 
 class nsIContent;
 class nsIDocument;
@@ -376,6 +377,38 @@ public:
   nsIDocument *GetCurrentDoc() const
   {
     return IsInDoc() ? GetOwnerDoc() : nsnull;
+  }
+
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType) = 0;
+
+  nsINode*
+  InsertBefore(nsINode *aNewChild, nsINode *aRefChild, nsresult *aReturn)
+  {
+    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+  }
+  nsINode*
+  ReplaceChild(nsINode *aNewChild, nsINode *aOldChild, nsresult *aReturn)
+  {
+    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+  }
+  nsINode*
+  AppendChild(nsINode *aNewChild, nsresult *aReturn)
+  {
+    return InsertBefore(aNewChild, nsnull, aReturn);
+  }
+  nsresult RemoveChild(nsINode *aOldChild)
+  {
+    if (!aOldChild) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    PRInt32 index = IndexOf(aOldChild);
+    if (index == -1) {
+      // aOldChild isn't one of our children.
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+
+    return RemoveChildAt(index, PR_TRUE);
   }
 
   /**
@@ -937,6 +970,22 @@ protected:
   nsresult GetPreviousSibling(nsIDOMNode** aPrevSibling);
   nsresult GetNextSibling(nsIDOMNode** aNextSibling);
   nsresult GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+
+  nsresult ReplaceOrInsertBefore(PRBool aReplace, nsIDOMNode *aNewChild,
+                                 nsIDOMNode *aRefChild, nsIDOMNode **aReturn);
+  nsINode* ReplaceOrInsertBefore(PRBool aReplace, nsINode *aNewChild,
+                                 nsINode *aRefChild, nsresult *aReturn)
+  {
+    *aReturn = ReplaceOrInsertBefore(aReplace, aNewChild, aRefChild);
+    if (NS_FAILED(*aReturn)) {
+      return nsnull;
+    }
+
+    return aReplace ? aRefChild : aNewChild;
+  }
+  virtual nsresult ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
+                                         nsINode* aRefChild);
+  nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
