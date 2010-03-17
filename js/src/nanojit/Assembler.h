@@ -297,7 +297,7 @@ namespace nanojit
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
 
             void        compile(Fragment *frag, Allocator& alloc, bool optimize
-                                verbose_only(, LabelMap*));
+                                verbose_only(, LInsPrinter*));
 
             void        endAssembly(Fragment* frag);
             void        assemble(Fragment* frag, LirFilter* reader);

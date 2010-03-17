@@ -647,9 +647,10 @@ namespace nanojit
     {
         int d = ins->isInAr() ? arDisp(ins) : 0;
         Register r = ins->getReg();
-        verbose_only( if (d && (_logc->lcbits & LC_Assembly)) {
+        verbose_only( RefBuf b;
+                      if (d && (_logc->lcbits & LC_Assembly)) {
                          setOutputForEOL("  <= spill %s",
-                         _thisfrag->lirbuf->names->formatRef(ins)); } )
+                         _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
         asm_spill(r, d, pop, ins->isN64());
     }
 
@@ -710,9 +711,10 @@ namespace nanojit
         NanoAssert(!_allocator.isFree(r));
         NanoAssert(vic == _allocator.getActive(r));
 
-        verbose_only( if (_logc->lcbits & LC_Assembly) {
+        verbose_only( RefBuf b;
+                      if (_logc->lcbits & LC_Assembly) {
                         setOutputForEOL("  <= restore %s",
-                        _thisfrag->lirbuf->names->formatRef(vic)); } )
+                        _thisfrag->lirbuf->printer->formatRef(&b, vic)); } )
         asm_restore(vic, r);
 
         _allocator.retire(r);
@@ -825,7 +827,7 @@ namespace nanojit
         return jmpTarget;
     }
 
-    void Assembler::compile(Fragment* frag, Allocator& alloc, bool optimize verbose_only(, LabelMap* labels))
+    void Assembler::compile(Fragment* frag, Allocator& alloc, bool optimize verbose_only(, LInsPrinter* printer))
     {
         verbose_only(
         bool anyVerb = (_logc->lcbits & 0xFFFF & ~LC_FragProfile) > 0;
@@ -872,9 +874,9 @@ namespace nanojit
         })
 
         // now the the main trunk
+        verbose_only( RefBuf b; )
         verbose_only( if (anyVerb) {
-            _logc->printf("=== -- Compile trunk %s: begin\n",
-                          labels->format(frag));
+            _logc->printf("=== -- Compile trunk %s: begin\n", printer->formatAddr(&b, frag));
         })
 
         // Used for debug printing, if needed
@@ -898,7 +900,7 @@ namespace nanojit
 
         // INITIAL PRINTING
         verbose_only( if (_logc->lcbits & LC_ReadLIR) {
-        pp_init = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+        pp_init = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->printer, _logc,
                                     "Initial LIR");
         lir = pp_init;
         })
@@ -910,7 +912,7 @@ namespace nanojit
         }
 
         verbose_only( if (_logc->lcbits & LC_AfterSF) {
-        pp_after_sf = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+        pp_after_sf = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->printer, _logc,
                                                 "After StackFilter");
         lir = pp_after_sf;
         })
@@ -925,13 +927,12 @@ namespace nanojit
         )
 
         verbose_only( if (anyVerb) {
-            _logc->printf("=== -- Compile trunk %s: end\n",
-                         labels->format(frag));
+            _logc->printf("=== -- Compile trunk %s: end\n", printer->formatAddr(&b, frag));
         })
 
         verbose_only(
             if (asmVerb)
-                outputf("## compiling trunk %s", labels->format(frag));
+                outputf("## compiling trunk %s", printer->formatAddr(&b, frag));
         )
         endAssembly(frag);
 
@@ -1604,7 +1605,8 @@ namespace nanojit
                         LabelState *lstate = _labels.get(to);
                         if (lstate) {
                             unionRegisterState(lstate->regs);
-                            asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->names->formatRef(to));
+                            verbose_only( RefBuf b; )
+                            asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->printer->formatRef(&b, to));
                         } else {
                             has_back_edges = true;
                         }
@@ -1627,7 +1629,8 @@ namespace nanojit
                             LabelState *lstate = _labels.get(to);
                             if (!lstate) {
                                 _labels.add(to, 0, _allocator);
-                                asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->names->formatRef(to));
+                                verbose_only( RefBuf b; )
+                                asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->printer->formatRef(&b, to));
                             }
                         }
                         asm_output("backward edges");
@@ -1662,8 +1665,10 @@ namespace nanojit
                         intersectRegisterState(label->regs);
                         label->addr = _nIns;
                     }
-                    verbose_only( if (_logc->lcbits & LC_Assembly) {
-                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins));
+                    verbose_only(
+                        RefBuf b;
+                        if (_logc->lcbits & LC_Assembly) {
+                            asm_output("[%s]", _thisfrag->lirbuf->printer->formatRef(&b, ins));
                     })
                     break;
                 }
@@ -1798,8 +1803,9 @@ namespace nanojit
             // field in another machine instruction).
             //
             if (_logc->lcbits & LC_Assembly) {
-                LirNameMap* names = _thisfrag->lirbuf->names;
-                outputf("    %s", names->formatIns(ins));
+                InsBuf b;
+                LInsPrinter* printer = _thisfrag->lirbuf->printer;
+                outputf("    %s", printer->formatIns(&b, ins));
                 if (ins->isGuard() && ins->oprnd1() && ins->oprnd1()->isCmp()) {
                     // Special case: code is generated for guard conditions at
                     // the same time that code is generated for the guard
@@ -1809,19 +1815,19 @@ namespace nanojit
                     // the condition *is* used again we'll end up printing it
                     // twice, but that's ok.
                     outputf("    %s       # codegen'd with the %s",
-                            names->formatIns(ins->oprnd1()), lirNames[op]);
+                            printer->formatIns(&b, ins->oprnd1()), lirNames[op]);
 
                 } else if (ins->isCmov()) {
                     // Likewise for cmov conditions.
                     outputf("    %s       # codegen'd with the %s",
-                            names->formatIns(ins->oprnd1()), lirNames[op]);
+                            printer->formatIns(&b, ins->oprnd1()), lirNames[op]);
 
                 }
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
                 else if (ins->isop(LIR_mod)) {
                     // There's a similar case when a div feeds into a mod.
                     outputf("    %s       # codegen'd with the mod",
-                            names->formatIns(ins->oprnd1()));
+                            printer->formatIns(&b, ins->oprnd1()));
                 }
 #endif
             }
@@ -1940,7 +1946,8 @@ namespace nanojit
             if (ins) {
                 NanoAssertMsg(!_allocator.isFree(r),
                               "Coding error; register is both free and active! " );
-                const char* n = _thisfrag->lirbuf->names->formatRef(ins);
+                RefBuf b;
+                const char* n = _thisfrag->lirbuf->printer->formatRef(&b, ins);
 
                 if (ins->isop(LIR_param) && ins->paramKind()==1 &&
                     r == Assembler::savedRegs[ins->paramArg()])
@@ -1969,7 +1976,8 @@ namespace nanojit
         int32_t arIndex = 0;
         for (AR::Iter iter(_activation); iter.next(ins, nStackSlots, arIndex); )
         {
-            const char* n = _thisfrag->lirbuf->names->formatRef(ins);
+            RefBuf b;
+            const char* n = _thisfrag->lirbuf->printer->formatRef(&b, ins);
             if (nStackSlots > 1) {
                 VMPI_sprintf(s," %d-%d(%s)", 4*arIndex, 4*(arIndex+nStackSlots-1), n);
             }

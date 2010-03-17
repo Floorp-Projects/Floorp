@@ -97,34 +97,32 @@ nanojit::StackFilter::getTop(LIns*)
 
 #if defined NJ_VERBOSE
 void
-nanojit::LirNameMap::formatGuard(LIns *i, char *out)
+nanojit::LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
 {
-    LasmSideExit *x;
-
-    x = (LasmSideExit *)i->record()->exit;
-    sprintf(out,
+    RefBuf b1, b2;
+    LasmSideExit *x = (LasmSideExit *)ins->record()->exit;
+    snprintf(buf->buf, buf->len,
             "%s: %s %s -> line=%ld (GuardID=%03d)",
-            formatRef(i),
-            lirNames[i->opcode()],
-            i->oprnd1() ? formatRef(i->oprnd1()) : "",
+            formatRef(&b1, ins),
+            lirNames[ins->opcode()],
+            ins->oprnd1() ? formatRef(&b2, ins->oprnd1()) : "",
             (long)x->line,
-            i->record()->profGuardID);
+            ins->record()->profGuardID);
 }
 
 void
-nanojit::LirNameMap::formatGuardXov(LIns *i, char *out)
+nanojit::LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
 {
-    LasmSideExit *x;
-
-    x = (LasmSideExit *)i->record()->exit;
-    sprintf(out,
+    RefBuf b1, b2, b3;
+    LasmSideExit *x = (LasmSideExit *)ins->record()->exit;
+    snprintf(buf->buf, buf->len,
             "%s = %s %s, %s -> line=%ld (GuardID=%03d)",
-            formatRef(i),
-            lirNames[i->opcode()],
-            formatRef(i->oprnd1()),
-            formatRef(i->oprnd2()),
+            formatRef(&b1, ins),
+            lirNames[ins->opcode()],
+            formatRef(&b2, ins->oprnd1()),
+            formatRef(&b3, ins->oprnd2()),
             (long)x->line,
-            i->record()->profGuardID);
+            ins->record()->profGuardID);
 }
 #endif
 
@@ -269,7 +267,6 @@ public:
     bool lookupFunction(const string &name, CallInfo *&ci);
 
     LirBuffer *mLirbuf;
-    verbose_only( LabelMap *mLabelMap; )
     LogControl mLogc;
     avmplus::AvmCore mCore;
     Allocator mAlloc;
@@ -524,7 +521,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
 #ifdef DEBUG
     if (mParent.mVerbose) {
         mLir = mVerboseWriter = new VerboseWriter(mParent.mAlloc, mLir,
-                                                  mParent.mLirbuf->names,
+                                                  mParent.mLirbuf->printer,
                                                   &mParent.mLogc);
     }
 #endif
@@ -805,7 +802,7 @@ FragmentAssembler::endFragment()
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
     mParent.mAssm.compile(mFragment, mParent.mAlloc, optimize
-              verbose_only(, mParent.mLabelMap));
+              verbose_only(, mParent.mLirbuf->printer));
 
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
@@ -1968,8 +1965,7 @@ Lirasm::Lirasm(bool verbose) :
 #ifdef DEBUG
     if (mVerbose) {
         mLogc.lcbits = LC_ReadLIR | LC_Assembly | LC_RegAlloc | LC_Activation;
-        mLabelMap = new (mAlloc) LabelMap(mAlloc, &mLogc);
-        mLirbuf->names = new (mAlloc) LirNameMap(mAlloc, mLabelMap);
+        mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc);
     }
 #endif
 
