@@ -88,6 +88,40 @@ Group.prototype = {
     });    
   },
   
+  arrange: function(){
+    var bb = this._getBoundingBox();
+    var tab;
+
+    var w = parseInt(Math.sqrt((bb.height * bb.width)/this._children.length));
+    var h = w * (2/3);
+
+    var x=0;
+    var y=0;
+    for([,tab] in Iterator(this._children)){
+      // This is for actual tabs. Need a better solution.
+      // One that doesn't require special casing to find the linked info.
+      // If I just animate the tab, the rest should happen automatically!
+      if( $("canvas", tab)[0] != null ){
+        $("canvas", tab).data('link').animate({height:h}, 250);
+      }
+      
+      //var el = $("canvas", tab);
+      //if( el ){ tab = el.data("link") }
+      
+      $(tab).animate({
+        height:h, width: w,
+        top:y+bb.top, left:x+bb.left,
+      }, 250);
+      
+      
+      
+      x += w+10;
+      if( x+w > bb.width){x = 0;y += h+10;}
+    
+    }
+    
+  },
+  
   _addHandlers: function(container){
     var self = this;
     
@@ -113,7 +147,7 @@ Group.prototype = {
       out: function(){
         $dragged.data("group").remove($dragged);
       }
-    });
+    }).dblclick(function(){self.arrange();})
     
     }
 }
@@ -160,8 +194,8 @@ window.Groups = {
         dragged.removeClass("willGroup")   
   
         dragged.animate({
-          top: target.position().top+10,
-          left: target.position().left+10,      
+          top: target.position().top+15,
+          left: target.position().left+15,      
         }, 100);
         
         setTimeout( function(){
