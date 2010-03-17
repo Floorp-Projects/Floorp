@@ -43,6 +43,7 @@
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
+#include "nsRegion.h"
 
 #include "prthread.h"
 #include "nsEvent.h"
@@ -587,6 +588,16 @@ class nsIWidget : public nsISupports {
      * widget.
      */
     virtual nsTransparencyMode GetTransparencyMode() = 0;
+
+    /**
+     * Updates a region of the window that might not have opaque content drawn. Widgets should
+     * assume that the initial possibly transparent region is empty.
+     *
+     * @param aDirtyRegion the region of the window that aMaybeTransparentRegion pertains to
+     * @param aPossiblyTransparentRegion the region of the window that is possibly transparent
+     */
+    virtual void UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
+                                                 const nsIntRegion &aPossiblyTransparentRegion) {};
 
     /**
      * This represents a command to set the bounds and clip region of

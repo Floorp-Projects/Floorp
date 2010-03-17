@@ -77,6 +77,9 @@
 #include "nsIAccessible.h"
 #endif
 
+#if !defined(WINCE)
+#include "nsUXThemeData.h"
+#endif // !defined(WINCE)
 /**
  * Forward class definitions
  */
@@ -182,6 +185,7 @@ public:
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
+  virtual void            UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion, const nsIntRegion& aPossiblyTransparentRegion);
 #endif // MOZ_XUL
 #ifdef NS_ENABLE_TSF
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus);
@@ -385,6 +389,7 @@ private:
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force = PR_FALSE);
   nsresult                UpdateTranslucentWindow();
   void                    SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode);
+  void                    UpdateGlass();
 protected:
 #endif // MOZ_XUL
 
@@ -492,6 +497,10 @@ protected:
   nsRefPtr<gfxWindowsSurface> mTransparentSurface;
   HDC                   mMemoryDC;
   nsTransparencyMode    mTransparencyMode;
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  nsIntRegion           mPossiblyTransparentRegion;
+  MARGINS               mGlassMargins;
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #endif // MOZ_XUL
 
   // Win7 Gesture processing and management
