@@ -41,16 +41,14 @@
 #include "nsDOMAttributeMap.h"
 #include "nsIDOMNode.h"
 #include "nsIMutationObserver.h"
+#include "nsINode.h"
 
 struct JSContext;
 struct JSObject;
-class nsINode;
-class nsNodeInfoManager;
 class nsIVariant;
 class nsIDOMUserDataHandler;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
-struct CharacterDataChangeInfo;
 
 class nsNodeUtils
 {
@@ -193,8 +191,14 @@ public:
                         JSObject *aNewScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
-    return CloneAndAdopt(aNode, PR_FALSE, PR_TRUE, aNewNodeInfoManager, aCx,
-                         aOldScope, aNewScope, aNodesWithProperties, nsnull);
+    nsresult rv = CloneAndAdopt(aNode, PR_FALSE, PR_TRUE, aNewNodeInfoManager,
+                                aCx, aOldScope, aNewScope, aNodesWithProperties,
+                                nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      nsMutationGuard::DidMutate();
+    }
+
+    return rv;
   }
 
   /**

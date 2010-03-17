@@ -6056,6 +6056,10 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
                                          PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (adoptedNode->GetOwnerDoc() != this) {
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  }
+
   return CallQueryInterface(adoptedNode, aResult);
 }
 
