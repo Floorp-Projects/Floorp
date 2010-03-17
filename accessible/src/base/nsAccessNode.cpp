@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNode.h"
+#include "nsDocAccessible.h"
 #include "nsIAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsHashtable.h"
@@ -78,7 +78,8 @@ nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
-nsAccessNodeHashtable nsAccessNode::gGlobalDocAccessibleCache;
+nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
+  nsAccessNode::gGlobalDocAccessibleCache;
 
 nsApplicationAccessibleWrap *nsAccessNode::gApplicationAccessible = nsnull;
 
@@ -346,12 +347,6 @@ nsPresContext* nsAccessNode::GetPresContext()
   return presShell->GetPresContext();
 }
 
-// nsAccessNode protected
-already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
-{
-  return GetDocAccessibleFor(mWeakShell); // Addref'd
-}
-
 already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
@@ -432,9 +427,11 @@ nsAccessNode::GetNumChildren(PRInt32 *aNumChildren)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
+nsAccessNode::GetAccessibleDocument(nsIAccessibleDocument **aAccessibleDocument)
 {
-  *aDocAccessible = GetDocAccessibleFor(mWeakShell).get();
+  NS_ENSURE_ARG_POINTER(aAccessibleDocument);
+
+  NS_IF_ADDREF(*aAccessibleDocument = GetDocAccessibleFor(mWeakShell));
   return NS_OK;
 }
 
@@ -643,19 +640,14 @@ nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode public static
 
-already_AddRefed<nsIAccessibleDocument>
+nsDocAccessible*
 nsAccessNode::GetDocAccessibleFor(nsIDocument *aDocument)
 {
-  if (!aDocument) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(do_QueryInterface(
-    gGlobalDocAccessibleCache.GetWeak(static_cast<void*>(aDocument))));
-  return docAccessible.forget();
+  return aDocument ?
+    gGlobalDocAccessibleCache.GetWeak(static_cast<void*>(aDocument)) : nsnull;
 }
- 
-already_AddRefed<nsIAccessibleDocument>
+
+nsDocAccessible*
 nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aWeakShell)
 {
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
@@ -663,7 +655,7 @@ nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aWeakShell)
     return nsnull;
   }
 
-  return nsAccessNode::GetDocAccessibleFor(presShell->GetDocument());
+  return GetDocAccessibleFor(presShell->GetDocument());
 }
 
 already_AddRefed<nsIAccessibleDocument>
@@ -675,7 +667,12 @@ nsAccessNode::GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
     NS_ASSERTION(docShell, "This method currently only supports docshells");
     nsCOMPtr<nsIPresShell> presShell;
     docShell->GetPresShell(getter_AddRefs(presShell));
-    return presShell ? GetDocAccessibleFor(presShell->GetDocument()) : nsnull;
+    if (!presShell)
+      return nsnull;
+
+    nsDocAccessible *docAcc = GetDocAccessibleFor(presShell->GetDocument());
+    NS_IF_ADDREF(docAcc);
+    return docAcc;
   }
 
   nsCOMPtr<nsIDOMNode> node = nsCoreUtils::GetDOMNodeForContainer(aContainer);
@@ -692,7 +689,7 @@ nsAccessNode::GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
   return docAccessible;
 }
  
-already_AddRefed<nsIAccessibleDocument>
+nsDocAccessible*
 nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIPresShell> eventShell = nsCoreUtils::GetPresShellFor(aNode);
@@ -777,4 +774,13 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
   }
  
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessNode protected
+
+nsDocAccessible*
+nsAccessNode::GetDocAccessible() const
+{
+  return GetDocAccessibleFor(mWeakShell);
 }

@@ -62,6 +62,7 @@ class nsPresContext;
 class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
+class nsDocAccessible;
 class nsRootAccessible;
 class nsApplicationAccessibleWrap;
 class nsIDocShellTreeItem;
@@ -123,12 +124,6 @@ class nsAccessNode: public nsIAccessNode
      */
     static already_AddRefed<nsApplicationAccessibleWrap> GetApplicationAccessible();
 
-    // Static cache methods for global document cache
-    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocument *aDocument);
-    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIWeakReference *aWeakShell);
-    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocShellTreeItem *aContainer, PRBool aCanCreate = PR_FALSE);
-    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
-
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;
@@ -173,11 +168,30 @@ class nsAccessNode: public nsIAccessNode
   PRBool IsInCache();
 #endif
 
+  /**
+   * Return cached document accessible.
+   */
+  static nsDocAccessible* GetDocAccessibleFor(nsIDocument *aDocument);
+  static nsDocAccessible* GetDocAccessibleFor(nsIWeakReference *aWeakShell);
+  static nsDocAccessible* GetDocAccessibleFor(nsIDOMNode *aNode);
+
+  /**
+   * Return document accessible.
+   */
+  static already_AddRefed<nsIAccessibleDocument>
+    GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
+                        PRBool aCanCreate = PR_FALSE);
+
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
 
     nsPresContext* GetPresContext();
-    already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
+
+  /**
+   * Return the document accessible for this accesnode.
+   */
+  nsDocAccessible* GetDocAccessible() const;
+
     void LastRelease();
 
     nsCOMPtr<nsIDOMNode> mDOMNode;
@@ -199,7 +213,8 @@ protected:
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 
-    static nsAccessNodeHashtable gGlobalDocAccessibleCache;
+  static nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
+    gGlobalDocAccessibleCache;
 
 private:
   static nsApplicationAccessibleWrap *gApplicationAccessible;
