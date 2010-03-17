@@ -89,7 +89,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGTextPathElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGTextPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTextPathElement,
                            nsIDOMSVGTextContentElement, nsIDOMSVGURIReference)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTextPathElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTextPathElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathElementBase)
 
 //----------------------------------------------------------------------
