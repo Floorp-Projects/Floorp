@@ -52,6 +52,7 @@
 
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
+#include "gfxFont.h"
 #ifdef MOZ_FT2_FONTS
 #include "gfxFT2Fonts.h"
 #else
