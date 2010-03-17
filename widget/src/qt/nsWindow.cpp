@@ -482,8 +482,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
 
-    if (mWindowType == eWindowType_toplevel ||
-        mWindowType == eWindowType_dialog) {
+    if (mIsTopLevel) {
         SetSizeMode(nsSizeMode_Normal);
 
         // the internal QGraphicsWidget is always in the top corner of
