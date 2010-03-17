@@ -1288,6 +1288,17 @@ void nsRegion::MoveBy (nsPoint aPt)
   }
 }
 
+nsIntRegion nsRegion::ToOutsidePixels(nscoord aAppUnitsPerPixel) const {
+  nsIntRegion result;
+  nsRegionRectIterator rgnIter(*this);
+  const nsRect *currentRect;
+  while (currentRect = rgnIter.Next()) {
+    nsIntRect deviceRect = currentRect->ToOutsidePixels(aAppUnitsPerPixel);
+    result.Or(result, deviceRect);
+  }
+  return result;
+}
+
 void nsRegion::SimplifyOutward (PRUint32 aMaxRects)
 {
   NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
