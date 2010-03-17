@@ -1434,7 +1434,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 // has the right value
                 if (value->isconstq()) {
                     underrunProtect(4*4);
-                    asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
+                    asm_immf_nochk(rv, value->imm64_0(), value->imm64_1());
                 }
             } else {
                 int da = findMemFor(value);
@@ -1485,7 +1485,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 // has the right value
                 if (value->isconstq()) {
                     underrunProtect(4*4);
-                    asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
+                    asm_immf_nochk(rv, value->imm64_0(), value->imm64_1());
                 }
             } else {
                 NanoAssertMsg(0, "st32f not supported with non-VFP, fix me");
@@ -1499,10 +1499,10 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
     //asm_output(">>> store64");
 }
 
-// stick a quad into register rr, where p points to the two
+// Stick a float into register rr, where p points to the two
 // 32-bit parts of the quad, optinally also storing at FP+d
 void
-Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
+Assembler::asm_immf_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
 {
     // We're not going to use a slot, because it might be too far
     // away.  Instead, we're going to stick a branch in the stream to
@@ -1524,9 +1524,9 @@ Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
 }
 
 void
-Assembler::asm_quad(LInsp ins)
+Assembler::asm_immf(LInsp ins)
 {
-    //asm_output(">>> asm_quad");
+    //asm_output(">>> asm_immf");
 
     int d = deprecated_disp(ins);
     Register rr = ins->deprecated_getReg();
@@ -1537,7 +1537,7 @@ Assembler::asm_quad(LInsp ins)
         asm_spill(rr, d, false, true);
 
         underrunProtect(4*4);
-        asm_quad_nochk(rr, ins->imm64_0(), ins->imm64_1());
+        asm_immf_nochk(rr, ins->imm64_0(), ins->imm64_1());
     } else {
         NanoAssert(d);
         // asm_mmq might spill a reg, so don't call it;
@@ -1550,7 +1550,7 @@ Assembler::asm_quad(LInsp ins)
         asm_ld_imm(IP, ins->imm64_0());
     }
 
-    //asm_output("<<< asm_quad");
+    //asm_output("<<< asm_immf");
 }
 
 void
@@ -2676,7 +2676,7 @@ Assembler::asm_param(LInsp ins)
 }
 
 void
-Assembler::asm_int(LInsp ins)
+Assembler::asm_immi(LInsp ins)
 {
     Register rr = deprecated_prepResultReg(ins, GpRegs);
     asm_ld_imm(rr, ins->imm32());
