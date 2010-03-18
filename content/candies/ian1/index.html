@@ -22,6 +22,7 @@
     background-color: rgba(255,255,255,.8);
     width: 160px;
     height: 137px;
+    overflow: hidden;
   }
     
   .fav{
@@ -51,7 +52,7 @@
   
   .name{
   	position: absolute;
-  	top: 123px;
+  	bottom: 0px;
     font-size: 12px;
     color: #888;
     display:block;
@@ -119,9 +120,22 @@
   }
     
   .group{
+    background-color: white;
     cursor: move;
-    -moz-box-shadow: 0px 0px 5px rgba(0,0,0,.2);
+    -moz-box-shadow: inset 2px 2px 12px rgba(0,0,0,.15);
+    -moz-border-radius: 6px 6px 0px 6px;        
+    overflow: hidden;
   }    
+   
+  /* Resizable
+  ----------------------------------*/
+  .resizer{
+    background-image: url(../zoomgroups/gfx/resizer.png);
+  }
+  .ui-resizable { position: relative;}
+  .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
+  .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
+  .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
 
   </style>
   
@@ -151,8 +165,10 @@
   <script type="text/javascript;version=1.8" src="../../js/core/tabs.js"></script>
   <script type="text/javascript;version=1.8" src="../../js/core/mirror.js"></script>
   <script type="text/javascript;version=1.8" src="js/ui.js"></script>  
+<!--
   <script type="text/javascript;version=1.8" src="../../js/shared/jquery.lasso.js"></script>
   <script type="text/javascript;version=1.8" src="js/jquery.select.js"></script>  
+-->
   
   <script type="text/javascript;version=1.8" src="../zoomgroups/js/groups.js"></script>
 
