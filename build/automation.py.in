@@ -85,6 +85,15 @@ else:
   import errno
 
 
+# We use the logging system here primarily because it'll handle multiple
+# threads, which is needed to process the output of the server and application
+# processes simultaneously.
+_log = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
+_log.setLevel(logging.INFO)
+_log.addHandler(handler)
+
+
 #################
 # PROFILE SETUP #
 #################
@@ -143,16 +152,8 @@ class Automation(object):
   DEFAULT_HTTP_PORT = _DEFAULT_HTTP_PORT
   DEFAULT_SSL_PORT = _DEFAULT_SSL_PORT
 
-  log = logging.getLogger()
-
   def __init__(self):
-
-    # We use the logging system here primarily because it'll handle multiple
-    # threads, which is needed to process the output of the server and application
-    # processes simultaneously.
-    handler = logging.StreamHandler(sys.stdout)
-    self.log.setLevel(logging.INFO)
-    self.log.addHandler(handler)
+    self.log = _log
 
   def setServerInfo(self, webServer = _DEFAULT_WEB_SERVER, httpPort = _DEFAULT_HTTP_PORT, sslPort = _DEFAULT_SSL_PORT):
     self.webServer = webServer
@@ -184,6 +185,28 @@ class Automation(object):
     Represents our view of a subprocess.
     It adds a kill() method which allows it to be stopped explicitly.
     """
+
+    def __init__(self,
+                 args,
+                 bufsize=0,
+                 executable=None,
+                 stdin=None,
+                 stdout=None,
+                 stderr=None,
+                 preexec_fn=None,
+                 close_fds=False,
+                 shell=False,
+                 cwd=None,
+                 env=None,
+                 universal_newlines=False,
+                 startupinfo=None,
+                 creationflags=0):
+      subprocess.Popen.__init__(self, args, bufsize, executable,
+                                stdin, stdout, stderr,
+                                preexec_fn, close_fds,
+                                shell, cwd, env,
+                                universal_newlines, startupinfo, creationflags)
+      self.log = _log
 
     def kill(self):
       if Automation().IS_WIN32:
