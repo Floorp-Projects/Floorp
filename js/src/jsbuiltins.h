@@ -503,9 +503,6 @@ struct ClosureVarInfo;
 jsdouble FASTCALL
 js_StringToNumber(JSContext* cx, JSString* str);
 
-jsdouble FASTCALL
-js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
-
 /* Extern version of SetBuiltinError. */
 extern JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx);
@@ -557,8 +554,7 @@ JS_DECLARE_CALLINFO(js_HasNamedProperty)
 JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
 JS_DECLARE_CALLINFO(js_TypeOfObject)
 JS_DECLARE_CALLINFO(js_TypeOfBoolean)
-JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
-JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
+JS_DECLARE_CALLINFO(js_BooleanIntToString)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
 JS_DECLARE_CALLINFO(js_PopInterpFrame)
 JS_DECLARE_CALLINFO(js_ConcatN)
