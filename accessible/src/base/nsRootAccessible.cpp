@@ -550,7 +550,21 @@ nsRootAccessible::FireCurrentFocusEvent()
         nsCOMPtr<nsIDOMNode> targetNode;
         accService->GetRelevantContentNodeFor(focusedNode,
                                             getter_AddRefs(targetNode));
+
         if (targetNode) {
+          // If the focused element is document element or HTML body element
+          // then simulate the focus event for the document.
+          nsCOMPtr<nsIContent> targetContent(do_QueryInterface(targetNode));
+          if (targetContent) {
+            nsCOMPtr<nsIDOMNode> document =
+              do_QueryInterface(targetContent->GetOwnerDoc());
+            if (targetContent == nsCoreUtils::GetRoleContent(document)) {
+              HandleEventWithTarget(event, document);
+              return;
+            }
+          }
+
+          // Otherwise simulate the focus event for currently focused node.
           HandleEventWithTarget(event, targetNode);
         }
       }
