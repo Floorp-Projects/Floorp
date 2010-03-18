@@ -101,7 +101,7 @@ nanojit::LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
 {
     RefBuf b1, b2;
     LasmSideExit *x = (LasmSideExit *)ins->record()->exit;
-    snprintf(buf->buf, buf->len,
+    VMPI_snprintf(buf->buf, buf->len,
             "%s: %s %s -> line=%ld (GuardID=%03d)",
             formatRef(&b1, ins),
             lirNames[ins->opcode()],
@@ -115,7 +115,7 @@ nanojit::LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
 {
     RefBuf b1, b2, b3;
     LasmSideExit *x = (LasmSideExit *)ins->record()->exit;
-    snprintf(buf->buf, buf->len,
+    VMPI_snprintf(buf->buf, buf->len,
             "%s = %s %s, %s -> line=%ld (GuardID=%03d)",
             formatRef(&b1, ins),
             lirNames[ins->opcode()],
