@@ -128,7 +128,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGStyleElement)
                            nsIDOMSVGElement, nsIDOMSVGStyleElement,
                            nsIDOMLinkStyle, nsIStyleSheetLinkingElement,
                            nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGStyleElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGStyleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGStyleElementBase)
 
 //----------------------------------------------------------------------

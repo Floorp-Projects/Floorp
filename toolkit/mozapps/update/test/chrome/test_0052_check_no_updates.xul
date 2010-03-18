@@ -89,7 +89,7 @@ function test02() {
 }
 
 /**
- * finished page
+ * no updates found page
  */
 function test03() {
   ok(true, "Entering test03 - finished page");

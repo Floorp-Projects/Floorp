@@ -222,6 +222,7 @@ CMMSRCS += \
   chrome_paths_mac.mm \
   mach_ipc_mac.mm \
   platform_util_mac.mm \
+  chrome_application_mac.mm \
   $(NULL)
 
 CPPSRCS += \

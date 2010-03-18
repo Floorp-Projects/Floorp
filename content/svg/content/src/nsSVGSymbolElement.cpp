@@ -89,7 +89,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGSymbolElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGSymbolElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
                            nsIDOMSVGSymbolElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSymbolElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSymbolElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSymbolElementBase)
 
 //----------------------------------------------------------------------

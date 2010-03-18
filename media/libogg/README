@@ -23,13 +23,16 @@ Directory:
 
 ./include       Library API headers and codebooks
 
-./debian        Rules/spec files for building Debian .deb packages
-
 ./doc           Ogg specification documents
 
 ./win32		Win32 projects and build automation
 
-./mac		MacOS 9 projects and build automation
+./macosx	MacOS X project and build files
+
+./macos		Classic MacOS 9 projects and build automation
+
+./debian        Rules/spec files for building Debian .deb packages
+		(may not be present, depending on your distribution)
 
 WHAT IS OGG?:
 
@@ -82,6 +85,33 @@ You can also run one of the batch files from the commandline.
 
 E.g.: build_ogg_dynamic
 
+CROSS COMPILING FROM LINUX TO WIN32:
+
+It is also possible to cross compile from Linux to windows using the MinGW
+cross tools and even to run the test suite under Wine, the Linux/*nix
+windows emulator.
+
+On Debian and Ubuntu systems, these cross compiler tools can be installed
+by doing:
+
+    sudo apt-get mingw32 mingw32-binutils mingw32-runtime wine
+
+Once these tools are installed its possible to compile and test by
+executing the following commands:
+
+    ./configure --host=i586-mingw32msvc --target=i586-mingw32msvc \
+         --build=i586-linux
+    make
+    make check
+
+The above has been tested with the following versions of the tools on
+Ubuntu's Hardy Heron release:
+
+    mingw32             4.2.1.dfsg-1ubuntu1
+    mingw32-binutils    2.17.50-20070129.1-1
+    mingw32-runtime     3.13-1
+    wine                0.9.59-0ubuntu4
+
 BUILDING ON MACOS 9:
 
 Ogg on MacOS 9 is built using CodeWarrior 5.3.  To build it, first
@@ -100,4 +130,4 @@ and #include "ogg/ogg.h" wherever you need to acces Ogg functionality.
 (Build instructions for Ogg codecs such as vorbis are similar and may
 be found in those source modules' README files)
 
-$Id: README 10478 2005-11-28 04:23:35Z giles $
+$Id: README 14726 2008-04-14 08:40:46Z erikd $

@@ -2155,6 +2155,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  RollUpPopups();
+
   nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
   if (!geckoWindow)
     return;

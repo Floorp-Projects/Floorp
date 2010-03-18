@@ -96,7 +96,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGTitleElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGTitleElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTitleElement,
                            nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTitleElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTitleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTitleElementBase)
 
 

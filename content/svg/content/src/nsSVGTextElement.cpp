@@ -106,7 +106,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGTextElement)
                            nsIDOMSVGElement, nsIDOMSVGTextElement,
                            nsIDOMSVGTextPositioningElement,
                            nsIDOMSVGTextContentElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTextElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTextElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 
 //----------------------------------------------------------------------

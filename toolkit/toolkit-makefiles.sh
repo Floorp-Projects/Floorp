@@ -628,9 +628,6 @@ MAKEFILES_embedding="
   embedding/browser/gtk/Makefile
   embedding/browser/gtk/src/Makefile
   embedding/browser/gtk/tests/Makefile
-  embedding/browser/photon/Makefile
-  embedding/browser/photon/src/Makefile
-  embedding/browser/photon/tests/Makefile
   embedding/components/Makefile
   embedding/components/appstartup/Makefile
   embedding/components/appstartup/src/Makefile
@@ -652,9 +649,6 @@ MAKEFILES_embedding="
   embedding/components/windowwatcher/Makefile
   embedding/components/windowwatcher/public/Makefile
   embedding/components/windowwatcher/src/Makefile
-  embedding/components/ui/Makefile
-  embedding/components/ui/helperAppDlg/Makefile
-  embedding/components/ui/progressDlg/Makefile
   embedding/tests/Makefile
   embedding/tests/winEmbed/Makefile
 "

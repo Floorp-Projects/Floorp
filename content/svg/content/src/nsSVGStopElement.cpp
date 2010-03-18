@@ -93,7 +93,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGStopElement,nsSVGStopElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGStopElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGStopElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGStopElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGStopElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGStopElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGStopElementBase)
 
 //----------------------------------------------------------------------

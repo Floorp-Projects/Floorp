@@ -7,6 +7,7 @@
 == underline-table-cell-quirks.html underline-table-cell-quirks-ref.html
 != underline-table-cell-quirks.html underline-table-cell-quirks-notref.html
 fails == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html # currently too quirky (bug 403524)
+fails == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks-ref.html # same problem as previous line (bug 403524)
 == underline-block-standards.html underline-block-standards-ref.html
 != underline-block-standards.html underline-block-standards-notref.html
 == underline-inline-block-standards.html underline-inline-block-standards-ref.html
@@ -15,6 +16,7 @@ fails == underline-block-propagation-quirks.html underline-block-propagation-qui
 != underline-table-caption-standards.html underline-table-caption-standards-notref.html
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
-fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that we propagate to floats (bug 403526)
+fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that decoration is drawn through non-text child (bug 428599)
+== underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-ref.html
 fails == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html # bug 403524

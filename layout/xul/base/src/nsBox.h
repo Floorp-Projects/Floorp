@@ -129,7 +129,6 @@ protected:
   virtual void ListBox(nsAutoString& aResult);
 #endif
   
-  virtual PRBool GetDefaultFlex(PRInt32& aFlex);
   virtual void GetLayoutFlags(PRUint32& aFlags);
 
   NS_HIDDEN_(nsresult) BeginLayout(nsBoxLayoutState& aState);

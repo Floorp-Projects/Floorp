@@ -38,14 +38,6 @@
 
     function doTest()
     {
-      if (LINUX) {
-        // XXX: bug 540529
-
-        todo(false, "Failure on Linux.");
-        SimpleTest.finish();
-        return;
-      }
-
       var tabBrowser = document.getElementById("tabbrowser");
 
       var progressListener =

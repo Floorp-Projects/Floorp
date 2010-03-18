@@ -856,8 +856,6 @@ public:
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
-  virtual void DocumentStatesChanged(nsIDocument* aDocument,
-                                     PRInt32 aStateMask);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
                                nsIStyleSheet* aStyleSheet,
                                PRBool aDocumentSheet);
@@ -1710,15 +1708,6 @@ PresShell::Init(nsIDocument* aDocument,
     }
 #endif
 
-#ifdef MOZ_SMIL
-  if (mDocument->HasAnimationController()) {
-    nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
-    if (!animCtrl->IsPaused()) {
-      animCtrl->StartSampling(GetPresContext()->RefreshDriver());
-    }
-  }
-#endif // MOZ_SMIL
-
   return NS_OK;
 }
 
@@ -1828,15 +1817,10 @@ PresShell::Destroy()
     mDocument->DeleteShell();
   }
 
-  nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
-  if (mDocument->HasAnimationController()) {
-    mDocument->GetAnimationController()->StopSampling(rd);
-  }
-
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
-  rd->RemoveRefreshObserver(this, Flush_Layout);
+  GetPresContext()->RefreshDriver()->RemoveRefreshObserver(this, Flush_Layout);
   mResizeEvent.Revoke();
   if (mAsyncResizeTimerIsActive) {
     mAsyncResizeEventTimer->Cancel();
@@ -4909,23 +4893,6 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
-    VERIFY_STYLE_TREE;
-  }
-}
-
-void
-PresShell::DocumentStatesChanged(nsIDocument* aDocument,
-                                 PRInt32 aStateMask)
-{
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  if (mDidInitialReflow &&
-      mStyleSet->HasDocumentStateDependentStyle(mPresContext,
-                                                mDocument->GetRootContent(),
-                                                aStateMask)) {
-    mFrameConstructor->PostRestyleEvent(mDocument->GetRootContent(),
-                                        eReStyle_Self, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 }

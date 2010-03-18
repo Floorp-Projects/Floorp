@@ -76,7 +76,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGMetadataElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGMetadataElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGMetadataElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGMetadataElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGMetadataElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGMetadataElementBase)
 
 

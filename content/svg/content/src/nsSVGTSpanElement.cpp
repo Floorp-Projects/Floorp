@@ -109,7 +109,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGTSpanElement)
                            nsIDOMSVGElement, nsIDOMSVGTSpanElement,
                            nsIDOMSVGTextPositioningElement,
                            nsIDOMSVGTextContentElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTSpanElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTSpanElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanElementBase)
 
 //----------------------------------------------------------------------

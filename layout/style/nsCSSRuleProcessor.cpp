@@ -707,7 +707,6 @@ static const PLDHashTableOps AttributeSelectorOps = {
 struct RuleCascadeData {
   RuleCascadeData(nsIAtom *aMedium, PRBool aQuirksMode)
     : mRuleHash(aQuirksMode),
-      mSelectorDocumentStates(0),
       mStateSelectors(),
       mCacheKey(aMedium),
       mNext(nsnull),
@@ -737,7 +736,6 @@ struct RuleCascadeData {
   RuleHash*
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
   nsTArray<nsCSSSelector*> mStateSelectors;
-  PRUint32                 mSelectorDocumentStates;
   nsTArray<nsCSSSelector*> mClassSelectors;
   nsTArray<nsCSSSelector*> mIDSelectors;
   PLDHashTable             mAttributeSelectors;
@@ -1123,12 +1121,6 @@ RuleProcessorData::ContentState()
     }
   }
   return mContentState;
-}
-
-PRUint32
-RuleProcessorData::DocumentState()
-{
-  return mContent->GetOwnerDoc()->GetDocumentState();
 }
 
 PRBool
@@ -1712,8 +1704,13 @@ mozLocaleDirMatches(RuleProcessorData& data, PRBool setNodeFlags,
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozLocaleDir,
                   "Unexpected atom");
+  nsIDocument* doc = data.mContent->GetDocument();
 
-  PRBool docIsRTL = (data.DocumentState() & NS_DOCUMENT_STATE_RTL_LOCALE) != 0;
+  if (!doc) {
+    return PR_FALSE;
+  }
+
+  PRBool docIsRTL = doc && doc->IsDocumentRightToLeft();
 
   nsDependentString dirString(pseudoClass->u.mString);
   NS_ASSERTION(dirString.EqualsLiteral("ltr") || dirString.EqualsLiteral("rtl"),
@@ -1752,16 +1749,6 @@ mozLWThemeDarkTextMatches(RuleProcessorData& data, PRBool setNodeFlags,
                   "Unexpected atom");
   nsIDocument* doc = data.mContent->GetOwnerDoc();
   return doc && doc->GetDocumentLWTheme() == nsIDocument::Doc_Theme_Dark;
-}
-
-static PRBool NS_FASTCALL
-mozWindowInactiveMatches(RuleProcessorData& data, PRBool setNodeFlags,
-                         nsPseudoClassList* pseudoClass)
-{
-  NS_PRECONDITION(pseudoClass->mAtom ==
-                    nsCSSPseudoClasses::mozWindowInactive,
-                  "Unexpected atom");
-  return (data.DocumentState() & NS_DOCUMENT_STATE_WINDOW_INACTIVE) != 0;
 }
 
 static PRBool NS_FASTCALL
@@ -2305,14 +2292,6 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
   return hint;
 }
 
-PRBool
-nsCSSRuleProcessor::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
-{
-  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
-
-  return cascade && (cascade->mSelectorDocumentStates & aData->mStateMask) != 0;
-}
-
 struct AttributeEnumData {
   AttributeEnumData(AttributeRuleProcessorData *aData)
     : data(aData), change(nsReStyleHint(0)) {}
@@ -2477,20 +2456,6 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
   return PR_FALSE;
 }
 
-inline
-void AddSelectorDocumentStates(nsCSSSelector& aSelector, PRUint32* aStateMask)
-{
-  for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
-       pseudoClass; pseudoClass = pseudoClass->mNext) {
-    if (pseudoClass->mAtom == nsCSSPseudoClasses::mozLocaleDir) {
-      *aStateMask |= NS_DOCUMENT_STATE_RTL_LOCALE;
-    }
-    else if (pseudoClass->mAtom == nsCSSPseudoClasses::mozWindowInactive) {
-      *aStateMask |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
-    }
-  }
-}
-
 static PRBool
 AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
 {
@@ -2568,9 +2533,6 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
     // in the future if :not() is extended. 
     for (nsCSSSelector* negation = selector; negation;
          negation = negation->mNegations) {
-      // Track the selectors that depend on document states.
-      AddSelectorDocumentStates(*negation, &cascade->mSelectorDocumentStates);
-
       // Build mStateSelectors.
       if (IsStateSelector(*negation))
         stateArray->AppendElement(selector);

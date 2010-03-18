@@ -10,6 +10,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js" />
@@ -18,23 +20,29 @@
 
   <script type="application/javascript">
     /**
-     * Focus invoker.
+     * Click menu item invoker.
      */
-    function synthFocus(aNodeOrID)
+    function clickMenuItem(aNodeOrID, aFocusNodeOrID)
     {
-      this.DOMNode = getNode(aNodeOrID);
+      this.DOMNode = getNode(aFocusNodeOrID);
 
-      this.invoke = function synthFocus_invoke()
+      this.invoke = function clickMenuItem_invoke()
       {
-        this.DOMNode.focus();
+        synthesizeMouse(getNode(aNodeOrID), 1, 1, {});
       }
 
-      this.getID = function synthFocus_getID() { return aNodeOrID + " focus"; }
+      this.getID = function clickMenuItem_getID()
+      {
+        return prettyName(aNodeOrID) + " click menu item";
+      }
     }
-
+    
     /**
      * Do tests.
      */
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
     var gQueue = null;
 
     function doTests()
@@ -44,6 +52,11 @@
 
       gQueue.push(new synthFocus("textbox"));
       gQueue.push(new synthFocus("scale"));
+      gQueue.push(new synthFocusOnFrame("editabledoc"));
+      gQueue.push(new synthClick("menu"));
+      gQueue.push(new synthMouseMove("menuitem"));
+      gQueue.push(new clickMenuItem("menuitem",
+                                    getNode("editabledoc").contentDocument));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -59,6 +72,11 @@
          title="xul:slider accessible of xul:scale is accessible illegally">
         Mozilla Bug 492518
       </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552368"
+         title=" fire focus event on document accessible whenever the root or body element is focused">
+        Mozilla Bug 552368
+      </a>
       <p id="display"></p>
       <div id="content" style="display: none"></div>
       <pre id="test">
@@ -68,6 +86,16 @@
     <vbox flex="1">
       <textbox id="textbox" value="hello"/>
       <scale id="scale" min="0" max="9" value="5"/>
+      <menubar>
+        <menu id="menu" label="menu">
+          <menupopup>
+            <menuitem id="menuitem" label="menuitem"/>
+          </menupopup>
+        </menu>
+      </menubar>
+      <iframe id="editabledoc" src="focus.html"/>
+
+      <vbox id="eventdump"/>
     </vbox>
   </hbox>
 </window>

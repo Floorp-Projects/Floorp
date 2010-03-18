@@ -202,7 +202,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGLinearGradientElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGGradientElement,
                            nsIDOMSVGLinearGradientElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGLinearGradientElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLinearGradientElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGLinearGradientElementBase)
 
 //----------------------------------------------------------------------
@@ -280,7 +280,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGRadialGradientElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGGradientElement,
                            nsIDOMSVGRadialGradientElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGRadialGradientElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGRadialGradientElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGRadialGradientElementBase)
 
 //----------------------------------------------------------------------
