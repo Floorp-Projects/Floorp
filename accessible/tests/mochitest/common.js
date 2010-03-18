@@ -262,15 +262,7 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
 function getRootAccessible(aAccOrElmOrID)
 {
   var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document);
-  while (acc) {
-    var parent = acc.parent;
-    if (parent && !parent.parent)
-      return acc;
-
-    acc = parent;
-  }
-
-  return null;
+  return acc ? acc.rootDocument.QueryInterface(nsIAccessible) : null;
 }
 
 /**

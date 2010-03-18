@@ -428,11 +428,21 @@ nsAccessNode::GetNumChildren(PRInt32 *aNumChildren)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetAccessibleDocument(nsIAccessibleDocument **aAccessibleDocument)
+nsAccessNode::GetDocument(nsIAccessibleDocument **aDocument)
 {
-  NS_ENSURE_ARG_POINTER(aAccessibleDocument);
+  NS_ENSURE_ARG_POINTER(aDocument);
 
-  NS_IF_ADDREF(*aAccessibleDocument = GetDocAccessibleFor(mWeakShell));
+  NS_IF_ADDREF(*aDocument = GetDocAccessibleFor(mWeakShell));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetRootDocument(nsIAccessibleDocument **aRootDocument)
+{
+  NS_ENSURE_ARG_POINTER(aRootDocument);
+
+  nsRefPtr<nsRootAccessible> rootDocument = GetRootAccessible();
+  NS_IF_ADDREF(*aRootDocument = rootDocument.get());
   return NS_OK;
 }
 
