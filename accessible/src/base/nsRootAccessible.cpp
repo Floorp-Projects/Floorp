@@ -940,10 +940,10 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
 nsresult
 nsRootAccessible::Init()
 {
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_ENSURE_STATE(root);
+  nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
+  NS_ENSURE_STATE(applicationAcc);
 
-  root->AddRootAccessible(this);
+  applicationAcc->AddRootAccessible(this);
 
   return nsDocAccessibleWrap::Init();
 }
@@ -956,10 +956,10 @@ nsRootAccessible::Shutdown()
     return NS_OK;  // Already shutdown
   }
 
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_ENSURE_STATE(root);
+  nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
+  NS_ENSURE_STATE(applicationAcc);
 
-  root->RemoveRootAccessible(this);
+  applicationAcc->RemoveRootAccessible(this);
 
   mCurrentARIAMenubar = nsnull;
 

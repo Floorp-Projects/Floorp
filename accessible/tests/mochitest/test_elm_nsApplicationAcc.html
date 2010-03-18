@@ -23,6 +23,7 @@
           return;
         }
 
+        // nsIAccessible::name
         var bundleServ = Components.classes["@mozilla.org/intl/stringbundle;1"]
                          .getService(Components.interfaces.nsIStringBundleService);
         var bundle = bundleServ.createBundle("chrome://branding/locale/brand.properties");
@@ -38,6 +39,16 @@
             applicationName = "Gecko based application";
 
         is (accessible.name, applicationName, "wrong application accessible name");
+
+        // nsIAccessibleApplication
+        var appInfo = Components.classes["@mozilla.org/xre/app-info;1"].
+          getService(Components.interfaces.nsIXULAppInfo);
+
+        is(accessible.appName, appInfo.name, "Wrong application name");
+        is(accessible.appVersion, appInfo.version, "Wrong application version");
+        is(accessible.platformName, "Gecko", "Wrong platform name");
+        is(accessible.platformVersion, appInfo.platformVersion,
+           "Wrong platform version");
 
         SimpleTest.finish();
     }

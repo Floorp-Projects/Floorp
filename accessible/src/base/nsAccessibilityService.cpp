@@ -961,16 +961,12 @@ nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
 // nsIAccessibleRetrieval
 
 NS_IMETHODIMP
-nsAccessibilityService::GetApplicationAccessible(nsIAccessible **aApplicationAccessible)
+nsAccessibilityService::GetApplicationAccessible(nsIAccessible **aAccessibleApplication)
 {
-  NS_ENSURE_ARG_POINTER(aApplicationAccessible);
-  *aApplicationAccessible = nsnull;
+  NS_ENSURE_ARG_POINTER(aAccessibleApplication);
 
-  nsRefPtr<nsApplicationAccessibleWrap> appAcc =
-    nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(appAcc);
-
-  return CallQueryInterface(appAcc, aApplicationAccessible);
+  NS_IF_ADDREF(*aAccessibleApplication = nsAccessNode::GetApplicationAccessible());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2003,11 +1999,11 @@ NS_IMETHODIMP nsAccessibilityService::AddNativeRootAccessible(void * aAtkAccessi
   *aRootAccessible = static_cast<nsIAccessible*>(rootAccWrap);
   NS_ADDREF(*aRootAccessible);
 
-  nsRefPtr<nsApplicationAccessibleWrap> appRoot =
+  nsApplicationAccessible *applicationAcc =
     nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(appRoot);
+  NS_ENSURE_STATE(applicationAcc);
 
-  appRoot->AddRootAccessible(*aRootAccessible);
+  applicationAcc->AddRootAccessible(*aRootAccessible);
 
   return NS_OK;
 #else
@@ -2021,11 +2017,11 @@ NS_IMETHODIMP nsAccessibilityService::RemoveNativeRootAccessible(nsIAccessible *
   void* atkAccessible;
   aRootAccessible->GetNativeInterface(&atkAccessible);
 
-  nsRefPtr<nsApplicationAccessibleWrap> appRoot =
+  nsApplicationAccessible *applicationAcc =
     nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(appRoot);
+  NS_ENSURE_STATE(applicationAcc);
 
-  appRoot->RemoveRootAccessible(aRootAccessible);
+  applicationAcc->RemoveRootAccessible(aRootAccessible);
 
   return NS_OK;
 #else
