@@ -82,18 +82,5 @@ _CHROME_FILES += \
   $(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-_CHROME_FILES += \
-  test_taskbarprogress_downloadstates.xul \
-  $(NULL)
-
-_BROWSER_FILES = \
-  browser_taskbarprogress_service.js \
-  $(NULL)
-
-libs:: $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-endif
-
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
