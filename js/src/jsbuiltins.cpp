@@ -317,23 +317,13 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, ACC_NONE)
 
-jsdouble FASTCALL
-js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
-{
-    if (unboxed == JSVAL_TO_SPECIAL(JSVAL_VOID))
-        return js_NaN;
-    JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
-    return unboxed;
-}
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_BooleanOrUndefinedToNumber, CONTEXT, INT32, 1, ACC_NONE)
-
 JSString* FASTCALL
-js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
+js_BooleanIntToString(JSContext *cx, int32 unboxed)
 {
-    JS_ASSERT(uint32(unboxed) <= 2);
+    JS_ASSERT(uint32(unboxed) <= 1);
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
 }
-JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanIntToString, CONTEXT, INT32, 1, ACC_NONE)
 
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
