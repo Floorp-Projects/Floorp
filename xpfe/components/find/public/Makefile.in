@@ -46,7 +46,6 @@ MODULE		= appcomps
 XPIDL_MODULE	= mozfind
 
 XPIDLSRCS	= \
-		nsISearchContext.idl \
 		nsIFindService.idl   \
 		$(NULL)
 
