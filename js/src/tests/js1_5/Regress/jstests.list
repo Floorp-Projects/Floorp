@@ -347,7 +347,7 @@ script regress-482421.js
 script regress-482783.js
 script regress-483103.js
 script regress-501124.js
-script regress-503860.js
+skip script regress-503860.js # waiting for bug 497789 to be fixed
 script regress-504078.js
 script regress-506567.js
 script regress-511859.js
