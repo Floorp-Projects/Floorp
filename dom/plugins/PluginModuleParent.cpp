@@ -48,6 +48,9 @@
 
 #include "nsContentUtils.h"
 #include "nsCRT.h"
+#ifdef MOZ_CRASHREPORTER
+#  include "nsExceptionHandler.h"
+#endif
 #include "nsNPAPIPlugin.h"
 
 using base::KillProcess;
@@ -258,8 +261,10 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown: {
+#ifdef MOZ_CRASHREPORTER
         nsCOMPtr<nsIFile> dump;
-        if (TakeMinidump(getter_AddRefs(dump))) {
+        if (CrashReporter::TakeMinidumpForChild(ChildProcessHandle(),
+                                                getter_AddRefs(dump))) {
             WriteExtraDataForMinidump(dump);
             if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
                 mDumpID.Replace(mDumpID.Length() - 4, 4,
@@ -269,6 +274,7 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
         else {
             NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
         }
+#endif
 
         mShutdown = true;
         // Defer the PluginCrashed method so that we don't re-enter
