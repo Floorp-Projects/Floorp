@@ -295,6 +295,15 @@ PluginModuleParent::NotifyPluginCrashed()
     // MessageLoop owns this
     mPluginCrashedTask = NULL;
 
+    if (!OkToCleanup()) {
+        // there's still plugin code on the C++ stack.  try again
+        mPluginCrashedTask = NewRunnableMethod(
+            this, &PluginModuleParent::NotifyPluginCrashed);
+        MessageLoop::current()->PostDelayedTask(
+            FROM_HERE, mPluginCrashedTask, 10);
+        return;
+    }
+
     if (mPlugin)
         mPlugin->PluginCrashed(mDumpID);
 }
