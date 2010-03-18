@@ -123,6 +123,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == radialGradient-basic-02.svg pass.svg
 == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == rect-01.svg pass.svg
+== rect-02.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
