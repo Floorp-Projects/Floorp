@@ -8611,6 +8611,8 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
     if (GetPromotedType(l) == GetPromotedType(r)) {
         if (JSVAL_IS_VOID(l) || JSVAL_IS_NULL(l)) {
             cond = true;
+            if (JSVAL_IS_NULL(l))
+                op = LIR_peq;
         } else if (JSVAL_IS_OBJECT(l)) {
             JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
             if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
