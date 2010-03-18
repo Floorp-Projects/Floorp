@@ -114,8 +114,8 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
     rv = localHandler->GetExecutable(getter_AddRefs(executable));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString path;
-    aFile->GetNativePath(path);
+    nsAutoString path;
+    aFile->GetPath(path);
 
     // Deal with local dll based handlers
     nsCString filename;
