@@ -2961,14 +2961,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             dumpvar = ExprVar('aDump')
             getdump = MethodDefn(MethodDecl(
-                'GetMinidump',
+                'TakeMinidump',
                 params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name) ],
                 ret=Type.BOOL,
                 const=1))
             getdump.addstmts([
                 CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
                 StmtReturn(ExprCall(
-                    ExprVar('XRE_GetMinidumpForChild'),
+                    ExprVar('XRE_TakeMinidumpForChild'),
                     args=[ ExprCall(otherpidvar), dumpvar ])),
                 CppDirective('else'),
                 StmtReturn(ExprLiteral.FALSE),
