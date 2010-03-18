@@ -210,10 +210,7 @@ protected:
         Listener()->OnEnteredCxxStack();
     }
 
-    void ExitedCxxStack()
-    {
-        Listener()->OnExitedCxxStack();
-    }
+    void ExitedCxxStack();
 
     enum Direction { IN_MESSAGE, OUT_MESSAGE };
     struct RPCFrame {
