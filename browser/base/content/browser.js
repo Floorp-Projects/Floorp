@@ -1341,6 +1341,13 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
     // Initialize the downloads monitor panel listener
     DownloadMonitorPanel.init();
+
+    if (Win7Features) {
+      let tempScope = {};
+      Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
+                tempScope);
+      tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
+    }
   }, 10000);
 
   // Delayed initialization of PlacesDBUtils.
