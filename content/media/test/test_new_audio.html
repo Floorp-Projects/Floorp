@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=528566
+-->
+<head>
+  <title>Test for Bug 528566</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=528566">Mozilla Bug 528566</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 528566 **/
+
+var testsStarted = 0;
+var testsComplete = 0;
+
+var player = new Audio();
+
+var audios = [];
+for (var i=0; i<gAudioTests.length; i++) {
+  var test = gAudioTests[i];
+  if (!player.canPlayType(test.type))
+    continue;
+  var a = new Audio(test.name);
+  ++testsStarted;
+  a.setAttribute("autoplay", false);
+  a.addEventListener("canplaythrough",
+                     function(e){ e.target.play(); },
+                      false);
+  a.addEventListener("ended",
+                     function(e){
+                        ok(true, "We should get to the end. Oh look we did.");
+                        testsComplete++;
+                        if (testsStarted == testsComplete) {
+                          SimpleTest.finish();
+                        }
+                     },
+                     false);
+  audios.push(a);
+}
+
+if (testsStarted != 0) {
+  SimpleTest.waitForExplicitFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>
