@@ -54,6 +54,7 @@ Group.prototype = {
         zIndex: -100,
         opacity: 0,
       })
+      .data("group", this)
       .appendTo("body")
       .animate({opacity:1.0}).dequeue();
     
@@ -78,7 +79,9 @@ Group.prototype = {
   },
   
   add: function(el){
-    this._children.push( el );
+    if($.inArray(el, this._children) == -1)
+      this._children.push( el );
+
     $(el).droppable("disable");
     
     this._updateGroup();
@@ -171,7 +174,7 @@ Group.prototype = {
       },
       drop: function(e){
         $dragged.removeClass("willGroup");
-        self.add( $dragged )
+        self.add( $dragged.get(0) )
       },
       accept: ".tab",
     });
@@ -192,6 +195,8 @@ var $dragged = null;
 var timeout = null;
 
 window.Groups = {
+  Group: Group, 
+  
   dragOptions: {
     start:function(){
       $dragged = $(this);
@@ -239,7 +244,7 @@ window.Groups = {
             var group = new Group();
             group.create( [target, dragged] );            
           } else {
-            group.add( dragged )
+            group.add( dragged.get(0) )
           }
           
         }, 100);
@@ -256,6 +261,34 @@ window.Groups = {
     out: function(){      
       $dragged.removeClass("willGroup");
     }
+  }, 
+  
+  arrange: function() {
+    var $groups = $('.group');
+    var count = $groups.length;
+    var columns = Math.ceil(Math.sqrt(count));
+    var rows = ((columns * columns) - count >= columns ? columns - 1 : columns); 
+    var padding = 12;
+    var startX = padding;
+    var startY = 100;
+    var totalWidth = window.innerWidth - startX;
+    var totalHeight = window.innerHeight - startY;
+    var w = (totalWidth / columns) - padding;
+    var h = (totalHeight / rows) - padding;
+    var x = startX;
+    var y = startY;
+    
+    $groups.each(function(i) {
+      $(this).css({left: x, top: y, width: w, height: h});
+      
+      $(this).data('group').arrange();
+      
+      x += w + padding;
+      if(i % columns == columns - 1) {
+        x = startX;
+        y += h + padding;
+      }
+    });
   }  
 };
 

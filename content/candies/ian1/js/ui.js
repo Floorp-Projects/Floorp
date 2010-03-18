@@ -282,35 +282,41 @@ var site = new ArrangeClass("Site", function() {
   var y = startY;
   var x2; 
   var y2;
-  var positions = [];
+  var groups = [];
   $(".tab:visible").each(function(i) {
     $el = $(this);
     var tab = Tabs.tab(this);
+    
+    var group = $el.data('group');
+    if(group)
+      group.remove(this);
+      
     var url = tab.url; 
     var domain = url.split('/')[2]; 
     var domainParts = domain.split('.');
     var mainDomain = domainParts[domainParts.length - 2];
-    if(positions[mainDomain]) {
-      x2 = positions[mainDomain].x;
-      y2 = positions[mainDomain].y;
-    } else {
-      x2 = x;
-      y2 = y;
-      
-      x += $el.width() + 30;
-      if( x > window.innerWidth - ($el.width() + startX)){ // includes allowance for the box shadow
-        x = startX;
-        y += $el.height() + 30;
-      }
-  
-      positions[mainDomain] = { 'x': x2, 'y': y2 };
-    }
-        
-    TabMirror.pausePainting();
-    $el.animate({'top': y2, 'left': x2, '-moz-transform': 'rotate(40deg)'}, 500, null, function() {
-      TabMirror.resumePainting();
-    });
+    if(groups[mainDomain]) 
+      groups[mainDomain].push(this);
+    else 
+      groups[mainDomain] = [this];
   });
+  
+  var leftovers = [];
+  for(key in groups) {
+    var set = groups[key];
+    if(set.length > 1) {
+      group = new Groups.Group();
+      group.create(set);            
+    } else
+      leftovers.push(set[0]);
+  }
+  
+  if(leftovers.length > 1) {
+    group = new Groups.Group();
+    group.create(leftovers);            
+  }
+  
+  Groups.arrange();
 });
 
 //----------------------------------------------------------

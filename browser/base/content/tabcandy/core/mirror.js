@@ -166,8 +166,6 @@ TabMirror.prototype = {
           var w = $canvas.width();
           var h = $canvas.height();
           if(w != $canvas.attr('width') || h != $canvas.attr('height')) {
-            Utils.log(w, $canvas.attr('width'), h, $canvas.attr('height'));
-            
             $canvas.attr('width', w);
             $canvas.attr('height', h);
             mirror.triggerPaint();
