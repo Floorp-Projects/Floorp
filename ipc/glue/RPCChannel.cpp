@@ -279,14 +279,6 @@ RPCChannel::Call(Message* msg, Message* reply)
             }
 
             if (0 == StackDepth()) {
-                // we may have received new messages while waiting for
-                // our reply.  because we were awaiting a reply,
-                // StackDepth > 0, and the IO thread didn't enqueue
-                // OnMaybeDequeueOne() events for us.  so to avoid
-                // "losing" the new messages, we do that now.
-                EnqueuePendingMessages();
-
-                
                 RPC_ASSERT(
                     mOutOfTurnReplies.empty(),
                     "still have pending replies with no pending out-calls",
@@ -375,6 +367,22 @@ RPCChannel::OnMaybeDequeueOne()
     AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
 
+    if (IsOnCxxStack())
+        // We're running in a nested event loop, and there's
+        // RPCChannel code below us on the stack.  We don't want to
+        // dispatch this new message here because the assumptions made
+        // by the code below us on the stack have changed.  Just
+        // bailing here isn't enough, however, because we also have to
+        // ensure that the messages received in this nested loop
+        // aren't "lost".  We might be running in this nested context
+        // above a non-interruptable handler; these are async
+        // in/out-msg, sync in/out-msg, and rpc in-call.  So, we still
+        // bail here, but ensure that at each exit point, we fix up
+        // the IO thread's invariant.  Luckily, since we already track
+        // the C++ stack, we know when these exit points are hit:
+        // ExitedCxxStack().
+        return;
+
     Message recvd;
     {
         MutexAutoLock lock(mMutex);
@@ -394,6 +402,7 @@ RPCChannel::OnMaybeDequeueOne()
         mPending.pop();
     }
 
+    RPC_ASSERT(!IsOnCxxStack(), "RPCChannel code not on C++ stack");
     CxxStackFrame f(*this, IN_MESSAGE, &recvd);
 
     if (recvd.is_rpc())
@@ -592,6 +601,17 @@ RPCChannel::UnblockFromParent()
         NS_RUNTIMEABORT("child tried to block parent");
     MutexAutoLock lock(mMutex);
     mBlockedOnParent = false;
+}
+
+void
+RPCChannel::ExitedCxxStack()
+{
+    Listener()->OnExitedCxxStack();
+    {
+        MutexAutoLock lock(mMutex);
+        // see long comment in OnMaybeDequeueOne()
+        EnqueuePendingMessages();
+    }
 }
 
 void
