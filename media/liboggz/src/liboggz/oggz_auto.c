@@ -899,14 +899,14 @@ auto_rcalc_vorbis(ogg_int64_t next_packet_gp, oggz_stream_t *stream,
 
   auto_calc_vorbis_info_t *info =
                   (auto_calc_vorbis_info_t *)stream->calculate_data;
+  int this_size, next_size;
+  ogg_int64_t r;
 
   int mode =
       (this_packet->packet[0] >> 1) & ((1 << info->log2_num_modes) - 1);
   if (info->mode_sizes_length == 0 || mode < 0 || mode >= info->mode_sizes_length)
     return 0;
-  int this_size = info->mode_sizes[mode] ? info->long_size : info->short_size;
-  int next_size;
-  ogg_int64_t r;
+  this_size = info->mode_sizes[mode] ? info->long_size : info->short_size;
 
   mode = (next_packet->packet[0] >> 1) & ((1 << info->log2_num_modes) - 1);
   if (info->mode_sizes_length == 0 || mode < 0 || mode >= info->mode_sizes_length)
