@@ -277,28 +277,7 @@ function getRootAccessible(aAccOrElmOrID)
  */
 function getApplicationAccessible()
 {
-  var acc = getAccessible(document), parent = null;
-  while (acc) {
-
-    try {
-      parent = acc.parent;
-    } catch (e) {
-      ok(false, "Can't get a parent for " + prettyName(acc));
-      return null;
-    }
-
-    if (!parent) {
-      if (acc.role == ROLE_APP_ROOT)
-        return acc;
-
-      ok(false, "No application accessible!");
-      return null;
-    }
-
-    acc = parent;
-  }
-
-  return null;
+  return gAccRetrieval.getApplicationAccessible();
 }
 
 /**
