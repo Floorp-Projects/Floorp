@@ -3,7 +3,7 @@
 
 interface nsIObserver;
 
-[scriptable, uuid(3c09efde-5f49-42b8-8520-57be02a5f84e)]
+[scriptable, uuid(609610de-9954-4a63-8a7c-346350a86403)]
 interface nsIProcess : nsISupports
 {
   /**
@@ -44,6 +44,31 @@ interface nsIProcess : nsISupports
    */
   void runAsync([array, size_is(count)] in string args, in unsigned long count,
                 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
+
+  /**
+   * Executes the file this object was initialized with
+   * @param blocking   Whether to wait until the process terminates before
+                       returning or not.
+   * @param args       An array of arguments to pass to the process in UTF-16
+   * @param count      The length of the args array.
+   */
+  void runw(in boolean blocking, [array, size_is(count)] in wstring args,
+	    in unsigned long count);
+
+  /**
+   * Executes the file this object was initialized with optionally calling
+   * an observer after the process has finished running.
+   * @param args       An array of arguments to pass to the process in UTF-16
+   * @param count      The length of the args array.
+   * @param observer   An observer to notify when the process has completed. It
+   *                   will receive this process instance as the subject and
+   *                   "process-finished" or "process-failed" as the topic. The
+   *                   observer will be notified on the main thread.
+   * @param holdWeak   Whether to use a weak reference to hold the observer.
+   */
+  void runwAsync([array, size_is(count)] in wstring args,
+		 in unsigned long count,
+		 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
 
   /**
    * The process identifier of the currently running process. This will only
