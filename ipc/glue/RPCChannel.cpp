@@ -96,8 +96,7 @@ RPCChannel::RPCChannel(RPCListener* aListener)
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mBlockedOnParent(false),
-    mCxxStackFrames(0)
+    mBlockedOnParent(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 
@@ -109,7 +108,7 @@ RPCChannel::RPCChannel(RPCListener* aListener)
 RPCChannel::~RPCChannel()
 {
     MOZ_COUNT_DTOR(RPCChannel);
-    RPC_ASSERT(0 == mCxxStackFrames, "mismatched CxxStackFrame ctor/dtors");
+    RPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 }
 
 void
@@ -142,14 +141,16 @@ RPCChannel::EventOccurred()
 bool
 RPCChannel::Send(Message* msg)
 {
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
     return AsyncChannel::Send(msg);
 }
 
 bool
 RPCChannel::Send(Message* msg, Message* reply)
 {
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
     return SyncChannel::Send(msg, reply);
 }
 
@@ -162,7 +163,8 @@ RPCChannel::Call(Message* msg, Message* reply)
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
 
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
 
     MutexAutoLock lock(mMutex);
 
@@ -227,7 +229,10 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         if (!recvd.is_sync() && !recvd.is_rpc()) {
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             AsyncChannel::OnDispatchMessage(recvd);
+
             continue;
         }
 
@@ -235,7 +240,10 @@ RPCChannel::Call(Message* msg, Message* reply)
             RPC_ASSERT(mPending.empty(),
                        "other side should have been blocked");
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             SyncChannel::OnDispatchMessage(recvd);
+
             continue;
         }
 
@@ -296,6 +304,7 @@ RPCChannel::Call(Message* msg, Message* reply)
         {
             MutexAutoUnlock unlock(mMutex);
             // someone called in to us from the other side.  handle the call
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             Incall(recvd, stackDepth);
             // FIXME/cjones: error handling
         }
@@ -332,6 +341,8 @@ RPCChannel::MaybeProcessDeferredIncall()
 
     MutexAutoUnlock unlock(mMutex);
     fprintf(stderr, "  (processing deferred in-call)\n");
+
+    CxxStackFrame f(*this, IN_MESSAGE, &call);
     Incall(call, stackDepth);
 }
 
@@ -383,7 +394,7 @@ RPCChannel::OnMaybeDequeueOne()
         mPending.pop();
     }
 
-    CxxStackFrame f(*this);
+    CxxStackFrame f(*this, IN_MESSAGE, &recvd);
 
     if (recvd.is_rpc())
         return Incall(recvd, 0);
@@ -554,6 +565,8 @@ RPCChannel::BlockOnParent()
             mPending.pop();
 
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             if (recvd.is_rpc()) {
                 // stack depth must be 0 here
                 Incall(recvd, 0);
@@ -594,8 +607,7 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
             why,
             type, reply ? "reply" : "");
     // technically we need the mutex for this, but we're dying anyway
-    fprintf(stderr, "  local RPC stack size: %lu\n",
-            mStack.size());
+    DumpRPCStack(stderr, "  ");
     fprintf(stderr, "  remote RPC stack guess: %lu\n",
             mRemoteStackDepthGuess);
     fprintf(stderr, "  deferred stack size: %lu\n",
@@ -613,6 +625,28 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
     }
 
     NS_RUNTIMEABORT(why);
+}
+
+void
+RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx)
+{
+    NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
+                     "The worker thread had better be paused in a debugger!");
+
+    if (!outfile)
+        outfile = stdout;
+
+    fprintf(outfile, "%sRPCChannel 'backtrace':\n", pfx);
+
+    // print a python-style backtrace, first frame to last
+    for (PRUint32 i = 0; i < mCxxStackFrames.size(); ++i) {
+        int32 id;
+        const char* dir, *sems, *name;
+        mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
+
+        fprintf(outfile, "%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
+                i, dir, sems, name, id);
+    }
 }
 
 //
