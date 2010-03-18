@@ -123,7 +123,15 @@ class nsAccessNode: public nsIAccessNode
    */
   static nsApplicationAccessible* GetApplicationAccessible();
 
-    already_AddRefed<nsRootAccessible> GetRootAccessible();
+  /**
+   * Return the document accessible for this accesnode.
+   */
+  nsDocAccessible* GetDocAccessible() const;
+
+  /**
+   * Return the root document accessible for this accessnode.
+   */
+  already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;
 
@@ -185,11 +193,6 @@ protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
 
     nsPresContext* GetPresContext();
-
-  /**
-   * Return the document accessible for this accesnode.
-   */
-  nsDocAccessible* GetDocAccessible() const;
 
     void LastRelease();
 
