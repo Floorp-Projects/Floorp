@@ -85,7 +85,11 @@ typedef unsigned __int64 uint64_t;
 #define VMPI_strncat strncat
 #define VMPI_strcpy strcpy
 #define VMPI_sprintf sprintf
-#define VMPI_snprintf snprintf
+#ifdef _MSC_VER
+#   define VMPI_snprintf sprintf_s
+#else
+#   define VMPI_snprintf snprintf
+#endif
 #define VMPI_vfprintf vfprintf
 #define VMPI_memset memset
 #define VMPI_isdigit isdigit
