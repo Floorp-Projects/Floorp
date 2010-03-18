@@ -194,14 +194,6 @@ using namespace nanojit;
 #define RETURN_IF_XML_A(val) RETURN_VALUE_IF_XML(val, ARECORD_STOP)
 #define RETURN_IF_XML(val)   RETURN_VALUE_IF_XML(val, RECORD_STOP)
 
-/*
- * Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and
- * the type. What you want to use is JSVAL_IS_SPECIAL(x) and then handle the
- * undefined case properly (bug 457363).
- */
-#undef JSVAL_IS_BOOLEAN
-#define JSVAL_IS_BOOLEAN(x) JS_STATIC_ASSERT(0)
-
 JS_STATIC_ASSERT(sizeof(TraceType) == 1);
 JS_STATIC_ASSERT(offsetof(TraceNativeStorage, stack_global_buf) % 16 == 0);
 
@@ -1049,11 +1041,14 @@ GetPromotedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
+    /* N.B. void is JSVAL_SPECIAL. */
+    if (JSVAL_IS_VOID(v))
+        return TT_VOID;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_SPECIAL) == JSVAL_SPECIAL);
     return TraceType(tag);
 }
 
@@ -1070,11 +1065,14 @@ getCoercedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
+    /* N.B. void is JSVAL_SPECIAL. */
+    if (JSVAL_IS_VOID(v))
+        return TT_VOID;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_SPECIAL) == JSVAL_SPECIAL);
     return TraceType(tag);
 }
 
@@ -2597,11 +2595,16 @@ ValueToNative(JSContext* cx, jsval v, TraceType type, double* slot)
         debug_only_print0(LC_TMTracer, "null ");
         return;
 
-      case TT_PSEUDOBOOLEAN:
-        /* Watch out for pseudo-booleans. */
+      case TT_SPECIAL:
         JS_ASSERT(tag == JSVAL_SPECIAL);
         *(JSBool*)slot = JSVAL_TO_SPECIAL(v);
-        debug_only_printf(LC_TMTracer, "pseudoboolean<%d> ", *(JSBool*)slot);
+        debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
+        return;
+
+      case TT_VOID:
+        JS_ASSERT(JSVAL_IS_VOID(v));
+        *(JSBool*)slot = JSVAL_TO_SPECIAL(JSVAL_VOID);
+        debug_only_print0(LC_TMTracer, "undefined ");
         return;
 
       case TT_FUNCTION: {
@@ -2773,10 +2776,14 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
         debug_only_printf(LC_TMTracer, "null<%p> ", (void*)(*(JSObject**)slot));
         break;
 
-      case TT_PSEUDOBOOLEAN:
-        /* Watch out for pseudo-booleans. */
+      case TT_SPECIAL:
         v = SPECIAL_TO_JSVAL(*(JSBool*)slot);
-        debug_only_printf(LC_TMTracer, "boolean<%d> ", *(JSBool*)slot);
+        debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
+        break;
+
+      case TT_VOID:
+        v = JSVAL_VOID;
+        debug_only_print0(LC_TMTracer, "undefined ");
         break;
 
       case TT_FUNCTION: {
@@ -3322,8 +3329,10 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
         JS_ASSERT_IF(t != TT_JSVAL, isNumber(*p) == (t == TT_DOUBLE));
         if (t == TT_DOUBLE) {
             ins = lir->insLoad(LIR_ldf, base, offset);
-        } else if (t == TT_PSEUDOBOOLEAN) {
+        } else if (t == TT_SPECIAL) {
             ins = lir->insLoad(LIR_ld, base, offset);
+        } else if (t == TT_VOID) {
+            ins = INS_VOID();
         } else {
             ins = lir->insLoad(LIR_ldp, base, offset);
         }
@@ -3822,10 +3831,13 @@ TraceRecorder::determineSlotType(jsval* vp)
             m = TT_FUNCTION;
         else
             m = TT_OBJECT;
+    } else if (JSVAL_IS_VOID(*vp)) {
+        /* N.B. void is JSVAL_SPECIAL. */
+        m = TT_VOID;
     } else {
-        JS_ASSERT(JSVAL_TAG(*vp) == JSVAL_STRING || JSVAL_IS_SPECIAL(*vp));
+        JS_ASSERT(JSVAL_IS_STRING(*vp) || JSVAL_IS_SPECIAL(*vp));
         JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
+        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_SPECIAL) == JSVAL_SPECIAL);
         m = TraceType(JSVAL_TAG(*vp));
     }
     JS_ASSERT(m != TT_INT32 || isInt32(*vp));
@@ -6059,10 +6071,16 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
             return true;
         debug_only_printf(LC_TMTracer, "null != tag%u ", tag);
         return false;
-      case TT_PSEUDOBOOLEAN:
-        if (tag == JSVAL_SPECIAL)
+      case TT_SPECIAL:
+        /* N.B. void is JSVAL_SPECIAL. */
+        if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp))
             return true;
         debug_only_printf(LC_TMTracer, "bool != tag%u ", tag);
+        return false;
+      case TT_VOID:
+        if (JSVAL_IS_VOID(*vp))
+            return true;
+        debug_only_printf(LC_TMTracer, "undefined != tag%u ", tag);
         return false;
       default:
         JS_ASSERT(*m == TT_FUNCTION);
@@ -8133,6 +8151,12 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 }
 
 LIns*
+TraceRecorder::i2f(LIns* i)
+{
+    return lir->ins1(LIR_i2f, i);
+}
+
+LIns*
 TraceRecorder::f2i(LIns* f)
 {
     if (f->isconstf())
@@ -8210,8 +8234,12 @@ TraceRecorder::stringify(jsval& v)
     const CallInfo* ci;
     if (JSVAL_IS_NUMBER(v)) {
         ci = &js_NumberToString_ci;
+    } else if (JSVAL_IS_VOID(v)) {
+        /* N.B. void is JSVAL_SPECIAL. */
+        return INS_ATOM(cx->runtime->atomState.booleanAtoms[2]);
     } else if (JSVAL_IS_SPECIAL(v)) {
-        ci = &js_BooleanOrUndefinedToString_ci;
+        JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+        ci = &js_BooleanIntToString_ci;
     } else {
         /*
          * Callers must deal with non-primitive (non-null object) values by
@@ -8581,14 +8609,16 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
      */
 
     if (GetPromotedType(l) == GetPromotedType(r)) {
-        if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_IS_SPECIAL(l)) {
-            if (JSVAL_TAG(l) == JSVAL_OBJECT && l) {
-                JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
-                if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
-                    RETURN_STOP_A("Can't trace extended class equality operator");
-            }
-            if (JSVAL_TAG(l) == JSVAL_OBJECT)
-                op = LIR_peq;
+        if (JSVAL_IS_VOID(l) || JSVAL_IS_NULL(l)) {
+            cond = true;
+        } else if (JSVAL_IS_OBJECT(l)) {
+            JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
+            if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
+                RETURN_STOP_A("Can't trace extended class equality operator");
+            op = LIR_peq;
+            cond = (l == r);
+        } else if (JSVAL_IS_SPECIAL(l)) {
+            JS_ASSERT(JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r));
             cond = (l == r);
         } else if (JSVAL_IS_STRING(l)) {
             args[0] = r_ins, args[1] = l_ins;
@@ -8600,12 +8630,12 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             cond = (asNumber(l) == asNumber(r));
             op = LIR_feq;
         }
-    } else if (JSVAL_IS_NULL(l) && JSVAL_IS_SPECIAL(r)) {
+    } else if (JSVAL_IS_NULL(l) && JSVAL_IS_VOID(r)) {
         l_ins = INS_VOID();
-        cond = (r == JSVAL_VOID);
-    } else if (JSVAL_IS_SPECIAL(l) && JSVAL_IS_NULL(r)) {
+        cond = true;
+    } else if (JSVAL_IS_VOID(l) && JSVAL_IS_NULL(r)) {
         r_ins = INS_VOID();
-        cond = (l == JSVAL_VOID);
+        cond = true;
     } else if (isNumber(l) && JSVAL_IS_STRING(r)) {
         args[0] = r_ins, args[1] = cx_ins;
         r_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -8617,43 +8647,25 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         cond = (js_StringToNumber(cx, JSVAL_TO_STRING(l)) == asNumber(r));
         op = LIR_feq;
     } else {
-        if (JSVAL_IS_SPECIAL(l)) {
-            bool isVoid = !!JSVAL_IS_VOID(l);
-            guard(isVoid,
-                  lir->ins2(LIR_eq, l_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
-                  BRANCH_EXIT);
-            if (!isVoid) {
-                args[0] = l_ins, args[1] = cx_ins;
-                l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-                l = (l == JSVAL_VOID)
-                    ? cx->runtime->NaNValue
-                    : INT_TO_JSVAL(l == JSVAL_TRUE);
-                return equalityHelper(l, r, l_ins, r_ins, negate,
-                                      tryBranchAfterCond, rval);
-            }
-        } else if (JSVAL_IS_SPECIAL(r)) {
-            bool isVoid = !!JSVAL_IS_VOID(r);
-            guard(isVoid,
-                  lir->ins2(LIR_eq, r_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
-                  BRANCH_EXIT);
-            if (!isVoid) {
-                args[0] = r_ins, args[1] = cx_ins;
-                r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-                r = (r == JSVAL_VOID)
-                    ? cx->runtime->NaNValue
-                    : INT_TO_JSVAL(r == JSVAL_TRUE);
-                return equalityHelper(l, r, l_ins, r_ins, negate,
-                                      tryBranchAfterCond, rval);
-            }
-        } else {
-            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
-                RETURN_IF_XML_A(r);
-                return InjectStatus(call_imacro(equality_imacros.any_obj));
-            }
-            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
-                RETURN_IF_XML_A(l);
-                return InjectStatus(call_imacro(equality_imacros.obj_any));
-            }
+        if (JSVAL_IS_BOOLEAN(l)) {
+            l_ins = i2f(l_ins);
+            l = INT_TO_JSVAL(l == JSVAL_TRUE);
+            return equalityHelper(l, r, l_ins, r_ins, negate,
+                                  tryBranchAfterCond, rval);
+        }
+        if (JSVAL_IS_BOOLEAN(r)) {
+            r_ins = i2f(r_ins);
+            r = INT_TO_JSVAL(r == JSVAL_TRUE);
+            return equalityHelper(l, r, l_ins, r_ins, negate,
+                                  tryBranchAfterCond, rval);
+        }
+        if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
+            RETURN_IF_XML_A(r);
+            return InjectStatus(call_imacro(equality_imacros.any_obj));
+        }
+        if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
+            RETURN_IF_XML_A(l);
+            return InjectStatus(call_imacro(equality_imacros.obj_any));
         }
 
         l_ins = lir->insImm(0);
@@ -8740,7 +8752,10 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
         LIns* args[] = { l_ins, cx_ins };
         switch (JSVAL_TAG(l)) {
           case JSVAL_SPECIAL:
-            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+            if (JSVAL_IS_VOID(l))
+                l_ins = lir->insImmf(js_NaN);
+            else
+                l_ins = i2f(l_ins);
             break;
           case JSVAL_STRING:
             l_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -8763,7 +8778,10 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
         LIns* args[] = { r_ins, cx_ins };
         switch (JSVAL_TAG(r)) {
           case JSVAL_SPECIAL:
-            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+            if (JSVAL_IS_VOID(r))
+                r_ins = lir->insImmf(js_NaN);
+            else
+                r_ins = i2f(r_ins);
             break;
           case JSVAL_STRING:
             r_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -8894,16 +8912,25 @@ TraceRecorder::binary(LOpcode op)
         rnum = js_StringToNumber(cx, JSVAL_TO_STRING(r));
         rightIsNumber = true;
     }
+    /* N.B. void is JSVAL_SPECIAL. */
     if (JSVAL_IS_SPECIAL(l)) {
-        LIns* args[] = { a, cx_ins };
-        a = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_SPECIAL(l));
+        if (JSVAL_IS_VOID(l)) {
+            a = lir->insImmf(js_NaN);
+            lnum = js_NaN;
+        } else {
+            a = i2f(a);
+            lnum = JSVAL_TO_SPECIAL(l);
+        }
         leftIsNumber = true;
     }
     if (JSVAL_IS_SPECIAL(r)) {
-        LIns* args[] = { b, cx_ins };
-        b = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_SPECIAL(r));
+        if (JSVAL_IS_VOID(r)) {
+            b = lir->insImmf(js_NaN);
+            rnum = js_NaN;
+        } else {
+            b = i2f(b);
+            rnum = JSVAL_TO_SPECIAL(r);
+        }
         rightIsNumber = true;
     }
     if (leftIsNumber && rightIsNumber) {
@@ -9365,11 +9392,17 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_SPECIAL:
+        if (JSVAL_IS_VOID(v)) {
+            guard(true, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+            return INS_VOID();
+        }
         guard(true,
               lir->ins2(LIR_peq,
                         lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                         INS_CONSTWORD(JSVAL_SPECIAL)),
               exit);
+        assert(!v_ins->isconstp());
+        guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
         return p2i(lir->ins2i(LIR_pursh, v_ins, JSVAL_TAGBITS));
 
       case JSVAL_OBJECT:
@@ -9834,7 +9867,7 @@ TraceRecorder::record_LeaveFrame()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_PUSH()
 {
-    stack(0, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
+    stack(0, INS_VOID());
     return ARECORD_CONTINUE;
 }
 
@@ -10230,14 +10263,20 @@ TraceRecorder::record_JSOP_NEG()
         return ARECORD_CONTINUE;
     }
 
-    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_IS_SPECIAL(v));
+    if (JSVAL_IS_VOID(v)) {
+        set(&v, lir->insImmf(js_NaN));
+        return ARECORD_CONTINUE;
+    }
 
-    LIns* args[] = { get(&v), cx_ins };
-    set(&v, lir->ins1(LIR_fneg,
-                      lir->insCall(JSVAL_IS_STRING(v)
-                                   ? &js_StringToNumber_ci
-                                   : &js_BooleanOrUndefinedToNumber_ci,
-                                   args)));
+    if (JSVAL_IS_STRING(v)) {
+        LIns* args[] = { get(&v), cx_ins };
+        set(&v, lir->ins1(LIR_fneg,
+                          lir->insCall(&js_StringToNumber_ci, args)));
+        return ARECORD_CONTINUE;
+    }
+
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    set(&v, i2f(get(&v)));
     return ARECORD_CONTINUE;
 }
 
@@ -10258,14 +10297,19 @@ TraceRecorder::record_JSOP_POS()
         set(&v, lir->insImmf(0));
         return ARECORD_CONTINUE;
     }
+    if (JSVAL_IS_VOID(v)) {
+        set(&v, lir->insImmf(js_NaN));
+        return ARECORD_CONTINUE;
+    }
 
-    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_IS_SPECIAL(v));
+    if (JSVAL_IS_STRING(v)) {
+        LIns* args[] = { get(&v), cx_ins };
+        set(&v, lir->insCall(&js_StringToNumber_ci, args));
+        return ARECORD_CONTINUE;
+    }
 
-    LIns* args[] = { get(&v), cx_ins };
-    set(&v, lir->insCall(JSVAL_IS_STRING(v)
-                         ? &js_StringToNumber_ci
-                         : &js_BooleanOrUndefinedToNumber_ci,
-                         args));
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    set(&v, i2f(get(&v)));
     return ARECORD_CONTINUE;
 }
 
@@ -10995,7 +11039,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(-1, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
+    stack(-1, INS_VOID());
     return ARECORD_CONTINUE;
 }
 
@@ -11987,13 +12031,14 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         if (!isNumber(v)) {
             if (JSVAL_IS_NULL(v)) {
                 v_ins = INS_CONST(0);
-            } else if (JSVAL_IS_PRIMITIVE(v)) {
-                JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_IS_SPECIAL(v));
+            } else if (JSVAL_IS_VOID(v)) {
+                v_ins = lir->insImmf(js_NaN);
+            } else if (JSVAL_IS_STRING(v)) {
                 LIns* args[] = { v_ins, cx_ins };
-                v_ins = lir->insCall(JSVAL_IS_STRING(v)
-                                     ? &js_StringToNumber_ci
-                                     : &js_BooleanOrUndefinedToNumber_ci,
-                                     args);
+                v_ins = lir->insCall(&js_StringToNumber_ci, args);
+            } else if (JSVAL_IS_SPECIAL(v)) {
+                JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+                v_ins = i2f(v_ins);
             } else {
                 v_ins = lir->insImmf(js_NaN);
             }
@@ -12224,7 +12269,8 @@ LIns* TraceRecorder::stackLoad(LIns* base, uint8 type)
         loadOp = LIR_ldp;
         break;
       case TT_INT32:
-      case TT_PSEUDOBOOLEAN:
+      case TT_SPECIAL:
+      case TT_VOID:
         loadOp = LIR_ld;
         break;
       case TT_JSVAL:
@@ -12384,7 +12430,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
      * and does not call any TR::record_*CallComplete hook.
      */
     if (fun->u.i.script->isEmpty()) {
-        LIns* rval_ins = constructing ? stack(-1 - argc) : INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        LIns* rval_ins = constructing ? stack(-1 - argc) : INS_VOID();
         stack(-2 - argc, rval_ins);
         return RECORD_CONTINUE;
     }
@@ -12787,7 +12833,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
             }
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
-        set(outp, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
+        set(outp, INS_VOID());
         return ARECORD_CONTINUE;
     }
 
@@ -12985,7 +13031,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
                          lir->ins2i(LIR_pilsh, pidx_ins, (sizeof(jsval) == 4) ? 2 : 3));
     v_ins = unbox_jsval(*vp, lir->insLoad(LIR_ldp, addr_ins, 0), exit);
 
-    if (JSVAL_IS_SPECIAL(*vp)) {
+    if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
         /*
          * If we read a hole from the array, convert it to undefined and guard
          * that there are no indexed properties along the prototype chain.
@@ -14625,7 +14671,7 @@ TraceRecorder::record_JSOP_STOP()
         JS_ASSERT(fp->thisv == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
-        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        rval_ins = INS_VOID();
     }
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
     return ARECORD_CONTINUE;
@@ -14664,7 +14710,7 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
     JSObject* obj;
     obj = cx->fp->script->getObject(getFullIndex(0));
 
-    LIns* void_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+    LIns* void_ins = INS_VOID();
     for (int i = 0, n = OBJ_BLOCK_COUNT(cx, obj); i < n; i++)
         stack(i, void_ins);
     return ARECORD_CONTINUE;

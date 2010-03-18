@@ -167,7 +167,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     if (*cx->fp->regs->pc == JSOP_RETURN)
         exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
     else
-        exitTypeMap[downPostSlots] = TT_PSEUDOBOOLEAN;
+        exitTypeMap[downPostSlots] = TT_VOID;
 
     /* Add global types. */
     determineGlobalTypes(&exitTypeMap[downPostSlots + 1]);
@@ -314,7 +314,7 @@ TraceRecorder::upRecursion()
                    NULL;
         JS_ASSERT(rval_ins);
     } else {
-        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        rval_ins = INS_VOID();
     }
 
     TraceType returnType = exit->stackTypeMap()[downPostSlots];
@@ -331,7 +331,7 @@ TraceRecorder::upRecursion()
     if (*cx->fp->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1));
     else
-        slotMap.addSlot(TT_PSEUDOBOOLEAN);
+        slotMap.addSlot(TT_VOID);
     VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     if (recursive_pc == (jsbytecode*)fragment->root->ip) {
         debug_only_print0(LC_TMTracer, "Compiling up-recursive loop...\n");
@@ -473,7 +473,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         if (*cx->fp->regs->pc == JSOP_RETURN)
             typeMap[downPostSlots] = determineSlotType(&stackval(-1));
         else
-            typeMap[downPostSlots] = TT_PSEUDOBOOLEAN;
+            typeMap[downPostSlots] = TT_VOID;
     } else {
         typeMap[downPostSlots] = anchor->stackTypeMap()[anchor->numStackSlots - 1];
     }
@@ -510,7 +510,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     } else {
         switch (returnType)
         {
-          case TT_PSEUDOBOOLEAN:
+          case TT_SPECIAL:
+          case TT_VOID:
           case TT_INT32:
             rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, offset);
             break;
@@ -591,7 +592,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     if (*cx->fp->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
     else
-        slotMap.addSlot(TT_PSEUDOBOOLEAN);
+        slotMap.addSlot(TT_VOID);
     VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     debug_only_print0(LC_TMTracer, "Compiling up-recursive slurp...\n");
     exit = copy(exit);
@@ -721,7 +722,7 @@ TraceRecorder::slurpDoubleSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::slurpBoolSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
+TraceRecorder::slurpSpecialSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
           lir->ins2(LIR_peq,
@@ -731,6 +732,13 @@ TraceRecorder::slurpBoolSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     LIns* bool_ins = lir->ins2(LIR_pirsh, val_ins, INS_CONST(JSVAL_TAGBITS));
     bool_ins = p2i(bool_ins);
     return bool_ins;
+}
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::slurpVoidSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
+{
+    guard(true, lir->ins2(LIR_peq, val_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+    return INS_VOID();
 }
 
 JS_REQUIRES_STACK LIns*
@@ -801,8 +809,10 @@ TraceRecorder::slurpSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     switch (exit->slurpType)
     {
-    case TT_PSEUDOBOOLEAN:
-        return slurpBoolSlot(val_ins, vp, exit);
+    case TT_SPECIAL:
+        return slurpSpecialSlot(val_ins, vp, exit);
+    case TT_VOID:
+        return slurpVoidSlot(val_ins, vp, exit);
     case TT_INT32:
         return slurpInt32Slot(val_ins, vp, exit);
     case TT_DOUBLE:
