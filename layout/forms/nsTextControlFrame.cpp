@@ -2001,7 +2001,13 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return selection->AddRange(range);
+  rv = selection->AddRange(range);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Scroll the selection into view (see bug 231389)
+  return mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                          nsISelectionController::SELECTION_FOCUS_REGION,
+                                          PR_FALSE);
 }
 
 nsresult
