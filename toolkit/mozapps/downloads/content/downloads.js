@@ -484,14 +484,6 @@ function Startup()
       e.preventDefault();
     }
   }, false);
-
-#ifdef XP_WIN
-#ifndef WINCE
-  let tempScope = {};
-  Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", tempScope);
-  tempScope.DownloadTaskbarProgress.onDownloadWindowLoad(window);
-#endif
-#endif
 }
 
 function Shutdown()
