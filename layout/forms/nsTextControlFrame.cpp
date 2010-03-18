@@ -1865,6 +1865,11 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   if (NS_SUCCEEDED(InitFocusedValue()))
     MaybeBeginSecureKeyboardInput();
 
+  // Scroll the current selection into view
+  mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                   nsISelectionController::SELECTION_FOCUS_REGION,
+                                   PR_FALSE);
+
   // tell the caret to use our selection
 
   nsCOMPtr<nsISelection> ourSel;
