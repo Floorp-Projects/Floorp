@@ -64,6 +64,8 @@
 #include <QPinchGesture>
 #endif // QT version check
 
+#include "nsXULAppAPI.h"
+
 #include "prlink.h"
 
 #include "nsWindow.h"
@@ -1848,7 +1850,11 @@ nsWindow::NativeShow(PRBool aAction)
 {
     if (aAction) {
         QWidget *widget = GetViewWidget();
-        if (widget && !widget->isVisible())
+        // On e10s, we never want the child process or plugin process
+        // to go fullscreen because if we do the window because visible
+        // do to disabled Qt-Xembed
+        if ((XRE_GetProcessType() == GeckoProcessType_Default) &&
+            widget && !widget->isVisible())
             MakeFullScreen(mSizeMode == nsSizeMode_Fullscreen);
         mWidget->show();
     }
@@ -1925,6 +1931,12 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
+#ifdef Q_WS_X11
+        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
+        // unsynchronized window activation.  Sync here to avoid such
+        // cases.
+        XSync(QX11Info().display(), False);
+#endif
         widget->showFullScreen();
     }
     else {
