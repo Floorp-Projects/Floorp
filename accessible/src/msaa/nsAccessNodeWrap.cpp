@@ -145,9 +145,11 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 
   // Can get to IAccessibleApplication from any node via QS
   if (iid == IID_IAccessibleApplication) {
-    nsRefPtr<nsApplicationAccessibleWrap> app =
-      GetApplicationAccessible();
-    nsresult rv = app->QueryNativeInterface(iid, ppv);
+    nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
+    if (!applicationAcc)
+      return E_NOINTERFACE;
+
+    nsresult rv = applicationAcc->QueryNativeInterface(iid, ppv);
     return NS_SUCCEEDED(rv) ? S_OK : E_NOINTERFACE;
   }
 

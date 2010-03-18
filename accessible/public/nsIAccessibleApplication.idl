@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *  Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,40 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_APPLICATION_ACCESSIBLE_WRAP_H__
-#define __NS_APPLICATION_ACCESSIBLE_WRAP_H__
+#include "nsISupports.idl"
 
-#include "nsApplicationAccessible.h"
-
-#include "AccessibleApplication.h"
-
-class nsApplicationAccessibleWrap: public nsApplicationAccessible,
-                                   public IAccessibleApplication
+/**
+ * This interface is implemented by top level accessible object in hierarchy and
+ * provides information about application.
+ */
+[scriptable, uuid(79251626-387c-4531-89f3-680d31d6cf05)]
+interface nsIAccessibleApplication : nsISupports
 {
-public:
-  // nsISupporst
-  NS_DECL_ISUPPORTS_INHERITED
+  /**
+   * Returns the application name.
+   */
+  readonly attribute DOMString appName;
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  /**
+   * Returns the application version.
+   */
+  readonly attribute DOMString appVersion;
 
-  // IAccessibleApplication
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appName(
-            /* [retval][out] */ BSTR *name);
+  /**
+   * Returns the platform name.
+   */
+  readonly attribute DOMString platformName;
 
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appVersion(
-      /* [retval][out] */ BSTR *version);
-
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitName(
-      /* [retval][out] */ BSTR *name);
-
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitVersion(
-          /* [retval][out] */ BSTR *version);
-
-public:
-  static void PreCreate();
-  static void Unload();
+  /**
+   * Returns the platform version.
+   */
+  readonly attribute DOMString platformVersion;
 };
-
-#endif
-

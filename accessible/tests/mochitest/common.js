@@ -22,6 +22,7 @@ const nsIAccessibleCoordinateType =
       Components.interfaces.nsIAccessibleCoordinateType;
 
 const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
+const nsIAccessibleApplication = Components.interfaces.nsIAccessibleApplication;
 
 const nsIAccessibleText = Components.interfaces.nsIAccessibleText;
 const nsIAccessibleEditableText = Components.interfaces.nsIAccessibleEditableText;
@@ -277,7 +278,8 @@ function getRootAccessible(aAccOrElmOrID)
  */
 function getApplicationAccessible()
 {
-  return gAccRetrieval.getApplicationAccessible();
+  return gAccRetrieval.getApplicationAccessible().
+    QueryInterface(nsIAccessibleApplication);
 }
 
 /**

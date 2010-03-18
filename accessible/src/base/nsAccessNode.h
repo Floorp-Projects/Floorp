@@ -63,7 +63,7 @@ class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
 class nsRootAccessible;
-class nsApplicationAccessibleWrap;
+class nsApplicationAccessible;
 class nsIDocShellTreeItem;
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
@@ -118,10 +118,10 @@ class nsAccessNode: public nsIAccessNode
     static void InitXPAccessibility();
     static void ShutdownXPAccessibility();
 
-    /**
-     * Return an application accessible.
-     */
-    static already_AddRefed<nsApplicationAccessibleWrap> GetApplicationAccessible();
+  /**
+   * Return an application accessible.
+   */
+  static nsApplicationAccessible* GetApplicationAccessible();
 
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
@@ -216,7 +216,7 @@ protected:
     gGlobalDocAccessibleCache;
 
 private:
-  static nsApplicationAccessibleWrap *gApplicationAccessible;
+  static nsApplicationAccessible *gApplicationAccessible;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessNode,
