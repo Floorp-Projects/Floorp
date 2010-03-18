@@ -1877,7 +1877,7 @@ namespace nanojit
             CASE64(LIR_qcall:) {
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
-                ssize_t m = n;
+                int32_t m = int32_t(n);     // Windows doesn't have 'ssize_t'
                 if (call->isIndirect())
                     m -= VMPI_snprintf(s, m, "%s = %s [%s] ( ", formatRef(&b1, i), lirNames[op],
                                        formatRef(&b2, i->arg(--argc)));
@@ -1896,7 +1896,7 @@ namespace nanojit
             }
 
             case LIR_jtbl: {
-                ssize_t m = n;
+                int32_t m = int32_t(n);     // Windows doesn't have 'ssize_t'
                 m -= VMPI_snprintf(s, m, "%s %s [ ", lirNames[op], formatRef(&b1, i->oprnd1()));
                 if (m < 0) break;
                 for (uint32_t j = 0, sz = i->getTableSize(); j < sz; j++) {
