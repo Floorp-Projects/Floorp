@@ -579,12 +579,11 @@ PrivateBrowsingService.prototype = {
 
     // Cookies
     let (cm = Cc["@mozilla.org/cookiemanager;1"].
-              getService(Ci.nsICookieManager)) {
-      let enumerator = cm.enumerator;
+              getService(Ci.nsICookieManager2)) {
+      let enumerator = cm.getCookiesFromHost(aDomain);
       while (enumerator.hasMoreElements()) {
         let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-        if (cookie.host.hasRootDomain(aDomain))
-          cm.remove(cookie.host, cookie.name, cookie.path, false);
+        cm.remove(cookie.host, cookie.name, cookie.path, false);
       }
     }
 
