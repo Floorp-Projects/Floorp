@@ -728,7 +728,7 @@ nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
   rv = stmt->BindInt32Parameter(1, TYPE_BOOKMARK);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
-  rv = stmt->BindUTF8StringParameter(2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+  rv = BindStatementURLCString(stmt, 2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
 
   // If we get any rows, then there exists at least one bookmark corresponding
