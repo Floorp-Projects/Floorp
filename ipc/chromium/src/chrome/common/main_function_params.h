@@ -6,8 +6,8 @@
 // plugin) to shield the call sites from the differences between platforms
 // (e.g., POSIX doesn't need to pass any sandbox information).
 
-#ifndef CHROME_COMMON_MAIN_FUNCTINON_PARAMS_H_
-#define CHROME_COMMON_MAIN_FUNCTINON_PARAMS_H_
+#ifndef CHROME_COMMON_MAIN_FUNCTION_PARAMS_H_
+#define CHROME_COMMON_MAIN_FUNCTION_PARAMS_H_
 
 #include "base/command_line.h"
 #include "chrome/common/sandbox_init_wrapper.h"
@@ -30,4 +30,4 @@ struct MainFunctionParams {
   Task* ui_task;
 };
 
-#endif  // CHROME_COMMON_MAIN_FUNCTINON_PARAMS_H_
+#endif  // CHROME_COMMON_MAIN_FUNCTION_PARAMS_H_
