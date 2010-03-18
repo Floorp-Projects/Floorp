@@ -43,7 +43,6 @@ function testCopyPaste () {
   // let's copy the selection
   documentViewer.copySelection();
 
-  is(clipboard.hasDataMatchingFlavors(["text/plain"], 1,1), false);
   is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
   is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
 
@@ -82,7 +81,6 @@ function testCopyPaste () {
   window.getSelection().selectAllChildren(node);
   documentViewer.copySelection();
 
-  is(clipboard.hasDataMatchingFlavors(["text/plain"], 1,1), false);
   is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
   is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
 
