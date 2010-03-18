@@ -184,18 +184,8 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
     return;
   }
 
-  /* Clamp rx and ry to half the rect's width and height respectively. */
-  float halfWidth  = width/2;
-  float halfHeight = height/2;
-  if (rx > halfWidth)
-    rx = halfWidth;
-  if (ry > halfHeight)
-    ry = halfHeight;
-
   /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
-     have to set it to the value of the other. We do this after clamping rx and
-     ry since omitting one of the attributes implicitly means they should both
-     be the same. */
+     have to set it to the value of the other. */
   PRBool hasRx = HasAttr(kNameSpaceID_None, nsGkAtoms::rx);
   PRBool hasRy = HasAttr(kNameSpaceID_None, nsGkAtoms::ry);
   if (hasRx && !hasRy)
@@ -203,12 +193,13 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
   else if (hasRy && !hasRx)
     rx = ry;
 
-  /* However, we may now have made rx > width/2 or else ry > height/2. (If this
-     is the case, we know we must be giving rx and ry the same value.) */
+  /* Clamp rx and ry to half the rect's width and height respectively. */
+  float halfWidth  = width/2;
+  float halfHeight = height/2;
   if (rx > halfWidth)
-    rx = ry = halfWidth;
-  else if (ry > halfHeight)
-    rx = ry = halfHeight;
+    rx = halfWidth;
+  if (ry > halfHeight)
+    ry = halfHeight;
 
   gfxSize corner(rx, ry);
   aCtx->RoundedRectangle(gfxRect(x, y, width, height),
