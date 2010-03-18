@@ -2738,15 +2738,7 @@
       <method name="_getDragTargetTab">
         <parameter name="event"/>
         <body><![CDATA[
-          var node = event.originalTarget;
-          if (node.localName == "tab")
-            return node;
-
-          node = document.getBindingParent(node);
-          if (node.localName == "tab")
-            return node;
-
-          return null;
+          return event.target.localName == "tab" ? event.target : null;
         ]]></body>
       </method>
 
