@@ -51,6 +51,10 @@ import sys
 import threading
 import tempfile
 
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+sys.path.insert(0, SCRIPT_DIR)
+import automationutils
+
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
@@ -73,6 +77,13 @@ _IS_CYGWIN = False
 #expand _IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand _IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 #expand _CRASHREPORTER = __CRASHREPORTER__ == 1
+
+
+if _IS_WIN32:
+  import ctypes, ctypes.wintypes, time, msvcrt
+else:
+  import errno
+
 
 #################
 # PROFILE SETUP #
@@ -125,10 +136,6 @@ class Automation(object):
   IS_TEST_BUILD = _IS_TEST_BUILD
   IS_DEBUG_BUILD = _IS_DEBUG_BUILD
   CRASHREPORTER = _CRASHREPORTER
-
-  SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
-  sys.path.insert(0, SCRIPT_DIR)
-  automationutils = __import__('automationutils')
 
   # timeout, in seconds
   DEFAULT_TIMEOUT = 60.0
@@ -466,7 +473,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     if env == None:
       env = dict(os.environ)
 
-    ldLibraryPath = os.path.abspath(os.path.join(self.SCRIPT_DIR, xrePath))
+    ldLibraryPath = os.path.abspath(os.path.join(SCRIPT_DIR, xrePath))
     if self.UNIXISH or self.IS_MAC:
       envVar = "LD_LIBRARY_PATH"
       if self.IS_MAC:
@@ -490,10 +497,6 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     return env
 
   if IS_WIN32:
-    ctypes = __import__('ctypes')
-    wintypes = __import__('ctypes.wintypes')
-    time = __import__('time')
-    msvcrt = __import__('msvcrt')
     PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
     GetLastError = ctypes.windll.kernel32.GetLastError
 
@@ -507,11 +510,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if timeout is None:
         # shortcut to allow callers to pass in "None" for no timeout.
         return (f.readline(), False)
-      x = self.msvcrt.get_osfhandle(f.fileno())
-      l = self.ctypes.c_long()
-      done = self.time.time() + timeout
-      while self.time.time() < done:
-        if self.PeekNamedPipe(x, None, 0, None, self.ctypes.byref(l), None) == 0:
+      x = msvcrt.get_osfhandle(f.fileno())
+      l = ctypes.c_long()
+      done = time.time() + timeout
+      while time.time() < done:
+        if self.PeekNamedPipe(x, None, 0, None, ctypes.byref(l), None) == 0:
           err = self.GetLastError()
           if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
             return ('', False)
@@ -521,18 +524,18 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
           # we're assuming that the output is line-buffered,
           # which is not unreasonable
           return (f.readline(), False)
-        self.time.sleep(0.01)
+        time.sleep(0.01)
       return ('', True)
 
     def isPidAlive(self, pid):
       STILL_ACTIVE = 259
       PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-      pHandle = self.ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+      pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
       if not pHandle:
         return False
       pExitCode = ctypes.wintypes.DWORD()
-      self.ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
-      self.ctypes.windll.kernel32.CloseHandle(pHandle)
+      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
+      ctypes.windll.kernel32.CloseHandle(pHandle)
       if (pExitCode.value == STILL_ACTIVE):
         return True
       else:
@@ -540,14 +543,13 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     def killPid(self, pid):
       PROCESS_TERMINATE = 0x0001
-      pHandle = self.ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
+      pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
       if not pHandle:
         return
-      success = self.ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
-      self.ctypes.windll.kernel32.CloseHandle(pHandle)
+      success = ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
+      ctypes.windll.kernel32.CloseHandle(pHandle)
 
   else:
-    errno = __import__('errno')
 
     def readWithTimeout(self, f, timeout):
       """Try to read a line of output from the file object |f|. If no output
@@ -575,7 +577,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       except OSError, err:
         # Catch the errors we might expect from os.kill/os.waitpid, 
         # and re-raise any others
-        if err.errno == self.errno.ESRCH or err.errno == self.errno.ECHILD:
+        if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
           return False
         raise
 
@@ -761,7 +763,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     # Do a final check for zombie child processes.
     self.checkForZombies(processLog)
-    self.automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
+    automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
 
     if os.path.exists(processLog):
       os.unlink(processLog)
