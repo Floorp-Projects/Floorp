@@ -198,7 +198,7 @@ UNMAKE_PACKAGE	= \
 SDK_SUFFIX = .tar.bz2
 SDK = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
 ifeq ($(MOZ_APP_NAME),xulrunner)
-SDK = $(SDK_PATH)$(MOZ_APP_NAME).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
+SDK = $(SDK_PATH)$(MOZ_APP_NAME)-$(MOZ_PKG_VERSION).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
 endif
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
