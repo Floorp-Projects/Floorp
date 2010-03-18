@@ -391,7 +391,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLScriptElement)
     foundInterface = static_cast<nsIScriptEventHandler*>
                                 (mScriptEventHandler);
   else
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLScriptElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLScriptElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

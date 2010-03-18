@@ -22,6 +22,7 @@ const nsIAccessibleCoordinateType =
       Components.interfaces.nsIAccessibleCoordinateType;
 
 const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
+const nsIAccessibleApplication = Components.interfaces.nsIAccessibleApplication;
 
 const nsIAccessibleText = Components.interfaces.nsIAccessibleText;
 const nsIAccessibleEditableText = Components.interfaces.nsIAccessibleEditableText;
@@ -261,15 +262,7 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
 function getRootAccessible(aAccOrElmOrID)
 {
   var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document);
-  while (acc) {
-    var parent = acc.parent;
-    if (parent && !parent.parent)
-      return acc;
-
-    acc = parent;
-  }
-
-  return null;
+  return acc ? acc.rootDocument.QueryInterface(nsIAccessible) : null;
 }
 
 /**
@@ -277,28 +270,8 @@ function getRootAccessible(aAccOrElmOrID)
  */
 function getApplicationAccessible()
 {
-  var acc = getAccessible(document), parent = null;
-  while (acc) {
-
-    try {
-      parent = acc.parent;
-    } catch (e) {
-      ok(false, "Can't get a parent for " + prettyName(acc));
-      return null;
-    }
-
-    if (!parent) {
-      if (acc.role == ROLE_APP_ROOT)
-        return acc;
-
-      ok(false, "No application accessible!");
-      return null;
-    }
-
-    acc = parent;
-  }
-
-  return null;
+  return gAccRetrieval.getApplicationAccessible().
+    QueryInterface(nsIAccessibleApplication);
 }
 
 /**

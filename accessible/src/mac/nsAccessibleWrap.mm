@@ -36,9 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibleWrap.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIAccessibleText.h"
+#include "nsDocAccessible.h"
 #include "nsObjCExceptions.h"
 
 #import "nsRoleMap.h"
@@ -92,8 +90,10 @@ void
 nsAccessibleWrap::GetNativeWindow (void **aOutNativeWindow)
 {
   *aOutNativeWindow = nsnull;
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  docAccessible->GetWindowHandle (aOutNativeWindow);
+
+  nsDocAccessible *docAcc = GetDocAccessible();
+  if (docAcc)
+    docAcc->GetWindowHandle (aOutNativeWindow);
 }
 
 // overridden in subclasses to create the right kind of object. by default we create a generic

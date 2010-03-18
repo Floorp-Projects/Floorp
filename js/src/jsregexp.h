@@ -159,6 +159,9 @@ JSObject::isRegExp() const
     return getClass() == &js_RegExpClass;
 }
 
+extern JS_FRIEND_API(JSBool)
+js_ObjectIsRegExp(JSObject *obj);
+
 enum regexp_tinyid {
     REGEXP_SOURCE       = -1,
     REGEXP_GLOBAL       = -2,
@@ -187,7 +190,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
 extern JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 
-extern JSObject * JS_FASTCALL
+extern JS_FRIEND_API(JSObject *) JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
 const uint32 JSSLOT_REGEXP_LAST_INDEX = JSSLOT_PRIVATE + 1;

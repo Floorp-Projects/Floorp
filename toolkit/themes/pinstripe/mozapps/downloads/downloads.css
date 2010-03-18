@@ -110,7 +110,7 @@ richlistitem[type="download"] button {
   -moz-appearance: statusbar;
 }
 
-#searchbox:-moz-window-inactive {
+:root:not([active]) #searchbox {
   opacity: 0.7;
 }
 
@@ -134,7 +134,7 @@ richlistitem[type="download"] button {
   -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
-#clearListButton:-moz-window-inactive {
+:root:not([active]) #clearListButton {
   color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through, bug 392188 */
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

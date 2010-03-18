@@ -892,12 +892,6 @@ nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData)
   return nsReStyleHint(0);
 }
 
-PRBool
-nsTransitionManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
-{
-  return PR_FALSE;
-}
-
 nsReStyleHint
 nsTransitionManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {

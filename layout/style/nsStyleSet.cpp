@@ -1070,32 +1070,7 @@ struct StatefulData : public StateRuleProcessorData {
       mHint(nsReStyleHint(0))
   {}
   nsReStyleHint   mHint;
-};
-
-static PRBool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
-                                         void *aData)
-{
-  StatefulData* data = (StatefulData*)aData;
-  if (aProcessor->HasDocumentStateDependentStyle(data)) {
-    data->mHint = eReStyle_Self;
-    return PR_FALSE; // don't continue
-  }
-  return PR_TRUE; // continue
-}
-
-// Test if style is dependent on a document state.
-PRBool
-nsStyleSet::HasDocumentStateDependentStyle(nsPresContext* aPresContext,
-                                           nsIContent*    aContent,
-                                           PRInt32        aStateMask)
-{
-  if (!aContent || !aContent->IsNodeOfType(nsINode::eELEMENT))
-    return PR_FALSE;
-
-  StatefulData data(aPresContext, aContent, aStateMask);
-  WalkRuleProcessors(SheetHasDocumentStateStyle, &data);
-  return data.mHint != 0;
-}
+}; 
 
 static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
                                     void *aData)

@@ -58,6 +58,8 @@ _CHROME_FILES = \
   test_0042_available_noBillboard_noAddons.xul \
   test_0051_check_error_xml_malformed.xul \
   test_0052_check_no_updates.xul \
+  test_0053_check_billboard_license_noAttr.xul \
+  test_0054_check_billboard_license_404.xul \
   test_0081_error_patchApplyFailure_partial_only.xul \
   test_0082_error_patchApplyFailure_complete_only.xul \
   test_0083_error_patchApplyFailure_partial_complete.xul \

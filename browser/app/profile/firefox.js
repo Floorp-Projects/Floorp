@@ -906,7 +906,11 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
+#ifdef XP_MACOSX
+pref("dom.ipc.plugins.enabled", false);
+#else
 pref("dom.ipc.plugins.enabled", true);
+#endif
 
 #ifdef XP_WIN
 #ifndef WINCE

@@ -79,7 +79,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGPolygonElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGPolygonElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGPolygonElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPolygonElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPolygonElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPolygonElementBase)
 
 //----------------------------------------------------------------------

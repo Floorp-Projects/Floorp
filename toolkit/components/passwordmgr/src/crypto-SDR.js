@@ -40,6 +40,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function LoginManagerCrypto_SDR() {
     this.init();
@@ -51,14 +52,6 @@ LoginManagerCrypto_SDR.prototype = {
     contractID : "@mozilla.org/login-manager/crypto/SDR;1",
     classID : Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
-
-    __logService : null, // Console logging service, used for debugging.
-    get _logService() {
-        if (!this.__logService)
-            this.__logService = Cc["@mozilla.org/consoleservice;1"].
-                                getService(Ci.nsIConsoleService);
-        return this.__logService;
-    },
 
     __decoderRing : null,  // nsSecretDecoderRing service
     get _decoderRing() {
@@ -82,14 +75,6 @@ LoginManagerCrypto_SDR.prototype = {
         this.__utfConverter = null;
     },
 
-    __observerService : null,
-    get _observerService() {
-        if (!this.__observerService)
-            this.__observerService = Cc["@mozilla.org/observer-service;1"].
-                                     getService(Ci.nsIObserverService);
-        return this.__observerService;
-    },
-
     _debug : false, // mirrors signon.debug
 
 
@@ -102,15 +87,13 @@ LoginManagerCrypto_SDR.prototype = {
         if (!this._debug)
             return;
         dump("PwMgr cryptoSDR: " + message + "\n");
-        this._logService.logStringMessage("PwMgr cryptoSDR: " + message);
+        Services.console.logStringMessage("PwMgr cryptoSDR: " + message);
     },
 
 
     init : function () {
         // Connect to the correct preferences branch.
-        this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefService);
-        this._prefBranch = this._prefBranch.getBranch("signon.");
+        this._prefBranch = Services.prefs.getBranch("signon.");
         this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
         this._debug = this._prefBranch.getBoolPref("debug");

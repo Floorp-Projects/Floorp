@@ -80,7 +80,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGAnimateElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGAnimateElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGAnimationElement,
                            nsIDOMSVGAnimateElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimateElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimateElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateElementBase)
 
 //----------------------------------------------------------------------

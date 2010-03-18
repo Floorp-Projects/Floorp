@@ -111,7 +111,7 @@ nsCommentNode::~nsCommentNode()
 NS_INTERFACE_TABLE_HEAD(nsCommentNode)
   NS_NODE_INTERFACE_TABLE3(nsCommentNode, nsIDOMNode, nsIDOMCharacterData,
                            nsIDOMComment)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Comment)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Comment)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 
