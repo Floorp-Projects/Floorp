@@ -1537,26 +1537,34 @@ nsHTMLInputElement::Click()
       return rv;
     }
     
-    nsIPresShell *shell = doc->GetPrimaryShell();
-
+    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsCOMPtr<nsPresContext> context = nsnull;
     if (shell) {
-      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+      context = shell->GetPresContext();
+    }
 
-      if (context) {
-        // Click() is never called from native code, but it may be
-        // called from chrome JS. Mark this event trusted if Click()
-        // is called from chrome code.
-        nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                           NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-        nsEventStatus status = nsEventStatus_eIgnore;
-
-        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
-
-        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
-                                    &event, nsnull, &status);
-
-        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
+    if (!context) {
+      doc->FlushPendingNotifications(Flush_Frames);
+      shell = doc->GetPrimaryShell();
+      if (shell) {
+        context = shell->GetPresContext();
       }
+    }
+
+    if (context) {
+      // Click() is never called from native code, but it may be
+      // called from chrome JS. Mark this event trusted if Click()
+      // is called from chrome code.
+      nsMouseEvent event(nsContentUtils::IsCallerChrome(),
+                         NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+      nsEventStatus status = nsEventStatus_eIgnore;
+
+      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
+
+      nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
+                                  &event, nsnull, &status);
+
+      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
     }
   }
 
