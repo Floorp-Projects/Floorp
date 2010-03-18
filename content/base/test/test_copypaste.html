@@ -19,11 +19,6 @@
 function testCopyPaste () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  // selection of the node
-  var node = document.getElementById('draggable');
-  window.getSelection().selectAllChildren(node);
-  
-  // let's copy the selection
   var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIWebNavigation)
 
@@ -31,41 +26,99 @@ function testCopyPaste () {
 
   var documentViewer = docShell.contentViewer
                                .QueryInterface(Components.interfaces.nsIContentViewerEdit);
-  documentViewer.copySelection();
-  
-  //--------- now check the content of the clipboard
+
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
                             .getService(Components.interfaces.nsIClipboard);
-  
+
+  var transferable, node;
+  var data = {};
+  var textarea = document.getElementById('input');
+
+  // ============  copy paste test from a simple text content to a textarea
+
+  // selection of the node
+  node = document.getElementById('draggable');
+  window.getSelection().selectAllChildren(node);
+
+  // let's copy the selection
+  documentViewer.copySelection();
+
+  is(clipboard.hasDataMatchingFlavors(["text/plain"], 1,1), false);
+  is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
+  is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
+
   // is the clipboard contain a text/unicode data ?
-  var transferable = Components.classes['@mozilla.org/widget/transferable;1']
-                               .createInstance(Components.interfaces.nsITransferable);
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
   transferable.addDataFlavor("text/unicode");
   clipboard.getData(transferable, 1);
-  var data = {}
+
   transferable.getTransferData ("text/unicode", data, {} ) ;
   is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
-      "This is a draggable bit of text.");
+      "This is a draggable bit of text.",
+      "text/unicode value in the clipboard");
   
   // is the clipboard contain a text/html data ?
   transferable = Components.classes['@mozilla.org/widget/transferable;1']
-        .createInstance(Components.interfaces.nsITransferable);
+                           .createInstance(Components.interfaces.nsITransferable);
   transferable.addDataFlavor("text/html");
-  clipboard.getData(transferable, 1); 
+  clipboard.getData(transferable, 1);
+
   transferable.getTransferData ("text/html", data, {} ) ;
   is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
-      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em>\n bit of text.</div>");
+      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em>\n bit of text.</div>",
+      "text/html value in the clipboard");
   
-  //------ let's paste now in the textarea and verify its content
-  var textarea = document.getElementById('input');
+  // let's paste now in the textarea and verify its content
   textarea.focus();
   textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
           .editor.paste(1);
-  is(textarea.value, "This is a draggable bit of text.");
+  is(textarea.value, "This is a draggable bit of text.", "value of the textarea after the paste");
 
 
-  // test copy/paste from/to textarea
-  var val = "1\n 2\n  3"
+  // ============ copy paste test from a piece of HTML to a textarea
+  textarea.blur();
+  node = document.getElementById('alist');
+  window.getSelection().selectAllChildren(node);
+  documentViewer.copySelection();
+
+  is(clipboard.hasDataMatchingFlavors(["text/plain"], 1,1), false);
+  is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
+  is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
+
+  // let's verify the clipboard content for the text/unicode flavor
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/unicode");
+  clipboard.getData(transferable, 1);
+  data = {};
+  transferable.getTransferData ("text/unicode", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      " bla\n\n    * foo\n    * bar\n\n",
+      "text/unicode value in the clipboard (html piece)");
+
+  // let's verify the clipboard content for the text/html flavor
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/html");
+  clipboard.getData(transferable, 1);
+  data = {};
+  transferable.getTransferData ("text/html", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      <li>bar</li>\n    </ul>\n  </div>",
+      "text/html value in the clipboard (html piece)");
+  
+  // let's paste now in the textarea and verify its content
+  textarea.value="";
+  textarea.focus();
+  textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+          .editor.paste(1);
+  is(textarea.value, " bla\n\n    * foo\n    * bar\n\n", "value of the textarea after the paste (html piece)");
+  
+
+  // ============ copy/paste test from/to a textarea
+
+  var val = "1\n 2\n  3";
   textarea.value=val;
   textarea.select();
   textarea.editor.copy();
@@ -73,6 +126,7 @@ function testCopyPaste () {
   textarea.value="";
   textarea.editor.paste(1);
   is(textarea.value, val);
+  textarea.value="";
 
   SimpleTest.finish();
 }
@@ -87,7 +141,15 @@ addLoadEvent(testCopyPaste);
 <div>
 
   <div id="draggable" title="title to have a long HTML line">This is a <em>draggable</em> bit of text.</div>
-  <textarea id="input"></textarea>
+  <textarea id="input" cols="40" rows="10"></textarea>
+
+  <div id="alist">
+    bla
+    <ul>
+      <li>foo</li>
+      <li>bar</li>
+    </ul>
+  </div>
 
 </div>
 </body>
