@@ -255,9 +255,9 @@ static MessageLoop* sIOMessageLoop;
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
 PRBool
-XRE_GetMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump)
+XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump)
 {
-  return CrashReporter::GetMinidumpForChild(aChildPid, aDump);
+  return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
 PRBool
