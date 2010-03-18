@@ -53,13 +53,13 @@ const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
-const PREF_APP_UPDATE_EXTRA1              = "app.update.extra1";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
+const PREF_APP_UPDATE_POSTUPDATE          = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
@@ -860,36 +860,57 @@ function Update(update) {
     attr.QueryInterface(Ci.nsIDOMAttr);
     if (attr.value == "undefined")
       continue;
-    else if (attr.name == "installDate" && attr.value)
-      this.installDate = parseInt(attr.value);
-    else if (attr.name == "isCompleteUpdate")
-      this.isCompleteUpdate = attr.value == "true";
-    else if (attr.name == "isSecurityUpdate")
-      this.isSecurityUpdate = attr.value == "true";
-    else if (attr.name == "showPrompt")
-      this.showPrompt = attr.value == "true";
-    else if (attr.name == "showNeverForVersion")
-      this.showNeverForVersion = attr.value == "true";
-    else if (attr.name == "showSurvey")
-      this.showSurvey = attr.value == "true";
     else if (attr.name == "detailsURL")
       this._detailsURL = attr.value;
-    else if (attr.name == "channel")
-      this.channel = attr.value;
     else if (attr.name == "extensionVersion") {
       // Prevent extensionVersion from replacing appVersion if appVersion is
       // present in the update xml.
       if (!this.appVersion)
         this.appVersion = attr.value;
     }
+    else if (attr.name == "installDate" && attr.value)
+      this.installDate = parseInt(attr.value);
+    else if (attr.name == "isCompleteUpdate")
+      this.isCompleteUpdate = attr.value == "true";
+    else if (attr.name == "isSecurityUpdate")
+      this.isSecurityUpdate = attr.value == "true";
+    else if (attr.name == "showNeverForVersion")
+      this.showNeverForVersion = attr.value == "true";
+    else if (attr.name == "showPrompt")
+      this.showPrompt = attr.value == "true";
+    else if (attr.name == "showSurvey")
+      this.showSurvey = attr.value == "true";
     else if (attr.name == "version") {
       // Prevent version from replacing displayVersion if displayVersion is
       // present in the update xml.
       if (!this.displayVersion)
         this.displayVersion = attr.value;
     }
-    else
+    else {
       this[attr.name] = attr.value;
+
+      switch (attr.name) {
+      case "appVersion":
+      case "billboardURL":
+      case "buildID":
+      case "channel":
+      case "displayVersion":
+      case "licenseURL":
+      case "name":
+      case "platformVersion":
+      case "previousAppVersion":
+      case "serviceURL":
+      case "statusText":
+      case "type":
+        break;
+      default:
+        // Save custom attributes when serializing to the local xml file but
+        // don't use this method for the expected attributes which are already
+        // handled in serialize.
+        this.setProperty(attr.name, attr.value);
+        break;
+      };
+    }
   }
 
   // Set the initial value with the current time when it doesn't already have a
@@ -987,36 +1008,36 @@ Update.prototype = {
    */
   serialize: function Update_serialize(updates) {
     var update = updates.createElementNS(URI_UPDATE_NS, "update");
-    update.setAttribute("type", this.type);
-    update.setAttribute("name", this.name);
-    update.setAttribute("displayVersion", this.displayVersion);
-    // for backwards compatibility in case the user downgrades
-    update.setAttribute("version", this.displayVersion);
     update.setAttribute("appVersion", this.appVersion);
     update.setAttribute("buildID", this.buildID);
+    update.setAttribute("channel", this.channel);
+    update.setAttribute("displayVersion", this.displayVersion);
     // for backwards compatibility in case the user downgrades
     update.setAttribute("extensionVersion", this.appVersion);
+    update.setAttribute("installDate", this.installDate);
+    update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
+    update.setAttribute("name", this.name);
+    update.setAttribute("serviceURL", this.serviceURL);
+    update.setAttribute("showNeverForVersion", this.showNeverForVersion);
+    update.setAttribute("showPrompt", this.showPrompt);
+    update.setAttribute("showSurvey", this.showSurvey);
+    update.setAttribute("type", this.type);
+    // for backwards compatibility in case the user downgrades
+
+    // Optional attributes
+    update.setAttribute("version", this.displayVersion);
+    if (this.billboardURL)
+      update.setAttribute("billboardURL", this.billboardURL);
+    if (this.detailsURL)
+      update.setAttribute("detailsURL", this.detailsURL);
+    if (this.licenseURL)
+      update.setAttribute("licenseURL", this.licenseURL);
     if (this.platformVersion)
       update.setAttribute("platformVersion", this.platformVersion);
     if (this.previousAppVersion)
       update.setAttribute("previousAppVersion", this.previousAppVersion);
-    if (this.detailsURL)
-      update.setAttribute("detailsURL", this.detailsURL);
-    if (this.billboardURL)
-      update.setAttribute("billboardURL", this.billboardURL);
-    if (this.licenseURL)
-      update.setAttribute("licenseURL", this.licenseURL);
-    update.setAttribute("serviceURL", this.serviceURL);
-    update.setAttribute("installDate", this.installDate);
     if (this.statusText)
       update.setAttribute("statusText", this.statusText);
-    update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
-    update.setAttribute("channel", this.channel);
-    update.setAttribute("showPrompt", this.showPrompt);
-    update.setAttribute("showSurvey", this.showSurvey);
-    update.setAttribute("showNeverForVersion", this.showNeverForVersion);
-    if (this.extra1)
-      update.setAttribute("extra1", this.extra1);
     updates.documentElement.appendChild(update);
 
     for (var p in this._properties) {
@@ -1197,8 +1218,7 @@ UpdateService.prototype = {
 
       // Update the patch's metadata.
       um.activeUpdate = update;
-      gPref.setCharPref(PREF_APP_UPDATE_EXTRA1,
-                        update.extra1 ? update.extra1 : "undefined");
+      gPref.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
       prompter.showUpdateInstalled();
 
       // Done with this update. Clean it up.

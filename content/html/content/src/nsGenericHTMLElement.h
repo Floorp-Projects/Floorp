@@ -1098,7 +1098,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_ELEMENT_INTERFACE_MAP_END
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(_class)                \
-    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                          \
+    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                              \
   NS_HTML_CONTENT_INTERFACE_MAP_END
 
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
@@ -1106,7 +1106,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
                                      mNodeInfo->Equals(nsGkAtoms::_tag))
 
 
-#define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(_class, _tag)         \
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(_class, _tag)             \
   if (mNodeInfo->Equals(nsGkAtoms::_tag) &&                                   \
       aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
     foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \

@@ -93,7 +93,7 @@
       do {
         docAcc = parentDocAcc;
         parentOfDocAcc = getAccessible(docAcc.parent, [nsIAccessNode]);
-        parentDocAcc = getAccessible(parentOfDocAcc.accessibleDocument,
+        parentDocAcc = getAccessible(parentOfDocAcc.document,
                                      [nsIAccessible]);
       } while (getRole(parentDocAcc) != ROLE_CHROME_WINDOW)
 

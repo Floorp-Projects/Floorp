@@ -35,21 +35,6 @@
       }
     }
 
-    function focusDocument(aFrameID)
-    {
-      this.DOMNode = getNode(aFrameID).contentDocument;
-
-      this.invoke = function focusDocument_invoke()
-      {
-        this.DOMNode.body.focus();
-      }
-
-      this.getID = function focusDocument_getID()
-      {
-        return "Focus document of " + prettyName(aFrameID);
-      }
-    }
-
     function focusElmWhileSubdocIsFocused(aID)
     {
       this.DOMNode = getNode(aID);
@@ -92,7 +77,7 @@
       gQueue.push(new openCloseDialog("button"));
 
       var frameNode = getNode("editabledoc");
-      gQueue.push(new focusDocument(frameNode));
+      gQueue.push(new synthFocusOnFrame(frameNode));
       gQueue.push(new openCloseDialog(frameNode.contentDocument));
 
       gQueue.push(new focusElmWhileSubdocIsFocused("button"));

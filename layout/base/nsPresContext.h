@@ -757,8 +757,6 @@ public:
 
   PRBool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
 
-  NS_HIDDEN_(PRBool) IsTopLevelWindowInactive();
-
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
    */

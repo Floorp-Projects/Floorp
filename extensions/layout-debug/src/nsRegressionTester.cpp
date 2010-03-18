@@ -81,27 +81,30 @@ nsRegressionTester::~nsRegressionTester()
 NS_IMPL_ISUPPORTS1(nsRegressionTester, nsILayoutRegressionTester)
 
 NS_IMETHODIMP
-nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aDestFile, PRUint32 aFlagsMask, PRInt32 *aResult) 
+nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
+                                   nsILocalFile *aDestFile,
+                                   PRUint32 aFlagsMask, PRInt32 *aResult)
 {
   NS_ENSURE_ARG(aWindowToDump);
   NS_ENSURE_ARG_POINTER(aResult);
-
-  nsresult    rv = NS_ERROR_NOT_AVAILABLE;
-  PRUint32    busyFlags;
-  PRBool      stillLoading;
 
   *aResult = DUMP_RESULT_ERROR;
 
 #ifndef DEBUG
   return NS_ERROR_NOT_AVAILABLE;
 #else
+  nsresult    rv = NS_ERROR_NOT_AVAILABLE;
+  PRUint32    busyFlags;
+  PRBool      stillLoading;
+
   nsCOMPtr<nsIDocShell> docShell;
   rv = GetDocShellFromWindow(aWindowToDump, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;
 
   // find out if the document is loaded
   docShell->GetBusyFlags(&busyFlags);
-  stillLoading = busyFlags && (nsIDocShell::BUSY_FLAGS_BUSY | nsIDocShell::BUSY_FLAGS_PAGE_LOADING);
+  stillLoading = busyFlags & (nsIDocShell::BUSY_FLAGS_BUSY |
+                              nsIDocShell::BUSY_FLAGS_PAGE_LOADING);
   if (stillLoading)
   {
     *aResult = DUMP_RESULT_LOADING;

@@ -693,7 +693,6 @@ public:
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
-  virtual void DocumentStatesChanged(PRInt32 aStateMask);
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aOldStyleRule,
@@ -940,8 +939,6 @@ public:
 
   virtual nsISupports* GetCurrentContentSink();
 
-  virtual PRInt32 GetDocumentState();
-
   virtual void RegisterFileDataUri(nsACString& aUri);
 
 protected:
@@ -1136,9 +1133,6 @@ protected:
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
-
-  PRInt32 mDocumentState;
-  PRInt32 mGotDocumentState;
 
 private:
   friend class nsUnblockOnloadEvent;

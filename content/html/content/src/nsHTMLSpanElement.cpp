@@ -132,7 +132,7 @@ public:
 };
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLUnknownElement)
 NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
 
 nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)

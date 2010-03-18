@@ -137,7 +137,7 @@ interface nsIDocumentEncoder : nsISupports
    * This is a catch-all flag for documents with mixed contents. Beware of
    * interoperability issues. See below for other flags which might likely
    * do what you want.
-   * XHTML/HTML output only.
+   * HTML output only.
    */
   const unsigned long OutputEncodeW3CEntities = (1 << 8);
 
@@ -180,7 +180,7 @@ interface nsIDocumentEncoder : nsISupports
    * E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
    * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
    * with older products that don't support &alpha; and friends.
-   * XHTML/HTML output only.
+   * HTML output only.
    */
   const unsigned long OutputEncodeBasicEntities = (1 << 14);
     
@@ -188,7 +188,7 @@ interface nsIDocumentEncoder : nsISupports
    * Encode entities when outputting to a string.
    * The Latin1 entity set additionally includes 8bit accented letters
    * between 128 and 255.
-   * XHTML/HTML output only.
+   * HTML output only.
    */
   const unsigned long OutputEncodeLatin1Entities = (1 << 15);
   
@@ -196,7 +196,7 @@ interface nsIDocumentEncoder : nsISupports
    * Encode entities when outputting to a string.
    * The HTML entity set additionally includes accented letters, greek
    * letters, and other special markup symbols as defined in HTML4.
-   * XHTML/HTML output only.
+   * HTML output only.
    */
   const unsigned long OutputEncodeHTMLEntities = (1 << 16);
 

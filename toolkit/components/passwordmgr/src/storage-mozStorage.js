@@ -48,6 +48,7 @@ const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function LoginManagerStorage_mozStorage() { };
 
@@ -57,14 +58,6 @@ LoginManagerStorage_mozStorage.prototype = {
     contractID : "@mozilla.org/login-manager/storage/mozStorage;1",
     classID : Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage]),
-
-    __logService : null, // Console logging service, used for debugging.
-    get _logService() {
-        if (!this.__logService)
-            this.__logService = Cc["@mozilla.org/consoleservice;1"].
-                                getService(Ci.nsIConsoleService);
-        return this.__logService;
-    },
 
     __crypto : null,  // nsILoginManagerCrypto service
     get _crypto() {
@@ -77,9 +70,7 @@ LoginManagerStorage_mozStorage.prototype = {
     __profileDir: null,  // nsIFile for the user's profile dir
     get _profileDir() {
         if (!this.__profileDir)
-            this.__profileDir = Cc["@mozilla.org/file/directory_service;1"].
-                                getService(Ci.nsIProperties).
-                                get("ProfD", Ci.nsIFile);
+            this.__profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
         return this.__profileDir;
     },
 
@@ -97,14 +88,6 @@ LoginManagerStorage_mozStorage.prototype = {
             this.__uuidService = Cc["@mozilla.org/uuid-generator;1"].
                                  getService(Ci.nsIUUIDGenerator);
         return this.__uuidService;
-    },
-
-    __observerService : null,
-    get _observerService() {
-        if (!this.__observerService)
-            this.__observerService = Cc["@mozilla.org/observer-service;1"].
-                                     getService(Ci.nsIObserverService);
-        return this.__observerService;
     },
 
 
@@ -168,7 +151,7 @@ LoginManagerStorage_mozStorage.prototype = {
         if (!this._debug)
             return;
         dump("PwMgr mozStorage: " + message + "\n");
-        this._logService.logStringMessage("PwMgr mozStorage: " + message);
+        Services.console.logStringMessage("PwMgr mozStorage: " + message);
     },
 
 
@@ -199,11 +182,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this._dbStmts = [];
 
         // Connect to the correct preferences branch.
-        this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefService);
-        this._prefBranch = this._prefBranch.getBranch("signon.");
-        this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-
+        this._prefBranch = Services.prefs.getBranch("signon.");
         this._debug = this._prefBranch.getBoolPref("debug");
 
         let isFirstRun;
@@ -747,7 +726,7 @@ LoginManagerStorage_mozStorage.prototype = {
                          createInstance(Ci.nsISupportsString);
             dataObject.data = data;
         }
-        this._observerService.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
+        Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
     },
 
 

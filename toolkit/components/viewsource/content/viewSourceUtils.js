@@ -110,7 +110,7 @@ var gViewSourceUtils = {
       if (uri.scheme == "file") {    
         // it's a local file; we can open it directly
         path = uri.QueryInterface(Components.interfaces.nsIFileURL).file.path;
-        editor.run(false, [path], 1);
+        editor.runw(false, [path], 1);
         this.handleCallBack(aCallBack, true, data);
       } else {
         // set up the progress listener with what we know so far
@@ -272,7 +272,7 @@ var gViewSourceUtils = {
               editorArgs.push(RegExp.$1 || RegExp.$2);
           }
           editorArgs.push(this.file.path);
-          this.editor.run(false, editorArgs, editorArgs.length);
+          this.editor.runw(false, editorArgs, editorArgs.length);
 
           gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
         } catch (ex) {

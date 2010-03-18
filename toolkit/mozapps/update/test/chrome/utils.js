@@ -41,7 +41,7 @@
 const PAGEID_CHECKING         = "checking";              // Done
 const PAGEID_PLUGIN_UPDATES   = "pluginupdatesfound";
 const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
-const PAGEID_MANUAL_UPDATE    = "manualUpdate"; // Can't test? Requires restricted access
+const PAGEID_MANUAL_UPDATE    = "manualUpdate"; // Tested on license load failure
 const PAGEID_INCOMPAT_CHECK   = "incompatibleCheck"; // Bug 546595
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
 const PAGEID_FOUND_BILLBOARD  = "updatesfoundbillboard"; // Done

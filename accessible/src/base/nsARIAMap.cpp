@@ -679,17 +679,17 @@ nsStateMapEntry nsARIAMap::gWAIStateMap[] = {
 };
 
 /**
- * Universal states:
+ * Universal (Global) states:
  * The following state rules are applied to any accessible element,
  * whether there is an ARIA role or not:
  */
 eStateMapEntryID nsARIAMap::gWAIUnivStateMap[] = {
-  eARIARequired,
-  eARIAInvalid,
-  eARIAHasPopup,
   eARIABusy,
   eARIADisabled,
-  eARIAExpanded,
+  eARIAExpanded,  // Currently under spec review but precedent exists
+  eARIAHasPopup,  // Note this is technically a "property"
+  eARIAInvalid,
+  eARIARequired,  // XXX not global, Bug 553117
   eARIANone
 };
 
@@ -703,7 +703,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsAccessibilityAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_atomic,                             ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_busy,                               ATTR_VALTOKEN },
-  {&nsAccessibilityAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN }, /* exposes checkable  obj attr */
+  {&nsAccessibilityAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN }, /* exposes checkable obj attr */
   {&nsAccessibilityAtoms::aria_controls,          ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_describedby,       ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },

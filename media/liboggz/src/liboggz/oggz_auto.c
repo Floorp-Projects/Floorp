@@ -680,6 +680,7 @@ typedef struct {
   int encountered_first_data_packet;
   int last_was_long;
   int log2_num_modes;
+  int mode_sizes_length;
   int mode_sizes[1];
 } auto_calc_vorbis_info_t;
 
@@ -713,6 +714,7 @@ auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
     info->long_size = long_size;
     info->nsn_increment = short_size >> 1;
     info->encountered_first_data_packet = 0;
+    info->mode_sizes_length = 0;
 
     /* this is a header packet */
     return 0;
@@ -865,6 +867,7 @@ auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
       info = realloc(stream->calculate_data, size_realloc_bytes);
       if (info == NULL) return -1;
 
+      info->mode_sizes_length = size + 1;
       stream->calculate_data = info;
 
       i = -1;
@@ -887,59 +890,7 @@ auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
     return 0;
   }
 
-  info = (auto_calc_vorbis_info_t *)stream->calculate_data;
-
   return -1;
-
-  {
-    /*
-     * we're in a data packet!  First we need to get the mode of the packet,
-     * and from the mode, the size
-     */
-    int mode;
-    int size;
-    ogg_int64_t result;
-
-    mode = (op->packet[0] >> 1) & ((1 << info->log2_num_modes) - 1);
-    size = info->mode_sizes[mode];
-
-    /*
-     * if we have a working granulepos, we use it, but only if we can't
-     * calculate a valid gp value.
-     */
-    if (now > -1 && stream->last_granulepos == -1) {
-      info->encountered_first_data_packet = 1;
-      info->last_was_long = size;
-      return now;
-    }
-
-    if (info->encountered_first_data_packet == 0) {
-      info->encountered_first_data_packet = 1;
-      info->last_was_long = size;
-      return -1;
-    }
-
-    /*
-     * otherwise, if we haven't yet had a working granulepos, we return
-     * -1
-     */
-    if (stream->last_granulepos == -1) {
-      info->last_was_long = size;
-      return -1;
-    }
-
-    result = stream->last_granulepos +
-      (
-        (info->last_was_long ? info->long_size  : info->short_size)
-        +
-        (size ? info->long_size : info->short_size)
-      ) / 4;
-    info->last_was_long = size;
-
-    return result;
-
-  }
-
 }
 
 ogg_int64_t
@@ -948,14 +899,18 @@ auto_rcalc_vorbis(ogg_int64_t next_packet_gp, oggz_stream_t *stream,
 
   auto_calc_vorbis_info_t *info =
                   (auto_calc_vorbis_info_t *)stream->calculate_data;
+  int this_size, next_size;
+  ogg_int64_t r;
 
   int mode =
       (this_packet->packet[0] >> 1) & ((1 << info->log2_num_modes) - 1);
-  int this_size = info->mode_sizes[mode] ? info->long_size : info->short_size;
-  int next_size;
-  ogg_int64_t r;
+  if (info->mode_sizes_length == 0 || mode < 0 || mode >= info->mode_sizes_length)
+    return 0;
+  this_size = info->mode_sizes[mode] ? info->long_size : info->short_size;
 
   mode = (next_packet->packet[0] >> 1) & ((1 << info->log2_num_modes) - 1);
+  if (info->mode_sizes_length == 0 || mode < 0 || mode >= info->mode_sizes_length)
+    return 0;
   next_size = info->mode_sizes[mode] ? info->long_size : info->short_size;
 
   r = next_packet_gp - ((this_size + next_size) / 4);

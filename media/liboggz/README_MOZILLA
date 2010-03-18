@@ -35,3 +35,5 @@ bug520493.patch: Fix oggz seek so that it doesn't exit too early, and to use
 bug523335.patch: Abort oggz seek bisection when the underlying stream closes.
 
 bug533822.patch: Clear packets queued for granulepos calcuation when resetting streams.
+
+bug526097.patch: Length check mode_sizes array in vorbis auto metrics calculation.

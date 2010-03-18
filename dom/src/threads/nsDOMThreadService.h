@@ -108,9 +108,6 @@ public:
   static nsIThreadJSContextStack* ThreadJSContextStack();
   static nsIXPCSecurityManager* WorkerSecurityManager();
 
-  static jsval ShareStringAsJSVal(JSContext* aCx,
-                                  const nsAString& aString);
-
   void CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);
   void SuspendWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);
   void ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);

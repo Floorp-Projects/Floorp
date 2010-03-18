@@ -115,8 +115,9 @@ function run_test_pt02() {
                                       "http://details/",
                                       "http://billboard/",
                                       "http://license/", "true",
-                                      "true", "true", "test extra1",
-                                      "4.1a1pre", "5.1a1pre");
+                                      "true", "true", "4.1a1pre", "5.1a1pre",
+                                      "custom1_attr=\"custom1 value\"",
+                                      "custom2_attr=\"custom2 value\"");
   gResponseBody = getRemoteUpdatesXMLString(updates);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -138,7 +139,7 @@ function check_test_pt02() {
 //  }
 
   do_check_eq(gUpdateCount, 1);
-  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
+  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount).QueryInterface(AUS_Ci.nsIPropertyBag);
   do_check_eq(bestUpdate.type, "minor");
   do_check_eq(bestUpdate.name, "Minor Test");
   do_check_eq(bestUpdate.displayVersion, "version 2.1a1pre");
@@ -151,7 +152,6 @@ function check_test_pt02() {
   do_check_true(bestUpdate.showPrompt);
   do_check_true(bestUpdate.showNeverForVersion);
   do_check_true(bestUpdate.showSurvey);
-  do_check_eq(bestUpdate.extra1, "test extra1");
   do_check_eq(bestUpdate.serviceURL, URL_HOST + "update.xml?force=1");
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);
@@ -165,6 +165,9 @@ function check_test_pt02() {
   do_check_eq(bestUpdate.errorCode, 0);
   do_check_eq(bestUpdate.patchCount, 2);
   //XXX TODO - test nsIUpdate:serialize
+
+  do_check_eq(bestUpdate.getProperty("custom1_attr"), "custom1 value");
+  do_check_eq(bestUpdate.getProperty("custom2_attr"), "custom2 value");
 
   var patch = bestUpdate.getPatchAt(0);
   do_check_eq(patch.type, "complete");
@@ -208,9 +211,7 @@ function run_test_pt03() {
                                       null, null,
                                       "5.1a1pre", "20080811053724",
                                       "http://details/",
-                                      null,
-                                      null, null,
-                                      null, null, null,
+                                      null, null, null, null, null,
                                       "version 4.1a1pre", "4.1a1pre");
   gResponseBody = getRemoteUpdatesXMLString(updates);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -231,7 +232,6 @@ function check_test_pt03() {
   do_check_false(bestUpdate.showPrompt);
   do_check_false(bestUpdate.showNeverForVersion);
   do_check_false(bestUpdate.showSurvey);
-  do_check_eq(bestUpdate.extra1, null);
   do_check_eq(bestUpdate.serviceURL, URL_HOST + "update.xml?force=1");
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);

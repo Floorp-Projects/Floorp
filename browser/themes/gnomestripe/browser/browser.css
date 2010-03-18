@@ -1114,7 +1114,7 @@ statusbarpanel#statusbar-display {
 
 .tabbrowser-tab {
   border: none !important;
-  padding: 0px;
+  padding: 0 2px;
   margin-bottom: 1px;
 }
 
@@ -1125,8 +1125,8 @@ statusbarpanel#statusbar-display {
 .tab-icon-image {
   width: 16px;
   height: 16px;
-  -moz-margin-start: 4px;
-  -moz-margin-end: 3px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 4px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
@@ -1205,7 +1205,6 @@ statusbarpanel#statusbar-display {
 }
 
 .tab-close-button {
-  -moz-margin-end: 6px;
   padding: 0px;
   border: none;
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");

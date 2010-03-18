@@ -108,3 +108,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "ww",
 XPCOMUtils.defineLazyServiceGetter(Services, "tm",
                                    "@mozilla.org/thread-manager;1",
                                    "nsIThreadManager");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "console",
+                                   "@mozilla.org/consoleservice;1",
+                                   "nsIConsoleService");

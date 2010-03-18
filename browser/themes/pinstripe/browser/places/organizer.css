@@ -33,7 +33,7 @@
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
 
-#placesList > treechildren:-moz-window-inactive::-moz-tree-row(selected) {
+window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) {
   background: @sidebarItemInactiveBackground@;
   border-top: @sidebarItemInactiveBorderTop@;
 }
@@ -103,14 +103,14 @@
                    inset 0 0 0 20px @toolbarbuttonPressedBackgroundColor@;
 }
 
-#placesToolbar > toolbarbutton:-moz-window-inactive {
+:root:not([active]) #placesToolbar > toolbarbutton {
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
 
 #placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton > .toolbarbutton-icon:-moz-window-inactive,
-#placesToolbar > toolbarbutton > .toolbarbutton-menu-dropmarker:-moz-window-inactive {
+:root:not([active]) #placesToolbar > toolbarbutton > .toolbarbutton-icon,
+:root:not([active]) #placesToolbar > toolbarbutton > .toolbarbutton-menu-dropmarker {
   opacity: 0.5; /* remove the second and third selector when we support click-through (bug 392188) */
 }
 
@@ -177,7 +177,7 @@
 
 /* Search field */
 
-#searchFilter:-moz-window-inactive {
+:root:not([active="true"]) #searchFilter {
   opacity: 0.7; /* remove this when we support click-through (bug 392188) */
 }
 
@@ -200,7 +200,7 @@
   border: 0px;
 }
 
-#placesList:-moz-window-inactive {
+#places:not([active="true"]) > #placesView > #placesList {
   background-color: #e8e8e8;
 }
 

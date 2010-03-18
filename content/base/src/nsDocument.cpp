@@ -485,7 +485,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
                       nsIDocumentObserver,
                       nsIMutationObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(StyleSheetList)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StyleSheetList)
 NS_INTERFACE_MAP_END
 
 
@@ -1137,7 +1137,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetSetList)
     NS_INTERFACE_TABLE_ENTRY(nsDOMStyleSheetSetList, nsIDOMDOMStringList)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMStringList)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMStringList)
 NS_INTERFACE_MAP_END
 
 nsDOMStyleSheetSetList::nsDOMStyleSheetSetList(nsIDocument* aDocument)
@@ -1274,7 +1274,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMImplementation)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMImplementation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDOMImplementation)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMImplementation)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMImplementation)
 NS_INTERFACE_MAP_END
 
 
@@ -4056,16 +4056,6 @@ nsDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2,
 }
 
 void
-nsDocument::DocumentStatesChanged(PRInt32 aStateMask)
-{
-  // Invalidate our cached state.
-  mGotDocumentState &= ~aStateMask;
-  mDocumentState &= ~aStateMask;
-
-  NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
-}
-
-void
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                              nsIStyleRule* aOldStyleRule,
                              nsIStyleRule* aNewStyleRule)
@@ -5555,22 +5545,20 @@ NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, nsnull, this,
-                                          aReturn);
+  return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, nsnull, this,
-                                          aReturn);
+  return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doRemoveChild(aOldChild, nsnull, this, aReturn);
+  return nsINode::RemoveChild(aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
@@ -6065,6 +6053,10 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
                                          nsIDOMUserDataHandler::NODE_ADOPTED,
                                          PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (adoptedNode->GetOwnerDoc() != this) {
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  }
 
   return CallQueryInterface(adoptedNode, aResult);
 }
@@ -7623,26 +7615,6 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
   if (NS_SUCCEEDED(rv)) {
     mPreloadingImages.AppendObject(request);
   }
-}
-
-PRInt32
-nsDocument::GetDocumentState()
-{
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_RTL_LOCALE)) {
-    if (IsDocumentRightToLeft()) {
-      mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
-    }
-    mGotDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
-  }
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    nsIPresShell* shell = GetPrimaryShell();
-    if (shell && shell->GetPresContext() &&
-        shell->GetPresContext()->IsTopLevelWindowInactive()) {
-      mDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
-    }
-    mGotDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
-  }
-  return mDocumentState;
 }
 
 namespace {

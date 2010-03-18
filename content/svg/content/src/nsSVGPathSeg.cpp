@@ -70,7 +70,7 @@ NS_IMPL_RELEASE(ns##basename)                                 \
                                                               \
 NS_INTERFACE_MAP_BEGIN(ns##basename)                          \
   NS_INTERFACE_MAP_ENTRY(nsIDOM##basename)                    \
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(basename)          \
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(basename)          \
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPathSeg)
 
 //----------------------------------------------------------------------

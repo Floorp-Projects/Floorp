@@ -203,28 +203,47 @@ function test() {
     for (let i = 0; i < 25; i++)
       uris.push("http://example.com/" + i);
 
-    // We're listening for the first load event, which should
-    // indicate one of the tabs has loaded and the others haven't. So one should
+    // We're waiting for the first location change, which should indicate
+    // one of the tabs has loaded and the others haven't. So one should
     // be in a non-userTypedValue case, while others should still have
     // userTypedValue and userTypedClear set.
-    gBrowser.addEventListener("load", function(aEvent) {
-      gBrowser.removeEventListener("load", arguments.callee, true);
+    gBrowser.addTabsProgressListener({
+      onLocationChange: function (aBrowser) {
+        if (uris.indexOf(aBrowser.currentURI.spec) > -1) {
+          gBrowser.removeTabsProgressListener(this);
+          firstLocationChange();
+        }
+      },
+      onProgressChange: function () {},
+      onSecurityChange: function () {},
+      onStateChange: function () {},
+      onStatusChange: function () {}
+    });
 
+    function firstLocationChange() {
       let state = JSON.parse(ss.getBrowserState());
-
-      let hasSH = state.windows[0].tabs.some(function(aTab) {
-        return !("userTypedValue" in aTab) && aTab.entries[0].url;
-      });
       let hasUTV = state.windows[0].tabs.some(function(aTab) {
         return aTab.userTypedValue && aTab.userTypedClear && !aTab.entries.length;
       });
 
+      ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
+
+      gBrowser.addEventListener("load", firstLoad, true);
+    }
+
+    function firstLoad() {
+      gBrowser.removeEventListener("load", firstLoad, true);
+
+      let state = JSON.parse(ss.getBrowserState());
+      let hasSH = state.windows[0].tabs.some(function(aTab) {
+        return !("userTypedValue" in aTab) && aTab.entries[0].url;
+      });
+
       ok(hasSH, "At least one tab has its entry in SH");
-      //ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
 
       runNextTest();
+    }
 
-    }, true);
     gBrowser.loadTabs(uris);
   }
 

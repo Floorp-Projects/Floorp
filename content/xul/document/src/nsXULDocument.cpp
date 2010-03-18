@@ -126,6 +126,7 @@
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
+#include "nsCSSFrameConstructor.h"
 
 //----------------------------------------------------------------------
 //
@@ -390,7 +391,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
       NS_INTERFACE_TABLE_ENTRY(nsXULDocument, nsICSSLoaderObserver)
     NS_OFFSET_AND_INTERFACE_TABLE_END
     NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
+    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 
 
@@ -4664,11 +4665,17 @@ nsXULDocument::IsDocumentRightToLeft()
 int
 nsXULDocument::DirectionChanged(const char* aPrefName, void* aData)
 {
-  // Reset the direction and restyle the document if necessary.
+  // reset the direction and reflow the document. This will happen if
+  // the direction isn't actually being used, but that doesn't really
+  // matter too much
   nsXULDocument* doc = (nsXULDocument *)aData;
-  if (doc) {
+  if (doc)
       doc->ResetDocumentDirection();
-      doc->DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
+
+  nsIPresShell *shell = doc->GetPrimaryShell();
+  if (shell) {
+      shell->FrameConstructor()->
+          PostRestyleEvent(doc->GetRootContent(), eReStyle_Self, NS_STYLE_HINT_NONE);
   }
 
   return 0;
