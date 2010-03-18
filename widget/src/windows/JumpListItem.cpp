@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsCExternalHandlerService.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace widget {
@@ -72,9 +73,22 @@ NS_IMPL_ISUPPORTS_INHERITED1(JumpListLink,
                              JumpListItem,
                              nsIJumpListLink)
 
-NS_IMPL_ISUPPORTS_INHERITED1(JumpListShortcut,
-                             JumpListItem,
-                             nsIJumpListShortcut)
+NS_IMPL_CYCLE_COLLECTION_CLASS(JumpListShortcut)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JumpListShortcut)
+  NS_INTERFACE_MAP_ENTRY(nsIJumpListShortcut)
+NS_INTERFACE_MAP_END_INHERITING(JumpListItem)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JumpListShortcut)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHandlerApp)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JumpListShortcut)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHandlerApp)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(JumpListShortcut)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(JumpListShortcut)
 
 /* attribute short type; */
 NS_IMETHODIMP JumpListItem::GetType(PRInt16 *aType)
