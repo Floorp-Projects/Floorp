@@ -1046,7 +1046,8 @@ nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
     DISPLAY_PREF_SIZE(this, size);
 
     AddBorderAndPadding(size);
-    nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
+    PRBool widthSet, heightSet;
+    nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
 
     return size;
 }
@@ -1067,7 +1068,8 @@ nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
         size.width = 0;
 
     AddBorderAndPadding(size);
-    nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
+    PRBool widthSet, heightSet;
+    nsIBox::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet);
 
     return size;
 }

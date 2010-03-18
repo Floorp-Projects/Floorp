@@ -790,8 +790,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(0,0);
   DISPLAY_PREF_SIZE(this, size);
   if (!DoesNeedRecalc(mPrefSize)) {
-     size = mPrefSize;
-     return size;
+     return mPrefSize;
   }
 
 #ifdef DEBUG_LAYOUT
@@ -802,13 +801,19 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size))
+  PRBool widthSet, heightSet;
+  if (!nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
-      size = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
-      nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
-    } else
+      nsSize layoutSize = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
+      if (!widthSet)
+        size.width = layoutSize.width;
+      if (!heightSet)
+        size.height = layoutSize.height;
+    }
+    else {
       size = nsBox::GetPrefSize(aBoxLayoutState);
+    }
   }
 
   nsSize minSize = GetMinSize(aBoxLayoutState);
@@ -848,8 +853,7 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(0,0);
   DISPLAY_MIN_SIZE(this, size);
   if (!DoesNeedRecalc(mMinSize)) {
-    size = mMinSize;
-    return size;
+    return mMinSize;
   }
 
 #ifdef DEBUG_LAYOUT
@@ -860,12 +864,17 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, size))
+  PRBool widthSet, heightSet;
+  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
-      size = mLayoutManager->GetMinSize(this, aBoxLayoutState);
-      nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
-    } else {
+      nsSize layoutSize = mLayoutManager->GetMinSize(this, aBoxLayoutState);
+      if (!widthSet)
+        size.width = layoutSize.width;
+      if (!heightSet)
+        size.height = layoutSize.height;
+    }
+    else {
       size = nsBox::GetMinSize(aBoxLayoutState);
     }
   }
@@ -884,8 +893,7 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);
   if (!DoesNeedRecalc(mMaxSize)) {
-    size = mMaxSize;
-    return size;
+    return mMaxSize;
   }
 
 #ifdef DEBUG_LAYOUT
@@ -896,12 +904,17 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size))
+  PRBool widthSet, heightSet;
+  if (!nsIBox::AddCSSMaxSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
-      size = mLayoutManager->GetMaxSize(this, aBoxLayoutState);
-      nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size);
-    } else {
+      nsSize layoutSize = mLayoutManager->GetMaxSize(this, aBoxLayoutState);
+      if (!widthSet)
+        size.width = layoutSize.width;
+      if (!heightSet)
+        size.height = layoutSize.height;
+    }
+    else {
       size = nsBox::GetMaxSize(aBoxLayoutState);
     }
   }
@@ -1725,9 +1738,10 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nsSize maxSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
                     nscoord flexCSS = NS_INTRINSICSIZE;
 
-                    nsIBox::AddCSSPrefSize(state, child, prefSizeCSS);
-                    nsIBox::AddCSSMinSize (state, child, minSizeCSS);
-                    nsIBox::AddCSSMaxSize (state, child, maxSizeCSS);
+                    PRBool widthSet, heightSet;
+                    nsIBox::AddCSSPrefSize(child, prefSizeCSS, widthSet, heightSet);
+                    nsIBox::AddCSSMinSize (state, child, minSizeCSS, widthSet, heightSet);
+                    nsIBox::AddCSSMaxSize (child, maxSizeCSS, widthSet, heightSet);
                     nsIBox::AddCSSFlex    (state, child, flexCSS);
 
                     nsSize prefSize = child->GetPrefSize(state);
