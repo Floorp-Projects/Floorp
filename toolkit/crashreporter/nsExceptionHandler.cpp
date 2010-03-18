@@ -1418,17 +1418,19 @@ SetRemoteExceptionHandler()
 
 
 bool
-TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump)
+TakeMinidumpForChild(ProcessHandle childPid, nsIFile** dump)
 {
   if (!GetEnabled())
     return false;
 
+  PRUint32 key = PRUint32(childPid);
+
   MutexAutoLock lock(*dumpMapLock);
 
   nsCOMPtr<nsIFile> d;
-  bool found = pidToMinidump->Get(childPid, getter_AddRefs(d));
+  bool found = pidToMinidump->Get(key, getter_AddRefs(d));
   if (found)
-    pidToMinidump->Remove(childPid);
+    pidToMinidump->Remove(key);
 
   *dump = NULL;
   d.swap(*dump);
