@@ -961,6 +961,19 @@ nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
 // nsIAccessibleRetrieval
 
 NS_IMETHODIMP
+nsAccessibilityService::GetApplicationAccessible(nsIAccessible **aApplicationAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aApplicationAccessible);
+  *aApplicationAccessible = nsnull;
+
+  nsRefPtr<nsApplicationAccessibleWrap> appAcc =
+    nsAccessNode::GetApplicationAccessible();
+  NS_ENSURE_STATE(appAcc);
+
+  return CallQueryInterface(appAcc, aApplicationAccessible);
+}
+
+NS_IMETHODIMP
 nsAccessibilityService::GetStringRole(PRUint32 aRole, nsAString& aString)
 {
   if ( aRole >= NS_ARRAY_LENGTH(kRoleNames)) {
