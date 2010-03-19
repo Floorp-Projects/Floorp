@@ -164,6 +164,17 @@ TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
                      aModifiers, aIgnoreRootScrollFrame);
 }
 
+void
+TabParent::SendKeyEvent(const nsAString& aType,
+                        PRInt32 aKeyCode,
+                        PRInt32 aCharCode,
+                        PRInt32 aModifiers,
+                        PRBool aPreventDefault)
+{
+    SendsendKeyEvent(nsString(aType), aKeyCode, aCharCode, aModifiers,
+                     aPreventDefault);
+}
+
 bool
 TabParent::RecvsendSyncMessageToParent(const nsString& aMessage,
                                        const nsString& aJSON,

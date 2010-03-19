@@ -44,7 +44,7 @@ interface nsIURI;
 interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(25b7a7e9-9507-4649-bba9-86852d72c5d3)]
+[scriptable, uuid(e511f61f-97db-448a-8b29-a10c470df3fa)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -107,6 +107,16 @@ interface nsIFrameLoader : nsISupports
   void activateFrameEvent(in AString aType, in boolean capture);
 
   readonly attribute nsIChromeFrameMessageManager messageManager;
+
+  /**
+   * @see nsIDOMWindowUtils sendKeyEvent.
+   */
+  void sendCrossProcessKeyEvent(in AString aType,
+                                in long aKeyCode,
+                                in long aCharCode,
+                                in long aModifiers,
+                                [optional] in boolean aPreventDefault);
+
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
