@@ -550,6 +550,10 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         widget->showMinimized();
         break;
     case nsSizeMode_Fullscreen:
+        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
+        // unsynchronized window activation.  Sync here to avoid such
+        // cases.
+        XSync(QX11Info().display(), False);
         widget->showFullScreen();
         break;
 
@@ -767,14 +771,12 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         return SetupPluginPort();
         break;
 
-#ifdef Q_WS_X11
     case NS_NATIVE_DISPLAY:
         {
             QWidget *widget = GetViewWidget();
             return widget ? widget->x11Info().display() : nsnull;
         }
         break;
-#endif
 
     case NS_NATIVE_GRAPHIC: {
         NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
@@ -1772,7 +1774,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsXPIDLString brandName;
     GetBrandName(brandName);
 
-#ifdef Q_WS_X11
     XClassHint *class_hint = XAllocClassHint();
     if (!class_hint)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1814,7 +1815,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsMemory::Free(class_hint->res_class);
     nsMemory::Free(class_hint->res_name);
     XFree(class_hint);
-#endif
 
     return NS_OK;
 }
@@ -1931,12 +1931,10 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-#ifdef Q_WS_X11
         // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
         // unsynchronized window activation.  Sync here to avoid such
         // cases.
         XSync(QX11Info().display(), False);
-#endif
         widget->showFullScreen();
     }
     else {
@@ -1992,11 +1990,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // and flush the queue here so that we don't end up with a BadWindow
     // error later when this happens (when the persistence timer fires
     // and GetWindowPos is called)
-#ifdef Q_WS_X11
     QWidget *widget = GetViewWidget();
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
     XSync(widget->x11Info().display(), False);
-#endif
 
     return NS_OK;
 }

@@ -1160,12 +1160,17 @@ class MessageDecl(ipdl.ast.MessageDecl):
     def msgClass(self):
         return 'Msg_%s'% (self.decl.progname)
 
+    def prettyMsgName(self, pfx=''):
+        return pfx + self.msgClass()
+
     def pqMsgClass(self):
         return '%s::%s'% (self.namespace, self.msgClass())
 
     def msgCast(self, msgexpr):
-        return ExprCast(msgexpr, Type(self.pqMsgClass(), const=1, ptr=1),
-                        static=1)
+        return ExprCast(msgexpr, self.msgCxxType(const=1, ptr=1), static=1)
+
+    def msgCxxType(self, const=0, ref=0, ptr=0):
+        return Type(self.pqMsgClass(), const=const, ref=ref, ptr=ptr)
 
     def msgId(self):  return self.msgClass()+ '__ID'
     def pqMsgId(self):
@@ -1184,6 +1189,9 @@ class MessageDecl(ipdl.ast.MessageDecl):
     def replyId(self):  return self.replyClass()+ '__ID'
     def pqReplyId(self):
         return '%s::%s'% (self.namespace, self.replyId())
+
+    def prettyReplyName(self, pfx=''):
+        return pfx + self.replyClass()
 
     def actorDecl(self):
         return self.params[0]
@@ -1645,7 +1653,8 @@ child actors.'''
                                          pipetypes=1)
             ns.addstmts([
                 _generateMessageClass(md.msgClass(), md.msgId(),
-                                      paramsIn, paramsOut, typedefs),
+                                      paramsIn, paramsOut, typedefs,
+                                      md.prettyMsgName(p.name+'::')),
                 Whitespace.NL ])
             if md.hasReply():
                 returnsIn = md.makeCxxParams(paramsems=None, returnsems='in',
@@ -1655,14 +1664,15 @@ child actors.'''
                 ns.addstmts([
                     _generateMessageClass(
                         md.replyClass(), md.replyId(), returnsIn, returnsOut,
-                        typedefs),
+                        typedefs, md.prettyReplyName(p.name+'::')),
                     Whitespace.NL ])
 
         ns.addstmts([ Whitespace.NL, Whitespace.NL ])
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
+def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs,
+                          prettyName):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
     cls.addstmt(Label.PRIVATE)
     cls.addstmts(typedefs)
@@ -1681,7 +1691,8 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
         memberinits=[ExprMemberInit(ExprVar('IPC::Message'),
                                     [ ExprVar('MSG_ROUTING_NONE'),
                                       ExprVar('ID'),
-                                      ExprVar('PRIORITY_NORMAL') ]) ])
+                                      ExprVar('PRIORITY_NORMAL'),
+                                      ExprLiteral.String(prettyName) ]) ])
     ctor.addstmts([
         StmtExpr(ExprCall(ExprVar('IPC::WriteParam'),
                           args=[ ExprVar.THIS, ExprVar(p.name) ]))
@@ -2950,14 +2961,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             dumpvar = ExprVar('aDump')
             getdump = MethodDefn(MethodDecl(
-                'GetMinidump',
+                'TakeMinidump',
                 params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name) ],
                 ret=Type.BOOL,
                 const=1))
             getdump.addstmts([
                 CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
                 StmtReturn(ExprCall(
-                    ExprVar('XRE_GetMinidumpForChild'),
+                    ExprVar('XRE_TakeMinidumpForChild'),
                     args=[ ExprCall(otherpidvar), dumpvar ])),
                 CppDirective('else'),
                 StmtReturn(ExprLiteral.FALSE),
@@ -3854,6 +3865,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         vars = [ ]
         readvars = [ ]
         stmts = [
+            # this is kind of naughty, but the only two other options
+            # are serializing the message name (yuk) or making the
+            # IPDL|*Channel abstraction leak more
+            StmtExpr(ExprCall(
+                ExprSelect(
+                    ExprCast(msgvar, Type('Message', ref=1), const=1),
+                    '.', 'set_name'),
+                args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
+                                                           +'::')) ])),
             self.logMessage(md, md.msgCast(ExprAddrOf(msgvar)),
                             'Received '),
             Whitespace.NL
