@@ -59,6 +59,7 @@ EXPORTS_mozilla/dom = \
   ContentProcessChild.h \
   ContentProcessParent.h \
   ContentProcessThread.h \
+  TabParent.h \
   $(NULL)
 
 CPPSRCS = \
@@ -77,6 +78,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/events/src \
+		-I$(topsrcdir)/chrome/src \
 		$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
