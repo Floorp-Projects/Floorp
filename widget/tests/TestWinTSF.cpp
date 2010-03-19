@@ -143,7 +143,6 @@ protected:
   PRBool TestExtents(void);
   PRBool TestComposition(void);
   PRBool TestNotification(void);
-  PRBool TestContentEvents(void);
   PRBool TestEditMessages(void);
   PRBool TestScrollMessages(void);
 
@@ -1157,7 +1156,7 @@ public:
   PRInt32 mFocusCount;
 
   TSFMgrImpl(TestApp* test) : mTestApp(test), mTest(nsnull), mRefCnt(0),
-    mDeactivated(PR_FALSE), mFocusCount(0)
+    mDeactivated(PR_FALSE), mFocusedDocument(nsnull), mFocusCount(0)
   {
   }
 
@@ -1661,9 +1660,9 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
   NS_ASSERTION(aStateFlags & nsIWebProgressListener::STATE_IS_WINDOW &&
               aStateFlags & nsIWebProgressListener::STATE_STOP, "wrong state");
   if (NS_SUCCEEDED(Init())) {
-    printf("Testing content events...\n");
-    if (TestContentEvents())
-      passed("TestContentEvents");
+    mCurrentNode = mTextArea;
+    mTextArea->Focus();
+
     if (RunTest(&TestApp::TestEditMessages))
       passed("TestEditMessages");
     if (RunTest(&TestApp::TestScrollMessages))
@@ -2717,143 +2716,6 @@ TestApp::TestNotification(void)
     return PR_FALSE;
   }
   return PR_TRUE;
-}
-
-PRBool
-TestApp::TestContentEvents(void)
-{
-  mTestString = NS_LITERAL_STRING(
-    "This is a test of the\r\nContent Events");
-  // 0123456789012345678901 2 34567890123456
-  // 0         1         2           3      
-  mTextArea->SetValue(mTestString);
-  mTextArea->Focus();
-
-  nsCOMPtr<nsIWidget> widget;
-  if (!GetWidget(getter_AddRefs(widget))) {
-    fail("TestContentEvents: get nsIWidget");
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIWidget> topLevel = widget->GetTopLevelWidget();
-  if (!topLevel) {
-    fail("TestContentEvents: get top level widget");
-    return PR_FALSE;
-  }
-
-  nsIntRect widgetRect, topLevelRect;
-  nsresult nsr = widget->GetScreenBounds(widgetRect);
-  if (NS_FAILED(nsr)) {
-    fail("TestContentEvents: get widget rect");
-    return PR_FALSE;
-  }
-  nsr = topLevel->GetScreenBounds(topLevelRect);
-  if (NS_FAILED(nsr)) {
-    fail("TestContentEvents: get top level widget rect");
-    return PR_FALSE;
-  }
-  nsIntPoint widgetOffset = widgetRect.TopLeft() - topLevelRect.TopLeft();
-  nsEventStatus eventStatus;
-  PRBool result = PR_TRUE;
-
-  const PRUint32 kNone = nsQueryContentEvent::NOT_FOUND;
-  PRUint32 testingOffset[] =   {     0, 10,    20,    23,    36 };
-  PRUint32 leftSideOffset[] =  { kNone,  9,    19, kNone,    35 };
-  PRUint32 rightSideOffset[] = {     1, 11, kNone,    24, kNone };
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(testingOffset); i++) {
-    nsQueryContentEvent textRect(PR_TRUE, NS_QUERY_TEXT_RECT, widget);
-    textRect.InitForQueryTextRect(testingOffset[i], 1);
-    nsr = widget->DispatchEvent(&textRect, eventStatus);
-    if (NS_FAILED(nsr) || !textRect.mSucceeded ||
-        textRect.mReply.mRect.IsEmpty()) {
-      fail("TestContentEvents: get text rect");
-      return PR_FALSE;
-    }
-    nsIntRect &charRect = textRect.mReply.mRect;
-    charRect.MoveBy(widgetOffset);
-    // Note that charRect might be inflated at rounding to pixels!
-    printf("TestContentEvents: testing... i=%lu, pt={ %ld, %ld }, size={ %ld, %ld }\n",
-           i, charRect.x, charRect.y, charRect.width, charRect.height);
-
-    nsQueryContentEvent charAtPt1(PR_TRUE, NS_QUERY_CHARACTER_AT_POINT, widget);
-    charAtPt1.refPoint.x = charRect.x + 1;
-    charAtPt1.refPoint.y = charRect.y + 1;
-    nsr = widget->DispatchEvent(&charAtPt1, eventStatus);
-    if (NS_FAILED(nsr) || !charAtPt1.mSucceeded) {
-      fail("  TestContentEvents: get char at point1");
-      return PR_FALSE;
-    }
-    printf("  NS_QUERY_CHARACTER_AT_POINT: pt={ %ld, %ld }, offset=%lu, rect={ %ld, %ld, %ld, %ld }\n",
-           charAtPt1.refPoint.x, charAtPt1.refPoint.y,
-           charAtPt1.mReply.mOffset, charAtPt1.mReply.mRect.x,
-           charAtPt1.mReply.mRect.y, charAtPt1.mReply.mRect.width,
-           charAtPt1.mReply.mRect.height);
-    if (charAtPt1.mReply.mOffset != testingOffset[i]) {
-      fail("    TestContentEvents: get char at point1 (wrong offset)");
-      result = PR_FALSE;
-    } else if (charAtPt1.mReply.mRect != textRect.mReply.mRect) {
-      fail("    TestContentEvents: get char at point1 (rect mismatch)");
-      result = PR_FALSE;
-    }
-
-    nsQueryContentEvent charAtPt2(PR_TRUE, NS_QUERY_CHARACTER_AT_POINT, widget);
-    charAtPt2.refPoint.x = charRect.XMost() - 2;
-    charAtPt2.refPoint.y = charRect.YMost() - 2;
-    nsr = widget->DispatchEvent(&charAtPt2, eventStatus);
-    if (NS_FAILED(nsr) || !charAtPt2.mSucceeded) {
-      fail("  TestContentEvents: get char at point2");
-      return PR_FALSE;
-    }
-    printf("  NS_QUERY_CHARACTER_AT_POINT: pt={ %ld, %ld }, offset=%lu, rect={ %ld, %ld, %ld, %ld }\n",
-           charAtPt2.refPoint.x, charAtPt2.refPoint.y,
-           charAtPt2.mReply.mOffset, charAtPt2.mReply.mRect.x,
-           charAtPt2.mReply.mRect.y, charAtPt2.mReply.mRect.width,
-           charAtPt2.mReply.mRect.height);
-    if (charAtPt2.mReply.mOffset != testingOffset[i]) {
-      fail("    TestContentEvents: get char at point2 (wrong offset)");
-      result = PR_FALSE;
-    } else if (charAtPt2.mReply.mRect != textRect.mReply.mRect) {
-      fail("    TestContentEvents: get char at point2 (rect mismatch)");
-      result = PR_FALSE;
-    }
-
-    nsQueryContentEvent charAtPt3(PR_TRUE, NS_QUERY_CHARACTER_AT_POINT, widget);
-    charAtPt3.refPoint.x = charRect.x - 2;
-    charAtPt3.refPoint.y = charRect.y + 1;
-    nsr = widget->DispatchEvent(&charAtPt3, eventStatus);
-    if (NS_FAILED(nsr) || !charAtPt3.mSucceeded) {
-      fail("  TestContentEvents: get char at point3");
-      return PR_FALSE;
-    }
-    printf("  NS_QUERY_CHARACTER_AT_POINT: pt={ %ld, %ld }, offset=%lu, rect={ %ld, %ld, %ld, %ld }\n",
-           charAtPt3.refPoint.x, charAtPt3.refPoint.y,
-           charAtPt3.mReply.mOffset, charAtPt3.mReply.mRect.x,
-           charAtPt3.mReply.mRect.y, charAtPt3.mReply.mRect.width,
-           charAtPt3.mReply.mRect.height);
-    if (charAtPt3.mReply.mOffset != leftSideOffset[i]) {
-      fail("    TestContentEvents: get left side char at point (wrong offset)");
-      result = PR_FALSE;
-    }
-
-    nsQueryContentEvent charAtPt4(PR_TRUE, NS_QUERY_CHARACTER_AT_POINT, widget);
-    charAtPt4.refPoint.x = charRect.XMost() + 1;
-    charAtPt4.refPoint.y = charRect.YMost() - 2;
-    nsr = widget->DispatchEvent(&charAtPt4, eventStatus);
-    if (NS_FAILED(nsr) || !charAtPt4.mSucceeded) {
-      fail("  TestContentEvents: get char at point4");
-      return PR_FALSE;
-    }
-    printf("  NS_QUERY_CHARACTER_AT_POINT: pt={ %ld, %ld }, offset=%lu, rect={ %ld, %ld, %ld, %ld }\n",
-           charAtPt4.refPoint.x, charAtPt4.refPoint.y,
-           charAtPt4.mReply.mOffset, charAtPt4.mReply.mRect.x,
-           charAtPt4.mReply.mRect.y, charAtPt4.mReply.mRect.width,
-           charAtPt4.mReply.mRect.height);
-    if (charAtPt4.mReply.mOffset != rightSideOffset[i]) {
-      fail("    TestContentEvents: get right side char at point4 (wrong offset)");
-      result = PR_FALSE;
-    }
-  }
-  return result;
 }
 
 PRBool
