@@ -71,19 +71,14 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const STATE_RUNNING_STR = "running";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 megabytes
 
-XPCOMUtils.defineLazyServiceGetter(this, "ConsoleSvc",
-  "@mozilla.org/consoleservice;1", "nsIConsoleService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "ObserverSvc",
-  "@mozilla.org/observer-service;1", "nsIObserverService");
-
 function debug(aMsg) {
   aMsg = ("SessionStartup: " + aMsg).replace(/\S{80}/g, "$&\n");
-  ConsoleSvc.logStringMessage(aMsg);
+  Services.console.logStringMessage(aMsg);
 }
 
 /* :::::::: The Service ::::::::::::::: */
@@ -152,8 +147,8 @@ SessionStartup.prototype = {
 
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
-      ObserverSvc.addObserver(this, "domwindowopened", true);
-      ObserverSvc.addObserver(this, "browser:purge-session-history", true);
+      Services.obs.addObserver(this, "domwindowopened", true);
+      Services.obs.addObserver(this, "browser:purge-session-history", true);
     }
   },
 
@@ -163,18 +158,18 @@ SessionStartup.prototype = {
   observe: function sss_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
     case "app-startup": 
-      ObserverSvc.addObserver(this, "final-ui-startup", true);
-      ObserverSvc.addObserver(this, "quit-application", true);
+      Services.obs.addObserver(this, "final-ui-startup", true);
+      Services.obs.addObserver(this, "quit-application", true);
       break;
     case "final-ui-startup": 
-      ObserverSvc.removeObserver(this, "final-ui-startup");
-      ObserverSvc.removeObserver(this, "quit-application");
+      Services.obs.removeObserver(this, "final-ui-startup");
+      Services.obs.removeObserver(this, "quit-application");
       this.init();
       break;
     case "quit-application":
       // no reason for initializing at this point (cf. bug 409115)
-      ObserverSvc.removeObserver(this, "final-ui-startup");
-      ObserverSvc.removeObserver(this, "quit-application");
+      Services.obs.removeObserver(this, "final-ui-startup");
+      Services.obs.removeObserver(this, "quit-application");
       break;
     case "domwindowopened":
       var window = aSubject;
@@ -189,7 +184,7 @@ SessionStartup.prototype = {
       this._iniString = null;
       this._sessionType = Ci.nsISessionStartup.NO_SESSION;
       // no need in repeating this, since startup state won't change
-      ObserverSvc.removeObserver(this, "browser:purge-session-history");
+      Services.obs.removeObserver(this, "browser:purge-session-history");
       break;
     }
   },
@@ -223,7 +218,7 @@ SessionStartup.prototype = {
         aWindow.arguments[0] == defaultArgs)
       aWindow.arguments[0] = null;
 
-    ObserverSvc.removeObserver(this, "domwindowopened");
+    Services.obs.removeObserver(this, "domwindowopened");
   },
 
 /* ........ Public API ................*/
@@ -264,7 +259,7 @@ SessionStartup.prototype = {
                         createInstance(Ci.nsISupportsString);
     stateString.data = this._readFile(aFile) || "";
 
-    ObserverSvc.notifyObservers(stateString, "sessionstore-state-read", "");
+    Services.obs.notifyObservers(stateString, "sessionstore-state-read", "");
 
     return stateString.data;
   },
