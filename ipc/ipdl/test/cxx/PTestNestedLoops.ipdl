@@ -1,0 +1,34 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+rpc protocol PTestNestedLoops {
+
+child:
+    async Start();
+    rpc R();
+    __delete__();
+
+parent:
+    async Nonce();
+
+
+state START:
+    send Start goto RACE;
+
+state RACE:
+    recv Nonce goto RACE1;
+    call R goto RACE2;
+state RACE1:
+    call R goto DEAD;
+state RACE2:
+    recv Nonce goto DEAD;
+
+state DEAD:
+    send __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

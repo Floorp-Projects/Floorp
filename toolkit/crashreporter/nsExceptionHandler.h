@@ -77,8 +77,9 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 // Out-of-process crash reporter API.
 
 // Return true iff a dump was found for |childPid|, and return the
-// path in |dump|.
-bool GetMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
+// path in |dump|.  The caller owns the last reference to |dump| if it
+// is non-NULL.
+bool TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
 
 #  if defined(XP_WIN32)
 // Parent-side API for children
