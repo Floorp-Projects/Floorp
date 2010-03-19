@@ -79,6 +79,8 @@
 #define SRCNOTE_SIZE(n)         ((n) * sizeof(jssrcnote))
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
+using namespace js;
+
 static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end);
@@ -184,7 +186,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     JS_ASSERT(cg->stackDepth >= 0);
     if (cg->stackDepth < 0) {
         char numBuf[12];
-        JSTokenStream *ts;
+        TokenStream *ts;
 
         JS_snprintf(numBuf, sizeof numBuf, "%d", target);
         ts = &cg->compiler->tokenStream;
@@ -893,7 +895,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
 
     if (growth) {
 #ifdef DEBUG_brendan
-        JSTokenStream *ts = &cg->compiler->tokenStream;
+        TokenStream *ts = &cg->compiler->tokenStream;
 
         printf("%s:%u: %u/%u jumps extended in %d passes (%d=%d+%d)\n",
                ts->filename ? ts->filename : "stdin", cg->firstLine,
@@ -1835,9 +1837,7 @@ AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
     if (cg->flags & TCF_IN_FUNCTION) {
         slot += cg->fun->u.i.nvars;
         if ((uintN) slot >= SLOTNO_LIMIT) {
-            js_ReportCompileErrorNumber(cx, CG_TS(cg), NULL,
-                                        JSREPORT_ERROR,
-                                        JSMSG_TOO_MANY_LOCALS);
+            ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
             slot = -1;
         }
     }
@@ -3934,8 +3934,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     depth = limit = (uintN) cg->stackDepth;
     for (pn = rhs->pn_head; pn; pn = pn->pn_next) {
         if (limit == JS_BIT(16)) {
-            js_ReportCompileErrorNumber(cx, CG_TS(cg), rhs, JSREPORT_ERROR,
-                                        JSMSG_ARRAY_INIT_TOO_BIG);
+            ReportCompileErrorNumber(cx, CG_TS(cg), rhs, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
             return JS_FALSE;
         }
 
@@ -4333,7 +4332,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSSrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
-    JSTokenType type;
+    TokenType type;
     uint32 argc;
 #if JS_HAS_SHARP_VARS
     jsint sharpnum;
@@ -4695,7 +4694,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn3 = pn2->pn_left;
             type = PN_TYPE(pn3);
             cg->flags |= TCF_IN_FOR_INIT;
-            if (TOKEN_TYPE_IS_DECL(type) && !js_EmitTree(cx, cg, pn3))
+            if (TokenTypeIsDecl(type) && !js_EmitTree(cx, cg, pn3))
                 return JS_FALSE;
             cg->flags &= ~TCF_IN_FOR_INIT;
 
@@ -4804,8 +4803,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     op = PN_OP(pn3);
                 }
                 if (pn3->isConst()) {
-                    js_ReportCompileErrorNumber(cx, CG_TS(cg), pn3, JSREPORT_ERROR,
-                                                JSMSG_BAD_FOR_LEFTSIDE);
+                    ReportCompileErrorNumber(cx, CG_TS(cg), pn3, JSREPORT_ERROR,
+                                             JSMSG_BAD_FOR_LEFTSIDE);
                     return JS_FALSE;
                 }
                 if (pn3->pn_cookie != FREE_UPVAR_COOKIE) {
@@ -4917,7 +4916,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (op == JSOP_POP) {
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (TOKEN_TYPE_IS_DECL(pn3->pn_type)) {
+                    if (TokenTypeIsDecl(PN_TYPE(pn3))) {
                         /*
                          * Check whether a destructuring-initialized var decl
                          * was optimized to a group assignment.  If so, we do
@@ -5486,9 +5485,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
         if (!(cg->flags & TCF_IN_FUNCTION)) {
-            js_ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
-                                        JSMSG_BAD_RETURN_OR_YIELD,
-                                        js_yield_str);
+            ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
+                                     JSMSG_BAD_RETURN_OR_YIELD,
+                                     js_yield_str);
             return JS_FALSE;
         }
         if (pn->pn_kid) {
@@ -5626,10 +5625,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  cg->topStmt->type != STMT_LABEL ||
                  cg->topStmt->update < CG_OFFSET(cg))) {
                 CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!js_ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_USELESS_EXPR)) {
+                if (!ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
+                                              JSREPORT_WARNING | JSREPORT_STRICT,
+                                              JSMSG_USELESS_EXPR)) {
                     return JS_FALSE;
                 }
             } else {
@@ -5796,13 +5794,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * x getter = y where x is a local or let variable is not
                  * supported.
                  */
-                js_ReportCompileErrorNumber(cx,
-                                            TS(cg->compiler),
-                                            pn2, JSREPORT_ERROR,
-                                            JSMSG_BAD_GETTER_OR_SETTER,
-                                            (op == JSOP_GETTER)
-                                            ? js_getter_str
-                                            : js_setter_str);
+                ReportCompileErrorNumber(cx, TS(cg->compiler), pn2, JSREPORT_ERROR,
+                                         JSMSG_BAD_GETTER_OR_SETTER,
+                                         (op == JSOP_GETTER) ? js_getter_str : js_setter_str);
                 return JS_FALSE;
             }
 
@@ -6633,8 +6627,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 #if JS_HAS_DESTRUCTURING_SHORTHAND
         if (pn->pn_xflags & PNX_DESTRUCT) {
-            js_ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
-                                        JSMSG_BAD_OBJECT_INIT);
+            ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
             return JS_FALSE;
         }
 #endif
