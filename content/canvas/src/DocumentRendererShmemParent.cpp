@@ -1,4 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Fenntrolysis.
+ * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
@@ -35,19 +34,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PIFrameEmbedding.ipdl";
+#include "mozilla/ipc/DocumentRendererShmemParent.h"
 
-namespace mozilla {
-namespace ipc {
+using namespace mozilla::ipc;
 
-protocol PDocumentRenderer
+DocumentRendererShmemParent::DocumentRendererShmemParent()
+{}
+
+DocumentRendererShmemParent::~DocumentRendererShmemParent()
+{}
+
+void
+DocumentRendererShmemParent::SetCanvas(nsICanvasRenderingContextInternal* aCanvas)
 {
-  manager PIFrameEmbedding;
+    mCanvas = aCanvas;
+}
 
-parent:
-    // Returns the width and height, in pixels, of the returned ARGB32 data.
-    __delete__(PRUint32 w, PRUint32 h, nsCString data);
-};
-
-} // namespace ipc
-} // namespace mozilla
+bool
+DocumentRendererShmemParent::Recv__delete__(const PRInt32& x, const PRInt32& y,
+                                            const PRInt32& w, const PRInt32& h,
+                                            Shmem& data)
+{
+    mCanvas->Swap(data, x, y, w, h);
+    return true;
+}
