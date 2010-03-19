@@ -72,6 +72,7 @@
 <!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running Weave.">
 <!ENTITY confirm.merge.start.label    "Start Syncing Now">
 <!ENTITY confirm.client.label         "All &brandShortName; data on this computer will be deleted, including the following:">
+<!ENTITY confirm.client.moreinfo.label "&brandShortName; will then copy your Weave data to this computer.">
 <!ENTITY confirm.client.warning.label "WARNING: This will result in all &brandShortName; data on this computer being replaced!">
 <!ENTITY confirm.client.start.label   "Delete and Replace Local Data">
 <!ENTITY confirm.server.label         "The following devices will be overwritten with your local data:">
