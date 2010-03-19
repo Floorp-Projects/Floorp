@@ -63,6 +63,10 @@ child:
 
     registerChrome(ChromePackage[] packages, ChromeResource[] resources);
 
+    // A dummy message to make sure PContentProcess contains methods to create
+    // Shmem segments.
+    async Dummy(Shmem foo);
+
 parent:
     PNecko();
 };
