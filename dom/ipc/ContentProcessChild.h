@@ -43,6 +43,7 @@
 
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/chrome/ChromeTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -70,6 +71,9 @@ public:
 
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
+
+    virtual bool RecvregisterChrome(const nsTArray<ChromePackage>& packages,
+                                    const nsTArray<ChromeResource>& resources);
 
 private:
     NS_OVERRIDE

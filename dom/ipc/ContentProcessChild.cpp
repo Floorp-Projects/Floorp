@@ -47,6 +47,8 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 
+#include "nsChromeRegistry.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 
@@ -125,6 +127,15 @@ bool
 ContentProcessChild::DeallocPNecko(PNeckoChild* necko)
 {
     delete necko;
+    return true;
+}
+
+bool
+ContentProcessChild::RecvregisterChrome(const nsTArray<ChromePackage>& packages,
+                                        const nsTArray<ChromeResource>& resources)
+{
+    nsChromeRegistry* chromeRegistry = nsChromeRegistry::GetService();
+    chromeRegistry->RegisterRemoteChrome(packages, resources);
     return true;
 }
 

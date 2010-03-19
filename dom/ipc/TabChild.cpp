@@ -54,6 +54,7 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsXULAppAPI.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIJSRuntimeService.h"
@@ -66,6 +67,7 @@
 #include "nsScriptLoader.h"
 #include "nsPIWindowRoot.h"
 #include "nsIScriptContext.h"
+#include "nsXULAppAPI.h"
 
 #ifdef MOZ_WIDGET_QT
 #include <QX11EmbedWidget>
@@ -498,6 +500,23 @@ TabChild::RecvPDocumentRendererConstructor(
         return true; // silently ignore
 
     return PDocumentRendererChild::Send__delete__(__a, width, height, data);
+}
+
+bool
+TabChild::RecvregisterChromePackage(const nsString& aPackage,
+                                    const nsString& aBaseURI,
+                                    const PRUint32& aFlags)
+{
+	XRE_RegisterChromePackage(aPackage, aBaseURI, aFlags);
+	return true;
+}
+
+bool
+TabChild::RecvregisterChromeResource(const nsString& aPackage,
+                                     const nsString& aResolvedURI)
+{
+	XRE_RegisterChromeResource(aPackage, aResolvedURI);
+	return true;
 }
 
 bool
