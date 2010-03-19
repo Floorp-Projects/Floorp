@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Content App.
+ * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
@@ -36,64 +34,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_ContentProcessChild_h
-#define mozilla_dom_ContentProcessChild_h
+#ifndef mozilla_dom_DocumentRendererShmemChild
+#define mozilla_dom_DocumentRendererShmemChild
 
-#include "mozilla/dom/PContentProcessChild.h"
+#include "mozilla/ipc/PDocumentRendererShmemChild.h"
 
-#include "nsTArray.h"
-#include "nsAutoPtr.h"
-#include "mozilla/chrome/ChromeTypes.h"
+class nsIDOMWindow;
+class gfxMatrix;
 
 namespace mozilla {
-namespace dom {
+namespace ipc {
 
-class ContentProcessChild : public PContentProcessChild
+class DocumentRendererShmemChild : public PDocumentRendererShmemChild
 {
 public:
-    ContentProcessChild();
-    virtual ~ContentProcessChild();
+    DocumentRendererShmemChild();
+    virtual ~DocumentRendererShmemChild();
 
-    bool Init(MessageLoop* aIOLoop,
-              base::ProcessHandle aParentHandle,
-              IPC::Channel* aChannel);
-
-    static ContentProcessChild* GetSingleton() {
-        NS_ASSERTION(sSingleton, "not initialized");
-        return sSingleton;
-    }
-
-    virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding();
-    virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingChild*);
-
-    virtual PTestShellChild* AllocPTestShell();
-    virtual bool DeallocPTestShell(PTestShellChild*);
-
-    virtual PNeckoChild* AllocPNecko();
-    virtual bool DeallocPNecko(PNeckoChild*);
-
-    virtual bool RecvDummy(Shmem& foo) { return true; }
-
-    virtual bool RecvregisterChrome(const nsTArray<ChromePackage>& packages,
-                                    const nsTArray<ChromeResource>& resources);
+    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x,
+                        const PRInt32& y, const PRInt32& w,
+                        const PRInt32& h, const nsString& aBGColor,
+                        const PRUint32& flags, const PRBool& flush,
+			const gfxMatrix &aMatrix,
+                        const PRInt32& bufw, const PRInt32& bufh,
+                        Shmem& data);
 
 private:
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
 
-    void Quit();
-
-    static ContentProcessChild* sSingleton;
-
-    nsTArray<PIFrameEmbeddingChild* > mIFrames;
-    nsTArray<nsAutoPtr<PTestShellChild> > mTestShells;
-
-    PRBool mQuit;
-
-    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
+    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererShmemChild);
 };
 
-} // namespace dom
-} // namespace mozilla
+}
+}
 
 #endif
