@@ -50,14 +50,14 @@
 #include "jspubtd.h"
 #include "jsvector.h"
 
+JS_BEGIN_EXTERN_C
+
 #define JS_KEYWORD(keyword, type, op, version) \
     extern const char js_##keyword##_str[];
 #include "jskeyword.tbl"
 #undef JS_KEYWORD
 
-namespace js {
-
-enum TokenType {
+typedef enum JSTokenType {
     TOK_ERROR = -1,                     /* well-known as the only code < EOF */
     TOK_EOF = 0,                        /* end of file */
     TOK_EOL = 1,                        /* end of line */
@@ -144,91 +144,87 @@ enum TokenType {
                                            tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
-};
+} JSTokenType;
 
-static inline bool TokenTypeIsXML(TokenType tt)
-{
-    return tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME;
-}
+#define IS_PRIMARY_TOKEN(tt) \
+    ((uintN)((tt) - TOK_NAME) <= (uintN)(TOK_PRIMARY - TOK_NAME))
 
-static inline bool TreeTypeIsXML(TokenType tt)
-{
-    return tt == TOK_XMLCOMMENT || tt == TOK_XMLCDATA || tt == TOK_XMLPI || tt == TOK_XMLELEM ||
-           tt == TOK_XMLLIST;
-}
+#define TOKEN_TYPE_IS_XML(tt) \
+    ((tt) == TOK_AT || (tt) == TOK_DBLCOLON || (tt) == TOK_ANYNAME)
 
-static inline bool TokenTypeIsDecl(TokenType tt)
-{
-#   if JS_HAS_BLOCK_SCOPE
-    return tt == TOK_VAR || tt == TOK_LET;
-#   else
-    return tt == TOK_VAR;
-#   endif
-}
+#define TREE_TYPE_IS_XML(tt)                                                  \
+    ((tt) == TOK_XMLCOMMENT || (tt) == TOK_XMLCDATA || (tt) == TOK_XMLPI ||   \
+     (tt) == TOK_XMLELEM || (tt) == TOK_XMLLIST)
 
-struct TokenPtr {
+#if JS_HAS_BLOCK_SCOPE
+# define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR || (tt) == TOK_LET)
+#else
+# define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR)
+#endif
+
+struct JSTokenPtr {
     uint32              index;          /* index of char in physical line */
     uint32              lineno;         /* physical line number */
 
-    bool operator==(const TokenPtr& bptr) {
+    bool operator==(const JSTokenPtr& bptr) {
         return index == bptr.index && lineno == bptr.lineno;
     }
 
-    bool operator!=(const TokenPtr& bptr) {
+    bool operator!=(const JSTokenPtr& bptr) {
         return index != bptr.index || lineno != bptr.lineno;
     }
 
-    bool operator <(const TokenPtr& bptr) {
+    bool operator <(const JSTokenPtr& bptr) {
         return lineno < bptr.lineno ||
                (lineno == bptr.lineno && index < bptr.index);
     }
 
-    bool operator <=(const TokenPtr& bptr) {
+    bool operator <=(const JSTokenPtr& bptr) {
         return lineno < bptr.lineno ||
                (lineno == bptr.lineno && index <= bptr.index);
     }
 
-    bool operator >(const TokenPtr& bptr) {
+    bool operator >(const JSTokenPtr& bptr) {
         return !(*this <= bptr);
     }
 
-    bool operator >=(const TokenPtr& bptr) {
+    bool operator >=(const JSTokenPtr& bptr) {
         return !(*this < bptr);
     }
 };
 
-struct TokenPos {
-    TokenPtr          begin;          /* first character and line of token */
-    TokenPtr          end;            /* index 1 past last char, last line */
+struct JSTokenPos {
+    JSTokenPtr          begin;          /* first character and line of token */
+    JSTokenPtr          end;            /* index 1 past last char, last line */
 
-    bool operator==(const TokenPos& bpos) {
+    bool operator==(const JSTokenPos& bpos) {
         return begin == bpos.begin && end == bpos.end;
     }
 
-    bool operator!=(const TokenPos& bpos) {
+    bool operator!=(const JSTokenPos& bpos) {
         return begin != bpos.begin || end != bpos.end;
     }
 
-    bool operator <(const TokenPos& bpos) {
+    bool operator <(const JSTokenPos& bpos) {
         return begin < bpos.begin;
     }
 
-    bool operator <=(const TokenPos& bpos) {
+    bool operator <=(const JSTokenPos& bpos) {
         return begin <= bpos.begin;
     }
 
-    bool operator >(const TokenPos& bpos) {
+    bool operator >(const JSTokenPos& bpos) {
         return !(*this <= bpos);
     }
 
-    bool operator >=(const TokenPos& bpos) {
+    bool operator >=(const JSTokenPos& bpos) {
         return !(*this < bpos);
     }
 };
 
-struct Token {
-    TokenType           type;           /* char value or above enumerator */
-    TokenPos            pos;            /* token position in file */
+struct JSToken {
+    JSTokenType         type;           /* char value or above enumerator */
+    JSTokenPos          pos;            /* token position in file */
     jschar              *ptr;           /* beginning of token in line buffer */
     union {
         struct {                        /* name or string literal */
@@ -245,7 +241,19 @@ struct Token {
     } u;
 };
 
-enum TokenStreamFlags
+#define t_op            u.s.op
+#define t_reflags       u.reflags
+#define t_atom          u.s.atom
+#define t_atom2         u.p.atom2
+#define t_dval          u.dval
+
+#define JS_LINE_LIMIT   256             /* logical line buffer size limit --
+                                           physical line length is unlimited */
+#define NTOKENS         4               /* 1 current + 2 lookahead, rounded */
+#define NTOKENS_MASK    (NTOKENS-1)     /* to power of 2 to avoid divmod by 3 */
+
+
+enum JSTokenStreamFlags
 {
     TSF_ERROR = 0x01,           /* fatal error while compiling */
     TSF_EOF = 0x02,             /* hit end of file */
@@ -290,24 +298,12 @@ enum TokenStreamFlags
     TSF_STRICT_MODE_CODE = 0x8000
 };
 
-#define t_op            u.s.op
-#define t_reflags       u.reflags
-#define t_atom          u.s.atom
-#define t_atom2         u.p.atom2
-#define t_dval          u.dval
-
-const size_t LINE_LIMIT = 256;  /* logical line buffer size limit
-                                   -- physical line length is unlimited */
-
-class TokenStream
+class JSTokenStream
 {
-    static const size_t ntokens = 4;                /* 1 current + 2 lookahead, rounded
-                                                       to power of 2 to avoid divmod by 3 */
-    static const uintN ntokensMask = ntokens - 1;
   public:
     /*
-     * To construct a TokenStream, first call the constructor, which is
-     * infallible, then call |init|, which can fail. To destroy a TokenStream,
+     * To construct a JSTokenStream, first call the constructor, which is
+     * infallible, then call |init|, which can fail. To destroy a JSTokenStream,
      * first call |close| then call the destructor. If |init| fails, do not call
      * |close|.
      *
@@ -315,7 +311,7 @@ class TokenStream
      * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
      * after calling |close|.
      */
-    TokenStream(JSContext *);
+    JSTokenStream(JSContext *);
 
     /*
      * Create a new token stream, either from an input buffer or from a file.
@@ -323,14 +319,14 @@ class TokenStream
      */
     bool init(const jschar *base, size_t length, FILE *fp, const char *filename, uintN lineno);
     void close();
-    ~TokenStream() {}
+    ~JSTokenStream() {}
 
     /* Accessors. */
     JSContext *getContext() const { return cx; }
-    bool onCurrentLine(const TokenPos &pos) const { return lineno == pos.end.lineno; }
-    const Token &currentToken() const { return tokens[cursor]; }
-    const Token &getTokenAt(size_t index) const {
-        JS_ASSERT(index < ntokens);
+    bool onCurrentLine(const JSTokenPos &pos) const { return lineno == pos.end.lineno; }
+    const JSToken &currentToken() const { return tokens[cursor]; }
+    const JSToken &getTokenAt(size_t index) const {
+        JS_ASSERT(index < NTOKENS);
         return tokens[index];
     }
     const JSCharBuffer &getTokenbuf() const { return tokenbuf; }
@@ -338,16 +334,16 @@ class TokenStream
     uintN getLineno() const { return lineno; }
 
     /* Mutators. */
-    Token *mutableCurrentToken() { return &tokens[cursor]; }
+    JSToken *mutableCurrentToken() { return &tokens[cursor]; }
     bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
 
-    TokenType getToken() {
+    JSTokenType getToken() {
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         while (lookahead != 0) {
             JS_ASSERT(!(flags & TSF_XMLTEXTMODE));
             lookahead--;
-            cursor = (cursor + 1) & ntokensMask;
-            TokenType tt = currentToken().type;
+            cursor = (cursor + 1) & NTOKENS_MASK;
+            JSTokenType tt = currentToken().type;
             if (tt != TOK_EOL || (flags & TSF_NEWLINES))
                 return tt;
         }
@@ -359,36 +355,36 @@ class TokenStream
         return getTokenInternal();
     }
 
-    Token *getMutableTokenAt(size_t index) {
-        JS_ASSERT(index < ntokens);
+    JSToken *getMutableTokenAt(size_t index) {
+        JS_ASSERT(index < NTOKENS);
         return &tokens[index];
     }
 
     void ungetToken() {
-        JS_ASSERT(lookahead < ntokensMask);
+        JS_ASSERT(lookahead < NTOKENS_MASK);
         lookahead++;
-        cursor = (cursor - 1) & ntokensMask;
+        cursor = (cursor - 1) & NTOKENS_MASK;
     }
 
-    TokenType peekToken() {
+    JSTokenType peekToken() {
         if (lookahead != 0) {
-            return tokens[(cursor + lookahead) & ntokensMask].type;
+            return tokens[(cursor + lookahead) & NTOKENS_MASK].type;
         }
-        TokenType tt = getToken();
+        JSTokenType tt = getToken();
         ungetToken();
         return tt;
     }
 
-    TokenType peekTokenSameLine() {
+    JSTokenType peekTokenSameLine() {
         if (!onCurrentLine(currentToken().pos))
             return TOK_EOL;
         flags |= TSF_NEWLINES;
-        TokenType tt = peekToken();
+        JSTokenType tt = peekToken();
         flags &= ~TSF_NEWLINES;
         return tt;
     }
 
-    JSBool matchToken(TokenType tt) {
+    JSBool matchToken(JSTokenType tt) {
         if (getToken() == tt)
             return JS_TRUE;
         ungetToken();
@@ -396,16 +392,16 @@ class TokenStream
     }
 
   private:
-    typedef struct TokenBuf {
+    typedef struct JSTokenBuf {
         jschar              *base;      /* base of line or stream buffer */
         jschar              *limit;     /* limit for quick bounds check */
         jschar              *ptr;       /* next char to get, or slot to use */
-    } TokenBuf;
+    } JSTokenBuf;
 
-    TokenType getTokenInternal();     /* doesn't check for pushback or error flag. */
+    JSTokenType getTokenInternal();     /* doesn't check for pushback or error flag. */
     int32 getChar();
     void ungetChar(int32 c);
-    Token *newToken(ptrdiff_t adjust);
+    JSToken *newToken(ptrdiff_t adjust);
     int32 getUnicodeEscape();
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
@@ -430,7 +426,7 @@ class TokenStream
     }
 
     JSContext           * const cx;
-    Token               tokens[ntokens];/* circular token buffer */
+    JSToken             tokens[NTOKENS];/* circular token buffer */
     uintN               cursor;         /* index of last parsed token */
     uintN               lookahead;      /* count of lookahead tokens */
 
@@ -442,9 +438,9 @@ class TokenStream
   private:
     uint32              linelen;        /* physical linebuf segment length */
     uint32              linepos;        /* linebuf offset in physical line */
-    TokenBuf            linebuf;        /* line buffer for diagnostics */
+    JSTokenBuf          linebuf;        /* line buffer for diagnostics */
 
-    TokenBuf            userbuf;        /* user input buffer if !file */
+    JSTokenBuf          userbuf;        /* user input buffer if !file */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
@@ -455,14 +451,12 @@ class TokenStream
     JSCharBuffer        tokenbuf;       /* current token string buffer */
 };
 
-} /* namespace js */
-
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029
 
 extern void
-js_CloseTokenStream(JSContext *cx, js::TokenStream *ts);
+js_CloseTokenStream(JSContext *cx, JSTokenStream *ts);
 
 extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
@@ -471,7 +465,7 @@ js_fgets(char *buf, int size, FILE *file);
  * If the given char array forms JavaScript keyword, return corresponding
  * token. Otherwise return TOK_EOF.
  */
-extern js::TokenType
+extern JSTokenType
 js_CheckKeyword(const jschar *chars, size_t length);
 
 /*
@@ -488,55 +482,53 @@ extern JSBool
 js_IsIdentifier(JSString *str);
 
 /*
- * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
- * message have const jschar* type, not const char*.
- */
-#define JSREPORT_UC 0x100
-
-namespace js {
-
-/*
  * Report a compile-time error by its number. Return true for a warning, false
  * for an error. When pn is not null, use it to report error's location.
  * Otherwise use ts, which must not be null.
  */
 bool
-ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN flags,
-                         uintN errorNumber, ...);
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
+                            uintN flags, uintN errorNumber, ...);
 
 /*
  * Report a condition that should elicit a warning with JSOPTION_STRICT,
  * or an error if ts or tc is handling strict mode code.  This function
- * defers to ReportCompileErrorNumber to do the real work.  Either tc
+ * defers to js_ReportCompileErrorNumber to do the real work.  Either tc
  * or ts may be NULL, if there is no tree context or token stream state
  * whose strictness should affect the report.
  *
- * One could have ReportCompileErrorNumber recognize the
+ * One could have js_ReportCompileErrorNumber recognize the
  * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
  * like this one.  However, the strict mode code flag we need to test is
  * in the JSTreeContext structure for that code; we would have to change
- * the ~120 ReportCompileErrorNumber calls to pass the additional
+ * the ~120 js_ReportCompileErrorNumber calls to pass the additional
  * argument, even though many of those sites would never use it.  Using
  * ts's TSF_STRICT_MODE_CODE flag instead of tc's would be brittle: at some
  * points ts's flags don't correspond to those of the tc relevant to the
  * error.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
-                      uintN errorNumber, ...);
+js_ReportStrictModeError(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+                         JSParseNode *pn, uintN errorNumber, ...);
+
+/*
+ * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
+ * message have const jschar* type, not const char*.
+ */
+#define JSREPORT_UC 0x100
 
 /*
  * Look ahead one token and return its type.
  */
-static inline TokenType
-PeekToken(JSContext *cx, TokenStream *ts)
+static inline JSTokenType
+js_PeekToken(JSContext *cx, JSTokenStream *ts)
 {
     JS_ASSERT(cx == ts->getContext());
     return ts->peekToken();
 }
 
-static inline TokenType
-PeekTokenSameLine(JSContext *cx, TokenStream *ts)
+static inline JSTokenType
+js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
 {
     JS_ASSERT(cx == ts->getContext());
     return ts->peekTokenSameLine();
@@ -545,8 +537,8 @@ PeekTokenSameLine(JSContext *cx, TokenStream *ts)
 /*
  * Get the next token from ts.
  */
-static inline TokenType
-GetToken(JSContext *cx, TokenStream *ts)
+static inline JSTokenType
+js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
     JS_ASSERT(cx == ts->getContext());
     return ts->getToken();
@@ -556,7 +548,7 @@ GetToken(JSContext *cx, TokenStream *ts)
  * Push back the last scanned token onto ts.
  */
 static inline void
-UngetToken(TokenStream *ts)
+js_UngetToken(JSTokenStream *ts)
 {
     ts->ungetToken();
 }
@@ -565,12 +557,12 @@ UngetToken(TokenStream *ts)
  * Get the next token from ts if its type is tt.
  */
 static inline JSBool
-MatchToken(JSContext *cx, TokenStream *ts, TokenType tt)
+js_MatchToken(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
 {
     JS_ASSERT(cx == ts->getContext());
     return ts->matchToken(tt);
 }
 
-} /* namespace js */
+JS_END_EXTERN_C
 
 #endif /* jsscan_h___ */
