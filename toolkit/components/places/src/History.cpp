@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/ContentProcessParent.h"
+#endif
+
 #include "History.h"
 #include "nsNavHistory.h"
 
@@ -109,27 +114,7 @@ public:
 
   NS_IMETHOD HandleCompletion(PRUint16 aReason)
   {
-    if (mIsVisited) {
-      History::GetService()->NotifyVisited(mURI);
-    }
-
-    // Notify any observers about that we have resolved the visited state of
-    // this URI.
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-    if (observerService) {
-      nsAutoString status;
-      if (mIsVisited) {
-        status.AssignLiteral(URI_VISITED);
-      }
-      else {
-        status.AssignLiteral(URI_NOT_VISITED);
-      }
-      (void)observerService->NotifyObservers(mURI,
-                                             URI_VISITED_RESOLUTION_TOPIC,
-                                             status.get());
-    }
-
+    History::GetService()->NotifyVisited(mURI, mIsVisited);
     return NS_OK;
   }
 private:
@@ -172,35 +157,67 @@ History::~History()
 }
 
 void
-History::NotifyVisited(nsIURI* aURI)
+History::NotifyVisited(nsIURI* aURI, bool aIsVisited)
 {
   NS_ASSERTION(aURI, "Ruh-roh!  A NULL URI was passed to us!");
 
-  // If the hash table has not been initialized, then we have nothing to notify
-  // about.
-  if (!mObservers.IsInitialized()) {
-    return;
-  }
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    mozilla::dom::ContentProcessParent * cpp = 
+        mozilla::dom::ContentProcessParent::GetSingleton();
+    NS_ASSERTION(cpp, "Content Protocol is NULL!");
 
-  // Additionally, if we have no observers for this URI, we have nothing to
-  // notify about.
-  KeyClass* key = mObservers.GetEntry(aURI);
-  if (!key) {
-    return;
+    nsCString aURISpec;
+    aURI->GetSpec(aURISpec);
+    cpp->SendNotifyVisited(aURISpec, aIsVisited);
   }
+#endif
 
-  // Walk through the array, and update each Link node.
-  const ObserverArray& observers = key->array;
-  ObserverArray::index_type len = observers.Length();
-  for (ObserverArray::index_type i = 0; i < len; i++) {
-    Link* link = observers[i];
-    link->SetLinkState(eLinkState_Visited);
-    NS_ASSERTION(len == observers.Length(),
-                 "Calling SetLinkState added or removed an observer!");
-  }
+  if (aIsVisited) {
+    // If the hash table has not been initialized, then we have nothing to notify
+    // about.
+    if (!mObservers.IsInitialized()) {
+      return;
+    }
+
+    // Additionally, if we have no observers for this URI, we have nothing to
+    // notify about.
+    KeyClass* key = mObservers.GetEntry(aURI);
+    if (!key) {
+      return;
+    }
+
+    // Walk through the array, and update each Link node.
+    const ObserverArray& observers = key->array;
+    ObserverArray::index_type len = observers.Length();
+    for (ObserverArray::index_type i = 0; i < len; i++) {
+      Link* link = observers[i];
+      link->SetLinkState(eLinkState_Visited);
+      NS_ASSERTION(len == observers.Length(),
+                   "Calling SetLinkState added or removed an observer!");
+    }
 
   // All the registered nodes can now be removed for this URI.
   mObservers.RemoveEntry(aURI);
+  }
+
+  // Notify any observers about that we have resolved the visited state of
+  // this URI.
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (observerService) {
+    nsAutoString status;
+    if (aIsVisited) {
+      status.AssignLiteral(URI_VISITED);
+    }
+    else {
+      status.AssignLiteral(URI_NOT_VISITED);
+    }
+    (void)observerService->NotifyObservers(aURI,
+      URI_VISITED_RESOLUTION_TOPIC,
+      status.get());
+  }
+
 }
 
 /* static */
@@ -238,6 +255,15 @@ NS_IMETHODIMP
 History::RegisterVisitedCallback(nsIURI* aURI,
                                  Link* aLink)
 {
+  nsresult   rv;
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      rv = VisitedQuery::Start(aURI);
+      return rv;
+  }
+#endif
+
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   NS_ASSERTION(aLink, "Must pass a non-null Link object!");
 
@@ -261,7 +287,19 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     // We are the first Link node to ask about this URI, or there are no pending
     // Links wanting to know about this URI.  Therefore, we should query the
     // database now.
-    nsresult rv = VisitedQuery::Start(aURI);
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild * cpc = 
+        mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    nsCString aURISpec;
+    aURI->GetSpec(aURISpec);
+    cpc->SendStartVisitedQuery(aURISpec, &rv);
+  }
+#else
+    rv = VisitedQuery::Start(aURI);
+#endif
     if (NS_FAILED(rv)) {
       // Remove our array from the hashtable so we don't keep it around.
       mObservers.RemoveEntry(aURI);

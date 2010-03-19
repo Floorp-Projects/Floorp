@@ -110,6 +110,8 @@ private:
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 
+    virtual bool RecvStartVisitedQuery(const nsCString& aURISpec, nsresult* rv);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
