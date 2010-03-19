@@ -77,6 +77,9 @@ public:
     virtual bool RecvregisterChrome(const nsTArray<ChromePackage>& packages,
                                     const nsTArray<ChromeResource>& resources);
 
+    virtual bool
+    RecvNotifyVisited(const nsCString& aURISpec, const bool& mIsVisited);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
