@@ -62,6 +62,20 @@
 //
 const PRUint32 nsSMILAnimationController::kTimerInterval = 22;
 
+// Helper method
+static nsRefreshDriver*
+GetRefreshDriverForDoc(nsIDocument* aDoc)
+{
+  nsIPresShell* shell = aDoc->GetPrimaryShell();
+  if (!shell) {
+    return nsnull;
+  }
+
+  nsPresContext* context = shell->GetPresContext();
+  return context ? context->RefreshDriver() : nsnull;
+}
+
+
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
@@ -75,10 +89,8 @@ nsSMILAnimationController::nsSMILAnimationController()
 
 nsSMILAnimationController::~nsSMILAnimationController()
 {
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nsnull;
-  }
+  StopSampling(GetRefreshDriverForDoc(mDocument));
+  mTimer = nsnull;
 
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
@@ -125,7 +137,7 @@ nsSMILAnimationController::Pause(PRUint32 aType)
   nsSMILTimeContainer::Pause(aType);
 
   if (mPauseState) {
-    StopTimer();
+    StopSampling(GetRefreshDriverForDoc(mDocument));
   }
 }
 
@@ -137,7 +149,8 @@ nsSMILAnimationController::Resume(PRUint32 aType)
   nsSMILTimeContainer::Resume(aType);
 
   if (wasPaused && !mPauseState && mChildContainerTable.Count()) {
-    StartTimer();
+    Sample(); // Run the first sample manually
+    StartSampling(GetRefreshDriverForDoc(mDocument));
   }
 }
 
@@ -146,6 +159,22 @@ nsSMILAnimationController::GetParentTime() const
 {
   // Our parent time is wallclock time
   return PR_Now() / PR_USEC_PER_MSEC;
+}
+
+//----------------------------------------------------------------------
+// nsARefreshObserver methods:
+NS_IMPL_ADDREF(nsSMILAnimationController)
+NS_IMPL_RELEASE(nsSMILAnimationController)
+
+// nsRefreshDriver Callback function
+// XXXdholbert NOTE: This function isn't used yet
+void
+nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
+{
+  // XXXdholbert Eventually we should be sampling based on aTime. For now,
+  // though, we keep track of the time on our own, and we just use
+  // nsRefreshDriver for scheduling samples.
+  Sample();
 }
 
 //----------------------------------------------------------------------
@@ -226,13 +255,10 @@ nsSMILAnimationController::Notify(nsITimer* timer, void* aClosure)
 }
 
 nsresult
-nsSMILAnimationController::StartTimer()
+nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver)
 {
   NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
   NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused");
-
-  // Run the first sample manually
-  Sample();
 
   //
   // XXX Make this self-tuning. Sounds like control theory to me and not
@@ -245,7 +271,7 @@ nsSMILAnimationController::StartTimer()
 }
 
 nsresult
-nsSMILAnimationController::StopTimer()
+nsSMILAnimationController::StopSampling(nsRefreshDriver* aRefreshDriver)
 {
   NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
 
@@ -668,7 +694,8 @@ nsSMILAnimationController::AddChild(nsSMILTimeContainer& aChild)
   NS_ENSURE_TRUE(key,NS_ERROR_OUT_OF_MEMORY);
 
   if (!mPauseState && mChildContainerTable.Count() == 1) {
-    StartTimer();
+    Sample(); // Run the first sample manually
+    StartSampling(GetRefreshDriverForDoc(mDocument));
   }
 
   return NS_OK;
@@ -680,6 +707,6 @@ nsSMILAnimationController::RemoveChild(nsSMILTimeContainer& aChild)
   mChildContainerTable.RemoveEntry(&aChild);
 
   if (!mPauseState && mChildContainerTable.Count() == 0) {
-    StopTimer();
+    StopSampling(GetRefreshDriverForDoc(mDocument));
   }
 }
