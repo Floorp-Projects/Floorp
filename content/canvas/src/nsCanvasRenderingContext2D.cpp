@@ -442,6 +442,7 @@ protected:
     // process to render to, and then swap our two buffers when it finishes.
     mozilla::ipc::Shmem mFrontBuffer;
     mozilla::ipc::Shmem mBackBuffer;
+    nsRefPtr<gfxASurface> mFrontSurface;
     nsRefPtr<gfxASurface> mBackSurface;
 
     // Creates a new mFrontBuffer and mBackBuffer of the correct size.
@@ -965,6 +966,9 @@ nsCanvasRenderingContext2D::CreateShmemSegments(PRInt32 width, PRInt32 height,
     mBackSurface = new gfxImageSurface(mBackBuffer.get<unsigned char>(),
                                        gfxIntSize(width, height),
                                        width * 4, format);
+    mFrontSurface = new gfxImageSurface(mFrontBuffer.get<unsigned char>(),
+                                        gfxIntSize(width, height),
+                                        width * 4, format);
 
     return true;
 }
@@ -983,16 +987,14 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
         if (mOpaque)
             format = gfxASurface::ImageFormatRGB24;
 
+	
 #ifdef MOZ_IPC
-        if (mShmem && CreateShmemSegments(width, height, format)) {
-            NS_ABORT_IF_FALSE(mFrontBuffer.get<unsigned char>(), "No front buffer!");
-            surface = new gfxImageSurface(mFrontBuffer.get<unsigned char>(),
-                                          gfxIntSize(width, height),
-                                          width * 4, format);
-        } else
+	if (mShmem)
+	    CreateShmemSegments(width, height, format);
 #endif
-            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
-                (gfxIntSize(width, height), format);
+
+	surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
+	    (gfxIntSize(width, height), format);
 
         if (surface && surface->CairoStatus() != 0)
             surface = NULL;
@@ -1111,13 +1113,18 @@ nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem &aBack,
     mFrontBuffer = aBack;
 
     // do want mozilla::Swap
-    nsRefPtr<gfxASurface> tmp = mSurface;
-    mSurface = mBackSurface;
+    nsRefPtr<gfxASurface> tmp = mFrontSurface;
+    mFrontSurface = mBackSurface;
     mBackSurface = tmp;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
-    CopyContext(ctx, mThebes);
-    mThebes = ctx;
+    nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
+
+    mThebes->NewPath();
+    mThebes->PixelSnappedRectangleAndSetPattern(gfxRect(x, y, w, h), pat);
+    mThebes->Fill();
+
+    // get rid of the pattern surface ref
+    mThebes->SetColor(gfxRGBA(1,1,1,1));
 
     Redraw(gfxRect(x, y, w, h));
 
