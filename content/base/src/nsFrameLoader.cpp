@@ -119,6 +119,8 @@
 #include "ContentProcessParent.h"
 #include "TabParent.h"
 
+#include "nsXULAppAPI.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 #endif
@@ -1520,6 +1522,8 @@ nsFrameLoader::TryNewProcess()
     nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
     mChildProcess->SetBrowserDOMWindow(browserDOMWin);
+
+    XRE_SendParentChromeRegistry(mChildProcess);
   }
   return true;
 }

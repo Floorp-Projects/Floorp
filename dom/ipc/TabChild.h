@@ -199,6 +199,13 @@ public:
     JSContext* GetJSContext() { return mCx; }
 
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
+
+    virtual bool RecvregisterChromePackage(const nsString& aPackage,
+                                           const nsString& aBaseURI,
+                                           const PRUint32& aFlags);
+    virtual bool RecvregisterChromeResource(const nsString& aPackage,
+                                            const nsString& aResolvedURI);
+
 private:
     bool InitTabChildGlobal();
 
