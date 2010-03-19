@@ -60,6 +60,8 @@ ifdef MOZ_IPC
 CPPSRCS += \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
+	DocumentRendererShmemParent.cpp \
+	DocumentRendererShmemChild.cpp \
 	$(NULL)
 endif
 
