@@ -315,7 +315,8 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSelectableAccessible,
 
 nsXFormsSelectableAccessible::
   nsXFormsSelectableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-  nsXFormsEditableAccessible(aNode, aShell)
+  nsXFormsEditableAccessible(aNode, aShell),
+  mIsSelect1Element(nsnull)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content)
