@@ -604,9 +604,15 @@ var ExtensionsView = {
       if (aTotalResults > aAddons.length) {
         let showmore = document.createElement("richlistitem");
         showmore.setAttribute("typeName", "showmore");
-        showmore.setAttribute("title", strings.getFormattedString("addonsSearchMore.label", [aTotalResults]));
-        showmore.setAttribute("description", strings.getFormattedString("addonsSearchMore.description", [aAddons.length]));
-  
+
+        let titleBase = strings.getString("addonsSearchMore.label");
+        let title = PluralForm.get(aTotalResults, titleBase).replace("#1", aTotalResults);
+        showmore.setAttribute("title", title);
+
+        let descBase = strings.getString("addonsSearchMore.description");
+        let desc = PluralForm.get(aAddons.length, descBase).replace("#1", aAddons.length);
+        showmore.setAttribute("description", desc);
+
         let url = gPrefService.getCharPref("extensions.getAddons.search.browseURL");
         url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
         url = formatter.formatURL(url);
