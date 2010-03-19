@@ -1806,6 +1806,7 @@ nsStyleDisplay::nsStyleDisplay()
   mBreakAfter = PR_FALSE;
   mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
   mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
+  mResize = NS_STYLE_RESIZE_NONE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
   mOpacity = 1.0f;
@@ -1841,6 +1842,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mBreakAfter = aSource.mBreakAfter;
   mOverflowX = aSource.mOverflowX;
   mOverflowY = aSource.mOverflowY;
+  mResize = aSource.mResize;
   mClipFlags = aSource.mClipFlags;
   mClip = aSource.mClip;
   mOpacity = aSource.mOpacity;
@@ -1864,7 +1866,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
-      || mOverflowY != aOther.mOverflowY)
+      || mOverflowY != aOther.mOverflowY
+      || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 
   if (mFloats != aOther.mFloats) {
