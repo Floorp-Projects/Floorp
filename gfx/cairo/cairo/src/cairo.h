@@ -312,7 +312,8 @@ typedef enum _cairo_status {
 typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR		= 0x1000,
     CAIRO_CONTENT_ALPHA		= 0x2000,
-    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
+    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000,
+    CAIRO_CONTENT_COLOR16	= 0x4000
 } cairo_content_t;
 
 /**
@@ -2066,11 +2067,8 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1
-    /* The value of 4 is reserved by a deprecated enum value.
-     * The next format added must have an explicit value of 5.
-    CAIRO_FORMAT_RGB16_565 = 4,
-    */
+    CAIRO_FORMAT_A1,
+    CAIRO_FORMAT_RGB16_565
 } cairo_format_t;
 
 cairo_public cairo_surface_t *

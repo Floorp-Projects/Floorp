@@ -389,6 +389,8 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
             return CONTENT_COLOR_ALPHA;
         case ImageFormatRGB24:
             return CONTENT_COLOR;
+        case ImageFormatRGB16:
+            return CONTENT_COLOR16;
         case ImageFormatA8:
         case ImageFormatA1:
             return CONTENT_ALPHA;
