@@ -351,7 +351,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
          * Construct a new copy of the error report struct. We can't use the
          * error report struct that was passed in, because it's allocated on
          * the stack, and also because it may point to transient data in the
-         * JSTokenStream.
+         * TokenStream.
          */
         priv->errorReport = CopyErrorReport(cx, report);
         if (!priv->errorReport) {
