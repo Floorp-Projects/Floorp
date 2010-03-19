@@ -3984,6 +3984,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       display->mOverflowY = NS_STYLE_OVERFLOW_AUTO;
   }
 
+  SetDiscrete(displayData.mResize, display->mResize, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mResize,
+              NS_STYLE_RESIZE_NONE, 0, 0, 0, 0);
+
   // clip property: length, auto, inherit
   if (eCSSUnit_Inherit == displayData.mClip.mTop.GetUnit()) { // if one is inherit, they all are
     canStoreInRuleTree = PR_FALSE;

@@ -2185,6 +2185,17 @@ CSS_PROP_QUOTES(
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    -moz-resize,
+    resize,
+    MozResize,
+    0,
+    Display,
+    mResize,
+    eCSSType_Value,
+    kResizeKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_BACKENDONLY(
     richness,
     richness,
