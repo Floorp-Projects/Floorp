@@ -78,6 +78,9 @@ gfxSharedImageSurface::getASurface(void)
     if (mDepth == 32)
         imageFormat = gfxASurface::ImageFormatARGB32;
 
+    if (mDepth == 16)
+        imageFormat = gfxASurface::ImageFormatRGB16;
+
     gfxASurface* result = new gfxImageSurface(mData, mSize, mStride, imageFormat);
     NS_IF_ADDREF(result);
     return result;
@@ -188,6 +191,8 @@ gfxSharedImageSurface::ComputeFormat()
         mFormat = ImageFormatARGB32;
     if (mDepth == 24)
         mFormat = ImageFormatRGB24;
+    if (mDepth == 16)
+        mFormat = ImageFormatRGB16;
     else {
         NS_WARNING("Unknown depth specified to gfxSharedImageSurface!");
         mFormat = ImageFormatUnknown;
@@ -205,6 +210,8 @@ gfxSharedImageSurface::ComputeDepth()
         mDepth = 32;
     else if (mFormat == ImageFormatRGB24)
         mDepth = 24;
+    else if (mFormat == ImageFormatRGB16)
+        mDepth = 16;
     else {
         NS_WARNING("Unknown format specified to gfxSharedImageSurface!");
         return false;
