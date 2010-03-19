@@ -50,6 +50,11 @@ EXPORT_LIBRARY = 1
 MODULE_NAME = nsPlacesModule
 IS_COMPONENT = 1
 
+EXPORTS_NAMESPACES = mozilla/places
+
+EXPORTS_mozilla/places = \
+  History.h \
+  $(NULL)
 
 CPPSRCS = \
           nsAnnoProtocolHandler.cpp \
@@ -93,4 +98,6 @@ EXTRA_JS_MODULES = \
 
 EXTRA_PP_JS_MODULES = utils.js
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

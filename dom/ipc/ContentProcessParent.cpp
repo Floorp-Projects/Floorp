@@ -41,13 +41,16 @@
 #include "TabParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/IHistory.h"
 
 #include "nsIObserverService.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsDocShellCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsNetUtil.h"
 #include "nsChromeRegistry.h"
 
 using namespace mozilla::ipc;
@@ -231,6 +234,23 @@ ContentProcessParent::RequestRunToCompletion()
     }
 
     return !!mRunToCompletionDepth;
+}
+
+bool
+ContentProcessParent::RecvStartVisitedQuery(const nsCString& aURISpec, nsresult* rv)
+{
+    // reconstruct our IPDL-passed nsIURI
+    nsCOMPtr<nsIURI> newURI;
+    *rv = NS_NewURI(getter_AddRefs(newURI), aURISpec);
+    if (NS_SUCCEEDED(*rv)) {
+        nsCOMPtr<IHistory> history = do_GetService(NS_IHISTORY_CONTRACTID);
+        if (history) {
+            *rv = history->RegisterVisitedCallback(newURI, nsnull);
+        }
+    } else {
+        *rv = NS_ERROR_UNEXPECTED; 
+    }  
+    return true;
 }
 
 /* void onDispatchedEvent (in nsIThreadInternal thread); */

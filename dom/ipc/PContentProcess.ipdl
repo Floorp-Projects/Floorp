@@ -66,9 +66,11 @@ child:
     // A dummy message to make sure PContentProcess contains methods to create
     // Shmem segments.
     async Dummy(Shmem foo);
+    async NotifyVisited(nsCString aURISpec, bool mIsVisited);
 
 parent:
     PNecko();
+    sync StartVisitedQuery(nsCString aURISpec) returns (nsresult rv);
 };
 
 }
