@@ -151,26 +151,26 @@ window.opener.SimpleTest.waitForFocus(doTest, window);
   <resizer id="html" dir="bottomend" element="_parent"/>
 </html:div>
 <hbox id="anchor" align="start" style="margin-left: 100px;">
-  <hbox id="inside-container">
+  <hbox id="inside-container" align="start">
     <hbox minwidth="45" minheight="41"/>
     <resizer id="inside" dir="bottomend" element="_parent"/>
   </hbox>
-  <hbox id="inside-large-container" width="70" height="70">
+  <hbox id="inside-large-container" width="70" height="70" align="start">
     <resizer id="inside-large" dir="bottomend" element="_parent"/>
   </hbox>
-  <hbox id="inside-with-border-container" style="border: 5px solid red; padding: 2px; margin: 2px;">
+  <hbox id="inside-with-border-container" style="border: 5px solid red; padding: 2px; margin: 2px;" align="start">
     <hbox minwidth="35" minheight="30"/>
     <resizer id="inside-with-border" dir="bottomend" element="_parent"/>
   </hbox>
 </hbox>
 
-<panel id="inside-popup-container" onpopupshown="popupShown(event)" onpopuphidden="popupHidden()">
+<panel id="inside-popup-container" align="start" onpopupshown="popupShown(event)" onpopuphidden="popupHidden()">
   <resizer id="inside-popup" dir="bottomend"/>
   <hbox width="50" height="50" flex="1"/>
 </panel>
 <resizer id="outside-popup" dir="bottomend" element="outside-popup-container"/>
 
-<panel id="anchored-panel-container" onpopupshown="anchoredPopupShown(event)"
+<panel id="anchored-panel-container" align="start" onpopupshown="anchoredPopupShown(event)"
        onpopuphidden="popupHidden()">
   <hbox width="50" height="50" flex="1"/>
   <resizer id="anchored-panel" width="20" height="20"/>
