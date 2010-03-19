@@ -407,6 +407,9 @@ function Tabs() {
 
         switch (event.type) {
         case "TabSelect":
+          tabsMixIns.bubble("onFocus",
+                           trackedTabs.get(chromeTab),
+                           true);
           break;
         case "TabOpen":
           newBrowserTab(tabbrowser, chromeTab);
