@@ -81,6 +81,7 @@ GetRefreshDriverForDoc(nsIDocument* aDoc)
 
 nsSMILAnimationController::nsSMILAnimationController()
   : mResampleNeeded(PR_FALSE),
+    mDeferredStartSampling(PR_FALSE),
     mDocument(nsnull)
 {
   mAnimationElementTable.Init();
@@ -150,7 +151,11 @@ nsSMILAnimationController::Resume(PRUint32 aType)
 
   if (wasPaused && !mPauseState && mChildContainerTable.Count()) {
     Sample(); // Run the first sample manually
-    StartSampling(GetRefreshDriverForDoc(mDocument));
+    if (mAnimationElementTable.Count()) {
+      StartSampling(GetRefreshDriverForDoc(mDocument));
+    } else {
+      mDeferredStartSampling = PR_TRUE;
+    }
   }
 }
 
@@ -185,6 +190,14 @@ nsSMILAnimationController::RegisterAnimationElement(
                                   nsISMILAnimationElement* aAnimationElement)
 {
   mAnimationElementTable.PutEntry(aAnimationElement);
+  if (mDeferredStartSampling) {
+    // mAnimationElementTable was empty until we just inserted its first element
+    NS_ABORT_IF_FALSE(mAnimationElementTable.Count() == 1,
+                      "we shouldn't have deferred sampling if we already had "
+                      "animations registered");
+    mDeferredStartSampling = PR_FALSE;
+    StartSampling(GetRefreshDriverForDoc(mDocument));
+  }
 }
 
 void
@@ -695,7 +708,11 @@ nsSMILAnimationController::AddChild(nsSMILTimeContainer& aChild)
 
   if (!mPauseState && mChildContainerTable.Count() == 1) {
     Sample(); // Run the first sample manually
-    StartSampling(GetRefreshDriverForDoc(mDocument));
+    if (mAnimationElementTable.Count()) {
+      StartSampling(GetRefreshDriverForDoc(mDocument));
+    } else {
+      mDeferredStartSampling = PR_TRUE;
+    }
   }
 
   return NS_OK;
