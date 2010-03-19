@@ -740,13 +740,13 @@ function onToolbarDragOver(aEvent)
     toolbar = toolbar.parentNode;
   }
 
-  var previousDragItem = gCurrentDragOverItem;
-
   // Make sure we are dragging over a customizable toolbar.
-  if (!isCustomizableToolbar(toolbar)) {
+  if (!toolbar || !isCustomizableToolbar(toolbar)) {
     gCurrentDragOverItem = null;
     return;
   }
+
+  var previousDragItem = gCurrentDragOverItem;
 
   if (dropTarget.localName == "toolbar") {
     gCurrentDragOverItem = dropTarget;
