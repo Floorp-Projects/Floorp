@@ -96,6 +96,15 @@ child:
                    PRInt32 aModifiers,
                    bool aIgnoreRootScrollFrame);
 
+  /**
+   * @see nsIDOMWindowUtils sendKeyEvent.
+   */
+    sendKeyEvent(nsString aType,
+                 PRInt32 aKeyCode,
+                 PRInt32 aCharCode,
+                 PRInt32 aModifiers,
+                 bool aPreventDefault);
+
     /**
      * Activate event forwarding from client to parent.
      */

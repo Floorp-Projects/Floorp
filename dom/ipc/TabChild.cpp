@@ -430,6 +430,22 @@ TabChild::RecvsendMouseEvent(const nsString& aType,
   return true;
 }
 
+bool
+TabChild::RecvsendKeyEvent(const nsString& aType,
+                           const PRInt32& aKeyCode,
+                           const PRInt32& aCharCode,
+                           const PRInt32& aModifiers,
+                           const bool& aPreventDefault)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+  nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+  NS_ENSURE_TRUE(utils, true);
+  PRBool ignored = PR_FALSE;
+  utils->SendKeyEvent(aType, aKeyCode, aCharCode,
+                      aModifiers, aPreventDefault, &ignored);
+  return true;
+}
+
 mozilla::ipc::PDocumentRendererChild*
 TabChild::AllocPDocumentRenderer(
         const PRInt32& x,
