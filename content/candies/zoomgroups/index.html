@@ -22,11 +22,41 @@
       }
       
       .group{
+        border: 1px inset rgba(0,0,0,.3);
         background-color: white;
         cursor: move;
         -moz-box-shadow: inset 2px 2px 12px rgba(0,0,0,.15);        
-      }    
+      }
+      
+      .titlebar{
+        border: 1px solid #ccc;
+        font-size: 12px;
+        line-height: 18px;
+        height: 18px;
+        background: -moz-linear-gradient(90deg, #ccc,#eee);
+      }
 
+      .close{
+        float:right;
+        top:12px; right:0;
+        margin: 1px;
+        width:12px; height:12px;
+        background-color: rgba(0,0,0,.6);
+        font-size: 10px;
+        text-align: center;
+        line-height:13px;
+        color: #DDD;
+        cursor: pointer;
+        -moz-border-radius: 10px;
+        -moz-box-shadow: inset 1px 1px 0px rgba(0,0,0,.5), inset -1px -1px 0px rgba(255,255,255,.5);
+        text-shadow: 1px 1px 1px rgba(0,0,0,.5);
+        font-family: Helvetica;
+      }
+      
+      input.name{
+        background: transparent;
+        border: none;
+      }
 
       /* Resizable
       ----------------------------------*/

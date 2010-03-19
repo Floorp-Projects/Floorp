@@ -5,6 +5,26 @@ var numCmp = function(a,b){ return a-b; }
 function min(list){ return list.slice().sort(numCmp)[0]; }
 function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 
+function isEventOverElement(event, el){
+  var hit = {nodeName: null};
+  var isOver = false;
+  
+  var hiddenEls = [];
+  while(hit.nodeName != "BODY" && hit.nodeName != "HTML"){
+    hit = document.elementFromPoint(event.clientX, event.clientY);
+    if( hit == el ){
+      isOver = true;
+      break;
+    }
+    $(hit).hide();
+    hiddenEls.push(hit);
+  }
+  
+  var hidden;
+  [$(hidden).show() for([,hidden] in Iterator(hiddenEls))];
+  return isOver;
+}
+
 function Group(){}
 Group.prototype = {
   _children: [],
@@ -65,6 +85,32 @@ Group.prototype = {
         bottom: 0, right: 0,
       }).appendTo(container);
 
+    var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
+      .appendTo(container)
+    
+    titlebar.css({
+        width: container.width(),
+        position: "relative",
+        top: -(titlebar.height()+2),
+        left: -1,
+      })
+
+    // On delay, show the title bar.
+    var shouldShow = false;
+    container.mouseover(function(){
+      shouldShow = true;
+      setTimeout(function(){
+        if( shouldShow == false ) return;
+        container.find("input").focus();
+        titlebar
+          .css({width: container.width()})
+          .animate({ opacity: 1}).dequeue();        
+      }, 500);
+    }).mouseout(function(e){
+      shouldShow = false;
+      if( isEventOverElement(e, container.get(0) )) return;
+      titlebar.animate({opacity:0}).dequeue();
+    })
 
     this._container = container;
     
@@ -172,13 +218,13 @@ Group.prototype = {
         $dragged.data("group").remove($dragged);
         $dragged.removeClass("willGroup");
       },
-      drop: function(e){
+      drop: function(){
         $dragged.removeClass("willGroup");
         self.add( $dragged.get(0) )
       },
       accept: ".tab",
     });
-    
+        
     $(container).resizable({
       handles: "se",
       aspectRatio: true,
@@ -306,7 +352,5 @@ function scaleTab( el, factor ){
 $(".tab").data('isDragging', false)
   .draggable(window.Groups.dragOptions)
   .droppable(window.Groups.dropOptions);
-
-
 
 })();
