@@ -98,6 +98,10 @@
 #include "nsSVGOuterSVGFrame.h"
 #endif
 
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
+
 using namespace mozilla::layers;
 
 /**
@@ -777,6 +781,28 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
    * so we can just subtract out the different.
    */
   return widgetToView - aFrame->GetOffsetTo(rootFrame);
+}
+
+nsIFrame*
+nsLayoutUtils::GetPopupFrameForEventCoordinates(const nsEvent* aEvent)
+{
+#ifdef MOZ_XUL
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (!pm) {
+    return nsnull;
+  }
+  nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
+  PRUint32 i;
+  // Search from top to bottom
+  for (i = 0; i < popups.Length(); i++) {
+    nsIFrame* popup = popups[i];
+    if (popup->GetOverflowRect().Contains(
+          GetEventCoordinatesRelativeTo(aEvent, popup))) {
+      return popup;
+    }
+  }
+#endif
+  return nsnull;
 }
 
 gfxMatrix

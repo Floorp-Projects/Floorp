@@ -6156,27 +6156,16 @@ PresShell::HandleEvent(nsIView         *aView,
     // list.
     if (framePresContext == rootPresContext &&
         frame == FrameManager()->GetRootFrame()) {
-
-#ifdef MOZ_XUL
-      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-      if (pm) {
-        nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
-        PRUint32 i;
-        // Search from top to bottom
-        nsIDocument* doc = framePresContext->GetPresShell()->GetDocument();
-        for (i = 0; i < popups.Length(); i++) {
-          nsIFrame* popup = popups[i];
-          if (popup->GetOverflowRect().Contains(
-              nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup)) &&
-              !nsContentUtils::ContentIsCrossDocDescendantOf(
-                 doc, popup->GetContent())) {
-            // The event should target the popup
-            frame = popup;
-            break;
-          }
-        }
+      nsIFrame* popupFrame =
+        nsLayoutUtils::GetPopupFrameForEventCoordinates(aEvent);
+      // If the popupFrame is an ancestor of the 'frame', the frame should
+      // handle the event, otherwise, the popup should handle it.
+      if (popupFrame &&
+          !nsContentUtils::ContentIsCrossDocDescendantOf(
+             framePresContext->GetPresShell()->GetDocument(),
+             popupFrame->GetContent())) {
+        frame = popupFrame;
       }
-#endif
     }
 
     PRBool captureRetarget = PR_FALSE;
