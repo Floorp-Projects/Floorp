@@ -34,7 +34,7 @@ var Page = {
         else {
           if(!$(this).data('isDragging')) {
             var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
-            if( ffVersion < 3.7 ) Utils.error("css-transforms require Firefox 3.7+");
+            if( ffVersion < 3.7 ) Utils.error("css-transitions require Firefox 3.7+");
             
             // ZOOM!          
             var [w,h] = [$(this).width(), $(this).height()];
