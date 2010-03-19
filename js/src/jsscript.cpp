@@ -1012,7 +1012,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     }
     script->lineno = cg->firstLine;
     if (script->nfixed + cg->maxStackDepth >= JS_BIT(16)) {
-        ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_NEED_DIET, "script");
+        js_ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR,
+                                    JSMSG_NEED_DIET, "script");
         goto bad;
     }
     script->nslots = script->nfixed + cg->maxStackDepth;
