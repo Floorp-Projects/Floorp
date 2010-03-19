@@ -251,6 +251,15 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 static MessageLoop* sIOMessageLoop;
 
 #if defined(MOZ_CRASHREPORTER)
+// FIXME/bug 539522: this out-of-place function is stuck here because
+// IPDL wants access to this crashreporter interface, and
+// crashreporter is built in such a way to make that awkward
+PRBool
+XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump)
+{
+  return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
+}
+
 PRBool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {

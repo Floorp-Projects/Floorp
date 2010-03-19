@@ -76,16 +76,10 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 #ifdef MOZ_IPC
 // Out-of-process crash reporter API.
 
-#if defined(XP_WIN32)
-typedef HANDLE ProcessHandle;
-#else
-typedef int ProcessHandle;
-#endif
-
 // Return true iff a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-NULL.
-bool TakeMinidumpForChild(ProcessHandle childPid, nsIFile** dump NS_OUTPARAM);
+bool TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
 
 #  if defined(XP_WIN32)
 // Parent-side API for children
