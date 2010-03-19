@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe5e070ce, 0xbc17, 0x4b5f, \
-    { 0xb2, 0x21, 0xbf, 0xc3, 0xe1, 0x68, 0xbe, 0x9b } }
+{ 0x0e170e5f, 0xf6d4, 0x44c5, \
+  { 0xbc, 0x2c, 0x44, 0x94, 0x20, 0x7e, 0xcc, 0x30 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -579,25 +579,9 @@ public:
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
-   * Notify the Clipboard that we have something to copy.
-   */
-  NS_IMETHOD DoCopy() = 0;
-
-  /**
-   * Get the selection of the focussed element (either the page selection,
-   * or the selection for a text field).
-   */
-  NS_IMETHOD GetSelectionForCopy(nsISelection** outSelection) = 0;
-
-  /**
    * Get link location.
    */
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
-
-  /**
-   * Get the doc or the selection as text or html.
-   */
-  NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.

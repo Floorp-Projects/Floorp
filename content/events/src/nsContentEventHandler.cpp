@@ -89,8 +89,8 @@ nsContentEventHandler::InitCommon()
   nsresult rv = mPresShell->FlushPendingNotifications(Flush_Layout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPresShell->GetSelectionForCopy(getter_AddRefs(mSelection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCopySupport::GetSelectionForCopy(mPresShell->GetDocument(),
+                                     getter_AddRefs(mSelection));
   NS_ASSERTION(mSelection,
                "GetSelectionForCopy succeeded, but the result is null");
 
