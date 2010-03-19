@@ -1142,127 +1142,65 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   return result;
 }
 
-nsresult nsPlaintextEditor::GetClipboardEventTarget(nsIDOMNode** aEventTarget)
+PRBool
+nsPlaintextEditor::CanCutOrCopy()
 {
-  NS_ENSURE_ARG_POINTER(aEventTarget);
-  *aEventTarget = nsnull;
-
   nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
+    return PR_FALSE;
 
-  return nsCopySupport::GetClipboardEventTarget(selection, aEventTarget);
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+  return !isCollapsed;
 }
 
-nsresult nsPlaintextEditor::FireClipboardEvent(PRUint32 msg,
-                                               PRBool* aPreventDefault)
+PRBool
+nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
 {
-  *aPreventDefault = PR_FALSE;
+  if (aType == NS_PASTE)
+    ForceCompositionEnd();
 
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps)
-    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+  NS_ENSURE_TRUE(presShell, PR_FALSE);
 
-  // Unsafe to fire event during reflow (bug 396108)
-  PRBool isReflowing = PR_TRUE;
-  nsresult rv = ps->IsReflowLocked(&isReflowing);
-  if (NS_FAILED(rv) || isReflowing)
-    return NS_OK;
+  nsCOMPtr<nsISelection> selection;
+  if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
+    return PR_FALSE;
 
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  if (NS_FAILED(rv))
-    // On failure to get event target, just forget about it and don't fire.
-    return NS_OK;
+  if (!nsCopySupport::FireClipboardEvent(aType, presShell, selection))
+    return PR_FALSE;
 
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent evt(PR_TRUE, msg);
-  nsEventDispatcher::Dispatch(eventTarget, ps->GetPresContext(), &evt,
-                              nsnull, &status);
-  // if event handler return'd false (PreventDefault)
-  if (status == nsEventStatus_eConsumeNoDefault)
-    *aPreventDefault = PR_TRUE;
-
-  // Did the event handler cause the editor to be destroyed? (ie. the input
-  // element was removed from the document)  Don't proceed with command,
-  // could crash, definitely does during paste.
-  if (mDidPreDestroy)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return NS_OK;
+  // If the event handler caused the editor to be destroyed, return false.
+  // Otherwise return true to indicate that the event was not cancelled.
+  return !mDidPreDestroy;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_CUT, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
-
-  nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRBool isCollapsed;
-  if (NS_SUCCEEDED(selection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
-    return NS_OK;  // just return ok so no JS error is thrown
-
-  // ps should be guaranteed by FireClipboardEvent not failing
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  rv = ps->DoCopy();
-  if (NS_SUCCEEDED(rv))
-    rv = DeleteSelection(eNone);
-  return rv;
+  if (FireClipboardEvent(NS_CUT))
+    return DeleteSelection(eNone);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool *aCanCut)
 {
   NS_ENSURE_ARG_POINTER(aCanCut);
-  *aCanCut = PR_FALSE;
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
-    
-  PRBool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(rv)) return rv;
-
-  *aCanCut = !isCollapsed && IsModifiable();
+  *aCanCut = IsModifiable() && CanCutOrCopy();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_COPY, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
-
-  // ps should be guaranteed by FireClipboardEvent not failing
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  return ps->DoCopy();
+  FireClipboardEvent(NS_COPY);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
 {
   NS_ENSURE_ARG_POINTER(aCanCopy);
-  *aCanCopy = PR_FALSE;
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
-    
-  PRBool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(rv)) return rv;
-
-  *aCanCopy = !isCollapsed;
+  *aCanCopy = CanCutOrCopy();
   return NS_OK;
 }
-
 
 // Shared between OutputToString and OutputToStream
 NS_IMETHODIMP

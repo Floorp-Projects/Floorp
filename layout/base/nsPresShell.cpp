@@ -738,12 +738,8 @@ public:
 
   NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
-  
-  NS_IMETHOD DoCopy();
-  NS_IMETHOD GetSelectionForCopy(nsISelection** outSelection);
 
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString);
-  NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue);
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
@@ -4298,57 +4294,6 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-PresShell::GetSelectionForCopy(nsISelection** outSelection)
-{
-  nsresult rv = NS_OK;
-
-  *outSelection = nsnull;
-
-  if (!mDocument) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> content;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mDocument->GetWindow());
-
-    nsCOMPtr<nsIDOMElement> focusedElement;
-    fm->GetFocusedElementForWindow(window, PR_FALSE, nsnull, getter_AddRefs(focusedElement));
-    content = do_QueryInterface(focusedElement);
-  }
-
-  nsCOMPtr<nsISelection> sel;
-  if (content)
-  {
-    //check to see if we need to get selection from frame
-    //optimization that MAY need to be expanded as more things implement their own "selection"
-    nsCOMPtr<nsIDOMNSHTMLInputElement>    htmlInputElement(do_QueryInterface(content));
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextAreaElement(do_QueryInterface(content));
-    if (htmlInputElement || htmlTextAreaElement)
-    {
-      nsIFrame *htmlInputFrame = content->GetPrimaryFrame();
-      if (!htmlInputFrame) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = htmlInputFrame->
-        GetSelectionController(mPresContext,getter_AddRefs(selCon));
-      if (NS_FAILED(rv)) return rv;
-      if (!selCon) return NS_ERROR_FAILURE;
-
-      rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                getter_AddRefs(sel));
-    }
-  }
-  if (!sel) {
-    sel = mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL);
-    rv = NS_OK;
-  }
-
-  *outSelection = sel;
-  NS_IF_ADDREF(*outSelection);
-  return rv;
-}
-
 NS_IMETHODIMP_(void)
 PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                   PRBool aFlushOnHoverChange)
@@ -4403,67 +4348,6 @@ PresShell::ClearMouseCapture(nsIView* aView)
   // or a drag has started. Otherwise, someone could start capture during
   // the modal dialog or drag.
   gCaptureInfo.mAllowed = PR_FALSE;
-}
-
-NS_IMETHODIMP
-PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& aOutValue)
-{
-  aOutValue.Truncate();
-  
-  if (!mDocument) return NS_ERROR_FAILURE;
-
-  nsresult rv;
-  nsCOMPtr<nsISelection> sel;
-
-  // Now we have the selection.  Make sure it's nonzero:
-  if (aSelectionOnly)
-  {
-    rv = GetSelectionForCopy(getter_AddRefs(sel));
-    if (NS_FAILED(rv)) return rv;
-    if (!sel) return NS_ERROR_FAILURE;
-  
-    PRBool isCollapsed;
-    sel->GetIsCollapsed(&isCollapsed);
-    if (isCollapsed)
-      return NS_OK;
-  }
-  
-  // call the copy code
-  return nsCopySupport::GetContents(aMimeType, aFlags, sel,
-                                    mDocument, aOutValue);
-}
-
-NS_IMETHODIMP
-PresShell::DoCopy()
-{
-  if (!mDocument) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISelection> sel;
-  nsresult rv = GetSelectionForCopy(getter_AddRefs(sel));
-  if (NS_FAILED(rv)) 
-    return rv;
-  if (!sel) 
-    return NS_ERROR_FAILURE;
-
-  // Now we have the selection.  Make sure it's nonzero:
-  PRBool isCollapsed;
-  sel->GetIsCollapsed(&isCollapsed);
-  if (isCollapsed)
-    return NS_OK;
-
-  // call the copy code
-  rv = nsCopySupport::HTMLCopy(sel, mDocument, nsIClipboard::kGlobalClipboard);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Now that we have copied, update the Paste menu item
-  nsPIDOMWindow *domWindow = mDocument->GetWindow();
-  if (domWindow)
-  {
-    domWindow->UpdateCommands(NS_LITERAL_STRING("clipboard"));
-  }
-  
-  return NS_OK;
 }
 
 NS_IMETHODIMP

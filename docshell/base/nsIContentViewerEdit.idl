@@ -40,12 +40,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(1691a02f-53b2-4cb8-8769-48e7efc908b8)]
+[scriptable, uuid(AF13EA3A-D488-4308-B843-526E055AB943)]
 interface nsIContentViewerEdit : nsISupports
 {
-	void search();
-	readonly attribute boolean searchable;
-
 	void clearSelection();
 	void selectAll();
 
@@ -61,12 +58,6 @@ interface nsIContentViewerEdit : nsISupports
 	const long COPY_IMAGE_ALL = -1;
 	void copyImage(in long aCopyFlags);
 	readonly attribute boolean inImage;
-
-	void cutSelection();
-	readonly attribute boolean cutable;
-
-	void paste();
-	readonly attribute boolean pasteable;
 
 	AString getContents(in string aMimeType, in boolean aSelectionOnly);
 	readonly attribute boolean canGetContents;
