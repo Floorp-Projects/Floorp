@@ -48,7 +48,8 @@
  */
 
 const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-const MAX_WAIT_SECONDS = 3;
+const MAX_WAIT_SECONDS = 4;
+const INTERVAL_CUSHION = 2;
 
 let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
@@ -107,7 +108,8 @@ function run_next_test() {
     };
     os.addObserver(gCurrentTest.observer, TOPIC_EXPIRATION_FINISHED, false);
     setInterval(gCurrentTest.interval);
-    let waitSeconds = Math.min(MAX_WAIT_SECONDS, gCurrentTest.interval + 1);
+    let waitSeconds = Math.min(MAX_WAIT_SECONDS,
+                               gCurrentTest.interval + INTERVAL_CUSHION);
     do_timeout(waitSeconds * 1000, check_result);
   }
   else {
