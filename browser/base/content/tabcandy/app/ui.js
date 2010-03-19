@@ -27,14 +27,35 @@ var Page = {
         $div.draggable(window.Groups.dragOptions);
         $div.droppable(window.Groups.dropOptions);
       }
-        
+              
       $div.mouseup(function(e){
         if( e.target.className == "close" ){
           $(this).find("canvas").data("link").tab.close(); }
         else {
-          if(!$(this).data('isDragging')) {
-            Navbar.show();
-            $(this).find("canvas").data("link").tab.focus();            
+          if(!$(this).data('isDragging')) {  
+            // ZOOM!          
+            var [w,h] = [$(this).width(), $(this).height()];
+            var origPos = $(this).position();
+            var scale = window.innerWidth/w;
+            
+            $(this).addClass("scale-animate").css({
+              top: 0, left: 0,
+              width:w*scale, height:h*scale
+            }).bind("transitionend", function(e){
+              // We will get one of this events for every property CSS-animated...
+              // I choose one randomly (width) and only do things for that.
+              if( e.originalEvent.propertyName != "width" ) return;
+
+              // Switch tabs, and the re-size and re-position the animated
+              // tab image.
+              $(this).find("canvas").data("link").tab.focus();
+              $(this)
+                .removeClass("scale-animate")
+                .css({top: origPos.top, left: origPos.left, width:w, height:h});
+              Navbar.show();
+            })
+            // END ZOOM
+            
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
           }

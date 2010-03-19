@@ -11,7 +11,14 @@
         font-size:250px;
         overflow:hidden; line-height:.5em;
         font-family: "Helvetica";
-        cursor: move;}
+        cursor: move;        
+      }
+      
+      .scale-animate{
+        -moz-transition-property: height, width, left, top, font-size;
+        -moz-transition-duration: .17s;
+        -moz-transition-timing-function: cubic-bezier(1.0, 0.0, 1.0, 1.0);        
+      }
       
       .active{
         -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);
