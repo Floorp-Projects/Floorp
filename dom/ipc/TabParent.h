@@ -77,6 +77,9 @@ public:
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         PRInt32 aButton, PRInt32 aClickCount,
                         PRInt32 aModifiers, PRBool aIgnoreRootScrollFrame);
+    void SendKeyEvent(const nsAString& aType, PRInt32 aKeyCode,
+                      PRInt32 aCharCode, PRInt32 aModifiers,
+                      PRBool aPreventDefault);
 
     virtual mozilla::ipc::PDocumentRendererParent* AllocPDocumentRenderer(
             const PRInt32& x,

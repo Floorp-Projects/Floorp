@@ -1577,6 +1577,23 @@ nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
+                                        PRInt32 aKeyCode,
+                                        PRInt32 aCharCode,
+                                        PRInt32 aModifiers,
+                                        PRBool aPreventDefault)
+{
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    mChildProcess->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers,
+                                aPreventDefault);
+    return NS_OK;
+  }
+#endif
+  return NS_ERROR_FAILURE;
+}
+
 nsresult
 nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 {

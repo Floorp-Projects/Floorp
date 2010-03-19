@@ -166,6 +166,11 @@ public:
                                     const PRInt32&  aClickCount,
                                     const PRInt32&  aModifiers,
                                     const bool&     aIgnoreRootScrollFrame);
+    virtual bool RecvsendKeyEvent(const nsString& aType,
+                                  const PRInt32&  aKeyCode,
+                                  const PRInt32&  aCharCode,
+                                  const PRInt32&  aModifiers,
+                                  const bool&     aPreventDefault);
     virtual bool RecvactivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvloadRemoteScript(const nsString& aURL);
     virtual bool RecvsendAsyncMessageToChild(const nsString& aMessage,
