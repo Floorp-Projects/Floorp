@@ -105,10 +105,6 @@ typedef struct JSEmptyScope         JSEmptyScope;
 typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;
 typedef struct JSThreadData         JSThreadData;
-typedef struct JSToken              JSToken;
-typedef struct JSTokenPos           JSTokenPos;
-typedef struct JSTokenPtr           JSTokenPtr;
-typedef struct JSTokenStream        JSTokenStream;
 typedef struct JSTreeContext        JSTreeContext;
 typedef struct JSTryNote            JSTryNote;
 typedef struct JSWeakRoots          JSWeakRoots;
@@ -149,6 +145,11 @@ namespace js {
 class TraceRecorder;
 struct TraceMonitor;
 class CallStack;
+
+struct TokenStream;
+struct Token;
+struct TokenPos;
+struct TokenPtr;
 
 class ContextAllocPolicy;
 class SystemAllocPolicy;

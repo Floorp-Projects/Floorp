@@ -178,7 +178,7 @@ struct RENode {
 
 typedef struct CompilerState {
     JSContext       *context;
-    JSTokenStream   *tokenStream; /* For reporting errors */
+    TokenStream     *tokenStream; /* For reporting errors */
     const jschar    *cpbegin;
     const jschar    *cpend;
     const jschar    *cp;
@@ -441,9 +441,8 @@ ReportRegExpErrorHelper(CompilerState *state, uintN flags, uintN errorNumber,
                         const jschar *arg)
 {
     if (state->tokenStream) {
-        return js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                           NULL, JSREPORT_UC | flags,
-                                           errorNumber, arg);
+        return ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        NULL, JSREPORT_UC | flags, errorNumber, arg);
     }
     return JS_ReportErrorFlagsAndNumberUC(state->context, flags,
                                           js_GetErrorMessage, NULL,
@@ -1958,7 +1957,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
 }
 
 static JSBool
-CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
+CompileRegExpToAST(JSContext* cx, TokenStream* ts,
                    JSString* str, uintN flags, CompilerState& state)
 {
     uintN i;
@@ -3337,7 +3336,7 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
 #endif
 
 JSRegExp *
-js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+js_NewRegExp(JSContext *cx, TokenStream *ts,
              JSString *str, uintN flags, JSBool flat)
 {
     JSRegExp *re;
@@ -5832,7 +5831,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
+js_NewRegExpObject(JSContext *cx, TokenStream *ts,
                    const jschar *chars, size_t length, uintN flags)
 {
     JSString *str;

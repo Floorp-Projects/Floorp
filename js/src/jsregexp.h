@@ -120,7 +120,7 @@ struct JSRegExp {
 };
 
 extern JSRegExp *
-js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+js_NewRegExp(JSContext *cx, js::TokenStream *ts,
              JSString *str, uintN flags, JSBool flat);
 
 extern JSRegExp *
@@ -183,7 +183,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp);
  * Create, serialize/deserialize, or clone a RegExp object.
  */
 extern JSObject *
-js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
+js_NewRegExpObject(JSContext *cx, js::TokenStream *ts,
                    const jschar *chars, size_t length, uintN flags);
 
 extern JSBool

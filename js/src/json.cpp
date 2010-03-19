@@ -923,7 +923,7 @@ static JSBool
 HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
     jsval keyword;
-    JSTokenType tt = js_CheckKeyword(buf, len);
+    TokenType tt = js_CheckKeyword(buf, len);
     if (tt != TOK_PRIMARY) {
         // bad keyword
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
