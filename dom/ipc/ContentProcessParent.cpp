@@ -54,10 +54,6 @@ using namespace mozilla::ipc;
 using namespace mozilla::net;
 using mozilla::MonitorAutoEnter;
 
-namespace {
-PRBool gSingletonDied = PR_FALSE;
-}
-
 namespace mozilla {
 namespace dom {
 
@@ -66,7 +62,10 @@ ContentProcessParent* ContentProcessParent::gSingleton;
 ContentProcessParent*
 ContentProcessParent::GetSingleton()
 {
-    if (!gSingleton && !gSingletonDied) {
+    if (gSingleton && !gSingleton->IsAlive())
+        gSingleton = nsnull;
+
+    if (!gSingleton) {
         nsRefPtr<ContentProcessParent> parent = new ContentProcessParent();
         if (parent) {
             nsCOMPtr<nsIObserverService> obs =
@@ -103,6 +102,8 @@ ContentProcessParent::ActorDestroy(ActorDestroyReason why)
         threadInt->SetObserver(mOldObserver);
     if (mRunToCompletionDepth)
         mRunToCompletionDepth = 0;
+
+    mIsAlive = false;
 }
 
 TabParent*
@@ -126,6 +127,7 @@ ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
 ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
     , mRunToCompletionDepth(0)
+    , mIsAlive(true)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
@@ -139,9 +141,16 @@ ContentProcessParent::ContentProcessParent()
 ContentProcessParent::~ContentProcessParent()
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    NS_ASSERTION(gSingleton == this, "More than one singleton?!");
-    gSingletonDied = PR_TRUE;
-    gSingleton = nsnull;
+    //If the previous content process has died, a new one could have
+    //been started since.
+    if (gSingleton == this)
+        gSingleton = nsnull;
+}
+
+bool
+ContentProcessParent::IsAlive()
+{
+    return mIsAlive;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(ContentProcessParent,
