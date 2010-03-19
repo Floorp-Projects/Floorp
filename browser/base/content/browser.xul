@@ -520,6 +520,7 @@
 
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
+             ordinal="100"
              collapsed="true">
       <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
             tabbrowser="content"
