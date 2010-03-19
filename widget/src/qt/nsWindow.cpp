@@ -670,6 +670,8 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     if (!mWidget)
         return NS_OK;
 
+    mDirtyScrollArea = mDirtyScrollArea.united(QRect(aRect.x, aRect.y, aRect.width, aRect.height));
+
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
     // QGraphicsItems cannot trigger a repaint themselves, so we start it on the view
@@ -1020,9 +1022,6 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     if (r.isEmpty())
         return nsEventStatus_eIgnore;
 
-    if (r.isEmpty())
-        return nsEventStatus_eIgnore;
-
     if (!mDirtyScrollArea.isEmpty())
         mDirtyScrollArea = QRegion();
 
@@ -1123,7 +1122,8 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
                        gBufferImage->Width(),
                        gBufferImage->Height(),
                        gBufferImage->Stride(),
-                       QImage::Format_RGB32);
+                       gBufferImage->Format() == gfxASurface::ImageFormatRGB16 ?
+                           QImage::Format_RGB16 : QImage::Format_RGB32);
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
                                 QRect(0, 0, rect.width, rect.height));
         }
