@@ -85,6 +85,8 @@ public:
 
     bool RequestRunToCompletion();
 
+    bool IsAlive();
+
 protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
@@ -115,6 +117,7 @@ private:
     int mRunToCompletionDepth;
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
+    bool mIsAlive;
 };
 
 } // namespace dom
