@@ -406,7 +406,7 @@ SyncEngine.prototype = {
     this._log.trace("Downloading & applying server changes");
 
     // Figure out how many total items to fetch this sync; do less on mobile
-    let fetchNum = 1500;
+    let fetchNum = Infinity;
     if (Svc.Prefs.get("client.type") == "mobile")
       fetchNum = 50;
 

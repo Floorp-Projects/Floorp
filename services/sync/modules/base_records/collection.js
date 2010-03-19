@@ -75,7 +75,7 @@ Collection.prototype = {
       args.push('sort=' + this.sort);
     if (this.ids != null)
       args.push("ids=" + this.ids);
-    if (this.limit > 0)
+    if (this.limit > 0 && this.limit != Infinity)
       args.push("limit=" + this.limit);
 
     this.uri.query = (args.length > 0)? '?' + args.join('&') : '';
