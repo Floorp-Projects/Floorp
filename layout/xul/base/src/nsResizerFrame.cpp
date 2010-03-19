@@ -179,23 +179,17 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       nsIntPoint screenPoint(aEvent->refPoint + aEvent->widget->WidgetToScreenOffset());
       nsIntPoint mouseMove(screenPoint - mMouseDownPoint);
 
-      // what direction should we go in? For content resizing, always use
-      // 'bottomend'. For other windows, check the dir attribute.
-      Direction direction;
+      // Determine which direction to resize by checking the dir attribute.
+      // For windows and menus, ensure that it can be resized in that direction.
+      Direction direction = GetDirection();
       if (window || menuPopupFrame) {
-        direction = GetDirection();
         if (menuPopupFrame) {
           menuPopupFrame->CanAdjustEdges(
             (direction.mHorizontal == -1) ? NS_SIDE_LEFT : NS_SIDE_RIGHT,
             (direction.mVertical == -1) ? NS_SIDE_TOP : NS_SIDE_BOTTOM, mouseMove);
         }
       }
-      else if (contentToResize) {
-        direction.mHorizontal =
-          GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL ? -1 : 1;
-        direction.mVertical = 1;
-      }
-      else {
+      else if (!contentToResize) {
         break; // don't do anything if there's nothing to resize
       }
 
@@ -233,9 +227,16 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       }
 
       if (contentToResize) {
-        nsIntRect cssRect =
-          rect.ToAppUnits(aPresContext->AppUnitsPerDevPixel())
-              .ToInsidePixels(nsPresContext::AppUnitsPerCSSPixel());
+        // convert the rectangle into css pixels. When changing the size in a
+        // direction, don't allow the new size to be less that the resizer's
+        // size. This ensures that content isn't resized too small as to make
+        // the resizer invisible.
+        nsRect appUnitsRect = rect.ToAppUnits(aPresContext->AppUnitsPerDevPixel());
+        if (appUnitsRect.width < mRect.width && mouseMove.x)
+          appUnitsRect.width = mRect.width;
+        if (appUnitsRect.height < mRect.height && mouseMove.y)
+          appUnitsRect.height = mRect.height;
+        nsIntRect cssRect = appUnitsRect.ToInsidePixels(nsPresContext::AppUnitsPerCSSPixel());
 
         nsAutoString widthstr, heightstr;
         widthstr.AppendInt(cssRect.width);
@@ -353,7 +354,9 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
   }
 
   if (elementid.EqualsLiteral("_parent")) {
-    return mContent->GetParent();
+    // return the parent, but skip over native anonymous content
+    nsIContent* parent = mContent->GetParent();
+    return parent ? parent->FindFirstNonNativeAnonymous() : nsnull;
   }
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aPresShell->GetDocument());
