@@ -32,7 +32,10 @@ var Page = {
         if( e.target.className == "close" ){
           $(this).find("canvas").data("link").tab.close(); }
         else {
-          if(!$(this).data('isDragging')) {  
+          if(!$(this).data('isDragging')) {
+            var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
+            if( ffVersion < 3.7 ) Utils.error("css-transforms require Firefox 3.7+");
+            
             // ZOOM!          
             var [w,h] = [$(this).width(), $(this).height()];
             var origPos = $(this).position();
