@@ -2796,10 +2796,14 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
     return nsnull;
 }
 
-NS_IMETHODIMP_(JSClass *)
-nsXPConnect::GetNativeWrapperClass()
+NS_IMETHODIMP_(void)
+nsXPConnect::GetNativeWrapperGetPropertyOp(JSPropertyOp *getPropertyPtr)
 {
-    return XPCNativeWrapper::GetJSClass();
+    NS_ASSERTION(XPCNativeWrapper::GetJSClass(true)->getProperty ==
+                 XPCNativeWrapper::GetJSClass(false)->getProperty,
+                 "Call and NoCall XPCNativeWrapper Class must use the same "
+                 "getProperty hook.");
+    *getPropertyPtr = XPCNativeWrapper::GetJSClass(true)->getProperty;
 }
 
 /* These are here to be callable from a debugger */

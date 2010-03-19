@@ -1474,7 +1474,7 @@ jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
 
 static const JSClass *sObjectClass = nsnull;
-const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
+JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class
