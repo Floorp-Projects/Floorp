@@ -115,6 +115,9 @@ child:
     sendAsyncMessageToChild(nsString aMessage, nsString aJSON);
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
+
+    registerChromePackage(nsString aPackage, nsString aBaseURI, PRUint32 aFlags);
+    registerChromeResource(nsString aPackage, nsString aResolvedURI);
 };
 
 }
