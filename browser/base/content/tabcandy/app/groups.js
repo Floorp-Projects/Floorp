@@ -357,7 +357,7 @@ $(".tab").click(function(){
   // ZOOM!
 
   var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
-  if( ffVersion < 3.7 ) Utils.error("css-transforms require Firefox 3.7+");  
+  if( ffVersion < 3.7 ) Utils.error("css-transitions require Firefox 3.7+");  
   
   var [w,h] = [$(this).width(), $(this).height()];
   var origPos = $(this).position();
