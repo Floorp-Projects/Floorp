@@ -160,12 +160,10 @@ static const nsModuleComponentInfo components[] =
       NS_BIDIKEYBOARD_CID,
       "@mozilla.org/widget/bidikeyboard;1",
       nsBidiKeyboardConstructor },
-#ifdef Q_WS_X11
     { "Qt Idle Service",
        NS_IDLE_SERVICE_CID,
        "@mozilla.org/widget/idleservice;1",
        nsIdleServiceQtConstructor },
-#endif
     { "Qt Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
