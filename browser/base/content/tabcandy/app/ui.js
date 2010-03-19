@@ -91,7 +91,12 @@ var Page = {
     Tabs.onClose(function(){
       Utils.homeTab.focus();
       return false;
-    })
+    });
+    
+    Utils.ilog(Tabs.onFocus)
+    Tabs.onFocus(function(tab){
+      Utils.log("HHHIIII")
+    });
     
     $("#tabbar").toggle(
       function(){Tabbar.hide()},
