@@ -39,9 +39,12 @@
 #ifndef ipc_glue_RPCChannel_h
 #define ipc_glue_RPCChannel_h 1
 
+#include <stdio.h>
+
 // FIXME/cjones probably shouldn't depend on STL
 #include <queue>
 #include <stack>
+#include <vector>
 
 #include "base/basictypes.h"
 
@@ -140,7 +143,7 @@ public:
 
     // Return true iff this has code on the C++ stack.
     bool IsOnCxxStack() const {
-        return 0 < mCxxStackFrames;
+        return !mCxxStackFrames.empty();
     }
 
     NS_OVERRIDE
@@ -183,7 +186,7 @@ protected:
 
     NS_OVERRIDE
     virtual bool ShouldDeferNotifyMaybeError() {
-        return 0 < mCxxStackFrames;
+        return IsOnCxxStack();
     }
 
     bool EventOccurred();
@@ -207,25 +210,44 @@ protected:
         Listener()->OnEnteredCxxStack();
     }
 
-    void ExitedCxxStack()
-    {
-        Listener()->OnExitedCxxStack();
-    }
+    void ExitedCxxStack();
+
+    enum Direction { IN_MESSAGE, OUT_MESSAGE };
+    struct RPCFrame {
+        RPCFrame(Direction direction, const Message* msg) :
+            mDirection(direction), mMsg(msg)
+        { }
+
+        void Describe(int32* id, const char** dir, const char** sems,
+                      const char** name)
+            const
+        {
+            *id = mMsg->routing_id();
+            *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
+            *sems = mMsg->is_rpc() ? "rpc" : mMsg->is_sync() ? "sync" : "async";
+            *name = mMsg->name();
+        }
+
+        Direction mDirection;
+        const Message* mMsg;
+    };
 
     class NS_STACK_CLASS CxxStackFrame
     {
     public:
-        CxxStackFrame(RPCChannel& that) : mThat(that) {
-            NS_ABORT_IF_FALSE(0 <= mThat.mCxxStackFrames,
-                              "mismatched CxxStackFrame ctor/dtor");
+
+        CxxStackFrame(RPCChannel& that, Direction direction,
+                      const Message* msg) : mThat(that) {
             mThat.AssertWorkerThread();
 
-            if (0 == mThat.mCxxStackFrames++)
+            if (mThat.mCxxStackFrames.empty())
                 mThat.EnteredCxxStack();
+            mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
         }
 
         ~CxxStackFrame() {
-            bool exitingStack = (0 == --mThat.mCxxStackFrames);
+            mThat.mCxxStackFrames.pop_back();
+            bool exitingStack = mThat.mCxxStackFrames.empty();
 
             // mListener could have gone away if Close() was called while
             // RPCChannel code was still on the stack
@@ -254,6 +276,10 @@ protected:
     void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,
                     const char* type="rpc", bool reply=false);
+
+    // This method is only safe to call on the worker thread, or in a
+    // debugger with all threads paused.  |outfile| defaults to stdout.
+    void DumpRPCStack(FILE* outfile=NULL, const char* const pfx="");
 
     // 
     // Queue of all incoming messages, except for replies to sync
@@ -350,15 +376,15 @@ protected:
     // True iff the parent has put us in a |BlockChild()| state.
     bool mBlockedOnParent;
 
-    // Approximation of number of Sync/RPCChannel-code frames on the
-    // C++ stack.  It can only be interpreted as the implication
+    // Approximation of Sync/RPCChannel-code frames on the C++ stack.
+    // It can only be interpreted as the implication
     //
-    //  mCxxStackDepth > 0 => RPCChannel code on C++ stack
+    //  !mCxxStackFrames.empty() => RPCChannel code on C++ stack
     //
     // This member is only accessed on the worker thread, and so is
     // not protected by mMutex.  It is managed exclusively by the
     // helper |class CxxStackFrame|.
-    int mCxxStackFrames;
+    std::vector<RPCFrame> mCxxStackFrames;
     
 private:
 

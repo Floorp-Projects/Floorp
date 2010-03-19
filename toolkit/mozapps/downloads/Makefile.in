@@ -51,12 +51,6 @@ EXTRA_JS_MODULES = \
   DownloadUtils.jsm \
   $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_JS_MODULES += \
-  DownloadTaskbarProgress.jsm \
-  $(NULL)
-endif
-
 ifdef ENABLE_TESTS
 DIRS += tests
 endif

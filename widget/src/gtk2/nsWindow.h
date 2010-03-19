@@ -81,15 +81,15 @@
 #include "prlog.h"
 #include "nsTArray.h"
 
+#include "nsGtkIMModule.h"
+
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
-extern PRLogModuleInfo *gWidgetIMLog;
 extern PRLogModuleInfo *gWidgetDragLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
 #define LOG(args) PR_LOG(gWidgetLog, 4, args)
 #define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
-#define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
 #define LOGDRAG(args) PR_LOG(gWidgetDragLog, 4, args)
 #define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
 
@@ -97,7 +97,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 #define LOG(args)
 #define LOGFOCUS(args)
-#define LOGIM(args)
 #define LOGDRAG(args)
 #define LOGDRAW(args)
 
@@ -310,90 +309,21 @@ public:
 
     NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
-#ifdef USE_XIM
-    void               IMEInitData       (void);
-    void               IMEReleaseData    (void);
-    void               IMEDestroyContext (void);
-    void               IMESetFocus       (void);
-    void               IMELoseFocus      (void);
-    void               IMEComposeStart   (void);
-    void               IMEComposeText    (const PRUnichar *aText,
-                                          const PRInt32 aLen,
-                                          const gchar *aPreeditString,
-                                          const gint aCursorPos,
-                                          const PangoAttrList *aFeedback);
-    void               IMEComposeEnd     (void);
-    GtkIMContext*      IMEGetContext     (void);
-    // "Enabled" means the users can use all IMEs.
-    // I.e., the focus is in the normal editors.
-    PRBool             IMEIsEnabledState (void);
-    // "Editable" means the users can input characters. They may be not able to
-    // use IMEs but they can use dead keys.
-    // I.e., the forcus is in the normal editors or the password editors or
-    // the |ime-mode: disabled;| editors.
-    PRBool             IMEIsEditableState(void);
-    nsWindow*          IMEComposingWindow(void);
-    void               IMECreateContext  (void);
-    PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
-    void               IMESetCursorPosition(const nsTextEventReply& aReply);
+    MozContainer*      GetMozContainer() { return mContainer; }
+    GdkWindow*         GetGdkWindow() { return mGdkWindow; }
+    PRBool             IsDestroyed() { return mIsDestroyed; }
 
-    /*
-     *  |mIMEData| has all IME data for the window and its children widgets.
-     *  Only stand-alone windows and child windows embedded in non-Mozilla GTK
-     *  containers own IME contexts.
-     *  But this is referred from all children after the widget gets focus.
-     *  The children refers to its owning window's object.
-     */
-    struct nsIMEData {
-        // Actual context. This is used for handling the user's input.
-        GtkIMContext       *mContext;
-        // mSimpleContext is used for the password field and
-        // the |ime-mode: disabled;| editors. These editors disable IME.
-        // But dead keys should work. Fortunately, the simple IM context of
-        // GTK2 support only them.
-        GtkIMContext       *mSimpleContext;
-        // mDummyContext is a dummy context and will be used in IMESetFocus()
-        // when mEnabled is false. This mDummyContext IM state is always
-        // "off", so it works to switch conversion mode to OFF on IM status
-        // window.
-        GtkIMContext       *mDummyContext;
-        // This mComposingWindow is set in IMEComposeStart(), when user starts
-        // composition, then unset in IMEComposeEnd() when user ends the
-        // composition. We will keep the widget where the actual composition is
-        // started. During the composition, we may get some events like
-        // ResetInputStateInternal() and CancelIMECompositionInternal() by
-        // changing input focus, we will use the original widget of
-        // mComposingWindow to commit or reset the composition.
-        nsWindow           *mComposingWindow;
-        // Owner of this struct.
-        // The owner window must release the contexts at destroying.
-        nsWindow           *mOwner;
-        // The reference counter. When this will be zero by the decrement,
-        // the decrementer must free the instance.
-        PRUint32           mRefCount;
-        // IME enabled state in this window.
-        PRUint32           mEnabled;
-        nsIMEData(nsWindow* aOwner) {
-            mContext         = nsnull;
-            mSimpleContext   = nsnull;
-            mDummyContext    = nsnull;
-            mComposingWindow = nsnull;
-            mOwner           = aOwner;
-            mRefCount        = 1;
-            mEnabled         = nsIWidget::IME_STATUS_ENABLED;
-        }
-    };
-    nsIMEData          *mIMEData;
+    // If this dispatched the keydown event actually, this returns TRUE,
+    // otherwise, FALSE.
+    PRBool             DispatchKeyDownEvent(GdkEventKey *aEvent,
+                                            PRBool *aIsCancelled);
 
     NS_IMETHOD ResetInputState();
-    NS_IMETHOD SetIMEOpenState(PRBool aState);
-    NS_IMETHOD GetIMEOpenState(PRBool* aState);
     NS_IMETHOD SetIMEEnabled(PRUint32 aState);
     NS_IMETHOD GetIMEEnabled(PRUint32* aState);
     NS_IMETHOD CancelIMEComposition();
+    NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
-
-#endif
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
    void                ApplyTransparencyBitmap();
@@ -568,6 +498,20 @@ private:
         *flag &= ~mask;
     }
 
+    /**
+     * |mIMModule| takes all IME related stuff.
+     *
+     * This is owned by the top-level nsWindow or the topmost child
+     * nsWindow embedded in a non-Gecko widget.
+     *
+     * The instance is created when the top level widget is created.  And when
+     * the widget is destroyed, it's released.  All child windows refer its
+     * ancestor widget's instance.  So, one set of IM contexts is created for
+     * all windows in a hierarchy.  If the children are released after the top
+     * level window is released, the children still have a valid pointer,
+     * however, IME doesn't work at that time.
+     */
+    nsRefPtr<nsGtkIMModule> mIMModule;
 };
 
 class nsChildWindow : public nsWindow {

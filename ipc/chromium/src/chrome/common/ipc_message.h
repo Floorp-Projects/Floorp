@@ -62,7 +62,12 @@ class Message : public Pickle {
 
   // Initialize a message with a user-defined type, priority value, and
   // destination WebView ID.
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   Message(int32 routing_id, uint16 type, PriorityValue priority);
+#else
+  Message(int32 routing_id, uint16 type, PriorityValue priority,
+          const char* const name="???");
+#endif
 
   // Initializes a message from a const block of data.  The data is not copied;
   // instead the data is merely referenced by this message.  Only const methods
@@ -165,6 +170,14 @@ class Message : public Pickle {
 
   void set_seqno(int32 seqno) {
     header()->seqno = seqno;
+  }
+
+  const char* const name() const {
+    return name_;
+  }
+
+  void set_name(const char* const name) {
+    name_ = name;
   }
 #endif
 
@@ -296,7 +309,11 @@ class Message : public Pickle {
     return headerT<Header>();
   }
 
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   void InitLoggingVariables();
+#else
+  void InitLoggingVariables(const char* const name="???");
+#endif
 
 #if defined(OS_POSIX)
   // The set of file descriptors associated with this message.
@@ -312,6 +329,10 @@ class Message : public Pickle {
   const FileDescriptorSet* file_descriptor_set() const {
     return file_descriptor_set_.get();
   }
+#endif
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  const char* name_;
 #endif
 
 #ifdef IPC_MESSAGE_LOG_ENABLED

@@ -37,14 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QX11Info>
+
 #include "nsIdleServiceQt.h"
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "prlink.h"
-
-
-#ifdef Q_WS_X11
-#include <QX11Info>
 
 typedef PRBool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
                                                  int* error_base);
@@ -134,27 +132,3 @@ nsIdleServiceQt::GetIdleTime(PRUint32 *aTimeDiff)
 
     return NS_ERROR_FAILURE;
 }
-
-#else
-
-NS_IMPL_ISUPPORTS1(nsIdleServiceQt, nsIIdleService)
-
-nsIdleServiceQt::nsIdleServiceQt()
-{
-}
-
-static void Initialize()
-{
-}
-
-nsIdleServiceQt::~nsIdleServiceQt()
-{
-}
-
-NS_IMETHODIMP
-nsIdleServiceQt::GetIdleTime(PRUint32 *aTimeDiff)
-{
-    return NS_ERROR_FAILURE;
-}
-
-#endif
