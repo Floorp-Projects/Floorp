@@ -142,9 +142,9 @@ nsDOMWindowUtils::GetDocCharsetIsForced(PRBool *aIsForced)
 {
   *aIsForced = PR_FALSE;
 
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   if (mWindow) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
@@ -158,10 +158,9 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   if (mWindow) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
@@ -222,10 +221,9 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  PRInt32 aModifiers,
                                  PRBool aIgnoreRootScrollFrame)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsPoint offset;
@@ -287,10 +285,9 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
                                        PRInt32 aDelta,
                                        PRInt32 aModifiers)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsPoint offset;
@@ -338,10 +335,9 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
                                PRBool aPreventDefault,
                                PRBool* aDefaultActionTaken)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -389,10 +385,9 @@ nsDOMWindowUtils::SendNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                      const nsAString& aCharacters,
                                      const nsAString& aUnmodifiedCharacters)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -410,10 +405,9 @@ nsDOMWindowUtils::SendNativeMouseEvent(PRInt32 aScreenX,
                                        PRInt32 aModifierFlags,
                                        nsIDOMElement* aElement)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
@@ -427,10 +421,9 @@ nsDOMWindowUtils::SendNativeMouseEvent(PRInt32 aScreenX,
 NS_IMETHODIMP
 nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -443,10 +436,9 @@ nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 NS_IMETHODIMP
 nsDOMWindowUtils::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -500,10 +492,9 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled(
-    "UniversalXPConnect", &hasCap)) || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
@@ -522,11 +513,9 @@ nsDOMWindowUtils::GarbageCollect()
   // NOTE: Only do this in NON debug builds, as this function can useful
   // during debugging.
 #ifndef DEBUG
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
-                  IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 #endif
 
   nsJSContext::CC();
@@ -565,10 +554,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          PRFloat64 aDelta,
                                          PRInt32 aModifiers)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsPoint offset;
@@ -645,9 +633,9 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
                                   PRUint32* aMaxDifference,
                                   PRUint32* retVal)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   if (aCanvas1 == nsnull ||
       aCanvas2 == nsnull ||
@@ -734,11 +722,9 @@ nsDOMWindowUtils::ClearMozAfterPaintEvents()
 NS_IMETHODIMP
 nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
-                  IsCapabilityEnabled("UniversalXPConnect", &hasCap)) ||
-      !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
   nsIDocShell *docShell = mWindow->GetDocShell();
@@ -752,9 +738,9 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
 NS_IMETHODIMP
 nsDOMWindowUtils::SuppressEventHandling(PRBool aSuppress)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -843,11 +829,9 @@ nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetCOWForObject()
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
-                IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsCOMPtr<nsIXPConnect> xpc = nsContentUtils::XPConnect();
 
@@ -1163,10 +1147,9 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
                                           nsITransferable * aTransferable)
 {
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
+  if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
