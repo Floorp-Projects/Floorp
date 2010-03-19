@@ -2491,7 +2491,7 @@ SessionStoreService.prototype = {
   restoreCookies: function sss_restoreCookies(aCookies) {
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
-    for (i = 0; i < aCookies.length; i++) {
+    for (let i = 0; i < aCookies.length; i++) {
       var cookie = aCookies[i];
       try {
         CookieSvc.add(cookie.host, cookie.path || "", cookie.name || "",
