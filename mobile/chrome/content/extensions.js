@@ -598,8 +598,33 @@ var ExtensionsView = {
       }
     }
 
-    if (!aIsRecommended)
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+
+    if (!aIsRecommended) {
+      if (aTotalResults > aAddons.length) {
+        let showmore = document.createElement("richlistitem");
+        showmore.setAttribute("typeName", "showmore");
+        showmore.setAttribute("title", strings.getFormattedString("addonsSearchMore.label", [aTotalResults]));
+        showmore.setAttribute("description", strings.getFormattedString("addonsSearchMore.description", [aAddons.length]));
+  
+        let url = gPrefService.getCharPref("extensions.getAddons.search.browseURL");
+        url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
+        url = formatter.formatURL(url);
+        showmore.setAttribute("url", url);
+        this._list.appendChild(showmore);
+      }
+
       this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess2.button"), true);
+    } else {
+      let showmore = document.createElement("richlistitem");
+      showmore.setAttribute("typeName", "showmore");
+      showmore.setAttribute("title", strings.getString("addonsBrowseAll.label"));
+      showmore.setAttribute("description", strings.getString("addonsBrowseAll.description"));
+
+      let url = formatter.formatURLPref("extensions.getAddons.browseAddons");
+      showmore.setAttribute("url", url);
+      this._list.appendChild(showmore);
+    }
   },
 
   showPage: function ev_showPage(aItem) {
@@ -621,6 +646,12 @@ var ExtensionsView = {
   resetSearch: function ev_resetSearch() {
     this.searchBox.value = "";
     this.getAddonsFromRepo("");
+  },
+
+  showMoreResults: function ev_showMoreResults(aItem) {
+    let uri = aItem.getAttribute("url");
+    if (uri)
+      BrowserUI.newTab(uri);
   },
 
   observe: function ev_observe(aSubject, aTopic, aData) {

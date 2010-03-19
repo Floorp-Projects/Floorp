@@ -130,6 +130,10 @@ richlistitem[typeName="message"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
 }
 
+richlistitem[typeName="showmore"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-showmore");
+}
+
 richlistitem[typeName="download"] {
   -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-downloading");
 }
