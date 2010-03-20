@@ -28,6 +28,9 @@ include gif/reftest.list
 # APNG tests
 include apng/reftest.list
 
+# Icon tests
+include icon/win/reftest.list
+
 # Generic image tests
 include generic/reftest.list
 
