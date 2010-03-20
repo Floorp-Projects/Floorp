@@ -937,6 +937,12 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 					 area.bottom - area.top, 
 					 &rt);
 
+    /**
+     * We set the number of pixels per DIP to 1.0. This is because we always want
+     * to draw in device pixels, and not device independent pixels. On high DPI
+     * systems this value will be higher than 1.0 and automatically upscale
+     * fonts, we don't want this since we do our own upscaling for various reasons.
+     */
     rt->SetPixelsPerDip(1.0);
 
     if (transform) {
