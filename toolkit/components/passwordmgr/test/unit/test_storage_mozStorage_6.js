@@ -254,6 +254,157 @@ storage.removeLogin(wonkyLogin);
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
 
 
+/* ========== 12 ========== */
+testnum++;
+testdesc = "check values for v4 DB addLogin";
+
+var timeuser1 = new nsLoginInfo();
+timeuser1.init("http://time1", "", null, "timeuser1", "origpass1", "foo", "bar");
+
+storage.addLogin(timeuser1);
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3, timeuser1]);
+
+let matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+matchData.setProperty("hostname", "http://time1");
+logins = storage.searchLogins({}, matchData);
+do_check_eq(1, logins.length);
+
+let tu1 = logins[0];
+tu1.QueryInterface(Ci.nsILoginMetaInfo);
+let time1 = tu1.timeCreated;
+
+// Check that times and usage count were initialized properly.
+do_check_true(LoginTest.is_about_now(time1));
+do_check_eq(time1, tu1.timeLastUsed);
+do_check_eq(time1, tu1.timePasswordChanged);
+do_check_eq(1, tu1.timesUsed);
+
+
+/* ========== 13 ========== */
+testnum++;
+testdesc = "check values for v4 DB addLogin part 2";
+
+var timeuser2 = new nsLoginInfo();
+timeuser2.init("http://time2", "", null, "timeuser2", "origpass2", "foo", "bar");
+timeuser2.QueryInterface(Ci.nsILoginMetaInfo);
+// This time pre-init the times and usage count.
+timeuser2.timeCreated = 123;
+timeuser2.timeLastUsed = 456;
+timeuser2.timePasswordChanged = 789;
+timeuser2.timesUsed = 42;
+
+storage.addLogin(timeuser2);
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3, timeuser1, timeuser2]);
+
+matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+matchData.setProperty("hostname", "http://time2");
+logins = storage.searchLogins({}, matchData);
+do_check_eq(1, logins.length);
+let tu2 = logins[0];
+
+tu2.QueryInterface(Ci.nsILoginMetaInfo);
+
+// Check that values we specified were set, instead of defaults.
+do_check_eq(123, tu2.timeCreated);
+do_check_eq(456, tu2.timeLastUsed);
+do_check_eq(789, tu2.timePasswordChanged);
+do_check_eq(42, tu2.timesUsed);
+
+
+/* ========== 14 ========== */
+testnum++;
+testdesc = "check values for v4 DB modifyLogin";
+
+let modData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+modData.setProperty("timesUsed", 8);
+
+storage.modifyLogin(timeuser2, modData);
+
+modData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+modData.setProperty("password", "newpass2");
+
+storage.modifyLogin(timeuser2, modData);
+timeuser2.password = "newpass2";
+
+matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+matchData.setProperty("hostname", "http://time2");
+logins = storage.searchLogins({}, matchData);
+do_check_eq(1, logins.length);
+tu2 = logins[0];
+
+tu2.QueryInterface(Ci.nsILoginMetaInfo);
+
+// Check that values we specified were set, instead of defaults.
+do_check_eq("newpass2", tu2.password);
+do_check_eq(123, tu2.timeCreated);
+do_check_eq(456, tu2.timeLastUsed);
+do_check_true(LoginTest.is_about_now(tu2.timePasswordChanged));
+do_check_eq(8, tu2.timesUsed);
+
+
+/* ========== 15 ========== */
+testnum++;
+testdesc = "check values for v4 DB modifyLogin part 2";
+
+modData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+modData.setProperty("timesUsedIncrement", 2);
+
+storage.modifyLogin(timeuser2, modData);
+
+modData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+modData.setProperty("password", "newpass2again\u0394\u00e8");
+modData.setProperty("timePasswordChanged", 888); // pw change with specific time
+
+storage.modifyLogin(timeuser2, modData);
+timeuser2.password = "newpass2again\u0394\u00e8";
+
+matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+matchData.setProperty("hostname", "http://time2");
+logins = storage.searchLogins({}, matchData);
+do_check_eq(1, logins.length);
+tu2 = logins[0];
+
+tu2.QueryInterface(Ci.nsILoginMetaInfo);
+
+// Check that values we specified were set, instead of defaults.
+do_check_eq("newpass2again\u0394\u00e8", tu2.password);
+do_check_eq(123, tu2.timeCreated);
+do_check_eq(456, tu2.timeLastUsed);
+do_check_eq(888, tu2.timePasswordChanged);
+do_check_eq(10, tu2.timesUsed);
+
+
+/* ========== 16 ========== */
+testnum++;
+testdesc = "check values for v4 DB modifyLogin part 3";
+
+modData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+modData.setProperty("timeCreated",  5444333222111);
+modData.setProperty("timeLastUsed", 22222);
+
+storage.modifyLogin(timeuser2, modData);
+
+matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+matchData.setProperty("hostname", "http://time2");
+logins = storage.searchLogins({}, matchData);
+do_check_eq(1, logins.length);
+tu2 = logins[0];
+
+tu2.QueryInterface(Ci.nsILoginMetaInfo);
+
+// Check that values we specified were set, instead of defaults.
+do_check_eq(5444333222111, tu2.timeCreated);
+do_check_eq(22222, tu2.timeLastUsed);
+do_check_eq(888, tu2.timePasswordChanged);
+do_check_eq(10, tu2.timesUsed);
+
+// some cleanup
+storage.removeLogin(timeuser1);
+storage.removeLogin(timeuser2);
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
+
+
+
 LoginTest.deleteFile(OUTDIR, "signons-unittest6.sqlite");
 
 } catch (e) {

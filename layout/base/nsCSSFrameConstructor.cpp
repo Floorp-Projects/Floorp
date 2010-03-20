@@ -4745,6 +4745,11 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
+  // We don't need frames for animation elements
+  if (aContent->IsNodeOfType(nsINode::eANIMATION)) {
+    return &sSuppressData;
+  }
+
   // Reduce the number of frames we create unnecessarily. Note that this is not
   // where we select which frame in a <switch> to render! That happens in
   // nsSVGSwitchFrame::PaintSVG.

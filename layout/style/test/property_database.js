@@ -535,6 +535,15 @@ var gCSSProperties = {
 		other_values: [ "1px", "3em" ],
 		invalid_values: []
 	},
+	"-moz-resize": {
+		domProp: "MozResize",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block", "overflow": "auto" },
+		initial_values: [ "none" ],
+		other_values: [ "both", "horizontal", "vertical" ],
+		invalid_values: []
+	},
 	"-moz-tab-size": {
 		domProp: "MozTabSize",
 		inherited: true,

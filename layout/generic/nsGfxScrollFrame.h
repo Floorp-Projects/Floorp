@@ -215,6 +215,15 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   PRBool IsLTR() const;
   PRBool IsScrollbarOnRight() const;
+  // adjust the scrollbar rectangle aRect to account for any visible resizer.
+  // aHasResizer specifies if there is a content resizer, however this method
+  // will also check if a widget resizer is present as well.
+  void AdjustScrollbarRectForResizer(nsIFrame* aFrame, nsPresContext* aPresContext,
+                                     nsRect& aRect, PRBool aHasResizer, PRBool aVertical);
+  // returns true if a resizer should be visible
+  PRBool HasResizer() {
+      return mScrollCornerContent && mScrollCornerContent->Tag() == nsGkAtoms::resizer;
+  }
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
