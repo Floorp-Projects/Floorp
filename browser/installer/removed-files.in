@@ -843,3 +843,8 @@ components/nsUpdateServiceStub.js
 old-homepage-default.properties
 components/microsummaries.xpt
 LICENSE
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+components/libimgicon.so
+#endif
+#endif
