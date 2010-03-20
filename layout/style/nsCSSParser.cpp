@@ -6019,6 +6019,9 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kPointerEventsKTable);
   case eCSSProperty_position:
     return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
+  case eCSSProperty_resize:
+    return ParseVariant(aValue, VARIANT_HK,
+                        nsCSSProps::kResizeKTable);
   case eCSSProperty_richness:
     return ParseVariant(aValue, VARIANT_HN, nsnull);
 #ifdef MOZ_MATHML

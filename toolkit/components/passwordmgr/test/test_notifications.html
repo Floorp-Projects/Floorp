@@ -135,6 +135,11 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
+
+        // Sanity check, no logins should exist yet.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 0, "Should not have any logins yet");
+
         clickNotificationButton(bar, kRememberButton);
         break;
 
@@ -144,6 +149,16 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(!bar, "checking for no notification bar");
+
+        // Check to make sure we updated the timestamps and use count on the
+        // existing loging that was submitted for this form.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(logins[0] instanceof Ci.nsILoginMetaInfo, "metainfo QI");
+        is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
+        ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
+        ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
+
         // remove that login
         pwmgr.removeLogin(login1);
         break;
@@ -286,6 +301,15 @@ function checkTest() {
         ok(bar, "got notification bar");
         clickNotificationButton(bar, kChangeButton);
 
+        // Check to make sure we updated the timestamps and use count for
+        // the login being changed with this form.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(logins[0] instanceof Ci.nsILoginMetaInfo, "metainfo QI");
+        is(logins[0].timesUsed, 2, "check .timesUsed incremented on change");
+        ok(logins[0].timeCreated < logins[0].timeLastUsed, "timeLastUsed bumped");
+        ok(logins[0].timeLastUsed == logins[0].timePasswordChanged, "timeUsed == timeChanged");
+
         // cleanup
         login1.password = "pass2";
         pwmgr.removeLogin(login1);
@@ -378,6 +402,8 @@ ok(Cc != null, "Access Cc");
 var pwmgr = Cc["@mozilla.org/login-manager;1"].
             getService(Ci.nsILoginManager);
 ok(pwmgr != null, "Access pwmgr");
+
+pwmgr.removeAllLogins();
 
 var prefs = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefService);
