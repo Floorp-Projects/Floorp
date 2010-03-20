@@ -2391,6 +2391,20 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 
       ::GetUpdateRgn(mWnd, updateRgn, FALSE);
       ::OffsetRgn(updateRgn, aDelta.x, aDelta.y);
+
+      if (gfxPlatform::GetDPI() != 96 &&
+          aDelta.y < 0 &&
+          clip.bottom == (mBounds.y + mBounds.height)) {
+        // XXX - bug 548935 - we can at high DPI settings scroll an undrawn
+        // row of pixels into view. This row should be invalidated to make
+        // sure it contains the correct content.
+        HRGN scrollRgn = ::CreateRectRgn(clip.left,
+                                         clip.bottom + aDelta.y - 1,
+                                         clip.right,
+                                         clip.bottom + aDelta.y);
+        ::CombineRgn(updateRgn, updateRgn, scrollRgn, RGN_OR);
+        ::DeleteObject((HGDIOBJ)scrollRgn);
+      }
     } else {
 #endif
       ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
