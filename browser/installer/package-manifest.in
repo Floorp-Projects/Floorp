@@ -189,11 +189,6 @@
 #endif
 @BINPATH@/components/layout_xul_tree.xpt
 @BINPATH@/components/layout_xul.xpt
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-@BINPATH@/components/libimgicon@DLL_SUFFIX@
-#endif
-#endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
 #ifndef WINCE
