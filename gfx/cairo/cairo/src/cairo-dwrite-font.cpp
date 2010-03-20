@@ -937,6 +937,8 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 					 area.bottom - area.top, 
 					 &rt);
 
+    rt->SetPixelsPerDip(1.0);
+
     if (transform) {
 	rt->SetCurrentTransform(transform);
     }
