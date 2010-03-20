@@ -410,15 +410,20 @@ var BrowserUI = {
     window.addEventListener("keypress", this, true);
 
     // Push the panel initialization out of the startup path
-    // (Using a timeout because we have no good way to delay-init [Bug 535366])
-    setTimeout(function() {
+    // (Using an event because we have no good way to delay-init [Bug 535366])
+    browsers.addEventListener("load", function() {
+      // We only want to delay one time
+      browsers.removeEventListener("load", arguments.callee, false);
+      
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
+
+      // Init the views
       ExtensionsView.init();
       DownloadsView.init();
       PreferencesView.init();
       ConsoleView.init();
-    }, 1000);
+    }, false);
   },
 
   uninit : function() {
