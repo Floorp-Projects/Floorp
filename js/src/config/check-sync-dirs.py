@@ -75,7 +75,7 @@ def check(copy, original, ignore):
             relative_name = join(dirpath, filename)
             original_name = join(original, relative_name)
             if (os.path.exists(original_name)
-                and filecmp.cmp(relative_name, original_name)):
+                and filecmp.cmp(relative_name, original_name, False)):
                 continue
             report(copy, original, relative_name)
 
