@@ -463,6 +463,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDrawing(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
+, mPluginInstanceOwner(nsnull)
 {
 #ifdef PR_LOGGING
   if (!sCocoaLog) {
@@ -2173,7 +2174,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mLastMouseDownEvent = nil;
     mDragService = nsnull;
 
+#ifndef NP_NO_CARBON
     mPluginTSMDoc = nil;
+#endif
 
     mGestureState = eGestureState_None;
     mCumulativeMagnification = 0.0;
@@ -5076,7 +5079,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 // Firefox) create a TSM document that (somehow) makes the input window behave
 // badly when it contains more than one kind of input (say Hiragana and
 // Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
-// provices (those created and managed by the NSTSMInputContext class) -- for
+// provides (those created and managed by the NSTSMInputContext class) -- for
 // some reason TSMProcessRawKeyEvent() doesn't work with them.)
 - (void)activatePluginTSMDoc
 {
