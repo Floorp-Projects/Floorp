@@ -1106,6 +1106,14 @@ const PRInt32 nsCSSProps::kRadialGradientSizeKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kResizeKTable[] = {
+  eCSSKeyword_none,       NS_STYLE_RESIZE_NONE,
+  eCSSKeyword_both,       NS_STYLE_RESIZE_BOTH,
+  eCSSKeyword_horizontal, NS_STYLE_RESIZE_HORIZONTAL,
+  eCSSKeyword_vertical,   NS_STYLE_RESIZE_VERTICAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kSpeakKTable[] = {
   eCSSKeyword_none,      NS_STYLE_SPEAK_NONE,
   eCSSKeyword_normal,    NS_STYLE_SPEAK_NORMAL,

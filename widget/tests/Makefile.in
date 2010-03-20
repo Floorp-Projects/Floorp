@@ -70,6 +70,8 @@ _CHROME_FILES =	test_bug343416.xul \
 		window_wheeltransaction.xul \
 		test_imestate.html \
 		test_plugin_scroll_consistency.html \
+		test_composition_text_querycontent.xul \
+		window_composition_text_querycontent.xul \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

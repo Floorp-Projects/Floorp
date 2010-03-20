@@ -483,7 +483,12 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     nsresult rv = NS_ERROR_FAILURE;
     if (target->GetContextForEventHandlers(&rv) ||
         NS_FAILED(rv)) {
-      NS_ERROR("This is unsafe!");
+      nsCOMPtr<nsINode> node = do_QueryInterface(target);
+      if (node && nsContentUtils::IsChromeDoc(node->GetOwnerDoc())) {
+        NS_WARNING("Fix the caller!");
+      } else {
+        NS_ERROR("This is unsafe! Fix the caller!");
+      }
     }
   }
 

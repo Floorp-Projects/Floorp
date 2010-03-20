@@ -300,7 +300,9 @@ public:
      returns a non-null value for nsIContent::GetText() */
     eDATA_NODE           = 1 << 10,
     /** nsHTMLMediaElement */
-    eMEDIA               = 1 << 11
+    eMEDIA               = 1 << 11,
+    /** animation elements */
+    eANIMATION           = 1 << 12
   };
 
   /**

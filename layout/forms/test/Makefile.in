@@ -57,6 +57,7 @@ _TEST_FILES =	test_bug231389.html \
 		test_bug476308.html \
 		test_bug477531.html \
 		test_bug477700.html \
+		test_textarea_resize.html \
 		test_bug478219.xhtml \
 		test_bug542914.html \
 		bug477700_subframe.html \
