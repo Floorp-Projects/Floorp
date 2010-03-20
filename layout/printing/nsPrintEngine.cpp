@@ -385,8 +385,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
   NS_ENSURE_ARG_POINTER(aPO);
 
   // Finds the SimplePageSequencer frame
-  nsIPageSequenceFrame* seqFrame = nsnull;
-  aPO->mPresShell->GetPageSequenceFrame(&seqFrame);
+  nsIPageSequenceFrame* seqFrame = aPO->mPresShell->GetPageSequenceFrame();
   if (seqFrame) {
     aSeqFrame = do_QueryFrame(seqFrame);
   } else {
@@ -1798,8 +1797,7 @@ nsPrintEngine::SetupToPrintContent()
   if (mIsCreatingPrintPreview) {
     // Print Preview -- Pass ownership of docTitleStr and docURLStr
     // to the pageSequenceFrame, to be displayed in the header
-    nsIPageSequenceFrame *seqFrame = nsnull;
-    mPrt->mPrintObject->mPresShell->GetPageSequenceFrame(&seqFrame);
+    nsIPageSequenceFrame *seqFrame = mPrt->mPrintObject->mPresShell->GetPageSequenceFrame();
     if (seqFrame) {
       seqFrame->StartPrint(mPrt->mPrintObject->mPresContext, 
                            mPrt->mPrintSettings, docTitleStr, docURLStr);
@@ -2062,8 +2060,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // this is the frame where the right-hand side of the frame extends
   // the furthest
   if (mPrt->mShrinkToFit && documentIsTopLevel) {
-    nsIPageSequenceFrame* pageSequence;
-    aPO->mPresShell->GetPageSequenceFrame(&pageSequence);
+    nsIPageSequenceFrame* pageSequence = aPO->mPresShell->GetPageSequenceFrame();
     pageSequence->GetSTFPercent(aPO->mShrinkRatio);
   }
 
@@ -2121,8 +2118,7 @@ nsPrintEngine::CalcNumPrintablePages(PRInt32& aNumPages)
     nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     if (po->mPresContext && po->mPresContext->IsRootPaginatedDocument()) {
-      nsIPageSequenceFrame* pageSequence;
-      po->mPresShell->GetPageSequenceFrame(&pageSequence);
+      nsIPageSequenceFrame* pageSequence = po->mPresShell->GetPageSequenceFrame();
       nsIFrame * seqFrame = do_QueryFrame(pageSequence);
       if (seqFrame) {
         nsIFrame* frame = seqFrame->GetFirstChild(nsnull);
@@ -2290,8 +2286,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
     }
 
     // Ask the page sequence frame to print all the pages
-    nsIPageSequenceFrame* pageSequence;
-    poPresShell->GetPageSequenceFrame(&pageSequence);
+    nsIPageSequenceFrame* pageSequence = poPresShell->GetPageSequenceFrame();
     NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
 
     // We are done preparing for printing, so we can turn this off
