@@ -78,11 +78,6 @@
       <children/>
     </content>
     <implementation implements="nsIDOMEventListener">
-      <field name="mPrefs" readonly="true">
-        Components.classes['@mozilla.org/preferences-service;1']
-                  .getService(Components.interfaces.nsIPrefService)
-                  .getBranch(null);
-      </field>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -669,8 +664,9 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            return (aURI && this.mPrefs.getBoolPref("browser.chrome.site_icons") &&
-                    this.mPrefs.getBoolPref("browser.chrome.favicons") &&
+            return (aURI &&
+                    Services.prefs.getBoolPref("browser.chrome.site_icons") &&
+                    Services.prefs.getBoolPref("browser.chrome.favicons") &&
                     ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
           ]]>
         </body>
@@ -683,9 +679,9 @@
             var browser = this.getBrowserForTab(aTab);
             var docURIObject = browser.contentDocument.documentURIObject; 
             if (browser.contentDocument instanceof ImageDocument) {
-              if (this.mPrefs.getBoolPref("browser.chrome.site_icons")) {
+              if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
                 try {
-                  var sz = this.mPrefs.getIntPref("browser.chrome.image_icons.max_size");
+                  let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
                   if (!sz)
                     return;
 
@@ -1029,7 +1025,7 @@
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
-                         this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
+                         Services.prefs.getBoolPref("browser.tabs.loadInBackground");
             var owner = bgLoad ? null : this.selectedTab;
             var tab = this.addTab(aURI, {
                                   referrerURI: aReferrerURI,
@@ -1255,7 +1251,7 @@
             // an external application or bookmark, i.e. somewhere other
             // than the current tab.
             if ((aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) &&
-                this.mPrefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
+                Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
               let newTabPos = (this._lastRelatedTab ||
                                this.selectedTab)._tPos + 1;
               this.moveTabTo(t, newTabPos);
@@ -1277,11 +1273,10 @@
             return reallyClose;
 
           const pref = "browser.tabs.warnOnClose";
-          var shouldPrompt = this.mPrefs.getBoolPref(pref);
+          var shouldPrompt = Services.prefs.getBoolPref(pref);
 
           if (shouldPrompt) {
-            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                          .getService(Components.interfaces.nsIPromptService);
+            let promptService = Services.prompt;
 
             //default to true: if it were false, we wouldn't get this far
             var warnOnClose = { value:true };
@@ -1310,7 +1305,7 @@
             reallyClose = (buttonPressed == 0);
             // don't set the pref unless they press OK and it's false
             if (reallyClose && !warnOnClose.value)
-              this.mPrefs.setBoolPref(pref, false);
+              Services.prefs.setBoolPref(pref, false);
           }
           return reallyClose;
         ]]>
@@ -1385,7 +1380,7 @@
             if (l == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
-                              this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+                              Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
               // Closing the tab and replacing it with a blank one is notably slower
               // than closing the window right away. If the caller opts in, take
@@ -1532,7 +1527,7 @@
 
             if (aTab.owner &&
                 this._removingTabs.indexOf(aTab.owner) == -1 &&
-                this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
+                Services.prefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
               this.selectedTab = aTab.owner;
               return;
             }
@@ -1793,13 +1788,11 @@
               return null;
 
             // tell a new window to take the "dropped" tab
-            var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                      getService(Ci.nsIWindowWatcher);
-            return ww.openWindow(window,
-                                 getBrowserURL(),
-                                 null,
-                                 "chrome,dialog=no,all",
-                                 aTab);
+            return Services.ww.openWindow(window,
+                                          getBrowserURL(),
+                                          null,
+                                          "chrome,dialog=no,all",
+                                          aTab);
           ]]>
         </body>
       </method>
@@ -2291,6 +2284,8 @@
       </method>
       <property name="mContextTab" readonly="true"
                 onget="return this.tabContainer._contextTab;"/>
+      <property name="mPrefs" readonly="true"
+                onget="return Services.prefs;"/>
     </implementation>
 
     <handlers>
@@ -2451,26 +2446,10 @@
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
-          var pb2 =
-              Components.classes['@mozilla.org/preferences-service;1'].
-              getService(Components.interfaces.nsIPrefBranch2);
-
-          try {
-            this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
-          } catch (e) {
-          }
-          try {
-            this.mTabMaxWidth = pb2.getIntPref("browser.tabs.tabMaxWidth");
-          } catch (e) {
-          }
-          try {
-            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
-          } catch (e) {
-          }
-          try {
-            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
-          } catch (e) {
-          }
+          this.mTabMinWidth = Services.prefs.getIntPref("browser.tabs.tabMinWidth");
+          this.mTabMaxWidth = Services.prefs.getIntPref("browser.tabs.tabMaxWidth");
+          this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
+          this.mCloseButtons = Services.prefs.getIntPref("browser.tabs.closeButtons");
 
           var tab = this.firstChild;
           tab.setAttribute("label",
@@ -2484,8 +2463,8 @@
           tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
 
-          pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
-          pb2.addObserver("browser.tabs.autoHide", this._prefObserver, false);
+          Services.prefs.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
+          Services.prefs.addObserver("browser.tabs.autoHide", this._prefObserver, false);
 
           window.addEventListener("resize", this, false);
         ]]>
@@ -2493,11 +2472,8 @@
 
       <destructor>
         <![CDATA[
-          var pb2 =
-              Components.classes['@mozilla.org/preferences-service;1'].
-              getService(Components.interfaces.nsIPrefBranch2);
-          pb2.removeObserver("browser.tabs.closeButtons", this._prefObserver);
-          pb2.removeObserver("browser.tabs.autoHide", this._prefObserver);
+          Services.prefs.removeObserver("browser.tabs.closeButtons", this._prefObserver);
+          Services.prefs.removeObserver("browser.tabs.autoHide", this._prefObserver);
         ]]>
       </destructor>
 
@@ -2525,8 +2501,7 @@
         observe: function (subject, topic, data) {
           switch (data) {
             case "browser.tabs.closeButtons":
-              subject.QueryInterface(Components.interfaces.nsIPrefBranch);
-              this.tabContainer.mCloseButtons = subject.getIntPref("browser.tabs.closeButtons");
+              this.tabContainer.mCloseButtons = Services.prefs.getIntPref(data);
               this.tabContainer.adjustTabstrip();
               break;
             case "browser.tabs.autoHide":
@@ -2607,20 +2582,6 @@
           this.mTabstripClosebutton.collapsed = this.mCloseButtons != 3;
         ]]></body>
       </method>
-        
-      <field name="_mPrefs">null</field>
-      <property name="mPrefs" readonly="true">
-        <getter>
-        <![CDATA[
-          if (!this._mPrefs) {
-            this._mPrefs =
-              Components.classes['@mozilla.org/preferences-service;1'].
-              getService(Components.interfaces.nsIPrefBranch2);
-          }
-          return this._mPrefs;
-        ]]>
-        </getter>
-      </property>
 
       <method name="_handleTabSelect">
         <body><![CDATA[
@@ -3027,11 +2988,7 @@
           let dragSession = dragService.getCurrentSession();
           nsDragAndDrop.dragDropSecurityCheck(event, dragSession, url);
 
-          let bgLoad = true;
-          try {
-            bgLoad = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
-          }
-          catch (e) { }
+          let bgLoad = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
 
           if (event.shiftKey)
             bgLoad = !bgLoad;
