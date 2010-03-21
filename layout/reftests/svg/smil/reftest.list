@@ -154,6 +154,8 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
 
+== api-sanity-1.svg lime.svg
+
 == freeze-applied-late-1.svg anim-standard-ref.svg
 == freeze-applied-late-2.svg anim-standard-ref.svg
 == freeze-applied-late-3.svg anim-standard-ref.svg
