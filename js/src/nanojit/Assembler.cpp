@@ -583,13 +583,13 @@ namespace nanojit
     Register Assembler::deprecated_prepResultReg(LIns *ins, RegisterMask allow)
     {
 #ifdef NANOJIT_IA32
-        const bool pop = (allow & rmask(FST0)) &&
-                         (!ins->isInReg() || ins->getReg() != FST0);
-#else
-        const bool pop = false;
+        // We used to have to worry about possibly popping the x87 stack here.
+        // But this function is no longer used on i386, and this assertion
+        // ensures that.
+        NanoAssert(0);
 #endif
         Register r = findRegFor(ins, allow);
-        deprecated_freeRsrcOf(ins, pop);
+        deprecated_freeRsrcOf(ins);
         return r;
     }
 
@@ -627,38 +627,46 @@ namespace nanojit
         // which case the restore will have already been generated, so we now
         // generate the spill (unless the restore was actually a
         // rematerialize, in which case it's not necessary).
-        //
-        // As for 'pop':  it's only relevant on i386 and if 'allow' includes
-        // FST0, in which case we have to pop if 'ins' isn't in FST0 in the
-        // post-regstate.  This could be because 'ins' is unused, 'ins' is in
-        // a spill slot, or 'ins' is in an XMM register.
 #ifdef NANOJIT_IA32
+        // If 'allow' includes FST0 we have to pop if 'ins' isn't in FST0 in
+        // the post-regstate.  This could be because 'ins' is unused, 'ins' is
+        // in a spill slot, or 'ins' is in an XMM register.
         const bool pop = (allow & rmask(FST0)) &&
                          (!ins->isInReg() || ins->getReg() != FST0);
 #else
         const bool pop = false;
 #endif
         Register r = findRegFor(ins, allow);
-        asm_spilli(ins, pop);
+        asm_maybe_spill(ins, pop);
+#ifdef NANOJIT_IA32
+        if (!ins->isInAr() && pop && r == FST0) {
+            // This can only happen with a LIR_fcall to an impure function
+            // whose return value was ignored (ie. if ins->isInReg() was false
+            // prior to the findRegFor() call).
+            FSTP(FST0);     // pop the fpu result since it isn't used
+        }
+#endif
         return r;
     }
 
-    void Assembler::asm_spilli(LInsp ins, bool pop)
+    void Assembler::asm_maybe_spill(LInsp ins, bool pop)
     {
         int d = ins->isInAr() ? arDisp(ins) : 0;
         Register r = ins->getReg();
-        verbose_only( RefBuf b;
-                      if (d && (_logc->lcbits & LC_Assembly)) {
-                         setOutputForEOL("  <= spill %s",
-                         _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
-        asm_spill(r, d, pop, ins->isN64());
+        if (ins->isInAr()) {
+            verbose_only( RefBuf b;
+                          if (_logc->lcbits & LC_Assembly) {
+                             setOutputForEOL("  <= spill %s",
+                             _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
+            asm_spill(r, d, pop, ins->isN64());
+        }
     }
 
     // XXX: This function is error-prone and should be phased out; see bug 513615.
-    void Assembler::deprecated_freeRsrcOf(LIns *ins, bool pop)
+    void Assembler::deprecated_freeRsrcOf(LIns *ins)
     {
         if (ins->isInReg()) {
-            asm_spilli(ins, pop);
+            asm_maybe_spill(ins, /*pop*/false);
             _allocator.retire(ins->getReg());   // free any register associated with entry
             ins->clearReg();
         }
