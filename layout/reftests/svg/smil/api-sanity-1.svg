@@ -4,13 +4,11 @@
      class="reftest-wait"
 >
   <script type="application/javascript">
-    function go(evt) {
+    function go() {
       // Try calling the animation-related methods in nsSVGSVGElement.cpp
       // If any aren't implemented, we'll throw an exception and
       // the rect will stay red.
 
-      // Note: I'm catching the exception because (I think) we need to
-      // make sure to remove the "reftest-wait" document-class
       try {
         document.documentElement.animationsPaused();
         document.documentElement.pauseAnimations();
@@ -18,6 +16,8 @@
         document.documentElement.getCurrentTime();
         document.documentElement.setCurrentTime(0);
       } catch (e) {
+        // If something failed and threw an exception, we still need to remove
+        // the "reftest-wait" class
         document.documentElement.removeAttribute("class");
         throw e;
       }
@@ -29,6 +29,5 @@
       document.documentElement.removeAttribute("class");
     }
   </script>
-  <rect id="rect" width="100px" height="100px"
-        fill="red"/>
+  <rect id="rect" width="100%" height="100%" fill="red" />
 </svg>
