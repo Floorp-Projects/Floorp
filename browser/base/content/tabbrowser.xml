@@ -2294,6 +2294,9 @@
           if (!event.isTrusted)
             return;
 
+          if (this.mTabs.length == 1)
+            return;
+
           var tab = this._getTabForContentWindow(event.target);
           if (tab) {
             this.removeTab(tab);
