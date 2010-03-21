@@ -321,6 +321,7 @@ fails == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
 == 315920-3c.html 315920-3-ref.html
 == 315920-3d.html 315920-3-ref.html
 != 315920-3e.html 315920-3-ref.html
+!= 315920-3f.html 315920-3-ref.html
 == 315920-4.html 315920-4-ref.html
 == 315920-5.html 315920-5-ref.html
 == 315920-6.html 315920-6-ref.html
@@ -730,6 +731,10 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 != 389924-1a.html about:blank
 == 390318-1a.html 390318-1-ref.html
 == 390318-1b.html 390318-1-ref.html
+== 390318-1c.html 390318-1-ref.html
+== 390318-1d.html 390318-1-ref.html
+== 390318-1e.html 390318-1-ref.html
+== 390318-1f.html 390318-1-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-specific Uniscribe bug, trailing period is matched against different fonts on Mac/Linux (see 396137)
 == 391140-1.html 391140-1-ref.html
 == 391412-1a.html 391412-1-ref.html
@@ -953,6 +958,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 421203-5.xul 321402-5-ref.xul
 == 421203-6.xul 321402-6-ref.xul
 == 421234-1.html 421234-1-ref.html
+== 421239-1.html 421239-1-ref.html
+== 421239-2.html 421239-2-ref.html
 == 421419-1.html 421419-1-ref.html
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
@@ -1323,6 +1330,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 495385-5.html 495385-5-ref.html
 == 498228-1.xul 498228-1-ref.xul
 == 496032-1.html 496032-1-ref.html
+== 496840-1.html 496840-1-ref.html
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
@@ -1394,6 +1402,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
 == 537471-1.html 537471-1-ref.html
+== 538909-1.html 538909-1-ref.html
 == 538935-1.html 538935-1-ref.html
 == 539226-1.html about:blank
 == 539323-1.html 539323-1-ref.html
