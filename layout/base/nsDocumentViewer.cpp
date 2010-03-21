@@ -1274,7 +1274,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
 
     if (!window) {
       // Fail if no window is available...
-      NS_ERROR("window not set for document!");
+      NS_WARNING("window not set for document!");
       return NS_ERROR_NULL_POINTER;
     }
 
