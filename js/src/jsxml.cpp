@@ -1268,11 +1268,10 @@ ParseNodeToQName(JSCompiler *jsc, JSParseNode *pn,
         }
 
         if (!uri) {
-            js_ReportCompileErrorNumber(jsc->context, &jsc->tokenStream, pn,
-                                        JSREPORT_ERROR,
-                                        JSMSG_BAD_XML_NAMESPACE,
-                                        js_ValueToPrintableString(jsc->context,
-                                            STRING_TO_JSVAL(prefix)));
+            ReportCompileErrorNumber(jsc->context, &jsc->tokenStream, pn,
+                                     JSREPORT_ERROR, JSMSG_BAD_XML_NAMESPACE,
+                                     js_ValueToPrintableString(jsc->context,
+                                                               STRING_TO_JSVAL(prefix)));
             return NULL;
         }
 
@@ -1350,8 +1349,8 @@ ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR,
-                                    JSMSG_OVER_RECURSED);
+        ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR,
+                                 JSMSG_OVER_RECURSED);
         return NULL;
     }
 
@@ -1489,11 +1488,10 @@ ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
             /* Enforce "Well-formedness constraint: Unique Att Spec". */
             for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
                 if (pn3->pn_atom == pn2->pn_atom) {
-                    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
-                                                JSREPORT_ERROR,
-                                                JSMSG_DUPLICATE_XML_ATTR,
-                                                js_ValueToPrintableString(cx,
-                                                    ATOM_KEY(pn2->pn_atom)));
+                    ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
+                                             JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
+                                             js_ValueToPrintableString(cx,
+                                                                       ATOM_KEY(pn2->pn_atom)));
                     goto fail;
                 }
             }
@@ -1600,11 +1598,10 @@ ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
                 attrjqn = attrj->name;
                 if (js_EqualStrings(GetURI(attrjqn), GetURI(qn)) &&
                     js_EqualStrings(GetLocalName(attrjqn), GetLocalName(qn))) {
-                    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
-                                                JSREPORT_ERROR,
-                                                JSMSG_DUPLICATE_XML_ATTR,
-                                                js_ValueToPrintableString(cx,
-                                                    ATOM_KEY(pn2->pn_atom)));
+                    ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
+                                             JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
+                                             js_ValueToPrintableString(cx,
+                                                                       ATOM_KEY(pn2->pn_atom)));
                     goto fail;
                 }
             }
@@ -1641,11 +1638,10 @@ ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
-                js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn,
-                                            JSREPORT_ERROR,
-                                            JSMSG_RESERVED_ID,
-                                            js_ValueToPrintableString(cx,
-                                                STRING_TO_JSVAL(str)));
+                ReportCompileErrorNumber(cx, &jsc->tokenStream, pn,
+                                         JSREPORT_ERROR, JSMSG_RESERVED_ID,
+                                         js_ValueToPrintableString(cx,
+                                                                   STRING_TO_JSVAL(str)));
                 goto fail;
             }
 
@@ -1690,8 +1686,7 @@ skip_child:
 #undef PN2X_SKIP_CHILD
 
 syntax:
-    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR,
-                                JSMSG_BAD_XML_MARKUP);
+    ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR, JSMSG_BAD_XML_MARKUP);
 fail:
     js_LeaveLocalRootScope(cx);
     return NULL;
