@@ -465,21 +465,14 @@ namespace nanojit
     void Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
     {
         (void)quad;
-        if (d)
-        {
-            if (rmask(rr) & GpRegs) {
-                ST(FP, d, rr);
-            } else if (rmask(rr) & XmmRegs) {
-                SSE_STQ(d, FP, rr);
-            } else {
-                NanoAssert(rmask(rr) & x87Regs);
-                FSTQ((pop?1:0), d, FP);
-            }
-        }
-        else if (pop && (rmask(rr) & x87Regs))
-        {
-            // pop the fpu result since it isn't used
-            FSTP(FST0);
+        NanoAssert(d);
+        if (rmask(rr) & GpRegs) {
+            ST(FP, d, rr);
+        } else if (rmask(rr) & XmmRegs) {
+            SSE_STQ(d, FP, rr);
+        } else {
+            NanoAssert(rmask(rr) & x87Regs);
+            FSTQ((pop?1:0), d, FP);
         }
     }
 
@@ -501,7 +494,7 @@ namespace nanojit
         //
         if (ins->isInReg()) {
             Register rr = ins->getReg();
-            asm_spilli(ins, false);         // if also in memory in post-state, spill it now
+            asm_maybe_spill(ins, false);    // if also in memory in post-state, spill it now
             switch (ins->opcode()) {
             case LIR_ldf:
                 if (rmask(rr) & XmmRegs) {

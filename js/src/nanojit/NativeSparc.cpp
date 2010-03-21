@@ -317,12 +317,11 @@ namespace nanojit
     {
         underrunProtect(24);
         (void)quad;
-        if (d) {
-            if (rmask(rr) & FpRegs) {
-                STDF32(rr, d, FP);
-            } else {
-                STW32(rr, d, FP);
-            }
+        NanoAssert(d);
+        if (rmask(rr) & FpRegs) {
+            STDF32(rr, d, FP);
+        } else {
+            STW32(rr, d, FP);
         }
     }
 
@@ -359,7 +358,7 @@ namespace nanojit
         if (dr)
             asm_mmq(FP, dr, rb, db);
 
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
         if (rr != deprecated_UnknownReg)
             {
@@ -823,7 +822,7 @@ namespace nanojit
 
         // @todo, if we used xor, ldsd, fldz, etc above, we don't need mem here
         int d = deprecated_disp(ins);
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
         if (d)
             {
                 STW32(L2, d+4, FP);

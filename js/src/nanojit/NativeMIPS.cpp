@@ -590,7 +590,7 @@ namespace nanojit
         SW(r, d+mswoff(), FP);
         r = findRegFor(lo, GpRegs);             // okay if r gets recycled.
         SW(r, d+lswoff(), FP);
-        deprecated_freeRsrcOf(ins, false);      // if we had a reg in use, flush it to mem
+        deprecated_freeRsrcOf(ins);             // if we had a reg in use, flush it to mem
 
         TAG("asm_qjoin(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
@@ -640,10 +640,11 @@ namespace nanojit
         int d = deprecated_disp(ins);
         Register rr = ins->deprecated_getReg();
 
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
         if (cpu_has_fpu && deprecated_isKnownReg(rr)) {
-            asm_spill(rr, d, false, true);
+            if (d)
+                asm_spill(rr, d, false, true);
             asm_li_d(rr, ins->imm64_1(), ins->imm64_0());
         }
         else {
@@ -678,7 +679,7 @@ namespace nanojit
 
         Register rbase = findRegFor(base, GpRegs);
         NanoAssert(IsGpReg(rbase));
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
         if (cpu_has_fpu && deprecated_isKnownReg(rd)) {
             NanoAssert(IsFpReg(rd));
@@ -1471,15 +1472,14 @@ namespace nanojit
     {
         USE(pop);
         USE(quad);
-        if (d) {
-            if (IsFpReg(rr)) {
-                NanoAssert(quad);
-                asm_ldst64(true, rr, d, FP);
-            }
-            else {
-                NanoAssert(!quad);
-                asm_ldst(OP_SW, rr, d, FP);
-            }
+        NanoAssert(d);
+        if (IsFpReg(rr)) {
+            NanoAssert(quad);
+            asm_ldst64(true, rr, d, FP);
+        }
+        else {
+            NanoAssert(!quad);
+            asm_ldst(OP_SW, rr, d, FP);
         }
         TAG("asm_spill(rr=%d, d=%d, pop=%d, quad=%d)", rr, d, pop, quad);
     }

@@ -875,7 +875,7 @@ Assembler::asm_call(LInsp ins)
             if (!deprecated_isKnownReg(rr)) {
                 int d = deprecated_disp(ins);
                 NanoAssert(d != 0);
-                deprecated_freeRsrcOf(ins, false);
+                deprecated_freeRsrcOf(ins);
 
                 // The result doesn't have a register allocated, so store the
                 // result (in R0,R1) directly to its stack slot.
@@ -1192,7 +1192,7 @@ Assembler::asm_qjoin(LIns *ins)
     // okay if r gets recycled.
     r = findRegFor(lo, GpRegs);
     STR(r, FP, d);
-    deprecated_freeRsrcOf(ins, false); // if we had a reg in use, emit a ST to flush it to mem
+    deprecated_freeRsrcOf(ins);     // if we had a reg in use, emit a ST to flush it to mem
 }
 
 void
@@ -1279,28 +1279,27 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 {
     (void) pop;
     (void) quad;
-    if (d) {
-        if (_config.arm_vfp && IsFpReg(rr)) {
-            if (isS8(d >> 2)) {
-                FSTD(rr, FP, d);
-            } else {
-                FSTD(rr, IP, 0);
-                asm_add_imm(IP, FP, d);
-            }
+    NanoAssert(d);
+    if (_config.arm_vfp && IsFpReg(rr)) {
+        if (isS8(d >> 2)) {
+            FSTD(rr, FP, d);
         } else {
-            NIns merged;
-            STR(rr, FP, d);
-            // See if we can merge this store into an immediately following one,
-            // one, by creating or extending a STM instruction.
-            if (/* is it safe to poke _nIns[1] ? */
-                does_next_instruction_exist(_nIns, codeStart, codeEnd,
-                                                   exitStart, exitEnd)
-                && /* can we merge _nIns[0] into _nIns[1] ? */
-                   do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
-                _nIns[1] = merged;
-                _nIns++;
-                verbose_only( asm_output("merge next into STMDB"); )
-            }
+            FSTD(rr, IP, 0);
+            asm_add_imm(IP, FP, d);
+        }
+    } else {
+        NIns merged;
+        STR(rr, FP, d);
+        // See if we can merge this store into an immediately following one,
+        // one, by creating or extending a STM instruction.
+        if (/* is it safe to poke _nIns[1] ? */
+            does_next_instruction_exist(_nIns, codeStart, codeEnd,
+                                               exitStart, exitEnd)
+            && /* can we merge _nIns[0] into _nIns[1] ? */
+               do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
+            _nIns[1] = merged;
+            _nIns++;
+            verbose_only( asm_output("merge next into STMDB"); )
         }
     }
 }
@@ -1320,7 +1319,7 @@ Assembler::asm_load64(LInsp ins)
 
     Register rb = findRegFor(base, GpRegs);
     NanoAssert(IsGpReg(rb));
-    deprecated_freeRsrcOf(ins, false);
+    deprecated_freeRsrcOf(ins);
 
     //outputf("--- load64: Finished register allocation.");
 
@@ -1531,10 +1530,11 @@ Assembler::asm_immf(LInsp ins)
     int d = deprecated_disp(ins);
     Register rr = ins->deprecated_getReg();
 
-    deprecated_freeRsrcOf(ins, false);
+    deprecated_freeRsrcOf(ins);
 
     if (_config.arm_vfp && deprecated_isKnownReg(rr)) {
-        asm_spill(rr, d, false, true);
+        if (d)
+            asm_spill(rr, d, false, true);
 
         underrunProtect(4*4);
         asm_immf_nochk(rr, ins->imm64_0(), ins->imm64_1());
