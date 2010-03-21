@@ -224,7 +224,7 @@ namespace nanojit
         Register rr = ins->deprecated_getReg();
         if (deprecated_isKnownReg(rr) && (rmask(rr) & FpRegs)) {
             // FPR already assigned, fine, use it
-            deprecated_freeRsrcOf(ins, false);
+            deprecated_freeRsrcOf(ins);
         } else {
             // use a GPR register; its okay to copy doubles with GPR's
             // but *not* okay to copy non-doubles with FPR's
@@ -811,20 +811,19 @@ namespace nanojit
 
     void Assembler::asm_spill(Register rr, int d, bool /* pop */, bool quad) {
         (void)quad;
-        if (d) {
-            if (IsFpReg(rr)) {
-                NanoAssert(quad);
-                STFD(rr, d, FP);
-            }
-        #ifdef NANOJIT_64BIT
-            else if (quad) {
-                STD(rr, d, FP);
-            }
-        #endif
-            else {
-                NanoAssert(!quad);
-                STW(rr, d, FP);
-            }
+        NanoAssert(d);
+        if (IsFpReg(rr)) {
+            NanoAssert(quad);
+            STFD(rr, d, FP);
+        }
+    #ifdef NANOJIT_64BIT
+        else if (quad) {
+            STD(rr, d, FP);
+        }
+    #endif
+        else {
+            NanoAssert(!quad);
+            STW(rr, d, FP);
         }
     }
 
@@ -1072,7 +1071,7 @@ namespace nanojit
         Register r = ins->deprecated_getReg();
         if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {
             // FPR already assigned, fine, use it
-            deprecated_freeRsrcOf(ins, false);
+            deprecated_freeRsrcOf(ins);
         } else {
             // use a GPR register; its okay to copy doubles with GPR's
             // but *not* okay to copy non-doubles with FPR's
