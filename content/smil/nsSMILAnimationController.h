@@ -183,7 +183,6 @@ protected:
   AnimationElementHashtable  mAnimationElementTable;
   TimeContainerHashtable     mChildContainerTable;
   PRPackedBool               mResampleNeeded;
-  PRPackedBool               mDeferredStartSampling;
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
