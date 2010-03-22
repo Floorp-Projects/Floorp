@@ -146,18 +146,21 @@ enum TokenKind {
     TOK_LIMIT                           /* domain size */
 };
 
-static inline bool TokenKindIsXML(TokenKind tt)
+static inline bool
+TokenKindIsXML(TokenKind tt)
 {
     return tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME;
 }
 
-static inline bool TreeTypeIsXML(TokenKind tt)
+static inline bool
+TreeTypeIsXML(TokenKind tt)
 {
     return tt == TOK_XMLCOMMENT || tt == TOK_XMLCDATA || tt == TOK_XMLPI ||
            tt == TOK_XMLELEM || tt == TOK_XMLLIST;
 }
 
-static inline bool TokenKindIsDecl(TokenKind tt)
+static inline bool
+TokenKindIsDecl(TokenKind tt)
 {
 #if JS_HAS_BLOCK_SCOPE
     return tt == TOK_VAR || tt == TOK_LET;
