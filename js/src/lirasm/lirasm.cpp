@@ -161,7 +161,7 @@ const ArgType I64 = nanojit::ARGTYPE_Q;
 const ArgType F64 = nanojit::ARGTYPE_F;
 const ArgType PTR = nanojit::ARGTYPE_P;
 const ArgType WRD = nanojit::ARGTYPE_P;
-const ArgType VOID = nanojit::ARGTYPE_V;
+const ArgType VD = nanojit::ARGTYPE_V;  // "VOID" causes problems on Windows!
  
 
 enum LirTokenType {
@@ -375,7 +375,7 @@ Function functions[] = {
     FN(puts,   argMask(PTR, 1, 1) | retMask(I32)),
     FN(sin,    argMask(F64, 1, 1) | retMask(F64)),
     FN(malloc, argMask(WRD, 1, 1) | retMask(PTR)),
-    FN(free,   argMask(PTR, 1, 1) | retMask(VOID))
+    FN(free,   argMask(PTR, 1, 1) | retMask(VD))
 };
 
 template<typename out, typename in> out
