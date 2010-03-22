@@ -78,6 +78,12 @@
       <children/>
     </content>
     <implementation implements="nsIDOMEventListener">
+      <field name="tabContainer" readonly="true">
+        document.getElementById(this.getAttribute("tabcontainer"));
+      </field>
+      <field name="tabs" readonly="true">
+        this.tabContainer.childNodes;
+      </field>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -89,14 +95,8 @@
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
-      <field name="mTabContainer" readonly="true">
-        document.getElementById(this.getAttribute("tabcontainer"));
-      </field>
       <field name="mPanelContainer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "panelcontainer");
-      </field>
-      <field name="mTabs" readonly="true">
-        this.mTabContainer.childNodes
       </field>
       <field name="mStringBundle">
         document.getAnonymousElementByAttribute(this, "anonid", "tbstringbundle");
@@ -204,7 +204,7 @@
         <![CDATA[
           for (let i = 0; i < this.browsers.length; i++) {
             if (this.browsers[i].contentWindow == aWindow)
-              return this.mTabs[i];
+              return this.tabs[i];
           }
           return null;
         ]]>
@@ -775,7 +775,7 @@
         <parameter name="aForceUpdate"/>
         <body>
           <![CDATA[
-            var newBrowser = this.getBrowserAtIndex(this.mTabContainer.selectedIndex);
+            var newBrowser = this.getBrowserAtIndex(this.tabContainer.selectedIndex);
             if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
@@ -821,7 +821,7 @@
 
                   // make sure that all status indicators are properly updated
                   if ("onUpdateCurrentBrowser" in p) {
-                    var listener = this.mTabListeners[this.mTabContainer.selectedIndex] || null;
+                    let listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
                     if (listener && listener.mStateFlags)
                       p.onUpdateCurrentBrowser(listener.mStateFlags, listener.mStatus,
                                                listener.mMessage, listener.mTotalProgress);
@@ -1075,7 +1075,7 @@
           else
             firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner});
 
-          var tabNum = this.mTabContainer.selectedIndex;
+          var tabNum = this.tabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
             let tab = this.addTab(aURIs[i]);
             if (aReplace)
@@ -1135,15 +1135,15 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.maxWidth = this.mTabContainer.mTabMaxWidth;
-            t.minWidth = this.mTabContainer.mTabMinWidth;
+            t.maxWidth = this.tabContainer.mTabMaxWidth;
+            t.minWidth = this.tabContainer.mTabMinWidth;
             t.width = 0;
             t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
-            this.mTabContainer.appendChild(t);
+            this.tabContainer.appendChild(t);
 
             if (this.tabContainer.mTabstrip._isRTLScrollbox) {
               /* In RTL UI, the tab is visually added to the left side of the
@@ -1151,11 +1151,11 @@
                * order to make sure the same set of tabs is visible before and
                * after the new tab is added.  See bug 508816. */
 
-              this.tabContainer.mTabstrip.scrollByPixels(this.mTabs[0].clientWidth);
+              this.tabContainer.mTabstrip.scrollByPixels(this.tabs[0].clientWidth);
             }
 
-            // invalidate cache, because mTabContainer is about to change
-            this._browsers = null; 
+            // invalidate cache, because tabContainer is about to change
+            this._browsers = null;
 
             // If this new tab is owned by another, assert that relationship
             if (aOwner)
@@ -1184,7 +1184,7 @@
             this.tabContainer.updateVisibility();
 
             // wire up a progress listener for the new browser object.
-            var position = this.mTabContainer.childNodes.length-1;
+            var position = this.tabs.length - 1;
             var tabListener = this.mTabProgressListener(t, b, blank);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
@@ -1267,7 +1267,7 @@
       <parameter name="aAll"/>
       <body>
         <![CDATA[
-          var numTabs = this.mTabContainer.childNodes.length;
+          var numTabs = this.tabs.length;
           var reallyClose = true;
           if (numTabs <= 1)
             return reallyClose;
@@ -1319,9 +1319,9 @@
             if (this.warnAboutClosingTabs(false)) {
               this.selectedTab = aTab;
 
-              for (let i = this.mTabs.length - 1; i >= 0; --i) {
-                if (this.mTabs[i] != aTab)
-                  this.removeTab(this.mTabs[i]);
+              for (let i = this.tabs.length - 1; i >= 0; --i) {
+                if (this.tabs[i] != aTab)
+                  this.removeTab(this.tabs[i]);
               }
             }
           ]]>
@@ -1376,7 +1376,7 @@
 
             var closeWindow = false;
             var newTab = false;
-            if (this.mTabs.length - this._removingTabs.length == 1) {
+            if (this.tabs.length - this._removingTabs.length == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
                               Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
@@ -1415,7 +1415,7 @@
             browser.setAttribute("type", "content-targetable");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
-            Array.forEach(this.mTabs, function (tab) {
+            Array.forEach(this.tabs, function (tab) {
               if ("owner" in tab && tab.owner == aTab)
                 // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
@@ -1487,8 +1487,8 @@
             this.tabContainer.removeChild(aTab);
 
             // ... and fix up the _tPos properties immediately.
-            for (let i = aTab._tPos; i < this.mTabs.length; i++)
-              this.mTabs[i]._tPos = i;
+            for (let i = aTab._tPos; i < this.tabs.length; i++)
+              this.tabs[i]._tPos = i;
 
             // update tab close buttons state
             if (!this._windowIsClosing)
@@ -1729,12 +1729,12 @@
         <![CDATA[
           // count backwards for aIndex < 0
           if (aIndex < 0)
-            aIndex += this.mTabs.length;
+            aIndex += this.tabs.length;
 
           if (aIndex >= 0 &&
-              aIndex < this.mTabs.length &&
+              aIndex < this.tabs.length &&
               aIndex != this.tabContainer.selectedIndex)
-            this.selectedTab = this.mTabs[aIndex];
+            this.selectedTab = this.tabs[aIndex];
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -1743,12 +1743,6 @@
         ]]>
         </body>
       </method>
-
-      <property name="tabContainer" readonly="true">
-        <getter>
-          return this.mTabContainer;
-        </getter>
-      </property>
 
       <property name="selectedTab">
         <getter>
@@ -1771,7 +1765,7 @@
        <getter>
           <![CDATA[
             return this._browsers ||
-                   (this._browsers = Array.map(this.mTabs, function (tab) tab.linkedBrowser));
+                   (this._browsers = Array.map(this.tabs, function (tab) tab.linkedBrowser));
           ]]>
         </getter>
       </property>
@@ -1782,7 +1776,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (this.mTabs.length == 1)
+            if (this.tabs.length == 1)
               return null;
 
             // tell a new window to take the "dropped" tab
@@ -1813,16 +1807,16 @@
           this.mCurrentTab._selected = false;
           // use .item() instead of [] because dragging to the end of the strip goes out of
           // bounds: .item() returns null (so it acts like appendChild), but [] throws
-          this.mTabContainer.insertBefore(aTab, this.mTabs.item(aIndex));
-          // invalidate cache, because mTabContainer is about to change
+          this.tabContainer.insertBefore(aTab, this.tabs.item(aIndex));
+          // invalidate cache, because tabContainer is about to change
           this._browsers = null;
 
-          for (let i = 0; i < this.mTabs.length; i++) {
-            this.mTabs[i]._tPos = i;
-            this.mTabs[i]._selected = false;
+          for (let i = 0; i < this.tabs.length; i++) {
+            this.tabs[i]._tPos = i;
+            this.tabs[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
-          this.mTabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
+          this.tabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2151,7 +2145,7 @@
                 if (window.getComputedStyle(this, null).direction == "ltr")
                   offset *= -1;
 
-                this.mTabContainer.advanceSelectedTab(offset, true);
+                this.tabContainer.advanceSelectedTab(offset, true);
                 aEvent.stopPropagation();
                 aEvent.preventDefault();
                 return;
@@ -2238,7 +2232,7 @@
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild;
-          this.mCurrentTab = this.mTabContainer.firstChild;
+          this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
 
           var uniqueId = "panel" + Date.now();
@@ -2284,6 +2278,10 @@
                 onget="return this.tabContainer._contextTab;"/>
       <property name="mPrefs" readonly="true"
                 onget="return Services.prefs;"/>
+      <property name="mTabContainer" readonly="true"
+                onget="return this.tabContainer;"/>
+      <property name="mTabs" readonly="true"
+                onget="return this.tabs;"/>
     </implementation>
 
     <handlers>
@@ -2292,7 +2290,7 @@
           if (!event.isTrusted)
             return;
 
-          if (this.mTabs.length == 1)
+          if (this.tabs.length == 1)
             return;
 
           var tab = this._getTabForContentWindow(event.target);

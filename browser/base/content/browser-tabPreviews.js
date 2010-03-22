@@ -202,7 +202,7 @@ var ctrlTab = {
     if (this._tabList)
       return this._tabList;
 
-    var list = Array.slice(gBrowser.mTabs);
+    var list = Array.slice(gBrowser.tabs);
 
     if (this._closing)
       this.detachTab(this._closing, list);
@@ -445,9 +445,9 @@ var ctrlTab = {
           } else if (!event.shiftKey) {
             event.preventDefault();
             event.stopPropagation();
-            if (gBrowser.mTabs.length > 2) {
+            if (gBrowser.tabs.length > 2) {
               this.open();
-            } else if (gBrowser.mTabs.length == 2) {
+            } else if (gBrowser.tabs.length == 2) {
               gBrowser.selectedTab = gBrowser.selectedTab.nextSibling ||
                                      gBrowser.selectedTab.previousSibling;
             }
@@ -577,7 +577,7 @@ var allTabs = {
       return;
     this._initiated = true;
 
-    Array.forEach(gBrowser.mTabs, function (tab) {
+    Array.forEach(gBrowser.tabs, function (tab) {
       this._addPreview(tab);
     }, this);
 
