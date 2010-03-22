@@ -6662,6 +6662,10 @@ MOZ_ARG_ENABLE_STRING(debug,
   fi ],
   MOZ_DEBUG=)
 
+if test $MOZ_PLATFORM_MAEMO; then
+    MOZ_DEBUG=1
+fi
+
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
  case "${target_os}" in
     beos*)
