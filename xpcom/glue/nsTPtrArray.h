@@ -113,10 +113,7 @@ class nsAutoTPtrArray : public nsTPtrArray<E> {
     }
 
   protected:
-    union {
-      char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
-      PRUint64 dummy;
-    };
+    char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
 };
 
 #endif  // nsTPtrArray_h__
