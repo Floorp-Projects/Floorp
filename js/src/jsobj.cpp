@@ -1645,12 +1645,12 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp)
 {
     if (!lookup(cx, obj, id, objp, propp))
-        return JS_FALSE;
+        return false;
     if (!*propp)
-        return JS_TRUE;
+        return true;
 
     if (*objp == obj)
-        return JS_TRUE;
+        return true;
 
     JSExtendedClass *xclasp;
     JSObject *outer;
@@ -1661,8 +1661,9 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
     } else {
         outer = xclasp->outerObject(cx, *objp);
         if (!outer)
-            return JS_FALSE;
+            return false;
     }
+
     if (outer != *objp) {
         if (OBJ_IS_NATIVE(*objp) && obj->getClass() == clasp) {
             /*
@@ -1681,16 +1682,14 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
              * owned, or indirectly delegated.
              */
             JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(*propp);
-            if (!SPROP_IS_SHARED_PERMANENT(sprop)) {
-                (*objp)->dropProperty(cx, *propp);
-                *propp = NULL;
-            }
-        } else {
-            (*objp)->dropProperty(cx, *propp);
-            *propp = NULL;
+            if (sprop->isSharedPermanent())
+                return true;
         }
+
+        (*objp)->dropProperty(cx, *propp);
+        *propp = NULL;
     }
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef JS_TRACER
@@ -1787,7 +1786,7 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      */
     if (pobj != obj &&
         !(OBJ_IS_NATIVE(pobj) &&
-          SPROP_IS_SHARED_PERMANENT((JSScopeProperty *)prop))) {
+          ((JSScopeProperty *)prop)->isSharedPermanent())) {
         pobj->dropProperty(cx, prop);
         *vp = JSVAL_FALSE;
         return JS_TRUE;
@@ -4760,7 +4759,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
             if (cacheResult) {
                 entry = js_FillPropertyCache(cx, scopeChain,
                                              scopeIndex, protoIndex, pobj,
-                                             (JSScopeProperty *) prop, false);
+                                             (JSScopeProperty *) prop);
             }
             SCOPE_DEPTH_ACCUM(&cx->runtime->scopeSearchDepthStats, scopeIndex);
             goto out;
@@ -4843,7 +4842,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
 #endif
             js_FillPropertyCache(cx, scopeChain,
                                  scopeIndex, protoIndex, pobj,
-                                 (JSScopeProperty *) prop, false);
+                                 (JSScopeProperty *) prop);
             JS_ASSERT(entry);
             JS_UNLOCK_OBJ(cx, pobj);
             return obj;
@@ -5079,7 +5078,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
     if (getHow & JSGET_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2, sprop, false);
+        js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2, sprop);
     }
 
     if (!js_NativeGet(cx, obj, obj2, sprop, getHow, vp))
@@ -5268,8 +5267,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             if (!sprop->hasSlot()) {
                 if (defineHow & JSDNP_CACHE_RESULT) {
                     JS_ASSERT_NOT_ON_TRACE(cx);
-                    JSPropCacheEntry *entry;
-                    entry = js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop, false);
+                    JSPropCacheEntry *entry =
+                        js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop);
                     TRACE_2(SetPropHit, entry, sprop);
                 }
 
@@ -5473,7 +5472,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
         if (prop) {
             if (OBJ_IS_NATIVE(proto)) {
                 sprop = (JSScopeProperty *)prop;
-                if (SPROP_IS_SHARED_PERMANENT(sprop))
+                if (sprop->isSharedPermanent())
                     *rval = JSVAL_FALSE;
             }
             proto->dropProperty(cx, prop);

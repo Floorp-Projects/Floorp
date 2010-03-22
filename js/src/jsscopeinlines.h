@@ -163,6 +163,7 @@ JSScope::trace(JSTracer *trc)
     JSContext *cx = trc->context;
     JSScopeProperty *sprop = lastProp;
     uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
+
     if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes && !hasRegenFlag(regenFlag)) {
         /*
          * Either this scope has its own shape, which must be regenerated, or
@@ -184,14 +185,20 @@ JSScope::trace(JSTracer *trc)
         shape = newShape;
         flags ^= JSScope::SHAPE_REGEN;
 
-        /* Also regenerate the shapes of empty scopes, in case they are not shared. */
-        for (JSScope *empty = emptyScope;
-             empty && !empty->hasRegenFlag(regenFlag);
-             empty = empty->emptyScope) {
-            empty->shape = js_RegenerateShapeForGC(cx);
-            empty->flags ^= JSScope::SHAPE_REGEN;
+        /* Also regenerate the shapes of this scope's empty scope, if there is one. */
+        JSScope *empty = emptyScope;
+        if (empty) {
+            JS_ASSERT(!empty->emptyScope);
+            if (!empty->hasRegenFlag(regenFlag)) {
+                uint32 newEmptyShape = js_RegenerateShapeForGC(cx);
+
+                JS_PROPERTY_TREE(cx).emptyShapeChange(empty->shape, newEmptyShape);
+                empty->shape = newEmptyShape;
+                empty->flags ^= JSScope::SHAPE_REGEN;
+            }
         }
     }
+
     if (sprop) {
         JS_ASSERT(hasProperty(sprop));
 

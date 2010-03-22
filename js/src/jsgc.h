@@ -48,6 +48,7 @@
 #include "jsbit.h"
 #include "jsutil.h"
 #include "jstask.h"
+#include "jsversion.h"
 
 JS_BEGIN_EXTERN_C
 
