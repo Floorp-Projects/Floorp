@@ -363,6 +363,8 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
     return JS_TRUE;
   }
 
+  CheckWindow(wn);
+
   XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
 
   // The parent must be the inner global object for its scope.
