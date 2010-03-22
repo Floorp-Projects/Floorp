@@ -5193,20 +5193,27 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
     return ARECORD_CONTINUE;
 }
 
-bool
-TraceRecorder::hasMethod(JSObject* obj, jsid id)
+RecordingStatus
+TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
 {
+    found = false;
+    RecordingStatus status = RECORD_CONTINUE;
     if (!obj)
-        return false;
+        return status;
 
     JSObject* pobj;
     JSProperty* prop;
     int protoIndex = obj->lookupProperty(cx, id, &pobj, &prop);
-    if (protoIndex < 0 || !prop)
-        return false;
+    if (protoIndex < 0)
+        return RECORD_ERROR;
+    if (!prop)
+        return status;
 
-    bool found = false;
-    if (OBJ_IS_NATIVE(pobj)) {
+    if (!OBJ_IS_NATIVE(pobj)) {
+        // We can't rely on __iterator__ being present on trace just because
+        // it's there now, if found in a non-native object.
+        status = RECORD_STOP;
+    } else {
         JSScope* scope = OBJ_SCOPE(pobj);
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
@@ -5214,24 +5221,22 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
-                if (!scope->generic() && !scope->branded()) {
-                    scope->brandingShapeChange(cx, sprop->slot, v);
-                    scope->setBranded();
-                }
+                if (!scope->generic() && !scope->branded() && !scope->brand(cx, sprop->slot, v))
+                    status = RECORD_STOP;
             }
         }
     }
 
     pobj->dropProperty(cx, prop);
-    return found;
+    return status;
 }
 
-JS_REQUIRES_STACK bool
-TraceRecorder::hasIteratorMethod(JSObject* obj)
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::hasIteratorMethod(JSObject* obj, bool& found)
 {
     JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
 
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom));
+    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom), found);
 }
 
 /*
@@ -9167,7 +9172,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                     RETURN_STOP_A("property found on non-native object");
                 }
                 entry = js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2,
-                                             (JSScopeProperty*) prop, false);
+                                             (JSScopeProperty*) prop);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
@@ -9214,60 +9219,36 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
 
     uint32 vshape = PCVCAP_SHAPE(entry->vcap);
 
-    // Check for first-level cache hit and guard on kshape if possible.
-    // Otherwise guard on key object exact match.
-    if (PCVCAP_TAG(entry->vcap) <= 1) {
-        // Special case for the global object, which may be aliased to get a property value.
-        // To catch cross-global property accesses we must check against globalObj identity.
-        // But a JOF_NAME mode opcode needs no guard, as we ensure the global object's shape
-        // never changes, and name ops can't reach across a global object ('with' aborts).
-        if (aobj == globalObj) {
-            if (entry->adding())
-                RETURN_STOP("adding a property to the global object");
+    // Special case for the global object, which may be aliased to get a property value.
+    // To catch cross-global property accesses we must check against globalObj identity.
+    // But a JOF_NAME mode opcode needs no guard, as we ensure the global object's shape
+    // never changes, and name ops can't reach across a global object ('with' aborts).
+    if (aobj == globalObj) {
+        if (entry->adding())
+            RETURN_STOP("adding a property to the global object");
 
-            JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
-            if (JOF_OPMODE(op) != JOF_NAME) {
-                guard(true,
-                      addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
-                      exit);
-            }
-        } else {
-            CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit));
-        }
-
-        if (entry->adding()) {
-            LIns *vshape_ins = addName(
-                lir->insLoad(LIR_ld,
-                             addName(lir->insLoad(LIR_ldp, cx_ins,
-                                                  offsetof(JSContext, runtime), ACC_READONLY),
-                                     "runtime"),
-                             offsetof(JSRuntime, protoHazardShape)),
-                "protoHazardShape");
-            guard(true,
-                  addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard_protoHazardShape"),
-                  MISMATCH_EXIT);
-        }
-    } else {
         JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
-
-#ifdef DEBUG
-        JSAtom *pcatom;
-        if (op == JSOP_LENGTH) {
-            pcatom = cx->runtime->atomState.lengthAtom;
-        } else {
-            ptrdiff_t pcoff = (JOF_TYPE(js_CodeSpec[op].format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-            GET_ATOM_FROM_BYTECODE(cx->fp->script, cx->fp->regs->pc, pcoff, pcatom);
-        }
-        JS_ASSERT(entry->kpc == (jsbytecode *) pcatom);
-        JS_ASSERT(entry->kshape == jsuword(aobj));
-#endif
-
-        // See above comment about globalObj and JOF_NAME.
-        if (!obj_ins->isconstp() && (aobj != globalObj || JOF_OPMODE(op) != JOF_NAME)) {
+        if (JOF_OPMODE(op) != JOF_NAME) {
             guard(true,
-                  addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(aobj)), "guard_kobj"),
+                  addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
                   exit);
         }
+    } else {
+        CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit));
+    }
+
+    if (entry->adding()) {
+        LIns *vshape_ins = addName(
+            lir->insLoad(LIR_ld,
+                         addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime),
+                                              ACC_READONLY),
+                                 "runtime"),
+                         offsetof(JSRuntime, protoHazardShape)),
+            "protoHazardShape");
+
+        guard(true,
+              addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard_protoHazardShape"),
+              MISMATCH_EXIT);
     }
 
     // For any hit that goes up the scope and/or proto chains, we will need to
@@ -13452,7 +13433,11 @@ TraceRecorder::record_JSOP_ITER()
 
     jsuint flags = cx->fp->regs->pc[1];
 
-    if (hasIteratorMethod(JSVAL_TO_OBJECT(v))) {
+    bool found;
+    RecordingStatus status = hasIteratorMethod(JSVAL_TO_OBJECT(v), found);
+    if (status != RECORD_CONTINUE)
+        return InjectStatus(status);
+    if (found) {
         if (flags == JSITER_ENUMERATE)
             return InjectStatus(call_imacro(iter_imacros.for_in));
         if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))

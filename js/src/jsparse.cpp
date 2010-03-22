@@ -6048,6 +6048,7 @@ JSCompiler::condExpr()
         pn = TernaryNode::create(tc);
         if (!pn)
             return NULL;
+
         /*
          * Always accept the 'in' operator in the middle clause of a ternary,
          * where it's unambiguous, even if we might be parsing the init of a

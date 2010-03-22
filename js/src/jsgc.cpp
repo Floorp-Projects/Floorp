@@ -3236,7 +3236,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * Sweep the runtime's property tree after finalizing objects, in case any
      * had watchpoints referencing tree nodes.
      */
-    js_SweepScopeProperties(cx);
+    js::SweepScopeProperties(cx);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop

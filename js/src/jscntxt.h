@@ -49,11 +49,12 @@
 #include "jsclist.h"
 #include "jslong.h"
 #include "jsatom.h"
-#include "jsversion.h"
 #include "jsdhash.h"
 #include "jsgc.h"
+#include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
+#include "jspropertytree.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsregexp.h"
@@ -61,7 +62,6 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
-#include "jshashtable.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -910,13 +910,18 @@ struct JSRuntime {
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
+     * This really should be free of all locking overhead and allocated in
+     * thread-local storage, hence the JS_PROPERTY_TREE(cx) macro.
+     */
+    js::PropertyTree    propertyTree;
+
+#define JS_PROPERTY_TREE(cx) ((cx)->runtime->propertyTree)
+
+    /*
      * The propertyRemovals counter is incremented for every JSScope::clear,
      * and for each JSScope::remove method call that frees a slot in an object.
-     * See js_NativeGet and js_NativeSet in jsobj.c.
+     * See js_NativeGet and js_NativeSet in jsobj.cpp.
      */
-    JSDHashTable        propertyTreeHash;
-    JSScopeProperty     *propertyFreeList;
-    JSArenaPool         propertyArenaPool;
     int32               propertyRemovals;
 
     /* Script filename table. */
