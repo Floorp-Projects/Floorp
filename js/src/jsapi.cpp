@@ -563,11 +563,8 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
-    if (!js_InitDtoa() ||
-        !js_InitGC(this, maxbytes) ||
-        !js_InitAtomState(this)) {
+    if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
-    }
 
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
@@ -757,7 +754,6 @@ JS_ShutDown(void)
     reprmeter::js_DumpReprMeter();
 #endif
 
-    js_FinishDtoa();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
