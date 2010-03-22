@@ -81,6 +81,46 @@ namespace nanojit
 
     #endif /* NANOJIT_VERBOSE */
 
+    uint32_t CallInfo::count_args() const
+    {
+        uint32_t argc = 0;
+        uint32_t argt = _typesig;
+        argt >>= ARGTYPE_SHIFT;         // remove retType
+        while (argt) {
+            argc++;
+            argt >>= ARGTYPE_SHIFT;
+        }
+        return argc;
+    }
+
+    uint32_t CallInfo::count_int32_args() const
+    {
+        uint32_t argc = 0;
+        uint32_t argt = _typesig;
+        argt >>= ARGTYPE_SHIFT;     // remove retType
+        while (argt) {
+            ArgType a = ArgType(argt & ARGTYPE_MASK);
+            if (a == ARGTYPE_I || a == ARGTYPE_U)
+                argc++;
+            argt >>= ARGTYPE_SHIFT;
+        }
+        return argc;
+    }
+
+    uint32_t CallInfo::getArgTypes(ArgType* argTypes) const
+    {
+        uint32_t argc = 0;
+        uint32_t argt = _typesig;
+        argt >>= ARGTYPE_SHIFT;         // remove retType
+        while (argt) {
+            ArgType a = ArgType(argt & ARGTYPE_MASK);
+            argTypes[argc] = a;
+            argc++;
+            argt >>= ARGTYPE_SHIFT;
+        }
+        return argc;
+    }
+
     // implementation
 #ifdef NJ_VERBOSE
     void ReverseLister::finish()
@@ -2324,11 +2364,11 @@ namespace nanojit
     static int32_t FASTCALL fle(double a, double b) { return a <= b; }
     static int32_t FASTCALL fge(double a, double b) { return a >= b; }
 
-    #define SIG_F_I     (ARGSIZE_F | ARGSIZE_I << ARGSIZE_SHIFT*1)
-    #define SIG_F_U     (ARGSIZE_F | ARGSIZE_U << ARGSIZE_SHIFT*1)
-    #define SIG_F_F     (ARGSIZE_F | ARGSIZE_F << ARGSIZE_SHIFT*1)
-    #define SIG_F_FF    (ARGSIZE_F | ARGSIZE_F << ARGSIZE_SHIFT*1 | ARGSIZE_F << ARGSIZE_SHIFT*2)
-    #define SIG_B_FF    (ARGSIZE_B | ARGSIZE_F << ARGSIZE_SHIFT*1 | ARGSIZE_F << ARGSIZE_SHIFT*2)
+    #define SIG_F_I     (ARGTYPE_F | ARGTYPE_I << ARGTYPE_SHIFT*1)
+    #define SIG_F_U     (ARGTYPE_F | ARGTYPE_U << ARGTYPE_SHIFT*1)
+    #define SIG_F_F     (ARGTYPE_F | ARGTYPE_F << ARGTYPE_SHIFT*1)
+    #define SIG_F_FF    (ARGTYPE_F | ARGTYPE_F << ARGTYPE_SHIFT*1 | ARGTYPE_F << ARGTYPE_SHIFT*2)
+    #define SIG_B_FF    (ARGTYPE_B | ARGTYPE_F << ARGTYPE_SHIFT*1 | ARGTYPE_F << ARGTYPE_SHIFT*2)
 
     #define SF_CALLINFO(name, typesig) \
         static const CallInfo name##_ci = \
@@ -2418,14 +2458,13 @@ namespace nanojit
     }
 
     LIns* SoftFloatFilter::insCall(const CallInfo *ci, LInsp args[]) {
-        uint32_t argt = ci->_argtypes;
-
-        for (uint32_t i = 0, argsizes = argt >> ARGSIZE_SHIFT; argsizes != 0; i++, argsizes >>= ARGSIZE_SHIFT)
+        uint32_t nArgs = ci->count_args();
+        for (uint32_t i = 0; i < nArgs; i++)
             args[i] = split(args[i]);
 
-        if ((argt & ARGSIZE_MASK_ANY) == ARGSIZE_F) {
-            // this function returns a double as two 32bit values, so replace
-            // call with qjoin(qhi(call), call)
+        if (ci->returnType() == ARGTYPE_F) {
+            // This function returns a double as two 32bit values, so replace
+            // call with qjoin(qhi(call), call).
             return split(ci, args);
         }
         return out->insCall(ci, args);
@@ -2876,8 +2915,8 @@ namespace nanojit
 
     LIns* ValidateWriter::insCall(const CallInfo *ci, LIns* args0[])
     {
-        ArgSize sizes[MAXARGS];
-        uint32_t nArgs = ci->get_sizes(sizes);
+        ArgType argTypes[MAXARGS];
+        uint32_t nArgs = ci->getArgTypes(argTypes);
         LTy formals[MAXARGS];
         LIns* args[MAXARGS];    // in left-to-right order, unlike args0[]
 
@@ -2890,20 +2929,20 @@ namespace nanojit
             errorAccSetShould(lirNames[op], ci->_storeAccSet,
                 "not contain bits that aren't in ACC_STORE_ANY");
 
-        // This loop iterates over the args from right-to-left (because
-        // arg() and get_sizes() use right-to-left order), but puts the
-        // results into formals[] and args[] in left-to-right order so
-        // that arg numbers in error messages make sense to the user.
+        // This loop iterates over the args from right-to-left (because arg()
+        // and getArgTypes() use right-to-left order), but puts the results
+        // into formals[] and args[] in left-to-right order so that arg
+        // numbers in error messages make sense to the user.
         for (uint32_t i = 0; i < nArgs; i++) {
             uint32_t i2 = nArgs - i - 1;    // converts right-to-left to left-to-right
-            switch (sizes[i]) {
-            case ARGSIZE_I:
-            case ARGSIZE_U:         formals[i2] = LTy_I32;   break;
+            switch (argTypes[i]) {
+            case ARGTYPE_I:
+            case ARGTYPE_U:         formals[i2] = LTy_I32;   break;
 #ifdef NANOJIT_64BIT
-            case ARGSIZE_Q:         formals[i2] = LTy_I64;   break;
+            case ARGTYPE_Q:         formals[i2] = LTy_I64;   break;
 #endif
-            case ARGSIZE_F:         formals[i2] = LTy_F64;   break;
-            default: NanoAssert(0); formals[i2] = LTy_Void;  break;
+            case ARGTYPE_F:         formals[i2] = LTy_F64;   break;
+            default: NanoAssertMsgf(0, "%d %s\n", argTypes[i],ci->_name); formals[i2] = LTy_Void;  break;
             }
             args[i2] = args0[i];
         }

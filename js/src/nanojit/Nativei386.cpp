@@ -168,7 +168,7 @@ namespace nanojit
 
         const CallInfo* call = ins->callInfo();
         // must be signed, not unsigned
-        uint32_t iargs = call->count_iargs();
+        uint32_t iargs = call->count_int32_args();
         int32_t fargs = call->count_args() - iargs;
 
         bool indirect = call->isIndirect();
@@ -237,13 +237,13 @@ namespace nanojit
         // Pre-assign registers to the first N 4B args based on the calling convention.
         uint32_t n = 0;
 
-        ArgSize sizes[MAXARGS];
-        uint32_t argc = call->get_sizes(sizes);
+        ArgType argTypes[MAXARGS];
+        uint32_t argc = call->getArgTypes(argTypes);
         int32_t stkd = 0;
 
         if (indirect) {
             argc--;
-            asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
+            asm_arg(ARGTYPE_P, ins->arg(argc), EAX, stkd);
             if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
@@ -251,12 +251,12 @@ namespace nanojit
         for (uint32_t i = 0; i < argc; i++)
         {
             uint32_t j = argc-i-1;
-            ArgSize sz = sizes[j];
+            ArgType ty = argTypes[j];
             Register r = UnspecifiedReg;
-            if (n < max_regs && sz != ARGSIZE_F) {
+            if (n < max_regs && ty != ARGTYPE_F) {
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
-            asm_arg(sz, ins->arg(j), r, stkd);
+            asm_arg(ty, ins->arg(j), r, stkd);
             if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
@@ -1377,12 +1377,12 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_arg(ArgSize sz, LInsp ins, Register r, int32_t& stkd)
+    void Assembler::asm_arg(ArgType ty, LInsp ins, Register r, int32_t& stkd)
     {
         // If 'r' is known, then that's the register we have to put 'ins'
         // into.
 
-        if (sz == ARGSIZE_I || sz == ARGSIZE_U) {
+        if (ty == ARGTYPE_I || ty == ARGTYPE_U) {
             if (r != UnspecifiedReg) {
                 if (ins->isconst()) {
                     // Rematerialize the constant.
@@ -1413,7 +1413,7 @@ namespace nanojit
             }
 
         } else {
-            NanoAssert(sz == ARGSIZE_F);
+            NanoAssert(ty == ARGTYPE_F);
             asm_farg(ins, stkd);
         }
     }
