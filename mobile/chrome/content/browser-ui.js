@@ -413,7 +413,7 @@ var BrowserUI = {
     // (Using an event because we have no good way to delay-init [Bug 535366])
     browsers.addEventListener("load", function() {
       // We only want to delay one time
-      browsers.removeEventListener("load", arguments.callee, false);
+      browsers.removeEventListener("load", arguments.callee, true);
       
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
@@ -423,7 +423,7 @@ var BrowserUI = {
       DownloadsView.init();
       PreferencesView.init();
       ConsoleView.init();
-    }, false);
+    }, true);
   },
 
   uninit : function() {
