@@ -147,42 +147,6 @@ PropertyTree::finish()
 }
 
 /*
- * A property tree node on PropertyTree::freeList overlays the following prefix
- * struct on JSScopeProperty.
- */
-typedef struct FreeNode {
-    jsid        id;
-    FreeNode    *next;
-    FreeNode    **prevp;
-
-    void insert(FreeNode *&list) {
-        next = list;
-        prevp = &list;
-        if (list)
-            list->prevp = &next;
-        list = this;
-    }
-
-    void remove() {
-        *prevp = next;
-        if (next)
-            next->prevp = prevp;
-    }
-} FreeNode;
-
-#define FREENODE(sprop) ((FreeNode *) (sprop))
-
-#define FREENODE_INSERT(list, sprop)                                          \
-    JS_BEGIN_MACRO                                                            \
-        union { FreeNode *fn; JSScopeProperty *sp; } u;                       \
-        u.fn = (FreeNode *)(list);                                            \
-        FREENODE(sprop)->insert(u.fn);                                        \
-    JS_END_MACRO
-
-#define FREENODE_REMOVE(sprop)                                                \
-    (FREENODE(sprop)->remove())
-
-/*
  * NB: Called with cx->runtime->gcLock held if gcLocked is true.
  * On failure, return null after unlocking the GC and reporting out of memory.
  */
@@ -195,7 +159,7 @@ PropertyTree::newScopeProperty(JSContext *cx, bool gcLocked)
         JS_LOCK_GC(cx->runtime);
     sprop = freeList;
     if (sprop) {
-        FREENODE_REMOVE(sprop);
+        sprop->removeFree();
     } else {
         JS_ARENA_ALLOCATE_CAST(sprop, JSScopeProperty *, &arenaPool,
                                sizeof(JSScopeProperty));
@@ -795,9 +759,6 @@ js::RemoveNodeIfDead(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number, v
 void
 js::SweepScopeProperties(JSContext *cx)
 {
-    JS_STATIC_ASSERT(offsetof(FreeNode, id) == offsetof(JSScopeProperty, id));
-    JS_STATIC_ASSERT(sizeof(FreeNode) >= offsetof(JSScopeProperty, slot));
-
 #ifdef DEBUG
     JSBasicStats bs;
     uint32 livePropCapacity = 0, totalLiveCount = 0;
@@ -939,16 +900,18 @@ js::SweepScopeProperties(JSContext *cx)
                     OrphanNodeKids(cx, sprop);
             }
 
-            /* Clear id so we know (above) that sprop is on the freelist. */
-            sprop->id = JSVAL_NULL;
-            FREENODE_INSERT(JS_PROPERTY_TREE(cx).freeList, sprop);
+            /*
+             * Note that JSScopeProperty::insertFree nulls sprop->id so we know
+             * that sprop is on the freelist.
+             */
+            sprop->insertFree(JS_PROPERTY_TREE(cx).freeList);
             JS_RUNTIME_UNMETER(cx->runtime, livePropTreeNodes);
         }
 
         /* If a contains no live properties, return it to the malloc heap. */
         if (liveCount == 0) {
             for (JSScopeProperty *sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++)
-                FREENODE_REMOVE(sprop);
+                sprop->removeFree();
             JS_ARENA_DESTROY(&JS_PROPERTY_TREE(cx).arenaPool, a, ap);
         } else {
 #ifdef DEBUG
