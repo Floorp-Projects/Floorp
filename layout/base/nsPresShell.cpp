@@ -1703,6 +1703,15 @@ PresShell::Init(nsIDocument* aDocument,
     }
 #endif
 
+#ifdef MOZ_SMIL
+  if (mDocument->HasAnimationController()) {
+    nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
+    if (!animCtrl->IsPaused()) {
+      animCtrl->StartSampling(GetPresContext()->RefreshDriver());
+    }
+  }
+#endif // MOZ_SMIL
+
   return NS_OK;
 }
 
@@ -1812,10 +1821,15 @@ PresShell::Destroy()
     mDocument->DeleteShell();
   }
 
+  nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
+  if (mDocument->HasAnimationController()) {
+    mDocument->GetAnimationController()->StopSampling(rd);
+  }
+
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
-  GetPresContext()->RefreshDriver()->RemoveRefreshObserver(this, Flush_Layout);
+  rd->RemoveRefreshObserver(this, Flush_Layout);
   mResizeEvent.Revoke();
   if (mAsyncResizeTimerIsActive) {
     mAsyncResizeEventTimer->Cancel();
