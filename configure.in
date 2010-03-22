@@ -132,7 +132,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.22
+SQLITE_VERSION=3.6.23
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -6370,13 +6370,18 @@ then
     SQLITE_CFLAGS=
     SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,mozsqlite3,$(DIST)/lib)'
 else
+    dnl ============================
+    dnl === SQLite Version check ===
+    dnl ============================
+    dnl Check to see if the system SQLite package is new enough.
     PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
-    dnl ===================================
-    dnl === SQLITE_SECURE_DELETE checks ===
-    dnl ===================================
-    dnl check to see if the system sqlite package is compiled with
+
+    dnl ==================================
+    dnl === SQLITE_SECURE_DELETE check ===
+    dnl ==================================
+    dnl Check to see if the system SQLite package is compiled with
     dnl SQLITE_SECURE_DELETE enabled.
-    AC_MSG_CHECKING(for SQLITE_SECURE_DELETE support in system sqlite)
+    AC_MSG_CHECKING(for SQLITE_SECURE_DELETE support in system SQLite)
     _SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $SQLITE_CFLAGS"
     _SAVE_LIBS="$LIBS"
@@ -6384,51 +6389,9 @@ else
     AC_CACHE_VAL(ac_cv_sqlite_secure_delete,[
         AC_TRY_RUN([
             #include "sqlite3.h"
-            #include <stdio.h>
-            #include <assert.h>
 
             int main(int argc, char **argv){
-              sqlite3 *db;
-              sqlite3_uint64 r;
-              char *zFilename;
-              FILE *in;
-              int i;
-              int rc;
-              char *zBuf;
-              const int bufSize = 1024*3;
-
-              zBuf = malloc(bufSize*sizeof(char));
-              assert( zBuf );
-              rc = sqlite3_open(":memory:", &db);
-              assert( rc==SQLITE_OK );
-              sqlite3_close(db);
-              sqlite3_randomness(sizeof(r), &r);
-              zFilename = sqlite3_mprintf("test_db_%llu.sqlite", r);
-              rc = sqlite3_open(zFilename, &db);
-              assert( rc==SQLITE_OK );
-              rc = sqlite3_exec(db, 
-                "BEGIN;"
-                "CREATE TABLE t1(x);"
-                "INSERT INTO t1 VALUES(zeroblob(1000)||'abcdefghijklmnopqrstuvwxyz');"
-                "COMMIT;"
-                "DELETE FROM t1;",
-                0, 0, 0
-              );
-              assert( rc==SQLITE_OK );
-              sqlite3_close(db);
-              in = fopen(zFilename, "r");
-              assert( in!=0 );
-              rc = fread(zBuf, 1, bufSize, in);
-              assert( rc==bufSize );
-              fclose(in);
-              unlink(zFilename);
-              free( zBuf );
-              for(i=0; i<bufSize-11; i++){
-                if( *(zBuf+i)=='h' && memcmp(zBuf+i, "hijklmnopq", 10)==0 ){
-                  return 1;
-                }
-              }
-              return 0;
+              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE=1");
             }],
             ac_cv_sqlite_secure_delete=yes,
             ac_cv_sqlite_secure_delete=no,
@@ -6439,7 +6402,65 @@ else
     CFLAGS="$_SAVE_CFLAGS"
     LIBS="$_SAVE_LIBS"
     if test "x$ac_cv_sqlite_secure_delete" = "xno"; then
-        AC_MSG_ERROR([System Sqlite library is not compiled with SQLITE_SECURE_DELETE.])
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_SECURE_DELETE.])
+    fi
+
+    dnl ===============================
+    dnl === SQLITE_THREADSAFE check ===
+    dnl ===============================
+    dnl Check to see if the system SQLite package is compiled with
+    dnl SQLITE_THREADSAFE enabled.
+    AC_MSG_CHECKING(for SQLITE_THREADSAFE support in system SQLite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_threadsafe,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+
+            int main(int argc, char **argv){
+              return !sqlite3_compileoption_used("SQLITE_THREADSAFE=1");
+            }],
+            ac_cv_sqlite_threadsafe=yes,
+            ac_cv_sqlite_threadsafe=no,
+            ac_cv_sqlite_threadsafe=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_threadsafe)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_threadsafe" = "xno"; then
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_THREADSAFE.])
+    fi
+
+    dnl ================================
+    dnl === SQLITE_ENABLE_FTS3 check ===
+    dnl ================================
+    dnl check to see if the system SQLite package is compiled with
+    dnl SQLITE_THREADSAFE enabled.
+    AC_MSG_CHECKING(for SQLITE_ENABLE_FTS3 support in system SQLite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_enable_fts3,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+
+            int main(int argc, char **argv){
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3=1");
+            }],
+            ac_cv_sqlite_enable_fts3=yes,
+            ac_cv_sqlite_enable_fts3=no,
+            ac_cv_sqlite_enable_fts3=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_enable_fts3)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_enable_fts3" = "xno"; then
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_FTS3.])
     fi
 fi
 
