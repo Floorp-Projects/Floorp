@@ -5088,16 +5088,17 @@ then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
         AC_CHECK_PROGS(HOST_MOC, moc, "")
     else
-        MOZ_QT_LIBS="-L$QTDIR/qt/lib/ -lQtGui -lQtNetwork -lQtCore"
+        MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtDBus -lQtXml"
 
         MOZ_QT_CFLAGS="-DQT_SHARED"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/Qt"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtGui"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtCore"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/qt/include/QtNetwork"
-
-        HOST_MOC="$QTDIR/qt/bin/moc"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/Qt"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtCore"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDBus"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
+        HOST_MOC="$QTDIR/bin/moc"
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
