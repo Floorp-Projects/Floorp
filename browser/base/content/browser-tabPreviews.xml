@@ -98,7 +98,7 @@
       <handler event="drop"><![CDATA[
         let tab = event.dataTransfer.mozGetDataAt("application/x-moz-node", 0);
         if (tab && tab.parentNode == gBrowser.tabContainer) {
-          let newIndex = Array.indexOf(gBrowser.tabContainer.childNodes, this._tab);
+          let newIndex = Array.indexOf(gBrowser.tabs, this._tab);
           gBrowser.moveTabTo(tab, newIndex);
         }
       ]]></handler>

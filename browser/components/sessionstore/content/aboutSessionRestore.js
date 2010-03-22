@@ -127,7 +127,7 @@ function restoreSession() {
   var top = getBrowserWindow();
   
   // if there's only this page open, reuse the window for restoring the session
-  if (top.gBrowser.tabContainer.childNodes.length == 1) {
+  if (top.gBrowser.tabs.length == 1) {
     ss.setWindowState(top, stateString, true);
     return;
   }
@@ -140,7 +140,7 @@ function restoreSession() {
     
     var tabbrowser = top.gBrowser;
     var tabIndex = tabbrowser.getBrowserIndexForDocument(document);
-    tabbrowser.removeTab(tabbrowser.tabContainer.childNodes[tabIndex]);
+    tabbrowser.removeTab(tabbrowser.tabs[tabIndex]);
   }, true);
 }
 
