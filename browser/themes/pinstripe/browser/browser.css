@@ -1941,19 +1941,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* ::::: Ctrl-Tab and All Tabs Panels ::::: */
 
-.tabPreview-canvas {
-  -moz-box-shadow: 1px 1px 3px rgb(12%,12%,12%);
-}
-
-.ctrlTab-favicon[src],
-.allTabs-favicon[src] {
-  background-color: white;
-  width: 24px;
-  height: 24px;
-  padding: 2px;
-  opacity: .7;
-}
-
 /* Ctrl-Tab */
 
 #ctrlTab-panel {
@@ -1961,22 +1948,33 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 3px rgb(27%,27%,27%);
 }
 
-.ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
+.ctrlTab-favicon[src] {
+  background-color: white;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+}
+
+.ctrlTab-preview-inner > .tabPreview-canvas {
+  -moz-box-shadow: 1px 1px 3px rgb(12%,12%,12%);
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner > .tabPreview-canvas {
   margin-bottom: 2px;
 }
 
-.ctrlTab-preview .ctrlTab-preview-inner {
+.ctrlTab-preview-inner {
   padding-bottom: 10px;
 }
 
-#ctrlTab-showAll .ctrlTab-preview-inner {
+#ctrlTab-showAll:not(:focus) > * > .ctrlTab-preview-inner {
   padding: 10px;
   background-color: rgba(255,255,255,.2);
   -moz-border-radius: .5em;
 }
 
-.ctrlTab-preview:focus .ctrlTab-preview-inner,
-#ctrlTab-showAll:focus .ctrlTab-preview-inner {
+.ctrlTab-preview:focus > * > .ctrlTab-preview-inner {
+  color: white;
   background-color: rgba(0,0,0,.6);
   text-shadow: none;
   padding: 8px;
@@ -1984,7 +1982,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-radius: .5em;
 }
 
-.ctrlTab-preview:not(#ctrlTab-showAll):focus .ctrlTab-preview-inner {
+.ctrlTab-preview:not(#ctrlTab-showAll):focus > * > .ctrlTab-preview-inner {
   margin: -10px -10px 0;
 }
 
@@ -1995,19 +1993,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /* All Tabs */
 
 #allTabs-panel {
-  padding: 10px;
-  margin-left: -10px;
-}
-
-#allTabs-panel:not(.KUI-panel) {
+  padding-bottom: 10px;
   -moz-appearance: none;
-  background: rgb(27%,27%,27%) url(KUI-background.png) repeat-x;
   border: none;
-  color: white;
+  background: -moz-dialog;
+  color: -moz-dialogText;
 }
 
 #allTabs-meta {
-  margin-bottom: 10px;
+  margin: 10px;
 }
 
 #allTabs-filter {
@@ -2015,26 +2009,24 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-margin-end: 0;
 }
 
-#allTabs-tab-close-button {
-  /*XXX without this, the closebutton can cause the panel to expand horizontally */
-  margin-right: -16px;
-}
-
 #allTabs-tab-close-button > .toolbarbutton-icon {
   margin: 0;
 }
 
-.allTabs-preview:focus,
-.allTabs-preview:hover,
-.allTabs-preview[closebuttonhover] {
-  background-color: rgba(0,0,0,.4);
-  -moz-border-radius: .5em;
+.allTabs-favicon {
+  margin-top: 1px;
+  -moz-margin-start: 1px;
 }
 
-.allTabs-preview:focus {
-  border: 2px solid white;
+.allTabs-preview-inner > .tabPreview-canvas {
+  background-color: rgb(60%,60%,60%);
+  -moz-box-shadow: 0 0 2px ThreeDShadow;
 }
 
-.allTabs-preview-label {
-  -moz-transform: translate(0, 1px);
+.allTabs-preview:not(:hover):not([closebuttonhover]) > html|canvas {
+  opacity: .8;
+}
+
+.allTabs-preview:focus > * > .allTabs-preview-inner {
+  -moz-box-shadow: @focusRingShadow@;
 }

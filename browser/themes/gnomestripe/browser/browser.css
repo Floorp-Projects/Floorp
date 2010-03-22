@@ -1373,24 +1373,17 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-box-shadow: none;
 }
 
-.ctrlTab-favicon[src],
-.allTabs-favicon[src] {
-  background-color: white;
-  padding: 2px;
-/* XXX: Upscaling images is ugly on Linux (bug 422179)
-  width: 24px;
-  height: 24px;
-  opacity: .7;
-*/
-  width: 20px;
-  height: 20px;
-  opacity: .8;
-}
-
 /* Ctrl-Tab */
 
 #ctrlTab-panel {
   padding: 10px;
+}
+
+.ctrlTab-favicon[src] {
+  background-color: white;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
 }
 
 .ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
@@ -1407,13 +1400,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 /* All Tabs */
 
 #allTabs-panel {
-  /* compensate for the widget border and padding to center the panel correctly */
-  margin-left: -13px;
-}
-
-#allTabs-tab-close-button {
-  /*XXX without this, the closebutton can cause the panel to expand horizontally */
-  margin-right: -16px;
+  padding-bottom: 10px;
 }
 
 #allTabs-meta {
@@ -1425,8 +1412,9 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
-#allTabs-stack {
-  margin: 10px;
+.allTabs-favicon {
+  margin-top: 1px;
+  -moz-margin-start: 1px;
 }
 
 .allTabs-preview-label {
