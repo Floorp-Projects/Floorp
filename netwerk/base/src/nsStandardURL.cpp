@@ -1894,7 +1894,7 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
     // backup to just after previous slash so we grab an appropriate path
     // segment such as a directory (not partial segments)
     // todo:  also check for file matches which include '?', '#', and ';'
-    while ((*(thisIndex-1) != '/') && (thisIndex != startCharPos))
+    while ((thisIndex != startCharPos) && (*(thisIndex-1) != '/'))
         thisIndex--;
 
     // grab spec from beginning to thisIndex
