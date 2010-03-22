@@ -863,7 +863,7 @@ Assembler::asm_call(LInsp ins)
     // for floating point calls, but not for integer calls.
     if (_config.arm_vfp && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
-        ArgType rsize = (ArgType)(ci->_typesig & ARGTYPE_MASK_ANY);
+        ArgType rsize = (ArgType)(ci->_typesig & ARGTYPE_MASK);
 
         // If the result size is a floating-point value, treat the result
         // specially, as described previously.
