@@ -482,7 +482,8 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 
         char numBuf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr;
         jsdouble d = JSVAL_IS_INT(*vp) ? jsdouble(JSVAL_TO_INT(*vp)) : *JSVAL_TO_DOUBLE(*vp);
-        numStr = JS_dtostr(numBuf, sizeof numBuf, DTOSTR_STANDARD, 0, d);
+        numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, numBuf, sizeof numBuf,
+                           DTOSTR_STANDARD, 0, d);
         if (!numStr) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
