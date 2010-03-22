@@ -1353,8 +1353,8 @@ class TraceRecorder
     JS_REQUIRES_STACK void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
     JS_REQUIRES_STACK AbortableRecordingStatus checkTraceEnd(jsbytecode* pc);
 
-    bool hasMethod(JSObject* obj, jsid id);
-    JS_REQUIRES_STACK bool hasIteratorMethod(JSObject* obj);
+    RecordingStatus hasMethod(JSObject* obj, jsid id, bool& found);
+    JS_REQUIRES_STACK RecordingStatus hasIteratorMethod(JSObject* obj, bool& found);
 
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 

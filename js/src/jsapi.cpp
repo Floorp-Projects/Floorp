@@ -603,7 +603,7 @@ JSRuntime::init(uint32 maxbytes)
     if (!deallocatorThread || !deallocatorThread->init())
         return false;
 #endif
-    return js_InitPropertyTree(this) && js_InitThreads(this);
+    return propertyTree.init() && js_InitThreads(this);
 }
 
 JSRuntime::~JSRuntime()
@@ -655,7 +655,7 @@ JSRuntime::~JSRuntime()
         delete deallocatorThread;
     }
 #endif
-    js_FinishPropertyTree(this);
+    propertyTree.finish();
 }
 
 
@@ -2808,10 +2808,8 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     /* Ensure that obj has its own, mutable scope, and seal that scope. */
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
-    if (scope) {
-        scope->sealingShapeChange(cx);
-        scope->setSealed();
-    }
+    if (scope)
+        scope->seal(cx);
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)
         return JS_FALSE;

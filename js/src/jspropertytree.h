@@ -1,6 +1,6 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
+/* vim: set ts=40 sw=4 et tw=99: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,16 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is the Mozilla SpiderMonkey property tree implementation
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ *   Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2002-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   IBM Corp.
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,48 +37,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _LIBMATH_H
-#define _LIBMATH_H
+#ifndef jspropertytree_h___
+#define jspropertytree_h___
 
-#include <math.h>
+#include "jsarena.h"
+#include "jsdhash.h"
+#include "jsprvtd.h"
 
-/*
- * Use system provided math routines.
- */
+struct JSScope;
 
-/* The right copysign function is not always named the same thing. */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-#define js_copysign __builtin_copysign
-#elif defined WINCE
-#define js_copysign _copysign
-#elif defined _WIN32
-#if _MSC_VER < 1400
-/* Try to work around apparent _copysign bustage in VC7.x. */
-#define js_copysign js_copysign
-extern double js_copysign(double, double);
-#else
-#define js_copysign _copysign
-#endif
-#else
-#define js_copysign copysign
-#endif
+namespace js {
 
-/* Consistency wrapper for platform deviations in fmod() */
-static inline double
-js_fmod(double d, double d2)
+JSDHashOperator RemoveNodeIfDead(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                 uint32 number, void *arg);
+
+void SweepScopeProperties(JSContext *cx);
+
+class PropertyTree
 {
-#ifdef XP_WIN
-    /*
-     * Workaround MS fmod bug where 42 % (1/0) => NaN, not 42.
-     * Workaround MS fmod bug where -0 % -N => 0, not -0.
-     */
-    if ((JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)) ||
-        (d == 0 && JSDOUBLE_IS_FINITE(d2))) {
-        return d;
-    }
-#endif
-    return fmod(d, d2);
-}
+    friend struct ::JSScope;
+    friend void js::SweepScopeProperties(JSContext *cx);
 
-#endif /* _LIBMATH_H */
+    JSDHashTable        hash;
+    JSScopeProperty     *freeList;
+    JSArenaPool         arenaPool;
+    uint32              emptyShapeChanges;
 
+    bool insertChild(JSContext *cx, JSScopeProperty *parent, JSScopeProperty *child);
+    void removeChild(JSContext *cx, JSScopeProperty *child);
+    void emptyShapeChange(uint32 oldEmptyShape, uint32 newEmptyShape);
+
+  public:
+    bool init();
+    void finish();
+
+    JSScopeProperty *newScopeProperty(JSContext *cx, bool gcLocked = false);
+
+    JSScopeProperty *getChild(JSContext *cx, JSScopeProperty *parent, uint32 shape,
+                              const JSScopeProperty &child);
+};
+
+} /* namespace js */
+
+#endif /* jspropertytree_h___ */
