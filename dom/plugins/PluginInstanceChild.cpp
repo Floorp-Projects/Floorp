@@ -499,6 +499,19 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     return true;
 }
 
+bool
+PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
+{
+#ifdef OS_WIN
+    int16_t dontcare;
+    return AnswerNPP_HandleEvent(event, &dontcare);
+#else
+    NS_RUNTIMEABORT("WindowPosChanged is a windows-only message");
+    return false;
+#endif
+}
+
+
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
 static bool
 XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
