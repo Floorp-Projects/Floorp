@@ -9403,7 +9403,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
                         lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                         INS_CONSTWORD(JSVAL_SPECIAL)),
               exit);
-        assert(!v_ins->isconstp());
+        JS_ASSERT(!v_ins->isconstp());
         guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
         return p2i(lir->ins2i(LIR_pursh, v_ins, JSVAL_TAGBITS));
 
@@ -10278,7 +10278,7 @@ TraceRecorder::record_JSOP_NEG()
     }
 
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    set(&v, i2f(get(&v)));
+    set(&v, lir->ins1(LIR_fneg, i2f(get(&v))));
     return ARECORD_CONTINUE;
 }
 
