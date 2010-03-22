@@ -1379,7 +1379,7 @@
             if (this.tabs.length - this._removingTabs.length == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
-                              Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+                              this.tabContainer._closeWindowWithLastTab;
 
               // Closing the tab and replacing it with a blank one is notably slower
               // than closing the window right away. If the caller opts in, take
@@ -2449,6 +2449,7 @@
           this.mTabMaxWidth = Services.prefs.getIntPref("browser.tabs.tabMaxWidth");
           this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
           this.mCloseButtons = Services.prefs.getIntPref("browser.tabs.closeButtons");
+          this._closeWindowWithLastTab = Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
           var tab = this.firstChild;
           tab.setAttribute("label",
@@ -2464,6 +2465,7 @@
 
           Services.prefs.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
           Services.prefs.addObserver("browser.tabs.autoHide", this._prefObserver, false);
+          Services.prefs.addObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver, false);
 
           window.addEventListener("resize", this, false);
         ]]>
@@ -2473,6 +2475,7 @@
         <![CDATA[
           Services.prefs.removeObserver("browser.tabs.closeButtons", this._prefObserver);
           Services.prefs.removeObserver("browser.tabs.autoHide", this._prefObserver);
+          Services.prefs.removeObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver);
         ]]>
       </destructor>
 
@@ -2506,13 +2509,13 @@
             case "browser.tabs.autoHide":
               this.tabContainer.updateVisibility();
               break;
+            case "browser.tabs.closeWindowWithLastTab":
+              this.tabContainer._closeWindowWithLastTab = Services.prefs.getBoolPref(data);
+              this.tabContainer.adjustTabstrip();
+              break;
           }
         }
       });]]></field>
-      <field name="mTabMinWidth">100</field>
-      <field name="mTabMaxWidth">250</field>
-      <field name="mTabClipWidth">140</field>
-      <field name="mCloseButtons">1</field>
       <field name="_blockDblClick">false</field>
 
       <field name="_tabDropIndicator">
@@ -2565,10 +2568,15 @@
           // 3 - closeatend = close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
-            this.setAttribute("closebuttons", "activetab");
+            if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
+              this.setAttribute("closebuttons", "noclose");
+            else
+              this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
+            if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
+              this.setAttribute("closebuttons", "noclose");
+            else if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
               this.setAttribute("closebuttons", "alltabs");
             else
               this.setAttribute("closebuttons", "activetab");
@@ -2786,7 +2794,7 @@
           return;
 
         if (this.childNodes.length > 1 ||
-            !Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab"))
+            !this._closeWindowWithLastTab)
           this.tabbrowser.removeTab(event.target);
 
         event.stopPropagation();
