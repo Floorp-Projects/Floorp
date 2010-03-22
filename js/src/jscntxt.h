@@ -50,6 +50,7 @@
 #include "jslong.h"
 #include "jsatom.h"
 #include "jsdhash.h"
+#include "jsdtoa.h"
 #include "jsgc.h"
 #include "jshashtable.h"
 #include "jsinterp.h"
@@ -555,6 +556,9 @@ struct JSThreadData {
     JSEvalCacheMeter    evalCacheMeter;
 #endif
 
+    /* State used by dtoa.c. */
+    DtoaState           *dtoaState;
+
     /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
@@ -569,7 +573,7 @@ struct JSThreadData {
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
-    void init();
+    bool init();
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);

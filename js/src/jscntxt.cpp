@@ -100,7 +100,7 @@ CallStack::contains(JSStackFrame *fp)
 }
 #endif
 
-void
+bool
 JSThreadData::init()
 {
 #ifdef DEBUG
@@ -111,6 +111,12 @@ JSThreadData::init()
 #ifdef JS_TRACER
     InitJIT(&traceMonitor);
 #endif
+    dtoaState = js_NewDtoaState();
+    if (!dtoaState) {
+        finish();
+        return false;
+    }
+    return true;
 }
 
 void
@@ -125,6 +131,9 @@ JSThreadData::finish()
         JS_ASSERT(!nativeEnumCache[i]);
     JS_ASSERT(!localRootStack);
 #endif
+
+    if (dtoaState)
+        js_DestroyDtoaState(dtoaState);
 
     js_FinishGSNCache(&gsnCache);
     js_FinishPropertyCache(&propertyCache);
@@ -190,7 +199,10 @@ NewThread(jsword id)
         return NULL;
     JS_INIT_CLIST(&thread->contextList);
     thread->id = id;
-    thread->data.init();
+    if (!thread->data.init()) {
+        js_free(thread);
+        return NULL;
+    }
     return thread;
 }
 
