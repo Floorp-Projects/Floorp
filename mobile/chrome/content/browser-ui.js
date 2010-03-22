@@ -36,8 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/utils.js");
-Cu.import("resource://gre/modules/PluralForm.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
+  Cu.import("resource://gre/modules/PluralForm.jsm");
+  return PluralForm;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
+  Cu.import("resource://gre/modules/utils.js");
+  return PlacesUtils;
+});
 
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
