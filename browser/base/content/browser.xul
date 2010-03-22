@@ -276,9 +276,6 @@
     </panel>
 
     <panel id="allTabs-panel" hidden="true" norestorefocus="true" ignorekeys="true"
-# XXX: KUI style disabled, because the transparent background slows down
-#      interacting with the panel, esp. the search field.
-#           class="KUI-panel"
            onmouseover="allTabs._updateTabCloseButton(event);">
       <hbox id="allTabs-meta" align="center">
         <spacer flex="1"/>
