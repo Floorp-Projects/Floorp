@@ -7082,6 +7082,8 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP= ,
     PKG_SKIP_STRIP=1)
 
+PKG_SKIP_STRIP=1
+
 dnl ========================================================
 dnl = --enable-elf-dynstr-gc
 dnl ========================================================
