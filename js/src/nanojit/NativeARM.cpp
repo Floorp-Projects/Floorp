@@ -597,19 +597,19 @@ Assembler::genEpilogue()
  *   alignment.
  */
 void
-Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
+Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, int& stkd)
 {
     // The stack pointer must always be at least aligned to 4 bytes.
     NanoAssert((stkd & 3) == 0);
 
-    if (sz == ARGSIZE_F) {
+    if (ty == ARGTYPE_F) {
         // This task is fairly complex and so is delegated to asm_arg_64.
         asm_arg_64(arg, r, stkd);
     } else {
-        NanoAssert(sz == ARGSIZE_I || sz == ARGSIZE_U);
+        NanoAssert(ty == ARGTYPE_I || ty == ARGTYPE_U);
         // pre-assign registers R0-R3 for arguments (if they fit)
         if (r < R4) {
-            asm_regarg(sz, arg, r);
+            asm_regarg(ty, arg, r);
             r = nextreg(r);
         } else {
             asm_stkarg(arg, stkd);
@@ -620,7 +620,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
 
 // Encode a 64-bit floating-point argument using the appropriate ABI.
 // This function operates in the same way as asm_arg, except that it will only
-// handle arguments where (ArgSize)sz == ARGSIZE_F.
+// handle arguments where (ArgType)ty == ARGTYPE_F.
 void
 Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
 {
@@ -665,8 +665,8 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
         if (_config.arm_vfp) {
             FMRRD(ra, rb, fp_reg);
         } else {
-            asm_regarg(ARGSIZE_LO, arg->oprnd1(), ra);
-            asm_regarg(ARGSIZE_LO, arg->oprnd2(), rb);
+            asm_regarg(ARGTYPE_LO, arg->oprnd1(), ra);
+            asm_regarg(ARGTYPE_LO, arg->oprnd2(), rb);
         }
 
 #ifndef NJ_ARM_EABI
@@ -699,7 +699,7 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
             // Without VFP, we can simply use asm_regarg and asm_stkarg to
             // encode the two 32-bit words as we don't need to load from a VFP
             // register.
-            asm_regarg(ARGSIZE_LO, arg->oprnd1(), ra);
+            asm_regarg(ARGTYPE_LO, arg->oprnd1(), ra);
             asm_stkarg(arg->oprnd2(), 0);
             stkd += 4;
         }
@@ -720,10 +720,10 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
 }
 
 void
-Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
+Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
 {
     NanoAssert(deprecated_isKnownReg(r));
-    if (sz & ARGSIZE_MASK_INT)
+    if (ty == ARGTYPE_I || ty == ARGTYPE_U)
     {
         // arg goes in specific register
         if (p->isconst()) {
@@ -752,7 +752,7 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
     }
     else
     {
-        NanoAssert(sz == ARGSIZE_F);
+        NanoAssert(ty == ARGTYPE_F);
         // fpu argument in register - should never happen since FPU
         // args are converted to two 32-bit ints on ARM
         NanoAssert(false);
@@ -848,10 +848,10 @@ Assembler::asm_call(LInsp ins)
 
     evictScratchRegsExcept(0);
 
-    const CallInfo* call = ins->callInfo();
-    ArgSize sizes[MAXARGS];
-    uint32_t argc = call->get_sizes(sizes);
-    bool indirect = call->isIndirect();
+    const CallInfo* ci = ins->callInfo();
+    ArgType argTypes[MAXARGS];
+    uint32_t argc = ci->getArgTypes(argTypes);
+    bool indirect = ci->isIndirect();
 
     // If we aren't using VFP, assert that the LIR operation is an integer
     // function call.
@@ -863,11 +863,11 @@ Assembler::asm_call(LInsp ins)
     // for floating point calls, but not for integer calls.
     if (_config.arm_vfp && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
-        ArgSize rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
+        ArgType rsize = (ArgType)(ci->_typesig & ARGTYPE_MASK_ANY);
 
         // If the result size is a floating-point value, treat the result
         // specially, as described previously.
-        if (rsize == ARGSIZE_F) {
+        if (ci->returnType() == ARGTYPE_F) {
             Register rr = ins->deprecated_getReg();
 
             NanoAssert(ins->opcode() == LIR_fcall);
@@ -902,7 +902,7 @@ Assembler::asm_call(LInsp ins)
         // interlock in the "long" branch sequence by manually loading the
         // target address into LR ourselves before setting up the parameters
         // in other registers.
-        BranchWithLink((NIns*)call->_address);
+        BranchWithLink((NIns*)ci->_address);
     } else {
         // Indirect call: we assign the address arg to LR since it's not
         // used for regular arguments, and is otherwise scratch since it's
@@ -917,7 +917,7 @@ Assembler::asm_call(LInsp ins)
         } else {
             BLX(LR);
         }
-        asm_regarg(ARGSIZE_LO, ins->arg(--argc), LR);
+        asm_regarg(ARGTYPE_LO, ins->arg(--argc), LR);
     }
 
     // Encode the arguments, starting at R0 and with an empty argument stack.
@@ -930,7 +930,7 @@ Assembler::asm_call(LInsp ins)
     // in reverse order.
     uint32_t    i = argc;
     while(i--) {
-        asm_arg(sizes[i], ins->arg(i), r, stkd);
+        asm_arg(argTypes[i], ins->arg(i), r, stkd);
     }
 
     if (stkd > max_out_args) {

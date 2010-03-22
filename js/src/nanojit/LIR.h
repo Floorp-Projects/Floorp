@@ -146,24 +146,25 @@ namespace nanojit
         ABI_CDECL
     };
 
-    enum ArgSize {
-        ARGSIZE_NONE = 0,
-        ARGSIZE_F = 1,      // double (64bit)
-        ARGSIZE_I = 2,      // int32_t
+    // All values must fit into three bits.  See CallInfo for details.
+    enum ArgType {
+        ARGTYPE_V = 0,      // void
+        ARGTYPE_F = 1,      // double (64bit)
+        ARGTYPE_I = 2,      // int32_t
+        ARGTYPE_U = 3,      // uint32_t
 #ifdef NANOJIT_64BIT
-        ARGSIZE_Q = 3,      // uint64_t
+        ARGTYPE_Q = 4,      // uint64_t
 #endif
-        ARGSIZE_U = 6,      // uint32_t
-        ARGSIZE_MASK_ANY = 7,
-        ARGSIZE_MASK_INT = 2,
-        ARGSIZE_SHIFT = 3,
 
         // aliases
-        ARGSIZE_P = PTR_SIZE(ARGSIZE_I, ARGSIZE_Q), // pointer
-        ARGSIZE_LO = ARGSIZE_I, // int32_t
-        ARGSIZE_B = ARGSIZE_I, // bool
-        ARGSIZE_V = ARGSIZE_NONE  // void
+        ARGTYPE_P = PTR_SIZE(ARGTYPE_I, ARGTYPE_Q), // pointer
+        ARGTYPE_LO = ARGTYPE_I, // int32_t
+        ARGTYPE_B = ARGTYPE_I   // bool
     };
+
+    // In _typesig, each entry is three bits.
+    static const int ARGTYPE_SHIFT = 3;
+    static const int ARGTYPE_MASK = 0x7;
 
     enum IndirectCall {
         CALL_INDIRECT = 0
@@ -290,38 +291,28 @@ namespace nanojit
 
     struct CallInfo
     {
+    private:
+
+    public:
         uintptr_t   _address;
-        uint32_t    _argtypes:27;    // 9 3-bit fields indicating arg type, by ARGSIZE above (including ret type): a1 a2 a3 a4 a5 ret
+        uint32_t    _typesig:27;     // 9 3-bit fields indicating arg type, by ARGTYPE above (including ret type): a1 a2 a3 a4 a5 ret
         AbiKind     _abi:3;
         uint8_t     _isPure:1;      // _isPure=1 means no side-effects, result only depends on args
         AccSet      _storeAccSet;   // access regions stored by the function
         verbose_only ( const char* _name; )
 
-        uint32_t _count_args(uint32_t mask) const;
+        uint32_t count_args() const;
+        uint32_t count_int32_args() const;
         // Nb: uses right-to-left order, eg. sizes[0] is the size of the right-most arg.
-        uint32_t get_sizes(ArgSize* sizes) const;
+        uint32_t getArgTypes(ArgType* types) const;
 
-        inline ArgSize returnType() const {
-            return ArgSize(_argtypes & ARGSIZE_MASK_ANY);
-        }
-
-        // Note that this indexes arguments *backwards*, that is to
-        // get the Nth arg, you have to ask for index (numargs - N).
-        // See mozilla bug 525815 for fixing this.
-        inline ArgSize argType(uint32_t arg) const {
-            return ArgSize((_argtypes >> (ARGSIZE_SHIFT * (arg+1))) & ARGSIZE_MASK_ANY);
+        inline ArgType returnType() const {
+            return ArgType(_typesig & ARGTYPE_MASK);
         }
 
         inline bool isIndirect() const {
             return _address < 256;
         }
-        inline uint32_t count_args() const {
-            return _count_args(ARGSIZE_MASK_ANY);
-        }
-        inline uint32_t count_iargs() const {
-            return _count_args(ARGSIZE_MASK_INT);
-        }
-        // fargs = args - iargs
     };
 
     /*
@@ -408,14 +399,14 @@ namespace nanojit
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_pcall;
         switch (ci->returnType()) {
-        case ARGSIZE_NONE:  op = LIR_pcall; break;
-        case ARGSIZE_I:
-        case ARGSIZE_U:     op = LIR_icall; break;
-        case ARGSIZE_F:     op = LIR_fcall; break;
+        case ARGTYPE_V: op = LIR_pcall; break;
+        case ARGTYPE_I:
+        case ARGTYPE_U: op = LIR_icall; break;
+        case ARGTYPE_F: op = LIR_fcall; break;
 #ifdef NANOJIT_64BIT
-        case ARGSIZE_Q:     op = LIR_qcall; break;
+        case ARGTYPE_Q: op = LIR_qcall; break;
 #endif
-        default:            NanoAssert(0);  break;
+        default:        NanoAssert(0);  break;
         }
         return op;
     }
