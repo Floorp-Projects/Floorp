@@ -2773,6 +2773,8 @@ split_getObjectOps(JSContext *cx, JSClass *clasp)
     if (!split_objectops.thisObject) {
         memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
         split_objectops.thisObject = split_thisObject;
+        split_objectops.call = NULL;
+        split_objectops.construct = NULL;
     }
 
     return &split_objectops;
