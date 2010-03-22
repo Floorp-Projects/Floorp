@@ -19,11 +19,8 @@
   display: none;
 }
 
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"]:not(:only-child) > .tab-close-button {
-  display: -moz-box;
-}
-
-.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab:not(:only-child) > .tab-close-button {
+.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button,
+.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
   display: -moz-box;
 }
 
