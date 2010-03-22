@@ -2385,35 +2385,6 @@ namespace nanojit
     }
 #endif // NJ_VERBOSE
 
-    uint32_t CallInfo::_count_args(uint32_t mask) const
-    {
-        uint32_t argc = 0;
-        uint32_t argt = _argtypes;
-        for (uint32_t i = 0; i < MAXARGS; ++i) {
-            argt >>= ARGSIZE_SHIFT;
-            if (!argt)
-                break;
-            argc += (argt & mask) != 0;
-        }
-        return argc;
-    }
-
-    uint32_t CallInfo::get_sizes(ArgSize* sizes) const
-    {
-        uint32_t argt = _argtypes;
-        uint32_t argc = 0;
-        for (uint32_t i = 0; i < MAXARGS; i++) {
-            argt >>= ARGSIZE_SHIFT;
-            ArgSize a = ArgSize(argt & ARGSIZE_MASK_ANY);
-            if (a != ARGSIZE_NONE) {
-                sizes[argc++] = a;
-            } else {
-                break;
-            }
-        }
-        return argc;
-    }
-
     void LabelStateMap::add(LIns *label, NIns *addr, RegAlloc &regs) {
         LabelState *st = new (alloc) LabelState(addr, regs);
         labels.put(label, st);

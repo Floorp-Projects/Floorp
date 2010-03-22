@@ -395,8 +395,8 @@ namespace nanojit
         void asm_immi(Register r, int32_t v, bool canClobberCCs);\
         void asm_immq(Register r, uint64_t v, bool canClobberCCs);\
         void asm_immf(Register r, uint64_t v, bool canClobberCCs);\
-        void asm_regarg(ArgSize, LIns*, Register);\
-        void asm_stkarg(ArgSize, LIns*, int);\
+        void asm_regarg(ArgType, LIns*, Register);\
+        void asm_stkarg(ArgType, LIns*, int);\
         void asm_shift(LIns*);\
         void asm_shift_imm(LIns*);\
         void asm_arith_imm(LIns*);\
