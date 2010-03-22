@@ -894,9 +894,10 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
 NS_IMETHODIMP
 nsNode3Tearoff::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
   *aReturn = PR_FALSE;
+
+  if (!aOther)
+    return NS_OK;
 
   // Since we implement nsIContent, aOther must as well.
   nsCOMPtr<nsIContent> aOtherContent = do_QueryInterface(aOther);

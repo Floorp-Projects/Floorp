@@ -5668,9 +5668,10 @@ nsDocument::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
 NS_IMETHODIMP
 nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
   *aReturn = PR_FALSE;
+
+  if (!aOther)
+    return NS_OK;
 
   // Node type check by QI.  We also reuse this later.
   nsCOMPtr<nsIDocument> aOtherDoc = do_QueryInterface(aOther);
