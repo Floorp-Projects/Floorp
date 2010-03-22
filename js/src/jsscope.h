@@ -579,10 +579,36 @@ struct JSScopeProperty {
     friend void js::SweepScopeProperties(JSContext *cx);
 
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
+
   private:
-    JSPropertyOp    rawGetter;          /* getter and setter hooks or objects */
-    JSPropertyOp    rawSetter;          /* getter is JSObject* and setter is 0
+    union {
+        JSPropertyOp rawGetter;         /* getter and setter hooks or objects */
+        JSScopeProperty *next;          /* next node in freelist */
+    };
+
+    union {
+        JSPropertyOp rawSetter;         /* getter is JSObject* and setter is 0
                                            if sprop->isMethod() */
+        JSScopeProperty **prevp;        /* pointer to previous node's next, or
+                                           pointer to head of freelist */
+    };
+
+    void insertFree(JSScopeProperty *&list) {
+        id = JSVAL_NULL;
+        next = list;
+        prevp = &list;
+        if (list)
+            list->prevp = &next;
+        list = this;
+    }
+
+    void removeFree() {
+        JS_ASSERT(JSVAL_IS_NULL(id));
+        *prevp = next;
+        if (next)
+            next->prevp = prevp;
+    }
+
   public:
     uint32          slot;               /* abstract index in object slots */
   private:
