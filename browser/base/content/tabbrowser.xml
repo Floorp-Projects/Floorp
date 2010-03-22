@@ -1375,9 +1375,8 @@
             }
 
             var closeWindow = false;
-            var l = this.mTabs.length - this._removingTabs.length;
             var newTab = false;
-            if (l == 1) {
+            if (this.mTabs.length - this._removingTabs.length == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
                               Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
@@ -1392,7 +1391,6 @@
                 return null;
 
               newTab = true;
-              l++;
             }
 
             this._removingTabs.push(aTab);
