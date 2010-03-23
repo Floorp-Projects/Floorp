@@ -260,10 +260,6 @@ struct ClosureVarInfo;
     _JS_TN_LINKAGE(linkage, crtype) name cargtypes;                                               \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
         { (intptr_t) &name, argtypes, nanojit::ABI_CDECL, isPure, storeAccSet _JS_CI_NAME(name) };\
-    /* XXX: a temporary assertion to check all cse/fold pairs are correctly */                    \
-    /* converted to isPure/storeAccSet pairs for bug 545274.  Will be removed */                  \
-    /* when bug 517910 starts doing more precise storeAccSet markings. */                         \
-    JS_STATIC_ASSERT_IF(!isPure, storeAccSet == nanojit::ACC_STORE_ANY); /* temporary */          \
     JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
 
 #else
@@ -271,10 +267,6 @@ struct ClosureVarInfo;
     _JS_TN_LINKAGE(linkage, crtype) FASTCALL name cargtypes;                                      \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
         { (intptr_t) &name, argtypes, nanojit::ABI_FASTCALL, isPure, storeAccSet _JS_CI_NAME(name) }; \
-    /* XXX: a temporary assertion to check all cse/fold pairs are correctly */                    \
-    /* converted to isPure/storeAccSet pairs for bug 545274.  Will be removed */                  \
-    /* when bug 517910 starts doing more precise storeAccSet markings. */                         \
-    JS_STATIC_ASSERT_IF(!isPure, storeAccSet == nanojit::ACC_STORE_ANY); /* temporary */          \
     JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
 #endif
 
