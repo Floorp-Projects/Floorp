@@ -19,14 +19,18 @@ function execTests() {
   var sel = win.getSelection();
   win.focus();
 
-  function setupTest(html, firstChildOffsetForCaret) {
+  function setupTest(html, firstChildOffsetForCaret, node) {
     // Work around bug 474255 --- we need to have nonempty content before we turn on
     // editing, or the tests below break because the editor doesn't notice when we
     // insert non-empty content using innerHTML.
     doc.designMode = 'off';
     editor.innerHTML = html;
     doc.designMode = 'on';
-    sel.collapse(editor.firstChild, firstChildOffsetForCaret);
+    var n = editor.firstChild;
+    if (node) {
+      n = node();
+    }
+    sel.collapse(n, firstChildOffsetForCaret);
   }
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -210,6 +214,47 @@ function execTests() {
   // Tests for Bug 502259
   setupTest("<p>Bug</p>\n<p>502259</p>", 1);
   testDelete(function(){return editor.firstChild.firstChild;}, 3, "<p>Bug502259</p>", true);
+
+  // Tests for Bug 507936
+  var nodecallback = function(){return editor.firstChild.firstChild.lastChild.firstChild.lastChild;};
+  setupTest("<ol><li>one<ol><li>two</li></ol></li></ol>\n<p>three</p>", 3, nodecallback);
+  testDelete(nodecallback, 0, "<ol><li>one<ol><li>twothree</li></ol></li></ol>", true);
+
+  setupTest("<ol><li>one<ol><li>two</li></ol></li></ol>\n<hr>\n<p>three</p>", 3, nodecallback);
+  testDelete(nodecallback, 3, 
+    "<ol><li>one<ol><li>two</li></ol></li></ol><p>three</p>", true);
+
+  // Tests for Bug 519751
+  var nodecallback = function(){return editor.firstChild.lastChild;};
+  setupTest("<p>one</p><ol><li>two</li><li>three</li></ol>", 3, nodecallback);
+  testDelete(nodecallback, 0, "<p>onetwo</p><ol><li>three</li></ol>", true);
+
+  nodecallback = function(){return editor.firstChild.childNodes[1].firstChild;};
+  setupTest("<ol><li>one</li><li>two</li></ol><ol><li>three</li><li>four</li></ol>", 3, nodecallback);
+  testDelete(function(){return editor.firstChild.childNodes[2].firstChild;}, 
+    0, "<ol><li>one</li><li>two</li><li>three</li><li>four</li></ol>", true);
+  /*todo_is(false, true, 'The above testDelete should use the same nodecallback' +
+    'as in the proceeding setupTest: the cursor should stay at the end of "two", while currently it is at the beginning of "three" after delete');*/
+
+  // More Tests for Bug 507936
+  nodecallback = function(){return editor.firstChild.firstChild.firstChild;}
+  setupTest("<div><div>abcdef</div><div>bar</div><div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(editor.lastChild.lastChild.lastChild, 5, "<div><div>abcdehi</div></div>", true);
+
+  setupTest("<div><div>abcdef</div><div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(editor.lastChild.lastChild.lastChild, 5, "<div><div>abcdehi</div></div>", true);
+
+  nodecallback = function(){return editor.firstChild.firstChild;}
+  setupTest("<div>abcdef<div><div>bar</div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  expectednodecallback = function(){return editor.lastChild.lastChild;}
+  testDelete(expectednodecallback, 0, "<div>abcdehi</div>", true);
+
+  setupTest("<div>abcdef<div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(expectednodecallback, 0, "<div>abcdehi</div>", true);
 
   SimpleTest.finish();
 }
