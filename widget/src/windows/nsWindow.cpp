@@ -3733,6 +3733,7 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
     case WM_SHOWWINDOW:
     case WM_CANCELMODE:
     case WM_MOUSEACTIVATE:
+    case WM_CONTEXTMENU:
       aResult = 0;
     return true;
 
