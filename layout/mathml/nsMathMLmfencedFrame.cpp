@@ -175,7 +175,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
     value = PRUnichar(','); // default as per the MathML REC
   }
   else {
-    value.Trim(" ");
+    value.StripWhitespace();
   }
 
   mSeparatorsCount = value.Length();
