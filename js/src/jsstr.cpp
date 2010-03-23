@@ -3110,49 +3110,6 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return str;
 }
 
-static bool
-FitsIntoShortString(size_t length)
-{
-    return length < sizeof(JSString) / sizeof(jschar);
-}
-
-JSString *
-NewShortString(JSContext *cx, const jschar *chars, size_t length)
-{
-    JS_ASSERT(FitsIntoShortString(length));
-    JSShortString *str = js_NewGCShortString(cx);
-    if (!str)
-        return NULL;
-    jschar *storage = &str->data[0];
-    memcpy(storage, chars, sizeof(jschar) * length);
-    storage[length] = 0;
-    str->header.initFlat(storage, length);
-    return &str->header;
-}
-
-JSString *
-NewShortString(JSContext *cx, const char *chars, size_t length)
-{
-    JS_ASSERT(FitsIntoShortString(length));
-    JSShortString *str = js_NewGCShortString(cx);
-    if (!str)
-        return NULL;
-    jschar *storage = &str->data[0];
-    if (js_CStringsAreUTF8) {
-        if (!js_InflateStringToBuffer(cx, chars, length, NULL, &length))
-            return NULL;
-        storage[length] = 0;
-    } else {
-        size_t n = length;
-        jschar *p = storage;
-        while (n-- > 0)
-            *p++ = jschar(*chars++);
-        *p = 0;
-    }
-    str->header.initFlat(storage, length);
-    return &str->header;
-}
-
 static const size_t sMinWasteSize = 16;
 
 JSString *
@@ -3247,9 +3204,6 @@ void printJSStringStats(JSRuntime *rt)
 JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
-    if (FitsIntoShortString(n))
-        return NewShortString(cx, s, n);
-
     jschar *news;
     JSString *str;
 
@@ -3265,19 +3219,6 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 }
 
 JSString *
-js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
-{
-    /*
-     * For simplicity, if UTF8 encoding is enabled, we assume conservatively
-     * that the length of the decided string is less or equal to the number
-     * of bytes.
-     */
-    if (FitsIntoShortString(n))
-        return NewShortString(cx, s, n);
-    return JS_NewStringCopyN(cx, s, n);
-}
-
-JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s)
 {
     size_t n, m;
@@ -3285,10 +3226,6 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     JSString *str;
 
     n = js_strlen(s);
-
-    if (FitsIntoShortString(n))
-        return NewShortString(cx, s, n);
-
     m = (n + 1) * sizeof(jschar);
     news = (jschar *) cx->malloc(m);
     if (!news)
@@ -3298,12 +3235,6 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     if (!str)
         cx->free(news);
     return str;
-}
-
-JSString *
-js_NewStringCopyZ(JSContext *cx, const char *s)
-{
-    return js_NewStringCopyN(cx, s, strlen(s));
 }
 
 JS_FRIEND_API(const char *)
