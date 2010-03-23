@@ -1203,25 +1203,6 @@ nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   return rv;
 }
 
-//
-// Get an appropriate wrap width for saving this document.
-// This class just uses a pref; subclasses are expected to
-// override if they know more about the document.
-//
-NS_IMETHODIMP
-nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
-{
-  NS_ENSURE_ARG_POINTER(aWrapColumn);
-  *aWrapColumn = 72;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefBranch)
-    (void) prefBranch->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsEditor::Cut()
 {

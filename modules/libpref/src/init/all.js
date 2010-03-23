@@ -329,7 +329,6 @@ pref("extensions.spellcheck.inline.max-misspellings", 500);
 // belong in comm-central/editor/ui/composer.js
 
 pref("editor.use_custom_colors", false);
-pref("editor.htmlWrapColumn", 72);
 pref("editor.singleLine.pasteNewlines",     1);
 pref("editor.quotesPreformatted",            false);
 pref("editor.use_css",                       true);
