@@ -1152,7 +1152,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* var(unsigned n);
     JS_REQUIRES_STACK void var(unsigned n, nanojit::LIns* i);
     JS_REQUIRES_STACK nanojit::LIns* upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v);
-    nanojit::LIns* stackLoad(nanojit::LIns* addr, uint8 type);
+    nanojit::LIns* stackLoad(nanojit::LIns* addr, nanojit::AccSet accSet, uint8 type);
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
@@ -1298,13 +1298,9 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      VMSideExit* exit,
-                                      nanojit::AccSet accSet = nanojit::ACC_LOAD_ANY);
-    bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp, VMSideExit* exit) {
-        return guardClass(obj, obj_ins, clasp, exit, nanojit::ACC_READONLY);
-    }
+                                      VMSideExit* exit, nanojit::AccSet accSet);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           ExitType exitType = MISMATCH_EXIT);
+                                           ExitType exitType);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,

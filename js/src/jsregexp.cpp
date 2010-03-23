@@ -2490,7 +2490,7 @@ class RegExpNativeCompiler {
                                        0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
+        LIns* text_word = lir->insLoad(LIR_ld, pos, 0, ACC_OTHER);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
@@ -2834,7 +2834,7 @@ class RegExpNativeCompiler {
          * memory (REGlobalData::stateStack, since it is unused).
          */
         lir->insStorei(branchEnd, state,
-                       offsetof(REGlobalData, stateStack));
+                       offsetof(REGlobalData, stateStack), ACC_OTHER);
         LIns *leftSuccess = lir->insBranch(LIR_j, NULL, NULL);
 
         /* Try right branch. */
@@ -2842,13 +2842,12 @@ class RegExpNativeCompiler {
         if (!(branchEnd = compileNode(rightRe, pos, atEnd, fails)))
             return NULL;
         lir->insStorei(branchEnd, state,
-                       offsetof(REGlobalData, stateStack));
+                       offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Land success on the left branch. */
         targetCurrentPoint(leftSuccess);
         return addName(fragment->lirbuf,
-                       lir->insLoad(LIR_ldp, state,
-                                    offsetof(REGlobalData, stateStack)),
+                       lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
                        "pos");
     }
 
@@ -2858,19 +2857,18 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Try ? body. */
         LInsList kidFails(cx);
         if (!(pos = compileNode(node, pos, atEnd, kidFails)))
             return NULL;
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Join success and failure and get new position. */
         targetCurrentPoint(kidFails);
         pos = addName(fragment->lirbuf,
-                      lir->insLoad(LIR_ldp, state,
-                                   offsetof(REGlobalData, stateStack)),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
                       "pos");
 
         return pos;
@@ -2925,13 +2923,13 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Begin iteration: load loop variables. */
         LIns *loopTop = lir->ins0(LIR_label);
         LIns *iterBegin = addName(fragment->lirbuf,
                                   lir->insLoad(LIR_ldp, state,
-                                               offsetof(REGlobalData, stateStack)),
+                                               offsetof(REGlobalData, stateStack), ACC_OTHER),
                                   "pos");
 
         /* Match quantifier body. */
@@ -2951,7 +2949,7 @@ class RegExpNativeCompiler {
         }
 
         /* End iteration: store loop variables, increment, jump */
-        lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
         lir->insBranch(LIR_j, NULL, loopTop);
 
         /*
@@ -3049,7 +3047,7 @@ class RegExpNativeCompiler {
             return false;
 
         /* Fall-through from compileNode means success. */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
         lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(1));
 
@@ -3088,7 +3086,7 @@ class RegExpNativeCompiler {
 
         /* Outer loop increment. */
         lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImmWord(2)), state,
-                       offsetof(REGlobalData, skipped));
+                       offsetof(REGlobalData, skipped), ACC_OTHER);
 
         return !outOfMemory();
     }
@@ -3192,7 +3190,7 @@ class RegExpNativeCompiler {
         )
 #endif
 #ifdef DEBUG
-        lir = validate_writer = new ValidateWriter(lir, "regexp writer pipeline");
+        lir = validate_writer = new ValidateWriter(lir, lirbuf->printer, "regexp writer pipeline");
 #endif
 
         /*
@@ -3221,8 +3219,7 @@ class RegExpNativeCompiler {
         })
 
         start = addName(lirbuf,
-                      lir->insLoad(LIR_ldp, state,
-                                   offsetof(REGlobalData, skipped)),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, skipped), ACC_OTHER),
                       "start");
 
         if (cs->flags & JSREG_STICKY) {
