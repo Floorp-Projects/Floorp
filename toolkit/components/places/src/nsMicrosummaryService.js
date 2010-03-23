@@ -71,6 +71,8 @@ const ANNO_CONTENT_TYPE      = "bookmarks/contentType";
 
 const MAX_SUMMARY_LENGTH = 4096;
 
+const USER_MICROSUMMARY_GENS_DIR = "microsummary-generators";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 __defineGetter__("NetUtil", function() {
@@ -271,7 +273,8 @@ MicrosummaryService.prototype = {
    */
   _cacheLocalGenerators: function MSS__cacheLocalGenerators() {
     // Load generators from the user's profile.
-    var msDir = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
+    var msDir = this._dirs.get("ProfDS", Ci.nsIFile);
+    msDir.append(USER_MICROSUMMARY_GENS_DIR);
     if (msDir.exists())
       this._cacheLocalGeneratorDir(msDir);
   },
@@ -413,7 +416,12 @@ MicrosummaryService.prototype = {
       topic = "microsummary-generator-installed";
       var generatorName = rootNode.getAttribute("name");
       var fileName = sanitizeName(generatorName) + ".xml";
-      var file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
+      var file = this._dirs.get("ProfDS", Ci.nsIFile);
+      file.append(USER_MICROSUMMARY_GENS_DIR);
+      if (!file.exists() || !file.isDirectory()) {
+        file.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+      }
+
       file.append(fileName);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
       generator = new MicrosummaryGenerator(null,
