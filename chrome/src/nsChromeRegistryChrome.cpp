@@ -69,6 +69,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
+#include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIVersionComparator.h"
 #include "nsIXPConnect.h"
