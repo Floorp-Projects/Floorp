@@ -61,7 +61,7 @@
 
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/minidump_writer/line_reader.h"
-#include "client/linux/minidump_writer//linux_dumper.h"
+#include "client/linux/minidump_writer/linux_dumper.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 
@@ -307,6 +307,54 @@ static void CPUFillFromUContext(MDRawContextAMD64 *out, const ucontext *uc,
   memcpy(&out->flt_save.xmm_registers, &fpregs->_xmm, 16 * 16);
 }
 
+#elif defined(__ARMEL__)
+typedef MDRawContextARM RawContextCPU;
+
+static void CPUFillFromThreadInfo(MDRawContextARM *out,
+                                  const google_breakpad::ThreadInfo &info) {
+  out->context_flags = MD_CONTEXT_ARM_FULL;
+
+  for (int i = 0; i < MD_CONTEXT_ARM_GPR_COUNT; ++i)
+    out->iregs[i] = info.regs.uregs[i];
+  // No CPSR register in ThreadInfo(it's not accessible via ptrace)
+  out->cpsr = 0;
+  out->float_save.fpscr = info.fpregs.fpsr |
+    (static_cast<u_int64_t>(info.fpregs.fpcr) << 32);
+  //TODO: sort this out, actually collect floating point registers
+  memset(&out->float_save.regs, 0, sizeof(out->float_save.regs));
+  memset(&out->float_save.extra, 0, sizeof(out->float_save.extra));
+}
+
+static void CPUFillFromUContext(MDRawContextARM *out, const ucontext *uc,
+                                const struct _libc_fpstate* fpregs) {
+  out->context_flags = MD_CONTEXT_ARM_FULL;
+
+  out->iregs[0] = uc->uc_mcontext.arm_r0;
+  out->iregs[1] = uc->uc_mcontext.arm_r1;
+  out->iregs[2] = uc->uc_mcontext.arm_r2;
+  out->iregs[3] = uc->uc_mcontext.arm_r3;
+  out->iregs[4] = uc->uc_mcontext.arm_r4;
+  out->iregs[5] = uc->uc_mcontext.arm_r5;
+  out->iregs[6] = uc->uc_mcontext.arm_r6;
+  out->iregs[7] = uc->uc_mcontext.arm_r7;
+  out->iregs[8] = uc->uc_mcontext.arm_r8;
+  out->iregs[9] = uc->uc_mcontext.arm_r9;
+  out->iregs[10] = uc->uc_mcontext.arm_r10;
+
+  out->iregs[11] = uc->uc_mcontext.arm_fp;
+  out->iregs[12] = uc->uc_mcontext.arm_ip;
+  out->iregs[13] = uc->uc_mcontext.arm_sp;
+  out->iregs[14] = uc->uc_mcontext.arm_lr;
+  out->iregs[15] = uc->uc_mcontext.arm_pc;
+
+  out->cpsr = uc->uc_mcontext.arm_cpsr;
+
+  //TODO: fix this after fixing ExceptionHandler
+  out->float_save.fpscr = 0;
+  memset(&out->float_save.regs, 0, sizeof(out->float_save.regs));
+  memset(&out->float_save.extra, 0, sizeof(out->float_save.extra));
+}
+
 #else
 #error "This code has not been ported to your platform yet."
 #endif
@@ -321,7 +369,12 @@ class MinidumpWriter {
       : filename_(filename),
         siginfo_(&context->siginfo),
         ucontext_(&context->context),
+#if !defined(__ARM_EABI__)
         float_state_(&context->float_state),
+#else
+        //TODO: fix this after fixing ExceptionHandler
+        float_state_(NULL),
+#endif
         crashing_tid_(context->tid),
         dumper_(crashing_pid) {
   }
@@ -612,6 +665,10 @@ class MinidumpWriter {
   uintptr_t GetStackPointer() {
     return ucontext_->uc_mcontext.gregs[REG_RSP];
   }
+#elif defined(__ARM_EABI__)
+  uintptr_t GetStackPointer() {
+    return ucontext_->uc_mcontext.arm_sp;
+  }
 #else
 #error "This code has not been ported to your platform yet."
 #endif
@@ -644,6 +701,8 @@ class MinidumpWriter {
         MD_CPU_ARCHITECTURE_X86;
 #elif defined(__x86_64)
         MD_CPU_ARCHITECTURE_AMD64;
+#elif defined(__arm__)
+        MD_CPU_ARCHITECTURE_ARM;
 #else
 #error "Unknown CPU arch"
 #endif

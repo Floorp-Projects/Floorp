@@ -1229,6 +1229,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
+    nsIWidget *widget = aFrame->GetWindow();
+    PRInt32 pixelRatio = widget->GetDeviceContext()->AppUnitsPerDevPixel();
+    nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
+    nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
+
+    widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
   }
   list.Paint(&builder, aRenderingContext, flags);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion

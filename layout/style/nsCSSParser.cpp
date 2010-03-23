@@ -3264,6 +3264,11 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
+  if (mToken.IsSymbol(')')) {
+    REPORT_UNEXPECTED_TOKEN(PENegationBadArg);
+    return eSelectorParsingStatus_Error;
+  }
+
   // Create a new nsCSSSelector and add it to the end of
   // aSelector.mNegations.
   // Given the current parsing rules, every selector in mNegations

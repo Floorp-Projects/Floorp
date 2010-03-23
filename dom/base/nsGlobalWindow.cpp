@@ -6843,52 +6843,53 @@ nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 void
 nsGlobalWindow::ActivateOrDeactivate(PRBool aActivate)
 {
-  // Set / unset the "active" attribute on the documentElement
-  // of the top level window
+  // Set / unset mIsActive on the top level window, which is used for the
+  // :-moz-window-inactive pseudoclass.
   nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-  if (mainWidget) {
-    // Get the top level widget (if the main widget is a sheet, this will
-    // be the sheet's top (non-sheet) parent).
-    nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
-    if (!topLevelWidget)
-      topLevelWidget = mainWidget;
+  if (!mainWidget)
+    return;
 
-    // Get the top level widget's nsGlobalWindow
-    nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
-    if (topLevelWidget == mainWidget) {
-      topLevelWindow = static_cast<nsIDOMWindowInternal *>(this);
-    } else {
-      // This is a workaround for the following problem:
-      // When a window with an open sheet loses focus, only the sheet window
-      // receives the NS_DEACTIVATE event. However, it's not the sheet that
-      // should lose the "active" attribute, but the containing top level window.
-      void* clientData;
-      topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
-      nsISupports* data = static_cast<nsISupports*>(clientData);
-      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-      topLevelWindow = do_GetInterface(req);
-    }
-
-    if (topLevelWindow) {
-      // Only set the attribute if the document is a XUL document and the
-      // window is a chrome window
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      topLevelWindow->GetDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(topLevelWindow);
-      if (xulDoc && chromeWin) {
-        nsCOMPtr<nsIContent> rootElem = doc->GetRootContent();
-        if (rootElem) {
-          if (aActivate)
-            rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                              NS_LITERAL_STRING("true"), PR_TRUE);
-          else
-            rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
-        }
-      }
-    }
+  // Get the top level widget (if the main widget is a sheet, this will
+  // be the sheet's top (non-sheet) parent).
+  nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
+  if (!topLevelWidget) {
+    topLevelWidget = mainWidget;
   }
+
+  // Get the top level widget's nsGlobalWindow
+  nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
+  if (topLevelWidget == mainWidget) {
+    topLevelWindow = static_cast<nsIDOMWindowInternal*>(this);
+  } else {
+    // This is a workaround for the following problem:
+    // When a window with an open sheet loses focus, only the sheet window
+    // receives the NS_DEACTIVATE event. However, it's not the sheet that
+    // should lose the active styling, but the containing top level window.
+    void* clientData;
+    topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
+    nsISupports* data = static_cast<nsISupports*>(clientData);
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+    topLevelWindow = do_GetInterface(req);
+  }
+  if (topLevelWindow) {
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(topLevelWindow));
+    piWin->SetActive(aActivate);
+  }
+}
+
+static PRBool
+NotifyDocumentTree(nsIDocument* aDocument, void* aData)
+{
+  aDocument->EnumerateSubDocuments(NotifyDocumentTree, nsnull);
+  aDocument->DocumentStatesChanged(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  return PR_TRUE;
+}
+
+void
+nsGlobalWindow::SetActive(PRBool aActive)
+{
+  nsPIDOMWindow::SetActive(aActive);
+  NotifyDocumentTree(mDoc, nsnull);
 }
 
 void

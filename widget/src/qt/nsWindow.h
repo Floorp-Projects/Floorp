@@ -372,6 +372,11 @@ private:
     double mLastPinchDistance;
     PRBool mMouseEventsDisabled;
  #endif
+
+    PRPackedBool mNeedsResize;
+    PRPackedBool mNeedsMove;
+    PRPackedBool mListenForResizes;
+    PRPackedBool mNeedsShow;
 };
 
 class nsChildWindow : public nsWindow

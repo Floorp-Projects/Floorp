@@ -1,4 +1,6 @@
-// Copyright (c) 2009, Google Inc.             -*- mode: c++ -*-
+// -*- mode: c++ -*-
+
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,7 +29,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// module.h: defines google_breakpad::Module, for writing breakpad symbol files
+// Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+
+// module.h: Define google_breakpad::Module. A Module holds debugging
+// information, and can write that information out as a Breakpad
+// symbol file.
 
 #ifndef COMMON_LINUX_MODULE_H__
 #define COMMON_LINUX_MODULE_H__
@@ -65,12 +71,12 @@ class Module {
   // A source file.
   struct File {
     // The name of the source file.
-    string name_;
+    string name;
 
     // The file's source id.  The Write member function clears this
     // field and assigns source ids a fresh, so any value placed here
     // before calling Write will be lost.
-    int source_id_;
+    int source_id;
   };
 
   // A function.
@@ -78,21 +84,21 @@ class Module {
     // For sorting by address.  (Not style-guide compliant, but it's
     // stupid not to put this in the struct.)
     static bool CompareByAddress(const Function *x, const Function *y) {
-      return x->address_ < y->address_;
+      return x->address < y->address;
     }
 
     // The function's name.
-    string name_;
+    string name;
     
     // The start address and length of the function's code.
-    Address address_, size_;
+    Address address, size;
 
     // The function's parameter size.
-    Address parameter_size_;
+    Address parameter_size;
 
     // Source lines belonging to this function, sorted by increasing
     // address.
-    vector<Line> lines_;
+    vector<Line> lines;
   };
 
   // A source line.
@@ -100,12 +106,41 @@ class Module {
     // For sorting by address.  (Not style-guide compliant, but it's
     // stupid not to put this in the struct.)
     static bool CompareByAddress(const Module::Line &x, const Module::Line &y) {
-      return x.address_ < y.address_;
+      return x.address < y.address;
     }
 
-    Address address_, size_;    // The address and size of the line's code.
-    File *file_;                // The source file.
-    int number_;                // The source line number.
+    Address address, size;    // The address and size of the line's code.
+    File *file;                // The source file.
+    int number;                // The source line number.
+  };
+
+  // A map from register names to postfix expressions that recover
+  // their their values. This can represent a complete set of rules to
+  // follow at some address, or a set of changes to be applied to an
+  // extant set of rules.
+  typedef map<string, string> RuleMap;
+
+  // A map from addresses to RuleMaps, representing changes that take
+  // effect at given addresses.
+  typedef map<Address, RuleMap> RuleChangeMap;
+  
+  // A range of 'STACK CFI' stack walking information. An instance of
+  // this structure corresponds to a 'STACK CFI INIT' record and the
+  // subsequent 'STACK CFI' records that fall within its range.
+  struct StackFrameEntry {
+    // The starting address and number of bytes of machine code this
+    // entry covers.
+    Address address, size;
+
+    // The initial register recovery rules, in force at the starting
+    // address.
+    RuleMap initial_rules;
+
+    // A map from addresses to rule changes. To find the rules in
+    // force at a given address, start with initial_rules, and then
+    // apply the changes given in this map for all addresses up to and
+    // including the address you're interested in.
+    RuleChangeMap rule_changes;
   };
     
   // Create a new module with the given name, operating system,
@@ -123,26 +158,64 @@ class Module {
   void SetLoadAddress(Address load_address);
 
   // Add FUNCTION to the module.
-  // Destroying this module frees all Function objects that have been
-  // added with this function.
+  // This module owns all Function objects added with this function:
+  // destroying the module destroys them as well.
   void AddFunction(Function *function);
 
   // Add all the functions in [BEGIN,END) to the module.
-  // Destroying this module frees all Function objects that have been
-  // added with this function.
+  // This module owns all Function objects added with this function:
+  // destroying the module destroys them as well.
   void AddFunctions(vector<Function *>::iterator begin,
                     vector<Function *>::iterator end);
 
-  // If this module has a file named NAME, return a pointer to it.  If
+  // Add STACK_FRAME_ENTRY to the module.
+  // 
+  // This module owns all StackFrameEntry objects added with this
+  // function: destroying the module destroys them as well.
+  void AddStackFrameEntry(StackFrameEntry *stack_frame_entry);
+
+  // If this module has a file named NAME, return a pointer to it. If
   // it has none, then create one and return a pointer to the new
-  // file.  Destroying this module frees all File objects that have
-  // been created using this function, or with Insert.
+  // file. This module owns all File objects created using these
+  // functions; destroying the module destroys them as well.
   File *FindFile(const string &name);
   File *FindFile(const char *name);
 
-  // Write this module to STREAM in the breakpad symbol format.
-  // Return true if all goes well, or false if an error occurs.  This
-  // method writes out:
+  // If this module has a file named NAME, return a pointer to it.
+  // Otherwise, return NULL.
+  File *FindExistingFile(const string &name);
+
+  // Insert pointers to the functions added to this module at I in
+  // VEC. The pointed-to Functions are still owned by this module.
+  // (Since this is effectively a copy of the function list, this is
+  // mostly useful for testing; other uses should probably get a more
+  // appropriate interface.)
+  void GetFunctions(vector<Function *> *vec, vector<Function *>::iterator i);
+
+  // Clear VEC and fill it with pointers to the Files added to this
+  // module, sorted by name. The pointed-to Files are still owned by
+  // this module. (Since this is effectively a copy of the file list,
+  // this is mostly useful for testing; other uses should probably get
+  // a more appropriate interface.)
+  void GetFiles(vector<File *> *vec);
+
+  // Clear VEC and fill it with pointers to the StackFrameEntry
+  // objects that have been added to this module. (Since this is
+  // effectively a copy of the stack frame entry list, this is mostly
+  // useful for testing; other uses should probably get
+  // a more appropriate interface.)
+  void GetStackFrameEntries(vector<StackFrameEntry *> *vec);
+
+  // Find those files in this module that are actually referred to by
+  // functions' line number data, and assign them source id numbers.
+  // Set the source id numbers for all other files --- unused by the
+  // source line data --- to -1.  We do this before writing out the
+  // symbol file, at which point we omit any unused files.
+  void AssignSourceIds();
+
+  // Call AssignSourceIds, and write this module to STREAM in the
+  // breakpad symbol format. Return true if all goes well, or false if
+  // an error occurs. This method writes out:
   // - a header based on the values given to the constructor,
   // - the source files added via FindFile, and finally
   // - the functions added via AddFunctions, each with its lines.
@@ -152,16 +225,14 @@ class Module {
 
 private:
 
-  // Find those files in this module that are actually referred to by
-  // functions' line number data, and assign them source id numbers.
-  // Set the source id numbers for all other files --- unused by the
-  // source line data --- to -1.  We do this before writing out the
-  // symbol file, at which point we omit any unused files.
-  void AssignSourceIds();
-
   // Report an error that has occurred writing the symbol file, using
   // errno to find the appropriate cause.  Return false.
   static bool ReportError();
+
+  // Write RULE_MAP to STREAM, in the form appropriate for 'STACK CFI'
+  // records, without a final newline. Return true if all goes well;
+  // if an error occurs, return false, and leave errno set.
+  static bool WriteRuleMap(const RuleMap &rule_map, FILE *stream);
 
   // Module header entries.
   string name_, os_, architecture_, id_;
@@ -186,6 +257,10 @@ private:
   // point to.
   FileByNameMap files_;                 // This module's source files.  
   vector<Function *> functions_;        // This module's functions.
+
+  // The module owns all the call frame info entries that have been
+  // added to it.
+  vector<StackFrameEntry *> stack_frame_entries_;
 };
 
 } // namespace google_breakpad

@@ -70,6 +70,7 @@ class nsChildView;
 class nsCocoaWindow;
 union nsPluginPort;
 
+#ifndef NP_NO_CARBON
 enum {
   // Currently focused ChildView (while this TSM document is active).
   // Transient (only set while TSMProcessRawKeyEvent() is processing a key
@@ -90,6 +91,7 @@ enum {
 // (PluginKeyEventsHandler()) to catch these events and pass them to Gecko
 // (which in turn passes them to the plugin).
 extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
+#endif // NP_NO_CARBON
 
 @interface NSEvent (Undocumented)
 
@@ -151,11 +153,13 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // re-establish the connection to the service manager many times per second
   // when handling |draggingUpdated:| messages.
   nsIDragService* mDragService;
-  
+
+#ifndef NP_NO_CARBON
   // For use with plugins, so that we can support IME in them.  We can't use
   // Cocoa TSM documents (those created and managed by the NSTSMInputContext
   // class) -- for some reason TSMProcessRawKeyEvent() doesn't work with them.
   TSMDocumentID mPluginTSMDoc;
+#endif
 
   // Simple gestures support
   //

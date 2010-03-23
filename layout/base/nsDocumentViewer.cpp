@@ -943,9 +943,12 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                               getter_AddRefs(window));
 
       if (window) {
-        window->SetNewDocument(mDocument, aState);
-
-        nsJSContext::LoadStart();
+        nsCOMPtr<nsIDocument> curDoc =
+          do_QueryInterface(window->GetExtantDocument());
+        if (!mIsPageMode || curDoc != mDocument) {
+          window->SetNewDocument(mDocument, aState);
+          nsJSContext::LoadStart();
+        }
       }
     }
   }
@@ -1274,7 +1277,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
 
     if (!window) {
       // Fail if no window is available...
-      NS_ERROR("window not set for document!");
+      NS_WARNING("window not set for document!");
       return NS_ERROR_NULL_POINTER;
     }
 
@@ -2368,7 +2371,7 @@ DocumentViewerImpl::FindContainerView()
 nsresult
 DocumentViewerImpl::CreateDeviceContext(nsIView* aContainerView)
 {
-  NS_PRECONDITION(!mPresShell && !mPresContext && !mWindow,
+  NS_PRECONDITION(!mPresShell && !mWindow,
                   "This will screw up our existing presentation");
   NS_PRECONDITION(mDocument, "Gotta have a document here");
   
@@ -2787,8 +2790,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
 
     mPrintPreviewZoom = aFullZoom;
     pc->SetPrintPreviewScale(aFullZoom * mOriginalPrintPreviewScale);
-    nsIPageSequenceFrame* pf = nsnull;
-    shell->GetPageSequenceFrame(&pf);
+    nsIPageSequenceFrame* pf = shell->GetPageSequenceFrame();
     if (pf) {
       nsIFrame* f = do_QueryFrame(pf);
       shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);

@@ -50,7 +50,7 @@ public:
 protected:
   // nsISMILType Methods
   // -------------------
-  virtual nsresult Init(nsSMILValue& aValue) const;
+  virtual void     Init(nsSMILValue& aValue) const;
   virtual void     Destroy(nsSMILValue&) const;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
