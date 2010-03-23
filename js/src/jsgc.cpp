@@ -757,7 +757,6 @@ GetFinalizableThingSize(unsigned thingKind)
 #if JS_HAS_XML_SUPPORT
         sizeof(JSXML),      /* FINALIZE_XML */
 #endif
-        sizeof(JSShortString), /* FINALIZE_SHORT_STRING  */
         sizeof(JSString),   /* FINALIZE_STRING */
         sizeof(JSString),   /* FINALIZE_EXTERNAL_STRING0 */
         sizeof(JSString),   /* FINALIZE_EXTERNAL_STRING1 */
@@ -781,11 +780,10 @@ GetFinalizableTraceKind(size_t thingKind)
     static const uint8 map[FINALIZE_LIMIT] = {
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
-#if JS_HAS_XML_SUPPORT
-        JSTRACE_XML,        /* FINALIZE_XML */
-#endif
-        JSTRACE_STRING,     /* FINALIZE_SHORT_STRING     */
-        JSTRACE_STRING,     /* FINALIZE_STRING           */
+#if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
+        JSTRACE_XML,
+#endif                      /* FINALIZE_STRING */
+        JSTRACE_STRING,
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING0 */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING1 */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING2 */
@@ -868,7 +866,7 @@ js_GetGCStringRuntime(JSString *str)
     JS_ASSERT(list->thingSize == sizeof(JSString));
 
     unsigned i = list->thingKind;
-    JS_ASSERT(i == FINALIZE_STRING || i == FINALIZE_SHORT_STRING ||
+    JS_ASSERT(i == FINALIZE_STRING ||
               (FINALIZE_EXTERNAL_STRING0 <= i &&
                i < FINALIZE_EXTERNAL_STRING0 + JS_EXTERNAL_STRING_LIMIT));
     return (JSRuntime *)((uint8 *)(list - i) -
@@ -987,7 +985,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #if JS_HAS_XML_SUPPORT
         "xml",
 #endif
-        "short_string",
         "string",
         "external_string_0",
         "external_string_1",
@@ -2337,7 +2334,6 @@ JSWeakRoots::mark(JSTracer *trc)
 #if JS_HAS_XML_SUPPORT
         "newborn_xml",                /* FINALIZE_XML */
 #endif
-        "newborn_short_string",       /* FINALIZE_SHORT_STRING */
         "newborn_string",             /* FINALIZE_STRING */
         "newborn_external_string0",   /* FINALIZE_EXTERNAL_STRING0 */
         "newborn_external_string1",   /* FINALIZE_EXTERNAL_STRING1 */
@@ -2611,18 +2607,6 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 }
 
 inline void
-FinalizeShortString(JSContext *cx, JSShortString *str, unsigned thingKind)
-{
-    JS_ASSERT(FINALIZE_SHORT_STRING == thingKind);
-    JS_ASSERT(!JSString::isStatic(&str->header));
-    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
-    if (str->header.isDependent()) {
-        JS_ASSERT(str->header.dependentBase());
-        JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-    }
-}
-
-inline void
 FinalizeString(JSContext *cx, JSString *str, unsigned thingKind)
 {
     JS_ASSERT(FINALIZE_STRING == thingKind);
@@ -2678,7 +2662,6 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
     } else {
         unsigned thingKind = JSGCArena::fromGCThing(str)->info.list->thingKind;
         JS_ASSERT(IsFinalizableStringKind(thingKind));
-        JS_ASSERT(thingKind != FINALIZE_SHORT_STRING);
 
         /* A stillborn string has null chars, so is not valid. */
         jschar *chars = str->flatChars();
@@ -3213,8 +3196,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     rt->deflatedStringCache->sweep(cx);
 
-    FinalizeArenaList<JSShortString, FinalizeShortString>
-        (cx, FINALIZE_SHORT_STRING, &emptyArenas);
     FinalizeArenaList<JSString, FinalizeString>
         (cx, FINALIZE_STRING, &emptyArenas);
     for (unsigned i = FINALIZE_EXTERNAL_STRING0;

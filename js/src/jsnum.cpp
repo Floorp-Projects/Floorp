@@ -327,7 +327,7 @@ num_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
     JS_snprintf(buf, sizeof buf, "(new %s(%s))", js_NumberClass.name, numStr);
-    str = js_NewStringCopyZ(cx, buf);
+    str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -589,7 +589,7 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    str = js_NewStringCopyZ(cx, numStr);
+    str = JS_NewStringCopyZ(cx, numStr);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -892,7 +892,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
-    s = js_NewStringCopyZ(cx, numStr);
+    s = JS_NewStringCopyZ(cx, numStr);
     if (!(numStr >= buf && numStr < buf + sizeof buf))
         js_free(numStr);
     return s;

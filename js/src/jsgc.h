@@ -244,7 +244,6 @@ enum JSFinalizeGCThingKind {
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
 #endif
-    FINALIZE_SHORT_STRING,
     FINALIZE_STRING,
     FINALIZE_EXTERNAL_STRING0,
     FINALIZE_EXTERNAL_STRING1,
@@ -284,14 +283,6 @@ static inline JSString *
 js_NewGCString(JSContext *cx)
 {
     return (JSString *) js_NewFinalizableGCThing(cx, FINALIZE_STRING);
-}
-
-struct JSShortString;
-
-static inline JSShortString *
-js_NewGCShortString(JSContext *cx)
-{
-    return (JSShortString *) js_NewFinalizableGCThing(cx, FINALIZE_SHORT_STRING);
 }
 
 static inline JSString *
