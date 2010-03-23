@@ -3975,11 +3975,6 @@ then
     esac
 fi
 
-MOZ_ARG_WITH_STRING(maemo-version,
-[  --with-maemo-version=MOZ_PLATFORM_MAEMO
-                        Maemo SDK Version],
-  MOZ_PLATFORM_MAEMO=$withval)
-
 MOZ_ARG_ENABLE_STRING(debug,
 [  --enable-debug[=DBG]    Enable building with developer debug info
                           (Using compiler flags DBG)],
@@ -3993,10 +3988,6 @@ MOZ_ARG_ENABLE_STRING(debug,
     MOZ_DEBUG=
   fi ],
   MOZ_DEBUG=)
-
-if test $MOZ_PLATFORM_MAEMO; then
-    MOZ_DEBUG=1
-fi
 
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
  case "${target_os}" in
@@ -4344,8 +4335,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
 [  --enable-install-strip  Enable stripping of libs & executables when packaging ],
     PKG_SKIP_STRIP= ,
     PKG_SKIP_STRIP=1)
-
-PKG_SKIP_STRIP=1
 
 dnl ========================================================
 dnl = 
