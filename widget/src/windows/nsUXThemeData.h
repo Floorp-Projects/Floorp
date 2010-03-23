@@ -37,6 +37,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef __UXThemeData_h__
+#define __UXThemeData_h__
 #include <windows.h>
 #include <uxtheme.h>
 
@@ -190,3 +192,4 @@ public:
   }
 #endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 };
+#endif // __UXThemeData_h__

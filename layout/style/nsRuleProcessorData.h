@@ -108,6 +108,7 @@ private:
 public:
   const nsString* GetLang();
   PRUint32 ContentState();
+  PRUint32 DocumentState();
   PRBool IsLink();
 
   // Returns a 1-based index of the child in its parent.  If the child

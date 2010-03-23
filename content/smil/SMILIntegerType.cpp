@@ -43,13 +43,12 @@ namespace mozilla {
 
 /*static*/ SMILIntegerType SMILIntegerType::sSingleton;
 
-nsresult
+void
 SMILIntegerType::Init(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mInt = 0;
   aValue.mType = this;
-  return NS_OK;
 }
 
 void

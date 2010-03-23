@@ -3,7 +3,7 @@ function test() {
   gBrowser.addTab();
   gBrowser.addTab();
 
-  var tabs = gBrowser.tabContainer.childNodes;
+  var tabs = gBrowser.tabs;
   var owner;
 
   is(tabs.length, 4, "4 tabs are open");

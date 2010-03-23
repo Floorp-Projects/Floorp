@@ -90,9 +90,9 @@ public:
   const nsISMILType* mType;
 
 protected:
-  nsresult InitAndCheckPostcondition(const nsISMILType* aNewType);
-  void     DestroyAndCheckPostcondition();
-  nsresult DestroyAndReinit(const nsISMILType* aNewType);
+  void InitAndCheckPostcondition(const nsISMILType* aNewType);
+  void DestroyAndCheckPostcondition();
+  void DestroyAndReinit(const nsISMILType* aNewType);
 };
 
 #endif  // NS_SMILVALUE_H_

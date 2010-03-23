@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -210,10 +210,11 @@ static bool RetrieveTest(TestMap *range_map, const RangeTest *range_test) {
 
       linked_ptr<CountedObject> nearest_object;
       AddressType nearest_base;
+      AddressType nearest_size;
       bool retrieved_nearest = range_map->RetrieveNearestRange(address,
                                                                &nearest_object,
                                                                &nearest_base,
-                                                               NULL);
+                                                               &nearest_size);
 
       // When checking one greater than the high side, RetrieveNearestRange
       // should usually return the test range.  When a different range begins
@@ -235,6 +236,22 @@ static bool RetrieveTest(TestMap *range_map, const RangeTest *range_test) {
                         offset,
                         expected_nearest ? "true" : "false",
                         observed_nearest ? "true" : "false");
+        return false;
+      }
+
+      // If a range was successfully retrieved, check that the returned
+      // bounds match the range as stored.
+      if (expected_nearest &&
+          (nearest_base != range_test->address ||
+           nearest_size != range_test->size)) {
+        fprintf(stderr, "FAILED: "
+                        "RetrieveNearestRange id %d, side %d, offset %d, "
+                        "expected base/size %d/%d, observed %d/%d\n",
+                        range_test->id,
+                        side,
+                        offset,
+                        range_test->address, range_test->size,
+                        nearest_base, nearest_size);
         return false;
       }
     }

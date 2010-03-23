@@ -126,14 +126,13 @@ ExtractValueWrapper(const nsSMILValue& aValue)
 
 // Class methods
 // -------------
-nsresult
+void
 nsSMILCSSValueType::Init(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected SMIL value type");
 
   aValue.mU.mPtr = nsnull;
   aValue.mType = this;
-  return NS_OK;
 }
 
 void

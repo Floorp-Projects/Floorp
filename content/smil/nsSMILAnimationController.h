@@ -111,8 +111,9 @@ public:
   void Unlink();
 
   // Methods for controlling whether we're sampling
-  nsresult StartSampling(nsRefreshDriver* aRefreshDriver);
-  nsresult StopSampling(nsRefreshDriver* aRefreshDriver);
+  // (Use to register/unregister us with the given nsRefreshDriver)
+  void StartSampling(nsRefreshDriver* aRefreshDriver);
+  void StopSampling(nsRefreshDriver* aRefreshDriver);
 
 protected:
   // Typedefs
@@ -148,9 +149,6 @@ protected:
   PR_STATIC_CALLBACK(PLDHashOperator) CompositorTableEntryTraverse(
       nsSMILCompositor* aCompositor, void* aArg);
 
-  // Timer-related implementation helpers
-  static void Notify(nsITimer* aTimer, void* aClosure);
-
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
   void DoSample(PRBool aSkipUnchangedContainers);
@@ -179,7 +177,6 @@ protected:
   NS_DECL_OWNINGTHREAD
 
   static const PRUint32      kTimerInterval;
-  nsCOMPtr<nsITimer>         mTimer;
   AnimationElementHashtable  mAnimationElementTable;
   TimeContainerHashtable     mChildContainerTable;
   PRPackedBool               mResampleNeeded;

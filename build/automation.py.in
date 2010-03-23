@@ -607,10 +607,9 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     def killPid(self, pid):
       os.kill(pid, signal.SIGKILL)
 
-  def triggerBreakpad(self, proc, utilityPath):
-    """Attempt to kill this process in a way that triggers Breakpad crash
-    reporting, if we know how for this platform. Otherwise just .kill() it."""
-    if self.CRASHREPORTER:
+  def killAndGetStack(self, proc, utilityPath, debuggerInfo):
+    """Kill the process, preferrably in a way that gets us a stack trace."""
+    if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
         # ABRT will get picked up by Breakpad's signal handler
         os.kill(proc.pid, signal.SIGABRT)
@@ -620,11 +619,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
         if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(proc.pid)]).wait() == 0:
           return
-    #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
+      #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
     self.log.info("Can't trigger Breakpad, just killing process")
     proc.kill()
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
     stackFixerModule = None
@@ -657,10 +656,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
           # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().
           hitMaxTime = True
           self.log.info("TEST-UNEXPECTED-FAIL | automation.py | application ran for longer than allowed maximum time of %d seconds", int(maxTime))
-          self.triggerBreakpad(proc, utilityPath)
+          self.killAndGetStack(proc, utilityPath, debuggerInfo)
       if didTimeout:
         self.log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
-        self.triggerBreakpad(proc, utilityPath)
+        self.killAndGetStack(proc, utilityPath, debuggerInfo)
 
     status = proc.wait()
     if status != 0 and not didTimeout and not hitMaxTime:
@@ -768,8 +767,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     cmd, args = self.buildCommandLine(app, debuggerInfo, profileDir, testURL, extraArgs)
     startTime = datetime.now()
 
-    # Don't redirect stdout and stderr if an interactive debugger is attached
     if debuggerInfo and debuggerInfo["interactive"]:
+      # If an interactive debugger is attached, don't redirect output
+      # and don't use timeouts.
+      timeout = None
+      maxTime = None
       outputPipe = None
     else:
       outputPipe = subprocess.PIPE
@@ -781,7 +783,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  stderr = subprocess.STDOUT)
     self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime)
+    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.

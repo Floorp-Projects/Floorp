@@ -103,9 +103,8 @@ $(IFACES_DIR)::
 
 GARBAGE_DIRS += $(IFACES_DIR)
 
-# Don't include the interface nsIPref, since it depends on the obsolete
-# interface nsIFileSpec.
-IGNORE_IFACES_NAMES = nsIPref
+# exclude interfaces that we don't need
+IGNORE_IFACES_NAMES =
 ifneq (,$(IGNORE_IFACES_NAMES))
 IGNORE_IFACES = $(patsubst %, ! -name "*%.java", $(IGNORE_IFACES_NAMES))
 endif
@@ -123,7 +122,9 @@ $(IFACES_JAR): $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class Makefile
 
 $(IFACES_JAR_SRC): $(IFACES_JAR)
 	$(JAR) cf $@ -C $(JAVA_DIST_DIR)/default org
+ifneq (,$(IGNORE_IFACES_NAMES))
 	$(ZIP) -d $@ $(patsubst %, $(JAVA_IFACES_PKG_NAME)/%.java, $(IGNORE_IFACES_NAMES))
+endif
 
 # Since we set NO_DIST_INSTALL above, the jars don't get copied into the SDK.
 # Handle that here.
