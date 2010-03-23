@@ -36,6 +36,7 @@ function testSerializer () {
 
   var doc = parser.parseFromString(str,"application/xml");
   var result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element inside an xml document with children");
 
   // with only whitespaces
@@ -44,6 +45,7 @@ function testSerializer () {
 
   doc = parser.parseFromString(str,"application/xml");
   result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element with only whitespaces as content, inside an xml document");
   
   // with only one space as content
@@ -52,6 +54,7 @@ function testSerializer () {
 
   doc = parser.parseFromString(str,"application/xml");
   result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element with only one space as content, inside an xml document");
   
   // let's remove the content
@@ -61,6 +64,7 @@ function testSerializer () {
   doc = parser.parseFromString(str,"application/xml");
   doc.documentElement.firstElementChild.textContent = '';
   result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element on which we removed dynamically the content, inside an xml document");
   
   // with no content but an ended tag
@@ -69,6 +73,7 @@ function testSerializer () {
 
   doc = parser.parseFromString(str,"application/xml");
   result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element with no content but with an ended tag, inside an xml document");
   
   // with no content
@@ -77,6 +82,7 @@ function testSerializer () {
 
   doc = parser.parseFromString(str,"application/xml");
   result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
   is(result, expected, "serialization of a link element with no content, inside an xml document");
   
   
