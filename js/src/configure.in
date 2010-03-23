@@ -3975,6 +3975,11 @@ then
     esac
 fi
 
+MOZ_ARG_WITH_STRING(maemo-version,
+[  --with-maemo-version=MOZ_PLATFORM_MAEMO
+                        Maemo SDK Version],
+  MOZ_PLATFORM_MAEMO=$withval)
+
 MOZ_ARG_ENABLE_STRING(debug,
 [  --enable-debug[=DBG]    Enable building with developer debug info
                           (Using compiler flags DBG)],
