@@ -36,32 +36,50 @@ var Page = {
             var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
             if( ffVersion < 3.7 ) Utils.error("css-transitions require Firefox 3.7+");
             
-            // ZOOM!          
-            var [w,h] = [$(this).width(), $(this).height()];
+            // ZOOM! 
+            var [w,h,z] = [$(this).width(), $(this).height(), $(this).css("zIndex")];
             var origPos = $(this).position();
             var scale = window.innerWidth/w;
             
             var tab = Tabs.tab(this);
             var mirror = tab.mirror;
-            mirror.forceCanvasSize(w * scale, h * scale);
+            //mirror.forceCanvasSize(w * scale/3, h * scale);
             
-            $(this).addClass("scale-animate").css({
+            var overflow = $("body").css("overflow");
+            $("body").css("overflow", "hidden");
+
+            $(this).css("zIndex",99999).animate({
+              top: 0, left: 0, easing: "easein",
+              width:w*scale, height:h*scale}, 200, function(){
+                $(this).find("canvas").data("link").tab.focus();
+                $(this)
+                  .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:z});  
+                Navbar.show();    
+                $("body").css("overflow", overflow);          
+              });
+            
+            // I'm temporarily giving up on CSS-Transforms and Firefox 3.7.
+            // It introduces way to many errors... -- Aza
+            
+            /*$(this).addClass("scale-animate").css({
               top: 0, left: 0,
               width:w*scale, height:h*scale
             }).bind("transitionend", function(e){
               // We will get one of this events for every property CSS-animated...
-              // I choose one randomly (width) and only do things for that.
+              // I chose one randomly (width) and only do things for that.
               if( e.originalEvent.propertyName != "width" ) return;
 
               // Switch tabs, and the re-size and re-position the animated
               // tab image.
+              // Don't forget to unbind the transitioned event handler!
+              $(this).unbind("transitionend");
               $(this).find("canvas").data("link").tab.focus();
               $(this)
                 .removeClass("scale-animate")
                 .css({top: origPos.top, left: origPos.left, width:w, height:h});
               Navbar.show();
-              mirror.unforceCanvasSize();
-            })
+              //mirror.unforceCanvasSize();
+            })*/
             // END ZOOM
             
           } else {
@@ -106,10 +124,13 @@ var Page = {
         // its mirror for the zoom out.
         var $tab = $(lastTab.mirror.el);
         
-        var [w,h, pos] = [$tab.width(), $tab.height(), $tab.position()];
+        var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
         var scale = window.innerWidth / w;
+
+        var overflow = $("body").css("overflow");
+        $("body").css("overflow", "hidden");
+        
         var mirror = lastTab.mirror;
-        mirror.forceCanvasSize(w * scale, h * scale);
         $tab.css({
             top: 0, left: 0,
             width: window.innerWidth,
@@ -119,7 +140,8 @@ var Page = {
             top: pos.top, left: pos.left,
             width: w, height: h
         },250, '', function() {
-            mirror.unforceCanvasSize();
+          $tab.css("zIndex",z);
+          $("body").css("overflow", overflow);
         });
       }
       lastTab = this;
@@ -128,7 +150,7 @@ var Page = {
     $("#tabbar").toggle(
       function(){Tabbar.hide()},
       function(){Tabbar.show()}      
-    )
+    );
     
     Page.initSearch();
   },
@@ -174,10 +196,10 @@ var Page = {
       
     });
     
-    Utils.homeTab.onFocus(function(){
+    /*Utils.homeTab.onFocus(function(){
       $search.val("").focus();
       Navbar.hide();
-    });
+    });*/
     
     $(window).blur(function(){
       Navbar.show();
@@ -198,15 +220,6 @@ ArrangeClass.prototype = {
     return $("<a href='#'/>").text(name).appendTo("#actions");
   }
 }
-
-var anim = new ArrangeClass("Anim", function(){
-  if( $("canvas:visible").eq(9).height() < 300 )
-    $("canvas:visible").eq(9).data("link").animate({height:500}, 500);
-  else
-    $("canvas:visible").eq(9).data("link").animate({height:120}, 500);
-    
-  $("canvas:visible").eq(9).css({zIndex:99999});
-})
 
 var grid = new ArrangeClass("Grid", function(){    
   var x = 10;
@@ -232,11 +245,9 @@ var grid = new ArrangeClass("Grid", function(){
 });
 
 
-
 var Arrange = {
   init: function(){
-    grid.arrange();
-    
+    grid.arrange();    
   }
 }
 
