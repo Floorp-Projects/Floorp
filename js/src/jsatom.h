@@ -461,12 +461,16 @@ js_FinishCommonAtoms(JSContext *cx);
 extern JSAtom *
 js_AtomizeDouble(JSContext *cx, jsdouble d);
 
+JS_END_EXTERN_C
+
 /*
  * Find or create the atom for a string. Return null on failure to allocate
  * memory.
  */
 extern JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
+
+JS_BEGIN_EXTERN_C
 
 extern JSAtom *
 js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags);
