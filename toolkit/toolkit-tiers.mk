@@ -207,7 +207,7 @@ ifdef MOZ_JPROF
 tier_platform_dirs        += tools/jprof
 endif
 
-tier_platform_dirs	+= xpfe
+tier_platform_dirs	+= xpfe/components
 
 ifdef MOZ_ENABLE_XREMOTE
 tier_platform_dirs += widget/src/xremoteclient
