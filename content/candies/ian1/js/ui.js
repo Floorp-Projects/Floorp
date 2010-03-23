@@ -276,15 +276,6 @@ ArrangeClass.prototype = {
   }
 }
 
-//----------------------------------------------------------
-var anim = new ArrangeClass("Anim", function(){
-  if( $("canvas:visible").eq(9).height() < 300 )
-    $("canvas:visible").eq(9).data("link").animate({height:500}, 500);
-  else
-    $("canvas:visible").eq(9).data("link").animate({height:120}, 500);
-    
-  $("canvas:visible").eq(9).css({zIndex:99999});
-})
 
 //----------------------------------------------------------
 var grid = new ArrangeClass("Grid", function(value) {
