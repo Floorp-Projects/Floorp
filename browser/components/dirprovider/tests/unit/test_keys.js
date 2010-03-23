@@ -34,25 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function test_usr_micsum() {
-  let mdir = gProfD.clone();
-  mdir.append("microsummary-generators");
-
-  let tmdir = gDirSvc.get("UsrMicsumGens", Ci.nsIFile);
-  do_check_true(tmdir.equals(mdir));
-
-  if (!tmdir.exists())
-    tmdir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
-
-  do_check_true(tmdir.isWritable());
-
-  let tfile = writeTestFile(tmdir, "usrmicsum");
-  do_check_true(tfile.exists());
-
-  mdir.append(tfile.leafName);
-  do_check_true(mdir.exists());
-}
-
 function test_bookmarkhtml() {
   let bmarks = gProfD.clone();
   bmarks.append("bookmarks.html");
@@ -70,8 +51,7 @@ function test_prefoverride() {
 }
 
 function run_test() {
-  [test_usr_micsum,
-   test_bookmarkhtml,
+  [test_bookmarkhtml,
    test_prefoverride
   ].forEach(function(f) {
     do_test_pending();
