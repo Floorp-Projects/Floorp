@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Stacks!</title>
+    <link rel="stylesheet" href="../../css/shared/groups.css" type="text/css">
     <script src="../../js/core/jquery.js"></script>
     <script src="../../js/core/utils.js"></script>  
     <style>
@@ -20,29 +21,6 @@
         -moz-transition-timing-function: cubic-bezier(1.0, 0.0, 1.0, 1.0);        
       }
       
-      .active{
-        -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);
-      }
-      
-      .willGroup{
-        -moz-box-shadow: 0px 0px 10px rgba(255,0,0,1);
-      }
-      
-      .group{
-        border: 1px inset rgba(0,0,0,.3);
-        background-color: white;
-        cursor: move;
-        -moz-box-shadow: inset 2px 2px 12px rgba(0,0,0,.15);        
-      }
-      
-      .titlebar{
-        border: 1px solid #ccc;
-        font-size: 12px;
-        line-height: 18px;
-        height: 18px;
-        background: -moz-linear-gradient(90deg, #ccc,#eee);
-      }
-
       .close{
         float:right;
         top:12px; right:0;
@@ -59,22 +37,12 @@
         text-shadow: 1px 1px 1px rgba(0,0,0,.5);
         font-family: Helvetica;
       }
-      
-      input.name{
-        background: transparent;
-        border: none;
-      }
 
-      /* Resizable
-      ----------------------------------*/
+      /* In Firefox 3.7, this relative url doesn't seem to work if stored in groups.css */
       .resizer{
-        background-image: url(gfx/resizer.png);
+        background-image: url(../../candies/zoomgroups/gfx/resizer.png);
       }
-      .ui-resizable { position: relative;}
-      .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
-      .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
-      .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
-      
+                
     </style>
   </head>
   

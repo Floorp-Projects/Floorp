@@ -163,14 +163,16 @@ TabMirror.prototype = {
             mirror.triggerPaint();
           }
           
-          var w = $canvas.width();
-          var h = $canvas.height();
-          if(w != $canvas.attr('width') || h != $canvas.attr('height')) {
-            $canvas.attr('width', w);
-            $canvas.attr('height', h);
-            mirror.triggerPaint();
+          if(!mirror.canvasSizeForced) {
+            var w = $canvas.width();
+            var h = $canvas.height();
+            if(w != $canvas.attr('width') || h != $canvas.attr('height')) {
+              $canvas.attr('width', w);
+              $canvas.attr('height', h);
+              mirror.triggerPaint();
+            }
           }
-
+          
           if(mirror.needsPaint) {
             mirror.tabCanvas.paint();
             
@@ -210,6 +212,7 @@ TabMirror.prototype = {
     
     tab.mirror = {}; 
     tab.mirror.needsPaint = 0;
+    tab.mirror.canvasSizeForced = false;
     tab.mirror.el = div.get(0);
     tab.mirror.favEl = $('.fav', div).get(0);
     tab.mirror.nameEl = $('.name', div).get(0);
@@ -218,6 +221,18 @@ TabMirror.prototype = {
     tab.mirror.triggerPaint = function() {
     	var date = new Date();
     	this.needsPaint = date.getTime();
+    };
+    
+    tab.mirror.forceCanvasSize = function(w, h) {
+      this.canvasSizeForced = true;
+      var $canvas = $(this.canvasEl);
+      $canvas.attr('width', w);
+      $canvas.attr('height', h);
+      this.tabCanvas.paint();
+    };
+    
+    tab.mirror.unforceCanvasSize = function() {
+      this.canvasSizeForced = false;
     };
     
     var doc = tab.contentDocument;

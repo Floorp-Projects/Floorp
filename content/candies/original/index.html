@@ -6,6 +6,7 @@
   <title>Switch</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
   <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
+  <link rel="stylesheet" href="../../css/shared/groups.css" type="text/css">
   <style media="screen" type="text/css">
   html, body {
     margin: 0;
@@ -62,6 +63,7 @@
     position: absolute;
     right:0px;
     background: -moz-linear-gradient(0deg, rgba(255,255,255,0), white);
+    overflow: hidden;
   }
   
   .close{
@@ -79,9 +81,13 @@
     -moz-box-shadow: inset 1px 1px 0px rgba(0,0,0,.5), inset -1px -1px 0px rgba(255,255,255,.5);
     text-shadow: 1px 1px 1px rgba(0,0,0,.5);
     font-family: Helvetica;
-  }     
-  
-    
+  } 
+
+  .titlebar .close {
+    top: 2px;
+    right: 2px;
+  }      
+      
   .search{width:100%; margin-top: 30px; text-align: center; margin-bottom: 30px;}
   .search input{ width: 300px; font-size: 16pt;}
 
@@ -108,29 +114,16 @@
     cursor: pointer;
   }
   
-  .group{
-    border: 1px inset rgba(0,0,0,.3);
-    background-color: white;
-    cursor: move;
-    -moz-box-shadow: inset 2px 2px 12px rgba(0,0,0,.15);        
-  }    
-  
   .scale-animate{
     -moz-transition-property: height, width, left, top;
     -moz-transition-duration: .17s;
     -moz-transition-timing-function: cubic-bezier(1.0, 0.0, 1.0, 1.0);        
   }
 
-   
-  /* Resizable
-  ----------------------------------*/
+  /* In Firefox 3.7, this relative url doesn't seem to work if stored in groups.css */
   .resizer{
-    background-image: url(../zoomgroups/gfx/resizer.png);
+    background-image: url(../../candies/zoomgroups/gfx/resizer.png);
   }
-  .ui-resizable { position: relative;}
-  .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
-  .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
-  .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
     
   </style>
   
