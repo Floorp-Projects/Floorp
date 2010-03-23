@@ -62,7 +62,6 @@ PARALLEL_DIRS = \
   certerror \
   dirprovider \
   feeds \
-  microsummaries \
   places \
   preferences \
   privatebrowsing \
