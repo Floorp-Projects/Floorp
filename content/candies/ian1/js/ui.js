@@ -33,8 +33,37 @@ var Page = {
           $(this).find("canvas").data("link").tab.close(); }
         else {
           if(!$(this).data('isDragging')) {
-            Navbar.show();
-            $(this).find("canvas").data("link").tab.focus();            
+            var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
+            if( ffVersion < 3.7 ) Utils.error("css-transitions require Firefox 3.7+");
+            
+            // ZOOM!          
+            var [w,h] = [$(this).width(), $(this).height()];
+            var origPos = $(this).position();
+            var scale = window.innerWidth/w;
+            
+            var tab = Tabs.tab(this);
+            var mirror = tab.mirror;
+            mirror.forceCanvasSize(w * scale, h * scale);
+            
+            $(this).addClass("scale-animate").css({
+              top: 0, left: 0,
+              width:w*scale, height:h*scale
+            }).bind("transitionend", function(e){
+              // We will get one of this events for every property CSS-animated...
+              // I choose one randomly (width) and only do things for that.
+              if( e.originalEvent.propertyName != "width" ) return;
+
+              // Switch tabs, and the re-size and re-position the animated
+              // tab image.
+              $(this).find("canvas").data("link").tab.focus();            
+              $(this)
+                .removeClass("scale-animate")
+                .css({top: origPos.top, left: origPos.left, width:w, height:h});
+              Navbar.show();
+              mirror.unforceCanvasSize();
+            })
+            // END ZOOM
+            
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
           }
@@ -57,7 +86,34 @@ var Page = {
     Tabs.onClose(function(){
       Utils.homeTab.focus();
       return false;
-    })
+    });
+    
+    var lastTab = null;
+    Tabs.onFocus(function(){
+      // If we switched to TabCandy window...
+      if( this.contentWindow == window && lastTab != null){
+        // If there was a lastTab we want to animate
+        // its mirror for the zoom out.
+        var $tab = $(lastTab.mirror.el);
+        
+        var [w,h, pos] = [$tab.width(), $tab.height(), $tab.position()];
+        var scale = window.innerWidth / w;
+        var mirror = lastTab.mirror;
+        mirror.forceCanvasSize(w * scale, h * scale);
+        $tab.css({
+            top: 0, left: 0,
+            width: window.innerWidth,
+            height: h * (window.innerWidth/w),
+            zIndex: 999999,
+        }).animate({
+            top: pos.top, left: pos.left,
+            width: w, height: h
+        },250, '', function() {
+            mirror.unforceCanvasSize();
+        });
+      }
+      lastTab = this;
+    });
     
     $("#tabbar").toggle(
       function(){Tabbar.hide()},

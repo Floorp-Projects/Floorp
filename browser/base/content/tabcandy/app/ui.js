@@ -41,6 +41,10 @@ var Page = {
             var origPos = $(this).position();
             var scale = window.innerWidth/w;
             
+            var tab = Tabs.tab(this);
+            var mirror = tab.mirror;
+            mirror.forceCanvasSize(w * scale, h * scale);
+            
             $(this).addClass("scale-animate").css({
               top: 0, left: 0,
               width:w*scale, height:h*scale
@@ -56,6 +60,7 @@ var Page = {
                 .removeClass("scale-animate")
                 .css({top: origPos.top, left: origPos.left, width:w, height:h});
               Navbar.show();
+              mirror.unforceCanvasSize();
             })
             // END ZOOM
             
@@ -102,16 +107,20 @@ var Page = {
         var $tab = $(lastTab.mirror.el);
         
         var [w,h, pos] = [$tab.width(), $tab.height(), $tab.position()];
+        var scale = window.innerWidth / w;
+        var mirror = lastTab.mirror;
+        mirror.forceCanvasSize(w * scale, h * scale);
         $tab.css({
             top: 0, left: 0,
             width: window.innerWidth,
             height: h * (window.innerWidth/w),
             zIndex: 999999,
-          })          
-          .animate({
+        }).animate({
             top: pos.top, left: pos.left,
             width: w, height: h
-          },250);
+        },250, '', function() {
+            mirror.unforceCanvasSize();
+        });
       }
       lastTab = this;
     });
