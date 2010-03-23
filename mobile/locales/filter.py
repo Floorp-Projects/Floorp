@@ -42,6 +42,12 @@ def test(mod, path, entity = None):
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
                  "mobile"):
     return False
+
+  # Ignore Lorentz strings, at least temporarily
+  if mod == "toolkit" and path == "chrome/mozapps/plugins/plugins.dtd":
+    if entity.startswith('reloadPlugin.'): return False
+    if entity.startswith('report.'): return False
+
   if mod != "mobile":
     # we only have exceptions for mobile
     return True
