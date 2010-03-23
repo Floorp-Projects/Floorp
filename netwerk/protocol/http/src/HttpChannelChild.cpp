@@ -210,19 +210,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 //-----------------------------------------------------------------------------
 
 bool 
-HttpChannelChild::RecvOnStartRequest(const PRInt32& HACK_ContentLength,
-                                     const nsCString& HACK_ContentType,
-                                     const PRUint32& HACK_Status,
-                                     const nsCString& HACK_StatusText)
+HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
   mState = HCC_ONSTART;
 
-  mContentLength_HACK = HACK_ContentLength;
-  mContentType_HACK = HACK_ContentType;
-  mResponseStatus_HACK = HACK_Status;
-  mResponseStatusText_HACK = HACK_StatusText;
+  mResponseHead = new nsHttpResponseHead(responseHead);
 
   nsresult rv = mChildListener->OnStartRequest(this, mChildListenerContext);
   if (!NS_SUCCEEDED(rv)) {
@@ -453,38 +447,82 @@ HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 NS_IMETHODIMP
 HttpChannelChild::GetContentType(nsACString& value)
 {
-  if (mState < HCC_ONSTART) {
+  if (!mResponseHead) {
     value.Truncate();
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (mContentType_HACK.IsEmpty()) {
+  if (mResponseHead->ContentType().IsEmpty()) {
     value.AssignLiteral(UNKNOWN_CONTENT_TYPE);
   } else {
-    value = mContentType_HACK;
+    value = mResponseHead->ContentType();
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP
 HttpChannelChild::SetContentType(const nsACString& aContentType)
 {
-  DROP_DEAD();
+  return BaseClassSetContentType_HACK(aContentType);
+}
+
+nsresult
+HttpChannelChild::BaseClassSetContentType_HACK(const nsACString &value)
+{
+  if (mChildListener || mWasOpened) {
+    if (!mResponseHead)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    nsCAutoString contentTypeBuf, charsetBuf;
+    PRBool hadCharset;
+    net_ParseContentType(value, contentTypeBuf, charsetBuf, &hadCharset);
+
+    mResponseHead->SetContentType(contentTypeBuf);
+
+    // take care not to stomp on an existing charset
+    if (hadCharset)
+      mResponseHead->SetContentCharset(charsetBuf);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetContentCharset(nsACString& aContentCharset)
 {
-  DROP_DEAD();
+  return BaseClassGetContentCharset_HACK(aContentCharset);
 }
+
+nsresult
+HttpChannelChild::BaseClassGetContentCharset_HACK(nsACString &value)
+{
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  value = mResponseHead->ContentCharset();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HttpChannelChild::SetContentCharset(const nsACString& aContentCharset)
 {
-  DROP_DEAD();
+  return BaseClassSetContentCharset_HACK(aContentCharset);
+}
+
+nsresult
+HttpChannelChild::BaseClassSetContentCharset_HACK(const nsACString &value)
+{
+  if (mChildListener) {
+    if (!mResponseHead)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    mResponseHead->SetContentCharset(value);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetContentLength(PRInt32 *aContentLength)
 {
-  *aContentLength = mContentLength_HACK;
+  *aContentLength = mResponseHead->ContentLength();
   return NS_OK;
 }
 
@@ -551,7 +589,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   }
 
   if (!SendAsyncOpen(mSpec, charset, originalSpec, originalCharset, 
-                     docSpec, docCharset, mLoadFlags)) {
+                     docSpec, docCharset, mLoadFlags, mRequestHeaders)) {
     // IPDL error: our destructor will be called automatically
     // -- TODO: verify that that's the case :)
     mChildListener = 0;
@@ -616,7 +654,21 @@ HttpChannelChild::SetReferrer(nsIURI *aReferrer)
 NS_IMETHODIMP
 HttpChannelChild::GetRequestHeader(const nsACString& hdr, nsACString& val)
 {
-  DROP_DEAD();
+  return BaseClassGetRequestHeader_HACK(hdr, val);
+}
+
+nsresult
+HttpChannelChild::BaseClassGetRequestHeader_HACK(const nsACString &header,
+                                                 nsACString &value)
+{
+  // XXX might be better to search the header list directly instead of
+  // hitting the http atom hash table.
+
+  nsHttpAtom atom = nsHttp::ResolveAtom(header);
+  if (!atom)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return mRequestHead.GetHeader(atom, value);
 }
 
 NS_IMETHODIMP
@@ -624,7 +676,55 @@ HttpChannelChild::SetRequestHeader(const nsACString& aHeader,
                                    const nsACString& aValue, 
                                    PRBool aMerge)
 {
-  DROP_DEAD();
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
+  nsresult rv = BaseClassSetRequestHeader_HACK(aHeader, aValue, aMerge);
+  if (NS_FAILED(rv))
+    return rv;
+
+  RequestHeaderTuple* tuple = mRequestHeaders.AppendElement();
+  if (!tuple)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  tuple->mHeader = aHeader;
+  tuple->mValue = aValue;
+  tuple->mMerge = aMerge;
+  return NS_OK;
+}
+
+nsresult
+HttpChannelChild::BaseClassSetRequestHeader_HACK(const nsACString &header,
+                                                 const nsACString &value,
+                                                 PRBool merge)
+{
+  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+
+  const nsCString &flatHeader = PromiseFlatCString(header);
+  const nsCString &flatValue  = PromiseFlatCString(value);
+
+  LOG(("nsHttpChannel::SetRequestHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
+       this, flatHeader.get(), flatValue.get(), merge));
+
+  // Header names are restricted to valid HTTP tokens.
+  if (!nsHttp::IsValidToken(flatHeader))
+    return NS_ERROR_INVALID_ARG;
+
+  // Header values MUST NOT contain line-breaks.  RFC 2616 technically
+  // permits CTL characters, including CR and LF, in header values provided
+  // they are quoted.  However, this can lead to problems if servers do not
+  // interpret quoted strings properly.  Disallowing CR and LF here seems
+  // reasonable and keeps things simple.  We also disallow a null byte.
+  if (flatValue.FindCharInSet("\r\n") != kNotFound ||
+      flatValue.Length() != strlen(flatValue.get()))
+    return NS_ERROR_INVALID_ARG;
+
+  nsHttpAtom atom = nsHttp::ResolveAtom(flatHeader.get());
+  if (!atom) {
+    NS_WARNING("failed to resolve atom");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mRequestHead.SetHeader(atom, flatValue, merge);
 }
 
 NS_IMETHODIMP
@@ -659,18 +759,18 @@ NS_IMETHODIMP
 HttpChannelChild::GetResponseStatus(PRUint32 *value)
 {
   NS_ENSURE_ARG_POINTER(value);
-  if (mState < HCC_ONSTART) 
+  if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
-  *value = mResponseStatus_HACK;
+  *value = mResponseHead->Status();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetResponseStatusText(nsACString& value)
 {
-  if (mState < HCC_ONSTART) 
+  if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
-  value = mResponseStatusText_HACK;
+  value = mResponseHead->StatusText();
   return NS_OK;
 }
 
@@ -678,9 +778,9 @@ NS_IMETHODIMP
 HttpChannelChild::GetRequestSucceeded(PRBool *value)
 {
   NS_PRECONDITION(value, "Don't ever pass a null arg to this function");
-  if (mState < HCC_ONSTART) 
+  if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
-  PRUint32 status = mResponseStatus_HACK;
+  PRUint32 status = mResponseHead->Status();
   *value = (status / 100 == 2);
   return NS_OK;
 }
@@ -688,7 +788,19 @@ HttpChannelChild::GetRequestSucceeded(PRBool *value)
 NS_IMETHODIMP
 HttpChannelChild::GetResponseHeader(const nsACString& header, nsACString& val)
 {
-  DROP_DEAD();
+  return BaseClassGetResponseHeader_HACK(header, val);
+}
+
+nsresult
+HttpChannelChild::BaseClassGetResponseHeader_HACK(const nsACString &header,
+                                                  nsACString &value)
+{
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+  nsHttpAtom atom = nsHttp::ResolveAtom(header);
+  if (!atom)
+    return NS_ERROR_NOT_AVAILABLE;
+  return mResponseHead->GetHeader(atom, value);
 }
 
 NS_IMETHODIMP
@@ -696,7 +808,32 @@ HttpChannelChild::SetResponseHeader(const nsACString& header,
                                     const nsACString& value, 
                                     PRBool merge)
 {
-  DROP_DEAD();
+  return BaseClassSetResponseHeader_HACK(header, value, merge);
+}
+
+nsresult
+HttpChannelChild::BaseClassSetResponseHeader_HACK(const nsACString &header,
+                                                  const nsACString &value,
+                                                  PRBool merge)
+{
+  LOG(("nsHttpChannel::SetResponseHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
+       this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
+
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+  nsHttpAtom atom = nsHttp::ResolveAtom(header);
+  if (!atom)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // these response headers must not be changed 
+  if (atom == nsHttp::Content_Type ||
+      atom == nsHttp::Content_Length ||
+      atom == nsHttp::Content_Encoding ||
+      atom == nsHttp::Trailer ||
+      atom == nsHttp::Transfer_Encoding)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  return mResponseHead->SetHeader(atom, value, merge);
 }
 
 NS_IMETHODIMP

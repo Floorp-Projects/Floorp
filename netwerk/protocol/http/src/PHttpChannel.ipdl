@@ -40,6 +40,11 @@
 
 include protocol "PNecko.ipdl";
 
+include "mozilla/net/PHttpChannelParams.h";
+
+using RequestHeaderTuples;
+using nsHttpResponseHead;
+
 namespace mozilla {
 namespace net {
 
@@ -51,23 +56,21 @@ protocol PHttpChannel
 parent:
   __delete__();
 
-  AsyncOpen(nsCString   uriSpec, 
-            nsCString   charset, 
+  AsyncOpen(nsCString           uriSpec, 
+            nsCString           charset, 
             // - TODO: unclear if any HTTP channel clients ever set
             // originalURI != uri (about:credits?); also not clear if chrome
             // channel would ever need to know.  Can we get rid of next two
             // args?
-            nsCString   originalUriSpec, 
-            nsCString   originalCharset, 
-            nsCString   docUriSpec, 
-            nsCString   docCharset, 
-            PRUint32    loadFlags);
+            nsCString           originalUriSpec, 
+            nsCString           originalCharset, 
+            nsCString           docUriSpec, 
+            nsCString           docCharset, 
+            PRUint32            loadFlags,
+            RequestHeaderTuples requestHeaders);
 
 child:
-  OnStartRequest(PRInt32    HACK_ContentLength,
-                 nsCString  HACK_ContentType,
-                 PRUint32   HACK_Status,
-                 nsCString  HACK_StatusText);
+  OnStartRequest(nsHttpResponseHead responseHead);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 

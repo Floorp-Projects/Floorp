@@ -52,6 +52,14 @@ EXPORTS_NAMESPACES = mozilla/net
 EXPORTS_mozilla/net = \
   HttpChannelParent.h \
   HttpChannelChild.h  \
+  PHttpChannelParams.h \
+  $(NULL)
+
+EXPORTS = \
+  nsHttpResponseHead.h \
+  nsHttpHeaderArray.h \
+  nsHttp.h \
+  nsHttpAtomList.h \
   $(NULL)
 endif
 
