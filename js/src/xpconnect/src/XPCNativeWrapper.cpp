@@ -1229,8 +1229,6 @@ JSObject *
 XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
                                JSObject *scope, nsIPrincipal *aObjectPrincipal)
 {
-  CheckWindow(wrapper);
-
   if (aObjectPrincipal) {
     nsIScriptSecurityManager *ssm = GetSecurityManager();
 
