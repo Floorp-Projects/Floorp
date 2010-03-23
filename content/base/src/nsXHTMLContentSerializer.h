@@ -200,6 +200,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   // Stack to store one olState struct per <OL>.
   nsAutoTArray<olState, 8> mOLStateStack;
 
+  PRBool HasNoChildren(nsIContent* aContent);
 };
 
 nsresult

@@ -461,18 +461,26 @@ nsXHTMLContentSerializer::AppendEndOfElementStart(nsIDOMElement *aOriginalElemen
     return;
   }
 
-  nsIParserService* parserService = nsContentUtils::GetParserService();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aOriginalElement);
 
-  if (parserService) {
-    PRBool isContainer;
-    parserService->IsContainer(parserService->HTMLAtomTagToId(aName),
-                             isContainer);
-    if (!isContainer) {
-      // for backward compatibility with HTML 4 user agents
-      // only non-container HTML elements can be closed immediatly,
-      // and a space is added before />
-      AppendToString(NS_LITERAL_STRING(" />"), aStr);
-      return;
+  // for non empty elements, even if they are not a container, we always
+  // serialize their content, because the XHTML element could contain non XHTML
+  // nodes useful in some context, like in an XSLT stylesheet
+  if (HasNoChildren(content)) {
+
+    nsIParserService* parserService = nsContentUtils::GetParserService();
+  
+    if (parserService) {
+      PRBool isContainer;
+      parserService->IsContainer(parserService->HTMLAtomTagToId(aName),
+                                 isContainer);
+      if (!isContainer) {
+        // for backward compatibility with HTML 4 user agents
+        // only non-container HTML elements can be closed immediatly,
+        // and a space is added before />
+        AppendToString(NS_LITERAL_STRING(" />"), aStr);
+        return;
+      }
     }
   }
   AppendToString(kGreaterThan, aStr);
@@ -605,17 +613,19 @@ nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
       }
     }
 
-    nsIParserService* parserService = nsContentUtils::GetParserService();
+    if (HasNoChildren(aContent)) {
+      nsIParserService* parserService = nsContentUtils::GetParserService();
 
-    if (parserService) {
-      PRBool isContainer;
+      if (parserService) {
+        PRBool isContainer;
 
-      parserService->IsContainer(parserService->HTMLAtomTagToId(name),
-                                 isContainer);
-      if (!isContainer) {
-        // non-container HTML elements are already closed,
-        // see AppendEndOfElementStart
-        return PR_FALSE;
+        parserService->IsContainer(parserService->HTMLAtomTagToId(name),
+                                   isContainer);
+        if (!isContainer) {
+          // non-container HTML elements are already closed,
+          // see AppendEndOfElementStart
+          return PR_FALSE;
+        }
       }
     }
     // for backward compatibility with old HTML user agents,
@@ -1065,4 +1075,23 @@ nsXHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement)
   }
   else
     return PR_FALSE;
+}
+
+PRBool
+nsXHTMLContentSerializer::HasNoChildren(nsIContent * aContent) {
+
+  PRUint32 i, childCount = aContent->GetChildCount();
+
+  for (i = 0; i < childCount; ++i) {
+
+    nsIContent* child = aContent->GetChildAt(i);
+
+    if (!child->IsNodeOfType(nsINode::eTEXT))
+      return PR_FALSE;
+
+    if (child->TextLength())
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
