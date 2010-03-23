@@ -710,7 +710,8 @@ namespace nanojit
             uint32_t j = argc - i - 1;
             ArgType ty = argTypes[j];
             LInsp arg = ins->arg(j);
-            if (ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q) {
+            NanoAssert(ty != ARGTYPE_V);
+            if (ty != ARGTYPE_F) {
                 // GP arg
                 if (r <= R10) {
                     asm_regarg(ty, arg, r);
@@ -720,7 +721,7 @@ namespace nanojit
                     // put arg on stack
                     TODO(stack_int32);
                 }
-            } else if (ty == ARGTYPE_F) {
+            } else {
                 // double
                 if (fr <= F13) {
                     asm_regarg(ty, arg, fr);
@@ -735,8 +736,6 @@ namespace nanojit
                     // put arg on stack
                     TODO(stack_double);
                 }
-            } else {
-                TODO(ARGTYPE_UNK);
             }
         }
         if (param_size > max_param_size)
@@ -746,7 +745,8 @@ namespace nanojit
     void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
     {
         NanoAssert(r != deprecated_UnknownReg);
-        if (ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q)
+        NanoAssert(ty != ARGTYPE_V);
+        if (ty != ARGTYPE_F)
         {
         #ifdef NANOJIT_64BIT
             if (ty == ARGTYPE_I) {
@@ -785,7 +785,7 @@ namespace nanojit
                 }
             }
         }
-        else if (ty == ARGTYPE_F) {
+        else {
             if (p->isUsed()) {
                 Register rp = p->deprecated_getReg();
                 if (!deprecated_isKnownReg(rp) || !IsFpReg(rp)) {
@@ -803,9 +803,6 @@ namespace nanojit
                 // to the scratch reg, it's dead after this point.
                 findSpecificRegFor(p, r);
             }
-        }
-        else {
-            TODO(ARGTYPE_UNK);
         }
     }
 
@@ -1032,7 +1029,7 @@ namespace nanojit
         Register r = ins->deprecated_getReg();
         if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {
             // FPR already assigned, fine, use it
-            deprecated_freeRsrcOf(ins, false);
+            deprecated_freeRsrcOf(ins);
         } else {
             // use a GPR register; its okay to copy doubles with GPR's
             // but *not* okay to copy non-doubles with FPR's
