@@ -6295,21 +6295,22 @@ var gMissingPluginInstaller = {
       let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
       let submitKey   = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.accesskey");
 
-      let buttons = [
+      let buttons = [{
+        label: reloadLabel,
+        accessKey: reloadKey,
+        popup: null,
+        callback: function() { browser.reload(); },
+      }];
 #ifdef MOZ_CRASHREPORTER
-        {
-          label: submitLabel,
-          accessKey: submitKey,
-          popup: null,
-          callback: function() { gMissingPluginInstaller.submitReport(minidumpID); },
-        },
+      let submitButton = {
+        label: submitLabel,
+        accessKey: submitKey,
+        popup: null,
+        callback: function() { gMissingPluginInstaller.submitReport(minidumpID); },
+      };
+      if (minidumpID)
+        buttons.push(submitButton);
 #endif
-        {
-          label: reloadLabel,
-          accessKey: reloadKey,
-          popup: null,
-          callback: function() { browser.reload(); },
-        }];
 
       let notification = notificationBox.appendNotification(messageString, "plugin-crashed",
                                                             iconURL, priority, buttons);
