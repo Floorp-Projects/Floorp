@@ -3047,11 +3047,10 @@ nsGfxScrollFrameInner::AdjustScrollbarRectForResizer(
     if (!widget || !widget->ShowsResizeIndicator(&widgetRect))
       return;
 
-    nsRect resizerRect =
-        nsRect(aPresContext->DevPixelsToAppUnits(widgetRect.x) - offset.x,
-               aPresContext->DevPixelsToAppUnits(widgetRect.y) - offset.y,
-               aPresContext->DevPixelsToAppUnits(widgetRect.width),
-               aPresContext->DevPixelsToAppUnits(widgetRect.height));
+    resizerRect = nsRect(aPresContext->DevPixelsToAppUnits(widgetRect.x) - offset.x,
+                         aPresContext->DevPixelsToAppUnits(widgetRect.y) - offset.y,
+                         aPresContext->DevPixelsToAppUnits(widgetRect.width),
+                         aPresContext->DevPixelsToAppUnits(widgetRect.height));
   }
 
   if (!resizerRect.Contains(aRect.BottomRight() - nsPoint(1, 1)))
