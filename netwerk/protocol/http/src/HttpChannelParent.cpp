@@ -69,13 +69,14 @@ NS_IMPL_ISUPPORTS3(HttpChannelParent,
 //-----------------------------------------------------------------------------
 
 bool 
-HttpChannelParent::RecvAsyncOpen(const nsCString& uriSpec, 
-                                 const nsCString& charset,
-                                 const nsCString& originalUriSpec, 
-                                 const nsCString& originalCharset,
-                                 const nsCString& docUriSpec, 
-                                 const nsCString& docCharset,
-                                 const PRUint32&  loadFlags)
+HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec, 
+                                 const nsCString&           charset,
+                                 const nsCString&           originalUriSpec, 
+                                 const nsCString&           originalCharset,
+                                 const nsCString&           docUriSpec, 
+                                 const nsCString&           docCharset,
+                                 const PRUint32&            loadFlags,
+                                 const RequestHeaderTuples& requestHeaders)
 {
   nsresult rv;
 
@@ -117,7 +118,13 @@ HttpChannelParent::RecvAsyncOpen(const nsCString& uriSpec,
   }
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     chan->SetLoadFlags(loadFlags);
- 
+
+  nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
+  for (PRUint32 i = 0; i < requestHeaders.Length(); i++)
+    httpChan->SetRequestHeader(requestHeaders[i].mHeader,
+                               requestHeaders[i].mValue,
+                               requestHeaders[i].mMerge);
+
   // TODO: implement needed interfaces, and either proxy calls back to child
   // process, or rig up appropriate hacks.
 //  chan->SetNotificationCallbacks(this);
@@ -139,26 +146,11 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
   LOG(("HttpChannelParent::OnStartRequest [this=%x]\n", this));
 
-  nsCOMPtr<nsIHttpChannel> chan(do_QueryInterface(aRequest));
-  NS_ENSURE_TRUE(chan, NS_ERROR_FAILURE);
+  nsHttpChannel *chan = static_cast<nsHttpChannel *>(aRequest);
+  nsHttpResponseHead *responseHead = chan->GetResponseHead();
+  NS_ABORT_IF_FALSE(responseHead, "Missing HTTP responseHead!");
 
-  /*
-   * - TODO: Need to send all or most of mResponseHead
-   * - TODO: if getting vals fails, still need to call OnStartRequest on child,
-   *   not just fail here?
-   */
-  PRInt32 contentLength_HACK;
-  chan->GetContentLength(&contentLength_HACK);
-  nsCAutoString contentType_HACK;
-  chan->GetContentType(contentType_HACK);
-  PRUint32 status_HACK;
-  chan->GetResponseStatus(&status_HACK);
-  nsCAutoString statusText_HACK;
-  chan->GetResponseStatusText(statusText_HACK);
-
-  if (!SendOnStartRequest(contentLength_HACK, contentType_HACK,
-                          status_HACK, statusText_HACK)) 
-  {
+  if (!SendOnStartRequest(*responseHead)) {
     // IPDL error--child dead/dying & our own destructor will be called
     // automatically
     // -- TODO: verify that that's the case :)

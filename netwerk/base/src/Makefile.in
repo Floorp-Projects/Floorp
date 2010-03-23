@@ -47,6 +47,9 @@ MODULE		= necko
 LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
 
+ifdef MOZ_IPC
+	EXPORTS = nsURLHelper.h
+endif
 
 CPPSRCS		= \
 		nsTransportUtils.cpp \
