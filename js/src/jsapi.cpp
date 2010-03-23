@@ -4427,6 +4427,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
 {
     JSAtom *atom;
 
+    CHECK_REQUEST(cx);
     atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return NULL;
