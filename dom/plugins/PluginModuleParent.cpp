@@ -45,6 +45,7 @@
 #include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
+#include "PluginIdentifierParent.h"
 
 #include "nsContentUtils.h"
 #include "nsCRT.h"
@@ -53,14 +54,11 @@
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
-using mozilla::ipc::NPRemoteIdentifier;
 using mozilla::ipc::SyncChannel;
 
 using namespace mozilla::plugins;
 
 static const char kTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
-
-PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 
 template<>
 struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
@@ -98,7 +96,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
-    if (!mValidIdentifiers.Init()) {
+    if (!mIdentifiers.Init()) {
         NS_ERROR("Out of memory");
     }
 
@@ -308,6 +306,31 @@ PluginModuleParent::NotifyPluginCrashed()
         mPlugin->PluginCrashed(mDumpID);
 }
 
+PPluginIdentifierParent*
+PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
+                                           const int32_t& aInt)
+{
+    NPIdentifier npident = aString.IsVoid() ?
+        mozilla::plugins::parent::_getintidentifier(aInt) :
+        mozilla::plugins::parent::_getstringidentifier(aString.get());
+
+    if (!npident) {
+        NS_WARNING("Failed to get identifier!");
+        return nsnull;
+    }
+
+    PluginIdentifierParent* ident = new PluginIdentifierParent(npident);
+    mIdentifiers.Put(npident, ident);
+    return ident;
+}
+
+bool
+PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
+{
+    delete aActor;
+    return true;
+}
+
 PPluginInstanceParent*
 PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
                                          const uint16_t& aMode,
@@ -370,30 +393,6 @@ PluginModuleParent::NPP_Destroy(NPP instance,
 
     (void) PluginInstanceParent::Call__delete__(parentInstance);
     return retval;
-}
-
-bool
-PluginModuleParent::EnsureValidNPIdentifier(NPIdentifier aIdentifier)
-{
-    if (!mValidIdentifiers.GetEntry(aIdentifier)) {
-        nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(aIdentifier);
-        if (!newEntry) {
-            NS_ERROR("Out of memory?");
-            return false;
-        }
-    }
-    return true;
-}
-
-NPIdentifier
-PluginModuleParent::GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier)
-{
-    NS_ASSERTION(mValidIdentifiers.IsInitialized(), "Not initialized!");
-    if (aRemoteIdentifier &&
-        mValidIdentifiers.GetEntry((NPIdentifier)aRemoteIdentifier)) {
-        return (NPIdentifier)aRemoteIdentifier;
-    }
-    return 0;
 }
 
 NPError
@@ -526,141 +525,36 @@ PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
     return true;
 }
 
-bool
-PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
-                                                NPRemoteIdentifier* aId)
+PPluginIdentifierParent*
+PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
 {
-    if (aString.IsVoid()) {
-        NS_ERROR("Someone sent over a void string?!");
-        return false;
-    }
-
-    NPIdentifier ident =
-        mozilla::plugins::parent::_getstringidentifier(aString.BeginReading());
-    if (!ident) {
-        *aId = 0;
-        return true;
-    }
-
-    if (!EnsureValidNPIdentifier(ident)) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    *aId = (NPRemoteIdentifier)ident;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
-                                             NPRemoteIdentifier* aId)
-{
-    NPIdentifier ident = mozilla::plugins::parent::_getintidentifier(aInt);
-    if (!ident) {
-        *aId = 0;
-        return true;
-    }
-
-    if (!EnsureValidNPIdentifier(ident)) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    *aId = (NPRemoteIdentifier)ident;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
-                                               NPError *err,
-                                               nsCString* aString)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    NPUTF8* val = mozilla::plugins::parent::_utf8fromidentifier(ident);
-    if (!val) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    aString->Assign(val);
-    *err = NPERR_NO_ERROR;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
-                                              NPError* err,
-                                              int32_t* aInt)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    *aInt = mozilla::plugins::parent::_intfromidentifier(ident);
-    *err = NPERR_NO_ERROR;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
-                                               bool* aIsString)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *aIsString = false;
-        return true;
-    }
-
-    *aIsString = mozilla::plugins::parent::_identifierisstring(ident);
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
-                                                 nsTArray<NPRemoteIdentifier>* aIds)
-{
-    NS_ASSERTION(aIds->IsEmpty(), "Non-empty array!");
-
-    PRUint32 count = aNames.Length();
-    if (!count) {
-        NS_ERROR("No names to get!");
-        return false;
-    }
-
-    nsTArray<NPUTF8*> buffers;
-    nsTArray<NPIdentifier> ids;
-
-    if (!(buffers.SetLength(count) &&
-          ids.SetLength(count))) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    for (PRUint32 index = 0; index < count; ++index)
-        buffers[index] = const_cast<NPUTF8*>(NullableStringGet(aNames[index]));
-
-    mozilla::plugins::parent::_getstringidentifiers(
-        const_cast<const NPUTF8**>(buffers.Elements()), count, ids.Elements());
-
-    for (PRUint32 index = 0; index < count; index++) {
-        NPIdentifier& id = ids[index];
-        if (id) {
-            if (!EnsureValidNPIdentifier(id)) {
-                NS_ERROR("Out of memory?");
-                return false;
+    PluginIdentifierParent* ident;
+    if (!mIdentifiers.Get(aIdentifier, &ident)) {
+        nsCString string;
+        int32_t intval = -1;
+        if (mozilla::plugins::parent::_identifierisstring(aIdentifier)) {
+            NPUTF8* chars =
+                mozilla::plugins::parent::_utf8fromidentifier(aIdentifier);
+            if (!chars) {
+                return nsnull;
             }
+            string.Adopt(chars);
         }
-        aIds->AppendElement((NPRemoteIdentifier)id);
+        else {
+            intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
+            if (intval == -1) {
+                return nsnull;
+            }
+            string.SetIsVoid(PR_TRUE);
+        }
+        ident = new PluginIdentifierParent(aIdentifier);
+        if (!SendPPluginIdentifierConstructor(ident, string, intval)) {
+            delete ident;
+            return nsnull;
+        }
+        mIdentifiers.Put(aIdentifier, ident);
     }
-
-    return true;
+    return ident;
 }
 
 PluginInstanceParent*
