@@ -2189,17 +2189,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   // Check if the frame is resizable.
-  nsIFrame* resizableFrame = mOuter;
-  if (parent) {
-    // For textarea, mOuter is the frame for the anonymous div element,
-    // so get the resizability from the parent textarea instead.
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
-    if (textAreaElement) {
-      resizableFrame = parent;
-    }
-  }
-
-  PRBool isResizable = resizableFrame->GetStyleDisplay()->mResize != NS_STYLE_RESIZE_NONE;
+  PRInt8 resizeStyle = mOuter->GetStyleDisplay()->mResize;
+  PRBool isResizable = resizeStyle != NS_STYLE_RESIZE_NONE;
 
   nsIScrollableFrame *scrollable = do_QueryFrame(mOuter);
 
@@ -2275,7 +2266,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString dir;
-    switch (resizableFrame->GetStyleDisplay()->mResize) {
+    switch (resizeStyle) {
       case NS_STYLE_RESIZE_HORIZONTAL:
         if (IsScrollbarOnRight()) {
           dir.AssignLiteral("right");

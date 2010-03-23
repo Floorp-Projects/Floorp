@@ -152,6 +152,7 @@ input > .anonymous-div {
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
   ime-mode: inherit;
+  -moz-resize: inherit;
 }
 
 textarea > .anonymous-div.wrap,
@@ -168,6 +169,7 @@ textarea > .placeholder {
   color: GrayText;
   overflow: hidden;
   pointer-events: none;
+  -moz-resize: none;
 }
 
 textarea > .placeholder {
