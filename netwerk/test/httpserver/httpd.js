@@ -2598,6 +2598,9 @@ ServerHandler.prototype =
           self._setObjectState(k, v);
         });
 
+        // Make it possible for sjs files to access their location
+        this._setState(path, "__LOCATION__", file.path);
+
         try
         {
           // Alas, the line number in errors dumped to console when calling the

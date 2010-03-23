@@ -69,9 +69,7 @@
 #include "nsIAccessible.h"
 #endif
 
-#ifdef USE_XIM
-#include "pldhash.h"
-#endif
+#include "nsGtkIMModule.h"
 
 #ifdef MOZ_LOGGING
 
@@ -80,8 +78,6 @@
 
 #include "prlog.h"
 #include "nsTArray.h"
-
-#include "nsGtkIMModule.h"
 
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;

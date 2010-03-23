@@ -177,6 +177,11 @@ class nsStyleSet
                          nsStyleContext* aStyleContext,
                          nsStyleContext* aNewParentContext);
 
+  // Test if style is dependent on a document state.
+  PRBool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
+                                        nsIContent*    aContent,
+                                        PRInt32        aStateMask);
+
   // Test if style is dependent on content state
   nsReStyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,

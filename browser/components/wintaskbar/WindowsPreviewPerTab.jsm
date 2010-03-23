@@ -180,12 +180,6 @@ PreviewController.prototype = {
     this.linkedBrowser.removeEventListener("pageshow", this, false);
     this.linkedBrowser.removeEventListener("DOMTitleChanged", this, false);
     this.linkedBrowser.removeEventListener("MozAfterPaint", this, false);
-
-    // Break cycles, otherwise we end up leaking the window with everything
-    // attached to it.
-    delete this.win;
-    delete this.preview;
-    delete this.dirtyRegion;
   },
   get wrappedJSObject() {
     return this;
@@ -389,8 +383,9 @@ function TabWindow(win) {
     this.tabbrowser.tabContainer.addEventListener(this.events[i], this, false);
   this.tabbrowser.addTabsProgressListener(this);
 
+
   AeroPeek.windows.push(this);
-  let tabs = this.tabbrowser.mTabs;
+  let tabs = this.tabbrowser.tabs;
   for (let i = 0; i < tabs.length; i++)
     this.newTab(tabs[i]);
 
@@ -405,9 +400,7 @@ TabWindow.prototype = {
   destroy: function () {
     this._destroying = true;
 
-    let tabs = this.tabbrowser.mTabs;
-
-    this.tabbrowser.removeTabsProgressListener(this);
+    let tabs = this.tabbrowser.tabs;
 
     for (let i = 0; i < this.events.length; i++)
       this.tabbrowser.tabContainer.removeEventListener(this.events[i], this, false);
@@ -596,17 +589,6 @@ var AeroPeek = {
     this.enabled = this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);
   },
 
-  destroy: function destroy() {
-    this._enabled = false;
-
-    this.prefs.removeObserver(TOGGLE_PREF_NAME, this);
-    this.prefs.removeObserver(DISABLE_THRESHOLD_PREF_NAME, this);
-    this.prefs.removeObserver(CACHE_EXPIRATION_TIME_PREF_NAME, this);
-
-    if (this.cacheTimer)
-      this.cacheTimer.cancel();
-  },
-
   get enabled() {
     return this._enabled;
   },
@@ -654,10 +636,7 @@ var AeroPeek = {
       return;
 
     win.gTaskbarTabGroup.destroy();
-    delete win.gTaskbarTabGroup;
-
-    if (this.windows.length == 0)
-      this.destroy();
+    win.gTaskbarTabGroup = null;
   },
 
   resetCacheTimer: function () {

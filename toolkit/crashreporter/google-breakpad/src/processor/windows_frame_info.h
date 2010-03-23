@@ -27,7 +27,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// stack_frame_info.h: Holds debugging information about a stack frame.
+// windows_frame_info.h: Holds debugging information about a stack frame.
 //
 // This structure is specific to Windows debugging information obtained
 // from pdb files using the DIA API.
@@ -35,8 +35,8 @@
 // Author: Mark Mentovai
 
 
-#ifndef PROCESSOR_STACK_FRAME_INFO_H__
-#define PROCESSOR_STACK_FRAME_INFO_H__
+#ifndef PROCESSOR_WINDOWS_FRAME_INFO_H__
+#define PROCESSOR_WINDOWS_FRAME_INFO_H__
 
 #include <string>
 
@@ -44,7 +44,7 @@
 
 namespace google_breakpad {
 
-struct StackFrameInfo {
+struct WindowsFrameInfo {
  public:
   enum Validity {
     VALID_NONE           = 0,
@@ -52,7 +52,7 @@ struct StackFrameInfo {
     VALID_ALL            = -1
   };
 
-  StackFrameInfo() : valid(VALID_NONE),
+  WindowsFrameInfo() : valid(VALID_NONE),
                      prolog_size(0),
                      epilog_size(0),
                      parameter_size(0),
@@ -62,7 +62,7 @@ struct StackFrameInfo {
                      allocates_base_pointer(0),
                      program_string() {}
 
-  StackFrameInfo(u_int32_t set_prolog_size,
+  WindowsFrameInfo(u_int32_t set_prolog_size,
                  u_int32_t set_epilog_size,
                  u_int32_t set_parameter_size,
                  u_int32_t set_saved_register_size,
@@ -80,8 +80,8 @@ struct StackFrameInfo {
         allocates_base_pointer(set_allocates_base_pointer),
         program_string(set_program_string) {}
 
-  // CopyFrom makes "this" StackFrameInfo object identical to "that".
-  void CopyFrom(const StackFrameInfo &that) {
+  // CopyFrom makes "this" WindowsFrameInfo object identical to "that".
+  void CopyFrom(const WindowsFrameInfo &that) {
     valid = that.valid;
     prolog_size = that.prolog_size;
     epilog_size = that.epilog_size;
@@ -93,7 +93,7 @@ struct StackFrameInfo {
     program_string = that.program_string;
   }
 
-  // Clears the StackFrameInfo object so that users will see it as though
+  // Clears the WindowsFrameInfo object so that users will see it as though
   // it contains no information.
   void Clear() {
     valid = VALID_NONE;
@@ -123,4 +123,4 @@ struct StackFrameInfo {
 }  // namespace google_breakpad
 
 
-#endif  // PROCESSOR_STACK_FRAME_INFO_H__
+#endif  // PROCESSOR_WINDOWS_FRAME_INFO_H__

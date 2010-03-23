@@ -2984,7 +2984,7 @@ const DOMLinkHandler = {
             if (browserIndex == -1)
               break;
 
-            var tab = gBrowser.mTabContainer.childNodes[browserIndex];
+            let tab = gBrowser.tabs[browserIndex];
             gBrowser.setIcon(tab, link.href);
             iconAdded = true;
           }
@@ -6564,7 +6564,7 @@ var FeedHandler = {
 function undoCloseTab(aIndex) {
   // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
   var blankTabToRemove = null;
-  if (gBrowser.tabContainer.childNodes.length == 1 &&
+  if (gBrowser.tabs.length == 1 &&
       !gPrefService.getBoolPref("browser.tabs.autoHide") &&
       gBrowser.sessionHistory.count < 2 &&
       gBrowser.currentURI.spec == "about:blank" &&
@@ -6627,7 +6627,7 @@ var gBookmarkAllTabsHandler = {
   },
 
   _updateCommandState: function BATH__updateCommandState(aTabClose) {
-    var numTabs = gBrowser.tabContainer.childNodes.length;
+    var numTabs = gBrowser.tabs.length;
 
     // The TabClose event is fired before the tab is removed from the DOM
     if (aTabClose)

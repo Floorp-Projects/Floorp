@@ -1,4 +1,4 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,9 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// stabs_reader_unittest.cc: Unit tests for StabsReader.
+// Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+
+// stabs_reader_unittest.cc: Unit tests for google_breakpad::StabsReader.
 
 #include <a.out.h>
 #include <cassert>
@@ -53,6 +55,7 @@ using std::ostringstream;
 using std::string;
 
 using ::testing::_;
+using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::Return;
 using ::testing::Sequence;
@@ -70,7 +73,8 @@ namespace {
 // sections, and then pass those to StabsReader to look at. The
 // human-readable file is called a "mock stabs file".
 //
-// Each line of a mock stabs file should have the following form:
+// Except for compilation unit boundary lines (described below), each
+// line of a mock stabs file should have the following form:
 //
 //   TYPE OTHER DESC VALUE NAME
 // 
@@ -91,6 +95,10 @@ namespace {
 //   is misleading, but that's how it is.  For SO, this may be a
 //   filename; for FUN, this is the function name, plus type data; and
 //   so on.
+//
+// A compilation unit boundary line has the form:
+//
+//  cu-boundary FILENAME
 
 // I don't know if the whole parser/handler pattern is really worth
 // the bureaucracy in this case.  But just writing it out as
@@ -108,6 +116,11 @@ class MockStabsHandler {
   // stops, and its Process member function returns false.
   virtual bool Entry(enum __stab_debug_code type, char other, short desc,
                      unsigned long value, const string &name) { return true; }
+  // Report a compilation unit boundary whose filename is FILENAME. As
+  // for the Entry function, this should return true to continue
+  // parsing, or false to stop processing.
+  virtual bool CUBoundary(const string &filename) { return true; }
+
   // Report an error in parsing the mock stabs data.  If this returns true,
   // the parser continues; if it returns false, the parser stops and
   // its Process member function returns false.
@@ -159,7 +172,7 @@ bool MockStabsParser::Process() {
   // terminating newline.
   for(;;) {
     string line;
-    std::getline(*stream_, line, '\n');
+    getline(*stream_, line, '\n');
     if (line.empty() && stream_->eof())
       break;
     line_number_++;
@@ -190,24 +203,32 @@ bool MockStabsParser::ParseLine(const string &line) {
   // Parse and validate the stabs type.
   string typeName;
   linestream >> typeName;
-  StabTypeNameTable::const_iterator typeIt = type_names_.find(typeName);
-  if (typeIt == type_names_.end())
-    return handler_->Error("%s:%d: unrecognized stab type: %s\n",
-                           filename_.c_str(), line_number_, typeName.c_str());
-  // These are int, not char and unsigned char, to ensure they're parsed
-  // as decimal numbers, not characters.
-  int otherInt, descInt;
-  unsigned long value;
-  linestream >> otherInt >> descInt >> value;
-  if (linestream.fail())
-    return handler_->Error("%s:%d: malformed mock stabs input line\n",
-                           filename_.c_str(), line_number_);
-  if (linestream.peek() == ' ')
-    linestream.get();
-  string name;
-  getline(linestream, name, '\n');
-  return handler_->Entry(static_cast<__stab_debug_code>(typeIt->second),
-                         otherInt, descInt, value, name);
+  if (typeName == "cu-boundary") {
+    if (linestream.peek() == ' ')
+      linestream.get();
+    string filename;
+    getline(linestream, filename, '\n');
+    return handler_->CUBoundary(filename);
+  } else {
+    StabTypeNameTable::const_iterator typeIt = type_names_.find(typeName);
+    if (typeIt == type_names_.end())
+      return handler_->Error("%s:%d: unrecognized stab type: %s\n",
+                             filename_.c_str(), line_number_, typeName.c_str());
+    // These are int, not char and unsigned char, to ensure they're parsed
+    // as decimal numbers, not characters.
+    int otherInt, descInt;
+    unsigned long value;
+    linestream >> otherInt >> descInt >> value;
+    if (linestream.fail())
+      return handler_->Error("%s:%d: malformed mock stabs input line\n",
+                             filename_.c_str(), line_number_);
+    if (linestream.peek() == ' ')
+      linestream.get();
+    string name;
+    getline(linestream, name, '\n');
+    return handler_->Entry(static_cast<__stab_debug_code>(typeIt->second),
+                           otherInt, descInt, value, name);
+  }
 }
 
 // A class for constructing .stab sections.
@@ -227,9 +248,15 @@ class StabSection {
   // call to Append.  The caller should initialize the returned entry
   // as needed.
   struct nlist *Append();
+  // Set the first entry's n_desc field to COUNT, and set its n_value field
+  // to STRING_SIZE.
+  void SetHeader(short count, unsigned long string_size);
   // Set SECTION to the contents of a .stab section holding the
   // accumulated list of entries added with Append.
   void GetSection(string *section);
+  // Clear the array, and prepare this StabSection to accumulate a fresh
+  // set of entries.
+  void Clear();
 
  private:
   // The array of stabs entries,
@@ -248,9 +275,21 @@ struct nlist *StabSection::Append() {
   return &entries_[used_++];
 }
 
+void StabSection::SetHeader(short count, unsigned long string_size) {
+  assert(used_ >= 1);
+  entries_[0].n_desc = count;
+  entries_[0].n_value = string_size;
+}
+
 void StabSection::GetSection(string *section) {
   section->assign(reinterpret_cast<char *>(entries_),
                   sizeof(*entries_) * used_);
+}
+
+void StabSection::Clear() {
+  used_ = 0;
+  size_ = 1;
+  entries_ = (struct nlist *) realloc(entries_, sizeof(*entries_) * size_);
 }
 
 // A class for building .stabstr sections.
@@ -273,6 +312,9 @@ class StabstrSection {
   // Set SECTION to the contents of a .stabstr section in which the
   // strings passed to Insert appear at the indices we promised.
   void GetSection(string *section);
+  // Clear the contents of this StabstrSection, and prepare it to
+  // accumulate a new set of strings.
+  void Clear();
  private:
   // Maps from strings to .stabstr indices and back.
   typedef map<string, size_t> StringToIndex;
@@ -317,6 +359,12 @@ void StabstrSection::GetSection(string *section) {
   }
 }
 
+void StabstrSection::Clear() {
+  string_indices_.clear();
+  string_indices_[""] = 0;
+  next_byte_ = 1;
+}
+
 // A mock stabs parser handler class that builds .stab and .stabstr
 // sections.
 class StabsSectionsBuilder: public MockStabsHandler {
@@ -325,13 +373,15 @@ class StabsSectionsBuilder: public MockStabsHandler {
   // and construct .stab and .stabstr sections.  FILENAME should be
   // the name of the mock stabs input file; we use it in error
   // messages.
-  StabsSectionsBuilder(const string &filename):
-      filename_(filename), error_count_(0) { }
+  StabsSectionsBuilder(const string &filename)
+      : filename_(filename), error_count_(0), has_header_(false),
+        entry_count_(0) { }
 
   // Overridden virtual member functions.
   bool Entry(enum __stab_debug_code type, char other, short desc,
              unsigned long value, const string &name);
-  virtual bool Error(const char *format, ...);
+  bool CUBoundary(const string &filename);
+  bool Error(const char *format, ...);
 
   // Set SECTION to the contents of a .stab or .stabstr section
   // reflecting the entries that have been passed to us via Entry.
@@ -339,10 +389,24 @@ class StabsSectionsBuilder: public MockStabsHandler {
   void GetStabstr(string *section);
 
  private:
-  StabSection stab_;                    // stabs entries we've seen
-  StabstrSection stabstr_;              // and the strings they love
-  const string &filename_;              // input filename, for error messages
-  int error_count_;                     // number of errors we've seen so far
+  // Finish a compilation unit. If there are any entries accumulated in
+  // stab_ and stabstr_, add them as a new compilation unit to
+  // finished_cu_stabs_ and finished_cu_stabstr_, and then clear stab_ and
+  // stabstr_.
+  void FinishCU();
+
+  const string &filename_;        // input filename, for error messages
+  int error_count_;               // number of errors we've seen so far
+
+  // The following members accumulate the contents of a single compilation
+  // unit, possibly headed by an N_UNDF stab.
+  bool has_header_;               // true if we have an N_UNDF header
+  int entry_count_;               // the number of entries we've seen
+  StabSection stab_;              // 'struct nlist' entries
+  StabstrSection stabstr_;        // and the strings they love
+
+  // Accumulated .stab and .stabstr content for all compilation units.
+  string finished_cu_stab_, finished_cu_stabstr_;
 };
 
 bool StabsSectionsBuilder::Entry(enum __stab_debug_code type, char other,
@@ -354,7 +418,46 @@ bool StabsSectionsBuilder::Entry(enum __stab_debug_code type, char other,
   entry->n_desc = desc;
   entry->n_value = value;
   entry->n_un.n_strx = stabstr_.Insert(name);
+  entry_count_++;
   return true;
+}
+
+bool StabsSectionsBuilder::CUBoundary(const string &filename) {
+  FinishCU();
+  // Add a header for the compilation unit.
+  assert(!has_header_);
+  assert(entry_count_ == 0);
+  struct nlist *entry = stab_.Append();
+  entry->n_type = N_UNDF;
+  entry->n_other = 0;
+  entry->n_desc = 0;          // will be set to number of entries
+  entry->n_value = 0;         // will be set to size of .stabstr data
+  entry->n_un.n_strx = stabstr_.Insert(filename);
+  has_header_ = true;
+  // The N_UNDF header isn't included in the symbol count, so we
+  // shouldn't bump entry_count_ here.
+  return true;
+}
+
+void StabsSectionsBuilder::FinishCU() {
+  if (entry_count_ > 0) {
+    // Get the strings first, so we can record their size in the header.
+    string stabstr;
+    stabstr_.GetSection(&stabstr);
+    finished_cu_stabstr_ += stabstr;
+
+    // Initialize our header, if we have one, and extract the .stab data.
+    if (has_header_)
+      stab_.SetHeader(entry_count_, stabstr.size());
+    string stab;
+    stab_.GetSection(&stab);
+    finished_cu_stab_ += stab;
+  }
+
+  stab_.Clear();
+  stabstr_.Clear();
+  has_header_ = false;
+  entry_count_ = 0;
 }
 
 bool StabsSectionsBuilder::Error(const char *format, ...) {
@@ -373,11 +476,13 @@ bool StabsSectionsBuilder::Error(const char *format, ...) {
 }
 
 void StabsSectionsBuilder::GetStab(string *section) {
-  stab_.GetSection(section);
+  FinishCU();
+  *section = finished_cu_stab_;
 }
 
 void StabsSectionsBuilder::GetStabstr(string *section) {
-  stabstr_.GetSection(section);
+  FinishCU();
+  *section = finished_cu_stabstr_;
 }
 
 class MockStabsReaderHandler: public StabsHandler {
@@ -428,7 +533,7 @@ static bool ApplyHandlerToMockStabsData(StabsHandler *handler,
   return reader.Process();
 }
 
-TEST(StabsReaderTestCase, MockStabsInput) {
+TEST(StabsReader, MockStabsInput) {
   MockStabsReaderHandler mock_handler;
 
   {
@@ -467,7 +572,7 @@ TEST(StabsReaderTestCase, MockStabsInput) {
                   "common/linux/testdata/stabs_reader_unittest.input1"));
 }
 
-TEST(StabsReaderTestCase, AbruptCU) {
+TEST(StabsReader, AbruptCU) {
   MockStabsReaderHandler mock_handler;
 
   {
@@ -485,7 +590,7 @@ TEST(StabsReaderTestCase, AbruptCU) {
                   "common/linux/testdata/stabs_reader_unittest.input2"));
 }
 
-TEST(StabsReaderTestCase, AbruptFunction) {
+TEST(StabsReader, AbruptFunction) {
   MockStabsReaderHandler mock_handler;
 
   {
@@ -507,7 +612,7 @@ TEST(StabsReaderTestCase, AbruptFunction) {
                   "common/linux/testdata/stabs_reader_unittest.input3"));
 }
 
-TEST(StabsReaderTestCase, NoCU) {
+TEST(StabsReader, NoCU) {
   MockStabsReaderHandler mock_handler;
 
   EXPECT_CALL(mock_handler, StartCompilationUnit(_, _, _))
@@ -521,7 +626,7 @@ TEST(StabsReaderTestCase, NoCU) {
   
 }
 
-TEST(StabsReaderTestCase, NoCUEnd) {
+TEST(StabsReader, NoCUEnd) {
   MockStabsReaderHandler mock_handler;
 
   {
@@ -544,5 +649,37 @@ TEST(StabsReaderTestCase, NoCUEnd) {
                   "common/linux/testdata/stabs_reader_unittest.input5"));
   
 }
+
+TEST(StabsReader, MultipleCUs) {
+  MockStabsReaderHandler mock_handler;
+
+  {
+    InSequence s;
+    EXPECT_CALL(mock_handler,
+                StartCompilationUnit(StrEq("antimony"), 0x12, NULL))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, StartFunction(Eq("arsenic"), 0x22))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, EndFunction(0x32))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, EndCompilationUnit(0x32))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler,
+                StartCompilationUnit(StrEq("aluminum"), 0x42, NULL))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, StartFunction(Eq("selenium"), 0x52))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, EndFunction(0x62))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_handler, EndCompilationUnit(0x62))
+        .WillOnce(Return(true));
+  }
+
+  ASSERT_TRUE(ApplyHandlerToMockStabsData(
+                  &mock_handler,
+                  "common/linux/testdata/stabs_reader_unittest.input6"));
+}
+
+// name duplication
 
 } // anonymous namespace

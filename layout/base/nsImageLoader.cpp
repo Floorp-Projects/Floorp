@@ -217,11 +217,7 @@ void
 nsImageLoader::DoReflow()
 {
   nsIPresShell *shell = mFrame->PresContext()->GetPresShell();
-#ifdef DEBUG
-  nsresult rv =
-#endif
-    shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not reflow after loading border-image");
+  shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
 }
 
 void

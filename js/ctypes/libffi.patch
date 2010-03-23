@@ -1,4 +1,4 @@
-Patch libffi to fix bug 528129 and bug 538216.
+Patch libffi to fix bug 550602, bug 528129 and bug 538216.
 
 diff --git a/js/ctypes/libffi/Makefile.in b/js/ctypes/libffi/Makefile.in
 --- a/js/ctypes/libffi/Makefile.in
@@ -22,6 +22,69 @@ diff --git a/js/ctypes/libffi/Makefile.in b/js/ctypes/libffi/Makefile.in
  TEXINFOS = doc/libffi.texi
  TEXI2DVI = texi2dvi
  TEXI2PDF = $(TEXI2DVI) --pdf --batch
+@@ -966,7 +966,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win32.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win64.Plo@am__quote@
+ 
+-.S.o:
++%.o: %.S
+ @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@@ -974,7 +974,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(CPPASCOMPILE) -c -o $@ $<
+ 
+-.S.obj:
++%.obj: %.S
+ @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@@ -982,7 +982,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(CPPASCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+ 
+-.S.lo:
++%.lo: %.S
+ @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(LTCPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+@@ -990,7 +990,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(LTCPPASCOMPILE) -c -o $@ $<
+ 
+-.c.o:
++%.o: %.c
+ @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+ @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@@ -998,7 +998,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ $<
+ 
+-.c.obj:
++%.obj: %.c
+ @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+ @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@@ -1006,7 +1006,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+ 
+-.c.lo:
++%.lo: %.c
+ @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+ @am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+@@ -1108,7 +1108,7 @@ mostlyclean-vti:
+ 
+ maintainer-clean-vti:
+ @MAINTAINER_MODE_TRUE@	-rm -f $(srcdir)/doc/stamp-vti $(srcdir)/doc/version.texi
+-.dvi.ps:
++%.ps: %.dvi
+ 	TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
+ 	$(DVIPS) -o $@ $<
+ 
 diff --git a/js/ctypes/libffi/configure b/js/ctypes/libffi/configure
 --- a/js/ctypes/libffi/configure
 +++ b/js/ctypes/libffi/configure
