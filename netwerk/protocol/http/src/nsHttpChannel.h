@@ -146,7 +146,7 @@ public:
 
 public: /* internal; workaround lame compilers */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
-
+    nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
 private:
 
     // Helper function to simplify getting notification callbacks.

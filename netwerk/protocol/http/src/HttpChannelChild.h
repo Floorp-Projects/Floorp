@@ -116,24 +116,33 @@ public:
   nsresult Init(nsIURI *uri);
 
 protected:
-  bool RecvOnStartRequest(const PRInt32& HACK_ContentLength,
-                          const nsCString& HACK_ContentType,
-                          const PRUint32& HACK_Status,
-                          const nsCString& HACK_StatusText);
+  bool RecvOnStartRequest(const nsHttpResponseHead& responseHead);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,
                            const PRUint32& count);
   bool RecvOnStopRequest(const nsresult& statusCode);
 
 private:
+  nsresult BaseClassSetContentType_HACK(const nsACString &value);
+  nsresult BaseClassGetContentCharset_HACK(nsACString &value);
+  nsresult BaseClassSetContentCharset_HACK(const nsACString &value);
+  nsresult BaseClassSetRequestHeader_HACK(const nsACString &header,
+                                          const nsACString &value,
+                                          PRBool merge);
+  nsresult BaseClassGetRequestHeader_HACK(const nsACString &header,
+                                          nsACString &value);
+  nsresult BaseClassGetResponseHeader_HACK(const nsACString &header,
+                                           nsACString &value);
+  nsresult BaseClassSetResponseHeader_HACK(const nsACString &header,
+                                           const nsACString &value,
+                                           PRBool merge);
+
   nsCOMPtr<nsIStreamListener>         mChildListener;
   nsCOMPtr<nsISupports>               mChildListenerContext;
 
-  // FIXME: copy full ResponseHead (bug 536283)
-  PRInt32                             mContentLength_HACK;
-  nsCString                           mContentType_HACK;
-  PRUint32                            mResponseStatus_HACK;
-  nsCString                           mResponseStatusText_HACK;
+  RequestHeaderTuples                 mRequestHeaders;
+
+  nsAutoPtr<nsHttpResponseHead>       mResponseHead;
 
   // FIXME: replace with IPDL states (bug 536319) 
   enum HttpChannelChildState mState;
