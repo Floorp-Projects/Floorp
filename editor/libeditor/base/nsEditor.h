@@ -311,9 +311,6 @@ protected:
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
-  /* Helper for output routines -- we expect subclasses to override this */
-  NS_IMETHOD GetWrapWidth(PRInt32* aWrapCol);
-
   /** helper method for scrolling the selection into view after
    *  an edit operation. aScrollToAnchor should be PR_TRUE if you
    *  want to scroll to the point where the selection was started.

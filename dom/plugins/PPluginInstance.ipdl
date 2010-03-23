@@ -79,9 +79,11 @@ child:
 
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
-  // special case of HandleEvent to make mediating races simpler
+  // special cases of HandleEvent to make mediating races simpler
   rpc Paint(NPRemoteEvent event)
     returns (int16_t handled);
+  // this is only used on windows to forward WM_WINDOWPOSCHANGE
+  async WindowPosChanged(NPRemoteEvent event);
 
   rpc NPP_Destroy()
     returns (NPError rv);
