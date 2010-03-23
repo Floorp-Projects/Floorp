@@ -47,9 +47,6 @@ browser/components/dirprovider/Makefile
 browser/components/feeds/Makefile
 browser/components/feeds/public/Makefile
 browser/components/feeds/src/Makefile
-browser/components/microsummaries/Makefile
-browser/components/microsummaries/public/Makefile
-browser/components/microsummaries/src/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
