@@ -54,8 +54,6 @@
 #include "jshashtable.h"
 #include "jslock.h"
 
-JS_BEGIN_EXTERN_C
-
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
@@ -300,6 +298,14 @@ struct JSString {
     static JSString *intString(jsint i);
 };
 
+struct JSShortString {
+    JSString header;
+    union {
+        JSString dummy;
+        jschar data[1];
+    };
+};
+
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 
@@ -473,8 +479,12 @@ JS_ISSPACE(jschar c)
 /* Initialize the String class, returning its prototype object. */
 extern JSClass js_StringClass;
 
+JS_BEGIN_EXTERN_C
+
 extern JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj);
+
+JS_END_EXTERN_C
 
 extern const char js_escape_str[];
 extern const char js_unescape_str[];
@@ -504,9 +514,15 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 extern JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
+extern JSString *
+js_NewStringCopyN(JSContext *cx, const char *s, size_t n);
+
 /* Copy a C string and GC-allocate a descriptor for it. */
 extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
+
+extern JSString *
+js_NewStringCopyZ(JSContext *cx, const char *s);
 
 /*
  * Convert a value to a printable C string.
@@ -690,8 +706,6 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
 
 extern JSBool
 js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-
-JS_END_EXTERN_C
 
 namespace js {
 
