@@ -3113,7 +3113,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
 static bool
 FitsIntoShortString(size_t length)
 {
-    return length < sizeof JSString / sizeof jschar;
+    return length < sizeof(JSString) / sizeof(jschar);
 }
 
 JSString *
