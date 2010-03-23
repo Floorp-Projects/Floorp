@@ -54,9 +54,10 @@
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginProcessParent.h"
+#include "mozilla/plugins/PluginIdentifierParent.h"
 
 #include "nsAutoPtr.h"
-#include "nsTHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
 
@@ -83,6 +84,14 @@ private:
     typedef mozilla::PluginLibrary PluginLibrary;
 
 protected:
+
+    virtual PPluginIdentifierParent*
+    AllocPPluginIdentifier(const nsCString& aString,
+                           const int32_t& aInt);
+
+    virtual bool
+    DeallocPPluginIdentifier(PPluginIdentifierParent* aActor);
+
     PPluginInstanceParent*
     AllocPPluginInstance(const nsCString& aMimeType,
                          const uint16_t& aMode,
@@ -118,11 +127,12 @@ public:
 
     base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 
-    bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
-
     bool OkToCleanup() const {
         return !IsOnCxxStack();
     }
+
+    PPluginIdentifierParent*
+    GetIdentifierForNPIdentifier(NPIdentifier aIdentifier);
 
 protected:
     NS_OVERRIDE
@@ -137,28 +147,6 @@ protected:
 
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
-
-    // NPRemoteIdentifier funcs
-    virtual bool
-    RecvNPN_GetStringIdentifier(const nsCString& aString,
-                                NPRemoteIdentifier* aId);
-    virtual bool
-    RecvNPN_GetIntIdentifier(const int32_t& aInt,
-                             NPRemoteIdentifier* aId);
-    virtual bool
-    RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
-                               NPError* err,
-                               nsCString* aString);
-    virtual bool
-    RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
-                              NPError* err,
-                              int32_t* aInt);
-    virtual bool
-    RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
-                               bool* aIsString);
-    virtual bool
-    RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
-                                 nsTArray<NPRemoteIdentifier>* aIds);
 
     virtual bool
     AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariable,
@@ -212,8 +200,6 @@ private:
     static NPError NPP_SetValue(NPP instance, NPNVariable variable,
                                 void *value);
 
-    NPIdentifier GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier);
-
     virtual bool HasRequiredFunctions();
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -245,7 +231,7 @@ private:
     PluginProcessParent* mSubprocess;
     bool mShutdown;
     const NPNetscapeFuncs* mNPNIface;
-    nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
+    nsDataHashtable<nsVoidPtrHashKey, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;
     time_t mProcessStartTime;
     CancelableTask* mPluginCrashedTask;

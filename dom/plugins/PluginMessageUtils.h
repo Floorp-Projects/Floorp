@@ -61,12 +61,6 @@ namespace mozilla {
 struct void_t { };
 struct null_t { };
 
-namespace ipc {
-
-typedef intptr_t NPRemoteIdentifier;
-
-} /* namespace ipc */
-
 namespace plugins {
 
 enum ScriptableObjectType

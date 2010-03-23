@@ -60,10 +60,9 @@
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
 #include "mozilla/plugins/PluginThreadChild.h"
+#include "PluginIdentifierChild.h"
 
 #include "nsNPAPIPlugin.h"
-
-using mozilla::ipc::NPRemoteIdentifier;
 
 using namespace mozilla::plugins;
 
@@ -125,6 +124,16 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
     if (!mObjectMap.Init()) {
        NS_WARNING("Failed to initialize object hashtable!");
+       return false;
+    }
+
+    if (!mStringIdentifiers.Init()) {
+       NS_ERROR("Failed to initialize string identifier hashtable!");
+       return false;
+    }
+
+    if (!mIntIdentifiers.Init()) {
+       NS_ERROR("Failed to initialize int identifier hashtable!");
        return false;
     }
 
@@ -523,25 +532,6 @@ _getjavaenv(void);
 static void* NP_CALLBACK /* OJI type: jref */
 _getjavapeer(NPP aNPP);
 
-static NPIdentifier NP_CALLBACK
-_getstringidentifier(const NPUTF8* name);
-
-static void NP_CALLBACK
-_getstringidentifiers(const NPUTF8** names, int32_t nameCount,
-                      NPIdentifier *identifiers);
-
-static bool NP_CALLBACK
-_identifierisstring(NPIdentifier identifiers);
-
-static NPIdentifier NP_CALLBACK
-_getintidentifier(int32_t intid);
-
-static NPUTF8* NP_CALLBACK
-_utf8fromidentifier(NPIdentifier identifier);
-
-static int32_t NP_CALLBACK
-_intfromidentifier(NPIdentifier identifier);
-
 static bool NP_CALLBACK
 _invoke(NPP aNPP, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result);
@@ -652,12 +642,12 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_invalidaterect,
     mozilla::plugins::child::_invalidateregion,
     mozilla::plugins::child::_forceredraw,
-    mozilla::plugins::child::_getstringidentifier,
-    mozilla::plugins::child::_getstringidentifiers,
-    mozilla::plugins::child::_getintidentifier,
-    mozilla::plugins::child::_identifierisstring,
-    mozilla::plugins::child::_utf8fromidentifier,
-    mozilla::plugins::child::_intfromidentifier,
+    PluginModuleChild::NPN_GetStringIdentifier,
+    PluginModuleChild::NPN_GetStringIdentifiers,
+    PluginModuleChild::NPN_GetIntIdentifier,
+    PluginModuleChild::NPN_IdentifierIsString,
+    PluginModuleChild::NPN_UTF8FromIdentifier,
+    PluginModuleChild::NPN_IntFromIdentifier,
     PluginModuleChild::NPN_CreateObject,
     PluginModuleChild::NPN_RetainObject,
     PluginModuleChild::NPN_ReleaseObject,
@@ -996,125 +986,6 @@ _getjavapeer(NPP aNPP)
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
     return 0;
-}
-
-NPIdentifier NP_CALLBACK
-_getstringidentifier(const NPUTF8* aName)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPRemoteIdentifier ident = 0;
-    if (aName)
-        PluginModuleChild::current()->
-            SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident);
-    return (NPIdentifier)ident;
-}
-
-void NP_CALLBACK
-_getstringidentifiers(const NPUTF8** aNames,
-                      int32_t aNameCount,
-                      NPIdentifier* aIdentifiers)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    if (!(aNames && aNameCount > 0 && aIdentifiers)) {
-        NS_RUNTIMEABORT("Bad input! Headed for a crash!");
-    }
-
-    // Initialize to zero in case of errors later
-    for (int32_t index = 0; index < aNameCount; ++index)
-        aIdentifiers[index] = 0;
-
-    nsTArray<nsCString> names;
-    nsTArray<NPRemoteIdentifier> ids;
-
-    names.SetLength(aNameCount);
-    for (int32_t index = 0; index < aNameCount; ++index) {
-        if (aNames[index]) {
-            names[index] = nsDependentCString(aNames[index]);
-        }
-        else {
-            names[index].SetIsVoid(true);
-        }
-    }
-
-    PluginModuleChild::current()->
-        SendNPN_GetStringIdentifiers(names, &ids);
-
-    for (int32_t index = 0; index < ids.Length(); ++index)
-        aIdentifiers[index] = (NPIdentifier)ids[index];
-}
-
-bool NP_CALLBACK
-_identifierisstring(NPIdentifier aIdentifier)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    bool isString;
-    if (!PluginModuleChild::current()->
-             SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier,
-                                        &isString)) {
-        NS_WARNING("Failed to send message!");
-        isString = false;
-    }
-
-    return isString;
-}
-
-NPIdentifier NP_CALLBACK
-_getintidentifier(int32_t aIntId)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPRemoteIdentifier ident;
-    if (!PluginModuleChild::current()->
-             SendNPN_GetIntIdentifier(aIntId, &ident)) {
-        NS_WARNING("Failed to send message!");
-        ident = 0;
-    }
-
-    return (NPIdentifier)ident;
-}
-
-NPUTF8* NP_CALLBACK
-_utf8fromidentifier(NPIdentifier aIdentifier)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPError err;
-    nsCAutoString val;
-    if (!PluginModuleChild::current()->
-             SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                         &err, &val)) {
-        NS_WARNING("Failed to send message!");
-        return 0;
-    }
-
-    return (NPERR_NO_ERROR == err) ? strdup(val.get()) : 0;
-}
-
-int32_t NP_CALLBACK
-_intfromidentifier(NPIdentifier aIdentifier)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPError err;
-    int32_t val;
-    if (!PluginModuleChild::current()->
-             SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                       &err, &val)) {
-        NS_WARNING("Failed to send message!");
-        return -1;
-    }
-
-    // -1 for consistency
-    return (NPERR_NO_ERROR == err) ? val : -1;
 }
 
 bool NP_CALLBACK
@@ -1516,6 +1387,39 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 #endif
 }
 
+PPluginIdentifierChild*
+PluginModuleChild::AllocPPluginIdentifier(const nsCString& aString,
+                                          const int32_t& aInt)
+{
+    // There's a possibility that we already have an actor that wraps the same
+    // string or int because we do all this identifier construction
+    // asynchronously. Check to see if we've already wrapped here, and then set
+    // canonical actor of the new one to the actor already in our hash.
+    PluginIdentifierChild* newActor;
+    PluginIdentifierChild* existingActor;
+
+    if (aString.IsVoid()) {
+        newActor = new PluginIdentifierChildInt(aInt);
+        if (mIntIdentifiers.Get(aInt, &existingActor)) {
+            newActor->SetCanonicalIdentifier(existingActor);
+        }
+    }
+    else {
+        newActor = new PluginIdentifierChildString(aString);
+        if (mStringIdentifiers.Get(aString, &existingActor)) {
+            newActor->SetCanonicalIdentifier(existingActor);
+        }
+    }
+    return newActor;
+}
+
+bool
+PluginModuleChild::DeallocPPluginIdentifier(PPluginIdentifierChild* aActor)
+{
+    delete aActor;
+    return true;
+}
+
 PPluginInstanceChild*
 PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
                                         const uint16_t& aMode,
@@ -1703,4 +1607,118 @@ PluginModuleChild::CollectForInstance(NPObjectData* d, void* userArg)
         instance->mDeletingHash->PutEntry(o);
     }
     return PL_DHASH_NEXT;
+}
+
+NPIdentifier NP_CALLBACK
+PluginModuleChild::NPN_GetStringIdentifier(const NPUTF8* aName)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    if (!aName)
+        return 0;
+
+    PluginModuleChild* self = PluginModuleChild::current();
+    nsDependentCString name(aName);
+
+    PluginIdentifierChild* ident;
+    if (!self->mStringIdentifiers.Get(name, &ident)) {
+        nsCString nameCopy(name);
+
+        ident = new PluginIdentifierChildString(nameCopy);
+        self->SendPPluginIdentifierConstructor(ident, nameCopy, -1);
+        self->mStringIdentifiers.Put(nameCopy, ident);
+    }
+
+    return ident;
+}
+
+void NP_CALLBACK
+PluginModuleChild::NPN_GetStringIdentifiers(const NPUTF8** aNames,
+                                            int32_t aNameCount,
+                                            NPIdentifier* aIdentifiers)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    if (!(aNames && aNameCount > 0 && aIdentifiers)) {
+        NS_RUNTIMEABORT("Bad input! Headed for a crash!");
+    }
+
+    PluginModuleChild* self = PluginModuleChild::current();
+
+    for (int32_t index = 0; index < aNameCount; ++index) {
+        if (!aNames[index]) {
+            aIdentifiers[index] = 0;
+            continue;
+        }
+        nsDependentCString name(aNames[index]);
+        PluginIdentifierChild* ident;
+        if (!self->mStringIdentifiers.Get(name, &ident)) {
+            nsCString nameCopy(name);
+
+            ident = new PluginIdentifierChildString(nameCopy);
+            self->SendPPluginIdentifierConstructor(ident, nameCopy, -1);
+            self->mStringIdentifiers.Put(nameCopy, ident);
+        }
+        aIdentifiers[index] = ident;
+    }
+}
+
+bool NP_CALLBACK
+PluginModuleChild::NPN_IdentifierIsString(NPIdentifier aIdentifier)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    PluginIdentifierChild* ident =
+        static_cast<PluginIdentifierChild*>(aIdentifier);
+    return ident->IsString();
+}
+
+NPIdentifier NP_CALLBACK
+PluginModuleChild::NPN_GetIntIdentifier(int32_t aIntId)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    PluginModuleChild* self = PluginModuleChild::current();
+
+    PluginIdentifierChild* ident;
+    if (!self->mIntIdentifiers.Get(aIntId, &ident)) {
+        nsCString voidString;
+        voidString.SetIsVoid(PR_TRUE);
+
+        ident = new PluginIdentifierChildInt(aIntId);
+        self->SendPPluginIdentifierConstructor(ident, voidString, aIntId);
+        self->mIntIdentifiers.Put(aIntId, ident);
+    }
+    return ident;
+}
+
+NPUTF8* NP_CALLBACK
+PluginModuleChild::NPN_UTF8FromIdentifier(NPIdentifier aIdentifier)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    if (static_cast<PluginIdentifierChild*>(aIdentifier)->IsString()) {
+      return static_cast<PluginIdentifierChildString*>(aIdentifier)->ToString();
+    }
+    return nsnull;
+}
+
+int32_t NP_CALLBACK
+PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    PluginIdentifierChild* ident =
+        static_cast<PluginIdentifierChild*>(aIdentifier);
+
+    if (static_cast<PluginIdentifierChild*>(aIdentifier)->IsString()) {
+      return static_cast<PluginIdentifierChildInt*>(aIdentifier)->ToInt();
+    }
+    return PR_INT32_MIN;
 }

@@ -51,11 +51,13 @@
 #include "npfunctions.h"
 
 #include "nsAutoPtr.h"
+#include "nsDataHashtable.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
 #include "mozilla/plugins/PPluginModuleChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
+#include "mozilla/plugins/PluginIdentifierChild.h"
 
 // NOTE: stolen from nsNPAPIPlugin.h
 
@@ -102,6 +104,13 @@ protected:
 
     // Implement the PPluginModuleChild interface
     virtual bool AnswerNP_Initialize(NPError* rv);
+
+    virtual PPluginIdentifierChild*
+    AllocPPluginIdentifier(const nsCString& aString,
+                           const int32_t& aInt);
+
+    virtual bool
+    DeallocPPluginIdentifier(PPluginIdentifierChild* aActor);
 
     virtual PPluginInstanceChild*
     AllocPPluginInstance(const nsCString& aMimeType,
@@ -166,6 +175,18 @@ public:
      * The child implementation of NPN_ReleaseObject.
      */
     static void NP_CALLBACK NPN_ReleaseObject(NPObject* aNPObj);
+
+    /**
+     * The child implementations of NPIdentifier-related functions.
+     */
+    static NPIdentifier NP_CALLBACK NPN_GetStringIdentifier(const NPUTF8* aName);
+    static void NP_CALLBACK NPN_GetStringIdentifiers(const NPUTF8** aNames,
+                                                     int32_t aNameCount,
+                                                     NPIdentifier* aIdentifiers);
+    static NPIdentifier NP_CALLBACK NPN_GetIntIdentifier(int32_t aIntId);
+    static bool NP_CALLBACK NPN_IdentifierIsString(NPIdentifier aIdentifier);
+    static NPUTF8* NP_CALLBACK NPN_UTF8FromIdentifier(NPIdentifier aIdentifier);
+    static int32_t NP_CALLBACK NPN_IntFromIdentifier(NPIdentifier aIdentifier);
 
 private:
     bool InitGraphics();
@@ -247,6 +268,9 @@ private:
      * final release/dealloc, whether or not an actor is currently associated with the object.
      */
     nsTHashtable<NPObjectData> mObjectMap;
+
+    nsDataHashtable<nsCStringHashKey, PluginIdentifierChild*> mStringIdentifiers;
+    nsDataHashtable<nsUint32HashKey, PluginIdentifierChild*> mIntIdentifiers;
 
 public: // called by PluginInstanceChild
     /**
