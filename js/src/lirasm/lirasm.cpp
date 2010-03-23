@@ -518,7 +518,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, nanojit::AvmCore::config);
 #ifdef DEBUG
     if (optimize) {     // don't re-validate if no optimization has taken place
-        mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
+        mLir = mValidateWriter2 =
+            new ValidateWriter(mLir, mFragment->lirbuf->printer, "end of writer pipeline");
     }
 #endif
 #ifdef DEBUG
@@ -540,7 +541,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
         mLir = mExprFilter = new ExprFilter(mLir);
     }
 #ifdef DEBUG
-    mLir = mValidateWriter1 = new ValidateWriter(mLir, "start of writer pipeline");
+    mLir = mValidateWriter1 =
+            new ValidateWriter(mLir, mFragment->lirbuf->printer, "start of writer pipeline");
 #endif
 
     mReturnTypeBits = 0;
@@ -634,7 +636,7 @@ FragmentAssembler::assemble_load()
         mTokens[1].find_first_of("0123456789") == 0) {
         return mLir->insLoad(mOpcode,
                              ref(mTokens[0]),
-                             imm(mTokens[1]));
+                             imm(mTokens[1]), ACC_LOAD_ANY);
     }
     bad("immediate offset required for load");
     return NULL;  // not reached
@@ -1059,7 +1061,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             need(3);
             ins = mLir->insStore(mOpcode, ref(mTokens[0]),
                                   ref(mTokens[1]),
-                                  imm(mTokens[2]));
+                                  imm(mTokens[2]), ACC_STORE_ANY);
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
@@ -1808,7 +1810,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty()) {
                 LIns* base = rndPick(Ms);
-                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()));
+                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Is, ins);
                 n++;
             }
@@ -1819,7 +1821,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_Q:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()));
+                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Qs, ins);
                 n++;
             }
@@ -1829,7 +1831,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_F:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(F_loads), base, rndOffset64(base->size()));
+                ins = mLir->insLoad(rndPick(F_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Fs, ins);
                 n++;
             }
@@ -1839,7 +1841,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty() && !Is.empty()) {
                 LIns* base = rndPick(Ms);
-                mLir->insStorei(rndPick(Is), base, rndOffset32(base->size()));
+                mLir->insStorei(rndPick(Is), base, rndOffset32(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1849,7 +1851,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_Q:
             if (!M8ps.empty() && !Qs.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStorei(rndPick(Qs), base, rndOffset64(base->size()));
+                mLir->insStorei(rndPick(Qs), base, rndOffset64(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1858,7 +1860,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_F:
             if (!M8ps.empty() && !Fs.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStorei(rndPick(Fs), base, rndOffset64(base->size()));
+                mLir->insStorei(rndPick(Fs), base, rndOffset64(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
