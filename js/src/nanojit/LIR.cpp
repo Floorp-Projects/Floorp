@@ -1149,23 +1149,30 @@ namespace nanojit
             m_list[kind] = new (alloc) LInsp[m_cap[kind]];
         }
         clear();
-        m_find[LInsImm]   = &LInsHashSet::findImm;
-        m_find[LInsImmq]  = PTR_SIZE(NULL, &LInsHashSet::findImmq);
-        m_find[LInsImmf]  = &LInsHashSet::findImmf;
-        m_find[LIns1]     = &LInsHashSet::find1;
-        m_find[LIns2]     = &LInsHashSet::find2;
-        m_find[LIns3]     = &LInsHashSet::find3;
-        m_find[LInsLoad]  = &LInsHashSet::findLoad;
-        m_find[LInsCall]  = &LInsHashSet::findCall;
+        m_find[LInsImm]          = &LInsHashSet::findImm;
+        m_find[LInsImmq]         = PTR_SIZE(NULL, &LInsHashSet::findImmq);
+        m_find[LInsImmf]         = &LInsHashSet::findImmf;
+        m_find[LIns1]            = &LInsHashSet::find1;
+        m_find[LIns2]            = &LInsHashSet::find2;
+        m_find[LIns3]            = &LInsHashSet::find3;
+        m_find[LInsCall]         = &LInsHashSet::findCall;
+        m_find[LInsLoadReadOnly] = &LInsHashSet::findLoadReadOnly;
+        m_find[LInsLoadStack]    = &LInsHashSet::findLoadStack;
+        m_find[LInsLoadRStack]   = &LInsHashSet::findLoadRStack;
+        m_find[LInsLoadOther]    = &LInsHashSet::findLoadOther;
+        m_find[LInsLoadMultiple] = &LInsHashSet::findLoadMultiple;
+    }
+
+    void LInsHashSet::clear(LInsHashKind kind) {
+        VMPI_memset(m_list[kind], 0, sizeof(LInsp)*m_cap[kind]);
+        m_used[kind] = 0;
     }
 
     void LInsHashSet::clear() {
         for (LInsHashKind kind = LInsFirst; kind <= LInsLast; kind = nextKind(kind)) {
-            VMPI_memset(m_list[kind], 0, sizeof(LInsp)*m_cap[kind]);
-            m_used[kind] = 0;
+            clear(kind);
         }
     }
-
 
     inline uint32_t LInsHashSet::hashImm(int32_t a) {
         return _hashfinish(_hash32(0,a));
@@ -1194,10 +1201,15 @@ namespace nanojit
         return _hashfinish(_hashptr(hash, c));
     }
 
-    inline uint32_t LInsHashSet::hashLoad(LOpcode op, LInsp a, int32_t d) {
+    NanoStaticAssert(sizeof(AccSet) == 1);  // required for hashLoad to work properly
+
+    // Nb: no need to hash the load's AccSet because each region's loads go in
+    // a different hash table.
+    inline uint32_t LInsHashSet::hashLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet) {
         uint32_t hash = _hash8(0,uint8_t(op));
         hash = _hashptr(hash, a);
-        return _hashfinish(_hash32(hash, d));
+        hash = _hash32(hash, d);
+        return _hashfinish(_hash8(hash, accSet));
     }
 
     inline uint32_t LInsHashSet::hashCall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
@@ -1219,11 +1231,12 @@ namespace nanojit
             LInsp ins = oldlist[i];
             if (!ins) continue;
             uint32_t j = (this->*find)(ins);
+            NanoAssert(!m_list[kind][j]);
             m_list[kind][j] = ins;
         }
     }
 
-    LInsp LInsHashSet::add(LInsHashKind kind, LInsp ins, uint32_t k)
+    void LInsHashSet::add(LInsHashKind kind, LInsp ins, uint32_t k)
     {
         NanoAssert(!m_list[kind][k]);
         m_used[kind]++;
@@ -1231,20 +1244,21 @@ namespace nanojit
         if ((m_used[kind] * 4) >= (m_cap[kind] * 3)) {  // load factor of 0.75
             grow(kind);
         }
-        return ins;
     }
 
     LInsp LInsHashSet::findImm(int32_t a, uint32_t &k)
     {
         LInsHashKind kind = LInsImm;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hashImm(a) & bitmask;
+        k = hashImm(a) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->imm32() != a))
-        {
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
             NanoAssert(ins->isconst());
+            if (ins->imm32() == a)
+                return ins;
             // Quadratic probe:  h(k,i) = h(k) + 0.5i + 0.5i^2, which gives the
             // sequence h(k), h(k)+1, h(k)+3, h(k)+6, h+10, ...  This is a
             // good sequence for 2^n-sized tables as the values h(k,i) for i
@@ -1252,11 +1266,9 @@ namespace nanojit
             // See http://portal.acm.org/citation.cfm?id=360737 and
             // http://en.wikipedia.org/wiki/Quadratic_probing (fetched
             // 06-Nov-2009) for more details.
-            hash = (hash + n) & bitmask;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::findImm(LInsp ins)
@@ -1271,18 +1283,18 @@ namespace nanojit
     {
         LInsHashKind kind = LInsImmq;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hashImmq(a) & bitmask;
+        k = hashImmq(a) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->imm64() != a))
-        {
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
             NanoAssert(ins->isconstq());
-            hash = (hash + n) & bitmask;
+            if (ins->imm64() == a)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::findImmq(LInsp ins)
@@ -1297,18 +1309,18 @@ namespace nanojit
     {
         LInsHashKind kind = LInsImmf;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hashImmq(a) & bitmask;
+        k = hashImmq(a) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->imm64() != a))
-        {
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
             NanoAssert(ins->isconstf());
-            hash = (hash + n) & bitmask;
+            if (ins->imm64() == a)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::findImmf(LInsp ins)
@@ -1322,17 +1334,17 @@ namespace nanojit
     {
         LInsHashKind kind = LIns1;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hash1(op,a) & bitmask;
+        k = hash1(op, a) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->opcode() != op || ins->oprnd1() != a))
-        {
-            hash = (hash + n) & bitmask;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::find1(LInsp ins)
@@ -1346,17 +1358,17 @@ namespace nanojit
     {
         LInsHashKind kind = LIns2;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hash2(op,a,b) & bitmask;
+        k = hash2(op, a, b) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->opcode() != op || ins->oprnd1() != a || ins->oprnd2() != b))
-        {
-            hash = (hash + n) & bitmask;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::find2(LInsp ins)
@@ -1370,17 +1382,17 @@ namespace nanojit
     {
         LInsHashKind kind = LIns3;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hash3(op,a,b,c) & bitmask;
+        k = hash3(op, a, b, c) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->opcode() != op || ins->oprnd1() != a || ins->oprnd2() != b || ins->oprnd3() != c))
-        {
-            hash = (hash + n) & bitmask;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b && ins->oprnd3() == c)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::find3(LInsp ins)
@@ -1390,27 +1402,57 @@ namespace nanojit
         return k;
     }
 
-    LInsp LInsHashSet::findLoad(LOpcode op, LInsp a, int32_t d, uint32_t &k)
+    LInsp LInsHashSet::findLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet, LInsHashKind kind,
+                                uint32_t &k)
     {
-        LInsHashKind kind = LInsLoad;
+        (void)accSet;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hashLoad(op,a,d) & bitmask;
+        k = hashLoad(op, a, d, accSet) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->opcode() != op || ins->oprnd1() != a || ins->disp() != d))
-        {
-            hash = (hash + n) & bitmask;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            NanoAssert(ins->accSet() == accSet);
+            if (ins->isop(op) && ins->oprnd1() == a && ins->disp() == d)
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
-    uint32_t LInsHashSet::findLoad(LInsp ins)
+    uint32_t LInsHashSet::findLoadReadOnly(LInsp ins)
     {
         uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), k);
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadReadOnly, k);
+        return k;
+    }
+
+    uint32_t LInsHashSet::findLoadStack(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadStack, k);
+        return k;
+    }
+
+    uint32_t LInsHashSet::findLoadRStack(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadRStack, k);
+        return k;
+    }
+
+    uint32_t LInsHashSet::findLoadOther(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadOther, k);
+        return k;
+    }
+
+    uint32_t LInsHashSet::findLoadMultiple(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadMultiple, k);
         return k;
     }
 
@@ -1426,17 +1468,17 @@ namespace nanojit
     {
         LInsHashKind kind = LInsCall;
         const uint32_t bitmask = m_cap[kind] - 1;
-        uint32_t hash = hashCall(ci, argc, args) & bitmask;
+        k = hashCall(ci, argc, args) & bitmask;
         uint32_t n = 1;
-        LInsp ins;
-        while ((ins = m_list[kind][hash]) != NULL &&
-            (!ins->isCall() || ins->callInfo() != ci || !argsmatch(ins, argc, args)))
-        {
-            hash = (hash + n) & bitmask;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args))
+                return ins;
+            k = (k + n) & bitmask;
             n += 1;
         }
-        k = hash;
-        return ins;
     }
 
     uint32_t LInsHashSet::findCall(LInsp ins)
@@ -1728,7 +1770,6 @@ namespace nanojit
         }
     }
 
-
     void LirNameMap::addNameWithSuffix(LInsp ins, const char *name, int suffix,
                                        bool ignoreOneSuffix) {
         // The lookup may succeed, ie. we may already have a name for this
@@ -1792,23 +1833,18 @@ namespace nanojit
     }
 
 
-    char* LInsPrinter::formatAccSet(RefBuf* buf, LInsp ins, bool isLoad) {
-        AccSet accSet = ins->accSet();
+    char* LInsPrinter::formatAccSet(RefBuf* buf, AccSet accSet) {
         int i = 0;
-        if ((isLoad && accSet == ACC_LOAD_ANY) ||
-            (!isLoad && accSet == ACC_STORE_ANY))
-        {
-            // boring, don't bother with a suffix
-        } else {
-            buf->buf[i++] = '.';
-            if (accSet & ACC_READONLY) { buf->buf[i++] = 'r'; accSet &= ~ACC_READONLY; }
-            if (accSet & ACC_STACK)    { buf->buf[i++] = 's'; accSet &= ~ACC_STACK; }
-            if (accSet & ACC_OTHER)    { buf->buf[i++] = 'o'; accSet &= ~ACC_OTHER; }
-            // This assertion will fail if we add a new accSet value but
-            // forget to handle it here.
-            NanoAssert(accSet == 0);
-        }
+        // 'c' is short for "const", because 'r' is used for RSTACK.
+        if (accSet & ACC_READONLY) { buf->buf[i++] = 'c'; accSet &= ~ACC_READONLY; }
+        if (accSet & ACC_STACK)    { buf->buf[i++] = 's'; accSet &= ~ACC_STACK; }
+        if (accSet & ACC_RSTACK)   { buf->buf[i++] = 'r'; accSet &= ~ACC_RSTACK; }
+        if (accSet & ACC_OTHER)    { buf->buf[i++] = 'o'; accSet &= ~ACC_OTHER; }
+        // This assertion will fail if we add a new accSet value but
+        // forget to handle it here.
+        NanoAssert(accSet == 0);
         buf->buf[i] = 0;
+        NanoAssert(size_t(i) < buf->len);
         return buf->buf;
     }
 
@@ -1919,11 +1955,12 @@ namespace nanojit
                 int32_t argc = i->argc();
                 int32_t m = int32_t(n);     // Windows doesn't have 'ssize_t'
                 if (call->isIndirect())
-                    m -= VMPI_snprintf(s, m, "%s = %s [%s] ( ", formatRef(&b1, i), lirNames[op],
-                                       formatRef(&b2, i->arg(--argc)));
+                    m -= VMPI_snprintf(s, m, "%s = %s.%s [%s] ( ", formatRef(&b1, i), lirNames[op],
+                                       formatAccSet(&b2, call->_storeAccSet),
+                                       formatRef(&b3, i->arg(--argc)));
                 else
-                    m -= VMPI_snprintf(s, m, "%s = %s #%s ( ", formatRef(&b1, i), lirNames[op],
-                                       call->_name);
+                    m -= VMPI_snprintf(s, m, "%s = %s.%s #%s ( ", formatRef(&b1, i), lirNames[op],
+                                       formatAccSet(&b2, call->_storeAccSet), call->_name);
                 if (m < 0) break;
                 for (int32_t j = argc - 1; j >= 0; j--) {
                     s += VMPI_strlen(s);
@@ -2074,8 +2111,8 @@ namespace nanojit
             case LIR_ldsb:
             case LIR_ldss:
             case LIR_ld32f:
-                VMPI_snprintf(s, n, "%s = %s%s %s[%d]", formatRef(&b1, i), lirNames[op],
-                    formatAccSet(&b2, i, /*isLoad*/true),
+                VMPI_snprintf(s, n, "%s = %s.%s %s[%d]", formatRef(&b1, i), lirNames[op],
+                    formatAccSet(&b2, i->accSet()),
                     formatRef(&b3, i->oprnd1()),
                     i->disp());
                 break;
@@ -2086,8 +2123,8 @@ namespace nanojit
             case LIR_stb:
             case LIR_sts:
             case LIR_st32f:
-                VMPI_snprintf(s, n, "%s%s %s[%d] = %s", lirNames[op],
-                    formatAccSet(&b1, i, /*isLoad*/false),
+                VMPI_snprintf(s, n, "%s.%s %s[%d] = %s", lirNames[op],
+                    formatAccSet(&b1, i->accSet()),
                     formatRef(&b2, i->oprnd2()),
                     i->disp(),
                     formatRef(&b3, i->oprnd1()));
@@ -2103,17 +2140,21 @@ namespace nanojit
 
 
     CseFilter::CseFilter(LirWriter *out, Allocator& alloc)
-        : LirWriter(out)
+        : LirWriter(out), storesSinceLastLoad(ACC_NONE)
     {
         uint32_t kInitialCaps[LInsLast + 1];
-        kInitialCaps[LInsImm]   = 128;
-        kInitialCaps[LInsImmq]  = PTR_SIZE(0, 16);
-        kInitialCaps[LInsImmf]  = 16;
-        kInitialCaps[LIns1]     = 256;
-        kInitialCaps[LIns2]     = 512;
-        kInitialCaps[LIns3]     = 16;
-        kInitialCaps[LInsLoad]  = 16;
-        kInitialCaps[LInsCall]  = 64;
+        kInitialCaps[LInsImm]          = 128;
+        kInitialCaps[LInsImmq]         = PTR_SIZE(0, 16);
+        kInitialCaps[LInsImmf]         = 16;
+        kInitialCaps[LIns1]            = 256;
+        kInitialCaps[LIns2]            = 512;
+        kInitialCaps[LIns3]            = 16;
+        kInitialCaps[LInsCall]         = 64;
+        kInitialCaps[LInsLoadReadOnly] = 16;
+        kInitialCaps[LInsLoadStack]    = 16;
+        kInitialCaps[LInsLoadRStack]   = 16;
+        kInitialCaps[LInsLoadOther]    = 16;
+        kInitialCaps[LInsLoadMultiple] = 16;
         exprs = new (alloc) LInsHashSet(alloc, kInitialCaps);
     }
 
@@ -2121,13 +2162,14 @@ namespace nanojit
     {
         uint32_t k;
         LInsp ins = exprs->findImm(imm, k);
-        if (ins)
-            return ins;
-        ins = out->insImm(imm);
+        if (!ins) {
+            ins = out->insImm(imm);
+            exprs->add(LInsImm, ins, k);
+        }
         // We assume that downstream stages do not modify the instruction, so
         // that we can insert 'ins' into slot 'k'.  Check this.
-        NanoAssert(ins->opcode() == LIR_int && ins->imm32() == imm);
-        return exprs->add(LInsImm, ins, k);
+        NanoAssert(ins->isop(LIR_int) && ins->imm32() == imm);
+        return ins;
     }
 
 #ifdef NANOJIT_64BIT
@@ -2135,11 +2177,12 @@ namespace nanojit
     {
         uint32_t k;
         LInsp ins = exprs->findImmq(q, k);
-        if (ins)
-            return ins;
-        ins = out->insImmq(q);
-        NanoAssert(ins->opcode() == LIR_quad && ins->imm64() == q);
-        return exprs->add(LInsImmq, ins, k);
+        if (!ins) {
+            ins = out->insImmq(q);
+            exprs->add(LInsImmq, ins, k);
+        }
+        NanoAssert(ins->isop(LIR_quad) && ins->imm64() == q);
+        return ins;
     }
 #endif
 
@@ -2154,85 +2197,121 @@ namespace nanojit
         } u;
         u.d = d;
         LInsp ins = exprs->findImmf(u.u64, k);
-        if (ins)
-            return ins;
-        ins = out->insImmf(d);
-        NanoAssert(ins->opcode() == LIR_float && ins->imm64() == u.u64);
-        return exprs->add(LInsImmf, ins, k);
+        if (!ins) {
+            ins = out->insImmf(d);
+            exprs->add(LInsImmf, ins, k);
+        }
+        NanoAssert(ins->isop(LIR_float) && ins->imm64() == u.u64);
+        return ins;
     }
 
-    LIns* CseFilter::ins0(LOpcode v)
+    LIns* CseFilter::ins0(LOpcode op)
     {
-        if (v == LIR_label)
+        if (op == LIR_label)
             exprs->clear();
-        return out->ins0(v);
+        return out->ins0(op);
     }
 
-    LIns* CseFilter::ins1(LOpcode v, LInsp a)
+    LIns* CseFilter::ins1(LOpcode op, LInsp a)
     {
-        if (isCseOpcode(v)) {
+        LInsp ins;
+        if (isCseOpcode(op)) {
             uint32_t k;
-            LInsp ins = exprs->find1(v, a, k);
-            if (ins)
-                return ins;
-            ins = out->ins1(v, a);
-            NanoAssert(ins->opcode() == v && ins->oprnd1() == a);
-            return exprs->add(LIns1, ins, k);
-        }
-        return out->ins1(v,a);
-    }
-
-    LIns* CseFilter::ins2(LOpcode v, LInsp a, LInsp b)
-    {
-        if (isCseOpcode(v)) {
-            uint32_t k;
-            LInsp ins = exprs->find2(v, a, b, k);
-            if (ins)
-                return ins;
-            ins = out->ins2(v, a, b);
-            NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b);
-            return exprs->add(LIns2, ins, k);
-        }
-        return out->ins2(v,a,b);
-    }
-
-    LIns* CseFilter::ins3(LOpcode v, LInsp a, LInsp b, LInsp c)
-    {
-        NanoAssert(isCseOpcode(v));
-        uint32_t k;
-        LInsp ins = exprs->find3(v, a, b, c, k);
-        if (ins)
-            return ins;
-        ins = out->ins3(v, a, b, c);
-        NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b &&
-                                                               ins->oprnd3() == c);
-        return exprs->add(LIns3, ins, k);
-    }
-
-    LIns* CseFilter::insLoad(LOpcode v, LInsp base, int32_t disp, AccSet accSet)
-    {
-        if (isS16(disp)) {
-            // XXX: This condition is overly strict.  Bug 517910 will make it better.
-            if (accSet == ACC_READONLY) {
-                uint32_t k;
-                LInsp ins = exprs->findLoad(v, base, disp, k);
-                if (ins)
-                    return ins;
-                ins = out->insLoad(v, base, disp, accSet);
-                NanoAssert(ins->opcode() == v && ins->oprnd1() == base && ins->disp() == disp);
-                return exprs->add(LInsLoad, ins, k);
+            ins = exprs->find1(op, a, k);
+            if (!ins) {
+                ins = out->ins1(op, a);
+                exprs->add(LIns1, ins, k);
             }
-            return out->insLoad(v, base, disp, accSet);
+        } else {
+            ins = out->ins1(op, a);
+        }
+        NanoAssert(ins->isop(op) && ins->oprnd1() == a);
+        return ins;
+    }
+
+    LIns* CseFilter::ins2(LOpcode op, LInsp a, LInsp b)
+    {
+        LInsp ins;
+        if (isCseOpcode(op)) {
+            uint32_t k;
+            ins = exprs->find2(op, a, b, k);
+            if (!ins) {
+                ins = out->ins2(op, a, b);
+                exprs->add(LIns2, ins, k);
+            }
+        } else {
+            ins = out->ins2(op, a, b);
+        }
+        NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b);
+        return ins;
+    }
+
+    LIns* CseFilter::ins3(LOpcode op, LInsp a, LInsp b, LInsp c)
+    {
+        NanoAssert(isCseOpcode(op));
+        uint32_t k;
+        LInsp ins = exprs->find3(op, a, b, c, k);
+        if (!ins) {
+            ins = out->ins3(op, a, b, c);
+            exprs->add(LIns3, ins, k);
+        }
+        NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b && ins->oprnd3() == c);
+        return ins;
+    }
+
+    LIns* CseFilter::insLoad(LOpcode op, LInsp base, int32_t disp, AccSet loadAccSet)
+    {
+        LInsp ins;
+        if (isS16(disp)) {
+            // Clear all loads aliased by stores and calls since the last time
+            // we were in this function.
+            if (storesSinceLastLoad != ACC_NONE) {
+                NanoAssert(!(storesSinceLastLoad & ACC_READONLY));  // can't store to READONLY
+                if (storesSinceLastLoad & ACC_STACK)  { exprs->clear(LInsLoadStack); }
+                if (storesSinceLastLoad & ACC_RSTACK) { exprs->clear(LInsLoadRStack); }
+                if (storesSinceLastLoad & ACC_OTHER)  { exprs->clear(LInsLoadOther); }
+                // Loads marked with multiple access regions must be treated
+                // conservatively -- we always clear all of them.
+                exprs->clear(LInsLoadMultiple);
+                storesSinceLastLoad = ACC_NONE;
+            }
+
+            LInsHashKind kind;
+            switch (loadAccSet) {
+            case ACC_READONLY:  kind = LInsLoadReadOnly;    break;
+            case ACC_STACK:     kind = LInsLoadStack;       break;
+            case ACC_RSTACK:    kind = LInsLoadRStack;      break;
+            case ACC_OTHER:     kind = LInsLoadOther;       break;
+            default:            kind = LInsLoadMultiple;    break;
+            }
+
+            uint32_t k;
+            ins = exprs->findLoad(op, base, disp, loadAccSet, kind, k);
+            if (!ins) {
+                ins = out->insLoad(op, base, disp, loadAccSet);
+                exprs->add(kind, ins, k);
+            }
+            NanoAssert(ins->isop(op) && ins->oprnd1() == base && ins->disp() == disp);
+
         } else {
             // If the displacement is more than 16 bits, put it in a separate
-            // instruction.  LirBufWriter also does this, we do it here as
-            // well because CseFilter relies on LirBufWriter not changing
-            // code.
-            return insLoad(v, ins2(LIR_addp, base, insImmWord(disp)), 0, accSet);
+            // instruction.  Nb: LirBufWriter also does this, we do it here
+            // too because CseFilter relies on LirBufWriter not changing code.
+            ins = insLoad(op, ins2(LIR_addp, base, insImmWord(disp)), 0, loadAccSet);
         }
+        return ins;
     }
 
-    LInsp CseFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
+    LIns* CseFilter::insStore(LOpcode op, LInsp value, LInsp base, int32_t disp, AccSet accSet)
+    {
+        storesSinceLastLoad |= accSet;
+        LIns* ins = out->insStore(op, value, base, disp, accSet);
+        NanoAssert(ins->isop(op) && ins->oprnd1() == value && ins->oprnd2() == base &&
+                   ins->disp() == disp && ins->accSet() == accSet);
+        return ins;
+    }
+
+    LInsp CseFilter::insGuard(LOpcode op, LInsp c, GuardRecord *gr)
     {
         // LIR_xt and LIR_xf guards are CSEable.  Note that we compare the
         // opcode and condition when determining if two guards are equivalent
@@ -2251,104 +2330,58 @@ namespace nanojit
         // - The CSE algorithm will always keep guard 1 and remove guard 2
         //   (not vice versa).  The current algorithm does this.
         //
-        if (isCseOpcode(v)) {
+        LInsp ins;
+        if (isCseOpcode(op)) {
             // conditional guard
             uint32_t k;
-            LInsp ins = exprs->find1(v, c, k);
-            if (ins)
-                return 0;
-            ins = out->insGuard(v, c, gr);
-            NanoAssert(ins->opcode() == v && ins->oprnd1() == c);
-            return exprs->add(LIns1, ins, k);
+            ins = exprs->find1(op, c, k);
+            if (!ins) {
+                ins = out->insGuard(op, c, gr);
+                exprs->add(LIns1, ins, k);
+            }
+        } else {
+            ins = out->insGuard(op, c, gr);
         }
-        return out->insGuard(v, c, gr);
+        NanoAssert(ins->isop(op) && ins->oprnd1() == c);
+        return ins;
     }
 
-    LInsp CseFilter::insGuardXov(LOpcode v, LInsp a, LInsp b, GuardRecord *gr)
+    LInsp CseFilter::insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr)
     {
         // LIR_*xov are CSEable.  See CseFilter::insGuard() for details.
-        NanoAssert(isCseOpcode(v));
+        NanoAssert(isCseOpcode(op));
         // conditional guard
         uint32_t k;
-        LInsp ins = exprs->find2(v, a, b, k);
-        if (ins)
-            return ins;
-        ins = out->insGuardXov(v, a, b, gr);
-        NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b);
-        return exprs->add(LIns2, ins, k);
+        LInsp ins = exprs->find2(op, a, b, k);
+        if (!ins) {
+            ins = out->insGuardXov(op, a, b, gr);
+            exprs->add(LIns2, ins, k);
+        }
+        NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b);
+        return ins;
     }
 
     LInsp CseFilter::insCall(const CallInfo *ci, LInsp args[])
     {
+        LInsp ins;
+        uint32_t argc = ci->count_args();
         if (ci->_isPure) {
             NanoAssert(ci->_storeAccSet == ACC_NONE);
             uint32_t k;
-            uint32_t argc = ci->count_args();
-            LInsp ins = exprs->findCall(ci, argc, args, k);
-            if (ins)
-                return ins;
-            ins = out->insCall(ci, args);
-            NanoAssert(ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args));
-            return exprs->add(LInsCall, ins, k);
-        }
-        return out->insCall(ci, args);
-    }
-
-    LInsp LoadFilter::insLoad(LOpcode v, LInsp base, int32_t disp, AccSet accSet)
-    {
-        if (base != sp && base != rp)
-        {
-            switch (v)
-            {
-                case LIR_ld:
-                CASE64(LIR_ldq:)
-                case LIR_ldf:
-                case LIR_ld32f:
-                case LIR_ldsb:
-                case LIR_ldss:
-                case LIR_ldzb:
-                case LIR_ldzs:
-                {
-                    uint32_t k;
-                    LInsp ins = exprs->findLoad(v, base, disp, k);
-                    if (ins)
-                        return ins;
-                    ins = out->insLoad(v, base, disp, accSet);
-                    return exprs->add(LInsLoad, ins, k);
-                }
-                default:
-                    // fall thru
-                    break;
+            ins = exprs->findCall(ci, argc, args, k);
+            if (!ins) {
+                ins = out->insCall(ci, args);
+                exprs->add(LInsCall, ins, k);
             }
+        } else {
+            // We only need to worry about aliasing if !ci->_isPure.
+            storesSinceLastLoad |= ci->_storeAccSet;
+            ins = out->insCall(ci, args);
         }
-        return out->insLoad(v, base, disp, accSet);
+        NanoAssert(ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args));
+        return ins;
     }
 
-    void LoadFilter::clear(LInsp p)
-    {
-        if (p != sp && p != rp)
-            exprs->clear();
-    }
-
-    LInsp LoadFilter::insStore(LOpcode op, LInsp v, LInsp b, int32_t d, AccSet accSet)
-    {
-        clear(b);
-        return out->insStore(op, v, b, d, accSet);
-    }
-
-    LInsp LoadFilter::insCall(const CallInfo *ci, LInsp args[])
-    {
-        if (!ci->_isPure)
-            exprs->clear();
-        return out->insCall(ci, args);
-    }
-
-    LInsp LoadFilter::ins0(LOpcode op)
-    {
-        if (op == LIR_label)
-            exprs->clear();
-        return out->ins0(op);
-    }
 
 #if NJ_SOFTFLOAT_SUPPORTED
     static double FASTCALL i2f(int32_t i)           { return i; }
@@ -2564,7 +2597,7 @@ namespace nanojit
                 NanoAssertMsgf(0,
                     "LIR type error (%s): arg %d of '%s' is '%s' "
                     "which has type %s (expected %s)",
-                    _whereInPipeline, i+1, lirNames[op],
+                    whereInPipeline, i+1, lirNames[op],
                     lirNames[args[i]->opcode()],
                     type2string(actual), type2string(formal));
             }
@@ -2576,15 +2609,16 @@ namespace nanojit
     {
         NanoAssertMsgf(0,
             "LIR structure error (%s): %s %d of '%s' is '%s' (expected %s)",
-            _whereInPipeline, argDesc, argN, 
+            whereInPipeline, argDesc, argN, 
             lirNames[op], lirNames[arg->opcode()], shouldBeDesc);
     }
 
-    void ValidateWriter::errorAccSetShould(const char* what, AccSet accSet, const char* shouldDesc)
+    void ValidateWriter::errorAccSet(const char* what, AccSet accSet, const char* shouldDesc)
     {
+        RefBuf b;
         NanoAssertMsgf(0,
-            "LIR AccSet error (%s): '%s' AccSet is %d; it should %s",
-            _whereInPipeline, what, accSet, shouldDesc);
+            "LIR AccSet error (%s): '%s' AccSet is '%s'; %s",
+            whereInPipeline, what, printer->formatAccSet(&b, accSet), shouldDesc);
     }
 
     void ValidateWriter::checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins)
@@ -2609,17 +2643,60 @@ namespace nanojit
             errorStructureShouldBe(op, "argument", argN, ins, lirNames[op2]);
     }
 
-    ValidateWriter::ValidateWriter(LirWriter *out, const char* stageName)
-        : LirWriter(out), _whereInPipeline(stageName)
+    void ValidateWriter::checkAccSet(LOpcode op, LInsp base, AccSet accSet, AccSet maxAccSet)
+    {
+        if (accSet == ACC_NONE)
+            errorAccSet(lirNames[op], accSet, "it should not equal ACC_NONE");
+
+        if (accSet & ~maxAccSet)
+            errorAccSet(lirNames[op], accSet,
+                "it should not contain bits that aren't in ACC_LOAD_ANY/ACC_STORE_ANY");
+
+        // Some sanity checking, which is based on the following assumptions:
+        // - STACK ones should use 'sp' or 'sp+k' as the base.  (We could look
+        //   for more complex patterns, but that feels dangerous.  Better to
+        //   keep it really simple.)
+        // - RSTACK ones should use 'rp' as the base.
+        // - READONLY/OTHER ones should not use 'sp'/'sp+k' or 'rp' as the base.
+        //
+        // Things that aren't checked:
+        // - There's no easy way to check if READONLY ones really are read-only.
+
+        bool isStack = base == sp ||
+                      (base->isop(LIR_piadd) && base->oprnd1() == sp && base->oprnd2()->isconstp());
+        bool isRStack = base == rp;
+
+        switch (accSet) {
+        case ACC_STACK:
+            if (!isStack)
+                errorAccSet(lirNames[op], accSet, "but it's not a stack access");
+            break;
+
+        case ACC_RSTACK:
+            if (!isRStack)
+                errorAccSet(lirNames[op], accSet, "but it's not an rstack access");
+            break;
+
+        case ACC_READONLY:
+        case ACC_OTHER:
+            if (isStack)
+                errorAccSet(lirNames[op], accSet, "but it's a stack access");
+            if (isRStack)
+                errorAccSet(lirNames[op], accSet, "but it's an rstack access");
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    ValidateWriter::ValidateWriter(LirWriter *out, LInsPrinter* printer, const char* where)
+        : LirWriter(out), printer(printer), whereInPipeline(where), sp(0), rp(0)
     {}
 
     LIns* ValidateWriter::insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet)
     {
-        if (accSet == ACC_NONE)
-            errorAccSetShould(lirNames[op], accSet, "not equal ACC_NONE");
-
-        if (accSet & ~ACC_LOAD_ANY)
-            errorAccSetShould(lirNames[op], accSet, "not contain bits that aren't in ACC_LOAD_ANY");
+        checkAccSet(op, base, accSet, ACC_LOAD_ANY);
 
         int nArgs = 1;
         LTy formals[1] = { LTy_Ptr };
@@ -2646,11 +2723,7 @@ namespace nanojit
 
     LIns* ValidateWriter::insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet)
     {
-        if (accSet == ACC_NONE)
-            errorAccSetShould(lirNames[op], accSet, "not equal ACC_NONE");
-
-        if (accSet & ~ACC_STORE_ANY)
-            errorAccSetShould(lirNames[op], accSet, "not contain bits that aren't in ACC_STORE_ANY");
+        checkAccSet(op, base, accSet, ACC_STORE_ANY);
 
         int nArgs = 2;
         LTy formals[2] = { LTy_Void, LTy_Ptr };     // LTy_Void is overwritten shortly
@@ -2680,7 +2753,7 @@ namespace nanojit
 
         typeCheckArgs(op, nArgs, formals, args);
 
-        return out->insStore(op, value, base, d);
+        return out->insStore(op, value, base, d, accSet);
     }
 
     LIns* ValidateWriter::ins0(LOpcode op)
@@ -2923,11 +2996,11 @@ namespace nanojit
         LOpcode op = getCallOpcode(ci);
 
         if (ci->_isPure && ci->_storeAccSet != ACC_NONE)
-            errorAccSetShould(ci->_name, ci->_storeAccSet, "equal ACC_NONE for pure functions");
+            errorAccSet(ci->_name, ci->_storeAccSet, "it should be ACC_NONE for pure functions");
 
         if (ci->_storeAccSet & ~ACC_STORE_ANY)
-            errorAccSetShould(lirNames[op], ci->_storeAccSet,
-                "not contain bits that aren't in ACC_STORE_ANY");
+            errorAccSet(lirNames[op], ci->_storeAccSet,
+                "it should not contain bits that aren't in ACC_STORE_ANY");
 
         // This loop iterates over the args from right-to-left (because arg()
         // and getArgTypes() use right-to-left order), but puts the results
