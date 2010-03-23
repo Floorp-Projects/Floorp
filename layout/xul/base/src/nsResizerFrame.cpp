@@ -106,7 +106,20 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           if (!frameToResize)
             break;
 
-          mMouseDownRect = frameToResize->GetScreenRect();
+          // cache the content rectangle for the frame to resize
+          // GetScreenRectInAppUnits returns the border box rectangle, so
+          // adjust to get the desired content rectangle.
+          nsRect rect = frameToResize->GetScreenRectInAppUnits();
+          switch (frameToResize->GetStylePosition()->mBoxSizing) {
+            case NS_STYLE_BOX_SIZING_CONTENT:
+              rect -= frameToResize->GetUsedPadding();
+            case NS_STYLE_BOX_SIZING_PADDING:
+              rect -= frameToResize->GetUsedBorder();
+            default:
+              break;
+          }
+
+          mMouseDownRect = rect.ToNearestPixels(aPresContext->AppUnitsPerDevPixel());
         }
         else {
           // ask the widget implementation to begin a resize drag if it can
@@ -254,8 +267,13 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
               widget->GetScreenBounds(oldRect);
           }
 
-          contentToResize->SetAttr(kNameSpaceID_None, nsGkAtoms::width, widthstr, PR_TRUE);
-          contentToResize->SetAttr(kNameSpaceID_None, nsGkAtoms::height, heightstr, PR_TRUE);
+          // only set the property if the element could have changed in that direction
+          if (direction.mHorizontal) {
+            contentToResize->SetAttr(kNameSpaceID_None, nsGkAtoms::width, widthstr, PR_TRUE);
+          }
+          if (direction.mVertical) {
+            contentToResize->SetAttr(kNameSpaceID_None, nsGkAtoms::height, heightstr, PR_TRUE);
+          }
 
           if (weakFrame.IsAlive() &&
               (oldRect.x != rect.x || oldRect.y != rect.y)) {
@@ -269,13 +287,18 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyleContent =
             do_QueryInterface(contentToResize);
           if (inlineStyleContent) {
-            widthstr += NS_LITERAL_STRING("px");
-            heightstr += NS_LITERAL_STRING("px");
-
             nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
             inlineStyleContent->GetStyle(getter_AddRefs(decl));
-            decl->SetProperty(NS_LITERAL_STRING("width"), widthstr, EmptyString());
-            decl->SetProperty(NS_LITERAL_STRING("height"), heightstr, EmptyString());
+
+            // only set the property if the element could have changed in that direction
+            if (direction.mHorizontal) {
+              widthstr.AppendLiteral("px");
+              decl->SetProperty(NS_LITERAL_STRING("width"), widthstr, EmptyString());
+            }
+            if (direction.mVertical) {
+              heightstr.AppendLiteral("px");
+              decl->SetProperty(NS_LITERAL_STRING("height"), heightstr, EmptyString());
+            }
           }
         }
       }
