@@ -566,6 +566,16 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
               }
             }
             break;
+
+            case WM_WINDOWPOSCHANGED:
+            {
+                // We send this in nsObjectFrame just before painting
+                SendWindowPosChanged(npremoteevent);
+                // nsObjectFrame doesn't care whether we handle this
+                // or not, just returning 1 for good hygiene
+                return 1;
+            }
+            break;
         }
     }
 #endif

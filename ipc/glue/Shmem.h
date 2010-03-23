@@ -145,6 +145,22 @@ public:
     return *this;
   }
 
+  // Returns whether this Shmem is writable by you, and thus whether you can
+  // transfer writability to another actor.
+  bool
+  IsWritable() const
+  {
+    return mSegment != NULL;
+  }
+
+  // Returns whether this Shmem is readable by you, and thus whether you can
+  // transfer readability to another actor.
+  bool
+  IsReadable() const
+  {
+    return mSegment != NULL;
+  }
+
   // Return a pointer to the user-visible data segment.
   template<typename T>
   T*
