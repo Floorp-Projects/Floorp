@@ -54,10 +54,4 @@
 
 #define NS_APP_EXISTING_PREF_OVERRIDE           "ExistingPrefOverride"
 
-// ----------------------------------------------------------------------------
-// Files and directories that exist on a per-profile basis.
-// ----------------------------------------------------------------------------
-
-#define NS_APP_USER_MICROSUMMARY_DIR            "UsrMicsumGens"
-         
 #endif
