@@ -2304,10 +2304,18 @@ namespace nanojit
 
     LIns* CseFilter::insStore(LOpcode op, LInsp value, LInsp base, int32_t disp, AccSet accSet)
     {
-        storesSinceLastLoad |= accSet;
-        LIns* ins = out->insStore(op, value, base, disp, accSet);
-        NanoAssert(ins->isop(op) && ins->oprnd1() == value && ins->oprnd2() == base &&
-                   ins->disp() == disp && ins->accSet() == accSet);
+        LInsp ins;
+        if (isS16(disp)) {
+            storesSinceLastLoad |= accSet;
+            ins = out->insStore(op, value, base, disp, accSet);
+            NanoAssert(ins->isop(op) && ins->oprnd1() == value && ins->oprnd2() == base &&
+                       ins->disp() == disp && ins->accSet() == accSet);
+        } else {
+            // If the displacement is more than 16 bits, put it in a separate
+            // instruction.  Nb: LirBufWriter also does this, we do it here
+            // too because CseFilter relies on LirBufWriter not changing code.
+            ins = insStore(op, value, ins2(LIR_addp, base, insImmWord(disp)), 0, accSet);
+        }
         return ins;
     }
 
