@@ -217,16 +217,8 @@ BEGIN_CASE(JSOP_STOP)
     }
 
     JS_ASSERT(regs.sp == StackBase(fp));
-    if ((fp->flags & JSFRAME_CONSTRUCTING) &&
-        JSVAL_IS_PRIMITIVE(fp->rval)) {
-        if (!fp->fun) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_NEW_RESULT,
-                                 js_ValueToPrintableString(cx, rval));
-            goto error;
-        }
+    if ((fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(fp->rval))
         fp->rval = fp->thisv;
-    }
     ok = JS_TRUE;
     if (inlineCallCount)
   inline_return:
