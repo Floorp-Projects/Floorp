@@ -160,6 +160,19 @@ class ExceptionHandler {
                             MinidumpCallback callback,
                             void *callback_context);
 
+  // Write a minidump of |child| immediately.  This can be used to
+  // capture the execution state of |child| independently of a crash.
+  //
+  // WARNING: the return of this function *must* be ordered
+  // happens-before the code that will eventually reap |child|.
+  // Otherwise there's a pernicious race condition in which |child|
+  // exits, is reaped, another process created with its pid, then that
+  // new process dumped.
+  static bool WriteMinidumpForChild(pid_t child,
+                                    const std::string &dump_path,
+                                    MinidumpCallback callback,
+                                    void *callback_context);
+
   // This structure is passed to minidump_writer.h:WriteMinidump via an opaque
   // blob. It shouldn't be needed in any user code.
   struct CrashContext {

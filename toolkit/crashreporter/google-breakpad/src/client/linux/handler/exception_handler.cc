@@ -400,4 +400,19 @@ bool ExceptionHandler::WriteMinidump() {
 #endif  // !defined(__ARM_EABI__)
 }
 
+// static
+bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
+                                             const std::string &dump_path,
+                                             MinidumpCallback callback,
+                                             void *callback_context)
+{
+  // This function is not run in a compromised context.
+  ExceptionHandler eh(dump_path, NULL, NULL, NULL, false);
+  if (!google_breakpad::WriteMinidump(eh.next_minidump_path_c_, child))
+      return false;
+
+  return callback ? callback(eh.dump_path_c_, eh.next_minidump_id_c_,
+                             callback_context, true) : true;
+}
+
 }  // namespace google_breakpad
