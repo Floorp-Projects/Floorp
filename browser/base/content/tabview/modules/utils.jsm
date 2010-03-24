@@ -195,7 +195,13 @@ var Utils = {
   getMilliseconds: function() {
   	var date = new Date();
   	return date.getTime();
-  }     
+  },
+  
+  // ___ Misc
+  isJQuery: function(object) {
+    // TODO: need more robust way 
+    return (object && typeof(object.fadeIn) == 'function' ? true : false);
+  }   
 };
 
 window.Utils = Utils;
