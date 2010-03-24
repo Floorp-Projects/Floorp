@@ -21,15 +21,26 @@ var Tabbar = {
 }
 
 var Page = {
-  init: function(){
+  init: function() {
+    var self = this;
+    
     function mod($div, tab){
       if(window.Groups) {        
         $div.draggable(window.Groups.dragOptions);
         $div.droppable(window.Groups.dropOptions);
       }
-              
-      $div.mouseup(function(e){
-        if( e.target.className == "close" ){
+      
+      $div.mousedown(function(e) {
+        self.lastMouseDownTarget = e.target;
+      });
+        
+      $div.mouseup(function(e) { 
+        var same = (e.target == self.lastMouseDownTarget);
+        self.lastMouseDownTarget = null;
+        if(!same)
+          return;
+          
+        if(e.target.className == "close") {
           $(this).find("canvas").data("link").tab.close(); }
         else {
           if(!$(this).data('isDragging')) {
@@ -124,7 +135,7 @@ var Page = {
     var lastTab = null;
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
-      if( this.contentWindow == window && lastTab != null){
+      if( this.contentWindow == window && lastTab != null && lastTab.mirror != null){
         // If there was a lastTab we want to animate
         // its mirror for the zoom out.
         var $tab = $(lastTab.mirror.el);
@@ -156,59 +167,6 @@ var Page = {
       function(){Tabbar.hide()},
       function(){Tabbar.show()}      
     );
-    
-    Page.initSearch();
-  },
-  
-  initSearch: function(){
-    $search = $(".search input");
-    $search.val("").focus();
-    $search.keydown(function(evt){
-           
-      if( evt.which == 13 ){
-                
-        Navbar.show();
-        
-        if ($(".tab:not(.unhighlight)").length == 1) {
-          $(".tab:not(.unhighlight)").find("canvas").data("link").tab.focus();
-        } else {
-          Tabs.open( "http://google.com/search?q=" + $search.val() ).focus();
-        }
-        $search.val("")          
-        $(".tab .name").parent().removeClass("unhighlight");
-        
-      }
-    });
-    
-    $search.keyup(function(evt){
-      if( $search.val().length > 0 )
-        var $found = $(".tab .name:not(:icontains(" + $search.val() + "))").parent();
-      else 
-        var $found = [];
-      
-      if( $search.val().length > 1 ){
-        $found.addClass("unhighlight");
-        $(".tab .name:icontains(" + $search.val() + ")").parent().removeClass("unhighlight");      
-      }
-      else {
-        $(".tab .name").parent().removeClass("unhighlight");
-      }
-      
-      if ( $found.length == 1 ) {
-        $found.click();
-        //$found.animate({top:0, left:0})
-      }  
-      
-    });
-    
-    /*Utils.homeTab.onFocus(function(){
-      $search.val("").focus();
-      Navbar.hide();
-    });*/
-    
-    $(window).blur(function(){
-      Navbar.show();
-    })
   },
   
   findOpenSpaceFor: function($div) {
