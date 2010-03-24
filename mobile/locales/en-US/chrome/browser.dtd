@@ -91,3 +91,6 @@
 <!ENTITY consoleErrFile.label      "Source File:">
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
+
+<!ENTITY contextOpenInNewTab.label "Open Link in New Tab">
+<!ENTITY contextSaveImage.label    "Save Image">

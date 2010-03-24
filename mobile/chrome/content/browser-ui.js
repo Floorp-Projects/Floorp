@@ -1699,6 +1699,142 @@ var SelectHelper = {
   }
 };
 
+const kXLinkNamespace = "http://www.w3.org/1999/xlink";
+
+var ContextHelper = {
+  popupNode: null,
+  onLink: false,
+  onImage: false,
+  linkURL: "",
+  mediaURL: "",
+
+  _clearState: function ch_clearState() {
+    this.popupNode = null;
+    this.onLink = false;
+    this.onImage = false;
+    this.linkURL = "";
+    this.mediaURL = "";
+  },
+
+  _getLinkURL: function ch_getLinkURL(aLink) {
+    let href = aLink.href;  
+    if (href)
+      return href;
+
+    href = aLink.getAttributeNS(kXLinkNamespace, "href");
+    if (!href || !href.match(/\S/)) {
+      // Without this we try to save as the current doc,
+      // for example, HTML case also throws if empty
+      throw "Empty href";
+    }
+
+    return Util.makeURLAbsolute(aLink.baseURI, href);
+  },
+
+  handleEvent: function ch_handleEvent(aEvent) {
+    this._clearState();
+
+    let [elementX, elementY] = Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+    this.popupNode = Browser.elementFromPoint(elementX, elementY);
+
+    // Do checks for nodes that never have children.
+    if (this.popupNode.nodeType == Node.ELEMENT_NODE) {
+      // See if the user clicked on an image.
+      if (this.popupNode instanceof Ci.nsIImageLoadingContent && this.popupNode.currentURI) {
+        this.onImage = true;
+        this.mediaURL = this.popupNode.currentURI.spec;
+      }
+    }
+
+    let elem = this.popupNode;
+    while (elem) {
+      if (elem.nodeType == Node.ELEMENT_NODE) {
+        // Link?
+        if (!this.onLink &&
+             ((elem instanceof HTMLAnchorElement && elem.href) ||
+              (elem instanceof HTMLAreaElement && elem.href) ||
+              elem instanceof HTMLLinkElement ||
+              elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+            
+          // Target is a link or a descendant of a link.
+          this.onLink = true;
+          this.linkURL = this._getLinkURL(elem);
+        }
+      }
+
+      elem = elem.parentNode;
+    }
+
+    let first = last = null;
+    let commands = document.getElementById("context-commands");
+    for (let i=0; i<commands.childElementCount; i++) {
+      let command = commands.children[i];
+      let type = command.getAttribute("type");
+      command.removeAttribute("selector");
+      if (type.indexOf("image") != -1 && this.onImage) {
+        first = (first ? first : command);
+        last = command;
+        command.hidden = false;
+        continue;
+      } else if (type.indexOf("link") != -1 && this.onLink) {
+        first = (first ? first : command);
+        last = command;
+        command.hidden = false;
+        continue;
+      }
+      command.hidden = true;
+    }
+
+    if (!first) {
+      this._clearState();
+      return;
+    }
+    
+    first.setAttribute("selector", "first-child");
+    last.setAttribute("selector", "last-child");
+
+    let label = document.getElementById("context-hint");
+    if (this.onImage)
+      label.value = this.mediaURL;
+    if (this.onLink)
+      label.value = this.linkURL;
+
+    let container = document.getElementById("context-popup");
+    container.hidden = false;
+
+    let rect = container.getBoundingClientRect();
+    let height = Math.min(rect.height, 0.75 * window.innerWidth);
+    let width = Math.min(rect.width, 0.75 * window.innerWidth);
+
+    container.height = height;
+    container.width = width;
+    container.top = (window.innerHeight - height) / 2;
+    container.left = (window.innerWidth - width) / 2;
+
+    BrowserUI.pushPopup(this, [container]);
+  },
+  
+  hide: function ch_hide() {
+    this._clearState();
+    
+    let container = document.getElementById("context-popup");
+    container.hidden = true;
+
+    BrowserUI.popPopup();
+   }
+ };
+
+var ContextCommands = {
+  openInNewTab: function cc_openInNewTab(aEvent) {
+    Browser.addTab(ContextHelper.linkURL, false);
+  },
+
+  saveImage: function cc_saveImage(aEvent) {
+    let doc = ContextHelper.popupNode.ownerDocument;
+    saveImageURL(ContextHelper.mediaURL, null, "SaveImageTitle", false, false, doc.documentURIObject);
+  }
+}
+
 function removeBookmarksForURI(aURI) {
   //XXX blargle xpconnect! might not matter, but a method on
   // nsINavBookmarksService that takes an array of items to
