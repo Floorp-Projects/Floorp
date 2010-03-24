@@ -242,7 +242,10 @@ protected:
 
             if (mThat.mCxxStackFrames.empty())
                 mThat.EnteredCxxStack();
+
             mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
+            mThat.mSawRPCOutMsg |= (direction == OUT_MESSAGE) &&
+                                   (msg->is_rpc());
         }
 
         ~CxxStackFrame() {
@@ -385,7 +388,12 @@ protected:
     // not protected by mMutex.  It is managed exclusively by the
     // helper |class CxxStackFrame|.
     std::vector<RPCFrame> mCxxStackFrames;
-    
+
+    // Did we process an RPC out-call during this stack?  Only
+    // meaningful in ExitedCxxStack(), from which this variable is
+    // reset.
+    bool mSawRPCOutMsg;
+
 private:
 
     //
