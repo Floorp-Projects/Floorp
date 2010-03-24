@@ -60,6 +60,7 @@ Group.prototype = {
   },
   
   create: function(listOfEls){
+    var self = this;
     this._children = $(listOfEls).toArray();
 
     var boundingBox = this._getBoundingBox();
@@ -93,7 +94,14 @@ Group.prototype = {
         position: "relative",
         top: -(titlebar.height()+2),
         left: -1,
-      })
+      });
+      
+    $('.close', titlebar).click(function() {
+      $.each(self._children, function(index, child) {
+        var tab = Tabs.tab(child);
+        tab.close();
+      });
+    });
 
     // On delay, show the title bar.
     var shouldShow = false;
@@ -122,6 +130,24 @@ Group.prototype = {
     for(var i in els){
       this.add( els[i] );
     }
+    
+    // ___ Push other objects away
+/*
+    var bb = Utils.getBounds(this._container);
+    $('.tab').each(function() {
+      $el = $(this);
+      if($el.data('group') != self) {
+        var box = Utils.getBounds(this);
+        if(box.intersects(bb)) {
+          if(box.right < bb.right) {
+            $el.animate({
+              left: box.left - (box.right - bb.left),       
+            });
+          }
+        }
+      }
+    });            
+*/
   },
   
   add: function($el){
@@ -253,7 +279,9 @@ Group.prototype = {
         $dragged.addClass("willGroup");
       },
       out: function(){
-        $dragged.data("group").remove($dragged);
+        var $group = $dragged.data("group");
+        if($group)
+          $group.remove($dragged);
         $dragged.removeClass("willGroup");
       },
       drop: function(){
