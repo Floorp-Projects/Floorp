@@ -276,10 +276,10 @@ PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 
 // This is the time of the last button press event.  The drag service
 // uses it as the time to start drags.
-guint32   nsWindow::mLastButtonPressTime = 0;
+guint32   nsWindow::sLastButtonPressTime = 0;
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
-guint32   nsWindow::mLastButtonReleaseTime = 0;
+guint32   nsWindow::sLastButtonReleaseTime = 0;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
@@ -339,9 +339,13 @@ static PRBool gForce24bpp = PR_FALSE;
 
 static GtkWidget *gInvisibleContainer = NULL;
 
+// Sometimes this actually also includes the state of the modifier keys, but
+// only the button state bits are used.
+static guint gButtonState;
+
 // Some gobject functions expect functions for gpointer arguments.
 // gpointer is void* but C++ doesn't like casting functions to void*.
-template<class T> gpointer
+template<class T> static inline gpointer
 FuncToGpointer(T aFunction)
 {
     return reinterpret_cast<gpointer>
@@ -2627,8 +2631,19 @@ nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 void
 nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
-    // XXXldb Is this the right test for embedding cases?
+    // This skips NotifyVirtual and NotifyNonlinearVirtual enter notify events
+    // when the pointer enters a child window.  If the destination window is a
+    // Gecko window then we'll catch the corresponding event on that window,
+    // but we won't notice when the pointer directly enters a foreign (plugin)
+    // child window without passing over a visible portion of a Gecko window.
     if (aEvent->subwindow != NULL)
+        return;
+
+    // Check before is_parent_ungrab_enter() as the button state may have
+    // changed while a non-Gecko ancestor window had a pointer grab.
+    DispatchMissedButtonReleases(aEvent);
+
+    if (is_parent_ungrab_enter(aEvent))
         return;
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
@@ -2644,6 +2659,7 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     DispatchEvent(&event, status);
 }
 
+// XXX Is this the right test for embedding cases?
 static PRBool
 is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
 {
@@ -2661,7 +2677,14 @@ is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
 void
 nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
-    // XXXldb Is this the right test for embedding cases?
+    // This ignores NotifyVirtual and NotifyNonlinearVirtual leave notify
+    // events when the pointer leaves a child window.  If the destination
+    // window is a Gecko window then we'll catch the corresponding event on
+    // that window.
+    //
+    // XXXkt However, we will miss toplevel exits when the pointer directly
+    // leaves a foreign (plugin) child window without passing over a visible
+    // portion of a Gecko window.
     if (aEvent->subwindow != NULL)
         return;
 
@@ -2837,6 +2860,61 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 }
 #endif
 
+// If the automatic pointer grab on ButtonPress has deactivated before
+// ButtonRelease, and the mouse button is released while the pointer is not
+// over any a Gecko window, then the ButtonRelease event will not be received.
+// (A similar situation exists when the pointer is grabbed with owner_events
+// True as the ButtonRelease may be received on a foreign [plugin] window).
+// Use this method to check for released buttons when the pointer returns to a
+// Gecko window.
+void
+nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
+{
+    guint changed = aGdkEvent->state ^ gButtonState;
+    // Only consider button releases.
+    // (Ignore button presses that occurred outside Gecko.)
+    guint released = changed & gButtonState;
+    gButtonState = aGdkEvent->state;
+
+    // Loop over each button, excluding mouse wheel buttons 4 and 5 for which
+    // GDK ignores releases.
+    for (guint buttonMask = GDK_BUTTON1_MASK;
+         buttonMask <= GDK_BUTTON3_MASK;
+         buttonMask <<= 1) {
+
+        if (released & buttonMask) {
+            PRInt16 buttonType;
+            switch (buttonMask) {
+            case GDK_BUTTON1_MASK:
+                buttonType = nsMouseEvent::eLeftButton;
+                break;
+            case GDK_BUTTON2_MASK:
+                buttonType = nsMouseEvent::eMiddleButton;
+                break;
+            default:
+                NS_ASSERTION(buttonMask == GDK_BUTTON3_MASK,
+                             "Unexpected button mask");
+                buttonType = nsMouseEvent::eRightButton;
+            }
+
+            LOG(("Synthesized button %u release on %p\n",
+                 guint(buttonType + 1), (void *)this));
+
+            // Dispatch a synthesized button up event to tell Gecko about the
+            // change in state.  This event is marked as synthesized so that
+            // it is not dispatched as a DOM event, because we don't know the
+            // position, widget, modifiers, or time/order.
+            nsMouseEvent synthEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, this,
+                                    nsMouseEvent::eSynthesized);
+            synthEvent.button = buttonType;
+            nsEventStatus status;
+            DispatchEvent(&synthEvent, status);
+
+            sLastButtonReleaseTime = aGdkEvent->time;
+        }
+    }
+}
+
 void
 nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
                           GdkEventButton *aGdkEvent)
@@ -2870,13 +2948,20 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
     }
 }
 
+static guint ButtonMaskFromGDKButton(guint button)
+{
+    return GDK_BUTTON1_MASK << (button - 1);
+}
+
 void
 nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
+    LOG(("Button %u press on %p\n", aEvent->button, (void *)this));
+
     nsEventStatus status;
 
-    // If you double click in GDK, it will actually generate a single
-    // click event before sending the double click event, and this is
+    // If you double click in GDK, it will actually generate a second
+    // GDK_BUTTON_PRESS before sending the GDK_2BUTTON_PRESS, and this is
     // different than the DOM spec.  GDK puts this in the queue
     // programatically, so it's safe to assume that if there's a
     // double click in the queue, it was generated so we can just drop
@@ -2890,8 +2975,8 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     }
 
     // Always save the time of this event
-    mLastButtonPressTime = aEvent->time;
-    mLastButtonReleaseTime = 0;
+    sLastButtonPressTime = aEvent->time;
+    sLastButtonReleaseTime = 0;
 
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
@@ -2953,6 +3038,8 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         return;
     }
 
+    gButtonState |= ButtonMaskFromGDKButton(aEvent->button);
+
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);
@@ -2974,8 +3061,10 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 void
 nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
+    LOG(("Button %u release on %p\n", aEvent->button, (void *)this));
+
     PRUint16 domButton;
-    mLastButtonReleaseTime = aEvent->time;
+    sLastButtonReleaseTime = aEvent->time;
 
     switch (aEvent->button) {
     case 1:
@@ -2990,6 +3079,8 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     default:
         return;
     }
+
+    gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
     event.button = domButton;
@@ -3584,7 +3675,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 {
     LOGDRAG(("nsWindow::OnDragMotionSignal\n"));
 
-    if (mLastButtonReleaseTime) {
+    if (sLastButtonReleaseTime) {
       // The drag ended before it was even setup to handle the end of the drag
       // So, we fake the button getting released again to release the drag
       GtkWidget *widget = gtk_grab_get_current();
@@ -3592,9 +3683,9 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
       gboolean retval;
       memset(&event, 0, sizeof(event));
       event.type = GDK_BUTTON_RELEASE;
-      event.button.time = mLastButtonReleaseTime;
+      event.button.time = sLastButtonReleaseTime;
       event.button.button = 1;
-      mLastButtonReleaseTime = 0;
+      sLastButtonReleaseTime = 0;
       if (widget) {
         g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
         return TRUE;
@@ -5636,10 +5727,6 @@ gboolean
 enter_notify_event_cb(GtkWidget *widget,
                       GdkEventCrossing *event)
 {
-    if (is_parent_ungrab_enter(event)) {
-        return TRUE;
-    }
-
     nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
