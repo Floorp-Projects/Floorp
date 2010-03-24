@@ -307,9 +307,7 @@
         </vbox>
       </hbox>
 
-      <hbox id="search-container" align="center" flex="1">
-        <label id="search-engine-label-add" value="&searchEngine.addSearch;"/>
-      </hbox>
+      <arrowscrollbox id="pageactions-container" orient="vertical" class="window-width" hidden="true"/>
     </vbox>
 
     <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
