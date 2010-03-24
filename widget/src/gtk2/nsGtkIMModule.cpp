@@ -140,6 +140,12 @@ nsGtkIMModule::Init()
     g_signal_connect(mContext, "preedit_changed",
                      G_CALLBACK(nsGtkIMModule::OnChangeCompositionCallback),
                      this);
+    g_signal_connect(mContext, "retrieve_surrounding",
+                     G_CALLBACK(nsGtkIMModule::OnRetrieveSurroundingCallback),
+                     this);
+    g_signal_connect(mContext, "delete_surrounding",
+                     G_CALLBACK(nsGtkIMModule::OnDeleteSurroundingCallback),
+                     this);
     g_signal_connect(mContext, "commit",
                      G_CALLBACK(nsGtkIMModule::OnCommitCompositionCallback),
                      this);
@@ -156,6 +162,12 @@ nsGtkIMModule::Init()
     gtk_im_context_set_client_window(mSimpleContext, gdkWindow);
     g_signal_connect(mSimpleContext, "preedit_changed",
                      G_CALLBACK(&nsGtkIMModule::OnChangeCompositionCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "retrieve_surrounding",
+                     G_CALLBACK(&nsGtkIMModule::OnRetrieveSurroundingCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "delete_surrounding",
+                     G_CALLBACK(&nsGtkIMModule::OnDeleteSurroundingCallback),
                      this);
     g_signal_connect(mSimpleContext, "commit",
                      G_CALLBACK(&nsGtkIMModule::OnCommitCompositionCallback),
@@ -814,6 +826,85 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
 }
 
 /* static */
+gboolean
+nsGtkIMModule::OnRetrieveSurroundingCallback(GtkIMContext  *aContext,
+                                             nsGtkIMModule *aModule)
+{
+    return aModule->OnRetrieveSurroundingNative(aContext);
+}
+
+gboolean
+nsGtkIMModule::OnRetrieveSurroundingNative(GtkIMContext *aContext)
+{
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): OnRetrieveSurroundingNative, aContext=%p, current context=%p",
+         this, aContext, GetContext()));
+
+    if (GetContext() != aContext) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, given context doesn't match, GetContext()=%p",
+             GetContext()));
+        return FALSE;
+    }
+
+    nsAutoString uniStr;
+    PRUint32 cursorPos;
+    if (NS_FAILED(GetCurrentParagraph(uniStr, cursorPos))) {
+        return FALSE;
+    }
+
+    glong wbytes;
+    gchar *utf8_str = g_utf16_to_utf8((const gunichar2 *)uniStr.get(),
+                                      uniStr.Length(), NULL, &wbytes, NULL);
+    if (utf8_str == NULL) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    failed to convert utf16 string to utf8"));
+        return FALSE;
+    }
+    gtk_im_context_set_surrounding(aContext, utf8_str, wbytes,
+        g_utf8_offset_to_pointer(utf8_str, cursorPos) - utf8_str);
+    g_free(utf8_str);
+
+    return TRUE;
+}
+
+/* static */
+gboolean
+nsGtkIMModule::OnDeleteSurroundingCallback(GtkIMContext  *aContext,
+                                           gint           aOffset,
+                                           gint           aNChars,
+                                           nsGtkIMModule *aModule)
+{
+    return aModule->OnDeleteSurroundingNative(aContext, aOffset, aNChars);
+}
+
+gboolean
+nsGtkIMModule::OnDeleteSurroundingNative(GtkIMContext  *aContext,
+                                         gint           aOffset,
+                                         gint           aNChars)
+{
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): OnDeleteSurroundingNative, aContext=%p, current context=%p",
+         this, aContext, GetContext()));
+
+    if (GetContext() != aContext) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, given context doesn't match, GetContext()=%p",
+             GetContext()));
+        return FALSE;
+    }
+
+    if (NS_SUCCEEDED(DeleteText(aOffset, (PRUint32)aNChars))) {
+        return TRUE;
+    }
+
+    // failed
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("    FAILED, cannot delete text"));
+    return FALSE;
+}
+                         
+/* static */
 void
 nsGtkIMModule::OnCommitCompositionCallback(GtkIMContext *aContext,
                                            const gchar *aString,
@@ -1252,6 +1343,100 @@ nsGtkIMModule::SetCursorPosition(PRUint32 aTargetOffset)
     area.height = charRect.mReply.mRect.height;
 
     gtk_im_context_set_cursor_location(im, &area);
+}
+
+nsresult
+nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
+{
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): GetCurrentParagraph", this));
+
+    if (!mLastFocusedWindow) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, there are no focused window in this module"));
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsEventStatus status;
+
+    // Query cursor position & selection
+    nsQueryContentEvent querySelectedTextEvent(PR_TRUE,
+                                               NS_QUERY_SELECTED_TEXT,
+                                               mLastFocusedWindow);
+    mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+    NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    aCursorPos = querySelectedTextEvent.mReply.mOffset;
+    PRUint32 selLength = querySelectedTextEvent.mReply.mString.Length();
+
+    // Get all text contents of the focused editor
+    nsQueryContentEvent queryTextContentEvent(PR_TRUE,
+                                              NS_QUERY_TEXT_CONTENT,
+                                              mLastFocusedWindow);
+    queryTextContentEvent.InitForQueryTextContent(0, PR_UINT32_MAX);
+    mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
+    NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    nsAutoString textContent(queryTextContentEvent.mReply.mString);
+    if (aCursorPos > textContent.Length()) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+          ("GtkIMModule(%p): GetCurrentParagraph, FAILED (The caret offset is invalid)\n",
+           this));
+        return NS_ERROR_FAILURE;
+    }
+
+    // Get only the focused paragraph, by looking for newlines
+    PRInt32 parStart = textContent.RFind("\n", PR_FALSE, aCursorPos, -1) + 1;
+    PRInt32 parEnd = textContent.Find("\n", PR_FALSE, aCursorPos + selLength, -1);
+    if (parEnd < 0) {
+        parEnd = textContent.Length();
+    }
+    aText = nsDependentSubstring(textContent, parStart, parEnd - parStart);
+    aCursorPos -= parStart;
+
+    return NS_OK;
+}
+
+nsresult
+nsGtkIMModule::DeleteText(const PRInt32 aOffset, const PRUint32 aNChars)
+{
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): DeleteText, aOffset=%d, aNChars=%d",
+         this, aOffset, aNChars));
+
+    if (!mLastFocusedWindow) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, there are no focused window in this module"));
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsEventStatus status;
+
+    // Query cursor position & selection
+    nsQueryContentEvent querySelectedTextEvent(PR_TRUE,
+                                               NS_QUERY_SELECTED_TEXT,
+                                               mLastFocusedWindow);
+    mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+    NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    // Set selection to delete
+    nsSelectionEvent selectionEvent(PR_TRUE, NS_SELECTION_SET,
+                                    mLastFocusedWindow);
+    selectionEvent.mOffset = querySelectedTextEvent.mReply.mOffset + aOffset;
+    selectionEvent.mLength = aNChars;
+    selectionEvent.mReversed = PR_FALSE;
+    selectionEvent.mExpandToClusterBoundary = PR_FALSE;
+    mLastFocusedWindow->DispatchEvent(&selectionEvent, status);
+    NS_ENSURE_TRUE(selectionEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    // Delete the selection
+    nsContentCommandEvent contentCommandEvent(PR_TRUE,
+                                              NS_CONTENT_COMMAND_DELETE,
+                                              mLastFocusedWindow);
+    mLastFocusedWindow->DispatchEvent(&contentCommandEvent, status);
+    NS_ENSURE_TRUE(contentCommandEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    return NS_OK;
 }
 
 void
