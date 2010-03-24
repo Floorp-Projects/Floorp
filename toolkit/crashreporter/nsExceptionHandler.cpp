@@ -96,6 +96,8 @@
 #include "nsIXULAppInfo.h"
 
 #if defined(MOZ_IPC)
+#include "nsIUUIDGenerator.h"
+
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
 
@@ -107,6 +109,7 @@ namespace CrashReporter {
 
 #ifdef XP_WIN32
 typedef wchar_t XP_CHAR;
+typedef std::wstring xpstring;
 #define CONVERT_UTF16_TO_XP_CHAR(x) x
 #define CONVERT_XP_CHAR_TO_UTF16(x) x
 #define XP_STRLEN(x) wcslen(x)
@@ -124,6 +127,7 @@ typedef wchar_t XP_CHAR;
 #endif
 #else
 typedef char XP_CHAR;
+typedef std::string xpstring;
 #define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
 #define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #define XP_STRLEN(x) strlen(x)
@@ -188,7 +192,31 @@ static Mutex* dumpMapLock;
 typedef nsInterfaceHashtable<nsUint32HashKey, nsIFile> ChildMinidumpMap;
 static ChildMinidumpMap* pidToMinidump;
 
+// Crashreporter annotations that we don't send along in subprocess
+// reports
+static const char* kSubprocessBlacklist[] = {
+  "FramePoisonBase",
+  "FramePoisonSize",
+  "StartupTime",
+  "URL"
+};
+
+
 #endif  // MOZ_IPC
+
+#ifdef XP_WIN
+static void
+CreateFileFromPath(const xpstring& path, nsILocalFile** file)
+{
+  NS_NewLocalFile(nsDependentString(path.c_str()), PR_FALSE, file);
+}
+#else
+static void
+CreateFileFromPath(const xpstring& path, nsILocalFile** file)
+{
+  NS_NewNativeLocalFile(nsDependentCString(path.c_str()), PR_FALSE, file);
+}
+#endif
 
 static XP_CHAR*
 Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
@@ -393,6 +421,14 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
 }
 #endif // XP_WIN
 
+static bool ShouldReport()
+{
+  // this environment variable prevents us from launching
+  // the crash reporter client
+  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
+  return !(envvar && *envvar);
+}
+
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -407,9 +443,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   // this environment variable prevents us from launching
   // the crash reporter client
-  envvar = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
-  if (envvar && *envvar)
-    doReport = false;
+  doReport = ShouldReport();
 
   // allocate our strings
   crashReporterAPIData = new nsCString();
@@ -1137,35 +1171,97 @@ nsresult SetSubmitReports(PRBool aSubmitReports)
 
 
 #if defined(MOZ_IPC)
-static PLDHashOperator EnumerateChildAnnotations(const nsACString& key,
-                                                 nsCString entry,
-                                                 void* userData)
-{
-  // blacklist of entries from the parent process that we don't want to
-  // submit with the child process
-  static const char* kBlacklist[] = {
-    "FramePoisonBase",
-    "FramePoisonSize",
-    "StartupTime",
-    "URL"
-  };
-  static const int kBlacklistLength =
-    sizeof(kBlacklist) / sizeof(kBlacklist[0]);
 
-  // skip entries in the blacklist
-  for (int i = 0; i < kBlacklistLength; i++) {
-    if (key.EqualsASCII(kBlacklist[i]))
-      return PL_DHASH_NEXT;
+struct Blacklist {
+  Blacklist() : mItems(NULL), mLen(0) { }
+  Blacklist(const char** items, int len) : mItems(items), mLen(len) { }
+
+  bool Contains(const nsACString& key) const {
+    for (int i = 0; i < mLen; ++i)
+      if (key.EqualsASCII(mItems[i]))
+        return true;
+    return false;
   }
 
-  PRFileDesc* fd =
-    reinterpret_cast<PRFileDesc*>(userData);
-  
+  const char** mItems;
+  const int mLen;
+};
+
+struct EnumerateAnnotationsContext {
+  const Blacklist& blacklist;
+  PRFileDesc* fd;
+};
+
+static PLDHashOperator
+EnumerateAnnotations(const nsACString& key,
+                     nsCString entry,
+                     void* userData)
+{
+  EnumerateAnnotationsContext* ctx =
+    static_cast<EnumerateAnnotationsContext*>(userData);
+  const Blacklist& blacklist = ctx->blacklist;
+
+  // skip entries in the blacklist
+  if (blacklist.Contains(key))
+      return PL_DHASH_NEXT;
+
+  PRFileDesc* fd = ctx->fd;  
   PR_Write(fd, key.BeginReading(), key.Length());
   PR_Write(fd, "=", 1);
   PR_Write(fd, entry.BeginReading(), entry.Length());
   PR_Write(fd, "\n", 1);
+
   return PL_DHASH_NEXT;
+}
+
+static bool
+WriteExtraForMinidump(nsILocalFile* minidump,
+                      const Blacklist& blacklist,
+                      nsILocalFile** extraFile)
+{
+  // Get an .extra file with the same base name as the .dmp file
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = minidump->Clone(getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return false;
+
+  nsCOMPtr<nsILocalFile> extra = do_QueryInterface(file);
+
+  nsAutoString leafName;
+  rv = extra->GetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return false;
+
+  leafName.Replace(leafName.Length() - 3, 3,
+                   NS_LITERAL_STRING("extra"));
+  rv = extra->SetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return false;
+
+  // Now write out the annotations to it
+  PRFileDesc* fd;
+  rv = extra->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                               0600, &fd);
+  if (NS_FAILED(rv))
+    return false;
+
+  EnumerateAnnotationsContext ctx = { blacklist, fd };
+  crashReporterAPIData_Hash->EnumerateRead(EnumerateAnnotations, &ctx);
+
+  // Add CrashTime to extra data
+  time_t crashTime = time(NULL);
+  char crashTimeString[32];
+  XP_TTOA(crashTime, crashTimeString, 10);
+
+  PR_Write(fd, kCrashTimeParameter, kCrashTimeParameterLen-1);
+  PR_Write(fd, crashTimeString, strlen(crashTimeString));
+  PR_Write(fd, "\n", 1);
+  PR_Close(fd);
+
+  *extraFile = NULL;
+  extra.swap(*extraFile);
+
+  return true;
 }
 
 static bool
@@ -1190,74 +1286,27 @@ MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
 static void
 OnChildProcessDumpRequested(void* aContext,
                             const ClientInfo* aClientInfo,
-#if defined(XP_WIN)
-                            const std::wstring*
-#else
-                            const std::string*
-#endif
-                              aFilePath)
+                            const xpstring* aFilePath)
 {
-  nsCOMPtr<nsILocalFile> lf;
-  PRUint32 pid;
+  nsCOMPtr<nsILocalFile> minidump;
+  nsCOMPtr<nsILocalFile> extraFile;
 
-#ifdef XP_WIN
-  NS_NewLocalFile(nsDependentString(aFilePath->c_str()), PR_FALSE,
-                  getter_AddRefs(lf));
-  pid = aClientInfo->pid();
-#else
-  NS_NewNativeLocalFile(nsDependentCString(aFilePath->c_str()), PR_FALSE,
-                        getter_AddRefs(lf));
-  pid = aClientInfo->pid_;
-#endif
+  CreateFileFromPath(*aFilePath, getter_AddRefs(minidump));
 
-  // Get an .extra file with the same base name as the .dmp file
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = lf->Clone(getter_AddRefs(file));
-  
-  if (NS_FAILED(rv))
-    return;
-  nsCOMPtr<nsILocalFile> extraFile = do_QueryInterface(file);
-
-  nsAutoString leafName;
-  rv = extraFile->GetLeafName(leafName);
-  if (NS_FAILED(rv))
+  if (!WriteExtraForMinidump(minidump,
+                             Blacklist(kSubprocessBlacklist,
+                                       NS_ARRAY_LENGTH(kSubprocessBlacklist)),
+                             getter_AddRefs(extraFile)))
     return;
 
-  leafName.Replace(leafName.Length() - 3, 3,
-                   NS_LITERAL_STRING("extra"));
-  rv = extraFile->SetLeafName(leafName);
-  if (NS_FAILED(rv))
-    return;
-
-  // Now write out the annotations to it
-  PRFileDesc* fd;
-  rv = extraFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                   0600, &fd);
-  if (NS_FAILED(rv))
-    return;
-  crashReporterAPIData_Hash->EnumerateRead(EnumerateChildAnnotations,
-                                           fd);
-  // Add CrashTime to extra data
-  time_t crashTime = time(NULL);
-  char crashTimeString[32];
-  XP_TTOA(crashTime, crashTimeString, 10);
-
-  PR_Write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
-  PR_Write(fd, crashTimeString, strlen(crashTimeString));
-  PR_Write(fd, "\n", 1);
-  PR_Close(fd);
-
-  bool doReport = true;
-  char* e = getenv("MOZ_CRASHREPORTER_NO_REPORT");
-  if (e && *e)
-    doReport = false;
-
-  if (doReport)
-    MoveToPending(lf, extraFile);
+  if (ShouldReport())
+    MoveToPending(minidump, extraFile);
 
   {
+    PRUint32 pid = aClientInfo->pid();
+
     MutexAutoLock lock(*dumpMapLock);
-    pidToMinidump->Put(pid, lf);
+    pidToMinidump->Put(pid, minidump);
   }
 }
 
@@ -1434,6 +1483,108 @@ TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump)
   d.swap(*dump);
 
   return found;
+}
+
+//-----------------------------------------------------------------------------
+// CreatePairedMinidumps() and helpers
+//
+struct PairedDumpContext {
+  nsCOMPtr<nsILocalFile>* minidump;
+  nsCOMPtr<nsILocalFile>* extra;
+  const Blacklist& blacklist;
+};
+
+static bool
+PairedDumpCallback(const XP_CHAR* dump_path,
+                   const XP_CHAR* minidump_id,
+                   void* context,
+#ifdef XP_WIN32
+                   EXCEPTION_POINTERS* /*unused*/,
+                   MDRawAssertionInfo* /*unused*/,
+#endif
+                   bool succeeded)
+{
+  PairedDumpContext* ctx = static_cast<PairedDumpContext*>(context);
+  nsCOMPtr<nsILocalFile>& minidump = *ctx->minidump;
+  nsCOMPtr<nsILocalFile>& extra = *ctx->extra;
+  const Blacklist& blacklist = ctx->blacklist;
+
+  xpstring dumpFilename(dump_path);
+  dumpFilename += XP_PATH_SEPARATOR;
+  dumpFilename += minidump_id;
+  dumpFilename += dumpFileExtension;
+
+  CreateFileFromPath(dumpFilename, getter_AddRefs(minidump));
+
+  return WriteExtraForMinidump(minidump, blacklist, getter_AddRefs(extra));
+}
+
+bool
+CreatePairedMinidumps(ProcessHandle childPid,
+                      nsAString* pairGUID,
+                      nsILocalFile** childDump,
+                      nsILocalFile** parentDump)
+{
+  if (!GetEnabled())
+    return false;
+
+  // create the UUID for the hang dump as a pair
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidgen =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);  
+
+  nsID id;
+  rv = uuidgen->GenerateUUIDInPlace(&id);
+  NS_ENSURE_SUCCESS(rv, false);
+  
+  char chars[NSID_LENGTH];
+  id.ToProvidedString(chars);
+  CopyASCIItoUTF16(chars, *pairGUID);
+
+  // trim off braces
+  pairGUID->Cut(0, 1);
+  pairGUID->Cut(pairGUID->Length()-1, 1);
+
+  // dump the child
+  nsCOMPtr<nsILocalFile> childMinidump;
+  nsCOMPtr<nsILocalFile> childExtra;
+  Blacklist childBlacklist(kSubprocessBlacklist,
+                           NS_ARRAY_LENGTH(kSubprocessBlacklist));
+  PairedDumpContext childCtx =
+    { &childMinidump, &childExtra, childBlacklist };
+  if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
+         childPid,
+         gExceptionHandler->dump_path(),
+         PairedDumpCallback,
+         &childCtx))
+    return false;
+
+  // dump the parent
+  nsCOMPtr<nsILocalFile> parentMinidump;
+  nsCOMPtr<nsILocalFile> parentExtra;
+  // nothing's blacklisted for this process
+  Blacklist parentBlacklist;
+  PairedDumpContext parentCtx =
+    { &parentMinidump, &parentExtra, parentBlacklist };
+  if (!google_breakpad::ExceptionHandler::WriteMinidump(
+         gExceptionHandler->dump_path(),
+         PairedDumpCallback,
+         &parentCtx))
+    return false;
+
+  // success
+  if (ShouldReport()) {
+    MoveToPending(childMinidump, childExtra);
+    MoveToPending(parentMinidump, parentExtra);
+  }
+
+  *childDump = NULL;
+  *parentDump = NULL;
+  childMinidump.swap(*childDump);
+  parentMinidump.swap(*parentDump);
+
+  return true;
 }
 
 bool
