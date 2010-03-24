@@ -4988,134 +4988,150 @@ function asyncOpenWebPanel(event)
  *    - gatherTextUnder
  */
 
- // Called whenever the user clicks in the content area,
- // except when left-clicking on links (special case)
- // should always return true for click to go through
- function contentAreaClick(event, fieldNormalClicks)
- {
-   if (!event.isTrusted || event.getPreventDefault()) {
-     return true;
-   }
+/**
+ * Extracts linkNode and href for the current click target.
+ *
+ * @param event
+ *        The click event.
+ * @return [href, linkNode].
+ *
+ * @note linkNode will be null if the click wasn't on an anchor
+ *       element (or XLink).
+ */
+function hrefAndLinkNodeForClickEvent(event)
+{
+  function isHTMLLink(aNode)
+  {
+    return aNode instanceof HTMLAnchorElement ||
+           aNode instanceof HTMLAreaElement ||
+           aNode instanceof HTMLLinkElement;
+  }
 
-   var target = event.target;
-   var linkNode;
+  let linkNode;
+  if (isHTMLLink(event.target)) {
+    // This is a hack to work around Gecko bug 266932.
+    // Walk up the DOM looking for a parent link node, to match the existing
+    // behaviour for left click.
+    // TODO: this is no more needed and should be removed in bug 325652.
+    let node = event.target;
+    while (node) {
+      if (isHTMLLink(node) && node.hasAttribute("href"))
+        linkNode = node;
+      node = node.parentNode;
+    }
+  }
+  else {
+    let node = event.originalTarget;
+    while (node && !(node instanceof HTMLAnchorElement)) {
+      node = node.parentNode;
+    }
+    // <a> cannot be nested.  So if we find an anchor without an
+    // href, there is no useful <a> around the target.
+    if (node && node.hasAttribute("href"))
+      linkNode = node;
+  }
 
-   if (target instanceof HTMLAnchorElement ||
-       target instanceof HTMLAreaElement ||
-       target instanceof HTMLLinkElement) {
-     if (target.hasAttribute("href"))
-       linkNode = target;
+  if (linkNode)
+    return [linkNode.href, linkNode];
 
-     // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
-     // we're going to walk up the DOM looking for a parent link node,
-     // this shouldn't be necessary, but we're matching the existing behaviour for left click
-     var parent = target.parentNode;
-     while (parent) {
-       if (parent instanceof HTMLAnchorElement ||
-           parent instanceof HTMLAreaElement ||
-           parent instanceof HTMLLinkElement) {
-           if (parent.hasAttribute("href"))
-             linkNode = parent;
-       }
-       parent = parent.parentNode;
-     }
-   }
-   else {
-     linkNode = event.originalTarget;
-     while (linkNode && !(linkNode instanceof HTMLAnchorElement))
-       linkNode = linkNode.parentNode;
-     // <a> cannot be nested.  So if we find an anchor without an
-     // href, there is no useful <a> around the target
-     if (linkNode && !linkNode.hasAttribute("href"))
-       linkNode = null;
-   }
-   var wrapper = null;
-   if (linkNode) {
-     wrapper = linkNode;
-     if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
-         !event.altKey && !event.metaKey) {
-       // A Web panel's links should target the main content area.  Do this
-       // if no modifier keys are down and if there's no target or the target equals
-       // _main (the IE convention) or _content (the Mozilla convention).
-       // XXX Now that markLinkVisited is gone, we may not need to field _main and
-       // _content here.
-       target = wrapper.getAttribute("target");
-       if (fieldNormalClicks &&
-           (!target || target == "_content" || target  == "_main"))
-         // IE uses _main, SeaMonkey uses _content, we support both
-       {
-         if (!wrapper.href)
-           return true;
-         if (wrapper.getAttribute("onclick"))
-           return true;
-         // javascript links should be executed in the current browser
-         if (wrapper.href.substr(0, 11) === "javascript:")
-           return true;
-         // data links should be executed in the current browser
-         if (wrapper.href.substr(0, 5) === "data:")
-           return true;
+  // If there is no linkNode, try simple XLink.
+  let href, baseURI;
+  let node = event.target;
+  while (node) {
+    if (node.nodeType == Node.ELEMENT_NODE) {
+      href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      if (href)
+        baseURI = node.baseURI;
+    }
+    node = node.parentNode;
+  }
 
-         try {
-           urlSecurityCheck(wrapper.href, wrapper.ownerDocument.nodePrincipal);
-         }
-         catch(ex) {
-           return false;
-         }
+  // In case of XLink, we don't return the node we got href from since
+  // callers expect <a>-like elements.
+  return [href ? makeURLAbsolute(baseURI, href) : null, null];
+}
 
-         var postData = { };
-         var url = getShortcutOrURI(wrapper.href, postData);
-         if (!url)
-           return true;
-         loadURI(url, null, postData.value, false);
-         event.preventDefault();
-         return false;
-       }
-       else if (linkNode.getAttribute("rel") == "sidebar") {
-         // This is the Opera convention for a special link that - when clicked - allows
-         // you to add a sidebar panel.  We support the Opera convention here.  The link's
-         // title attribute contains the title that should be used for the sidebar panel.
-         PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
-                                                wrapper.getAttribute("title"),
-                                                null, null, true, true);
-         event.preventDefault();
-         return false;
-       }
-     }
-     else {
-       handleLinkClick(event, wrapper.href, linkNode);
-     }
+/**
+ * Called whenever the user clicks in the content area.
+ *
+ * @param event
+ *        The click event.
+ * @param isPanelClick
+ *        Whether the event comes from a web panel.
+ * @note default event is prevented if the click is handled.
+ */
+function contentAreaClick(event, isPanelClick)
+{
+  if (!event.isTrusted || event.getPreventDefault() || event.button == 2)
+    return true;
 
-     return true;
-   } else {
-     // Try simple XLink
-     var href, realHref, baseURI;
-     linkNode = target;
-     while (linkNode) {
-       if (linkNode.nodeType == Node.ELEMENT_NODE) {
-         wrapper = linkNode;
+  let [href, linkNode] = hrefAndLinkNodeForClickEvent(event);
+  if (!href) {
+    // Not a link, handle middle mouse navigation.
+    if (event.button == 1 &&
+        gPrefService.getBoolPref("middlemouse.contentLoadURL") &&
+        !gPrefService.getBoolPref("general.autoScroll")) {
+      middleMousePaste(event);
+      event.preventDefault();
+    }
+    return true;
+  }
 
-         realHref = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-         if (realHref) {
-           href = realHref;
-           baseURI = wrapper.baseURI
-         }
-       }
-       linkNode = linkNode.parentNode;
-     }
-     if (href) {
-       href = makeURLAbsolute(baseURI, href);
-       handleLinkClick(event, href, null);
-       return true;
-     }
-   }
-   if (event.button == 1 &&
-       gPrefService.getBoolPref("middlemouse.contentLoadURL") &&
-       !gPrefService.getBoolPref("general.autoScroll")) {
-     middleMousePaste(event);
-   }
-   return true;
- }
+  // This code only applies if we have a linkNode (i.e. clicks on real anchor
+  // elements, as opposed to XLink).
+  if (linkNode && event.button == 0 &&
+      !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+    // A Web panel's links should target the main content area.  Do this
+    // if no modifier keys are down and if there's no target or the target
+    // equals _main (the IE convention) or _content (the Mozilla convention).
+    let target = linkNode.target;
+    let mainTarget = !target || target == "_content" || target  == "_main";
+    if (isPanelClick && mainTarget) {
+      // javascript and data links should be executed in the current browser.
+      if (linkNode.getAttribute("onclick") ||
+          href.substr(0, 11) === "javascript:" ||
+          href.substr(0, 5) === "data:")
+        return true;
 
+      try {
+        urlSecurityCheck(href, linkNode.ownerDocument.nodePrincipal);
+      }
+      catch(ex) {
+        // Prevent loading unsecure destinations.
+        event.preventDefault();
+        return true;
+      }
+
+      let postData = {};
+      let url = getShortcutOrURI(href, postData);
+      if (!url)
+        return true;
+      loadURI(url, null, postData.value, false);
+      event.preventDefault();
+      return true;
+    }
+
+    if (linkNode.getAttribute("rel") == "sidebar") {
+      // This is the Opera convention for a special link that, when clicked,
+      // allows to add a sidebar panel.  The link's title attribute contains
+      // the title that should be used for the sidebar panel.
+      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(href),
+                                             linkNode.getAttribute("title"),
+                                             null, null, true, true);
+      event.preventDefault();
+      return true;
+    }
+  }
+
+  handleLinkClick(event, href, linkNode);
+  return true;
+}
+
+/**
+ * Handles clicks on links.
+ *
+ * @return true if the click event was handled, false otherwise.
+ */
 function handleLinkClick(event, href, linkNode) {
   if (event.button == 2) // right click
     return false;
@@ -5129,6 +5145,7 @@ function handleLinkClick(event, href, linkNode) {
   if (where == "save") {
     saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
             true, doc.documentURIObject);
+    event.preventDefault();
     return true;
   }
 
@@ -5136,7 +5153,7 @@ function handleLinkClick(event, href, linkNode) {
   openLinkIn(href, where, { fromContent: true,
                             referrerURI: doc.documentURIObject,
                             charset: doc.characterSet });
-  event.stopPropagation();
+  event.preventDefault();
   return true;
 }
 
