@@ -39,6 +39,7 @@
 #define nsExceptionHandler_h__
 
 #include "nscore.h"
+#include "nsDataHashtable.h"
 #include "nsXPCOM.h"
 #include "nsStringGlue.h"
 
@@ -64,6 +65,17 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data);
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID);
+
+// Functions for working with minidumps and .extras
+typedef nsDataHashtable<nsCStringHashKey, nsCString> AnnotationTable;
+
+bool GetMinidumpForID(const nsAString& id, nsILocalFile** minidump);
+bool GetIDFromMinidump(nsILocalFile* minidump, nsAString& id);
+bool GetExtraFileForID(const nsAString& id, nsILocalFile** extraFile);
+bool GetExtraFileForMinidump(nsILocalFile* minidump, nsILocalFile** extraFile);
+bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
+bool AppendExtraData(nsILocalFile* extraFile, const AnnotationTable& data);
+
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
 #endif
@@ -79,7 +91,8 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 // Return true iff a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-NULL.
-bool TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
+bool TakeMinidumpForChild(PRUint32 childPid,
+                          nsILocalFile** dump NS_OUTPARAM);
 
 #ifdef XP_WIN
 typedef HANDLE ProcessHandle;

@@ -256,7 +256,7 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown: {
-        nsCOMPtr<nsIFile> dump;
+        nsCOMPtr<nsILocalFile> dump;
         if (TakeMinidump(getter_AddRefs(dump))) {
             WriteExtraDataForMinidump(dump);
             if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
