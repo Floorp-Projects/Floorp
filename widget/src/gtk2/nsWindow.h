@@ -300,8 +300,8 @@ public:
     Window             mOldFocusWindow;
 #endif /* MOZ_X11 */
 
-    static guint32     mLastButtonPressTime;
-    static guint32     mLastButtonReleaseTime;
+    static guint32     sLastButtonPressTime;
+    static guint32     sLastButtonReleaseTime;
 
     NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
@@ -493,6 +493,8 @@ private:
         PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
         *flag &= ~mask;
     }
+
+    void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);
 
     /**
      * |mIMModule| takes all IME related stuff.
