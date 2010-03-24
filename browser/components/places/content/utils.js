@@ -1021,7 +1021,7 @@ var PlacesUIUtils = {
     else {
       if (PlacesUtils.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
-        element.className = "menuitem-iconic bookmark-item";
+        element.className = "menuitem-iconic bookmark-item menuitem-with-favicon";
         element.setAttribute("scheme", this.guessUrlSchemeForUI(aNode.uri));
       }
       else if (PlacesUtils.containerTypes.indexOf(type) != -1) {
