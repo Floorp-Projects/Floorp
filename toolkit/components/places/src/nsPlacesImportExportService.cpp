@@ -95,7 +95,6 @@
 #include "nsPlacesImportExportService.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
-#include "nsStringAPI.h"
 #include "nsUnicharUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -104,9 +103,9 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "prprf.h"
-#include "nsIBrowserGlue.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsPlacesMacros.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -309,6 +308,7 @@ nsEscapeHTML(const char* string)
   return escaped;
 }
 
+PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsPlacesImportExportService, gImportExportService)
 
 NS_IMPL_ISUPPORTS2(nsPlacesImportExportService, nsIPlacesImportExportService,
                    nsINavHistoryBatchCallback)
@@ -316,25 +316,37 @@ NS_IMPL_ISUPPORTS2(nsPlacesImportExportService, nsIPlacesImportExportService,
 
 nsPlacesImportExportService::nsPlacesImportExportService()
 {
-  // Be sure to call EnsureServiceState() before using services.
-  mHistoryService = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(mHistoryService, "could not get history service");
-  mFaviconService = do_GetService(NS_FAVICONSERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(mFaviconService, "could not get favicon service");
-  mAnnotationService = do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(mAnnotationService, "could not get annotation service");
-  mBookmarksService = do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(mBookmarksService, "could not get bookmarks service");
-  mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(mLivemarkService, "could not get livemark service");
-  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1");
-  NS_WARN_IF_FALSE(mMicrosummaryService, "could not get microsummary service");
+  NS_ASSERTION(!gImportExportService,
+               "Attempting to create two instances of the service!");
+  gImportExportService = this;
 }
 
 nsPlacesImportExportService::~nsPlacesImportExportService()
 {
+  NS_ASSERTION(gImportExportService == this,
+               "Deleting a non-singleton instance of the service");
+  if (gImportExportService == this)
+    gImportExportService = nsnull;
 }
 
+nsresult
+nsPlacesImportExportService::Init()
+{
+  // Be sure to call EnsureServiceState() before using services.
+  mHistoryService = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mHistoryService, NS_ERROR_OUT_OF_MEMORY);
+  mFaviconService = do_GetService(NS_FAVICONSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mFaviconService, NS_ERROR_OUT_OF_MEMORY);
+  mAnnotationService = do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mAnnotationService, NS_ERROR_OUT_OF_MEMORY);
+  mBookmarksService = do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mBookmarksService, NS_ERROR_OUT_OF_MEMORY);
+  mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mLivemarkService, NS_ERROR_OUT_OF_MEMORY);
+  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1");
+  NS_ENSURE_TRUE(mMicrosummaryService, NS_ERROR_OUT_OF_MEMORY);
+  return NS_OK;
+}
 
 /**
  * The content sink stuff is based loosely on nsIHTMLContentSink.
@@ -1330,7 +1342,7 @@ BookmarkContentSink::ConvertImportedDateToInternalDate(const nsACString& aDate) 
   PRTime convertedDate = 0;
   if (!aDate.IsEmpty()) {
     nsresult rv;
-    convertedDate = aDate.ToInteger(&rv);
+    convertedDate = PromiseFlatCString(aDate).ToInteger(&rv);
     if (NS_SUCCEEDED(rv)) {
       convertedDate *= 1000000; // in bookmarks.html this value is in seconds, not microseconds
     }
@@ -2300,13 +2312,6 @@ nsPlacesImportExportService::RunBatched(nsISupports* aUserData)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mBookmarksService->RemoveFolderChildren(unfiledBookmarksFolder);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Add the smart bookmarks.
-    nsCOMPtr<nsIBrowserGlue> glue =
-      do_GetService("@mozilla.org/browser/browserglue;1");
-    NS_ENSURE_TRUE(glue, NS_ERROR_OUT_OF_MEMORY);
-    rv = glue->EnsurePlacesDefaultQueriesInitialized();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
