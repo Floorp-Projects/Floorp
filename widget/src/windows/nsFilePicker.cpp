@@ -209,6 +209,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
     ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
+    PRInt32 extIndex = mDefault.RFind(".");
+
     if (!mDefaultExtension.IsEmpty()) {
       ofn.lpstrDefExt = mDefaultExtension.get();
     }
@@ -216,7 +218,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       // Get file extension from suggested filename
       //  to detect if we are saving an html file
       //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
-      PRInt32 extIndex = mDefault.RFind(".");
       if ( extIndex >= 0) {
         nsAutoString ext;
         mDefault.Right(ext, mDefault.Length() - extIndex);
@@ -259,6 +260,12 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
             StringEndsWith(ext, NS_LITERAL_CSTRING(".pif")) ||
             StringEndsWith(ext, NS_LITERAL_CSTRING(".url")))
           ofn.Flags |= OFN_NODEREFERENCELINKS;
+
+        // The save-as filepicker on XP doesn't appreciate the default filename
+        // having an extension. Vista and up don't mind either way. If
+        // lpstrDefExt is already defined, strip the .ext from the file name.
+        if (ofn.lpstrDefExt && extIndex >= 0 && extIndex < FILE_BUFFER_SIZE)
+          fileBuffer[extIndex] = '\0';
 
         result = ::GetSaveFileNameW(&ofn);
         if (!result) {
