@@ -43,7 +43,6 @@ endif
 
 SHARED_LIBRARY_LIBS = \
 	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
-	../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	../privatebrowsing/src/$(LIB_PREFIX)privatebrowsing_s.$(LIB_SUFFIX) \
 	../about/$(LIB_PREFIX)browserabout_s.$(LIB_SUFFIX) \
 	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \

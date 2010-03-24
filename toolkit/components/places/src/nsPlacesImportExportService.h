@@ -23,7 +23,18 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
     NS_DECL_NSINAVHISTORYBATCHCALLBACK
     nsPlacesImportExportService();
 
+  /**
+   * Obtains the service's object.
+   */
+  static nsPlacesImportExportService* GetSingleton();
+
+  /**
+   * Initializes the service's object.  This should only be called once.
+   */
+  nsresult Init();
+
   private:
+    static nsPlacesImportExportService* gImportExportService;
     virtual ~nsPlacesImportExportService();
 
   protected:
