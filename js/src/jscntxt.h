@@ -2261,11 +2261,8 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 /*
- * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack grows
- * in the expected direction.  On Unix-y systems, JS_STACK_GROWTH_DIRECTION is
- * computed on the build host by jscpucfg.c and written into jsautocfg.h.  The
- * macro is hardcoded in jscpucfg.h on Windows and Mac systems (for historical
- * reasons pre-dating autoconf usage).
+ * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack
+ * grows in the expected direction.
  */
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) < (cx)->stackLimit)
