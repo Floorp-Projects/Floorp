@@ -56,6 +56,7 @@ const char kLinuxGateLibraryName[] = "linux-gate.so";
 
 // We produce one of these structures for each thread in the crashed process.
 struct ThreadInfo {
+  pid_t tid;    // thread id
   pid_t tgid;   // thread group id
   pid_t ppid;   // parent process
 
@@ -90,6 +91,16 @@ struct MappingInfo {
   char name[NAME_MAX];
 };
 
+// Suspend a thread by attaching to it.
+bool AttachThread(pid_t pid);
+
+// Resume a thread by detaching from it.
+bool DetachThread(pid_t pid);
+
+// Fill |info| with the register state of |info->tid|.  The thread
+// must be attached to the calling process.  Return true on success.
+bool GetThreadRegisters(ThreadInfo* info);
+
 class LinuxDumper {
  public:
   explicit LinuxDumper(pid_t pid);
@@ -97,13 +108,15 @@ class LinuxDumper {
   // Parse the data for |threads| and |mappings|.
   bool Init();
 
-  // Suspend/resume all threads in the given process.
-  bool ThreadsSuspend();
-  bool ThreadsResume();
+  // Attach/detach all threads in the given process.  No attempt is
+  // made to attach |except|, if it identifies a thread in the given
+  // process: it is assumed to already be attached.
+  bool ThreadsAttach(pid_t except=0);
+  bool ThreadsDetach();
 
   // Read information about the given thread. Returns true on success. One must
-  // have called |ThreadsSuspend| first.
-  bool ThreadInfoGet(pid_t tid, ThreadInfo* info);
+  // have called |ThreadsAttach| first.
+  bool ThreadInfoGet(ThreadInfo* info);
 
   // These are only valid after a call to |Init|.
   const wasteful_vector<pid_t> &threads() { return threads_; }

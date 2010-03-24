@@ -65,6 +65,8 @@
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 
+using google_breakpad::ThreadInfo;
+
 // These are additional minidump stream values which are specific to the linux
 // breakpad implementation.
 enum {
@@ -100,7 +102,7 @@ static void U32(void* out, uint32_t v) {
 //   out: the minidump structure
 //   info: the collection of register structures.
 static void CPUFillFromThreadInfo(MDRawContextX86 *out,
-                                  const google_breakpad::ThreadInfo &info) {
+                                  const ThreadInfo &info) {
   out->context_flags = MD_CONTEXT_X86_ALL;
 
   out->dr0 = info.dregs[0];
@@ -198,11 +200,23 @@ static void CPUFillFromUContext(MDRawContextX86 *out, const ucontext *uc,
   memcpy(out->float_save.register_area, fp->_st, 10 * 8);
 }
 
+static uintptr_t InstructionPointer(const ThreadInfo& info) {
+  return info.regs.eip;
+}
+
+static uintptr_t StackPointer(const ThreadInfo& info) {
+  return info.regs.esp;
+}
+
+static uintptr_t StackPointer(const ucontext* uc) {
+  return uc->uc_mcontext.gregs[REG_ESP];
+}
+
 #elif defined(__x86_64)
 typedef MDRawContextAMD64 RawContextCPU;
 
 static void CPUFillFromThreadInfo(MDRawContextAMD64 *out,
-                                  const google_breakpad::ThreadInfo &info) {
+                                  const ThreadInfo &info) {
   out->context_flags = MD_CONTEXT_AMD64_FULL |
                        MD_CONTEXT_AMD64_SEGMENTS;
 
@@ -307,11 +321,23 @@ static void CPUFillFromUContext(MDRawContextAMD64 *out, const ucontext *uc,
   memcpy(&out->flt_save.xmm_registers, &fpregs->_xmm, 16 * 16);
 }
 
+static uintptr_t InstructionPointer(const ThreadInfo& info) {
+  return info.regs.rip;
+}
+
+static uintptr_t StackPointer(const ThreadInfo& info) {
+  return info.regs.rsp;
+}
+
+static uintptr_t StackPointer(const ucontext* uc) {
+  return uc->uc_mcontext.gregs[REG_RSP];
+}
+
 #elif defined(__ARMEL__)
 typedef MDRawContextARM RawContextCPU;
 
 static void CPUFillFromThreadInfo(MDRawContextARM *out,
-                                  const google_breakpad::ThreadInfo &info) {
+                                  const ThreadInfo &info) {
   out->context_flags = MD_CONTEXT_ARM_FULL;
 
   for (int i = 0; i < MD_CONTEXT_ARM_GPR_COUNT; ++i)
@@ -355,6 +381,18 @@ static void CPUFillFromUContext(MDRawContextARM *out, const ucontext *uc,
   memset(&out->float_save.extra, 0, sizeof(out->float_save.extra));
 }
 
+static uintptr_t InstructionPointer(const ThreadInfo& info) {
+  return info.regs.uregs[R12];
+}
+
+static uintptr_t StackPointer(const ThreadInfo& info) {
+  return info.regs.uregs[R13];
+}
+
+static uintptr_t StackPointer(const ucontext* uc) {
+  return uc->uc_mcontext.arm_sp;
+}
+
 #else
 #error "This code has not been ported to your platform yet."
 #endif
@@ -376,17 +414,36 @@ class MinidumpWriter {
         float_state_(NULL),
 #endif
         crashing_tid_(context->tid),
+        crashing_tid_info_(NULL),
         dumper_(crashing_pid) {
+  }
+
+  MinidumpWriter(const char* filename,
+                 pid_t pid,
+                 ThreadInfo* info,
+                 const siginfo_t* siginfo)
+      : filename_(filename),
+        siginfo_(siginfo),
+        ucontext_(NULL),
+        float_state_(NULL),
+        crashing_tid_(info->tid),
+        crashing_tid_info_(info),
+        dumper_(pid) {
   }
 
   bool Init() {
     return dumper_.Init() && minidump_writer_.Open(filename_) &&
-           dumper_.ThreadsSuspend();
+           dumper_.ThreadsAttach(CrashingThreadAttached() ?
+                                 crashing_tid_ : 0);
   }
 
   ~MinidumpWriter() {
     minidump_writer_.Close();
-    dumper_.ThreadsResume();
+    dumper_.ThreadsDetach();
+  }
+
+  bool CrashingThreadAttached() const {
+    return crashing_tid_info_ != NULL;
   }
 
   bool Dump() {
@@ -419,9 +476,11 @@ class MinidumpWriter {
       return false;
     dir.CopyIndex(dir_index++, &dirent);
 
-    if (!WriteExceptionStream(&dirent))
-      return false;
-    dir.CopyIndex(dir_index++, &dirent);
+    if (siginfo_) {
+      if (!WriteExceptionStream(&dirent))
+        return false;
+      dir.CopyIndex(dir_index++, &dirent);
+    }
 
     if (!WriteSystemInfoStream(&dirent))
       return false;
@@ -465,7 +524,7 @@ class MinidumpWriter {
     // If you add more directory entries, don't forget to update kNumWriters,
     // above.
 
-    dumper_.ThreadsResume();
+    dumper_.ThreadsDetach();
     return true;
   }
 
@@ -507,12 +566,18 @@ class MinidumpWriter {
         if (!cpu.Allocate())
           return false;
         my_memset(cpu.get(), 0, sizeof(RawContextCPU));
-        CPUFillFromUContext(cpu.get(), ucontext_, float_state_);
+        if (crashing_tid_info_)
+          // if the caller used the ThreadInfo ctor, take the register
+          // values from there
+          CPUFillFromThreadInfo(cpu.get(), *crashing_tid_info_);
+        else
+          CPUFillFromUContext(cpu.get(), ucontext_, float_state_);
         thread.thread_context = cpu.location();
         crashing_thread_context_ = cpu.location();
       } else {
         ThreadInfo info;
-        if (!dumper_.ThreadInfoGet(dumper_.threads()[i], &info))
+        info.tid = dumper_.threads()[i];
+        if (!dumper_.ThreadInfoGet(&info))
           return false;
         UntypedMDRVA memory(&minidump_writer_);
         if (!memory.Allocate(info.stack_len))
@@ -657,21 +722,10 @@ class MinidumpWriter {
   }
 
  private:
-#if defined(__i386)
   uintptr_t GetStackPointer() {
-    return ucontext_->uc_mcontext.gregs[REG_ESP];
+    return crashing_tid_info_ ? StackPointer(*crashing_tid_info_) :
+      StackPointer(ucontext_);
   }
-#elif defined(__x86_64)
-  uintptr_t GetStackPointer() {
-    return ucontext_->uc_mcontext.gregs[REG_RSP];
-  }
-#elif defined(__ARM_EABI__)
-  uintptr_t GetStackPointer() {
-    return ucontext_->uc_mcontext.arm_sp;
-  }
-#else
-#error "This code has not been ported to your platform yet."
-#endif
 
   void NullifyDirectoryEntry(MDRawDirectory* dirent) {
     dirent->stream_type = 0;
@@ -893,9 +947,12 @@ popline:
 
   const char* const filename_;  // output filename
   const siginfo_t* const siginfo_;  // from the signal handler (see sigaction)
+  // context that can be used instead of crashing_thread_info_
   const struct ucontext* const ucontext_;  // also from the signal handler
   const struct _libc_fpstate* const float_state_;  // ditto
   const pid_t crashing_tid_;  // the process which actually crashed
+  // context that can be used instead of ucontext_/float_state_
+  ThreadInfo* crashing_tid_info_;
   LinuxDumper dumper_;
   MinidumpFileWriter minidump_writer_;
   MDLocationDescriptor crashing_thread_context_;
@@ -908,6 +965,39 @@ bool WriteMinidump(const char* filename, pid_t crashing_process,
   const ExceptionHandler::CrashContext* context =
       reinterpret_cast<const ExceptionHandler::CrashContext*>(blob);
   MinidumpWriter writer(filename, crashing_process, context);
+  if (!writer.Init())
+    return false;
+  return writer.Dump();
+}
+
+bool WriteMinidump(const char* filename, pid_t process) {
+  // The scheme is
+  //  - attach to the main thread of |process| (aka |(tid)process|)
+  //  - grab its context from whereever ptrace stopped it
+  //  - proceed dumping |process| as if the main thread had crashed
+  //  - detach from the main thread of |process|
+  // There are many race conditions here, but all should manifest as
+  // failed syscalls.
+
+  if (!AttachThread(process))
+    return false;
+
+  // from here on, we have to ensure that the process is detached before
+  // returning
+  struct AutoDetach {
+    AutoDetach(pid_t proc) : proc_(proc) { }
+    ~AutoDetach() { DetachThread(proc_); }
+    pid_t proc_;
+  } detach(process);
+
+  ThreadInfo info;
+  my_memset(&info, 0, sizeof(info));
+
+  info.tid = process;
+  if (!GetThreadRegisters(&info))
+      return false;
+
+  MinidumpWriter writer(filename, process, &info, NULL);
   if (!writer.Init())
     return false;
   return writer.Dump();
