@@ -202,7 +202,7 @@ PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
 int
 PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
-    AssertPluginThread();
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thead!");
     NS_ABORT_IF_FALSE(!strcmp(aPref, kTimeoutPref),
                       "unexpected pref callback");
 
