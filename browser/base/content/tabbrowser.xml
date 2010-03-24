@@ -437,9 +437,13 @@
               if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
+              // Don't clear the favicon if this onLocationChange was triggered
+              // by a pushState or a replaceState.  See bug 550565.
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
-                  aWebProgress.isLoadingDocument)
-                this.mTabBrowser.getBrowserForTab(this.mTab).mIconURL = null;
+                  aWebProgress.isLoadingDocument &&
+                  !(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+                this.mBrowser.mIconURL = null;
+              }
 
               // changing location, clear out the missing plugins list
               this.mBrowser.missingPlugins = null;
