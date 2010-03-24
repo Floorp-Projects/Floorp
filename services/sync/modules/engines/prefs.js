@@ -40,7 +40,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const WEAVE_SYNC_PREFS = "extensions.weave.prefs.sync";
+const WEAVE_SYNC_PREFS = "extensions.weave.prefs.sync.";
 const WEAVE_PREFS_GUID = "preferences";
 
 Cu.import("resource://weave/util.js");
@@ -91,8 +91,7 @@ PrefStore.prototype = {
   get _syncPrefs() {
     let service = Cc["@mozilla.org/preferences-service;1"].
       getService(Ci.nsIPrefService);
-    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {}).
-      map(function(elem) { return elem.substr(1); });
+    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {});
 
     this.__defineGetter__("_syncPrefs", function() syncPrefs);
     return syncPrefs;
@@ -104,7 +103,7 @@ PrefStore.prototype = {
 
     let pref;
     for (let i = 0; i < toSync.length; i++) {
-      if (!this._prefs.getBoolPref(WEAVE_SYNC_PREFS + "." + toSync[i]))
+      if (!this._prefs.getBoolPref(WEAVE_SYNC_PREFS + toSync[i]))
         continue;
 
       pref = {};
@@ -230,8 +229,7 @@ PrefTracker.prototype = {
   get _syncPrefs() {
     let service = Cc["@mozilla.org/preferences-service;1"].
       getService(Ci.nsIPrefService);
-    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {}).
-      map(function(elem) { return elem.substr(1); });
+    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {});
 
     this.__defineGetter__("_syncPrefs", function() syncPrefs);
     return syncPrefs;
