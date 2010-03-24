@@ -96,7 +96,8 @@ RPCChannel::RPCChannel(RPCListener* aListener)
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mBlockedOnParent(false)
+    mBlockedOnParent(false),
+    mSawRPCOutMsg(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 
@@ -597,10 +598,11 @@ void
 RPCChannel::ExitedCxxStack()
 {
     Listener()->OnExitedCxxStack();
-    {
+    if (mSawRPCOutMsg) {
         MutexAutoLock lock(mMutex);
         // see long comment in OnMaybeDequeueOne()
         EnqueuePendingMessages();
+        mSawRPCOutMsg = false;
     }
 }
 
