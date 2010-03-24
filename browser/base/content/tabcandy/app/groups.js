@@ -124,27 +124,41 @@ Group.prototype = {
     }
   },
   
-  add: function(el){
+  add: function($el){
+    Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
+    var el = $el.get(0);
     if($.inArray(el, this._children) == -1)
       this._children.push( el );
 
     $(el).droppable("disable");
+    
+    var self = this;
+    var tab = Tabs.tab(el);
+    tab.mirror.addOnClose(el, function() {
+      self.remove($el);
+    });
     
     this._updateGroup();
     this.arrange();
   },
   
   remove: function(el){
+    var self = this;
     $(el).data("toRemove", true);
     this._children = this._children.filter(function(child){
       if( $(child).data("toRemove") == true ){
         $(child).data("group", null);
         scaleTab( $(child), 160/$(child).width());
         $(child).droppable("enable");        
+
+        var tab = Tabs.tab(child);
+        tab.mirror.removeOnClose(el);
+
         return false;
       }
       else return true;
-    })
+    });
+    
     $(el).data("toRemove", false);
     
     if( this._children.length == 0 ){
@@ -152,7 +166,6 @@ Group.prototype = {
     } else {
       this.arrange();
     }
-    
   },
   
   _updateGroup: function(){
@@ -163,7 +176,7 @@ Group.prototype = {
   },
   
   arrange: function(){
-    if( this._children.length < 2 ) return;
+/*     if( this._children.length < 2 ) return; */
     var bb = this._getContainerBox();
 
     // TODO: This is an hacky heuristic. Fix this layout algorithm.
@@ -219,7 +232,7 @@ Group.prototype = {
       },
       drop: function(){
         $dragged.removeClass("willGroup");
-        self.add( $dragged.get(0) )
+        self.add( $dragged );
       },
       accept: ".tab",
     });
@@ -289,7 +302,7 @@ window.Groups = {
             var group = new Group();
             group.create( [target, dragged] );            
           } else {
-            group.add( dragged.get(0) )
+            group.add( dragged );
           }
           
         }, 100);
