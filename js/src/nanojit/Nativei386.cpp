@@ -742,11 +742,19 @@ namespace nanojit
             // disturb the CCs!
             Register r = findRegFor(lhs, GpRegs);
             if (c == 0 && cond->isop(LIR_eq)) {
-                TEST(r, r);
+                NanoAssert(N_LOOKAHEAD >= 3);
+                if ((lhs->isop(LIR_and) || lhs->isop(LIR_or)) &&
+                    cond == lookahead[1] && lhs == lookahead[2])
+                {
+                    // Do nothing.  At run-time, 'lhs' will have just computed
+                    // by an i386 instruction that sets ZF for us ('and' or
+                    // 'or'), so we don't have to do it ourselves.
+                } else {
+                    TEST(r, r);     // sets ZF according to the value of 'lhs'
+                }
             } else {
                 CMPi(r, c);
             }
-
         } else {
             Register ra, rb;
             findRegFor2(GpRegs, lhs, ra, GpRegs, rhs, rb);
