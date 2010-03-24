@@ -1498,6 +1498,7 @@ _cairo_d2d_release_source_image(void                   *abstract_surface,
     }
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(abstract_surface);
 
+    cairo_surface_destroy(&image->base);
     ID3D10Texture2D *softTexture = (ID3D10Texture2D*)image_extra;
     
     softTexture->Unmap(0);
@@ -1579,6 +1580,9 @@ _cairo_d2d_release_dest_image(void                    *abstract_surface,
     rect.left = rect.top = 0;
     rect.right = size.width;
     rect.bottom = size.height;
+
+    cairo_surface_destroy(&image->base);
+
     softTexture->Unmap(0);
     D3D10Factory::Device()->CopyResource(d2dsurf->surface, softTexture);
     softTexture->Release();
