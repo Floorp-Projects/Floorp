@@ -17,6 +17,40 @@ var consoleService = Cc["@mozilla.org/consoleservice;1"]
 var extensionManager = Cc["@mozilla.org/extensions/manager;1"]  
     .getService(Ci.nsIExtensionManager);  
 
+// ----------
+function Rect(left, top, width, height) {
+  this.left = left;
+  this.top = top;
+  this.width = width;
+  this.height = height;
+}
+
+Rect.prototype = {
+  get right() {
+    return this.left + this.width;
+  },
+  
+  set right(value) {
+      this.width = value - this.left;
+  },
+
+  get bottom() {
+    return this.top + this.height;
+  },
+  
+  set bottom(value) {
+      this.height = value - this.top;
+  },
+  
+  intersects: function(rect) {
+    return (rect.right > this.left
+        && rect.left < this.right
+        && rect.bottom > this.top
+        && rect.top < this.bottom);      
+  }
+};
+
+// ----------
 var Utils = {
   // ___ Windows and Tabs
   get activeWindow(){
@@ -147,11 +181,15 @@ var Utils = {
       var s = obj + ' = {';
       for(prop in obj) {
         var value = obj[prop]; 
-        s += prop + ": " 
-        + (typeof(value) == 'string' ? '\'' : '')
-        + value 
-        + (typeof(value) == 'string' ? '\'' : '')
-        + ", ";
+        s += prop + ': ';
+        if(typeof(value) == 'string')
+          s += '\'' + value + '\'';
+        else if(typeof(value) == 'function')
+          s += 'function';
+        else
+          s += value;
+
+        s += ", ";
       }
       return s + '}';
     }, 
@@ -197,6 +235,17 @@ var Utils = {
   	return date.getTime();
   },
   
+  // ___ Geometry
+  getBounds: function(el) {
+    var $el = $(el);
+    return new Rect(
+      parseInt($el.css('left')), 
+      parseInt($el.css('top')),
+      $el.width(),
+      $el.height()
+    );
+  },
+
   // ___ Misc
   isJQuery: function(object) {
     // TODO: need more robust way 
