@@ -150,19 +150,53 @@ Group.prototype = {
 */
   },
   
-  add: function($el){
+  add: function($el, dropPos){
     Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
     var el = $el.get(0);
-    if($.inArray(el, this._children) == -1)
-      this._children.push( el );
+    
+    if( typeof(dropPos) == "undefined" ) dropPos = {top:window.innerWidth, left:window.innerHeight};
+    var self = this;
+    
+    function findInsertionPoint(dropPos){
+      var best = {dist: Infinity, el: null};
+      var index = 0;
+      for each(var child in self._children){
+        var pos = $(child).position();
+        var [w, h] = [$(child).width(), $(child).height()];
+        var dist = Math.sqrt( Math.pow((pos.top+h/2)-dropPos.top,2) + Math.pow((pos.left+w/2)-dropPos.left,2) );
+        Utils.log( index, dist );
+        if( dist <= best.dist ){
+          best.el = child;
+          best.dist = dist;
+          best.index = index;
+        }
+        index += 1;
+      }
+
+      if( self._children.length > 0 ){
+        var insertLeft = dropPos.left <= $(best.el).position().left + $(best.el).width()/2;
+        if( !insertLeft ) return best.index+1
+        else return best.index
+      }
+      return 0;
+      
+    }
+    
+    var index = findInsertionPoint(dropPos);
+    
+    if($.inArray(el, this._children) == -1){
+      this._children.splice( index, 0, el );
+    }
+      
 
     $(el).droppable("disable");
-    
-    var self = this;
-    var tab = Tabs.tab(el);
-    tab.mirror.addOnClose(el, function() {
-      self.remove($el);
-    });
+
+    if( typeof(Tabs) != "undefined" ){
+      var tab = Tabs.tab(el);
+      tab.mirror.addOnClose(el, function() {
+        self.remove($el);
+      });      
+    }
     
     this._updateGroup();
     this.arrange();
@@ -175,11 +209,11 @@ Group.prototype = {
       if( $(child).data("toRemove") == true ){
         $(child).data("group", null);
         scaleTab( $(child), 160/$(child).width());
-        $(child).droppable("enable");        
-
-        var tab = Tabs.tab(child);
-        tab.mirror.removeOnClose(el);
-
+        $(child).droppable("enable");    
+        if( typeof(Tabs) != "undefined" ){
+          var tab = Tabs.tab(child);
+          tab.mirror.removeOnClose(el);              
+        }
         return false;
       }
       else return true;
@@ -192,6 +226,7 @@ Group.prototype = {
     } else {
       this.arrange();
     }
+    
   },
   
   _updateGroup: function(){
@@ -201,8 +236,12 @@ Group.prototype = {
     });    
   },
   
-  arrange: function(){
-/*     if( this._children.length < 2 ) return; */
+  arrange: function(options){
+    if( options && options.animate == false ) animate = false;
+    else animate = true;
+    
+    //Utils.log(speed);
+    /*if( this._children.length < 2 ) return;*/
     var bb = this._getContainerBox();
     var aTab = $(this._children[0]);
 
@@ -242,7 +281,11 @@ Group.prototype = {
     
     var x = pad; var y=pad; var numInCol = 0;
     for each(var tab in this._children){
-      $(tab).animate({width:tabW, height:tabH, top:y+bb.top, left:x+bb.left});
+      var sizeOptions = {width:tabW, height:tabH, top:y+bb.top, left:x+bb.left};
+      
+      if( animate ) $(tab).animate(sizeOptions).dequeue();
+      else $(tab).css(sizeOptions).dequeue()
+      
       x += tabW + pad;
       numInCol += 1;
       if( numInCol >= best.numCols ) [x, numInCol, y] = [pad, 0, y+tabH+pad];
@@ -284,9 +327,9 @@ Group.prototype = {
           $group.remove($dragged);
         $dragged.removeClass("willGroup");
       },
-      drop: function(){
+      drop: function(event){
         $dragged.removeClass("willGroup");
-        self.add( $dragged );
+        self.add( $dragged, {left:event.pageX, top:event.pageY} )
       },
       accept: ".tab",
     });
@@ -294,6 +337,9 @@ Group.prototype = {
     $(container).resizable({
       handles: "se",
       aspectRatio: false,
+      resize: function(){
+        self.arrange({animate: false});
+      },
       stop: function(){
         self.arrange();
       } 
