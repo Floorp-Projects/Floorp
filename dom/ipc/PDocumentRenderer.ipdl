@@ -45,6 +45,7 @@ protocol PDocumentRenderer
   manager PIFrameEmbedding;
 
 parent:
+    // Returns the width and height, in pixels, of the returned ARGB32 data.
     __delete__(PRUint32 w, PRUint32 h, nsCString data);
 };
 
