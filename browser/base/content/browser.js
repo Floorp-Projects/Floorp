@@ -3230,7 +3230,7 @@ function FillHistoryMenu(aParent) {
     }
 
     if (j < index) {
-      item.className = "unified-nav-back menuitem-iconic";
+      item.className = "unified-nav-back menuitem-iconic menuitem-with-favicon";
       item.setAttribute("tooltiptext", tooltipBack);
     } else if (j == index) {
       item.setAttribute("type", "radio");
@@ -3238,7 +3238,7 @@ function FillHistoryMenu(aParent) {
       item.className = "unified-nav-current";
       item.setAttribute("tooltiptext", tooltipCurrent);
     } else {
-      item.className = "unified-nav-forward menuitem-iconic";
+      item.className = "unified-nav-forward menuitem-iconic menuitem-with-favicon";
       item.setAttribute("tooltiptext", tooltipForward);
     }
 
