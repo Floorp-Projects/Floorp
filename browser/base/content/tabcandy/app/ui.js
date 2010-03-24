@@ -89,6 +89,11 @@ var Page = {
       });
       
       $("<div class='close'>x</div>").appendTo($div);
+
+      if(Arrange.initialized) {
+        var p = Page.findOpenSpaceFor($div);
+        $div.css({left: p.x, top: p.y});
+      }
       
       // TODO: Figure out this really weird bug?
       // Why is that:
@@ -204,10 +209,97 @@ var Page = {
     $(window).blur(function(){
       Navbar.show();
     })
+  },
+  
+  findOpenSpaceFor: function($div) {
+    var w = window.innerWidth;
+    var h = 0;
+    var startX = 30;
+    var startY = 100;
+    var bufferX = 30;
+    var bufferY = 30;
+    var rects = [];
+    var r;
+    var $el;
+    $(".tab:visible").each(function(i) {
+      if(this == $div.get(0))
+        return;
+        
+      $el = $(this);
+      r = {x: parseInt($el.css('left')),
+        y: parseInt($el.css('top')),
+        w: parseInt($el.css('width')) + bufferX,
+        h: parseInt($el.css('height')) + bufferY};
+        
+      if(r.x + r.w > w)
+        w = r.x + r.w;
+
+      if(r.y + r.h > h)
+        h = r.y + r.h;
+  
+      rects.push(r);
+    });
+
+    if(!h) 
+      return { 'x': startX, 'y': startY };
+      
+    var canvas = document.createElement('canvas');
+    $(canvas).attr({width:w,height:h});
+
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgb(255, 255, 255)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgb(0, 0, 0)';
+    var count = rects.length;
+    var a;
+    for(a = 0; a < count; a++) {
+      r = rects[a];
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+    }
+    
+    var divWidth = parseInt($div.css('width')) + bufferX;
+    var divHeight = parseInt($div.css('height')) + bufferY;
+    var strideX = divWidth / 4;
+    var strideY = divHeight / 4;
+    var data = ctx.getImageData(0, 0, w, h).data;
+
+    function isEmpty(x1, y1) {
+      return (x1 >= 0 && y1 >= 0
+          && x1 < w && y1 < h
+          && data[(y1 * w + x1) * 4]);
+    }
+
+    function isEmptyBox(x1, y1) {
+      return (isEmpty(x1, y1) 
+          && isEmpty(x1 + (divWidth - 1), y1)
+          && isEmpty(x1, y1 + (divHeight - 1))
+          && isEmpty(x1 + (divWidth - 1), y1 + (divHeight - 1)));
+    }
+    
+    for(var y = startY; y < h; y += strideY) {
+      for(var x = startX; x < w; x += strideX) {
+        if(isEmptyBox(x, y)) {
+          for(; y > startY + 1; y--) {
+            if(!isEmptyBox(x, y - 1))
+              break;
+          }
+
+          for(; x > startX + 1; x--) {
+            if(!isEmptyBox(x - 1, y))
+              break;
+          }
+
+          return { 'x': x, 'y': y };
+        }
+  	  }
+    }
+
+    return { 'x': startX, 'y': h };        
   }
 }
 
 
+//----------------------------------------------------------
 function ArrangeClass(name, func){ this.init(name, func); };
 ArrangeClass.prototype = {
   init: function(name, func){
@@ -217,40 +309,96 @@ ArrangeClass.prototype = {
   },
   
   _create: function(name){
-    return $("<a href='#'/>").text(name).appendTo("#actions");
+    return $("<a class='action' href='#'/>").text(name).appendTo("#actions");
   }
 }
 
-var grid = new ArrangeClass("Grid", function(){    
-  var x = 10;
+
+//----------------------------------------------------------
+var grid = new ArrangeClass("Grid", function(value) {
+  var immediately = false;
+  if(typeof(value) == 'boolean')
+    immediately = value;
+
+  var startX = 30;         
+  var x = startX;
   var y = 100;
   $(".tab:visible").each(function(i){
     $el = $(this);
     
-    var oldPos = $el.find("canvas").data("link").tab.raw.pos;
-    if( oldPos ){
-      $el.css({top:oldPos.top, left:oldPos.left});
-      return;
+    if(immediately)
+      $el.css({top: y,left: x});
+    else {
+      TabMirror.pausePainting();
+      $el.animate({top: y,left: x}, 500, null, function() {
+        TabMirror.resumePainting();
+      });
     }
     
-    $el.css({top: y,left: x});
-    x += $el.width() + 10;
-    if( x > window.innerWidth - $el.width() ){
-      x = 10;
+    x += $el.width() + 30;
+    if( x > window.innerWidth - ($el.width() + startX)){ // includes allowance for the box shadow
+      x = startX;
       y += $el.height() + 30;
     }
-    
-    
   });
 });
+    
+//----------------------------------------------------------
+var site = new ArrangeClass("Site", function() {
+  var startX = 30;
+  var startY = 100;
+  var x = startX;
+  var y = startY;
+  var x2; 
+  var y2;
+  var groups = [];
+  $(".tab:visible").each(function(i) {
+    $el = $(this);
+    var tab = Tabs.tab(this);
+    
+    var group = $el.data('group');
+    if(group)
+      group.remove(this);
+      
+    var url = tab.url; 
+    var domain = url.split('/')[2]; 
+    var domainParts = domain.split('.');
+    var mainDomain = domainParts[domainParts.length - 2];
+    if(groups[mainDomain]) 
+      groups[mainDomain].push(this);
+    else 
+      groups[mainDomain] = [this];
+  });
+  
+  var leftovers = [];
+  for(key in groups) {
+    var set = groups[key];
+    if(set.length > 1) {
+      group = new Groups.Group();
+      group.create(set);            
+    } else
+      leftovers.push(set[0]);
+  }
+  
+  if(leftovers.length > 1) {
+    group = new Groups.Group();
+    group.create(leftovers);            
+  }
+  
+  Groups.arrange();
+});
 
-
+//----------------------------------------------------------
 var Arrange = {
+  initialized: false,
+
   init: function(){
-    grid.arrange();    
+    this.initialized = true;
+    grid.arrange(true);
   }
 }
 
+//----------------------------------------------------------
 function UIClass(){ this.init(); };
 UIClass.prototype = {
   navbar: Navbar,
@@ -258,13 +406,12 @@ UIClass.prototype = {
   init: function(){
     Page.init();
     Arrange.init();
-
   }
 }
 
+//----------------------------------------------------------
 var UI = new UIClass();
 window.UI = UI;
-
 
 })();
 
