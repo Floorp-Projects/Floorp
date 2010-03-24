@@ -221,6 +221,7 @@ _BROWSER_FILES = \
                  browser_aboutHome.js \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
+                 browser_contentAreaClick.js \
                  $(NULL)
 
 # compartment-disabled
