@@ -50,6 +50,7 @@ var Page = {
             // ZOOM! 
             var [w,h,z] = [$(this).width(), $(this).height(), $(this).css("zIndex")];
             var origPos = $(this).position();
+            var zIndex = $(this).css("zIndex");
             var scale = window.innerWidth/w;
             
             var tab = Tabs.tab(this);
@@ -74,12 +75,12 @@ var Page = {
             
             /*$(this).addClass("scale-animate").css({
               top: 0, left: 0,
-              width:w*scale, height:h*scale
+              width:w*scale, height:h*scale,
+              zIndex: 999999
             }).bind("transitionend", function(e){
               // We will get one of this events for every property CSS-animated...
               // I chose one randomly (width) and only do things for that.
               if( e.originalEvent.propertyName != "width" ) return;
-
               // Switch tabs, and the re-size and re-position the animated
               // tab image.
               // Don't forget to unbind the transitioned event handler!
@@ -87,7 +88,8 @@ var Page = {
               $(this).find("canvas").data("link").tab.focus();
               $(this)
                 .removeClass("scale-animate")
-                .css({top: origPos.top, left: origPos.left, width:w, height:h});
+                .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:zIndex})
+                .unbind("transitionend");
               Navbar.show();
               //mirror.unforceCanvasSize();
             })*/
