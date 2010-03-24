@@ -65,8 +65,6 @@
 <!ENTITY noResults.label           "No results">
 <!ENTITY allBookmarks.label        "See all bookmarks">
 
-<!ENTITY searchEngine.addSearch    "Add Search:">
-
 <!ENTITY bookmarkPopup.label       "Page Bookmarked">
 <!ENTITY bookmarkRemove.label      "Remove">
 <!ENTITY bookmarkEdit.label        "Edit">

@@ -1638,31 +1638,22 @@ const BrowserSearch = {
       return !this.engines.some(function (e) e.name == element.engine.title);
     }, this);
 
-    let container = document.getElementById('search-container');
-    let buttons = container.getElementsByAttribute("class", "search-engine-button button-dark");
-    for (let i=0; i<buttons.length; i++)
-      container.removeChild(buttons[i]);
-
-    if (newEngines.length == 0) {
-      container.collapsed = true;
+    if (newEngines.length == 0)
       return;
-    }
 
     // XXX limit to the first search engine for now
     for (let i = 0; i<1; i++) {
-      let button = document.createElement("button");
-      button.className = "search-engine-button button-dark";
-      button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.collapsed=true;");
+      let engine = newEngines[i].engine;
+      let item = PageActions.appendItem(engine.title,
+                                        Elements.browserBundle.getString("pageactions.search.addNew"),
+                                        BrowserUI._favicon.src);
 
-      let engine = newEngines[i];
-      button.engine = engine.engine;
-      button.setAttribute("label", engine.engine.title);
-      button.setAttribute("image", BrowserUI._favicon.src);
-
-      container.appendChild(button);
+      item.engine = engine;
+      item.onclick = function() {
+        BrowserSearch.addPermanentSearchEngine(item.engine);
+        PageActions.removeItem(item);
+      };
     }
-
-    container.collapsed = false;
   },
 
   addPermanentSearchEngine: function (aEngine) {
@@ -2073,8 +2064,14 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
 
+    // clean all the previous result
+    PageActions.removeAllItems();
+
     // Update the search engines results
     BrowserSearch.updatePageSearchEngines();
+
+    // Update the per site permissions results
+    PageActions.updatePagePermissions();
   },
 
   show: function ih_show() {

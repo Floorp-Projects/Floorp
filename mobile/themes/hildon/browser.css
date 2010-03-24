@@ -844,27 +844,70 @@ box[type="documenttab"]:only-child .documenttab-close {
   list-style-image: url("chrome://browser/skin/images/lock-40.png");
 }
 
-/* search popup   ---------------------------------------------------------- */
-#search-container {
+/* Page Actions popup   ---------------------------------------------------- */
+#pageactions-container {
   border: 2px solid transparent;
   -moz-border-top-colors: #212429 #52555a;
-  padding: 8px; /* core spacing */
-  margin-top: 8px;
-}
-
-#search-engine-label-add {
-  font-size: 18px;
-}
-
-#search-buttons,
-.search-engine-button {
+  padding: 0 8px;
   -moz-user-focus: ignore;
 }
 
-.search-engine-button .button-icon {
+#pageactions-container .scrollbox-innerbox {
+  display: inline-block;
+}
+
+#pageactions-container .autorepeatbutton-down {
+  list-style-image: url(images/arrowdowndark-16.png);
+}
+
+#pageactions-container .autorepeatbutton-up {
+  list-style-image: url(images/arrowupdark-16.png);
+}
+
+/* force the autorepeat buttons to create a 'padding' when collapsed */
+#pageactions-container autorepeatbutton[collapsed="true"],
+#pageactions-container autorepeatbutton[disabled="true"] {
+  visibility: hidden;
+}
+
+pageaction {
+  width: 50%;
+  height: 64px;
+  border-width: 10px;
+  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
+}
+
+@media all and (orientation: portrait) {
+  pageaction {
+    width :100%;
+  }
+}
+
+pageaction:active:hover {
+  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
+}
+
+pageaction .pageaction-image {
   width: 32px;
   height: 32px;
   -moz-margin-end: 8px;
+}
+
+pageaction:not([image]) .pageaction-image {
+  width: 0px;
+}
+
+pageaction .pageaction-title {
+  font-size: 18px !important;
+}
+
+pageaction .pageaction-desc {
+  font-size: 14px !important;
+  color: grey;
+}
+
+pageaction .pageaction-desc[value=""] {
+  display: none;
 }
 
 /* Preferences window   ---------------------------------------------------- */

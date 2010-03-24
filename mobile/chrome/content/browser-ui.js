@@ -377,6 +377,9 @@ var BrowserUI = {
     // tabs
     document.getElementById("tabs").resize();
 
+    // Site menu
+    PageActions.resize();
+
     // awesomebar
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
@@ -609,24 +612,6 @@ var BrowserUI = {
 
   selectTab : function selectTab(aTab) {
     Browser.selectedTab = aTab;
-  },
-
-  hideTabs: function hideTabs() {
-/*
-    if (ws.isWidgetVisible("tabs-container")) {
-      let widthOfTabs = document.getElementById("tabs-container").boxObject.width;
-      ws.panBy(widthOfTabs, 0, true);
-    }
-*/
-  },
-
-  hideControls: function hideControls() {
-/*
-    if (ws.isWidgetVisible("browser-controls")) {
-      let widthOfControls = document.getElementById("browser-controls").boxObject.width;
-      ws.panBy(-widthOfControls, 0, true);
-    }
-*/
   },
 
   isTabsVisible: function isTabsVisible() {
@@ -862,6 +847,140 @@ var BrowserUI = {
     }
   }
 };
+
+var PageActions = {
+  get _permissionManager() {
+    delete this._permissionManager;
+    return this._permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+  },
+
+  get _loginManager() {
+    delete this._loginManager;
+    return this._loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+  },
+
+  // This is easy for an addon to add his own perm type here
+  _permissions: ["popup", "offline-app", "geo"],
+
+  _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
+    let pm = this._permissionManager;
+    for (let i = 0; i < this._permissions.length; i++) {
+      let type = this._permissions[i];
+      if (!pm.testPermission(aHost, type))
+        continue;
+
+      let perms = pm.enumerator;
+      while (perms.hasMoreElements()) {
+        let permission = perms.getNext().QueryInterface(Ci.nsIPermission);
+        if (permission.host == aHost.asciiHost && permission.type == type)
+          aCallback(type);
+      }
+    }
+  },
+
+  updatePagePermissions: function updatePagePermissions() {
+    let host = Browser.selectedBrowser.currentURI;
+    let permissions = [];
+
+    this._forEachPermissions(host, function(aType) {
+      permissions.push(aType);
+    });
+
+    let lm = this._loginManager;
+    if (!lm.getLoginSavingEnabled(host.prePath)) {
+      permissions.push("password");
+    }
+
+    // Show the clear site preferences button if needed
+    if (permissions.length) {
+      let title = Elements.browserBundle.getString("pageactions.reset");
+      let description = [];
+      for each(permission in permissions)
+        description.push(Elements.browserBundle.getString("pageactions." + permission));
+
+      let node = this.appendItem(title, description.join(", "));
+      node.onclick = function(event) {
+        PageActions.clearPagePermissions();
+        PageActions.removeItem(node);
+      }
+    }
+
+    // Show the password button if needed
+    let logins = lm.getAllLogins({});
+    for each(login in logins) {
+      if (login.hostname != host.prePath)
+        continue;
+
+      let title = Elements.browserBundle.getString("pageactions.password.forget");
+      let node = this.appendItem(title, "");
+      node.onclick = function(event) {
+        lm.removeLogin(login);
+        PageActions.removeItem(node);
+      };
+    }
+  },
+
+  clearPagePermissions: function clearPagePermissions() {
+    let pm = this._permissionManager;
+    let host = Browser.selectedBrowser.currentURI;
+    this._forEachPermissions(host, function(aType) {
+      pm.remove(host.asciiHost, aType);
+    });
+
+    let lm = this._loginManager;
+    if (!lm.getLoginSavingEnabled(host.prePath))
+      lm.setLoginSavingEnabled(host.prePath, true);
+  },
+
+  appendItem: function appendItem(aTitle, aDesc, aImage) {
+    let container = document.getElementById("pageactions-container");
+    let item = document.createElement("pageaction");
+    item.setAttribute("title", aTitle);
+    item.setAttribute("description", aDesc);
+    if (aImage)
+      item.setAttribute("image", aImage);
+    container.appendChild(item);
+
+    this.resize();
+    container.hidden = !container.hasChildNodes();
+
+    return item;
+  },
+
+  removeItem: function removeItem(aItem) {
+    let container = document.getElementById("pageactions-container");
+    container.removeChild(aItem);
+
+    if (container.hasChildNodes())
+      this.resize();
+    container.hidden = !container.hasChildNodes();
+  },
+
+  removeAllItems: function removeAllItems() {
+    let container = document.getElementById("pageactions-container");
+    while(container.hasChildNodes())
+      this.removeItem(container.lastChild);
+  },
+
+  resize: function resize() {
+    let container = document.getElementById("pageactions-container");
+    if (container.hidden)
+      return;
+
+    // We manually size the arrowscrollbox
+    let childHeight = container.firstChild.getBoundingClientRect().height;
+    let linesCount = (window.innerHeight < window.innerWidth) ? Math.round(container.childNodes.length / 2)
+                                                              : container.childNodes.length;
+
+    const kMargin = 64;
+    let toolbarHeight = BrowserUI.toolbarH;
+    let identityHeight = document.getElementById("identity-popup-container").getBoundingClientRect().height;
+    let maxHeight = window.innerHeight - (toolbarHeight + identityHeight) - kMargin;
+
+    let additional = 50; // size of the scroll arrows + margins
+    container.style.height = Math.min(maxHeight, linesCount * childHeight + additional) + "px";
+  }
+}
 
 var NewTabPopup = {
   _timeout: 0,

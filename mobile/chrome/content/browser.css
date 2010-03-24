@@ -193,5 +193,9 @@ richlistitem[type="message"]{
 }
 
 dialog {
-    -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
+  -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
+}
+
+pageaction {
+  -moz-binding: url("chrome://browser/content/bindings/pageaction.xml#pageaction");
 }

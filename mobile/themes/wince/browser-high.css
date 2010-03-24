@@ -105,9 +105,20 @@
   background: url("images/leftcapSSL-active-64.png");
 }
 
-.search-engine-button .button-icon {
+pageaction {
+  height: 64px;
+  border-width: 10px;
+  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
+}
+
+pageaction:active:hover {
+  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
+}
+
+pageaction .pageaction-image {
   width: 32px;
   height: 32px;
+  -moz-margin-end: 8px;
 }
 
 #urlbar-throbber[loading] {
