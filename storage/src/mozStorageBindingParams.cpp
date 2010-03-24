@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Andrew Sutherland <asutherland@asutherland.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -136,14 +137,30 @@ sqlite3_T_blob(BindingColumnData aData,
 ////////////////////////////////////////////////////////////////////////////////
 //// BindingParams
 
-BindingParams::BindingParams(BindingParamsArray *aOwningArray,
+BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray,
                              Statement *aOwningStatement)
-: mOwningArray(aOwningArray)
+: mLocked(false)
+, mOwningArray(aOwningArray)
 , mOwningStatement(aOwningStatement)
-, mLocked(false)
 {
   (void)mOwningStatement->GetParameterCount(&mParamCount);
   (void)mParameters.SetCapacity(mParamCount);
+}
+
+BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray)
+: mLocked(false)
+, mOwningArray(aOwningArray)
+, mOwningStatement(nsnull)
+, mParamCount(0)
+{
+}
+
+AsyncBindingParams::AsyncBindingParams(
+  mozIStorageBindingParamsArray *aOwningArray
+)
+: BindingParams(aOwningArray)
+{
+  mNamedParameters.Init();
 }
 
 void
@@ -160,17 +177,74 @@ BindingParams::lock()
 }
 
 void
-BindingParams::unlock()
+BindingParams::unlock(Statement *aOwningStatement)
 {
   NS_ASSERTION(mLocked == true, "Parameters were not yet locked!");
   mLocked = false;
+  mOwningStatement = aOwningStatement;
 }
 
-const BindingParamsArray *
+const mozIStorageBindingParamsArray *
 BindingParams::getOwner() const
 {
   return mOwningArray;
 }
+
+PLDHashOperator
+AsyncBindingParams::iterateOverNamedParameters(const nsACString &aName,
+                                               nsIVariant *aValue,
+                                               void *voidClosureThunk)
+{
+  NamedParameterIterationClosureThunk *closureThunk =
+    static_cast<NamedParameterIterationClosureThunk *>(voidClosureThunk);
+
+  // We do not accept any forms of names other than ":name", but we need to add
+  // the colon for SQLite.
+  nsCAutoString name(":");
+  name.Append(aName);
+  int oneIdx = ::sqlite3_bind_parameter_index(closureThunk->statement,
+                                              name.get());
+
+  if (oneIdx == 0) {
+    nsCAutoString errMsg(aName);
+    errMsg.Append(NS_LITERAL_CSTRING(" is not a valid named parameter."));
+    closureThunk->err = new Error(SQLITE_RANGE, errMsg.get());
+    return PL_DHASH_STOP;
+  }
+
+  // XPCVariant's AddRef and Release are not thread-safe and so we must not do
+  // anything that would invoke them here on the async thread.  As such we can't
+  // cram aValue into self->mParameters using ReplaceObjectAt so that we can
+  // freeload off of the BindingParams::Bind implementation.
+  int rc = variantToSQLiteT(BindingColumnData(closureThunk->statement,
+                                              oneIdx - 1),
+                            aValue);
+  if (rc != SQLITE_OK) {
+    // We had an error while trying to bind.  Now we need to create an error
+    // object with the right message.  Note that we special case
+    // SQLITE_MISMATCH, but otherwise get the message from SQLite.
+    const char *msg = "Could not covert nsIVariant to SQLite type.";
+    if (rc != SQLITE_MISMATCH)
+      msg = ::sqlite3_errmsg(::sqlite3_db_handle(closureThunk->statement));
+
+    closureThunk->err = new Error(rc, msg);
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsISupports
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(
+  BindingParams
+, mozIStorageBindingParams
+, IStorageBindingParamsInternal
+)
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// IStorageBindingParamsInternal
 
 already_AddRefed<mozIStorageError>
 BindingParams::bind(sqlite3_stmt *aStatement)
@@ -191,14 +265,26 @@ BindingParams::bind(sqlite3_stmt *aStatement)
     }
   }
 
-  // No error occurred, so return null!
   return nsnull;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(
-  BindingParams,
-  mozIStorageBindingParams
-)
+already_AddRefed<mozIStorageError>
+AsyncBindingParams::bind(sqlite3_stmt * aStatement)
+{
+  // We should bind by index using the super-class if there is nothing in our
+  // hashtable.
+  if (!mNamedParameters.Count())
+    return BindingParams::bind(aStatement);
+
+  // Enumerate over everyone in the map, propagating them into mParameters if
+  // we can and creating an error immediately when we cannot.
+  NamedParameterIterationClosureThunk closureThunk = {this, aStatement, nsnull};
+  (void)mNamedParameters.EnumerateRead(iterateOverNamedParameters,
+                                       (void *)&closureThunk);
+
+  return closureThunk.err.forget();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //// mozIStorageBindingParams
@@ -216,6 +302,18 @@ BindingParams::BindByName(const nsACString &aName,
 
   return BindByIndex(index, aValue);
 }
+
+NS_IMETHODIMP
+AsyncBindingParams::BindByName(const nsACString &aName,
+                               nsIVariant *aValue)
+{
+  NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
+
+  if (!mNamedParameters.Put(aName, aValue))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 BindingParams::BindUTF8StringByName(const nsACString &aName,
@@ -298,6 +396,20 @@ BindingParams::BindByIndex(PRUint32 aIndex,
 {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
   ENSURE_INDEX_VALUE(aIndex, mParamCount);
+
+  // Store the variant for later use.
+  NS_ENSURE_TRUE(mParameters.ReplaceObjectAt(aValue, aIndex),
+                 NS_ERROR_OUT_OF_MEMORY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncBindingParams::BindByIndex(PRUint32 aIndex,
+                                nsIVariant *aValue)
+{
+  NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
+  // In the asynchronous case we do not know how many parameters there are to
+  // bind to, so we cannot check the validity of aIndex.
 
   // Store the variant for later use.
   NS_ENSURE_TRUE(mParameters.ReplaceObjectAt(aValue, aIndex),

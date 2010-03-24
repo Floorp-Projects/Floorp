@@ -5853,7 +5853,7 @@ nsNavHistory::VacuumDatabase()
       getter_AddRefs(journalToDefault));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mozIStorageStatement *stmts[] = {
+    mozIStorageBaseStatement *stmts[] = {
       journalToMemory,
       vacuum,
       journalToDefault
@@ -5907,7 +5907,7 @@ nsNavHistory::DecayFrecency()
     getter_AddRefs(deleteAdaptive));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozIStorageStatement *stmts[] = {
+  mozIStorageBaseStatement *stmts[] = {
     decayFrecency,
     decayAdaptive,
     deleteAdaptive
@@ -6385,13 +6385,11 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
                             nsCOMArray<nsNavHistoryResultNode>* aResults)
 {
   nsresult rv;
-  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(statement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
     nsRefPtr<nsNavHistoryResultNode> result;
-    rv = RowToResult(row, aOptions, getter_AddRefs(result));
+    rv = RowToResult(statement, aOptions, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
     aResults->AppendObject(result);
   }
@@ -6778,7 +6776,7 @@ nsNavHistory::GetRedirectFor(const nsACString& aDestination,
 //    or full visit.
 
 nsresult
-nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
+nsNavHistory::RowToResult(mozIStorageStatement* aRow,
                           nsNavHistoryQueryOptions* aOptions,
                           nsNavHistoryResultNode** aResult)
 {
