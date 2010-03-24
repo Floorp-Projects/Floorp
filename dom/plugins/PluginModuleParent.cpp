@@ -49,6 +49,9 @@
 
 #include "nsContentUtils.h"
 #include "nsCRT.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 #include "nsNPAPIPlugin.h"
 
 using base::KillProcess;
@@ -92,7 +95,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mNPNIface(NULL)
     , mPlugin(NULL)
     , mProcessStartTime(time(NULL))
-    , mPluginCrashedTask(NULL)
+    , mTaskFactory(this)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
@@ -106,11 +109,6 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 PluginModuleParent::~PluginModuleParent()
 {
     NS_ASSERTION(OkToCleanup(), "unsafe destruction");
-
-    if (mPluginCrashedTask) {
-        mPluginCrashedTask->Cancel();
-        mPluginCrashedTask = 0;
-    }
 
     if (!mShutdown) {
         NS_WARNING("Plugin host deleted the module without shutting down.");
@@ -127,48 +125,21 @@ PluginModuleParent::~PluginModuleParent()
     nsContentUtils::UnregisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
 }
 
+#ifdef MOZ_CRASHREPORTER
 void
-PluginModuleParent::WriteExtraDataEntry(nsIFileOutputStream* stream,
-                                        const char* key,
-                                        const char* value)
+PluginModuleParent::WritePluginExtraDataForMinidump(const nsAString& id)
 {
-    PRUint32 written;
-    stream->Write(key, strlen(key), &written);
-    stream->Write("=", 1, &written);
-    stream->Write(value, strlen(value), &written);
-    stream->Write("\n", 1, &written);
-}
+    typedef nsDependentCString CS;
 
-void
-PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
-{
-    // get a reference to the extra file, and add some more entries
-    nsCOMPtr<nsIFile> extraFile;
-    nsresult rv = dumpFile->Clone(getter_AddRefs(extraFile));
-    if (NS_FAILED(rv))
+    CrashReporter::AnnotationTable notes;
+    if (!notes.Init(32))
         return;
 
-    nsAutoString leafName;
-    rv = extraFile->GetLeafName(leafName);
-    if (NS_FAILED(rv))
-        return;
+    notes.Put(CS("ProcessType"), CS("plugin"));
 
-    leafName.Replace(leafName.Length() - 3, 3,
-                     NS_LITERAL_STRING("extra"));
-    rv = extraFile->SetLeafName(leafName);
-    if (NS_FAILED(rv))
-        return;
-
-    nsCOMPtr<nsIFileOutputStream> stream =
-        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    // PR_WRONLY | PR_APPEND
-    rv = stream->Init(extraFile, 0x12, 0600, 0);
-    if (NS_FAILED(rv))
-        return;
-    WriteExtraDataEntry(stream, "ProcessType", "plugin");
     char startTime[32];
     sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
-    WriteExtraDataEntry(stream, "StartupTime", startTime);
+    notes.Put(CS("StartupTime"), CS(startTime));
 
     // Get the plugin filename, try to get just the file leafname
     const std::string& pluginFile = mSubprocess->GetPluginFilePath();
@@ -177,20 +148,38 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
         filePos = 0;
     else
         filePos++;
-    WriteExtraDataEntry(stream, "PluginFilename",
-                        pluginFile.substr(filePos).c_str());
+    notes.Put(CS("PluginFilename"), CS(pluginFile.substr(filePos).c_str()));
+
     //TODO: add plugin name and version: bug 539841
     // (as PluginName, PluginVersion)
-    WriteExtraDataEntry(stream, "PluginName", "");
-    WriteExtraDataEntry(stream, "PluginVersion", "");
+    notes.Put(CS("PluginName"), CS(""));
+    notes.Put(CS("PluginVersion"), CS(""));
 
-    if (!mCrashNotes.IsEmpty()) {
-        WriteExtraDataEntry(stream, "Notes", mCrashNotes.get());
-    }
+    if (!mCrashNotes.IsEmpty())
+        notes.Put(CS("Notes"), CS(mCrashNotes.get()));
 
-    stream->Close();
+    if (!mHangID.IsEmpty())
+        notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(mHangID));
+
+    if (!CrashReporter::AppendExtraData(id, notes))
+        NS_WARNING("problem appending plugin data to .extra");
 }
 
+void
+PluginModuleParent::WriteExtraDataForHang()
+{
+    // this writes HangID
+    WritePluginExtraDataForMinidump(mPluginDumpID);
+
+    CrashReporter::AnnotationTable notes;
+    if (!notes.Init(4))
+        return;
+
+    notes.Put(nsDependentCString("HangID"), NS_ConvertUTF16toUTF8(mHangID));
+    if (!CrashReporter::AppendExtraData(mBrowserDumpID, notes))
+        NS_WARNING("problem appending browser data to .extra");
+}
+#endif  // MOZ_CRASHREPORTER
 
 bool
 PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
@@ -224,31 +213,38 @@ PluginModuleParent::CleanupFromTimeout()
 bool
 PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
-    // FIXME/bug 544095: pop up a dialog asking the user what to do
-    bool waitMoar = false;
+#ifdef MOZ_CRASHREPORTER
+    nsCOMPtr<nsILocalFile> pluginDump;
+    nsCOMPtr<nsILocalFile> browserDump;
+    if (CrashReporter::CreatePairedMinidumps(OtherProcess(),
+                                             &mHangID,
+                                             getter_AddRefs(pluginDump),
+                                             getter_AddRefs(browserDump)) &&
+        CrashReporter::GetIDFromMinidump(pluginDump, mPluginDumpID) &&
+        CrashReporter::GetIDFromMinidump(browserDump, mBrowserDumpID)) {
 
-    if (!waitMoar) {
-        // We can't depend on the IO thread notifying us of a channel
-        // error, because there's an inherent race between killing the
-        // subprocess and shutting down the socket.  It would be nice
-        // to call Close() here and do all the IPDL cleanup
-        // immediately, but we might have arbitrary junk below us on
-        // the stack.  So, a compromise: enqueue an event now that
-        // will Close(), *before* killing the child process.  This
-        // guarantees that the Close() event will be processed before
-        // the IO error event, if it's delivered.
-        MessageLoop::current()->PostTask(
-            FROM_HERE,
-            NewRunnableMethod(this, &PluginModuleParent::CleanupFromTimeout));
-
-        // FIXME/bug 544095: kill the subprocess in a way that
-        // triggers breakpad, and also capture a minidump for this
-        // process
-        KillProcess(ChildProcessHandle(), 1, false);
+        PLUGIN_LOG_DEBUG(
+            ("generated paired browser/plugin minidumps: %s/%s (ID=%s)",
+             NS_ConvertUTF16toUTF8(mBrowserDumpID).get(),
+             NS_ConvertUTF16toUTF8(mPluginDumpID).get(),
+             NS_ConvertUTF16toUTF8(mHangID).get()));
     }
-    
+    else {
+        NS_WARNING("failed to capture paired minidumps from hang");
+    }
+#endif
 
-    return waitMoar;
+    // this must run before the error notification from the channel,
+    // or not at all
+    MessageLoop::current()->PostTask(
+        FROM_HERE,
+        mTaskFactory.NewRunnableMethod(
+            &PluginModuleParent::CleanupFromTimeout));
+
+    if (!KillProcess(OtherProcess(), 1, false))
+        NS_WARNING("failed to kill subprocess!");
+
+    return false;
 }
 
 void
@@ -256,26 +252,30 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown: {
-        nsCOMPtr<nsILocalFile> dump;
-        if (TakeMinidump(getter_AddRefs(dump))) {
-            WriteExtraDataForMinidump(dump);
-            if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
-                mDumpID.Replace(mDumpID.Length() - 4, 4,
-                                NS_LITERAL_STRING(""));
-            }
+#ifdef MOZ_CRASHREPORTER
+        nsCOMPtr<nsILocalFile> pluginDump;
+        if (TakeMinidump(getter_AddRefs(pluginDump)) &&
+            CrashReporter::GetIDFromMinidump(pluginDump, mPluginDumpID)) {
+            PLUGIN_LOG_DEBUG(("got child minidump: %s",
+                              NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
+            WritePluginExtraDataForMinidump(mPluginDumpID);
+        }
+        else if (!mPluginDumpID.IsEmpty() && !mBrowserDumpID.IsEmpty()) {
+            WriteExtraDataForHang();
         }
         else {
             NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
         }
+#endif
 
         mShutdown = true;
         // Defer the PluginCrashed method so that we don't re-enter
         // and potentially modify the actor child list while enumerating it.
-        if (mPlugin) {
-            mPluginCrashedTask = NewRunnableMethod(
-                this, &PluginModuleParent::NotifyPluginCrashed);
-            MessageLoop::current()->PostTask(FROM_HERE, mPluginCrashedTask);
-        }
+        if (mPlugin)
+            MessageLoop::current()->PostTask(
+                FROM_HERE,
+                mTaskFactory.NewRunnableMethod(
+                    &PluginModuleParent::NotifyPluginCrashed));
         break;
     }
     case NormalShutdown:
@@ -290,20 +290,19 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 void
 PluginModuleParent::NotifyPluginCrashed()
 {
-    // MessageLoop owns this
-    mPluginCrashedTask = NULL;
-
     if (!OkToCleanup()) {
         // there's still plugin code on the C++ stack.  try again
-        mPluginCrashedTask = NewRunnableMethod(
-            this, &PluginModuleParent::NotifyPluginCrashed);
         MessageLoop::current()->PostDelayedTask(
-            FROM_HERE, mPluginCrashedTask, 10);
+            FROM_HERE,
+            mTaskFactory.NewRunnableMethod(
+                &PluginModuleParent::NotifyPluginCrashed), 10);
         return;
     }
 
+    // FIXME/bug 544936: propagate mBrowserDumpID out to nsNPAPIPlugin
+    // and beyond
     if (mPlugin)
-        mPlugin->PluginCrashed(mDumpID);
+        mPlugin->PluginCrashed(mPluginDumpID);
 }
 
 PPluginIdentifierParent*

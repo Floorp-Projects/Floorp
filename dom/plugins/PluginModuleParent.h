@@ -219,10 +219,8 @@ private:
                              char* argv[], NPSavedData* saved,
                              NPError* error);
 private:
-    void WriteExtraDataForMinidump(nsIFile* dumpFile);
-    void WriteExtraDataEntry(nsIFileOutputStream* stream,
-                             const char* key,
-                             const char* value);
+    void WritePluginExtraDataForMinidump(const nsAString& id);
+    void WriteExtraDataForHang();
     void CleanupFromTimeout();
     static int TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
@@ -234,8 +232,10 @@ private:
     nsDataHashtable<nsVoidPtrHashKey, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;
     time_t mProcessStartTime;
-    CancelableTask* mPluginCrashedTask;
-    nsString mDumpID;
+    ScopedRunnableMethodFactory<PluginModuleParent> mTaskFactory;
+    nsString mPluginDumpID;
+    nsString mBrowserDumpID;
+    nsString mHangID;
 };
 
 } // namespace plugins
