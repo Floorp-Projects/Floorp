@@ -61,9 +61,14 @@ TIERS += base
 tier_base_dirs = \
 	config \
 	build \
-	memory \
 	probes \
 	$(NULL)
+
+ifndef LIBXUL_SDK
+tier_base_dirs += \
+	memory \
+	$(NULL)
+endif
 
 ifdef COMPILE_ENVIRONMENT
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
