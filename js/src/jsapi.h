@@ -1726,6 +1726,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                       JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
+extern JS_PUBLIC_API(JSBool)
+JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
+
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
  *
@@ -1819,6 +1822,9 @@ struct JSPropertyDescriptor {
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                              JSPropertyDescriptor *desc);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);

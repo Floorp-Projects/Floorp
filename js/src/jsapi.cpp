@@ -2989,6 +2989,13 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                           JSScopeProperty::HAS_SHORTID, tinyid);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp)
+{
+    CHECK_REQUEST(cx);
+    return js_DefineOwnProperty(cx, obj, id, descriptor, bp);
+}
+
 static JSBool
 LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp, JSProperty **propp)
@@ -3391,6 +3398,13 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     CHECK_REQUEST(cx);
 
     return GetPropertyAttributesById(cx, obj, id, flags, JS_FALSE, desc);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    return js_GetOwnPropertyDescriptor(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
