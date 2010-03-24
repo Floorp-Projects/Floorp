@@ -184,7 +184,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
+          <xul:checkbox anonid="input" xbl:inherits="disabled,onlabel,offlabel" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:box>
     </content>
@@ -337,7 +337,6 @@
           let iss = Components.classes["@mozilla.org/supports-string;1"]
                               .createInstance(Components.interfaces.nsISupportsString);
           iss.data = this.value;
-          Components.reportError(this.value)
           this._prefs
               .setComplexValue(this.pref, Components.interfaces.nsISupportsString, iss);
         ]]>

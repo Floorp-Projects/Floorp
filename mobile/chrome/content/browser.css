@@ -98,6 +98,10 @@ menulist {
 }
 
 /* richlist defaults ------------------------------------------------------- */
+richlistbox[batch] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#richlistbox-batch");
+}
+
 richlistitem {
   -moz-binding: url("chrome://browser/content/bindings.xml#richlistitem");
 }

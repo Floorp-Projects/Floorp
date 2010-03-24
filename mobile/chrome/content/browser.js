@@ -1355,8 +1355,10 @@ Browser.MainDragger.prototype = {
     let panOffset = this._panControlsAwayOffset(doffset);
 
     // do HTML overflow or XUL panning
-    if (this.contentScrollbox && !doffset.isZero())
+    if (this.contentScrollbox && !doffset.isZero()) {
       this._panScrollbox(this.contentScrollbox, doffset);
+      render = true;
+    }
 
     // Do all iframe panning
     if (elem) {

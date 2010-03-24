@@ -3,6 +3,8 @@
 chrome.jar:
 % content browser %content/
 * content/about.xhtml                  (content/about.xhtml)
+  content/config.xul                   (content/config.xul)
+  content/config.js                    (content/config.js)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutCertError.css           (content/aboutCertError.css)
   content/languages.properties         (content/languages.properties)
@@ -43,3 +45,5 @@ chrome.jar:
   content/prompt/promptPassword.xul    (content/prompt/promptPassword.xul)
   content/prompt/select.xul            (content/prompt/select.xul)
   content/prompt/prompt.js             (content/prompt/prompt.js)
+
+% override chrome://global/content/config.xul chrome://browser/content/config.xul
