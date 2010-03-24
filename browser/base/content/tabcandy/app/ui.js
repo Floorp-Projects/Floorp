@@ -31,7 +31,8 @@ var Page = {
       }
       
       $div.mousedown(function(e) {
-        self.lastMouseDownTarget = e.target;
+        if(!Utils.isRightClick(e))
+          self.lastMouseDownTarget = e.target;
       });
         
       $div.mouseup(function(e) { 
