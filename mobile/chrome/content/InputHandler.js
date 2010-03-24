@@ -139,6 +139,7 @@ function InputHandler(browserViewContainer) {
   this.listenFor(browserViewContainer, "keyup");
   this.listenFor(browserViewContainer, "DOMMouseScroll");
   this.listenFor(browserViewContainer, "MozMousePixelScroll");
+  this.listenFor(browserViewContainer, "contextmenu");
 
   this.addModule(new MouseModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
@@ -418,6 +419,11 @@ function MouseModule(owner, browserViewContainer) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
+    // TODO: Make "contextmenu" a first class part of InputHandler
+    // Bug 554639
+    if (evInfo.event.type == "contextmenu")
+      this._cleanClickBuffer();
+
     if (evInfo.event.button !== 0) // avoid all but a clean left click
       return;
 

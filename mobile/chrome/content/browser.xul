@@ -69,6 +69,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/javascript" src="chrome://browser/content/exceptions.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
@@ -479,6 +480,20 @@
         <button id="helperapp-save" class="button-dark" label="&helperApp.save;" oncommand="HelperAppDialog.save();"/>
         <button id="helperapp-nothing" class="button-dark" label="&helperApp.nothing;" oncommand="HelperAppDialog.hide();"/>
       </hbox>
+    </vbox>
+
+    <vbox id="context-popup" hidden="true" class="dialog-dark" top="0" left="0">
+      <hbox id="context-header">
+        <label id="context-hint" crop="center" flex="1"/>
+      </hbox>
+      <richlistbox id="context-commands" onclick="ContextHelper.hide();">
+        <richlistitem id="context-openinnewtab" type="link" onclick="ContextCommands.openInNewTab(event);">
+          <label value="&contextOpenInNewTab.label;"/>
+        </richlistitem>
+        <richlistitem id="context-saveimage" type="image" onclick="ContextCommands.saveImage(event);">
+          <label value="&contextSaveImage.label;"/>
+        </richlistitem>
+      </richlistbox>
     </vbox>
 
     <!-- alerts for content -->

@@ -438,6 +438,9 @@ var Browser = {
     notifications.addEventListener("AlertActive", notificationHandler, false);
     notifications.addEventListener("AlertClose", notificationHandler, false);
 
+    // Add context helper to the content area only
+    container.addEventListener("contextmenu", ContextHelper, false);
+
     // initialize input handling
     ih = new InputHandler(container);
 

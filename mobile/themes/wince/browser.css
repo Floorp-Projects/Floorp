@@ -708,6 +708,38 @@ box[type="documenttab"]:only-child .documenttab-close {
   min-width: 30px;
 }
 
+/* context popup ----------------------------------------------------------- */
+#context-popup {
+  /* Remove some dialog-dark styles */
+  padding: 0.5mm 0 0 0;
+  border: none;
+}
+
+#context-header > label {
+  font-size: 8pt;
+  padding: 0.25mm;
+}
+
+#context-commands {
+  border: 1px solid rgb(207,207,207);
+  -moz-border-radius: 0 0 0.5mm 0.5mm;
+}
+
+#context-commands > richlistitem {
+  -moz-box-align: center;
+  background-color: rgb(245,245,245);
+  min-width: 200px; /* keep the command from being too narrow */
+}
+
+#context-commands > richlistitem[selector="first-child"] {
+  background: -moz-linear-gradient(top, rgb(255,255,255), rgb(245,245,245));
+}
+
+#context-commands > richlistitem[selector="last-child"] {
+  background: -moz-linear-gradient(top, rgb(245,245,245), rgb(215,215,215));
+  -moz-border-radius: 0 0 8px 8px !important;
+}
+
 .modal-block {
   -moz-box-align: center;
   -moz-box-pack: center;
