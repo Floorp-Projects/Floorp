@@ -891,7 +891,7 @@ namespace nanojit
         // Note, this assumes that loads will never fault and hence cannot
         // affect the control flow.
         bool isStmt() {
-            NanoAssert(!isop(LIR_start) && !isop(LIR_skip));
+            NanoAssert(!isop(LIR_skip));
             // All instructions with Void retType are statements, as are calls
             // to impure functions.
             if (isCall())
@@ -1943,21 +1943,25 @@ namespace nanojit
         LirFilter(LirFilter *in) : in(in) {}
         virtual ~LirFilter(){}
 
+        // It's crucial that once this reaches the LIR_start at the beginning
+        // of the buffer, that it just keeps returning that LIR_start LIns on
+        // any subsequent calls.
         virtual LInsp read() {
             return in->read();
         }
-        virtual LInsp pos() {
-            return in->pos();
+        virtual LInsp finalIns() {
+            return in->finalIns();
         }
     };
 
     // concrete
     class LirReader : public LirFilter
     {
-        LInsp _i; // next instruction to be read;  invariant: is never a skip
+        LInsp _ins;         // next instruction to be read;  invariant: is never a skip
+        LInsp _finalIns;    // final instruction in the stream;  ie. the first one to be read
 
     public:
-        LirReader(LInsp i) : LirFilter(0), _i(i)
+        LirReader(LInsp ins) : LirFilter(0), _ins(ins), _finalIns(ins)
         {
             // The last instruction for a fragment shouldn't be a skip.
             // (Actually, if the last *inserted* instruction exactly fills up
@@ -1966,7 +1970,7 @@ namespace nanojit
             // cross-chunk link.  But the last *inserted* instruction is what
             // is recorded and used to initialise each LirReader, and that is
             // what is seen here, and therefore this assertion holds.)
-            NanoAssert(i && !i->isop(LIR_skip));
+            NanoAssert(ins && !ins->isop(LIR_skip));
         }
         virtual ~LirReader() {}
 
@@ -1974,9 +1978,8 @@ namespace nanojit
         // Invariant: never returns a skip.
         LInsp read();
 
-        // Returns next instruction.  Invariant: never returns a skip.
-        LInsp pos() {
-            return _i;
+        LInsp finalIns() {
+            return _finalIns;
         }
     };
 
@@ -2102,6 +2105,7 @@ namespace nanojit
         const char*  _title;
         StringList   _strs;
         LogControl*  _logc;
+        LIns*        _prevIns;
     public:
         ReverseLister(LirFilter* in, Allocator& alloc,
                       LInsPrinter* printer, LogControl* logc, const char* title)
@@ -2111,6 +2115,7 @@ namespace nanojit
             , _title(title)
             , _strs(alloc)
             , _logc(logc)
+            , _prevIns(NULL)
         { }
 
         void finish();

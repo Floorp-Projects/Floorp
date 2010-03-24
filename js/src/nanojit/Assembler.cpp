@@ -80,6 +80,7 @@ namespace nanojit
         , _config(config)
     {
         VMPI_memset(&_stats, 0, sizeof(_stats));
+        VMPI_memset(lookahead, 0, N_LOOKAHEAD * sizeof(LInsp));
         nInit(core);
         (void)logc;
         verbose_only( _logc = logc; )
@@ -1208,67 +1209,77 @@ namespace nanojit
         NanoAssert(_thisfrag->nStaticExits == 0);
 
         // The trace must end with one of these opcodes.
-        NanoAssert(reader->pos()->isop(LIR_x)    ||
-                   reader->pos()->isop(LIR_xtbl) ||
-                   reader->pos()->isRet()        ||
-                   reader->pos()->isLive());
+        NanoAssert(reader->finalIns()->isop(LIR_x)    ||
+                   reader->finalIns()->isop(LIR_xtbl) ||
+                   reader->finalIns()->isRet()        ||
+                   reader->finalIns()->isLive());
 
         InsList pending_lives(alloc);
 
         NanoAssert(!error());
-        for (LInsp ins = reader->read(); !ins->isop(LIR_start); ins = reader->read())
+
+        // What's going on here: we're visiting all the LIR instructions in
+        // the buffer, working strictly backwards in buffer-order, and
+        // generating machine instructions for them as we go.
+        //
+        // For each LIns, we first determine whether it's actually necessary,
+        // and if not skip it.  Otherwise we generate code for it.  There are
+        // two kinds of "necessary" instructions:
+        //
+        // - "Statement" instructions, which have side effects.  Anything that
+        //   could change control flow or the state of memory.
+        //
+        // - "Value" or "expression" instructions, which compute a value based
+        //   only on the operands to the instruction (and, in the case of
+        //   loads, the state of memory).  Because we visit instructions in
+        //   reverse order, if some previously visited instruction uses the
+        //   value computed by this instruction, then this instruction will
+        //   already have a register assigned to hold that value.  Hence we
+        //   can consult the instruction to detect whether its value is in
+        //   fact used (i.e. not dead).
+        //
+        // Note that the backwards code traversal can make register allocation
+        // confusing.  (For example, we restore a value before we spill it!)
+        // In particular, words like "before" and "after" must be used very
+        // carefully -- their meaning at regalloc-time is opposite to their
+        // meaning at run-time.  We use the term "pre-regstate" to refer to
+        // the register allocation state that occurs prior to an instruction's
+        // execution, and "post-regstate" to refer to the state that occurs
+        // after an instruction's execution, e.g.:
+        //
+        //   pre-regstate:  ebx(ins)
+        //   instruction:   mov eax, ebx     // mov dst, src
+        //   post-regstate: eax(ins)
+        //
+        // At run-time, the instruction updates the pre-regstate into the
+        // post-regstate (and these states are the real machine's regstates).
+        // But when allocating registers, because we go backwards, the
+        // pre-regstate is constructed from the post-regstate (and these
+        // regstates are those stored in RegAlloc).
+        //
+        // One consequence of generating code backwards is that we tend to
+        // both spill and restore registers as early (at run-time) as
+        // possible;  this is good for tolerating memory latency.  If we
+        // generated code forwards, we would expect to both spill and restore
+        // registers as late (at run-time) as possible;  this might be better
+        // for reducing register pressure.
+        //
+        // Another thing to note: we provide N_LOOKAHEAD instruction's worth
+        // of lookahead because it's useful for backends.  This is nice and
+        // easy because once read() gets to the LIR_start at the beginning of
+        // the buffer it'll just keep regetting it.
+
+        for (int32_t i = 0; i < N_LOOKAHEAD; i++)
+            lookahead[i] = reader->read();
+
+        while (!lookahead[0]->isop(LIR_start))
         {
-            /* What's going on here: we're visiting all the LIR instructions
-               in the buffer, working strictly backwards in buffer-order, and
-               generating machine instructions for them as we go.
+            LInsp ins = lookahead[0];   // give it a shorter name for local use
+            LOpcode op = ins->opcode();
 
-               For each LIns, we first determine whether it's actually
-               necessary, and if not skip it.  Otherwise we generate code for
-               it.  There are two kinds of "necessary" instructions:
-
-               - "Statement" instructions, which have side effects.  Anything
-                 that could change control flow or the state of memory.
-
-               - "Value" or "expression" instructions, which compute a value
-                 based only on the operands to the instruction (and, in the
-                 case of loads, the state of memory).  Because we visit
-                 instructions in reverse order, if some previously visited
-                 instruction uses the value computed by this instruction, then
-                 this instruction will already have a register assigned to
-                 hold that value.  Hence we can consult the instruction to
-                 detect whether its value is in fact used (i.e. not dead).
-
-              Note that the backwards code traversal can make register
-              allocation confusing.  (For example, we restore a value before
-              we spill it!)  In particular, words like "before" and "after"
-              must be used very carefully -- their meaning at regalloc-time is
-              opposite to their meaning at run-time.  We use the term
-              "pre-regstate" to refer to the register allocation state that
-              occurs prior to an instruction's execution, and "post-regstate"
-              to refer to the state that occurs after an instruction's
-              execution, e.g.:
-
-                pre-regstate:  ebx(ins)
-                instruction:   mov eax, ebx     // mov dst, src
-                post-regstate: eax(ins)
-
-              At run-time, the instruction updates the pre-regstate into the
-              post-regstate (and these states are the real machine's
-              regstates).  But when allocating registers, because we go
-              backwards, the pre-regstate is constructed from the
-              post-regstate (and these regstates are those stored in
-              RegAlloc).
-
-              One consequence of generating code backwards is that we tend to
-              both spill and restore registers as early (at run-time) as
-              possible;  this is good for tolerating memory latency.  If we
-              generated code forwards, we would expect to both spill and
-              restore registers as late (at run-time) as possible;  this might
-              be better for reducing register pressure.
-            */
             bool required = ins->isStmt() || ins->isUsed();
             if (!required)
-                continue;
+                goto end_of_loop;
 
 #ifdef NJ_VERBOSE
             // Output the post-regstate (registers and/or activation).
@@ -1281,8 +1292,7 @@ namespace nanojit
                 printRegState();
 #endif
 
-            LOpcode op = ins->opcode();
-            switch(op)
+            switch (op)
             {
                 default:
                     NanoAssertMsgf(false, "unsupported LIR instruction: %d\n", op);
@@ -1851,6 +1861,11 @@ namespace nanojit
             // check that all is well (don't check in exit paths since its more complicated)
             debug_only( pageValidate(); )
             debug_only( resourceConsistencyCheck();  )
+
+          end_of_loop:
+            for (int32_t i = 1; i < N_LOOKAHEAD; i++)
+                lookahead[i-1] = lookahead[i];
+            lookahead[N_LOOKAHEAD-1] = reader->read();
         }
     }
 
