@@ -344,6 +344,10 @@ class TokenStream
     Token *mutableCurrentToken() { return &tokens[cursor]; }
     bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
 
+    /*
+     * Get the next token from the stream, make it the current token, and
+     * return its kind.
+     */
     TokenKind getToken() {
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         while (lookahead != 0) {
@@ -367,6 +371,9 @@ class TokenStream
         return &tokens[index];
     }
 
+    /*
+     * Push the last scanned token back into the stream.
+     */
     void ungetToken() {
         JS_ASSERT(lookahead < ntokensMask);
         lookahead++;
@@ -391,6 +398,9 @@ class TokenStream
         return tt;
     }
 
+    /*
+     * Get the next token from the stream if its kind is |tt|.
+     */
     JSBool matchToken(TokenKind tt) {
         if (getToken() == tt)
             return JS_TRUE;
@@ -527,52 +537,6 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN 
 bool
 ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
                       uintN errorNumber, ...);
-
-/*
- * Look ahead one token and return its type.
- */
-static inline TokenKind
-PeekToken(JSContext *cx, TokenStream *ts)
-{
-    JS_ASSERT(cx == ts->getContext());
-    return ts->peekToken();
-}
-
-static inline TokenKind
-PeekTokenSameLine(JSContext *cx, TokenStream *ts)
-{
-    JS_ASSERT(cx == ts->getContext());
-    return ts->peekTokenSameLine();
-}
-
-/*
- * Get the next token from ts.
- */
-static inline TokenKind
-GetToken(JSContext *cx, TokenStream *ts)
-{
-    JS_ASSERT(cx == ts->getContext());
-    return ts->getToken();
-}
-
-/*
- * Push back the last scanned token onto ts.
- */
-static inline void
-UngetToken(TokenStream *ts)
-{
-    ts->ungetToken();
-}
-
-/*
- * Get the next token from ts if its type is tt.
- */
-static inline JSBool
-MatchToken(JSContext *cx, TokenStream *ts, TokenKind tt)
-{
-    JS_ASSERT(cx == ts->getContext());
-    return ts->matchToken(tt);
-}
 
 } /* namespace js */
 

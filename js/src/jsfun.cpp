@@ -2336,7 +2336,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* The argument string may be empty or contain no tokens. */
-        tt = GetToken(cx, &ts);
+        tt = ts.getToken();
         if (tt != TOK_EOF) {
             for (;;) {
                 /*
@@ -2371,12 +2371,12 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * Get the next token.  Stop on end of stream.  Otherwise
                  * insist on a comma, get another name, and iterate.
                  */
-                tt = GetToken(cx, &ts);
+                tt = ts.getToken();
                 if (tt == TOK_EOF)
                     break;
                 if (tt != TOK_COMMA)
                     goto after_args;
-                tt = GetToken(cx, &ts);
+                tt = ts.getToken();
             }
         }
 
