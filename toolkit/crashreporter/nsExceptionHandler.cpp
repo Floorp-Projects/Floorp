@@ -90,7 +90,6 @@
 #include "nsCRT.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
-#include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "prprf.h"
 #include "nsIXULAppInfo.h"
@@ -167,7 +166,7 @@ static const int kTimeSinceLastCrashParameterLen =
                                      sizeof(kTimeSinceLastCrashParameter)-1;
 
 // this holds additional data sent via the API
-static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
+static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
@@ -189,7 +188,7 @@ static const int kMagicChildCrashReportFd = 42;
 
 // |dumpMapLock| must protect all access to |pidToMinidump|.
 static Mutex* dumpMapLock;
-typedef nsInterfaceHashtable<nsUint32HashKey, nsIFile> ChildMinidumpMap;
+typedef nsInterfaceHashtable<nsUint32HashKey, nsILocalFile> ChildMinidumpMap;
 static ChildMinidumpMap* pidToMinidump;
 
 // Crashreporter annotations that we don't send along in subprocess
@@ -1169,9 +1168,113 @@ nsresult SetSubmitReports(PRBool aSubmitReports)
     return PrefSubmitReports(&aSubmitReports, true);
 }
 
+// The "pending" dir is Crash Reports/pending, from which minidumps
+// can be submitted
+static bool
+GetPendingDir(nsILocalFile** dir)
+{
+  nsCOMPtr<nsIProperties> dirSvc =
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirSvc)
+    return false;
+  nsCOMPtr<nsILocalFile> pendingDir;
+  if (NS_FAILED(dirSvc->Get("UAppData",
+                            NS_GET_IID(nsILocalFile),
+                            getter_AddRefs(pendingDir))) ||
+      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("Crash Reports"))) ||
+      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("pending"))))
+    return false;
+  *dir = NULL;
+  pendingDir.swap(*dir);
+  return true;
+}
 
-#if defined(MOZ_IPC)
+// The "limbo" dir is where minidumps go to wait for something else to
+// use them.  If we're |ShouldReport()|, then the "something else" is
+// a minidump submitter, and they're coming from the 
+// Crash Reports/pending/ dir.  Otherwise, we don't know what the
+// "somthing else" is, but the minidumps stay in [profile]/minidumps/
+// limbo.
+static bool
+GetMinidumpLimboDir(nsILocalFile** dir)
+{
+  if (ShouldReport()) {
+    return GetPendingDir(dir);
+  }
+  else {
+    CreateFileFromPath(gExceptionHandler->dump_path(), dir);
+    return NULL != *dir;
+  }
+}
 
+bool
+GetMinidumpForID(const nsAString& id, nsILocalFile** minidump)
+{
+  if (!GetMinidumpLimboDir(minidump))
+    return false;
+  (*minidump)->Append(id + NS_LITERAL_STRING(".dmp")); 
+  return true;
+}
+
+bool
+GetIDFromMinidump(nsILocalFile* minidump, nsAString& id)
+{
+  if (NS_SUCCEEDED(minidump->GetLeafName(id))) {
+    id.Replace(id.Length() - 4, 4, NS_LITERAL_STRING(""));
+    return true;
+  }
+  return false;
+}
+
+bool
+GetExtraFileForID(const nsAString& id, nsILocalFile** extraFile)
+{
+  if (!GetMinidumpLimboDir(extraFile))
+    return false;
+  (*extraFile)->Append(id + NS_LITERAL_STRING(".extra"));
+  return true;
+}
+
+bool
+GetExtraFileForMinidump(nsILocalFile* minidump, nsILocalFile** extraFile)
+{
+  nsAutoString leafName;
+  nsresult rv = minidump->GetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return false;
+
+  nsCOMPtr<nsIFile> extraF;
+  rv = minidump->Clone(getter_AddRefs(extraF));
+  if (NS_FAILED(rv))
+    return false;
+
+  nsCOMPtr<nsILocalFile> extra = do_QueryInterface(extraF);
+  if (!extra)
+    return false;
+
+  leafName.Replace(leafName.Length() - 3, 3,
+                   NS_LITERAL_STRING("extra"));
+  rv = extra->SetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return false;
+
+  *extraFile = NULL;
+  extra.swap(*extraFile);
+  return true;
+}
+
+bool
+AppendExtraData(const nsAString& id, const AnnotationTable& data)
+{
+  nsCOMPtr<nsILocalFile> extraFile;
+  if (!GetExtraFileForID(id, getter_AddRefs(extraFile)))
+    return false;
+  return AppendExtraData(extraFile, data);
+}
+
+//-----------------------------------------------------------------------------
+// Helpers for AppendExtraData()
+//
 struct Blacklist {
   Blacklist() : mItems(NULL), mLen(0) { }
   Blacklist(const char** items, int len) : mItems(items), mLen(len) { }
@@ -1192,6 +1295,15 @@ struct EnumerateAnnotationsContext {
   PRFileDesc* fd;
 };
 
+static void
+WriteAnnotation(PRFileDesc* fd, const nsACString& key, const nsACString& value)
+{
+  PR_Write(fd, key.BeginReading(), key.Length());
+  PR_Write(fd, "=", 1);
+  PR_Write(fd, value.BeginReading(), value.Length());
+  PR_Write(fd, "\n", 1);
+}
+
 static PLDHashOperator
 EnumerateAnnotations(const nsACString& key,
                      nsCString entry,
@@ -1205,58 +1317,66 @@ EnumerateAnnotations(const nsACString& key,
   if (blacklist.Contains(key))
       return PL_DHASH_NEXT;
 
-  PRFileDesc* fd = ctx->fd;  
-  PR_Write(fd, key.BeginReading(), key.Length());
-  PR_Write(fd, "=", 1);
-  PR_Write(fd, entry.BeginReading(), entry.Length());
-  PR_Write(fd, "\n", 1);
+  WriteAnnotation(ctx->fd, key, entry);
 
   return PL_DHASH_NEXT;
 }
+
+static bool
+WriteExtraData(nsILocalFile* extraFile,
+               const AnnotationTable& data,
+               const Blacklist& blacklist,
+               bool writeCrashTime=false,
+               bool truncate=false)
+{
+  PRFileDesc* fd;
+  PRIntn truncOrAppend = truncate ? PR_TRUNCATE : PR_APPEND;
+  nsresult rv = 
+    extraFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | truncOrAppend,
+                                0600, &fd);
+  if (NS_FAILED(rv))
+    return false;
+
+  EnumerateAnnotationsContext ctx = { blacklist, fd };
+  data.EnumerateRead(EnumerateAnnotations, &ctx);
+
+  if (writeCrashTime) {
+    time_t crashTime = time(NULL);
+    char crashTimeString[32];
+    XP_TTOA(crashTime, crashTimeString, 10);
+
+    WriteAnnotation(fd,
+                    nsDependentCString("CrashTime"),
+                    nsDependentCString(crashTimeString));
+  }
+
+  PR_Close(fd);
+  return true;
+}
+
+bool
+AppendExtraData(nsILocalFile* extraFile, const AnnotationTable& data)
+{
+  return WriteExtraData(extraFile, data, Blacklist());
+}
+
+
+#if defined(MOZ_IPC)
 
 static bool
 WriteExtraForMinidump(nsILocalFile* minidump,
                       const Blacklist& blacklist,
                       nsILocalFile** extraFile)
 {
-  // Get an .extra file with the same base name as the .dmp file
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = minidump->Clone(getter_AddRefs(file));
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsILocalFile> extra;
+  if (!GetExtraFileForMinidump(minidump, getter_AddRefs(extra)))
     return false;
 
-  nsCOMPtr<nsILocalFile> extra = do_QueryInterface(file);
-
-  nsAutoString leafName;
-  rv = extra->GetLeafName(leafName);
-  if (NS_FAILED(rv))
+  if (!WriteExtraData(extra, *crashReporterAPIData_Hash,
+                      blacklist,
+                      true /*write crash time*/,
+                      true /*truncate*/))
     return false;
-
-  leafName.Replace(leafName.Length() - 3, 3,
-                   NS_LITERAL_STRING("extra"));
-  rv = extra->SetLeafName(leafName);
-  if (NS_FAILED(rv))
-    return false;
-
-  // Now write out the annotations to it
-  PRFileDesc* fd;
-  rv = extra->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                               0600, &fd);
-  if (NS_FAILED(rv))
-    return false;
-
-  EnumerateAnnotationsContext ctx = { blacklist, fd };
-  crashReporterAPIData_Hash->EnumerateRead(EnumerateAnnotations, &ctx);
-
-  // Add CrashTime to extra data
-  time_t crashTime = time(NULL);
-  char crashTimeString[32];
-  XP_TTOA(crashTime, crashTimeString, 10);
-
-  PR_Write(fd, kCrashTimeParameter, kCrashTimeParameterLen-1);
-  PR_Write(fd, crashTimeString, strlen(crashTimeString));
-  PR_Write(fd, "\n", 1);
-  PR_Close(fd);
 
   *extraFile = NULL;
   extra.swap(*extraFile);
@@ -1264,23 +1384,17 @@ WriteExtraForMinidump(nsILocalFile* minidump,
   return true;
 }
 
+// It really only makes sense to call this function when
+// ShouldReport() is true.
 static bool
 MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
 {
-  nsCOMPtr<nsIProperties> dirSvc
-    = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-  if (!dirSvc)
-    return false;
   nsCOMPtr<nsILocalFile> pendingDir;
-  if (NS_FAILED(dirSvc->Get("UAppData",
-                            NS_GET_IID(nsILocalFile),
-                            getter_AddRefs(pendingDir))) ||
-      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("Crash Reports"))) ||
-      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("pending"))))
-      return false;
+  if (!GetPendingDir(getter_AddRefs(pendingDir)))
+    return false;
 
-  return NS_FAILED(dumpFile->MoveTo(pendingDir, EmptyString())) ||
-    NS_FAILED(extraFile->MoveTo(pendingDir, EmptyString()));
+  return NS_SUCCEEDED(dumpFile->MoveTo(pendingDir, EmptyString())) &&
+    NS_SUCCEEDED(extraFile->MoveTo(pendingDir, EmptyString()));
 }
 
 static void
@@ -1467,14 +1581,14 @@ SetRemoteExceptionHandler()
 
 
 bool
-TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump)
+TakeMinidumpForChild(PRUint32 childPid, nsILocalFile** dump)
 {
   if (!GetEnabled())
     return false;
 
   MutexAutoLock lock(*dumpMapLock);
 
-  nsCOMPtr<nsIFile> d;
+  nsCOMPtr<nsILocalFile> d;
   bool found = pidToMinidump->Get(childPid, getter_AddRefs(d));
   if (found)
     pidToMinidump->Remove(childPid);
@@ -1509,13 +1623,12 @@ PairedDumpCallback(const XP_CHAR* dump_path,
   nsCOMPtr<nsILocalFile>& extra = *ctx->extra;
   const Blacklist& blacklist = ctx->blacklist;
 
-  xpstring dumpFilename(dump_path);
-  dumpFilename += XP_PATH_SEPARATOR;
-  dumpFilename += minidump_id;
-  dumpFilename += dumpFileExtension;
+  xpstring dump(dump_path);
+  dump += XP_PATH_SEPARATOR;
+  dump += minidump_id;
+  dump += dumpFileExtension;
 
-  CreateFileFromPath(dumpFilename, getter_AddRefs(minidump));
-
+  CreateFileFromPath(dump, getter_AddRefs(minidump));
   return WriteExtraForMinidump(minidump, blacklist, getter_AddRefs(extra));
 }
 
