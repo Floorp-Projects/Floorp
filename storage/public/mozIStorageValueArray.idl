@@ -41,8 +41,8 @@
 [ptr] native octetPtr(PRUint8);
 
 /**
- * mozIStorageValueArray wraps an array of SQL values,
- * such as a single database row.
+ * mozIStorageValueArray wraps an array of SQL values, such as a single database
+ * row.
  */
 [scriptable, uuid(07b5b93e-113c-4150-863c-d247b003a55d)]
 interface mozIStorageValueArray : nsISupports {

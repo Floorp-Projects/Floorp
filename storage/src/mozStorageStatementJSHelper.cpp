@@ -74,14 +74,18 @@ stepFunc(JSContext *aCtx,
     return JS_FALSE;
   }
 
-  Statement *stmt = static_cast<Statement *>(wrapper->Native());
-
 #ifdef DEBUG
   {
-    nsCOMPtr<mozIStorageStatement> isStatement(do_QueryInterface(stmt));
+    nsCOMPtr<mozIStorageStatement> isStatement(
+      do_QueryInterface(wrapper->Native())
+    );
     NS_ASSERTION(isStatement, "How is this not a statement?!");
   }
 #endif
+
+  Statement *stmt = static_cast<Statement *>(
+    static_cast<mozIStorageStatement *>(wrapper->Native())
+  );
 
   PRBool hasMore = PR_FALSE;
   rv = stmt->ExecuteStep(&hasMore);
@@ -208,14 +212,17 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   if (!JSVAL_IS_STRING(aId))
     return NS_OK;
 
-  Statement *stmt = static_cast<Statement *>(aWrapper->Native());
-
 #ifdef DEBUG
   {
-    nsCOMPtr<mozIStorageStatement> isStatement(do_QueryInterface(stmt));
+    nsCOMPtr<mozIStorageStatement> isStatement(
+                                     do_QueryInterface(aWrapper->Native()));
     NS_ASSERTION(isStatement, "How is this not a statement?!");
   }
 #endif
+
+  Statement *stmt = static_cast<Statement *>(
+    static_cast<mozIStorageStatement *>(aWrapper->Native())
+  );
 
   const char *propName = ::JS_GetStringBytes(JSVAL_TO_STRING(aId));
   if (::strcmp(propName, "row") == 0)

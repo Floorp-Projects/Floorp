@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Andrew Sutherland <asutherland@asutherland.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozStorageStatement_h_
-#define _mozStorageStatement_h_
+#ifndef mozilla_storage_mozStorageAsyncStatement_h_
+#define mozilla_storage_mozStorageAsyncStatement_h_
 
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -47,8 +48,7 @@
 
 #include "mozStorageBindingParamsArray.h"
 #include "mozStorageStatementData.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageValueArray.h"
+#include "mozIStorageAsyncStatement.h"
 #include "StorageBaseStatementInternal.h"
 
 class nsIXPConnectJSObjectHolder;
@@ -56,22 +56,21 @@ struct sqlite3_stmt;
 
 namespace mozilla {
 namespace storage {
-class StatementJSHelper;
+
+class AsyncStatementJSHelper;
 class Connection;
 
-class Statement : public mozIStorageStatement
-                , public mozIStorageValueArray
-                , public StorageBaseStatementInternal
+class AsyncStatement : public mozIStorageAsyncStatement
+                     , public StorageBaseStatementInternal
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGESTATEMENT
+  NS_DECL_MOZISTORAGEASYNCSTATEMENT
   NS_DECL_MOZISTORAGEBASESTATEMENT
   NS_DECL_MOZISTORAGEBINDINGPARAMS
-  // NS_DECL_MOZISTORAGEVALUEARRAY (methods in mozIStorageStatement)
   NS_DECL_STORAGEBASESTATEMENTINTERNAL
 
-  Statement();
+  AsyncStatement();
 
   /**
    * Initializes the object on aDBConnection by preparing the SQL statement
@@ -85,12 +84,6 @@ public:
   nsresult initialize(Connection *aDBConnection,
                       const nsACString &aSQLStatement);
 
-
-  /**
-   * Obtains the native statement pointer.
-   */
-  inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
-
   /**
    * Obtains and transfers ownership of the array of parameters that are bound
    * to this statment.  This can be null.
@@ -100,48 +93,53 @@ public:
     return mParamsArray.forget();
   }
 
+
 private:
-    ~Statement();
-
-    sqlite3_stmt *mDBStatement;
-    PRUint32 mParamCount;
-    PRUint32 mResultColumnCount;
-    nsTArray<nsCString> mColumnNames;
-    bool mExecuting;
-
-    /**
-     * @return a pointer to the BindingParams object to use with our Bind*
-     *         method.
-     */
-    mozIStorageBindingParams *getParams();
-
-    /**
-     * Holds the array of parameters to bind to this statement when we execute
-     * it asynchronously.
-     */
-    nsRefPtr<BindingParamsArray> mParamsArray;
-
-    /**
-     * The following two members are only used with the JS helper.  They cache
-     * the row and params objects.
-     */
-    nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementRowHolder;
+  ~AsyncStatement();
 
   /**
-   * Internal version of finalize that allows us to tell it if it is being
-   * called from the destructor so it can know not to dispatch events that
-   * require a reference to us.
-   *
-   * @param aDestructing
-   *        Is the destructor calling?
+   * Clean up the references JS helpers hold to us.  For cycle-avoidance reasons
+   * they do not hold reference-counted references to us, so it is important
+   * we do this.
    */
-  nsresult internalFinalize(bool aDestructing);
+  void cleanupJSHelpers();
 
-    friend class StatementJSHelper;
+  /**
+   * @return a pointer to the BindingParams object to use with our Bind*
+   *         method.
+   */
+  mozIStorageBindingParams *getParams();
+
+  /**
+   * The SQL string as passed by the user.  We store it because we create the
+   * async statement on-demand on the async thread.
+   */
+  nsCString mSQLString;
+
+  /**
+   * Holds the array of parameters to bind to this statement when we execute
+   * it asynchronously.
+   */
+  nsRefPtr<BindingParamsArray> mParamsArray;
+
+  /**
+   * Caches the JS 'params' helper for this statement.
+   */
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
+
+  /**
+   * Have we been explicitly finalized by the user?
+   */
+  bool mFinalized;
+
+  /**
+   * Required for access to private mStatementParamsHolder field by
+   * AsyncStatementJSHelper::getParams.
+   */
+  friend class AsyncStatementJSHelper;
 };
 
 } // storage
 } // mozilla
 
-#endif // _mozStorageStatement_h_
+#endif // mozilla_storage_mozStorageAsyncStatement_h_

@@ -40,48 +40,50 @@
 
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
 #include "mozStoragePrivateHelpers.h"
-#include "mozStorageStatementParams.h"
+#include "mozStorageAsyncStatement.h"
+#include "mozStorageAsyncStatementParams.h"
 #include "mozIStorageStatement.h"
 
 namespace mozilla {
 namespace storage {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// StatementParams
+//// AsyncStatementParams
 
-StatementParams::StatementParams(mozIStorageStatement *aStatement) :
-    mStatement(aStatement)
+AsyncStatementParams::AsyncStatementParams(AsyncStatement *aStatement)
+: mStatement(aStatement)
 {
   NS_ASSERTION(mStatement != nsnull, "mStatement is null");
-  (void)mStatement->GetParameterCount(&mParamCount);
 }
 
 NS_IMPL_ISUPPORTS2(
-  StatementParams,
-  mozIStorageStatementParams,
-  nsIXPCScriptable
+  AsyncStatementParams
+, mozIStorageStatementParams
+, nsIXPCScriptable
 )
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIXPCScriptable
 
-#define XPC_MAP_CLASSNAME StatementParams
-#define XPC_MAP_QUOTED_CLASSNAME "StatementParams"
+#define XPC_MAP_CLASSNAME AsyncStatementParams
+#define XPC_MAP_QUOTED_CLASSNAME "AsyncStatementParams"
 #define XPC_MAP_WANT_SETPROPERTY
-#define XPC_MAP_WANT_NEWENUMERATE
 #define XPC_MAP_WANT_NEWRESOLVE
 #define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP
-StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
-                             JSContext *aCtx,
-                             JSObject *aScopeObj,
-                             jsval aId,
-                             jsval *_vp,
-                             PRBool *_retval)
+AsyncStatementParams::SetProperty(
+  nsIXPConnectWrappedNative *aWrapper,
+  JSContext *aCtx,
+  JSObject *aScopeObj,
+  jsval aId,
+  jsval *_vp,
+  PRBool *_retval
+)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
@@ -99,7 +101,6 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
                                    (::JS_GetStringChars(str)),
                                ::JS_GetStringLength(str));
 
-    // check to see if there's a parameter with this name
     nsCOMPtr<nsIVariant> variant(convertJSValToVariant(aCtx, *_vp));
     NS_ENSURE_TRUE(variant, NS_ERROR_UNEXPECTED);
     nsresult rv = mStatement->BindByName(name, variant);
@@ -114,80 +115,15 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
 }
 
 NS_IMETHODIMP
-StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
-                              JSContext *aCtx,
-                              JSObject *aScopeObj,
-                              PRUint32 aEnumOp,
-                              jsval *_statep,
-                              jsid *_idp,
-                              PRBool *_retval)
-{
-  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
-
-  switch (aEnumOp) {
-    case JSENUMERATE_INIT:
-    {
-      // Start our internal index at zero.
-      *_statep = JSVAL_ZERO;
-
-      // And set our length, if needed.
-      if (_idp)
-        *_idp = INT_TO_JSVAL(mParamCount);
-
-      break;
-    }
-    case JSENUMERATE_NEXT:
-    {
-      NS_ASSERTION(*_statep != JSVAL_NULL, "Internal state is null!");
-
-      // Make sure we are in range first.
-      PRUint32 index = static_cast<PRUint32>(JSVAL_TO_INT(*_statep));
-      if (index >= mParamCount) {
-        *_statep = JSVAL_NULL;
-        return NS_OK;
-      }
-
-      // Get the name of our parameter.
-      nsCAutoString name;
-      nsresult rv = mStatement->GetParameterName(index, name);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // But drop the first character, which is going to be a ':'.
-      JSString *jsname = ::JS_NewStringCopyN(aCtx, &(name.get()[1]),
-                                             name.Length() - 1);
-      NS_ENSURE_TRUE(jsname, NS_ERROR_OUT_OF_MEMORY);
-
-      // Set our name.
-      if (!::JS_ValueToId(aCtx, STRING_TO_JSVAL(jsname), _idp)) {
-        *_retval = PR_FALSE;
-        return NS_OK;
-      }
-
-      // And increment our index.
-      *_statep = INT_TO_JSVAL(++index);
-
-      break;
-    }
-    case JSENUMERATE_DESTROY:
-    {
-      // Clear our state.
-      *_statep = JSVAL_NULL;
-
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
-                            JSContext *aCtx,
-                            JSObject *aScopeObj,
-                            jsval aId,
-                            PRUint32 aFlags,
-                            JSObject **_objp,
-                            PRBool *_retval)
+AsyncStatementParams::NewResolve(
+  nsIXPConnectWrappedNative *aWrapper,
+  JSContext *aCtx,
+  JSObject *aScopeObj,
+  jsval aId,
+  PRUint32 aFlags,
+  JSObject **_objp,
+  PRBool *_retval
+)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
   // We do not throw at any point after this unless our index is out of range
@@ -198,27 +134,17 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
 
   if (JSVAL_IS_INT(aId)) {
     idx = JSVAL_TO_INT(aId);
-
-    // Ensure that our index is within range.  We do not care about the
-    // prototype chain being checked here.
-    if (idx >= mParamCount)
-      return NS_ERROR_INVALID_ARG;
+    // All indexes are good because we don't know how many parameters there
+    // really are.
   }
   else if (JSVAL_IS_STRING(aId)) {
     JSString *str = JSVAL_TO_STRING(aId);
     jschar *nameChars = ::JS_GetStringChars(str);
     size_t nameLength = ::JS_GetStringLength(str);
 
-    // Check to see if there's a parameter with this name, and if not, let
-    // the rest of the prototype chain be checked.
-    NS_ConvertUTF16toUTF8 name(reinterpret_cast<const PRUnichar *>(nameChars),
-                               nameLength);
-    nsresult rv = mStatement->GetParameterIndex(name, &idx);
-    if (NS_FAILED(rv)) {
-      *_objp = NULL;
-      return NS_OK;
-    }
-
+    // We are unable to tell if there's a parameter with this name and so
+    // we must assume that there is.  This screws the rest of the prototype
+    // chain, but people really shouldn't be depending on this anyways.
     *_retval = ::JS_DefineUCProperty(aCtx, aScopeObj, nameChars, nameLength,
                                      JSVAL_VOID, nsnull, nsnull, 0);
     NS_ENSURE_TRUE(*_retval, NS_OK);
