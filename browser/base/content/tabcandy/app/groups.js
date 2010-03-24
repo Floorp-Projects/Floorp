@@ -165,22 +165,48 @@ Group.prototype = {
   arrange: function(){
     if( this._children.length < 2 ) return;
     var bb = this._getContainerBox();
+    var aTab = $(this._children[0]);
 
-    // TODO: This is an hacky heuristic. Fix this layout algorithm.
-    var pad = 10;
-    var w = parseInt(Math.sqrt(((bb.height+pad) * (bb.width+pad))/(this._children.length+4)));
-    var h = w * (2/3);
-
-    var x=pad;
-    var y=pad;
-    for each( var tab in this._children){      
-      scaleTab( $(tab), w/$(tab).width());
-      $(tab).animate({
-        top:y+bb.top, left:x+bb.left,
-      }, 250);
+    var count = this._children.length;
+    var bbAspect = bb.width/bb.height;
+    var tabAspect = 4/3; 
+    
+    function howManyColumns( numRows, count ){ return Math.ceil(count/numRows) }
+    
+    var count = this._children.length;
+    var best = {cols: 0, rows:0, area:0};
+    for(var numRows=1; numRows<=count; numRows++){
+      numCols = howManyColumns( numRows, count);
+      var w = numCols*tabAspect;
+      var h = numRows;
       
-      x += w+pad;
-      if( x+w+pad > $(this._container).width()){x = pad;y += h+pad;}
+      // We are width constrained
+      if( w/bb.width >= h/bb.height ) var scale = bb.width/w;
+      // We are height constrained
+      else var scale = bb.height/h;
+      var w = w*scale;
+      var h = h*scale;
+            
+      if( w*h >= best.area ){
+        best.numRows = numRows;
+        best.numCols = numCols;
+        best.area = w*h;
+        best.w = w;
+        best.h = h;
+      }
+    }
+    
+    var padAmount = .1;
+    var pad = padAmount * (best.w/best.numCols);
+    var tabW = (best.w-pad)/best.numCols - pad;
+    var tabH = (best.h-pad)/best.numRows - pad;
+    
+    var x = pad; var y=pad; var numInCol = 0;
+    for each(var tab in this._children){
+      $(tab).animate({width:tabW, height:tabH, top:y+bb.top, left:x+bb.left});
+      x += tabW + pad;
+      numInCol += 1;
+      if( numInCol >= best.numCols ) [x, numInCol, y] = [pad, 0, y+tabH+pad];
     }
     
   },
