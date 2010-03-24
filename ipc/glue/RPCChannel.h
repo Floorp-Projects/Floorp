@@ -158,23 +158,34 @@ public:
 
 #ifdef OS_WIN
     static bool IsSpinLoopActive() {
-        return (sInnerEventLoopDepth > 0);
+        return (sModalEventCount > 0);
     }
-
 protected:
     bool WaitForNotify();
-    bool IsMessagePending();
     bool SpinInternalEventLoop();
-    static void EnterModalLoop() {
+    static bool WaitNeedsSpinLoop() {
+        return (IsSpinLoopActive() && 
+                (sModalEventCount > sInnerEventLoopDepth));
+    }
+    static void EnterSpinLoop() {
         sInnerEventLoopDepth++;
     }
-    static void ExitModalLoop() {
+    static void ExitSpinLoop() {
         sInnerEventLoopDepth--;
         NS_ASSERTION(sInnerEventLoopDepth >= 0,
             "sInnerEventLoopDepth dropped below zero!");
     }
+    static void IncModalLoopCnt() {
+        sModalEventCount++;
+    }
+    static void DecModalLoopCnt() {
+        sModalEventCount--;
+        NS_ASSERTION(sModalEventCount >= 0,
+            "sModalEventCount dropped below zero!");
+    }
 
     static int sInnerEventLoopDepth;
+    static int sModalEventCount;
 #endif
 
   private:

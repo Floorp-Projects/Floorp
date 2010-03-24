@@ -576,9 +576,25 @@ TimeoutHasExpired(const TimeoutData& aData)
 
 } // anonymous namespace
 
+// Spin loop is called in place of WaitForNotify when modal ui is being shown
+// in a child. There are some intricacies in using it however. Spin loop is
+// enabled / disabled through a set of thread messages sent from
+// PluginInstanceParent (gOOPPStartNativeLoopEvent/gOOPPStopNativeLoopEvent).
+// Each time we receive a start/stop spin event, a counter is adjusted to track
+// the number of modal loops children drop into. We can receive multiple
+// matching starts and stops in cases where multiple plugins drop into modal ui
+// loops. (For example, a message dialog in one browser window, a context menu
+// in another.) When the final count drops to zero, we exit out of spin loop
+// and start using WaitForNotify again. However, we don't replace WaitForNotify
+// completely when spin loop is active - we only call SpinInternalEventLoop
+// at the base of the stack. To accomplish this, we use a second counter to
+// limit the number of calls to SpinInternalEventLoop() equal to the number
+// of modal loops entered.
 bool
 RPCChannel::SpinInternalEventLoop()
 {
+  EnterSpinLoop();
+
   // Nested windows event loop that's triggered when the child enters into modal
   // event procedures.
   do {
@@ -588,12 +604,13 @@ RPCChannel::SpinInternalEventLoop()
     {
       MutexAutoLock lock(mMutex);
       if (!Connected()) {
-        RPCChannel::ExitModalLoop();
+        ExitSpinLoop();
         return false;
       }
     }
 
     if (!RPCChannel::IsSpinLoopActive()) {
+      ExitSpinLoop();
       return false;
     }
 
@@ -603,7 +620,8 @@ RPCChannel::SpinInternalEventLoop()
     // into deferred message processing.
     if (PeekMessageW(&msg, (HWND)-1, gOOPPStopNativeLoopEvent,
                      gOOPPStopNativeLoopEvent, PM_REMOVE)) {
-      RPCChannel::ExitModalLoop();
+      DecModalLoopCnt();
+      ExitSpinLoop();
       return false;
     }
 
@@ -612,21 +630,24 @@ RPCChannel::SpinInternalEventLoop()
     // Returning true here causes the WaitForNotify() to return.
     if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
                      PM_REMOVE)) {
+      ExitSpinLoop();
       return true;
     }
 
     // Retrieve window or thread messages
     if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       if (msg.message == gOOPPStopNativeLoopEvent) {
-        RPCChannel::ExitModalLoop();
+        DecModalLoopCnt();
+        ExitSpinLoop();
         return false;
       }
       else if (msg.message == gOOPPSpinNativeLoopEvent) {
         // Keep the spin loop counter accurate, multiple plugins can show ui.
-        RPCChannel::EnterModalLoop();
+        IncModalLoopCnt();
         continue;
       }
       else if (msg.message == gEventLoopMessage) {
+        ExitSpinLoop();
         return true;
       }
 
@@ -643,17 +664,6 @@ RPCChannel::SpinInternalEventLoop()
       WaitMessage();
     }
   } while (true);
-}
-
-bool
-RPCChannel::IsMessagePending()
-{
-  MSG msg = { 0 };
-  if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
-                   PM_REMOVE)) {
-    return true;
-  }
-  return false;
 }
 
 bool
@@ -805,16 +815,7 @@ RPCChannel::WaitForNotify()
 
   bool retval = true;
 
-  // IsSpinLoopActive indicates modal UI is being displayed in a plugin. Drop
-  // down into the spin loop until all modal loops end. If SpinInternalEventLoop
-  // returns true, the out-call response we were waiting on arrived, or we
-  // received an in-call request from child, so return from WaitForNotify.
-  // We'll step back down into the spin loop on the next WaitForNotify call.
-  // If the spin loop returns false, the child's modal loop has ended, so
-  // drop down into "normal" deferred processing until the next reply is
-  // received. Note, spin loop can cause reentrant race conditions, which
-  // is expected.
-  if (RPCChannel::IsSpinLoopActive()) {
+  if (WaitNeedsSpinLoop()) {
     SpinInternalEventLoop();
     return true; // bug 545338
   }
@@ -907,9 +908,17 @@ RPCChannel::WaitForNotify()
         // until the child process tells us the modal loop has closed. A return
         // of true indicates gEventLoopMessage was received, exit out of
         // WaitForNotify so we can deal with it in RPCChannel.
-        RPCChannel::EnterModalLoop();
+        IncModalLoopCnt();
         SpinInternalEventLoop();
         return true; // bug 545338
+      }
+
+      // If a modal loop in the child has exited, we want to disable the spin
+      // loop.
+      if (PeekMessageW(&msg, (HWND)-1, gOOPPStopNativeLoopEvent,
+                       gOOPPStopNativeLoopEvent, PM_REMOVE)) {
+        DecModalLoopCnt();
+        break;
       }
 
       if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
