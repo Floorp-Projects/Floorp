@@ -226,7 +226,7 @@ Group.prototype = {
         
     $(container).resizable({
       handles: "se",
-      aspectRatio: true,
+      aspectRatio: false,
       stop: function(){
         self.arrange();
       } 
