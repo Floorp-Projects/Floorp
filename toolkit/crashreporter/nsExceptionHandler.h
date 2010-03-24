@@ -81,6 +81,24 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 // is non-NULL.
 bool TakeMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
 
+#ifdef XP_WIN
+typedef HANDLE ProcessHandle;
+#else
+typedef int ProcessHandle;
+#endif
+
+// Create new minidumps that are snapshots of the state of this parent
+// process and |childPid|.  Return true on success along with the
+// minidumps and a new UUID that can be used to correlate the dumps.
+//
+// If this function fails, it's the caller's responsibility to clean
+// up |childDump| and |parentDump|.  Either or both can be created and
+// returned non-null on failure.
+bool CreatePairedMinidumps(ProcessHandle childPid,
+                           nsAString* pairGUID NS_OUTPARAM,
+                           nsILocalFile** childDump NS_OUTPARAM,
+                           nsILocalFile** parentDump NS_OUTPARAM);
+
 #  if defined(XP_WIN32)
 // Parent-side API for children
 const char* GetChildNotificationPipe();
