@@ -275,6 +275,21 @@ nsSVGClipPathFrame::IsValid()
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsSVGClipPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::transform) {
+    nsSVGUtils::NotifyChildrenOfSVGChange(this,
+                                          nsISVGChildFrame::TRANSFORM_CHANGED);
+  }
+
+  return nsSVGClipPathFrameBase::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsSVGClipPathFrame::Init(nsIContent* aContent,
