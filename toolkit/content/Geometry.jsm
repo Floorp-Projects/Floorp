@@ -108,6 +108,11 @@ let Util = {
       return null;
   },
 
+  makeURLAbsolute: function makeURLAbsolute(base, url) {
+    // Note:  makeURI() will throw if url is not a valid URI
+    return makeURI(url, null, makeURI(base)).spec;
+  },
+
   contentIsHandheld: function contentIsHandheld(browser) {
     let doctype = browser.contentDocument.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
