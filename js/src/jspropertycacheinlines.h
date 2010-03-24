@@ -42,8 +42,7 @@
 #ifndef jspropertycacheinlines_h___
 #define jspropertycacheinlines_h___
 
-#include "jsinterp.h"
-#include "jslock.h"
+#include "jspropertycache.h"
 #include "jsscope.h"
 
 /* static */ inline bool
@@ -53,10 +52,10 @@ JSPropCacheEntry::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
 }
 
 /*
- * Property cache lookup macros. PROPERTY_CACHE_TEST is designed to inline the
- * fast path in js_Interpret, so it makes "just-so" restrictions on parameters,
- * e.g. pobj and obj should not be the same variable, since for JOF_PROP-mode
- * opcodes, obj must not be changed because of a cache miss.
+ * PROPERTY_CACHE_TEST is designed to inline the fast path in js_Interpret, so
+ * it makes "just-so" restrictions on parameters, e.g. pobj and obj should not
+ * be the same variable, since for JOF_PROP-mode opcodes, obj must not be
+ * changed because of a cache miss.
  *
  * On return from PROPERTY_CACHE_TEST, if atom is null then obj points to the
  * scope chain element in which the property was found, pobj is locked, and
@@ -68,33 +67,35 @@ JSPropCacheEntry::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
  * be deleting a property from its scope, or otherwise invalidating property
  * caches (on all threads) by re-generating scope->shape.
  */
-#define PROPERTY_CACHE_TEST(cx, pc, obj, pobj, entry, atom)                   \
-    do {                                                                      \
-        JSPropertyCache *cache_ = &JS_PROPERTY_CACHE(cx);                     \
-        uint32 kshape_ = (JS_ASSERT(OBJ_IS_NATIVE(obj)), OBJ_SHAPE(obj));     \
-        entry = &cache_->table[PROPERTY_CACHE_HASH(pc, kshape_)];             \
-        PCMETER(cache_->pctestentry = entry);                                 \
-        PCMETER(cache_->tests++);                                             \
-        JS_ASSERT(&obj != &pobj);                                             \
-        if (entry->kpc == pc && entry->kshape == kshape_) {                   \
-            JSObject *tmp_;                                                   \
-            pobj = obj;                                                       \
-            if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
-                (tmp_ = pobj->getProto()) != NULL) {                          \
-                pobj = tmp_;                                                  \
-            }                                                                 \
-                                                                              \
-            if (JSPropCacheEntry::matchShape(cx, pobj,                        \
-                                             PCVCAP_SHAPE(entry->vcap))) {    \
-                PCMETER(cache_->pchits++);                                    \
-                PCMETER(!PCVCAP_TAG(entry->vcap) || cache_->protopchits++);   \
-                atom = NULL;                                                  \
-                break;                                                        \
-            }                                                                 \
-        }                                                                     \
-        atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, entry);          \
-        if (atom)                                                             \
-            PCMETER(cache_->misses++);                                        \
-    } while (0)
+JS_ALWAYS_INLINE void
+PROPERTY_CACHE_TEST(JSContext *cx, jsbytecode *pc, JSObject *&obj,
+		    JSObject *&pobj, JSPropCacheEntry *&entry, JSAtom *&atom)
+{
+    JSPropertyCache *cache = &JS_PROPERTY_CACHE(cx);
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    uint32 kshape = OBJ_SHAPE(obj);
+    entry = &cache->table[PROPERTY_CACHE_HASH(pc, kshape)];
+    PCMETER(cache->pctestentry = entry);
+    PCMETER(cache->tests++);
+    JS_ASSERT(&obj != &pobj);
+    if (entry->kpc == pc && entry->kshape == kshape) {
+        JSObject *tmp;
+        pobj = obj;
+        if (PCVCAP_TAG(entry->vcap) == 1 &&
+            (tmp = pobj->getProto()) != NULL) {
+            pobj = tmp;
+        }
+
+        if (JSPropCacheEntry::matchShape(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {
+            PCMETER(cache->pchits++);
+            PCMETER(!PCVCAP_TAG(entry->vcap) || cache->protopchits++);
+            atom = NULL;
+            return;
+        }
+    }
+    atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, entry);
+    if (atom)
+        PCMETER(cache->misses++);
+}
 
 #endif /* jspropertycacheinlines_h___ */
