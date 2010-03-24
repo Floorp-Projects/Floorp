@@ -55,6 +55,7 @@
 #include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
+#include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"

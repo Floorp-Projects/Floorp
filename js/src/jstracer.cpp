@@ -78,7 +78,7 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
-#include "jsinterpinlines.h"
+#include "jspropertycacheinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
