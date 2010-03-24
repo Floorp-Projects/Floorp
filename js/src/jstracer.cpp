@@ -4058,7 +4058,16 @@ TraceRecorder::snapshot(ExitType exitType)
 JS_REQUIRES_STACK GuardRecord*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
+#ifdef JS_JIT_SPEW
+    // For debug builds, place the guard records in a longer lasting
+    // pool.  This is because the fragment profiler will look at them
+    // relatively late in the day, after they would have been freed,
+    // in some cases, had they been allocated in traceAlloc().
+    GuardRecord* gr = new (dataAlloc()) GuardRecord();
+#else
+    // The standard place (for production builds).
     GuardRecord* gr = new (traceAlloc()) GuardRecord();
+#endif
 
     gr->exit = exit;
     exit->addGuard(gr);
