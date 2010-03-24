@@ -44,12 +44,18 @@
 #include "nsIDocShell.h"
 #include "gfxPattern.h"
 
-// {ed741c16-4039-469b-91da-dca742c51a9f}
+// {3c4632ab-8443-4082-a8a310e7cfba4c74}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-  { 0xed741c16, 0x4039, 0x469b, { 0x91, 0xda, 0xdc, 0xa7, 0x42, 0xc5, 0x1a, 0x9f } }
+  { 0x3c4632ab, 0x8443, 0x4082, { 0xa8, 0xa3, 0x10, 0xe7, 0xcf, 0xba, 0x4c, 0x74 } }
 
 class gfxContext;
 class gfxASurface;
+
+namespace mozilla {
+namespace ipc {
+class Shmem;
+}
+}
 
 class nsICanvasRenderingContextInternal : public nsISupports {
 public:
@@ -90,6 +96,17 @@ public:
 
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
+
+  // If this context can be set to use Mozilla's Shmem segments as its backing
+  // store, this will set it to that state. Note that if you have drawn
+  // anything into this canvas before changing the shmem state, it will be
+  // lost.
+  NS_IMETHOD SetIsShmem(PRBool isShmem) = 0;
+
+  // Swap this back buffer with the front, and copy its contents to the new
+  // back. x, y, w, and h specify the area of |back| that is dirty.
+  NS_IMETHOD Swap(mozilla::ipc::Shmem& back,
+                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
