@@ -69,15 +69,22 @@
     }
   
     $(".tab").each(function(){
+      function randColor(){
+        return "rgb(%s,%s,%s)".replace(/%s/, parseInt(Math.random()*255))
+                              .replace(/%s/, parseInt(Math.random()*255))
+                              .replace(/%s/, parseInt(Math.random()*255))
+      }
+      
       $(this).css({
         top: randInt(window.innerHeight-150),
         left:randInt(window.innerWidth-150),
+        backgroundColor: randColor(),
         position: "absolute"
       })
     })
   </script>
 
-    <script type="text/javascript;version=1.8" src="../../js/optional/jquery-ui.js"></script>  
+    <script type="text/javascript;version=1.8" src="../../js/optional/jquery-ui.js"></script>
 
     <script src="js/groups.js"></script>
   
