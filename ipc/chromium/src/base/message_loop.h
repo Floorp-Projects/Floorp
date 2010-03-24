@@ -434,14 +434,18 @@ class MessageLoopForUI : public MessageLoop {
   MessageLoopForUI(Type type=TYPE_UI) : MessageLoop(type) {
   }
 
-#ifndef CHROMIUM_MOZILLA_BUILD
   // Returns the MessageLoopForUI of the current thread.
   static MessageLoopForUI* current() {
     MessageLoop* loop = MessageLoop::current();
+#ifdef CHROMIUM_MOZILLA_BUILD
+    Type type = loop->type();
+    DCHECK(type == MessageLoop::TYPE_UI ||
+           type == MessageLoop::TYPE_MOZILLA_UI);
+#else
     DCHECK_EQ(MessageLoop::TYPE_UI, loop->type());
+#endif
     return static_cast<MessageLoopForUI*>(loop);
   }
-#endif
 
 #if defined(OS_WIN)
   typedef base::MessagePumpWin::Dispatcher Dispatcher;

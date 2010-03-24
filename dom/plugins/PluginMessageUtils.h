@@ -198,12 +198,32 @@ NPNVariableToString(NPNVariable aVar)
 }
 #undef VARSTR
 
+inline bool IsPluginThread()
+{
+  MessageLoop::Type type = MessageLoop::current()->type();
+  return type == MessageLoop::TYPE_UI;
+}
 
 inline void AssertPluginThread()
 {
-  NS_ASSERTION(MessageLoopForUI::current(),
-               "should be on the plugin's main thread!");
+  NS_ASSERTION(IsPluginThread(), "Should be on the plugin's main thread!");
 }
+
+#define ENSURE_PLUGIN_THREAD(retval) \
+  PR_BEGIN_MACRO \
+    if (!IsPluginThread()) { \
+      NS_WARNING("Not running on the plugin's main thread!"); \
+      return (retval); \
+    } \
+  PR_END_MACRO
+
+#define ENSURE_PLUGIN_THREAD_VOID() \
+  PR_BEGIN_MACRO \
+    if (!IsPluginThread()) { \
+      NS_WARNING("Not running on the plugin's main thread!"); \
+      return; \
+    } \
+  PR_END_MACRO
 
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
 void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
