@@ -49,7 +49,7 @@ var Page = {
             $("body").css("overflow", "hidden");
 
             $(this).css("zIndex",99999).animate({
-              top: 0, left: 0, easing: "easein",
+              top: -10, left: 0, easing: "easein",
               width:w*scale, height:h*scale}, 200, function(){
                 $(this).find("canvas").data("link").tab.focus();
                 $(this)
