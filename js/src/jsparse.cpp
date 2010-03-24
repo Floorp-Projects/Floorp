@@ -2324,7 +2324,8 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                 if (nupvars == 0) {
                     FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                } else if (nflattened != 0) {
+                } else if (nflattened == nupvars) {
+                    /* FIXME bug 545759: to test nflattened != 0 */
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
