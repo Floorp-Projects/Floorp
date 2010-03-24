@@ -73,6 +73,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 #if defined(OS_WIN)
     , mPluginHWND(NULL)
     , mPluginWndProc(NULL)
+    , mNestedEventState(false)
 #endif // defined(XP_WIN)
 {
 }

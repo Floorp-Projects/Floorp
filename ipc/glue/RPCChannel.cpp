@@ -123,6 +123,7 @@ RPCChannel::Clear()
 #ifdef OS_WIN
 // static
 int RPCChannel::sInnerEventLoopDepth = 0;
+int RPCChannel::sModalEventCount = 0;
 #endif
 
 bool
