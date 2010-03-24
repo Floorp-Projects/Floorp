@@ -20,8 +20,8 @@
 #define bookmarks_aboutBrowser Firefox: About your browser
 
 # LOCALIZATION NOTE (bookmarks_weave):
-# link title for https://www.mozilla.com/en-US/mobile/weave
-#define bookmarks_weave Firefox: Synchronize using Weave
+# link title for https://www.mozilla.com/en-US/mobile/sync
+#define bookmarks_sync Firefox: Synchronize using Weave Sync
 
 # LOCALIZATION NOTE (bookmarks_addons):
 # link title for https://addons.mozilla.org/en-US/mobile
