@@ -367,12 +367,10 @@ public:
     NS_IMETHOD SetIsShmem(PRBool isShmem);
     // this rect is in CSS pixels
     NS_IMETHOD Redraw(const gfxRect &r);
-#ifdef MOZ_IPC
     // Swap this back buffer with the front, and copy its contents to the new back.
     // x, y, w, and h specify the area of |back| that is dirty.
     NS_IMETHOD Swap(mozilla::ipc::Shmem& back, PRInt32 x, PRInt32 y, 
                     PRInt32 w, PRInt32 h);
-#endif
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -1100,11 +1098,11 @@ nsCanvasRenderingContext2D::SetIsShmem(PRBool isShmem)
 #endif
 }
 
-#ifdef MOZ_IPC
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack, 
                                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
+#ifdef MOZ_IPC
     // Our front buffer is always the correct size. If this back buffer doesn't
     // match the front buffer's size, it's out of date (we've resized since
     // this message was sent) and we should just ignore it.
@@ -1145,8 +1143,10 @@ nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack,
                                              /* aCancelable = */ PR_TRUE);
     }
     return NS_OK;
-}
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter)
