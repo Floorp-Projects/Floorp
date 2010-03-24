@@ -4,6 +4,7 @@ chrome.jar:
 % skin browser classic/1.0 %
   aboutCertError.css                   (aboutCertError.css)
   aboutPage.css                        (aboutPage.css)
+  config.css                           (config.css)
   firstRun.css                         (firstRun.css)
   header.css                           (header.css)
   platform.css                         (platform.css)

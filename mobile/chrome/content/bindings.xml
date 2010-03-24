@@ -357,6 +357,14 @@
 
   <binding id="place-base">
     <content/>
+
+    <handlers>
+      <handler event="click" button="0">
+        if (this.control)
+          this.control._fireOpen(event, this);
+      </handler>
+    </handlers>
+
     <implementation>
       <field name="_uri">null</field>
       <field name="_control">null</field>
@@ -637,6 +645,15 @@
   </binding>
 
   <binding id="place-label" extends="chrome://browser/content/bindings.xml#place-base">
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          if (this.control)
+            this.control.openFolder(this.previousSibling.itemId);
+        ]]>
+      </handler>
+    </handlers>
+
     <content align="center">
       <xul:spacer xbl:inherits="width=indent"/>
       <xul:image anonid="favicon" class="bookmark-folder-image"/>
@@ -647,7 +664,7 @@
   <binding id="place-list">
     <content orient="vertical" flex="1">
       <xul:vbox anonid="parent-items" class="place-list-parents" />
-      <xul:richlistbox anonid="child-items" class="place-list-children" flex="1"/>
+      <xul:richlistbox anonid="child-items" class="place-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
       <constructor>
@@ -709,12 +726,6 @@
       </field>
 
       <field name="scrollBoxObject">this._children.scrollBoxObject</field>
-      <!-- This won't be updated when the window size changes, but that's OK,
-           since we don't need an exact value - we just use it to get an
-           approximate scroll position for deciding whether to append additional
-           items (see batchSize/_insertItems()).
-        -->
-      <field name="_childrenHeight">this.scrollBoxObject.height;</field>
 
       <property name="items" readonly="true" onget="return this._children.childNodes"/>
 
@@ -861,14 +872,6 @@
         </body>
       </method>
 
-      <!-- Number of elements to add to the list initially. If there are more
-           than this many bookmarks to display, only add them to the list once
-           the user has scrolled towards them. This is a performance
-           optimization to avoid locking up while attempting to append hundreds
-           of bookmarks to our richlistbox.
-        -->
-      <field name="batchSize">25</field>
-
       <method name="openFolder">
         <parameter name="aRootFolder"/>
         <body>
@@ -899,9 +902,6 @@
               parent.setAttribute("title", title);
               parents.insertBefore(parent, parents.firstChild);
 
-              // XXX Fix me - use <handler>?
-              parent.addEventListener("click", function(e) { self.openFolder(e.target.previousSibling.itemId); }, false);
-              
               folderId = this._folderParents[folderId] || PlacesUtils.bookmarks.getFolderIdForItem(folderId);
             } while (folderId != PlacesUtils.bookmarks.placesRoot)
 
@@ -911,95 +911,13 @@
 
             children.scrollBoxObject.scrollTo(0, 0);
 
-            this._childItems = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren.concat()
-                                                                          : this._getChildren(aRootFolder);
+            let items = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren.concat()
+                                                                   : this._getChildren(aRootFolder);
 
             if (aRootFolder == this.mobileRoot && !this.isDesktopFolderEmpty())
-              this._childItems.unshift(this._desktopFolder);
+              items.unshift(this._desktopFolder);
 
-            this._insertItems();
-          ]]>
-        </body>
-      </method>
-
-      <method name="close">
-        <body>
-          <![CDATA[
-            // Clear out references to child items, and remove event listener
-            // if needed
-            this._childItems = null;
-            if (this._scrollListenerAdded) {
-              this._children.removeEventListener("scroll", this._scrollListener, false);
-              this._scrollListenerAdded = false;
-            }
-          ]]>
-        </body>        
-      </method>
-
-      <method name="_insertItems">
-        <body>
-          <![CDATA[
-            let items = this._childItems.splice(0, this.batchSize);
-
-            if (!items.length)
-              return; // no items to insert
-
-            let children = this._children;
-            let itemsRemaining = this._childItems.length > 0;
-            if (itemsRemaining && !this._scrollListenerAdded) {
-              // We're not going to insert all items, so add a scroll listener
-              // to know when to add them.
-              this._children.addEventListener("scroll", this._scrollListener, false);
-              this._scrollListenerAdded = true;
-            }
-
-            if (!itemsRemaining && this._scrollListenerAdded) {
-              // Can get rid of the scroll listener now that all items are added.
-              this._children.removeEventListener("scroll", this._scrollListener, false);
-              this._scrollListenerAdded = false;
-            }
-
-            let fragment = document.createDocumentFragment();            
-            let count = items.length;
-            for (let i=0; i<count; i++)
-              fragment.appendChild(this.createItem(items[i]));
-            children.appendChild(fragment);
-
-            // make sure we recalculate the scrollHeight of the children
-            this._childrenScrollHeight = -1;
-          ]]>
-        </body>
-      </method>
-
-      <field name="_scrollListener"><![CDATA[
-        ({
-          self: this,
-          handleEvent: function () {
-            this.self._checkForInsert();
-          }
-        })
-      ]]></field>
-
-      <method name="_checkForInsert">
-        <body>
-          <![CDATA[
-            if (this._childrenScrollHeight == -1) {
-              // Need to force a reflow to get the right value here since we may
-              // have just added children.
-              Browser.forceChromeReflow();
-              let scrollheight = {};
-              this.scrollBoxObject.getScrolledSize({}, scrollheight);
-              this._childrenScrollHeight = scrollheight.value;
-            }
-
-            let y = {};
-            this.scrollBoxObject.getPosition({}, y);
-            let scrollRatio = (y.value + this._childrenHeight) / this._childrenScrollHeight;
-
-            // If we're scrolled 80% to the bottom of the list, append the next
-            // set of items
-            if (scrollRatio > 0.8)
-              this._insertItems();
+            children.setItems(items.map(this.createItem));
           ]]>
         </body>
       </method>
@@ -1020,10 +938,6 @@
               child.setAttribute("type", "folder");
             else
               child.setAttribute("src", aItem.icon);
-
-            // XXX make a <handler>
-            let self = this;
-            child.addEventListener("click", function(e) { self._fireOpen(e, child); }, false);
 
             return child;
           ]]>
@@ -1069,6 +983,69 @@
             }
           ]]>
         </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="richlistbox-batch" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <handlers>
+      <handler event="scroll">
+        <![CDATA[
+          // if there no more items to insert, just return early
+          if (this._items.length == 0)
+            return;
+
+          if (this._contentScrollHeight == -1) {
+            let scrollheight = {};
+            this.scrollBoxObject.getScrolledSize({}, scrollheight);
+            this._contentScrollHeight = scrollheight.value;
+          }
+
+          let y = {};
+          this.scrollBoxObject.getPosition({}, y);
+          let scrollRatio = (y.value + this._childrenHeight) / this._contentScrollHeight;
+
+          // If we're scrolled 80% to the bottom of the list, append the next
+          // set of items
+          if (scrollRatio > 0.8)
+            this._insertItems();
+        ]]>
+      </handler>
+    </handlers>
+    <implementation>
+      <!-- Number of elements to add to the list initially. If there are more
+           than this many elements to display, only add them to the list once
+           the user has scrolled towards them. This is a performance
+           optimization to avoid locking up while attempting to append hundreds
+           of nodes to our richlistbox.
+      -->
+      <property name="batchSize" readonly="true" onget="return this.getAttribute('batch')"/>
+
+      <field name="_childrenHeight">this.scrollBoxObject.height;</field>
+      <field name="_items">[]</field>
+
+      <method name="setItems">
+        <parameter name="aItems"/>
+        <body><![CDATA[
+          this._items = aItems;
+          this._insertItems();
+        ]]></body>
+      </method>
+
+      <method name="_insertItems">
+        <body><![CDATA[
+          let items = this._items.splice(0, this.batchSize);
+          if (!items.length)
+            return; // no items to insert
+
+          let count = items.length;
+          for (let i = 0; i<count; i++)
+            this.appendChild(items[i]);
+
+
+          // make sure we recalculate the scrollHeight of the content
+          this._contentScrollHeight = -1;
+        ]]></body>
       </method>
     </implementation>
   </binding>

@@ -5,6 +5,7 @@ chrome.jar:
   aboutCertError.css                   (aboutCertError.css)
   aboutPage.css                        (aboutPage.css)
   about.css                            (about.css)
+  config.css                           (config.css)
   firstRun.css                         (firstRun.css)
   header.css                           (header.css)
   platform.css                         (platform.css)
