@@ -63,6 +63,7 @@ XPIDLSRCS += \
   nsPIPlacesHistoryListenersNotifier.idl \
   mozIPlacesAutoComplete.idl \
   nsIMicrosummaryService.idl \
+  nsIPlacesImportExportService.idl \
   $(NULL)
 endif
 
