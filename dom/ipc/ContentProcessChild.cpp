@@ -72,10 +72,6 @@ ContentProcessChild* ContentProcessChild::sSingleton;
 ContentProcessChild::ContentProcessChild()
     : mQuit(PR_FALSE)
 {
-#ifdef MOZ_WIDGET_QT
-    NS_ASSERTION(!qApp, "QApplication created too early?");
-    mQApp = new QApplication(gArgc, (char**)gArgv);
-#endif
 }
 
 ContentProcessChild::~ContentProcessChild()
@@ -91,6 +87,11 @@ ContentProcessChild::Init(MessageLoop* aIOLoop,
   
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
+
+#ifdef MOZ_WIDGET_QT
+    NS_ASSERTION(!qApp, "QApplication created too early?");
+    mQApp = new QApplication(gArgc, (char**)gArgv);
+#endif
 
     return true;
 }
