@@ -60,6 +60,10 @@ XPCOMUtils.defineLazyGetter(this, "PACS", function() {
                    .getService(Ci.nsIAutoCompleteSearch);
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gObsSvc",
+                                   "@mozilla.org/observer-service;1",
+                                   "nsIObserverService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
                                    "@mozilla.org/file/directory_service;1",
                                    "nsIProperties");
@@ -224,6 +228,8 @@ var AutoCompleteUtils = {
 
 function AutoCompleteCache() {
   AutoCompleteUtils.init();
+
+  gObsSvc.addObserver(this, "browser:purge-session-history", true);
 }
 
 AutoCompleteCache.prototype = {
@@ -231,7 +237,7 @@ AutoCompleteCache.prototype = {
   contractID: "@mozilla.org/autocomplete/search;1?name=history",
   classID: Components.ID("{a65f9dca-62ab-4b36-a870-972927c78b56}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   startSearch: function(query, param, prev, listener) {
     let self = this;
@@ -257,9 +263,59 @@ AutoCompleteCache.prototype = {
   stopSearch: function() {
     // Stop any active queries
     AutoCompleteUtils.stop();
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "browser:purge-session-history":
+        AutoCompleteUtils.update();
+        break;
+    }
   }
 };
 
+// -----------------------------------------------------------------------
+// BookmarkObserver updates the cache when a bookmark is added
+// -----------------------------------------------------------------------
+function BookmarkObserver() {
+  this._batch = false;
+}
+
+BookmarkObserver.prototype = {
+  onBeginUpdateBatch: function() {
+    this._batch = true;
+  },
+  onEndUpdateBatch: function() {
+    this._batch = false;
+    AutoCompleteUtils.update();
+  },
+  onItemAdded: function(aItemId, aParentId, aIndex, aItemType) {
+    if (!this._batch)
+      AutoCompleteUtils.update();
+  },
+  onItemChanged: function () {
+    if (!this._batch)
+      AutoCompleteUtils.update();
+  },
+  onBeforeItemRemoved: function() {},
+  onItemRemoved: function() {
+    if (!this._batch)
+      AutoCompleteUtils.update();
+  },
+  onItemVisited: function() {},
+  onItemMoved: function() {},
+
+  classDescription: "Bookmark observer used to update autocomplete cache",
+  classID: Components.ID("f570982e-4f15-48ab-b6a0-ed851ac551b2"),
+  contractID: "@mozilla.org/browser/autocomplete-observer;1",
+
+  // Registering in this category makes us get initialized only when
+  // the listener would be notified.
+  _xpcom_categories: [{ category: "bookmark-observers" }],
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+};
+
 function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([AutoCompleteCache]);
+  return XPCOMUtils.generateModule([AutoCompleteCache, BookmarkObserver]);
 }
