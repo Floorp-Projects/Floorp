@@ -744,9 +744,12 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mOpaque(PR_FALSE), mShmem(PR_FALSE), mCanvasElement(nsnull),
-      mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE), mInvalidateCount(0),
-      mLastStyle(STYLE_MAX), mStyleStack(20)
+    :  mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull)
+    ,  mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE), mInvalidateCount(0)
+    ,  mLastStyle(STYLE_MAX), mStyleStack(20)
+#ifdef MOZ_IPC
+    , mShmem(PR_FALSE)
+#endif
 {
     sNumLivingContexts++;
 }
@@ -1078,6 +1081,7 @@ nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetIsShmem(PRBool isShmem)
 {
+#ifdef MOZ_IPC
     if (isShmem == mShmem)
         return NS_OK;
 
@@ -1091,6 +1095,9 @@ nsCanvasRenderingContext2D::SetIsShmem(PRBool isShmem)
     }
 
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 #ifdef MOZ_IPC
