@@ -184,6 +184,15 @@ static PRUint32 gPixelScrollDeltaTimeout = 0;
 static nscoord
 GetScrollableLineHeight(nsIFrame* aTargetFrame);
 
+static inline PRBool
+IsMouseEventReal(nsEvent* aEvent)
+{
+  NS_ABORT_IF_FALSE(aEvent->eventStructType == NS_MOUSE_EVENT,
+                    "Not a mouse event");
+  // Return true if not synthesized.
+  return static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal;
+}
+
 #ifdef DEBUG_DOCSHELL_FOCUS
 static void
 PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
@@ -509,7 +518,7 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
       return;
     case NS_MOUSE_MOVE:
     case NS_DRAGDROP_OVER:
-      if (((nsMouseEvent*)aEvent)->reason == nsMouseEvent::eReal) {
+      if (IsMouseEventReal(aEvent)) {
         // If the cursor is moving to be outside the frame,
         // terminate the scrollwheel transaction.
         nsIntPoint pt = GetScreenPoint((nsGUIEvent*)aEvent);
@@ -1031,7 +1040,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   // when user is not active doesn't change the state to active.
   if (NS_IS_TRUSTED_EVENT(aEvent) &&
       ((aEvent->eventStructType == NS_MOUSE_EVENT  &&
-        static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal &&
+        IsMouseEventReal(aEvent) &&
         aEvent->message != NS_MOUSE_ENTER &&
         aEvent->message != NS_MOUSE_EXIT) ||
        aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
@@ -2819,13 +2828,15 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_BUTTON_UP:
     {
       SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
-      if (!mCurrentTarget) {
-        nsIFrame* targ;
-        GetEventTarget(&targ);
-      }
-      if (mCurrentTarget) {
-        ret =
-          CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent, aStatus);
+      if (IsMouseEventReal(aEvent)) {
+        if (!mCurrentTarget) {
+          nsIFrame* targ;
+          GetEventTarget(&targ);
+        }
+        if (mCurrentTarget) {
+          ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent,
+                                         aStatus);
+        }
       }
 
       nsIPresShell *shell = presContext->GetPresShell();

@@ -6330,8 +6330,8 @@ PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
   return NS_OK;
 }
 
-inline PRBool
-IsSynthesizedMouseMove(nsEvent* aEvent)
+static inline PRBool
+IsSynthesizedMouseEvent(nsEvent* aEvent)
 {
   return aEvent->eventStructType == NS_MOUSE_EVENT &&
          static_cast<nsMouseEvent*>(aEvent)->reason != nsMouseEvent::eReal;
@@ -6458,7 +6458,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     if (GetCurrentEventFrame() && NS_SUCCEEDED(rv)) {
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (PreHandleEvent above), but not mousemove DOM events.
-      if (!IsSynthesizedMouseMove(aEvent)) {
+      // Synthesized button up events also do not cause DOM events
+      // because they do not have a reliable refPoint.
+      if (!IsSynthesizedMouseEvent(aEvent)) {
         nsPresShellEventCB eventCB(this);
         if (mCurrentEventContent) {
           nsEventDispatcher::Dispatch(mCurrentEventContent, mPresContext,
