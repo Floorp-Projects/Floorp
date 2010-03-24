@@ -57,6 +57,8 @@ UINT gOOPPSpinNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
 UINT gOOPPStopNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
+#elif defined(MOZ_WIDGET_GTK2)
+#include <gdk/gdk.h>
 #endif
 
 using namespace mozilla::plugins;
@@ -184,6 +186,16 @@ PluginInstanceParent::DeallocPPluginStream(PPluginStreamParent* stream)
     delete stream;
     return true;
 }
+
+#ifdef MOZ_X11
+static Display* GetXDisplay() {
+#  ifdef MOZ_WIDGET_GTK2
+        return GDK_DISPLAY();
+#  elif defined(MOZ_WIDGET_QT)
+        return QX11Info::display();
+#  endif
+}
+#endif
 
 bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVjavascriptEnabledBool(
@@ -581,7 +593,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 #endif
 
 #if defined(MOZ_X11)
-    if (GraphicsExpose == npevent->type) {
+    switch (npevent->type) {
+    case GraphicsExpose:
         PLUGIN_LOG_DEBUG(("  schlepping drawable 0x%lx across the pipe\n",
                           npevent->xgraphicsexpose.drawable));
         // Make sure the X server has created the Drawable and completes any
@@ -591,11 +604,22 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // process does not need to wait; the child is the process that needs
         // to wait.  A possibly-slightly-better alternative would be to send
         // an X event to the child that the child would wait for.
+        XSync(GetXDisplay(), False);
+        break;
+    case ButtonPress:
+        // Release any active pointer grab so that the plugin X client can
+        // grab the pointer if it wishes.
+        Display *dpy = GetXDisplay();
 #  ifdef MOZ_WIDGET_GTK2
-        XSync(GDK_DISPLAY(), False);
-#  elif defined(MOZ_WIDGET_QT)
-        XSync(QX11Info::display(), False);
+        // GDK attempts to (asynchronously) track whether there is an active
+        // grab so ungrab through GDK.
+        gdk_pointer_ungrab(npevent->xbutton.time);
+#  else
+        XUngrabPointer(dpy, npevent->xbutton.time);
 #  endif
+        // Wait for the ungrab to complete.
+        XSync(dpy, False);
+        break;
 
         return CallPaint(npremoteevent, &handled) ? handled : 0;
     }
