@@ -66,6 +66,8 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 
+class gfxMatrix;
+
 namespace mozilla {
 namespace dom {
 
@@ -193,6 +195,33 @@ public:
             const nsString& bgcolor,
             const PRUint32& flags,
             const bool& flush);
+
+    virtual PDocumentRendererShmemChild* AllocPDocumentRendererShmem(
+            const PRInt32& x,
+            const PRInt32& y,
+            const PRInt32& w,
+            const PRInt32& h,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush,
+            const gfxMatrix& aMatrix,
+            const PRInt32& bufw,
+            const PRInt32& bufh,
+            Shmem& buf);
+    virtual bool DeallocPDocumentRendererShmem(PDocumentRendererShmemChild* actor);
+    virtual bool RecvPDocumentRendererShmemConstructor(
+            PDocumentRendererShmemChild *__a,
+            const PRInt32& aX,
+            const PRInt32& aY,
+            const PRInt32& aW,
+            const PRInt32& aH,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush,
+            const gfxMatrix& aMatrix,
+            const PRInt32& aBufW,
+            const PRInt32& aBufH,
+            Shmem& aBuf);
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 

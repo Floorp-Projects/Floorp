@@ -48,6 +48,7 @@
 
 class nsIURI;
 class nsIDOMElement;
+class gfxMatrix;
 
 namespace mozilla {
 namespace dom {
@@ -90,6 +91,21 @@ public:
             const PRUint32& flags,
             const bool& flush);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
+
+    virtual mozilla::ipc::PDocumentRendererShmemParent* AllocPDocumentRendererShmem(
+            const PRInt32& x,
+            const PRInt32& y,
+            const PRInt32& w,
+            const PRInt32& h,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush,
+            const gfxMatrix& aMatrix,
+            const PRInt32& bufw,
+            const PRInt32& bufh,
+            Shmem& buf);
+    virtual bool DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor);
+
 protected:
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;

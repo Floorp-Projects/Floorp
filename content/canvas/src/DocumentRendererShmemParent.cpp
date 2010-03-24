@@ -1,5 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Content App.
+ * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
@@ -36,41 +34,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PIFrameEmbedding.ipdl";
-include protocol "PTestShell.ipdl";
-include protocol "PNecko.ipdl";
+#include "mozilla/ipc/DocumentRendererShmemParent.h"
 
-include "mozilla/TabTypes.h";
-include "mozilla/chrome/RegistryMessageUtils.h";
+using namespace mozilla::ipc;
 
-using ChromePackage;
-using ResourceMapping;
-using OverrideMapping;
+DocumentRendererShmemParent::DocumentRendererShmemParent()
+{}
 
-namespace mozilla {
-namespace dom {
+DocumentRendererShmemParent::~DocumentRendererShmemParent()
+{}
 
-rpc protocol PContentProcess
+void
+DocumentRendererShmemParent::SetCanvas(nsICanvasRenderingContextInternal* aCanvas)
 {
-    manages PIFrameEmbedding;
-    manages PTestShell;
-    manages PNecko;
-
-child:
-    PIFrameEmbedding();
-
-    PTestShell();
-
-    // A dummy message to make sure PContentProcess contains methods to create
-    // Shmem segments.
-    async Dummy(Shmem foo);
-
-    RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
-                   OverrideMapping[] overrides);
-
-parent:
-    PNecko();
-};
-
+    mCanvas = aCanvas;
 }
+
+bool
+DocumentRendererShmemParent::Recv__delete__(const PRInt32& x, const PRInt32& y,
+                                            const PRInt32& w, const PRInt32& h,
+                                            Shmem& data)
+{
+    mCanvas->Swap(data, x, y, w, h);
+    return true;
 }

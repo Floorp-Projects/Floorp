@@ -70,6 +70,9 @@ public:
         return sSingleton;
     }
 
+    /* if you remove this, please talk to cjones or dougt */
+    virtual bool RecvDummy(Shmem& foo) { return true; }
+
     virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding();
     virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingChild*);
 
