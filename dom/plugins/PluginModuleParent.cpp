@@ -299,10 +299,8 @@ PluginModuleParent::NotifyPluginCrashed()
         return;
     }
 
-    // FIXME/bug 544936: propagate mBrowserDumpID out to nsNPAPIPlugin
-    // and beyond
     if (mPlugin)
-        mPlugin->PluginCrashed(mPluginDumpID);
+        mPlugin->PluginCrashed(mPluginDumpID, mBrowserDumpID);
 }
 
 PPluginIdentifierParent*

@@ -301,10 +301,11 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 
 #ifdef MOZ_IPC
 void
-nsNPAPIPlugin::PluginCrashed(const nsAString& dumpID)
+nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
+                             const nsAString& browserDumpID)
 {
   nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
-  host->PluginCrashed(this, dumpID);
+  host->PluginCrashed(this, pluginDumpID, browserDumpID);
 }
 #endif
 
