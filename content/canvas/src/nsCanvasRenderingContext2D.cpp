@@ -1125,6 +1125,18 @@ nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack,
     memcpy(mBackBuffer.get<unsigned char>(), mFrontBuffer.get<unsigned char>(),
            mWidth * mHeight * 4);
 
+    // Notify listeners that we've finished drawing
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    nsIDocument* ownerDoc = nsnull;
+    if (content)
+        ownerDoc = content->GetOwnerDoc();
+
+    if (ownerDoc && mCanvasElement) {
+        nsContentUtils::DispatchTrustedEvent(ownerDoc, mCanvasElement, 
+                                             NS_LITERAL_STRING("MozAsyncCanvasRender"),
+                                             /* aCanBubble = */ PR_TRUE, 
+                                             /* aCancelable = */ PR_TRUE);
+    }
     return NS_OK;
 }
 #endif
