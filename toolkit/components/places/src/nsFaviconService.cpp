@@ -456,7 +456,7 @@ nsFaviconService::ExpireAllFavicons()
   // then we do the same in the temp table.  This is because the view UPDATE
   // trigger does not allow setting a NULL value to prevent dataloss.
 
-  mozIStorageStatement *stmts[] = {
+  mozIStorageBaseStatement *stmts[] = {
     GetStatement(mDBRemoveOnDiskReferences),
     GetStatement(mDBRemoveTempReferences),
     GetStatement(mDBRemoveAllFavicons),

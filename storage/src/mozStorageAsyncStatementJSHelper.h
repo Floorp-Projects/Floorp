@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,16 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is mozStorage code.
  *
- * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Lev Serebryakov <lev@serebryakov.spb.ru>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,38 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_storage_mozStorageAsyncStatementJSHelper_h_
+#define mozilla_storage_mozStorageAsyncStatementJSHelper_h_
 
-#include "mozIStorageValueArray.idl"
+#include "nsIXPCScriptable.h"
 
-interface mozIStorageConnection;
-interface nsIArray;
-interface nsIVariant;
+class AsyncStatement;
+
+namespace mozilla {
+namespace storage {
 
 /**
- * mozIStorageFunction is to be implemented by storage consumers that
- * wish to receive callbacks during the request execution.
- *
- * SQL can apply functions to values from tables. Examples of
- * such functions are MIN(a1,a2) or SQRT(num). Many functions are
- * implemented in SQL engine.
- *
- * This interface allows consumers to implement their own,
- * problem-specific functions.
- * These functions can be called from triggers, too.
- *
+ * A modified version of StatementJSHelper that only exposes the async-specific
+ * 'params' helper.  We do not expose 'row' or 'step' as they do not apply to
+ * us.
  */
-[scriptable, function, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
-interface mozIStorageFunction : nsISupports {
-  /**
-   * onFunctionCall is called when execution of a custom
-   * function should occur.
-   * 
-   * @param aNumArguments         The number of arguments
-   * @param aFunctionArguments    The arguments passed in to the function
-   *
-   * @returns any value as Variant type.
-   */
+class AsyncStatementJSHelper : public nsIXPCScriptable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCSCRIPTABLE
 
-  nsIVariant onFunctionCall(in mozIStorageValueArray aFunctionArguments);
+private:
+  nsresult getParams(AsyncStatement *, JSContext *, JSObject *, jsval *);
 };
+
+} // namespace storage
+} // namespace mozilla
+
+#endif // mozilla_storage_mozStorageAsyncStatementJSHelper_h_

@@ -107,7 +107,8 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     else if (type == mozIStorageValueArray::VALUE_TYPE_TEXT) {
       PRUint32 bytes;
       const jschar *sval = reinterpret_cast<const jschar *>(
-        mStatement->AsSharedWString(idx, &bytes)
+        static_cast<mozIStorageStatement *>(mStatement)->
+          AsSharedWString(idx, &bytes)
       );
       JSString *str = ::JS_NewUCStringCopyN(aCtx, sval, bytes / 2);
       if (!str) {
@@ -118,7 +119,8 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     }
     else if (type == mozIStorageValueArray::VALUE_TYPE_BLOB) {
       PRUint32 length;
-      const PRUint8 *blob = mStatement->AsSharedBlob(idx, &length);
+      const PRUint8 *blob = static_cast<mozIStorageStatement *>(mStatement)->
+        AsSharedBlob(idx, &length);
       JSObject *obj = ::JS_NewArrayObject(aCtx, length, nsnull);
       if (!obj) {
         *_retval = PR_FALSE;
