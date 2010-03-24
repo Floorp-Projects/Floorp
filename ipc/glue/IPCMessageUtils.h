@@ -307,7 +307,7 @@ struct ParamTraits<gfxMatrix>
         ReadParam(aMsg, aIter, &aResult->y0))
       return true;
 
-    return true;
+    return false;
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
