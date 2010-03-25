@@ -830,17 +830,16 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
 }
 
 bool
-PluginInstanceParent::AnswerNPN_PushPopupsEnabledState(const bool& aState,
-                                                       bool* aSuccess)
+PluginInstanceParent::AnswerNPN_PushPopupsEnabledState(const bool& aState)
 {
-    *aSuccess = mNPNIface->pushpopupsenabledstate(mNPP, aState ? 1 : 0);
+    mNPNIface->pushpopupsenabledstate(mNPP, aState ? 1 : 0);
     return true;
 }
 
 bool
-PluginInstanceParent::AnswerNPN_PopPopupsEnabledState(bool* aSuccess)
+PluginInstanceParent::AnswerNPN_PopPopupsEnabledState()
 {
-    *aSuccess = mNPNIface->poppopupsenabledstate(mNPP);
+    mNPNIface->poppopupsenabledstate(mNPP);
     return true;
 }
 

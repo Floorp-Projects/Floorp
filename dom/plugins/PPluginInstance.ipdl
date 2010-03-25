@@ -123,11 +123,9 @@ parent:
 
   async NPN_InvalidateRect(NPRect rect);
 
-  rpc NPN_PushPopupsEnabledState(bool aState)
-    returns (bool aSuccess);
+  rpc NPN_PushPopupsEnabledState(bool aState);
 
-  rpc NPN_PopPopupsEnabledState()
-    returns (bool aSuccess);
+  rpc NPN_PopPopupsEnabledState();
 
   rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
     returns (nsCString value, NPError result);

@@ -157,11 +157,10 @@ public:
     RecvNPN_InvalidateRect(const NPRect& rect);
 
     virtual bool
-    AnswerNPN_PushPopupsEnabledState(const bool& aState,
-                                     bool* aSuccess);
+    AnswerNPN_PushPopupsEnabledState(const bool& aState);
 
     virtual bool
-    AnswerNPN_PopPopupsEnabledState(bool* aSuccess);
+    AnswerNPN_PopPopupsEnabledState();
 
     NS_OVERRIDE virtual bool
     AnswerNPN_GetValueForURL(const NPNURLVariable& variable,
