@@ -571,10 +571,10 @@ namespace nanojit
         Register rb = b==a ? ra : findRegFor(b, allow & ~rmask(ra));
         if (isSICmpOpcode(condop)) {
             CMPW(cr, ra, rb);
-        } 
+        }
         else if (isUICmpOpcode(condop)) {
             CMPLW(cr, ra, rb);
-        } 
+        }
     #if defined NANOJIT_64BIT
         else if (isSQCmpOpcode(condop)) {
             CMPD(cr, ra, rb);
@@ -1019,7 +1019,7 @@ namespace nanojit
         }
     }
     #endif
-    
+
 #ifdef NANOJIT_64BIT
     void Assembler::asm_immq(LIns *ins) {
         Register r = ins->deprecated_getReg();
@@ -1203,7 +1203,7 @@ namespace nanojit
     #else
         NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI32() && iffalse->isI32()));
     #endif
-    
+
         // fixme: we could handle fpu registers here, too, since we're just branching
         Register rr = deprecated_prepResultReg(ins, GpRegs);
         findSpecificRegFor(iftrue, rr);

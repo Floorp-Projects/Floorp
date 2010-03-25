@@ -1743,7 +1743,7 @@ namespace nanojit
             // a temp XMM register.
             // Nb: we don't want any F64 values to end up in a GpReg, nor any
             // I64 values to end up in an FpReg.
-            // 
+            //
             //   # 'gt' and 'ga' are temporary GpRegs.
             //   # ins->oprnd1() is in 'rr' (FpRegs)
             //   mov   gt, 0x8000000000000000
