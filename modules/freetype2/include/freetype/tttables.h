@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -695,7 +695,7 @@ FT_BEGIN_HEADER
   *   FreeType error code.  0~means success.
   *
   * @note:
-  *   SFNT tables with length zero are treated as missing by Windows.
+  *   SFNT tables with length zero are treated as missing.
   *
   */
   FT_EXPORT( FT_Error )

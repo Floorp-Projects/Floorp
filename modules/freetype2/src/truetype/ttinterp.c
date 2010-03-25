@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -748,6 +748,13 @@
   }
 
 
+  /* The default value for `scan_control' is documented as FALSE in the */
+  /* TrueType specification.  This is confusing since it implies a      */
+  /* Boolean value.  However, this is not the case, thus both the       */
+  /* default values of our `scan_type' and `scan_control' fields (which */
+  /* the documentation's `scan_control' variable is split into) are     */
+  /* zero.                                                              */
+
   const TT_GraphicsState  tt_default_graphics_state =
   {
     0, 0, 0,
@@ -761,7 +768,7 @@
 
     1, 64, 1,
     TRUE, 68, 0, 0, 9, 3,
-    0, FALSE, 2, 1, 1, 1
+    0, FALSE, 0, 1, 1, 1
   };
 
 
@@ -784,9 +791,9 @@
 
       /* allocate object */
       if ( FT_NEW( exec ) )
-        goto Exit;
+        goto Fail;
 
-      /* initialize it */
+      /* initialize it; in case of error this deallocates `exec' too */
       error = Init_Context( exec, memory );
       if ( error )
         goto Fail;
@@ -795,13 +802,10 @@
       driver->context = exec;
     }
 
-  Exit:
     return driver->context;
 
   Fail:
-    FT_FREE( exec );
-
-    return 0;
+    return NULL;
   }
 
 
@@ -2190,7 +2194,7 @@
     FT_ASSERT( !CUR.face->unpatented_hinting );
 #endif
 
-    return TT_DotFix14( dx, dy,
+    return TT_DotFix14( (FT_UInt32)dx, (FT_UInt32)dy,
                         CUR.GS.projVector.x,
                         CUR.GS.projVector.y );
   }
@@ -2216,7 +2220,7 @@
   Dual_Project( EXEC_OP_ FT_Pos  dx,
                          FT_Pos  dy )
   {
-    return TT_DotFix14( dx, dy,
+    return TT_DotFix14( (FT_UInt32)dx, (FT_UInt32)dy,
                         CUR.GS.dualVector.x,
                         CUR.GS.dualVector.y );
   }
@@ -4286,13 +4290,21 @@
       CUR.numFDefs++;
     }
 
+    /* Although FDEF takes unsigned 32-bit integer,  */
+    /* func # must be within unsigned 16-bit integer */
+    if ( n > 0xFFFFU )
+    {
+      CUR.error = TT_Err_Too_Many_Function_Defs;
+      return;
+    }
+
     rec->range  = CUR.curRange;
-    rec->opc    = n;
+    rec->opc    = (FT_UInt16)n;
     rec->start  = CUR.IP + 1;
     rec->active = TRUE;
 
     if ( n > CUR.maxFunc )
-      CUR.maxFunc = n;
+      CUR.maxFunc = (FT_UInt16)n;
 
     /* Now skip the whole function definition. */
     /* We don't allow nested IDEFS & FDEFs.    */
@@ -4549,13 +4561,20 @@
       CUR.numIDefs++;
     }
 
-    def->opc    = args[0];
+    /* opcode must be unsigned 8-bit integer */
+    if ( 0 > args[0] || args[0] > 0x00FF )
+    {
+      CUR.error = TT_Err_Too_Many_Instruction_Defs;
+      return;
+    }
+
+    def->opc    = (FT_Byte)args[0];
     def->start  = CUR.IP+1;
     def->range  = CUR.curRange;
     def->active = TRUE;
 
     if ( (FT_ULong)args[0] > CUR.maxIns )
-      CUR.maxIns = args[0];
+      CUR.maxIns = (FT_Byte)args[0];
 
     /* Now skip the whole function definition. */
     /* We don't allow nested IDEFs & FDEFs.    */
@@ -5092,7 +5111,7 @@
       return;
     }
 
-    if ( ( args[0] & 0x100 ) != 0 && CUR.tt_metrics.ppem < A )
+    if ( ( args[0] & 0x100 ) != 0 && CUR.tt_metrics.ppem <= A )
       CUR.GS.scan_control = TRUE;
 
     if ( ( args[0] & 0x200 ) != 0 && CUR.tt_metrics.rotated )
@@ -5101,7 +5120,7 @@
     if ( ( args[0] & 0x400 ) != 0 && CUR.tt_metrics.stretched )
       CUR.GS.scan_control = TRUE;
 
-    if ( ( args[0] & 0x800 ) != 0 && CUR.tt_metrics.ppem >= A )
+    if ( ( args[0] & 0x800 ) != 0 && CUR.tt_metrics.ppem > A )
       CUR.GS.scan_control = FALSE;
 
     if ( ( args[0] & 0x1000 ) != 0 && CUR.tt_metrics.rotated )
@@ -5523,20 +5542,20 @@
     {
       if ( CUR.GS.both_x_axis )
       {
-        dx = TT_MulFix14( args[0], 0x4000 );
+        dx = TT_MulFix14( (FT_UInt32)args[0], 0x4000 );
         dy = 0;
       }
       else
       {
         dx = 0;
-        dy = TT_MulFix14( args[0], 0x4000 );
+        dy = TT_MulFix14( (FT_UInt32)args[0], 0x4000 );
       }
     }
     else
 #endif
     {
-      dx = TT_MulFix14( args[0], CUR.GS.freeVector.x );
-      dy = TT_MulFix14( args[0], CUR.GS.freeVector.y );
+      dx = TT_MulFix14( (FT_UInt32)args[0], CUR.GS.freeVector.x );
+      dy = TT_MulFix14( (FT_UInt32)args[0], CUR.GS.freeVector.y );
     }
 
     while ( CUR.GS.loop > 0 )
@@ -5702,8 +5721,8 @@
 
     if ( CUR.GS.gep0 == 0 )   /* If in twilight zone */
     {
-      CUR.zp0.org[point].x = TT_MulFix14( distance, CUR.GS.freeVector.x );
-      CUR.zp0.org[point].y = TT_MulFix14( distance, CUR.GS.freeVector.y ),
+      CUR.zp0.org[point].x = TT_MulFix14( (FT_UInt32)distance, CUR.GS.freeVector.x );
+      CUR.zp0.org[point].y = TT_MulFix14( (FT_UInt32)distance, CUR.GS.freeVector.y ),
       CUR.zp0.cur[point]   = CUR.zp0.org[point];
     }
 
@@ -5890,10 +5909,12 @@
     if ( CUR.GS.gep1 == 0 )
     {
       CUR.zp1.org[point].x = CUR.zp0.org[CUR.GS.rp0].x +
-                             TT_MulFix14( cvt_dist, CUR.GS.freeVector.x );
+                             TT_MulFix14( (FT_UInt32)cvt_dist,
+                                          CUR.GS.freeVector.x );
 
       CUR.zp1.org[point].y = CUR.zp0.org[CUR.GS.rp0].y +
-                             TT_MulFix14( cvt_dist, CUR.GS.freeVector.y );
+                             TT_MulFix14( (FT_UInt32)cvt_dist,
+                                          CUR.GS.freeVector.y );
 
       CUR.zp1.cur[point] = CUR.zp0.cur[point];
     }
@@ -6381,7 +6402,7 @@
           {
             scale_valid = 1;
             scale       = TT_MULDIV( org2 + delta2 - ( org1 + delta1 ),
-                                     0x10000, orus2 - orus1 );
+                                     0x10000L, orus2 - orus1 );
           }
 
           x = ( org1 + delta1 ) +

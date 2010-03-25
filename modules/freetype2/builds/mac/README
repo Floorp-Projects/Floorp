@@ -61,11 +61,11 @@ environment by Metrowerks. GCC for MPW and Symantec
   /Developer/Tools/SetFile of DevTool is useful to
   manipulate from commandline.
 
-  2-2. Metrowerks CodeWarriror
-  ----------------------------
+  2-2. Metrowerks CodeWarrior
+  ---------------------------
 
   XML project file is generated and tested by
-  CodeWarriror 9.0.  Older versions are not tested
+  CodeWarrior 9.0.  Older versions are not tested
   at all. At present, static library for ppc target
   is available in the project file.
 
@@ -99,7 +99,7 @@ environment by Metrowerks. GCC for MPW and Symantec
       System 7, MacOS 8, MacOS 9. So-called "Toolbox"
       API is used.
 
-    - FreeType.ppc_classic.make.txt
+    - FreeType.ppc_carbon.make.txt
       CFM binary executable format for ppc MacOS:
       MacOS 9. Carbon API is used.
 
@@ -392,7 +392,7 @@ ATSFontGetFileSpecification()         |    x    |    x    |    x    |    x    | 
     ATS font manager is not published in these versions.
 
 ------------------------------------------------------------
-Last update: 2007-Feb-01, by Alexei Podtelezhnikov.
+Last update: 2009-Jul-25.
 
 Currently maintained by
 	suzuki toshiya, <mpsuzuki@hiroshima-u.ac.jp>

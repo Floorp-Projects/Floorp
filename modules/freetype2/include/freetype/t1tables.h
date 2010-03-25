@@ -5,7 +5,7 @@
 /*    Basic Type 1/Type 2 tables definitions and interface (specification  */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -482,11 +482,11 @@ FT_BEGIN_HEADER
    *    FreeType error code.  0~means success.
    *
    * @note:
-   *    The string pointers within the font info structure are owned by
+   *    The string pointers within the @PS_PrivateRec structure are owned by
    *    the face and don't need to be freed by the caller.
    *
-   *    If the font's format is not PostScript-based, this function will
-   *    return the `FT_Err_Invalid_Argument' error code.
+   *    If the font's format is not PostScript-based, this function returns
+   *    the `FT_Err_Invalid_Argument' error code.
    *
    */
   FT_EXPORT( FT_Error )
