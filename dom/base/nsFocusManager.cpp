@@ -1671,7 +1671,7 @@ public:
 
   nsCOMPtr<nsISupports>   mTarget;
   PRUint32                mType;
-  nsCOMPtr<nsPresContext> mContext;
+  nsRefPtr<nsPresContext> mContext;
   PRBool                  mWindowRaised;
 };
 
