@@ -419,6 +419,11 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBSetPageFavicon, NS_LITERAL_CSTRING(
     "UPDATE moz_places_view SET favicon_id = ?2 WHERE id = ?1"));
 
+  RETURN_IF_STMT(mDBAssociateFaviconURIToPageURI, NS_LITERAL_CSTRING(
+    "UPDATE moz_places_view "
+    "SET favicon_id = (SELECT id FROM moz_favicons WHERE url = ?1) "
+    "WHERE url = ?2"));
+
   RETURN_IF_STMT(mDBRemoveOnDiskReferences, NS_LITERAL_CSTRING(
     "UPDATE moz_places "
     "SET favicon_id = NULL "
@@ -1199,6 +1204,7 @@ nsFaviconService::FinalizeStatements() {
     mDBRemoveOnDiskReferences,
     mDBRemoveTempReferences,
     mDBRemoveAllFavicons,
+    mDBAssociateFaviconURIToPageURI,
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {

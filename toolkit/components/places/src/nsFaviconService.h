@@ -57,6 +57,7 @@ namespace places {
   enum FaviconStatementId {
     DB_GET_ICON_INFO_WITH_PAGE = 0
   , DB_INSERT_ICON = 1
+  , DB_ASSOCIATE_ICONURI_TO_PAGEURI = 2
   };
 
 } // namespace places
@@ -156,6 +157,8 @@ public:
         return GetStatement(mDBGetIconInfoWithPage);
       case DB_INSERT_ICON:
         return GetStatement(mDBInsertIcon);
+      case DB_ASSOCIATE_ICONURI_TO_PAGEURI:
+        return GetStatement(mDBAssociateFaviconURIToPageURI);
     }
     return nsnull;
   }
@@ -179,6 +182,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBInsertIcon;
   nsCOMPtr<mozIStorageStatement> mDBUpdateIcon;
   nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
+  nsCOMPtr<mozIStorageStatement> mDBAssociateFaviconURIToPageURI;
   nsCOMPtr<mozIStorageStatement> mDBRemoveOnDiskReferences;
   nsCOMPtr<mozIStorageStatement> mDBRemoveTempReferences;
   nsCOMPtr<mozIStorageStatement> mDBRemoveAllFavicons;

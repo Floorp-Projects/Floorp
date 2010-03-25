@@ -861,6 +861,77 @@ SetFaviconDataStep::HandleCompletion(PRUint16 aReason)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// AssociateIconWithPageStep
+
+NS_IMPL_ISUPPORTS_INHERITED0(
+  AssociateIconWithPageStep
+, AsyncFaviconStep
+)
+ASYNC_STATEMENT_HANDLEERROR_IMPL(AssociateIconWithPageStep)
+ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(AssociateIconWithPageStep)
+
+
+void
+AssociateIconWithPageStep::Run() {
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mIconURI);
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mPageURI);
+
+  // The API does not say anything about what happens when we try to set an
+  // icon for a never seen page, but the service always tried to create it.
+  // Creating a new moz_places entry is a complex task that we don't want to
+  // replicate here, so, till that process will be async, we just go sync.
+  // Notice that the common case is that we add the visit before adding the
+  // icon, so this should hurt only direct and isolated API calls.
+  // See bug 554553.
+  if (!mStepper->mPageId) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    FAVICONSTEP_FAIL_IF_FALSE(history);
+    nsresult rv = history->GetUrlIdFor(mStepper->mPageURI,
+                                       &mStepper->mPageId,
+                                       PR_TRUE); // Auto create.
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  }
+
+  nsFaviconService* fs = nsFaviconService::GetFaviconService();
+  FAVICONSTEP_FAIL_IF_FALSE(fs);
+  mozIStorageStatement* stmt =
+    fs->GetStatementById(mozilla::places::DB_ASSOCIATE_ICONURI_TO_PAGEURI);
+  // Statement is null if we are shutting down.
+  FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = BindStatementURI(stmt, 0, mStepper->mIconURI);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  rv = BindStatementURI(stmt, 1, mStepper->mPageURI);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  // ExecuteAsync will reset the statement for us.
+  scoper.Abandon();
+}
+
+
+NS_IMETHODIMP
+AssociateIconWithPageStep::HandleCompletion(PRUint16 aReason)
+{
+  FAVICONSTEP_FAIL_IF_FALSE_RV(aReason == mozIStorageStatementCallback::REASON_FINISHED, NS_OK);
+
+  mStepper->mIconStatus |= ICON_STATUS_ASSOCIATED;
+
+  // Proceed to next step.
+  nsresult rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 } // namespace places
 } // namespace mozilla
