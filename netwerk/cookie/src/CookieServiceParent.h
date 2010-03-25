@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Daniel Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,51 +36,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHttp.h"
-#include "mozilla/net/NeckoParent.h"
-#include "mozilla/net/HttpChannelParent.h"
-#include "mozilla/net/CookieServiceParent.h"
+#ifndef mozilla_net_CookieServiceParent_h
+#define mozilla_net_CookieServiceParent_h
+
+#include "mozilla/net/PCookieServiceParent.h"
+
+class nsCookieService;
+class nsIIOService;
 
 namespace mozilla {
 namespace net {
 
-// C++ file contents
-NeckoParent::NeckoParent()
+class CookieServiceParent : public PCookieServiceParent
 {
+public:
+  CookieServiceParent();
+  virtual ~CookieServiceParent();
+
+protected:
+  virtual bool RecvGetCookieString(const nsCString& aHostSpec,
+                                   const nsCString& aHostCharset,
+                                   const nsCString& aOriginatingSpec,
+                                   const nsCString& aOriginatingCharset,
+                                   const bool& aFromHttp,
+                                   nsCString* aResult);
+
+  virtual bool RecvSetCookieString(const nsCString& aHostSpec,
+                                   const nsCString& aHostCharset,
+                                   const nsCString& aOriginatingSpec,
+                                   const nsCString& aOriginatingCharset,
+                                   const nsCString& aCookieString,
+                                   const nsCString& aServerTime,
+                                   const bool& aFromHttp);
+
+  nsRefPtr<nsCookieService> mCookieService;
+  nsCOMPtr<nsIIOService> mIOService;
+};
+
+}
 }
 
-NeckoParent::~NeckoParent()
-{
-}
-
-PHttpChannelParent* 
-NeckoParent::AllocPHttpChannel()
-{
-  HttpChannelParent *p = new HttpChannelParent();
-  p->AddRef();
-  return p;
-}
-
-bool 
-NeckoParent::DeallocPHttpChannel(PHttpChannelParent* channel)
-{
-  HttpChannelParent *p = static_cast<HttpChannelParent *>(channel);
-  p->Release();
-  return true;
-}
-
-PCookieServiceParent* 
-NeckoParent::AllocPCookieService()
-{
-  return new CookieServiceParent();
-}
-
-bool 
-NeckoParent::DeallocPCookieService(PCookieServiceParent* cs)
-{
-  delete cs;
-  return true;
-}
-
-}} // mozilla::net
+#endif // mozilla_net_CookieServiceParent_h
 
