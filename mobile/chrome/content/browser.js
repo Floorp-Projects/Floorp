@@ -417,7 +417,7 @@ var Browser = {
       
       let curEl = document.activeElement;
       if (curEl && curEl.scrollIntoView)
-        curEl.scrollIntoView();
+        curEl.scrollIntoView(false);
     }
     window.addEventListener("resize", resizeHandler, false);
 
