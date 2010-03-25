@@ -673,10 +673,10 @@ _releasevariantvalue(NPVariant *variant);
 static void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message);
 
-static bool NP_CALLBACK
+static void NP_CALLBACK
 _pushpopupsenabledstate(NPP aNPP, NPBool enabled);
 
-static bool NP_CALLBACK
+static void NP_CALLBACK
 _poppopupsenabledstate(NPP aNPP);
 
 static void NP_CALLBACK
@@ -1289,34 +1289,23 @@ _setexception(NPObject* aNPObj,
     NS_WARNING("Not yet implemented!");
 }
 
-bool NP_CALLBACK
+void NP_CALLBACK
 _pushpopupsenabledstate(NPP aNPP,
                         NPBool aEnabled)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
-    // XXXbent This is incorrect, followup to make this return void!
-    ENSURE_PLUGIN_THREAD(false);
+    ENSURE_PLUGIN_THREAD_VOID();
 
-    bool retval;
-    if (InstCast(aNPP)->CallNPN_PushPopupsEnabledState(aEnabled ? true : false,
-                                                       &retval)) {
-        return retval;
-    }
-    return false;
+    InstCast(aNPP)->CallNPN_PushPopupsEnabledState(aEnabled ? true : false);
 }
 
-bool NP_CALLBACK
+void NP_CALLBACK
 _poppopupsenabledstate(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
-    // XXXbent This is incorrect, followup to make this return void!
-    ENSURE_PLUGIN_THREAD(false);
+    ENSURE_PLUGIN_THREAD_VOID();
 
-    bool retval;
-    if (InstCast(aNPP)->CallNPN_PopPopupsEnabledState(&retval)) {
-        return retval;
-    }
-    return false;
+    InstCast(aNPP)->CallNPN_PopPopupsEnabledState();
 }
 
 void NP_CALLBACK
