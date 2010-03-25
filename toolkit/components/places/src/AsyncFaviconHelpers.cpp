@@ -40,9 +40,17 @@
 #include "mozilla/storage.h"
 #include "nsNetUtil.h"
 
+#include "nsStreamUtils.h"
+#include "nsIContentSniffer.h"
+#include "nsICacheService.h"
+#include "nsICacheVisitor.h"
+#include "nsICachingChannel.h"
+
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
+
+#include "nsCycleCollectionParticipant.h"
 
 #define TO_CHARBUFFER(_buffer) \
   reinterpret_cast<char*>(const_cast<PRUint8*>(_buffer))
@@ -72,6 +80,16 @@ _class::HandleResult(mozIStorageResultSet* aResultSet) \
   NS_NOTREACHED("Got an unexpected result?");\
   return NS_OK; \
 }
+
+#define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
+
+/**
+ * The maximum time we will keep a favicon around.  We always ask the cache, if
+ * we can, but default to this value if we do not get a time back, or the time
+ * is more in the future than this.
+ * Currently set to one week from now.
+ */
+#define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
 namespace mozilla {
 namespace places {
@@ -536,6 +554,209 @@ EnsureDatabaseEntryStep::HandleCompletion(PRUint16 aReason)
   nsresult rv = mStepper->Step();
   FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
 
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// FetchNetworkIconStep
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(FetchNetworkIconStep)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchNetworkIconStep)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+NS_INTERFACE_MAP_END_INHERITING(AsyncFaviconStep)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FetchNetworkIconStep)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FetchNetworkIconStep)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FetchNetworkIconStep)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FetchNetworkIconStep)
+
+
+FetchNetworkIconStep::FetchNetworkIconStep(enum AsyncFaviconFetchMode aFetchMode)
+  : mFetchMode(aFetchMode)
+{
+}
+
+
+void
+FetchNetworkIconStep::Run()
+{
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+
+  if (mFetchMode == FETCH_NEVER) {
+    // No data and we don't want to fetch, stop here.
+    FAVICONSTEP_CANCEL_IF_TRUE(mStepper->mData.Length() == 0, PR_FALSE);
+    // Else proceed to next step.
+    nsresult rv = mStepper->Step();
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  }
+
+  bool isExpired = PR_Now() < mStepper->mExpiration;
+  if (mStepper->mData.Length() > 0 && !isExpired &&
+      mFetchMode == FETCH_IF_MISSING) {
+    // We have an icon and we don't want to fetch a new one.  Proceed.
+    nsresult rv = mStepper->Step();
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+    return;
+  }
+
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mIconURI);
+
+  nsresult rv = NS_NewChannel(getter_AddRefs(mChannel), mStepper->mIconURI);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
+    do_QueryInterface(reinterpret_cast<nsISupports*>(this), &rv);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  rv = mChannel->SetNotificationCallbacks(listenerRequestor);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  rv = mChannel->AsyncOpen(this, nsnull);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+}
+
+
+NS_IMETHODIMP
+FetchNetworkIconStep::OnStartRequest(nsIRequest* aRequest,
+                                     nsISupports* aContext)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+FetchNetworkIconStep::OnStopRequest(nsIRequest* aRequest,
+                                    nsISupports* aContext,
+                                    nsresult aStatusCode)
+{
+  nsFaviconService* fs = nsFaviconService::GetFaviconService();
+  FAVICONSTEP_FAIL_IF_FALSE_RV(fs, NS_ERROR_OUT_OF_MEMORY);
+
+  if (NS_FAILED(aStatusCode) || mData.Length() == 0) {
+    // Load failed, add to failed cache.
+    fs->AddFailedFavicon(mStepper->mIconURI);
+    FAVICONSTEP_CANCEL_IF_TRUE_RV(true, PR_FALSE, NS_OK);
+  }
+
+  // Sniff the MIME type.
+  nsCOMPtr<nsICategoryManager> categoryManager =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(categoryManager, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsISimpleEnumerator> sniffers;
+  nsresult rv = categoryManager->EnumerateCategory(CONTENT_SNIFFING_SERVICES,
+                                                   getter_AddRefs(sniffers));
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  nsCAutoString mimeType;
+  PRBool hasMore = PR_FALSE;
+  while (mimeType.IsEmpty() &&
+         NS_SUCCEEDED(sniffers->HasMoreElements(&hasMore)) &&
+         hasMore) {
+    nsCOMPtr<nsISupports> snifferCIDSupports;
+    rv = sniffers->GetNext(getter_AddRefs(snifferCIDSupports));
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+    nsCOMPtr<nsISupportsCString> snifferCIDSupportsCString =
+      do_QueryInterface(snifferCIDSupports, &rv);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+    nsCAutoString snifferCID;
+    rv = snifferCIDSupportsCString->GetData(snifferCID);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+    nsCOMPtr<nsIContentSniffer> sniffer = do_GetService(snifferCID.get());
+    FAVICONSTEP_FAIL_IF_FALSE_RV(sniffer, rv);
+
+     // Ignore errors: we'll try the next sniffer.
+    (void)sniffer->GetMIMETypeFromContent(aRequest, TO_INTBUFFER(mData),
+                                          mData.Length(), mimeType);
+  }
+
+  if (mimeType.IsEmpty()) {
+    // We can not handle favicons that do not have a recognisable MIME type.
+    fs->AddFailedFavicon(mStepper->mIconURI);
+    FAVICONSTEP_CANCEL_IF_TRUE_RV(true, PR_FALSE, NS_OK);
+  }
+
+  // Attempt to get an expiration time from the cache.  If this fails, we'll
+  // make one up.
+  PRTime expiration = -1;
+  nsCOMPtr<nsICachingChannel> cachingChannel(do_QueryInterface(mChannel));
+  if (cachingChannel) {
+    nsCOMPtr<nsISupports> cacheToken;
+    rv = cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICacheEntryInfo> cacheEntry(do_QueryInterface(cacheToken));
+      PRUint32 seconds;
+      rv = cacheEntry->GetExpirationTime(&seconds);
+      if (NS_SUCCEEDED(rv)) {
+        // Set the expiration, but make sure we honor our cap.
+        expiration = PR_Now() + NS_MIN((PRTime)seconds * PR_USEC_PER_SEC,
+                                       MAX_FAVICON_EXPIRATION);
+      }
+    }
+  }
+  // If we did not obtain a time from the cache, or it was negative, use our cap
+  if (expiration < 0) {
+    expiration = PR_Now() + MAX_FAVICON_EXPIRATION;
+  }
+
+  mStepper->mExpiration = expiration;
+  mStepper->mMimeType = mimeType;
+  mStepper->mData = mData;
+  mStepper->mIconStatus |= ICON_STATUS_CHANGED;
+
+  // Proceed to next step.
+  rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+FetchNetworkIconStep::OnDataAvailable(nsIRequest* aRequest,
+                                      nsISupports* aContext,
+                                      nsIInputStream* aInputStream,
+                                      PRUint32 aOffset,
+                                      PRUint32 aCount)
+{
+  nsCAutoString buffer;
+  nsresult rv = NS_ConsumeStream(aInputStream, aCount, buffer);
+  if (rv != NS_BASE_STREAM_WOULD_BLOCK && NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mData.Append(buffer);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+FetchNetworkIconStep::GetInterface(const nsIID& uuid,
+                                   void** aResult)
+{
+  return QueryInterface(uuid, aResult);
+}
+
+
+NS_IMETHODIMP
+FetchNetworkIconStep::OnChannelRedirect(nsIChannel* oldChannel,
+                                        nsIChannel* newChannel,
+                                        PRUint32 flags)
+{
+  mChannel = newChannel;
   return NS_OK;
 }
 
