@@ -2650,7 +2650,7 @@ crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
   return pluginCrashInNestedLoop(id);
 }
 
-else
+#else
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
                  NPVariant* result)
