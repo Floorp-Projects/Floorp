@@ -106,8 +106,10 @@ public:
   }
 
   // internal version called by history when done lazily
-  nsresult DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
-                                      PRBool aForceReload);
+  nsresult DoSetAndLoadFaviconForPage(nsIURI* aPageURI,
+                                      nsIURI* aFaviconURI,
+                                      PRBool aForceReload,
+                                      nsIFaviconDataCallback* aCallback);
 
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);

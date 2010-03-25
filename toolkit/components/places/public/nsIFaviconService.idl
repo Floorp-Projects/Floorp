@@ -42,7 +42,7 @@
 interface nsIURI;
 interface nsIFaviconDataCallback;
 
-[scriptable, uuid(66f6b992-e2d3-43da-ba2a-d966e34a7654)]
+[scriptable, uuid(2cf188f4-3c96-4bca-b668-36b25aaf7c1d)]
 interface nsIFaviconService : nsISupports
 {
   /**
@@ -99,7 +99,8 @@ interface nsIFaviconService : nsISupports
    */
   void setAndLoadFaviconForPage(in nsIURI aPageURI,
                                 in nsIURI aFaviconURI,
-                                in boolean aForceReload);
+                                in boolean aForceReload,
+                                [optional] in nsIFaviconDataCallback aCallback);
 
   /**
    * Stores the data for a given favicon URI.
