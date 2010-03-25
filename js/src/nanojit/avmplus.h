@@ -90,10 +90,6 @@
 void NanoAssertFail();
 #endif
 
-#define AvmAssert(x) assert(x)
-#define AvmAssertMsg(x, y)
-#define AvmDebugLog(x) printf x
-
 #if defined(AVMPLUS_IA32)
 #if defined(_MSC_VER)
 __declspec(naked) static inline __int64 rdtsc()
