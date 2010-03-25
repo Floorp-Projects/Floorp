@@ -186,8 +186,8 @@ nsSVGTransformSMILAttr::ParseValue(const nsAString& aSpec,
     return;
   }
 
-  // Success! Populate our outparam with parsed value.
-  aResult.Swap(val);
+  // Success! Initialize our outparam with parsed value.
+  aResult = val;
 }
 
 inline PRBool
