@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Outline Processing
@@ -79,6 +79,11 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 
   } <b>FT_Outline</b>;
 
+  /* Following limits must be consistent with */
+  /* <b>FT_Outline</b>.{n_contours,n_points}         */
+#define FT_OUTLINE_CONTOURS_MAX  SHRT_MAX
+#define FT_OUTLINE_POINTS_MAX    SHRT_MAX
+
 </pre></table><br>
 <table align=center width="87%"><tr><td>
 <p>This structure is used to describe an outline to the scan-line converter.</p>
@@ -96,8 +101,11 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 <p>A pointer to an array of &lsquo;n_points&rsquo; <a href="ft2-basic_types.html#FT_Vector">FT_Vector</a> elements, giving the outline's point coordinates.</p>
 </td></tr>
 <tr valign=top><td><b>tags</b></td><td>
-<p>A pointer to an array of &lsquo;n_points&rsquo; chars, giving each outline point's type. If bit&nbsp;0 is unset, the point is &lsquo;off&rsquo; the curve, i.e., a Bézier control point, while it is &lsquo;on&rsquo; when set.</p>
+<p>A pointer to an array of &lsquo;n_points&rsquo; chars, giving each outline point's type.</p>
+<p>If bit&nbsp;0 is unset, the point is &lsquo;off&rsquo; the curve, i.e., a Bézier control point, while it is &lsquo;on&rsquo; if set.</p>
 <p>Bit&nbsp;1 is meaningful for &lsquo;off&rsquo; points only. If set, it indicates a third-order Bézier arc control point; and a second-order control point if unset.</p>
+<p>If bit&nbsp;2 is set, bits 5-7 contain the drop-out mode (as defined in the OpenType specification; the value is the same as the argument to the SCANMODE instruction).</p>
+<p>Bits 3 and&nbsp;4 are reserved for internal purposes.</p>
 </td></tr>
 <tr valign=top><td><b>contours</b></td><td>
 <p>An array of &lsquo;n_contours&rsquo; shorts, giving the end point of each contour within the outline. For example, the first contour is defined by the points &lsquo;0&rsquo; to &lsquo;contours[0]&rsquo;, the second one is defined by the points &lsquo;contours[0]+1&rsquo; to &lsquo;contours[1]&rsquo;, etc.</p>
@@ -106,6 +114,9 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 <p>A set of bit flags used to characterize the outline and give hints to the scan-converter and hinter on how to convert/grid-fit it. See <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_FLAGS</a>.</p>
 </td></tr>
 </table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>The B/W rasterizer only checks bit&nbsp;2 in the &lsquo;tags&rsquo; array for the first point of each contour. The drop-out mode as given with <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a>, <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_SMART_DROPOUTS</a>, and <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_INCLUDE_STUBS</a> in &lsquo;flags&rsquo; is then overridden.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -146,7 +157,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_EVEN_ODD_FILL</b></td></tr>
 <tr valign=top><td></td><td>
-<p>By default, outlines are filled using the non-zero winding rule. If set to 1, the outline will be filled using the even-odd fill rule (only works with the smooth raster).</p>
+<p>By default, outlines are filled using the non-zero winding rule. If set to 1, the outline will be filled using the even-odd fill rule (only works with the smooth rasterizer).</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_REVERSE_FILL</b></td></tr>
 <tr valign=top><td></td><td>
@@ -154,15 +165,15 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_IGNORE_DROPOUTS</b></td></tr>
 <tr valign=top><td></td><td>
-<p>By default, the scan converter will try to detect drop-outs in an outline and correct the glyph bitmap to ensure consistent shape continuity. If set, this flag hints the scan-line converter to ignore such cases.</p>
+<p>By default, the scan converter will try to detect drop-outs in an outline and correct the glyph bitmap to ensure consistent shape continuity. If set, this flag hints the scan-line converter to ignore such cases. See below for more information.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_SMART_DROPOUTS</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Select smart dropout control. If unset, use simple dropout control. Ignored if <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a> is set.</p>
+<p>Select smart dropout control. If unset, use simple dropout control. Ignored if <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a> is set. See below for more information.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_INCLUDE_STUBS</b></td></tr>
 <tr valign=top><td></td><td>
-<p>If set, turn pixels on for &lsquo;stubs&rsquo;, otherwise exclude them. Ignored if <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a> is set.</p>
+<p>If set, turn pixels on for &lsquo;stubs&rsquo;, otherwise exclude them. Ignored if <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a> is set. See below for more information.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_HIGH_PRECISION</b></td></tr>
 <tr valign=top><td></td><td>
@@ -174,6 +185,8 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>The flags <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_IGNORE_DROPOUTS</a>, <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_SMART_DROPOUTS</a>, and <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_INCLUDE_STUBS</a> are ignored by the smooth rasterizer.</p>
+<p>There exists a second mechanism to pass the drop-out mode to the B/W rasterizer; see the &lsquo;tags&rsquo; field in <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>.</p>
 <p>Please refer to the description of the &lsquo;SCANTYPE&rsquo; instruction in the OpenType specification (in file &lsquo;ttinst1.doc&rsquo;) how simple drop-outs, smart drop-outs, and stubs are defined.</p>
 </td></tr></table>
 </td></tr></table>
@@ -224,7 +237,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 <p></p>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>anoutline</b></td><td>
-<p>A handle to the new outline. NULL in case of error.</p>
+<p>A handle to the new outline.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -442,6 +455,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>The used algorithm to increase or decrease the thickness of the glyph doesn't change the number of points; this means that certain situations like acute angles or intersections are sometimes handled incorrectly.</p>
+<p>If you need &lsquo;better&rsquo; metrics values you should call <a href="ft2-outline_processing.html#FT_Outline_Get_CBox">FT_Outline_Get_CBox</a> ot <a href="ft2-outline_processing.html#FT_Outline_Get_BBox">FT_Outline_Get_BBox</a>.</p>
 <p>Example call:</p>
 <pre class="colored">
   FT_Load_Glyph( face, index, FT_LOAD_DEFAULT );                   
@@ -478,7 +492,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>This functions toggles the bit flag <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_REVERSE_FILL</a> in the outline's &lsquo;flags&rsquo; field.</p>
+<p>This function toggles the bit flag <a href="ft2-outline_processing.html#FT_OUTLINE_FLAGS">FT_OUTLINE_REVERSE_FILL</a> in the outline's &lsquo;flags&rsquo; field.</p>
 <p>It shouldn't be used by a normal client application, unless it knows what it is doing.</p>
 </td></tr></table>
 </td></tr></table>
@@ -705,7 +719,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>A function pointer type use to describe the signature of a &lsquo;conic to&rsquo; function during outline walking/decomposition.</p>
+<p>A function pointer type used to describe the signature of a &lsquo;conic to&rsquo; function during outline walking or decomposition.</p>
 <p>A &lsquo;conic to&rsquo; is emitted to indicate a second-order Bézier arc in the outline.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
@@ -748,7 +762,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>A function pointer type used to describe the signature of a &lsquo;cubic to&rsquo; function during outline walking/decomposition.</p>
+<p>A function pointer type used to describe the signature of a &lsquo;cubic to&rsquo; function during outline walking or decomposition.</p>
 <p>A &lsquo;cubic to&rsquo; is emitted to indicate a third-order Bézier arc.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
@@ -798,7 +812,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>A structure to hold various function pointers used during outline decomposition in order to emit segments, conic, and cubic Béziers, as well as &lsquo;move to&rsquo; and &lsquo;close to&rsquo; operations.</p>
+<p>A structure to hold various function pointers used during outline decomposition in order to emit segments, conic, and cubic Béziers.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>fields</b></em></td></tr><tr><td>
 <p></p>
@@ -829,7 +843,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
   x' = (x &lt;&lt; shift) - delta                                        
   y' = (x &lt;&lt; shift) - delta                                        
 </pre>
-<p>Set the value of &lsquo;shift&rsquo; and &lsquo;delta&rsquo; to&nbsp;0 to get the original point coordinates.</p>
+<p>Set the values of &lsquo;shift&rsquo; and &lsquo;delta&rsquo; to&nbsp;0 to get the original point coordinates.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -851,7 +865,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Walk over an outline's structure to decompose it into individual segments and Bézier arcs. This function is also able to emit &lsquo;move to&rsquo; and &lsquo;close to&rsquo; operations to indicate the start and end of new contours in the outline.</p>
+<p>Walk over an outline's structure to decompose it into individual segments and Bézier arcs. This function also emits &lsquo;move to&rsquo; operations to indicate the start of new contours in the outline.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>
@@ -860,7 +874,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 <p>A pointer to the source target.</p>
 </td></tr>
 <tr valign=top><td><b>func_interface</b></td><td>
-<p>A table of &lsquo;emitters&rsquo;, i.e,. function pointers called during decomposition to indicate path operations.</p>
+<p>A table of &lsquo;emitters&rsquo;, i.e., function pointers called during decomposition to indicate path operations.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -982,7 +996,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Render an outline within a bitmap using the current scan-convert. This functions uses an <a href="ft2-raster.html#FT_Raster_Params">FT_Raster_Params</a> structure as an argument, allowing advanced features like direct composition, translucency, etc.</p>
+<p>Render an outline within a bitmap using the current scan-convert. This function uses an <a href="ft2-raster.html#FT_Raster_Params">FT_Raster_Params</a> structure as an argument, allowing advanced features like direct composition, translucency, etc.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>

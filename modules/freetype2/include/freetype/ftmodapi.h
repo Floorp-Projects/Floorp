@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2008 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2008, 2009 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -259,6 +259,10 @@ FT_BEGIN_HEADER
   /*    from a given memory object.  It is thus possible to use libraries  */
   /*    with distinct memory allocators within the same program.           */
   /*                                                                       */
+  /*    Normally, you would call this function (followed by a call to      */
+  /*    @FT_Add_Default_Modules or a series of calls to @FT_Add_Module)    */
+  /*    instead of @FT_Init_FreeType to initialize the FreeType library.   */
+  /*                                                                       */
   /* <Input>                                                               */
   /*    memory   :: A handle to the original memory object.                */
   /*                                                                       */
@@ -412,7 +416,7 @@ FT_BEGIN_HEADER
    *     FT_Get_TrueType_Engine_Type
    *
    *  @description:
-   *     Return a @FT_TrueTypeEngineType value to indicate which level of
+   *     Return an @FT_TrueTypeEngineType value to indicate which level of
    *     the TrueType virtual machine a given library instance supports.
    *
    *  @input:

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005, 2006 by
+# Copyright 1996-2000, 2003, 2005, 2006, 2009 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -61,7 +61,7 @@ T := -o$(space)
 #   Use the ANSIFLAGS variable to define the compiler flags used to enfore
 #   ANSI compliance.
 #
-CFLAGS ?= -c -g -O6 -Wall
+CFLAGS ?= -c -g -O3 -Wall
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #

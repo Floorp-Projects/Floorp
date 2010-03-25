@@ -46,7 +46,7 @@
 #include FT_INTERNAL_DEBUG_H
 
 
-#if defined( FT_DEBUG_LEVEL_ERROR )
+#ifdef FT_DEBUG_LEVEL_ERROR
 
   /* documentation is in ftdebug.h */
 

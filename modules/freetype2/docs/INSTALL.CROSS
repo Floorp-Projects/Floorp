@@ -8,7 +8,7 @@ INSTALL.UNIX for required tools and the basic self-building procedure.
   -----------------
 
     For self-building the FreeType library  on a Unix system, GNU Make
-    3.78.1 or  newer is required.  INSTALL.UNIX contains  hints how to
+    3.80 or  newer is required.   INSTALL.UNIX  contains  hints how to
     check the installed `make'.
 
     The GNU C  compiler to cross-build the target  system is required.
@@ -121,7 +121,7 @@ INSTALL.UNIX for required tools and the basic self-building procedure.
 
 ----------------------------------------------------------------------
 
-Copyright 2006 by suzuki toshiya
+Copyright 2006, 2008 by suzuki toshiya
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 
