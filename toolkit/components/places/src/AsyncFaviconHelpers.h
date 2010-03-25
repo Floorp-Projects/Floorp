@@ -293,6 +293,22 @@ public:
   void Run();
 };
 
+
+/**
+ * Fetch an existing icon and associated information from the database.
+ * Requires mDBInsertIcon statement.
+ */
+class EnsureDatabaseEntryStep : public AsyncFaviconStep
+                              , public mozilla::places::AsyncStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  EnsureDatabaseEntryStep() {};
+  void Run();
+};
+
 } // namespace places
 } // namespace mozilla
 

@@ -65,6 +65,14 @@ _class::HandleError(mozIStorageError *aError) \
   FAVICONSTEP_FAIL_IF_FALSE_RV(false, NS_OK); \
 }
 
+#define ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(_class) \
+NS_IMETHODIMP \
+_class::HandleResult(mozIStorageResultSet* aResultSet) \
+{ \
+  NS_NOTREACHED("Got an unexpected result?");\
+  return NS_OK; \
+}
+
 namespace mozilla {
 namespace places {
 
@@ -463,6 +471,64 @@ FetchDatabaseIconStep::HandleResult(mozIStorageResultSet* aResultSet)
 
 NS_IMETHODIMP
 FetchDatabaseIconStep::HandleCompletion(PRUint16 aReason)
+{
+  FAVICONSTEP_FAIL_IF_FALSE_RV(aReason == mozIStorageStatementCallback::REASON_FINISHED, NS_OK);
+
+  // Proceed to next step.
+  nsresult rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// EnsureDatabaseEntryStep
+
+NS_IMPL_ISUPPORTS_INHERITED0(
+  EnsureDatabaseEntryStep
+, AsyncFaviconStep
+)
+ASYNC_STATEMENT_HANDLEERROR_IMPL(EnsureDatabaseEntryStep)
+ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(EnsureDatabaseEntryStep)
+
+
+void
+EnsureDatabaseEntryStep::Run()
+{
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mIconURI);
+  nsresult rv;
+
+  // If the icon entry already exists, just proceed to next step.
+  if (mStepper->mIconId > 0 || mStepper->mIsRevisit) {
+    rv = mStepper->Step();
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+    return;
+  }
+
+  // Insert a new icon entry in the database.
+  nsFaviconService* fs = nsFaviconService::GetFaviconService();
+  FAVICONSTEP_FAIL_IF_FALSE(fs);
+  mozIStorageStatement* stmt =
+    fs->GetStatementById(mozilla::places::DB_INSERT_ICON);
+  // Statement is null if we are shutting down.
+  FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
+  mozStorageStatementScoper scoper(stmt);
+  rv = BindStatementURI(stmt, 0, mStepper->mIconURI);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  // ExecuteAsync will reset the statement for us.
+  scoper.Abandon();
+}
+
+
+NS_IMETHODIMP
+EnsureDatabaseEntryStep::HandleCompletion(PRUint16 aReason)
 {
   FAVICONSTEP_FAIL_IF_FALSE_RV(aReason == mozIStorageStatementCallback::REASON_FINISHED, NS_OK);
 
