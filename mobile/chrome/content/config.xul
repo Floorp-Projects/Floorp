@@ -77,8 +77,8 @@
 
             <vbox id="editor" hidden="true">
               <hbox align="center">
-                <textbox id="editor-name" flex="1"/>
-                <setting id="editor-setting" onlabel="true" offlabel="false" flex="1"/>
+                <textbox id="editor-name" emptytext="&addpref.name;" flex="1"/>
+                <setting id="editor-setting" emptytext="&addpref.value;" onlabel="true" offlabel="false" flex="1"/>
               </hbox>
               <hbox id="editor-buttons">
                 <button id="editor-cancel" label="&cancel.label;" oncommand="ViewConfig.close(false)"/>

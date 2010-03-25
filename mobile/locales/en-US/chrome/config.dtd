@@ -1,5 +1,7 @@
 <!ENTITY empty.label            "Search">
-<!ENTITY newpref.label          "Add a new preference">
+<!ENTITY newpref.label          "Add a New Preference">
+<!ENTITY addpref.name           "Name">
+<!ENTITY addpref.value          "Value">
 
 <!ENTITY cancel.label           "Cancel">
 <!ENTITY reset.label            "Reset">

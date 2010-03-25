@@ -75,7 +75,7 @@ richlistitem .prefvalue {
 #editor-container > #editor > hbox > #editor-name,
 #editor-container > #editor > hbox > #editor-cancel,
 #editor-container > #editor > hbox > #editor-done {
-  display: block;
+  display: -moz-box;
 }
 
 #editor-container > #editor > hbox > #editor-reset {
