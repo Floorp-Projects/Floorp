@@ -961,7 +961,6 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
                              ref(mTokens[0]));
             break;
 
-          case LIR_addp:
           case LIR_add:
           case LIR_sub:
           case LIR_mul:
@@ -1352,9 +1351,6 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 
     vector<LOpcode> I_II_ops;
     I_II_ops.push_back(LIR_add);
-#ifndef NANOJIT_64BIT
-    I_II_ops.push_back(LIR_iaddp);
-#endif
     I_II_ops.push_back(LIR_sub);
     I_II_ops.push_back(LIR_mul);
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
@@ -1371,7 +1367,6 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #ifdef NANOJIT_64BIT
     vector<LOpcode> Q_QQ_ops;
     Q_QQ_ops.push_back(LIR_qiadd);
-    Q_QQ_ops.push_back(LIR_qaddp);
     Q_QQ_ops.push_back(LIR_qiand);
     Q_QQ_ops.push_back(LIR_qior);
     Q_QQ_ops.push_back(LIR_qxor);

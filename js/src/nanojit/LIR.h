@@ -71,7 +71,6 @@ namespace nanojit
         LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov),
         LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
         LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
-        LIR_addp    = PTR_SIZE(LIR_iaddp,  LIR_qaddp),
         LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
         LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
         LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),

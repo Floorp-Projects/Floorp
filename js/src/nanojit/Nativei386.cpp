@@ -849,9 +849,9 @@ namespace nanojit
         LInsp rhs = ins->oprnd2();
 
         // Second special case.
-        // XXX: bug 547125: don't need this once LEA is used for LIR_add/LIR_addp in all cases below
-        if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-            // LIR_add(LIR_alloc, LIR_int) or LIR_addp(LIR_alloc, LIR_int) -- use lea.
+        // XXX: bug 547125: don't need this once LEA is used for LIR_add in all cases below
+        if (op == LIR_add && lhs->isop(LIR_alloc) && rhs->isconst()) {
+            // LIR_add(LIR_alloc, LIR_int) -- use lea.
             Register rr = prepareResultReg(ins, GpRegs);
             int d = findMemFor(lhs) + rhs->imm32();
 
@@ -913,7 +913,6 @@ namespace nanojit
 
             switch (op) {
             case LIR_add:
-            case LIR_addp:
             case LIR_addxov:    ADD(rr, rb); break;     // XXX: bug 547125: could use LEA for LIR_add
             case LIR_sub:
             case LIR_subxov:    SUB(rr, rb); break;
@@ -935,7 +934,6 @@ namespace nanojit
         } else {
             int c = rhs->imm32();
             switch (op) {
-            case LIR_addp:
             case LIR_add:
                 // this doesn't set cc's, only use it when cc's not required.
                 LEA(rr, c, ra);

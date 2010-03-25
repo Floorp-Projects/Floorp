@@ -954,7 +954,6 @@ namespace nanojit
                 // MIPS arith immediate ops sign-extend the imm16 value
                 switch (op) {
                 case LIR_add:
-                case LIR_iaddp:
                     if (ovreg != deprecated_UnknownReg)
                         SLT(ovreg, rr, ra);
                     ADDIU(rr, ra, rhsc);
@@ -1016,7 +1015,6 @@ namespace nanojit
 
         switch (op) {
             case LIR_add:
-            case LIR_iaddp:
                 if (ovreg != deprecated_UnknownReg)
                     SLT(ovreg,rr,ra);
                 ADDU(rr, ra, rb);
