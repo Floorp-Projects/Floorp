@@ -474,6 +474,9 @@ nsChildView::nsChildView() : nsBaseWidget()
   }
 #endif // PR_LOGGING
 
+  memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
+  memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
+
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
 }
