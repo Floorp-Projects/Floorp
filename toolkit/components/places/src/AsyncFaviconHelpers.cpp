@@ -932,6 +932,36 @@ AssociateIconWithPageStep::HandleCompletion(PRUint16 aReason)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// NotifyStep
+
+NS_IMPL_ISUPPORTS_INHERITED0(
+  NotifyStep
+, AsyncFaviconStep
+)
+
+
+void
+NotifyStep::Run()
+{
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+  // If a new icon has been added to the database or an icon has been associated
+  // with a page, we want to notify.
+  FAVICONSTEP_CANCEL_IF_TRUE(mStepper->mData.Length() == 0, PR_FALSE);
+
+  if (mStepper->mIconStatus & ICON_STATUS_SAVED ||
+      mStepper->mIconStatus & ICON_STATUS_ASSOCIATED) {
+    nsFaviconService* fs = nsFaviconService::GetFaviconService();
+    FAVICONSTEP_FAIL_IF_FALSE(fs);
+    fs->SendFaviconNotifications(mStepper->mPageURI, mStepper->mIconURI);
+    nsresult rv = fs->UpdateBookmarkRedirectFavicon(mStepper->mPageURI,
+                                                    mStepper->mIconURI);
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  }
+
+  // Proceed to next step.
+  nsresult rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+}
 
 } // namespace places
 } // namespace mozilla
