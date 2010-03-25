@@ -163,6 +163,10 @@ public:
     return nsnull;
   }
 
+  nsresult UpdateBookmarkRedirectFavicon(nsIURI* aPage, nsIURI* aFavicon);
+
+  void SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
 
@@ -212,9 +216,6 @@ private:
 
   nsresult SetFaviconUrlForPageInternal(nsIURI* aURI, nsIURI* aFavicon,
                                         PRBool* aHasData);
-
-  nsresult UpdateBookmarkRedirectFavicon(nsIURI* aPage, nsIURI* aFavicon);
-  void SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI);
 
   friend class FaviconLoadListener;
 
