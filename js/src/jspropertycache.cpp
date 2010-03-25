@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=98:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -41,26 +44,24 @@
 
 using namespace js;
 
-JS_REQUIRES_STACK JSPropCacheEntry *
-js_FillPropertyCache(JSContext *cx, JSObject *obj,
-                     uintN scopeIndex, uintN protoIndex, JSObject *pobj,
-                     JSScopeProperty *sprop, JSBool adding)
+JS_REQUIRES_STACK PropertyCacheEntry *
+PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoIndex,
+                    JSObject *pobj, JSScopeProperty *sprop, JSBool adding)
 {
-    JSPropertyCache *cache;
     jsbytecode *pc;
     JSScope *scope;
     jsuword kshape, vshape;
     JSOp op;
     const JSCodeSpec *cs;
     jsuword vword;
-    JSPropCacheEntry *entry;
+    PropertyCacheEntry *entry;
 
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
-    cache = &JS_PROPERTY_CACHE(cx);
 
     /* FIXME bug 489098: consider enabling the property cache for eval. */
     if (js_IsPropertyCacheDisabled(cx) || (cx->fp->flags & JSFRAME_EVAL)) {
-        PCMETER(cache->disfills++);
+        PCMETER(disfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
 
@@ -70,7 +71,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      */
     scope = OBJ_SCOPE(pobj);
     if (!scope->hasProperty(sprop)) {
-        PCMETER(cache->oddfills++);
+        PCMETER(oddfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
 
@@ -106,7 +107,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
              * mutate in arbitrary way without changing any shapes.
              */
             if (!tmp || !OBJ_IS_NATIVE(tmp)) {
-                PCMETER(cache->noprotos++);
+                PCMETER(noprotos++);
                 return JS_NO_PROP_CACHE_FILL;
             }
             if (tmp == pobj)
@@ -116,7 +117,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     }
 
     if (scopeIndex > PCVCAP_SCOPEMASK || protoIndex > PCVCAP_PROTOMASK) {
-        PCMETER(cache->longchains++);
+        PCMETER(longchains++);
         return JS_NO_PROP_CACHE_FILL;
     }
 
@@ -169,7 +170,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                      * object will result in shape being regenerated.
                      */
                     if (!scope->branded()) {
-                        PCMETER(cache->brandfills++);
+                        PCMETER(brandfills++);
 #ifdef DEBUG_notme
                         fprintf(stderr,
                                 "branding %p (%s) for funobj %p (%s), shape %lu\n",
@@ -288,22 +289,19 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     }
     JS_ASSERT(vshape < SHAPE_OVERFLOW_BIT);
 
-    entry = &cache->table[PROPERTY_CACHE_HASH(pc, kshape)];
-    PCMETER(PCVAL_IS_NULL(entry->vword) || cache->recycles++);
-    entry->kpc = pc;
-    entry->kshape = kshape;
-    entry->vcap = PCVCAP_MAKE(vshape, scopeIndex, protoIndex);
-    entry->vword = vword;
+    entry = &table[hash(pc, kshape)];
+    PCMETER(PCVAL_IS_NULL(entry->vword) || recycles++);
+    entry->assign(pc, kshape, vshape, scopeIndex, protoIndex, vword);
 
-    cache->empty = JS_FALSE;
-    PCMETER(cache->fills++);
+    empty = false;
+    PCMETER(fills++);
 
     /*
      * The modfills counter is not exact. It increases if a getter or setter
      * recurse into the interpreter.
      */
-    PCMETER(entry == cache->pctestentry || cache->modfills++);
-    PCMETER(cache->pctestentry = NULL);
+    PCMETER(entry == pctestentry || modfills++);
+    PCMETER(pctestentry = NULL);
     return entry;
 }
 
@@ -320,13 +318,13 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 }
 
 JS_REQUIRES_STACK JSAtom *
-js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
-                         JSObject **objp, JSObject **pobjp,
-                         JSPropCacheEntry *entry)
+PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
+                        PropertyCacheEntry *entry)
 {
     JSObject *obj, *pobj, *tmp;
     uint32 vcap;
 
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(uintN((cx->fp->imacpc ? cx->fp->imacpc : pc) - cx->fp->script->code)
               < cx->fp->script->length);
 
@@ -338,7 +336,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     vcap = entry->vcap;
 
     if (entry->kpc != pc) {
-        PCMETER(JS_PROPERTY_CACHE(cx).kpcmisses++);
+        PCMETER(kpcmisses++);
 
         JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
@@ -361,13 +359,13 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     if (entry->kshape != OBJ_SHAPE(obj)) {
-        PCMETER(JS_PROPERTY_CACHE(cx).kshapemisses++);
+        PCMETER(kshapemisses++);
         return GetAtomFromBytecode(cx, pc, op, cs);
     }
 
     /*
-     * PROPERTY_CACHE_TEST handles only the direct and immediate-prototype hit
-     * cases, all others go here. We could embed the target object in the cache
+     * PropertyCache::test handles only the direct and immediate-prototype hit
+     * cases. All others go here. We could embed the target object in the cache
      * entry but then entry size would be 5 words. Instead we traverse chains.
      */
     pobj = obj;
@@ -392,7 +390,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         --vcap;
     }
 
-    if (JSPropCacheEntry::matchShape(cx, pobj, PCVCAP_SHAPE(vcap))) {
+    if (matchShape(cx, pobj, vcap >> PCVCAP_TAGBITS)) {
 #ifdef DEBUG
         JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
         jsid id = ATOM_TO_JSID(atom);
@@ -405,39 +403,36 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         return NULL;
     }
 
-    PCMETER(JS_PROPERTY_CACHE(cx).vcapmisses++);
+    PCMETER(vcapmisses++);
     return GetAtomFromBytecode(cx, pc, op, cs);
 }
 
 #ifdef DEBUG
-#define ASSERT_CACHE_IS_EMPTY(cache)                                          \
-    JS_BEGIN_MACRO                                                            \
-        JSPropertyCache *cache_ = (cache);                                    \
-        uintN i_;                                                             \
-        JS_ASSERT(cache_->empty);                                             \
-        for (i_ = 0; i_ < PROPERTY_CACHE_SIZE; i_++) {                        \
-            JS_ASSERT(!cache_->table[i_].kpc);                                \
-            JS_ASSERT(!cache_->table[i_].kshape);                             \
-            JS_ASSERT(!cache_->table[i_].vcap);                               \
-            JS_ASSERT(!cache_->table[i_].vword);                              \
-        }                                                                     \
-    JS_END_MACRO
-#else
-#define ASSERT_CACHE_IS_EMPTY(cache) ((void)0)
+void
+PropertyCache::assertEmpty()
+{
+    JS_ASSERT(empty);
+    for (uintN i = 0; i < SIZE; i++) {
+        JS_ASSERT(!table[i].kpc);
+        JS_ASSERT(!table[i].kshape);
+        JS_ASSERT(!table[i].vcap);
+        JS_ASSERT(!table[i].vword);
+    }
+}
 #endif
 
 JS_STATIC_ASSERT(PCVAL_NULL == 0);
 
 void
-js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
+PropertyCache::purge(JSContext *cx)
 {
-    if (cache->empty) {
-        ASSERT_CACHE_IS_EMPTY(cache);
+    if (empty) {
+        assertEmpty();
         return;
     }
 
-    PodArrayZero(cache->table);
-    cache->empty = JS_TRUE;
+    PodArrayZero(table);
+    empty = true;
 
 #ifdef JS_PROPERTY_CACHE_METERING
   { static FILE *fp;
@@ -450,7 +445,7 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
 #endif
         fprintf(fp, "GC %u\n", cx->runtime->gcNumber);
 
-# define P(mem) fprintf(fp, "%11s %10lu\n", #mem, (unsigned long)cache->mem)
+# define P(mem) fprintf(fp, "%11s %10lu\n", #mem, (unsigned long)mem)
         P(fills);
         P(nofills);
         P(rofills);
@@ -481,28 +476,24 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
 # undef P
 
         fprintf(fp, "hit rates: pc %g%% (proto %g%%), set %g%%, ini %g%%, full %g%%\n",
-                (100. * cache->pchits) / cache->tests,
-                (100. * cache->protopchits) / cache->tests,
-                (100. * (cache->addpchits + cache->setpchits))
-                / cache->settests,
-                (100. * cache->inipchits) / cache->initests,
-                (100. * (cache->tests - cache->misses)) / cache->tests);
+                (100. * pchits) / tests,
+                (100. * protopchits) / tests,
+                (100. * (addpchits + setpchits))
+                / settests,
+                (100. * inipchits) / initests,
+                (100. * (tests - misses)) / tests);
         fflush(fp);
     }
   }
 #endif
 
-    PCMETER(cache->flushes++);
+    PCMETER(flushes++);
 }
 
 void
-js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
+PropertyCache::purgeForScript(JSScript *script)
 {
-    JSPropertyCache *cache = &JS_PROPERTY_CACHE(cx);
-
-    for (JSPropCacheEntry *entry = cache->table;
-         entry < cache->table + PROPERTY_CACHE_SIZE;
-         entry++) {
+    for (PropertyCacheEntry *entry = table; entry < table + SIZE; entry++) {
         if (JS_UPTRDIFF(entry->kpc, script->code) < script->length) {
             entry->kpc = NULL;
 #ifdef DEBUG
