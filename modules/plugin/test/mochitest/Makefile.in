@@ -116,6 +116,7 @@ endif
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 _MOCHITEST_FILES += \
 		test_copyText.html \
+		test_crash_nested_loop.html \
 		$(NULL)
 endif
 
