@@ -245,19 +245,12 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsCocoaUtils::CreateCGImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, CGImageRef *aResult)
+nsresult nsCocoaUtils::CreateCGImageFromSurface(gfxImageSurface *aFrame, CGImageRef *aResult)
 {
-  nsRefPtr<gfxImageSurface> frame;
-  nsresult rv = aImage->CopyFrame(aWhichFrame,
-                                  imgIContainer::FLAG_SYNC_DECODE,
-                                  getter_AddRefs(frame));
-  if (NS_FAILED(rv) || !frame) {
-    return NS_ERROR_FAILURE;
-  }
 
-  PRInt32 width = frame->Width();
-  PRInt32 stride = frame->Stride();
-  PRInt32 height = frame->Height();
+  PRInt32 width = aFrame->Width();
+  PRInt32 stride = aFrame->Stride();
+  PRInt32 height = aFrame->Height();
   if ((stride % 4 != 0) || (height < 1) || (width < 1)) {
     return NS_ERROR_FAILURE;
   }
@@ -266,7 +259,7 @@ nsresult nsCocoaUtils::CreateCGImageFromImageContainer(imgIContainer *aImage, PR
   // the alpha ordering and endianness of the machine so we don't have to
   // touch the bits ourselves.
   CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(NULL,
-                                                                  frame->Data(),
+                                                                  aFrame->Data(),
                                                                   stride * height,
                                                                   NULL);
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
@@ -311,8 +304,15 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult)
 {
+  nsRefPtr<gfxImageSurface> frame;
+  nsresult rv = aImage->CopyFrame(aWhichFrame,
+                                  imgIContainer::FLAG_SYNC_DECODE,
+                                  getter_AddRefs(frame));
+  if (NS_FAILED(rv) || !frame) {
+    return NS_ERROR_FAILURE;
+  }
   CGImageRef imageRef = NULL;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(aImage, aWhichFrame, &imageRef);
+  rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &imageRef);
   if (NS_FAILED(rv) || !imageRef) {
     return NS_ERROR_FAILURE;
   }
