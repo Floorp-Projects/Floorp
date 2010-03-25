@@ -40,9 +40,8 @@
 
 #include "jscntxt.h"
 #include "Library.h"
-#include "Function.h"
+#include "CTypes.h"
 #include "nsServiceManagerUtils.h"
-#include "nsString.h"
 #include "nsIXPConnect.h"
 #include "nsILocalFile.h"
 #include "nsNativeCharsetUtils.h"
