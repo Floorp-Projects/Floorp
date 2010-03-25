@@ -301,9 +301,7 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
 
   // If additive animation isn't required or isn't supported, set the value.
   if (!IsAdditive() || NS_FAILED(aResult.SandwichAdd(result))) {
-    aResult.Swap(result);
-    // Note: The old value of aResult is now in |result|, and it will get
-    // cleaned up when |result| goes out of scope, when this function returns.
+    aResult = result;
   }
 }
 
