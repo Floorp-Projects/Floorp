@@ -55,6 +55,7 @@
 #include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
+#include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -539,7 +540,7 @@ struct JSThreadData {
     JSGSNCache          gsnCache;
 
     /* Property cache for faster call/get/set invocation. */
-    JSPropertyCache     propertyCache;
+    js::PropertyCache   propertyCache;
 
     /* Optional stack of heap-allocated scoped local GC roots. */
     JSLocalRootStack    *localRootStack;
@@ -2361,7 +2362,7 @@ js_GetTopStackFrame(JSContext *cx)
 static JS_INLINE JSBool
 js_IsPropertyCacheDisabled(JSContext *cx)
 {
-    return cx->runtime->shapeGen >= SHAPE_OVERFLOW_BIT;
+    return cx->runtime->shapeGen >= js::SHAPE_OVERFLOW_BIT;
 }
 
 static JS_INLINE uint32
@@ -2376,7 +2377,7 @@ js_RegenerateShapeForGC(JSContext *cx)
      * the shape stays such.
      */
     uint32 shape = cx->runtime->shapeGen;
-    shape = (shape + 1) | (shape & SHAPE_OVERFLOW_BIT);
+    shape = (shape + 1) | (shape & js::SHAPE_OVERFLOW_BIT);
     cx->runtime->shapeGen = shape;
     return shape;
 }
