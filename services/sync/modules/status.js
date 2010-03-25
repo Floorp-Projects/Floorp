@@ -55,13 +55,7 @@ let Status = {
   get sync() this._sync,
   set sync(code) {
     this._sync = code;
-
-    if (code != SYNC_SUCCEEDED)
-      this.service = SYNC_FAILED;
-    else {
-      this.service = STATUS_OK;
-      this.resetBackoff();
-    }
+    this.service = code == SYNC_SUCCEEDED ? STATUS_OK : SYNC_FAILED;
   },
 
   get engines() this._engines,
