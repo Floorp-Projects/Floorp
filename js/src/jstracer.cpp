@@ -623,7 +623,7 @@ FragProfiling_showResults(TraceMonitor* tm)
             break;
         }
         r++;
-        AvmAssert(r >= 0 && r <= N_TOP_BLOCKS);
+        NanoAssert(r >= 0 && r <= N_TOP_BLOCKS);
         /* This entry should be placed at topPI[r], and entries
            at higher numbered slots moved up one. */
         if (r < N_TOP_BLOCKS) {
@@ -11418,9 +11418,9 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     LIns *callstackBase_ins = lir->insLoad(LIR_ldp, lirbuf->state,
                                            offsetof(InterpState, callstackBase), ACC_OTHER);
     LIns *frameInfo_ins = lir->insLoad(LIR_ldp, callstackBase_ins, 0, ACC_OTHER);
-    LIns *typemap_ins = lir->ins2(LIR_addp, frameInfo_ins, INS_CONSTWORD(sizeof(FrameInfo)));
+    LIns *typemap_ins = lir->ins2(LIR_piadd, frameInfo_ins, INS_CONSTWORD(sizeof(FrameInfo)));
     LIns *type_ins = lir->insLoad(LIR_ldzb,
-                                  lir->ins2(LIR_addp, typemap_ins, lir->ins_u2p(slot_ins)), 0,
+                                  lir->ins2(LIR_piadd, typemap_ins, lir->ins_u2p(slot_ins)), 0,
                                   ACC_READONLY);
     TraceType type = getCoercedType(v);
     if (type == TT_INT32 && !isPromoteInt(v_ins))
@@ -11435,7 +11435,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
                                        offsetof(InterpState, stackBase), ACC_OTHER);
     LIns *storeValue_ins = isPromoteInt(v_ins) ? demote(lir, v_ins) : v_ins;
     lir->insStorei(storeValue_ins,
-                   lir->ins2(LIR_addp, stackBase_ins, lir->ins_u2p(offset_ins)), 0, ACC_STORE_ANY);
+                   lir->ins2(LIR_piadd, stackBase_ins, lir->ins_u2p(offset_ins)), 0, ACC_STORE_ANY);
     LIns *br2 = lir->insBranch(LIR_j, NULL, NULL);
 
     // Case 2: calling builtin.
