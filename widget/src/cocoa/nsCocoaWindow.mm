@@ -1166,15 +1166,20 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void
+nsCocoaWindow::UpdateBounds()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
-  // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
+  aRect = mBounds;
   return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
@@ -1339,27 +1344,24 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect windowFrame = [mWindow frame];
-  if (!r)
-    r = &windowFrame;
+  NSRect frameRect = r ? *r : [mWindow frame];
+  NSRect contentRect = [mWindow contentRectForFrameRect:frameRect];
 
   if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
       [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
     // Report the frame rect instead of the content rect. This will make our
     // root widget NSView bigger than the window's content view, and since it's
     // anchored at the bottom, it will extend upwards into the titlebar.
-    windowFrame = *r;
-  } else {
-    windowFrame = [mWindow contentRectForFrameRect:(*r)];
+    contentRect = frameRect;
   }
 
-  mBounds.width  = nscoord(windowFrame.size.width);
-  mBounds.height = nscoord(windowFrame.size.height);
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRect(frameRect);
+  nsIntRect innerBounds = nsCocoaUtils::CocoaRectToGeckoRect(contentRect);
 
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
-  sizeEvent.windowSize = &mBounds;
+  sizeEvent.windowSize = &innerBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
 
@@ -1760,6 +1762,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 
 - (void)windowDidMove:(NSNotification *)aNotification
 {
+  mGeckoWindow->UpdateBounds();
   // Dispatch the move event to Gecko
   nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, mGeckoWindow);
   nsIntRect rect;
