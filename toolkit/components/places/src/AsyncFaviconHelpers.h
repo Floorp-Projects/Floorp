@@ -278,6 +278,21 @@ private:
   bool mIsBookmarked;
 };
 
+
+/**
+ * Fetch an existing icon and associated information from the database.
+ */
+class FetchDatabaseIconStep : public AsyncFaviconStep
+                            , public mozilla::places::AsyncStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  FetchDatabaseIconStep() {};
+  void Run();
+};
+
 } // namespace places
 } // namespace mozilla
 
