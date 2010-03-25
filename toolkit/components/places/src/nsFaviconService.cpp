@@ -69,6 +69,7 @@
 #include "nsPlacesMacros.h"
 #include "nsIPrefService.h"
 #include "Helpers.h"
+#include "AsyncFaviconHelpers.h"
 
 // For large favicons optimization.
 #include "imgITools.h"
