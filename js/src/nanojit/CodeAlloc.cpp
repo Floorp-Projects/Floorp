@@ -153,7 +153,7 @@ namespace nanojit
         if (verbose)
             avmplus::AvmLog("free %p-%p %d\n", start, end, (int)blk->size());
 
-        AvmAssert(!blk->isFree);
+        NanoAssert(!blk->isFree);
 
         // coalesce adjacent blocks.
         bool already_on_avail_list;
