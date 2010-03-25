@@ -187,6 +187,4 @@ private:
   bool mShuttingDown;
 };
 
-#define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
-#define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/warning-16.png"
 #define FAVICON_ANNOTATION_NAME "favicon"
