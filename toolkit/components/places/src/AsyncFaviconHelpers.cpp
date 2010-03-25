@@ -37,17 +37,36 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "AsyncFaviconHelpers.h"
-
 #include "mozilla/storage.h"
+#include "nsNetUtil.h"
+
+#include "nsNavHistory.h"
+#include "nsNavBookmarks.h"
+#include "nsFaviconService.h"
 
 #define TO_CHARBUFFER(_buffer) \
   reinterpret_cast<char*>(const_cast<PRUint8*>(_buffer))
 #define TO_INTBUFFER(_string) \
   reinterpret_cast<PRUint8*>(const_cast<char*>(_string.get()))
 
+#ifdef DEBUG
+#define INHERITED_ERROR_HANDLER \
+  nsresult rv = AsyncStatementCallback::HandleError(aError); \
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
+#define INHERITED_ERROR_HANDLER /* nothing */
+#endif
+
+#define ASYNC_STATEMENT_HANDLEERROR_IMPL(_class) \
+NS_IMETHODIMP \
+_class::HandleError(mozIStorageError *aError) \
+{ \
+  INHERITED_ERROR_HANDLER \
+  FAVICONSTEP_FAIL_IF_FALSE_RV(false, NS_OK); \
+}
+
 namespace mozilla {
 namespace places {
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncFaviconStep
@@ -211,6 +230,156 @@ AsyncFaviconStepperInternal::Cancel(bool aNotify)
                                             TO_INTBUFFER(mData),
                                             mMimeType);
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// GetEffectivePageStep
+
+NS_IMPL_ISUPPORTS_INHERITED0(
+  GetEffectivePageStep
+, AsyncFaviconStep
+)
+ASYNC_STATEMENT_HANDLEERROR_IMPL(GetEffectivePageStep)
+
+
+GetEffectivePageStep::GetEffectivePageStep()
+  : mSubStep(0)
+  , mIsBookmarked(false)
+{
+}
+
+
+void
+GetEffectivePageStep::Run()
+{
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mPageURI);
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mIconURI);
+
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  FAVICONSTEP_FAIL_IF_FALSE(history);
+  PRBool canAddToHistory;
+  nsresult rv = history->CanAddURI(mStepper->mPageURI, &canAddToHistory);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  // If history is disabled or the page isn't addable to history, only load
+  // favicons if the page is bookmarked.
+  if (!canAddToHistory || history->IsHistoryDisabled()) {
+    // Get place id associated with this page.
+    mozIStorageStatement* stmt = history->GetStatementById(DB_GET_PAGE_INFO);
+    // Statement is null if we are shutting down.
+    FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
+    mozStorageStatementScoper scoper(stmt);
+
+    nsresult rv = BindStatementURI(stmt, 0, mStepper->mPageURI);
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<mozIStoragePendingStatement> ps;
+    rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+    FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+    // ExecuteAsync will reset the statement for us.
+    scoper.Abandon();
+  }
+  else {
+    CheckPageAndProceed();
+  }
+}
+
+
+NS_IMETHODIMP
+GetEffectivePageStep::HandleResult(mozIStorageResultSet* aResultSet)
+{
+  nsCOMPtr<mozIStorageRow> row;
+  nsresult rv = aResultSet->GetNextRow(getter_AddRefs(row));
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  if (mSubStep == 0) {
+    rv = row->GetInt64(0, &mStepper->mPageId);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  }
+  else {
+    NS_ASSERTION(mSubStep == 1, "Wrong sub-step?");
+    nsCAutoString spec;
+    rv = row->GetUTF8String(0, spec);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+    // We always want to use the bookmark uri.
+    rv = mStepper->mPageURI->SetSpec(spec);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+    // Since we got a result, this is a bookmark.
+    mIsBookmarked = true;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+GetEffectivePageStep::HandleCompletion(PRUint16 aReason)
+{
+  FAVICONSTEP_FAIL_IF_FALSE_RV(aReason == mozIStorageStatementCallback::REASON_FINISHED, NS_OK);
+
+  if (mSubStep == 0) {
+    // Prepare for next sub step.
+    mSubStep++;
+    // If we have never seen this page, we don't want to go on.
+    FAVICONSTEP_CANCEL_IF_TRUE_RV(mStepper->mPageId == 0, PR_FALSE, NS_OK);
+
+    // Check if the page is bookmarked.
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    FAVICONSTEP_FAIL_IF_FALSE_RV(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+    mozIStorageStatement* stmt = bookmarks->GetStatementById(DB_FIND_REDIRECTED_BOOKMARK);
+    // Statement is null if we are shutting down.
+    FAVICONSTEP_CANCEL_IF_TRUE_RV(!stmt, PR_FALSE, NS_OK);
+    mozStorageStatementScoper scoper(stmt);
+
+    nsresult rv = stmt->BindInt64Parameter(0, mStepper->mPageId);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+    nsCOMPtr<mozIStoragePendingStatement> ps;
+    rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+    // ExecuteAsync will reset the statement for us.
+    scoper.Abandon();
+  }
+  else {
+    NS_ASSERTION(mSubStep == 1, "Wrong sub-step?");
+    // If the page is not bookmarked, we don't want to go on.
+    FAVICONSTEP_CANCEL_IF_TRUE_RV(!mIsBookmarked, PR_FALSE, NS_OK);
+
+    CheckPageAndProceed();
+  }
+
+  return NS_OK;
+}
+
+
+void
+GetEffectivePageStep::CheckPageAndProceed()
+{
+  // If pageURI is an image, the favicon URI will be the same as the page URI.
+  // TODO: In future we could store a resample of the image, but
+  // for now we just avoid that, for database size concerns.
+  PRBool pageEqualsFavicon;
+  nsresult rv = mStepper->mPageURI->Equals(mStepper->mIconURI,
+                                           &pageEqualsFavicon);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  FAVICONSTEP_CANCEL_IF_TRUE(pageEqualsFavicon, PR_FALSE);
+
+  // Don't store favicons to error pages.
+  nsCOMPtr<nsIURI> errorPageFaviconURI;
+  rv = NS_NewURI(getter_AddRefs(errorPageFaviconURI),
+                 NS_LITERAL_CSTRING(FAVICON_ERRORPAGE_URL));
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  PRBool isErrorPage;
+  rv = mStepper->mIconURI->Equals(errorPageFaviconURI, &isErrorPage);
+  FAVICONSTEP_CANCEL_IF_TRUE(isErrorPage, PR_FALSE);
+
+  // Proceed to next step.
+  rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
 }
 
 
