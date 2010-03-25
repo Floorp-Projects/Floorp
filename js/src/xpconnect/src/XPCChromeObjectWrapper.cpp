@@ -386,12 +386,13 @@ XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSObject *scope = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(funToCall));
   for (uintN i = 0; i < argc; ++i) {
     if (!JSVAL_IS_PRIMITIVE(argv[i]) &&
-        !RewrapObject(cx, scope, JSVAL_TO_OBJECT(argv[i]), UNKNOWN, &argv[i])) {
+        !RewrapObject(cx, scope, JSVAL_TO_OBJECT(argv[i]), XPCNW_EXPLICIT,
+                      &argv[i])) {
       return JS_FALSE;
     }
   }
 
-  if (!RewrapObject(cx, scope, obj, UNKNOWN, rval) ||
+  if (!RewrapObject(cx, scope, obj, XPCNW_EXPLICIT, rval) ||
       !JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(*rval), funToCall, argc, argv,
                             rval)) {
     return JS_FALSE;
@@ -450,8 +451,9 @@ RewrapForChrome(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     return JS_TRUE;
   }
 
-  return RewrapObject(cx, JS_GetGlobalForObject(cx, GetWrappedObject(cx, wrapperObj)),
-                      JSVAL_TO_OBJECT(v), UNKNOWN, vp);
+  JSObject *scope =
+    JS_GetGlobalForObject(cx, GetWrappedObject(cx, wrapperObj));
+  return RewrapObject(cx, scope, JSVAL_TO_OBJECT(v), XPCNW_EXPLICIT, vp);
 }
 
 JSBool
