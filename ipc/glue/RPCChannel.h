@@ -162,7 +162,7 @@ public:
     }
 protected:
     bool WaitForNotify();
-    bool SpinInternalEventLoop();
+    void SpinInternalEventLoop();
     static bool WaitNeedsSpinLoop() {
         return (IsSpinLoopActive() && 
                 (sModalEventCount > sInnerEventLoopDepth));
