@@ -268,9 +268,11 @@ toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolb
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
                    0 0 0 2px rgba(255,255,255,.1) inset,
-                   0 0 5px hsl(190,90%,80%),
-                   0 1px 0 rgba(0,0,0,.1);
-  -moz-transition: background-color .5s ease-in;
+                   0 1px 0 rgba(0,0,0,.1),
+                   0 0 5px hsl(190,90%,80%);
+  -moz-transition: background-color .4s ease-in,
+                   border-color .3s ease-in,
+                   -moz-box-shadow .3s ease-in;
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
@@ -364,9 +366,11 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   padding-right: 3px;
 }
 
-toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="true"]):hover {
+toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="true"]):not(:active):hover {
   /*mask: url(keyhole-forward-mask.svg#mask-hover);*/
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask-hover);
+  /* Don't animate the box shadow, as the blur and spread radii affect the mask. */
+  -moz-transition: background-color .4s ease-in;
 }
 
 #back-forward-dropmarker {
