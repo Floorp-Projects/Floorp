@@ -194,6 +194,8 @@ public:
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
+    void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
+
 private:
     friend class PluginModuleChild;
 
@@ -282,6 +284,8 @@ private:
 #endif
 
     friend class ChildAsyncCall;
+
+    Mutex mAsyncCallMutex;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
