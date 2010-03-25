@@ -78,10 +78,6 @@
 // Default value for mOptimizedIconDimension
 #define OPTIMIZED_FAVICON_DIMENSION 16
 
-// Most icons will be smaller than this rough estimate of the size of an
-// uncompressed 16x16 RGBA image of the same dimensions.
-#define MAX_ICON_FILESIZE(s) ((PRUint32) s*s*4)
-
 #define MAX_FAVICON_CACHE_SIZE 256
 #define FAVICON_CACHE_REDUCE_COUNT 64
 
@@ -413,8 +409,8 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT f.data, f.mime_type FROM moz_favicons f WHERE url = ?1"));
 
   RETURN_IF_STMT(mDBInsertIcon, NS_LITERAL_CSTRING(
-    "INSERT INTO moz_favicons (url, data, mime_type, expiration) "
-      "VALUES (?1, ?2, ?3, ?4)"));
+    "INSERT OR REPLACE INTO moz_favicons (id, url, data, mime_type, expiration) "
+      "VALUES (?1, ?2, ?3, ?4, ?5)"));
 
   RETURN_IF_STMT(mDBUpdateIcon, NS_LITERAL_CSTRING(
     "UPDATE moz_favicons SET data = ?2, mime_type = ?3, expiration = ?4 "
@@ -581,12 +577,12 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
 
   if (iconId == -1) {
     // We did not find any entry, so create a new one
-
     // not-binded params are automatically nullified by mozStorage
     DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBInsertIcon);
-    rv = BindStatementURI(stmt, 0, aFaviconURI);
+    rv = stmt->BindNullParameter(0);
     NS_ENSURE_SUCCESS(rv, rv);
-
+    rv = BindStatementURI(stmt, 1, aFaviconURI);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -807,25 +803,33 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
       statement = GetStatement(mDBUpdateIcon);
       NS_ENSURE_STATE(statement);
       rv = statement->BindInt64Parameter(0, id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindBlobParameter(1, data, dataLen);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindUTF8StringParameter(2, *mimeType);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindInt64Parameter(3, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
       // insert new one (statement parameter 0 = favicon URL)
       statement = GetStatement(mDBInsertIcon);
       NS_ENSURE_STATE(statement);
-      rv = BindStatementURI(statement, 0, aFaviconURI);
+      rv = statement->BindNullParameter(0);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = BindStatementURI(statement, 1, aFaviconURI);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindBlobParameter(2, data, dataLen);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindUTF8StringParameter(3, *mimeType);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindInt64Parameter(4, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mozStorageStatementScoper scoper(statement);
 
-  // the insert and update statements share all but the 0th parameter
-  rv = statement->BindBlobParameter(1, data, dataLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindUTF8StringParameter(2, *mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(3, aExpiration);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
