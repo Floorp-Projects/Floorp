@@ -62,6 +62,9 @@ namespace places {
 } // namespace places
 } // namespace mozilla
 
+// Most icons will be smaller than this rough estimate of the size of an
+// uncompressed 16x16 RGBA image of the same dimensions.
+#define MAX_ICON_FILESIZE(s) ((PRUint32) s*s*4)
 
 // forward class definitions
 class mozIStorageStatementCallback;
@@ -112,6 +115,7 @@ public:
   nsresult OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
                                 const nsACString& aMimeType,
                                 nsACString& aNewData, nsACString& aNewMimeType);
+  PRInt32 GetOptimizedIconDimension() { return mOptimizedIconDimension; }
 
   /**
    * Obtains the favicon data asynchronously.
