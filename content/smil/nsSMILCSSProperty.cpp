@@ -96,11 +96,6 @@ nsSMILCSSProperty::nsSMILCSSProperty(nsCSSProperty aPropID,
 nsSMILValue
 nsSMILCSSProperty::GetBaseValue() const
 {
-  // To benefit from Return Value Optimization and avoid copy constructor calls
-  // due to our use of return-by-value, we must return the exact same object
-  // from ALL return points. This function must only return THIS variable:
-  nsSMILValue baseValue;
-
   // SPECIAL CASE: Shorthands
   if (nsCSSProps::IsShorthand(mPropID)) {
     // We can't look up the base (computed-style) value of shorthand
@@ -111,12 +106,10 @@ nsSMILCSSProperty::GetBaseValue() const
     // properties we know about don't support those operations. So, we can just
     // return a dummy value (initialized with the right type, so as not to
     // indicate failure).
-    nsSMILValue tmpVal(&nsSMILCSSValueType::sSingleton);
-    baseValue.Swap(tmpVal);
-    return baseValue;
+    return nsSMILValue(&nsSMILCSSValueType::sSingleton);
   }
 
-  // GENERAL CASE: Non-Shorthands
+  // GENERAL CASE: Non-Shorthands  
   // (1) Put empty string in override style for property mPropID
   // (saving old override style value, so we can set it again when we're done)
   nsCOMPtr<nsIDOMCSSStyleDeclaration> overrideStyle;
@@ -141,7 +134,8 @@ nsSMILCSSProperty::GetBaseValue() const
     overrideDecl->SetPropertyValue(mPropID, cachedOverrideStyleVal);
   }
 
-  // (4) Populate our nsSMILValue from the computed style
+  // (4) Create a nsSMILValue from the computed style
+  nsSMILValue baseValue;
   if (didGetComputedVal) {
     nsSMILCSSValueType::ValueFromString(mPropID, mElement,
                                         computedStyleVal, baseValue);
