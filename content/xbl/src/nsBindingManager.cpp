@@ -1330,6 +1330,39 @@ EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
+struct WalkAllRulesData {
+  nsIStyleRuleProcessor::EnumFunc mFunc;
+  RuleProcessorData* mData;
+};
+
+static PLDHashOperator
+EnumWalkAllRules(nsVoidPtrHashKey *aKey, void* aClosure)
+{
+  nsIStyleRuleProcessor *ruleProcessor =
+    static_cast<nsIStyleRuleProcessor*>(const_cast<void*>(aKey->GetKey()));
+  WalkAllRulesData *data = static_cast<WalkAllRulesData*>(aClosure);
+
+  (*(data->mFunc))(ruleProcessor, data->mData);
+
+  return PL_DHASH_NEXT;
+}
+
+void
+nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
+                               RuleProcessorData* aData)
+{
+  if (!mBindingTable.IsInitialized())
+    return;
+
+  RuleProcessorSet set;
+  mBindingTable.EnumerateRead(EnumRuleProcessors, &set);
+  if (!set.IsInitialized())
+    return;
+
+  WalkAllRulesData data = { aFunc, aData };
+  set.EnumerateEntries(EnumWalkAllRules, &data);
+}
+
 struct MediumFeaturesChangedData {
   nsPresContext *mPresContext;
   PRBool *mRulesChanged;
