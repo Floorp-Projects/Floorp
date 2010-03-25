@@ -2300,7 +2300,7 @@
         </body>
       </method>
       <property name="mContextTab" readonly="true"
-                onget="return this.tabContainer._contextTab;"/>
+                onget="return TabContextMenu.contextTab;"/>
       <property name="mPrefs" readonly="true"
                 onget="return Services.prefs;"/>
       <property name="mTabContainer" readonly="true"
@@ -2422,47 +2422,10 @@
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
-    <content context="_child">
+    <content>
       <xul:hbox align="start">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
-      <xul:menupopup anonid="tabContextMenu"
-                     onpopupshowing="if (event.target == this) this.parentNode._updateContextMenu(this);"
-                     onpopuphidden="if (event.target == this) this.parentNode._contextTab = null;">
-        <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
-                      command="cmd_newNavigatorTab"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('reloadTab');"/>
-        <xul:menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                      tbattr="tabbrowser-multiple"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('reloadAllTabs');"/>
-        <xul:menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
-                      tbattr="tabbrowser-multiple"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('removeAllTabsBut');"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
-                      accesskey="&openTabInNewWindow.accesskey;"
-                      tbattr="tabbrowser-multiple"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('replaceTabWithWindow');"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="context_bookmarkTab"
-                      label="&bookmarkThisTab.label;"
-                      accesskey="&bookmarkThisTab.accesskey;"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('BookmarkThisTab', window);"/>
-        <xul:menuitem id="context_bookmarkAllTabs"
-                      label="&bookmarkAllTabs.label;"
-                      accesskey="&bookmarkAllTabs.accesskey;"
-                      command="Browser:BookmarkAllTabs"/>
-        <xul:menuitem id="context_undoCloseTab"
-                      label="&undoCloseTab.label;"
-                      accesskey="&undoCloseTab.accesskey;"
-                      command="History:UndoCloseTab"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
-                      tbattr="tabbrowser-multiple"
-                      oncommand="this.parentNode.parentNode._contextMenuAction('removeTab');"/>
-      </xul:menupopup>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
                           style="min-width: 1px;"
 #ifndef XP_MACOSX
@@ -2538,7 +2501,7 @@
       </field>
 
       <field name="contextMenu" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "tabContextMenu");
+        document.getElementById(this.getAttribute("context"));
       </field>
 
       <field name="mTabstripWidth">0</field>
@@ -2722,35 +2685,6 @@
               ele.removeAttribute("notifybgtab");
             }, 150, this._animateElement);
           }
-        ]]></body>
-      </method>
-
-      <field name="_contextTab">null</field>
-      <method name="_updateContextMenu">
-        <parameter name="aPopupMenu"/>
-        <body><![CDATA[
-          this._contextTab = document.popupNode.localName == "tab" ?
-                             document.popupNode : this.selectedItem;
-          var disabled = this.childNodes.length == 1;
-          var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
-          for (var i = 0; i < menuItems.length; i++)
-            menuItems[i].disabled = disabled;
-
-          // Session store
-          // XXXzeniko should't we just disable this item as we disable
-          // the tabbrowser-multiple items above - for consistency?
-          document.getElementById("context_undoCloseTab").hidden =
-            Cc["@mozilla.org/browser/sessionstore;1"].
-            getService(Ci.nsISessionStore).
-            getClosedTabCount(window) == 0;
-        ]]></body>
-      </method>
-
-      <method name="_contextMenuAction">
-        <parameter name="aMethod"/>
-        <parameter name="aContext"/>
-        <body><![CDATA[
-          (aContext || this.tabbrowser)[aMethod](this._contextTab);
         ]]></body>
       </method>
 
