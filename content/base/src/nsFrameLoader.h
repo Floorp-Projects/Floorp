@@ -140,8 +140,8 @@ public:
 
 #ifdef MOZ_IPC
   mozilla::dom::PIFrameEmbeddingParent* GetChildProcess();
-  NS_IMETHOD GetCrossProcessObjectWrapper(nsIVariant** cpow);
 #endif
+  NS_IMETHOD GetCrossProcessObjectWrapper(nsIVariant** cpow);
 
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 

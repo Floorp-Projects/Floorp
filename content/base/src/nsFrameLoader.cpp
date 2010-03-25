@@ -1601,6 +1601,7 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
 NS_IMETHODIMP
 nsFrameLoader::GetCrossProcessObjectWrapper(nsIVariant** cpow)
 {
+#ifdef MOZ_IPC
    nsIXPConnect* xpc;
    nsIThreadJSContextStack* stack;
    JSContext* cx;
@@ -1612,7 +1613,7 @@ nsFrameLoader::GetCrossProcessObjectWrapper(nsIVariant** cpow)
        mChildProcess->GetGlobalJSObject(cx, &global)) {
      return xpc->JSToVariant(cx, OBJECT_TO_JSVAL(global), cpow);
    }
-  
+#endif
    return NS_ERROR_NOT_AVAILABLE;
 }
 
