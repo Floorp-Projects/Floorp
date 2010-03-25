@@ -234,7 +234,6 @@ public:
     NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    void                    UpdateBounds();
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
     NS_IMETHOD              SetCursor(nsCursor aCursor);
