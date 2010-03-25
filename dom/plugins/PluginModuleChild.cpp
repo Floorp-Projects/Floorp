@@ -1324,9 +1324,7 @@ _pluginthreadasynccall(NPP aNPP,
     if (!aFunc)
         return;
 
-    PluginThreadChild::current()->message_loop()
-        ->PostTask(FROM_HERE, new ChildAsyncCall(InstCast(aNPP), aFunc,
-                                                 aUserData));
+    InstCast(aNPP)->AsyncCall(aFunc, aUserData);
 }
 
 NPError NP_CALLBACK

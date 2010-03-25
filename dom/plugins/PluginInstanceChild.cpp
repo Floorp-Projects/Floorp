@@ -42,6 +42,7 @@
 #include "BrowserStreamChild.h"
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
+#include "PluginThreadChild.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 
@@ -97,6 +98,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mCachedWinlessPluginHWND(0)
     , mWinlessPopupSurrogateHWND(0)
 #endif // OS_WIN
+    , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 {
     memset(&mWindow, 0, sizeof(mWindow));
     mData.ndata = (void*) this;
@@ -1724,6 +1726,18 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
     mTimers.RemoveElement(id, ChildTimer::IDComparator());
 }
 
+void
+PluginInstanceChild::AsyncCall(PluginThreadCallback aFunc, void* aUserData)
+{
+    ChildAsyncCall* task = new ChildAsyncCall(this, aFunc, aUserData);
+
+    {
+        MutexAutoLock lock(mAsyncCallMutex);
+        mPendingAsyncCalls.AppendElement(task);
+    }
+    PluginThreadChild::current()->message_loop()->PostTask(FROM_HERE, task);
+}
+
 static PLDHashOperator
 InvalidateObject(DeletingObjectEntry* e, void* userArg)
 {
@@ -1776,9 +1790,12 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     for (PRUint32 i = 0; i < streams.Length(); ++i)
         static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
-    for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
-        mPendingAsyncCalls[i]->Cancel();
-    mPendingAsyncCalls.TruncateLength(0);
+    {
+        MutexAutoLock lock(mAsyncCallMutex);
+        for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
+            mPendingAsyncCalls[i]->Cancel();
+        mPendingAsyncCalls.TruncateLength(0);
+    }
 
     mTimers.Clear();
 
