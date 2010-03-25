@@ -180,6 +180,7 @@ public:
             NS_ASSERTION(0 <= rv, PR_ErrorToName(PR_GetError()));
 
             if (0 == rv) {      // timeout
+                fputs("(timed out!)\n", stderr);
                 Finish(PR_FALSE); // abnormal
                 return;
             }
@@ -218,6 +219,13 @@ public:
 
             now = PR_IntervalNow();
         }
+
+        if (stdoutOpen)
+            fputs("(stdout still open!)\n", stderr);
+        if (stderrOpen)
+            fputs("(stderr still open!)\n", stderr);
+        if (now > deadline)
+            fputs("(timed out!)\n", stderr);
 
         Finish(!stdoutOpen && !stderrOpen && now <= deadline);
     }
@@ -518,7 +526,7 @@ ContentionNoDeadlock()
 {
     const char * func = __func__;
     Subprocess proc(func);
-    proc.RunToCompletion(10000);
+    proc.RunToCompletion(60000);
     if (0 != proc.mExitCode) {
         printf("(expected 0 == return code, got %d)\n", proc.mExitCode);
         puts("(output)\n----------------------------------\n");
