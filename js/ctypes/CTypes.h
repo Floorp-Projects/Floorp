@@ -41,6 +41,8 @@
 
 #include "jsapi.h"
 #include "nsString.h"
+#include "nsTArray.h"
+#include "prlink.h"
 #include "ffi.h"
 
 namespace mozilla {
@@ -79,8 +81,6 @@ enum TypeCode {
   TYPE_array,
   TYPE_struct
 };
-
-ABICode GetABICode(JSContext* cx, JSObject* obj);
 
 struct FieldInfo
 {
@@ -141,6 +141,13 @@ enum CTypeSlot {
   SLOT_FIELDS    = 7, // (StructTypes only) 'fields' property
   SLOT_FIELDINFO = 8, // (StructTypes only) FieldInfo array
   CTYPE_SLOTS
+};
+
+enum FunctionSlot
+{
+  SLOT_FUNCTION = 0,
+  SLOT_LIBRARYOBJ = 1
+  // JSFunction objects always get exactly two slots.
 };
 
 enum CDataSlot {
@@ -242,6 +249,65 @@ public:
   static JSBool FieldGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
+};
+
+// Represents an argument type for a function.
+struct Type
+{
+  ffi_type mFFIType;
+  JSObject* mType;
+};
+
+// Helper class for handling allocation of function arguments.
+struct AutoValue
+{
+  AutoValue() : mData(NULL) { }
+
+  ~AutoValue()
+  {
+    delete[] static_cast<char*>(mData);
+  }
+
+  bool SizeToType(JSContext* cx, JSObject* type)
+  {
+    size_t size = CType::GetSize(cx, type);
+    mData = new char[size];
+    if (mData)
+      memset(mData, 0, size);
+    return mData != NULL;
+  }
+
+  void* mData;
+};
+
+class Function
+{
+public:
+  Function();
+
+  Function*& Next() { return mNext; }
+  void Trace(JSTracer *trc);
+
+  static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
+
+  ~Function();
+
+private:
+  JSBool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  JSBool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
+
+protected:
+  PRFuncPtr mFunc;
+
+  ffi_abi mCallType;
+  Type mResultType;
+  nsAutoTArray<Type, 16> mArgTypes;
+  nsAutoTArray<ffi_type*, 16> mFFITypes;
+
+  ffi_cif mCIF;
+
+  Function* mNext;
 };
 
 class CData {
