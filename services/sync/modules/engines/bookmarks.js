@@ -706,6 +706,7 @@ BookmarksStore.prototype = {
   // Create a record starting from the weave id (places guid)
   createRecord: function createRecord(guid) {
     let placeId = idForGUID(guid);
+    let record;
     if (placeId <= 0) { // deleted item
       record = new PlacesItem();
       record.deleted = true;
