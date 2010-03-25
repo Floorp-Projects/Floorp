@@ -295,8 +295,8 @@ function SyncEngine(name) {
 }
 SyncEngine.prototype = {
   __proto__: Engine.prototype,
-
   _recordObj: CryptoWrapper,
+  version: 1,
 
   get storageURL() Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI") +
     "/" + ID.get("WeaveID").username + "/storage/",
@@ -304,6 +304,17 @@ SyncEngine.prototype = {
   get engineURL() this.storageURL + this.name,
 
   get cryptoMetaURL() this.storageURL + "crypto/" + this.name,
+
+  get metaURL() this.storageURL + "meta/global",
+
+  get syncID() {
+    // Generate a random syncID if we don't have one
+    let syncID = Svc.Prefs.get(this.name + ".syncID", "");
+    return syncID == "" ? this.syncID = Utils.makeGUID() : syncID;
+  },
+  set syncID(value) {
+    Svc.Prefs.set(this.name + ".syncID", value);
+  },
 
   get lastSync() {
     return parseFloat(Svc.Prefs.get(this.name + ".lastSync", "0"));
@@ -346,6 +357,42 @@ SyncEngine.prototype = {
   _syncStartup: function SyncEngine__syncStartup() {
     this._log.trace("Ensuring server crypto records are there");
 
+    // Determine if we need to wipe on outdated versions
+    let wipeServerData = false;
+    let metaGlobal = Records.get(this.metaURL);
+    let engines = metaGlobal.payload.engines || {};
+    let engineData = engines[this.name] || {};
+
+    // Assume missing versions are 0 and wipe the server
+    if ((engineData.version || 0) < this.version) {
+      this._log.debug("Old engine data: " + [engineData.version, this.version]);
+
+      // Prepare to clear the server and upload everything
+      wipeServerData = true;
+      this.syncID = "";
+
+      // Set the newer version and newly generated syncID
+      engineData.version = this.version;
+      engineData.syncID = this.syncID;
+
+      // Put the new data back into meta/global and mark for upload
+      engines[this.name] = engineData;
+      metaGlobal.payload.engines = engines;
+      metaGlobal.changed = true;
+    }
+    // Don't sync this engine if the server has newer data
+    else if (engineData.version > this.version) {
+      let error = new String("New data: " + [engineData.version, this.version]);
+      error.failureCode = VERSION_OUT_OF_DATE;
+      throw error;
+    }
+    // Changes to syncID mean we'll need to upload everything
+    else if (engineData.syncID != this.syncID) {
+      this._log.debug("Engine syncIDs: " + [engineData.syncID, this.syncID]);
+      this.syncID = engineData.syncID;
+      this._resetClient();
+    };
+
     // Try getting/unwrapping the crypto record
     let meta = CryptoMetas.get(this.cryptoMetaURL);
     if (meta) {
@@ -355,14 +402,18 @@ SyncEngine.prototype = {
         meta.getKey(privkey, ID.get("WeaveCryptoID"));
       }
       catch(ex) {
-        // Remove traces of this bad cryptometa
+        // Remove traces of this bad cryptometa and tainted data
         this._log.debug("Purging bad data after failed unwrap crypto: " + ex);
         CryptoMetas.del(this.cryptoMetaURL);
         meta = null;
-
-        // Remove any potentially tained data
-        new Resource(this.engineURL).delete();
+        wipeServerData = true;
       }
+    }
+
+    // Delete all server data and reupload on bad version or meta
+    if (wipeServerData) {
+      new Resource(this.engineURL).delete();
+      this._resetClient();
     }
 
     // Generate a new crypto record
