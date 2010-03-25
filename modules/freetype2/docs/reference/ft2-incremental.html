@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Incremental Loading
@@ -89,6 +89,7 @@ Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).
     <a href="ft2-basic_types.html#FT_Long">FT_Long</a>  bearing_x;
     <a href="ft2-basic_types.html#FT_Long">FT_Long</a>  bearing_y;
     <a href="ft2-basic_types.html#FT_Long">FT_Long</a>  advance;
+    <a href="ft2-basic_types.html#FT_Long">FT_Long</a>  advance_v;     /* since 2.3.12 */
 
   } <b>FT_Incremental_MetricsRec</b>;
 
@@ -106,7 +107,10 @@ Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).
 <p>Top bearing, in font units.</p>
 </td></tr>
 <tr valign=top><td><b>advance</b></td><td>
-<p>Glyph advance, in font units.</p>
+<p>Horizontal component of glyph advance, in font units.</p>
+</td></tr>
+<tr valign=top><td><b>advance_v</b></td><td>
+<p>Vertical component of glyph advance, in font units.</p>
 </td></tr>
 </table>
 </td></tr></table>

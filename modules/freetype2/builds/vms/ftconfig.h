@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    VMS-specific configuration file (specification only).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,6 +109,14 @@ FT_BEGIN_HEADER
 #else
 #define FT_MACINTOSH 1
 #endif
+
+#elif defined( __SC__ ) || defined( __MRC__ )
+  /* Classic MacOS compilers */
+#include "ConditionalMacros.h"
+#if TARGET_OS_MAC
+#define FT_MACINTOSH 1
+#endif
+
 #endif
 
 
