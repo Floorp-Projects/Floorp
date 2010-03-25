@@ -4690,7 +4690,7 @@ nsTypedSelection::RemoveAllRanges()
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
-  nsCOMPtr<nsPresContext>  presContext;
+  nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
 
 
@@ -4741,7 +4741,7 @@ nsTypedSelection::AddRange(nsIRange* aRange)
   if (mType == nsISelectionController::SELECTION_NORMAL)
     SetInterlinePosition(PR_TRUE);
 
-  nsCOMPtr<nsPresContext>  presContext;
+  nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
 
@@ -4798,7 +4798,7 @@ nsTypedSelection::RemoveRange(nsIRange* aRange)
   }
 
   // clear the selected bit from the removed range's frames
-  nsCOMPtr<nsPresContext>  presContext;
+  nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_FALSE);
 
@@ -4855,7 +4855,7 @@ nsTypedSelection::Collapse(nsINode* aParentNode, PRInt32 aOffset)
     return NS_ERROR_FAILURE;
   nsresult result;
   // Delete all of the current ranges
-  nsCOMPtr<nsPresContext>  presContext;
+  nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   Clear(presContext);
 
@@ -5022,7 +5022,7 @@ nsTypedSelection::CopyRangeToAnchorFocus(nsIRange *aRange)
 void
 nsTypedSelection::ReplaceAnchorFocusRange(nsIRange *aRange)
 {
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
     selectFrames(presContext, mAnchorFocusRange, PR_FALSE);
@@ -5124,7 +5124,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
   if (result2 == 0) //not selecting anywhere
     return NS_OK;
 
-  nsCOMPtr<nsPresContext>  presContext;
+  nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
@@ -5693,7 +5693,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 
   PRInt32 frameStart, frameEnd;
   focusFrame->GetOffsets(frameStart, frameEnd);
-  nsCOMPtr<nsPresContext> context;
+  nsRefPtr<nsPresContext> context;
   PRUint8 levelBefore, levelAfter;
   result = GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(result) || !context)

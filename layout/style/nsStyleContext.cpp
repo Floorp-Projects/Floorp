@@ -554,7 +554,7 @@ void
 nsStyleContext::Destroy()
 {
   // Get the pres context from our rule node.
-  nsCOMPtr<nsPresContext> presContext = mRuleNode->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = mRuleNode->GetPresContext();
 
   // Call our destructor.
   this->~nsStyleContext();

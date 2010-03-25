@@ -3998,7 +3998,7 @@ nsDocument::DispatchContentLoadedEvents()
 
           nsIPresShell *shell = parent->GetPrimaryShell();
           if (shell) {
-            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+            nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
             if (context) {
               nsEventDispatcher::Dispatch(parent, context, innerEvent, event,
@@ -6198,7 +6198,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
   nsIPresShell *shell = GetPrimaryShell();
-  nsCOMPtr<nsPresContext> context;
+  nsRefPtr<nsPresContext> context;
   if (shell) {
      context = shell->GetPresContext();
   }
