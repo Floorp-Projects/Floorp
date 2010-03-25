@@ -1439,7 +1439,6 @@ namespace nanojit
                 case LIR_qursh:
                 case LIR_qirsh:
                 case LIR_qior:
-                CASE64(LIR_qaddp:)
                 case LIR_qxor:
                 {
                     asm_qbinop(ins);
@@ -1448,7 +1447,6 @@ namespace nanojit
 #endif
 
                 case LIR_add:
-                CASE32(LIR_iaddp:)
                 case LIR_sub:
                 case LIR_mul:
                 case LIR_and:

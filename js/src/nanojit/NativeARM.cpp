@@ -2370,7 +2370,7 @@ Assembler::asm_arith(LInsp ins)
     // trace-tests.js so it is very unlikely to be worthwhile implementing it.
     if (rhs->isconst() && op != LIR_mul && op != LIR_mulxov)
     {
-        if ((op == LIR_add || op == LIR_iaddp || op == LIR_addxov) && lhs->isop(LIR_ialloc)) {
+        if ((op == LIR_add || op == LIR_addxov) && lhs->isop(LIR_ialloc)) {
             // Add alloc+const. The result should be the address of the
             // allocated space plus a constant.
             Register    rs = deprecated_prepResultReg(ins, allow);
@@ -2384,7 +2384,6 @@ Assembler::asm_arith(LInsp ins)
 
         switch (op)
         {
-            case LIR_iaddp:
             case LIR_add:       asm_add_imm(rr, ra, imm32);     break;
             case LIR_addxov:    asm_add_imm(rr, ra, imm32, 1);  break;
             case LIR_sub:       asm_sub_imm(rr, ra, imm32);     break;
@@ -2421,7 +2420,6 @@ Assembler::asm_arith(LInsp ins)
     const Register SBZ = (Register)0;
     switch (op)
     {
-        case LIR_iaddp:
         case LIR_add:       ADDs(rr, ra, rb, 0);    break;
         case LIR_addxov:    ADDs(rr, ra, rb, 1);    break;
         case LIR_sub:       SUBs(rr, ra, rb, 0);    break;
