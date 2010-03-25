@@ -591,14 +591,16 @@ nsWindow::OnDestroy(void)
         return;
 
     mOnDestroyCalled = PR_TRUE;
+    
+    // Prevent deletion.
+    nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
     // release references to children, device context, toolkit + app shell
-    nsBaseWidget::OnDestroy();
-
-    // let go of our parent
+    nsBaseWidget::OnDestroy(); 
+    
+    // Remove association between this object and its parent and siblings.
+    nsBaseWidget::Destroy();
     mParent = nsnull;
-
-    nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
     nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
     nsEventStatus status;
@@ -808,13 +810,14 @@ nsWindow::Destroy(void)
         CheckDestroyInvisibleContainer();
     }
 
-    OnDestroy();
-
 #ifdef ACCESSIBILITY
-    if (mRootAccessible) {
-        mRootAccessible = nsnull;
-    }
+     if (mRootAccessible) {
+         mRootAccessible = nsnull;
+     }
 #endif
+
+    // Save until last because OnDestroy() may cause us to be deleted.
+    OnDestroy();
 
     return NS_OK;
 }
