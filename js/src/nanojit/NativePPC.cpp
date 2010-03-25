@@ -838,9 +838,7 @@ namespace nanojit
                 // ppc arith immediate ops sign-exted the imm16 value
                 switch (op) {
                 case LIR_add:
-                CASE32(LIR_iaddp:)
                 CASE64(LIR_qiadd:)
-                CASE64(LIR_qaddp:)
                     ADDI(rr, ra, rhsc);
                     return;
                 case LIR_sub:
@@ -887,9 +885,7 @@ namespace nanojit
         Register rb = rhs==lhs ? ra : findRegFor(rhs, GpRegs&~rmask(ra));
         switch (op) {
             CASE64(LIR_qiadd:)
-            CASE64(LIR_qaddp:)
             case LIR_add:
-            CASE32(LIR_iaddp:)
                 ADD(rr, ra, rb);
                 break;
             CASE64(LIR_qiand:)
@@ -1361,7 +1357,6 @@ namespace nanojit
     void Assembler::asm_qbinop(LIns *ins) {
         LOpcode op = ins->opcode();
         switch (op) {
-        case LIR_qaddp:
         case LIR_qior:
         case LIR_qiand:
         case LIR_qursh:

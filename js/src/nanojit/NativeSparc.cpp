@@ -633,7 +633,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_iaddp||op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+        else if ((op == LIR_add || op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
@@ -653,7 +653,7 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov)
+                if (op == LIR_add || op == LIR_addxov)
                     ADDCC(rr, rb, rr);
                 else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, rb, rr);
@@ -677,7 +677,7 @@ namespace nanojit
         else
             {
                 int c = rhs->imm32();
-                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov)
+                if (op == LIR_add || op == LIR_addxov)
                     ADDCC(rr, L2, rr);
                 else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, L2, rr);

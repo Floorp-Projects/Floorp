@@ -264,7 +264,7 @@ namespace nanojit
             return ins;
         } else {
             // If the displacement is more than 16 bits, put it in a separate instruction.
-            return insStore(op, val, ins2(LIR_addp, base, insImmWord(d)), 0, accSet);
+            return insStore(op, val, ins2(LIR_piadd, base, insImmWord(d)), 0, accSet);
         }
     }
 
@@ -311,7 +311,7 @@ namespace nanojit
             // If the displacement is more than 16 bits, put it in a separate instruction.
             // Note that CseFilter::insLoad() also does this, so this will
             // only occur if CseFilter has been removed from the pipeline.
-            return insLoad(op, ins2(LIR_addp, base, insImmWord(d)), 0, accSet);
+            return insLoad(op, ins2(LIR_piadd, base, insImmWord(d)), 0, accSet);
         }
     }
 
@@ -713,7 +713,6 @@ namespace nanojit
             LIns* t;
             switch (v) {
             case LIR_add:
-            CASE32(LIR_iaddp:)
             case LIR_mul:
             case LIR_fadd:
             case LIR_fmul:
@@ -774,7 +773,6 @@ namespace nanojit
             if (c == 0) {
                 switch (v) {
                 case LIR_add:
-                CASE32(LIR_iaddp:)
                 case LIR_or:
                 case LIR_xor:
                 case LIR_sub:
@@ -1679,7 +1677,6 @@ namespace nanojit
                 CASE64(LIR_qilsh:)
                 CASE64(LIR_qirsh:)
                 CASE64(LIR_qursh:)
-                case LIR_addp:
                 case LIR_add:
                 case LIR_sub:
                 case LIR_mul:
@@ -2064,7 +2061,6 @@ namespace nanojit
                 break;
 
             case LIR_add:       CASE64(LIR_qiadd:)
-            case LIR_addp:
             case LIR_sub:
             case LIR_mul:
             CASE86(LIR_div:)
@@ -2237,15 +2233,12 @@ namespace nanojit
     LIns* CseFilter::ins2(LOpcode op, LInsp a, LInsp b)
     {
         LInsp ins;
-        if (isCseOpcode(op)) {
-            uint32_t k;
-            ins = exprs->find2(op, a, b, k);
-            if (!ins) {
-                ins = out->ins2(op, a, b);
-                exprs->add(LIns2, ins, k);
-            }
-        } else {
+        NanoAssert(isCseOpcode(op));
+        uint32_t k;
+        ins = exprs->find2(op, a, b, k);
+        if (!ins) {
             ins = out->ins2(op, a, b);
+            exprs->add(LIns2, ins, k);
         }
         NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b);
         return ins;
@@ -2302,7 +2295,7 @@ namespace nanojit
             // If the displacement is more than 16 bits, put it in a separate
             // instruction.  Nb: LirBufWriter also does this, we do it here
             // too because CseFilter relies on LirBufWriter not changing code.
-            ins = insLoad(op, ins2(LIR_addp, base, insImmWord(disp)), 0, loadAccSet);
+            ins = insLoad(op, ins2(LIR_piadd, base, insImmWord(disp)), 0, loadAccSet);
         }
         return ins;
     }
@@ -2319,7 +2312,7 @@ namespace nanojit
             // If the displacement is more than 16 bits, put it in a separate
             // instruction.  Nb: LirBufWriter also does this, we do it here
             // too because CseFilter relies on LirBufWriter not changing code.
-            ins = insStore(op, value, ins2(LIR_addp, base, insImmWord(disp)), 0, accSet);
+            ins = insStore(op, value, ins2(LIR_piadd, base, insImmWord(disp)), 0, accSet);
         }
         return ins;
     }
@@ -2885,11 +2878,6 @@ namespace nanojit
         case LIR_uge:
             formals[0] = LTy_I32;
             formals[1] = LTy_I32;
-            break;
-
-        case LIR_addp:
-            formals[0] = LTy_Ptr;
-            formals[1] = LTy_Ptr;
             break;
 
 #if NJ_SOFTFLOAT_SUPPORTED

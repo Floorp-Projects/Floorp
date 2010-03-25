@@ -719,8 +719,7 @@ namespace nanojit
             case LIR_sub:
             case LIR_subxov:    SUBLR8(rr, imm);   break;
             case LIR_xor:       XORLR8(rr, imm);   break;
-            case LIR_qiadd:
-            case LIR_qaddp:     ADDQR8(rr, imm);   break;
+            case LIR_qiadd:     ADDQR8(rr, imm);   break;
             case LIR_qiand:     ANDQR8(rr, imm);   break;
             case LIR_qior:      ORQR8( rr, imm);   break;
             case LIR_qxor:      XORQR8(rr, imm);   break;
@@ -735,8 +734,7 @@ namespace nanojit
             case LIR_sub:
             case LIR_subxov:    SUBLRI(rr, imm);   break;
             case LIR_xor:       XORLRI(rr, imm);   break;
-            case LIR_qiadd:
-            case LIR_qaddp:     ADDQRI(rr, imm);   break;
+            case LIR_qiadd:     ADDQRI(rr, imm);   break;
             case LIR_qiand:     ANDQRI(rr, imm);   break;
             case LIR_qior:      ORQRI( rr, imm);   break;
             case LIR_qxor:      XORQRI(rr, imm);   break;
@@ -845,8 +843,7 @@ namespace nanojit
         case LIR_qxor:      XORQRR(rr, rb); break;
         case LIR_qior:      ORQRR(rr, rb);  break;
         case LIR_qiand:     ANDQRR(rr, rb); break;
-        case LIR_qiadd:
-        case LIR_qaddp:     ADDQRR(rr, rb); break;
+        case LIR_qiadd:     ADDQRR(rr, rb); break;
         }
         if (rr != ra)
             MR(rr, ra);
