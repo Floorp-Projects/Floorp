@@ -539,7 +539,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 .searchbar-textbox {
   -moz-appearance: none;
   margin: 1px 3px;
-  padding: 1px;
+  padding: 2px;
   -moz-background-clip: padding;
   border: 1px solid;
   border-color: rgba(0,0,0,.2) rgba(0,0,0,.25) rgba(0,0,0,.3);
@@ -612,7 +612,6 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   background-color: -moz-dialog;
   background-image: -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
   color: -moz-dialogText;
-  margin: 1px;
   -moz-border-radius: 2px;
 }
 
@@ -653,7 +652,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 #identity-icon-labels {
   -moz-margin-start: 1px;
   -moz-margin-end: 3px;
-  margin-bottom: 1px;
+  -moz-transform: translate(0, -1px);
 }
 
 /* Location bar dropmarker */
