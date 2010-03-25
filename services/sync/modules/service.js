@@ -165,6 +165,15 @@ WeaveSvc.prototype = {
     return user + "1/";
   },
 
+  get syncID() {
+    // Generate a random syncID id we don't have one
+    let syncID = Svc.Prefs.get("client.syncID", "");
+    return syncID == "" ? this.syncID = Utils.makeGUID() : syncID;
+  },
+  set syncID(value) {
+    Svc.Prefs.set("client.syncID", value);
+  },
+
   get isLoggedIn() { return this._loggedIn; },
 
   get keyGenEnabled() { return this._keyGenEnabled; },
@@ -865,10 +874,11 @@ WeaveSvc.prototype = {
       Status.sync = VERSION_OUT_OF_DATE;
       this._log.warn("Upgrade required to access newer storage version.");
       return false;
-    } else if (meta.payload.syncID != Clients.syncID) {
+    }
+    else if (meta.payload.syncID != this.syncID) {
       this.resetService();
-      Clients.syncID = meta.payload.syncID;
-      this._log.debug("Clear cached values and take syncId: " + Clients.syncID);
+      this.syncID = meta.payload.syncID;
+      this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
       // XXX Bug 531005 Wait long enough to allow potentially another concurrent
       // sync to finish generating the keypair and uploading them
@@ -1237,7 +1247,7 @@ WeaveSvc.prototype = {
     this.resetClient();
 
     let meta = new WBORecord(this.metaURL);
-    meta.payload.syncID = Clients.syncID;
+    meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
@@ -1338,7 +1348,7 @@ WeaveSvc.prototype = {
   wipeRemote: function WeaveSvc_wipeRemote(engines)
     this._catch(this._notify("wipe-remote", "", function() {
       // Make sure stuff gets uploaded
-      Clients.resetSyncID();
+      this.syncID = "";
 
       // Clear out any server data
       this.wipeServer(engines);
@@ -1364,7 +1374,7 @@ WeaveSvc.prototype = {
       this._log.info("Logs reinitialized for service reset");
 
       // Pretend we've never synced to the server and drop cached data
-      Clients.resetSyncID();
+      this.syncID = "";
       Svc.Prefs.reset("lastSync");
       for each (let cache in [PubKeys, PrivKeys, CryptoMetas, Records])
         cache.clearCache();

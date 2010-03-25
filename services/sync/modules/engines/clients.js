@@ -87,18 +87,6 @@ ClientEngine.prototype = {
     return Svc.Prefs.get("client.GUID");
   },
 
-  get syncID() {
-    if (!Svc.Prefs.get("client.syncID"))
-      Svc.Prefs.set("client.syncID", Utils.makeGUID());
-    return Svc.Prefs.get("client.syncID");
-  },
-  set syncID(value) {
-    Svc.Prefs.set("client.syncID", value);
-  },
-  resetSyncID: function ClientEngine_resetSyncID() {
-    Svc.Prefs.reset("client.syncID");
-  },
-
   get clientName() {
     if (Svc.Prefs.isSet("client.name"))
       return Svc.Prefs.get("client.name");
