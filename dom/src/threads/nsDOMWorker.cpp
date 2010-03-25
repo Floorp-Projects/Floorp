@@ -1072,7 +1072,10 @@ nsDOMWorker::Finalize(nsIXPConnectWrappedNative* /* aWrapper */,
 
   // Do this *after* we null out mWrappedNative so that we don't hand out a
   // freed pointer.
-  TerminateInternal(PR_TRUE);
+  if (TerminateInternal(PR_TRUE) == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+    // We're shutting down, jump right to Kill.
+    Kill();
+  }
 
   return NS_OK;
 }
@@ -1776,11 +1779,8 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
     runnable->ReplaceWrappedNative(mScopeWN);
   }
 
-  rv = nsDOMThreadService::get()->Dispatch(this, runnable, aTimeoutInterval,
-                                           aClearQueue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return nsDOMThreadService::get()->Dispatch(this, runnable, aTimeoutInterval,
+                                             aClearQueue);
 }
 
 nsresult
@@ -1831,6 +1831,11 @@ nsDOMWorker::TerminateInternal(PRBool aFromFinalize)
 
   nsresult rv = FireCloseRunnable(PR_INTERVAL_NO_TIMEOUT, PR_TRUE,
                                   aFromFinalize);
+  if (rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+    return rv;
+  }
+
+  // Warn about other kinds of failures.
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
