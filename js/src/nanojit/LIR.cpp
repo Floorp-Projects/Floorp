@@ -1823,7 +1823,7 @@ namespace nanojit
         } else {
             addNameWithSuffix(ins, lirNames[ins->opcode()], lircounts.add(ins->opcode()),
                               /*ignoreOneSuffix*/false);
-                
+
         }
         return names.get(ins)->name;
     }
@@ -2615,7 +2615,7 @@ namespace nanojit
     {
         NanoAssertMsgf(0,
             "LIR structure error (%s): %s %d of '%s' is '%s' (expected %s)",
-            whereInPipeline, argDesc, argN, 
+            whereInPipeline, argDesc, argN,
             lirNames[op], lirNames[arg->opcode()], shouldBeDesc);
     }
 
