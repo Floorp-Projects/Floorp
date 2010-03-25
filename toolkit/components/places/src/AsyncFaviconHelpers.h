@@ -348,6 +348,21 @@ private:
   nsCString mData;
 };
 
+
+/**
+ * Saves icon data in the database if it has changed.
+ */
+class SetFaviconDataStep : public AsyncFaviconStep
+                         , public mozilla::places::AsyncStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  SetFaviconDataStep() {};
+  void Run();
+};
+
 } // namespace places
 } // namespace mozilla
 
