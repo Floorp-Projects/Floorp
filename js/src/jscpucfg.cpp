@@ -52,8 +52,6 @@
 
 int main(int argc, char **argv)
 {
-    int dummy1;
-
     printf("#ifndef js_cpucfg___\n");
     printf("#define js_cpucfg___\n\n");
 
