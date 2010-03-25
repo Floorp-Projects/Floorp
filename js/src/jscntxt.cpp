@@ -136,7 +136,7 @@ JSThreadData::finish()
         js_DestroyDtoaState(dtoaState);
 
     js_FinishGSNCache(&gsnCache);
-    js_FinishPropertyCache(&propertyCache);
+    propertyCache.~PropertyCache();
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
 #endif
@@ -160,7 +160,7 @@ JSThreadData::purge(JSContext *cx)
     js_PurgeGSNCache(&gsnCache);
 
     /* FIXME: bug 506341. */
-    js_PurgePropertyCache(cx, &propertyCache);
+    propertyCache.purge(cx);
 
 #ifdef JS_TRACER
     /*

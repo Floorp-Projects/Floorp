@@ -48,10 +48,13 @@
 #endif
 
 #include "jstypes.h"
+#include "jscntxt.h"
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jspropertycache.h"
+#include "jspropertytree.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

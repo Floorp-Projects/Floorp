@@ -1136,10 +1136,10 @@ js_DestroyScript(JSContext *cx, JSScript *script)
      * regenerating shapes, so we don't have to purge fragments if the GC is
      * currently running.
      *
-     * JS_THREADSAFE note: js_PurgePropertyCacheForScript purges only the
-     * current thread's property cache, so a script not owned by a function
-     * or object, which hands off lifetime management for that script to the
-     * GC, must be used by only one thread over its lifetime.
+     * JS_THREADSAFE note: The code below purges only the current thread's
+     * property cache, so a script not owned by a function or object, which
+     * hands off lifetime management for that script to the GC, must be used by
+     * only one thread over its lifetime.
      *
      * This should be an API-compatible change, since a script is never safe
      * against premature GC if shared among threads without a rooted object
@@ -1155,7 +1155,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
         if (!(fp && (fp->flags & JSFRAME_EVAL))) {
-            js_PurgePropertyCacheForScript(cx, script);
+            JS_PROPERTY_CACHE(cx).purgeForScript(script);
 
 #ifdef CHECK_SCRIPT_OWNER
             JS_ASSERT(script->owner == cx->thread);
