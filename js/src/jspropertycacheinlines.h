@@ -45,57 +45,59 @@
 #include "jspropertycache.h"
 #include "jsscope.h"
 
+using namespace js;
+
 /* static */ inline bool
-JSPropCacheEntry::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
+PropertyCache::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
 {
     return CX_OWNS_OBJECT_TITLE(cx, obj) && OBJ_SHAPE(obj) == shape;
 }
 
 /*
- * PROPERTY_CACHE_TEST is designed to inline the fast path in js_Interpret, so
- * it makes "just-so" restrictions on parameters, e.g. pobj and obj should not
- * be the same variable, since for JOF_PROP-mode opcodes, obj must not be
- * changed because of a cache miss.
+ * This method is designed to inline the fast path in js_Interpret, so it makes
+ * "just-so" restrictions on parameters, e.g. pobj and obj should not be the
+ * same variable, since for JOF_PROP-mode opcodes, obj must not be changed
+ * because of a cache miss.
  *
- * On return from PROPERTY_CACHE_TEST, if atom is null then obj points to the
- * scope chain element in which the property was found, pobj is locked, and
- * entry is valid. If atom is non-null then no object is locked but entry is
- * still set correctly for use, e.g., by js_FillPropertyCache and atom should
- * be used as the id to find.
+ * On return, if atom is null then obj points to the scope chain element in
+ * which the property was found, pobj is locked, and entry is valid. If atom is
+ * non-null then no object is locked but entry is still set correctly for use,
+ * e.g., by PropertyCache::fill and atom should be used as the id to find.
  *
  * We must lock pobj on a hit in order to close races with threads that might
  * be deleting a property from its scope, or otherwise invalidating property
  * caches (on all threads) by re-generating scope->shape.
  */
 JS_ALWAYS_INLINE void
-PROPERTY_CACHE_TEST(JSContext *cx, jsbytecode *pc, JSObject *&obj,
-		    JSObject *&pobj, JSPropCacheEntry *&entry, JSAtom *&atom)
+PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
+                    JSObject *&pobj, PropertyCacheEntry *&entry, JSAtom *&atom)
 {
-    JSPropertyCache *cache = &JS_PROPERTY_CACHE(cx);
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(OBJ_IS_NATIVE(obj));
+
     uint32 kshape = OBJ_SHAPE(obj);
-    entry = &cache->table[PROPERTY_CACHE_HASH(pc, kshape)];
-    PCMETER(cache->pctestentry = entry);
-    PCMETER(cache->tests++);
+    entry = &table[hash(pc, kshape)];
+    PCMETER(pctestentry = entry);
+    PCMETER(tests++);
     JS_ASSERT(&obj != &pobj);
     if (entry->kpc == pc && entry->kshape == kshape) {
         JSObject *tmp;
         pobj = obj;
-        if (PCVCAP_TAG(entry->vcap) == 1 &&
+        if (entry->vcapTag() == 1 &&
             (tmp = pobj->getProto()) != NULL) {
             pobj = tmp;
         }
 
-        if (JSPropCacheEntry::matchShape(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {
-            PCMETER(cache->pchits++);
-            PCMETER(!PCVCAP_TAG(entry->vcap) || cache->protopchits++);
+        if (matchShape(cx, pobj, entry->vshape())) {
+            PCMETER(pchits++);
+            PCMETER(!entry->vcapTag() || protopchits++);
             atom = NULL;
             return;
         }
     }
-    atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, entry);
+    atom = fullTest(cx, pc, &obj, &pobj, entry);
     if (atom)
-        PCMETER(cache->misses++);
+        PCMETER(misses++);
 }
 
 #endif /* jspropertycacheinlines_h___ */

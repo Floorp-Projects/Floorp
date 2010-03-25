@@ -2222,7 +2222,7 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL_CONSTEXPR(JSVAL_INT_MAX)));
 static bool
 AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
                             ptrdiff_t pcoff, JSObject *start, JSObject *found,
-                            JSPropCacheEntry *entry)
+                            PropertyCacheEntry *entry)
 {
     uint32 sample = cx->runtime->gcNumber;
 
@@ -2244,8 +2244,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (cx->runtime->gcNumber != sample ||
-        PCVCAP_SHAPE(entry->vcap) != OBJ_SHAPE(pobj)) {
+    if (cx->runtime->gcNumber != sample || entry->vshape() != OBJ_SHAPE(pobj)) {
         pobj->dropProperty(cx, prop);
         return true;
     }
