@@ -101,7 +101,7 @@ struct PropertySpec
 
 JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
 
-JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj, void* data, bool wantPrimitive, jsval* result);
+JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj, void* data, bool wantPrimitive, bool ownResult, jsval* result);
 JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer, bool isArgument, bool* freePointer);
 JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer);
 
@@ -154,6 +154,7 @@ enum CDataSlot {
   SLOT_CTYPE    = 0, // CType object representing the underlying type
   SLOT_REFERENT = 1, // CData object this object refers to, if any
   SLOT_DATA     = 2, // pointer to a buffer containing the binary data
+  SLOT_OWNS     = 3, // JSVAL_TRUE if this CData owns its own buffer
   CDATA_SLOTS
 };
 
@@ -312,7 +313,7 @@ protected:
 
 class CData {
 public:
-  static JSObject* Create(JSContext* cx, JSObject* type, JSObject* base, void* data);
+  static JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* refObj, void* data, bool ownResult);
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static JSObject* GetCType(JSContext* cx, JSObject* dataObj);
