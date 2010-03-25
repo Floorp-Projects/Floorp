@@ -567,11 +567,18 @@ MakeNewArenaFreeList(JSGCArena *a, size_t thingSize)
 #define METER_UPDATE_MAX(maxLval, rval)                                       \
     METER_IF((maxLval) < (rval), (maxLval) = (rval))
 
+#ifdef MOZ_GCTIMER
+static jsrefcount newChunkCount = 0;
+static jsrefcount destroyChunkCount = 0;
+#endif
+
 static jsuword
 NewGCChunk(void)
 {
     void *p;
-
+#ifdef MOZ_GCTIMER
+    JS_ATOMIC_INCREMENT(&newChunkCount);
+#endif
 #if defined(XP_WIN)
     p = VirtualAlloc(NULL, GC_CHUNK_SIZE,
                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -593,6 +600,9 @@ NewGCChunk(void)
 static void
 DestroyGCChunk(jsuword chunk)
 {
+#ifdef MOZ_GCTIMER
+    JS_ATOMIC_INCREMENT(&destroyChunkCount);
+#endif
     JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
 #if defined(XP_WIN)
     VirtualFree((void *) chunk, 0, MEM_RELEASE);
@@ -2793,6 +2803,46 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind, JSGCArena **emptyArenas)
                            nlivearenas, nkilledarenas, nthings));
 }
 
+#ifdef MOZ_GCTIMER
+struct GCTimer {
+    uint64 enter;
+    uint64 startMark;
+    uint64 startSweep;
+    uint64 sweepObjectEnd;
+    uint64 sweepStringEnd;
+    uint64 sweepDoubleEnd;
+    uint64 sweepDestroyEnd;
+    uint64 end;
+};
+
+void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
+{
+    static FILE *gcFile;
+
+    if (!gcFile) {
+        gcFile = fopen("gcTimer.dat", "w");
+        JS_ASSERT(gcFile);
+        
+        fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj, ");
+        fprintf(gcFile, "FinStr, FinDbl, Destroy,  newChunks, destoyChunks\n");
+    }
+    fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %7.1f, ",
+            (double)(gcT->enter - firstEnter) / 1E6, 
+            (double)(gcT->end-gcT->enter) / 1E6, 
+            (double)(gcT->startSweep - gcT->startMark) / 1E6, 
+            (double)(gcT->sweepDestroyEnd - gcT->startSweep) / 1E6, 
+            (double)(gcT->sweepObjectEnd - gcT->startSweep) / 1E6, 
+            (double)(gcT->sweepStringEnd - gcT->sweepObjectEnd) / 1E6,
+            (double)(gcT->sweepDoubleEnd - gcT->sweepStringEnd) / 1E6,
+            (double)(gcT->sweepDestroyEnd - gcT->sweepDoubleEnd) / 1E6);
+    fprintf(gcFile, "%10d, %10d \n", newChunkCount, destroyChunkCount);
+    fflush(gcFile);
+
+    if (lastGC)
+        fclose(gcFile);
+}
+#endif
+
 /*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
  * rt->gcLock already held, so the lock should be kept on return.
@@ -2833,6 +2883,16 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     if (rt->state != JSRTS_UP && gckind != GC_LAST_CONTEXT)
         return;
+    
+#ifdef MOZ_GCTIMER
+    static uint64 firstEnter = rdtsc();
+    GCTimer gcTimer;
+    memset(&gcTimer, 0, sizeof(GCTimer));
+# define TIMESTAMP(x) (x = rdtsc())
+#else
+# define TIMESTAMP(x) ((void) 0)
+#endif
+    TIMESTAMP(gcTimer.enter);
 
   restart_at_beginning:
     /*
@@ -3078,7 +3138,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             acx->purge();
     }
 
-
 #ifdef JS_TRACER
     if (gckind == GC_LAST_CONTEXT) {
         /* Clear builtin functions, which are recreated on demand. */
@@ -3089,6 +3148,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* The last ditch GC preserves weak roots. */
     if (!(gckind & GC_KEEP_ATOMS))
         JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
+
+    TIMESTAMP(gcTimer.startMark);
 
   restart:
     rt->gcNumber++;
@@ -3152,6 +3213,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * JSString* assuming that they are unique. This works since the
      * atomization API must not be called during GC.
      */
+    TIMESTAMP(gcTimer.startSweep);
     js_SweepAtomState(cx);
 
     /* Finalize iterator states before the objects they iterate over. */
@@ -3189,6 +3251,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #if JS_HAS_XML_SUPPORT
     FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &emptyArenas);
 #endif
+    TIMESTAMP(gcTimer.sweepObjectEnd);
 
     /*
      * We sweep the deflated cache before we finalize the strings so the
@@ -3204,6 +3267,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         FinalizeArenaList<JSString, FinalizeExternalString>
             (cx, i, &emptyArenas);
     }
+    TIMESTAMP(gcTimer.sweepStringEnd);
 
     ap = &rt->gcDoubleArenaList.head;
     METER((nlivearenas = 0, nkilledarenas = 0, nthings = 0));
@@ -3231,7 +3295,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,
                            nlivearenas, nkilledarenas, nthings));
     rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
-
+    TIMESTAMP(gcTimer.sweepDoubleEnd);
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
      * had watchpoints referencing tree nodes.
@@ -3251,6 +3315,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * use js_IsAboutToBeFinalized().
      */
     DestroyGCArenas(rt, emptyArenas);
+    TIMESTAMP(gcTimer.sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE
     cx->submitDeallocatorTask();
@@ -3358,4 +3423,12 @@ out:
             JS_UNKEEP_ATOMS(rt);
         }
     }
+    TIMESTAMP(gcTimer.end);
+
+#ifdef MOZ_GCTIMER
+    if (gcTimer.startMark > 0)
+        dumpGCTimer(&gcTimer, firstEnter, gckind == GC_LAST_CONTEXT);
+    newChunkCount = 0;
+    destroyChunkCount = 0;
+#endif
 }
