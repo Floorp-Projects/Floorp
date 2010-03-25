@@ -530,7 +530,7 @@ namespace nanojit
         default:
             BADOPCODE(op);
         }
-        
+
         TAG("asm_store32(value=%p{%s}, dr=%d, base=%p{%s})",
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
@@ -881,7 +881,7 @@ namespace nanojit
         case LIR_ldzb:          // 8-bit integer load, zero-extend to 32-bit
             asm_ldst(OP_LBU, rres, d, rbase);
             break;
-        case LIR_ldzs:          // 16-bit integer load, zero-extend to 32-bit 
+        case LIR_ldzs:          // 16-bit integer load, zero-extend to 32-bit
             asm_ldst(OP_LHU, rres, d, rbase);
             break;
         case LIR_ldsb:          // 8-bit integer load, sign-extend to 32-bit
@@ -890,7 +890,7 @@ namespace nanojit
         case LIR_ldss:          // 16-bit integer load, sign-extend to 32-bit
             asm_ldst(OP_LH, rres, d, rbase);
             break;
-        case LIR_ld:            // 32-bit integer load 
+        case LIR_ld:            // 32-bit integer load
             asm_ldst(OP_LW, rres, d, rbase);
             break;
         default:
@@ -1128,7 +1128,7 @@ namespace nanojit
         }
         else
             BADOPCODE(op);
-            
+
         TAG("asm_store64(value=%p{%s}, dr=%d, base=%p{%s})",
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
@@ -1502,7 +1502,7 @@ namespace nanojit
      * - 32-bit arguments are placed in registers and 32-bit aligned
      *   on the stack.
      */
-    void 
+    void
     Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd)
     {
         // The stack offset must always be at least aligned to 4 bytes.
@@ -1529,7 +1529,7 @@ namespace nanojit
 
     void
     Assembler::asm_call(LInsp ins)
-    { 
+    {
         Register rr;
         LOpcode op = ins->opcode();
 
