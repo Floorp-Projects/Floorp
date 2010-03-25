@@ -40,9 +40,14 @@
  * How to use this stepper:
  *
  * nsCOMPtr<AsyncFaviconStepper> stepper = new AsyncFaviconStepper(callback);
- * stepper->AppendStep(new SomeStep());
- * stepper->AppendStep(new SomeOtherStep());
- * stepper->Start();
+ * stepper->SetPageURI(aPageURI);
+ * stepper->SetIconURI(aFaviconURI);
+ * rv = stepper->AppendStep(new SomeStep());
+ * NS_ENSURE_SUCCESS(rv, rv);
+ * rv = stepper->AppendStep(new SomeOtherStep());
+ * NS_ENSURE_SUCCESS(rv, rv);
+ * rv = stepper->Start();
+ * NS_ENSURE_SUCCESS(rv, rv);
  */
 
 #ifndef AsyncFaviconHelpers_h_
