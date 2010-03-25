@@ -1224,17 +1224,20 @@ strnlen(const CharType* begin, size_t max)
 // * If a CData object 'parentObj' is supplied, the new CData object is
 //   dependent on the given parent and its buffer refers to a slice of the
 //   parent's buffer.
-// * If 'parentObj' is null, the new CData object will make an owning copy of
-//   'data'.
+// * If 'parentObj' is null, the new CData object may or may not own its
+//   resulting buffer depending on the 'ownResult' argument.
 JSBool
 ConvertToJS(JSContext* cx,
             JSObject* typeObj,
             JSObject* parentObj,
             void* data,
             bool wantPrimitive,
+            bool ownResult,
             jsval* result)
 {
   JS_ASSERT(!parentObj || CData::IsCData(cx, parentObj));
+  JS_ASSERT(!parentObj || !ownResult);
+  JS_ASSERT(!wantPrimitive || !ownResult);
 
   TypeCode typeCode = CType::GetTypeCode(cx, typeObj);
 
@@ -1308,7 +1311,7 @@ ConvertToJS(JSContext* cx,
       return false;
     }
 
-    JSObject* obj = CData::Create(cx, typeObj, parentObj, data);
+    JSObject* obj = CData::Create(cx, typeObj, parentObj, data, ownResult);
     if (!obj)
       return false;
 
@@ -2099,7 +2102,7 @@ CType::ConstructBasic(JSContext* cx,
   }
 
   // construct a CData object
-  JSObject* result = CData::Create(cx, obj, NULL, NULL);
+  JSObject* result = CData::Create(cx, obj, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -2720,7 +2723,7 @@ PointerType::ConstructData(JSContext* cx,
     return JS_FALSE;
   }
 
-  JSObject* result = CData::Create(cx, obj, NULL, NULL);
+  JSObject* result = CData::Create(cx, obj, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -2796,7 +2799,7 @@ PointerType::ContentsGetter(JSContext* cx,
   }
 
   jsval result;
-  if (!ConvertToJS(cx, baseType, obj, data, false, &result))
+  if (!ConvertToJS(cx, baseType, NULL, data, false, false, &result))
     return JS_FALSE;
 
   JS_SET_RVAL(cx, vp, result);
@@ -3060,7 +3063,7 @@ ArrayType::ConstructData(JSContext* cx,
   // Root the CType object, in case we created one above.
   JSAutoTempValueRooter root(cx, obj);
 
-  JSObject* result = CData::Create(cx, obj, NULL, NULL);
+  JSObject* result = CData::Create(cx, obj, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -3191,7 +3194,7 @@ ArrayType::Getter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
   JSObject* baseType = GetBaseType(cx, typeObj);
   size_t elementSize = CType::GetSize(cx, baseType);
   char* data = static_cast<char*>(CData::GetData(cx, obj)) + elementSize * index;
-  return ConvertToJS(cx, baseType, obj, data, false, vp);
+  return ConvertToJS(cx, baseType, obj, data, false, false, vp);
 }
 
 JSBool
@@ -3258,7 +3261,7 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval *vp)
   JSAutoTempValueRooter root(cx, pointerType);
 
   // Create a PointerType CData object containing null.
-  JSObject* result = CData::Create(cx, pointerType, NULL, NULL);
+  JSObject* result = CData::Create(cx, pointerType, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -3582,7 +3585,7 @@ StructType::ConstructData(JSContext* cx,
     return JS_FALSE;
   }
 
-  JSObject* result = CData::Create(cx, obj, NULL, NULL);
+  JSObject* result = CData::Create(cx, obj, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -3707,7 +3710,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
 
   char* data = static_cast<char*>(CData::GetData(cx, obj)) + field->mOffset;
-  return ConvertToJS(cx, field->mType, obj, data, false, vp);
+  return ConvertToJS(cx, field->mType, obj, data, false, false, vp);
 }
 
 JSBool
@@ -3765,7 +3768,7 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
   JSAutoTempValueRooter root(cx, pointerType);
 
   // Create a PointerType CData object containing null.
-  JSObject* result = CData::Create(cx, pointerType, NULL, NULL);
+  JSObject* result = CData::Create(cx, pointerType, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -3971,7 +3974,7 @@ Function::Execute(JSContext* cx, PRUint32 argc, jsval* vp)
 
   // prepare a JS object from the result
   jsval rval;
-  if (!ConvertToJS(cx, mResultType.mType, NULL, resultValue.mData, false, &rval))
+  if (!ConvertToJS(cx, mResultType.mType, NULL, resultValue.mData, false, true, &rval))
     return false;
 
   JS_SET_RVAL(cx, vp, rval);
@@ -4071,24 +4074,36 @@ Function::Call(JSContext* cx, uintN argc, jsval* vp)
 *******************************************************************************/
 
 // Create a new CData object of type 'typeObj' containing binary data supplied
-// in 'source', optionally with a referent CData object 'baseObj'.
+// in 'source', optionally with a referent object 'refObj'.
+//
 // * 'typeObj' must be a CType of defined (but possibly zero) size.
-// * If a CData object 'baseObj' is supplied, the new CData object becomes
-//   dependent on the given parent and its buffer refers to a slice of the
-//   parent's buffer, supplied in 'source'. 'baseObj' will be held alive by
-//   the resulting CData object.
-// * If 'baseObj' is null, the new CData object will create a new buffer of
-//   size given by 'typeObj'. If 'source' data is supplied, the data will be
-//   copied from 'source' into the new buffer; otherwise, the entirety of the
-//   new buffer will be initialized to zero.
+//
+// * If an object 'refObj' is supplied, the new CData object stores the
+//   referent object in a reserved slot for GC safety, such that 'refObj' will
+//   be held alive by the resulting CData object. 'refObj' must itself be a
+//   CData object, and 'ownResult' must be false.
+// * Otherwise 'refObj' is NULL. In this case, 'ownResult' may be true or false.
+//
+// * If 'ownResult' is true, the CData object will allocate an appropriately
+//   sized buffer, and free it upon finalization. If 'source' data is
+//   supplied, the data will be copied from 'source' into the buffer;
+//   otherwise, the entirety of the new buffer will be initialized to zero.
+// * If 'ownResult' is false, the new CData's buffer refers to a slice of
+//   another CData's buffer given by 'refObj'. 'source' data must be provided,
+//   and the new CData's buffer will refer to 'source'.
 JSObject*
-CData::Create(JSContext* cx, JSObject* typeObj, JSObject* baseObj, void* source)
+CData::Create(JSContext* cx,
+              JSObject* typeObj,
+              JSObject* refObj,
+              void* source,
+              bool ownResult)
 {
   JS_ASSERT(typeObj);
   JS_ASSERT(CType::IsCType(cx, typeObj));
   JS_ASSERT(CType::IsSizeDefined(cx, typeObj));
-  JS_ASSERT(!baseObj || CData::IsCData(cx, baseObj));
-  JS_ASSERT(!baseObj || source);
+  JS_ASSERT(ownResult || source);
+  JS_ASSERT(!refObj || CData::IsCData(cx, refObj));
+  JS_ASSERT(!refObj || !ownResult);
 
   // Get the 'prototype' property from the type.
   jsval slot;
@@ -4108,8 +4123,13 @@ CData::Create(JSContext* cx, JSObject* typeObj, JSObject* baseObj, void* source)
   if (!JS_SetReservedSlot(cx, dataObj, SLOT_CTYPE, OBJECT_TO_JSVAL(typeObj)))
     return NULL;
 
-  // root the base object, if any
-  if (!JS_SetReservedSlot(cx, dataObj, SLOT_REFERENT, OBJECT_TO_JSVAL(baseObj)))
+  // Stash the referent object, if any, for GC safety.
+  if (refObj &&
+      !JS_SetReservedSlot(cx, dataObj, SLOT_REFERENT, OBJECT_TO_JSVAL(refObj)))
+    return NULL;
+
+  // Set our ownership flag.
+  if (!JS_SetReservedSlot(cx, dataObj, SLOT_OWNS, BOOLEAN_TO_JSVAL(ownResult)))
     return NULL;
 
   // attach the buffer. since it might not be 2-byte aligned, we need to
@@ -4121,10 +4141,10 @@ CData::Create(JSContext* cx, JSObject* typeObj, JSObject* baseObj, void* source)
   }
 
   char* data;
-  if (baseObj) {
+  if (!ownResult) {
     data = static_cast<char*>(source);
   } else {
-    // There is no parent object to depend on; initialize our own buffer.
+    // Initialize our own buffer.
     size_t size = CType::GetSize(cx, typeObj);
     data = new char[size];
     if (!data) {
@@ -4142,7 +4162,7 @@ CData::Create(JSContext* cx, JSObject* typeObj, JSObject* baseObj, void* source)
 
   *buffer = data;
   if (!JS_SetReservedSlot(cx, dataObj, SLOT_DATA, PRIVATE_TO_JSVAL(buffer))) {
-    if (!baseObj)
+    if (ownResult)
       delete data;
     delete buffer;
     return NULL;
@@ -4156,9 +4176,10 @@ CData::Finalize(JSContext* cx, JSObject* obj)
 {
   // Delete our buffer, and the data it contains if we own it.
   jsval slot;
-  if (!JS_GetReservedSlot(cx, obj, SLOT_REFERENT, &slot) || JSVAL_IS_VOID(slot))
+  if (!JS_GetReservedSlot(cx, obj, SLOT_OWNS, &slot) || JSVAL_IS_VOID(slot))
     return;
-  JSBool owns = JSVAL_IS_NULL(slot);
+
+  JSBool owns = JSVAL_TO_BOOLEAN(slot);
 
   if (!JS_GetReservedSlot(cx, obj, SLOT_DATA, &slot) || JSVAL_IS_VOID(slot))
     return;
@@ -4210,7 +4231,7 @@ CData::ValueGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
   }
 
   // Convert the value to a primitive; do not create a new CData object.
-  if (!ConvertToJS(cx, GetCType(cx, obj), NULL, GetData(cx, obj), true, vp))
+  if (!ConvertToJS(cx, GetCType(cx, obj), NULL, GetData(cx, obj), true, false, vp))
     return JS_FALSE;
 
   return JS_TRUE;
@@ -4250,7 +4271,7 @@ CData::Address(JSContext* cx, uintN argc, jsval *vp)
   JSAutoTempValueRooter root(cx, pointerType);
 
   // Create a PointerType CData object containing null.
-  JSObject* result = CData::Create(cx, pointerType, NULL, NULL);
+  JSObject* result = CData::Create(cx, pointerType, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
 
@@ -4297,7 +4318,7 @@ CData::Cast(JSContext* cx, uintN argc, jsval *vp)
   // Construct a new CData object with a type of 'targetType' and a referent
   // of 'sourceData'.
   void* data = CData::GetData(cx, sourceData);
-  JSObject* result = CData::Create(cx, targetType, sourceData, data);
+  JSObject* result = CData::Create(cx, targetType, sourceData, data, false);
   if (!result)
     return JS_FALSE;
 
