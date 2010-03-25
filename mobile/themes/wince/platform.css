@@ -633,7 +633,7 @@ richlistitem[selected="true"] {
   background-color: white;
 }
 
-richlistitem:active:not([selected="true"]):not([typeName="message"]):not(.section-header) {
+richlistitem:active:not([selected="true"]):not([nohighlight="true"]) {
   background-color: #8db8d8;
 }
 
