@@ -380,6 +380,23 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBGetIconInfo, NS_LITERAL_CSTRING(
     "SELECT id, length(data), expiration FROM moz_favicons WHERE url = ?1"));
 
+  // If the page does not exist url = NULL will return NULL instead of 0,
+  // since (1 = NULL) is NULL.  Thus the need for the IFNULL.
+  RETURN_IF_STMT(mDBGetIconInfoWithPage, NS_LITERAL_CSTRING(
+    "SELECT id, length(data), expiration, data, mime_type, "
+    "IFNULL(url = (SELECT f.url "
+                  "FROM ( "
+                    "SELECT favicon_id FROM moz_places_temp "
+                    "WHERE url = ?2 "
+                    "UNION ALL "
+                    "SELECT favicon_id FROM moz_places "
+                    "WHERE url = ?2 "
+                  ") AS h "
+                  "JOIN moz_favicons f ON h.favicon_id = f.id "
+                  "LIMIT 1), "
+           "0)"
+    "FROM moz_favicons WHERE url = ?1"));
+
   RETURN_IF_STMT(mDBGetURL, NS_LITERAL_CSTRING(
     "SELECT f.id, f.url, length(f.data), f.expiration "
     "FROM ( "
@@ -1171,6 +1188,7 @@ nsFaviconService::FinalizeStatements() {
     mDBGetURL,
     mDBGetData,
     mDBGetIconInfo,
+    mDBGetIconInfoWithPage,
     mDBInsertIcon,
     mDBUpdateIcon,
     mDBSetPageFavicon,

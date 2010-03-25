@@ -384,6 +384,97 @@ GetEffectivePageStep::CheckPageAndProceed()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// FetchDatabaseIconStep
+
+NS_IMPL_ISUPPORTS_INHERITED0(
+  FetchDatabaseIconStep
+, AsyncFaviconStep
+)
+ASYNC_STATEMENT_HANDLEERROR_IMPL(FetchDatabaseIconStep)
+
+
+void
+FetchDatabaseIconStep::Run()
+{
+  NS_ASSERTION(mStepper, "Step is not associated to a stepper");
+  FAVICONSTEP_FAIL_IF_FALSE(mStepper->mIconURI);
+
+  // Check if this favicon exists in the database and get associated
+  // information.
+  nsFaviconService* fs = nsFaviconService::GetFaviconService();
+  FAVICONSTEP_FAIL_IF_FALSE(fs);
+  mozIStorageStatement* stmt =
+    fs->GetStatementById(mozilla::places::DB_GET_ICON_INFO_WITH_PAGE);
+  FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = BindStatementURI(stmt, 0, mStepper->mIconURI);
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+  if (mStepper->mPageURI) {
+    rv = BindStatementURI(stmt, 1, mStepper->mPageURI);
+  }
+  else {
+    rv = stmt->BindNullParameter(1);
+  }
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+  FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
+
+  // ExecuteAsync will reset the statement for us.
+  scoper.Abandon();
+}
+
+
+NS_IMETHODIMP
+FetchDatabaseIconStep::HandleResult(mozIStorageResultSet* aResultSet)
+{
+  nsCOMPtr<mozIStorageRow> row;
+  nsresult rv = aResultSet->GetNextRow(getter_AddRefs(row));
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  rv = row->GetInt64(0, &mStepper->mIconId);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  // Don't need to fetch dataLen (index 1) since it will be read with data, it
+  // is in the query to mimic mDBGetIconInfo.
+  // Indeed in future we could want to retain only one statement.
+
+  rv = row->GetInt64(2, &mStepper->mExpiration);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  PRUint8* data;
+  PRUint32 dataLen = 0;
+  rv = row->GetBlob(3, &dataLen, &data);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  mStepper->mData.Adopt(TO_CHARBUFFER(data), dataLen);
+  rv = row->GetUTF8String(4, mStepper->mMimeType);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  PRInt32 isRevisit;
+  rv = row->GetInt32(5, &isRevisit);
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  mStepper->mIsRevisit = !!isRevisit;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+FetchDatabaseIconStep::HandleCompletion(PRUint16 aReason)
+{
+  FAVICONSTEP_FAIL_IF_FALSE_RV(aReason == mozIStorageStatementCallback::REASON_FINISHED, NS_OK);
+
+  // Proceed to next step.
+  nsresult rv = mStepper->Step();
+  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 } // namespace places
 } // namespace mozilla

@@ -51,9 +51,19 @@
 // This still allows us to accept a favicon even if we cannot optimize it.
 #define MAX_FAVICON_SIZE 10240
 
+namespace mozilla {
+namespace places {
+
+  enum FaviconStatementId {
+    DB_GET_ICON_INFO_WITH_PAGE = 0
+  };
+
+} // namespace places
+} // namespace mozilla
+
+
 // forward class definitions
 class mozIStorageStatementCallback;
-
 // forward definition for friend class
 class FaviconLoadListener;
 
@@ -131,6 +141,18 @@ public:
    */
   nsresult FinalizeStatements();
 
+  mozIStorageStatement* GetStatementById(
+    enum mozilla::places::FaviconStatementId aStatementId
+  )
+  {
+    using namespace mozilla::places;
+    switch(aStatementId) {
+      case DB_GET_ICON_INFO_WITH_PAGE:
+        return GetStatement(mDBGetIconInfoWithPage);
+    }
+    return nsnull;
+  }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
 
@@ -146,6 +168,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBGetURL; // returns URL, data len given page
   nsCOMPtr<mozIStorageStatement> mDBGetData; // returns actual data given URL
   nsCOMPtr<mozIStorageStatement> mDBGetIconInfo;
+  nsCOMPtr<mozIStorageStatement> mDBGetIconInfoWithPage;
   nsCOMPtr<mozIStorageStatement> mDBInsertIcon;
   nsCOMPtr<mozIStorageStatement> mDBUpdateIcon;
   nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
