@@ -57,6 +57,12 @@
 
 #include "mozilla/storage.h"
 
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIStreamListener.h"
+
+#include "nsCycleCollectionParticipant.h"
+
 #define FAVICONSTEP_FAIL_IF_FALSE(_cond) \
   FAVICONSTEP_FAIL_IF_FALSE_RV(_cond, )
 
@@ -307,6 +313,39 @@ public:
 
   EnsureDatabaseEntryStep() {};
   void Run();
+};
+
+enum AsyncFaviconFetchMode {
+  FETCH_NEVER = 0
+, FETCH_IF_MISSING = 1
+, FETCH_ALWAYS = 2
+};
+
+
+/**
+ * Fetch an icon and associated information from the network.
+ * Requires mDBGetIconInfoWithPage statement.
+ */
+class FetchNetworkIconStep : public AsyncFaviconStep
+                           , public nsIStreamListener
+                           , public nsIInterfaceRequestor
+                           , public nsIChannelEventSink
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(FetchNetworkIconStep, AsyncFaviconStep)
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIREQUESTOBSERVER
+
+  FetchNetworkIconStep(enum AsyncFaviconFetchMode aFetchMode);
+  void Run();
+
+private:
+  enum AsyncFaviconFetchMode mFetchMode;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCString mData;
 };
 
 } // namespace places
