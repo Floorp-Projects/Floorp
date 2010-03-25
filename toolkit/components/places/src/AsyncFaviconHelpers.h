@@ -53,6 +53,7 @@
 #include "nsIURI.h"
 
 #include "nsIFaviconService.h"
+#include "Helpers.h"
 
 #include "mozilla/storage.h"
 
@@ -254,6 +255,28 @@ private:
   nsCOMPtr<AsyncFaviconStepperInternal> mStepper;
 };
 
+
+/**
+ * Determines the real page URI that a favicon should be stored for.
+ * Will ensure we can save this icon, and return the correct bookmark to
+ * associate it with.
+ */
+class GetEffectivePageStep : public AsyncFaviconStep
+                           , public mozilla::places::AsyncStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  GetEffectivePageStep();
+  void Run();
+
+private:
+  void CheckPageAndProceed();
+
+  PRUint8 mSubStep;
+  bool mIsBookmarked;
+};
 
 } // namespace places
 } // namespace mozilla
