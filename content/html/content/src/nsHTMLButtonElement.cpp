@@ -217,7 +217,7 @@ nsHTMLButtonElement::Click()
   if (doc) {
     nsIPresShell *shell = doc->GetPrimaryShell();
     if (shell) {
-      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+      nsRefPtr<nsPresContext> context = shell->GetPresContext();
       if (context) {
         // Click() is never called from native code, but it may be
         // called from chrome JS. Mark this event trusted if Click()

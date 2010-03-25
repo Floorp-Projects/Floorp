@@ -145,7 +145,7 @@ public:
 
 private:
   nsCOMPtr<nsIContent> mMenu;
-  nsCOMPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
   PRBool mIsActivate;
 };
 
