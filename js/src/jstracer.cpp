@@ -12351,7 +12351,7 @@ TraceRecorder::record_JSOP_GETDSLOT()
 
     unsigned index = GET_UINT16(cx->fp->regs->pc);
     LIns* dslots_ins = lir->insLoad(LIR_ldp, callee_ins, offsetof(JSObject, dslots), ACC_OTHER);
-    LIns* v_ins = lir->insLoad(LIR_ldp, dslots_ins, index * sizeof(jsval), ACC_READONLY);
+    LIns* v_ins = lir->insLoad(LIR_ldp, dslots_ins, index * sizeof(jsval), ACC_OTHER);
 
     stack(0, unbox_jsval(callee->dslots[index], v_ins, snapshot(BRANCH_EXIT)));
     return ARECORD_CONTINUE;
