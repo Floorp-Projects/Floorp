@@ -453,9 +453,12 @@ PluginModuleChild::InitGraphics()
         *scroll_event = gtk_plug_scroll_event;
     }
 
-    GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
-    real_gtk_plug_embedded = *embedded;
-    *embedded = wrap_gtk_plug_embedded;
+    if (gtk_check_version(2,18,7) != NULL) { // older
+        GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
+        real_gtk_plug_embedded = *embedded;
+        *embedded = wrap_gtk_plug_embedded;
+    }
+
 #elif defined(MOZ_WIDGET_QT)
     if (!qApp)
         gQApp = new QApplication(0, NULL);
