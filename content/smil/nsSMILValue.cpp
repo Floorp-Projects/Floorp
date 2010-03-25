@@ -38,7 +38,6 @@
 
 #include "nsSMILValue.h"
 #include "nsDebug.h"
-#include "prlog.h"
 
 //----------------------------------------------------------------------
 // Public methods
@@ -83,29 +82,6 @@ nsSMILValue::operator==(const nsSMILValue& aVal) const
     return PR_TRUE;
 
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
-}
-
-static inline void
-CopyMemberData(nsSMILValue& aDest, const nsSMILValue& aSrc)
-{
-  aDest.mType = aSrc.mType;
-  aDest.mU.mUint = aSrc.mU.mUint;
-  // Make sure the above assignments accounted for all the bits in nsSMILValue
-  PR_STATIC_ASSERT(sizeof(aDest) ==
-                   sizeof(aDest.mType) + sizeof(aDest.mU.mUint));
-}
-
-void
-nsSMILValue::Swap(nsSMILValue& aOther)
-{
-  nsSMILValue tmp;
-  CopyMemberData(tmp, aOther);    // tmp    = aOther
-  CopyMemberData(aOther, *this);  // aOther = this
-  CopyMemberData(*this, tmp);     // this   = tmp
-
-  // |tmp| is about to die -- we need to clear its mType, so that its
-  // destructor doesn't muck with the data we just transferred out of it.
-  tmp.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult
