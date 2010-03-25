@@ -83,9 +83,30 @@ function test_urlSecurityCheck() {
     do_throw("urlSecurityCheck should throw when linking to a chrome uri with a null principal");
 }
 
+function test_stringBundle() {
+  // This test verifies that the elements that can be used as file picker title
+  //  keys in the save* functions are actually present in the string bundle.
+  //  These keys are part of the contentAreaUtils.js public API.
+  var validFilePickerTitleKeys = [
+    "SaveImageTitle",
+    "SaveVideoTitle",
+    "SaveAudioTitle",
+    "SaveLinkTitle",
+  ];
+
+  for (let [, filePickerTitleKey] in Iterator(validFilePickerTitleKeys)) {
+    // Just check that the string exists
+    try {
+      ContentAreaUtils.stringBundle.GetStringFromName(filePickerTitleKey);
+    } catch (e) {
+      do_throw("Error accessing file picker title key: " + filePickerTitleKey);
+    }
+  }
+}
 
 function run_test()
 {
   loadUtilsScript();
   test_urlSecurityCheck();
+  test_stringBundle();
 }
