@@ -687,7 +687,7 @@ END_CASE(JSOP_ENUMCONSTELEM)
 
 BEGIN_CASE(JSOP_BINDNAME)
     do {
-        JSPropCacheEntry *entry;
+        PropertyCacheEntry *entry;
 
         /*
          * We can skip the property lookup for the global object. If the
@@ -709,7 +709,7 @@ BEGIN_CASE(JSOP_BINDNAME)
         if (!obj->getParent())
             break;
         if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-            PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
+            JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
             if (!atom) {
                 ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                 break;
@@ -1216,11 +1216,11 @@ BEGIN_CASE(JSOP_DECNAME)
 BEGIN_CASE(JSOP_NAMEINC)
 BEGIN_CASE(JSOP_NAMEDEC)
 {
-    JSPropCacheEntry *entry;
+    PropertyCacheEntry *entry;
 
     obj = fp->scopeChain;
     if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-        PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
             if (obj == obj2 && PCVAL_IS_SLOT(entry->vword)) {
@@ -1475,7 +1475,7 @@ BEGIN_CASE(JSOP_GETXPROP)
   do_getprop_with_obj:
     do {
         JSObject *aobj;
-        JSPropCacheEntry *entry;
+        PropertyCacheEntry *entry;
 
         /*
          * We do not impose the method read barrier if in an imacro,
@@ -1484,7 +1484,7 @@ BEGIN_CASE(JSOP_GETXPROP)
          */
         aobj = js_GetProtoIfDenseArray(obj);
         if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
-            PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
+            JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
             if (!atom) {
                 ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
                 if (PCVAL_IS_OBJECT(entry->vword)) {
@@ -1556,7 +1556,7 @@ END_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
     JSObject *aobj;
-    JSPropCacheEntry *entry;
+    PropertyCacheEntry *entry;
 
     lval = FETCH_OPND(-1);
     if (!JSVAL_IS_PRIMITIVE(lval)) {
@@ -1580,7 +1580,7 @@ BEGIN_CASE(JSOP_CALLPROP)
 
     aobj = js_GetProtoIfDenseArray(obj);
     if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
-        PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
             if (PCVAL_IS_OBJECT(entry->vword)) {
@@ -1605,7 +1605,7 @@ BEGIN_CASE(JSOP_CALLPROP)
 
     /*
      * Cache miss: use the immediate atom that was loaded for us under
-     * PROPERTY_CACHE_TEST.
+     * PropertyCache::test.
      */
     id = ATOM_TO_JSID(atom);
     PUSH(JSVAL_NULL);
@@ -1671,16 +1671,16 @@ BEGIN_CASE(JSOP_SETMETHOD)
     VALUE_TO_OBJECT(cx, -2, lval, obj);
 
     do {
-        JSPropCacheEntry *entry;
+        PropertyCacheEntry *entry;
 
         entry = NULL;
         atom = NULL;
         if (JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
-            JSPropertyCache *cache = &JS_PROPERTY_CACHE(cx);
+            PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
             uint32 kshape = OBJ_SHAPE(obj);
 
             /*
-             * Open-code PROPERTY_CACHE_TEST, specializing for two important
+             * Open-code PropertyCache::test, specializing for two important
              * set-property cases. First:
              *
              *   function f(a, b, c) {
@@ -1698,12 +1698,12 @@ BEGIN_CASE(JSOP_SETMETHOD)
              * (possibly after the first iteration) always exist in native
              * object o.
              */
-            entry = &cache->table[PROPERTY_CACHE_HASH(regs.pc, kshape)];
+            entry = &cache->table[PropertyCache::hash(regs.pc, kshape)];
             PCMETER(cache->pctestentry = entry);
             PCMETER(cache->tests++);
             PCMETER(cache->settests++);
             if (entry->kpc == regs.pc && entry->kshape == kshape &&
-                JSPropCacheEntry::matchShape(cx, obj, kshape)) {
+                PropertyCache::matchShape(cx, obj, kshape)) {
                 /*
                  * Property cache hit: either predicting a new property to be
                  * added directly to obj by this set, or on an existing "own"
@@ -1712,7 +1712,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                 sprop = PCVAL_TO_SPROP(entry->vword);
                 JS_ASSERT(sprop->writable());
-                JS_ASSERT_IF(sprop->hasSlot(), PCVCAP_TAG(entry->vcap) == 0);
+                JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
 
                 JSScope *scope = OBJ_SCOPE(obj);
                 JS_ASSERT(!scope->sealed());
@@ -1725,10 +1725,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  */
                 bool checkForAdd;
                 if (!sprop->hasSlot()) {
-                    if (PCVCAP_TAG(entry->vcap) == 0 ||
+                    if (entry->vcapTag() == 0 ||
                         ((obj2 = obj->getProto()) &&
                          OBJ_IS_NATIVE(obj2) &&
-                         OBJ_SHAPE(obj2) == PCVCAP_SHAPE(entry->vcap))) {
+                         OBJ_SHAPE(obj2) == entry->vshape())) {
                         goto fast_set_propcache_hit;
                     }
 
@@ -1758,7 +1758,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 }
 
                 if (checkForAdd &&
-                    PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape &&
+                    entry->vshape() == rt->protoHazardShape &&
                     sprop->hasDefaultSetter() &&
                     (slot = sprop->slot) == scope->freeslot) {
                     /*
@@ -1835,7 +1835,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 PCMETER(cache->setpcmisses++);
             }
 
-            atom = js_FullTestPropertyCache(cx, regs.pc, &obj, &obj2, entry);
+            atom = cache->fullTest(cx, regs.pc, &obj, &obj2, entry);
             if (atom) {
                 PCMETER(cache->misses++);
                 PCMETER(cache->setmisses++);
@@ -2288,11 +2288,11 @@ END_CASE(JSOP_SETCALL)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    JSPropCacheEntry *entry;
+    PropertyCacheEntry *entry;
 
     obj = fp->scopeChain;
     if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-        PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
             if (PCVAL_IS_OBJECT(entry->vword)) {
@@ -3372,8 +3372,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
     do {
         JSScope *scope;
         uint32 kshape;
-        JSPropertyCache *cache;
-        JSPropCacheEntry *entry;
+        PropertyCache *cache;
+        PropertyCacheEntry *entry;
 
         /*
          * We can not assume that the object created by JSOP_NEWINIT is still
@@ -3387,15 +3387,15 @@ BEGIN_CASE(JSOP_INITMETHOD)
         JS_ASSERT(!scope->sealed());
         kshape = scope->shape;
         cache = &JS_PROPERTY_CACHE(cx);
-        entry = &cache->table[PROPERTY_CACHE_HASH(regs.pc, kshape)];
+        entry = &cache->table[PropertyCache::hash(regs.pc, kshape)];
         PCMETER(cache->pctestentry = entry);
         PCMETER(cache->tests++);
         PCMETER(cache->initests++);
 
         if (entry->kpc == regs.pc &&
             entry->kshape == kshape &&
-            PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape) {
-            JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
+            entry->vshape() == rt->protoHazardShape) {
+            JS_ASSERT(entry->vcapTag() == 0);
 
             PCMETER(cache->pchits++);
             PCMETER(cache->inipchits++);

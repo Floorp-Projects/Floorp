@@ -863,7 +863,7 @@ struct JSFunctionBox : public JSObjectBox
      *
      * We despecialize from caching function objects, caching slots or sprops
      * instead, because an unbranded object may still have joined methods (for
-     * which sprop->isMethod), since js_FillPropertyCache gives precedence to
+     * which sprop->isMethod), since PropertyCache::fill gives precedence to
      * joined methods over branded methods.
      */
     bool shouldUnbrand(uintN methods, uintN slowMethods) const;
