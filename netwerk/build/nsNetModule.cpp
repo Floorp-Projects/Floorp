@@ -175,9 +175,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 #ifdef NECKO_COOKIES
 #include "nsCookieService.h"
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICookieService,
+  nsCookieService::GetXPCOMSingleton)
 #endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 #ifdef NECKO_WIFI
@@ -1111,13 +1111,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_COOKIEMANAGER_CLASSNAME,
       NS_COOKIEMANAGER_CID,
       NS_COOKIEMANAGER_CONTRACTID,
-      nsCookieServiceConstructor
+      nsICookieServiceConstructor
     },
 
     { NS_COOKIESERVICE_CLASSNAME,
       NS_COOKIESERVICE_CID,
       NS_COOKIESERVICE_CONTRACTID,
-      nsCookieServiceConstructor
+      nsICookieServiceConstructor
     },
 #endif
 

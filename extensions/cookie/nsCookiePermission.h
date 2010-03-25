@@ -62,11 +62,12 @@ public:
     {}
   virtual ~nsCookiePermission() {}
 
-  nsresult Init();
-  void     PrefChanged(nsIPrefBranch *, const char *);
+  bool Init();
+  void PrefChanged(nsIPrefBranch *, const char *);
 
 private:
-  PRBool InPrivateBrowsing();
+  bool EnsureInitialized() { return mPermMgr != NULL || Init(); };
+  bool InPrivateBrowsing();
 
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<nsIPrivateBrowsingService> mPBService;

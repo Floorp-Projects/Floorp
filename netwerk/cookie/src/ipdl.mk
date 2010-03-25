@@ -11,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is Mozilla Firefox.
 #
-# The Initial Developer of the Original Code is IBM Corporation.
-# Portions created by IBM Corporation are Copyright (C) 2003
-# IBM Corporation. All Rights Reserved.
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   IBM Corp.
+#   Daniel Witte <dwitte@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,39 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+IPDLSRCS =            \
+  PCookieService.ipdl \
+  $(NULL)
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE		= necko
-LIBRARY_NAME	= neckocookie_s
-FORCE_STATIC_LIB	= 1
-LIBXUL_LIBRARY  = 1
-
-CPPSRCS		= \
-		nsCookie.cpp \
-		nsCookieService.cpp \
-		$(NULL)
-
-ifdef MOZ_IPC
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-		CookieServiceParent.h \
-		CookieServiceChild.h  \
-		$(NULL)
-
-CPPSRCS += \
-		CookieServiceParent.cpp \
-		CookieServiceChild.cpp \
-		$(NULL)
-endif
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DIMPL_NS_NET
