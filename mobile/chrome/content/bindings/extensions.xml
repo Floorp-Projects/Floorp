@@ -199,7 +199,7 @@
   </binding>
 
   <binding id="extension-message" extends="chrome://browser/content/bindings.xml#richlistitem">
-    <content orient="vertical" align="center">
+    <content orient="vertical" align="center" nohighlight="true">
       <xul:hbox align="center">
         <xul:image src="chrome://browser/skin/images/throbber.png" xbl:inherits="hidden=hidethrobber"/>
         <xul:label class="normal" xbl:inherits="value=message"/>
@@ -226,13 +226,10 @@
   </binding>
 
   <binding id="extension-search-showmore" extends="chrome://browser/content/bindings.xml#richlistitem">
-    <content orient="vertical">
-      <xul:hbox align="start">
+    <content orient="vertical" nohighlight="true">
+      <xul:hbox align="center">
         <xul:image class="addon-showmore-image" xbl:inherits="src=image"/>
-        <xul:vbox flex="1">
-          <xul:label class="title" xbl:inherits="value=title"/>
-          <xul:description class="normal" xbl:inherits="xbl:text=description" flex="1"/>
-        </xul:vbox>
+        <xul:label class="title" xbl:inherits="value=label"/>
         <xul:spacer flex="1"/>
         <xul:button label="&addonShowPage.label;" oncommand="ExtensionsView.showMoreResults(document.getBindingParent(this));"/>
       </xul:hbox>
