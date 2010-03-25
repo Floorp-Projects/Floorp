@@ -68,6 +68,8 @@ public:
     return (mType == &nsSMILNullType::sSingleton);
   }
 
+  // Swaps the contents (mU & mType) of two nsSMILValue objects.
+  void     Swap(nsSMILValue& aOther);
   nsresult Add(const nsSMILValue& aValueToAdd, PRUint32 aCount = 1);
   nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
   nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
