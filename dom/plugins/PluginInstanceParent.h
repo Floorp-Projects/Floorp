@@ -126,6 +126,12 @@ public:
     virtual bool
     AnswerNPN_SetValue_NPPVpluginTransparent(const bool& transparent,
                                              NPError* result);
+    virtual bool
+    AnswerNPN_SetValue_NPPVpluginDrawingModel(const int& drawingModel,
+                                             NPError* result);
+    virtual bool
+    AnswerNPN_SetValue_NPPVpluginEventModel(const int& eventModel,
+                                             NPError* result);
 
     virtual bool
     AnswerNPN_GetURL(const nsCString& url, const nsCString& target,
@@ -181,6 +187,17 @@ public:
                                     nsCString* username,
                                     nsCString* password,
                                     NPError* result);
+
+    NS_OVERRIDE virtual bool
+    AnswerNPN_ConvertPoint(const double& sourceX,
+                           const double& sourceY,
+                           const NPCoordinateSpace& sourceSpace,
+                           const NPCoordinateSpace& destSpace,
+                           double *destX,
+                           bool *ignoreDestX,
+                           double *destY,
+                           bool *ignoreDestY,
+                           bool *result);
 
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
@@ -263,6 +280,12 @@ private:
     WNDPROC            mPluginWndProc;
     bool               mNestedEventState;
 #endif // defined(XP_WIN)
+#if defined(OS_MACOSX)
+private:
+    Shmem mShSurface; 
+    size_t mShWidth;
+    size_t mShHeight;
+#endif // definied(OS_MACOSX)
 };
 
 

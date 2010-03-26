@@ -267,6 +267,19 @@ var PlacesUtils = {
   },
 
   /**
+   * Generator for a node's ancestors.
+   * @param aNode
+   *        A result node
+   */
+  nodeAncestors: function PU_nodeAncestors(aNode) {
+    let node = aNode.parent;
+    while (node) {
+      yield node;
+      node = node.parent;
+    }
+  },
+
+  /**
    * Cache array of read-only item IDs.
    *
    * The first time this property is called:
