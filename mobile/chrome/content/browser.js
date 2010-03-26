@@ -715,7 +715,8 @@ var Browser = {
       return;
 
     if (this._selectedTab) {
-      this._selectedTab.scrollOffset = this.getScrollboxPosition(this.contentScrollboxScroller);
+      this._selectedTab.contentScrollOffset = this.getScrollboxPosition(this.contentScrollboxScroller);
+      this._selectedTab.pageScrollOffset = this.getScrollboxPosition(this.pageScrollboxScroller);
     }
 
     let isFirstTab = this._selectedTab == null;
@@ -744,10 +745,14 @@ var Browser = {
 
     tab.lastSelected = Date.now();
 
-    if (tab.scrollOffset) {
-      // XXX incorrect behavior if page was scrolled by tab in the background.
-      let { x: scrollX, y: scrollY } = tab.scrollOffset;
+    // XXX incorrect behavior if page was scrolled by tab in the background.
+    if (tab.contentScrollOffset) {
+      let { x: scrollX, y: scrollY } = tab.contentScrollOffset;
       Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
+    }
+    if (tab.pageScrollOffset) {
+      let { x: pageScrollX, y: pageScrollY } = tab.pageScrollOffset;
+      Browser.pageScrollboxScroller.scrollTo(pageScrollX, pageScrollY);
     }
 
     bv.setAggressive(!tab._loading);
@@ -2602,7 +2607,7 @@ ProgressController.prototype = {
     }
     else {
       let scroll = BrowserView.Util.getContentScrollOffset(this._tab.browser);
-      this._tab.scrollOffset = new Point(scroll.x, scroll.y);
+      this._tab.contentScrollOffset = new Point(scroll.x, scroll.y);
     }
   }
 };
