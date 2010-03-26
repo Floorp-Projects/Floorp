@@ -2140,6 +2140,8 @@ IdentityHandler.prototype = {
     // clean all the previous result
     PageActions.removeAllItems();
 
+    PageActions.updatePageSaveAs();
+
     // Update the search engines results
     BrowserSearch.updatePageSearchEngines();
 
