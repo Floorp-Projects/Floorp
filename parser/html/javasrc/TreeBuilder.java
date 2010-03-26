@@ -60,8 +60,6 @@ import org.xml.sax.SAXParseException;
 public abstract class TreeBuilder<T> implements TokenHandler,
         TreeBuilderState<T> {
 
-    public static final int BUFFER_FLUSH_THRESHOLD = 4096;
-
     public static final int STACK_MAX_DEPTH = 200;
     
     // Start dispatch groups
@@ -842,10 +840,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public final void ensureBufferSpace(int addedLength) throws SAXException {
         int newCharBufferCapacity = charBufferLen + addedLength;
-        if (newCharBufferCapacity > TreeBuilder.BUFFER_FLUSH_THRESHOLD) {
-            flushCharacters();
-            newCharBufferCapacity = addedLength;
-        }
         if (newCharBufferCapacity > charBuffer.length) {
             char[] newBuf = new char[newCharBufferCapacity];
             System.arraycopy(charBuffer, 0, newBuf, 0, charBufferLen);

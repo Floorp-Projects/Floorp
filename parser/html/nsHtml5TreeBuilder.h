@@ -248,7 +248,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
-#define NS_HTML5TREE_BUILDER_BUFFER_FLUSH_THRESHOLD 4096
 #define NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH 200
 #define NS_HTML5TREE_BUILDER_OTHER 0
 #define NS_HTML5TREE_BUILDER_A 1
