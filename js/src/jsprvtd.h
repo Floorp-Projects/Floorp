@@ -174,7 +174,7 @@ class HashSet;
 
 class DeflatedStringCache;
 
-struct PropertyCache;
+class PropertyCache;
 struct PropertyCacheEntry;
 } /* namespace js */
 

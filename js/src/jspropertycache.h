@@ -147,8 +147,9 @@ struct PropertyCacheEntry
 #define JS_PROPERTY_CACHE_METERING 1
 #endif
 
-struct PropertyCache
+class PropertyCache
 {
+  private:
     enum {
         SIZE_LOG2 = 12,
         SIZE = JS_BIT(SIZE_LOG2),
@@ -158,6 +159,7 @@ struct PropertyCache
     PropertyCacheEntry  table[SIZE];
     JSBool              empty;
 #ifdef JS_PROPERTY_CACHE_METERING
+  public:
     PropertyCacheEntry  *pctestentry;   /* entry of the last PC-based test */
     uint32              fills;          /* number of cache entry fills */
     uint32              nofills;        /* couldn't fill (e.g. default get) */
@@ -187,6 +189,7 @@ struct PropertyCache
     uint32              misses;         /* cache misses */
     uint32              flushes;        /* cache flushes */
     uint32              pcpurges;       /* shadowing purges on proto chain */
+  private:
 # define PCMETER(x)     x
 #else
 # define PCMETER(x)     ((void)0)
@@ -205,12 +208,46 @@ struct PropertyCache
 
     static inline bool matchShape(JSContext *cx, JSObject *obj, uint32 shape);
 
+    JS_REQUIRES_STACK JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
+                                       JSObject **pobjp, PropertyCacheEntry *entry);
+
+#ifdef DEBUG
+    void assertEmpty();
+#else
+    inline void assertEmpty() {}
+#endif
+
+  public:
     JS_ALWAYS_INLINE JS_REQUIRES_STACK void test(JSContext *cx, jsbytecode *pc,
                                                  JSObject *&obj, JSObject *&pobj,
                                                  PropertyCacheEntry *&entry, JSAtom *&atom);
 
-    JS_REQUIRES_STACK JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
-                                       JSObject **pobjp, PropertyCacheEntry *entry);
+    /*
+     * Test for cached information about a property set on *objp at pc.
+     *
+     * On a fast hit, set *entryp to the entry and return true.
+     *
+     * On a slow hit, set *entryp to the entry, set *obj2p to the object that
+     * owns the property (either obj or a prototype), set *atomp to NULL, and
+     * return false.
+     *
+     * On a miss, set *atomp to the name of the property being set and return false.
+     */
+    JS_ALWAYS_INLINE bool testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
+                                     PropertyCacheEntry **entryp, JSObject **obj2p,
+                                     JSAtom **atomp);
+
+    /*
+     * Test for cached information about creating a new own data property on obj at pc.
+     *
+     * On a hit, set *spropp to an sprop from the property tree describing the
+     * new property as well as all existing properties on obj and return
+     * true. Otherwise return false.
+     *
+     * Hit or miss, *entryp receives a pointer to the property cache entry.
+     */
+    JS_ALWAYS_INLINE bool testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj, JSScope *scope,
+                                      JSScopeProperty **spropp, PropertyCacheEntry **entryp);
 
     /*
      * Fill property cache entry for key cx->fp->pc, optimized value word
@@ -226,12 +263,6 @@ struct PropertyCache
 
     void purge(JSContext *cx);
     void purgeForScript(JSScript *script);
-
-#ifdef DEBUG
-    void assertEmpty();
-#else
-    inline void assertEmpty() {}
-#endif
 };
 
 } /* namespace js */
