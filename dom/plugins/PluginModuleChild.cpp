@@ -1470,19 +1470,24 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return true;
+#elif defined(OS_WIN)
+    nsresult rv = mGetEntryPointsFunc(&mFunctions);
+    if (NS_FAILED(rv)) {
+        return false;
+    }
+    NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
+                 "callback version is less than NP version");
 
-#elif defined(OS_WIN) || defined(OS_MACOSX)
+    *_retval = mInitializeFunc(&sBrowserFuncs);
+    return true;
+#elif defined(OS_MACOSX)
+    *_retval = mInitializeFunc(&sBrowserFuncs);
+
     nsresult rv = mGetEntryPointsFunc(&mFunctions);
     if (NS_FAILED(rv)) {
         return false;
     }
 
-#ifdef OS_WIN
-    NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
-                 "callback version is less than NP version");
-#endif
-
-    *_retval = mInitializeFunc(&sBrowserFuncs);
     return true;
 #else
 #  error Please implement me for your platform
