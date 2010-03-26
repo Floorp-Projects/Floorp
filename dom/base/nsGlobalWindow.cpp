@@ -7071,7 +7071,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
     jsval jsStateObj = JSVAL_NULL;
     // Root the container which will hold our decoded state object.
-    nsAutoGCRoot(&jsStateObj, &rv);
+    nsAutoGCRoot root(&jsStateObj, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Deserialize the state object into an nsIVariant.
