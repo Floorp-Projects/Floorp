@@ -88,6 +88,10 @@ MODULE_OPTIMIZE_FLAGS = -O2 -ip
 endif
 else # not INTEL_CXX
 MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
+ifeq ($(OS_ARCH),Linux)
+#TODO: move this up a line when we fix OS X (bug 517832)
+MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
+endif
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
