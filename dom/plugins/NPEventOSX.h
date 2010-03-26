@@ -64,17 +64,31 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
     static void Write(Message* aMsg, const paramType& aParam)
     {
         // Make a non-const copy of aParam so that we can muck with
-        // its insides for tranport
+        // its insides for transport
         paramType paramCopy;
 
         paramCopy.event = aParam.event;
 
         switch (paramCopy.event.type) {
+            case NPCocoaEventMouseDown:
+            case NPCocoaEventMouseUp:
+            case NPCocoaEventMouseMoved:
+            case NPCocoaEventMouseEntered:
+            case NPCocoaEventMouseExited:
+            case NPCocoaEventMouseDragged:
+            case NPCocoaEventFocusChanged:
+            case NPCocoaEventWindowFocusChanged:
+            case NPCocoaEventScrollWheel:
+                // Nothing special to do for these events.
+                break;
             case NPCocoaEventDrawRect:
                 // Don't serialize the context pointer
                 paramCopy.event.data.draw.context = NULL;
                 break;
-
+            case NPCocoaEventKeyDown:
+            case NPCocoaEventKeyUp:
+            case NPCocoaEventFlagsChanged:
+            case NPCocoaEventTextInput:
             default:
                 // ignore any events we don't expect
                 return; 
