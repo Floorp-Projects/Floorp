@@ -229,7 +229,7 @@ static inline JSObject *
 FindSafeObject(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &SJOWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
 
     if (!obj) {
       break;
@@ -398,7 +398,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
   if (JSVAL_IS_PRIMITIVE(val)) {
     *rval = val;
   } else {
-    if (!RewrapObject(cx, STOBJ_GET_PARENT(obj), JSVAL_TO_OBJECT(val), SJOW,
+    if (!RewrapObject(cx, obj->getParent(), JSVAL_TO_OBJECT(val), SJOW,
                       rval)) {
       return JS_FALSE;
     }

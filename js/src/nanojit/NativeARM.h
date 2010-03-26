@@ -121,7 +121,7 @@ typedef enum {
 
     FirstReg = R0,
     LastReg = D6,
-    deprecated_UnknownReg = 32,
+    deprecated_UnknownReg = 32,     // XXX: remove eventually, see bug 538924
 
     S14 = 24
 } Register;

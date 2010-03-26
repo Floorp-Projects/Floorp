@@ -1457,10 +1457,10 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
 
     str = (JSString *) closure;
     caller = JS_GetScriptedCaller(cx, NULL);
-    if (!JS_EvaluateScript(cx, caller->scopeChain,
-                           JS_GetStringBytes(str), JS_GetStringLength(str),
-                           caller->script->filename, caller->script->lineno,
-                           rval)) {
+    if (!JS_EvaluateUCInStackFrame(cx, caller,
+                                   JS_GetStringChars(str), JS_GetStringLength(str),
+                                   caller->script->filename, caller->script->lineno,
+                                   rval)) {
         return JSTRAP_ERROR;
     }
     if (!JSVAL_IS_VOID(*rval))
@@ -2549,7 +2549,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         /* Make sure to define this property on the inner object. */
-        if (!JS_ValueToId(cx, *vp, &asId))
+        if (!JS_ValueToId(cx, id, &asId))
             return JS_FALSE;
         return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, NULL, NULL, JSPROP_ENUMERATE);
     }
@@ -3636,6 +3636,32 @@ MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
 #endif // XP_UNIX
 
 static JSBool
+Compile(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "compile", "0", "s");
+        return JS_FALSE;
+    }
+    jsval arg0 = JS_ARGV(cx, vp)[0];
+    if (!JSVAL_IS_STRING(arg0)) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, arg0));
+        JS_ReportError(cx, "expected string to compile, got %s", typeName);
+        return JS_FALSE;
+    }
+
+    JSString *scriptContents = JSVAL_TO_STRING(arg0);
+    JSScript *result = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
+                                          JS_GetStringLength(scriptContents), "<string>", 0);
+    if (!result)
+        return JS_FALSE;
+
+    JS_DestroyScript(cx, result);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -3786,6 +3812,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FS("snarf",          Snarf,        0,0,0),
+    JS_FN("compile",        Compile,        1,0),
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FS_END
@@ -3888,6 +3915,7 @@ static const char *const shell_help_messages[] = {
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
+"compile(code)            Parses a string, potentially throwing",
 "timeout([seconds])\n"
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",

@@ -1657,7 +1657,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                                 &message, &report, charArgs, ap)) {
+                                 &message, &report, !!charArgs, ap)) {
         return JS_FALSE;
     }
 

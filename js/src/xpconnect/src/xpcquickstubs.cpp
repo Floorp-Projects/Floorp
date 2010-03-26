@@ -1092,7 +1092,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
 
 #ifdef DEBUG
     JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
-    if(jsobj && !STOBJ_GET_PARENT(jsobj))
+    if(jsobj && !jsobj->getParent())
         NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
                      "Why did we recreate this wrapper?");
 #endif

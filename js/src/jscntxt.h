@@ -63,6 +63,13 @@
 #include "jsvector.h"
 #include "jshashtable.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
+#pragma warning(push)
+#pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
+#endif
+
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -125,7 +132,7 @@ struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
-struct TypeMap;
+class TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
@@ -283,7 +290,7 @@ class CallStack
         return suspendedFrame;
     }
 
-    bool isSuspended() const { return suspendedFrame; }
+    bool isSuspended() const { return !!suspendedFrame; }
 
     void setPrevious(CallStack *cs) { previous = cs; }
     CallStack *getPrevious() const  { return previous; }
@@ -417,9 +424,9 @@ struct TraceMonitor {
      */
     REHashMap*              reFragments;
 
-    // Cached temporary typemap to avoid realloc'ing every time we create one. 
+    // Cached temporary typemap to avoid realloc'ing every time we create one.
     // This must be used in only one place at a given time. It must be cleared
-    // before use. 
+    // before use.
     TypeMap*                cachedTempTypeMap;
 
 #ifdef DEBUG
@@ -1801,6 +1808,10 @@ class JSAutoIdArray {
     JSIdArray * const idArray;
     JSTempValueRooter tvr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    JSAutoIdArray(JSAutoIdArray &);
+    void operator=(JSAutoIdArray &);
 };
 
 /* The auto-root for enumeration object and its state. */
@@ -2279,5 +2290,10 @@ ContextAllocPolicy::reportAllocOverflow() const
 }
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#pragma warning(pop)
+#endif
 
 #endif /* jscntxt_h___ */

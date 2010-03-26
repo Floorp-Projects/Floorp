@@ -145,7 +145,7 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
   } else {
     // We need to return an [id, value] pair.
-    if (!JS_GetPropertyById(cx, STOBJ_GET_PARENT(obj), id, vp)) {
+    if (!JS_GetPropertyById(cx, obj->getParent(), id, vp)) {
       return JS_FALSE;
     }
   }
@@ -350,7 +350,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
       return nsnull;
     }
-  } while ((innerObj = STOBJ_GET_PROTO(innerObj)) != nsnull);
+  } while ((innerObj = innerObj->getProto()) != nsnull);
 
   return FinishCreatingIterator(cx, iterObj, keysonly);
 }
@@ -406,7 +406,7 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
     if (!SimpleEnumerate(cx, iterObj, propertyContainer)) {
       return nsnull;
     }
-  } while ((propertyContainer = STOBJ_GET_PROTO(propertyContainer)));
+  } while ((propertyContainer = propertyContainer->getProto()));
 
   return FinishCreatingIterator(cx, iterObj, keysonly);
 }

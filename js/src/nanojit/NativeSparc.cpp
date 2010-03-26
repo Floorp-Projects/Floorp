@@ -159,7 +159,7 @@ namespace nanojit
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
 
-        evictScratchRegs();
+        evictScratchRegsExcept(0);
 
         const CallInfo* call = ins->callInfo();
 
@@ -330,11 +330,9 @@ namespace nanojit
     {
         switch (ins->opcode()) {
             case LIR_ldf:
-            case LIR_ldfc:
                 // handled by mainline code below for now
                 break;
             case LIR_ld32f:
-            case LIR_ldc32f:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -398,7 +396,7 @@ namespace nanojit
                 return;
             }
 
-        if (value->isop(LIR_ldf) || value->isop(LIR_ldfc))
+        if (value->isop(LIR_ldf))
             {
                 // value is 64bit struct or int64_t, or maybe a double.
                 // it may be live in an FPU reg.  Either way, don't
@@ -458,7 +456,7 @@ namespace nanojit
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCmp());
-        if (condop >= LIR_feq && condop <= LIR_fge)
+        if (isFCmpOpcode(condop))
             {
                 return asm_fbranch(branchOnFalse, cond, targ);
             }
@@ -574,7 +572,7 @@ namespace nanojit
         Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
         underrunProtect(8);
         LOpcode condop = ins->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        NanoAssert(isFCmpOpcode(condop));
         if (condop == LIR_feq)
             MOVFEI(1, 0, 0, 0, r);
         else if (condop == LIR_fle)
@@ -737,21 +735,16 @@ namespace nanojit
         Register ra = getBaseReg(base, d, GpRegs);
         switch(op) {
             case LIR_ldzb:
-            case LIR_ldcb:
                 LDUB32(ra, d, rr);
                 break;
             case LIR_ldzs:
-            case LIR_ldcs:
                 LDUH32(ra, d, rr);
                 break;
             case LIR_ld:
-            case LIR_ldc:
                 LDSW32(ra, d, rr);
                 break;
             case LIR_ldsb:
             case LIR_ldss:
-            case LIR_ldcsb:
-            case LIR_ldcss:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -932,7 +925,7 @@ namespace nanojit
     {
         NIns *at = 0;
         LOpcode condop = cond->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        NanoAssert(isFCmpOpcode(condop));
         underrunProtect(32);
         intptr_t tt = ((intptr_t)targ - (intptr_t)_nIns + 8) >> 2;
         // !targ means that it needs patch.

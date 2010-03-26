@@ -417,23 +417,23 @@ namespace nanojit
     // optimize the LIR_alloc case by indexing off FP, thus saving the use of
     // a GpReg.
     //
-    Register Assembler::getBaseReg(LIns *i, int &d, RegisterMask allow)
+    Register Assembler::getBaseReg(LInsp base, int &d, RegisterMask allow)
     {
     #if !PEDANTIC
-        if (i->isop(LIR_alloc)) {
+        if (base->isop(LIR_alloc)) {
             // The value of a LIR_alloc is a pointer to its stack memory,
             // which is always relative to FP.  So we can just return FP if we
             // also adjust 'd' (and can do so in a valid manner).  Or, in the
             // PEDANTIC case, we can just assign a register as normal;
             // findRegFor() will allocate the stack memory for LIR_alloc if
             // necessary.
-            d += findMemFor(i);
+            d += findMemFor(base);
             return FP;
         }
     #else
         (void) d;
     #endif
-        return findRegFor(i, allow);
+        return findRegFor(base, allow);
     }
 
     // Like findRegFor2(), but used for stores where the base value has the
@@ -1384,12 +1384,7 @@ namespace nanojit
                 case LIR_ldzs:
                 case LIR_ldsb:
                 case LIR_ldss:
-                case LIR_ldcsb:
-                case LIR_ldcss:
                 case LIR_ld:
-                case LIR_ldc:
-                case LIR_ldcb:
-                case LIR_ldcs:
                 {
                     countlir_ld();
                     asm_load32(ins);
@@ -1397,11 +1392,8 @@ namespace nanojit
                 }
 
                 case LIR_ld32f:
-                case LIR_ldc32f:
                 case LIR_ldf:
-                case LIR_ldfc:
                 CASE64(LIR_ldq:)
-                CASE64(LIR_ldqc:)
                 {
                     countlir_ldq();
                     asm_load64(ins);
@@ -2086,20 +2078,20 @@ namespace nanojit
     }
 
     /**
-     * move regs around so the SavedRegs contains the highest priority regs.
+     * Move regs around so the SavedRegs contains the highest priority regs.
      */
-    void Assembler::evictScratchRegs()
+    void Assembler::evictScratchRegsExcept(RegisterMask ignore)
     {
-        // find the top GpRegs that are candidates to put in SavedRegs
+        // Find the top GpRegs that are candidates to put in SavedRegs.
 
-        // tosave is a binary heap stored in an array.  the root is tosave[0],
+        // 'tosave' is a binary heap stored in an array.  The root is tosave[0],
         // left child is at i+1, right child is at i+2.
 
         Register tosave[LastReg-FirstReg+1];
         int len=0;
         RegAlloc *regs = &_allocator;
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r)) {
-            if (rmask(r) & GpRegs) {
+            if (rmask(r) & GpRegs & ~ignore) {
                 LIns *ins = regs->getActive(r);
                 if (ins) {
                     if (canRemat(ins)) {
@@ -2121,8 +2113,8 @@ namespace nanojit
             }
         }
 
-        // now primap has the live exprs in priority order.
-        // allocate each of the top priority exprs to a SavedReg
+        // Now primap has the live exprs in priority order.
+        // Allocate each of the top priority exprs to a SavedReg.
 
         RegisterMask allow = SavedRegs;
         while (allow && len > 0) {
@@ -2156,7 +2148,7 @@ namespace nanojit
         }
 
         // now evict everything else.
-        evictSomeActiveRegs(~SavedRegs);
+        evictSomeActiveRegs(~(SavedRegs | ignore));
     }
 
     void Assembler::evictAllActiveRegs()

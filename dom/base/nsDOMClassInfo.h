@@ -43,7 +43,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
-#include "jsobj.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
@@ -206,12 +205,7 @@ public:
 
   static void PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
 
-  static inline nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper,
-                                       JSObject *obj)
-  {
-    return wrapper ? wrapper->Native() :
-                     static_cast<nsISupports*>(obj->getPrivate());
-  }
+  static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
 
   static nsIXPConnect *XPConnect()
   {

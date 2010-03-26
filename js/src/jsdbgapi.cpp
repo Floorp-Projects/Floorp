@@ -476,7 +476,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
             ((wprop->attrs ^ sprop->attrs) & JSPROP_SETTER) == 0 &&
             IsWatchedProperty(cx, wprop)) {
             sprop = scope->changeProperty(cx, wprop, 0, wprop->attrs,
-                                          wprop->getter, wp->setter);
+                                          wprop->getter(), wp->setter);
             if (!sprop)
                 ok = JS_FALSE;
         }
@@ -705,7 +705,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     frame.fun = fun;
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
-                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
+                    frame.scopeChain = closure->getParent();
                     if (script && script->nslots)
                         frame.slots = argv + slotsStart;
                     if (script) {
@@ -772,12 +772,14 @@ static bool
 IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
     if (sprop->attrs & JSPROP_SETTER) {
-        JSObject *funobj = js_CastAsObject(sprop->setter);
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSObject *funobj = sprop->setterObject();
+        if (!funobj->isFunction())
+            return false;
 
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         return FUN_NATIVE(fun) == js_watch_set_wrapper;
     }
-    return sprop->setter == js_watch_set;
+    return sprop->setterOp() == js_watch_set;
 }
 
 JSPropertyOp
@@ -799,7 +801,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
         atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, js_CastAsObject(setter)),
+                             js_CastAsObject(setter)->getParent(),
                              atom);
     if (!wrapper)
         return NULL;
@@ -875,8 +877,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))
                     ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
                     : JSVAL_VOID;
-            getter = sprop->getter;
-            setter = sprop->setter;
+            getter = sprop->getter();
+            setter = sprop->setter();
             attrs = sprop->attrs;
             flags = sprop->getFlags();
             shortid = sprop->shortid;
@@ -909,7 +911,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
         DBG_UNLOCK(rt);
-        watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter);
+        watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter());
         if (!watcher) {
             ok = JS_FALSE;
             goto out;
@@ -923,13 +925,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
-        JS_ASSERT(sprop->setter != js_watch_set || pobj != obj);
-        wp->setter = sprop->setter;
+        JS_ASSERT(sprop->setter() != js_watch_set || pobj != obj);
+        wp->setter = sprop->setter();
         wp->flags = JSWP_LIVE;
 
         /* XXXbe nest in obj lock here */
         sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
-                                             sprop->getter, watcher);
+                                             sprop->getter(), watcher);
         if (!sprop) {
             /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
             JS_INIT_CLIST(&wp->links);
@@ -1463,7 +1465,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 {
     pd->id = ID_TO_VALUE(sprop->id);
 
-    bool wasThrowing = cx->throwing;
+    JSBool wasThrowing = cx->throwing;
     JSAutoTempValueRooter lastException(cx, cx->exception);
     cx->throwing = JS_FALSE;
 
@@ -1487,10 +1489,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
               | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (sprop->getter == js_GetCallArg) {
+    if (sprop->getter() == js_GetCallArg) {
         pd->slot = sprop->shortid;
         pd->flags |= JSPD_ARGUMENT;
-    } else if (sprop->getter == js_GetCallVar) {
+    } else if (sprop->getter() == js_GetCallVar) {
         pd->slot = sprop->shortid;
         pd->flags |= JSPD_VARIABLE;
     } else {

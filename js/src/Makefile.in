@@ -197,7 +197,6 @@ INSTALLED_HEADERS = \
 		jslock.h \
 		jslong.h \
 		jsmath.h \
-		jsnum.h \
 		jsobj.h \
 		jsobjinlines.h \
 		json.h \

@@ -73,6 +73,7 @@
 #include "jsstrinlines.h"
 #include "jsvector.h"
 
+using namespace js;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
 
@@ -254,11 +255,11 @@ const char js_parseInt_str[]   = "parseInt";
 #ifdef JS_TRACER
 
 JS_DEFINE_TRCINFO_2(num_parseInt,
-    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)),
-    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, 1)))
+    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, nanojit::ACC_NONE)),
+    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACC_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
-    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)))
+    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, nanojit::ACC_NONE)))
 
 #endif /* JS_TRACER */
 
@@ -421,7 +422,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 {
-    char thousandsLength, decimalLength;
+    size_t thousandsLength, decimalLength;
     const char *numGrouping, *tmpGroup;
     JSRuntime *rt;
     JSString *numStr, *str;
@@ -625,8 +626,10 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_TRACER
 
 JS_DEFINE_TRCINFO_2(num_toString,
-    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,        1, 1)),
-    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1, 1)))
+    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,        1,
+         nanojit::ACC_NONE)),
+    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1,
+         nanojit::ACC_NONE)))
 
 #endif /* JS_TRACER */
 
@@ -884,7 +887,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
         if (jsuint(i) < jsuint(base)) {
             if (i < 10)
                 return JSString::intString(i);
-            return JSString::unitString('a' + i - 10);
+            return JSString::unitString(jschar('a' + i - 10));
         }
     }
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);
@@ -942,7 +945,6 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
 {
     jsval v;
     JSString *str;
-    const jschar *bp, *end, *ep;
     jsdouble d;
     JSObject *obj;
 
@@ -955,28 +957,9 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
         if (JSVAL_IS_STRING(v)) {
             str = JSVAL_TO_STRING(v);
 
-            /*
-             * Note that ECMA doesn't treat a string beginning with a '0' as
-             * an octal number here. This works because all such numbers will
-             * be interpreted as decimal by js_strtod and will never get
-             * passed to js_strtointeger (which would interpret them as
-             * octal).
-             */
-            str->getCharsAndEnd(bp, end);
-
-            /* ECMA doesn't allow signed hex numbers (bug 273467). */
-            bp = js_SkipWhiteSpace(bp, end);
-            if (bp + 2 < end && (*bp == '-' || *bp == '+') &&
-                bp[1] == '0' && (bp[2] == 'X' || bp[2] == 'x')) {
+            d = StringToNumberType<jsdouble>(cx, str);
+            if (JSDOUBLE_IS_NaN(d))
                 break;
-            }
-
-            if ((!js_strtod(cx, bp, end, &ep, &d) ||
-                 js_SkipWhiteSpace(ep, end) != end) &&
-                (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
-                 js_SkipWhiteSpace(ep, end) != end)) {
-                break;
-            }
 
             /*
              * JSVAL_TRUE indicates that double jsval was never constructed
@@ -989,10 +972,9 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             if (JSVAL_TO_BOOLEAN(v)) {
                 *vp = JSVAL_ONE;
                 return 1.0;
-            } else {
-                *vp = JSVAL_ZERO;
-                return 0.0;
             }
+            *vp = JSVAL_ZERO;
+            return 0.0;
         }
         if (JSVAL_IS_NULL(v)) {
             *vp = JSVAL_ZERO;

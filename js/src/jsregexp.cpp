@@ -502,7 +502,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
             (state->flags & JSREG_FOLD) == 0) {
             result->op = REOP_ALTPREREQ2;
             result->u.altprereq.ch1 = ((RENode *) result->u.kid2)->u.flat.chr;
-            result->u.altprereq.ch2 = ((RENode *) result->kid)->u.ucclass.index;
+            result->u.altprereq.ch2 = jschar(((RENode *) result->kid)->u.ucclass.index);
             /* ALTPREREQ2, <end>, uch1, uch2, <next>, ...,
                                             JUMP, <end> ... ENDALT */
             state->progLength += 13;
@@ -515,7 +515,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
             result->op = REOP_ALTPREREQ2;
             result->u.altprereq.ch1 = ((RENode *) result->kid)->u.flat.chr;
             result->u.altprereq.ch2 =
-                ((RENode *) result->u.kid2)->u.ucclass.index;
+                jschar(((RENode *) result->u.kid2)->u.ucclass.index);
             /* ALTPREREQ2, <end>, uch1, uch2, <next>, ...,
                                           JUMP, <end> ... ENDALT */
             state->progLength += 13;
@@ -934,7 +934,7 @@ CalculateBitmapSize(CompilerState *state, RENode *target, const jschar *src,
 
     while (src != end) {
         JSBool canStartRange = JS_TRUE;
-        uintN localMax = 0;
+        jschar localMax = 0;
 
         switch (*src) {
           case '\\':
@@ -987,7 +987,7 @@ lexHex:
                     }
                     n = (n << 4) | digit;
                 }
-                localMax = n;
+                localMax = jschar(n);
                 break;
               case 'd':
                 canStartRange = JS_FALSE;
@@ -1048,7 +1048,7 @@ lexHex:
                             src--;
                     }
                 }
-                localMax = n;
+                localMax = jschar(n);
                 break;
 
               default:
@@ -1089,8 +1089,8 @@ lexHex:
             for (i = rangeStart; i <= localMax; i++) {
                 jschar uch, dch;
 
-                uch = upcase(i);
-                dch = inverse_upcase(i);
+                uch = jschar(upcase(i));
+                dch = inverse_upcase(jschar(i));
                 maxch = JS_MAX(maxch, uch);
                 maxch = JS_MAX(maxch, dch);
             }
@@ -1098,9 +1098,9 @@ lexHex:
         }
 
         if (localMax > max)
-            max = localMax;
+            max = uintN(localMax);
     }
-    target->u.ucclass.bmsize = max;
+    target->u.ucclass.bmsize = uint16(max);
     return JS_TRUE;
 }
 
@@ -1973,7 +1973,7 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
         return JS_FALSE;
     state.cpbegin = state.cp;
     state.cpend = state.cp + len;
-    state.flags = flags;
+    state.flags = uint16(flags);
     state.parenCount = 0;
     state.classCount = 0;
     state.progLength = 0;
@@ -2352,7 +2352,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns* text_ch = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
 
         // Extra characters that need to be compared against when doing folding.
         struct extra {
@@ -2573,7 +2573,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns* text_ch = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
         if (!fails.append(lir->insBranch(LIR_jf,
                                          lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)),
                                          0))) {
@@ -2581,7 +2581,8 @@ class RegExpNativeCompiler {
         }
         LIns* byteIndex = lir->ins_i2p(lir->ins2(LIR_rsh, text_ch, lir->insImm(3)));
         LIns* bitmap = lir->insImmPtr(bitmapData);
-        LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
+        LIns* byte = lir->insLoad(LIR_ldzb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0,
+                                  ACC_READONLY);
         LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
                                lir->ins2(LIR_and, text_ch, lir->insImm(0x7)));
         LIns* test = lir->ins2(LIR_eq, lir->ins2(LIR_and, byte, bitMask), lir->insImm(0));
@@ -2600,7 +2601,7 @@ class RegExpNativeCompiler {
             chr = lir->ins2(LIR_lsh, chr, sizeLog2);
         }
         LIns *addr = lir->ins2(LIR_piadd, lir->insImmPtr(tbl), lir->ins_u2p(chr));
-        return lir->insLoad(LIR_ldcb, addr, 0);
+        return lir->insLoad(LIR_ldzb, addr, 0, ACC_READONLY);
     }
 
     /* Compile a builtin character class. */
@@ -2609,7 +2610,7 @@ class RegExpNativeCompiler {
         /* All the builtins checked below consume one character. */
         if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0)))
             return NULL;
-        LIns *chr = lir->insLoad(LIR_ldcs, pos, 0);
+        LIns *chr = lir->insLoad(LIR_ldzs, pos, 0, ACC_READONLY);
 
         switch (node->op) {
           case REOP_DOT:
@@ -3404,7 +3405,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
             re = tmp;
     }
 
-    re->flags = flags;
+    re->flags = uint16(flags);
     re->parenCount = state.parenCount;
     re->source = str;
 
@@ -3887,9 +3888,9 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
                 for (i = rangeStart; i <= thisCh; i++) {
                     jschar uch, dch;
 
-                    AddCharacterToCharSet(charSet, i);
-                    uch = upcase(i);
-                    dch = inverse_upcase(i);
+                    AddCharacterToCharSet(charSet, jschar(i));
+                    uch = jschar(upcase(i));
+                    dch = inverse_upcase(jschar(i));
                     if (i != uch)
                         AddCharacterToCharSet(charSet, uch);
                     if (i != dch)
@@ -3901,7 +3902,7 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
             inRange = JS_FALSE;
         } else {
             if (re->flags & JSREG_FOLD) {
-                AddCharacterToCharSet(charSet, upcase(thisCh));
+                AddCharacterToCharSet(charSet, jschar(upcase(thisCh)));
                 AddCharacterToCharSet(charSet, inverse_upcase(thisCh));
             } else {
                 AddCharacterToCharSet(charSet, thisCh);
@@ -4976,7 +4977,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 
     res = &cx->regExpStatics;
     res->input = str;
-    res->parenCount = re->parenCount;
+    res->parenCount = uint16(re->parenCount);
     if (re->parenCount == 0) {
         res->lastParen = js_EmptySubString;
     } else {
@@ -5114,7 +5115,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
     while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
-        obj = OBJ_GET_PROTO(cx, obj);
+        obj = obj->getProto();
         if (!obj)
             return JS_TRUE;
     }
@@ -5160,7 +5161,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return ok;
     while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
-        obj = OBJ_GET_PROTO(cx, obj);
+        obj = obj->getProto();
         if (!obj)
             return JS_TRUE;
     }
@@ -5436,8 +5437,8 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        STOBJ_CLEAR_PARENT(obj);
-        STOBJ_CLEAR_PROTO(obj);
+        obj->clearParent();
+        obj->clearProto();
         re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;
@@ -5875,7 +5876,8 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0,
+                     ACC_STORE_ANY)
 #endif
 
 bool

@@ -42,8 +42,11 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#include "jsprvtd.h"
-#include "jsnum.h"
+#include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
+
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsINodeInfo.h"
@@ -60,6 +63,8 @@
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
 #include "nsIPrefBranch2.h"
+
+#include "jsapi.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1771,20 +1776,14 @@ private:
 
 /*
  * Check whether a floating point number is finite (not +/-infinity and not a
- * NaN value). We wrap JSDOUBLE_IS_FINITE in a function because it expects to
- * take the address of its argument, and because the argument must be of type
- * jsdouble to have the right size and layout of bits.
- *
- * Note: we could try to exploit the fact that |infinity - infinity == NaN|
- * instead of using JSDOUBLE_IS_FINITE. This would produce more compact code
- * and perform better by avoiding type conversions and bit twiddling.
- * Unfortunately, some architectures don't guarantee that |f == f| evaluates
- * to true (where f is any *finite* floating point number). See
- * https://bugzilla.mozilla.org/show_bug.cgi?id=369418#c63 . To play it safe
- * for gecko 1.9, we just reuse JSDOUBLE_IS_FINITE.
+ * NaN value).
  */
 inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
-  return JSDOUBLE_IS_FINITE(f);
+#ifdef WIN32
+  return _finite(f);
+#else
+  return finite(f);
+#endif
 }
 
 /*

@@ -444,6 +444,12 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_DoubleIsInt32(jsdouble d, jsint *ip)
+{
+    return JSDOUBLE_IS_INT(d, *ip);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {
     CHECK_REQUEST(cx);
@@ -502,7 +508,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
         obj = JSVAL_TO_OBJECT(v);
         if (obj)
             return obj->map->ops->typeOf(cx, obj);
-        return JSTYPE_OBJECT;
+        type = JSTYPE_OBJECT;
     } else if (JSVAL_IS_NUMBER(v)) {
         type = JSTYPE_NUMBER;
     } else if (JSVAL_IS_STRING(v)) {
@@ -725,6 +731,12 @@ JS_DestroyRuntime(JSRuntime *rt)
     js_free(rt);
 }
 
+#ifdef JS_REPRMETER
+namespace reprmeter {
+    extern void js_DumpReprMeter();
+}
+#endif
+
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
@@ -734,8 +746,11 @@ JS_ShutDown(void)
 
 #ifdef JS_OPMETER
     extern void js_DumpOpMeters();
-
     js_DumpOpMeters();
+#endif
+
+#ifdef JS_REPRMETER
+    reprmeter::js_DumpReprMeter();
 #endif
 
     js_FinishDtoa();
@@ -1139,9 +1154,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    OBJ_SET_PROTO(cx, fun_proto, obj_proto);
-    if (!OBJ_GET_PROTO(cx, obj))
-        OBJ_SET_PROTO(cx, obj, obj_proto);
+    fun_proto->setProto(obj_proto);
+    if (!obj->getProto())
+        obj->setProto(obj_proto);
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
@@ -1188,9 +1203,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitStringClass(cx, obj) &&
            js_InitEval(cx, obj) &&
            js_InitTypedArrayClasses(cx, obj) &&
-#if JS_HAS_SCRIPT_OBJECT
-           js_InitScriptClass(cx, obj) &&
-#endif
 #if JS_HAS_XML_SUPPORT
            js_InitXMLClasses(cx, obj) &&
 #endif
@@ -1249,9 +1261,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
-#if JS_HAS_SCRIPT_OBJECT
-    {js_InitScriptClass,                EAGER_ATOM_AND_CLASP(Script)},
-#endif
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
     {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
@@ -1409,7 +1418,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
             }
         }
 
-        if (!stdnm && !OBJ_GET_PROTO(cx, obj)) {
+        if (!stdnm && !obj->getProto()) {
             /*
              * Try even less frequently used names delegated from the global
              * object to Object.prototype, but only if the Object class hasn't
@@ -1474,7 +1483,8 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
+                             JS_PropertyStub, JS_PropertyStub,
+                             JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
     }
 
@@ -1656,9 +1666,7 @@ JS_GetScopeChain(JSContext *cx)
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *parent;
-
-    while ((parent = OBJ_GET_PARENT(cx, obj)) != NULL)
+   while (JSObject *parent = obj->getParent())
         obj = parent;
     return obj;
 }
@@ -2658,7 +2666,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     CHECK_REQUEST(cx);
-    proto = OBJ_GET_PROTO(cx, obj);
+    proto = obj->getProto();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return proto && proto->map ? proto : NULL;
@@ -2674,9 +2682,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
-    JSObject *parent;
-
-    parent = OBJ_GET_PARENT(cx, obj);
+    JSObject *parent = obj->getParent();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return parent && parent->map ? parent : NULL;
@@ -2744,7 +2750,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     uint32 nslots, i;
     jsval v;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
 
     if (!OBJ_IS_NATIVE(obj)) {
@@ -3029,7 +3035,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     } else {
         sprop = (JSScopeProperty *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
-                                   sprop->getter, sprop->setter, sprop->slot,
+                                   sprop->getter(), sprop->setter(), sprop->slot,
                                    sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                    sprop->shortid)
               != NULL);
@@ -3063,7 +3069,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
         *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                : JSVAL_TRUE;
-    } else if (OBJ_IS_DENSE_ARRAY(cx, obj2)) {
+    } else if (obj2->isDenseArray()) {
         ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
     } else {
         /* XXX bad API: no way to return "defined but value unknown" */
@@ -3102,8 +3108,8 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (OBJ_IS_NATIVE(obj2)) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
-            desc->getter = sprop->getter;
-            desc->setter = sprop->setter;
+            desc->getter = sprop->getter();
+            desc->setter = sprop->setter();
             desc->value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                           ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                           : JSVAL_VOID;
@@ -3643,7 +3649,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
-    return OBJ_IS_ARRAY(cx, js_GetWrappedObject(cx, obj));
+    return js_GetWrappedObject(cx, obj)->isArray();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3702,7 +3708,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     }
     sprop = (JSScopeProperty *)prop;
     ok = (js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
-                               sprop->getter, sprop->setter, sprop->slot,
+                               sprop->getter(), sprop->setter(), sprop->slot,
                                sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                sprop->shortid)
           != NULL);
@@ -3966,7 +3972,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
     i = JSVAL_TO_INT(iterobj->fslots[JSSLOT_ITER_INDEX]);
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
-        obj = OBJ_GET_PARENT(cx, iterobj);
+        obj = iterobj->getParent();
         JS_ASSERT(OBJ_IS_NATIVE(obj));
         scope = OBJ_SCOPE(obj);
         sprop = (JSScopeProperty *) iterobj->getPrivate();
@@ -4154,7 +4160,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                          JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                     goto break2;
                 }
-                obj = OBJ_GET_PARENT(cx, obj);
+                obj = obj->getParent();
             }
 
             JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(names[i]);
@@ -4735,7 +4741,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         JSObject *pobj = obj;
         uintN depth = 1;
 
-        while ((pobj = OBJ_GET_PARENT(cx, pobj)) != NULL)
+        while ((pobj = pobj->getParent()) != NULL)
             ++depth;
         JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
     }
@@ -5582,7 +5588,8 @@ JS_ClearPendingException(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
-    JSBool save, ok;
+    JSBool ok;
+    JSPackedBool save;
 
     CHECK_REQUEST(cx);
 

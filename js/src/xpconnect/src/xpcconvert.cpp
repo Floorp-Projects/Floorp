@@ -473,7 +473,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
 
 #ifdef DEBUG
                     JSObject* jsobj = JSVAL_TO_OBJECT(*d);
-                    if(jsobj && !STOBJ_GET_PARENT(jsobj))
+                    if(jsobj && !jsobj->getParent())
                         NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
                                      "Why did we recreate this wrapper?");
 #endif

@@ -188,6 +188,11 @@ struct JSObjectMap {
     explicit JSObjectMap(const JSObjectOps *ops, uint32 shape) : ops(ops), shape(shape) {}
 
     enum { SHAPELESS = 0xffffffff };
+
+private:
+    /* No copy or assignment semantics. */
+    JSObjectMap(JSObjectMap &);
+    void operator=(JSObjectMap &);
 };
 
 const uint32 JS_INITIAL_NSLOTS = 5;
@@ -362,7 +367,7 @@ struct JSObject {
     inline void initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                       jsval privateSlotValue);
 
-    inline bool hasSlotsArray() const { return dslots; }
+    inline bool hasSlotsArray() const { return !!dslots; }
 
     /* This method can only be called when hasSlotsArray() returns true. */
     inline void freeSlotsArray(JSContext *cx);
@@ -438,24 +443,8 @@ struct JSObject {
     inline bool unbrand(JSContext *cx);
 };
 
-/* Compatibility macros. */
+/* Compatibility macro. */
 #define OBJ_IS_NATIVE(obj)              ((obj)->isNative())
-
-#define STOBJ_GET_PROTO(obj)            ((obj)->getProto())
-#define STOBJ_SET_PROTO(obj,proto)      ((obj)->setProto(proto))
-#define STOBJ_CLEAR_PROTO(obj)          ((obj)->clearProto())
-
-#define STOBJ_GET_PARENT(obj)           ((obj)->getParent())
-#define STOBJ_SET_PARENT(obj,parent)    ((obj)->setParent(parent))
-#define STOBJ_CLEAR_PARENT(obj)         ((obj)->clearParent())
-
-#define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
-#define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
-#define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
-
-#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
-#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
-#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
@@ -892,7 +881,7 @@ js_IsCacheableNonGlobalScope(JSObject *obj)
 {
     extern JS_FRIEND_DATA(JSClass) js_CallClass;
     extern JS_FRIEND_DATA(JSClass) js_DeclEnvClass;
-    JS_ASSERT(STOBJ_GET_PARENT(obj));
+    JS_ASSERT(obj->getParent());
 
     JSClass *clasp = STOBJ_GET_CLASS(obj);
     bool cacheable = (clasp == &js_CallClass ||

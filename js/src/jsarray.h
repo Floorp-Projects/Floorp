@@ -67,9 +67,6 @@ JSObject::isArray() const
     return isDenseArray() || getClass() == &js_SlowArrayClass;
 }
 
-#define OBJ_IS_DENSE_ARRAY(cx,obj)  (obj)->isDenseArray()
-#define OBJ_IS_ARRAY(cx,obj)        (obj)->isArray()
-
 /*
  * Dense arrays are not native (OBJ_IS_NATIVE(cx, aobj) for a dense array aobj
  * results in false, meaning aobj->map does not point to a JSScope).
@@ -90,9 +87,9 @@ JSObject::isArray() const
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
  */
 static JS_INLINE JSObject *
-js_GetProtoIfDenseArray(JSContext *cx, JSObject *obj)
+js_GetProtoIfDenseArray(JSObject *obj)
 {
-    return OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+    return obj->isDenseArray() ? obj->getProto() : obj;
 }
 
 extern JSObject *
