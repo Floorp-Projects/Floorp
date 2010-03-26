@@ -356,7 +356,7 @@ PluginModuleChild::DetectNestedEventLoop(gpointer data)
 
     NS_ABORT_IF_FALSE(0 != pmc->mNestedLoopTimerId,
                       "callback after descheduling");
-    NS_ABORT_IF_FALSE(1 < g_main_depth(),
+    NS_ABORT_IF_FALSE(pmc->mTopLoopDepth < g_main_depth(),
                       "not canceled before returning to main event loop!");
 
     PLUGIN_LOG_DEBUG(("Detected nested glib event loop"));
@@ -378,10 +378,10 @@ PluginModuleChild::DetectNestedEventLoop(gpointer data)
 gboolean
 PluginModuleChild::ProcessBrowserEvents(gpointer data)
 {
-    NS_ABORT_IF_FALSE(1 < g_main_depth(),
-                      "not canceled before returning to main event loop!");
-
     PluginModuleChild* pmc = static_cast<PluginModuleChild*>(data);
+
+    NS_ABORT_IF_FALSE(pmc->mTopLoopDepth < g_main_depth(),
+                      "not canceled before returning to main event loop!");
 
     pmc->CallProcessSomeEvents();
 
@@ -400,6 +400,10 @@ PluginModuleChild::EnteredCxxStack()
                            PluginModuleChild::DetectNestedEventLoop,
                            this,
                            NULL);
+
+#ifdef DEBUG
+    mTopLoopDepth = g_main_depth();
+#endif
 }
 
 void
