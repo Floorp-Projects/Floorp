@@ -676,6 +676,35 @@ struct ParamTraits<NPNURLVariable>
   }
 };
 
+  
+template<>
+struct ParamTraits<NPCoordinateSpace>
+{
+  typedef NPCoordinateSpace paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, int32(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int32 intval;
+    if (ReadParam(aMsg, aIter, &intval)) {
+      switch (intval) {
+      case NPCoordinateSpacePlugin:
+      case NPCoordinateSpaceWindow:
+      case NPCoordinateSpaceFlippedWindow:
+      case NPCoordinateSpaceScreen:
+      case NPCoordinateSpaceFlippedScreen:
+        *aResult = paramType(intval);
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 } /* namespace IPC */
 
 

@@ -77,8 +77,9 @@ using mozilla::gfx::SharedDIB;
 #include <windowsx.h>
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
-
-#endif // defined(OS_WIN)
+#elif defined(XP_MACOSX)
+#include <ApplicationServices/ApplicationServices.h>
+#endif // defined(XP_MACOSX)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsCString& aMimeType)
@@ -320,6 +321,30 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
     }
 
+#ifdef XP_MACOSX
+   case NPNVsupportsCoreGraphicsBool: {
+        *((NPBool*)aValue) = true;
+        return NPERR_NO_ERROR;
+    }
+
+    case NPNVsupportsCoreAnimationBool: {
+        *((NPBool*)aValue) = false;
+        return NPERR_NO_ERROR;
+    }
+
+    case NPNVsupportsCocoaBool: {
+        *((NPBool*)aValue) = true;
+        return NPERR_NO_ERROR;
+    }
+  
+#ifndef NP_NO_QUICKDRAW
+    case NPNVsupportsQuickDrawBool: {
+        *((NPBool*)aValue) = false;
+        return NPERR_NO_ERROR;
+    }
+#endif /* NP_NO_QUICKDRAW */
+#endif /* XP_MACOSX */
+
     default:
         PR_LOG(gPluginLog, PR_LOG_WARNING,
                ("In PluginInstanceChild::NPN_GetValue: Unhandled NPNVariable %i (%s)",
@@ -358,6 +383,28 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
         return rv;
     }
+
+#ifdef XP_MACOSX
+    case NPPVpluginDrawingModel: {
+        NPError rv;
+        int drawingModel = (int16) (intptr_t) aValue;
+
+        if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
+            return NPERR_GENERIC_ERROR;
+
+        return rv;
+    }
+
+    case NPPVpluginEventModel: {
+        NPError rv;
+        int eventModel = (int16) (intptr_t) aValue;
+
+        if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
+            return NPERR_GENERIC_ERROR;
+
+        return rv;
+    }
+#endif
 
     default:
         PR_LOG(gPluginLog, PR_LOG_WARNING,
@@ -464,7 +511,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                           event.event.xgraphicsexpose.drawable));
 #endif
 
-#ifdef OS_MACOSX
+#ifdef XP_MACOSX
     // Mac OS X does not define an NPEvent structure. It defines more specific types.
     NPCocoaEvent evcopy = event.event;
 #else
@@ -512,6 +559,73 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 
     return true;
 }
+
+#ifdef XP_MACOSX
+bool
+PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
+                                                 Shmem& mem,
+                                                 int16_t* handled,
+                                                 Shmem* rtnmem)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    // We return access to the shared memory buffer after returning.
+
+    NPCocoaEvent evcopy = event.event;
+
+    if (evcopy.type == NPCocoaEventDrawRect) {
+        CGColorSpaceRef cSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+        if (!cSpace) {
+            PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
+            *handled = false;
+            *rtnmem = mem;
+            return true;
+        } 
+        void* cgContextByte = mem.get<char>();
+        CGContextRef ctxt = ::CGBitmapContextCreate(cgContextByte, mWindow.width, mWindow.height, 8, mWindow.width * 4, cSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        ::CGColorSpaceRelease(cSpace);
+        if (!ctxt) {
+            PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
+            *handled = false;
+            *rtnmem = mem;
+            return true;
+        }
+        evcopy.data.draw.context = ctxt; 
+    } else {
+        PLUGIN_LOG_DEBUG(("Invalid event type for AnswerNNP_HandleEvent_Shmem."));
+        *handled = false;
+        *rtnmem = mem;
+        return true;
+    } 
+
+    if (!mPluginIface->event) {
+        *handled = false;
+    } else {
+        *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+    }
+
+    // Some events need cleaning up.
+    if (evcopy.type == NPCocoaEventDrawRect) {
+        ::CGContextRelease(evcopy.data.draw.context);
+    }
+
+    *rtnmem = mem;
+    return true;
+}
+
+#else
+bool
+PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
+                                                 Shmem& mem,
+                                                 int16_t* handled,
+                                                 Shmem* rtnmem)
+{
+    NS_RUNTIMEABORT("not reached.");
+    *rtnmem = mem;
+    return true;
+}
+#endif
 
 bool
 PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
@@ -641,7 +755,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
       break;
     }
 
-#elif defined(OS_MACOSX)
+#elif defined(XP_MACOSX)
 
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
@@ -649,6 +763,9 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     mWindow.height = aWindow.height;
     mWindow.clipRect = aWindow.clipRect;
     mWindow.type = aWindow.type;
+
+    if (mPluginIface->setwindow)
+        (void) mPluginIface->setwindow(&mData, &mWindow);
 
 #else
 #  error Implement me for your OS

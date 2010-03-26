@@ -991,6 +991,13 @@ nsNavHistory::InitTempTables()
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // moz_openpages_temp
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_OPENPAGES_TEMP);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_REMOVEOPENPAGE_CLEANUP_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1217,6 +1224,27 @@ nsNavHistory::InitStatements()
       "WHERE url = ?2"),
     getter_AddRefs(mDBSetPlaceTitle));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBRegisterOpenPage
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT OR REPLACE INTO moz_openpages_temp (place_id, open_count) "
+      "VALUES (?1, "
+        "IFNULL("
+          "(SELECT open_count + 1 FROM moz_openpages_temp WHERE place_id = ?1), "
+          "1"
+        ")"
+      ")"),
+    getter_AddRefs(mDBRegisterOpenPage));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBUnregisterOpenPage
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_openpages_temp "
+      "SET open_count = open_count - 1 "
+      "WHERE place_id = ?1"),
+    getter_AddRefs(mDBUnregisterOpenPage));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBVisitsForFrecency
   // NOTE: This is not limited to visits with "visit_type NOT IN (0,4,7,8)"
   // because otherwise mDBVisitsForFrecency would return no visits
@@ -5035,6 +5063,72 @@ nsNavHistory::MarkPageAsFollowedLink(nsIURI *aURI)
 }
 
 
+NS_IMETHODIMP
+nsNavHistory::RegisterOpenPage(nsIURI* aURI)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+
+  // Don't add any pages while in Private Browsing mode, so as to avoid leaking
+  // information about other windows that might otherwise stay hidden
+  // and private.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
+  PRBool canAdd = PR_FALSE;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 placeId;
+  // Note: If the URI has never been added to history (but can be added),
+  // LAZY_ADD will cause this to add an orphan page, until the visit is added.
+  rv = GetUrlIdFor(aURI, &placeId, canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (placeId == 0)
+    return NS_OK;
+
+  mozStorageStatementScoper scoper(mDBRegisterOpenPage);
+
+  rv = mDBRegisterOpenPage->BindInt64Parameter(0, placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBRegisterOpenPage->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistory::UnregisterOpenPage(nsIURI* aURI)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+
+  // Entering Private Browsing mode will unregister all open pages, therefore
+  // there shouldn't be anything in the moz_openpages_temp table. So we can stop
+  // now without doing any unnecessary work.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
+  PRInt64 placeId;
+  nsresult rv = GetUrlIdFor(aURI, &placeId, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (placeId == 0)
+    return NS_OK;
+
+  mozStorageStatementScoper scoper(mDBUnregisterOpenPage);
+
+  rv = mDBUnregisterOpenPage->BindInt64Parameter(0, placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBUnregisterOpenPage->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
 // nsNavHistory::SetCharsetForURI
 //
 // Sets the character-set for a URI.
@@ -8154,6 +8248,8 @@ nsNavHistory::FinalizeStatements() {
     mDBUpdateFrecencyAndHidden,
     mDBGetPlaceVisitStats,
     mDBFullVisitCount,
+    mDBRegisterOpenPage,
+    mDBUnregisterOpenPage,
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
