@@ -25,12 +25,14 @@ function isEventOverElement(event, el){
   return isOver;
 }
 
+// ##########
 function Group(){}
 Group.prototype = {
   _children: [],
   _container: null,
   _padding: 30,
   
+  // ----------  
   _getBoundingBox: function(){
     var els = this._children;
     var el;
@@ -45,6 +47,7 @@ Group.prototype = {
     return boundingBox;
   },
   
+  // ----------  
   _getContainerBox: function(){
     var pos = $(this._container).position();
     var w = $(this._container).width();
@@ -59,7 +62,9 @@ Group.prototype = {
     }
   },
   
-  create: function(listOfEls){
+  // ----------  
+  create: function(listOfEls, manager) {
+    this.manager = manager;
     var self = this;
     this._children = $(listOfEls).toArray();
 
@@ -78,6 +83,11 @@ Group.prototype = {
       .data("group", this)
       .appendTo("body")
       .animate({opacity:1.0}).dequeue();
+    
+/*
+    var contentEl = $('<div class="group-content"/>')
+      .appendTo(container);
+*/
     
     var resizer = $("<div class='resizer'/>")
       .css({
@@ -132,24 +142,81 @@ Group.prototype = {
     }
     
     // ___ Push other objects away
-/*
-    var bb = Utils.getBounds(this._container);
-    $('.tab').each(function() {
-      $el = $(this);
-      if($el.data('group') != self) {
-        var box = Utils.getBounds(this);
-        if(box.intersects(bb)) {
-          if(box.right < bb.right) {
-            $el.animate({
-              left: box.left - (box.right - bb.left),       
-            });
-          }
-        }
-      }
-    });            
-*/
+    this.pushAway();
   },
   
+  // ----------  
+  pushAway: function() {
+    return; // TODO: not ready yet.
+    
+    var buffer = 10;
+    
+    var items = this.manager.getTopLevelItems();
+    $.each(items, function(index, item) {
+      item.pushAwayData = {};
+    });
+    
+    var pushOne = function(baseItem) {
+      baseItem.pushAwayData.anchored = true; 
+      var bb = baseItem.getBounds();
+      bb.inset(-buffer, -buffer);
+      var bbc = bb.center();
+    
+      $.each(items, function(index, item) {
+        if(item.pushAwayData.anchored)
+          return;
+          
+        var box = item.getBounds();
+        box.inset(-buffer, -buffer);
+        if(box.intersects(bb)) {
+          var offset = new Point();
+          var center = box.center(); 
+          if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
+            if(center.y > bbc.y)
+              offset.y = bb.bottom - box.top; 
+            else
+              offset.y = bb.top - box.bottom;
+          } else {
+            if(center.x > bbc.x)
+              offset.x = bb.right - box.left; 
+            else
+              offset.x = bb.left - box.right;
+          }
+
+/*           Utils.log(offset); */
+          item.setPosition(box.left + offset.x, box.top + offset.y);
+/*           pushOne(item); */
+        }
+      });
+    };            
+      
+    pushOne(this);
+  },
+  
+  // ----------  
+  getBounds: function() {
+    var $titlebar = $('.titlebar', this._container);
+    var bb = Utils.getBounds(this._container);
+    var titleHeight = $titlebar.height();
+    bb.top -= titleHeight;
+    bb.height += titleHeight;
+    return bb;
+  },
+  
+  // ----------  
+  setPosition: function(left, top) {
+    var box = this.getBounds();
+    var offset = new Point(left - box.left, top - box.top);
+    $.each(this._children, function(index, value) {
+      var $el = $(this);
+      box = Utils.getBounds(this);
+      $el.animate({left: box.left + offset.x, top: box.top + offset.y});
+    });
+        
+    $(this._container).animate({left: left, top: top});
+  },
+
+  // ----------  
   add: function($el, dropPos){
     Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
     var el = $el.get(0);
@@ -202,6 +269,7 @@ Group.prototype = {
     this.arrange();
   },
   
+  // ----------  
   remove: function(el){
     var self = this;
     $(el).data("toRemove", true);
@@ -229,6 +297,7 @@ Group.prototype = {
     
   },
   
+  // ----------  
   _updateGroup: function(){
     var self = this;
     this._children.forEach(function(el){
@@ -236,6 +305,7 @@ Group.prototype = {
     });    
   },
   
+  // ----------  
   arrange: function(options){
     if( options && options.animate == false ) animate = false;
     else animate = true;
@@ -293,6 +363,7 @@ Group.prototype = {
     
   },
   
+  // ----------  
   _addHandlers: function(container){
     var self = this;
     
@@ -348,6 +419,7 @@ Group.prototype = {
     }
 }
 
+// ##########
 var zIndex = 100;
 var $dragged = null;
 var timeout = null;
@@ -355,6 +427,7 @@ var timeout = null;
 window.Groups = {
   Group: Group, 
   
+  // ----------  
   dragOptions: {
     start:function(){
       $dragged = $(this);
@@ -369,6 +442,7 @@ window.Groups = {
     zIndex: 999,
   },
   
+  // ----------  
   dropOptions: {
     accept: ".tab",
     tolerance: "pointer",
@@ -400,7 +474,7 @@ window.Groups = {
           var group = $(target).data("group");
           if( group == null ){
             var group = new Group();
-            group.create( [target, dragged] );            
+            group.create([target, dragged], Groups);            
           } else {
             group.add( dragged );
           }
@@ -421,6 +495,7 @@ window.Groups = {
     }
   }, 
   
+  // ----------  
   arrange: function() {
     var $groups = $('.group');
     var count = $groups.length;
@@ -447,9 +522,27 @@ window.Groups = {
         y += h + padding;
       }
     });
-  }  
+  }, 
+  
+  // ----------  
+  getTopLevelItems: function() {
+    var items = [];
+    
+    $('.tab').each(function() {
+      $this = $(this);
+      if(!$this.data('group'))
+        items.push($this.data('tabItem'));
+    });
+    
+    $('.group').each(function() {
+      items.push($(this).data('group'));
+    });
+    
+    return items;
+  }
 };
 
+// ##########
 function scaleTab( el, factor ){  
   var $el = $(el);
 
