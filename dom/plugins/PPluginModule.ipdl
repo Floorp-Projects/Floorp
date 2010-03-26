@@ -80,6 +80,7 @@ child:
     returns (NPError rv);
 
 parent:
+  async XXX_HACK_FIXME_cjones(Shmem _);
   rpc NPN_UserAgent()
     returns (nsCString userAgent);
 
