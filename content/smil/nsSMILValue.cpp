@@ -38,6 +38,7 @@
 
 #include "nsSMILValue.h"
 #include "nsDebug.h"
+#include <string.h>
 
 //----------------------------------------------------------------------
 // Public methods
@@ -82,6 +83,19 @@ nsSMILValue::operator==(const nsSMILValue& aVal) const
     return PR_TRUE;
 
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
+}
+
+void
+nsSMILValue::Swap(nsSMILValue& aOther)
+{
+  nsSMILValue tmp;
+  memcpy(&tmp,    &aOther, sizeof(nsSMILValue));  // tmp    = aOther
+  memcpy(&aOther, this,    sizeof(nsSMILValue));  // aOther = this
+  memcpy(this,    &tmp,    sizeof(nsSMILValue));  // this   = tmp
+
+  // |tmp| is about to die -- we need to clear its mType, so that its
+  // destructor doesn't muck with the data we just transferred out of it.
+  tmp.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult
