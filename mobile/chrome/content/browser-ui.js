@@ -937,6 +937,55 @@ var PageActions = {
       lm.setLoginSavingEnabled(host.prePath, true);
   },
 
+  _savePageAsPDF: function saveAsPDF() {
+    let contentWindow = Browser.selectedBrowser.contentWindow;
+    let strings = Elements.browserBundle;
+    let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
+    picker.appendFilter("PDF", "*.pdf");
+    picker.defaultExtension = "pdf";
+    picker.defaultString = contentWindow.document.title + ".pdf";
+
+    let rv = picker.show();
+    if (rv == Ci.nsIFilePicker.returnCancel)
+      return;
+
+    let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                          .getService(Ci.nsIPrintSettingsService)
+                          .newPrintSettings;
+    printSettings.printSilent = true;
+    printSettings.showPrintProgress = false;
+    printSettings.printBGImages = true;
+    printSettings.printBGColors = true;
+    printSettings.printToFile = true;
+    printSettings.toFileName = picker.file.path;
+    printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+    printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+
+    //XXX we probably need a preference here, the header can be useful
+    printSettings.footerStrCenter = '';
+    printSettings.footerStrLeft   = '';
+    printSettings.footerStrRight  = '';
+    printSettings.headerStrCenter = '';
+    printSettings.headerStrLeft   = '';
+    printSettings.headerStrRight  = '';
+
+    let webBrowserPrint = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsIWebBrowserPrint);
+    webBrowserPrint.print(printSettings, null);
+  },
+
+  updatePageSaveAs: function updatePageSaveAs() {
+    if (Browser.selectedBrowser.contentDocument instanceof XULDocument)
+      return;
+
+    let strings = Elements.browserBundle;
+    let node = this.appendItem(strings.getString("pageactions.saveas.pdf"), "");
+    node.onclick = function(event) {
+      PageActions._savePageAsPDF();
+    }
+  },
+
   appendItem: function appendItem(aTitle, aDesc, aImage) {
     let container = document.getElementById("pageactions-container");
     let item = document.createElement("pageaction");
