@@ -90,7 +90,7 @@ function testSerializer () {
   encoder.init(doc, "text/html", de.OutputLFLineBreak);
   encoder.setCharset("UTF-8");
   result = encoder.encodeToString();
-  expected = '<!DOCTYPE HTML>\n<html><head><meta http-equiv=\"content-type\" content=\"text/html; \ncharset=UTF-8\">\n  <title>Test</title>\n';
+  expected = '<html><head><meta http-equiv=\"content-type\" content=\"text/html; \ncharset=UTF-8\">\n  <title>Test</title>\n';
   expected += '   <link rel=\"Top\" href=\"\"> ';
   expected += ' </head><body>foo \n\n\n  <p>Hello world</p>\n</body></html>';
   is(result, expected, "serialization of a link element with content, inside an html document");
