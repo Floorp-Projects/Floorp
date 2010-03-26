@@ -99,6 +99,9 @@ function ensure_results(aSearch, aExpected)
 
   controller.input = input;
 
+  if (typeof kSearchParam == "string")
+    input.searchParam = kSearchParam;
+
   let numSearchesStarted = 0;
   input.onSearchBegin = function() {
     numSearchesStarted++;
