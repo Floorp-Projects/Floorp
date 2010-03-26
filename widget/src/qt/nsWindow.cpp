@@ -552,10 +552,6 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         widget->showMinimized();
         break;
     case nsSizeMode_Fullscreen:
-        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
-        // unsynchronized window activation.  Sync here to avoid such
-        // cases.
-        XSync(QX11Info().display(), False);
         widget->showFullScreen();
         break;
 
@@ -575,16 +571,23 @@ nsWindow::SetSizeMode(PRInt32 aMode)
 // set to visible if one of their ancestors is invisible)
 static void find_first_visible_parent(QGraphicsItem* aItem, QGraphicsItem*& aVisibleItem)
 {
-    if (!aItem)
-        return;
+    NS_ENSURE_TRUE(aItem, );
 
-    if (!aVisibleItem && aItem->isVisible())
-        aVisibleItem = aItem;
-    else if (aVisibleItem && !aItem->isVisible())
-        aVisibleItem = nsnull;
-
-    // check further up the chain
-    find_first_visible_parent(aItem->parentItem(), aVisibleItem);
+    aVisibleItem = nsnull;
+    QGraphicsItem* parItem = nsnull;
+    while (!aVisibleItem) {
+        if (aItem->isVisible())
+            aVisibleItem = aItem;
+        else {
+            parItem = aItem->parentItem();
+            if (parItem)
+                aItem = parItem;
+            else {
+                aItem->setVisible(true);
+                aVisibleItem = aItem;
+            }
+        }
+    }
 }
 
 NS_IMETHODIMP
@@ -597,7 +600,10 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!mWidget)
         return NS_ERROR_FAILURE;
 
-    // Because QGraphicsItem cannot get the focus if they are 
+    if (mWidget->hasFocus())
+        return NS_OK;
+
+    // Because QGraphicsItem cannot get the focus if they are
     // invisible, we look up the chain, for the lowest visible
     // parent and focus that one
     QGraphicsItem* realFocusItem = nsnull;
@@ -669,6 +675,8 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 
     if (!mWidget)
         return NS_OK;
+
+    mDirtyScrollArea = mDirtyScrollArea.united(QRect(aRect.x, aRect.y, aRect.width, aRect.height));
 
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
@@ -1941,10 +1949,6 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
-        // unsynchronized window activation.  Sync here to avoid such
-        // cases.
-        XSync(QX11Info().display(), False);
         widget->showFullScreen();
     }
     else {
@@ -1965,10 +1969,10 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
             break;
         }
     }
-    
+
     NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
                  "mLastSizeMode should never be fullscreen");
-    return NS_OK;
+    return nsBaseWidget::MakeFullScreen(aFullScreen);
 }
 
 NS_IMETHODIMP
