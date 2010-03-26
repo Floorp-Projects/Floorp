@@ -99,7 +99,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 class QEvent;
 
 class MozQWidget;
-class QGraphicsScene;
 
 class nsWindow : public nsBaseWidget,
                  public nsSupportsWeakReference
@@ -371,7 +370,7 @@ private:
     double mTouchPointDistance;
     double mLastPinchDistance;
     PRBool mMouseEventsDisabled;
- #endif
+#endif
 
     PRPackedBool mNeedsResize;
     PRPackedBool mNeedsMove;
