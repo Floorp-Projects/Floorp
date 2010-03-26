@@ -385,7 +385,6 @@ PluginModuleChild::ProcessBrowserEvents(gpointer data)
     NS_ABORT_IF_FALSE(pmc->mTopLoopDepth < g_main_depth(),
                       "not canceled before returning to main event loop!");
 
-    PluginModuleChild* pmc = static_cast<PluginModuleChild*>(data);
     pmc->CallProcessSomeEvents();
 
     return TRUE;
