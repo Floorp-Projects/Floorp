@@ -302,6 +302,9 @@ ArrangeClass.prototype = {
 
 //----------------------------------------------------------
 var grid = new ArrangeClass("Grid", function(value) {
+  if(typeof(Groups) != 'undefined')
+    Groups.removeAll();
+
   var immediately = false;
   if(typeof(value) == 'boolean')
     immediately = value;
@@ -331,6 +334,8 @@ var grid = new ArrangeClass("Grid", function(value) {
     
 //----------------------------------------------------------
 var site = new ArrangeClass("Site", function() {
+  Groups.removeAll();
+  
   var startX = 30;
   var startY = 100;
   var x = startX;
@@ -342,34 +347,32 @@ var site = new ArrangeClass("Site", function() {
     $el = $(this);
     var tab = Tabs.tab(this);
     
-    var group = $el.data('group');
-    if(group)
-      group.remove(this);
-      
     var url = tab.url; 
     var domain = url.split('/')[2]; 
     var domainParts = domain.split('.');
     var mainDomain = domainParts[domainParts.length - 2];
     if(groups[mainDomain]) 
-      groups[mainDomain].push(this);
+      groups[mainDomain].push($(this));
     else 
-      groups[mainDomain] = [this];
+      groups[mainDomain] = [$(this)];
   });
+  
+  var createOptions = {suppressPush: true};
   
   var leftovers = [];
   for(key in groups) {
     var set = groups[key];
     if(set.length > 1) {
       group = new Groups.Group();
-      group.create(set);            
+      group.create(set, createOptions);            
     } else
       leftovers.push(set[0]);
   }
   
-  if(leftovers.length > 1) {
+/*   if(leftovers.length > 1) { */
     group = new Groups.Group();
-    group.create(leftovers);            
-  }
+    group.create(leftovers, createOptions);            
+/*   } */
   
   Groups.arrange();
 });
