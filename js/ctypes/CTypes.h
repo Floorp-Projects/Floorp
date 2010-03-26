@@ -245,6 +245,7 @@ public:
   static JSObject* GetBaseType(JSContext* cx, JSObject* obj);
 
   static JSBool TargetTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ContentsGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
   static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
 };
