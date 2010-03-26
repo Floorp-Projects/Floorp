@@ -196,7 +196,6 @@
 #endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
-@BINPATH@/components/microsummaries.xpt
 #ifndef WINCE
 @BINPATH@/components/migration.xpt
 #endif
