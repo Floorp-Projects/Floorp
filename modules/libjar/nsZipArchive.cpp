@@ -526,15 +526,17 @@ nsresult nsZipArchive::BuildFileList()
   PRUint8* startp = mFd->mFileData;
   PRUint8* endp = startp + mFd->mLen;
 
-  for (buf = endp - ZIPEND_SIZE; xtolong(buf) != ENDSIG; buf--)
+  PRUint32 centralOffset = 0;
+  for (buf = endp - ZIPEND_SIZE; buf > startp; buf--)
   {
-    if (buf == startp) {
-      // We're at the beginning of the file, and still no sign
-      // of the end signature.  File must be corrupted!
-      return NS_ERROR_FILE_CORRUPTED;
+    if (xtolong(buf) == ENDSIG) {
+      centralOffset = xtolong(((ZipEnd *)buf)->offset_central_dir);
+      break;
     }
   }
-  PRUint32 centralOffset = xtolong(((ZipEnd *)buf)->offset_central_dir);
+
+  if (!centralOffset)
+    return NS_ERROR_FILE_CORRUPTED;
 
   //-- Read the central directory headers
   buf = startp + centralOffset;
