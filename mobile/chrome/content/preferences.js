@@ -37,7 +37,7 @@
 
 var PreferencesView = {
   _currentLocale: null,
-  _list: null,
+  _languages: null,
   _msg: null,
   _restartCount: 0,
 
@@ -115,7 +115,7 @@ var PreferencesView = {
   },
 
   _delayedInit: function ev__delayedInit() {
-    if (this._list)
+    if (this._languages)
       return;
 
 #ifdef WINCE
@@ -123,8 +123,10 @@ var PreferencesView = {
     document.getElementById("prefs-default-browser").value = phone.isDefaultBrowser(false);
 #endif
 
-    this._list = document.getElementById("prefs-languages");
+    this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
+
+    this._loadHomePage();
   },
 
   _loadLocales: function _loadLocales() {
@@ -148,7 +150,7 @@ var PreferencesView = {
       } catch (e) {
         label = locale;
       }
-      let item = this._list.appendItem(label, locale);
+      let item = this._languages.appendItem(label, locale);
       if (locale == selectedLocale) {
         this._currentLocale = locale;
         selectedItem = item;
@@ -165,9 +167,9 @@ var PreferencesView = {
     
     // Highlight current locale (or auto-detect entry)
     if (autoDetect)
-      this._list.selectedItem = document.getElementById("prefs-languages-auto");
+      this._languages.selectedItem = document.getElementById("prefs-languages-auto");
     else
-      this._list.selectedItem = selectedItem;
+      this._languages.selectedItem = selectedItem;
     
     // Hide the setting if we only have one locale
     if (localeCount == 1)
@@ -176,7 +178,7 @@ var PreferencesView = {
   
   updateLocale: function updateLocale() {
     // Which locale did the user select?
-    let newLocale = this._list.selectedItem.value;
+    let newLocale = this._languages.selectedItem.value;
     
     if (newLocale == "auto") {
       if (gPrefService.prefHasUserValue("general.useragent.locale"))
@@ -192,5 +194,74 @@ var PreferencesView = {
       this.hideRestart();
     else
       this.showRestart();
-  }  
+  },
+
+  _loadHomePage: function _loadHomePage() {
+    let url = Browser.getHomePage();
+    let value = "default";
+    let display = url;
+
+    switch (url) {
+      case "about:blank":
+        value = "none";
+        display = "";
+        break;
+      case "about:home":
+        value = "default";
+        display = "";
+        break;
+      default:
+        value = "custom";
+        break;
+    }
+
+    // Show or hide the URL of the custom homepage
+    document.getElementById("prefs-homepage").setAttribute("desc", display);
+  
+    // Select the homepage option
+    let options = document.getElementById("prefs-homepage-options");
+    if (value == "custom") {
+      // Make sure nothing is selected and just use a label to show the state
+      options.selectedIndex = -1;
+      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom"));
+    } else {
+      // Select the right menulist item
+      options.value = value;
+    }
+  },
+
+  updateHomePage: function updateHomePage() {
+    let url = "about:home";
+    let options = document.getElementById("prefs-homepage-options");
+    let value = options.selectedItem.value;
+    let display = "";
+
+    switch (value) {
+      case "none":
+        url = "about:blank";
+        break;
+      case "default":
+        url = "about:home";
+        break;
+      case "custom":
+        url = Browser.selectedBrowser.currentURI.spec;
+        display = url;
+        break;
+    }
+
+    // Show or hide the URL of the custom homepage
+    document.getElementById("prefs-homepage").setAttribute("desc", display);
+
+    let options = document.getElementById("prefs-homepage-options");
+    if (value == "custom") {
+      // Make sure nothing is selected and just use a label to show the state
+      options.selectedIndex = -1;
+      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom"));
+    }
+
+    // Save the homepage URL to a preference
+    let pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
+    pls.data = url;
+    gPrefService.setComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString, pls);
+  }
 };

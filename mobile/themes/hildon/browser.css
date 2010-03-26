@@ -189,8 +189,6 @@ toolbarbutton.urlbar-cap-button {
   -moz-appearance: none !important;
   padding: 0px !important;
   border: none !important;
-  color: #000;
-  background-color: #fff;
 }
 
 /* make sure this endcap matches the other endcap */

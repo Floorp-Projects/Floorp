@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutHome.dtd" >
+%aboutDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Finkle <mfinkle@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&urlbar.emptytext;</title>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutHome.css" type="text/css"/>
+  <script type="application/javascript;version=1.8"><![CDATA[
+    let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
+    let gChromeWin = null;
+    
+    function getChromeWin() {
+      if (!gChromeWin) {
+        gChromeWin = window
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+      }
+      return gChromeWin;
+    }
+
+    function init() {
+      initTabs();
+      initWeave();
+      initAddons();
+    }
+
+    function _readFile(aFile) {
+      try {
+        let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+        stream.init(aFile, 0x01, 0, 0);
+        let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+  
+        let fileSize = stream.available();  
+        cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+        let data = {};
+        cvstream.readString(fileSize, data);
+        let content = data.value;
+        cvstream.close();
+        return content.replace(/\r\n?/g, "\n");
+      }
+      catch (ex) { Cu.reportError(ex); }
+  
+      return null;
+    }
+
+    function openTabs(aURLs) {
+      let BrowserUI = getChromeWin().BrowserUI;
+      let urls = aURLs.split("|");
+      for (let i=0; i< urls.length; i++) {
+        BrowserUI.newTab(urls[i]);
+      }
+    }
+
+    function initTabs() {
+      let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      let session = dirService.get("ProfD", Ci.nsILocalFile);
+      session.append("sessionstore.bak");
+
+      let data = JSON.parse(_readFile(session));
+      if (!data || data.windows.length == 0)
+        return;
+
+      let chromeWin = getChromeWin();
+      let allPageURLs = [];
+      
+      let tabs = data.windows[0].tabs;
+      let count = Math.min(5, tabs.length);
+      let list = document.getElementById("recentTabs");
+      for (let i=0; i<count; i++) {
+        let url = tabs[i].url;
+        if (url.indexOf("about:") == 0)
+          continue;
+
+        let title = tabs[i].title;
+        if (!title)
+          continue;
+
+        let uri = chromeWin.makeURI(url);
+        let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
+
+        let outer = document.createElement("div");
+
+        let pageURL = url;
+        outer.addEventListener("click", function() {
+          openTabs(pageURL);
+        }, false);
+        
+        allPageURLs.push(pageURL);
+
+        let img = document.createElement("img");
+        img.className = "favicon";
+        img.setAttribute("src", favicon);
+        outer.appendChild(img);
+
+        let inner = document.createElement("div");
+        inner.className = "inner";
+
+        let titlePart = document.createElement("div");
+        titlePart.textContent = title;
+        titlePart.className = "title";
+        inner.appendChild(titlePart);
+
+        outer.appendChild(inner);
+        list.appendChild(outer);
+      }
+      
+      if (allPageURLs.length > 0) {
+        let outer = document.createElement("div");
+        outer.className = "openall";
+        outer.textContent = document.getElementById("text-openalltabs").textContent;
+
+        outer.addEventListener("click", function() {
+          openTabs(allPageURLs.join("|"));
+        }, false);
+
+        list.appendChild(outer);
+      } else {
+        list.style.display = "none";
+      }
+    }
+
+    function initWeave() {
+      let em = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);  
+      let weave = em.getItemForID("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+      if (!weave || !getChromeWin().WeaveGlue)
+        document.getElementById("remoteTabs").style.display = "none";
+    }
+
+    function openRemoteTabs() {
+      getChromeWin().WeaveGlue.openRemoteTabs();
+    }
+
+    function goToAddons(aSearchString) {
+      let chromeWin = getChromeWin();
+      let BrowserUI = chromeWin.BrowserUI;
+      BrowserUI.showPanel("addons-container");
+      if (aSearchString) {
+        // ExtensionsView initialization is delayed, so need to delay triggering
+        // the search as well
+        setTimeout(function () {
+          // do the search
+          chromeWin.ExtensionsView.doSearch(aSearchString);
+        }, 0);
+      }
+    }
+
+    var RecommendedSearchResults = {
+      searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
+        let list = document.getElementById("newAddons");
+        if (aAddons.length == 0) {
+          list.style.display = "none";
+          return;
+        }
+
+        for (let i=0; i<aAddons.length; i++) {  
+          let outer = document.createElement("div");
+          outer.setAttribute("addonID", aAddons[i].id);
+  
+          let addonName = aAddons[i].name;
+          outer.addEventListener("click", function() {
+            goToAddons(addonName);
+          }, false)
+  
+          let img = document.createElement("img");
+          img.className = "favicon";
+          img.setAttribute("src", aAddons[i].iconURL);
+          outer.appendChild(img);
+  
+          let inner = document.createElement("div");
+          inner.className = "inner";
+  
+          let titlePart = document.createElement("span");
+          titlePart.textContent = aAddons[i].name;
+          titlePart.className = "title";
+          inner.appendChild(titlePart);
+  
+          let versionPart = document.createElement("span");
+          versionPart.textContent = aAddons[i].version;
+          versionPart.className = "version";
+          inner.appendChild(versionPart);
+  
+          outer.appendChild(inner);
+          list.appendChild(outer);
+        }
+      },
+    
+      searchFailed: function searchFailed() {}
+    }
+
+    const kAddonsMaxDisplay = 2;
+
+    function initAddons() {
+      let repository = "@mozilla.org/extensions/addon-repository;1";
+      let repo = Cc[repository].createInstance(Ci.nsIAddonRepository);
+      if (repo.isSearching)
+        repo.cancelSearch();
+      repo.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
+    }
+  ]]></script>
+</head>
+
+<body dir="&locale.dir;" onload="init();">
+  <div id="wrapper">
+    <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div><span>&brandShortName; </span><span id="header-suffix">&aboutHome.start;</span></div>
+
+    <div id="recentTabs" class="section-box">
+      <h1>&aboutHome.recentTabs;</h1>
+    </div>
+
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();">
+      <div>
+        <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
+        <div>&aboutHome.remoteTabs;</div>
+      </div>
+    </div>
+
+    <div id="newAddons" class="section-box">
+      <h1>&aboutHome.recommendedAddons;</h1>
+    </div>
+
+    <div id="about">
+    	 <img src="http://mozilla.org/favicon.ico"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
+    </div>
+  </div>
+
+  <!-- l10n hack -->
+  <div style="display: none">
+    <span id="text-openalltabs">&aboutHome.openAllTabs;</span>
+  </div>
+</body>
+</html>
