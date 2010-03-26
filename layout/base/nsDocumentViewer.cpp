@@ -428,7 +428,7 @@ protected:
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // may be null
   nsCOMPtr<nsIViewManager> mViewManager;
-  nsCOMPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
 
   nsCOMPtr<nsISelectionListener> mSelectionListener;
@@ -1315,7 +1315,7 @@ AttachContainerRecurse(nsIDocShell* aShell)
     if (doc) {
       doc->SetContainer(aShell);
     }
-    nsCOMPtr<nsPresContext> pc;
+    nsRefPtr<nsPresContext> pc;
     docViewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetContainer(aShell);
@@ -1443,7 +1443,7 @@ DetachContainerRecurse(nsIDocShell *aShell)
     if (doc) {
       doc->SetContainer(nsnull);
     }
-    nsCOMPtr<nsPresContext> pc;
+    nsRefPtr<nsPresContext> pc;
     docViewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetContainer(nsnull);
@@ -3181,7 +3181,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
   nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-   nsCOMPtr<nsPresContext> presContext;
+   nsRefPtr<nsPresContext> presContext;
    GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

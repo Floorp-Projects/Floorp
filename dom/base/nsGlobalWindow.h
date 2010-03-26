@@ -562,6 +562,7 @@ protected:
 
   // The timeout implementation functions.
   void RunTimeout(nsTimeout *aTimeout);
+  void RunTimeout() { RunTimeout(nsnull); }
 
   void ClearAllTimeouts();
   // Insert aTimeout into the list, before all timeouts that would

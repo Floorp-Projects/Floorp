@@ -2,10 +2,9 @@
 /*                                                                         */
 /*  ftbitmap.h                                                             */
 /*                                                                         */
-/*    FreeType utility functions for converting 1bpp, 2bpp, 4bpp, and 8bpp */
-/*    bitmaps into 8bpp format (specification).                            */
+/*    FreeType utility functions for bitmaps (specification).              */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2008 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -121,7 +120,7 @@ FT_BEGIN_HEADER
   /*    or equal to~8 if bitmap is of pixel_mode @FT_PIXEL_MODE_MONO.      */
   /*                                                                       */
   /*    If you want to embolden the bitmap owned by a @FT_GlyphSlotRec,    */
-  /*    you should call `FT_GlyphSlot_Own_Bitmap' on the slot first.       */
+  /*    you should call @FT_GlyphSlot_Own_Bitmap on the slot first.        */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Bitmap_Embolden( FT_Library  library,
@@ -168,6 +167,28 @@ FT_BEGIN_HEADER
                      const FT_Bitmap  *source,
                      FT_Bitmap        *target,
                      FT_Int            alignment );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_GlyphSlot_Own_Bitmap                                            */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Make sure that a glyph slot owns `slot->bitmap'.                   */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    slot :: The glyph slot.                                            */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    This function is to be used in combination with                    */
+  /*    @FT_Bitmap_Embolden.                                               */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_GlyphSlot_Own_Bitmap( FT_GlyphSlot  slot );
 
 
   /*************************************************************************/

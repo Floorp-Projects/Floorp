@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,14 +35,18 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 SFNT Names
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#FT_SfntName">FT_SfntName</a></td><td></td><td><a href="#FT_Get_Sfnt_Name_Count">FT_Get_Sfnt_Name_Count</a></td><td></td><td><a href="#FT_Get_Sfnt_Name">FT_Get_Sfnt_Name</a></td></tr>
+<tr><td></td><td><a href="#FT_SfntName">FT_SfntName</a></td></tr>
+<tr><td></td><td><a href="#FT_Get_Sfnt_Name_Count">FT_Get_Sfnt_Name_Count</a></td></tr>
+<tr><td></td><td><a href="#FT_Get_Sfnt_Name">FT_Get_Sfnt_Name</a></td></tr>
+<tr><td></td><td><a href="#FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY">FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY</a></td></tr>
+<tr><td></td><td><a href="#FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY">FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY</a></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -177,9 +181,47 @@ Defined in FT_SFNT_NAMES_H (freetype/ftsnames.h).
 <p>FreeType error code. 0&nbsp;means success.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>The &lsquo;string&rsquo; array returned in the &lsquo;aname&rsquo; structure is not null-terminated.</p>
+<p>The &lsquo;string&rsquo; array returned in the &lsquo;aname&rsquo; structure is not null-terminated. The application should deallocate it if it is no longer in use.</p>
 <p>Use <a href="ft2-sfnt_names.html#FT_Get_Sfnt_Name_Count">FT_Get_Sfnt_Name_Count</a> to get the total number of available &lsquo;name&rsquo; table entries, then do a loop until you get the right platform, encoding, and name ID.</p>
 </td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY">FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY</a></h4>
+<table align=center width="87%"><tr><td>
+Defined in FT_SFNT_NAMES_H (freetype/ftsnames.h).
+</td></tr></table><br>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+#define <b>FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY</b>  <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'i', 'g', 'p', 'f' )
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>A constant used as the tag of <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structures to make FT_Open_Face() ignore preferred family subfamily names in &lsquo;name&rsquo; table since OpenType version 1.4. For backwards compatibility with legacy systems which has 4-face-per-family restriction.</p>
+</td></tr></table><br>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY">FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY</a></h4>
+<table align=center width="87%"><tr><td>
+Defined in FT_SFNT_NAMES_H (freetype/ftsnames.h).
+</td></tr></table><br>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+#define <b>FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY</b>  <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'i', 'g', 'p', 's' )
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>A constant used as the tag of <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structures to make FT_Open_Face() ignore preferred subfamily names in &lsquo;name&rsquo; table since OpenType version 1.4. For backwards compatibility with legacy systems which has 4-face-per-family restriction.</p>
+</td></tr></table><br>
 </td></tr></table>
 <hr width="75%">
 <table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>

@@ -38,14 +38,20 @@ I. Standard procedure
 
       src/base/ftbdf.c        -- optional, see <freetype/ftbdf.h>
       src/base/ftbitmap.c     -- optional, see <freetype/ftbitmap.h>
+      src/base/ftcid.c        -- optional, see <freetype/ftcid.h>
+      src/base/ftfstype.c     -- optional
+      src/base/ftgasp.c       -- optional, see <freetype/ftgasp.h>
       src/base/ftgxval.c      -- optional, see <freetype/ftgxval.h>
+      src/base/ftlcdfil.c     -- optional, see <freetype/ftlcdfil.h>
       src/base/ftmm.c         -- optional, see <freetype/ftmm.h>
       src/base/ftotval.c      -- optional, see <freetype/ftotval.h>
+      src/base/ftpatent.c     -- optional
       src/base/ftpfr.c        -- optional, see <freetype/ftpfr.h>
       src/base/ftstroke.c     -- optional, see <freetype/ftstroke.h>
       src/base/ftsynth.c      -- optional, see <freetype/ftsynth.h>
       src/base/fttype1.c      -- optional, see <freetype/t1tables.h>
       src/base/ftwinfnt.c     -- optional, see <freetype/ftwinfnt.h>
+      src/base/ftxf86.c       -- optional, see <freetype/ftxf86.h>
 
       src/base/ftmac.c        -- only on the Macintosh
 
@@ -63,8 +69,8 @@ I. Standard procedure
       src/type42/type42.c     -- Type 42 font driver
       src/winfonts/winfnt.c   -- Windows FONT / FNT font driver
 
-    -- rasterizers (optional; at least one is needed for
-       vector formats)
+    -- rasterizers (optional; at least one is needed for vector
+       formats)
 
       src/raster/raster.c     -- monochrome rasterizer
       src/smooth/smooth.c     -- anti-aliasing rasterizer
@@ -83,6 +89,12 @@ I. Standard procedure
 
 
     Notes:
+
+      `ftcache.c'  needs `ftglyph.c'
+      `ftfstype.c' needs `fttype1.c'
+      `ftglyph.c'  needs `ftbitmap.c'
+      `ftstroke.c' needs `ftglyph.c'
+      `ftsynth.c'  needs `ftbitmap.c'
 
       `cff.c'      needs `sfnt.c', `pshinter.c', and `psnames.c'
       `truetype.c' needs `sfnt.c' and `psnames.c'
@@ -115,10 +127,10 @@ II. Support for flat-directory compilation
 
   2. Compile sources
 
-      cc -c -Ifreetype2/include ftsystem.c
-      cc -c -Ifreetype2/include ftinit.c
-      cc -c -Ifreetype2/include ftdebug.c
-      cc -c -Ifreetype2/include ftbase.c
+      cc -c -Ifreetype2/include -DFT2_BUILD_LIBRARY ftsystem.c
+      cc -c -Ifreetype2/include -DFT2_BUILD_LIBRARY ftinit.c
+      cc -c -Ifreetype2/include -DFT2_BUILD_LIBRARY ftdebug.c
+      cc -c -Ifreetype2/include -DFT2_BUILD_LIBRARY ftbase.c
       etc.
 
     You don't  need to define  the FT_FLAT_COMPILATION macro  (as this
@@ -126,7 +138,7 @@ II. Support for flat-directory compilation
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005, 2006 by
+Copyright 2003, 2005, 2006, 2009, 2010 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

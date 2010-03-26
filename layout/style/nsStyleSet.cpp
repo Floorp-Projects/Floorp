@@ -664,7 +664,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 // of the rules and doesn't walk !important-rules.
 void
 nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
-                               RuleProcessorData* aData)
+                               RuleProcessorData* aData,
+                               PRBool aWalkAllXBLStylesheets)
 {
   NS_PRECONDITION(SheetCount(ePresHintSheet) == 0 ||
                   SheetCount(eHTMLPresHintSheet) == 0,
@@ -685,7 +686,11 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
-    mBindingManager->WalkRules(aFunc, aData, &cutOffInheritance);
+    if (aWalkAllXBLStylesheets) {
+      mBindingManager->WalkAllRules(aFunc, aData);
+    } else {
+      mBindingManager->WalkRules(aFunc, aData, &cutOffInheritance);
+    }
   }
   if (!skipUserStyles && !cutOffInheritance &&
       mRuleProcessors[eDocSheet]) // NOTE: different
@@ -1093,7 +1098,7 @@ nsStyleSet::HasDocumentStateDependentStyle(nsPresContext* aPresContext,
     return PR_FALSE;
 
   StatefulData data(aPresContext, aContent, aStateMask);
-  WalkRuleProcessors(SheetHasDocumentStateStyle, &data);
+  WalkRuleProcessors(SheetHasDocumentStateStyle, &data, PR_TRUE);
   return data.mHint != 0;
 }
 
@@ -1116,7 +1121,7 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
 
   if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
     StatefulData data(aPresContext, aContent, aStateMask);
-    WalkRuleProcessors(SheetHasStatefulStyle, &data);
+    WalkRuleProcessors(SheetHasStatefulStyle, &data, PR_FALSE);
     result = data.mHint;
   }
 
@@ -1156,7 +1161,7 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
   if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
     AttributeData data(aPresContext, aContent, aAttribute, aModType,
                        aAttrHasChanged);
-    WalkRuleProcessors(SheetHasAttributeStyle, &data);
+    WalkRuleProcessors(SheetHasAttributeStyle, &data, PR_FALSE);
     result = data.mHint;
   }
 

@@ -2064,7 +2064,7 @@ nsXULElement::Click()
         nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
         if (shell) {
             // strong ref to PresContext so events don't destroy it
-            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+            nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
             PRBool isCallerChrome = nsContentUtils::IsCallerChrome();
 

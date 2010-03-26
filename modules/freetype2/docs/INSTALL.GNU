@@ -35,7 +35,7 @@ in the file INSTALL.UNIX instead.
 
     to display its version number.
 
-    VERSION 3.78.1 OR NEWER IS NEEDED!
+    VERSION 3.80 OR NEWER IS NEEDED!
 
 
   2. Invoke `make'
@@ -146,7 +146,7 @@ in the file INSTALL.UNIX instead.
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2004, 2005, 2006 by
+Copyright 2003, 2004, 2005, 2006, 2008 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

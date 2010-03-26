@@ -166,6 +166,8 @@ function writeSubmittedReport(crashID, viewURL) {
   let reportFile = directoryService.get("UAppData", Ci.nsIFile);
   reportFile.append("Crash Reports");
   reportFile.append("submitted");
+  if (!reportFile.exists())
+    reportFile.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
   reportFile.append(crashID + ".txt");
   var fstream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);

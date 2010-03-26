@@ -28,6 +28,7 @@ import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NsUri;
 import nu.validator.htmlparser.annotation.Prefix;
 import nu.validator.htmlparser.annotation.QName;
+import nu.validator.htmlparser.common.Interner;
 import nu.validator.htmlparser.common.XmlViolationPolicy;
 
 import org.xml.sax.Attributes;
@@ -447,6 +448,25 @@ public final class HtmlAttributes implements Attributes {
         mode = AttributeName.SVG;
     }
 
+    public HtmlAttributes cloneAttributes(Interner interner) throws SAXException {
+        assert (length == 0 && xmlnsLength == 0) || mode == 0 || mode == 3;
+        HtmlAttributes clone = new HtmlAttributes(0);
+        for (int i = 0; i < length; i++) {
+            clone.addAttribute(names[i].cloneAttributeName(interner), Portability.newStringFromString(values[i])
+            // [NOCPP[
+                   , XmlViolationPolicy.ALLOW
+            // ]NOCPP]
+            );
+        }
+        // [NOCPP[
+        for (int i = 0; i < xmlnsLength; i++) {
+            clone.addAttribute(xmlnsNames[i],
+                    xmlnsValues[i], XmlViolationPolicy.ALLOW);
+        }
+        // ]NOCPP]
+        return clone; // XXX!!!
+    }
+    
     // [NOCPP[
     
     void processNonNcNames(TreeBuilder<?> treeBuilder, XmlViolationPolicy namePolicy) throws SAXException {
@@ -480,6 +500,7 @@ public final class HtmlAttributes implements Attributes {
             }
         }
     }
+
 
     // ]NOCPP]
     

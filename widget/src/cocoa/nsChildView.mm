@@ -474,6 +474,9 @@ nsChildView::nsChildView() : nsBaseWidget()
   }
 #endif // PR_LOGGING
 
+  memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
+  memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
+
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
 }
@@ -4509,6 +4512,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #ifndef NP_NO_CARBON
     EventRecord carbonEvent;
 #endif
+    NPCocoaEvent cocoaEvent;
     if (mCurKeyEvent) {
       // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
       // might send the keyDown event with wrong keyboard layout if other
@@ -4518,11 +4522,13 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       if (mPluginEventModel == NPEventModelCarbon) {
         ConvertCocoaKeyEventToCarbonEvent(mCurKeyEvent, carbonEvent);
         geckoEvent.pluginEvent = &carbonEvent;
-      } else
-#endif
-      {
-        geckoEvent.pluginEvent = NULL;
       }
+#endif
+      if (mPluginEventModel == NPEventModelCocoa) {
+        ConvertCocoaKeyEventToNPCocoaEvent(mCurKeyEvent, cocoaEvent);
+        geckoEvent.pluginEvent = &cocoaEvent;
+      }
+
       geckoEvent.isShift = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
       if (!IsPrintableChar(geckoEvent.charCode)) {
         geckoEvent.keyCode = 
@@ -4912,6 +4918,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 #endif
 
 // Returns PR_TRUE if Gecko claims to have handled the event, PR_FALSE otherwise.
+// We only send Carbon plugin events with NS_KEY_DOWN gecko events, and only send
+// Cocoa plugin events with NS_KEY_PRESS gecko events. This is because we want to
+// send repeat key down events to Cocoa plugins but not Carbon plugins.
 - (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -4941,7 +4950,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
       [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
-      // create event for use by plugins
 #ifndef NP_NO_CARBON
       EventRecord carbonEvent;
       if (mPluginEventModel == NPEventModelCarbon) {
@@ -4949,11 +4957,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         geckoEvent.pluginEvent = &carbonEvent;
       }
 #endif
-      NPCocoaEvent cocoaEvent;
-      if (mPluginEventModel == NPEventModelCocoa) {
-        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-        geckoEvent.pluginEvent = &cocoaEvent;
-      }
 
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
@@ -4995,16 +4998,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
-      // create event for use by plugins
-#ifndef NP_NO_CARBON
-      EventRecord carbonEvent;
-      if (mPluginEventModel == NPEventModelCarbon) {
-        ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.pluginEvent = &carbonEvent;
-      } else
-#endif
-      {
-        geckoEvent.pluginEvent = NULL;
+      NPCocoaEvent cocoaEvent;
+      if (mPluginEventModel == NPEventModelCocoa) {
+        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
+        geckoEvent.pluginEvent = &cocoaEvent;
       }
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5040,16 +5037,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
-      // create event for use by plugins
-#ifndef NP_NO_CARBON
-      EventRecord carbonEvent;
-      if (mPluginEventModel == NPEventModelCarbon) {
-        ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.pluginEvent = &carbonEvent;
-      } else
-#endif
-      {
-        geckoEvent.pluginEvent = NULL;
+      NPCocoaEvent cocoaEvent;
+      if (mPluginEventModel == NPEventModelCocoa) {
+        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
+        geckoEvent.pluginEvent = &cocoaEvent;
       }
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5204,9 +5195,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
-
-  // plugin case returned out early, we don't need a native event here
-  geckoEvent.pluginEvent = NULL;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 

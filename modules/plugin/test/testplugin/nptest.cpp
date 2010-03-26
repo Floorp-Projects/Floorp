@@ -157,6 +157,7 @@ static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -199,6 +200,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getClipboardText",
   "callOnDestroy",
   "crashInNestedLoop",
+  "reinitWidget",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -242,6 +244,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getClipboardText,
   callOnDestroy,
   crashPluginInNestedLoop,
+  reinitWidget,
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -2686,5 +2689,21 @@ callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
   return true;
 }
 
-  
-  
+// On Linux at least, a windowed plugin resize causes Flash Player to
+// reconnect to the browser window.  This method simulates that.
+bool
+reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+             NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  if (!id->hasWidget)
+    return false;
+
+  pluginWidgetInit(id, id->window.window);
+  return true;
+}

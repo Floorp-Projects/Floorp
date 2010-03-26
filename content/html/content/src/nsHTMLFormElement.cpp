@@ -392,7 +392,7 @@ nsHTMLFormElement::Submit()
 {
   // Send the submit event
   nsresult rv = NS_OK;
-  nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
   if (mPendingSubmission) {
     // aha, we have a pending submission that was not flushed
     // (this happens when form.submit() is called twice)

@@ -1,4 +1,5 @@
-#  Content (c) 2002, 2004, 2006, 2007, 2008 David Turner <david@freetype.org>
+#  Content (c) 2002, 2004, 2006, 2007, 2008, 2009
+#    David Turner <david@freetype.org>
 #
 #  This file contains routines used to parse the content of documentation
 #  comment blocks and build more structured objects out of them.
@@ -153,7 +154,7 @@ class  DocField:
             if mode == mode_code:
                 m = re_code_end.match( l )
                 if m and len( m.group( 1 ) ) <= margin:
-                    # that's it, we finised the code sequence
+                    # that's it, we finished the code sequence
                     code = DocCode( 0, cur_lines )
                     self.items.append( code )
                     margin    = -1
@@ -321,7 +322,7 @@ class  DocSection:
         self.blocks[block.name] = block
 
     def  process( self ):
-        # lookup one block that contains a valid section description
+        # look up one block that contains a valid section description
         for block in self.defs:
             title = block.get_markup_text( "title" )
             if title:
@@ -539,9 +540,10 @@ class  DocBlock:
         while start < end and not string.strip( source[end] ):
             end = end - 1
 
-        source = source[start:end + 1]
-
-        self.code = source
+        if start == end and not string.strip( source[start] ):
+            self.code = []
+        else:
+            self.code = source[start:end + 1]
 
     def  location( self ):
         return self.source.location()

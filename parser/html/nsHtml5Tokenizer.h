@@ -50,7 +50,6 @@
 #include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5StreamParser;
-class nsHtml5SpeculativeLoader;
 
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
@@ -347,7 +346,6 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = 0;
 jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #endif
 
-#define NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD 8000
 #define NS_HTML5TOKENIZER_DATA 0
 #define NS_HTML5TOKENIZER_RCDATA 1
 #define NS_HTML5TOKENIZER_SCRIPT_DATA 2

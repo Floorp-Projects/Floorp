@@ -333,7 +333,8 @@ class nsStyleSet
   // Enumerate all the rules in a way that doesn't care about the order
   // of the rules and break out if the enumeration is halted.
   void WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
-                          RuleProcessorData* aData);
+                          RuleProcessorData* aData,
+                          PRBool aWalkAllXBLStylesheets);
 
   already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
                                               nsStyleContext* aParentContext,

@@ -96,7 +96,8 @@ RPCChannel::RPCChannel(RPCListener* aListener)
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mBlockedOnParent(false)
+    mBlockedOnParent(false),
+    mSawRPCOutMsg(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 
@@ -122,6 +123,7 @@ RPCChannel::Clear()
 #ifdef OS_WIN
 // static
 int RPCChannel::sInnerEventLoopDepth = 0;
+int RPCChannel::sModalEventCount = 0;
 #endif
 
 bool
@@ -202,7 +204,11 @@ RPCChannel::Call(Message* msg, Message* reply)
         while (!EventOccurred()) {
             bool maybeTimedOut = !RPCChannel::WaitForNotify();
 
-            if (EventOccurred())
+            if (EventOccurred() ||
+                // we might have received a "subtly deferred" message
+                // in a nested loop that it's now time to process
+                (!maybeTimedOut &&
+                 (!mDeferred.empty() || !mOutOfTurnReplies.empty())))
                 break;
 
             if (maybeTimedOut && !ShouldContinueFromTimeout())
@@ -222,9 +228,17 @@ RPCChannel::Call(Message* msg, Message* reply)
             recvd = it->second;
             mOutOfTurnReplies.erase(it);
         }
-        else {
+        else if (!mPending.empty()) {
             recvd = mPending.front();
             mPending.pop();
+        }
+        else {
+            // because of subtleties with nested event loops, it's
+            // possible that we got here and nothing happened.  or, we
+            // might have a deferred in-call that needs to be
+            // processed.  either way, we won't break the inner while
+            // loop again until something new happens.
+            continue;
         }
 
         if (!recvd.is_sync() && !recvd.is_rpc()) {
@@ -597,10 +611,11 @@ void
 RPCChannel::ExitedCxxStack()
 {
     Listener()->OnExitedCxxStack();
-    {
+    if (mSawRPCOutMsg) {
         MutexAutoLock lock(mMutex);
         // see long comment in OnMaybeDequeueOne()
         EnqueuePendingMessages();
+        mSawRPCOutMsg = false;
     }
 }
 

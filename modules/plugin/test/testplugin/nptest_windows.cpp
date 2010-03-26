@@ -92,6 +92,7 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 {
   HWND hWnd = (HWND)instanceData->window.window;
   if (oldWindow) {
+    // chrashtests/539897-1.html excercises this code
     HWND hWndOld = (HWND)oldWindow;
     ClearSubclass(hWndOld);
     if (instanceData->platformData->childWindow) {

@@ -48,6 +48,8 @@ var tests =
             null, start_functionHandler, null),
    new Test("http://localhost:4444/non-existent-path",
             null, start_non_existent_path, null),
+   new Test("http://localhost:4444/lotsOfHeaders",
+            null, start_lots_of_headers, null),
   ];
 
 function run_test()
@@ -64,12 +66,14 @@ function run_test()
   // register a few test paths
   srv.registerPathHandler("/objHandler", objHandler);
   srv.registerPathHandler("/functionHandler", functionHandler);
+  srv.registerPathHandler("/lotsOfHeaders", lotsOfHeadersHandler);
 
   srv.start(4444);
 
   runHttpTests(tests, testComplete(srv));
 }
 
+const HEADER_COUNT = 1000;
 
 // TEST DATA
 
@@ -122,6 +126,16 @@ function start_non_existent_path(ch, cx)
   do_check_false(ch.requestSucceeded);
 }
 
+function start_lots_of_headers(ch, cx)
+{
+  commonCheck(ch);
+
+  do_check_eq(ch.responseStatus, 200);
+  do_check_true(ch.requestSucceeded);
+
+  for (var i = 0; i < HEADER_COUNT; i++)
+    do_check_eq(ch.getResponseHeader("X-Header-" + i), "value " + i);
+}
 
 // PATH HANDLERS
 
@@ -174,4 +188,13 @@ function functionHandler(metadata, response)
 
   var body = "this is text\n";
   response.bodyOutputStream.write(body, body.length);
+}
+
+// /lotsOfHeaders
+function lotsOfHeadersHandler(request, response)
+{
+  response.setHeader("Content-Type", "text/plain", false);
+
+  for (var i = 0; i < HEADER_COUNT; i++)
+    response.setHeader("X-Header-" + i, "value " + i, false);
 }

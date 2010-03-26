@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype237.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2312.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
@@ -78,7 +78,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype237_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2312_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
@@ -102,8 +102,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"lib\freetype237_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype237MT_D.lib"
+# ADD BASE LIB32 /nologo /out:"lib\freetype2312_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2312MT_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
@@ -126,8 +126,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"lib\freetype237.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype237MT.lib"
+# ADD BASE LIB32 /nologo /out:"lib\freetype2312.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2312MT.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
@@ -151,8 +151,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype237.lib"
-# ADD LIB32 /out:"..\..\..\objs\freetype237ST.lib"
+# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype2312.lib"
+# ADD LIB32 /out:"..\..\..\objs\freetype2312ST.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
@@ -177,8 +177,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype237_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype237ST_D.lib"
+# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype2312_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2312ST_D.lib"
 
 !ENDIF 
 
@@ -223,6 +223,10 @@ SOURCE=..\..\..\src\base\ftbdf.c
 # Begin Source File
 
 SOURCE=..\..\..\src\base\ftbitmap.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\base\ftfstype.c
 # End Source File
 # Begin Source File
 

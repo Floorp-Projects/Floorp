@@ -45,7 +45,9 @@ interface mozIStorageAggregateFunction;
 interface mozIStorageCompletionCallback;
 interface mozIStorageFunction;
 interface mozIStorageProgressHandler;
+interface mozIStorageBaseStatement;
 interface mozIStorageStatement;
+interface mozIStorageAsyncStatement;
 interface mozIStorageStatementCallback;
 interface mozIStoragePendingStatement;
 interface nsIFile;
@@ -59,11 +61,10 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(5a06b207-1977-47d4-b140-271cb851bb26)]
+[scriptable, uuid(32b43ec6-e905-4070-9cfe-370c45f7c1bf)]
 interface mozIStorageConnection : nsISupports {
-  /*
-   * Initialization and status
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  //// Initialization and status
 
   /**
    * Closes a database connection.  Callers must finalize all statements created
@@ -125,9 +126,8 @@ interface mozIStorageConnection : nsISupports {
    */
   attribute long schemaVersion;
 
-  /*
-   * Statement creation
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  //// Statement creation
 
   /**
    * Create a mozIStorageStatement for the given SQL expression.  The
@@ -135,11 +135,27 @@ interface mozIStorageConnection : nsISupports {
    * ?1, ?2 etc. to indicate specific numbered arguments or :name and 
    * $var to indicate named arguments.
    *
-   * @param aSQLStatement  The SQL statement to execute
-   *
-   * @returns a new mozIStorageStatement
+   * @param aSQLStatement
+   *        The SQL statement to execute.
+   * @return a new mozIStorageStatement
    */
   mozIStorageStatement createStatement(in AUTF8String aSQLStatement);
+
+  /**
+   * Create an asynchronous statement (mozIStorageAsyncStatement) for the given
+   * SQL expression.  An asynchronous statement can only be used to dispatch
+   * asynchronous requests to the asynchronous execution thread and cannot be
+   * used to take any synchronous actions on the database.
+   *
+   * The expression may use ? to indicate sequential numbered arguments,
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and
+   * $var to indicate named arguments.
+   *
+   * @param aSQLStatement
+   *        The SQL statement to execute.
+   * @return a new mozIStorageAsyncStatement
+   */
+  mozIStorageAsyncStatement createAsyncStatement(in AUTF8String aSQLStatement);
 
   /**
    * Execute a SQL expression, expecting no arguments.
@@ -165,10 +181,10 @@ interface mozIStorageConnection : nsISupports {
    * @param aCallback [optional]
    *        The callback object that will be notified of progress, errors, and
    *        completion.
-   * @returns an object that can be used to cancel the statements execution.
+   * @return an object that can be used to cancel the statements execution.
    */
   mozIStoragePendingStatement executeAsync(
-    [array, size_is(aNumStatements)] in mozIStorageStatement aStatements,
+    [array, size_is(aNumStatements)] in mozIStorageBaseStatement aStatements,
     in unsigned long aNumStatements,
     [optional] in mozIStorageStatementCallback aCallback
   );
@@ -176,8 +192,9 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Check if the given table exists.
    *
-   * @param aTableName   The table to check
-   * @returns TRUE if table exists, FALSE otherwise.
+   * @param aTableName
+   *        The table to check
+   * @return TRUE if table exists, FALSE otherwise.
    */
   boolean tableExists(in AUTF8String aTableName);
 
@@ -185,14 +202,12 @@ interface mozIStorageConnection : nsISupports {
    * Check if the given index exists.
    *
    * @param aIndexName   The index to check
-   * @returns TRUE if the index exists, FALSE otherwise.
+   * @return TRUE if the index exists, FALSE otherwise.
    */
   boolean indexExists(in AUTF8String aIndexName);
 
-
-  /*
-   * Transactions
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  //// Transactions
 
   /**
    * Returns true if a transaction is active on this connection.
@@ -225,9 +240,8 @@ interface mozIStorageConnection : nsISupports {
    */
   void rollbackTransaction();
 
-  /*
-   * Tables
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  //// Tables
 
   /**
    * Create the table with the given name and schema.
@@ -236,34 +250,36 @@ interface mozIStorageConnection : nsISupports {
    * (XXX at some point in the future it will check if the schema is
    * the same as what is specified, but that doesn't happen currently.)
    *
-   * @param aTableName the table name to be created, consisting of
-   * [A-Za-z0-9_], and beginning with a letter.
+   * @param aTableName
+   *        The table name to be created, consisting of [A-Za-z0-9_], and
+   *        beginning with a letter.
+   * @param aTableSchema
+   *        The schema of the table; what would normally go between the parens
+   *        in a CREATE TABLE statement: e.g., "foo  INTEGER, bar STRING".
    *
-   * @param aTableSchema the schema of the table; what would normally
-   * go between the parens in a CREATE TABLE statement: e.g., "foo
-   * INTEGER, bar STRING".
-   *
-   * @throws NS_ERROR_FAILURE if the table already exists or could not
-   * be created for any other reason.
-   *
+   * @throws NS_ERROR_FAILURE
+   *         If the table already exists or could not be created for any other
+   *         reason.
    */
   void createTable(in string aTableName,
                    in string aTableSchema);
 
-  /*
-   * Functions
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  //// Functions
 
   /**
    * Create a new SQL function.  If you use your connection on multiple threads,
    * your function needs to be threadsafe, or it should only be called on one
    * thread.
    *
-   * @param aFunctionName  The name of function to create, as seen in SQL.
-   * @param aNumArguments  The number of arguments the function takes. Pass
-   *                       -1 for variable-argument functions.
-   * @param aFunction      The instance of mozIStorageFunction, which implements
-   *                       the function in question.
+   * @param aFunctionName
+   *        The name of function to create, as seen in SQL.
+   * @param aNumArguments
+   *        The number of arguments the function takes. Pass -1 for
+   *        variable-argument functions.
+   * @param aFunction
+   *        The instance of mozIStorageFunction, which implements the function
+   *        in question.
    */
   void createFunction(in AUTF8String aFunctionName,
                       in long aNumArguments,
@@ -274,12 +290,14 @@ interface mozIStorageConnection : nsISupports {
    * multiple threads, your function needs to be threadsafe, or it should only
    * be called on one thread.
    *
-   * @param aFunctionName  The name of aggregate function to create, as seen
-   *                       in SQL.
-   * @param aNumArguments  The number of arguments the function takes. Pass
-   *                       -1 for variable-argument functions.
-   * @param aFunction      The instance of mozIStorageAggreagteFunction,
-   *                       which implements the function in question.
+   * @param aFunctionName
+   *        The name of aggregate function to create, as seen in SQL.
+   * @param aNumArguments
+   *        The number of arguments the function takes. Pass -1 for
+   *        variable-argument functions.
+   * @param aFunction
+   *        The instance of mozIStorageAggreagteFunction, which implements the
+   *        function in question.
    */
   void createAggregateFunction(in AUTF8String aFunctionName,
                                in long aNumArguments,
@@ -287,7 +305,8 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Delete custom SQL function (simple or aggregate one).
    *
-   * @param aFunctionName  The name of function to remove.
+   * @param aFunctionName
+   *        The name of function to remove.
    */
   void removeFunction(in AUTF8String aFunctionName);
 
@@ -297,10 +316,11 @@ interface mozIStorageConnection : nsISupports {
    * handler should be threadsafe if you use this connection object on more than
    * one thread.
    *
-   * @param aGranularity   The number of SQL virtual machine steps between
-   *                       progress handler callbacks.
-   * @param aHandler       The instance of mozIStorageProgressHandler.
-   *
+   * @param aGranularity
+   *        The number of SQL virtual machine steps between progress handler
+   *        callbacks.
+   * @param aHandler
+   *        The instance of mozIStorageProgressHandler.
    * @return previous registered handler.
    */
   mozIStorageProgressHandler setProgressHandler(in PRInt32 aGranularity,
