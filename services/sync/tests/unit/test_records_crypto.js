@@ -59,7 +59,6 @@ function run_test() {
     log.info("Generating keypair + symmetric key");
 
     PubKeys.defaultKeyUri = "http://localhost:8080/pubkey";
-    let passphrase = { password: "my passphrase" };
     keys = PubKeys.createKeypair(passphrase,
                                  "http://localhost:8080/pubkey",
                                  "http://localhost:8080/privkey");
