@@ -330,3 +330,9 @@ function SyncTestingInfrastructure(engineFactory) {
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
 let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
+
+_("Setting the identity for passphrase");
+Cu.import("resource://weave/identity.js");
+let passphrase = ID.set("WeaveCryptoID", new Identity());
+passphrase.password = "passphrase";
+

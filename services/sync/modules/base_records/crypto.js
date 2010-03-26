@@ -41,6 +41,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
@@ -133,8 +134,21 @@ CryptoMeta.prototype = {
     if (!wrapped_key)
       throw "keyring doesn't contain a key for " + pubkeyUri;
 
-    let unwrappedKey = new String(Svc.Crypto.unwrapSymmetricKey(wrapped_key,
-      privkey.keyData, passphrase.password, privkey.salt, privkey.iv));
+    // Make sure the wrapped key hasn't been tampered with
+    let localHMAC = Utils.sha256HMAC(wrapped_key.wrapped, this.hmacKey);
+    if (localHMAC != wrapped_key.hmac)
+      throw "Server attack?! SHA256 HMAC key fail: " + wrapped_key.hmac;
+
+    // Decrypt the symmetric key and make it a String object to add properties
+    let unwrappedKey = new String(
+      Svc.Crypto.unwrapSymmetricKey(
+        wrapped_key.wrapped,
+        privkey.keyData,
+        passphrase.password,
+        privkey.salt,
+        privkey.iv
+      )
+    );
 
     unwrappedKey.hmacKey = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC,
       unwrappedKey);
@@ -160,8 +174,17 @@ CryptoMeta.prototype = {
         delete this.keyring[relUri];
     }
 
-    this.keyring[new_pubkey.uri.spec] =
-      Svc.Crypto.wrapSymmetricKey(symkey, new_pubkey.keyData);
+    // Wrap the symmetric key and generate a HMAC for it
+    let wrapped = Svc.Crypto.wrapSymmetricKey(symkey, new_pubkey.keyData);
+    this.keyring[new_pubkey.uri.spec] = {
+      wrapped: wrapped,
+      hmac: Utils.sha256HMAC(wrapped, this.hmacKey)
+    };
+  },
+
+  get hmacKey() {
+    let passphrase = ID.get("WeaveCryptoID").password;
+    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, passphrase);
   }
 };
 

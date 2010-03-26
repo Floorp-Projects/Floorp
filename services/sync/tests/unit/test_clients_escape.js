@@ -4,7 +4,6 @@ Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/base_records/crypto.js");
 
 function run_test() {
-  let passphrase = { password: "passphrase" };
   let baseUri = "http://fakebase/";
   let pubUri = baseUri + "pubkey";
   let privUri = baseUri + "privkey";
