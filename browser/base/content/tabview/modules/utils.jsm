@@ -18,14 +18,20 @@ var extensionManager = Cc["@mozilla.org/extensions/manager;1"]
     .getService(Ci.nsIExtensionManager);  
 
 // ----------
-function Rect(left, top, width, height) {
+window.Point = function(x, y) {
+  this.x = (typeof(x) == 'undefined' ? 0 : x);
+  this.y = (typeof(y) == 'undefined' ? 0 : y);
+}
+
+// ----------
+window.Rect = function(left, top, width, height) {
   this.left = left;
   this.top = top;
   this.width = width;
   this.height = height;
 }
 
-Rect.prototype = {
+window.Rect.prototype = {
   get right() {
     return this.left + this.width;
   },
@@ -47,6 +53,17 @@ Rect.prototype = {
         && rect.left < this.right
         && rect.bottom > this.top
         && rect.top < this.bottom);      
+  },
+  
+  center: function() {
+    return new Point(this.left + (this.width / 2), this.top + (this.height / 2));
+  },
+  
+  inset: function(x, y) {
+    this.left += x;
+    this.width -= x * 2;
+    this.top += y;
+    this.height -= y * 2;
   }
 };
 
