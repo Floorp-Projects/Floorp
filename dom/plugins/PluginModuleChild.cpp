@@ -1451,8 +1451,22 @@ _convertpoint(NPP instance,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_WARNING("Not yet implemented!");
-    return 0;
+
+    double rDestX = 0;
+    bool ignoreDestX = !destX;
+    double rDestY = 0;
+    bool ignoreDestY = !destY;
+    bool result = false;
+    InstCast(instance)->CallNPN_ConvertPoint(sourceX, sourceY, sourceSpace, destSpace,
+                                             &rDestX, &ignoreDestX, &rDestY, &ignoreDestY, &result);
+    if (result) {
+        if (destX)
+            *destX = rDestX;
+        if (destY)
+            *destY = rDestY;
+    }
+
+    return result;
 }
 
 } /* namespace child */
