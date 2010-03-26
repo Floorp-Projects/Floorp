@@ -2189,40 +2189,32 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   // Check if the frame is resizable.
-  nsIFrame* resizableFrame = mOuter;
-  if (parent) {
-    // For textarea, mOuter is the frame for the anonymous div element,
-    // so get the resizability from the parent textarea instead.
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
-    if (textAreaElement) {
-      resizableFrame = parent;
-    }
-  }
-
-  PRBool isResizable = resizableFrame->GetStyleDisplay()->mResize != NS_STYLE_RESIZE_NONE;
+  PRInt8 resizeStyle = mOuter->GetStyleDisplay()->mResize;
+  PRBool isResizable = resizeStyle != NS_STYLE_RESIZE_NONE;
 
   nsIScrollableFrame *scrollable = do_QueryFrame(mOuter);
 
-  // At this stage in frame construction, the document element and/or
-  // BODY overflow styles have not yet been propagated to the
-  // viewport. So GetScrollbarStylesFromFrame called here will only
-  // take into account the scrollbar preferences set on the docshell.
-  // Thus if no scrollbar preferences are set on the docshell, we will
-  // always create scrollbars, which means later dynamic changes to
-  // propagated overflow styles will show or hide scrollbars on the
-  // viewport without requiring frame reconstruction of the viewport
-  // (good!).
-
-  // XXX On the other hand, if scrolling="no" is set on the container
-  // we won't create scrollbars here so no scrollbars will ever be
-  // created even if the container's scrolling attribute is later
-  // changed. However, this has never been supported.
+  // If we're the scrollframe for the root, then we want to construct
+  // our scrollbar frames no matter what.  That way later dynamic
+  // changes to propagated overflow styles will show or hide
+  // scrollbars on the viewport without requiring frame reconstruction
+  // of the viewport (good!).
+  PRBool canHaveHorizontal;
+  PRBool canHaveVertical;
+  // Hack to try to avoid Tsspider regression: always call
+  // GetScrollbarStyles here, even if we plan to ignore the return
+  // value.
   ScrollbarStyles styles = scrollable->GetScrollbarStyles();
-  PRBool canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
-  PRBool canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
-  if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
-    // Nothing to do.
-    return NS_OK;
+  if (!mIsRoot) {
+    canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
+    canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
+    if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
+      // Nothing to do.
+      return NS_OK;
+    }
+  } else {
+    canHaveHorizontal = PR_TRUE;
+    canHaveVertical = PR_TRUE;
   }
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
@@ -2275,7 +2267,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString dir;
-    switch (resizableFrame->GetStyleDisplay()->mResize) {
+    switch (resizeStyle) {
       case NS_STYLE_RESIZE_HORIZONTAL:
         if (IsScrollbarOnRight()) {
           dir.AssignLiteral("right");
@@ -3056,11 +3048,10 @@ nsGfxScrollFrameInner::AdjustScrollbarRectForResizer(
     if (!widget || !widget->ShowsResizeIndicator(&widgetRect))
       return;
 
-    nsRect resizerRect =
-        nsRect(aPresContext->DevPixelsToAppUnits(widgetRect.x) - offset.x,
-               aPresContext->DevPixelsToAppUnits(widgetRect.y) - offset.y,
-               aPresContext->DevPixelsToAppUnits(widgetRect.width),
-               aPresContext->DevPixelsToAppUnits(widgetRect.height));
+    resizerRect = nsRect(aPresContext->DevPixelsToAppUnits(widgetRect.x) - offset.x,
+                         aPresContext->DevPixelsToAppUnits(widgetRect.y) - offset.y,
+                         aPresContext->DevPixelsToAppUnits(widgetRect.width),
+                         aPresContext->DevPixelsToAppUnits(widgetRect.height));
   }
 
   if (!resizerRect.Contains(aRect.BottomRight() - nsPoint(1, 1)))

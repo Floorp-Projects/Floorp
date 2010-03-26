@@ -437,7 +437,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     if (shell) {
 
       // Retrieve the context in which our DOM event will fire.
-      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+      nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
       // Handle the DOM event
       nsEventStatus status = nsEventStatus_eIgnore;

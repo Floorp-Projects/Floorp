@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component (specification).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006, 2007, 2008 by                   */
+/*  Copyright 1996-2001, 2002, 2004, 2006, 2007, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -92,7 +92,7 @@ FT_BEGIN_HEADER
 
 #else /* !FT_DEBUG_LEVEL_TRACE */
 
-#define FT_TRACE( level, varformat )  do ; while ( 0 )      /* nothing */
+#define FT_TRACE( level, varformat )  do { } while ( 0 )      /* nothing */
 
 #endif /* !FT_DEBUG_LEVEL_TRACE */
 
@@ -178,7 +178,7 @@ FT_BEGIN_HEADER
 
 #else  /* !FT_DEBUG_LEVEL_ERROR */
 
-#define FT_ERROR( varformat )  do ; while ( 0 )      /* nothing */
+#define FT_ERROR( varformat )  do { } while ( 0 )      /* nothing */
 
 #endif /* !FT_DEBUG_LEVEL_ERROR */
 
@@ -201,7 +201,7 @@ FT_BEGIN_HEADER
 
 #else /* !FT_DEBUG_LEVEL_ERROR */
 
-#define FT_ASSERT( condition )  do ; while ( 0 )
+#define FT_ASSERT( condition )  do { } while ( 0 )
 
 #endif /* !FT_DEBUG_LEVEL_ERROR */
 

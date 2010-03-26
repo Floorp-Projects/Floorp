@@ -2027,7 +2027,7 @@ case "$target" in
             # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -4749,7 +4749,6 @@ MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
 MOZ_VIEW_SOURCE=1
-MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
@@ -5008,7 +5007,7 @@ cairo-cocoa)
     AC_DEFINE(MOZ_WIDGET_COCOA)
     MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
-    TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
+    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-DNO_X11"
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
@@ -5173,8 +5172,8 @@ if test -z "$REAL_BRANDING_DIRECTORY"; then
   REAL_BRANDING_DIRECTORY=${MOZ_BUILD_APP}/branding/nightly
 fi
 
-if test -f "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"; then
-  . "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"
+if test -f "${_topsrcdir}/$REAL_BRANDING_DIRECTORY/configure.sh"; then
+  . "${_topsrcdir}/$REAL_BRANDING_DIRECTORY/configure.sh"
 fi
 
 AC_SUBST(MOZ_BRANDING_DIRECTORY)
@@ -5568,15 +5567,6 @@ esac
 fi
 
 dnl ========================================================
-dnl xpfe/components on by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xpfe-components,
-[  --disable-xpfe-components
-                          Disable xpfe components],
-    MOZ_XPFE_COMPONENTS=,
-    MOZ_XPFE_COMPONENTS=1 )
-
-dnl ========================================================
 dnl xpinstall support on by default
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xpinstall,
@@ -5868,13 +5858,20 @@ dnl ========================================================
 dnl = Breakpad crash reporting (on by default on supported platforms)
 dnl ========================================================
 
-if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
-    || test "$OS_ARCH" = "Darwin" \
-    || test "$OS_ARCH" = "Linux" -a "$CPU_ARCH" = "x86" \
-    || test "$OS_ARCH" = "SunOS") \
-   && test -z "$HAVE_64BIT_OS"; then
-   MOZ_CRASHREPORTER=1
-fi
+case $target in
+i?86-*-mingw*)
+  MOZ_CRASHREPORTER=1
+  ;;
+i?86-apple-darwin*|powerpc-apple-darwin*)
+  MOZ_CRASHREPORTER=1
+  ;;
+i?86-*-linux*|x86_64-*-linux*)
+  MOZ_CRASHREPORTER=1
+  ;;
+*solaris*)
+  MOZ_CRASHREPORTER=1
+  ;;
+esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter          Disable breakpad crash reporting],
@@ -8281,7 +8278,6 @@ AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
-AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 

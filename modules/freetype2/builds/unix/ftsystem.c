@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Unix-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -277,7 +277,12 @@
     /*                                                                 */
     if ( stat_buf.st_size > LONG_MAX )
     {
-      FT_ERROR(( "FT_Stream_Open: file is too big" ));
+      FT_ERROR(( "FT_Stream_Open: file is too big\n" ));
+      goto Fail_Map;
+    }
+    else if ( stat_buf.st_size == 0 )
+    {
+      FT_ERROR(( "FT_Stream_Open: zero-length file\n" ));
       goto Fail_Map;
     }
 

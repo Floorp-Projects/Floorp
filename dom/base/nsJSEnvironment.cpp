@@ -396,7 +396,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aScriptGlobal));
   nsIDocShell *docShell = win ? win->GetDocShell() : nsnull;
   if (docShell) {
-    nsCOMPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
 
     static PRInt32 errorDepth; // Recursion prevention
@@ -439,7 +439,7 @@ public:
           !sHandlingScriptError) {
         sHandlingScriptError = PR_TRUE; // Recursion prevention
 
-        nsCOMPtr<nsPresContext> presContext;
+        nsRefPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
 
         if (presContext) {

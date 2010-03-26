@@ -1197,6 +1197,8 @@ var gDownloadingPage = {
   _startTime: null,
   _pausedStatus: "",
 
+  _hiding: false,
+
   /**
    * Initialize
    */
@@ -1361,9 +1363,24 @@ var gDownloadingPage = {
   },
 
   /**
+   * When the user has closed the window using a Window Manager control (this
+   * page doesn't have a cancel button) cancel the update in progress.
+   */
+  onWizardCancel: function() {
+    if (this._hiding)
+      return;
+
+    this.removeDownloadListener();
+ },
+
+  /**
    * When the user closes the Wizard UI by clicking the Hide button
    */
   onHide: function() {
+    // Set _hiding to false to prevent onWizardCancel from cancelling the update
+    // that is in progress.
+    this._hiding = true;
+
     // Remove ourself as a download listener so that we don't continue to be
     // fed progress and state notifications after the UI we're updating has
     // gone away.

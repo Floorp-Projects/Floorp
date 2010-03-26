@@ -507,7 +507,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   // If we have a PresContext, make sure it doesn't die before
   // event dispatching is finished.
-  nsCOMPtr<nsPresContext> kungFuDeathGrip(aPresContext);
+  nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
   ChainItemPool pool;
   NS_ENSURE_TRUE(pool.GetPool(), NS_ERROR_OUT_OF_MEMORY);
 

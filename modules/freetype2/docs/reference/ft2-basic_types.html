@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Basic Data Types
@@ -468,7 +468,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>The type FT_Pos is a 32-bit integer used to store vectorial coordinates. Depending on the context, these can represent distances in integer font units, or 16.16, or 26.6 fixed float pixel coordinates.</p>
+<p>The type FT_Pos is used to store vectorial coordinates. Depending on the context, these can represent distances in integer font units, or 16.16, or 26.6 fixed float pixel coordinates.</p>
 </td></tr></table><br>
 </td></tr></table>
 <hr width="75%">
@@ -545,6 +545,11 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 <p>The vertical maximum (top-most).</p>
 </td></tr>
 </table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>The bounding box is specified with the coordinates of the lower left and the upper right corner. In PostScript, those values are often called (llx,lly) and (urx,ury), respectively.</p>
+<p>If &lsquo;yMin&rsquo; is negative, this value gives the glyph's descender. Otherwise, the glyph doesn't descend below the baseline. Similarly, if &lsquo;ymax&rsquo; is positive, this value gives the glyph's ascender.</p>
+<p>&lsquo;xMin&rsquo; gives the horizontal distance from the glyph's origin to the left edge of the glyph's bounding box. If &lsquo;xMin&rsquo; is negative, the glyph extends to the left of the origin.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -743,19 +748,19 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 <p>A monochrome bitmap, using 1&nbsp;bit per pixel. Note that pixels are stored in most-significant order (MSB), which means that the left-most pixel in a byte has value 128.</p>
 </td></tr>
 <tr valign=top><td><b>FT_PIXEL_MODE_GRAY</b></td><td>
-<p>An 8-bit bitmap, generally used to represent anti-aliased glyph images. Each pixel is stored in one byte. Note that the number of value &lsquo;gray&rsquo; levels is stored in the &lsquo;num_grays&rsquo; field of the <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a> structure (it generally is 256).</p>
+<p>An 8-bit bitmap, generally used to represent anti-aliased glyph images. Each pixel is stored in one byte. Note that the number of &lsquo;gray&rsquo; levels is stored in the &lsquo;num_grays&rsquo; field of the <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a> structure (it generally is 256).</p>
 </td></tr>
 <tr valign=top><td><b>FT_PIXEL_MODE_GRAY2</b></td><td>
-<p>A 2-bit/pixel bitmap, used to represent embedded anti-aliased bitmaps in font files according to the OpenType specification. We haven't found a single font using this format, however.</p>
+<p>A 2-bit per pixel bitmap, used to represent embedded anti-aliased bitmaps in font files according to the OpenType specification. We haven't found a single font using this format, however.</p>
 </td></tr>
 <tr valign=top><td><b>FT_PIXEL_MODE_GRAY4</b></td><td>
-<p>A 4-bit/pixel bitmap, used to represent embedded anti-aliased bitmaps in font files according to the OpenType specification. We haven't found a single font using this format, however.</p>
+<p>A 4-bit per pixel bitmap, representing embedded anti-aliased bitmaps in font files according to the OpenType specification. We haven't found a single font using this format, however.</p>
 </td></tr>
 <tr valign=top><td><b>FT_PIXEL_MODE_LCD</b></td><td>
-<p>An 8-bit bitmap, used to represent RGB or BGR decimated glyph images used for display on LCD displays; the bitmap is three times wider than the original glyph image. See also <a href="ft2-base_interface.html#FT_Render_Mode">FT_RENDER_MODE_LCD</a>.</p>
+<p>An 8-bit bitmap, representing RGB or BGR decimated glyph images used for display on LCD displays; the bitmap is three times wider than the original glyph image. See also <a href="ft2-base_interface.html#FT_Render_Mode">FT_RENDER_MODE_LCD</a>.</p>
 </td></tr>
 <tr valign=top><td><b>FT_PIXEL_MODE_LCD_V</b></td><td>
-<p>An 8-bit bitmap, used to represent RGB or BGR decimated glyph images used for display on rotated LCD displays; the bitmap is three times taller than the original glyph image. See also <a href="ft2-base_interface.html#FT_Render_Mode">FT_RENDER_MODE_LCD_V</a>.</p>
+<p>An 8-bit bitmap, representing RGB or BGR decimated glyph images used for display on rotated LCD displays; the bitmap is three times taller than the original glyph image. See also <a href="ft2-base_interface.html#FT_Render_Mode">FT_RENDER_MODE_LCD_V</a>.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -884,6 +889,7 @@ Defined in FT_IMAGE_H (freetype/ftimage.h).
 </td></tr>
 <tr valign=top><td><b>pitch</b></td><td>
 <p>The pitch's absolute value is the number of bytes taken by one bitmap row, including padding. However, the pitch is positive when the bitmap has a &lsquo;down&rsquo; flow, and negative when it has an &lsquo;up&rsquo; flow. In all cases, the pitch is an offset to add to a bitmap pointer in order to go down one row.</p>
+<p>For the B/W rasterizer, &lsquo;pitch&rsquo; is always an even number.</p>
 </td></tr>
 <tr valign=top><td><b>buffer</b></td><td>
 <p>A typeless pointer to the bitmap buffer. This value should be aligned on 32-bit boundaries in most cases.</p>
@@ -1142,6 +1148,7 @@ Defined in FT_TYPES_H (freetype/fttypes.h).
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
 #define <b>FT_MAKE_TAG</b>( _x1, _x2, _x3, _x4 ) \
+          (<a href="ft2-basic_types.html#FT_Tag">FT_Tag</a>)                        \
           ( ( (<a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>)_x1 &lt;&lt; 24 ) |     \
             ( (<a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>)_x2 &lt;&lt; 16 ) |     \
             ( (<a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>)_x3 &lt;&lt;  8 ) |     \

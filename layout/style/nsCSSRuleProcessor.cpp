@@ -707,8 +707,8 @@ static const PLDHashTableOps AttributeSelectorOps = {
 struct RuleCascadeData {
   RuleCascadeData(nsIAtom *aMedium, PRBool aQuirksMode)
     : mRuleHash(aQuirksMode),
-      mSelectorDocumentStates(0),
       mStateSelectors(),
+      mSelectorDocumentStates(0),
       mCacheKey(aMedium),
       mNext(nsnull),
       mQuirksMode(aQuirksMode)

@@ -210,8 +210,14 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #  define MOZALLOC_EXPORT_NEW
 #endif
 
+#ifdef __MINGW32__
+#define MOZALLOC_THROW_BAD_ALLOC throw(std::bad_alloc)
+#else
+#define MOZALLOC_THROW_BAD_ALLOC throw()
+#endif
+
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void* operator new(size_t size) throw()
+void* operator new(size_t size) MOZALLOC_THROW_BAD_ALLOC
 {
     return moz_xmalloc(size);
 }
@@ -223,7 +229,7 @@ void* operator new(size_t size, const std::nothrow_t&) throw()
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void* operator new[](size_t size) throw()
+void* operator new[](size_t size) MOZALLOC_THROW_BAD_ALLOC
 {
     return moz_xmalloc(size);
 }

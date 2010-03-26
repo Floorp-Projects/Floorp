@@ -453,6 +453,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     nsCOMPtr<nsIRunnable>         mExecutorFlusher;
     
+    nsCOMPtr<nsIRunnable>         mLoadFlusher;
+
     /**
      * The chardet instance if chardet is enabled.
      */

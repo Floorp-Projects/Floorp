@@ -41,6 +41,8 @@
 
 #include "jsapi.h"
 #include "nsString.h"
+#include "nsTArray.h"
+#include "prlink.h"
 #include "ffi.h"
 
 namespace mozilla {
@@ -80,8 +82,6 @@ enum TypeCode {
   TYPE_struct
 };
 
-ABICode GetABICode(JSContext* cx, JSObject* obj);
-
 struct FieldInfo
 {
   nsString  mName;
@@ -101,7 +101,7 @@ struct PropertySpec
 
 JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
 
-JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj, void* data, bool wantPrimitive, jsval* result);
+JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj, void* data, bool wantPrimitive, bool ownResult, jsval* result);
 JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer, bool isArgument, bool* freePointer);
 JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer);
 
@@ -113,11 +113,15 @@ enum CABISlot {
 };
 
 enum CTypeProtoSlot {
-  SLOT_POINTERPROTO = 0, // ctypes.PointerType.prototype object
-  SLOT_ARRAYPROTO   = 1, // ctypes.ArrayType.prototype object
-  SLOT_STRUCTPROTO  = 2, // ctypes.StructType.prototype object
-  SLOT_INT64PROTO   = 3, // ctypes.Int64.prototype object
-  SLOT_UINT64PROTO  = 4, // ctypes.UInt64.prototype object
+  SLOT_POINTERPROTO     = 0, // ctypes.PointerType.prototype object
+  SLOT_ARRAYPROTO       = 1, // ctypes.ArrayType.prototype object
+  SLOT_STRUCTPROTO      = 2, // ctypes.StructType.prototype object
+  SLOT_CDATAPROTO       = 3, // ctypes.CData.prototype object
+  SLOT_POINTERDATAPROTO = 4, // common ancestor of all CData objects of PointerType
+  SLOT_ARRAYDATAPROTO   = 5, // common ancestor of all CData objects of ArrayType
+  SLOT_STRUCTDATAPROTO  = 6, // common ancestor of all CData objects of StructType
+  SLOT_INT64PROTO       = 7, // ctypes.Int64.prototype object
+  SLOT_UINT64PROTO      = 8, // ctypes.UInt64.prototype object
   CTYPEPROTO_SLOTS
 };
 
@@ -139,11 +143,24 @@ enum CTypeSlot {
   CTYPE_SLOTS
 };
 
+enum FunctionSlot
+{
+  SLOT_FUNCTION = 0,
+  SLOT_LIBRARYOBJ = 1
+  // JSFunction objects always get exactly two slots.
+};
+
 enum CDataSlot {
   SLOT_CTYPE    = 0, // CType object representing the underlying type
   SLOT_REFERENT = 1, // CData object this object refers to, if any
   SLOT_DATA     = 2, // pointer to a buffer containing the binary data
+  SLOT_OWNS     = 3, // JSVAL_TRUE if this CData owns its own buffer
   CDATA_SLOTS
+};
+
+enum TypeCtorSlot {
+  SLOT_FN_CTORPROTO = 0 // ctypes.{Pointer,Array,Struct}Type.prototype
+  // JSFunction objects always get exactly two slots.
 };
 
 enum Int64Slot {
@@ -158,8 +175,8 @@ enum Int64FunctionSlot {
 
 class CType {
 public:
-  static JSObject* Create(JSContext* cx, JSObject* proto, TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, JSFunctionSpec* fs, PropertySpec* ps);
-  static JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName, JSObject* proto, const char* name, TypeCode type, jsval size, jsval align, ffi_type* ffiType);
+  static JSObject* Create(JSContext* cx, JSObject* typeProto, JSObject* dataProto, TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, PropertySpec* ps);
+  static JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName, JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type, jsval size, jsval align, ffi_type* ffiType);
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static JSBool ConstructAbstract(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
@@ -175,7 +192,7 @@ public:
   static size_t GetAlignment(JSContext* cx, JSObject* obj);
   static ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
   static JSString* GetName(JSContext* cx, JSObject* obj);
-  static JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj);
+  static JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
   static JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
 
   static JSBool PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
@@ -185,6 +202,7 @@ public:
   static JSBool Array(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
 };
 
 class PointerType {
@@ -234,9 +252,68 @@ public:
   static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
 };
 
+// Represents an argument type for a function.
+struct Type
+{
+  ffi_type mFFIType;
+  JSObject* mType;
+};
+
+// Helper class for handling allocation of function arguments.
+struct AutoValue
+{
+  AutoValue() : mData(NULL) { }
+
+  ~AutoValue()
+  {
+    delete[] static_cast<char*>(mData);
+  }
+
+  bool SizeToType(JSContext* cx, JSObject* type)
+  {
+    size_t size = CType::GetSize(cx, type);
+    mData = new char[size];
+    if (mData)
+      memset(mData, 0, size);
+    return mData != NULL;
+  }
+
+  void* mData;
+};
+
+class Function
+{
+public:
+  Function();
+
+  Function*& Next() { return mNext; }
+  void Trace(JSTracer *trc);
+
+  static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
+
+  ~Function();
+
+private:
+  JSBool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  JSBool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
+
+protected:
+  PRFuncPtr mFunc;
+
+  ffi_abi mCallType;
+  Type mResultType;
+  nsAutoTArray<Type, 16> mArgTypes;
+  nsAutoTArray<ffi_type*, 16> mFFITypes;
+
+  ffi_cif mCIF;
+
+  Function* mNext;
+};
+
 class CData {
 public:
-  static JSObject* Create(JSContext* cx, JSObject* type, JSObject* base, void* data);
+  static JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* refObj, void* data, bool ownResult);
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static JSObject* GetCType(JSContext* cx, JSObject* dataObj);

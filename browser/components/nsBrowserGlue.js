@@ -210,6 +210,13 @@ BrowserGlue.prototype = {
         // Customization has finished, we don't need the customizer anymore.
         delete this._distributionCustomizer;
         break;
+      case "bookmarks-restore-success":
+      case "bookmarks-restore-failed":
+        this._observerService.removeObserver(this, "bookmarks-restore-success");
+        this._observerService.removeObserver(this, "bookmarks-restore-failed");
+        if (topic == "bookmarks-restore-success" && data == "html-initial")
+          this.ensurePlacesDefaultQueriesInitialized();
+        break;
     }
   }, 
 
@@ -677,13 +684,16 @@ BrowserGlue.prototype = {
       }
     }
 
+    // If bookmarks are not imported, then initialize smart bookmarks.  This
+    // happens during a common startup.
+    // Otherwise, if any kind of import runs, smart bookmarks creation should be
+    // delayed till the import operations has finished.  Not doing so would
+    // cause them to be overwritten by the newly imported bookmarks.
     if (!importBookmarks) {
-      // Call it here for Fx3 profiles created before the Places folder
-      // has been added, otherwise it's called during import.
       this.ensurePlacesDefaultQueriesInitialized();
     }
     else {
-      // ensurePlacesDefaultQueriesInitialized() is called by import.
+      // An import operation is about to run.
       // Don't try to recreate smart bookmarks if autoExportHTML is true or
       // smart bookmarks are disabled.
       var autoExportHTML = false;
@@ -711,7 +721,12 @@ BrowserGlue.prototype = {
         bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
       if (bookmarksFile.exists()) {
-        // import the file
+        // Add an import observer.  It will ensure that smart bookmarks are
+        // created once the operation is complete.
+        this._observerService.addObserver(this, "bookmarks-restore-success", false);
+        this._observerService.addObserver(this, "bookmarks-restore-failed", false);
+
+        // Import from bookmarks.html file.
         try {
           var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
                          getService(Ci.nsIPlacesImportExportService);
@@ -719,6 +734,8 @@ BrowserGlue.prototype = {
         } catch (err) {
           // Report the error, but ignore it.
           Cu.reportError("Bookmarks.html file could be corrupt. " + err);
+          this._observerService.removeObserver(this, "bookmarks-restore-success");
+          this._observerService.removeObserver(this, "bookmarks-restore-failed");
         }
       }
       else

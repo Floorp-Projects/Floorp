@@ -51,7 +51,6 @@
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5RefPtr.h"
-#include "nsHtml5SpeculativeLoader.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -92,9 +91,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
   tmp->mOwner = nsnull;
   tmp->mExecutorFlusher = nsnull;
+  tmp->mLoadFlusher = nsnull;
   tmp->mExecutor = nsnull;
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChardet)
-  tmp->mTreeBuilder->DropSpeculativeLoader();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
@@ -109,17 +108,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExecutorFlusher->mExecutor");
     cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
   }
+  // hack: count the strongly owned edge wrapped in the runnable
+  if (tmp->mLoadFlusher) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mLoadFlusher->mExecutor");
+    cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
+  }
   // hack: count self if held by mChardet
   if (tmp->mChardet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
       "mChardet->mObserver");
     cb.NoteXPCOMChild(static_cast<nsIStreamListener*>(tmp));
-  }
-  // hack: count the strongly owned edge wrapped in the speculative loader
-  if (tmp->mTreeBuilder->HasSpeculativeLoader()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
-      "mTreeBuilder->mSpeculativeLoader->mExecutor");
-    cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -133,7 +131,22 @@ class nsHtml5ExecutorFlusher : public nsRunnable
     {}
     NS_IMETHODIMP Run()
     {
-      mExecutor->Flush(PR_FALSE);
+      mExecutor->RunFlushLoop();
+      return NS_OK;
+    }
+};
+
+class nsHtml5LoadFlusher : public nsRunnable
+{
+  private:
+    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+  public:
+    nsHtml5LoadFlusher(nsHtml5TreeOpExecutor* aExecutor)
+      : mExecutor(aExecutor)
+    {}
+    NS_IMETHODIMP Run()
+    {
+      mExecutor->FlushSpeculativeLoads();
       return NS_OK;
     }
 };
@@ -143,8 +156,8 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   : mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(aExecutor)
-  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage(), 
-                                        new nsHtml5SpeculativeLoader(mExecutor)))
+  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage(),
+                                        mExecutor->GetStage()))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
@@ -152,6 +165,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex")
   , mThread(nsHtml5Module::GetStreamParserThread())
   , mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor))
+  , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
   , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -755,6 +769,13 @@ nsHtml5StreamParser::ParseAvailableData()
               mFirstBuffer->setStart(0);
               mFirstBuffer->setEnd(0);
             }
+            mTreeBuilder->FlushLoads();
+            // Dispatch this runnable unconditionally, because the loads
+            // that need flushing may have been flushed earlier even if the
+            // flush right above here did nothing.
+            if (NS_FAILED(NS_DispatchToMainThread(mLoadFlusher))) {
+              NS_WARNING("failed to dispatch load flush event");
+            }
             return; // no more data for now but expecting more
           case STREAM_ENDED:
             if (mAtEOF) {
@@ -859,9 +880,12 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
         // the first speculation isn't the current speculation, so there's 
         // no need to bother the parser thread.
         speculation->FlushToSink(mExecutor);
-        if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
-          NS_WARNING("failed to dispatch executor flush event");
-        }
+        NS_ASSERTION(!mExecutor->IsScriptExecuting(),
+          "ParseUntilBlocked() was supposed to ensure we don't come "
+          "here when scripts are executing.");
+        NS_ASSERTION(mExecutor->IsInFlushLoop(), "How are we here if "
+          "RunFlushLoop() didn't call ParseUntilBlocked() which is the "
+          "only caller of this method?");
         mSpeculations.RemoveElementAt(0);
         return;
       }
@@ -920,9 +944,12 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       // We've got a successful speculation and at least a moment ago it was
       // the current speculation
       mSpeculations.ElementAt(0)->FlushToSink(mExecutor);
-      if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
-        NS_WARNING("failed to dispatch executor flush event");
-      }
+      NS_ASSERTION(!mExecutor->IsScriptExecuting(),
+        "ParseUntilBlocked() was supposed to ensure we don't come "
+        "here when scripts are executing.");
+      NS_ASSERTION(mExecutor->IsInFlushLoop(), "How are we here if "
+        "RunFlushLoop() didn't call ParseUntilBlocked() which is the "
+        "only caller of this method?");
       mSpeculations.RemoveElementAt(0);
       if (mSpeculations.IsEmpty()) {
         // yes, it was still the only speculation. Now stop speculating

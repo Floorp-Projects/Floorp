@@ -54,9 +54,6 @@ function run_test()
   srv.registerPathHandler("/exceptions", handleExceptions);
   srv.registerPathHandler("/async-seizure", handleAsyncSeizure);
   srv.registerPathHandler("/seize-after-async", handleSeizeAfterAsync);
-  srv.registerPathHandler("/thrown-exception", handleThrownException);
-  srv.registerPathHandler("/asap-later-write", handleASAPLaterWrite);
-  srv.registerPathHandler("/asap-later-finish", handleASAPLaterFinish);
 
   srv.start(PORT);
 
@@ -165,51 +162,6 @@ function handleSeizeAfterAsync(request, response)
   });
 }
 
-function handleThrownException(request, response)
-{
-  if (request.queryString === "writeBefore")
-    response.write("ignore this");
-  else if (request.queryString === "writeBeforeEmpty")
-    response.write("");
-  else if (request.queryString !== "")
-    throw "query string FAIL";
-  response.seizePower();
-  response.write("preparing to throw...");
-  throw "badness 10000";
-}
-
-function handleASAPLaterWrite(request, response)
-{
-  response.seizePower();
-  response.write("should only ");
-  response.write("see this");
-
-  callASAPLater(function()
-  {
-    response.write("...and not this");
-    callASAPLater(function()
-    {
-      response.write("...or this");
-      response.finish();
-    });
-  });
-
-  throw "opening pitch of the ballgame";
-}
-
-function handleASAPLaterFinish(request, response)
-{
-  response.seizePower();
-  response.write("should only see this");
-
-  callASAPLater(function()
-  {
-    response.finish();
-  });
-
-  throw "out the bum!";
-}
-
 
 /***************
  * BEGIN TESTS *
@@ -261,49 +213,4 @@ function checkSeizeAfterAsync(data)
   do_check_eq(LineIterator(data).next(), "HTTP/1.0 200 async seizure pass");
 }
 test = new RawTest("localhost", PORT, data, checkSeizeAfterAsync),
-tests.push(test);
-
-data = "GET /thrown-exception?writeBefore HTTP/1.0\r\n" +
-       "\r\n";
-function checkThrownExceptionWriteBefore(data)
-{
-  do_check_eq(data, "preparing to throw...");
-}
-test = new RawTest("localhost", PORT, data, checkThrownExceptionWriteBefore),
-tests.push(test);
-
-data = "GET /thrown-exception?writeBeforeEmpty HTTP/1.0\r\n" +
-       "\r\n";
-function checkThrownExceptionWriteBeforeEmpty(data)
-{
-  do_check_eq(data, "preparing to throw...");
-}
-test = new RawTest("localhost", PORT, data, checkThrownExceptionWriteBeforeEmpty),
-tests.push(test);
-
-data = "GET /thrown-exception HTTP/1.0\r\n" +
-       "\r\n";
-function checkThrownException(data)
-{
-  do_check_eq(data, "preparing to throw...");
-}
-test = new RawTest("localhost", PORT, data, checkThrownException),
-tests.push(test);
-
-data = "GET /asap-later-write HTTP/1.0\r\n" +
-       "\r\n";
-function checkASAPLaterWrite(data)
-{
-  do_check_eq(data, "should only see this");
-}
-test = new RawTest("localhost", PORT, data, checkASAPLaterWrite),
-tests.push(test);
-
-data = "GET /asap-later-finish HTTP/1.0\r\n" +
-       "\r\n";
-function checkASAPLaterFinish(data)
-{
-  do_check_eq(data, "should only see this");
-}
-test = new RawTest("localhost", PORT, data, checkASAPLaterFinish),
 tests.push(test);

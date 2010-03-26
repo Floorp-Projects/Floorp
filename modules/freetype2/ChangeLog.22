@@ -199,7 +199,7 @@
 	* src/base/ftmac.c (read_lwfn): Catch integer overflow.
 	* src/base/ftrfork.c (raccess_guess_darwin_hfsplus): Ditto.
 	* src/base/ftutil.c: Remove special code for FT_STRICT_ALIASING.
-	(ft_mem_alloc. ft_mem_realloc, ft_mem_qrealloc): Rewrite.
+	(ft_mem_alloc, ft_mem_realloc, ft_mem_qrealloc): Rewrite.
 
 
 	* include/freetype/ftstream.h (FT_FRAME_ENTER, FT_FRAME_EXIT,

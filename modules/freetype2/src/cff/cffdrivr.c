@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,7 +21,6 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
-#include FT_TRUETYPE_IDS_H
 #include FT_SERVICE_CID_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
@@ -32,8 +31,10 @@
 #include "cffgload.h"
 #include "cffload.h"
 #include "cffcmap.h"
+#include "cffparse.h"
 
 #include "cfferrs.h"
+#include "cffpic.h"
 
 #include FT_SERVICE_XFREE86_NAME_H
 #include FT_SERVICE_GLYPH_DICT_H
@@ -187,6 +188,35 @@
   }
 
 
+  FT_CALLBACK_DEF( FT_Error )
+  cff_get_advances( FT_Face    face,
+                    FT_UInt    start,
+                    FT_UInt    count,
+                    FT_Int32   flags,
+                    FT_Fixed*  advances )
+  {
+    FT_UInt       nn;
+    FT_Error      error = CFF_Err_Ok;
+    FT_GlyphSlot  slot  = face->glyph;
+
+
+    flags |= (FT_UInt32)FT_LOAD_ADVANCE_ONLY;
+
+    for ( nn = 0; nn < count; nn++ )
+    {
+      error = Load_Glyph( slot, face->size, start + nn, flags );
+      if ( error )
+        break;
+
+      advances[nn] = ( flags & FT_LOAD_VERTICAL_LAYOUT )
+                     ? slot->linearVertAdvance
+                     : slot->linearHoriAdvance;
+    }
+
+    return error;
+  }
+
+
   /*
    *  GLYPH DICT SERVICE
    *
@@ -209,10 +239,10 @@
     FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
     if ( !psnames )
     {
-      FT_ERROR(( "cff_get_glyph_name:" ));
-      FT_ERROR(( " cannot get glyph name from CFF & CEF fonts\n" ));
-      FT_ERROR(( "                   " ));
-      FT_ERROR(( " without the `PSNames' module\n" ));
+      FT_ERROR(( "cff_get_glyph_name:"
+                 " cannot get glyph name from CFF & CEF fonts\n"
+                 "                   "
+                 " without the `PSNames' module\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -280,11 +310,10 @@
   }
 
 
-  static const FT_Service_GlyphDictRec  cff_service_glyph_dict =
-  {
+  FT_DEFINE_SERVICE_GLYPHDICTREC(cff_service_glyph_dict,
     (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)cff_get_name_index,
-  };
+    (FT_GlyphDict_NameIndexFunc)cff_get_name_index
+  )
 
 
   /*
@@ -341,19 +370,20 @@
       cff->font_info = font_info;
     }
 
-    *afont_info = *cff->font_info;
+    if ( cff )
+      *afont_info = *cff->font_info;
 
   Fail:
     return error;
   }
 
 
-  static const FT_Service_PsInfoRec  cff_service_ps_info =
-  {
+  FT_DEFINE_SERVICE_PSINFOREC(cff_service_ps_info,
     (PS_GetFontInfoFunc)   cff_ps_get_font_info,
+    (PS_GetFontExtraFunc)  NULL,
     (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,
     (PS_GetFontPrivateFunc)NULL         /* unsupported with CFF fonts */
-  };
+  )
 
 
   /*
@@ -371,10 +401,9 @@
   }
 
 
-  static const FT_Service_PsFontNameRec  cff_service_ps_name =
-  {
+  FT_DEFINE_SERVICE_PSFONTNAMEREC(cff_service_ps_name,
     (FT_PsName_GetFunc)cff_get_ps_name
-  };
+  )
 
 
   /*
@@ -393,15 +422,16 @@
   {
     FT_CMap   cmap  = FT_CMAP( charmap );
     FT_Error  error = CFF_Err_Ok;
+    FT_Face    face    = FT_CMAP_FACE( cmap );
+    FT_Library library = FT_FACE_LIBRARY( face );
 
 
     cmap_info->language = 0;
+    cmap_info->format   = 0;
 
-    if ( cmap->clazz != &cff_cmap_encoding_class_rec &&
-         cmap->clazz != &cff_cmap_unicode_class_rec  )
+    if ( cmap->clazz != &FT_CFF_CMAP_ENCODING_CLASS_REC_GET &&
+         cmap->clazz != &FT_CFF_CMAP_UNICODE_CLASS_REC_GET  )
     {
-      FT_Face             face    = FT_CMAP_FACE( cmap );
-      FT_Library          library = FT_FACE_LIBRARY( face );
       FT_Module           sfnt    = FT_Get_Module( library, "sfnt" );
       FT_Service_TTCMaps  service =
         (FT_Service_TTCMaps)ft_module_get_service( sfnt,
@@ -416,10 +446,9 @@
   }
 
 
-  static const FT_Service_TTCMapsRec  cff_service_get_cmap_info =
-  {
+  FT_DEFINE_SERVICE_TTCMAPSREC(cff_service_get_cmap_info,
     (TT_CMap_Info_GetFunc)cff_get_cmap_info
-  };
+  )
 
 
   /*
@@ -466,8 +495,19 @@
         *ordering = cff->ordering;
       }
 
+      /*
+       * XXX: According to Adobe TechNote #5176, the supplement in CFF
+       *      can be a real number. We truncate it to fit public API
+       *      since freetype-2.3.6.
+       */
       if ( supplement )
-        *supplement = dict->cid_supplement;
+      {
+        if ( dict->cid_supplement < FT_INT_MIN ||
+             dict->cid_supplement > FT_INT_MAX )
+          FT_TRACE1(( "cff_get_ros: too large supplement %d is truncated\n",
+                      dict->cid_supplement ));
+        *supplement = (FT_Int)dict->cid_supplement;
+      }
     }
       
   Fail:
@@ -475,10 +515,74 @@
   }
 
 
-  static const FT_Service_CIDRec  cff_service_cid_info =
+  static FT_Error
+  cff_get_is_cid( CFF_Face  face,
+                  FT_Bool  *is_cid )
   {
-    (FT_CID_GetRegistryOrderingSupplementFunc)cff_get_ros
-  };
+    FT_Error  error = CFF_Err_Ok;
+    CFF_Font  cff   = (CFF_Font)face->extra.data;
+
+
+    *is_cid = 0;
+
+    if ( cff )
+    {
+      CFF_FontRecDict  dict = &cff->top_font.font_dict;
+
+
+      if ( dict->cid_registry != 0xFFFFU )
+        *is_cid = 1;
+    }
+
+    return error;
+  }
+
+
+  static FT_Error
+  cff_get_cid_from_glyph_index( CFF_Face  face,
+                                FT_UInt   glyph_index,
+                                FT_UInt  *cid )
+  {
+    FT_Error  error = CFF_Err_Ok;
+    CFF_Font  cff;
+
+
+    cff = (CFF_Font)face->extra.data;
+
+    if ( cff )
+    {
+      FT_UInt          c;
+      CFF_FontRecDict  dict = &cff->top_font.font_dict;
+
+
+      if ( dict->cid_registry == 0xFFFFU )
+      {
+        error = CFF_Err_Invalid_Argument;
+        goto Fail;
+      }
+
+      if ( glyph_index > cff->num_glyphs )
+      {
+        error = CFF_Err_Invalid_Argument;
+        goto Fail;
+      }
+
+      c = cff->charset.sids[glyph_index];
+
+      if ( cid )
+        *cid = c;
+    }
+
+  Fail:
+    return error;
+  }
+
+
+  FT_DEFINE_SERVICE_CIDREC(cff_service_cid_info,
+    (FT_CID_GetRegistryOrderingSupplementFunc)cff_get_ros,
+    (FT_CID_GetIsInternallyCIDKeyedFunc)      cff_get_is_cid,
+    (FT_CID_GetCIDFromGlyphIndexFunc)         cff_get_cid_from_glyph_index
+  )
 
 
   /*************************************************************************/
@@ -492,20 +596,24 @@
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
-
-  static const FT_ServiceDescRec  cff_services[] =
-  {
-    { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF },
-    { FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info },
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name },
 #ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
-    { FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict },
+  FT_DEFINE_SERVICEDESCREC6(cff_services,
+    FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_GLYPH_DICT,           &FT_CFF_SERVICE_GLYPH_DICT_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+  )
+#else
+  FT_DEFINE_SERVICEDESCREC5(cff_services,
+    FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+  )
 #endif
-    { FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info },
-    { FT_SERVICE_ID_CID,                  &cff_service_cid_info },
-    { NULL, NULL }
-  };
-
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   cff_get_interface( FT_Module    driver,       /* CFF_Driver */
@@ -515,9 +623,12 @@
     FT_Module_Interface  result;
 
 
-    result = ft_service_list_lookup( cff_services, module_interface );
+    result = ft_service_list_lookup( FT_CFF_SERVICES_GET, module_interface );
     if ( result != NULL )
       return  result;
+
+    if ( !driver )
+      return NULL;
 
     /* we pass our request to the `sfnt' module */
     sfnt = FT_Get_Module( driver->library, "sfnt" );
@@ -528,11 +639,13 @@
 
   /* The FT_DriverInterface structure is defined in ftdriver.h. */
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Driver_ClassRec  cff_driver_class =
-  {
-    /* begin with the FT_Module_Class fields */
-    {
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+#define CFF_SIZE_SELECT cff_size_select
+#else
+#define CFF_SIZE_SELECT 0
+#endif
+
+  FT_DEFINE_DRIVER(cff_driver_class,
       FT_MODULE_FONT_DRIVER       |
       FT_MODULE_DRIVER_SCALABLE   |
       FT_MODULE_DRIVER_HAS_HINTER,
@@ -547,7 +660,6 @@
       cff_driver_init,
       cff_driver_done,
       cff_get_interface,
-    },
 
     /* now the specific driver fields */
     sizeof( TT_FaceRec ),
@@ -561,25 +673,19 @@
     cff_slot_init,
     cff_slot_done,
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
+    ft_stub_set_char_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    ft_stub_set_pixel_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     Load_Glyph,
 
     cff_get_kerning,
     0,                      /* FT_Face_AttachFunc      */
-    0,                      /* FT_Face_GetAdvancesFunc */
+    cff_get_advances,       /* FT_Face_GetAdvancesFunc */
 
     cff_size_request,
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-    cff_size_select
-#else
-    0                       /* FT_Size_SelectFunc      */
-#endif
-  };
+    CFF_SIZE_SELECT
+  )
 
 
 /* END */

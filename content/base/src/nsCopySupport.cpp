@@ -629,6 +629,7 @@ nsCopySupport::CanCopy(nsIDocument* aDocument)
 
   nsCOMPtr<nsISelection> sel;
   GetSelectionForCopy(aDocument, getter_AddRefs(sel));
+  NS_ENSURE_TRUE(sel, PR_FALSE);
 
   PRBool isCollapsed;
   sel->GetIsCollapsed(&isCollapsed);
