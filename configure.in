@@ -5874,7 +5874,7 @@ i?86-*-mingw*)
 i?86-apple-darwin*|powerpc-apple-darwin*)
   MOZ_CRASHREPORTER=1
   ;;
-i?86-*-linux*|x86_64-*-linux*)
+i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
   MOZ_CRASHREPORTER=1
   ;;
 *solaris*)
