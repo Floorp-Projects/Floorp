@@ -45,6 +45,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIBrowserDOMWindow.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 class nsIURI;
 class nsIDOMElement;
@@ -60,8 +63,30 @@ class PContextWrapperParent;
 }
 
 namespace dom {
+struct TabParentListenerInfo 
+{
+  TabParentListenerInfo(nsIWeakReference *aListener, unsigned long aNotifyMask)
+    : mWeakListener(aListener), mNotifyMask(aNotifyMask)
+  {
+  }
 
-class TabParent : public PIFrameEmbeddingParent
+  TabParentListenerInfo(const TabParentListenerInfo& obj)
+    : mWeakListener(obj.mWeakListener), mNotifyMask(obj.mNotifyMask) 
+  {
+  }
+
+  nsWeakPtr mWeakListener;
+
+  PRUint32 mNotifyMask;
+};
+
+inline    
+bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& rhs)
+{
+  return &lhs == &rhs;
+}
+
+class TabParent : public PIFrameEmbeddingParent, public nsIWebProgress
 {
 public:
     TabParent();
@@ -73,6 +98,21 @@ public:
 
     virtual bool RecvmoveFocus(const bool& aForward);
     virtual bool RecvsendEvent(const RemoteDOMEvent& aEvent);
+    virtual bool RecvnotifyProgressChange(const PRInt64& aProgress,
+                                          const PRInt64& aProgressMax,
+                                          const PRInt64& aTotalProgress,
+                                          const PRInt64& aMaxTotalProgress);
+    virtual bool RecvnotifyStateChange(const PRUint32& aStateFlags,
+                                       const nsresult& aStatus);
+    virtual bool RecvnotifyLocationChange(const nsCString& aUri);
+    virtual bool RecvnotifyStatusChange(const nsresult& status,
+                                        const nsString& message);
+    virtual bool RecvnotifySecurityChange(const PRUint32& aState);
+    virtual bool RecvrefreshAttempted(const nsCString& aURI,
+                                      const PRInt32& aMillis,
+                                      const bool& aSameURI,
+                                      bool* aAllowRefresh);
+
     virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
     virtual bool RecvsendSyncMessageToParent(const nsString& aMessage,
                                              const nsString& aJSON,
@@ -119,9 +159,16 @@ public:
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBPROGRESS
+
 protected:
+    TabParentListenerInfo* GetListenerInfo(nsIWebProgressListener *aListener);
+
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
+
+    nsTArray<TabParentListenerInfo> mListenerInfoList;
 };
 
 } // namespace dom

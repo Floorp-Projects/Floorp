@@ -72,6 +72,24 @@ parent:
 
     sendEvent(RemoteDOMEvent aEvent);
 
+    notifyStateChange(PRUint32 stateFlags, nsresult status);
+
+    notifyProgressChange(PRInt64 curSelfProgress,
+                         PRInt64 maxSelfProgress,
+                         PRInt64 curTotalProgress,
+                         PRInt64 maxTotalProgress);
+
+    notifyLocationChange(nsCString uri);
+
+    notifyStatusChange(nsresult status,
+                       nsString message);
+
+    notifySecurityChange(PRUint32 aState);
+
+    sync refreshAttempted(nsCString uri, PRInt32 millis,
+                          bool sameURI) returns (bool retval);
+
+
     rpc createWindow() returns (PIFrameEmbedding window);
 
     PContextWrapper();
