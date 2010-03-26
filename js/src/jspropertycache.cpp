@@ -44,6 +44,8 @@
 
 using namespace js;
 
+JS_STATIC_ASSERT(sizeof(PCVal) == sizeof(jsuword));
+
 JS_REQUIRES_STACK PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoIndex,
                     JSObject *pobj, JSScopeProperty *sprop, JSBool adding)
@@ -53,7 +55,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     jsuword kshape, vshape;
     JSOp op;
     const JSCodeSpec *cs;
-    jsuword vword;
+    PCVal vword;
     PropertyCacheEntry *entry;
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
@@ -148,7 +150,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 v = sprop->methodValue();
                 JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
                 JS_ASSERT(v == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
-                vword = JSVAL_OBJECT_TO_PCVAL(v);
+                vword.setObject(JSVAL_TO_OBJECT(v));
                 break;
             }
 
@@ -182,7 +184,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                         if (!scope->brand(cx, sprop->slot, v))
                             return JS_NO_PROP_CACHE_FILL;
                     }
-                    vword = JSVAL_OBJECT_TO_PCVAL(v);
+                    vword.setObject(JSVAL_TO_OBJECT(v));
                     break;
                 }
             }
@@ -193,10 +195,10 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
             sprop->hasDefaultGetter() &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
-            vword = SLOT_TO_PCVAL(sprop->slot);
+            vword.setSlot(sprop->slot);
         } else {
             /* Best we can do is to cache sprop (still a nice speedup). */
-            vword = SPROP_TO_PCVAL(sprop);
+            vword.setSprop(sprop);
             if (adding &&
                 sprop == scope->lastProperty() &&
                 scope->shape == sprop->shape) {
@@ -290,7 +292,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     JS_ASSERT(vshape < SHAPE_OVERFLOW_BIT);
 
     entry = &table[hash(pc, kshape)];
-    PCMETER(PCVAL_IS_NULL(entry->vword) || recycles++);
+    PCMETER(entry->vword.isNull() || recycles++);
     entry->assign(pc, kshape, vshape, scopeIndex, protoIndex, vword);
 
     empty = false;
@@ -416,12 +418,10 @@ PropertyCache::assertEmpty()
         JS_ASSERT(!table[i].kpc);
         JS_ASSERT(!table[i].kshape);
         JS_ASSERT(!table[i].vcap);
-        JS_ASSERT(!table[i].vword);
+        JS_ASSERT(table[i].vword.isNull());
     }
 }
 #endif
-
-JS_STATIC_ASSERT(PCVAL_NULL == 0);
 
 void
 PropertyCache::purge(JSContext *cx)
@@ -432,6 +432,7 @@ PropertyCache::purge(JSContext *cx)
     }
 
     PodArrayZero(table);
+    JS_ASSERT(table[0].vword.isNull());
     empty = true;
 
 #ifdef JS_PROPERTY_CACHE_METERING
@@ -497,7 +498,8 @@ PropertyCache::purgeForScript(JSScript *script)
         if (JS_UPTRDIFF(entry->kpc, script->code) < script->length) {
             entry->kpc = NULL;
 #ifdef DEBUG
-            entry->kshape = entry->vcap = entry->vword = 0;
+            entry->kshape = entry->vcap = 0;
+            entry->vword.setNull();
 #endif
         }
     }

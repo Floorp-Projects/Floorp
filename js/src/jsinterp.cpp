@@ -2252,23 +2252,23 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     JS_ASSERT(pobj == found);
 
     JSScopeProperty *sprop = (JSScopeProperty *) prop;
-    if (PCVAL_IS_SLOT(entry->vword)) {
-        JS_ASSERT(PCVAL_TO_SLOT(entry->vword) == sprop->slot);
+    if (entry->vword.isSlot()) {
+        JS_ASSERT(entry->vword.toSlot() == sprop->slot);
         JS_ASSERT(!sprop->isMethod());
-    } else if (PCVAL_IS_SPROP(entry->vword)) {
-        JS_ASSERT(PCVAL_TO_SPROP(entry->vword) == sprop);
+    } else if (entry->vword.isSprop()) {
+        JS_ASSERT(entry->vword.toSprop() == sprop);
         JS_ASSERT_IF(sprop->isMethod(),
                      sprop->methodValue() == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
     } else {
         jsval v;
-        JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
-        JS_ASSERT(entry->vword != PCVAL_NULL);
+        JS_ASSERT(entry->vword.isObject());
+        JS_ASSERT(!entry->vword.isNull());
         JS_ASSERT(OBJ_SCOPE(pobj)->brandedOrHasMethodBarrier());
         JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
         JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
-        JS_ASSERT(PCVAL_TO_OBJECT(entry->vword) == JSVAL_TO_OBJECT(v));
+        JS_ASSERT(entry->vword.toObject() == JSVAL_TO_OBJECT(v));
 
         if (sprop->isMethod()) {
             JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);

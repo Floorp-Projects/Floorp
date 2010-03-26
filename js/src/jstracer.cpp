@@ -9145,7 +9145,7 @@ TraceRecorder::guardNativePropertyOp(JSObject* aobj, LIns* map_ins)
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
+TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, PCVal& pcval)
 {
     jsbytecode* pc = cx->fp->regs->pc;
     JS_ASSERT(*pc != JSOP_INITPROP && *pc != JSOP_INITMETHOD &&
@@ -9223,8 +9223,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             // the global it's assigning does not yet exist, create it.
             obj2 = obj;
 
-            // Use PCVAL_NULL to return "no such property" to our caller.
-            pcval = PCVAL_NULL;
+            // Use a null pcval to return "no such property" to our caller.
+            pcval.setNull();
             return ARECORD_CONTINUE;
         }
 
@@ -9250,7 +9250,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                                      JSObject* aobj,
                                      JSObject* obj2,
                                      PropertyCacheEntry* entry,
-                                     jsuword& pcval)
+                                     PCVal& pcval)
 {
     VMSideExit* exit = snapshot(BRANCH_EXIT);
 
@@ -11292,7 +11292,7 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
     // Guard before anything else.
     LIns* map_ins = map(obj_ins);
     CHECK_STATUS(guardNativePropertyOp(obj, map_ins));
-    jsuword pcval;
+    PCVal pcval;
     CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
     JS_ASSERT(scope->object == obj2);
     JS_ASSERT(scope->hasProperty(sprop));
@@ -12202,16 +12202,16 @@ TraceRecorder::record_JSOP_CALLNAME()
 
     LIns* obj_ins = INS_CONSTOBJ(globalObj);
     JSObject* obj2;
-    jsuword pcval;
+    PCVal pcval;
 
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
-    if (PCVAL_IS_NULL(pcval) || !PCVAL_IS_OBJECT(pcval))
+    if (pcval.isNull() || !pcval.isObject())
         RETURN_STOP_A("callee is not an object");
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
+    JS_ASSERT(HAS_FUNCTION_CLASS(pcval.toObject()));
 
-    stack(0, INS_CONSTOBJ(PCVAL_TO_OBJECT(pcval)));
+    stack(0, INS_CONSTOBJ(pcval.toObject()));
     stack(1, obj_ins);
     return ARECORD_CONTINUE;
 }
@@ -12757,7 +12757,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     uint32 slot;
 
     JSObject* obj2;
-    jsuword pcval;
+    PCVal pcval;
 
     /*
      * Property cache ensures that we are dealing with an existing property,
@@ -12766,7 +12766,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
     /* Abort if property doesn't exist (interpreter will report an error.) */
-    if (PCVAL_IS_NULL(pcval))
+    if (pcval.isNull())
         RETURN_STOP_A("named property not found");
 
     /* Insist on obj being the directly addressed object. */
@@ -12774,15 +12774,15 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
         RETURN_STOP_A("name() hit prototype chain");
 
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
-    if (PCVAL_IS_SPROP(pcval)) {
-        JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
+    if (pcval.isSprop()) {
+        JSScopeProperty* sprop = pcval.toSprop();
         if (!isValidSlot(OBJ_SCOPE(obj), sprop))
             RETURN_STOP_A("name() not accessing a valid slot");
         slot = sprop->slot;
     } else {
-        if (!PCVAL_IS_SLOT(pcval))
+        if (!pcval.isSlot())
             RETURN_STOP_A("PCE is not a slot");
-        slot = PCVAL_TO_SLOT(pcval);
+        slot = pcval.toSlot();
     }
 
     if (!lazilyImportGlobalSlot(slot))
@@ -12831,11 +12831,11 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
      * and guards the shape for us.
      */
     JSObject* obj2;
-    jsuword pcval;
+    PCVal pcval;
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
     /* Check for non-existent property reference, which results in undefined. */
-    if (PCVAL_IS_NULL(pcval)) {
+    if (pcval.isNull()) {
         if (slotp)
             RETURN_STOP_A("property not found");
 
@@ -12876,7 +12876,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pcval,
+TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcval,
                         uint32 *slotp, LIns** v_insp, jsval *outp)
 {
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
@@ -12887,8 +12887,8 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pc
     uint32 slot;
     bool isMethod;
 
-    if (PCVAL_IS_SPROP(pcval)) {
-        sprop = PCVAL_TO_SPROP(pcval);
+    if (pcval.isSprop()) {
+        sprop = pcval.toSprop();
         JS_ASSERT(OBJ_SCOPE(obj2)->hasProperty(sprop));
 
         if (setflags && !sprop->hasDefaultSetter())
@@ -12910,9 +12910,9 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pc
         isMethod = sprop->isMethod();
         JS_ASSERT_IF(isMethod, OBJ_SCOPE(obj2)->hasMethodBarrier());
     } else {
-        if (!PCVAL_IS_SLOT(pcval))
+        if (!pcval.isSlot())
             RETURN_STOP_A("PCE is not a slot");
-        slot = PCVAL_TO_SLOT(pcval);
+        slot = pcval.toSlot();
         sprop = NULL;
         isMethod = false;
     }
@@ -14606,27 +14606,27 @@ TraceRecorder::record_JSOP_CALLPROP()
     }
 
     JSObject* obj2;
-    jsuword pcval;
+    PCVal pcval;
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
-    if (PCVAL_IS_OBJECT(pcval)) {
-        if (PCVAL_IS_NULL(pcval))
+    if (pcval.isObject()) {
+        if (pcval.isNull())
             RETURN_STOP_A("callprop of missing method");
 
-        JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
+        JS_ASSERT(HAS_FUNCTION_CLASS(pcval.toObject()));
 
         if (JSVAL_IS_PRIMITIVE(l)) {
-            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, PCVAL_TO_OBJECT(pcval));
+            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, pcval.toObject());
             if (!PRIMITIVE_THIS_TEST(fun, l))
                 RETURN_STOP_A("callee does not accept primitive |this|");
         }
 
-        set(&l, INS_CONSTOBJ(PCVAL_TO_OBJECT(pcval)));
+        set(&l, INS_CONSTOBJ(pcval.toObject()));
     } else {
         if (JSVAL_IS_PRIMITIVE(l))
             RETURN_STOP_A("callprop of primitive method");
 
-        JS_ASSERT_IF(PCVAL_IS_SPROP(pcval), !PCVAL_TO_SPROP(pcval)->isMethod());
+        JS_ASSERT_IF(pcval.isSprop(), !pcval.toSprop()->isMethod());
 
         AbortableRecordingStatus status = propTail(obj, obj_ins, obj2, pcval, NULL, NULL, &l);
         if (status != ARECORD_CONTINUE)

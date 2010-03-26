@@ -1223,8 +1223,8 @@ BEGIN_CASE(JSOP_NAMEDEC)
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-            if (obj == obj2 && PCVAL_IS_SLOT(entry->vword)) {
-                slot = PCVAL_TO_SLOT(entry->vword);
+            if (obj == obj2 && entry->vword.isSlot()) {
+                slot = entry->vword.toSlot();
                 JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot);
                 rval = LOCKED_OBJ_GET_SLOT(obj, slot);
                 if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
@@ -1487,15 +1487,15 @@ BEGIN_CASE(JSOP_GETXPROP)
             JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
             if (!atom) {
                 ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
-                if (PCVAL_IS_OBJECT(entry->vword)) {
-                    rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
-                } else if (PCVAL_IS_SLOT(entry->vword)) {
-                    slot = PCVAL_TO_SLOT(entry->vword);
+                if (entry->vword.isObject()) {
+                    rval = entry->vword.toJsval();
+                } else if (entry->vword.isSlot()) {
+                    slot = entry->vword.toSlot();
                     JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                     rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                 } else {
-                    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                    sprop = PCVAL_TO_SPROP(entry->vword);
+                    JS_ASSERT(entry->vword.isSprop());
+                    sprop = entry->vword.toSprop();
                     NATIVE_GET(cx, obj, obj2, sprop,
                                fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
                                &rval);
@@ -1583,15 +1583,15 @@ BEGIN_CASE(JSOP_CALLPROP)
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
-            if (PCVAL_IS_OBJECT(entry->vword)) {
-                rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
-            } else if (PCVAL_IS_SLOT(entry->vword)) {
-                slot = PCVAL_TO_SLOT(entry->vword);
+            if (entry->vword.isObject()) {
+                rval = entry->vword.toJsval();
+            } else if (entry->vword.isSlot()) {
+                slot = entry->vword.toSlot();
                 JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                 rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
             } else {
-                JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                sprop = PCVAL_TO_SPROP(entry->vword);
+                JS_ASSERT(entry->vword.isSprop());
+                sprop = entry->vword.toSprop();
                 NATIVE_GET(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
             }
             STORE_OPND(-1, rval);
@@ -1709,8 +1709,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * added directly to obj by this set, or on an existing "own"
                  * property, or on a prototype property that has a setter.
                  */
-                JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                sprop = PCVAL_TO_SPROP(entry->vword);
+                JS_ASSERT(entry->vword.isSprop());
+                sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
                 JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
 
@@ -1843,8 +1843,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                 sprop = NULL;
                 if (obj == obj2) {
-                    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                    sprop = PCVAL_TO_SPROP(entry->vword);
+                    JS_ASSERT(entry->vword.isSprop());
+                    sprop = entry->vword.toSprop();
                     JS_ASSERT(sprop->writable());
                     JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
                     NATIVE_SET(cx, obj, sprop, entry, &rval);
@@ -2295,20 +2295,20 @@ BEGIN_CASE(JSOP_CALLNAME)
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
         if (!atom) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-            if (PCVAL_IS_OBJECT(entry->vword)) {
-                rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
+            if (entry->vword.isObject()) {
+                rval = entry->vword.toJsval();
                 goto do_push_rval;
             }
 
-            if (PCVAL_IS_SLOT(entry->vword)) {
-                slot = PCVAL_TO_SLOT(entry->vword);
+            if (entry->vword.isSlot()) {
+                slot = entry->vword.toSlot();
                 JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                 rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                 goto do_push_rval;
             }
 
-            JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-            sprop = PCVAL_TO_SPROP(entry->vword);
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
             goto do_native_get;
         }
     } else {
@@ -3400,8 +3400,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
             PCMETER(cache->pchits++);
             PCMETER(cache->inipchits++);
 
-            JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-            sprop = PCVAL_TO_SPROP(entry->vword);
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
             JS_ASSERT(sprop->writable());
 
             /*
