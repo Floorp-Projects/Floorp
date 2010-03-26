@@ -2161,7 +2161,7 @@ function sanitizeName(aName) {
 
   // If our input had not enough valid characters, use a random name.
   if (name.length < MIN_GENERATOR_NAME_LENGTH)
-    name = Math.random().toString(36).substr(2);
+    name = Math.random().toString(36).replace(/^.*\./, '');
 
   // Force max length.
   return name.substring(0, MAX_GENERATOR_NAME_LENGTH);
