@@ -48,6 +48,8 @@
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserChromeFocus.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
@@ -65,6 +67,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsWeakReference.h"
 
 class gfxMatrix;
 
@@ -138,11 +141,13 @@ protected:
 };
 
 class TabChild : public PIFrameEmbeddingChild,
+                 public nsIWebProgressListener2,
                  public nsIWebBrowserChrome2,
                  public nsIEmbeddingSiteWindow2,
                  public nsIWebBrowserChromeFocus,
                  public nsIInterfaceRequestor,
-                 public nsIWindowProvider
+                 public nsIWindowProvider,
+                 public nsSupportsWeakReference
 {
 public:
     TabChild();
@@ -151,6 +156,8 @@ public:
     nsresult Init();
 
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBPROGRESSLISTENER
+    NS_DECL_NSIWEBPROGRESSLISTENER2
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2
     NS_DECL_NSIEMBEDDINGSITEWINDOW
