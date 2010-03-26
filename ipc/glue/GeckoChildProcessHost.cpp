@@ -278,7 +278,7 @@ GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
   MonitorAutoEnter mon(mMonitor);
   mLaunched = true;
 
-  if (!base::OpenProcessHandle(peer_pid, &mChildProcessHandle))
+  if (!base::OpenPrivilegedProcessHandle(peer_pid, &mChildProcessHandle))
       NS_RUNTIMEABORT("can't open handle to child process");
 
   mon.Notify();

@@ -186,13 +186,13 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     if (!argc)
         return JS_TRUE;
-    
+
     str = JS_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
 
-    char *bytes = JS_GetStringBytes(str);
-    fputs(bytes, stderr);
+    jschar *chars = JS_GetStringChars(str);
+    fputs(NS_ConvertUTF16toUTF8(chars).get(), stderr);
     return JS_TRUE;
 }
 

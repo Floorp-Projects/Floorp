@@ -1,0 +1,182 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 et
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozStorage.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Andrew Sutherland <asutherland@asutherland.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "mozIStorageBindingParams.idl"
+
+interface mozIStorageConnection;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
+interface mozIStorageBindingParams;
+interface mozIStorageBindingParamsArray;
+
+/**
+ * The base interface for both pure asynchronous storage statements 
+ * (mozIStorageAsyncStatement) and 'classic' storage statements
+ * (mozIStorageStatement) that can be used for both synchronous and asynchronous
+ * purposes.
+ */
+[scriptable, uuid(da2ec336-fbbb-4ba1-9778-8c9825980d01)]
+interface mozIStorageBaseStatement : mozIStorageBindingParams {
+  /**
+   * Finalizes a statement so you can successfully close a database connection.
+   * Once a statement has been finalized it can no longer be used for any
+   * purpose.
+   * 
+   * Statements are implicitly finalized when their reference counts hits zero.
+   * If you are a native (C++) caller this is accomplished by setting all of
+   * your nsCOMPtr instances to be NULL.  If you are operating from JavaScript
+   * code then you cannot rely on this behavior because of the involvement of
+   * garbage collection.
+   *
+   * When finalizing an asynchronous statement you do not need to worry about
+   * whether the statement has actually been executed by the asynchronous
+   * thread; you just need to call finalize after your last call to executeAsync
+   * involving the statement.  However, you do need to use asyncClose instead of
+   * close on the connection if any statements have been used asynchronously.
+   */
+  void finalize();
+
+  /**
+   * Bind the given value at the given numeric index.
+   *
+   * @param aParamIndex
+   *        0-based index, 0 corresponding to the first numbered argument or
+   *        "?1".
+   * @param aValue
+   *        Argument value.
+   * @param aValueSize
+   *        Length of aValue in bytes.
+   * @{
+   */
+  [deprecated] void bindUTF8StringParameter(in unsigned long aParamIndex,
+                                            in AUTF8String aValue);
+  [deprecated] void bindStringParameter(in unsigned long aParamIndex,
+                                        in AString aValue);
+  [deprecated] void bindDoubleParameter(in unsigned long aParamIndex,
+                                        in double aValue);
+  [deprecated] void bindInt32Parameter(in unsigned long aParamIndex,
+                                       in long aValue);
+  [deprecated] void bindInt64Parameter(in unsigned long aParamIndex,
+                                       in long long aValue);
+  [deprecated] void bindNullParameter(in unsigned long aParamIndex);
+  [deprecated] void bindBlobParameter(
+    in unsigned long aParamIndex,
+    [array,const,size_is(aValueSize)] in octet aValue,
+    in unsigned long aValueSize);
+  /**@}*/
+
+  /**
+   * Binds the array of parameters to the statement.  When executeAsync is
+   * called, all the parameters in aParameters are bound and then executed.
+   *
+   * @param aParameters
+   *        The array of parameters to bind to the statement upon execution.
+   *
+   * @note This is only works on statements being used asynchronously.
+   */
+  void bindParameters(in mozIStorageBindingParamsArray aParameters);
+
+  /**
+   * Creates a new mozIStorageBindingParamsArray that can be used to bind
+   * multiple sets of data to a statement with bindParameters.
+   *
+   * @return a mozIStorageBindingParamsArray that multiple sets of parameters
+   *         can be bound to.
+   *
+   * @note This is only useful for statements being used asynchronously.
+   */
+  mozIStorageBindingParamsArray newBindingParamsArray();
+
+  /**
+   * Execute a query asynchronously using any currently bound parameters.  This
+   * statement can be reused immediately, and reset does not need to be called.
+   *
+   * @note If you have any custom defined functions, they must be re-entrant
+   *       since they can be called on multiple threads.
+   *
+   * @param aCallback [optional]
+   *        The callback object that will be notified of progress, errors, and
+   *        completion.
+   * @return an object that can be used to cancel the statements execution.
+   */
+  mozIStoragePendingStatement executeAsync(
+    [optional] in mozIStorageStatementCallback aCallback
+  );
+
+  /**
+   * The statement is not usable, either because it failed to initialize or
+   * was explicitly finalized.
+   */
+  const long MOZ_STORAGE_STATEMENT_INVALID = 0;
+  /**
+   * The statement is usable.
+   */
+  const long MOZ_STORAGE_STATEMENT_READY = 1;
+  /**
+   * Indicates that the statement is executing and the row getters may be used.
+   *
+   * @note This is only relevant for mozIStorageStatement instances being used
+   *       in a synchronous fashion.
+   */
+  const long MOZ_STORAGE_STATEMENT_EXECUTING = 2;
+
+  /**
+   * Find out whether the statement is usable (has not been finalized).
+   */
+  readonly attribute long state;
+
+  /**
+   * Escape a string for SQL LIKE search.
+   *
+   * @note Consumers will have to use same escape char when doing statements
+   *       such as:   ...LIKE '?1' ESCAPE '/'...
+   *
+   * @param aValue
+   *        The string to escape for SQL LIKE.
+   * @param aEscapeChar
+   *        The escape character.
+   * @return an AString of an escaped version of aValue
+   *         (%, _ and the escape char are escaped with the escape char)
+   *         For example, we will convert "foo/bar_baz%20cheese" 
+   *         into "foo//bar/_baz/%20cheese" (if the escape char is '/').
+   */
+  AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
+};

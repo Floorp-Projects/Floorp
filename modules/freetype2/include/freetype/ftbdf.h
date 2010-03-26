@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing BDF-specific strings (specification).     */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006 by                                    */
+/*  Copyright 2002, 2003, 2004, 2006, 2009 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -182,6 +182,14 @@ FT_BEGIN_HEADER
   *   This function works with BDF _and_ PCF fonts.  It returns an error
   *   otherwise.  It also returns an error if the property is not in the
   *   font.
+  *
+  *   A `property' is a either key-value pair within the STARTPROPERTIES
+  *   ... ENDPROPERTIES block of a BDF font or a key-value pair from the
+  *   `info->props' array within a `FontRec' structure of a PCF font.
+  *
+  *   Integer properties are always stored as `signed' within PCF fonts;
+  *   consequently, @BDF_PROPERTY_TYPE_CARDINAL is a possible return value
+  *   for BDF fonts only.
   *
   *   In case of error, `aproperty->type' is always set to
   *   @BDF_PROPERTY_TYPE_NONE.

@@ -768,14 +768,14 @@ endif
 ifdef WINCE
 RUN_TEST_PROGRAM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-run-test.py
 else
-ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
-RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
-endif
-
-ifeq ($(OS_ARCH),OS2)
+ifeq (OS2,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(DIST)"
-endif
-endif
+else
+ifneq (WINNT,$(OS_ARCH))
+RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
+endif # ! WINNT
+endif # ! OS2
+endif # ! WINCE
 
 #
 # Java macros

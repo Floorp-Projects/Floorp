@@ -1,9 +1,8 @@
-#include <stdio.h>
+#include <prthread.h>
  
 int main()
 {
-   char text[20];
-   fgets(text, sizeof text, stdin);
+   while(1) PR_Sleep(PR_SecondsToInterval(10));
    return 0;
 }
 

@@ -154,6 +154,10 @@ protected:
 
     int32 mTimeoutMs;
 
+#ifdef OS_WIN
+    HANDLE mEvent;
+#endif
+
 private:
     bool EventOccurred();
 };

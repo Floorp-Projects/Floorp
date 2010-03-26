@@ -453,7 +453,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
     val.mU.mOrient.mUnit = unitType;
     val.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE;
   }
-  aValue = val;
+  aValue.Swap(val);
   aCanCache = PR_TRUE;
 
   return NS_OK;

@@ -187,6 +187,12 @@ protected:
 
     // Callback methods for native IME events.  These methods should call
     // the related instance methods simply.
+    static gboolean OnRetrieveSurroundingCallback(GtkIMContext  *aContext,
+                                                  nsGtkIMModule *aModule);
+    static gboolean OnDeleteSurroundingCallback(GtkIMContext  *aContext,
+                                                gint           aOffset,
+                                                gint           aNChars,
+                                                nsGtkIMModule *aModule);
     static void OnCommitCompositionCallback(GtkIMContext *aContext,
                                             const gchar *aString,
                                             nsGtkIMModule* aModule);
@@ -198,6 +204,10 @@ protected:
                                          nsGtkIMModule* aModule);
 
     // The instance methods for the native IME events.
+    gboolean OnRetrieveSurroundingNative(GtkIMContext  *aContext);
+    gboolean OnDeleteSurroundingNative(GtkIMContext  *aContext,
+                                       gint           aOffset,
+                                       gint           aNChars);
     void OnCommitCompositionNative(GtkIMContext *aContext,
                                    const gchar *aString);
     void OnChangeCompositionNative(GtkIMContext *aContext);
@@ -246,6 +256,12 @@ protected:
 
     // Queries the current selection offset of the window.
     PRUint32 GetSelectionOffset(nsWindow* aWindow);
+
+    // Get current paragraph text content and cursor position
+    nsresult GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos);
+
+    // Delete text portion
+    nsresult DeleteText(const PRInt32 aOffset, const PRUint32 aNChars);
 
     // Initializes the GUI event.
     void InitEvent(nsGUIEvent& aEvent);

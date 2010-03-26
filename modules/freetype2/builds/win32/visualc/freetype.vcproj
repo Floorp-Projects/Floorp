@@ -69,7 +69,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237.lib"
+				OutputFile="..\..\..\objs\freetype2312.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -144,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237MT.lib"
+				OutputFile="..\..\..\objs\freetype2312MT.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237ST.lib"
+				OutputFile="..\..\..\objs\freetype2312ST.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -291,7 +291,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237_D.lib"
+				OutputFile="..\..\..\objs\freetype2312_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -364,7 +364,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237ST_D.lib"
+				OutputFile="..\..\..\objs\freetype2312ST_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -438,7 +438,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype237MT_D.lib"
+				OutputFile="..\..\..\objs\freetype2312MT_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -672,6 +672,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\base\ftbitmap.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\base\ftfstype.c"
 				>
 			</File>
 			<File
@@ -1312,6 +1316,22 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\base\ftwinfnt.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\base\ftlcdfil.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\base\ftgxval.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\base\ftotval.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\base\ftpatent.c"
 					>
 				</File>
 				<File

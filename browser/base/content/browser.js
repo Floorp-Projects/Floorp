@@ -263,7 +263,7 @@ function SetClickAndHoldHandlers() {
     var forwardButton = document.getElementById("forward-button");
     popup = popup.cloneNode(true);
     forwardButton.setAttribute("type", "menu");
-    forwardButton.appendChild(popup);    
+    forwardButton.appendChild(popup);
     _addClickAndHoldListenersOnElement(forwardButton);
     unifiedButton._clickHandlersAttached = true;
   }
@@ -295,21 +295,21 @@ const gSessionHistoryObserver = {
 
 /**
  * Given a starting docshell and a URI to look up, find the docshell the URI
- * is loaded in. 
+ * is loaded in.
  * @param   aDocument
- *          A document to find instead of using just a URI - this is more specific. 
+ *          A document to find instead of using just a URI - this is more specific.
  * @param   aDocShell
  *          The doc shell to start at
  * @param   aSoughtURI
  *          The URI that we're looking for
- * @returns The doc shell that the sought URI is loaded in. Can be in 
+ * @returns The doc shell that the sought URI is loaded in. Can be in
  *          subframes.
  */
 function findChildShell(aDocument, aDocShell, aSoughtURI) {
   aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
   aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
-  if ((aDocument && doc == aDocument) || 
+  if ((aDocument && doc == aDocument) ||
       (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
     return aDocShell;
 
@@ -874,7 +874,7 @@ let gGestureSupport = {
    *        The swipe event to handle
    */
   onSwipe: function GS_onSwipe(aEvent) {
-    // Figure out which one (and only one) direction was triggered 
+    // Figure out which one (and only one) direction was triggered
     ["UP", "RIGHT", "DOWN", "LEFT"].forEach(function (dir) {
       if (aEvent.direction == aEvent["DIRECTION_" + dir])
         return this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
@@ -896,7 +896,7 @@ let gGestureSupport = {
     try {
       // Determine what type of data to load based on default value's type
       let type = typeof aDef;
-      let getFunc = "get" + (type == "boolean" ? "Bool" : 
+      let getFunc = "get" + (type == "boolean" ? "Bool" :
                              type == "number" ? "Int" : "Char") + "Pref";
       return gPrefService[getFunc](branch + aPref);
     }
@@ -926,7 +926,7 @@ function BrowserStartup() {
 
   prepareForStartup();
 
-  if (uriToLoad && !isLoadingBlank) { 
+  if (uriToLoad && !isLoadingBlank) {
     if (uriToLoad instanceof Ci.nsISupportsArray) {
       let count = uriToLoad.Count();
       let specs = [];
@@ -1197,7 +1197,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   }
 
   UpdateUrlbarSearchSplitterState();
-  
+
   PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
@@ -1324,7 +1324,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   }, 4000);
 
   // Delayed initialization of the livemarks update timer.
-  // Livemark updates don't need to start until after bookmark UI 
+  // Livemark updates don't need to start until after bookmark UI
   // such as the toolbar has initialized. Starting 5 seconds after
   // delayedStartup in order to stagger this after the microsummary
   // service (see above) and before the download manager starts (see below).
@@ -1496,7 +1496,7 @@ function nonBrowserWindowDelayedStartup()
 {
   // initialise the offline listener
   BrowserOffline.init();
-  
+
   // Set up Sanitize Item
   initializeSanitizer();
 
@@ -1739,7 +1739,7 @@ function loadOneOrMoreURIs(aURIString)
   // so that we don't disrupt startup
   try {
     gBrowser.loadTabs(aURIString.split("|"), false, true);
-  } 
+  }
   catch (e) {
   }
 }
@@ -1976,13 +1976,13 @@ function getShortcutOrURI(aURL, aPostDataRef) {
 
   return shortcutURL;
 }
- 
+
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
   var dataStream = Cc["@mozilla.org/io/string-input-stream;1"].
                    createInstance(Ci.nsIStringInputStream);
   aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
   dataStream.data = aStringData;
- 
+
   var mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"].
                    createInstance(Ci.nsIMIMEInputStream);
   mimeStream.addHeader("Content-Type", aType);
@@ -2334,7 +2334,7 @@ function BrowserOnCommand(event) {
     if (/^about:certerror/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false, handlePrivateBrowsing : true };
-        
+
         try {
           switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
             case 2 : // Pre-fetch & pre-populate
@@ -2345,10 +2345,10 @@ function BrowserOnCommand(event) {
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
         }
-        
+
         window.openDialog('chrome://pippki/content/exceptionDialog.xul',
                           '','chrome,centerscreen,modal', params);
-        
+
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
           errorDoc.location.reload();
@@ -2362,7 +2362,7 @@ function BrowserOnCommand(event) {
       // First check whether it's malware or phishing, so that we can
       // use the right strings/links
       var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
-      
+
       if (ot == errorDoc.getElementById('getMeOutButton')) {
         getMeOutOfHere();
       }
@@ -2423,7 +2423,7 @@ function BrowserOnCommand(event) {
             }
           };
         }
-        
+
         let notificationBox = gBrowser.getNotificationBox();
         let value = "blocked-badware-page";
 
@@ -2637,7 +2637,7 @@ function FillInHTMLTooltip(tipElement)
           (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))) {
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
-      if (lookingForSVGTitle && 
+      if (lookingForSVGTitle &&
           !(tipElement instanceof SVGElement &&
             tipElement.parentNode instanceof SVGElement &&
             !(tipElement.parentNode instanceof SVGForeignObjectElement))) {
@@ -2666,7 +2666,7 @@ function FillInHTMLTooltip(tipElement)
 
   var tipNode = document.getElementById("aHTMLTooltip");
   tipNode.style.direction = direction;
-  
+
   [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
 
@@ -3054,13 +3054,13 @@ const BrowserSearch = {
   },
 
   /**
-   * Update the browser UI to show whether or not additional engines are 
-   * available when a page is loaded or the user switches tabs to a page that 
+   * Update the browser UI to show whether or not additional engines are
+   * available when a page is loaded or the user switches tabs to a page that
    * has search engines.
    */
   updateSearchButton: function() {
     var searchBar = this.searchBar;
-    
+
     // The search bar binding might not be applied even though the element is
     // in the document (e.g. when the navigation toolbar is hidden), so check
     // for .searchButton specifically.
@@ -3128,14 +3128,14 @@ const BrowserSearch = {
    */
   loadSearch: function BrowserSearch_search(searchText, useNewTab) {
     var engine;
-  
+
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
     if (isElementVisible(this.searchBar))
       engine = Services.search.currentEngine;
     else
       engine = Services.search.defaultEngine;
-  
+
     var submission = engine.getSubmission(searchText, null); // HTML response
 
     // getSubmission can return null if the engine doesn't have a URL
@@ -3144,7 +3144,7 @@ const BrowserSearch = {
     // but let's be on the safe side.
     if (!submission)
       return;
-  
+
     if (useNewTab) {
       gBrowser.loadOneTab(submission.uri.spec, {
                           postData: submission.postData,
@@ -3230,7 +3230,7 @@ function FillHistoryMenu(aParent) {
     }
 
     if (j < index) {
-      item.className = "unified-nav-back menuitem-iconic";
+      item.className = "unified-nav-back menuitem-iconic menuitem-with-favicon";
       item.setAttribute("tooltiptext", tooltipBack);
     } else if (j == index) {
       item.setAttribute("type", "radio");
@@ -3238,7 +3238,7 @@ function FillHistoryMenu(aParent) {
       item.className = "unified-nav-current";
       item.setAttribute("tooltiptext", tooltipCurrent);
     } else {
-      item.className = "unified-nav-forward menuitem-iconic";
+      item.className = "unified-nav-forward menuitem-iconic menuitem-with-favicon";
       item.setAttribute("tooltiptext", tooltipForward);
     }
 
@@ -3424,7 +3424,7 @@ function BrowserToolboxCustomizeChange() {
  *
  * If UI is visible, we use goUpdateGlobalEditMenuItems to set the commands'
  * enabled state so the UI will reflect it appropriately.
- * 
+ *
  * If the UI isn't visible, we enable all edit commands so keyboard shortcuts
  * still work and just lazily disable them as needed when the user presses a
  * shortcut.
@@ -3784,7 +3784,7 @@ var FullScreen =
  * @param aMimeType
  *        The MIME type to check.
  *
- * If adding types to this function, please also check the similar 
+ * If adding types to this function, please also check the similar
  * function in findbar.xml
  */
 function mimeTypeIsTextBased(aMimeType)
@@ -3905,7 +3905,7 @@ var XULBrowserWindow = {
       this.statusText = text;
     }
   },
-  
+
   onLinkIconAvailable: function (aBrowser, aIconURL) {
     if (gProxyFavIcon && gBrowser.userTypedValue === null)
       PageProxySetIcon(aIconURL); // update the favicon in the URL bar
@@ -4144,7 +4144,7 @@ var XULBrowserWindow = {
     else
       this.asyncUpdateUI();
   },
-  
+
   asyncUpdateUI: function () {
     FeedHandler.updateFeeds();
     BrowserSearch.updateSearchButton();
@@ -4171,7 +4171,7 @@ var XULBrowserWindow = {
         var contentHost = gBrowser.contentWindow.location.host;
         if (this._host !== undefined && this._host != contentHost) {
             Components.utils.reportError(
-              "ASSERTION: browser.js host is inconsistent. Content window has " + 
+              "ASSERTION: browser.js host is inconsistent. Content window has " +
               "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
             );
         }
@@ -4232,7 +4232,7 @@ var XULBrowserWindow = {
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
 
-    // Don't pass in the actual location object, since it can cause us to 
+    // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we
     // care about. (bug 424829)
     var location = gBrowser.contentWindow.location;
@@ -4276,7 +4276,7 @@ var XULBrowserWindow = {
     gBrowser.selectedBrowser.feeds = null;
 
     // clear out search-engine data
-    gBrowser.selectedBrowser.engines = null;    
+    gBrowser.selectedBrowser.engines = null;
 
     var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
 
@@ -4402,7 +4402,7 @@ var TabsProgressListener = {
     if (aBrowser.contentWindow == aWebProgress.DOMWindow)
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
   },
-  
+
   onStatusChange: function (aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
   },
 
@@ -4610,7 +4610,7 @@ function displaySecurityInfo()
  *  - id           (required) the string to match commandID. The convention
  *                 is to use this naming scheme: 'view<sidebar-name>Sidebar'.
  *  - sidebarurl   (required) specifies the URL to load in this sidebar.
- *  - sidebartitle or label (in that order) specify the title to 
+ *  - sidebartitle or label (in that order) specify the title to
  *                 display on the sidebar.
  *  - checked      indicates whether the sidebar is currently displayed.
  *                 Note that toggleSidebar updates this attribute when
@@ -4905,7 +4905,7 @@ function asyncOpenWebPanel(event)
          }
          catch(ex) {
            return false;
-         } 
+         }
 
          var postData = { };
          var url = getShortcutOrURI(wrapper.href, postData);
@@ -4978,14 +4978,14 @@ function handleLinkClick(event, href, linkNode)
       }
 
       if (event.shiftKey && event.altKey) {
-        var feedService = 
+        var feedService =
             Cc["@mozilla.org/browser/feeds/result-service;1"].
             getService(Ci.nsIFeedResultService);
         feedService.forcePreviewPage = true;
         loadURI(href, null, null, false);
         return false;
       }
-                                                       
+
       if (event.shiftKey) {
         openNewWindowWith(href, doc, null, false);
         event.stopPropagation();
@@ -5346,7 +5346,7 @@ var BrowserOffline = {
       ioService.manageOfflineStatus = false;
     } catch (ex) {
     }
-  
+
     if (!ioService.offline && !this._canGoOffline()) {
       this._updateOfflineUI(false);
       return;
@@ -5800,7 +5800,7 @@ function AddKeywordForSearchField() {
 
   var spec = formURI.spec;
 
-  var isURLEncoded = 
+  var isURLEncoded =
                (node.form.method.toUpperCase() == "POST"
                 && (node.form.enctype == "application/x-www-form-urlencoded" ||
                     node.form.enctype == ""));
@@ -5833,7 +5833,7 @@ function AddKeywordForSearchField() {
     }
 
     type = el.type.toLowerCase();
-    
+
     if ((type == "text" || type == "hidden" || type == "textarea") ||
         ((type == "checkbox" || type == "radio") && el.checked)) {
       formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
@@ -5882,7 +5882,7 @@ function getPluginInfo(pluginElement)
       var docShell = findChildShell(doc, gBrowser.docShell, null);
       try {
         pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
-      } catch (ex) { 
+      } catch (ex) {
         pluginsPage = "";
       }
     }
@@ -5914,17 +5914,18 @@ var gMissingPluginInstaller = {
     return this.crashReportHelpURL;
   },
 
-  addLinkClickCallback: function (linkNode, callbackName, callbackArg) {
+  addLinkClickCallback: function (linkNode, callbackName /*callbackArgs...*/) {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
+    let callbackArgs = Array.prototype.slice.call(arguments).slice(2);
     linkNode.addEventListener("click",
                               function(evt) {
                                 if (!evt.isTrusted)
                                   return;
                                 evt.preventDefault();
-                                if (callbackArg == undefined)
-                                  callbackArg = evt;
-                                (self[callbackName])(callbackArg);
+                                if (callbackArgs.length == 0)
+                                  callbackArgs = [ evt ];
+                                (self[callbackName]).apply(self, callbackArgs);
                               },
                               true);
 
@@ -5934,10 +5935,10 @@ var gMissingPluginInstaller = {
                                   return;
                                 if (evt.keyCode == evt.DOM_VK_RETURN) {
                                   evt.preventDefault();
-                                  if (callbackArg == undefined)
-                                    callbackArg = evt;
+                                  if (callbackArgs.length == 0)
+                                    callbackArgs = [ evt ];
                                   evt.preventDefault();
-                                  (self[callbackName])(callbackArg);
+                                  (self[callbackName]).apply(self, callbackArgs);
                                 }
                               },
                               true);
@@ -5961,10 +5962,12 @@ var gMissingPluginInstaller = {
   },
 
   // Callback for user clicking "submit a report" link
-  submitReport : function(minidumpID) {
+  submitReport : function(pluginDumpID, browserDumpID) {
     // The crash reporter wants a DOM element it can append an IFRAME to,
     // which it uses to submit a form. Let's just give it gBrowser.
-    this.CrashSubmit.submit(minidumpID, gBrowser, null, null);
+    this.CrashSubmit.submit(pluginDumpID, gBrowser, null, null);
+    if (browserDumpID)
+      this.CrashSubmit.submit(browserDumpID, gBrowser, null, null);
   },
 
   // Callback for user clicking a "reload page" link
@@ -6103,7 +6106,7 @@ var gMissingPluginInstaller = {
         popup: null,
         callback: showPluginsMissing
       }];
-    
+
       notificationBox.appendNotification(messageString, "missing-plugins",
                                          iconURL, priority, buttons);
     }
@@ -6127,13 +6130,14 @@ var gMissingPluginInstaller = {
      return;
 
 #ifdef MOZ_CRASHREPORTER
-    let minidumpID   = propertyBag.getPropertyAsAString("minidumpID");
+    let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
+    let browserDumpID= propertyBag.getPropertyAsAString("browserDumpID");
     let shouldSubmit = gCrashReporter.submitReports;
     let doPrompt     = true; // XXX followup to get via gCrashReporter
 
     // Submit automatically when appropriate.
-    if (minidumpID && shouldSubmit && !doPrompt) {
-      this.submitReport(minidumpID);
+    if (pluginDumpID && shouldSubmit && !doPrompt) {
+      this.submitReport(pluginDumpID, browserDumpID);
       // Submission is async, so we can't easily show failure UI.
       propertyBag.setPropertyAsBool("submittedCrashReport", true);
     }
@@ -6156,7 +6160,8 @@ var gMissingPluginInstaller = {
     let doPrompt        = true; // XXX followup for .getData("doPrompt");
     let submitReports   = true; // XXX followup for .getData("submitReports");
     let pluginName      = aEvent.getData("pluginName");
-    let minidumpID      = aEvent.getData("minidumpID");
+    let pluginDumpID    = aEvent.getData("pluginDumpID");
+    let browserDumpID   = aEvent.getData("browserDumpID");
 
     // We're expecting this to be a plugin.
     let plugin = aEvent.target;
@@ -6193,12 +6198,13 @@ var gMissingPluginInstaller = {
       // XXX can we make the link target actually be blank?
       let pleaseLink = doc.getAnonymousElementByAttribute(
                             plugin, "class", "pleaseSubmitLink");
-      self.addLinkClickCallback(pleaseLink, "submitReport", minidumpID);
+      self.addLinkClickCallback(pleaseLink, "submitReport",
+                                pluginDumpID, browserDumpID);
     }
 
     // If we don't have a minidumpID, we can't (or didn't) submit anything.
     // This can happen if the plugin is killed from the task manager.
-    if (!minidumpID) {
+    if (!pluginDumpID) {
         showClass = "msg msgNoCrashReport";
     }
 
@@ -6222,7 +6228,7 @@ var gMissingPluginInstaller = {
           if (!(propertyBag instanceof Ci.nsIPropertyBag2))
             return;
           // Ignore notifications for other crashes.
-          if (propertyBag.get("minidumpID") != minidumpID)
+          if (propertyBag.get("minidumpID") != pluginDumpID)
             return;
           self.updateSubmissionStatus(plugin, propertyBag, data);
         },
@@ -6266,7 +6272,7 @@ var gMissingPluginInstaller = {
         // If another plugin on the page was large enough to show our UI, we
         // don't want to show a notification bar.
         if (!doc.mozNoPluginCrashedNotification)
-          showNotificationBar(minidumpID);
+          showNotificationBar(pluginDumpID, browserDumpID);
     } else {
         // If a previous plugin on the page was too small and resulted in
         // adding a notification bar, then remove it because this plugin
@@ -6281,7 +6287,7 @@ var gMissingPluginInstaller = {
         notificationBox.removeNotification(notification, true);
     }
 
-    function showNotificationBar(minidumpID) {
+    function showNotificationBar(pluginDumpID, browserDumpID) {
       // If there's already an existing notification bar, don't do anything.
       let notification = notificationBox.getNotificationWithValue("plugin-crashed");
       if (notification)
@@ -6295,21 +6301,22 @@ var gMissingPluginInstaller = {
       let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
       let submitKey   = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.accesskey");
 
-      let buttons = [
+      let buttons = [{
+        label: reloadLabel,
+        accessKey: reloadKey,
+        popup: null,
+        callback: function() { browser.reload(); },
+      }];
 #ifdef MOZ_CRASHREPORTER
-        {
-          label: submitLabel,
-          accessKey: submitKey,
-          popup: null,
-          callback: function() { gMissingPluginInstaller.submitReport(minidumpID); },
-        },
+      let submitButton = {
+        label: submitLabel,
+        accessKey: submitKey,
+        popup: null,
+          callback: function() { gMissingPluginInstaller.submitReport(pluginDumpID, browserDumpID); },
+      };
+      if (minidumpID)
+        buttons.push(submitButton);
 #endif
-        {
-          label: reloadLabel,
-          accessKey: reloadKey,
-          popup: null,
-          callback: function() { browser.reload(); },
-        }];
 
       let notification = notificationBox.appendNotification(messageString, "plugin-crashed",
                                                             iconURL, priority, buttons);
@@ -6379,19 +6386,19 @@ function convertFromUnicode(charset, str)
     str = unicodeConverter.ConvertFromUnicode(str);
     return str + unicodeConverter.Finish();
   } catch(ex) {
-    return null; 
+    return null;
   }
 }
 
 /**
  * The Feed Handler object manages discovery of RSS/ATOM feeds in web pages
- * and shows UI when they are discovered. 
+ * and shows UI when they are discovered.
  */
 var FeedHandler = {
   /**
    * The click handler for the Feed icon in the location bar. Opens the
    * subscription page if user is not given a choice of feeds.
-   * (Otherwise the list of available feeds will be presented to the 
+   * (Otherwise the list of available feeds will be presented to the
    * user in a popup menu.)
    */
   onFeedButtonClick: function(event) {
@@ -6403,11 +6410,11 @@ var FeedHandler = {
         this.subscribeToFeed(null, event);
     }
   },
-  
+
   /**
-   * Called when the user clicks on the Feed icon in the location bar. 
+   * Called when the user clicks on the Feed icon in the location bar.
    * Builds a menu of unique feeds associated with the page, and if there
-   * is only one, shows the feed inline in the browser window. 
+   * is only one, shows the feed inline in the browser window.
    * @param   menuPopup
    *          The feed list menupopup to be populated.
    * @returns true if the menu should be shown, false if there was only
@@ -6437,7 +6444,7 @@ var FeedHandler = {
       return false;
     }
 
-    // Build the menu showing the available feed choices for viewing. 
+    // Build the menu showing the available feed choices for viewing.
     for (var i = 0; i < feeds.length; ++i) {
       var feedInfo = feeds[i];
       var menuItem = document.createElement("menuitem");
@@ -6452,7 +6459,7 @@ var FeedHandler = {
     }
     return true;
   },
-  
+
   /**
    * Subscribe to a given feed.  Called when
    *   1. Page has a single feed and user clicks feed icon in location bar
@@ -6463,7 +6470,7 @@ var FeedHandler = {
    *          The feed to subscribe to. May be null, in which case the
    *          event target's feed attribute is examined.
    * @param   event
-   *          The event this method is handling. Used to decide where 
+   *          The event this method is handling. Used to decide where
    *          to open the preview UI. (Optional, unless href is null)
    */
   subscribeToFeed: function(href, event) {
@@ -6487,7 +6494,7 @@ var FeedHandler = {
       openUILink(href, event, false, true, false, null);
     }
     finally {
-      // We might default to a livebookmarks modal dialog, 
+      // We might default to a livebookmarks modal dialog,
       // so reset that if the user happens to click it again
       gBrowser.selectedBrowser.feeds = feeds;
     }
@@ -6495,7 +6502,7 @@ var FeedHandler = {
 
   /**
    * Update the browser UI to show whether or not feeds are available when
-   * a page is loaded or the user switches tabs to a page that has feeds. 
+   * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
     var feedButton = document.getElementById("feed-button");
@@ -6516,7 +6523,7 @@ var FeedHandler = {
     } else {
       if (feedButton)
         feedButton.collapsed = false;
-      
+
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
         this._feedMenupopup.removeAttribute("hidden");
@@ -6532,7 +6539,7 @@ var FeedHandler = {
         this._feedMenupopup.setAttribute("hidden", "true");
       }
     }
-  }, 
+  },
 
   addFeed: function(link, targetDoc) {
     // find which tab this is for, and set the attribute on the browser
@@ -6577,11 +6584,11 @@ function undoCloseTab(aIndex) {
            getService(Ci.nsISessionStore);
   if (ss.getClosedTabCount(window) > (aIndex || 0)) {
     tab = ss.undoCloseTab(window, aIndex || 0);
-    
+
     if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
   }
-  
+
   return tab;
 }
 
@@ -6750,7 +6757,7 @@ var gIdentityHandler = {
     displaySecurityInfo();
     event.stopPropagation();
   },
-  
+
   /**
    * Helper to parse out the important parts of _lastStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
@@ -6759,10 +6766,10 @@ var gIdentityHandler = {
     var result = {};
     var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
     var cert = status.serverCert;
-    
+
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
-    
+
     // SubjectName fields, broken up for individual access
     if (cert.subjectName) {
       result.subjectNameFields = {};
@@ -6770,25 +6777,25 @@ var gIdentityHandler = {
         var field = v.split("=");
         this[field[0]] = field[1];
       }, result.subjectNameFields);
-      
+
       // Call out city, state, and country specifically
       result.city = result.subjectNameFields.L;
       result.state = result.subjectNameFields.ST;
       result.country = result.subjectNameFields.C;
     }
-    
+
     // Human readable name of Certificate Authority
     result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
     result.cert = cert;
-    
+
     return result;
   },
-  
+
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
    * (if available) and, if necessary, update the UI to reflect this.  Intended to
    * be called by onSecurityChange
-   * 
+   *
    * @param PRUint32 state
    * @param JS Object location that mirrors an nsLocation (i.e. has .host and
    *                           .hostname and .port)
@@ -6810,7 +6817,7 @@ var gIdentityHandler = {
     else
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
   },
-  
+
   /**
    * Return the eTLD+1 version of the current hostname
    */
@@ -6827,7 +6834,7 @@ var gIdentityHandler = {
       return this._lastLocation.hostname;
     }
   },
-  
+
   /**
    * Update the UI to reflect the specified mode, which should be one of the
    * IDENTITY_MODE_* constants.
@@ -6841,12 +6848,12 @@ var gIdentityHandler = {
 
     this._identityBox.className = newMode;
     this.setIdentityMessages(newMode);
-    
+
     // Update the popup too, if it's open
     if (this._identityPopup.state == "open")
       this.setPopupMessages(newMode);
   },
-  
+
   /**
    * Set up the messages for the primary identity UI based on the specified mode,
    * and the details of the SSL cert, where applicable
@@ -6855,8 +6862,8 @@ var gIdentityHandler = {
    */
   setIdentityMessages : function(newMode) {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
-      var iData = this.getIdentityData();     
-      
+      var iData = this.getIdentityData();
+
       // It would be sort of nice to use the CN= field in the cert, since that's
       // typically what we want here, but thanks to x509 certs being extensible,
       // it's not the only place you have to check, there can be more than one domain,
@@ -6873,7 +6880,7 @@ var gIdentityHandler = {
         case 1 : // Show eTLD.
           icon_label = this.getEffectiveHost();
       }
-      
+
       // We need a port number for all lookups.  If one hasn't been specified, use
       // the https default
       var lookupHost = this._lastLocation.host;
@@ -6884,12 +6891,12 @@ var gIdentityHandler = {
       // for certs that are trusted because of a security exception.
       var tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
                                                         [iData.caOrg]);
-      
+
       // Check whether this site is a security exception. XPConnect does the right
       // thing here in terms of converting _lastLocation.port from string to int, but
       // the overrideService doesn't like undefined ports, so make sure we have
       // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
+      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
@@ -6917,7 +6924,7 @@ var gIdentityHandler = {
       icon_country_label = "";
       icon_labels_dir = "ltr";
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
     this._identityIconLabel.value = icon_label;
@@ -6928,7 +6935,7 @@ var gIdentityHandler = {
     // Hide completely if the organization label is empty
     this._identityIconLabel.parentNode.hidden = icon_label ? false : true;
   },
-  
+
   /**
    * Set up the title and content messages for the identity message popup,
    * based on the specified mode, and the details of the SSL cert, where
@@ -6937,17 +6944,17 @@ var gIdentityHandler = {
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
   setPopupMessages : function(newMode) {
-      
+
     this._identityPopup.className = newMode;
     this._identityPopupContentBox.className = newMode;
-    
+
     // Set the static strings up front
     this._identityPopupEncLabel.textContent = this._encryptionLabel[newMode];
-    
+
     // Initialize the optional strings to empty values
     var supplemental = "";
     var verifier = "";
-    
+
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
@@ -6959,12 +6966,12 @@ var gIdentityHandler = {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
       host = this.getEffectiveHost();
-      owner = iData.subjectOrg; 
+      owner = iData.subjectOrg;
       verifier = this._identityBox.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
-        supplemental += iData.city + "\n";        
+        supplemental += iData.city + "\n";
       if (iData.state && iData.country)
         supplemental += gNavigatorBundle.getFormattedString("identity.identified.state_and_country",
                                                             [iData.state, iData.country]);
@@ -6978,7 +6985,7 @@ var gIdentityHandler = {
       host = "";
       owner = "";
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityPopupContentHost.textContent = host;
     this._identityPopupContentOwner.textContent = owner;
@@ -6991,12 +6998,12 @@ var gIdentityHandler = {
   },
 
   /**
-   * Click handler for the identity-box element in primary chrome.  
+   * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent : function(event) {
-  
+
     event.stopPropagation();
- 
+
     if ((event.type == "click" && event.button != 0) ||
         (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
          event.keyCode != KeyEvent.DOM_VK_RETURN))
@@ -7008,14 +7015,14 @@ var gIdentityHandler = {
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
-    
+
     // Tell the popup to consume dismiss clicks, to avoid bug 395314
     this._identityPopup.popupBoxObject
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-    
+
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
-    
+
     // Make sure the identity popup hangs toward the middle of the location bar
     // in RTL builds
     var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_end' : 'after_start';
@@ -7094,7 +7101,7 @@ let DownloadMonitorPanel = {
 
       return;
     }
-  
+
     // Find the download with the longest remaining time
     let numPaused = 0;
     let maxTime = -Infinity;
@@ -7295,7 +7302,7 @@ let gPrivateBrowsingUI = {
     this._setPBMenuTitle("stop");
 
     document.getElementById("menu_import").setAttribute("disabled", "true");
-    
+
     // Disable the Clear Recent History... menu item when in PB mode
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");

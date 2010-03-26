@@ -159,6 +159,12 @@ interface mozIStorageError : nsISupports {
   const long FORMAT = 24;
 
   /**
+   * Attempt to bind a parameter using an out-of-range index or nonexistent
+   * named parameter name.
+   */
+  const long RANGE = 25;
+
+  /**
    * File opened that is not a database file.
    */
   const long NOTADB = 26;

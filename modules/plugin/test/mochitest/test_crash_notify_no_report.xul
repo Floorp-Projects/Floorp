@@ -32,7 +32,7 @@ var testObserver = {
     ok((subject instanceof Components.interfaces.nsIWritablePropertyBag2),
 "got writable Propbag");
 
-    var id = subject.getPropertyAsAString("minidumpID");
+    var id = subject.getPropertyAsAString("pluginDumpID");
     isnot(id, "", "got a non-empty crash id");
     let directoryService =
       Components.classes["@mozilla.org/file/directory_service;1"].

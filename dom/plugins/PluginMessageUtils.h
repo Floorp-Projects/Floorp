@@ -61,12 +61,6 @@ namespace mozilla {
 struct void_t { };
 struct null_t { };
 
-namespace ipc {
-
-typedef intptr_t NPRemoteIdentifier;
-
-} /* namespace ipc */
-
 namespace plugins {
 
 enum ScriptableObjectType
@@ -204,12 +198,32 @@ NPNVariableToString(NPNVariable aVar)
 }
 #undef VARSTR
 
+inline bool IsPluginThread()
+{
+  MessageLoop::Type type = MessageLoop::current()->type();
+  return type == MessageLoop::TYPE_UI;
+}
 
 inline void AssertPluginThread()
 {
-  NS_ASSERTION(MessageLoopForUI::current(),
-               "should be on the plugin's main thread!");
+  NS_ASSERTION(IsPluginThread(), "Should be on the plugin's main thread!");
 }
+
+#define ENSURE_PLUGIN_THREAD(retval) \
+  PR_BEGIN_MACRO \
+    if (!IsPluginThread()) { \
+      NS_WARNING("Not running on the plugin's main thread!"); \
+      return (retval); \
+    } \
+  PR_END_MACRO
+
+#define ENSURE_PLUGIN_THREAD_VOID() \
+  PR_BEGIN_MACRO \
+    if (!IsPluginThread()) { \
+      NS_WARNING("Not running on the plugin's main thread!"); \
+      return; \
+    } \
+  PR_END_MACRO
 
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
 void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
@@ -654,6 +668,35 @@ struct ParamTraits<NPNURLVariable>
       switch (intval) {
       case NPNURLVCookie:
       case NPNURLVProxy:
+        *aResult = paramType(intval);
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+  
+template<>
+struct ParamTraits<NPCoordinateSpace>
+{
+  typedef NPCoordinateSpace paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, int32(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int32 intval;
+    if (ReadParam(aMsg, aIter, &intval)) {
+      switch (intval) {
+      case NPCoordinateSpacePlugin:
+      case NPCoordinateSpaceWindow:
+      case NPCoordinateSpaceFlippedWindow:
+      case NPCoordinateSpaceScreen:
+      case NPCoordinateSpaceFlippedScreen:
         *aResult = paramType(intval);
         return true;
       }

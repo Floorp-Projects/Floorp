@@ -594,7 +594,6 @@ MAKEFILES_xpinstall="
 MAKEFILES_xpfe="
   widget/src/xremoteclient/Makefile
   toolkit/components/remote/Makefile
-  xpfe/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
   xpfe/components/find/Makefile

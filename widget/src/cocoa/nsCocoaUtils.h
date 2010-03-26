@@ -138,12 +138,11 @@ class nsCocoaUtils
   /** Creates a <code>CGImageRef</code> from a frame contained in an <code>imgIContainer</code>.
       Copies the pixel data from the indicated frame of the <code>imgIContainer</code> into a new <code>CGImageRef</code>.
       The caller owns the <code>CGImageRef</code>. 
-      @param aImage the image to extract a frame from
-      @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aFrame the frame to convert
       @param aResult the resulting CGImageRef
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateCGImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, CGImageRef *aResult);
+  static nsresult CreateCGImageFromSurface(gfxImageSurface *aFrame, CGImageRef *aResult);
   
   /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
       Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.

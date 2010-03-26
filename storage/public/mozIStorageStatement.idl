@@ -22,6 +22,8 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Andrew Sutherland <asutherland@asutherland.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,23 +39,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "mozIStorageValueArray.idl"
+#include "mozIStorageBaseStatement.idl"
 
-interface mozIStorageConnection;
-interface mozIStorageStatementCallback;
-interface mozIStoragePendingStatement;
-interface mozIStorageBindingParamsArray;
+[ptr] native octetPtr(PRUint8);
 
-[scriptable, uuid(20c45bdd-51d4-4f07-b70e-5feaa6302197)]
-interface mozIStorageStatement : mozIStorageValueArray {
-  /**
-   * Finalizes a statement so you can successfully close a database connection.
-   * This method does not need to be used from native callers since you can just
-   * set the statement to null, but is extremely useful to JS callers.
-   */
-  void finalize();
-
+/**
+ * A SQL statement that can be used for both synchronous and asynchronous
+ * purposes.
+ */
+[scriptable, uuid(57ec7be1-36cf-4510-b938-7d1c9ee8cec5)]
+interface mozIStorageStatement : mozIStorageBaseStatement {
   /**
    * Create a clone of this statement, by initializing a new statement
    * with the same connection and same SQL statement as this one.  It
@@ -79,7 +74,7 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * @param aName
    *        The name of the parameter you want the index for.  This does not
    *        include the leading ':'.
-   * @returns the index of the named parameter.
+   * @return the index of the named parameter.
    */
   unsigned long getParameterIndex(in AUTF8String aName);
 
@@ -96,7 +91,8 @@ interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Obtains the index of the column with the specified name.
    *
-   * @param aName The name of the column.
+   * @param aName
+   *        The name of the column.
    * @return The index of the column with the specified name.
    */
   unsigned long getColumnIndex(in AUTF8String aName);
@@ -104,9 +100,10 @@ interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Obtains the declared column type of a prepared statement.
    *
-   * @param aParamIndex The zero-based index of the column who's declared type
-   *                    we are interested in.
-   * @returns the declared index type.
+   * @param aParamIndex
+   *        The zero-based index of the column who's declared type we are
+   *        interested in.
+   * @return the declared index type.
    */
   AUTF8String getColumnDecltype(in unsigned long aParamIndex);
 
@@ -114,39 +111,6 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * Reset parameters/statement execution
    */
   void reset();
-
-  /**
-   * Bind the given value to the parameter at aParamIndex. Index 0
-   * denotes the first numbered argument or ?1.
-   */
-  void bindUTF8StringParameter(in unsigned long aParamIndex,
-                               in AUTF8String aValue);
-  void bindStringParameter(in unsigned long aParamIndex, in AString aValue);
-  void bindDoubleParameter(in unsigned long aParamIndex, in double aValue);
-  void bindInt32Parameter(in unsigned long aParamIndex, in long aValue);
-  void bindInt64Parameter(in unsigned long aParamIndex, in long long aValue);
-  void bindNullParameter(in unsigned long aParamIndex);
-  void bindBlobParameter(in unsigned long aParamIndex,
-                         [array,const,size_is(aValueSize)] in octet aValue,
-                         in unsigned long aValueSize);
-
-  /**
-   * Binds the array of parameters to the statement.  When executeAsync is
-   * called, all the parameters in aParameters are bound and then executed.
-   *
-   * @param aParameters
-   *        The array of parameters to bind to the statement upon execution.
-   */
-  void bindParameters(in mozIStorageBindingParamsArray aParameters);
-
-  /**
-   * Creates a new mozIStorageBindingParamsArray that can be used to bind
-   * multiple sets of data to a statement.
-   *
-   * @returns a mozIStorageBindingParamsArray that multiple sets of parameters
-   *          can be bound to.
-   */
-  mozIStorageBindingParamsArray newBindingParamsArray();
 
   /**
    * Execute the query, ignoring any results.  This is accomplished by
@@ -162,10 +126,9 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * must be called on the statement after the last call of
    * executeStep.
    *
-   * @returns a boolean indicating whether there are more rows or not;
-   * row data may be accessed using mozIStorageValueArray methods on
-   * the statement.
-   *
+   * @return a boolean indicating whether there are more rows or not;
+   *         row data may be accessed using mozIStorageValueArray methods on
+   *         the statement.
    */
   boolean executeStep();
 
@@ -176,7 +139,7 @@ interface mozIStorageStatement : mozIStorageValueArray {
    *
    * @deprecated As of Mozilla 1.9.2 in favor of executeStep().
    *
-   * @returns a boolean indicating whether there are more rows or not.
+   * @return a boolean indicating whether there are more rows or not.
    *
    * [deprecated] boolean step();
    */
@@ -195,43 +158,152 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * readonly attribute mozIStorageStatementRow row;
    */
 
-  /**
-   * Execute a query asynchronously using any currently bound parameters.  This
-   * statement can be reused immediately, and reset does not need to be called.
-   *
-   * Note:  If you have any custom defined functions, they must be re-entrant
-   *        since they can be called on multiple threads.
-   *
-   * @param aCallback [optional]
-   *        The callback object that will be notified of progress, errors, and
-   *        completion.
-   * @returns an object that can be used to cancel the statements execution.
-   */
-  mozIStoragePendingStatement executeAsync(
-    [optional] in mozIStorageStatementCallback aCallback
-  );
+  //////////////////////////////////////////////////////////////////////////////
+  //// Copied contents of mozIStorageValueArray
 
   /**
-   * The current state.  Row getters are only valid while
-   * the statement is in the "executing" state.
+   * These type values are returned by getTypeOfIndex
+   * to indicate what type of value is present at
+   * a given column.
    */
-  const long MOZ_STORAGE_STATEMENT_INVALID = 0;
-  const long MOZ_STORAGE_STATEMENT_READY = 1;
-  const long MOZ_STORAGE_STATEMENT_EXECUTING = 2;
-
-  readonly attribute long state;
+  const long VALUE_TYPE_NULL = 0;
+  const long VALUE_TYPE_INTEGER = 1;
+  const long VALUE_TYPE_FLOAT = 2;
+  const long VALUE_TYPE_TEXT = 3;
+  const long VALUE_TYPE_BLOB = 4;
 
   /**
-   * Escape a string for SQL LIKE search.
-   *
-   * @param     aValue the string to escape for SQL LIKE 
-   * @param     aEscapeChar the escape character
-   * @returns   an AString of an escaped version of aValue
-   *            (%, _ and the escape char are escaped with the escape char)
-   *            For example, we will convert "foo/bar_baz%20cheese" 
-   *            into "foo//bar/_baz/%20cheese" (if the escape char is '/').
-   * @note      consumers will have to use same escape char
-   *            when doing statements such as:   ...LIKE '?1' ESCAPE '/'...
+   * The number of entries in the array (each corresponding to a column in the
+   * database row)
    */
-  AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
+  readonly attribute unsigned long numEntries;
+
+  /**
+   * Indicate the data type of the current result row for the the given column.
+   * SQLite will perform type conversion if you ask for a value as a different
+   * type than it is stored as.
+   *
+   * @param aIndex
+   *        0-based column index.
+   * @return The type of the value at the given column index; one of
+   *         VALUE_TYPE_NULL, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
+   *         VALUE_TYPE_TEXT, VALUE_TYPE_BLOB.
+   */
+  long getTypeOfIndex(in unsigned long aIndex);
+
+  /**
+   * Retrieve the contents of a column from the current result row as an
+   * integer.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return Column value interpreted as an integer per type conversion rules.
+   * @{
+   */
+  long getInt32(in unsigned long aIndex);
+  long long getInt64(in unsigned long aIndex);
+  /** @} */
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * floating point double.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return Column value interpreted as a double per type conversion rules.
+   */
+  double getDouble(in unsigned long aIndex);
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result column interpreted as a string.  If the
+   *         stored value was NULL, you will get an empty string with IsVoid set
+   *         to distinguish it from an explicitly set empty string.
+   * @{
+   */
+  AUTF8String getUTF8String(in unsigned long aIndex);
+  AString getString(in unsigned long aIndex);
+  /** @} */
+
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * blob.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @param[out] aDataSize
+   *             The number of bytes in the blob.
+   * @param[out] aData
+   *             The contents of the BLOB.  This will be NULL if aDataSize == 0.
+   */
+  void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+  /**
+   * Check whether the given column in the current result row is NULL.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return true if the value for the result column is null.
+   */
+  boolean getIsNull(in unsigned long aIndex);
+
+  /**
+   * Returns a shared string pointer
+   */
+  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out string aResult);
+  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out wstring aResult);
+  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out octetPtr aResult);
+
+%{C++
+  /**
+   * Getters for native code that return their values as
+   * the return type, for convenience and sanity.
+   *
+   * Not virtual; no vtable bloat.
+   */
+
+  inline PRInt32 AsInt32(PRUint32 idx) {
+    PRInt32 v;
+    GetInt32(idx, &v);
+    return v;
+  }
+
+  inline PRInt64 AsInt64(PRUint32 idx) {
+    PRInt64 v;
+    GetInt64(idx, &v);
+    return v;
+  }
+
+  inline double AsDouble(PRUint32 idx) {
+    double v;
+    GetDouble(idx, &v);
+    return v;
+  }
+
+  inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
+    const char *str = nsnull;
+    GetSharedUTF8String(idx, len, &str);
+    return str;
+  }
+
+  inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
+    const PRUnichar *str = nsnull;
+    GetSharedString(idx, len, &str);
+    return str;
+  }
+
+  inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
+    const PRUint8 *blob = nsnull;
+    GetSharedBlob(idx, len, &blob);
+    return blob;
+  }
+
+  inline PRBool IsNull(PRUint32 idx) {
+    PRBool b = PR_FALSE;
+    GetIsNull(idx, &b);
+    return b;
+  }
+
+%}
 };

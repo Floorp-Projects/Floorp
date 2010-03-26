@@ -78,6 +78,10 @@
       <children/>
     </content>
     <implementation implements="nsIDOMEventListener">
+
+      <property name="tabContextMenu" readonly="true"
+                onget="return this.tabContainer.contextMenu;"/>
+
       <field name="tabContainer" readonly="true">
         document.getElementById(this.getAttribute("tabcontainer"));
       </field>
@@ -437,9 +441,13 @@
               if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
+              // Don't clear the favicon if this onLocationChange was triggered
+              // by a pushState or a replaceState.  See bug 550565.
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
-                  aWebProgress.isLoadingDocument)
-                this.mTabBrowser.getBrowserForTab(this.mTab).mIconURL = null;
+                  aWebProgress.isLoadingDocument &&
+                  !(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+                this.mBrowser.mIconURL = null;
+              }
 
               // changing location, clear out the missing plugins list
               this.mBrowser.missingPlugins = null;
@@ -2282,6 +2290,31 @@
                 onget="return this.tabContainer;"/>
       <property name="mTabs" readonly="true"
                 onget="return this.tabs;"/>
+      <!--
+        - Compatibility hack: several extensions depend on this property to
+        - access the tab context menu or tab container, so keep that working for
+        - now. Ideally we can remove this once extensions are using
+        - tabbrowser.tabContextMenu and tabbrowser.tabContainer directly.
+        -->
+      <property name="mStrip" readonly="true">
+        <getter>
+        <![CDATA[
+          return ({
+            self: this,
+            childNodes: [null, this.tabContextMenu, this.tabContainer],
+            firstChild: { nextSibling: this.tabContextMenu },
+            getElementsByAttribute: function (attr, attrValue) {
+              if (attr == "anonid" && attrValue == "tabContextMenu")
+                return [this.self.tabContextMenu];
+              return [];
+            },
+            // Also support adding event listeners (forward to the tab container)
+            addEventListener: function (a,b,c) { this.self.tabContainer.addEventListener(a,b,c); },
+            removeEventListener: function (a,b,c) { this.self.tabContainer.removeEventListener(a,b,c); }
+          });
+        ]]>
+        </getter>
+      </property>
     </implementation>
 
     <handlers>
@@ -2485,6 +2518,10 @@
 
       <field name="tabbox" readonly="true">
         this.tabbrowser.mTabBox;
+      </field>
+
+      <field name="contextMenu" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "tabContextMenu");
       </field>
 
       <field name="mTabstripWidth">0</field>

@@ -197,10 +197,6 @@ void
 nsHtml5TreeBuilder::ensureBufferSpace(PRInt32 addedLength)
 {
   PRInt32 newCharBufferCapacity = charBufferLen + addedLength;
-  if (newCharBufferCapacity > NS_HTML5TREE_BUILDER_BUFFER_FLUSH_THRESHOLD) {
-    flushCharacters();
-    newCharBufferCapacity = addedLength;
-  }
   if (newCharBufferCapacity > charBuffer.length) {
     jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newCharBufferCapacity);
     nsHtml5ArrayCopy::arraycopy(charBuffer, newBuf, charBufferLen);

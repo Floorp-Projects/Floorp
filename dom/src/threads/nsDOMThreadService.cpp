@@ -878,7 +878,13 @@ nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
   NS_ASSERTION(aWorker, "Null pointer!");
   NS_ASSERTION(aRunnable, "Null pointer!");
 
-  NS_ASSERTION(mThreadPool, "Dispatch called after 'xpcom-shutdown'!");
+  if (!mThreadPool) {
+    // This can happen from a nsDOMWorker::Finalize call after the thread pool
+    // has been shutdown. It should never be possible off the main thread.
+    NS_ASSERTION(NS_IsMainThread(),
+                 "This should be impossible on a non-main thread!");
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
 
   // Don't accept the runnable if the worker's close handler has been triggered
   // (unless, of course, this is the close runnable as indicated by the non-0

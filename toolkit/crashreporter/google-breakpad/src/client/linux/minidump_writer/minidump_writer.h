@@ -48,6 +48,12 @@ namespace google_breakpad {
 bool WriteMinidump(const char* filename, pid_t crashing_process,
                    const void* blob, size_t blob_size);
 
+// Alternate form of WriteMinidump() that works with processes that
+// are not expected to have crashed.  It is not expected that this
+// function will be called from a compromised context, but it is safe
+// to do so.
+bool WriteMinidump(const char* filename, pid_t process);
+
 }  // namespace google_breakpad
 
 #endif  // CLIENT_LINUX_MINIDUMP_WRITER_MINIDUMP_WRITER_H_

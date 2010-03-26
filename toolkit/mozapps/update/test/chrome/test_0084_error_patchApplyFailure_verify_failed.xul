@@ -62,9 +62,12 @@ SimpleTest.waitForExplicitFinish();
 function test01() {
   ok(true, "Entering test01 - test preparation");
 
+  // Specify the url to update.sjs with a slowDownloadMar param so the ui can
+  // load before the download completes.
+  var slowDownloadURL = URL_UPDATE + "?slowDownloadMar=1";
   var patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
-                getLocalPatchString("complete", null, "MD5",
+                getLocalPatchString("complete", slowDownloadURL, "MD5",
                                     "1234cd43a1c77e30191c53a329a3f99d");
 
   var updates = getLocalUpdateString(patches);
@@ -102,20 +105,32 @@ function test02() {
   ok(gDocElem.getButton("cancel").disabled, "cancel button should be disabled");
 
   gNextFunc = test03;
+  gPageId = PAGEID_DOWNLOADING;
+  addPageShowListener();
+  // go forward to the downloading page
+  gDocElem.getButton("next").click();
+}
+
+/**
+ * downloading page
+ */
+function test03() {
+  ok(true, "Entering test12 - downloading page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_DOWNLOADING,
+     "Page ID should be " + PAGEID_DOWNLOADING);
+
+  gNextFunc = test04;
   gPageId = PAGEID_ERRORS;
   addPageShowListener();
-  // Clicking next will go forward to the finished page if the download has
-  // already finished or it will go to the downloading page and then
-  // automatically go forward to the finished page after the download has
-  // finished.
-  gDocElem.getButton("next").click();
+  // The downloading page will automatically go to the errors page.
 }
 
 /**
  * errors page
  */
-function test03() {
-  ok(true, "Entering test03 - errors page");
+function test04() {
+  ok(true, "Entering test04 - errors page");
 
   is(gDocElem.currentPage.pageid, PAGEID_ERRORS,
      "Page ID should be " + PAGEID_ERRORS);

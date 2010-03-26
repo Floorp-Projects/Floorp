@@ -158,23 +158,34 @@ public:
 
 #ifdef OS_WIN
     static bool IsSpinLoopActive() {
-        return (sInnerEventLoopDepth > 0);
+        return (sModalEventCount > 0);
     }
-
 protected:
     bool WaitForNotify();
-    bool IsMessagePending();
-    bool SpinInternalEventLoop();
-    static void EnterModalLoop() {
+    void SpinInternalEventLoop();
+    static bool WaitNeedsSpinLoop() {
+        return (IsSpinLoopActive() && 
+                (sModalEventCount > sInnerEventLoopDepth));
+    }
+    static void EnterSpinLoop() {
         sInnerEventLoopDepth++;
     }
-    static void ExitModalLoop() {
+    static void ExitSpinLoop() {
         sInnerEventLoopDepth--;
         NS_ASSERTION(sInnerEventLoopDepth >= 0,
             "sInnerEventLoopDepth dropped below zero!");
     }
+    static void IncModalLoopCnt() {
+        sModalEventCount++;
+    }
+    static void DecModalLoopCnt() {
+        sModalEventCount--;
+        NS_ASSERTION(sModalEventCount >= 0,
+            "sModalEventCount dropped below zero!");
+    }
 
     static int sInnerEventLoopDepth;
+    static int sModalEventCount;
 #endif
 
   private:
@@ -242,7 +253,10 @@ protected:
 
             if (mThat.mCxxStackFrames.empty())
                 mThat.EnteredCxxStack();
+
             mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
+            mThat.mSawRPCOutMsg |= (direction == OUT_MESSAGE) &&
+                                   (msg->is_rpc());
         }
 
         ~CxxStackFrame() {
@@ -385,7 +399,12 @@ protected:
     // not protected by mMutex.  It is managed exclusively by the
     // helper |class CxxStackFrame|.
     std::vector<RPCFrame> mCxxStackFrames;
-    
+
+    // Did we process an RPC out-call during this stack?  Only
+    // meaningful in ExitedCxxStack(), from which this variable is
+    // reset.
+    bool mSawRPCOutMsg;
+
 private:
 
     //
