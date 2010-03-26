@@ -1,3 +1,5 @@
+<!ENTITY urlbar.emptytext      "Enter Search or Address">
+
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
 <!ENTITY reload.label          "Reload">

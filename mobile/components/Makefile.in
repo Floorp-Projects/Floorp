@@ -64,6 +64,7 @@ EXTRA_COMPONENTS = \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
         AddonUpdateService.js \
+        SessionStore.js \
 	$(NULL)
 
 DIRS = protocols \

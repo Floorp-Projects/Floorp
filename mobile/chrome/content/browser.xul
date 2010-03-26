@@ -54,6 +54,7 @@
 <window id="main-window"
         onload="Browser.startup();"
         onunload="Browser.shutdown();"
+        onclose="return Browser.closing();"
         windowtype="navigator:browser"
         title="&brandShortName;"
 #ifdef WINCE
@@ -222,6 +223,7 @@
                              maxrows="6"
                              completeselectedindex="true"
                              minresultsforpopup="0"
+                             emptytext="&urlbar.emptytext;"
                              flex="1"
                              ontextentered="BrowserUI.goToURI();"
                              clickSelectsAll="true"/>
@@ -396,6 +398,15 @@
                 &defaultBrowser.description;
               </setting>
 #endif
+              <setting id="prefs-homepage" title="&homepage.title;" type="control">
+                <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
+                  <menupopup>
+                    <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
+                    <menuitem id="prefs-homepage-none" label="&homepage.none;" value="none"/>
+                    <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="custom"/>
+                  </menupopup>
+                </menulist>
+              </setting>
               <settings id="prefs-content" label="&content.title;">
                 <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                 <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>

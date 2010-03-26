@@ -1,0 +1,6 @@
+<!ENTITY aboutHome.start                        "Start">
+<!ENTITY aboutHome.recentTabs                   "Your tabs from last time">
+<!ENTITY aboutHome.remoteTabs                   "Tabs from your other computers">
+<!ENTITY aboutHome.recommendedAddons            "Add-ons for your Firefox">
+<!ENTITY aboutHome.aboutMozilla                 "About Mozilla">
+<!ENTITY aboutHome.openAllTabs                  "Open all in tabs">

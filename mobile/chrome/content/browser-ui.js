@@ -83,6 +83,11 @@ const TOOLBARSTATE_LOADED   = 2;
     [Ci.nsIFocusManager]
   ],
   [
+    "gWindowMediator",
+    "@mozilla.org/appshell/window-mediator;1",
+    [Ci.nsIWindowMediator]
+  ],
+  [
     "gObserverService",
     "@mozilla.org/observer-service;1",
     [Ci.nsIObserverService]

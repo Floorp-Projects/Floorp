@@ -63,6 +63,10 @@ let modules = {
   certerror: {
     uri: "chrome://browser/content/aboutCertError.xhtml",
     privileged: true
+  },
+  home: {
+    uri: "chrome://browser/content/aboutHome.xhtml",
+    privileged: true
   }
 }
 
@@ -141,6 +145,15 @@ AboutCertError.prototype = {
   classID: Components.ID("{972efe64-8ac0-4e91-bdb0-22835d987815}")
 }
 
+function AboutHome() {}
+AboutHome.prototype = {
+  __proto__: AboutGeneric.prototype,
+  classDescription: "About Home",
+  contractID: "@mozilla.org/network/protocol/about;1?what=home",
+  classID: Components.ID("{b071364f-ab68-4669-a9db-33fca168271a}")
+}
+
+
 function NSGetModule(compMgr, fileSpec)
   XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights,
-                             AboutCertError, AboutFirefox]);
+                             AboutCertError, AboutFirefox, AboutHome]);
