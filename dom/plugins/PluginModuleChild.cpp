@@ -199,7 +199,6 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
 #if defined(MOZ_WIDGET_GTK2)
 typedef void (*GObjectDisposeFn)(GObject*);
-typedef gboolean (*GtkWidgetScrollEventFn)(GtkWidget*, GdkEventScroll*);
 typedef void (*GtkPlugEmbeddedFn)(GtkPlug*);
 
 static GObjectDisposeFn real_gtk_plug_dispose;
@@ -232,92 +231,6 @@ wrap_gtk_plug_dispose(GObject* object) {
     g_object_add_toggle_ref(object, undo_bogus_unref, NULL);
     (*real_gtk_plug_dispose)(object);
     g_object_remove_toggle_ref(object, undo_bogus_unref, NULL);
-}
-
-static gboolean
-gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
-{
-    if (!GTK_WIDGET_TOPLEVEL(widget)) // in same process as its GtkSocket
-        return FALSE; // event not handled; propagate to GtkSocket
-
-    GdkWindow* socket_window = GTK_PLUG(widget)->socket_window;
-    if (!socket_window)
-        return FALSE;
-
-    // Propagate the event to the embedder.
-    GdkScreen* screen = gdk_drawable_get_screen(socket_window);
-    GdkWindow* plug_window = widget->window;
-    GdkWindow* event_window = gdk_event->window;
-    gint x = gdk_event->x;
-    gint y = gdk_event->y;
-    unsigned int button;
-    unsigned int button_mask = 0;
-    XEvent xevent;
-    Display* dpy = GDK_WINDOW_XDISPLAY(socket_window);
-
-    /* Translate the event coordinates to the plug window,
-     * which should be aligned with the socket window.
-     */
-    while (event_window != plug_window)
-    {
-        gint dx, dy;
-
-        gdk_window_get_position(event_window, &dx, &dy);
-        x += dx;
-        y += dy;
-
-        event_window = gdk_window_get_parent(event_window);
-        if (!event_window)
-            return FALSE;
-    }
-
-    switch (gdk_event->direction) {
-    case GDK_SCROLL_UP:
-        button = 4;
-        button_mask = Button4Mask;
-        break;
-    case GDK_SCROLL_DOWN:
-        button = 5;
-        button_mask = Button5Mask;
-        break;
-    case GDK_SCROLL_LEFT:
-        button = 6;
-        break;
-    case GDK_SCROLL_RIGHT:
-        button = 7;
-        break;
-    default:
-        return FALSE; // unknown GdkScrollDirection
-    }
-
-    memset(&xevent, 0, sizeof(xevent));
-    xevent.xbutton.type = ButtonPress;
-    xevent.xbutton.window = GDK_WINDOW_XWINDOW(socket_window);
-    xevent.xbutton.root = GDK_WINDOW_XWINDOW(gdk_screen_get_root_window(screen));
-    xevent.xbutton.subwindow = GDK_WINDOW_XWINDOW(plug_window);
-    xevent.xbutton.time = gdk_event->time;
-    xevent.xbutton.x = x;
-    xevent.xbutton.y = y;
-    xevent.xbutton.x_root = gdk_event->x_root;
-    xevent.xbutton.y_root = gdk_event->y_root;
-    xevent.xbutton.state = gdk_event->state;
-    xevent.xbutton.button = button;
-    xevent.xbutton.same_screen = True;
-
-    gdk_error_trap_push();
-
-    XSendEvent(dpy, xevent.xbutton.window,
-               True, ButtonPressMask, &xevent);
-
-    xevent.xbutton.type = ButtonRelease;
-    xevent.xbutton.state |= button_mask;
-    XSendEvent(dpy, xevent.xbutton.window,
-               True, ButtonReleaseMask, &xevent);
-
-    gdk_display_sync(gdk_screen_get_display(screen));
-    gdk_error_trap_pop();
-
-    return TRUE; // event handled
 }
 
 static void
@@ -436,18 +349,6 @@ PluginModuleChild::InitGraphics()
                       "InitGraphics called twice");
     real_gtk_plug_dispose = *dispose;
     *dispose = wrap_gtk_plug_dispose;
-
-    // If we ever stop setting GDK_NATIVE_WINDOWS, we'll also need to
-    // gtk_widget_add_events GDK_SCROLL_MASK or GDK client-side windows will
-    // not tell us about the scroll events that it intercepts.  With native
-    // windows, this is called when GDK intercepts the events; if GDK doesn't
-    // intercept the events, then the X server will instead send them directly
-    // to an ancestor (embedder) window.
-    GtkWidgetScrollEventFn* scroll_event =
-        &GTK_WIDGET_CLASS(gtk_plug_class)->scroll_event;
-    if (!*scroll_event) {
-        *scroll_event = gtk_plug_scroll_event;
-    }
 
     GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
     real_gtk_plug_embedded = *embedded;
