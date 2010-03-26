@@ -63,8 +63,7 @@ Group.prototype = {
   },
   
   // ----------  
-  create: function(listOfEls, manager) {
-    this.manager = manager;
+  create: function(listOfEls, options) {
     var self = this;
     this._children = $(listOfEls).toArray();
 
@@ -142,31 +141,40 @@ Group.prototype = {
     }
     
     // ___ Push other objects away
-    this.pushAway();
+    if(!options || !options.suppressPush)
+      this.pushAway(); 
   },
   
   // ----------  
   pushAway: function() {
-    return; // TODO: not ready yet.
-    
     var buffer = 10;
     
-    var items = this.manager.getTopLevelItems();
+    var items = Items.getTopLevelItems();
     $.each(items, function(index, item) {
-      item.pushAwayData = {};
+      var data = {};
+      data.bounds = item.getBounds();
+      data.startBounds = new Rect(data.bounds);
+      item.pushAwayData = data;
     });
     
+    var itemsToPush = [this];
+    this.pushAwayData.anchored = true;
+
     var pushOne = function(baseItem) {
-      baseItem.pushAwayData.anchored = true; 
-      var bb = baseItem.getBounds();
+      var bb = new Rect(baseItem.pushAwayData.bounds);
       bb.inset(-buffer, -buffer);
       var bbc = bb.center();
     
       $.each(items, function(index, item) {
-        if(item.pushAwayData.anchored)
+        if(item == baseItem)
           return;
           
-        var box = item.getBounds();
+        var data = item.pushAwayData;
+        if(data.anchored)
+          return;
+          
+        var bounds = data.bounds;
+        var box = new Rect(bounds);
         box.inset(-buffer, -buffer);
         if(box.intersects(bb)) {
           var offset = new Point();
@@ -182,15 +190,22 @@ Group.prototype = {
             else
               offset.x = bb.left - box.right;
           }
-
-/*           Utils.log(offset); */
-          item.setPosition(box.left + offset.x, box.top + offset.y);
-/*           pushOne(item); */
+          
+          bounds.offset(offset); 
+          itemsToPush.push(item);
         }
       });
-    };            
-      
-    pushOne(this);
+    };   
+    
+    var a;
+    for(a = 0; a < 500 && itemsToPush.length; a++)
+      pushOne(itemsToPush.shift());         
+
+    $.each(items, function(index, item) {
+      var data = item.pushAwayData;
+      if(!data.bounds.equals(data.startBounds))
+        item.setPosition(data.bounds.left, data.bounds.top);
+    });
   },
   
   // ----------  
@@ -207,13 +222,15 @@ Group.prototype = {
   setPosition: function(left, top) {
     var box = this.getBounds();
     var offset = new Point(left - box.left, top - box.top);
+    
     $.each(this._children, function(index, value) {
       var $el = $(this);
       box = Utils.getBounds(this);
       $el.animate({left: box.left + offset.x, top: box.top + offset.y});
     });
         
-    $(this._container).animate({left: left, top: top});
+    var bb = Utils.getBounds(this._container);
+    $(this._container).animate({left: bb.left + offset.x, top: bb.top + offset.y});
   },
 
   // ----------  
@@ -224,6 +241,8 @@ Group.prototype = {
     if( typeof(dropPos) == "undefined" ) dropPos = {top:window.innerWidth, left:window.innerHeight};
     var self = this;
     
+    // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
+    // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
       var best = {dist: Infinity, el: null};
       var index = 0;
@@ -231,7 +250,7 @@ Group.prototype = {
         var pos = $(child).position();
         var [w, h] = [$(child).width(), $(child).height()];
         var dist = Math.sqrt( Math.pow((pos.top+h/2)-dropPos.top,2) + Math.pow((pos.left+w/2)-dropPos.left,2) );
-        Utils.log( index, dist );
+/*         Utils.log( index, dist ); */
         if( dist <= best.dist ){
           best.el = child;
           best.dist = dist;
@@ -249,12 +268,12 @@ Group.prototype = {
       
     }
     
+    var oldIndex = $.inArray(el, this._children);
+    if(oldIndex != -1)
+      this._children.splice(oldIndex, 1); 
+
     var index = findInsertionPoint(dropPos);
-    
-    if($.inArray(el, this._children) == -1){
-      this._children.splice( index, 0, el );
-    }
-      
+    this._children.splice( index, 0, el );
 
     $(el).droppable("disable");
 
@@ -295,6 +314,15 @@ Group.prototype = {
       this.arrange();
     }
     
+  },
+  
+  // ----------
+  // TODO: could be a lot more efficient by unwrapping the remove routine
+  removeAll: function() {
+    var self = this;
+    $.each(this._children, function(index, child) {
+      self.remove(child);
+    });
   },
   
   // ----------  
@@ -474,7 +502,7 @@ window.Groups = {
           var group = $(target).data("group");
           if( group == null ){
             var group = new Group();
-            group.create([target, dragged], Groups);            
+            group.create([target, dragged]);            
           } else {
             group.add( dragged );
           }
@@ -522,8 +550,20 @@ window.Groups = {
         y += h + padding;
       }
     });
-  }, 
+  },
   
+  // ----------
+  removeAll: function() {
+    var $groups = $('.group');
+    $groups.each(function() {
+      var group = $(this).data('group');
+      group.removeAll();
+    });
+  }
+};
+
+// ##########
+window.Items = {
   // ----------  
   getTopLevelItems: function() {
     var items = [];
