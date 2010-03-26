@@ -177,4 +177,11 @@
   ")" \
 )
 
+#define CREATE_MOZ_OPENPAGES_TEMP NS_LITERAL_CSTRING( \
+  "CREATE TEMP TABLE moz_openpages_temp (" \
+    "  place_id INTEGER PRIMARY KEY" \
+    ", open_count INTEGER" \
+  ")" \
+)
+
 #endif // __nsPlacesTables_h__

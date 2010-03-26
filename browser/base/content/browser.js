@@ -3805,7 +3805,6 @@ var XULBrowserWindow = {
   overLink: "",
   startTime: 0,
   statusText: "",
-  lastURI: null,
   isBusy: false,
 
   _progressCollapseTimer: 0,
@@ -3869,7 +3868,6 @@ var XULBrowserWindow = {
     delete this.statusTextField;
     delete this.securityButton;
     delete this.statusText;
-    delete this.lastURI;
   },
 
   setJSStatus: function (status) {
@@ -4084,7 +4082,6 @@ var XULBrowserWindow = {
         nBox.removeTransientNotifications();
       }
     }
-    selectedBrowser.lastURI = aLocationURI;
 
     // Disable menu entries for images, enable otherwise
     if (content.document && mimeTypeIsTextBased(content.document.contentType))
@@ -7588,4 +7585,43 @@ var LightWeightThemeWebInstaller = {
     return this._manager.parseTheme(node.getAttribute("data-browsertheme"),
                                     node.baseURI);
   }
+}
+
+function switchToTabHavingURI(aURI) {
+  function switchIfURIInWindow(aWindow) {
+    if (!("gBrowser" in aWindow))
+      return false;
+    let browsers = aWindow.gBrowser.browsers;
+    for (let i = 0; i < browsers.length; i++) {
+      let browser = browsers[i];
+      if (browser.currentURI.equals(aURI)) {
+        gURLBar.handleRevert();
+        aWindow.focus();
+        aWindow.gBrowser.tabContainer.selectedIndex = i;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // This can be passed either nsIURI or a string.
+  if (!(aURI instanceof Ci.nsIURI))
+    aURI = makeURI(aURI);
+
+  // Prioritise this window.
+  if (switchIfURIInWindow(window))
+    return true;
+
+  let winEnum = Services.wm.getEnumerator("navigator:browser");
+  while (winEnum.hasMoreElements()) {
+    let browserWin = winEnum.getNext();
+    // Skip closed (but not yet destroyed) windows,
+    // and the current window (which was checked earlier).
+    if (browserWin.closed || browserWin == window)
+      continue;
+    if (switchIfURIInWindow(browserWin))
+      return true;
+  }
+  // No opened tab has that url.
+  return false;
 }

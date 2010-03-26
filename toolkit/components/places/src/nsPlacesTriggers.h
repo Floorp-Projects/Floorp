@@ -94,8 +94,8 @@
 
 /**
  * This trigger allows for the deletion of a record in moz_places_view.  It
- * removes any entry in the temporary table, and any entry in the permanent
- * table as well.
+ * removes any entry in the temporary table, the permanent table, and any
+ * associated entry in moz_openpages_temp.
  */
 #define CREATE_PLACES_VIEW_DELETE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_places_view_delete_trigger " \
@@ -106,6 +106,8 @@
     "WHERE id = OLD.id; " \
     "DELETE FROM moz_places " \
     "WHERE id = OLD.id; " \
+    "DELETE FROM moz_openpages_temp " \
+    "WHERE place_id = OLD.id; " \
   "END" \
 )
 
@@ -257,5 +259,19 @@
   CREATE_TEMP_SYNC_TRIGGER_BASE("moz_places", MOZ_PLACES_COLUMNS)
 #define CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER \
   CREATE_TEMP_SYNC_TRIGGER_BASE("moz_historyvisits", MOZ_HISTORYVISITS_COLUMNS)
+
+
+/**
+ * This trigger removes a row from moz_openpages_temp when open_count reaches 0.
+ */
+#define CREATE_REMOVEOPENPAGE_CLEANUP_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger " \
+  "AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW " \
+  "WHEN NEW.open_count = 0 " \
+  "BEGIN " \
+    "DELETE FROM moz_openpages_temp " \
+    "WHERE place_id = NEW.place_id;" \
+  "END" \
+)
 
 #endif // __nsPlacesTriggers_h__
