@@ -1593,7 +1593,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tabs:not([overflow="true"]) {
-  -moz-padding-start: 3px;
+  -moz-margin-start: 3px;
 }
 
 /**
