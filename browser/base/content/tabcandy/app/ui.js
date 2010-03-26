@@ -1,9 +1,5 @@
 (function(){
 
-$.expr[':'].icontains = function(obj, index, meta, stack){
-return (obj.textContent || obj.innerText || jQuery(obj).text() || '').toLowerCase().indexOf(meta[3].toLowerCase()) >= 0;
-};
-
 // ##########
 Navbar = {
   get el(){
@@ -91,31 +87,6 @@ var Page = {
                 Navbar.show();    
                 $("body").css("overflow", overflow);          
               });
-            
-            // I'm temporarily giving up on CSS-Transforms and Firefox 3.7.
-            // It introduces way to many errors... -- Aza
-            
-            /*$(this).addClass("scale-animate").css({
-              top: 0, left: 0,
-              width:w*scale, height:h*scale,
-              zIndex: 999999
-            }).bind("transitionend", function(e){
-              // We will get one of this events for every property CSS-animated...
-              // I chose one randomly (width) and only do things for that.
-              if( e.originalEvent.propertyName != "width" ) return;
-              // Switch tabs, and the re-size and re-position the animated
-              // tab image.
-              // Don't forget to unbind the transitioned event handler!
-              $(this).unbind("transitionend");
-              $(this).find("canvas").data("link").tab.focus();
-              $(this)
-                .removeClass("scale-animate")
-                .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:zIndex})
-                .unbind("transitionend");
-              Navbar.show();
-              //mirror.unforceCanvasSize();
-            })*/
-            // END ZOOM
             
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
