@@ -57,10 +57,6 @@
 #include "WinMobileLocationProvider.h"
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
-#include "MaemoLocationProvider.h"
-#endif
-
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
@@ -410,14 +406,9 @@ nsresult nsGeolocationService::Init()
 
   // we should move these providers outside of this file! dft
 
+  // if WINCE, see if we should try the WINCE location provider
 #ifdef WINCE_WINDOWS_MOBILE
   provider = new WinMobileLocationProvider();
-  if (provider)
-    mProviders.AppendObject(provider);
-#endif
-
-#ifdef MOZ_PLATFORM_MAEMO
-  provider = new MaemoLocationProvider();
   if (provider)
     mProviders.AppendObject(provider);
 #endif
