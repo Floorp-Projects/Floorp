@@ -66,8 +66,6 @@ import org.xml.sax.SAXParseException;
  */
 public class Tokenizer implements Locator {
 
-    private static final int BUFFER_CLIP_THRESHOLD = 8000;
-
     public static final int DATA = 0;
 
     public static final int RCDATA = 1;
@@ -1350,12 +1348,6 @@ public class Tokenizer implements Locator {
 
     private void ensureBufferSpace(int addedLength) throws SAXException {
         int newlongStrBufCapacity = longStrBufLen + addedLength;
-        if (newlongStrBufCapacity > Tokenizer.BUFFER_CLIP_THRESHOLD) {
-            longStrBuf[0] = '\u2026'; // HORIZONTAL ELLIPSIS
-            longStrBuf[1] = '\uFFFD'; // REPLACEMENT CHARACTER
-            longStrBufLen = 2;
-            newlongStrBufCapacity = 2 + addedLength;
-        }
         if (newlongStrBufCapacity > longStrBuf.length) {
             char[] newBuf = new char[newlongStrBufCapacity];
             System.arraycopy(longStrBuf, 0, newBuf, 0, longStrBufLen);
@@ -1364,12 +1356,6 @@ public class Tokenizer implements Locator {
         }
         
         int newStrBufCapacity = strBufLen + addedLength;
-        if (newStrBufCapacity > Tokenizer.BUFFER_CLIP_THRESHOLD) {
-            strBuf[0] = '\u2026'; // HORIZONTAL ELLIPSIS
-            strBuf[1] = '\uFFFD'; // REPLACEMENT CHARACTER
-            strBufLen = 2;
-            newStrBufCapacity = 2 + addedLength;
-        }
         if (newStrBufCapacity > strBuf.length) {
             char[] newBuf = new char[newStrBufCapacity];
             System.arraycopy(strBuf, 0, newBuf, 0, strBufLen);
