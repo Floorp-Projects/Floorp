@@ -3805,41 +3805,42 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-#ifdef MAC_CARBON_PLUGINS
-  // send KeyPress events only for Mac OS X Carbon event model
-  if (GetEventModel() != NPEventModelCarbon)
-    return aKeyEvent->PreventDefault();
+#ifdef XP_MACOSX
+#ifndef NP_NO_CARBON
+  if (GetEventModel() == NPEventModelCarbon) {
+    // KeyPress events are really synthesized keyDown events.
+    // Here we check the native message of the event so that
+    // we won't send the plugin two keyDown events.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
+    if (privateEvent) {
+      nsEvent *theEvent = privateEvent->GetInternalNSEvent();
+      const nsGUIEvent *guiEvent = (nsGUIEvent*)theEvent;
+      const EventRecord *ev = (EventRecord*)(guiEvent->pluginEvent); 
+      if (guiEvent &&
+          guiEvent->message == NS_KEY_PRESS &&
+          ev &&
+          ev->what == keyDown)
+        return aKeyEvent->PreventDefault(); // consume event
+    }
 
-  // KeyPress events are really synthesized keyDown events.
-  // Here we check the native message of the event so that
-  // we won't send the plugin two keyDown events.
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
-  if (privateEvent) {
-    nsEvent *theEvent = privateEvent->GetInternalNSEvent();
-    const nsGUIEvent *guiEvent = (nsGUIEvent*)theEvent;
-    const EventRecord *ev = (EventRecord*)(guiEvent->pluginEvent); 
-    if (guiEvent &&
-        guiEvent->message == NS_KEY_PRESS &&
-        ev &&
-        ev->what == keyDown)
+    // Nasty hack to avoid recursive event dispatching with Java. Java can
+    // dispatch key events to a TSM handler, which comes back and calls 
+    // [ChildView insertText:] on the cocoa widget, which sends a key
+    // event back down.
+    static PRBool sInKeyDispatch = PR_FALSE;
+
+    if (sInKeyDispatch)
       return aKeyEvent->PreventDefault(); // consume event
+
+    sInKeyDispatch = PR_TRUE;
+    nsresult rv =  DispatchKeyToPlugin(aKeyEvent);
+    sInKeyDispatch = PR_FALSE;
+    return rv;
   }
+#endif
 
-  // Nasty hack to avoid recursive event dispatching with Java. Java can
-  // dispatch key events to a TSM handler, which comes back and calls 
-  // [ChildView insertText:] on the cocoa widget, which sends a key
-  // event back down.
-  static PRBool sInKeyDispatch = PR_FALSE;
-  
-  if (sInKeyDispatch)
-    return aKeyEvent->PreventDefault(); // consume event
-
-  sInKeyDispatch = PR_TRUE;
-  nsresult rv =  DispatchKeyToPlugin(aKeyEvent);
-  sInKeyDispatch = PR_FALSE;
-  return rv;
+  return DispatchKeyToPlugin(aKeyEvent);
 #else
-
   if (SendNativeEvents())
     DispatchKeyToPlugin(aKeyEvent);
 
