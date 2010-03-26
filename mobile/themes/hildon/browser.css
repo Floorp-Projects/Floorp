@@ -1113,7 +1113,12 @@ pageaction .pageaction-desc[value=""] {
 
 #context-commands > richlistitem[selector="last-child"] {
   background: -moz-linear-gradient(top, rgb(245,245,245), rgb(215,215,215));
-  -moz-border-radius: 0 0 8px 8px !important;
+  -moz-border-radius: 0 0 8px 8px;
+}
+
+/* Force any command tap to highlight */
+#context-commands > richlistitem:hover:active {
+  background: #8db8d8;
 }
 
 .modal-block {

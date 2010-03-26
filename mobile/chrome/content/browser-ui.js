@@ -1823,15 +1823,19 @@ const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 var ContextHelper = {
   popupNode: null,
   onLink: false,
+  onSaveableLink: false,
   onImage: false,
   linkURL: "",
+  linkProtocol: null,
   mediaURL: "",
 
   _clearState: function ch_clearState() {
     this.popupNode = null;
     this.onLink = false;
+    this.onSaveableLink = false;
     this.onImage = false;
     this.linkURL = "";
+    this.linkProtocol = null;
     this.mediaURL = "";
   },
 
@@ -1848,6 +1852,25 @@ var ContextHelper = {
     }
 
     return Util.makeURLAbsolute(aLink.baseURI, href);
+  },
+
+  _getURI: function ch_getURI(aURL) {
+    try {
+      return makeURI(aURL);
+    } catch (ex) { }
+
+    return null;
+  },
+  
+  _getProtocol: function ch_getProtocol(aURI) {
+    if (aURI)
+      return aURI.scheme;
+    return null;
+  },
+  
+  _isSaveable: function ch_isSaveable(aProtocol) {
+    // We don't do the Right Thing for news/snews yet, so turn them off until we do
+    return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
   },
 
   handleEvent: function ch_handleEvent(aEvent) {
@@ -1876,8 +1899,10 @@ var ContextHelper = {
               elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
             
           // Target is a link or a descendant of a link.
-          this.onLink = true;
           this.linkURL = this._getLinkURL(elem);
+          this.linkProtocol = this._getProtocol(this._getURI(this.linkURL));
+          this.onLink = true;
+          this.onSaveableLink = this._isSaveable(this.linkProtocol);
         }
       }
 
@@ -1895,7 +1920,12 @@ var ContextHelper = {
         last = command;
         command.hidden = false;
         continue;
-      } else if (type.indexOf("link") != -1 && this.onLink) {
+      } else if (type.indexOf("link") != -1 && this.onLink  && this.onSaveableLink) {
+        first = (first ? first : command);
+        last = command;
+        command.hidden = false;
+        continue;
+      } else if (type.indexOf("mailto") != -1 && this.onLink  && this.linkProtocol == "mailto") {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
@@ -1921,8 +1951,14 @@ var ContextHelper = {
     let container = document.getElementById("context-popup");
     container.hidden = false;
 
+    // Make sure the container is at least sized to the content
+    let preferredHeight = 0;
+    for (let i=0; i<container.childElementCount; i++) {
+      preferredHeight += container.children[i].getBoundingClientRect().height;
+    }
+
     let rect = container.getBoundingClientRect();
-    let height = Math.min(rect.height, 0.75 * window.innerWidth);
+    let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
     let width = Math.min(rect.width, 0.75 * window.innerWidth);
 
     container.height = height;
