@@ -369,12 +369,6 @@ void
 nsHtml5Tokenizer::ensureBufferSpace(PRInt32 addedLength)
 {
   PRInt32 newlongStrBufCapacity = longStrBufLen + addedLength;
-  if (newlongStrBufCapacity > NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD) {
-    longStrBuf[0] = 0x2026;
-    longStrBuf[1] = 0xfffd;
-    longStrBufLen = 2;
-    newlongStrBufCapacity = 2 + addedLength;
-  }
   if (newlongStrBufCapacity > longStrBuf.length) {
     jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newlongStrBufCapacity);
     nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBufLen);
@@ -382,12 +376,6 @@ nsHtml5Tokenizer::ensureBufferSpace(PRInt32 addedLength)
     longStrBuf = newBuf;
   }
   PRInt32 newStrBufCapacity = strBufLen + addedLength;
-  if (newStrBufCapacity > NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD) {
-    strBuf[0] = 0x2026;
-    strBuf[1] = 0xfffd;
-    strBufLen = 2;
-    newStrBufCapacity = 2 + addedLength;
-  }
   if (newStrBufCapacity > strBuf.length) {
     jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newStrBufCapacity);
     nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBufLen);
