@@ -191,7 +191,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="downloading" pageid="downloading" next="finished"
+  <wizardpage id="downloading" pageid="downloading"
               object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
               onpageshow="gDownloadingPage.onPageShow();">
     <updateheader label="&downloadPage.title;"/>

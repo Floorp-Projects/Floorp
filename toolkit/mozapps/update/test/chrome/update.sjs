@@ -19,6 +19,31 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, statusCode, statusReason);
   response.setHeader("Cache-Control", "no-cache", false);
 
+  // When a mar download is started by the update service it can finish
+  // downloading before the ui has loaded. By specifying a serviceURL for the
+  // update patch that points to this file and has a slowDownloadMar param the
+  // mar will be downloaded asynchronously which will allow the ui to load
+  // before the download completes.
+  if (params.slowDownloadMar) {
+    response.processAsync();
+    response.setHeader("Content-Length", "775");
+    var marFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
+                  getService(AUS_Ci.nsIProperties).
+                  get("CurWorkD", AUS_Ci.nsILocalFile);
+    var path = URL_PATH + "empty.mar";
+    var pathParts = path.split("/");
+    for(var i = 0; i < pathParts.length; ++i)
+      marFile.append(pathParts[i]);
+    var contents = readFileBytes(marFile);
+    var timer = AUS_Cc["@mozilla.org/timer;1"].
+                createInstance(AUS_Ci.nsITimer);
+    timer.initWithCallback(function() {
+      response.write(contents);
+      response.finish();
+    }, 2000, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
+    return;
+  }
+
   if (params.uiURL) {
     var remoteType = "";
     if (!params.remoteNoTypeAttr &&
