@@ -168,6 +168,11 @@ static JSPropertySpec sPointerProps[] = {
   { 0, 0, 0, NULL, NULL }
 };
 
+static JSFunctionSpec sPointerInstanceFunctions[] = {
+  JS_FN("isNull", PointerType::IsNull, 0, CTYPESFN_FLAGS),
+  JS_FS_END
+};
+  
 static JSPropertySpec sPointerInstanceProps[] = {
   { "contents", 0, JSPROP_SHARED | JSPROP_PERMANENT,
     PointerType::ContentsGetter, PointerType::ContentsSetter },
@@ -641,8 +646,9 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   //     * 'constructor' property === 't'
   JSObject* protos[CTYPEPROTO_SLOTS];
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sPointerFunction, sPointerProps, NULL, sPointerInstanceProps,
-         protos[SLOT_POINTERPROTO], protos[SLOT_POINTERDATAPROTO]))
+         sPointerFunction, sPointerProps, sPointerInstanceFunctions,
+         sPointerInstanceProps, protos[SLOT_POINTERPROTO],
+         protos[SLOT_POINTERDATAPROTO]))
     return false;
   JSAutoTempValueRooter proot(cx, protos[SLOT_POINTERDATAPROTO]);
 
@@ -2963,6 +2969,30 @@ PointerType::TargetTypeGetter(JSContext* cx,
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_TARGET_T, vp));
   JS_ASSERT(JSVAL_IS_OBJECT(*vp));
+  return JS_TRUE;
+}
+
+JSBool
+PointerType::IsNull(JSContext* cx, uintN argc, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JS_ASSERT(obj);
+
+  if (!CData::IsCData(cx, obj)) {
+    JS_ReportError(cx, "not a CData");
+    return JS_FALSE;
+  }
+
+  // Get pointer type and base type.
+  JSObject* typeObj = CData::GetCType(cx, obj);
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer) {
+    JS_ReportError(cx, "not a PointerType");
+    return JS_FALSE;
+  }
+
+  void* data = *static_cast<void**>(CData::GetData(cx, obj));
+  jsval result = BOOLEAN_TO_JSVAL(data == NULL);
+  JS_SET_RVAL(cx, vp, result);
   return JS_TRUE;
 }
 
