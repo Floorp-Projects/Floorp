@@ -188,6 +188,17 @@ public:
                                     nsCString* password,
                                     NPError* result);
 
+    NS_OVERRIDE virtual bool
+    AnswerNPN_ConvertPoint(const double& sourceX,
+                           const double& sourceY,
+                           const NPCoordinateSpace& sourceSpace,
+                           const NPCoordinateSpace& destSpace,
+                           double *destX,
+                           bool *ignoreDestX,
+                           double *destY,
+                           bool *ignoreDestY,
+                           bool *result);
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void* retval);

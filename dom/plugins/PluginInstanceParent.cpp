@@ -990,13 +990,32 @@ PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
     return true;
 }
 
+bool
+PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
+                                             const double& sourceY,
+                                             const NPCoordinateSpace& sourceSpace,
+                                             const NPCoordinateSpace& destSpace,
+                                             double *destX,
+                                             bool *ignoreDestX,
+                                             double *destY,
+                                             bool *ignoreDestY,
+                                             bool *result)
+{
+    *result = mNPNIface->convertpoint(mNPP, sourceX, sourceY, sourceSpace,
+                                      ignoreDestX ? nsnull : destX,
+                                      ignoreDestY ? nsnull : destY,
+                                      destSpace);
+
+    return true;
+}
+
 #if defined(OS_WIN)
 
 /*
   plugin focus changes between processes
 
   focus from dom -> child:
-    Focs manager calls on widget to set the focus on the window.
+    Focus manager calls on widget to set the focus on the window.
     We pick up the resulting wm_setfocus event here, and forward
     that over ipc to the child which calls set focus on itself. 
 
