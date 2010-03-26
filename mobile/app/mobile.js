@@ -42,6 +42,8 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
 
+pref("browser.tabs.warnOnClose", true);
+
 #if MOZ_PLATFORM_MAEMO
 pref("browser.ui.cursor", false);
 #elifdef WINCE
