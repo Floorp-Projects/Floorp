@@ -100,4 +100,57 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
         PCMETER(misses++);
 }
 
+JS_ALWAYS_INLINE bool
+PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
+                          PropertyCacheEntry **entryp, JSObject **obj2p, JSAtom **atomp)
+{
+    uint32 shape = OBJ_SHAPE(obj);
+    PropertyCacheEntry *entry = &table[hash(pc, shape)];
+    *entryp = entry;
+    PCMETER(pctestentry = entry);
+    PCMETER(tests++);
+    PCMETER(settests++);
+    if (entry->kpc == pc && entry->kshape == shape && matchShape(cx, obj, shape))
+        return true;
+
+#ifdef DEBUG
+    JSObject *orig = obj;
+#endif
+    JSAtom *atom = fullTest(cx, pc, &obj, obj2p, entry);
+    if (atom) {
+        PCMETER(misses++);
+        PCMETER(setmisses++);
+    } else {
+        JS_ASSERT(obj == orig);
+    }
+    *atomp = atom;
+    return false;
+}
+
+JS_ALWAYS_INLINE bool
+PropertyCache::testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj, JSScope *scope,
+                           JSScopeProperty **spropp, PropertyCacheEntry **entryp)
+{
+    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(!scope->sealed());
+    uint32 kshape = scope->shape;
+    PropertyCacheEntry *entry = &table[hash(pc, kshape)];
+    *entryp = entry;
+    PCMETER(pctestentry = entry);
+    PCMETER(tests++);
+    PCMETER(initests++);
+
+    if (entry->kpc == pc &&
+        entry->kshape == kshape &&
+        entry->vshape() == rt->protoHazardShape) {
+        PCMETER(pchits++);
+        PCMETER(inipchits++);
+        JS_ASSERT(entry->vcapTag() == 0);
+        *spropp = entry->vword.toSprop();
+        JS_ASSERT((*spropp)->writable());
+        return true;
+    }
+    return false;
+}
+
 #endif /* jspropertycacheinlines_h___ */

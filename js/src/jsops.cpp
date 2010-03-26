@@ -1677,10 +1677,9 @@ BEGIN_CASE(JSOP_SETMETHOD)
         atom = NULL;
         if (JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
             PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
-            uint32 kshape = OBJ_SHAPE(obj);
 
             /*
-             * Open-code PropertyCache::test, specializing for two important
+             * Probe the property cache, specializing for two important
              * set-property cases. First:
              *
              *   function f(a, b, c) {
@@ -1698,15 +1697,14 @@ BEGIN_CASE(JSOP_SETMETHOD)
              * (possibly after the first iteration) always exist in native
              * object o.
              */
-            entry = &cache->table[PropertyCache::hash(regs.pc, kshape)];
-            PCMETER(cache->pctestentry = entry);
-            PCMETER(cache->tests++);
-            PCMETER(cache->settests++);
-            if (entry->kpc == regs.pc && entry->kshape == kshape &&
-                PropertyCache::matchShape(cx, obj, kshape)) {
+            if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
                 /*
-                 * Property cache hit: either predicting a new property to be
-                 * added directly to obj by this set, or on an existing "own"
+                 * Fast property cache hit, only partially confirmed by
+                 * testForSet. We know that the entry applies to regs.pc and
+                 * that obj's shape matches.
+                 *
+                 * The entry predicts either a new property to be added
+                 * directly to obj by this set, or on an existing "own"
                  * property, or on a prototype property that has a setter.
                  */
                 JS_ASSERT(entry->vword.isSprop());
@@ -1833,17 +1831,15 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     break;
                 }
                 PCMETER(cache->setpcmisses++);
-            }
-
-            atom = cache->fullTest(cx, regs.pc, &obj, &obj2, entry);
-            if (atom) {
-                PCMETER(cache->misses++);
-                PCMETER(cache->setmisses++);
-            } else {
+                atom = NULL;
+            } else if (!atom) {
+                /*
+                 * Slower property cache hit, fully confirmed by testForSet (in
+                 * the slow path, via fullTest).
+                 */
                 ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                 sprop = NULL;
                 if (obj == obj2) {
-                    JS_ASSERT(entry->vword.isSprop());
                     sprop = entry->vword.toSprop();
                     JS_ASSERT(sprop->writable());
                     JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
@@ -3359,6 +3355,7 @@ END_CASE(JSOP_ENDINIT)
 
 BEGIN_CASE(JSOP_INITPROP)
 BEGIN_CASE(JSOP_INITMETHOD)
+{
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.sp - StackBase(fp) >= 2);
     rval = FETCH_OPND(-1);
@@ -3369,104 +3366,63 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
     JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
-    do {
-        JSScope *scope;
-        uint32 kshape;
-        PropertyCache *cache;
-        PropertyCacheEntry *entry;
 
-        /*
-         * We can not assume that the object created by JSOP_NEWINIT is still
-         * single-threaded as the debugger can access it from other threads.
-         */
-        if (!CX_OWNS_OBJECT_TITLE(cx, obj))
-            goto do_initprop_miss;
+    JSScope *scope = OBJ_SCOPE(obj);
+    PropertyCacheEntry *entry;
 
-        scope = OBJ_SCOPE(obj);
-        JS_ASSERT(scope->object == obj);
-        JS_ASSERT(!scope->sealed());
-        kshape = scope->shape;
-        cache = &JS_PROPERTY_CACHE(cx);
-        entry = &cache->table[PropertyCache::hash(regs.pc, kshape)];
-        PCMETER(cache->pctestentry = entry);
-        PCMETER(cache->tests++);
-        PCMETER(cache->initests++);
-
-        if (entry->kpc == regs.pc &&
-            entry->kshape == kshape &&
-            entry->vshape() == rt->protoHazardShape) {
-            JS_ASSERT(entry->vcapTag() == 0);
-
-            PCMETER(cache->pchits++);
-            PCMETER(cache->inipchits++);
-
-            JS_ASSERT(entry->vword.isSprop());
-            sprop = entry->vword.toSprop();
-            JS_ASSERT(sprop->writable());
-
-            /*
-             * If this property has a non-stub setter, it must be __proto__,
-             * __parent__, or another "shared prototype" built-in. Force a miss
-             * to save code size here and let the standard code path take care
-             * of business.
-             */
-            if (!sprop->hasDefaultSetter())
-                goto do_initprop_miss;
-
-            /*
-             * Detect a repeated property name and force a miss to share the
-             * strict warning code and consolidate all the complexity managed
-             * by JSScope::addProperty.
-             */
-            if (sprop->parent != scope->lastProperty())
-                goto do_initprop_miss;
-
-            /*
-             * Otherwise this entry must be for a direct property of obj, not a
-             * proto-property, and there cannot have been any deletions of
-             * prior properties.
-             */
-            JS_ASSERT(!scope->inDictionaryMode());
-            JS_ASSERT_IF(scope->table, !scope->hasProperty(sprop));
-
-            slot = sprop->slot;
-            JS_ASSERT(slot == scope->freeslot);
-            if (slot < STOBJ_NSLOTS(obj)) {
-                ++scope->freeslot;
-            } else {
-                if (!js_AllocSlot(cx, obj, &slot))
-                    goto error;
-                JS_ASSERT(slot == sprop->slot);
-            }
-
-            JS_ASSERT(!scope->lastProperty() ||
-                      scope->shape == scope->lastProperty()->shape);
-            if (scope->table) {
-                JSScopeProperty *sprop2 =
-                    scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(), slot,
-                                       sprop->attributes(), sprop->getFlags(), sprop->shortid);
-                if (!sprop2) {
-                    js_FreeSlot(cx, obj, slot);
-                    goto error;
-                }
-                JS_ASSERT(sprop2 == sprop);
-            } else {
-                JS_ASSERT(!scope->isSharedEmpty());
-                scope->extend(cx, sprop);
-            }
-
-            /*
-             * No method change check here because here we are adding a new
-             * property, not updating an existing slot's value that might
-             * contain a method of a branded scope.
-             */
-            TRACE_2(SetPropHit, entry, sprop);
-            LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-            break;
+    /*
+     * Probe the property cache. 
+     *
+     * We can not assume that the object created by JSOP_NEWINIT is still
+     * single-threaded as the debugger can access it from other threads.
+     * So check first.
+     *
+     * On a hit, if the cached sprop has a non-default setter, it must be
+     * __proto__ or __parent__. If sprop->parent != scope->lastProperty(),
+     * there is a repeated property name. The fast path does not handle these
+     * two cases.
+     */
+    if (CX_OWNS_OBJECT_TITLE(cx, obj) &&
+        JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, scope, &sprop, &entry) &&
+        sprop->hasDefaultSetter() &&
+        sprop->parent == scope->lastProperty())
+    {
+        /* Fast path. Property cache hit. */
+        slot = sprop->slot;
+        JS_ASSERT(slot == scope->freeslot);
+        if (slot < STOBJ_NSLOTS(obj)) {
+            ++scope->freeslot;
+        } else {
+            if (!js_AllocSlot(cx, obj, &slot))
+                goto error;
+            JS_ASSERT(slot == sprop->slot);
         }
 
-      do_initprop_miss:
-        PCMETER(cache->inipcmisses++);
+        JS_ASSERT(!scope->lastProperty() ||
+                  scope->shape == scope->lastProperty()->shape);
+        if (scope->table) {
+            JSScopeProperty *sprop2 =
+                scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(), slot,
+                                   sprop->attributes(), sprop->getFlags(), sprop->shortid);
+            if (!sprop2) {
+                js_FreeSlot(cx, obj, slot);
+                goto error;
+            }
+            JS_ASSERT(sprop2 == sprop);
+        } else {
+            JS_ASSERT(!scope->isSharedEmpty());
+            scope->extend(cx, sprop);
+        }
+
+        /*
+         * No method change check here because here we are adding a new
+         * property, not updating an existing slot's value that might
+         * contain a method of a branded scope.
+         */
+        TRACE_2(SetPropHit, entry, sprop);
+        LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+    } else {
+        PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
 
         /* Get the immediate property name into id. */
         LOAD_ATOM(0);
@@ -3488,10 +3444,11 @@ BEGIN_CASE(JSOP_INITMETHOD)
                                         defineHow))) {
             goto error;
         }
-    } while (0);
+    }
 
     /* Common tail for property cache hit and miss cases. */
     regs.sp--;
+}
 END_CASE(JSOP_INITPROP);
 
 BEGIN_CASE(JSOP_INITELEM)
