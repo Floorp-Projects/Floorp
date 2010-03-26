@@ -150,12 +150,12 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         JSObject *tmp = obj;
 
         for (uintN i = 0; i != scopeIndex; i++)
-            tmp = OBJ_GET_PARENT(cx, tmp);
+            tmp = tmp->getParent();
         JS_ASSERT(tmp != pobj);
 
         protoIndex = 1;
         for (;;) {
-            tmp = OBJ_GET_PROTO(cx, tmp);
+            tmp = tmp->getProto();
 
             /*
              * We cannot cache properties coming from native objects behind
@@ -295,7 +295,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                      * matching empty scope. In unusual cases involving
                      * __proto__ assignment we may not find one.
                      */
-                    JSObject *proto = STOBJ_GET_PROTO(obj);
+                    JSObject *proto = obj->getProto();
                     if (!proto || !OBJ_IS_NATIVE(proto))
                         return JS_NO_PROP_CACHE_FILL;
                     JSScope *protoscope = OBJ_SCOPE(proto);
@@ -335,7 +335,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #ifdef DEBUG
         if (scopeIndex == 0) {
             JS_ASSERT(protoIndex != 0);
-            JS_ASSERT((protoIndex == 1) == (OBJ_GET_PROTO(cx, obj) == pobj));
+            JS_ASSERT((protoIndex == 1) == (obj->getProto() == pobj));
         }
 #endif
 
@@ -443,7 +443,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     if (JOF_MODE(cs->format) == JOF_NAME) {
         while (vcap & (PCVCAP_SCOPEMASK << PCVCAP_PROTOBITS)) {
-            tmp = OBJ_GET_PARENT(cx, pobj);
+            tmp = pobj->getParent();
             if (!tmp || !OBJ_IS_NATIVE(tmp))
                 break;
             pobj = tmp;
@@ -454,7 +454,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     while (vcap & PCVCAP_PROTOMASK) {
-        tmp = OBJ_GET_PROTO(cx, pobj);
+        tmp = pobj->getProto();
         if (!tmp || !OBJ_IS_NATIVE(tmp))
             break;
         pobj = tmp;
@@ -762,7 +762,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          */
         limitClone = fp->scopeChain;
         while (OBJ_GET_CLASS(cx, limitClone) == &js_WithClass)
-            limitClone = OBJ_GET_PARENT(cx, limitClone);
+            limitClone = limitClone->getParent();
         JS_ASSERT(limitClone);
 
         /*
@@ -783,7 +783,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          * be a block either.  So we can just grab limitClone's prototype here
          * regardless of its type or which frame it belongs to.
          */
-        limitBlock = OBJ_GET_PROTO(cx, limitClone);
+        limitBlock = limitClone->getProto();
 
         /* If the innermost block has already been cloned, we are done. */
         if (limitBlock == sharedBlock)
@@ -808,8 +808,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JSObject *newChild = innermostNewChild;
     for (;;) {
-        JS_ASSERT(OBJ_GET_PROTO(cx, newChild) == sharedBlock);
-        sharedBlock = OBJ_GET_PARENT(cx, sharedBlock);
+        JS_ASSERT(newChild->getProto() == sharedBlock);
+        sharedBlock = sharedBlock->getParent();
 
         /* Sometimes limitBlock will be NULL, so check that first.  */
         if (sharedBlock == limitBlock || !sharedBlock)
@@ -821,14 +821,10 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         if (!clone)
             return NULL;
 
-        /*
-         * Avoid OBJ_SET_PARENT overhead as newChild cannot escape to
-         * other threads.
-         */
-        STOBJ_SET_PARENT(newChild, clone);
+        newChild->setParent(clone);
         newChild = clone;
     }
-    STOBJ_SET_PARENT(newChild, fp->scopeChain);
+    newChild->setParent(fp->scopeChain);
 
 
     /*
@@ -894,7 +890,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
     JSObject *thisp;
 
     if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
+        !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
         thisp = cx->globalObject;
     } else {
         jsid id;
@@ -937,10 +933,8 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
             return NULL;
 
         if (v != JSVAL_NULL) {
-            thisp = JSVAL_IS_VOID(v)
-                    ? OBJ_GET_PARENT(cx, thisp)
-                    : JSVAL_TO_OBJECT(v);
-            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+            thisp = JSVAL_IS_VOID(v) ? thisp->getParent() : JSVAL_TO_OBJECT(v);
+            while ((parent = thisp->getParent()) != NULL)
                 thisp = parent;
         }
     }
@@ -1135,8 +1129,8 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         goto bad;
 
     funobj = JSVAL_TO_OBJECT(v);
-    parent = OBJ_GET_PARENT(cx, funobj);
-    clasp = OBJ_GET_CLASS(cx, funobj);
+    parent = funobj->getParent();
+    clasp = funobj->getClass();
     if (clasp != &js_FunctionClass) {
 #if JS_HAS_NO_SUCH_METHOD
         if (clasp == &js_NoSuchMethodClass) {
@@ -1561,7 +1555,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.argsobj = NULL;
         JSObject *obj = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
-            while (JSObject *tmp = OBJ_GET_PARENT(cx, obj))
+            while (JSObject *tmp = obj->getParent())
                 obj = tmp;
         }
         frame.fun = NULL;
@@ -1899,9 +1893,9 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
         }
         rval = vp[1];
         proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
-        parent = OBJ_GET_PARENT(cx, obj2);
+        parent = obj2->getParent();
 
-        if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
+        if (obj2->getClass() == &js_FunctionClass) {
             fun2 = GET_FUNCTION_PRIVATE(cx, obj2);
             if (!FUN_INTERPRETED(fun2) && fun2->u.n.clasp)
                 clasp = fun2->u.n.clasp;
@@ -2005,7 +1999,7 @@ js_LeaveWith(JSContext *cx)
     JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
     JS_ASSERT(withobj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
-    cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
+    cx->fp->scopeChain = withobj->getParent();
     withobj->setPrivate(NULL);
 }
 
@@ -2037,7 +2031,7 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     JS_ASSERT(stackDepth >= 0);
     JS_ASSERT(StackBase(fp) + stackDepth <= fp->regs->sp);
 
-    for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+    for (obj = fp->blockChain; obj; obj = obj->getParent()) {
         JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
         if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
             break;
@@ -2353,6 +2347,166 @@ js_DumpOpMeters()
 
 #ifndef  jsinvoke_cpp___
 
+#ifdef JS_REPRMETER
+// jsval representation metering: this measures the kinds of jsvals that
+// are used as inputs to each JSOp.
+namespace reprmeter {
+    enum Repr {
+        NONE,
+        INT,
+        DOUBLE,
+        BOOLEAN_PROPER,
+        BOOLEAN_OTHER,
+        STRING,
+        OBJECT_NULL,
+        OBJECT_PLAIN,
+        FUNCTION_INTERPRETED,
+        FUNCTION_FASTNATIVE,
+        FUNCTION_SLOWNATIVE,
+        ARRAY_SLOW,
+        ARRAY_DENSE
+    };
+
+    // Return the |repr| value giving the representation of the given jsval.
+    static Repr
+    GetRepr(jsval v)
+    {
+        if (JSVAL_IS_INT(v))
+            return INT;
+        if (JSVAL_IS_DOUBLE(v))
+            return DOUBLE;
+        if (JSVAL_IS_SPECIAL(v)) {
+            return (v == JSVAL_TRUE || v == JSVAL_FALSE)
+                   ? BOOLEAN_PROPER
+                   : BOOLEAN_OTHER;
+        }
+        if (JSVAL_IS_STRING(v))
+            return STRING;
+
+        JS_ASSERT(JSVAL_IS_OBJECT(v));
+
+        JSObject *obj = JSVAL_TO_OBJECT(v);
+        if (VALUE_IS_FUNCTION(cx, v)) {
+            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+            if (FUN_INTERPRETED(fun))
+                return FUNCTION_INTERPRETED;
+            if (fun->flags & JSFUN_FAST_NATIVE)
+                return FUNCTION_FASTNATIVE;
+            return FUNCTION_SLOWNATIVE;
+        }
+        // This must come before the general array test, because that
+        // one subsumes this one.
+        if (!obj)
+            return OBJECT_NULL;
+        if (obj->isDenseArray())
+            return ARRAY_DENSE;
+        if (obj->isArray())
+            return ARRAY_SLOW;
+        return OBJECT_PLAIN;
+    }
+
+    static const char *reprName[] = { "invalid", "int", "double", "bool", "special",
+                                      "string", "null", "object", 
+                                      "fun:interp", "fun:fast", "fun:slow",
+                                      "array:slow", "array:dense" };
+
+    // Logically, a tuple of (JSOp, repr_1, ..., repr_n) where repr_i is
+    // the |repr| of the ith input to the JSOp.
+    struct OpInput {
+        enum { max_uses = 16 };
+
+        JSOp op;
+        Repr uses[max_uses];
+
+        OpInput() : op(JSOp(255)) {
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = NONE;
+        }
+
+        OpInput(JSOp op) : op(op) {
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = NONE;
+        }
+
+        // Hash function
+        operator uint32() const {
+            uint32 h = op;
+            for (int i = 0; i < max_uses; ++i)
+                h = h * 7 + uses[i] * 13;
+            return h;
+        }
+
+        bool operator==(const OpInput &opinput) const {
+            if (op != opinput.op)
+                return false;
+            for (int i = 0; i < max_uses; ++i) {
+                if (uses[i] != opinput.uses[i])
+                    return false;
+            }
+            return true;
+        }
+
+        OpInput &operator=(const OpInput &opinput) {
+            op = opinput.op;
+            for (int i = 0; i < max_uses; ++i)
+                uses[i] = opinput.uses[i];
+            return *this;
+        }
+    };
+
+    typedef HashMap<OpInput, uint64, DefaultHasher<OpInput>, SystemAllocPolicy> OpInputHistogram;
+
+    OpInputHistogram opinputs;
+    bool             opinputsInitialized = false;
+
+    // Record an OpInput for the current op. This should be called just
+    // before executing the op.
+    static void
+    MeterRepr(JSStackFrame *fp)
+    {
+        // Note that we simply ignore the possibility of errors (OOMs)
+        // using the hash map, since this is only metering code.
+
+        if (!opinputsInitialized) {
+            opinputs.init();
+            opinputsInitialized = true;
+        }
+
+        JSOp op = JSOp(*fp->regs->pc);
+        unsigned nuses = js_GetStackUses(&js_CodeSpec[op], op, fp->regs->pc);
+
+        // Build the OpInput.
+        OpInput opinput(op);
+        for (unsigned i = 0; i < nuses; ++i) {
+            jsval v = fp->regs->sp[-nuses+i];
+            opinput.uses[i] = GetRepr(v);
+        }
+
+        OpInputHistogram::AddPtr p = opinputs.lookupForAdd(opinput);
+        if (p)
+            ++p->value;
+        else
+            opinputs.add(p, opinput, 1);
+    }
+
+    void
+    js_DumpReprMeter()
+    {
+        FILE *f = fopen("/tmp/reprmeter.txt", "w");
+        JS_ASSERT(f);
+        for (OpInputHistogram::Range r = opinputs.all(); !r.empty(); r.popFront()) {
+            const OpInput &o = r.front().key;
+            uint64 c = r.front().value;
+            fprintf(f, "%3d,%s", o.op, js_CodeName[o.op]);
+            for (int i = 0; i < OpInput::max_uses && o.uses[i] != NONE; ++i)
+                fprintf(f, ",%s", reprName[o.uses[i]]);
+            fprintf(f, ",%llu\n", c);
+        }
+        fclose(f);
+    }
+}
+#endif /* JS_REPRMETER */
+
 #define PUSH(v)         (*regs.sp++ = (v))
 #define PUSH_OPND(v)    PUSH(v)
 #define STORE_OPND(n,v) (regs.sp[n] = (v))
@@ -2539,6 +2693,12 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL_CONSTEXPR(JSVAL_INT_MAX)));
 # define METER_SLOT_OP(op,slot) (js_MeterSlotOpcode(op, slot))
 
 #endif
+
+#ifdef JS_REPRMETER
+# define METER_REPR(fp)         (reprmeter::MeterRepr(fp))
+#else
+# define METER_REPR(fp)
+#endif /* JS_REPRMETER */
 
 /*
  * Threaded interpretation via computed goto appears to be well-supported by
@@ -2782,8 +2942,9 @@ js_Interpret(JSContext *cx)
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                                METER_OP_PAIR(op, regs.pc[n]);                \
+                                METER_OP_PAIR(op, JSOp(regs.pc[n]));          \
                                 op = (JSOp) *(regs.pc += (n));                \
+                                METER_REPR(fp);                               \
                                 DO_OP();                                      \
                             JS_END_MACRO
 
@@ -3108,11 +3269,17 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
   error:
+#ifdef JS_TRACER
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
-        if (*fp->imacpc == JSOP_NEXTITER && js_ValueIsStopIteration(cx->exception)) {
+        if (*fp->imacpc == JSOP_NEXTITER &&
+            InCustomIterNextTryRegion(regs.pc) &&
+            js_ValueIsStopIteration(cx->exception)) {
+            // If the other NEXTITER imacro, native_iter_next, throws
+            // StopIteration, do not catch it here. See bug 547911.
+
             // pc may point to JSOP_DUP here due to bug 474854.
-            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP || *regs.pc == JSOP_TRUE);
+            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
             cx->throwing = JS_FALSE;
             cx->exception = JSVAL_VOID;
             regs.sp[-1] = JSVAL_HOLE;
@@ -3125,6 +3292,7 @@ js_Interpret(JSContext *cx)
         fp->imacpc = NULL;
         atoms = script->atomMap.vector;
     }
+#endif
 
     JS_ASSERT((size_t)((fp->imacpc ? fp->imacpc : regs.pc) - script->code) < script->length);
 

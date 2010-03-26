@@ -44,7 +44,12 @@
 #include "nsCRTGlue.h"
 #include "prlog.h"
 #include "prdtoa.h"
-#include "jsnum.h"
+
+#include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
+
 #ifdef HAVE_SSIZE_T
 #include <sys/types.h>
 #endif
@@ -253,6 +258,14 @@ static JSFunctionSpec sUInt64Functions[] = {
   JS_FN("toSource", UInt64::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
+
+static inline bool FloatIsFinite(jsdouble f) {
+#ifdef WIN32
+  return _finite(f);
+#else
+  return finite(f);
+#endif
+}
 
 JS_ALWAYS_INLINE void
 ASSERT_OK(JSBool ok)
@@ -1041,7 +1054,7 @@ jsvalToIntegerExplicit(JSContext* cx, jsval val, IntegerType* result)
   if (JSVAL_IS_DOUBLE(val)) {
     // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
     jsdouble d = *JSVAL_TO_DOUBLE(val);
-    *result = JSDOUBLE_IS_FINITE(d) ? IntegerType(d) : 0;
+    *result = FloatIsFinite(d) ? IntegerType(d) : 0;
     return true;
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {

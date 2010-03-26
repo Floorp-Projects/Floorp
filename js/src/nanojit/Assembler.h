@@ -337,7 +337,7 @@ namespace nanojit
             void        registerResetAll();
             void        evictAllActiveRegs();
             void        evictSomeActiveRegs(RegisterMask regs);
-            void        evictScratchRegs();
+            void        evictScratchRegsExcept(RegisterMask ignore);
             void        intersectRegisterState(RegAlloc& saved);
             void        unionRegisterState(RegAlloc& saved);
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
@@ -368,7 +368,7 @@ namespace nanojit
                                   verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
-            bool isKnownReg(Register r) {
+            bool deprecated_isKnownReg(Register r) {
                 return r != deprecated_UnknownReg;
             }
 

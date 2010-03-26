@@ -1319,7 +1319,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
-    STOBJ_SET_PARENT(blockObj, tc->blockChain);
+    blockObj->setParent(tc->blockChain);
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChain = blockObj;
@@ -1512,7 +1512,7 @@ js_PopStatement(JSTreeContext *tc)
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE) {
-            tc->blockChain = STOBJ_GET_PARENT(stmt->blockObj);
+            tc->blockChain = stmt->blockObj->getParent();
             JS_SCOPE_DEPTH_METERING(--tc->scopeDepth);
         }
     }
@@ -2099,7 +2099,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * as their parent by JSCompiler::newFunction.
              */
             JSObject *scopeobj = (cg->flags & TCF_IN_FUNCTION)
-                                 ? STOBJ_GET_PARENT(FUN_OBJECT(cg->fun))
+                                 ? FUN_OBJECT(cg->fun)->getParent()
                                  : cg->scopeChain;
             if (scopeobj != caller->varobj(cx))
                 return JS_TRUE;

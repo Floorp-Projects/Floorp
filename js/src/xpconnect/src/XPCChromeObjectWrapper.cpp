@@ -349,7 +349,7 @@ JSObject *
 GetWrapper(JSObject *obj)
 {
   while (STOBJ_GET_CLASS(obj) != &COWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       break;
     }
@@ -410,7 +410,7 @@ WrapFunction(JSContext *cx, JSObject *scope, JSObject *funobj, jsval *rval)
     reinterpret_cast<JSFunction *>(xpc_GetJSPrivate(funobj));
   JSNative native = JS_GetFunctionNative(cx, wrappedFun);
   if (native == XPC_COW_FunctionWrapper) {
-    if (STOBJ_GET_PARENT(funobj) == scope) {
+    if (funobj->getParent() == scope) {
       *rval = funobjVal;
       return JS_TRUE;
     }

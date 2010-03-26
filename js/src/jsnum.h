@@ -48,6 +48,8 @@
 #include <ieeefp.h>
 #endif
 
+#include "jsstr.h"
+
 /*
  * JS number (IEEE double) interface.
  *
@@ -425,5 +427,63 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
                 const jschar **ep, jsint radix, jsdouble *dp);
 
 JS_END_EXTERN_C
+
+namespace js {
+template<typename T> struct NumberTraits { };
+template<> struct NumberTraits<int32> {
+  static JS_ALWAYS_INLINE int32 NaN() { return 0; }
+  static JS_ALWAYS_INLINE int32 toSelfType(int32 i) { return i; }
+  static JS_ALWAYS_INLINE int32 toSelfType(jsdouble d) { return js_DoubleToECMAUint32(d); }
+};
+template<> struct NumberTraits<jsdouble> {
+  static JS_ALWAYS_INLINE jsdouble NaN() { return js_NaN; }
+  static JS_ALWAYS_INLINE jsdouble toSelfType(int32 i) { return i; }
+  static JS_ALWAYS_INLINE jsdouble toSelfType(jsdouble d) { return d; }
+};
+
+template<typename T>
+static JS_ALWAYS_INLINE T
+StringToNumberType(JSContext *cx, JSString *str)
+{
+    if (str->length() == 1) {
+        jschar c = str->chars()[0];
+        if ('0' <= c && c <= '9')
+            return NumberTraits<T>::toSelfType(int32(c - '0'));
+        return NumberTraits<T>::NaN();
+    }
+
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    str->getCharsAndEnd(bp, end);
+    bp = js_SkipWhiteSpace(bp, end);
+
+    /* ECMA doesn't allow signed hex numbers (bug 273467). */
+    if (end - bp >= 2 && bp[0] == '0' && (bp[1] == 'x' || bp[1] == 'X')) {
+        /* Looks like a hex number. */
+        if (!js_strtointeger(cx, bp, end, &ep, 16, &d) ||
+            js_SkipWhiteSpace(ep, end) != end) {
+            return NumberTraits<T>::NaN();
+        }
+        return NumberTraits<T>::toSelfType(d);
+    }
+
+    /*
+     * Note that ECMA doesn't treat a string beginning with a '0' as
+     * an octal number here. This works because all such numbers will
+     * be interpreted as decimal by js_strtod.  Also, any hex numbers
+     * that have made it here (which can only be negative ones) will
+     * be treated as 0 without consuming the 'x' by js_strtod.
+     */
+    if (!js_strtod(cx, bp, end, &ep, &d) ||
+        js_SkipWhiteSpace(ep, end) != end) {
+        return NumberTraits<T>::NaN();
+    }
+
+    return NumberTraits<T>::toSelfType(d);
+}
+}
 
 #endif /* jsnum_h___ */

@@ -1305,7 +1305,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
 
     # Write the JS_DEFINE_TRCINFO block
     f.write("JS_DEFINE_TRCINFO_1(%s,\n" % stubName)
-    f.write("    (%d, (static, %s, %s, %s, 0, 0)))\n\n"
+    f.write("    (%d, (static, %s, %s, %s, 0, nanojit::ACC_STORE_ANY)))\n\n"
             % (len(traceInfo["params"]), traceInfo["type"], stubName + "_tn",
                ", ".join(traceInfo["params"])))
 

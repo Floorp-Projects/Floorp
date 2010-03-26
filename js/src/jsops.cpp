@@ -144,7 +144,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - StackBase(fp)));
-    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+    for (obj = fp->scopeChain; obj; obj = obj->getParent()) {
         clasp = OBJ_GET_CLASS(cx, obj);
         if (clasp != &js_BlockClass && clasp != &js_WithClass)
             continue;
@@ -714,7 +714,7 @@ BEGIN_CASE(JSOP_BINDNAME)
          * forms.
          */
         obj = fp->scopeChain;
-        if (!OBJ_GET_PARENT(cx, obj))
+        if (!obj->getParent())
             break;
         if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
             PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
@@ -1490,7 +1490,7 @@ BEGIN_CASE(JSOP_GETXPROP)
          * assuming any property gets it does (e.g., for 'toString'
          * from JSOP_NEW) will not be leaked to the calling script.
          */
-        aobj = js_GetProtoIfDenseArray(cx, obj);
+        aobj = js_GetProtoIfDenseArray(obj);
         if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
             PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
             if (!atom) {
@@ -1540,7 +1540,7 @@ BEGIN_CASE(JSOP_LENGTH)
         str = JSVAL_TO_STRING(lval);
         regs.sp[-1] = INT_TO_JSVAL(str->length());
     } else if (!JSVAL_IS_PRIMITIVE(lval) &&
-               (obj = JSVAL_TO_OBJECT(lval), OBJ_IS_ARRAY(cx, obj))) {
+               (obj = JSVAL_TO_OBJECT(lval), obj->isArray())) {
         jsuint length;
 
         /*
@@ -1586,7 +1586,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 
-    aobj = js_GetProtoIfDenseArray(cx, obj);
+    aobj = js_GetProtoIfDenseArray(obj);
     if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
         PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
@@ -1731,7 +1731,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     bool checkForAdd;
                     if (sprop->attrs & JSPROP_SHARED) {
                         if (PCVCAP_TAG(entry->vcap) == 0 ||
-                            ((obj2 = OBJ_GET_PROTO(cx, obj)) &&
+                            ((obj2 = obj->getProto()) &&
                              OBJ_IS_NATIVE(obj2) &&
                              OBJ_SHAPE(obj2) == PCVCAP_SHAPE(entry->vcap))) {
                             goto fast_set_propcache_hit;
@@ -1809,7 +1809,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         if (slot != sprop->slot || scope->table) {
                             JSScopeProperty *sprop2 =
                                 scope->putProperty(cx, sprop->id,
-                                                   sprop->getter, sprop->setter,
+                                                   sprop->getter(), sprop->setter(),
                                                    slot, sprop->attrs,
                                                    sprop->getFlags(), sprop->shortid);
                             if (!sprop2) {
@@ -1897,7 +1897,7 @@ BEGIN_CASE(JSOP_GETELEM)
 
     VALUE_TO_OBJECT(cx, -2, lval, obj);
     if (JSVAL_IS_INT(rval)) {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        if (obj->isDenseArray()) {
             jsuint length;
 
             length = js_DenseArrayCapacity(obj);
@@ -1946,7 +1946,7 @@ BEGIN_CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, lval, obj);
     FETCH_ELEMENT_ID(obj, -2, id);
     do {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
+        if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length;
 
             length = js_DenseArrayCapacity(obj);
@@ -2003,7 +2003,7 @@ BEGIN_CASE(JSOP_NEW)
             rval = vp[1];
             obj2 = js_NewObject(cx, &js_ObjectClass,
                                 JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
-                                OBJ_GET_PARENT(cx, obj));
+                                obj->getParent());
             if (!obj2)
                 goto error;
 
@@ -2133,7 +2133,7 @@ BEGIN_CASE(JSOP_APPLY)
             newifp->frame.rval = JSVAL_VOID;
             newifp->frame.down = fp;
             newifp->frame.annotation = NULL;
-            newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
+            newifp->frame.scopeChain = parent = obj->getParent();
             newifp->frame.flags = flags;
             newifp->frame.blockChain = NULL;
             if (script->staticLevel < JS_DISPLAY_SIZE) {
@@ -2919,7 +2919,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (OBJ_GET_PARENT(cx, obj) != obj2) {
+    if (obj->getParent() != obj2) {
         obj = CloneFunctionObject(cx, fun, obj2);
         if (!obj)
             goto error;
@@ -3091,7 +3091,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         if (!parent)
             goto error;
 
-        if (OBJ_GET_PARENT(cx, obj) != parent) {
+        if (obj->getParent() != parent) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
@@ -3142,7 +3142,7 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (FUN_NULL_CLOSURE(fun)) {
             parent = fp->scopeChain;
 
-            if (OBJ_GET_PARENT(cx, obj) == parent) {
+            if (obj->getParent() == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
 
                 /*
@@ -3451,7 +3451,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                       scope->shape == scope->lastProperty()->shape);
             if (scope->table) {
                 JSScopeProperty *sprop2 =
-                    scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, slot,
+                    scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(), slot,
                                        sprop->attrs, sprop->getFlags(), sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
@@ -3528,7 +3528,7 @@ BEGIN_CASE(JSOP_INITELEM)
      * initialiser, set the array length to one greater than id.
      */
     if (rval == JSVAL_HOLE) {
-        JS_ASSERT(OBJ_IS_ARRAY(cx, obj));
+        JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
         if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
@@ -4012,7 +4012,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
     }
 
 #ifdef DEBUG
-    JS_ASSERT(fp->blockChain == OBJ_GET_PARENT(cx, obj));
+    JS_ASSERT(fp->blockChain == obj->getParent());
 
     /*
      * The young end of fp->scopeChain may omit blocks if we haven't closed
@@ -4022,14 +4022,14 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      * static scope.
      */
     obj2 = fp->scopeChain;
-    while ((clasp = OBJ_GET_CLASS(cx, obj2)) == &js_WithClass)
-        obj2 = OBJ_GET_PARENT(cx, obj2);
+    while ((clasp = obj2->getClass()) == &js_WithClass)
+        obj2 = obj2->getParent();
     if (clasp == &js_BlockClass &&
         obj2->getPrivate() == fp) {
-        JSObject *youngestProto = OBJ_GET_PROTO(cx, obj2);
+        JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
         parent = obj;
-        while ((parent = OBJ_GET_PARENT(cx, parent)) != youngestProto)
+        while ((parent = parent->getParent()) != youngestProto)
             JS_ASSERT(parent);
     }
 #endif
@@ -4052,14 +4052,14 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      * the stack into the clone, and pop it off the chain.
      */
     obj = fp->scopeChain;
-    if (OBJ_GET_PROTO(cx, obj) == fp->blockChain) {
+    if (obj->getProto() == fp->blockChain) {
         JS_ASSERT (OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             goto error;
     }
 
     /* Pop the block chain, too.  */
-    fp->blockChain = OBJ_GET_PARENT(cx, fp->blockChain);
+    fp->blockChain = fp->blockChain->getParent();
 
     /* Move the result of the expression to the new topmost stack slot. */
     if (op == JSOP_LEAVEBLOCKEXPR)

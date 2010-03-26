@@ -256,15 +256,26 @@ struct ClosureVarInfo;
 #define _JS_CALLINFO(name) name##_ci
 
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-#define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, cse, fold)                \
+#define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, isPure, storeAccSet)      \
     _JS_TN_LINKAGE(linkage, crtype) name cargtypes;                                               \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
-        { (intptr_t) &name, argtypes, cse, fold, nanojit::ABI_CDECL _JS_CI_NAME(name) };
+        { (intptr_t) &name, argtypes, nanojit::ABI_CDECL, isPure, storeAccSet _JS_CI_NAME(name) };\
+    /* XXX: a temporary assertion to check all cse/fold pairs are correctly */                    \
+    /* converted to isPure/storeAccSet pairs for bug 545274.  Will be removed */                  \
+    /* when bug 517910 starts doing more precise storeAccSet markings. */                         \
+    JS_STATIC_ASSERT_IF(!isPure, storeAccSet == nanojit::ACC_STORE_ANY); /* temporary */          \
+    JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
+
 #else
-#define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, cse, fold)                \
+#define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, isPure, storeAccSet)      \
     _JS_TN_LINKAGE(linkage, crtype) FASTCALL name cargtypes;                                      \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
-        { (intptr_t) &name, argtypes, cse, fold, nanojit::ABI_FASTCALL _JS_CI_NAME(name) };
+        { (intptr_t) &name, argtypes, nanojit::ABI_FASTCALL, isPure, storeAccSet _JS_CI_NAME(name) }; \
+    /* XXX: a temporary assertion to check all cse/fold pairs are correctly */                    \
+    /* converted to isPure/storeAccSet pairs for bug 545274.  Will be removed */                  \
+    /* when bug 517910 starts doing more precise storeAccSet markings. */                         \
+    JS_STATIC_ASSERT_IF(!isPure, storeAccSet == nanojit::ACC_STORE_ANY); /* temporary */          \
+    JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
 #endif
 
 /*
@@ -289,33 +300,40 @@ struct ClosureVarInfo;
  *
  * - The parameter types.
  *
- * - The cse flag. 1 if the builtin call can be optimized away by common
- *   subexpression elimination; otherwise 0. This should be 1 only if the
- *   function is idempotent and the return value is determined solely by the
- *   arguments.
+ * - The isPure flag.  Set to 1 if:
+ *   (a) the function's return value is determined solely by its arguments
+ *       (ie. no hidden state, no implicit inputs used such as global
+ *       variables or the result of an I/O operation); and
+ *   (b) the function causes no observable side-effects (ie. no writes to
+ *       global variables, no I/O output).
+ *   Multiple calls to a pure function can be merged during CSE.
  *
- * - The fold flag. Reserved. The same as cse for now.
+ * - The storeAccSet.  This indicates which memory access regions the function
+ *   accesses.  It must be ACC_NONE if the function is pure;  use
+ *   ACC_STORE_ANY if you're not sure.  Used to determine if each call site of
+ *   the function aliases any loads.
  */
-#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)                                     \
+#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, isPure, storeAccSet)                           \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt), (_JS_CTYPE_TYPE(at0)),                   \
                         (_JS_CTYPE_ARGSIZE(at0) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, cse, fold)                                \
+                        _JS_CTYPE_RETSIZE(rt),                                                    \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, isPure, storeAccSet)                      \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1)),                               \
                         (_JS_CTYPE_ARGSIZE(at0) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at1) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt),                                                    \
-                        cse, fold)
-#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, cse, fold)                           \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, isPure, storeAccSet)                 \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2)),          \
                         (_JS_CTYPE_ARGSIZE(at0) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at1) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at2) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt),                                                    \
-                        cse, fold)
-#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)                      \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, isPure, storeAccSet)            \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
                          _JS_CTYPE_TYPE(at3)),                                                    \
@@ -324,8 +342,8 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at2) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at3) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt),                                                    \
-                        cse, fold)
-#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)                 \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, isPure, storeAccSet)       \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
                          _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4)),                               \
@@ -335,8 +353,8 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at3) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at4) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt),                                                    \
-                        cse, fold)
-#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)            \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, isPure, storeAccSet)  \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
                          _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5)),          \
@@ -346,8 +364,10 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at3) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at4) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at5) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)       \
+                        _JS_CTYPE_RETSIZE(rt),                                                    \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, isPure,          \
+                             storeAccSet)                                                         \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
                          _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5),           \
@@ -359,8 +379,10 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at4) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at5) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at6) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)  \
+                        _JS_CTYPE_RETSIZE(rt),                                                    \
+                        isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, isPure,     \
+                             storeAccSet)                                                         \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
                          _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5),           \
@@ -373,37 +395,38 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at5) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at6) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at7) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
+                        _JS_CTYPE_RETSIZE(rt),                                                    \
+                        isPure, storeAccSet)
 
 #define JS_DECLARE_CALLINFO(name)  extern const nanojit::CallInfo _JS_CALLINFO(name);
 
 #define _JS_TN_INIT_HELPER_n(n, args)  _JS_TN_INIT_HELPER_##n args
 
-#define _JS_TN_INIT_HELPER_1(linkage, rt, op, at0, cse, fold)                                     \
+#define _JS_TN_INIT_HELPER_1(linkage, rt, op, at0, isPure, storeAccSet)                           \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at0),                                                                           \
     _JS_CTYPE_ACH(at0),                                                                           \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_2(linkage, rt, op, at0, at1, cse, fold)                                \
+#define _JS_TN_INIT_HELPER_2(linkage, rt, op, at0, at1, isPure, storeAccSet)                      \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                        \
     _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                        \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_3(linkage, rt, op, at0, at1, at2, cse, fold)                           \
+#define _JS_TN_INIT_HELPER_3(linkage, rt, op, at0, at1, at2, isPure, storeAccSet)                 \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                     \
     _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                     \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)                      \
+#define _JS_TN_INIT_HELPER_4(linkage, rt, op, at0, at1, at2, at3, isPure, storeAccSet)            \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                  \
     _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                  \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)                 \
+#define _JS_TN_INIT_HELPER_5(linkage, rt, op, at0, at1, at2, at3, at4, isPure, storeAccSet)       \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1)                   \
         _JS_CTYPE_PCH(at0),                                                                       \
@@ -411,7 +434,7 @@ struct ClosureVarInfo;
         _JS_CTYPE_ACH(at0),                                                                       \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)            \
+#define _JS_TN_INIT_HELPER_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, isPure, storeAccSet) \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2)                   \
         _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                    \
@@ -419,7 +442,7 @@ struct ClosureVarInfo;
         _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                    \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)       \
+#define _JS_TN_INIT_HELPER_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, isPure, storeAccSet) \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at6) _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3)                   \
         _JS_CTYPE_PCH(at2)  _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                \
@@ -427,7 +450,7 @@ struct ClosureVarInfo;
         _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                 \
     _JS_CTYPE_FLAGS(rt)
 
-#define _JS_TN_INIT_HELPER_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)  \
+#define _JS_TN_INIT_HELPER_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, isPure, storeAccSet) \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at7) _JS_CTYPE_PCH(at6) _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4)                   \
         _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2)  _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),             \
@@ -492,14 +515,14 @@ js_dmod(jsdouble a, jsdouble b);
 
 #else
 
-#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)
-#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, cse, fold)
-#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, cse, fold)
-#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)
-#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)
-#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)
-#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)
-#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)
+#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, isPure, storeAccSet)
+#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, isPure, storeAccSet)
 #define JS_DECLARE_CALLINFO(name)
 #define JS_DEFINE_TRCINFO_1(name, tn0)
 #define JS_DEFINE_TRCINFO_2(name, tn0, tn1)

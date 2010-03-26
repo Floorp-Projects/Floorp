@@ -42,7 +42,6 @@
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
 #include "jsdbgapi.h"
-#include "jsnum.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -1483,10 +1482,10 @@ FindObjectClass(JSObject* aGlobalObject)
   JSObject *obj, *proto = aGlobalObject;
   do {
     obj = proto;
-    proto = STOBJ_GET_PROTO(obj);
+    proto = obj->getProto();
   } while (proto);
 
-  sObjectClass = STOBJ_GET_CLASS(obj);
+  sObjectClass = obj->getClass();
 }
 
 static void
@@ -1567,6 +1566,13 @@ GetInternedJSVal(JSContext *cx, const char *str)
 }
 
 // static
+
+nsISupports *
+nsDOMClassInfo::GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
+{
+  return wrapper ? wrapper->Native() : static_cast<nsISupports*>(obj->getPrivate());
+}
+
 nsresult
 nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 {
@@ -3824,7 +3830,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
 
   jsint i = -1;
 
-  if (!JSDOUBLE_IS_INT(array_index, i)) {
+  if (!::JS_DoubleIsInt32(array_index, &i)) {
     return -1;
   }
 
@@ -6412,7 +6418,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #ifdef DEBUG
         if (!win->IsChromeWindow()) {
           NS_ASSERTION(JSVAL_IS_OBJECT(v) &&
-                       !strcmp(STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name,
+                       !strcmp(JSVAL_TO_OBJECT(v)->getClass()->name,
                                "XPCCrossOriginWrapper"),
                        "Didn't wrap a window!");
         }
@@ -6525,7 +6531,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #ifdef DEBUG
     if (!win->IsChromeWindow()) {
           NS_ASSERTION(JSVAL_IS_OBJECT(v) &&
-                       !strcmp(STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name,
+                       !strcmp(JSVAL_TO_OBJECT(v)->getClass()->name,
                                "XPCCrossOriginWrapper"),
                        "Didn't wrap a location object!");
     }
@@ -6733,7 +6739,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetJSObject(&realObj);
 
     if (obj == realObj) {
-      JSObject *proto = STOBJ_GET_PROTO(obj);
+      JSObject *proto = obj->getProto();
       if (proto) {
         jsid interned_id;
         JSObject *pobj = NULL;
@@ -8476,8 +8482,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  while (STOBJ_GET_CLASS(obj) != &sHTMLDocumentAllClass) {
-    obj = STOBJ_GET_PROTO(obj);
+  while (obj->getClass() != &sHTMLDocumentAllClass) {
+    obj = obj->getProto();
 
     if (!obj) {
       NS_ERROR("The JS engine lies!");

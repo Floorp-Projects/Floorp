@@ -182,7 +182,7 @@ const line_regexp_parts = [
     "^(?:(\\w+):)?",                    // optional label at start of line
     "\\s*(\\.?\\w+)",                   // optional spaces, (pseudo-)opcode
     "(?:\\s+(\\w+|\\([^)]*\\)))?",      // optional first immediate operand
-    "(?:\\s+([\\w-]+|\\([^)]*\\)))?",   // optional second immediate operand
+    "(?:\\s+([\\w-,]+|\\([^)]*\\)))?",  // optional second immediate operand
     "(?:\\s*(?:#.*))?$"                 // optional spaces and comment
 ];
 
@@ -216,14 +216,29 @@ function assemble(filename) {
                     throw new Error("missing .igroup name");
                 if (igroup)
                     throw new Error("nested .igroup " + imm1);
-                let oprange = imm2.match(/^(\w+)(?:-(\w+))?$/);
-                if (!oprange)
+                if (!imm2.match(/^\w+(?:-\w+)?(?:,\w+(?:-\w+)?)*$/))
                     throw new Error("invalid igroup operator range " + imm2);
-                let firstop = jsop2opcode[oprange[1]];
+                let ops = imm2.split(",").reduce(function(initial, current) {
+                    let split = current.match(/^(\w+)(?:-(\w+))?$/);
+                    let opcode = jsop2opcode[split[1]];
+                    if (opcode in initial)
+                        throw new Error("repeated opcode " + split[1]);
+                    initial[opcode] = true;
+                    if (split[2] !== undefined) {
+                        let lastopcode = jsop2opcode[split[2]];
+                        if (opcode >= lastopcode)
+                            throw new Error("invalid opcode range: " + current);
+                        while (++opcode <= lastopcode) {
+                            if (opcode in initial)
+                                throw new Error("repeated opcode " + split[2]);
+                            initial[opcode] = true;
+                        }
+                    }
+                    return initial;
+                }, {});
                 igroup = {
                     name:    imm1,
-                    firstop: firstop,
-                    lastop:  oprange[2] ? jsop2opcode[oprange[2]] : firstop,
+                    ops:     ops,
                     imacros: []
                 };
                 break;
@@ -286,11 +301,8 @@ function assemble(filename) {
 
                     print("};");
 
-                    let opcode = igroup.firstop;
-                    let oplast = igroup.lastop;
-                    do {
+                    for (let opcode in igroup.ops)
                         opcode2extra[opcode] = maxdepth;
-                    } while (opcode++ != oplast);
                     igroups.push(igroup);
                     igroup = null;
                 } else {

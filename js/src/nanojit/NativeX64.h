@@ -399,15 +399,18 @@ namespace nanojit
         void asm_shift(LIns*);\
         void asm_shift_imm(LIns*);\
         void asm_arith_imm(LIns*);\
-        void regalloc_unary(LIns *ins, RegisterMask allow, Register &rr, Register &ra);\
-        void regalloc_binary(LIns *ins, RegisterMask allow, Register &rr, Register &ra, Register &rb);\
-        void regalloc_load(LIns *ins, RegisterMask allow, Register &rr, int32_t &d, Register &rb);\
+        void beginOp1Regs(LIns *ins, RegisterMask allow, Register &rr, Register &ra);\
+        void beginOp2Regs(LIns *ins, RegisterMask allow, Register &rr, Register &ra, Register &rb);\
+        void endOpRegs(LIns *ins, Register rr, Register ra);\
+        void beginLoadRegs(LIns *ins, RegisterMask allow, Register &rr, int32_t &d, Register &rb);\
+        void endLoadRegs(LIns *ins);\
         void dis(NIns *p, int bytes);\
         void asm_cmp(LIns*);\
         void asm_cmp_imm(LIns*);\
-        void fcmp(LIns*, LIns*);\
+        void asm_fcmp(LIns*, LIns*);\
         NIns* asm_fbranch(bool, LIns*, NIns*);\
-        void asm_div_mod(LIns *i);\
+        void asm_div(LIns *ins);\
+        void asm_div_mod(LIns *ins);\
         int max_stk_used;\
         void PUSHR(Register r);\
         void POPR(Register r);\

@@ -108,11 +108,11 @@ typedef unsigned char	CHAR;
 /*
 **  Variables and routines internal to this package.
 */
-extern int	rl_eof;
-extern int	rl_erase;
-extern int	rl_intr;
-extern int	rl_kill;
-extern int	rl_quit;
+extern unsigned rl_eof;
+extern unsigned rl_erase;
+extern unsigned rl_intr;
+extern unsigned rl_kill;
+extern unsigned rl_quit;
 extern char	*rl_complete();
 extern int	rl_list_possib();
 extern void	rl_ttyset();
