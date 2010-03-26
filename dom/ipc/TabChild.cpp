@@ -54,6 +54,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsISupportsImpl.h"
+#include "nsIURI.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -72,6 +73,7 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsWeakReference.h"
 
 #ifdef MOZ_WIDGET_QT
 #include <QX11EmbedWidget>
@@ -118,6 +120,9 @@ TabChild::Init()
   }
 
   webBrowser->SetContainerWindow(this);
+  nsCOMPtr<nsIWeakReference> weak =
+    do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
+  webBrowser->AddWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
 
   mWebNav = do_QueryInterface(webBrowser);
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
@@ -127,10 +132,11 @@ TabChild::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS7(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
-                   nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
-                   nsIWebBrowserChromeFocus, nsIInterfaceRequestor,
-                   nsIWindowProvider)
+NS_IMPL_ISUPPORTS10(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
+                    nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
+                    nsIWebBrowserChromeFocus, nsIInterfaceRequestor,
+                    nsIWindowProvider, nsIWebProgressListener,
+                    nsIWebProgressListener2, nsSupportsWeakReference)
 
 NS_IMETHODIMP
 TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
@@ -368,6 +374,94 @@ TabChild::~TabChild()
       }
     }
 }
+
+NS_IMETHODIMP
+TabChild::OnStateChange(nsIWebProgress *aWebProgress,
+                        nsIRequest *aRequest,
+                        PRUint32 aStateFlags,
+                        nsresult aStatus)
+{
+  SendnotifyStateChange(aStateFlags, aStatus);
+  return NS_OK;
+}
+
+// Only one of OnProgressChange / OnProgressChange64 will be called.
+// According to interface, it should be OnProgressChange64, but looks
+// like docLoader only sends the former.
+NS_IMETHODIMP
+TabChild::OnProgressChange(nsIWebProgress *aWebProgress,
+                           nsIRequest *aRequest,
+                           PRInt32 aCurSelfProgress,
+                           PRInt32 aMaxSelfProgress,
+                           PRInt32 aCurTotalProgress,
+                           PRInt32 aMaxTotalProgress)
+{
+  SendnotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
+                           aCurTotalProgress, aMaxTotalProgress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnStatusChange(nsIWebProgress *aWebProgress,
+                         nsIRequest *aRequest,
+                         nsresult aStatus,
+                         const PRUnichar* aMessage)
+{
+  nsDependentString message(aMessage);
+  SendnotifyStatusChange(aStatus, message);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnSecurityChange(nsIWebProgress *aWebProgress,
+                           nsIRequest *aRequest,
+                           PRUint32 aState)
+{
+  SendnotifySecurityChange(aState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnLocationChange(nsIWebProgress *aWebProgress,
+                           nsIRequest *aRequest,
+                           nsIURI *aLocation)
+{
+  NS_ENSURE_ARG_POINTER(aLocation);
+  nsCString uri;
+  aLocation->GetSpec(uri);
+  SendnotifyLocationChange(uri);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnProgressChange64(nsIWebProgress *aWebProgress,
+                             nsIRequest *aRequest,
+                             PRInt64 aCurSelfProgress,
+                             PRInt64 aMaxSelfProgress,
+                             PRInt64 aCurTotalProgress,
+                             PRInt64 aMaxTotalProgress)
+{
+  SendnotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
+                           aCurTotalProgress, aMaxTotalProgress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                             nsIURI *aURI, PRInt32 aMillis,
+                             PRBool aSameURL, PRBool *aRefreshAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsCString uri;
+  aURI->GetSpec(uri);
+  bool sameURL = aSameURL;
+  bool refreshAllowed;
+  SendrefreshAttempted(uri, aMillis, sameURL, &refreshAllowed);
+  *aRefreshAllowed = refreshAllowed;
+  return NS_OK;
+}
+                             
+                             
 
 bool
 TabChild::RecvloadURL(const nsCString& uri)

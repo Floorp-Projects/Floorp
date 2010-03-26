@@ -68,6 +68,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -408,6 +409,34 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetWebProgress(nsIWebProgress **aWebProgress)
+{
+  nsresult rv;
+  *aWebProgress = nsnull;
+#ifdef MOZ_IPC
+  if (mRemoteFrame) {
+    if (!mChildProcess) {
+      TryNewProcess();
+    }
+    if (!mChildProcess) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aWebProgress = mChildProcess;
+    NS_ADDREF(*aWebProgress);
+    return NS_OK;
+  }
+#endif
+
+  nsCOMPtr<nsIDocShell> shell;
+  rv = GetDocShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(shell));
+    progress.swap(*aWebProgress);
+  }
+  return rv;
+}
+
 void
 nsFrameLoader::Finalize()
 {
@@ -683,7 +712,10 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
 {
   NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
 
-  TryNewProcess();
+  if (!mChildProcess) {
+    TryNewProcess();
+  }
+
   if (!mChildProcess) {
     NS_ERROR("Couldn't create child process.");
     return false;

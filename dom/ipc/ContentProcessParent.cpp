@@ -176,13 +176,18 @@ ContentProcessParent::Observe(nsISupports* aSubject,
 PIFrameEmbeddingParent*
 ContentProcessParent::AllocPIFrameEmbedding()
 {
-    return new TabParent();
+  TabParent* parent = new TabParent();
+  if (parent){
+    NS_ADDREF(parent);
+  }
+  return parent;
 }
 
 bool
 ContentProcessParent::DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame)
 {
-  delete frame;
+  TabParent* parent = static_cast<TabParent*>(frame);
+  NS_RELEASE(parent);
   return true;
 }
 
