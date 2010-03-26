@@ -1208,7 +1208,7 @@ class TraceRecorder
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
                                          nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
-                                                                     JSObject*& obj2, jsuword& pcval);
+                                                                     JSObject*& obj2, PCVal& pcval);
     JS_REQUIRES_STACK RecordingStatus guardNativePropertyOp(JSObject* aobj,
                                                               nanojit::LIns* map_ins);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
@@ -1216,7 +1216,7 @@ class TraceRecorder
                                                             JSObject* aobj,
                                                             JSObject* obj2,
                                                             PropertyCacheEntry* entry,
-                                                            jsuword& pcval);
+                                                            PCVal& pcval);
 
     void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot,
                          nanojit::LIns* v_ins);
@@ -1249,7 +1249,7 @@ class TraceRecorder
                                                     uint32 *slotp, nanojit::LIns** v_insp,
                                                     jsval* outp);
     JS_REQUIRES_STACK AbortableRecordingStatus propTail(JSObject* obj, nanojit::LIns* obj_ins,
-                                                        JSObject* obj2, jsuword pcval,
+                                                        JSObject* obj2, PCVal pcval,
                                                         uint32 *slotp, nanojit::LIns** v_insp,
                                                         jsval* outp);
     JS_REQUIRES_STACK RecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
