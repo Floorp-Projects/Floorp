@@ -568,7 +568,35 @@ var Browser = {
 
   closing: function closing() {
     // Prompt if we have multiple tabs before closing window
-    // TODO: bug 545395
+    let numTabs = this._tabs.length;
+    if (numTabs > 1) {
+      let shouldPrompt = gPrefService.getBoolPref("browser.tabs.warnOnClose");
+      if (shouldPrompt) {
+        let prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+  
+        // Default to true: if it were false, we wouldn't get this far
+        let warnOnClose = { value: true };
+
+        let messageBase = Elements.browserBundle.getString("tabs.closeWarning");
+        let message = PluralForm.get(numTabs, messageBase).replace("#1", numTabs);
+
+        let title = Elements.browserBundle.getString("tabs.closeWarningTitle");
+        let closeText = Elements.browserBundle.getString("tabs.closeButton");
+        let checkText = Elements.browserBundle.getString("tabs.closeWarningPromptMe");
+        let buttons = (prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0) +
+                      (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1);
+        let pressed = prompt.confirmEx(window, title, message, buttons, closeText, null, null, checkText, warnOnClose);
+
+        // Don't set the pref unless they press OK and it's false
+        let reallyClose = (pressed == 0);
+        if (reallyClose && !warnOnClose.value)
+          gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
+
+        // If we don't want to close, return now. If we are closing, continue with other housekeeping.
+        if (!reallyClose)
+          return false;
+      }
+    }
 
     // Figure out if there's at least one other browser window around.
     let lastBrowser = true;
