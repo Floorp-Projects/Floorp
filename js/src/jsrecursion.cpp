@@ -309,9 +309,8 @@ TraceRecorder::upRecursion()
 
     LIns* rval_ins;
     if (*cx->fp->regs->pc == JSOP_RETURN) {
-        rval_ins = (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) ?
-                   get(&stackval(-1)) :
-                   NULL;
+        JS_ASSERT(!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT);
+        rval_ins = get(&stackval(-1));
         JS_ASSERT(rval_ins);
     } else {
         rval_ins = INS_VOID();
@@ -355,6 +354,27 @@ public:
     unsigned slurpFailSlot;
 };
 
+/*
+ * The three types of anchors that can cause this type of trace to be built are:
+ *   RECURSIVE_SLURP_MISMATCH_EXIT
+ *   RECURSIVE_SLURP_FAIL_EXIT
+ *   RECURSIVE_EMPTY_RP_EXIT
+ *
+ * EMPTY_RP means that recursion is unwinding, but there are no more frames.
+ * This triggers a "slurp trace" to be built. A slurp trace does three things:
+ *   1) Checks to see if cx->fp returns to the same point the recursive trace
+ *      is trying to unwind to.
+ *   2) Pops the inline frame cx->fp, such that cx->fp is now cx->fp->down.
+ *   3) Converts the new top-frame slots/sp into the tracer frame.
+ *
+ * SLURP_MISMATCH means that while trying to convert an interpreter frame,
+ * it is owned by the same script, but does not return to the same pc. At this
+ * point the frame has not been popped yet.
+ *
+ * SLURP_FAIL means that the interpreter frame has been popped, the return
+ * value has been written to the native stack, but there was a type mismatch
+ * while unboxing the interpreter slots.
+ */
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 {
@@ -501,12 +521,24 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     TraceType returnType = exit->stackTypeMap()[downPostSlots];
 
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        rval_ins = get(&stackval(-1));
-        if (returnType == TT_INT32) {
-            JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
-            JS_ASSERT(isPromoteInt(rval_ins));
-            rval_ins = demote(lir, rval_ins);
+        /*
+         * It is safe to read cx->fp->regs->pc here because the frame hasn't
+         * been popped yet. We're guaranteed to have a return or stop.
+         */
+        JSOp op = JSOp(*cx->fp->regs->pc);
+        JS_ASSERT(op == JSOP_RETURN || op == JSOP_STOP);
+
+        if (op == JSOP_RETURN) {
+            rval_ins = get(&stackval(-1));
+            if (returnType == TT_INT32) {
+                JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
+                JS_ASSERT(isPromoteInt(rval_ins));
+                rval_ins = demote(lir, rval_ins);
+            }
+        } else {
+            rval_ins = INS_VOID();
         }
+
         /*
          * The return value must be written out early, before slurping can fail,
          * otherwise it will not be available when there's a type mismatch.
