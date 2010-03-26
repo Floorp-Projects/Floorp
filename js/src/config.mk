@@ -127,9 +127,9 @@ INTERP_OPTIMIZER = -O2 -GL
 BUILTINS_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
-OPTIMIZER           = -Os -fno-exceptions -fno-rtti
-BUILTINS_OPTIMIZER  = -O9 -fno-exceptions -fno-rtti
-INTERP_OPTIMIZER    = -O3 -fno-exceptions -fno-rtti
+OPTIMIZER           = -Os -fno-exceptions -fno-rtti -fstrict-aliasing -Wstrict-aliasing=3
+BUILTINS_OPTIMIZER  = -O9 -fno-exceptions -fno-rtti -fstrict-aliasing
+INTERP_OPTIMIZER    = -O3 -fno-exceptions -fno-rtti -fstrict-aliasing
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)
 OBJDIR_TAG = _OPT
@@ -139,7 +139,7 @@ OPTIMIZER  = -Zi
 INTERP_OPTIMIZER = -Zi
 BUILTINS_OPTIMIZER = $(INTERP_OPTIMIZER)
 else
-OPTIMIZER          = -g3 -fstrict-aliasing -fno-exceptions -fno-rtti -Wstrict-aliasing=2
+OPTIMIZER          = -g3 -fstrict-aliasing -fno-exceptions -fno-rtti -Wstrict-aliasing=3
 INTERP_OPTIMIZER   = -g3 -fstrict-aliasing -fno-exceptions -fno-rtti
 BUILTINS_OPTIMIZER = $(INTERP_OPTIMIZER)
 endif
