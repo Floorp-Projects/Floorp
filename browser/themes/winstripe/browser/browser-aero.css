@@ -20,6 +20,29 @@
     text-shadow: 0 0 .6em white, 0 0 .6em white, 0 0 .6em white;
   }
 
+  #urlbar,
+  .searchbar-textbox {
+    background-color: rgba(255,255,255,.725);
+    color: black;
+  }
+
+  /*XXX :-moz-placeholder isn't implemented yet (bug 457801)
+  #urlbar > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
+  .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
+    color: #777;
+  }
+  */
+
+  #urlbar:hover,
+  .searchbar-textbox:hover {
+    background-color: rgba(255,255,255,.898);
+  }
+
+  #urlbar[focused="true"],
+  .searchbar-textbox[focused="true"] {
+    background-color: white;
+  }
+
   #TabsToolbar:not(:-moz-lwtheme) {
     margin-bottom: 0;
     -moz-box-shadow: ThreeDDarkShadow 0 -1px inset;
