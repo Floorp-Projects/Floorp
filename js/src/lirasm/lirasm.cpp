@@ -151,7 +151,7 @@ enum ReturnType {
 #endif
 
 #define CI(name, args) \
-    {(uintptr_t) (&name), args, /*_cse*/0, /*_fold*/0, nanojit::ABI_CDECL \
+    {(uintptr_t) (&name), args, nanojit::ABI_CDECL, /*isPure*/0, ACC_STORE_ANY \
      DEBUG_ONLY_NAME(name)}
 
 #define FN(name, args) \
@@ -1064,23 +1064,15 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
-          case LIR_ldzb:
-          case LIR_ldzs:
           case LIR_ldsb:
           case LIR_ldss:
-          case LIR_ldcsb:
-          case LIR_ldcss:
           case LIR_ld32f:
-          case LIR_ldc32f:
 #endif
+          case LIR_ldzb:
+          case LIR_ldzs:
           case LIR_ld:
-          case LIR_ldc:
           CASE64(LIR_ldq:)
-          CASE64(LIR_ldqc:)
           case LIR_ldf:
-          case LIR_ldfc:
-          case LIR_ldcb:
-          case LIR_ldcs:
             ins = assemble_load();
             break;
 
@@ -1334,6 +1326,10 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 // - LIR_file/LIR_line (#ifdef VTUNE only)
 // - LIR_fmod (not implemented in NJ backends)
 //
+// Other limitations:
+// - Loads always use accSet==ACC_LOAD_ANY
+// - Stores always use accSet==ACC_STORE_ANY
+//
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
 {
@@ -1459,34 +1455,23 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_loads.push_back(LIR_ld);          // weight LIR_ld more heavily
     I_loads.push_back(LIR_ld);
     I_loads.push_back(LIR_ld);
-    I_loads.push_back(LIR_ldc);
-    I_loads.push_back(LIR_ldcb);
-    I_loads.push_back(LIR_ldcs);
-#if NJ_EXPANDED_LOADSTORE_SUPPORTED 
     I_loads.push_back(LIR_ldzb);
     I_loads.push_back(LIR_ldzs);
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED 
     I_loads.push_back(LIR_ldsb);
     I_loads.push_back(LIR_ldss);
-    I_loads.push_back(LIR_ldcsb);
-    I_loads.push_back(LIR_ldcss);
 #endif
 
 #ifdef NANOJIT_64BIT
     vector<LOpcode> Q_loads;
-    Q_loads.push_back(LIR_ldq);      // weight LIR_ld more heavily
     Q_loads.push_back(LIR_ldq);
-    Q_loads.push_back(LIR_ldqc);
 #endif
 
     vector<LOpcode> F_loads;
-    F_loads.push_back(LIR_ldf);      // weight LIR_ldf more heavily
     F_loads.push_back(LIR_ldf);
-    F_loads.push_back(LIR_ldfc);
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED
-    // this loads a 32-bit float and expands to 64-bit float
-    F_loads.push_back(LIR_ld32f);    // weight LIR_ld32f more heavily
-    F_loads.push_back(LIR_ld32f); 
-    F_loads.push_back(LIR_ldc32f);
+    // this loads a 32-bit float and expands it to 64-bit float
+    F_loads.push_back(LIR_ld32f);
 #endif
 
     enum LInsClass {
@@ -1990,7 +1975,7 @@ Lirasm::Lirasm(bool verbose) :
 #endif
 
     // Populate the mOpMap table.
-#define OP___(op, number, repKind, retType) \
+#define OP___(op, number, repKind, retType, isCse) \
     mOpMap[#op] = LIR_##op;
 #include "nanojit/LIRopcode.tbl"
 #undef OP___
@@ -2024,13 +2009,13 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
         // The ABI, arg types and ret type will be overridden by the caller.
         if (func->second.mReturnType == RT_FLOAT) {
             CallInfo target = {(uintptr_t) func->second.rfloat,
-                               0, 0, 0, ABI_FASTCALL
+                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
 
         } else {
             CallInfo target = {(uintptr_t) func->second.rint,
-                               0, 0, 0, ABI_FASTCALL
+                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
         }

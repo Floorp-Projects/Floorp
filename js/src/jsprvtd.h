@@ -147,7 +147,7 @@ extern "C++" {
 namespace js {
 
 class TraceRecorder;
-class TraceMonitor;
+struct TraceMonitor;
 class CallStack;
 
 class ContextAllocPolicy;

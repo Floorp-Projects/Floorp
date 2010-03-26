@@ -494,7 +494,8 @@ ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     size_t linelength;
     jschar *linechars;
     char *linebytes;
-    JSBool warning, ok;
+    bool warning;
+    JSBool ok;
     JSTokenPos *tp;
     uintN index, i;
     JSErrorReporter onError;
@@ -522,7 +523,7 @@ ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
                                  errorNumber, &message, &report,
                                  !(flags & JSREPORT_UC), ap);
     if (!ok) {
-        warning = JS_FALSE;
+        warning = false;
         goto out;
     }
 
@@ -541,14 +542,14 @@ ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     linelength = ts->linebuf.limit - ts->linebuf.base;
     linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
     if (!linechars) {
-        warning = JS_FALSE;
+        warning = false;
         goto out;
     }
     memcpy(linechars, ts->linebuf.base, linelength * sizeof(jschar));
     linechars[linelength] = 0;
     linebytes = js_DeflateString(cx, linechars, linelength);
     if (!linebytes) {
-        warning = JS_FALSE;
+        warning = false;
         goto out;
     }
     report.linebuf = linebytes;

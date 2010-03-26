@@ -732,7 +732,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
             XPCWrappedNative *wrapper =
-                (XPCWrappedNative*)xpc_GetJSPrivate(STOBJ_GET_PARENT(obj));
+                (XPCWrappedNative*)xpc_GetJSPrivate(obj->getParent());
             dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
         }
         else if(IS_WRAPPER_CLASS(clazz) && IS_WN_WRAPPER_OBJECT(obj))

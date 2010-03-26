@@ -1109,8 +1109,7 @@ class TraceRecorder
 
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
                              bool demote);
-    JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false,
-                               bool demote = true);
+    JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool demote = true);
     nanojit::LIns* getFromTracker(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* attemptImport(jsval* p);
@@ -1294,9 +1293,10 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      VMSideExit* exit, nanojit::LOpcode loadOp = nanojit::LIR_ldp);
+                                      VMSideExit* exit,
+                                      nanojit::AccSet accSet = nanojit::ACC_LOAD_ANY);
     bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp, VMSideExit* exit) {
-        return guardClass(obj, obj_ins, clasp, exit, nanojit::LIR_ldcp);
+        return guardClass(obj, obj_ins, clasp, exit, nanojit::ACC_READONLY);
     }
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
@@ -1363,8 +1363,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(TreeFragment* f);
-    JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner, nanojit::LIns*& inner_sp_ins);
-    JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit, nanojit::LIns* inner_sp_ins);
+    JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner);
+    JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit);
     JS_REQUIRES_STACK void determineGlobalTypes(TraceType* typeMap);
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
@@ -1517,6 +1517,9 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 extern bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
+
+extern bool
+InCustomIterNextTryRegion(jsbytecode *pc);
 
 #ifdef MOZ_TRACEVIS
 

@@ -510,7 +510,7 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   while (obj && !XPCNativeWrapper::IsNativeWrapper(obj)) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
   }
 
   if (!obj) {
@@ -519,7 +519,7 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   // The real method we're going to call is the parent of this
   // function's JSObject.
-  JSObject *methodToCallObj = STOBJ_GET_PARENT(funObj);
+  JSObject *methodToCallObj = funObj->getParent();
   XPCWrappedNative* wrappedNative = nsnull;
 
   jsval isAllAccess;
@@ -585,7 +585,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   while (!XPCNativeWrapper::IsNativeWrapper(obj)) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       return ThrowException(NS_ERROR_UNEXPECTED, cx);
     }
@@ -689,7 +689,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     }
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    STOBJ_SET_PARENT(funobj, obj);
+    funobj->setParent(obj);
 
     return JS_DefineProperty(cx, obj, "toString", OBJECT_TO_JSVAL(funobj),
                              nsnull, nsnull, 0);
@@ -737,7 +737,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   while (!XPCNativeWrapper::IsNativeWrapper(obj)) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       return ThrowException(NS_ERROR_UNEXPECTED, cx);
     }
@@ -889,7 +889,7 @@ static JSBool
 MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
                           JSObject **result NS_OUTPARAM)
 {
-  JSObject *wn_parent = STOBJ_GET_PARENT(wrapper->GetFlatJSObject());
+  JSObject *wn_parent = wrapper->GetFlatJSObject()->getParent();
   if (!wn_parent) {
     *result = nsnull;
   } else {
@@ -920,7 +920,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   if (JS_FrameIterator(cx, &fp) && JS_IsConstructorFrame(cx, fp)) {
     constructing = JS_TRUE;
 
-    JSObject *proto = STOBJ_GET_PROTO(obj);
+    JSObject *proto = obj->getProto();
     if (proto && !XPCNativeWrapper::IsNativeWrapper(proto)) {
       // Deal with our prototype object specially.
 
@@ -1106,7 +1106,7 @@ XPC_NW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 
   JSObject *wrapperIter =
     JS_NewObjectWithGivenProto(cx, XPCNativeWrapper::GetJSClass(), nsnull,
-                               STOBJ_GET_PARENT(obj));
+                               obj->getParent());
   if (!wrapperIter) {
     return nsnull;
   }
@@ -1130,7 +1130,7 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
   while (!XPCNativeWrapper::IsNativeWrapper(obj)) {
-    obj = STOBJ_GET_PROTO(obj);
+    obj = obj->getProto();
     if (!obj) {
       return ThrowException(NS_ERROR_UNEXPECTED, cx);
     }

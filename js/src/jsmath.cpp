@@ -563,7 +563,7 @@ math_toSource(JSContext *cx, uintN argc, jsval *vp)
 #define MATH_BUILTIN_CFUN_1(name, cfun)                                       \
     static jsdouble FASTCALL math_##name##_tn(jsdouble d) { return cfun(d); } \
     JS_DEFINE_TRCINFO_1(math_##name,                                          \
-        (1, (static, DOUBLE, math_##name##_tn, DOUBLE, 1, 1)))
+        (1, (static, DOUBLE, math_##name##_tn, DOUBLE, 1, nanojit::ACC_NONE)))
 
 MATH_BUILTIN_CFUN_1(abs, fabs)
 MATH_BUILTIN_1(atan)
@@ -609,7 +609,7 @@ math_exp_tn(JSContext *cx, jsdouble d)
 }
 
 JS_DEFINE_TRCINFO_1(math_exp,
-    (2, (static, DOUBLE, math_exp_tn,  CONTEXT, DOUBLE,  1, 1)))
+    (2, (static, DOUBLE, math_exp_tn,  CONTEXT, DOUBLE,  1, nanojit::ACC_NONE)))
 
 #else
 
@@ -692,27 +692,27 @@ math_floor_tn(jsdouble x)
 }
 
 JS_DEFINE_TRCINFO_1(math_acos,
-    (1, (static, DOUBLE, math_acos_tn, DOUBLE,          1, 1)))
+    (1, (static, DOUBLE, math_acos_tn, DOUBLE,          1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(math_asin,
-    (1, (static, DOUBLE, math_asin_tn, DOUBLE,          1, 1)))
+    (1, (static, DOUBLE, math_asin_tn, DOUBLE,          1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(math_atan2,
-    (2, (static, DOUBLE, math_atan2_kernel, DOUBLE, DOUBLE, 1, 1)))
+    (2, (static, DOUBLE, math_atan2_kernel, DOUBLE, DOUBLE, 1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(js_math_floor,
-    (1, (static, DOUBLE, math_floor_tn, DOUBLE,         1, 1)))
+    (1, (static, DOUBLE, math_floor_tn, DOUBLE,         1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(math_log,
-    (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, 1)))
+    (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(js_math_max,
-    (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)))
+    (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(js_math_min,
-    (2, (static, DOUBLE, math_min_tn, DOUBLE, DOUBLE,   1, 1)))
+    (2, (static, DOUBLE, math_min_tn, DOUBLE, DOUBLE,   1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(math_pow,
-    (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)))
+    (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(math_random,
-    (1, (static, DOUBLE, math_random_tn, CONTEXT,       0, 0)))
+    (1, (static, DOUBLE, math_random_tn, CONTEXT,       0, nanojit::ACC_STORE_ANY)))
 JS_DEFINE_TRCINFO_1(js_math_round,
-    (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, 1)))
+    (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, nanojit::ACC_NONE)))
 JS_DEFINE_TRCINFO_1(js_math_ceil,
-    (1, (static, DOUBLE, math_ceil_tn, DOUBLE,          1, 1)))
+    (1, (static, DOUBLE, math_ceil_tn, DOUBLE,          1, nanojit::ACC_NONE)))
 
 #endif /* JS_TRACER */
 

@@ -56,6 +56,8 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
+#pragma warning(push)
+#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
 #endif
 
 JS_BEGIN_EXTERN_C
@@ -553,15 +555,17 @@ js_CastAsObjectJSVal(JSPropertyOp op)
 }
 
 struct JSScopeProperty {
-    friend class JSScope;
+    friend struct JSScope;
     friend void js_SweepScopeProperties(JSContext *cx);
     friend JSScopeProperty * js_GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
                                                      const JSScopeProperty &child);
 
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
-    JSPropertyOp    getter;             /* getter and setter hooks or objects */
-    JSPropertyOp    setter;             /* getter is JSObject* and setter is 0
+private:
+    JSPropertyOp    rawGetter;          /* getter and setter hooks or objects */
+    JSPropertyOp    rawSetter;          /* getter is JSObject* and setter is 0
                                            if sprop->isMethod() */
+public:
     uint32          slot;               /* abstract index in object slots */
     uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
 private:
@@ -596,6 +600,17 @@ private:
         IN_DICTIONARY = 0x20
     };
 
+    JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                    uintN attrs, uintN flags, intN shortid)
+        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
+          flags(uint8(flags)), shortid(int16(shortid))
+    {
+        JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER),
+                     JSVAL_TO_OBJECT(getterValue())->isCallable());
+        JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER),
+                     JSVAL_TO_OBJECT(setterValue())->isCallable());
+    }
+
     bool marked() const { return (flags & MARK) != 0; }
     void mark() { flags |= MARK; }
     void clearMark() { flags &= ~MARK; }
@@ -622,33 +637,41 @@ public:
 
     JSObject *methodObject() const {
         JS_ASSERT(isMethod());
-        return js_CastAsObject(getter);
+        return js_CastAsObject(rawGetter);
     }
     jsval methodValue() const {
         JS_ASSERT(isMethod());
-        return js_CastAsObjectJSVal(getter);
+        return js_CastAsObjectJSVal(rawGetter);
     }
 
+    JSPropertyOp getter() const { return rawGetter; }
+    bool hasDefaultGetter() const { return !rawGetter; }
+    JSPropertyOp getterOp() const {
+        JS_ASSERT(!(attrs & JSPROP_GETTER));
+        return rawGetter;
+    }
     JSObject *getterObject() const {
         JS_ASSERT(attrs & JSPROP_GETTER);
-        return js_CastAsObject(getter);
+        return js_CastAsObject(rawGetter);
     }
     jsval getterValue() const {
         JS_ASSERT(attrs & JSPROP_GETTER);
-        jsval getterVal = getter ? js_CastAsObjectJSVal(getter) : JSVAL_VOID;
-        JS_ASSERT_IF(getter, JSVAL_TO_OBJECT(getterVal)->isCallable());
-        return getterVal;
+        return rawGetter ? js_CastAsObjectJSVal(rawGetter) : JSVAL_VOID;
     }
 
+    JSPropertyOp setter() const { return rawSetter; }
+    bool hasDefaultSetter() const { return !rawSetter; }
+    JSPropertyOp setterOp() const {
+        JS_ASSERT(!(attrs & JSPROP_SETTER));
+        return rawSetter;
+    }
     JSObject *setterObject() const {
-        JS_ASSERT((attrs & JSPROP_SETTER) && setter);
-        return js_CastAsObject(setter);
+        JS_ASSERT((attrs & JSPROP_SETTER) && rawSetter);
+        return js_CastAsObject(rawSetter);
     }
     jsval setterValue() const {
         JS_ASSERT(attrs & JSPROP_SETTER);
-        jsval setterVal = setter ? js_CastAsObjectJSVal(setter) : JSVAL_VOID;
-        JS_ASSERT_IF(setter, JSVAL_TO_OBJECT(setterVal)->isCallable());
-        return setterVal;
+        return rawSetter ? js_CastAsObjectJSVal(rawSetter) : JSVAL_VOID;
     }
 
     inline JSDHashNumber hash() const;
@@ -795,8 +818,8 @@ JSScope::insertDictionaryProperty(JSScopeProperty *sprop, JSScopeProperty **chil
 #define SLOT_IN_SCOPE(slot,scope)         ((slot) < (scope)->freeslot)
 #define SPROP_HAS_VALID_SLOT(sprop,scope) SLOT_IN_SCOPE((sprop)->slot, scope)
 
-#define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
-#define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
+#define SPROP_HAS_STUB_GETTER(sprop)    ((sprop)->hasDefaultGetter())
+#define SPROP_HAS_STUB_SETTER(sprop)    ((sprop)->hasDefaultSetter())
 
 #define SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop)                             \
     (SPROP_HAS_STUB_GETTER(sprop) || (sprop)->isMethod())
@@ -898,7 +921,7 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
      */
     if (STOBJ_GET_CLASS(obj) == &js_WithClass)
         obj = obj->map->ops->thisObject(cx, obj);
-    return getter(cx, obj, SPROP_USERID(this), vp);
+    return getterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
 inline bool
@@ -917,7 +940,7 @@ JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
     /* See the comment in JSScopeProperty::get as to why we can check for With. */
     if (STOBJ_GET_CLASS(obj) == &js_WithClass)
         obj = obj->map->ops->thisObject(cx, obj);
-    return setter(cx, obj, SPROP_USERID(this), vp);
+    return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
 /* Macro for common expression to test for shared permanent attributes. */
@@ -942,6 +965,7 @@ js_FinishPropertyTree(JSRuntime *rt);
 JS_END_EXTERN_C
 
 #ifdef _MSC_VER
+#pragma warning(pop)
 #pragma warning(pop)
 #endif
 
