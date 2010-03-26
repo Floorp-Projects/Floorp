@@ -776,6 +776,11 @@ pageaction .pageaction-desc {
   -moz-border-radius: 0 0 8px 8px !important;
 }
 
+/* Force any command tap to highlight */
+#context-commands > richlistitem:hover:active {
+  background: #8db8d8;
+}
+
 .modal-block {
   -moz-box-align: center;
   -moz-box-pack: center;
