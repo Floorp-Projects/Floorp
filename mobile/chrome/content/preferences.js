@@ -223,7 +223,7 @@ var PreferencesView = {
     if (value == "custom") {
       // Make sure nothing is selected and just use a label to show the state
       options.selectedIndex = -1;
-      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom"));
+      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom2"));
     } else {
       // Select the right menulist item
       options.value = value;
@@ -256,7 +256,7 @@ var PreferencesView = {
     if (value == "custom") {
       // Make sure nothing is selected and just use a label to show the state
       options.selectedIndex = -1;
-      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom"));
+      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom2"));
     }
 
     // Save the homepage URL to a preference
