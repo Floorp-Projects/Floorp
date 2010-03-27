@@ -967,12 +967,12 @@ nsFrame::DisplayOutline(nsDisplayListBuilder*   aBuilder,
 
 nsresult
 nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
-                       const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
+                       const nsRect& aDirtyRect, nsDisplayList* aList)
 {
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  return aLists.Content()->AppendNewToTop(
+  return aList->AppendNewToTop(
       new (aBuilder) nsDisplayCaret(this, aBuilder->GetCaret()));
 }
 
@@ -1217,7 +1217,7 @@ BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
   nsDisplayListCollection set;
   nsresult rv = aFrame->BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aBuilder->DisplayCaret(aFrame, aDirtyRect, aSet);
+  rv = aBuilder->DisplayCaret(aFrame, aDirtyRect, aSet.Content());
   NS_ENSURE_SUCCESS(rv, rv);
   
   return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect);
@@ -1556,7 +1556,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     } else {
       rv = aChild->BuildDisplayList(aBuilder, dirty, aLists);
       if (NS_SUCCEEDED(rv)) {
-        rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+        rv = aBuilder->DisplayCaret(aChild, dirty, aLists.Content());
       }
     }
 #ifdef NS_DEBUG
@@ -1573,7 +1573,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // True stacking context
     rv = aChild->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
     if (NS_SUCCEEDED(rv)) {
-      rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+      rv = aBuilder->DisplayCaret(aChild, dirty, &list);
     }
   } else {
     nsRect clipRect;
@@ -1598,7 +1598,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     } else {
       rv = aChild->BuildDisplayList(aBuilder, clippedDirtyRect, pseudoStack);
       if (NS_SUCCEEDED(rv)) {
-        rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+        rv = aBuilder->DisplayCaret(aChild, dirty, pseudoStack.Content());
       }
     }
     

@@ -251,12 +251,12 @@ public:
    * Display the caret if needed.
    */
   nsresult DisplayCaret(nsIFrame* aFrame, const nsRect& aDirtyRect,
-      const nsDisplayListSet& aLists) {
+      nsDisplayList* aList) {
     nsIFrame* frame = GetCaretFrame();
     if (aFrame != frame) {
       return NS_OK;
     }
-    return frame->DisplayCaret(this, aDirtyRect, aLists);
+    return frame->DisplayCaret(this, aDirtyRect, aList);
   }
   /**
    * Get the frame that the caret is supposed to draw in.
