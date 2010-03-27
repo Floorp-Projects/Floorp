@@ -1582,23 +1582,23 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
 /********************************/
 
-class AutoExceptionRestorer
+class AutoExceptionRestorer : public JSAutoTempValueRooter
 {
 public:
     AutoExceptionRestorer(JSContext *cx, jsval v)
-        : mContext(cx), tvr(cx, v)
+        : JSAutoTempValueRooter(cx, v),
+          mVal(v)
     {
         JS_ClearPendingException(mContext);
     }
 
     ~AutoExceptionRestorer()
     {
-        JS_SetPendingException(mContext, tvr.value());
+        JS_SetPendingException(mContext, mVal);
     }
 
 private:
-    JSContext * const mContext;
-    js::AutoValueRooter tvr;
+    jsval mVal;
 };
 
 // static

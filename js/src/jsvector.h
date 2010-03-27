@@ -359,10 +359,7 @@ class Vector : AllocPolicy
 
     /* mutators */
 
-    /*
-     * If reserve(N) succeeds, additions to this vector which increase its size
-     * up to and including N are guaranteed to succeed.
-     */
+    /* If reserve(N) succeeds, the N next appends are guaranteed to succeed. */
     bool reserve(size_t capacity);
 
     /* Destroy elements in the range [begin() + incr, end()). */

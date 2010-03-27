@@ -40,7 +40,7 @@
 #include "xpcprivate.h"
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
-#include "jscntxt.h"  // For js::AutoValueRooter.
+#include "jscntxt.h"  // For JSAutoTempValueRooter.
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 
@@ -137,7 +137,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
   }
 
   *vp = OBJECT_TO_JSVAL(wrapperObj);
-  js::AutoValueRooter tvr(cx, *vp);
+  JSAutoTempValueRooter tvr(cx, *vp);
 
   if (!JS_SetReservedSlot(cx, wrapperObj, sWrappedObjSlot, v) ||
       !JS_SetReservedSlot(cx, wrapperObj, sFlagsSlot, JSVAL_ZERO)) {
@@ -437,7 +437,7 @@ XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_FALSE;
   }
 
-  js::AutoArrayRooter tvr(cx, 1, vp);
+  JSAutoTempValueRooter tvr(cx, 1, vp);
 
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
@@ -649,7 +649,7 @@ XPC_SOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize our SOW.
   jsval v = OBJECT_TO_JSVAL(wrappedObj);

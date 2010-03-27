@@ -454,23 +454,4 @@ js_MarkTraps(JSTracer *trc);
 
 JS_END_EXTERN_C
 
-namespace js {
-
-void
-TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
-
-inline void
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
-{
-    for (jsval *vp = vec, *end = vp + len; vp < end; vp++) {
-        jsval v = *vp;
-        if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_INDEX(trc, name, vp - vec);
-            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
-        }
-    }
-}
-
-}
-
 #endif /* jsgc_h___ */
