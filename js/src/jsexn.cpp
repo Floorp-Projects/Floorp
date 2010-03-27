@@ -839,9 +839,8 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(name);
 
     JSTempValueRooter tvr;
+    JSBool ok;
     {
-        JSBool ok;
-
         MUST_FLOW_THROUGH("out");
         JS_PUSH_TEMP_ROOT(cx, 3, localroots, &tvr);
 
@@ -953,7 +952,7 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
 
   out:
     JS_POP_TEMP_ROOT(cx, &tvr);
-    return JS_FALSE;
+    return JS_TRUE;
 }
 #endif
 
