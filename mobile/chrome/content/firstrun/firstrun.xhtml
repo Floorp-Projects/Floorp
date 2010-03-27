@@ -50,13 +50,14 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>&welcome.title;</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+  <title>&firstrun.title;</title>
   <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
-  <link rel="stylesheet" href="chrome://browser/skin/header.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/firstRun.css" type="text/css"/>
+
   <script><![CDATA[
     var Ci = Components.interfaces, Cc = Components.classes;
     function reloadIfDone(aImg) {
@@ -71,50 +72,60 @@
         imgIContainer.startAnimation();
       }
     }
-    function goToAddons(aSearchString) {
-      var chromeWin = window
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
-                         .rootTreeItem
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow)
-                         .QueryInterface(Ci.nsIDOMChromeWindow);
-      var BrowserUI = chromeWin.BrowserUI;
-      BrowserUI.showPanel("addons-container");
-      if (aSearchString) {
-        // ExtensionsView initialization is delayed, so need to delay triggering
-        // the search as well
-        setTimeout(function () {
-          // do the search
-          chromeWin.ExtensionsView.doSearch(aSearchString);
-        }, 0);
-      }
-    }
   ]]></script>
 </head>
 
-<body dir="&locale.dir;">
+<body id="firstrun" class="">
   <div id="wrapper">
-    <div class="intro">
-      <img id="welcomeImage" src="chrome://branding/content/logoWordmark.png"/>
-      <img id="welcomeAnim" onclick="reloadIfDone(this);" src="chrome://browser/content/firstRunAnimation.gif"/>
+    <div id="header">
+      <a href="http://mozilla.com/m"><img src="chrome://browser/content/firstrun/mozilla.png" width="64" height="17"/></a>
     </div>
-    <p id="overview" class="title">&intro.description;</p>
+  
+    <div id="head">
+      <h1><img src="chrome://branding/content/logoWordmark.png"/></h1>
+      <p>&firstrun.heading;</p>
+    </div>
+  
+    <div id="content">
+      <h2>&firstrun.recommended;</h2>
+    
+      <ul id="recommended">
+        <li id="weave"><a href="https://addons.mozilla.org/mobile/addon/10868"><b>&firstrun.weave.title;</b> <span>&firstrun.weave.description;</span></a></li>
+        <li id="starter"><a href="https://addons.mozilla.org/firefox/collection/mobilestarterkit"><b>&firstrun.starter.title;</b> <span>&firstrun.starter.description;</span></a></li>
+        <li id="tour"><a href="#demo" id="show-demo"><b>&firstrun.tour.title;</b> <span>&firstrun.tour.description;</span></a></li>
+      </ul>
 
-    <div class="go" id="weave">
-      <p class="title">&weave.title;</p>
-      <p>&weave.description;</p>
-      <img src="chrome://browser/skin/images/weave.png"/>
-      <p class="rightalign"><input type="button" id="sync" onclick="goToAddons('weave');" value="&weave.linkLabel;"/></p>
-    </div>
+      <p id="features"><a href="http://mozilla.com/m/features">&firstrun.features;</a></p>
 
-    <div class="go" id="addons">
-      <p class="title">&getPersonal.title;</p>
-      <p>&getPersonal.description;</p>
-      <img src="chrome://browser/skin/images/addons.png"/>
-      <p class="rightalign"><input type="button" id="getPersonal" onclick="goToAddons();" value="&getPersonal.linkLabel;"/></p>
+      <p id="demo" style="display: none">
+        <img id="animation" src="" onclick="reloadIfDone(this);"/>
+      </p>
+    
+      <script>
+        var preload = new Image();
+        preload.src = "chrome://browser/content/firstrun/animation.gif";
+    
+        document.getElementById("show-demo").addEventListener("click", function() {
+          document.getElementById("demo").style.display = "block";
+          document.getElementById("animation").setAttribute("src", preload.src);
+        }, false);
+      </script>
     </div>
+  
+    <div id="footer">
+      <ul class="nav">
+        <li><a href="http://mozilla.com/m/faq">&firstrun.faq;</a></li>
+        <li><a href="http://mozilla.com/m/privacy">&firstrun.privacy;</a></li>
+      </ul>
+  
+      <div id="follow">
+        <p>&firstrun.follow;</p>
+        <ul>
+          <li id="follow-twitter"><a href="http://twitter.com/mozmobile"><img src="chrome://browser/content/firstrun/twitter.png" height="41" width="42" /></a></li>
+          <li id="follow-facebook"><a href="http://www.facebook.com/firefoxformobile"><img src="chrome://browser/content/firstrun/facebook.png" height="41" width="42" /></a></li>
+        </ul>
+      </div>
+    </div>  
   </div>
 </body>
 </html>

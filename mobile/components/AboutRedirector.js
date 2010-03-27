@@ -49,7 +49,7 @@ let modules = {
   get firefox() this.fennec,
 
   firstrun: {
-    uri: "chrome://browser/content/firstrun.xhtml",
+    uri: "chrome://browser/content/firstrun/firstrun.xhtml",
     privileged: true
   },
   rights: {
