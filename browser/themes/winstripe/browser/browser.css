@@ -189,16 +189,16 @@ menuitem.bookmark-item {
 .toolbarbutton-1 {
   -moz-appearance: none;
   padding: 1px 5px;
-  background: rgba(85%,85%,85%,.1)
-              -moz-linear-gradient(top, rgba(255,255,255,.9), rgba(255,255,255,.45) 48%,
-                                        rgba(90%,90%,90%,.4) 52%, rgba(90%,90%,90%,.2));
+  background: rgba(151,152,153,.05)
+              -moz-linear-gradient(rgba(251,252,253,.95), rgba(246,247,248,.47) 49%, 
+                                   rgba(231,232,233,.45) 51%, rgba(225,226,229,.3));
   -moz-background-clip: padding;
-  -moz-border-radius: 5px;
+  -moz-border-radius: 4.5px;
   border: 1px solid;
   border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
                    0 0 0 2px rgba(255,255,255,.1) inset,
-                   0 1px 0 rgba(0,0,0,.1);
+                   0 1px 0 rgba(0,0,0,.15);
   color: black;
   text-shadow: 0 0 3px white;
 }
@@ -282,7 +282,7 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropm
 .toolbarbutton-1[checked="true"],
 .toolbarbutton-1[open="true"] {
   background-color: transparent;
-  border-color: rgba(0,0,0,.5) rgba(0,0,0,.4) rgba(0,0,0,.4);
+  border-color: rgba(0,0,0,.65) rgba(0,0,0,.55) rgba(0,0,0,.5);
   -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
                    0 0 3px rgba(0,0,0,.4) inset,
                    0 1px 0 rgba(255,255,255,.4);
@@ -338,13 +338,39 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   -moz-border-radius: 100%;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   position: relative;
   z-index: 1;
-  margin-top: -3px;
-  margin-bottom: -3px;
-  -moz-image-region: rect(18px, 18px, 38px, 0);
+  margin-top: -2px;
+  margin-bottom: -2px;
+  border: none;
+  background-image: -moz-linear-gradient(rgba(251,252,253,.97), rgba(246,247,248,.5) 49%, 
+                                         rgba(231,232,233,.45) 51%, rgba(225,226,229,.2));
+  -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
+                   0 0 0 2px rgba(255,255,255,.1) inset,
+                   0 0 0 1px rgba(0,0,0,.15),
+                   0 1px 0 rgba(0,0,0,.4),
+                   0 1px 1px rgba(0,0,0,.3),
+                   1px 2px 1px rgba(0,0,0,.2);
+  -moz-image-region: rect(18px, 20px, 38px, 0);
+}
+
+toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):not([checked="true"]):not(:active):hover {
+  -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
+                   0 0 0 2px rgba(255,255,255,.1) inset,
+                   0 0 0 1px hsla(190,50%,40%,.3),
+                   0 1px 0 rgba(0,0,0,.4),
+                   0 1px 1px rgba(0,0,0,.3),
+                   1px 2px 1px rgba(0,0,0,.2),
+                   0 0 5px 1px hsl(190,90%,80%);
+}
+
+toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active {
+  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
+                   0 0 3px rgba(0,0,0,.4) inset,
+                   0 0 0 1px rgba(0,0,0,.65),
+                   0 2px 0 rgba(255,255,255,.4);
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button > .toolbarbutton-icon {
@@ -546,7 +572,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   padding: 2px;
   -moz-background-clip: padding;
   border: 1px solid;
-  border-color: rgba(0,0,0,.2) rgba(0,0,0,.25) rgba(0,0,0,.3);
+  border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
   -moz-border-radius: 4px;
   -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    0 1px 0 rgba(255,255,255,.4);
