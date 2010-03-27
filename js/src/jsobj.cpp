@@ -1685,7 +1685,7 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
              * owned, or indirectly delegated.
              */
             JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(*propp);
-            if (!sprop->isSharedPermanent())
+            if (sprop->isSharedPermanent())
                 return true;
         }
 
