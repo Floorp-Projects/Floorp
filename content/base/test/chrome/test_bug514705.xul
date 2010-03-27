@@ -17,12 +17,13 @@
 
   <script type="application/javascript">
   <![CDATA[
-    SimpleTest.waitForExplicitFinish();
+    //SimpleTest.waitForExplicitFinish();
+    todo(false, "Enable this test");
     
     function RunTest()
     {
-      window.open("bug514705_helper.xul", "bug514705",
-                  "chrome,width=100,height=100");
+      //window.open("bug514705_helper.xul", "bug514705",
+      //            "chrome,width=100,height=100");
     }
   ]]>
   </script>
