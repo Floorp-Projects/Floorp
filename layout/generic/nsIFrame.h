@@ -940,7 +940,7 @@ public:
    */
   nsresult DisplayCaret(nsDisplayListBuilder*       aBuilder,
                         const nsRect&               aDirtyRect,
-                        const nsDisplayListSet&     aLists);
+                        nsDisplayList*              aList);
 
   PRBool IsThemed(nsTransparencyMode* aTransparencyMode = nsnull) {
     return IsThemed(GetStyleDisplay(), aTransparencyMode);
