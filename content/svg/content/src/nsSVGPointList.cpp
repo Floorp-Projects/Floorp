@@ -38,6 +38,7 @@
 
 #include "nsSVGPointList.h"
 #include "nsSVGPoint.h"
+#include "nsSVGUtils.h"
 #include "nsDOMError.h"
 #include "prdtoa.h"
 #include "nsReadableUtils.h"
@@ -167,11 +168,10 @@ nsSVGPointList::SetValueString(const nsAString& aValue)
   char* rest = str;
   char* token1;
   char* token2;
-  const char* delimiters = ",\x20\x9\xD\xA";
   nsCOMArray<nsIDOMSVGPoint> points;
   
-  while ( (token1 = nsCRT::strtok(rest, delimiters, &rest)) &&
-          (token2 = nsCRT::strtok(rest, delimiters, &rest)) ) {
+  while ( (token1 = nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest)) &&
+          (token2 = nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest)) ) {
 
     char *end;
     
