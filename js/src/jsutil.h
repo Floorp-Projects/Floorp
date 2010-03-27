@@ -211,9 +211,9 @@ JS_END_EXTERN_C
  * when we have a guard object whose only purpose is its constructor and
  * destructor (and is never otherwise referenced), the intended use
  * might be:
- *     js::AutoValueRooter tvr(cx, 1, &val);
+ *     JSAutoTempValueRooter tvr(cx, 1, &val);
  * but is is easy to accidentally write:
- *     js::AutoValueRooter(cx, 1, &val);
+ *     JSAutoTempValueRooter(cx, 1, &val);
  * which compiles just fine, but runs the destructor well before the
  * intended time.
  *

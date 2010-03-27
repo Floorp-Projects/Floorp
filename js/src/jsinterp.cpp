@@ -800,7 +800,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     JSObject *innermostNewChild = js_CloneBlockObject(cx, sharedBlock, fp);
     if (!innermostNewChild)
         return NULL;
-    AutoValueRooter tvr(cx, innermostNewChild);
+    JSAutoTempValueRooter tvr(cx, innermostNewChild);
 
     /*
      * Clone our way towards outer scopes until we reach the innermost
@@ -1005,7 +1005,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-    AutoValueRooter tvr(cx, JSVAL_NULL);
+    JSAutoTempValueRooter tvr(cx, JSVAL_NULL);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
         return false;
     if (JSVAL_IS_PRIMITIVE(tvr.value())) {

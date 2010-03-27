@@ -39,7 +39,7 @@
 #ifndef jsxml_h___
 #define jsxml_h___
 
-#include "jsarray.h"
+#include "jspubtd.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -61,58 +61,6 @@ struct JSXMLArray {
     uint32              capacity;
     void                **vector;
     JSXMLArrayCursor    *cursors;
-};
-
-struct JSXMLArrayCursor
-{
-    JSXMLArray       *array;
-    uint32           index;
-    JSXMLArrayCursor *next;
-    JSXMLArrayCursor **prevp;
-    void             *root;
-
-    JSXMLArrayCursor(JSXMLArray *array)
-      : array(array), index(0), next(array->cursors), prevp(&array->cursors),
-        root(NULL)
-    {
-        if (next)
-            next->prevp = &next;
-        array->cursors = this;
-    }
-
-    ~JSXMLArrayCursor() { disconnect(); }
-
-    void disconnect() {
-        if (!array)
-            return;
-        if (next)
-            next->prevp = prevp;
-        *prevp = next;
-        array = NULL;
-    }
-
-    void *getNext() {
-        if (!array || index >= array->length)
-            return NULL;
-        return root = array->vector[index++];
-    }
-
-    void *getCurrent() {
-        if (!array || index >= array->length)
-            return NULL;
-        return root = array->vector[index];
-    }
-
-    void trace(JSTracer *trc) {
-#ifdef DEBUG
-        size_t index = 0;
-#endif
-        for (JSXMLArrayCursor *cursor = this; cursor; cursor = cursor->next) {
-            void *root = cursor->root;
-            JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
-            js_CallValueTracerIfGCThing(trc, jsval(root));
-        }
-    }
 };
 
 #define JSXML_PRESET_CAPACITY   JS_BIT(31)
