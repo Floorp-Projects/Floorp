@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGViewBox.h"
+#include "nsSVGUtils.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #ifdef MOZ_SMIL
@@ -143,18 +144,19 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 
   char *rest = str;
   char *token;
-  const char *delimiters = ",\x20\x9\xD\xA";
 
   float vals[4];
   PRUint32 i;
   for (i = 0; i < 4; ++i) {
-    if (!(token = nsCRT::strtok(rest, delimiters, &rest))) break; // parse error
+    if (!(token = nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest)))
+      break; // parse error
 
     char *end;
     vals[i] = float(PR_strtod(token, &end));
-    if (*end != '\0' || !NS_FloatIsFinite(vals[i])) break; // parse error
+    if (*end != '\0' || !NS_FloatIsFinite(vals[i]))
+      break; // parse error
   }
-  if (i!=4 || nsCRT::strtok(rest, delimiters, &rest)!=0) {
+  if (i != 4 || (nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest) != 0)) {
     // there was a parse error.
     rv = NS_ERROR_DOM_SYNTAX_ERR;
   } else {
