@@ -4841,36 +4841,6 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     return ok;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
-                     JSExecPart part, jsval *rval)
-{
-    JSScript tmp;
-    JSBool ok;
-
-    /* Make a temporary copy of the JSScript structure and farble it a bit. */
-    tmp = *script;
-    if (part == JSEXEC_PROLOG) {
-        tmp.length = tmp.main - tmp.code;
-    } else {
-        tmp.length -= tmp.main - tmp.code;
-        tmp.code = tmp.main;
-    }
-
-    /* Tell the debugger about our temporary copy of the script structure. */
-    const JSDebugHooks *hooks = cx->debugHooks;
-    if (hooks->newScriptHook) {
-        hooks->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
-                             hooks->newScriptHookData);
-    }
-
-    /* Execute the farbled struct and tell the debugger to forget about it. */
-    ok = JS_ExecuteScript(cx, obj, &tmp, rval);
-    if (hooks->destroyScriptHook)
-        hooks->destroyScriptHook(cx, &tmp, hooks->destroyScriptHookData);
-    return ok;
-}
-
 /* Ancient uintN nbytes is part of API/ABI, so use size_t length local. */
 JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
