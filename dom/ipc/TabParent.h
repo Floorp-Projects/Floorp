@@ -60,6 +60,7 @@ namespace mozilla {
 
 namespace jsipc {
 class PContextWrapperParent;
+class PObjectWrapperParent;
 }
 
 namespace dom {
@@ -114,9 +115,10 @@ public:
                                       bool* aAllowRefresh);
 
     virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
-    virtual bool RecvsendSyncMessageToParent(const nsString& aMessage,
-                                             const nsString& aJSON,
-                                             nsTArray<nsString>* aJSONRetVal);
+    virtual bool AnswersendSyncMessageToParent(const nsString& aMessage,
+                                               const nsString& aJSON,
+                                               const nsTArray<PObjectWrapperParent*>&,
+                                               nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvsendAsyncMessageToParent(const nsString& aMessage,
                                               const nsString& aJSON);
 
@@ -163,6 +165,12 @@ public:
     NS_DECL_NSIWEBPROGRESS
 
 protected:
+    bool ReceiveMessage(const nsString& aMessage,
+                        PRBool aSync,
+                        const nsString& aJSON,
+                        const nsTArray<PObjectWrapperParent*>* aObjects,
+                        nsTArray<nsString>* aJSONRetVal = nsnull);
+
     TabParentListenerInfo* GetListenerInfo(nsIWebProgressListener *aListener);
 
     nsIDOMElement* mFrameElement;
