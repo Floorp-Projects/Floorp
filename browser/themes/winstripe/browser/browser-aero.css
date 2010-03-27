@@ -17,7 +17,7 @@
   #navigator-toolbox:not(:-moz-lwtheme),
   #FindToolbar:not(:-moz-lwtheme) {
     color: black;
-    text-shadow: 0 0 .6em white, 0 0 .6em white, 0 0 .6em white;
+    text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
   #urlbar,
@@ -53,8 +53,8 @@
   .tabbrowser-arrowscrollbox > .scrollbutton-down:not(:-moz-lwtheme),
   .tabs-newtab-button:not(:-moz-lwtheme),
   .tabs-alltabs-button:not(:-moz-lwtheme) {
-    background-color: rgba(255,255,255,.25);
-    text-shadow: 0 1px 0 rgba(255,255,255,.2);
+    background-color: rgba(255,255,255,.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
 
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
