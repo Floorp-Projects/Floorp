@@ -75,7 +75,6 @@ namespace mozilla {
 
 namespace jsipc {
 class PContextWrapperChild;
-class ContextWrapperChild;
 }
 
 namespace dom {
@@ -245,7 +244,6 @@ public:
     virtual PContextWrapperChild* AllocPContextWrapper();
     virtual bool DeallocPContextWrapper(PContextWrapperChild* actor);
 
-    nsresult GetObjectsForMessage(nsTArray<PObjectWrapperChild*>& aObjects);
 private:
     bool InitTabChildGlobal();
 
@@ -254,8 +252,6 @@ private:
     nsCOMPtr<nsIXPConnectJSObjectHolder> mRootGlobal;
 
     JSContext* mCx;
-
-    mozilla::jsipc::ContextWrapperChild* mContextWrapper;
 
     nsCOMPtr<nsIChannel> mChannel;
 
