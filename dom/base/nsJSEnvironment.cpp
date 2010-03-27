@@ -2108,13 +2108,14 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     return NS_OK;
   }
 
-  js::AutoValueRooter targetVal(mContext, JSVAL_VOID);
+  jsval targetVal = JSVAL_VOID;
+  JSAutoTempValueRooter tvr(mContext, 1, &targetVal);
 
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  targetVal.setObject(target);
+  targetVal = OBJECT_TO_JSVAL(target);
 
   jsval rval = JSVAL_VOID;
 
@@ -2139,7 +2140,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     jsval *argv = nsnull;
 
     js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-    js::LazilyConstructed<js::AutoArrayRooter> tvr;
+    js::LazilyConstructed<JSAutoTempValueRooter> tvr;
 
     // Use |target| as the scope for wrapping the arguments, since aScope is
     // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
@@ -2653,7 +2654,7 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   JSAutoRequest ar(mContext);
 
   js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-  js::LazilyConstructed<js::AutoArrayRooter> tvr;
+  js::LazilyConstructed<JSAutoTempValueRooter> tvr;
 
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
@@ -2688,7 +2689,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      PRUint32 *aArgc,
                                      jsval **aArgv,
                                      js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
-                                     js::LazilyConstructed<js::AutoArrayRooter> &aRooter)
+                                     js::LazilyConstructed<JSAutoTempValueRooter> &aRooter)
 {
   nsresult rv = NS_OK;
 

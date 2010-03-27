@@ -478,7 +478,7 @@ XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 NS_STACK_CLASS class SafeCallGuard {
 public:
   SafeCallGuard(JSContext *cx, nsIPrincipal *principal)
-    : cx(cx), tvr(cx) {
+    : cx(cx) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
       // Note: We pass null as the target frame pointer because we know that
@@ -517,7 +517,7 @@ public:
 private:
   JSContext *cx;
   JSRegExpStatics statics;
-  js::AutoValueRooter tvr;
+  JSTempValueRooter tvr;
   uint32 options;
   JSStackFrame *fp;
 };
@@ -957,7 +957,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize the wrapper.
   return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, unsafeObj,

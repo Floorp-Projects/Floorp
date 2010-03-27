@@ -94,6 +94,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     uint32 length, lineno, nslots, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, i;
     uint32 prologLength, version;
+    JSTempValueRooter tvr;
     JSPrincipals *principals;
     uint32 encodeable;
     JSBool filenameWasSaved;
@@ -211,8 +212,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
 
-    AutoScriptRooter tvr(cx, NULL);
-
     if (xdr->mode == JSXDR_DECODE) {
         script = js_NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
                               nregexps, ntrynotes);
@@ -226,7 +225,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = script->notes();
         *scriptp = script;
-        tvr.setScript(script);
+        JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     }
 
     /*
@@ -369,10 +368,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     }
 
     xdr->script = oldscript;
+    if (xdr->mode == JSXDR_DECODE)
+        JS_POP_TEMP_ROOT(cx, &tvr);
     return JS_TRUE;
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
+        JS_POP_TEMP_ROOT(cx, &tvr);
         if (script->filename && !filenameWasSaved) {
             cx->free((void *) script->filename);
             script->filename = NULL;
