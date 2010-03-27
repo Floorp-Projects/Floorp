@@ -35,55 +35,182 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+html {
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  background: #fff;
+}
+
 body {
-  color: #4b4742;
   font-size: 16px;
+  color: #444;
+  border-top: 4px solid #1e4262;
 }
 
-.intro {
-  padding-top: 10px;
+h1 {
+  font-size: 19px;
+  margin: 0 0 10px;
 }
 
-p {
-  padding: 0;
-  padding-bottom: 5px;
+a {
+  color: #0489b7;
+  text-decoration: none;
+}
+
+img {
+  border: none;
+}
+
+#wrapper {
+    width: 96%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#header {
+    text-align: right;
+    height: 30px;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+#header a {
+  display: inline-block;
+  padding: 4px 6px 2px 6px;
+  background: #1e4262;
+ -moz-border-radius-bottomright: 4px;
+ -moz-border-radius-bottomleft: 4px;
+}
+
+#footer {
+  border-top: 2px solid #e7e7e7;
+  padding: 10px;
+  color: #999;
+  clear: both;
+  margin-top: 10px;
+}
+
+#footer ul {
   margin: 0;
-}
-
-p.title {
-  font-size: 19px;
-}
-
-p.rightalign {
-  text-align: right;
-  padding-bottom: 0;
-}
-
-input[type="button"] {
-  font-size: 19px;
-  margin-bottom: 20px;
-}
-
-.go {
-  position: relative;
-  padding-left: 100px;
-}
-
-.go > img {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-#welcomeImage {
+  padding: 0;
   float: left;
 }
 
-#welcomeAnim {
-  float: right;
+#footer.nav li {
+  list-style: none;
+  float: left;
+  margin: 0 1em 0 0;
+  padding-right: 1em;
+  border-right: 1px solid #e7e7e7;
 }
 
-#overview {
-  padding-bottom: 30px;
+#footer.nav li:last-child {
+  border: 0;
+}
+
+#footer #follow {
+  float: right;
+  padding-bottom: 10px
+}
+
+#footer #follow p {
+  display: inline;
+}
+
+#footer #follow ul {
+  display: inline;
+  float: none;
+}
+
+#footer #follow ul li {
+  display: inline;
+  list-style-type: none;
+  margin-left: 10px;
+}
+
+#footer #follow img {
+  vertical-align: top;
+}
+
+#firstrun #header {
+  margin-bottom: 0;
+}
+
+#firstrun #head h1 {
+  float: left;
+  margin: 0;
+}
+
+#firstrun #head p {
+  margin: 0 0 10px 245px;
+  padding-top: 18px;
+}
+
+#firstrun ul#recommended {
+  margin: 0;
+  padding: 0;
+}
+
+#firstrun ul#recommended li {
+  float: left;
+  width: 32%;
+  list-style-type: none;
+  margin-right: 2%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#firstrun ul#recommended li:last-child {
+  margin-right: 0;
+}
+
+#firstrun ul#recommended li a {
+  display: block;
+  padding: 20px 0;
+  -moz-border-radius: 10px;
+  background: #d8ecf1;
+}
+
+#firstrun ul#recommended li a:active {
+  text-decoration: none;
+  background: #b5d7e0;
+}
+
+#firstrun ul#recommended li b {
+  display: block;
+  padding: 90px 10px 0 10px;
+  background-repeat: no-repeat;
+  background-image: url("chrome://browser/content/firstrun/features.png");
+}
+
+#firstrun ul#recommended li span {
+  display: block;
+  padding: 0 10px;
+}
+
+#firstrun ul#recommended li#weave b {
+  background-position: 50% 0;
+}
+
+#firstrun ul#recommended li#starter b {
+  background-position: 50% -150px;
+}
+
+#firstrun ul#recommended li#tour b {
+  background-position: 50% -300px;
+}
+
+#firstrun #features {
   clear: both;
+  text-align: center;
+}
+
+#firstrun #features a {
+  display: inline-block;
+  padding: 5px 35px 5px 0;
+  background: url("chrome://browser/content/firstrun/nav-arrow.png") right center no-repeat;
+  font-size: 16px;
+}
+
+#firstrun #demo {
+  text-align: center;
 }

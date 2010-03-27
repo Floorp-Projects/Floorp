@@ -2,6 +2,14 @@
 
 chrome.jar:
 % content browser %content/
+  content/firstrun/firstrun.xhtml      (content/firstrun/firstrun.xhtml)
+  content/firstrun/animation.gif       (content/firstrun/animation.gif)
+  content/firstrun/mozilla.png         (content/firstrun/mozilla.png)
+  content/firstrun/features.png        (content/firstrun/features.png)
+  content/firstrun/twitter.png         (content/firstrun/twitter.png)
+  content/firstrun/facebook.png        (content/firstrun/facebook.png)
+  content/firstrun/nav-arrow.png       (content/firstrun/nav-arrow.png)
+
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xul                   (content/config.xul)
   content/config.js                    (content/config.js)
@@ -14,8 +22,6 @@ chrome.jar:
 * content/browser-ui.js                (content/browser-ui.js)
   content/commandUtil.js               (content/commandUtil.js)
   content/bindings.xml                 (content/bindings.xml)
-  content/firstrun.xhtml               (content/firstrun.xhtml)
-  content/firstRunAnimation.gif        (content/firstRunAnimation.gif)
   content/tabs.xml                     (content/tabs.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
   content/notification.xml             (content/notification.xml)
