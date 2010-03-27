@@ -2261,10 +2261,10 @@ extern JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
 
 /*
- * NB: JS_ExecuteScript, JS_ExecuteScriptPart, and the JS_Evaluate*Script*
- * quadruplets all use the obj parameter as the initial scope chain header,
- * the 'this' keyword value, and the variables object (ECMA parlance for where
- * 'var' and 'function' bind names) of the execution context for script.
+ * NB: JS_ExecuteScript and the JS_Evaluate*Script* quadruplets use the obj
+ * parameter as the initial scope chain header, the 'this' keyword value, and
+ * the variables object (ECMA parlance for where 'var' and 'function' bind
+ * names) of the execution context for script.
  *
  * Using obj as the variables object is problematic if obj's parent (which is
  * the scope chain link; see JS_SetParent and JS_NewObject) is not null: in
@@ -2303,10 +2303,6 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
  * main body, but not both.
  */
 typedef enum JSExecPart { JSEXEC_PROLOG, JSEXEC_MAIN } JSExecPart;
-
-extern JS_PUBLIC_API(JSBool)
-JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
-                     JSExecPart part, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
