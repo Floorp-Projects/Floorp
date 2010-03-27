@@ -41,6 +41,7 @@ include protocol "PContentProcess.ipdl";
 include protocol "PDocumentRenderer.ipdl";
 include protocol "PDocumentRendererShmem.ipdl";
 include protocol "PContextWrapper.ipdl";
+include protocol "PObjectWrapper.ipdl";
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
@@ -94,7 +95,9 @@ parent:
 
     PContextWrapper();
 
-    sync sendSyncMessageToParent(nsString aMessage, nsString aJSON) returns (nsString[] retval);
+    rpc sendSyncMessageToParent(nsString aMessage, nsString aJSON, PObjectWrapper[] aObjects)
+      returns (nsString[] retval);
+
     sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
 child:
     createWidget(MagicWindowHandle parentWidget);
