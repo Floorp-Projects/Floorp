@@ -1636,7 +1636,7 @@ str_match(JSContext *cx, uintN argc, jsval *vp)
     if (!g.normalizeRegExp(false, 1, argc, vp))
         return false;
 
-    AutoValueRooter array(cx, JSVAL_NULL);
+    JSAutoTempValueRooter array(cx, JSVAL_NULL);
     if (!DoMatch(cx, vp, str, g, MatchCallback, array.addr(), MATCH_ARGS))
         return false;
 
@@ -3328,7 +3328,7 @@ js_ValueToSource(JSContext *cx, jsval v)
     }
 
     JSAtom *atom = cx->runtime->atomState.toSourceAtom;
-    AutoValueRooter tvr(cx, JSVAL_NULL);
+    JSAutoTempValueRooter tvr(cx, JSVAL_NULL);
     if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v), atom, 0, NULL, tvr.addr()))
         return NULL;
     return js_ValueToString(cx, tvr.value());

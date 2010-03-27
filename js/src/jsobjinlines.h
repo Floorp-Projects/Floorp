@@ -83,34 +83,4 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
-namespace js {
-
-typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
-
-class AutoDescriptorArray : private AutoGCRooter
-{
-  public:
-    AutoDescriptorArray(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
-    { }
-
-    PropertyDescriptor *append() {
-        if (!descriptors.append(PropertyDescriptor()))
-            return NULL;
-        return &descriptors.back();
-    }
-
-    PropertyDescriptor& operator[](size_t i) {
-        JS_ASSERT(i < descriptors.length());
-        return descriptors[i];
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    PropertyDescriptorArray descriptors;
-};
-
-}
-
 #endif /* jsobjinlines_h___ */

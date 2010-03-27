@@ -108,9 +108,10 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *s = NULL;
     jsval *argv = vp + 2;
-    AutoValueRooter reviver(cx, JSVAL_NULL);
+    jsval reviver = JSVAL_NULL;
+    JSAutoTempValueRooter tvr(cx, 1, &reviver);
 
-    if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, reviver.addr()))
+    if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, &reviver))
         return JS_FALSE;
 
     JSONParser *jp = js_BeginJSONParse(cx, vp);
@@ -120,7 +121,7 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
         size_t length;
         s->getCharsAndLength(chars, length);
         ok = js_ConsumeJSONText(cx, jp, chars, length);
-        ok &= js_FinishJSONParse(cx, jp, reviver.value());
+        ok &= js_FinishJSONParse(cx, jp, reviver);
     }
 
     return ok;
@@ -130,16 +131,18 @@ JSBool
 js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv = vp + 2;
-    AutoValueRooter space(cx, JSVAL_NULL);
-    AutoObjectRooter replacer(cx);
+    JSObject *replacer = NULL;
+    jsval space = JSVAL_NULL;
+    JSAutoTempValueRooter tvr(cx, replacer);
+    JSAutoTempValueRooter tvr2(cx, 1, &space);
 
     // Must throw an Error if there isn't a first arg
-    if (!JS_ConvertArguments(cx, argc, argv, "v / o v", vp, replacer.addr(), space.addr()))
+    if (!JS_ConvertArguments(cx, argc, argv, "v / o v", vp, &replacer, &space))
         return JS_FALSE;
 
     JSCharBuffer cb(cx);
 
-    if (!js_Stringify(cx, vp, replacer.object(), space.value(), cb))
+    if (!js_Stringify(cx, vp, replacer, space, cb))
         return JS_FALSE;
 
     // XXX This can never happen to nsJSON.cpp, but the JSON object
@@ -257,7 +260,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         return JS_FALSE;
 
     jsval vec[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
+    JSAutoTempValueRooter tvr(cx, 3, vec);
     jsval& key = vec[0];
     jsval& outputValue = vec[1];
 
@@ -306,7 +309,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
             if (!ks)
                 goto error_break;
         }
-        AutoValueRooter keyStringRoot(cx, ks);
+        JSAutoTempValueRooter keyStringRoot(cx, ks);
 
         // Don't include prototype properties, since this operation is
         // supposed to be implemented as if by ES3.1 Object.keys()
@@ -392,20 +395,21 @@ JA(JSContext *cx, jsval *vp, StringifyContext *scx)
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
-    AutoValueRooter outputValue(cx, JSVAL_NULL);
+    jsval outputValue = JSVAL_NULL;
+    JSAutoTempValueRooter tvr(cx, 1, &outputValue);
 
     jsid id;
     jsuint i;
     for (i = 0; i < length; i++) {
         id = INT_TO_JSID(i);
 
-        if (!obj->getProperty(cx, id, outputValue.addr()))
+        if (!obj->getProperty(cx, id, &outputValue))
             return JS_FALSE;
 
-        if (!Str(cx, id, obj, scx, outputValue.addr()))
+        if (!Str(cx, id, obj, scx, &outputValue))
             return JS_FALSE;
 
-        if (outputValue.value() == JSVAL_VOID) {
+        if (outputValue == JSVAL_VOID) {
             if (!js_AppendLiteral(scx->cb, "null"))
                 return JS_FALSE;
         }
@@ -569,54 +573,63 @@ static JSBool IsNumChar(jschar c)
 static JSBool HandleData(JSContext *cx, JSONParser *jp, JSONDataType type);
 static JSBool PopState(JSContext *cx, JSONParser *jp);
 
-static bool
+static JSBool
+DestroyIdArrayOnError(JSContext *cx, JSIdArray *ida) {
+    JS_DestroyIdArray(cx, ida);
+    return JS_FALSE;
+}
+
+static JSBool
 Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     if (!holder->getProperty(cx, id, vp))
-        return false;
+        return JS_FALSE;
 
     JSObject *obj;
 
     if (!JSVAL_IS_PRIMITIVE(*vp) && !(obj = JSVAL_TO_OBJECT(*vp))->isCallable()) {
-        AutoValueRooter propValue(cx, JSVAL_NULL);
+        jsval propValue = JSVAL_NULL;
+        JSAutoTempValueRooter tvr(cx, 1, &propValue);
 
         if(obj->isArray()) {
             jsuint length = 0;
             if (!js_GetLengthProperty(cx, obj, &length))
-                return false;
+                return JS_FALSE;
 
             for (jsuint i = 0; i < length; i++) {
                 jsid index;
                 if (!js_IndexToId(cx, i, &index))
-                    return false;
+                    return JS_FALSE;
 
-                if (!Walk(cx, index, obj, reviver, propValue.addr()))
-                    return false;
+                if (!Walk(cx, index, obj, reviver, &propValue))
+                    return JS_FALSE;
 
-                if (!obj->defineProperty(cx, index, propValue.value(), NULL, NULL, JSPROP_ENUMERATE))
-                    return false;
+                if (!obj->defineProperty(cx, index, propValue, NULL, NULL, JSPROP_ENUMERATE))
+                    return JS_FALSE;
             }
         } else {
-            AutoIdArray ida(cx, JS_Enumerate(cx, obj));
+            JSIdArray *ida = JS_Enumerate(cx, obj);
             if (!ida)
-                return false;
+                return JS_FALSE;
 
-            for (jsint i = 0, len = ida.length(); i < len; i++) {
-                jsid idName = ida[i];
-                if (!Walk(cx, idName, obj, reviver, propValue.addr()))
-                    return false;
-                if (propValue.value() == JSVAL_VOID) {
-                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr()))
-                        return false;
+            JSAutoTempValueRooter idaroot(cx, JS_ARRAY_LENGTH(ida), (jsval*)ida);
+
+            for(jsint i = 0; i < ida->length; i++) {
+                jsid idName = ida->vector[i];
+                if (!Walk(cx, idName, obj, reviver, &propValue))
+                    return DestroyIdArrayOnError(cx, ida);
+                if (propValue == JSVAL_VOID) {
+                    if (!js_DeleteProperty(cx, obj, idName, &propValue))
+                        return DestroyIdArrayOnError(cx, ida);
                 } else {
-                    if (!obj->defineProperty(cx, idName, propValue.value(), NULL, NULL,
-                                             JSPROP_ENUMERATE)) {
-                        return false;
-                    }
+                    if (!obj->defineProperty(cx, idName, propValue, NULL, NULL, JSPROP_ENUMERATE))
+                        return DestroyIdArrayOnError(cx, ida);
                 }
             }
+
+            JS_DestroyIdArray(cx, ida);
         }
     }
 
@@ -624,29 +637,31 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
     jsval value = *vp;
     JSString *key = js_ValueToString(cx, ID_TO_VALUE(id));
     if (!key)
-        return false;
+        return JS_FALSE;
 
     jsval vec[2] = {STRING_TO_JSVAL(key), value};
     jsval reviverResult;
     if (!JS_CallFunctionValue(cx, holder, reviver, 2, vec, &reviverResult))
-        return false;
+        return JS_FALSE;
 
     *vp = reviverResult;
-    return true;
+
+    return JS_TRUE;
 }
 
-static bool
+static JSBool
 Revive(JSContext *cx, jsval reviver, jsval *vp)
 {
 
     JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
-        return false;
+        return JS_FALSE;
 
-    AutoValueRooter tvr(cx, obj);
+    jsval v = OBJECT_TO_JSVAL(obj);
+    JSAutoTempValueRooter tvr(cx, 1, &v);
     if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                              *vp, NULL, NULL, JSPROP_ENUMERATE)) {
-        return false;
+        return JS_FALSE;
     }
 
     return Walk(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), obj, reviver, vp);
@@ -681,11 +696,11 @@ bad:
     return NULL;
 }
 
-bool
+JSBool
 js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 {
     if (!jp)
-        return true;
+        return JS_TRUE;
 
     JSBool early_ok = JS_TRUE;
 
@@ -706,20 +721,20 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     /* This internal API is infallible, in spite of its JSBool return type. */
     js_RemoveRoot(cx->runtime, &jp->objectStack);
 
-    bool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
+    JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     jsval *vp = jp->rootVal;
 
     cx->destroy(jp);
 
     if (!early_ok)
-        return false;
+        return JS_FALSE;
 
     if (!ok) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return false;
+        return JS_FALSE;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(reviver) && JSVAL_TO_OBJECT(reviver)->isCallable())
+    if (!JSVAL_IS_PRIMITIVE(reviver) && js_IsCallable(reviver))
         ok = Revive(cx, reviver, vp);
 
     return ok;
@@ -797,7 +812,7 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
     }
 
     jsval v = OBJECT_TO_JSVAL(obj);
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
 
     // Check if this is the root object
     if (len == 0) {
@@ -870,7 +885,7 @@ CloseArray(JSContext *cx, JSONParser *jp)
 static JSBool
 PushPrimitive(JSContext *cx, JSONParser *jp, jsval value)
 {
-    AutoValueRooter tvr(cx, value);
+    JSAutoTempValueRooter tvr(cx, 1, &value);
 
     jsuint len;
     if (!js_GetLengthProperty(cx, jp->objectStack, &len))
