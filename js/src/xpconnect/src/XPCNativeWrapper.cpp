@@ -1144,7 +1144,7 @@ XPC_NW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize our native wrapper.
   XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(JS_GetPrivate(cx, obj));

@@ -912,8 +912,8 @@ class JSTreeContext;
 
 typedef struct BindData BindData;
 
-struct JSCompiler : private js::AutoGCRooter {
-    JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
+struct JSCompiler {
+    JSContext           * const context;
     JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
     js::TokenStream     tokenStream;
@@ -925,9 +925,10 @@ struct JSCompiler : private js::AutoGCRooter {
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
     JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
+    JSTempValueRooter   tempRoot;       /* root to trace traceListHead */
 
     JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : js::AutoGCRooter(cx, COMPILER), context(cx),
+      : context(cx),
         aleFreeList(NULL), tokenStream(cx), principals(NULL), callerFrame(cfp),
         callerVarObj(cfp ? cfp->varobj(cx->containingCallStack(cfp)) : NULL),
         nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL)
@@ -938,9 +939,6 @@ struct JSCompiler : private js::AutoGCRooter {
     }
 
     ~JSCompiler();
-
-    friend void js::AutoGCRooter::trace(JSTracer *trc);
-    friend class JSTreeContext;
 
     /*
      * Initialize a compiler. Parameters are passed on to init tokenStream.

@@ -1164,6 +1164,96 @@ typedef struct JSResolvingEntry {
 #define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
 #define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
 
+/*
+ * Macros to push/pop JSTempValueRooter instances to context-linked stack of
+ * temporary GC roots. If you need to protect a result value that flows out of
+ * a C function across several layers of other functions, use the
+ * js_LeaveLocalRootScopeWithResult internal API (see further below) instead.
+ *
+ * The macros also provide a simple way to get a single rooted pointer via
+ * JS_PUSH_TEMP_ROOT_<KIND>(cx, NULL, &tvr). Then &tvr.u.<kind> gives the
+ * necessary pointer.
+ *
+ * JSTempValueRooter.count defines the type of the rooted value referenced by
+ * JSTempValueRooter.u union of type JSTempValueUnion. When count is positive
+ * or zero, u.array points to a vector of jsvals. Otherwise it must be one of
+ * the following constants:
+ */
+#define JSTVU_SINGLE        (-1)    /* u.value or u.<gcthing> is single jsval
+                                       or non-JSString GC-thing pointer */
+#define JSTVU_TRACE         (-2)    /* u.trace is a hook to trace a custom
+                                     * structure */
+#define JSTVU_SPROP         (-3)    /* u.sprop roots property tree node */
+#define JSTVU_WEAK_ROOTS    (-4)    /* u.weakRoots points to saved weak roots */
+#define JSTVU_COMPILER      (-5)    /* u.compiler roots JSCompiler* */
+#define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
+#define JSTVU_ENUMERATOR    (-7)    /* a pointer to JSTempValueRooter points
+                                       to an instance of JSAutoEnumStateRooter
+                                       with u.object storing the enumeration
+                                       object */
+
+/*
+ * Here single JSTVU_SINGLE covers both jsval and pointers to almost (see note
+ * below) any GC-thing via reinterpreting the thing as JSVAL_OBJECT. This works
+ * because the GC-thing is aligned on a 0 mod 8 boundary, and object has the 0
+ * jsval tag. So any GC-heap-allocated thing pointer may be tagged as if it
+ * were an object and untagged, if it's then used only as an opaque pointer
+ * until discriminated by other means than tag bits. This is how, for example,
+ * js_GetGCThingTraceKind uses its |thing| parameter -- it consults GC-thing
+ * flags stored separately from the thing to decide the kind of thing.
+ *
+ * Note well that JSStrings may be statically allocated (see the intStringTable
+ * and unitStringTable static arrays), so this hack does not work for arbitrary
+ * GC-thing pointers.
+ */
+#define JS_PUSH_TEMP_ROOT_COMMON(cx,x,tvr,cnt,kind)                           \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((cx)->tempValueRooters != (tvr));                           \
+        (tvr)->count = (cnt);                                                 \
+        (tvr)->u.kind = (x);                                                  \
+        (tvr)->down = (cx)->tempValueRooters;                                 \
+        (cx)->tempValueRooters = (tvr);                                       \
+    JS_END_MACRO
+
+#define JS_POP_TEMP_ROOT(cx,tvr)                                              \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((cx)->tempValueRooters == (tvr));                           \
+        (cx)->tempValueRooters = (tvr)->down;                                 \
+    JS_END_MACRO
+
+#define JS_PUSH_TEMP_ROOT(cx,cnt,arr,tvr)                                     \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((int)(cnt) >= 0);                                           \
+        JS_PUSH_TEMP_ROOT_COMMON(cx, arr, tvr, (ptrdiff_t) (cnt), array);     \
+    JS_END_MACRO
+
+#define JS_PUSH_SINGLE_TEMP_ROOT(cx,val,tvr)                                  \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, val, tvr, JSTVU_SINGLE, value)
+
+#define JS_PUSH_TEMP_ROOT_OBJECT(cx,obj,tvr)                                  \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, obj, tvr, JSTVU_SINGLE, object)
+
+#define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, str ? STRING_TO_JSVAL(str) : JSVAL_NULL, tvr)
+
+#define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
+
+#define JS_PUSH_TEMP_ROOT_TRACE(cx,trace_,tvr)                                \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, trace_, tvr, JSTVU_TRACE, trace)
+
+#define JS_PUSH_TEMP_ROOT_SPROP(cx,sprop_,tvr)                                \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, sprop_, tvr, JSTVU_SPROP, sprop)
+
+#define JS_PUSH_TEMP_ROOT_WEAK_COPY(cx,weakRoots_,tvr)                        \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, weakRoots_, tvr, JSTVU_WEAK_ROOTS, weakRoots)
+
+#define JS_PUSH_TEMP_ROOT_COMPILER(cx,pc,tvr)                                 \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, pc, tvr, JSTVU_COMPILER, compiler)
+
+#define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, script_, tvr, JSTVU_SCRIPT, script)
+
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 /*
@@ -1385,6 +1475,9 @@ struct JSContext
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
+
+    /* Stack of thread-stack-allocated temporary GC roots. */
+    JSTempValueRooter   *tempValueRooters;
 
     /* Stack of thread-stack-allocated GC roots. */
     js::AutoGCRooter   *autoGCRooters;
@@ -1663,17 +1756,17 @@ class AutoGCRooter {
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
-        SPROP =        -2, /* js::AutoScopePropertyRooter */
-        WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
+        SPROP =        -2, /* JSAutoScopePropertyTreeRooter */
+        WEAKROOTS =    -3, /* AutoSaveWeakRoots */
         COMPILER =     -4, /* JSCompiler */
-        SCRIPT =       -5, /* js::AutoScriptRooter */
-        ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
-        IDARRAY =      -7, /* js::AutoIdArray */
-        DESCRIPTORS =  -8, /* js::AutoDescriptorArray */
-        NAMESPACES =   -9, /* js::AutoNamespaces */
-        XML =         -10, /* js::AutoXMLRooter */
-        OBJECT =      -11, /* js::AutoObjectRooter */
-        ID =          -12  /* js::AutoIdRooter */
+        SCRIPT =       -5, /* JSAutoScriptRooter */
+        ENUMERATOR =   -6, /* JSAutoEnumStateRooter */
+        IDARRAY =      -7, /* JSAutoIdArray */
+        DESCRIPTORS =  -8, /* AutoDescriptorArray */
+        NAMESPACES =   -9, /* AutoNamespaceArray */
+        XML =         -10, /* JSAutoXML */
+        OBJECT =      -11, /* JSAutoObjectRooter */
+        ID =          -12  /* JSAutoTempIdRooter */
     };
 };
 
@@ -1962,7 +2055,146 @@ class AutoXMLRooter : private AutoGCRooter {
 };
 #endif /* JS_HAS_XML_SUPPORT */
 
-}
+} /* namespace js */
+
+/* FIXME(bug 332648): Move this into a public header. */
+class JSAutoTempValueRooter
+{
+  public:
+    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT(mContext, len, vec, &mTvr);
+    }
+    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL
+                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_SINGLE_TEMP_ROOT(mContext, v, &mTvr);
+    }
+    JSAutoTempValueRooter(JSContext *cx, JSString *str
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT_STRING(mContext, str, &mTvr);
+    }
+    JSAutoTempValueRooter(JSContext *cx, JSObject *obj
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
+    }
+    JSAutoTempValueRooter(JSContext *cx, JSScopeProperty *sprop
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT_SPROP(mContext, sprop, &mTvr);
+    }
+
+    ~JSAutoTempValueRooter() {
+        JS_POP_TEMP_ROOT(mContext, &mTvr);
+    }
+
+    jsval value() { return mTvr.u.value; }
+    jsval *addr() { return &mTvr.u.value; }
+
+  protected:
+    JSContext *mContext;
+
+  private:
+    JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class JSAutoTempIdRooter
+{
+  public:
+    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
+    }
+
+    ~JSAutoTempIdRooter() {
+        JS_POP_TEMP_ROOT(mContext, &mTvr);
+    }
+
+    jsid id() { return (jsid) mTvr.u.value; }
+    jsid * addr() { return (jsid *) &mTvr.u.value; }
+
+  private:
+    JSContext *mContext;
+    JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class JSAutoIdArray {
+  public:
+    JSAutoIdArray(JSContext *cx, JSIdArray *ida
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : cx(cx), idArray(ida) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        if (ida)
+            JS_PUSH_TEMP_ROOT(cx, ida->length, ida->vector, &tvr);
+    }
+    ~JSAutoIdArray() {
+        if (idArray) {
+            JS_POP_TEMP_ROOT(cx, &tvr);
+            JS_DestroyIdArray(cx, idArray);
+        }
+    }
+    bool operator!() {
+        return idArray == NULL;
+    }
+    jsid operator[](size_t i) const {
+        JS_ASSERT(idArray);
+        JS_ASSERT(i < size_t(idArray->length));
+        return idArray->vector[i];
+    }
+    size_t length() const {
+         return idArray->length;
+    }
+  private:
+    JSContext * const cx;
+    JSIdArray * const idArray;
+    JSTempValueRooter tvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    JSAutoIdArray(JSAutoIdArray &);
+    void operator=(JSAutoIdArray &);
+};
+
+/* The auto-root for enumeration object and its state. */
+class JSAutoEnumStateRooter : public JSTempValueRooter
+{
+  public:
+    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx), mStatep(statep)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(obj);
+        JS_ASSERT(statep);
+        JS_PUSH_TEMP_ROOT_COMMON(cx, obj, this, JSTVU_ENUMERATOR, object);
+    }
+
+    ~JSAutoEnumStateRooter() {
+        JS_POP_TEMP_ROOT(mContext, this);
+    }
+
+    void mark(JSTracer *trc) {
+        JS_CALL_OBJECT_TRACER(trc, u.object, "enumerator_obj");
+        js_MarkEnumeratorState(trc, u.object, *mStatep);
+    }
+
+  private:
+    JSContext   *mContext;
+    jsval       *mStatep;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 class JSAutoResolveFlags
 {

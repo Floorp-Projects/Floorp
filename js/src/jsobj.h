@@ -52,14 +52,12 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
-namespace js { class AutoDescriptorArray; }
-
 /*
  * A representation of ECMA-262 ed. 5's internal property descriptor data
  * structure.
  */
 struct PropertyDescriptor {
-  friend class js::AutoDescriptorArray;
+  friend class AutoDescriptorArray;
 
   private:
     PropertyDescriptor();
