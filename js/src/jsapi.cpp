@@ -438,7 +438,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
     *dp = js_ValueToNumber(cx, tvr.addr());
     return !JSVAL_IS_NULL(tvr.value());
 }
@@ -454,7 +454,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
     *ip = js_ValueToECMAInt32(cx, tvr.addr());
     return !JSVAL_IS_NULL(tvr.value());
 }
@@ -464,7 +464,7 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
     *ip = js_ValueToECMAUint32(cx, tvr.addr());
     return !JSVAL_IS_NULL(tvr.value());
 }
@@ -474,7 +474,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
     *ip = js_ValueToInt32(cx, tvr.addr());
     return !JSVAL_IS_NULL(tvr.value());
 }
@@ -484,7 +484,7 @@ JS_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx, v);
+    JSAutoTempValueRooter tvr(cx, v);
     *ip = js_ValueToUint16(cx, tvr.addr());
     return !JSVAL_IS_NULL(tvr.value());
 }
@@ -3059,7 +3059,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
         if (sprop->isMethod()) {
-            AutoScopePropertyRooter root(cx, sprop);
+            JSAutoTempValueRooter root(cx, sprop);
             JS_UNLOCK_OBJ(cx, obj2);
             *vp = sprop->methodValue();
             return OBJ_SCOPE(obj2)->methodReadBarrier(cx, sprop, vp);
@@ -3810,6 +3810,7 @@ JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
     jsint i, n;
+    jsval iter_state, num_properties;
     jsid id;
     JSIdArray *ida;
     jsval *vector;
@@ -3817,11 +3818,11 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     ida = NULL;
-    AutoEnumStateRooter iterState(cx, obj);
+    iter_state = JSVAL_NULL;
+    JSAutoEnumStateRooter tvr(cx, obj, &iter_state);
 
     /* Get the number of properties to enumerate. */
-    jsval num_properties;
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
+    if (!obj->enumerate(cx, JSENUMERATE_INIT, &iter_state, &num_properties))
         goto error;
     if (!JSVAL_IS_INT(num_properties)) {
         JS_ASSERT(0);
@@ -3841,11 +3842,11 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     i = 0;
     vector = &ida->vector[0];
     for (;;) {
-        if (!obj->enumerate(cx, JSENUMERATE_NEXT, iterState.addr(), &id))
+        if (!obj->enumerate(cx, JSENUMERATE_NEXT, &iter_state, &id))
             goto error;
 
         /* No more jsid's to enumerate ? */
-        if (iterState.state() == JSVAL_NULL)
+        if (iter_state == JSVAL_NULL)
             break;
 
         if (i == ida->length) {
@@ -3859,6 +3860,8 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     return SetIdArrayLength(cx, ida, i);
 
 error:
+    if (!JSVAL_IS_NULL(iter_state))
+        obj->enumerate(cx, JSENUMERATE_DESTROY, &iter_state, 0);
     if (ida)
         JS_DestroyIdArray(cx, ida);
     return NULL;
@@ -3942,7 +3945,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
          * Note: we have to make sure that we root obj around the call to
          * JS_Enumerate to protect against multiple allocations under it.
          */
-        AutoValueRooter tvr(cx, iterobj);
+        JSAutoTempValueRooter tvr(cx, iterobj);
         ida = JS_Enumerate(cx, obj);
         if (!ida)
             return NULL;
@@ -4592,6 +4595,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
+    JSTempValueRooter tvr;
     JSObject *obj;
 
     CHECK_REQUEST(cx);
@@ -4600,19 +4604,16 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 
     JS_ASSERT(!script->u.object);
 
-    {
-        AutoScriptRooter root(cx, script);
-
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
-        if (obj) {
-            obj->setPrivate(script);
-            script->u.object = obj;
+    JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+    if (obj) {
+        obj->setPrivate(script);
+        script->u.object = obj;
 #ifdef CHECK_SCRIPT_OWNER
-            script->owner = NULL;
+        script->owner = NULL;
 #endif
-        }
     }
-
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
 }
 
@@ -4690,6 +4691,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, uintN lineno)
 {
     JSFunction *fun;
+    JSTempValueRooter tvr;
     JSAtom *funAtom, *argAtom;
     uintN i;
 
@@ -4707,48 +4709,47 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (!fun)
         goto out2;
 
-    {
-        AutoValueRooter tvr(cx, FUN_OBJECT(fun));
-        MUST_FLOW_THROUGH("out");
-
-        for (i = 0; i < nargs; i++) {
-            argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
-            if (!argAtom) {
-                fun = NULL;
-                goto out;
-            }
-            if (!js_AddLocal(cx, fun, argAtom, JSLOCAL_ARG)) {
-                fun = NULL;
-                goto out;
-            }
-        }
-
-        if (!JSCompiler::compileFunctionBody(cx, fun, principals,
-                                             chars, length, filename, lineno)) {
+    MUST_FLOW_THROUGH("out");
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, FUN_OBJECT(fun), &tvr);
+    for (i = 0; i < nargs; i++) {
+        argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
+        if (!argAtom) {
             fun = NULL;
             goto out;
         }
-
-        if (obj && funAtom &&
-            !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
-                                 NULL, NULL, JSPROP_ENUMERATE)) {
+        if (!js_AddLocal(cx, fun, argAtom, JSLOCAL_ARG)) {
             fun = NULL;
+            goto out;
         }
+    }
+
+    if (!JSCompiler::compileFunctionBody(cx, fun, principals,
+                                         chars, length, filename, lineno)) {
+        fun = NULL;
+        goto out;
+    }
+
+    if (obj &&
+        funAtom &&
+        !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
+                             NULL, NULL, JSPROP_ENUMERATE)) {
+        fun = NULL;
+    }
 
 #ifdef JS_SCOPE_DEPTH_METER
-        if (fun && obj) {
-            JSObject *pobj = obj;
-            uintN depth = 1;
+    if (fun && obj) {
+        JSObject *pobj = obj;
+        uintN depth = 1;
 
-            while ((pobj = pobj->getParent()) != NULL)
-                ++depth;
-            JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-        }
+        while ((pobj = pobj->getParent()) != NULL)
+            ++depth;
+        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
+    }
 #endif
 
-      out:
-        cx->weakRoots.finalizableNewborns[FINALIZE_FUNCTION] = fun;
-    }
+  out:
+    cx->weakRoots.finalizableNewborns[FINALIZE_FUNCTION] = fun;
+    JS_POP_TEMP_ROOT(cx, &tvr);
 
   out2:
     LAST_FRAME_CHECKS(cx, fun);
@@ -4936,7 +4937,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
 {
     CHECK_REQUEST(cx);
 
-    AutoValueRooter tvr(cx);
+    JSAutoTempValueRooter tvr(cx);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
     JSBool ok = atom &&
                 js_GetMethod(cx, obj, ATOM_TO_JSID(atom),

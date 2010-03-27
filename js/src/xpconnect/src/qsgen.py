@@ -833,7 +833,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         if isGetter:
             pthisval = 'vp'
         elif isSetter:
-            f.write("    js::AutoValueRooter tvr(cx);\n")
+            f.write("    JSAutoTempValueRooter tvr(cx);\n")
             pthisval = 'tvr.addr()'
         else:
             pthisval = '&vp[1]' # as above, ok to overwrite vp[1]

@@ -245,24 +245,32 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    jsval iter_state;
     jsid num_properties;
+    JSBool ok;
 
     if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, JSSLOT_COUNT))
-        return false;
+        return JS_FALSE;
+
+    iter_state = JSVAL_NULL;
+    JSAutoEnumStateRooter tvr(cx, obj, &iter_state);
 
     /* Get the number of properties to enumerate. */
-    AutoEnumStateRooter iterState(cx, obj);
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
-        return false;
+    ok = obj->enumerate(cx, JSENUMERATE_INIT, &iter_state, &num_properties);
+    if (!ok)
+        goto out;
 
     if (!JSVAL_IS_INT(num_properties)) {
         JS_ASSERT(0);
         *vp = JSVAL_ZERO;
-        return true;
+        goto out;
     }
     *vp = num_properties;
 
-    return true;
+out:
+    if (!JSVAL_IS_NULL(iter_state))
+        ok &= obj->enumerate(cx, JSENUMERATE_DESTROY, &iter_state, 0);
+    return ok;
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
@@ -656,13 +664,15 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 #endif
     jsval *val;
     jsval localroot[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
+    JSTempValueRooter tvr;
     JSString *gsopold[2];
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
+    MUST_FLOW_THROUGH("out");
+    JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
     outermost = (cx->sharpObjectMap.depth == 0);
@@ -1027,6 +1037,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
     ok = JS_TRUE;
   out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 
   overflow:
@@ -1955,7 +1966,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
 
     JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
 
-    AutoIdRooter nameidr(cx);
+    JSAutoTempIdRooter nameidr(cx);
     if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
         return JS_FALSE;
 
@@ -1975,7 +1986,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
     }
 
     jsval roots[] = { JSVAL_VOID, JSVAL_VOID };
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
+    JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (OBJ_IS_NATIVE(obj)) {
             JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
@@ -2036,7 +2047,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    AutoIdArray ida(cx, JS_Enumerate(cx, obj));
+    JSAutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
         return JS_FALSE;
 
@@ -2200,6 +2211,50 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
 
     return true;
 }
+
+typedef js::Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+
+class AutoDescriptorArray : private JSTempValueRooter
+{
+  private:
+    JSContext *cx;
+    PropertyDescriptorArray descriptors;
+
+  public:
+    AutoDescriptorArray(JSContext *cx)
+      : cx(cx), descriptors(cx)
+    {
+        JS_PUSH_TEMP_ROOT_TRACE(cx, trace, this);
+    }
+    ~AutoDescriptorArray() {
+        JS_POP_TEMP_ROOT(cx, this);
+    }
+
+    PropertyDescriptor *append() {
+        if (!descriptors.append(PropertyDescriptor()))
+            return NULL;
+        return &descriptors.back();
+    }
+
+    PropertyDescriptor& operator[](size_t i) {
+        JS_ASSERT(i < descriptors.length());
+        return descriptors[i];
+    }
+
+  private:
+    static void trace(JSTracer *trc, JSTempValueRooter *tvr) {
+        PropertyDescriptorArray &descs =
+            static_cast<AutoDescriptorArray *>(tvr)->descriptors;
+        for (size_t i = 0, len = descs.length(); i < len; i++) {
+            PropertyDescriptor &desc = descs[i];
+
+            JS_CALL_VALUE_TRACER(trc, desc.value, "PropertyDescriptor::value");
+            JS_CALL_VALUE_TRACER(trc, desc.get, "PropertyDescriptor::get");
+            JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
+            js_TraceId(trc, desc.id);
+        }
+    }
+};
 
 static JSBool
 Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
@@ -2584,7 +2639,7 @@ obj_defineProperty(JSContext* cx, uintN argc, jsval* vp)
     JSObject* obj = JSVAL_TO_OBJECT(*vp);
 
     /* 15.2.3.6 step 2. */
-    AutoIdRooter nameidr(cx);
+    JSAutoTempIdRooter nameidr(cx);
     if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
         return JS_FALSE;
 
@@ -2621,7 +2676,7 @@ obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
         return JS_FALSE;
     vp[3] = OBJECT_TO_JSVAL(props);
 
-    AutoIdArray ida(cx, JS_Enumerate(cx, props));
+    JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
     if (!ida)
         return JS_FALSE;
 
@@ -2685,7 +2740,7 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
         }
 
         JSObject *props = JSVAL_TO_OBJECT(vp[3]);
-        AutoIdArray ida(cx, JS_Enumerate(cx, props));
+        JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
         if (!ida)
             return JS_FALSE;
 
@@ -2883,7 +2938,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      * builtin. See bug 481444.
      */
     if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-        AutoValueRooter tvr(cx, obj);
+        JSAutoTempValueRooter tvr(cx, obj);
         JS_KEEP_ATOMS(cx->runtime);
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
@@ -3559,7 +3614,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         obj->setParent(parent);
     }
 
-    AutoValueRooter tvr(cx, obj);
+    JSAutoTempValueRooter tvr(cx, obj);
 
     if (!JS_XDRUint32(xdr, &tmp))
         return false;
@@ -3652,6 +3707,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JSAtom *atom;
     JSProtoKey key;
     JSObject *proto, *ctor;
+    JSTempValueRooter tvr;
     jsval cval, rval;
     JSBool named;
     JSFunction *fun;
@@ -3687,7 +3743,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
 
     /* After this point, control must exit via label bad or out. */
-    AutoValueRooter tvr(cx, proto);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, proto, &tvr);
 
     if (!constructor) {
         /*
@@ -3777,6 +3833,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         goto bad;
 
 out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return proto;
 
 bad:
@@ -4084,7 +4141,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     jsval cval, rval;
     JSObject *obj, *ctor;
 
-    AutoArrayRooter argtvr(cx, argc, argv);
+    JSAutoTempValueRooter argtvr(cx, argc, argv);
 
     JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (!js_FindClassObject(cx, parent, protoKey, &cval, clasp))
@@ -4096,7 +4153,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
     /* Protect cval in case a crazy getter for .prototype uproots it. */
-    AutoValueRooter tvr(cx, cval);
+    JSAutoTempValueRooter tvr(cx, cval);
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -4896,6 +4953,8 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     JSScope *scope;
     uint32 slot;
     int32 sample;
+    JSTempValueRooter tvr, tvr2;
+    JSBool ok;
 
     JS_ASSERT(OBJ_IS_NATIVE(pobj));
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, pobj));
@@ -4915,14 +4974,15 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
 
     sample = cx->runtime->propertyRemovals;
     JS_UNLOCK_SCOPE(cx, scope);
-    {
-        AutoScopePropertyRooter tvr(cx, sprop);
-        AutoValueRooter tvr2(cx, pobj);
-        if (!sprop->get(cx, obj, pobj, vp))
-            return false;
-    }
-    JS_LOCK_SCOPE(cx, scope);
+    JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, pobj, &tvr2);
+    ok = sprop->get(cx, obj, pobj, vp);
+    JS_POP_TEMP_ROOT(cx, &tvr2);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    if (!ok)
+        return false;
 
+    JS_LOCK_SCOPE(cx, scope);
     if (SLOT_IN_SCOPE(slot, scope) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          scope->hasProperty(sprop))) {
@@ -4946,6 +5006,8 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
     JSScope *scope;
     uint32 slot;
     int32 sample;
+    JSTempValueRooter tvr;
+    JSBool ok;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
@@ -4977,11 +5039,11 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
 
     sample = cx->runtime->propertyRemovals;
     JS_UNLOCK_SCOPE(cx, scope);
-    {
-        AutoScopePropertyRooter tvr(cx, sprop);
-        if (!sprop->set(cx, obj, vp))
-            return false;
-    }
+    JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+    ok = sprop->set(cx, obj, vp);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    if (!ok)
+        return false;
 
     JS_LOCK_SCOPE(cx, scope);
     if (SLOT_IN_SCOPE(slot, scope) &&
