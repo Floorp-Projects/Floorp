@@ -55,8 +55,6 @@
 #include "nsIWebProgressListener2.h"
 #include "nsFrameLoader.h"
 #include "nsNetUtil.h"
-#include "jsarray.h"
-#include "nsContentUtils.h"
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -445,20 +443,9 @@ TabParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
     ManagedPContextWrapperParent(cwps);
     if (cwps.Length() < 1)
         return false;
-
-    // This is temporary until we decide whether to return
-    // TabChildGlobal or top level page's global object.
-    // Currently this returns the page global object.
-    // Note, TabChildGlobal's context doesn't report its global object here!
-    NS_ASSERTION(cwps.Length() <= 2, "More than two PContextWrappers?");
+    NS_ASSERTION(cwps.Length() == 1, "More than one PContextWrapper?");
     ContextWrapperParent* cwp = static_cast<ContextWrapperParent*>(cwps[0]);
-    if (cwp->GetGlobalObjectWrapper()) {
-      return cwp->GetGlobalJSObject(cx, globalp);
-    } else if (cwps.Length() == 2) {
-      cwp = static_cast<ContextWrapperParent*>(cwps[1]);
-      return cwp->GetGlobalJSObject(cx, globalp);
-    }
-    return false;
+    return (cwp->GetGlobalJSObject(cx, globalp));
 }
 
 void
@@ -482,62 +469,40 @@ TabParent::SendKeyEvent(const nsAString& aType,
 }
 
 bool
-TabParent::AnswersendSyncMessageToParent(const nsString& aMessage,
-                                         const nsString& aJSON,
-                                         const nsTArray<PObjectWrapperParent*>& aObjects,
-                                         nsTArray<nsString>* aJSONRetVal)
-{
-  static_cast<ContentProcessParent*>(Manager())->ReportChildAlreadyBlocked();
-  return ReceiveMessage(aMessage, PR_TRUE, aJSON, &aObjects, aJSONRetVal);
-}
-
-bool
-TabParent::RecvsendAsyncMessageToParent(const nsString& aMessage,
-                                        const nsString& aJSON)
-{
-  return ReceiveMessage(aMessage, PR_FALSE, aJSON, nsnull);
-}
-
-bool
-TabParent::ReceiveMessage(const nsString& aMessage,
-                          PRBool aSync,
-                          const nsString& aJSON,
-                          const nsTArray<PObjectWrapperParent*>* aObjects,
-                          nsTArray<nsString>* aJSONRetVal)
+TabParent::RecvsendSyncMessageToParent(const nsString& aMessage,
+                                       const nsString& aJSON,
+                                       nsTArray<nsString>* aJSONRetVal)
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
     do_QueryInterface(mFrameElement);
   if (frameLoaderOwner) {
     nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
     if (frameLoader && frameLoader->GetFrameMessageManager()) {
-      nsFrameMessageManager* manager = frameLoader->GetFrameMessageManager();
-      JSContext* ctx = manager->GetJSContext();
-      JSAutoRequest ar(ctx);
-      jsval* dest;
-      PRUint32 len = aObjects ? aObjects->Length() : 0;
-      // Because we want JS messages to have always the same properties,
-      // create array even if len == 0.
-      JSObject* objectsArray =
-        js_NewArrayObjectWithCapacity(ctx, len, &dest);
-      if (!objectsArray) {
-        return false;
-      }
+      frameLoader->GetFrameMessageManager()->ReceiveMessage(mFrameElement,
+                                                            aMessage,
+                                                            PR_TRUE,
+                                                            aJSON,
+                                                            aJSONRetVal);
+    }
+  }
+  return true;
+}
 
-      nsresult rv = NS_OK;
-      nsAutoGCRoot arrayGCRoot(&objectsArray, &rv);
-      NS_ENSURE_SUCCESS(rv, false);
-      for (PRUint32 i = 0; i < len; ++i) {
-        mozilla::jsipc::ObjectWrapperParent* wrapper =
-          static_cast<mozilla::jsipc::ObjectWrapperParent*>(aObjects->ElementAt(i));
-        dest[i] = OBJECT_TO_JSVAL(wrapper ? wrapper->GetJSObject(ctx) : nsnull);
-      }
-      
-      manager->ReceiveMessage(mFrameElement,
-                              aMessage,
-                              aSync,
-                              aJSON,
-                              objectsArray,
-                              aJSONRetVal);
+bool
+TabParent::RecvsendAsyncMessageToParent(const nsString& aMessage,
+                                        const nsString& aJSON)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
+    do_QueryInterface(mFrameElement);
+  if (frameLoaderOwner) {
+    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (frameLoader && frameLoader->GetFrameMessageManager()) {
+      nsTArray<nsString> dummy;
+      frameLoader->GetFrameMessageManager()->ReceiveMessage(mFrameElement,
+                                                            aMessage,
+                                                            PR_FALSE,
+                                                            aJSON,
+                                                            nsnull);
     }
   }
   return true;

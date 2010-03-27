@@ -126,7 +126,6 @@ ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
 ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
     , mRunToCompletionDepth(0)
-    , mShouldCallUnblockChild(false)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
@@ -218,18 +217,6 @@ ContentProcessParent::DeallocPNecko(PNeckoParent* necko)
     return true;
 }
 
-void
-ContentProcessParent::ReportChildAlreadyBlocked()
-{
-    if (!mRunToCompletionDepth) {
-#ifdef DEBUG
-        printf("Running to completion...\n");
-#endif
-        mRunToCompletionDepth = 1;
-        mShouldCallUnblockChild = false;
-    }
-}
-    
 bool
 ContentProcessParent::RequestRunToCompletion()
 {
@@ -239,8 +226,8 @@ ContentProcessParent::RequestRunToCompletion()
         printf("Running to completion...\n");
 #endif
         mRunToCompletionDepth = 1;
-        mShouldCallUnblockChild = true;
     }
+
     return !!mRunToCompletionDepth;
 }
 
@@ -279,10 +266,7 @@ ContentProcessParent::AfterProcessNextEvent(nsIThreadInternal *thread,
 #ifdef DEBUG
             printf("... ran to completion.\n");
 #endif
-            if (mShouldCallUnblockChild) {
-                mShouldCallUnblockChild = false;
-                UnblockChild();
-            }
+            UnblockChild();
     }
 
     if (mOldObserver)
