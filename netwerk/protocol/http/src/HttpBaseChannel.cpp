@@ -44,15 +44,6 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
-#define DROP_DEAD()                                                            \
-  do {                                                                         \
-    fprintf(stderr,                                                            \
-            "*&*&*&*&*&*&*&**&*&&*& FATAL ERROR: '%s' UNIMPLEMENTED: %s +%d",  \
-            __FUNCTION__, __FILE__, __LINE__);                                 \
-    NS_ABORT();                                                                \
-    return NS_ERROR_NOT_IMPLEMENTED;                                           \
-  } while (0)
-
 namespace mozilla {
 namespace net {
 
