@@ -383,7 +383,7 @@ namespace nanojit
         }
 
         underrunProtect(48);
-        if (value->isconstq())
+        if (value->isconstf())
             {
                 // if a constant 64-bit value just store it now rather than
                 // generating a pointless store/load/store sequence

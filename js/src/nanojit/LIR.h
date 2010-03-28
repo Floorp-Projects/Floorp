@@ -816,24 +816,22 @@ namespace nanojit
                    isop(LIR_xbarrier) || isop(LIR_xtbl) ||
                    isop(LIR_addxov) || isop(LIR_subxov) || isop(LIR_mulxov);
         }
-        // True if the instruction is a 32-bit or smaller constant integer.
+        // True if the instruction is a 32-bit integer immediate.
         bool isconst() const {
             return isop(LIR_int);
         }
-        // True if the instruction is a 32-bit or smaller constant integer and
-        // has the value val when treated as a 32-bit signed integer.
+        // True if the instruction is a 32-bit integer immediate and
+        // has the value 'val' when treated as a 32-bit signed integer.
         bool isconstval(int32_t val) const {
             return isconst() && imm32()==val;
         }
-        // True if the instruction is a constant quad value.
-        bool isconstq() const {
-            return
 #ifdef NANOJIT_64BIT
-                isop(LIR_quad) ||
-#endif
-                isop(LIR_float);
+        // True if the instruction is a 64-bit integer immediate.
+        bool isconstq() const {
+            return isop(LIR_quad);
         }
-        // True if the instruction is a constant pointer value.
+#endif
+        // True if the instruction is a pointer-sized integer immediate.
         bool isconstp() const
         {
 #ifdef NANOJIT_64BIT
@@ -842,9 +840,21 @@ namespace nanojit
             return isconst();
 #endif
         }
-        // True if the instruction is a constant float value.
+        // True if the instruction is a 64-bit float immediate.
         bool isconstf() const {
             return isop(LIR_float);
+        }
+        // True if the instruction is a 64-bit integer or float immediate.
+        bool isconstqf() const {
+            return
+#ifdef NANOJIT_64BIT
+                isconstq() ||
+#endif
+                isconstf();
+        }
+        // True if the instruction an any type of immediate.
+        bool isImmAny() const {
+            return isconst() || isconstqf();
         }
 
         bool isBranch() const {
@@ -1316,13 +1326,14 @@ namespace nanojit
 
     inline int32_t LIns::imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
 
-    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstq()); return toLInsN64()->imm64_0; }
-    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstq()); return toLInsN64()->imm64_1; }
+    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_0; }
+    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_1; }
     uint64_t       LIns::imm64()     const {
-        NanoAssert(isconstq());
+        NanoAssert(isconstqf());
         return (uint64_t(toLInsN64()->imm64_1) << 32) | uint32_t(toLInsN64()->imm64_0);
     }
     double         LIns::imm64f()    const {
+        NanoAssert(isconstf());
         union {
             double f;
             uint64_t q;

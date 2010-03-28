@@ -1395,7 +1395,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
             if (_config.arm_vfp) {
                 Register rb = findRegFor(base, GpRegs);
 
-                if (value->isconstq()) {
+                if (value->isconstf()) {
                     underrunProtect(LD32_size*2 + 8);
 
                     // XXX use another reg, get rid of dependency
@@ -1428,7 +1428,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 
                 // if it's a constant, make sure our baseReg/baseOffset location
                 // has the right value
-                if (value->isconstq()) {
+                if (value->isconstf()) {
                     underrunProtect(4*4);
                     asm_immf_nochk(rv, value->imm64_0(), value->imm64_1());
                 }
@@ -1444,7 +1444,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
             if (_config.arm_vfp) {
                 Register rb = findRegFor(base, GpRegs);
 
-                if (value->isconstq()) {
+                if (value->isconstf()) {
                     underrunProtect(LD32_size*2 + 8);
 
                     // XXX use another reg, get rid of dependency
@@ -1479,7 +1479,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 
                 // if it's a constant, make sure our baseReg/baseOffset location
                 // has the right value
-                if (value->isconstq()) {
+                if (value->isconstf()) {
                     underrunProtect(4*4);
                     asm_immf_nochk(rv, value->imm64_0(), value->imm64_1());
                 }

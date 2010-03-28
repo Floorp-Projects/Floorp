@@ -625,6 +625,8 @@ namespace nanojit
             }
             asm_li(r, i->imm32());
         }
+        // XXX: should really rematerializable isconstf() and isconstq() cases
+        // here; canRemat() assumes they will be rematerialized.
         else {
             d = findMemFor(i);
             if (IsFpReg(r)) {
