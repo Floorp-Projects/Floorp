@@ -49,6 +49,8 @@ include $(DEPTH)/config/autoconf.mk
 FINAL_FAILURE_TESTCASES = \
   TestFinal.cpp \
   TestFinalTemplate.cpp \
+  TestFinalFunction.cpp \
+  TestFinalGrandparentFunction.cpp \
   $(NULL)
 
 STACK_FAILURE_TESTCASES = \
