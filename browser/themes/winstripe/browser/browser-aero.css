@@ -14,10 +14,14 @@
     border-style: none;
   }
 
-  #navigator-toolbox:not(:-moz-lwtheme),
-  #FindToolbar:not(:-moz-lwtheme) {
+  #navigator-toolbox:not(:-moz-lwtheme) {
     color: black;
     text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
+  }
+
+  #browser:not(:-moz-lwtheme),
+  #browser-bottombox:not(:-moz-lwtheme) {
+    background-color: -moz-dialog;
   }
 
   #urlbar,
