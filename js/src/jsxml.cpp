@@ -868,60 +868,10 @@ attr_identity(const void *a, const void *b)
     return qname_identity(xmla->name, xmlb->name);
 }
 
-struct JSXMLArrayCursor
-{
-    JSXMLArray       *array;
-    uint32           index;
-    JSXMLArrayCursor *next;
-    JSXMLArrayCursor **prevp;
-    void             *root;
-
-    JSXMLArrayCursor(JSXMLArray *array)
-      : array(array), index(0), next(array->cursors), prevp(&array->cursors),
-        root(NULL)
-    {
-        if (next)
-            next->prevp = &next;
-        array->cursors = this;
-    }
-
-    ~JSXMLArrayCursor() { disconnect(); }
-
-    void disconnect() {
-        if (!array)
-            return;
-        if (next)
-            next->prevp = prevp;
-        *prevp = next;
-        array = NULL;
-    }
-
-    void *getNext() {
-        if (!array || index >= array->length)
-            return NULL;
-        return root = array->vector[index++];
-    }
-
-    void *getCurrent() {
-        if (!array || index >= array->length)
-            return NULL;
-        return root = array->vector[index];
-    }
-};
-
 static void
 XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor *cursor)
 {
-    void *root;
-#ifdef DEBUG
-    size_t index = 0;
-#endif
-
-    for (; cursor; cursor = cursor->next) {
-        root = cursor->root;
-        JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
-        js_CallValueTracerIfGCThing(trc, (jsval)root);
-    }
+    cursor->trace(trc);
 }
 
 /* NB: called with null cx from the GC, via xml_trace => XMLArrayTrim. */
@@ -5885,21 +5835,6 @@ typedef struct JSTempRootedNSArray {
     JSXMLArray          array;
     jsval               value;  /* extra root for temporaries */
 } JSTempRootedNSArray;
-
-static void
-TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
-{
-    uint32 i;
-    JSObject *obj;
-
-    for (i = 0; i < len; i++) {
-        obj = vec[i];
-        if (obj) {
-            JS_SET_TRACING_INDEX(trc, "vector", i);
-            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
-        }
-    }
-}
 
 static void
 trace_temp_ns_array(JSTracer *trc, JSTempValueRooter *tvr)
