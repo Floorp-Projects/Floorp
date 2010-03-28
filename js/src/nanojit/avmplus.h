@@ -92,6 +92,9 @@ void NanoAssertFail();
 
 #if defined(AVMPLUS_IA32)
 #if defined(_MSC_VER)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 __declspec(naked) static inline __int64 rdtsc()
 {
     __asm
@@ -100,23 +103,34 @@ __declspec(naked) static inline __int64 rdtsc()
         ret;
     }
 }
+
 #elif defined(SOLARIS)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 static inline unsigned long long rdtsc(void)
 {
     unsigned long long int x;
     asm volatile (".byte 0x0f, 0x31" : "=A" (x));
     return x;
 }
+
 #elif defined(__i386__)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 static __inline__ unsigned long long rdtsc(void)
 {
   unsigned long long int x;
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
+
 #endif /* compilers */
 
 #elif defined(__x86_64__)
+
+# define AVMPLUS_HAS_RDTSC 1
 
 static __inline__ uint64_t rdtsc(void)
 {
@@ -127,6 +141,8 @@ static __inline__ uint64_t rdtsc(void)
 
 #elif defined(_MSC_VER) && defined(_M_AMD64)
 
+# define AVMPLUS_HAS_RDTSC 1
+
 #include <intrin.h>
 #pragma intrinsic(__rdtsc)
 
@@ -136,6 +152,8 @@ static inline unsigned __int64 rdtsc(void)
 }
 
 #elif defined(__powerpc__)
+
+# define AVMPLUS_HAS_RDTSC 1
 
 typedef unsigned long long int unsigned long long;
 
@@ -160,6 +178,10 @@ static __inline__ unsigned long long rdtsc(void)
 }
 
 #endif /* architecture */
+
+#ifndef AVMPLUS_HAS_RDTSC
+# define AVMPLUS_HAS_RDTSC 0
+#endif
 
 struct JSContext;
 
