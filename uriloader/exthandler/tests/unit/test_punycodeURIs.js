@@ -14,7 +14,7 @@
  * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Messaging
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
