@@ -569,7 +569,7 @@ namespace nanojit
                 FST32(pop?1:0, dr, rb);
             }
 
-        } else if (value->isconstq()) {
+        } else if (value->isconstf()) {
             STi(rb, dr+4, value->imm64_1());
             STi(rb, dr,   value->imm64_0());
 
@@ -1561,7 +1561,7 @@ namespace nanojit
             NanoAssert(FST0 == rr);
             NanoAssert(!lhs->isInReg() || FST0 == lhs->getReg());
 
-            if (rhs->isconstq()) {
+            if (rhs->isconstf()) {
                 const uint64_t* p = findQuadConstant(rhs->imm64());
 
                 switch (op) {
@@ -1888,7 +1888,7 @@ namespace nanojit
             } else {
                 TEST_AH(mask);
                 FNSTSW_AX();        // requires EAX to be free
-                if (rhs->isconstq())
+                if (rhs->isconstf())
                 {
                     const uint64_t* p = findQuadConstant(rhs->imm64());
                     FCOMdm((pop?1:0), (const double*)p);

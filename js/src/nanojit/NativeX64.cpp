@@ -1381,7 +1381,7 @@ namespace nanojit
             ins->clearReg();
             asm_immi(r, ins->imm32(), /*canClobberCCs*/false);
         }
-        else if (ins->isop(LIR_quad)) {
+        else if (ins->isconstq()) {
             ins->clearReg();
             asm_immq(r, ins->imm64(), /*canClobberCCs*/false);
         }

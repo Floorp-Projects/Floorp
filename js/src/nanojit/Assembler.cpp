@@ -259,7 +259,7 @@ namespace nanojit
      * they can just be recalculated w/out any inputs.
      */
     bool Assembler::canRemat(LIns *i) {
-        return i->isconst() || i->isconstq() || i->isop(LIR_alloc);
+        return i->isImmAny() || i->isop(LIR_alloc);
     }
 
     void Assembler::codeAlloc(NIns *&start, NIns *&end, NIns *&eip
@@ -568,7 +568,7 @@ namespace nanojit
     int Assembler::findMemFor(LIns *ins)
     {
 #if NJ_USES_QUAD_CONSTANTS
-        NanoAssert(!ins->isconstq());
+        NanoAssert(!ins->isconstf());
 #endif
         if (!ins->isInAr()) {
             uint32_t const arIndex = arReserve(ins);
@@ -1918,18 +1918,18 @@ namespace nanojit
             LIns *ins = p->head;
             NanoAssert(ins->isLive());
             LIns *op1 = ins->oprnd1();
-            // must findMemFor even if we're going to findRegFor; loop-carried
+            // Must findMemFor even if we're going to findRegFor; loop-carried
             // operands may spill on another edge, and we need them to always
             // spill to the same place.
 #if NJ_USES_QUAD_CONSTANTS
-            // exception: if quad constants are true constants, we should
-            // never call findMemFor on those ops
-            if (!op1->isconstq())
+            // Exception: if float constants are true constants, we should
+            // never call findMemFor on those ops.
+            if (!op1->isconstf())
 #endif
             {
                 findMemFor(op1);
             }
-            if (! (op1->isconst() || op1->isconstf() || op1->isconstq()))
+            if (!op1->isImmAny())
                 findRegFor(op1, ins->isop(LIR_flive) ? FpRegs : GpRegs);
         }
 

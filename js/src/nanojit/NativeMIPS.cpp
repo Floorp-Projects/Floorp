@@ -361,7 +361,7 @@ namespace nanojit
 
     void Assembler::asm_store_imm64(LIns *value, int dr, Register rbase)
     {
-        NanoAssert(value->isconstq());
+        NanoAssert(value->isconstf());
         int32_t msw = value->imm64_1();
         int32_t lsw = value->imm64_0();
 
@@ -1102,7 +1102,7 @@ namespace nanojit
             else
                 rbase = findRegFor(base, GpRegs);
 
-            if (value->isconstq())
+            if (value->isconstf())
                 asm_store_imm64(value, dr, rbase);
             else if (!cpu_has_fpu || value->isop(LIR_ldq)) {
 
