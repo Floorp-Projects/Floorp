@@ -87,6 +87,7 @@
 #include "jsdtracef.h"
 #endif
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 /*
@@ -2283,6 +2284,21 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
         }                                                                     \
     JS_END_MACRO
 
+namespace js {
+
+void
+TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
+{
+    for (uint32 i = 0; i < len; i++) {
+        if (JSObject *obj = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, "vector", i);
+            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
+        }
+    }
+}
+
+}
+
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
@@ -2387,7 +2403,6 @@ JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
     JSStackHeader *sh;
-    JSTempValueRooter *tvr;
 
     /*
      * Trace active and suspended callstacks.
@@ -2440,7 +2455,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         TRACE_JSVALS(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
     }
 
-    for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
+    for (JSTempValueRooter *tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
         switch (tvr->count) {
           case JSTVU_SINGLE:
             JS_SET_TRACING_NAME(trc, "tvr->u.value");
@@ -2469,6 +2484,9 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
             TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
         }
     }
+
+    for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
+        gcr->trace(trc);
 
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
