@@ -73,7 +73,7 @@ namespace {
                                                JSOPTION_DONT_REPORT_UNCAUGHT)))
         {
             JS_GUARD_OBJECT_NOTIFIER_INIT;
-            mStack.Push(cx, PR_FALSE);
+            mStack.Push(cx);
         }
 
         ~AutoContextPusher() {
