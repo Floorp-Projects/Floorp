@@ -172,7 +172,8 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 NS_IMETHODIMP
 HttpChannelChild::Cancel(nsresult status)
 {
-  DROP_DEAD();
+  // FIXME: bug 536317
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -191,21 +192,28 @@ HttpChannelChild::Resume()
 // HttpChannelChild::nsIChannel
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-HttpChannelChild::GetOwner(nsISupports **aOwner)
+HttpChannelChild::GetOwner(nsISupports **result)
 {
-  DROP_DEAD();
+  // FIXME bug 547051
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::SetOwner(nsISupports *aOwner)
 {
+  // FIXME bug 547051
   DROP_DEAD();
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
-  DROP_DEAD();
+  // FIXME: Stub for bug 536301 .
+  NS_ENSURE_ARG_POINTER(aSecurityInfo);
+  *aSecurityInfo = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -330,7 +338,8 @@ HttpChannelChild::SetupFallbackChannel(const char *aFallbackKey)
 NS_IMETHODIMP
 HttpChannelChild::GetCacheToken(nsISupports **aCacheToken)
 {
-  DROP_DEAD();
+  // FIXME: stub for bug 537164
+  return NS_ERROR_NOT_AVAILABLE;
 }
 NS_IMETHODIMP
 HttpChannelChild::SetCacheToken(nsISupports *aCacheToken)
@@ -352,7 +361,10 @@ HttpChannelChild::SetOfflineCacheToken(nsISupports *aOfflineCacheToken)
 NS_IMETHODIMP
 HttpChannelChild::GetCacheKey(nsISupports **aCacheKey)
 {
-  DROP_DEAD();
+  // FIXME: stub for bug 537164
+  NS_ENSURE_ARG_POINTER(aCacheKey);
+  *aCacheKey = 0;
+  return NS_OK;
 }
 NS_IMETHODIMP
 HttpChannelChild::SetCacheKey(nsISupports *aCacheKey)
@@ -400,9 +412,14 @@ HttpChannelChild::GetCacheFile(nsIFile **aCacheFile)
 }
 
 NS_IMETHODIMP
-HttpChannelChild::IsFromCache(PRBool *retval)
+HttpChannelChild::IsFromCache(PRBool *value)
 {
-  DROP_DEAD();
+  if (!mIsPending)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // FIXME: stub for bug 537164
+  *value = false;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -418,9 +435,12 @@ HttpChannelChild::SetUploadStream(nsIInputStream *aStream,
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetUploadStream(nsIInputStream **aUploadStream)
+HttpChannelChild::GetUploadStream(nsIInputStream **stream)
 {
-  DROP_DEAD();
+  // FIXME: stub for bug 536273
+  NS_ENSURE_ARG_POINTER(stream);
+  *stream = 0;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -540,7 +560,9 @@ HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 NS_IMETHODIMP
 HttpChannelChild::GetLoadedFromApplicationCache(PRBool *retval)
 {
-  DROP_DEAD();
+  // FIXME: stub for bug 536295
+  *retval = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
