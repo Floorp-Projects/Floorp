@@ -1543,13 +1543,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 #ifdef MOZ_IPC
     if (IsNeckoChild()) {
         LOG(("NECKO_E10S_HTTP set: using experimental interprocess HTTP\n"));
-
-        // TODO:  Just ignore HTTPS and proxying for now
-        if (https)
-            DROP_DEAD();
-        if (givenProxyInfo)
-            DROP_DEAD();
-
         httpChannel = new HttpChannelChild();
     } else
 #endif
