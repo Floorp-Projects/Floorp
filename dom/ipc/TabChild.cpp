@@ -102,6 +102,7 @@ ContentListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 TabChild::TabChild()
+: mCx(nsnull), mContextWrapper(nsnull), mTabChildGlobal(nsnull)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -757,10 +758,9 @@ TabChild::RecvsendAsyncMessageToChild(const nsString& aMessage,
                                       const nsString& aJSON)
 {
   if (mTabChildGlobal) {
-    nsTArray<nsString> dummy;
     static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get())->
       ReceiveMessage(static_cast<nsPIDOMEventTarget*>(mTabChildGlobal),
-                     aMessage, PR_FALSE, aJSON, nsnull);
+                     aMessage, PR_FALSE, aJSON, nsnull, nsnull);
   }
   return true;
 }
@@ -846,7 +846,45 @@ TabChild::InitTabChildGlobal()
 
   JS_SetGlobalObject(cx, global);
 
+  mContextWrapper = new ContextWrapperChild(mCx);
+  SendPContextWrapperConstructor(mContextWrapper);
+  
   return true;
+}
+
+nsresult
+TabChild::GetObjectsForMessage(nsTArray<mozilla::jsipc::PObjectWrapperChild*>& aObjects)
+{
+  nsAXPCNativeCallContext* ncc = nsnull;
+  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(ncc);
+
+  JSContext* ctx = nsnull;
+  rv = ncc->GetJSContext(&ctx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 argc;
+  jsval* argv = nsnull;
+  ncc->GetArgc(&argc);
+  ncc->GetArgvPtr(&argv);
+
+  JSAutoRequest ar(ctx);
+
+  JSObject* obj = nsnull;
+  nsAutoGCRoot resultGCRoot(&obj, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // First parameter is the message name, second is the JSON.
+  for (PRUint32 i = 2; i < argc; ++i) {
+    if (JSVAL_IS_OBJECT(argv[i])) {
+      obj = JSVAL_TO_OBJECT(argv[i]);
+    } else if (!JS_ValueToObject(ctx, argv[i], &obj)) {
+      obj = nsnull;
+    }
+    // GetOrCreateWrapper is null safe!
+    aObjects.AppendElement(mContextWrapper->GetOrCreateWrapper(obj));
+  }
+  return NS_OK;
 }
 
 bool SendSyncMessageToParent(void* aCallbackData,
@@ -854,8 +892,11 @@ bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aJSON,
                              nsTArray<nsString>* aJSONRetVal)
 {
+  nsTArray<mozilla::jsipc::PObjectWrapperChild*> objects;
+  static_cast<TabChild*>(aCallbackData)->GetObjectsForMessage(objects);
   return static_cast<TabChild*>(aCallbackData)->
-    SendsendSyncMessageToParent(nsString(aMessage), nsString(aJSON), aJSONRetVal);
+    CallsendSyncMessageToParent(nsString(aMessage), nsString(aJSON), objects,
+                                aJSONRetVal);
 }
 
 bool SendAsyncMessageToParent(void* aCallbackData,

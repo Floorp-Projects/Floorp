@@ -48,6 +48,7 @@
 
 class nsAXPCNativeCallContext;
 struct JSContext;
+struct JSObject;
 
 struct nsMessageListenerInfo
 {
@@ -103,6 +104,7 @@ public:
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           PRBool aSync, const nsAString& aJSON,
+                          JSObject* aObjectsArray,
                           nsTArray<nsString>* aJSONRetVal);
   void AddChildManager(nsFrameMessageManager* aManager);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -115,6 +117,7 @@ public:
   nsresult GetParamsForMessage(nsAString& aMessageName, nsAString& aJSON);
   nsresult SendAsyncMessageInternal(const nsAString& aMessage,
                                     const nsAString& aJSON);
+  JSContext* GetJSContext() { return mContext; }
 protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
