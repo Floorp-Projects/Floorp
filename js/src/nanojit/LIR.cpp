@@ -524,13 +524,13 @@ namespace nanojit
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
         case LIR_qlo:
-            if (oprnd->isconstq())
+            if (oprnd->isconstf())
                 return insImm(oprnd->imm64_0());
             if (oprnd->isop(LIR_qjoin))
                 return oprnd->oprnd1();
             break;
         case LIR_qhi:
-            if (oprnd->isconstq())
+            if (oprnd->isconstf())
                 return insImm(oprnd->imm64_1());
             if (oprnd->isop(LIR_qjoin))
                 return oprnd->oprnd2();
@@ -550,7 +550,7 @@ namespace nanojit
                 return out->ins2(LIR_sub, oprnd->oprnd2(), oprnd->oprnd1());
             goto involution;
         case LIR_fneg:
-            if (oprnd->isconstq())
+            if (oprnd->isconstf())
                 return insImmf(-oprnd->imm64f());
             if (oprnd->isop(LIR_fsub))
                 return out->ins2(LIR_fsub, oprnd->oprnd2(), oprnd->oprnd1());
@@ -560,7 +560,7 @@ namespace nanojit
                 return insImmf(oprnd->imm32());
             break;
         case LIR_f2i:
-            if (oprnd->isconstq())
+            if (oprnd->isconstf())
                 return insImm(int32_t(oprnd->imm64f()));
             break;
         case LIR_u2f:
@@ -681,7 +681,7 @@ namespace nanojit
                 ;
             }
         }
-        else if (oprnd1->isconstq() && oprnd2->isconstq())
+        else if (oprnd1->isconstf() && oprnd2->isconstf())
         {
             double c1 = oprnd1->imm64f();
             double c2 = oprnd2->imm64f();
@@ -1521,10 +1521,10 @@ namespace nanojit
             , maxlive(0)
         { }
 
-        void add(LInsp i, LInsp use) {
-            if (!i->isconst() && !i->isconstq() && !live.containsKey(i)) {
-                NanoAssert(size_t(i->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
-                live.put(i,use);
+        void add(LInsp ins, LInsp use) {
+            if (!ins->isImmAny() && !live.containsKey(ins)) {
+                NanoAssert(size_t(ins->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
+                live.put(ins,use);
             }
         }
 
@@ -1902,14 +1902,16 @@ namespace nanojit
         if (name) {
             VMPI_snprintf(buf->buf, buf->len, "%s", name);
         }
-        else if (ref->isconstf()) {
-            VMPI_snprintf(buf->buf, buf->len, "%g", ref->imm64f());
+        else if (ref->isconst()) {
+            formatImm(buf, ref->imm32());
         }
+#ifdef NANOJIT_64BIT
         else if (ref->isconstq()) {
             formatImmq(buf, ref->imm64());
         }
-        else if (ref->isconst()) {
-            formatImm(buf, ref->imm32());
+#endif
+        else if (ref->isconstf()) {
+            VMPI_snprintf(buf->buf, buf->len, "%g", ref->imm64f());
         }
         else {
             name = lirNameMap->createName(ref);
