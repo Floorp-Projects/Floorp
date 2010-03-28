@@ -1086,7 +1086,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   }
 #endif
 
-  if (!mStopped) {
+  if (!mStopped && window) {
     window->DispatchSyncPopState();
   }
 
