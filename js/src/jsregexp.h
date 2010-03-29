@@ -65,13 +65,15 @@ struct JSRegExpStatics {
     JSSubString rightContext;   /* input to right of last match (perl $') */
 };
 
+namespace js { class AutoValueRooter; }
+
 extern JS_FRIEND_API(void)
 js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             JSTempValueRooter *tvr);
+                             js::AutoValueRooter *tvr);
 
 extern JS_FRIEND_API(void)
 js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        JSTempValueRooter *tvr);
+                        js::AutoValueRooter *tvr);
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
