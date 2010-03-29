@@ -2,19 +2,55 @@
 window.TabItem = function(container, tab) {
   this.container = container;
   this.tab = tab;
+  
+  $(this.container).data('item', this);
 };
 
-window.TabItem.prototype = {
+window.TabItem.prototype = $.extend(new Item(), {
+  // ----------
+  getContainer: function() {
+    return this.container;
+  },
+  
   // ----------
   getBounds: function() {
     return Utils.getBounds(this.container);
   },
   
-  // ----------
-  setPosition: function(left, top) {
-    $(this.container).animate({left: left, top: top});
+  // ----------  
+  setBounds: function(rect) {
+    this.setPosition(rect.left, rect.top);
+    this.setSize(rect.width, rect.height);
   },
-};
+  
+  // ----------
+  setPosition: function(left, top, immediately) {
+    if(immediately) 
+      $(this.container).css({left: left, top: top});
+    else
+      $(this.container).animate({left: left, top: top});
+  },
+
+  // ----------  
+  setSize: function(width, height) {
+    $(this.container).animate({width: width, height: height});
+  },
+
+  // ----------
+  close: function() {
+    this.tab.close();
+  },
+  
+  // ----------
+  addOnClose: function(referenceObject, callback) {
+    this.tab.mirror.addOnClose(referenceObject, callback);      
+  },
+
+  // ----------
+  removeOnClose: function(referenceObject) {
+    this.tab.mirror.removeOnClose(referenceObject);      
+  }
+});
 
 // ##########
 window.TabItems = {
