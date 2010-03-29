@@ -9032,7 +9032,7 @@ TraceRecorder::dumpGuardedShapes(const char* prefix)
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char* guardName,
-                          LIns* map_ins, VMSideExit* exit)
+                          VMSideExit* exit)
 {
     // Test (with add if missing) for a remembered guard for (obj_ins, obj).
     GuardedShapeTable::AddPtr p = guardedShapeTable.lookupForAdd(obj_ins);
@@ -9051,7 +9051,7 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
 
     // Finally, emit the shape guard.
     LIns* shape_ins =
-        addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape), ACC_OTHER), "shape");
+        addName(lir->insLoad(LIR_ld, map(obj_ins), offsetof(JSScope, shape), ACC_OTHER), "shape");
     guard(true,
           addName(lir->ins2i(LIR_eq, shape_ins, shape), guardName),
           exit);
@@ -9110,41 +9110,6 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
     return true;
 }
 
-JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::guardNativePropertyOp(JSObject* aobj, LIns* map_ins)
-{
-    /*
-     * Interpreter calls to PropertyCache::test guard on native object ops
-     * which is required to use native objects (those whose maps are scopes),
-     * or even more narrow conditions required because the cache miss case
-     * will call a particular object-op (js_GetProperty, js_SetProperty).
-     *
-     * We parameterize using offsetof and guard on match against the hook at
-     * the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
-     * guards the js_SetProperty case.
-     */
-    uint32 format = js_CodeSpec[*cx->fp->regs->pc].format;
-    uint32 mode = JOF_MODE(format);
-
-    // No need to guard native-ness of global object.
-    JS_ASSERT(OBJ_IS_NATIVE(globalObj));
-    if (aobj != globalObj) {
-        size_t op_offset = offsetof(JSObjectOps, objectMap);
-        if (mode == JOF_PROP || mode == JOF_VARPROP) {
-            op_offset = (format & JOF_SET)
-                        ? offsetof(JSObjectOps, setProperty)
-                        : offsetof(JSObjectOps, getProperty);
-        } else {
-            JS_ASSERT(mode == JOF_NAME);
-        }
-
-        LIns* ops_ins;
-        if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
-            RETURN_STOP("non-native map");
-    }
-    return RECORD_CONTINUE;
-}
-
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, PCVal& pcval)
 {
@@ -9161,10 +9126,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         aobj = obj->getProto();
         obj_ins = stobj_get_proto(obj_ins);
     }
-
-    LIns* map_ins = map(obj_ins);
-
-    CHECK_STATUS_A(guardNativePropertyOp(aobj, map_ins));
 
     JSAtom* atom;
     PropertyCacheEntry* entry;
@@ -9242,12 +9203,11 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JS_ASSERT(cx->requestDepth);
 #endif
 
-    return InjectStatus(guardPropertyCacheHit(obj_ins, map_ins, aobj, obj2, entry, pcval));
+    return InjectStatus(guardPropertyCacheHit(obj_ins, aobj, obj2, entry, pcval));
 }
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
-                                     LIns* map_ins,
                                      JSObject* aobj,
                                      JSObject* obj2,
                                      PropertyCacheEntry* entry,
@@ -9272,7 +9232,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                   exit);
         }
     } else {
-        CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit));
+        CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", exit));
     }
 
     if (entry->adding()) {
@@ -9304,7 +9264,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         } else {
             obj2_ins = INS_CONSTOBJ(obj2);
         }
-        CHECK_STATUS(guardShape(obj2_ins, obj2, vshape, "guard_vshape", map(obj2_ins), exit));
+        CHECK_STATUS(guardShape(obj2_ins, obj2, vshape, "guard_vshape", exit));
     }
 
     pcval = entry->vword;
@@ -9594,7 +9554,7 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
         return RECORD_STOP;
 
     while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit))
-        CHECK_STATUS(guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)", map(obj_ins), exit));
+        CHECK_STATUS(guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)", exit));
     return RECORD_CONTINUE;
 }
 
@@ -11291,10 +11251,8 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
     JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
     // Guard before anything else.
-    LIns* map_ins = map(obj_ins);
-    CHECK_STATUS(guardNativePropertyOp(obj, map_ins));
     PCVal pcval;
-    CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
+    CHECK_STATUS(guardPropertyCacheHit(obj_ins, obj, obj2, entry, pcval));
     JS_ASSERT(scope->object == obj2);
     JS_ASSERT(scope->hasProperty(sprop));
     JS_ASSERT_IF(obj2 != obj, !sprop->hasSlot());
@@ -12859,11 +12817,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
-            LIns* map_ins = map(obj_ins);
-            LIns* ops_ins;
-            if (map_is_native(obj->map, map_ins, ops_ins)) {
-                CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)",
-                                                       map_ins, exit)));
+            if (OBJ_IS_NATIVE(obj)) {
+                CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, OBJ_SHAPE(obj),
+                                                       "guard(shape)", exit)));
             } else if (!guardDenseArray(obj, obj_ins, exit)) {
                 RETURN_STOP_A("non-native object involved in undefined property access");
             }
