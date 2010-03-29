@@ -5662,8 +5662,10 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       &hasOutlineOrEffects);
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) && 
-      GetStyleDisplay()->HasTransform()) {
+  PRBool hasTransform =
+    (mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) && 
+    GetStyleDisplay()->HasTransform();
+  if (hasTransform) {
     /* Since our size might not actually have been computed yet, we need to make sure that we use the
      * correct dimensions by overriding the stored bounding rectangle with the value the caller has
      * ensured us we'll use.
@@ -5687,10 +5689,10 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     }
   }
 
-  if (overflowChanged && hasOutlineOrEffects) {
-    // When there's an outline or box-shadow or SVG effects, changes to
-    // those styles might require repainting of the old and new overflow
-    // areas. Repainting of the old overflow area is handled in
+  if (overflowChanged && (hasOutlineOrEffects || hasTransform)) {
+    // When there's an outline or box-shadow or SVG effects or transform,
+    // changes to those styles might require repainting of the old and new
+    // overflow areas. Repainting of the old overflow area is handled in
     // nsCSSFrameConstructor::DoApplyRenderingChangeToTree in response
     // to nsChangeHint_RepaintFrame. Since the new overflow area is not
     // known at that time, we have to handle it here.
