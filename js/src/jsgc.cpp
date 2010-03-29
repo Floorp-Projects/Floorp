@@ -2270,20 +2270,6 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     return JS_DHASH_NEXT;
 }
 
-#define TRACE_JSVALS(trc, len, vec, name)                                     \
-    JS_BEGIN_MACRO                                                            \
-    jsval _v, *_vp, *_end;                                                    \
-                                                                              \
-        for (_vp = vec, _end = _vp + len; _vp < _end; _vp++) {                \
-            _v = *_vp;                                                        \
-            if (JSVAL_IS_TRACEABLE(_v)) {                                     \
-                JS_SET_TRACING_INDEX(trc, name, _vp - (vec));                 \
-                js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(_v),                  \
-                                JSVAL_TRACE_KIND(_v));                        \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
 namespace js {
 
 void
@@ -2323,7 +2309,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
             } else {
                 nslots = fp->script->nfixed;
             }
-            TRACE_JSVALS(trc, nslots, fp->slots, "slot");
+            TraceValues(trc, nslots, fp->slots, "slot");
         }
     } else {
         JS_ASSERT(!fp->slots);
@@ -2348,7 +2334,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
             if (fp->fun->flags & JSFRAME_ROOTED_ARGV)
                 skip = 2 + fp->argc;
         }
-        TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
+        TraceValues(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
     }
 
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
@@ -2452,7 +2438,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     for (sh = acx->stackHeaders; sh; sh = sh->down) {
         METER(trc->context->runtime->gcStats.stackseg++);
         METER(trc->context->runtime->gcStats.segslots += sh->nslots);
-        TRACE_JSVALS(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
+        TraceValues(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
     }
 
     for (JSTempValueRooter *tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
@@ -2481,7 +2467,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
             break;
           default:
             JS_ASSERT(tvr->count >= 0);
-            TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
+            TraceValues(trc, tvr->count, tvr->u.array, "tvr->u.array");
         }
     }
 
@@ -2497,7 +2483,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     InterpState* state = acx->interpState;
     while (state) {
         if (state->nativeVp)
-            TRACE_JSVALS(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
+            TraceValues(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
         state = state->prev;
     }
 #endif
@@ -3449,33 +3435,30 @@ out:
      * interlock mechanism here.
      */
     if (gckind != GC_SET_SLOT_REQUEST && (callback = rt->gcCallback)) {
-        JSWeakRoots savedWeakRoots;
-        JSTempValueRooter tvr;
+        if (!(gckind & GC_KEEP_ATOMS)) {
+            (void) callback(cx, JSGC_END);
 
-        if (gckind & GC_KEEP_ATOMS) {
+            /*
+             * On shutdown iterate until JSGC_END callback stops creating
+             * garbage.
+             */
+            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
+                goto restart_at_beginning;
+        } else {
             /*
              * We allow JSGC_END implementation to force a full GC or allocate
              * new GC things. Thus we must protect the weak roots from garbage
              * collection and overwrites.
              */
-            savedWeakRoots = cx->weakRoots;
-            JS_PUSH_TEMP_ROOT_WEAK_COPY(cx, &savedWeakRoots, &tvr);
+            AutoSaveWeakRoots save(cx);
+
             JS_KEEP_ATOMS(rt);
             JS_UNLOCK_GC(rt);
-        }
 
-        (void) callback(cx, JSGC_END);
+            (void) callback(cx, JSGC_END);
 
-        if (gckind & GC_KEEP_ATOMS) {
             JS_LOCK_GC(rt);
             JS_UNKEEP_ATOMS(rt);
-            JS_POP_TEMP_ROOT(cx, &tvr);
-        } else if (gckind == GC_LAST_CONTEXT && rt->gcPoke) {
-            /*
-             * On shutdown iterate until JSGC_END callback stops creating
-             * garbage.
-             */
-            goto restart_at_beginning;
         }
     }
     TIMESTAMP(gcTimer.end);
