@@ -20,4 +20,4 @@ function f(e) {
 }
 t = 1;
 f();
-print(" PASSED!");
+reportCompare(0, 0, "");
