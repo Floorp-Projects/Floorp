@@ -1756,17 +1756,17 @@ class AutoGCRooter {
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
-        SPROP =        -2, /* JSAutoScopePropertyTreeRooter */
-        WEAKROOTS =    -3, /* AutoSaveWeakRoots */
+        SPROP =        -2, /* js::AutoScopePropertyRooter */
+        WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
         COMPILER =     -4, /* JSCompiler */
-        SCRIPT =       -5, /* JSAutoScriptRooter */
-        ENUMERATOR =   -6, /* JSAutoEnumStateRooter */
-        IDARRAY =      -7, /* JSAutoIdArray */
-        DESCRIPTORS =  -8, /* AutoDescriptorArray */
-        NAMESPACES =   -9, /* AutoNamespaceArray */
-        XML =         -10, /* JSAutoXML */
-        OBJECT =      -11, /* JSAutoObjectRooter */
-        ID =          -12  /* JSAutoTempIdRooter */
+        SCRIPT =       -5, /* js::AutoScriptRooter */
+        ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
+        IDARRAY =      -7, /* js::AutoIdArray */
+        DESCRIPTORS =  -8, /* js::AutoDescriptorArray */
+        NAMESPACES =   -9, /* js::AutoNamespaceArray */
+        XML =         -10, /* js::AutoXMLRooter */
+        OBJECT =      -11, /* js::AutoObjectRooter */
+        ID =          -12  /* js::AutoIdRooter */
     };
 };
 

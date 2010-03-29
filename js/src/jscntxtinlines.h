@@ -105,7 +105,6 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case DESCRIPTORS: {
-#if 0 /* AutoDescriptorArray is still old-style */
         PropertyDescriptorArray &descriptors =
             static_cast<AutoDescriptorArray *>(this)->descriptors;
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
@@ -116,9 +115,6 @@ AutoGCRooter::trace(JSTracer *trc)
             JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
             js_TraceId(trc, desc.id);
         }
-#else
-        JS_ASSERT(0);
-#endif
         return;
       }
 
