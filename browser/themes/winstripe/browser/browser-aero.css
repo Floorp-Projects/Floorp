@@ -2,7 +2,7 @@
 %include browser.css
 %undef WINSTRIPE_AERO
 
-/* ::::: Main Window Styling ::::: */
+%if 0
 @media all and (-moz-windows-compositor) {
   #main-window:not(:-moz-lwtheme) {
     -moz-appearance: -moz-win-glass;
@@ -79,6 +79,7 @@
     text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
   }
 }
+%endif
 
 @media not all and (-moz-windows-compositor) {
   #print-preview-toolbar:not(:-moz-lwtheme) {
