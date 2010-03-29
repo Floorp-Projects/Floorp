@@ -708,16 +708,13 @@ BEGIN_CASE(JSOP_BINDNAME)
         obj = fp->scopeChain;
         if (!obj->getParent())
             break;
-        if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-            JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-            if (!atom) {
-                ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                break;
-            }
-        } else {
-            entry = NULL;
-            LOAD_ATOM(0);
+
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
+        if (!atom) {
+            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+            break;
         }
+
         id = ATOM_TO_JSID(atom);
         obj = js_FindIdentifierBase(cx, fp->scopeChain, id);
         if (!obj)
@@ -1219,30 +1216,28 @@ BEGIN_CASE(JSOP_NAMEDEC)
     PropertyCacheEntry *entry;
 
     obj = fp->scopeChain;
-    if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-        if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-            if (obj == obj2 && entry->vword.isSlot()) {
-                slot = entry->vword.toSlot();
-                JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot);
-                rval = LOCKED_OBJ_GET_SLOT(obj, slot);
-                if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
+    if (!atom) {
+        ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+        if (obj == obj2 && entry->vword.isSlot()) {
+            slot = entry->vword.toSlot();
+            JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot);
+            rval = LOCKED_OBJ_GET_SLOT(obj, slot);
+            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+                rtmp = rval;
+                rval += (js_CodeSpec[op].format & JOF_INC) ? 2 : -2;
+                if (!(js_CodeSpec[op].format & JOF_POST))
                     rtmp = rval;
-                    rval += (js_CodeSpec[op].format & JOF_INC) ? 2 : -2;
-                    if (!(js_CodeSpec[op].format & JOF_POST))
-                        rtmp = rval;
-                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-                    PUSH_OPND(rtmp);
-                    len = JSOP_INCNAME_LENGTH;
-                    DO_NEXT_OP(len);
-                }
+                LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+                PUSH_OPND(rtmp);
+                len = JSOP_INCNAME_LENGTH;
+                DO_NEXT_OP(len);
             }
-            LOAD_ATOM(0);
         }
-    } else {
         LOAD_ATOM(0);
     }
+
     id = ATOM_TO_JSID(atom);
     if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
         goto error;
@@ -1483,34 +1478,28 @@ BEGIN_CASE(JSOP_GETXPROP)
          * from JSOP_NEW) will not be leaked to the calling script.
          */
         aobj = js_GetProtoIfDenseArray(obj);
-        if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
-            JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
-            if (!atom) {
-                ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
-                if (entry->vword.isObject()) {
-                    rval = entry->vword.toJsval();
-                } else if (entry->vword.isSlot()) {
-                    slot = entry->vword.toSlot();
-                    JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-                    rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-                } else {
-                    JS_ASSERT(entry->vword.isSprop());
-                    sprop = entry->vword.toSprop();
-                    NATIVE_GET(cx, obj, obj2, sprop,
-                               fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                               &rval);
-                }
-                break;
+
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+        if (!atom) {
+            ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
+            if (entry->vword.isObject()) {
+                rval = entry->vword.toJsval();
+            } else if (entry->vword.isSlot()) {
+                slot = entry->vword.toSlot();
+                JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
+                rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+            } else {
+                JS_ASSERT(entry->vword.isSprop());
+                sprop = entry->vword.toSprop();
+                NATIVE_GET(cx, obj, obj2, sprop,
+                           fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
+                           &rval);
             }
-        } else {
-            entry = NULL;
-            if (i < 0)
-                atom = rt->atomState.lengthAtom;
-            else
-                LOAD_ATOM(i);
+            break;
         }
+
         id = ATOM_TO_JSID(atom);
-        if (entry
+        if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
             ? !js_GetPropertyHelper(cx, obj, id,
                                     fp->imacpc
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
@@ -1579,28 +1568,24 @@ BEGIN_CASE(JSOP_CALLPROP)
     }
 
     aobj = js_GetProtoIfDenseArray(obj);
-    if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
-        if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
-            if (entry->vword.isObject()) {
-                rval = entry->vword.toJsval();
-            } else if (entry->vword.isSlot()) {
-                slot = entry->vword.toSlot();
-                JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-                rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-            } else {
-                JS_ASSERT(entry->vword.isSprop());
-                sprop = entry->vword.toSprop();
-                NATIVE_GET(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
-            }
-            STORE_OPND(-1, rval);
-            PUSH_OPND(lval);
-            goto end_callprop;
+
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+    if (!atom) {
+        ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
+        if (entry->vword.isObject()) {
+            rval = entry->vword.toJsval();
+        } else if (entry->vword.isSlot()) {
+            slot = entry->vword.toSlot();
+            JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
+            rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+        } else {
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
+            NATIVE_GET(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
         }
-    } else {
-        entry = NULL;
-        LOAD_ATOM(0);
+        STORE_OPND(-1, rval);
+        PUSH_OPND(lval);
+        goto end_callprop;
     }
 
     /*
@@ -1611,7 +1596,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     PUSH(JSVAL_NULL);
     if (!JSVAL_IS_PRIMITIVE(lval)) {
         if (!js_GetMethod(cx, obj, id,
-                          entry
+                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
@@ -1671,189 +1656,185 @@ BEGIN_CASE(JSOP_SETMETHOD)
     VALUE_TO_OBJECT(cx, -2, lval, obj);
 
     do {
-        PropertyCacheEntry *entry;
-
-        entry = NULL;
+        PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
+        PropertyCacheEntry *entry = NULL;
         atom = NULL;
-        if (JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
-            PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
+
+        /*
+         * Probe the property cache, specializing for two important
+         * set-property cases. First:
+         *
+         *   function f(a, b, c) {
+         *     var o = {p:a, q:b, r:c};
+         *     return o;
+         *   }
+         *
+         * or similar real-world cases, which evolve a newborn native
+         * object predicatably through some bounded number of property
+         * additions. And second:
+         *
+         *   o.p = x;
+         *
+         * in a frequently executed method or loop body, where p will
+         * (possibly after the first iteration) always exist in native
+         * object o.
+         */
+        if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
+            /*
+             * Fast property cache hit, only partially confirmed by
+             * testForSet. We know that the entry applies to regs.pc and
+             * that obj's shape matches.
+             *
+             * The entry predicts either a new property to be added
+             * directly to obj by this set, or on an existing "own"
+             * property, or on a prototype property that has a setter.
+             */
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
+            JS_ASSERT(sprop->writable());
+            JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
+
+            JSScope *scope = OBJ_SCOPE(obj);
+            JS_ASSERT(!scope->sealed());
 
             /*
-             * Probe the property cache, specializing for two important
-             * set-property cases. First:
-             *
-             *   function f(a, b, c) {
-             *     var o = {p:a, q:b, r:c};
-             *     return o;
-             *   }
-             *
-             * or similar real-world cases, which evolve a newborn native
-             * object predicatably through some bounded number of property
-             * additions. And second:
-             *
-             *   o.p = x;
-             *
-             * in a frequently executed method or loop body, where p will
-             * (possibly after the first iteration) always exist in native
-             * object o.
+             * Fastest path: check whether the cached sprop is already
+             * in scope and call NATIVE_SET and break to get out of the
+             * do-while(0). But we can call NATIVE_SET only if obj owns
+             * scope or sprop is shared.
              */
-            if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
+            bool checkForAdd;
+            if (!sprop->hasSlot()) {
+                if (entry->vcapTag() == 0 ||
+                    ((obj2 = obj->getProto()) &&
+                     OBJ_IS_NATIVE(obj2) &&
+                     OBJ_SHAPE(obj2) == entry->vshape())) {
+                    goto fast_set_propcache_hit;
+                }
+
+                /* The cache entry doesn't apply. vshape mismatch. */
+                checkForAdd = false;
+            } else if (!scope->isSharedEmpty()) {
+                if (sprop == scope->lastProperty() || scope->hasProperty(sprop)) {
+                  fast_set_propcache_hit:
+                    PCMETER(cache->pchits++);
+                    PCMETER(cache->setpchits++);
+                    NATIVE_SET(cx, obj, sprop, entry, &rval);
+                    break;
+                }
+                checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
+            } else {
                 /*
-                 * Fast property cache hit, only partially confirmed by
-                 * testForSet. We know that the entry applies to regs.pc and
-                 * that obj's shape matches.
-                 *
-                 * The entry predicts either a new property to be added
-                 * directly to obj by this set, or on an existing "own"
-                 * property, or on a prototype property that has a setter.
+                 * We check that cx own obj here and will continue to
+                 * own it after js_GetMutableScope returns so we can
+                 * continue to skip JS_UNLOCK_OBJ calls.
                  */
-                JS_ASSERT(entry->vword.isSprop());
+                JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
+                scope = js_GetMutableScope(cx, obj);
+                JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
+                if (!scope)
+                    goto error;
+                checkForAdd = !sprop->parent;
+            }
+
+            if (checkForAdd &&
+                entry->vshape() == rt->protoHazardShape &&
+                sprop->hasDefaultSetter() &&
+                (slot = sprop->slot) == scope->freeslot) {
+                /*
+                 * Fast path: adding a plain old property that was once
+                 * at the frontier of the property tree, whose slot is
+                 * next to claim among the allocated slots in obj,
+                 * where scope->table has not been created yet.
+                 *
+                 * We may want to remove hazard conditions above and
+                 * inline compensation code here, depending on
+                 * real-world workloads.
+                 */
+                JS_ASSERT(!(obj->getClass()->flags &
+                            JSCLASS_SHARE_ALL_PROPERTIES));
+
+                PCMETER(cache->pchits++);
+                PCMETER(cache->addpchits++);
+
+                /*
+                 * Beware classes such as Function that use the
+                 * reserveSlots hook to allocate a number of reserved
+                 * slots that may vary with obj.
+                 */
+                if (slot < STOBJ_NSLOTS(obj) &&
+                    !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+                    ++scope->freeslot;
+                } else {
+                    if (!js_AllocSlot(cx, obj, &slot))
+                        goto error;
+                }
+
+                /*
+                 * If this obj's number of reserved slots differed, or
+                 * if something created a hash table for scope, we must
+                 * pay the price of JSScope::putProperty.
+                 *
+                 * (A reserveSlots hook can cause scopes of the same
+                 * shape to have different freeslot values. This is
+                 * what causes the slot != sprop->slot case. See
+                 * js_GetMutableScope.)
+                 */
+                if (slot != sprop->slot || scope->table) {
+                    JSScopeProperty *sprop2 =
+                        scope->putProperty(cx, sprop->id,
+                                           sprop->getter(), sprop->setter(),
+                                           slot, sprop->attributes(),
+                                           sprop->getFlags(), sprop->shortid);
+                    if (!sprop2) {
+                        js_FreeSlot(cx, obj, slot);
+                        goto error;
+                    }
+                    sprop = sprop2;
+                } else {
+                    scope->extend(cx, sprop);
+                }
+
+                /*
+                 * No method change check here because here we are
+                 * adding a new property, not updating an existing
+                 * slot's value that might contain a method of a
+                 * branded scope.
+                 */
+                TRACE_2(SetPropHit, entry, sprop);
+                LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+
+                /*
+                 * Purge the property cache of the id we may have just
+                 * shadowed in obj's scope and proto chains. We do this
+                 * after unlocking obj's scope to avoid lock nesting.
+                 */
+                js_PurgeScopeChain(cx, obj, sprop->id);
+                break;
+            }
+            PCMETER(cache->setpcmisses++);
+            atom = NULL;
+        } else if (!atom) {
+            /*
+             * Slower property cache hit, fully confirmed by testForSet (in
+             * the slow path, via fullTest).
+             */
+            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+            sprop = NULL;
+            if (obj == obj2) {
                 sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
-                JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
-
-                JSScope *scope = OBJ_SCOPE(obj);
-                JS_ASSERT(!scope->sealed());
-
-                /*
-                 * Fastest path: check whether the cached sprop is already
-                 * in scope and call NATIVE_SET and break to get out of the
-                 * do-while(0). But we can call NATIVE_SET only if obj owns
-                 * scope or sprop is shared.
-                 */
-                bool checkForAdd;
-                if (!sprop->hasSlot()) {
-                    if (entry->vcapTag() == 0 ||
-                        ((obj2 = obj->getProto()) &&
-                         OBJ_IS_NATIVE(obj2) &&
-                         OBJ_SHAPE(obj2) == entry->vshape())) {
-                        goto fast_set_propcache_hit;
-                    }
-
-                    /* The cache entry doesn't apply. vshape mismatch. */
-                    checkForAdd = false;
-                } else if (!scope->isSharedEmpty()) {
-                    if (sprop == scope->lastProperty() || scope->hasProperty(sprop)) {
-                      fast_set_propcache_hit:
-                        PCMETER(cache->pchits++);
-                        PCMETER(cache->setpchits++);
-                        NATIVE_SET(cx, obj, sprop, entry, &rval);
-                        break;
-                    }
-                    checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
-                } else {
-                    /*
-                     * We check that cx own obj here and will continue to
-                     * own it after js_GetMutableScope returns so we can
-                     * continue to skip JS_UNLOCK_OBJ calls.
-                     */
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    scope = js_GetMutableScope(cx, obj);
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    if (!scope)
-                        goto error;
-                    checkForAdd = !sprop->parent;
-                }
-
-                if (checkForAdd &&
-                    entry->vshape() == rt->protoHazardShape &&
-                    sprop->hasDefaultSetter() &&
-                    (slot = sprop->slot) == scope->freeslot) {
-                    /*
-                     * Fast path: adding a plain old property that was once
-                     * at the frontier of the property tree, whose slot is
-                     * next to claim among the allocated slots in obj,
-                     * where scope->table has not been created yet.
-                     *
-                     * We may want to remove hazard conditions above and
-                     * inline compensation code here, depending on
-                     * real-world workloads.
-                     */
-                    JS_ASSERT(!(obj->getClass()->flags &
-                                JSCLASS_SHARE_ALL_PROPERTIES));
-
-                    PCMETER(cache->pchits++);
-                    PCMETER(cache->addpchits++);
-
-                    /*
-                     * Beware classes such as Function that use the
-                     * reserveSlots hook to allocate a number of reserved
-                     * slots that may vary with obj.
-                     */
-                    if (slot < STOBJ_NSLOTS(obj) &&
-                        !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
-                        ++scope->freeslot;
-                    } else {
-                        if (!js_AllocSlot(cx, obj, &slot))
-                            goto error;
-                    }
-
-                    /*
-                     * If this obj's number of reserved slots differed, or
-                     * if something created a hash table for scope, we must
-                     * pay the price of JSScope::putProperty.
-                     *
-                     * (A reserveSlots hook can cause scopes of the same
-                     * shape to have different freeslot values. This is
-                     * what causes the slot != sprop->slot case. See
-                     * js_GetMutableScope.)
-                     */
-                    if (slot != sprop->slot || scope->table) {
-                        JSScopeProperty *sprop2 =
-                            scope->putProperty(cx, sprop->id,
-                                               sprop->getter(), sprop->setter(),
-                                               slot, sprop->attributes(),
-                                               sprop->getFlags(), sprop->shortid);
-                        if (!sprop2) {
-                            js_FreeSlot(cx, obj, slot);
-                            goto error;
-                        }
-                        sprop = sprop2;
-                    } else {
-                        scope->extend(cx, sprop);
-                    }
-
-                    /*
-                     * No method change check here because here we are
-                     * adding a new property, not updating an existing
-                     * slot's value that might contain a method of a
-                     * branded scope.
-                     */
-                    TRACE_2(SetPropHit, entry, sprop);
-                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);
-
-                    /*
-                     * Purge the property cache of the id we may have just
-                     * shadowed in obj's scope and proto chains. We do this
-                     * after unlocking obj's scope to avoid lock nesting.
-                     */
-                    js_PurgeScopeChain(cx, obj, sprop->id);
-                    break;
-                }
-                PCMETER(cache->setpcmisses++);
-                atom = NULL;
-            } else if (!atom) {
-                /*
-                 * Slower property cache hit, fully confirmed by testForSet (in
-                 * the slow path, via fullTest).
-                 */
-                ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                sprop = NULL;
-                if (obj == obj2) {
-                    sprop = entry->vword.toSprop();
-                    JS_ASSERT(sprop->writable());
-                    JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
-                    NATIVE_SET(cx, obj, sprop, entry, &rval);
-                }
-                if (sprop)
-                    break;
+                JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
+                NATIVE_SET(cx, obj, sprop, entry, &rval);
             }
+            if (sprop)
+                break;
         }
 
         if (!atom)
             LOAD_ATOM(0);
         id = ATOM_TO_JSID(atom);
-        if (entry) {
+        if (entry && JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
             uintN defineHow = (op == JSOP_SETMETHOD)
                               ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                               : JSDNP_CACHE_RESULT;
@@ -2287,28 +2268,25 @@ BEGIN_CASE(JSOP_CALLNAME)
     PropertyCacheEntry *entry;
 
     obj = fp->scopeChain;
-    if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-        if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-            if (entry->vword.isObject()) {
-                rval = entry->vword.toJsval();
-                goto do_push_rval;
-            }
 
-            if (entry->vword.isSlot()) {
-                slot = entry->vword.toSlot();
-                JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-                rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-                goto do_push_rval;
-            }
-
-            JS_ASSERT(entry->vword.isSprop());
-            sprop = entry->vword.toSprop();
-            goto do_native_get;
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
+    if (!atom) {
+        ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+        if (entry->vword.isObject()) {
+            rval = entry->vword.toJsval();
+            goto do_push_rval;
         }
-    } else {
-        LOAD_ATOM(0);
+
+        if (entry->vword.isSlot()) {
+            slot = entry->vword.toSlot();
+            JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
+            rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+            goto do_push_rval;
+        }
+
+        JS_ASSERT(entry->vword.isSprop());
+        sprop = entry->vword.toSprop();
+        goto do_native_get;
     }
 
     id = ATOM_TO_JSID(atom);
