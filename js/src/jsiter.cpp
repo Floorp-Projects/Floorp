@@ -215,18 +215,11 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
 {
-    jsval vec[2];
-    JSTempValueRooter tvr;
-    JSObject *aobj;
+    jsval vec[2] = { ID_TO_VALUE(key), val };
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
-    vec[0] = ID_TO_VALUE(key);
-    vec[1] = val;
-
-    JS_PUSH_TEMP_ROOT(cx, 2, vec, &tvr);
-    aobj = js_NewArrayObject(cx, 2, vec);
+    JSObject *aobj = js_NewArrayObject(cx, 2, vec);
     *rval = OBJECT_TO_JSVAL(aobj);
-    JS_POP_TEMP_ROOT(cx, &tvr);
-
     return aobj != NULL;
 }
 
@@ -347,20 +340,18 @@ JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 {
     JSObject *obj;
-    JSTempValueRooter tvr;
     JSAtom *atom;
     JSClass *clasp;
     JSExtendedClass *xclasp;
-    JSBool ok;
     JSObject *iterobj;
     jsval arg;
 
-    JS_ASSERT(!(flags & ~(JSITER_ENUMERATE |
-                          JSITER_FOREACH |
-                          JSITER_KEYVALUE)));
+    JS_ASSERT(!(flags & ~(JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE)));
 
     /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
     JS_ASSERT(!(flags & JSITER_KEYVALUE) || (flags & JSITER_FOREACH));
+
+    AutoValueRooter tvr(cx);
 
     /* XXX work around old valueOf call hidden beneath js_ValueToObject */
     if (!JSVAL_IS_PRIMITIVE(*vp)) {
@@ -374,30 +365,29 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
          */
         if ((flags & JSITER_ENUMERATE)) {
             if (!js_ValueToObject(cx, *vp, &obj))
-                return JS_FALSE;
+                return false;
             if (!obj)
                 goto default_iter;
         } else {
             obj = js_ValueToNonNullObject(cx, *vp);
             if (!obj)
-                return JS_FALSE;
+                return false;
         }
     }
 
-    JS_ASSERT(obj);
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
+    tvr.setObject(obj);
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
         (xclasp = (JSExtendedClass *) clasp)->iteratorObject) {
         iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
         if (!iterobj)
-            goto bad;
+            return false;
         *vp = OBJECT_TO_JSVAL(iterobj);
     } else {
         atom = cx->runtime->atomState.iteratorAtom;
         if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))
-            goto bad;
+            return false;
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:
             /*
@@ -410,36 +400,26 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
              */
             iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
             if (!iterobj)
-                goto bad;
+                return false;
 
             /* Store in *vp to protect it from GC (callers must root vp). */
             *vp = OBJECT_TO_JSVAL(iterobj);
 
             if (!InitNativeIterator(cx, iterobj, obj, flags))
-                goto bad;
+                return false;
         } else {
             LeaveTrace(cx);
             arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
-            if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg,
-                                   vp)) {
-                goto bad;
-            }
+            if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg, vp))
+                return false;
             if (JSVAL_IS_PRIMITIVE(*vp)) {
-                js_ReportValueError(cx, JSMSG_BAD_ITERATOR_RETURN,
-                                    JSDVG_SEARCH_STACK, *vp, NULL);
-                goto bad;
+                js_ReportValueError(cx, JSMSG_BAD_ITERATOR_RETURN, JSDVG_SEARCH_STACK, *vp, NULL);
+                return false;
             }
         }
     }
 
-    ok = JS_TRUE;
-  out:
-    if (obj)
-        JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
-  bad:
-    ok = JS_FALSE;
-    goto out;
+    return true;
 }
 
 JS_FRIEND_API(JSBool) JS_FASTCALL
