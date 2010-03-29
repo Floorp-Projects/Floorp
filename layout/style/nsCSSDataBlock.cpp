@@ -610,7 +610,7 @@ nsCSSExpandedDataBlock::DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
         // FIXME (maybe): We really don't need to clone the block
         // itself, just all the data inside it.
         *aBlock = (*aBlock)->Clone();
-        if (!aBlock) {
+        if (!*aBlock) {
             // Not much we can do; just lose the properties.
             NS_WARNING("out of memory");
             return;
