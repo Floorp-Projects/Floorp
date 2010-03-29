@@ -1195,8 +1195,7 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus binary(nanojit::LOpcode op);
 
     JS_REQUIRES_STACK RecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
-                                                 uint32 shape, const char* name,
-                                                 nanojit::LIns* map_ins, VMSideExit* exit);
+                                                 uint32 shape, const char* name, VMSideExit* exit);
 
 #if defined DEBUG_notme && defined XP_UNIX
     void dumpGuardedShapes(const char* prefix);
@@ -1209,10 +1208,7 @@ class TraceRecorder
                                          nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                                      JSObject*& obj2, PCVal& pcval);
-    JS_REQUIRES_STACK RecordingStatus guardNativePropertyOp(JSObject* aobj,
-                                                              nanojit::LIns* map_ins);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
-                                                            nanojit::LIns* map_ins,
                                                             JSObject* aobj,
                                                             JSObject* obj2,
                                                             PropertyCacheEntry* entry,
