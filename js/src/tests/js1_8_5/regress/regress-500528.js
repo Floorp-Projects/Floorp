@@ -19,4 +19,4 @@ for each (var obj in [c1, c2])
     s += obj.x;
 assertEq(s, 'ab');
 
-print(" PASSED! Property cache soundness: objects with the same shape but different prototypes.");
+reportCompare(0, 0, "Property cache soundness: objects with the same shape but different prototypes.");
