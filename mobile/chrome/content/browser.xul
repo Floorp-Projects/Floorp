@@ -309,7 +309,7 @@
         </vbox>
       </hbox>
 
-      <arrowscrollbox id="pageactions-container" orient="vertical" class="window-width" hidden="true"/>
+      <hbox id="pageactions-container" class="window-width" hidden="true"/>
     </vbox>
 
     <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">

@@ -1705,6 +1705,8 @@ const BrowserSearch = {
   },
 
   updatePageSearchEngines: function() {
+    PageActions.removeItems("search");
+
     // Check to see whether we've already added an engine with this title in
     // the search list
     let newEngines = this._currentEngines.filter(function(element) {
@@ -1715,11 +1717,12 @@ const BrowserSearch = {
       return;
 
     // XXX limit to the first search engine for now
-    for (let i = 0; i<1; i++) {
+    let kMaxSearchEngine = 1;
+    for (let i = 0; i < kMaxSearchEngine; i++) {
       let engine = newEngines[i].engine;
-      let item = PageActions.appendItem(engine.title,
+      let item = PageActions.appendItem("search",
                                         Elements.browserBundle.getString("pageactions.search.addNew"),
-                                        BrowserUI._favicon.src);
+                                        engine.title);
 
       item.engine = engine;
       item.onclick = function() {
@@ -2136,9 +2139,6 @@ IdentityHandler.prototype = {
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
-
-    // clean all the previous result
-    PageActions.removeAllItems();
 
     PageActions.updatePageSaveAs();
 

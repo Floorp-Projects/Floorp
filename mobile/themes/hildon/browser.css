@@ -54,7 +54,6 @@
   z-index: 1000;
 }
 
-
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
   /* space out the buttons a bit horizontally */
@@ -265,7 +264,7 @@ toolbarbutton.page-button {
   margin-right: -40px; /* big number just to make sure the image overflows the edge */
 }
 
-#tool-panel-open:not([disabled="true"]):active:hover {
+#tool-panel-open:not([disabled="true"]):hover:active {
   list-style-image: url("chrome://browser/skin/images/settings-active-64.png");
 }
 
@@ -780,8 +779,18 @@ box[type="documenttab"]:only-child .documenttab-close {
   -moz-box-shadow: black 0 2px 2px;
 }
 
+#identity-container[hasmenu="true"] {
+  -moz-border-radius-bottomleft: 8px;
+  -moz-border-radius-bottomright: 8px;
+}
+
 #identity-popup-container {
   padding: 8px; /* core spacing */
+}
+
+#identity-container[hasmenu="true"] > #identity-popup-container {
+  background-image: -moz-linear-gradient(bottom, rgb(94,95,99) 0%, rgb(54,55,59) 25%, transparent);
+  padding-bottom: 16px;
 }
 
 /* Popup Icons */
@@ -843,46 +852,74 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 /* Page Actions popup   ---------------------------------------------------- */
+#identity-container[hasmenu="false"] > #pageactions-container {
+  display: none;
+}
+
 #pageactions-container {
-  border: 2px solid transparent;
-  -moz-border-top-colors: #212429 #52555a;
-  padding: 0 8px;
+  background: rgb(210, 210, 210) -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%, rgba(235,235,235,0.4) 90%, rgba(185,185,185,0.4) 100%);
+  border: none;
+  padding: 0;
   -moz-user-focus: ignore;
-}
-
-#pageactions-container .scrollbox-innerbox {
   display: inline-block;
-}
-
-#pageactions-container .autorepeatbutton-down {
-  list-style-image: url(images/arrowdowndark-16.png);
-}
-
-#pageactions-container .autorepeatbutton-up {
-  list-style-image: url(images/arrowupdark-16.png);
-}
-
-/* force the autorepeat buttons to create a 'padding' when collapsed */
-#pageactions-container autorepeatbutton[collapsed="true"],
-#pageactions-container autorepeatbutton[disabled="true"] {
-  visibility: hidden;
+  -moz-border-radius-bottomleft: 8px;
+  -moz-border-radius-bottomright: 8px;
 }
 
 pageaction {
-  width: 50%;
+  border-color: rgb(255,255,255) rgb(215,215,215) rgb(215,215,215) rgb(255,255,255);
+  background-color: rgb(235,235,235);
+  border-style: solid;
+  border-width: 1px;
   height: 64px;
-  border-width: 10px;
-  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
+  width :100%;
 }
 
-@media all and (orientation: portrait) {
+@media all and (orientation: landscape) {
   pageaction {
-    width :100%;
+    width: 50%;
+  }
+
+  pageaction:nth-last-child(2):not(:nth-child(even)) {
+    background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
+    border-bottom: 1px solid #fff;
+    -moz-border-radius-bottomleft: 8px;
+  }
+
+  pageaction:first-child,
+  pageaction:nth-child(2) {
+    background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%) !important;
+  }
+
+  pageaction:last-child:not(:nth-child(even)) {
+    border-bottom: 1px solid #fff;
+    -moz-border-radius-bottomleft: 8px;
+  }
+
+  pageaction:last-child:not(:nth-child(odd)) {
+    border-bottom: 1px solid #fff;
+    -moz-border-radius-bottomright: 8px;
   }
 }
 
-pageaction:active:hover {
-  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
+@media all and (orientation: portrait) {
+  pageaction:last-child {
+    -moz-border-radius-bottomleft: 8px;
+    -moz-border-radius-bottomright: 8px;
+  }
+}
+
+pageaction:last-child {
+  background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
+}
+
+pageaction:first-child {
+  background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
+}
+
+pageaction:hover:active {
+  background-image: none !important;
+  background-color: #8db8d8;
 }
 
 pageaction .pageaction-image {
@@ -892,16 +929,21 @@ pageaction .pageaction-image {
 }
 
 pageaction:not([image]) .pageaction-image {
-  width: 0px;
+  width: 0;
 }
 
 pageaction .pageaction-title {
-  font-size: 18px !important;
+  font-size: 24px !important;
+  color: #414141;
 }
 
 pageaction .pageaction-desc {
   font-size: 14px !important;
-  color: grey;
+  color: darkgray;
+}
+
+pageaction:hover:active  .pageaction-desc {
+  color: white;
 }
 
 pageaction .pageaction-desc[value=""] {
