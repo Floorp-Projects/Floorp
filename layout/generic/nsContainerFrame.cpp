@@ -1120,7 +1120,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     }
   }
 
-  aNextInFlow->Invalidate(aNextInFlow->GetOverflowRect());
+  aNextInFlow->InvalidateOverflowRect();
 
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG
