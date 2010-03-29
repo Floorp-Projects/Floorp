@@ -56,6 +56,7 @@
 #include "gfxMatrix.h"
 #include "nsFrameList.h"
 #include "nsAlgorithm.h"
+#include "FramePropertyTable.h"
 
 /**
  * New rules of reflow:
@@ -180,9 +181,6 @@ enum {
   NS_FRAME_CONTAINS_RELATIVE_HEIGHT =           0x00000020,
 
   // If this bit is set, then the frame corresponds to generated content
-  // Such frames store an nsCOMArray<nsIContent> of their generated content
-  // in the nsGkAtoms::generatedContent frame property, except for continuation
-  // frames.
   NS_FRAME_GENERATED_CONTENT =                  0x00000040,
 
   // If this bit is set the frame is a continuation that is holding overflow,
@@ -489,6 +487,9 @@ typedef PRBool nsDidReflowStatus;
 class nsIFrame : public nsQueryFrame
 {
 public:
+  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
+  typedef mozilla::FrameProperties FrameProperties;
+
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
   nsPresContext* PresContext() const {
@@ -801,6 +802,39 @@ public:
     return mParent ? mParent->GetPositionOfChildIgnoringScrolling(this)
       : GetPosition();
   }
+
+  static void DestroyMargin(void* aPropertyValue)
+  {
+    delete static_cast<nsMargin*>(aPropertyValue);
+  }
+
+  static void DestroyRect(void* aPropertyValue)
+  {
+    delete static_cast<nsRect*>(aPropertyValue);
+  }
+
+  static void DestroyPoint(void* aPropertyValue)
+  {
+    delete static_cast<nsPoint*>(aPropertyValue);
+  }
+
+#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
+  static const FramePropertyDescriptor* prop() {                \
+    static const FramePropertyDescriptor descriptor = { dtor }; \
+    return &descriptor;                                         \
+  }
+
+  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nsnull)
+
+  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyPoint)
+
+  NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
+  NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)
+
+  NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DestroyMargin)
 
   /**
    * Return the distance between the border edge of the frame and the
@@ -1903,10 +1937,7 @@ public:
   /**
    * Removes any stored overflow rect from the frame.
    */
-  void ClearOverflowRect() {
-    DeleteProperty(nsGkAtoms::overflowAreaProperty);
-    mOverflow.mType = NS_FRAME_OVERFLOW_NONE;
-  }
+  void ClearOverflowRect();
 
   /**
    * Determine whether borders should not be painted on certain sides of the
@@ -2125,24 +2156,19 @@ public:
     return mContent == aParentContent;
   }
 
+  FrameProperties Properties() const {
+    return FrameProperties(PresContext()->PropertyTable(), this);
+  }
 
-  NS_HIDDEN_(void*) GetProperty(nsIAtom* aPropertyName,
-                                nsresult* aStatus = nsnull) const;
-  virtual NS_HIDDEN_(void*) GetPropertyExternal(nsIAtom*  aPropertyName,
-                                                nsresult* aStatus) const;
-  NS_HIDDEN_(nsresult) SetProperty(nsIAtom*           aPropertyName,
-                                   void*              aValue,
-                                   NSPropertyDtorFunc aDestructor = nsnull,
-                                   void*              aDtorData = nsnull);
-  NS_HIDDEN_(nsresult) DeleteProperty(nsIAtom* aPropertyName) const;
-  NS_HIDDEN_(void*) UnsetProperty(nsIAtom* aPropertyName,
-                                  nsresult* aStatus = nsnull) const;
+  NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(CharTypeProperty, nsnull)
 
 #define NS_GET_BASE_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::baseLevel))
+NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
+NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
 
   /**
    * Return PR_TRUE if and only if this frame obeys visibility:hidden.

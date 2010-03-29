@@ -114,8 +114,8 @@ nsSVGTextPathFrame::GetDy()
 nsIFrame *
 nsSVGTextPathFrame::GetPathFrame()
 {
-  nsSVGTextPathProperty *property =
-    static_cast<nsSVGTextPathProperty*>(GetProperty(nsGkAtoms::href));
+  nsSVGTextPathProperty *property = static_cast<nsSVGTextPathProperty*>
+    (Properties().Get(nsSVGEffects::HrefProperty()));
 
   if (!property) {
     nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
@@ -130,8 +130,8 @@ nsSVGTextPathFrame::GetPathFrame()
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               mContent->GetCurrentDoc(), base);
 
-    property = nsSVGEffects::GetTextPathProperty(
-                               targetURI, this, nsGkAtoms::href);
+    property =
+      nsSVGEffects::GetTextPathProperty(targetURI, this, nsSVGEffects::HrefProperty());
     if (!property)
       return nsnull;
   }
@@ -206,7 +206,7 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    DeleteProperty(nsGkAtoms::href);
+    Properties().Delete(nsSVGEffects::HrefProperty());
     NotifyGlyphMetricsChange();
   }
 

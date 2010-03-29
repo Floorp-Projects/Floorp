@@ -54,6 +54,8 @@
 
 #include "nsCellMap.h"//table cell navigation
 
+using namespace mozilla;
+
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext):
   nsHTMLContainerFrame(aContext)
 {
@@ -1810,11 +1812,12 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
 //end nsLineIterator methods
 
 static void
-DestroyFrameCursorData(void* aObject, nsIAtom* aPropertyName,
-                       void* aPropertyValue, void* aData)
+DestroyFrameCursorData(void* aPropertyValue)
 {
   delete static_cast<nsTableRowGroupFrame::FrameCursorData*>(aPropertyValue);
 }
+
+NS_DECLARE_FRAME_PROPERTY(RowCursorProperty, DestroyFrameCursorData)
 
 void
 nsTableRowGroupFrame::ClearRowCursor()
@@ -1823,7 +1826,7 @@ nsTableRowGroupFrame::ClearRowCursor()
     return;
 
   RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
-  DeleteProperty(nsGkAtoms::rowCursorProperty);
+  Properties().Delete(RowCursorProperty());
 }
 
 nsTableRowGroupFrame::FrameCursorData*
@@ -1847,12 +1850,7 @@ nsTableRowGroupFrame::SetupRowCursor()
   FrameCursorData* data = new FrameCursorData();
   if (!data)
     return nsnull;
-  nsresult rv = SetProperty(nsGkAtoms::rowCursorProperty, data,
-                            DestroyFrameCursorData);
-  if (NS_FAILED(rv)) {
-    delete data;
-    return nsnull;
-  }
+  Properties().Set(RowCursorProperty(), data);
   AddStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
   return data;
 }
@@ -1864,7 +1862,7 @@ nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
     return nsnull;
 
   FrameCursorData* property = static_cast<FrameCursorData*>
-                                         (GetProperty(nsGkAtoms::rowCursorProperty));
+    (Properties().Get(RowCursorProperty()));
   PRUint32 cursorIndex = property->mCursorIndex;
   PRUint32 frameCount = property->mFrames.Length();
   if (cursorIndex >= frameCount)

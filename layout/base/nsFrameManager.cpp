@@ -116,7 +116,7 @@
     #define NOISY_TRACE_FRAME(_msg,_frame);
   #endif
 
-// IID's
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 
@@ -904,7 +904,8 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // oldContext)" check will prevent us from redoing work.
         if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
             !aFrame->GetPrevContinuation()) {
-          nsIFrame* sib = static_cast<nsIFrame*>(aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+          nsIFrame* sib = static_cast<nsIFrame*>
+            (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
           if (sib) {
             ReParentStyleContext(sib);
           }
@@ -1468,7 +1469,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   // as well as all its special siblings and their next-in-flows,
   // reresolving style on all the frames we encounter in this walk.
 
-  nsPropertyTable *propTable = GetPresContext()->PropertyTable();
+  FramePropertyTable *propTable = GetPresContext()->PropertyTable();
 
   do {
     // Outer loop over special siblings
@@ -1498,7 +1499,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
     }
     
     frame2 = static_cast<nsIFrame*>
-                        (propTable->GetProperty(frame2, nsGkAtoms::IBSplitSpecialSibling));
+      (propTable->Get(frame2, nsIFrame::IBSplitSpecialSibling()));
     frame = frame2;
   } while (frame2);
 }

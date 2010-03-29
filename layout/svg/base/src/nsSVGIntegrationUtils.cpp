@@ -68,7 +68,8 @@ static nsRect GetNonSVGUserSpace(nsIFrame* aFirst)
 static nsRect
 GetPreEffectsOverflowRect(nsIFrame* aFrame)
 {
-  nsRect* r = static_cast<nsRect*>(aFrame->GetProperty(nsGkAtoms::preEffectsBBoxProperty));
+  nsRect* r = static_cast<nsRect*>
+    (aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
   if (r)
     return *r;
   return aFrame->GetOverflowRect();
