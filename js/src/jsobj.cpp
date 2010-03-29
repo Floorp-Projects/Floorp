@@ -633,9 +633,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    JSTempValueRooter tvr;
-    MUST_FLOW_THROUGH("out");
-    JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
     outermost = (cx->sharpObjectMap.depth == 0);
@@ -1000,7 +998,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
     ok = JS_TRUE;
   out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 
   overflow:
@@ -2024,7 +2021,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
         return false;
     }
     JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
-    JSAutoTempIdRooter nameidr(cx);
+    AutoIdRooter nameidr(cx);
     if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
         return JS_FALSE;
     return js_GetOwnPropertyDescriptor(cx, obj, nameidr.id(), vp);
@@ -2040,7 +2037,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSAutoIdArray ida(cx, JS_Enumerate(cx, obj));
+    AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
         return JS_FALSE;
 
@@ -2204,50 +2201,6 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
 
     return true;
 }
-
-typedef js::Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
-
-class AutoDescriptorArray : private JSTempValueRooter
-{
-  private:
-    JSContext *cx;
-    PropertyDescriptorArray descriptors;
-
-  public:
-    AutoDescriptorArray(JSContext *cx)
-      : cx(cx), descriptors(cx)
-    {
-        JS_PUSH_TEMP_ROOT_TRACE(cx, trace, this);
-    }
-    ~AutoDescriptorArray() {
-        JS_POP_TEMP_ROOT(cx, this);
-    }
-
-    PropertyDescriptor *append() {
-        if (!descriptors.append(PropertyDescriptor()))
-            return NULL;
-        return &descriptors.back();
-    }
-
-    PropertyDescriptor& operator[](size_t i) {
-        JS_ASSERT(i < descriptors.length());
-        return descriptors[i];
-    }
-
-  private:
-    static void trace(JSTracer *trc, JSTempValueRooter *tvr) {
-        PropertyDescriptorArray &descs =
-            static_cast<AutoDescriptorArray *>(tvr)->descriptors;
-        for (size_t i = 0, len = descs.length(); i < len; i++) {
-            PropertyDescriptor &desc = descs[i];
-
-            JS_CALL_VALUE_TRACER(trc, desc.value, "PropertyDescriptor::value");
-            JS_CALL_VALUE_TRACER(trc, desc.get, "PropertyDescriptor::get");
-            JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
-            js_TraceId(trc, desc.id);
-        }
-    }
-};
 
 static JSBool
 Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
@@ -2676,7 +2629,7 @@ obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
         return JS_FALSE;
     vp[3] = OBJECT_TO_JSVAL(props);
 
-    JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
+    AutoIdArray ida(cx, JS_Enumerate(cx, props));
     if (!ida)
         return JS_FALSE;
 
@@ -2740,7 +2693,7 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
         }
 
         JSObject *props = JSVAL_TO_OBJECT(vp[3]);
-        JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
+        AutoIdArray ida(cx, JS_Enumerate(cx, props));
         if (!ida)
             return JS_FALSE;
 
@@ -2938,7 +2891,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      * builtin. See bug 481444.
      */
     if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-        JSAutoTempValueRooter tvr(cx, obj);
+        AutoValueRooter tvr(cx, obj);
         JS_KEEP_ATOMS(cx->runtime);
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
@@ -3614,7 +3567,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         obj->setParent(parent);
     }
 
-    JSAutoTempValueRooter tvr(cx, obj);
+    AutoValueRooter tvr(cx, obj);
 
     if (!JS_XDRUint32(xdr, &tmp))
         return false;
@@ -3741,10 +3694,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto)
         return NULL;
 
-    /* After this point, control must exit via label out or out. */
-    JSTempValueRooter tvr;
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, proto, &tvr);
-    MUST_FLOW_THROUGH("out");
+    /* After this point, control must exit via label bad or out. */
+    AutoValueRooter tvr(cx, proto);
 
     if (!constructor) {
         /*
@@ -3834,7 +3785,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         goto bad;
 
 out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
     return proto;
 
 bad:
@@ -4142,7 +4092,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     jsval cval, rval;
     JSObject *obj, *ctor;
 
-    JSAutoTempValueRooter argtvr(cx, argc, argv);
+    AutoArrayRooter argtvr(cx, argc, argv);
 
     JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (!js_FindClassObject(cx, parent, protoKey, &cval, clasp))
@@ -4154,7 +4104,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
     /* Protect cval in case a crazy getter for .prototype uproots it. */
-    JSAutoTempValueRooter tvr(cx, cval);
+    AutoValueRooter tvr(cx, cval);
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -4970,8 +4920,8 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     sample = cx->runtime->propertyRemovals;
     JS_UNLOCK_SCOPE(cx, scope);
     {
-        JSAutoTempValueRooter tvr(cx, sprop);
-        JSAutoTempValueRooter tvr2(cx, pobj);
+        AutoScopePropertyRooter tvr(cx, sprop);
+        AutoValueRooter tvr2(cx, pobj);
         if (!sprop->get(cx, obj, pobj, vp))
             return false;
     }
@@ -5032,7 +4982,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
     sample = cx->runtime->propertyRemovals;
     JS_UNLOCK_SCOPE(cx, scope);
     {
-        JSAutoTempValueRooter tvr(cx, sprop);
+        AutoScopePropertyRooter tvr(cx, sprop);
         if (!sprop->set(cx, obj, vp))
             return false;
     }
