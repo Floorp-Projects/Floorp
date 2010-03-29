@@ -188,6 +188,7 @@ function run_test()
   run_string_tests(library);
   run_struct_tests(library);
   run_function_tests(library);
+  run_closure_tests(library);
 
   // test the string version of ctypes.open() as well
   let libpath = libfile.path;
@@ -2063,6 +2064,45 @@ function run_function_tests(library)
     "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr])");
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
   do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+}
+
+function run_closure_tests(library)
+{
+  run_single_closure_tests(library, ctypes.default_abi, "cdecl");
+#ifdef _WIN32
+#ifndef _WIN64
+  run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
+#endif
+#endif
+}
+
+function run_single_closure_tests(library, abi, suffix)
+{
+  let b = 23;
+
+  function closure_fn(i)
+  {
+    return "a" in this ? i + this.a : i + b;
+  }
+
+  do_check_eq(closure_fn(7), 7 + b);
+  let thisobj = { a: 5 };
+  do_check_eq(closure_fn.call(thisobj, 7), 7 + thisobj.a);
+
+  // Construct a closure, and call it ourselves.
+  let fn_t = ctypes.FunctionType(abi, ctypes.int32_t, [ ctypes.int8_t ]);
+  let closure = fn_t(closure_fn);
+  do_check_eq(closure(-17), -17 + b);
+
+  // Have C code call it.
+  let test_closure = library.declare("test_closure_" + suffix,
+    ctypes.default_abi, ctypes.int32_t, ctypes.int8_t, fn_t);
+  do_check_eq(test_closure(-52, closure), -52 + b);
+
+  // Do the same, but specify 'this'.
+  let closure2 = fn_t(closure_fn, thisobj);
+  do_check_eq(closure2(-17), -17 + thisobj.a);
+  do_check_eq(test_closure(-52, closure2), -52 + thisobj.a);
 }
 
 // bug 522360 - try loading system library without full path
