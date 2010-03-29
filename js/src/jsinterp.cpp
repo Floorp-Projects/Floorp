@@ -1588,7 +1588,7 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
     uintN slot = UPVAR_FRAME_SLOT(cookie);
     jsval *vp;
 
-    if (!fp->fun) {
+    if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
         vp = fp->slots + fp->script->nfixed;
     } else if (slot < fp->fun->nargs) {
         vp = fp->argv;
