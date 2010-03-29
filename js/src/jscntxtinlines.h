@@ -82,11 +82,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case COMPILER:
-#if 0 /* JSCompiler is still old-style */
         static_cast<JSCompiler *>(this)->trace(trc);
-#else
-        JS_ASSERT(0);
-#endif
         return;
 
       case SCRIPT:
