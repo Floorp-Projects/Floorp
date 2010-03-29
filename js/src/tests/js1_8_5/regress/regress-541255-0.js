@@ -11,4 +11,4 @@
     for (x in [0])]\
   ")
 })();
-print(" PASSED!");
+reportCompare(0, 0, "");

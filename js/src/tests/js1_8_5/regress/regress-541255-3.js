@@ -10,4 +10,4 @@ function f(y) {
 var x = {};
 f(x);
 assertEq(x.p, 7);
-print(" PASSED!");
+reportCompare(0, 0, "");
