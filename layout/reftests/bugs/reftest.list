@@ -1408,10 +1408,11 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 539323-1.html 539323-1-ref.html
 == 539323-2.html 539323-2-ref.html
 == 539323-3.html 539323-3-ref.html
-== 542620-1.html 542620-1-ref.html
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
+== 542620-1.html 542620-1-ref.html
+== 545049-1.html 545049-1-ref.html
 == 546033-1.html 546033-1-ref.html
-== 550716-1.html 550716-1-ref.html
-== 549184-1.html 549184-1-ref.html
 random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
+== 549184-1.html 549184-1-ref.html
+== 550716-1.html 550716-1-ref.html
