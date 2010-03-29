@@ -3535,7 +3535,7 @@ ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
 static JSBool
 AddFieldToArray(JSContext* cx,
                 JSObject* arrayObj,
-                jsuint index,
+                jsval* element,
                 const nsString& name,
                 JSObject* typeObj)
 {
@@ -3543,9 +3543,7 @@ AddFieldToArray(JSContext* cx,
   if (!fieldObj)
     return false;
 
-  if (!JS_DefineElement(cx, arrayObj, index, OBJECT_TO_JSVAL(fieldObj),
-         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return false;
+  *element = OBJECT_TO_JSVAL(fieldObj);
 
   if (!JS_DefineUCProperty(cx, fieldObj,
          reinterpret_cast<const jschar*>(name.get()), name.Length(),
@@ -3578,16 +3576,18 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  // Prepare a new array for the .fields property of the StructType.
-  JSObject* fieldsProp = JS_NewArrayObject(cx, 0, NULL);
-  if (!fieldsProp)
-    return JS_FALSE;
-  JSAutoTempValueRooter root(cx, fieldsProp);
-
-  // Process the field types and fill in the ffi_type fields.
   JSObject* fieldsObj = JSVAL_TO_OBJECT(argv[1]);
   jsuint len;
   ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
+
+  // Prepare a new array for the .fields property of the StructType.
+  jsval* fieldsVec;
+  JSObject* fieldsProp =
+    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
+  if (!fieldsProp)
+    return JS_FALSE;
+  JSAutoTempValueRooter root(cx, fieldsProp);
+  JS_ASSERT(len == 0 || fieldsVec);
 
   nsAutoPtr<ffi_type> ffiType(new ffi_type);
   if (!ffiType) {
@@ -3609,6 +3609,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
   nsAutoArrayPtr<ffi_type*> elements;
 
+  // Process the field types and fill in the ffi_type fields.
   size_t structSize = 0, structAlign = 0;
   if (len != 0) {
     elements = new ffi_type*[len + 1];
@@ -3636,7 +3637,8 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
       }
 
       // Duplicate the object for the fields property.
-      if (!AddFieldToArray(cx, fieldsProp, i, info->mName, info->mType))
+      if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[i],
+             info->mName, info->mType))
         return JS_FALSE;
 
       // Fill in the PropertySpec for the field.
@@ -4301,21 +4303,21 @@ FunctionType::Call(JSContext* cx,
   nsAutoTArray<AutoValue, 16> values;
   nsAutoTArray<AutoValue, 16> strings;
   for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
-    AutoValue& value = *values.AppendElement();
+    AutoValue* value = values.AppendElement();
     bool freePointer = false;
-    if (!value.SizeToType(cx, fninfo->mArgTypes[i])) {
+    if (!value->SizeToType(cx, fninfo->mArgTypes[i])) {
       JS_ReportAllocationOverflow(cx);
       return false;
     }
 
-    if (!ImplicitConvert(cx, argv[i], fninfo->mArgTypes[i], value.mData, true,
+    if (!ImplicitConvert(cx, argv[i], fninfo->mArgTypes[i], value->mData, true,
            &freePointer))
       return false;
 
     if (freePointer) {
       // ImplicitConvert converted a string for us, which we have to free.
       // Keep track of it.
-      strings.AppendElement()->mData = *static_cast<char**>(value.mData);
+      strings.AppendElement()->mData = *static_cast<char**>(value->mData);
     }
   }
 
@@ -4369,18 +4371,20 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* v
   if (!JSVAL_IS_VOID(*vp))
     return JS_TRUE;
 
+  FunctionInfo* fninfo = GetFunctionInfo(cx, obj);
+  PRUint32 len = fninfo->mArgTypes.Length();
+
   // Prepare a new array.
-  JSObject* argTypes = JS_NewArrayObject(cx, 0, NULL);
+  jsval* vec;
+  JSObject* argTypes =
+    js_NewArrayObjectWithCapacity(cx, len, &vec);
   if (!argTypes)
     return JS_FALSE;
   JSAutoTempValueRooter argsroot(cx, argTypes);
+  JS_ASSERT(len == 0 || vec);
 
-  FunctionInfo* fninfo = GetFunctionInfo(cx, obj);
-  for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
-    if (!JS_DefineElement(cx, argTypes, i, OBJECT_TO_JSVAL(fninfo->mArgTypes[i]),
-           NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-      return JS_FALSE;
-  }
+  for (PRUint32 i = 0; i < len; ++i)
+    vec[i] = OBJECT_TO_JSVAL(fninfo->mArgTypes[i]);
 
   // Seal and cache it.
   if (!JS_SealObject(cx, argTypes, JS_FALSE) ||
