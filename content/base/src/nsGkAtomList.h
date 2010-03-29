@@ -132,7 +132,6 @@ GK_ATOM(b, "b")
 GK_ATOM(background, "background")
 GK_ATOM(base, "base")
 GK_ATOM(basefont, "basefont")
-GK_ATOM(baseLevel, "BaseLevel")                            // PRUint8
 GK_ATOM(baseline, "baseline")
 GK_ATOM(bdo, "bdo")
 GK_ATOM(before, "before")
@@ -187,7 +186,6 @@ GK_ATOM(_char, "char")
 GK_ATOM(charcode, "charcode")
 GK_ATOM(charoff, "charoff")
 GK_ATOM(charset, "charset")
-GK_ATOM(charType, "charType")                              // PRUint8
 GK_ATOM(checkbox, "checkbox")
 GK_ATOM(checked, "checked")
 GK_ATOM(child, "child")
@@ -343,7 +341,6 @@ GK_ATOM(elementAvailable, "element-available")
 GK_ATOM(elements, "elements")
 GK_ATOM(em, "em")
 GK_ATOM(embed, "embed")
-GK_ATOM(embeddingLevel, "EmbeddingLevel")                  // PRUint8
 GK_ATOM(embossed, "embossed")
 GK_ATOM(empty, "empty")
 GK_ATOM(encoding, "encoding")
@@ -1655,43 +1652,10 @@ GK_ATOM(durationchange, "durationchange")
 GK_ATOM(volumechange, "volumechange")
 #endif
 
-// Frame property names
-GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
-GK_ATOM(changeListProperty, "ChangeListProperty") // void*
-GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
-GK_ATOM(floatContinuationProperty, "FloatContinuationProperty") // nsFrameList*
-GK_ATOM(floatRegionProperty, "FloatRegionProperty") // nsRect*
-GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
-#ifdef MOZ_MATHML
-GK_ATOM(HTMLReflowMetricsProperty, "HTMLReflowMetricsProperty") // nsHTMLReflowMetrics*
-#endif
-GK_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
-GK_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
-GK_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
-GK_ATOM(rowCursorProperty, "RowCursorProperty") // nsTableRowGroupFrame::FrameCursorData*
-GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
-GK_ATOM(outlineInnerRectProperty, "OutlineInnerRectProperty") // nsRect*
-GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
-GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
-GK_ATOM(overflowProperty, "OverflowProperty")              // nsFrameList*
-GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             // nsFrameList*
-GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
-GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
-GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
-GK_ATOM(preEffectsBBoxProperty, "PreEffectsBBoxProperty") // nsRect*
-GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
-GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
-GK_ATOM(tabWidthProperty, "TabWidthProperty")              // nsTArray<TabSetting>* array of tab widths
-GK_ATOM(tableBCProperty, "TableBCProperty")                // table border collapsing info (e.g. damage area, table border widths)
+// Content property names
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
-GK_ATOM(usedBorderProperty, "UsedBorderProperty") // nsMargin*
-GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
-GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
-GK_ATOM(viewProperty, "ViewProperty")                      
-
-// Content property names
 GK_ATOM(genConInitializerProperty, "QuoteNodeProperty")
 GK_ATOM(labelMouseDownPtProperty, "LabelMouseDownPtProperty")
 

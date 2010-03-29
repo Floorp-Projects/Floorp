@@ -100,6 +100,8 @@ static const int MIN_LINES_NEEDING_CURSOR = 20;
 
 #define DISABLE_FLOAT_BREAKING_IN_COLUMNS
 
+using namespace mozilla;
+
 #ifdef DEBUG
 #include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
@@ -265,6 +267,18 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 }
 #endif
 
+// Destructor function for the overflowLines frame property
+static void
+DestroyOverflowLines(void* aPropertyValue)
+{
+  NS_ERROR("Overflow lines should never be destroyed by the FramePropertyTable");
+}
+
+NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nsnull)
+NS_DECLARE_FRAME_PROPERTY(OverflowLinesProperty, DestroyOverflowLines)
+NS_DECLARE_FRAME_PROPERTY(OverflowOutOfFlowsProperty,
+                          nsContainerFrame::DestroyFrameList)
+
 //----------------------------------------------------------------------
 
 nsIFrame*
@@ -368,11 +382,11 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " next-in-flow=%p", static_cast<void*>(GetNextInFlow()));
   }
 
-  void* IBsibling = GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+  void* IBsibling = Properties().Get(IBSplitSpecialSibling());
   if (IBsibling) {
     fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
   }
-  void* IBprevsibling = GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+  void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
   if (IBprevsibling) {
     fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
   }
@@ -4490,7 +4504,7 @@ nsBlockFrame::GetOverflowLines() const
     return nsnull;
   }
   nsLineList* lines = static_cast<nsLineList*>
-                                 (GetProperty(nsGkAtoms::overflowLinesProperty));
+    (Properties().Get(OverflowLinesProperty()));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   return lines;
@@ -4503,26 +4517,11 @@ nsBlockFrame::RemoveOverflowLines()
     return nsnull;
   }
   nsLineList* lines = static_cast<nsLineList*>
-                                 (UnsetProperty(nsGkAtoms::overflowLinesProperty));
+    (Properties().Remove(OverflowLinesProperty()));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
   return lines;
-}
-
-// Destructor function for the overflowLines frame property
-static void
-DestroyOverflowLines(void*           aFrame,
-                     nsIAtom*        aPropertyName,
-                     void*           aPropertyValue,
-                     void*           aDtorData)
-{
-  if (aPropertyValue) {
-    nsLineList* lines = static_cast<nsLineList*>(aPropertyValue);
-    nsPresContext *context = static_cast<nsPresContext*>(aDtorData);
-    nsLineBox::DeleteLineList(context, *lines, nsnull);
-    delete lines;
-  }
 }
 
 // This takes ownership of aOverflowLines.
@@ -4535,14 +4534,12 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
   NS_ASSERTION(!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES),
                "Overwriting existing overflow lines");
 
-  nsPresContext *presContext = PresContext();
-  nsresult rv = presContext->PropertyTable()->
-    SetProperty(this, nsGkAtoms::overflowLinesProperty, aOverflowLines,
-                DestroyOverflowLines, presContext);
-  // Verify that we didn't overwrite an existing overflow list
-  NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");
+  FrameProperties props = Properties();
+  // Verify that we won't overwrite an existing overflow list
+  NS_ASSERTION(!props.Get(OverflowLinesProperty()), "existing overflow list");
+  props.Set(OverflowLinesProperty(), aOverflowLines);
   AddStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
-  return rv;
+  return NS_OK;
 }
 
 nsFrameList*
@@ -4552,7 +4549,7 @@ nsBlockFrame::GetOverflowOutOfFlows() const
     return nsnull;
   }
   nsFrameList* result =
-    GetPropTableFrames(PresContext(), nsGkAtoms::overflowOutOfFlowsProperty);
+    GetPropTableFrames(PresContext(), OverflowOutOfFlowsProperty());
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return result;
 }
@@ -4571,20 +4568,20 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
     }
     nsFrameList* list =
       RemovePropTableFrames(PresContext(),
-                            nsGkAtoms::overflowOutOfFlowsProperty);
+                            OverflowOutOfFlowsProperty());
     NS_ASSERTION(aPropValue == list, "prop value mismatch");
     delete list;
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
   else if (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) {
     NS_ASSERTION(aPropValue == GetPropTableFrames(PresContext(),
-                                 nsGkAtoms::overflowOutOfFlowsProperty),
+                                 OverflowOutOfFlowsProperty()),
                  "prop value mismatch");
     *aPropValue = aList;
   }
   else {
     SetPropTableFrames(PresContext(), new nsFrameList(aList),
-                       nsGkAtoms::overflowOutOfFlowsProperty);
+                       OverflowOutOfFlowsProperty());
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 }
@@ -5407,7 +5404,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
     PRBool removed = mFloats.RemoveFrameIfPresent(aChild);
     if (!removed) {
       nsFrameList* list = GetPropTableFrames(aPresContext,
-                                          nsGkAtoms::floatContinuationProperty);
+                                             FloatContinuationProperty());
       if (list) {
         removed = list->RemoveFrameIfPresent(aChild);
       }
@@ -6197,7 +6194,7 @@ void nsBlockFrame::ClearLineCursor()
     return;
   }
 
-  UnsetProperty(nsGkAtoms::lineCursorProperty);
+  Properties().Delete(LineCursorProperty());
   RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
 
@@ -6208,8 +6205,7 @@ void nsBlockFrame::SetupLineCursor()
     return;
   }
    
-  SetProperty(nsGkAtoms::lineCursorProperty,
-              mLines.front(), nsnull);
+  Properties().Set(LineCursorProperty(), mLines.front());
   AddStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
 
@@ -6219,8 +6215,10 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y)
     return nsnull;
   }
 
+  FrameProperties props = Properties();
+  
   nsLineBox* property = static_cast<nsLineBox*>
-                                   (GetProperty(nsGkAtoms::lineCursorProperty));
+    (props.Get(LineCursorProperty()));
   line_iterator cursor = mLines.begin(property);
   nsRect cursorArea = cursor->GetCombinedArea();
 
@@ -6236,8 +6234,7 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y)
   }
 
   if (cursor.get() != property) {
-    SetProperty(nsGkAtoms::lineCursorProperty,
-                cursor.get(), nsnull);
+    props.Set(LineCursorProperty(), cursor.get());
   }
 
   return cursor.get();

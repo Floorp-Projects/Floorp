@@ -1101,7 +1101,7 @@ public:
   static PRBool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
   }
 
   /**
@@ -1111,7 +1111,7 @@ public:
   static PRBool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialSibling());
   }
 
   /**
