@@ -382,9 +382,6 @@ var BrowserUI = {
     // tabs
     document.getElementById("tabs").resize();
 
-    // Site menu
-    PageActions.resize();
-
     // awesomebar
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
@@ -884,6 +881,8 @@ var PageActions = {
   },
 
   updatePagePermissions: function updatePagePermissions() {
+    this.removeItems("preferences");
+
     let host = Browser.selectedBrowser.currentURI;
     let permissions = [];
 
@@ -903,7 +902,7 @@ var PageActions = {
       for each(permission in permissions)
         description.push(Elements.browserBundle.getString("pageactions." + permission));
 
-      let node = this.appendItem(title, description.join(", "));
+      let node = this.appendItem("preferences", title, description.join(", "));
       node.onclick = function(event) {
         PageActions.clearPagePermissions();
         PageActions.removeItem(node);
@@ -917,7 +916,7 @@ var PageActions = {
         continue;
 
       let title = Elements.browserBundle.getString("pageactions.password.forget");
-      let node = this.appendItem(title, "");
+      let node = this.appendItem("preferences", title, "");
       node.onclick = function(event) {
         lm.removeLogin(login);
         PageActions.removeItem(node);
@@ -976,28 +975,27 @@ var PageActions = {
   },
 
   updatePageSaveAs: function updatePageSaveAs() {
+    this.removeItems("saveas");
     if (Browser.selectedBrowser.contentDocument instanceof XULDocument)
       return;
 
     let strings = Elements.browserBundle;
-    let node = this.appendItem(strings.getString("pageactions.saveas.pdf"), "");
+    let node = this.appendItem("saveas", strings.getString("pageactions.saveas.pdf"), "");
     node.onclick = function(event) {
       PageActions._savePageAsPDF();
     }
   },
 
-  appendItem: function appendItem(aTitle, aDesc, aImage) {
+  appendItem: function appendItem(aType, aTitle, aDesc) {
     let container = document.getElementById("pageactions-container");
     let item = document.createElement("pageaction");
     item.setAttribute("title", aTitle);
     item.setAttribute("description", aDesc);
-    if (aImage)
-      item.setAttribute("image", aImage);
+    item.setAttribute("type", aType);
     container.appendChild(item);
 
-    this.resize();
-    container.hidden = !container.hasChildNodes();
-
+    let identityContainer = document.getElementById("identity-container");
+    identityContainer.setAttribute("hasmenu", "true");
     return item;
   },
 
@@ -1005,34 +1003,17 @@ var PageActions = {
     let container = document.getElementById("pageactions-container");
     container.removeChild(aItem);
 
-    if (container.hasChildNodes())
-      this.resize();
-    container.hidden = !container.hasChildNodes();
+    let identityContainer = document.getElementById("identity-container");
+    identityContainer.setAttribute("hasmenu", container.hasChildNodes() ? "true" : "false");
   },
 
-  removeAllItems: function removeAllItems() {
+  removeItems: function removeItems(aType) {
     let container = document.getElementById("pageactions-container");
-    while(container.hasChildNodes())
-      this.removeItem(container.lastChild);
-  },
-
-  resize: function resize() {
-    let container = document.getElementById("pageactions-container");
-    if (container.hidden)
-      return;
-
-    // We manually size the arrowscrollbox
-    let childHeight = container.firstChild.getBoundingClientRect().height;
-    let linesCount = (window.innerHeight < window.innerWidth) ? Math.round(container.childNodes.length / 2)
-                                                              : container.childNodes.length;
-
-    const kMargin = 64;
-    let toolbarHeight = BrowserUI.toolbarH;
-    let identityHeight = document.getElementById("identity-popup-container").getBoundingClientRect().height;
-    let maxHeight = window.innerHeight - (toolbarHeight + identityHeight) - kMargin;
-
-    let additional = 50; // size of the scroll arrows + margins
-    container.style.height = Math.min(maxHeight, linesCount * childHeight + additional) + "px";
+    let count = container.childNodes.length;
+    for (let i = count - 1; i >= 0; i--) {
+      if (aType == "" || container.childNodes[i].getAttribute("type") == aType)
+        this.removeItem(container.childNodes[i]);
+    }
   }
 }
 
