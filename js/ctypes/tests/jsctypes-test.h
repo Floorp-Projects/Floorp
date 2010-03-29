@@ -185,5 +185,7 @@ NS_EXTERN_C
   NS_EXPORT FIVE_BYTE test_5_byte_struct_return(RECT);
   NS_EXPORT SIX_BYTE test_6_byte_struct_return(RECT);
   NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(RECT);
+
+  NS_EXPORT void * test_fnptr();
 }
 

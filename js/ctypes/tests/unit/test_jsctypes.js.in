@@ -165,6 +165,7 @@ function run_test()
   // Test the special types.
   run_StructType_tests();
   run_PointerType_tests();
+  run_FunctionType_tests();
   run_ArrayType_tests();
 
   // Test the 'name' and 'toSource' of a long typename.
@@ -186,6 +187,7 @@ function run_test()
 
   run_string_tests(library);
   run_struct_tests(library);
+  run_function_tests(library);
 
   // test the string version of ctypes.open() as well
   let libpath = libfile.path;
@@ -193,8 +195,12 @@ function run_test()
   run_void_tests(library);
 
   // test library.close
+  let test_void_t = library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
   library.close();
-  do_check_throws(function () { run_void_tests(library); }, Error);
+  do_check_throws(function() { test_void_t(); }, Error);
+  do_check_throws(function() {
+    library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
+  }, Error);
 
   // test that library functions throw when bound to other objects
   library = ctypes.open(libpath);
@@ -1646,6 +1652,98 @@ function run_PointerType_tests() {
   do_check_eq(z.contents.length, 0);
 }
 
+function run_FunctionType_tests() {
+  run_type_ctor_class_tests(ctypes.FunctionType,
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t),
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.int32_t ]),
+    [ "abi", "returnType", "argTypes" ], undefined, undefined, undefined, undefined);
+
+  do_check_throws(function() { ctypes.FunctionType(); }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ]);
+  }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ], 5);
+  }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, ctypes.void_t);
+  }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, null);
+  }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t());
+  }, Error);
+
+  let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
+  let g = g_t(1, 2);
+
+  let f_t = ctypes.FunctionType(ctypes.default_abi, g_t);
+  let name = "g_t(*)()";
+  do_check_eq(f_t.name, name);
+  do_check_eq(f_t.size, ctypes.uintptr_t.size);
+  do_check_true(f_t.abi === ctypes.default_abi);
+  do_check_true(f_t.returnType === g_t);
+  do_check_true(f_t.argTypes.length == 0);
+
+  do_check_eq(f_t.toString(), "type " + name);
+  do_check_eq(f_t.toSource(),
+    "ctypes.FunctionType(ctypes.default_abi, g_t)");
+
+  // Test ExplicitConvert.
+  let f = f_t();
+  do_check_throws(function() { f.value; }, Error);
+  do_check_eq(ptrValue(f), 0);
+  f = f_t(5);
+  do_check_eq(ptrValue(f), 5);
+  f = f_t(ctypes.UInt64(10));
+  do_check_eq(ptrValue(f), 10);
+
+  // Test ImplicitConvert.
+  f.value = null;
+  do_check_eq(ptrValue(f), 0);
+  do_check_throws(function() { f.value = 5; }, Error);
+  do_check_eq(f.toSource(),
+    'ctypes.FunctionType(ctypes.default_abi, g_t)(ctypes.UInt64("0x0"))');
+
+  // Test ExplicitConvert from a function pointer of different type.
+  let f2_t = ctypes.FunctionType(ctypes.default_abi, g_t, [ ctypes.int32_t ]);
+  let f2 = f2_t();
+  do_check_throws(function() { f_t(f2); }, Error);
+  do_check_throws(function() { f.value = f2; }, Error);
+  do_check_throws(function() { f2.value = f; }, Error);
+
+  // Test that converting to a voidptr_t throws.
+  do_check_throws(function() { ctypes.voidptr_t(f2); }, Error);
+
+  // Test some more complex names.
+  do_check_eq(f_t.array().name, "g_t(*[])()");
+  do_check_eq(f_t.array().ptr.name, "g_t(*(*)[])()");
+
+  let f3_t = ctypes.FunctionType(ctypes.default_abi,
+    ctypes.char.ptr.array().ptr).ptr.array(8).array();
+  do_check_eq(f3_t.name, "char*(*(**[][8])())[]");
+
+#ifdef _WIN32
+#ifndef _WIN64
+  f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
+    ctypes.char.ptr.array().ptr).ptr.array(8).array();
+  do_check_eq(f3_t.name, "char*(__stdcall *(**[][8])())[]");
+#endif
+#endif
+
+  let f4_t = ctypes.FunctionType(ctypes.default_abi,
+    ctypes.char.ptr.array().ptr, [ ctypes.int32_t, f_t ]);
+  do_check_true(f4_t.argTypes.length == 2);
+  do_check_true(f4_t.argTypes[0] === ctypes.int32_t);
+  do_check_true(f4_t.argTypes[1] === f_t);
+  do_check_throws(function() { f4_t.argTypes.z = 0; }, Error);
+  do_check_throws(function() { f4_t.argTypes[0] = 0; }, Error);
+
+  let t4_t = f4_t.ptr.array(8).array();
+  do_check_eq(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
+}
+
 function run_ArrayType_tests() {
   run_type_ctor_class_tests(ctypes.ArrayType,
     ctypes.ArrayType(ctypes.int32_t, 10), ctypes.ArrayType(ctypes.int64_t),
@@ -1790,6 +1888,7 @@ function run_cast_tests() {
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let a_t = ctypes.ArrayType(g_t, 4);
   let p_t = ctypes.PointerType(g_t);
+  let f_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t);
 
   let a = a_t();
   a[0] = { a: 5, b: 7.5 };
@@ -1807,11 +1906,21 @@ function run_cast_tests() {
   do_check_eq(ptrValue(ip), ptrValue(p));
   do_check_eq(ptrValue(ip.address()), ptrValue(p.address()));
   do_check_eq(ip.contents, g.a);
+
+  let f = f_t(0x5);
+  let f2 = ctypes.cast(f, ctypes.voidptr_t);
+  do_check_eq(ptrValue(f2), ptrValue(f));
+  do_check_eq(ptrValue(f2.address()), ptrValue(f.address()));
 }
 
 function run_void_tests(library) {
   let test_void_t = library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
   do_check_eq(test_void_t(), undefined);
+
+  // Test that library.declare throws with void function args.
+  do_check_throws(function() {
+    library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t, ctypes.void_t);
+  }, Error);
 
 #ifdef _WIN32
 #ifndef _WIN64
@@ -1928,6 +2037,32 @@ function run_small_struct_test(library, rect_t, bytes)
     if (++j == 4)
       j = 0;
   }
+}
+
+function run_function_tests(library)
+{
+  let test_ansi_len = library.declare("test_ansi_len", ctypes.default_abi,
+    ctypes.int32_t, ctypes.char.ptr);
+  let fn_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t,
+    [ ctypes.char.ptr ]);
+
+  let test_fnptr = library.declare("test_fnptr", ctypes.default_abi, fn_t);
+
+  // Test that the value handed back by test_fnptr matches the function pointer
+  // for test_ansi_len itself.
+  let ptr = test_fnptr();
+  do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+
+  // Test that we can call ptr().
+  do_check_eq(ptr("function pointers rule!"), 23);
+
+  // Test that library.declare() returns data of type FunctionType, and that
+  // it is immutable.
+  do_check_true(test_ansi_len.constructor.__proto__ === ctypes.FunctionType.prototype);
+  do_check_eq(test_ansi_len.constructor.toSource(),
+    "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr])");
+  do_check_throws(function() { test_ansi_len.value = null; }, Error);
+  do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
 }
 
 // bug 522360 - try loading system library without full path

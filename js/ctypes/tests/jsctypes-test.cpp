@@ -313,3 +313,10 @@ test_7_byte_struct_return(RECT r)
   s.g = r.bottom;
   return s;
 }
+
+void *
+test_fnptr()
+{
+  return (void*)test_ansi_len;
+}
+
