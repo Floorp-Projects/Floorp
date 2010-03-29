@@ -5226,11 +5226,11 @@ js_InitRegExpStatics(JSContext *cx)
 
 JS_FRIEND_API(void)
 js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             JSTempValueRooter *tvr)
+                             AutoValueRooter *tvr)
 {
     *statics = cx->regExpStatics;
-    JS_PUSH_TEMP_ROOT_STRING(cx, statics->input, tvr);
-
+    if (statics->input)
+        tvr->setString(statics->input);
     /*
      * Prevent JS_ClearRegExpStatics from freeing moreParens, since we've only
      * moved it elsewhere (into statics->moreParens).
@@ -5241,12 +5241,11 @@ js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
 
 JS_FRIEND_API(void)
 js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        JSTempValueRooter *tvr)
+                        AutoValueRooter *tvr)
 {
     /* Clear/free any new JSRegExpStatics data before clobbering. */
     JS_ClearRegExpStatics(cx);
     cx->regExpStatics = *statics;
-    JS_POP_TEMP_ROOT(cx, tvr);
 }
 
 void
@@ -5839,7 +5838,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
     str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
-    JSAutoTempValueRooter tvr(cx, str);
+    AutoValueRooter tvr(cx, str);
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
