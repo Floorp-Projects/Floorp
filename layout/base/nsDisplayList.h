@@ -1305,7 +1305,7 @@ private:
 class nsDisplayBackground : public nsDisplayItem {
 public:
   nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
-    mIsThemed = mFrame->IsThemed();
+    mIsThemed = mFrame->IsThemed(&mThemeTransparency);
     MOZ_COUNT_CTOR(nsDisplayBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1325,6 +1325,7 @@ public:
 private:
     /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
     PRPackedBool mIsThemed;
+    nsITheme::Transparency mThemeTransparency;
 };
 
 /**
