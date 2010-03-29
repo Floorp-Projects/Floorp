@@ -581,6 +581,13 @@ NPError OSCALL NP_Shutdown()
 NPError
 NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
+  // Make sure our pdata field is NULL at this point. If it isn't, that
+  // probably means the browser gave us uninitialized memory.
+  if (instance->pdata) {
+    printf("NPP_New called with non-NULL NPP->pdata pointer!\n");
+    return NPERR_GENERIC_ERROR;
+  }
+
   // Make sure we can render this plugin
   NPBool browserSupportsWindowless = false;
   NPN_GetValue(instance, NPNVSupportsWindowless, &browserSupportsWindowless);
