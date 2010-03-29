@@ -70,6 +70,8 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "jscntxtinlines.h"
+
 #ifdef DEBUG
 #include <string.h>     /* for #ifdef DEBUG memset calls */
 #endif
@@ -3795,12 +3797,10 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSObject *kidobj, *listobj;
     JSObject *nameqn;
     jsid funid;
-    jsval roots[2];
-    JSTempValueRooter tvr;
 
     xml = (JSXML *) JS_GetInstancePrivate(cx, obj, &js_XMLClass, NULL);
     if (!xml)
-        return JS_TRUE;
+        return true;
 
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
@@ -3817,18 +3817,18 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML);
                 if (!kid) {
                     *vp = JSVAL_VOID;
-                    return JS_TRUE;
+                    return true;
                 }
                 kidobj = js_GetXMLObject(cx, kid);
                 if (!kidobj)
-                    return JS_FALSE;
+                    return false;
 
                 *vp = OBJECT_TO_JSVAL(kidobj);
             } else {
                 *vp = JSVAL_VOID;
             }
         }
-        return JS_TRUE;
+        return true;
     }
 
     /*
@@ -3836,37 +3836,34 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
      */
     nameqn = ToXMLName(cx, id, &funid);
     if (!nameqn)
-        return JS_FALSE;
+        return false;
     if (funid)
         return GetXMLFunction(cx, obj, funid, vp);
 
-    roots[0] = OBJECT_TO_JSVAL(nameqn);
-    JS_PUSH_TEMP_ROOT(cx, 1, roots, &tvr);
+    jsval roots[2] = { OBJECT_TO_JSVAL(nameqn), JSVAL_NULL };
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-    if (listobj) {
-        roots[1] = OBJECT_TO_JSVAL(listobj);
-        tvr.count++;
+    if (!listobj)
+        return false;
 
-        list = (JSXML *) listobj->getPrivate();
-        if (!GetNamedProperty(cx, xml, nameqn, list)) {
-            listobj = NULL;
-        } else {
-            /*
-             * Erratum: ECMA-357 9.1.1.1 misses that [[Append]] sets the
-             * given list's [[TargetProperty]] to the property that is being
-             * appended. This means that any use of the internal [[Get]]
-             * property returns a list which, when used by e.g. [[Insert]]
-             * duplicates the last element matched by id. See bug 336921.
-             */
-            list->xml_target = xml;
-            list->xml_targetprop = nameqn;
-            *vp = OBJECT_TO_JSVAL(listobj);
-        }
-    }
+    roots[1] = OBJECT_TO_JSVAL(listobj);
 
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return listobj != NULL;
+    list = (JSXML *) listobj->getPrivate();
+    if (!GetNamedProperty(cx, xml, nameqn, list))
+        return false;
+
+    /*
+     * Erratum: ECMA-357 9.1.1.1 misses that [[Append]] sets the
+     * given list's [[TargetProperty]] to the property that is being
+     * appended. This means that any use of the internal [[Get]]
+     * property returns a list which, when used by e.g. [[Insert]]
+     * duplicates the last element matched by id. See bug 336921.
+     */
+    list->xml_target = xml;
+    list->xml_targetprop = nameqn;
+    *vp = OBJECT_TO_JSVAL(listobj);
+    return true;
 }
 
 static JSXML *
@@ -3910,8 +3907,6 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSBool ok, primitiveAssign;
     enum { OBJ_ROOT, ID_ROOT, VAL_ROOT };
-    jsval roots[3];
-    JSTempValueRooter tvr;
     JSXML *xml, *vxml, *rxml, *kid, *attr, *parent, *copy, *kid2, *match;
     JSObject *vobj, *nameobj, *attrobj, *parentobj, *kidobj, *copyobj;
     JSObject *targetprop, *nameqn, *attrqn;
@@ -3940,11 +3935,13 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     ok = js_EnterLocalRootScope(cx);
     if (!ok)
         return JS_FALSE;
+
     MUST_FLOW_THROUGH("out");
+    jsval roots[3];
     roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
     roots[ID_ROOT] = id;
     roots[VAL_ROOT] = *vp;
-    JS_PUSH_TEMP_ROOT(cx, 3, roots, &tvr);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
@@ -4531,7 +4528,6 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
 out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
     js_LeaveLocalRootScope(cx);
     return ok;
 
@@ -4663,38 +4659,34 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
     JSObject *pobj;
     JSProperty *prop;
     JSXML *xml;
-    JSTempValueRooter tvr;
-    JSBool ok;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_XMLClass);
 
     if (!js_LookupProperty(cx, obj, funid, &pobj, &prop))
-        return JS_FALSE;
+        return false;
     if (prop) {
         pobj->dropProperty(cx, prop);
     } else {
         xml = (JSXML *) obj->getPrivate();
         if (HasSimpleContent(xml)) {
+            AutoObjectRooter tvr(cx);
+
             /*
              * Search in String.prototype to set found whenever
              * GetXMLFunction returns existing function.
              */
-            JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr);
-            ok = js_GetClassPrototype(cx, NULL, JSProto_String,
-                                      &tvr.u.object);
-            JS_ASSERT(tvr.u.object);
-            if (ok) {
-                ok = js_LookupProperty(cx, tvr.u.object, funid, &pobj, &prop);
-                if (ok && prop)
-                    pobj->dropProperty(cx, prop);
-            }
-            JS_POP_TEMP_ROOT(cx, &tvr);
-            if (!ok)
-                return JS_FALSE;
+            if (!js_GetClassPrototype(cx, NULL, JSProto_String, tvr.addr()))
+                return false;
+
+            JS_ASSERT(tvr.object());
+            if (!js_LookupProperty(cx, tvr.object(), funid, &pobj, &prop))
+                return false;
+            if (prop)
+                pobj->dropProperty(cx, prop);
         }
     }
     *found = (prop != NULL);
-    return JS_TRUE;
+    return true;
 }
 
 /* ECMA-357 9.1.1.6 XML [[HasProperty]] and 9.2.1.5 XMLList [[HasProperty]]. */
@@ -4961,18 +4953,22 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     switch (enum_op) {
       case JSENUMERATE_INIT:
         if (length == 0) {
-            cursor = NULL;
+            *statep = JSVAL_ZERO;
         } else {
             cursor = cx->create<JSXMLArrayCursor>(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
+            *statep = PRIVATE_TO_JSVAL(cursor);
         }
-        *statep = PRIVATE_TO_JSVAL(cursor);
         if (idp)
             *idp = INT_TO_JSID(length);
         break;
 
       case JSENUMERATE_NEXT:
+        if (*statep == JSVAL_ZERO) {
+            *statep = JSVAL_NULL;
+            break;
+        }
         cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
         if (cursor && cursor->array && (index = cursor->index) < length) {
             *idp = INT_TO_JSID(index);
@@ -4982,9 +4978,11 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
-        cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
-        if (cursor)
-            cx->destroy(cursor);
+        if (*statep != JSVAL_ZERO) {
+            cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
+            if (cursor)
+                cx->destroy(cursor);
+        }
         *statep = JSVAL_NULL;
         break;
     }
@@ -5073,7 +5071,7 @@ js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * As our callers have a bad habit of passing a pointer to an unrooted
      * local value as vp, we use a proper root here.
      */
-    JSAutoTempValueRooter tvr(cx);
+    AutoValueRooter tvr(cx);
     JSBool ok = GetXMLFunction(cx, obj, id, tvr.addr());
     *vp = tvr.value();
     return ok;
@@ -5096,20 +5094,22 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     switch (enum_op) {
       case JSENUMERATE_INIT:
         if (length == 0) {
-            cursor = NULL;
+            *statep = JSVAL_ZERO;
         } else {
             cursor = cx->create<JSXMLArrayCursor>(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
+            *statep = PRIVATE_TO_JSVAL(cursor);
         }
-        *statep = PRIVATE_TO_JSVAL(cursor);
-        if (idp)
-            *idp = INT_TO_JSID(length);
-        if (vp)
-            *vp = JSVAL_VOID;
+        JS_ASSERT(!idp);
+        JS_ASSERT(!vp);
         break;
 
       case JSENUMERATE_NEXT:
+        if (*statep == JSVAL_ZERO) {
+            *statep = JSVAL_NULL;
+            break;
+        }
         cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
         if (cursor && cursor->array && (index = cursor->index) < length) {
             while (!(kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML))) {
@@ -5128,10 +5128,12 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
-        cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
-        if (cursor) {
-      destroy:
-            cx->destroy(cursor);
+        if (*statep != JSVAL_ZERO) {
+            cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
+            if (cursor) {
+              destroy:
+                cx->destroy(cursor);
+            }
         }
         *statep = JSVAL_NULL;
         break;
@@ -5424,7 +5426,7 @@ xml_attributes(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     name = OBJECT_TO_JSVAL(qn);
 
-    JSAutoTempValueRooter tvr(cx, name);
+    AutoValueRooter tvr(cx, name);
     return GetProperty(cx, JS_THIS_OBJECT(cx, vp), name, vp);
 }
 
@@ -5830,66 +5832,6 @@ xml_hasSimpleContent(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-typedef struct JSTempRootedNSArray {
-    JSTempValueRooter   tvr;
-    JSXMLArray          array;
-    jsval               value;  /* extra root for temporaries */
-} JSTempRootedNSArray;
-
-static void
-trace_temp_ns_array(JSTracer *trc, JSTempValueRooter *tvr)
-{
-    JSTempRootedNSArray *tmp = (JSTempRootedNSArray *)tvr;
-
-    TraceObjectVector(trc,
-                      (JSObject **) tmp->array.vector,
-                      tmp->array.length);
-    XMLArrayCursorTrace(trc, tmp->array.cursors);
-    JS_CALL_VALUE_TRACER(trc, tmp->value, "temp_ns_array_value");
-}
-
-static void
-InitTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
-{
-    XMLArrayInit(cx, &tmp->array, 0);
-    tmp->value = JSVAL_NULL;
-    JS_PUSH_TEMP_ROOT_TRACE(cx, trace_temp_ns_array, &tmp->tvr);
-}
-
-static void
-FinishTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
-{
-    JS_ASSERT(tmp->tvr.u.trace == trace_temp_ns_array);
-    JS_POP_TEMP_ROOT(cx, &tmp->tvr);
-    XMLArrayFinish(cx, &tmp->array);
-}
-
-/*
- * Populate a new JS array with elements of JSTempRootedNSArray.array and
- * place the result into rval.  rval must point to a rooted location.
- */
-static JSBool
-TempNSArrayToJSArray(JSContext *cx, JSTempRootedNSArray *tmp, jsval *rval)
-{
-    JSObject *arrayobj;
-    uint32 i, n;
-    JSObject *ns;
-
-    arrayobj = js_NewArrayObject(cx, 0, NULL);
-    if (!arrayobj)
-        return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(arrayobj);
-    for (i = 0, n = tmp->array.length; i < n; i++) {
-        ns = XMLARRAY_MEMBER(&tmp->array, i, JSObject);
-        if (!ns)
-            continue;
-        tmp->value = OBJECT_TO_JSVAL(ns);
-        if (!arrayobj->setProperty(cx, INT_TO_JSID(i), &tmp->value))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
 static JSBool
 FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray *nsarray)
 {
@@ -5931,19 +5873,48 @@ FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray *nsarray)
     return JS_TRUE;
 }
 
+class AutoNamespaceArray : public js::AutoNamespaces {
+  public:
+    AutoNamespaceArray(JSContext *cx)
+      : js::AutoNamespaces(cx)
+    {
+        XMLArrayInit(cx, &array, 0);
+    }
+
+    ~AutoNamespaceArray() {
+        XMLArrayFinish(context, &array);
+    }
+
+    /*
+     * Populate a new JS array with elements of array and place the result into
+     * rval.  rval must point to a rooted location.
+     */
+    bool toJSArray(jsval *rval) {
+        JSObject *arrayobj = js_NewArrayObject(context, 0, NULL);
+        if (!arrayobj)
+            return false;
+        *rval = OBJECT_TO_JSVAL(arrayobj);
+
+        AutoValueRooter tvr(context);
+        for (uint32 i = 0, n = array.length; i < n; i++) {
+            JSObject *ns = XMLARRAY_MEMBER(&array, i, JSObject);
+            if (!ns)
+                continue;
+            *tvr.addr() = OBJECT_TO_JSVAL(ns);
+            if (!arrayobj->setProperty(context, INT_TO_JSID(i), tvr.addr()))
+                return false;
+        }
+        return true;
+    }
+};
+
 static JSBool
 xml_inScopeNamespaces(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSTempRootedNSArray namespaces;
-    JSBool ok;
-
     NON_LIST_XML_METHOD_PROLOG;
 
-    InitTempNSArray(cx, &namespaces);
-    ok = FindInScopeNamespaces(cx, xml, &namespaces.array) &&
-         TempNSArrayToJSArray(cx, &namespaces, vp);
-    FinishTempNSArray(cx, &namespaces);
-    return ok;
+    AutoNamespaceArray namespaces(cx);
+    return FindInScopeNamespaces(cx, xml, &namespaces.array) && namespaces.toJSArray(vp);
 }
 
 static JSBool
@@ -6043,15 +6014,13 @@ static JSBool
 xml_namespace(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *prefix, *nsprefix;
-    JSTempRootedNSArray inScopeNSes;
-    JSBool ok;
     jsuint i, length;
     JSObject *ns;
 
     NON_LIST_XML_METHOD_PROLOG;
     if (argc == 0 && !JSXML_HAS_NAME(xml)) {
         *vp = JSVAL_NULL;
-        return JS_TRUE;
+        return true;
     }
 
     if (argc == 0) {
@@ -6059,22 +6028,18 @@ xml_namespace(JSContext *cx, uintN argc, jsval *vp)
     } else {
         prefix = js_ValueToString(cx, vp[2]);
         if (!prefix)
-            return JS_FALSE;
+            return false;
         vp[2] = STRING_TO_JSVAL(prefix);      /* local root */
     }
 
-    InitTempNSArray(cx, &inScopeNSes);
-    MUST_FLOW_THROUGH("out");
-    ok = FindInScopeNamespaces(cx, xml, &inScopeNSes.array);
-    if (!ok)
-        goto out;
+    AutoNamespaceArray inScopeNSes(cx);
+    if (!FindInScopeNamespaces(cx, xml, &inScopeNSes.array))
+        return false;
 
     if (!prefix) {
         ns = GetNamespace(cx, xml->name, &inScopeNSes.array);
-        if (!ns) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!ns)
+            return false;
     } else {
         ns = NULL;
         for (i = 0, length = inScopeNSes.array.length; i < length; i++) {
@@ -6089,64 +6054,44 @@ xml_namespace(JSContext *cx, uintN argc, jsval *vp)
     }
 
     *vp = (!ns) ? JSVAL_VOID : OBJECT_TO_JSVAL(ns);
-
-  out:
-    FinishTempNSArray(cx, &inScopeNSes);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
 xml_namespaceDeclarations(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSBool ok;
-    JSTempRootedNSArray ancestors, declared;
-    JSXML *yml;
-    uint32 i, n;
-    JSObject *ns;
-
     NON_LIST_XML_METHOD_PROLOG;
     if (JSXML_HAS_VALUE(xml))
-        return JS_TRUE;
+        return true;
 
-    /* From here, control flow must goto out to finish these arrays. */
-    ok = JS_TRUE;
-    InitTempNSArray(cx, &ancestors);
-    InitTempNSArray(cx, &declared);
-    yml = xml;
+    AutoNamespaceArray ancestors(cx);
+    AutoNamespaceArray declared(cx);
 
+    JSXML *yml = xml;
     while ((yml = yml->parent) != NULL) {
         JS_ASSERT(yml->xml_class == JSXML_CLASS_ELEMENT);
-        for (i = 0, n = yml->xml_namespaces.length; i < n; i++) {
-            ns = XMLARRAY_MEMBER(&yml->xml_namespaces, i, JSObject);
-            if (ns &&
-                !XMLARRAY_HAS_MEMBER(&ancestors.array, ns, namespace_match)) {
-                ok = XMLARRAY_APPEND(cx, &ancestors.array, ns);
-                if (!ok)
-                    goto out;
+        for (uint32 i = 0, n = yml->xml_namespaces.length; i < n; i++) {
+            JSObject *ns = XMLARRAY_MEMBER(&yml->xml_namespaces, i, JSObject);
+            if (ns && !XMLARRAY_HAS_MEMBER(&ancestors.array, ns, namespace_match)) {
+                if (!XMLARRAY_APPEND(cx, &ancestors.array, ns))
+                    return false;
             }
         }
     }
 
-    for (i = 0, n = xml->xml_namespaces.length; i < n; i++) {
-        ns = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSObject);
+    for (uint32 i = 0, n = xml->xml_namespaces.length; i < n; i++) {
+        JSObject *ns = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSObject);
         if (!ns)
             continue;
         if (!IsDeclared(ns))
             continue;
         if (!XMLARRAY_HAS_MEMBER(&ancestors.array, ns, namespace_match)) {
-            ok = XMLARRAY_APPEND(cx, &declared.array, ns);
-            if (!ok)
-                goto out;
+            if (!XMLARRAY_APPEND(cx, &declared.array, ns))
+                return false;
         }
     }
 
-    ok = TempNSArrayToJSArray(cx, &declared, vp);
-
-out:
-    /* Finishing must be in reverse order of initialization to follow LIFO. */
-    FinishTempNSArray(cx, &declared);
-    FinishTempNSArray(cx, &ancestors);
-    return ok;
+    return declared.toJSArray(vp);
 }
 
 static const char js_attribute_str[] = "attribute";
@@ -7179,9 +7124,9 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         if (xml->xml_targetprop)
             JS_CALL_OBJECT_TRACER(trc, xml->xml_targetprop, "targetprop");
     } else {
-        TraceObjectVector(trc,
-                          (JSObject **) xml->xml_namespaces.vector,
-                          xml->xml_namespaces.length);
+        js::TraceObjectVector(trc,
+                              (JSObject **) xml->xml_namespaces.vector,
+                              xml->xml_namespaces.length);
         XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
         if (IS_GC_MARKING_TRACER(trc))
             XMLArrayTrim(&xml->xml_namespaces);
@@ -7214,17 +7159,12 @@ js_FinalizeXML(JSContext *cx, JSXML *xml)
 JSObject *
 js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
 {
-    JSXML *xml;
-    JSObject *obj;
-    JSTempValueRooter tvr;
-
-    xml = js_NewXML(cx, xml_class);
+    JSXML *xml = js_NewXML(cx, xml_class);
     if (!xml)
         return NULL;
-    JS_PUSH_TEMP_ROOT_XML(cx, xml, &tvr);
-    obj = js_GetXMLObject(cx, xml);
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return obj;
+
+    AutoXMLRooter root(cx, xml);
+    return js_GetXMLObject(cx, xml);
 }
 
 static JSObject *
@@ -7741,48 +7681,35 @@ js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp)
 static JSBool
 GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *target;
-    JSXML *xml;
-    JSTempValueRooter tvr;
-    JSBool ok;
-
     JS_ASSERT(OBJECT_IS_XML(cx, obj));
-
-    MUST_FLOW_THROUGH("out");
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr);
 
     /*
      * See comments before xml_lookupProperty about the need for the proto
      * chain lookup.
      */
-    target = obj;
+    JSObject *target = obj;
+    AutoObjectRooter tvr(cx);
     for (;;) {
-        ok = js_GetProperty(cx, target, id, vp);
-        if (!ok)
-            goto out;
-        if (VALUE_IS_FUNCTION(cx, *vp)) {
-            ok = JS_TRUE;
-            goto out;
-        }
+        if (!js_GetProperty(cx, target, id, vp))
+            return false;
+        if (VALUE_IS_FUNCTION(cx, *vp))
+            return true;
         target = target->getProto();
         if (target == NULL)
             break;
-        tvr.u.object = target;
+        tvr.setObject(target);
     }
 
-    xml = (JSXML *) obj->getPrivate();
-    if (HasSimpleContent(xml)) {
-        /* Search in String.prototype to implement 11.2.2.1 Step 3(f). */
-        ok = js_GetClassPrototype(cx, NULL, JSProto_String, &tvr.u.object);
-        if (!ok)
-            goto out;
-        JS_ASSERT(tvr.u.object);
-        ok = tvr.u.object->getProperty(cx, id, vp);
-    }
+    JSXML *xml = (JSXML *) obj->getPrivate();
+    if (!HasSimpleContent(xml))
+        return true;
 
-  out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+    /* Search in String.prototype to implement 11.2.2.1 Step 3(f). */
+    if (!js_GetClassPrototype(cx, NULL, JSProto_String, tvr.addr()))
+        return false;
+
+    JS_ASSERT(tvr.object());
+    return tvr.object()->getProperty(cx, id, vp);
 }
 
 static JSXML *
