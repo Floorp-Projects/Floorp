@@ -26,8 +26,90 @@ function isEventOverElement(event, el){
 }
 
 // ##########
-function Group(){}
-Group.prototype = {
+window.Group = function(listOfEls, options) {
+  var self = this;
+  this._children = $(listOfEls).toArray();
+
+  var boundingBox = this._getBoundingBox();
+  var padding = 30;
+  var container = $("<div class='group'/>")
+    .css({
+      position: "absolute",
+      top: boundingBox.top-padding,
+      left: boundingBox.left-padding,
+      width: boundingBox.width+padding*2,
+      height: boundingBox.height+padding*2,
+      zIndex: -100,
+      opacity: 0,
+    })
+    .data("group", this)
+    .appendTo("body")
+    .animate({opacity:1.0}).dequeue();
+  
+/*
+  var contentEl = $('<div class="group-content"/>')
+    .appendTo(container);
+*/
+  
+  var resizer = $("<div class='resizer'/>")
+    .css({
+      position: "absolute",
+      width: 16, height: 16,
+      bottom: 0, right: 0,
+    }).appendTo(container);
+
+  var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
+    .appendTo(container)
+  
+  titlebar.css({
+      width: container.width(),
+      position: "relative",
+      top: -(titlebar.height()+2),
+      left: -1,
+    });
+    
+  $('.close', titlebar).click(function() {
+    $.each(self._children, function(index, child) {
+      var tab = Tabs.tab(child);
+      tab.close();
+    });
+  });
+
+  // On delay, show the title bar.
+  var shouldShow = false;
+  container.mouseover(function(){
+    shouldShow = true;
+    setTimeout(function(){
+      if( shouldShow == false ) return;
+      container.find("input").focus();
+      titlebar
+        .css({width: container.width()})
+        .animate({ opacity: 1}).dequeue();        
+    }, 500);
+  }).mouseout(function(e){
+    shouldShow = false;
+    if( isEventOverElement(e, container.get(0) )) return;
+    titlebar.animate({opacity:0}).dequeue();
+  })
+
+  this._container = container;
+  
+  this._addHandlers(container);
+  this._updateGroup();
+
+  var els = this._children;
+  this._children = [];
+  for(var i in els){
+    this.add( els[i] );
+  }
+  
+  // ___ Push other objects away
+  if(!options || !options.suppressPush)
+    this.pushAway();   
+};
+
+// ----------
+window.Group.prototype = {
   _children: [],
   _container: null,
   _padding: 30,
@@ -63,91 +145,7 @@ Group.prototype = {
   },
   
   // ----------  
-  create: function(listOfEls, options) {
-    var self = this;
-    this._children = $(listOfEls).toArray();
-
-    var boundingBox = this._getBoundingBox();
-    var padding = 30;
-    var container = $("<div class='group'/>")
-      .css({
-        position: "absolute",
-        top: boundingBox.top-padding,
-        left: boundingBox.left-padding,
-        width: boundingBox.width+padding*2,
-        height: boundingBox.height+padding*2,
-        zIndex: -100,
-        opacity: 0,
-      })
-      .data("group", this)
-      .appendTo("body")
-      .animate({opacity:1.0}).dequeue();
-    
-/*
-    var contentEl = $('<div class="group-content"/>')
-      .appendTo(container);
-*/
-    
-    var resizer = $("<div class='resizer'/>")
-      .css({
-        position: "absolute",
-        width: 16, height: 16,
-        bottom: 0, right: 0,
-      }).appendTo(container);
-
-    var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
-      .appendTo(container)
-    
-    titlebar.css({
-        width: container.width(),
-        position: "relative",
-        top: -(titlebar.height()+2),
-        left: -1,
-      });
-      
-    $('.close', titlebar).click(function() {
-      $.each(self._children, function(index, child) {
-        var tab = Tabs.tab(child);
-        tab.close();
-      });
-    });
-
-    // On delay, show the title bar.
-    var shouldShow = false;
-    container.mouseover(function(){
-      shouldShow = true;
-      setTimeout(function(){
-        if( shouldShow == false ) return;
-        container.find("input").focus();
-        titlebar
-          .css({width: container.width()})
-          .animate({ opacity: 1}).dequeue();        
-      }, 500);
-    }).mouseout(function(e){
-      shouldShow = false;
-      if( isEventOverElement(e, container.get(0) )) return;
-      titlebar.animate({opacity:0}).dequeue();
-    })
-
-    this._container = container;
-    
-    this._addHandlers(container);
-    this._updateGroup();
-
-    var els = this._children;
-    this._children = [];
-    for(var i in els){
-      this.add( els[i] );
-    }
-    
-    // ___ Push other objects away
-    if(!options || !options.suppressPush)
-      this.pushAway(); 
-  },
-  
-  // ----------  
   pushAway: function() {
-  	return; //doesn't work in this version of groups.js
     var buffer = 10;
     
     var items = Items.getTopLevelItems();
@@ -446,7 +444,7 @@ Group.prototype = {
     })
     
     }
-}
+};
 
 // ##########
 var zIndex = 100;
@@ -454,8 +452,6 @@ var $dragged = null;
 var timeout = null;
 
 window.Groups = {
-  Group: Group, 
-  
   // ----------  
   dragOptions: {
     start:function(){
@@ -502,8 +498,7 @@ window.Groups = {
         setTimeout( function(){
           var group = $(target).data("group");
           if( group == null ){
-            var group = new Group();
-            group.create([target, dragged]);            
+            var group = new Group([target, dragged]);
           } else {
             group.add( dragged );
           }
@@ -560,26 +555,6 @@ window.Groups = {
       var group = $(this).data('group');
       group.removeAll();
     });
-  }
-};
-
-// ##########
-window.Items = {
-  // ----------  
-  getTopLevelItems: function() {
-    var items = [];
-    
-    $('.tab').each(function() {
-      $this = $(this);
-      if(!$this.data('group'))
-        items.push($this.data('tabItem'));
-    });
-    
-    $('.group').each(function() {
-      items.push($(this).data('group'));
-    });
-    
-    return items;
   }
 };
 
