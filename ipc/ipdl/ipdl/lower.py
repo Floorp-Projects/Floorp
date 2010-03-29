@@ -2408,6 +2408,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.ns = None
         self.cls = None
         self.includedActorTypedefs = [ ]
+        self.includedActorUsings = [ ]
         self.protocolCxxIncludes = [ ]
 
     def lower(self, tu, clsname, cxxHeaderFile, cxxFile):
@@ -2513,8 +2514,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.protocolCxxIncludes
             + [ Whitespace.NL ]
             + self.standardTypedefs()
-            + self.includedActorTypedefs
             + tu.protocol.decl.cxxtypedefs
+            + self.includedActorUsings
             + [ Whitespace.NL ]))
 
         cppns = makeNamespace(self.protocol, cf)
@@ -2543,6 +2544,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.includedActorTypedefs.append(Typedef(
                 Type(_actorName(ip.decl.fullname, self.prettyside)),
                 _actorName(ip.decl.shortname, self.prettyside)))
+            self.includedActorUsings.append(Using(
+                Type(_actorName(ip.decl.fullname, self.prettyside))))
 
 
     def visitProtocol(self, p):
