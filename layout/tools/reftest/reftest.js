@@ -59,6 +59,8 @@ const NS_XREAPPINFO_CONTRACTID =
 
 var gLoadTimeout = 0;
 var gRemote = false;
+var gTotalChunks = 0;
+var gThisChunk = 0;
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -165,6 +167,17 @@ function OnRefTestLoad()
       gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
     }
 
+
+    /* Support for running a chunk (subset) of tests.  In seperate try as this is optional */
+    try {
+      gTotalChunks = prefs.getIntPref("reftest.totalChunks");
+      gThisChunk = prefs.getIntPref("reftest.thisChunk");
+    }
+    catch(e) {
+      gTotalChunks = 0;
+      gThisChunk = 0;
+    }
+
     gBrowser.addEventListener("load", OnDocumentLoad, true);
 
     try {
@@ -231,6 +244,15 @@ function StartTests()
 
         ReadTopManifest(args.uri);
         BuildUseCounts();
+
+        if (gTotalChunks > 0 && gThisChunk > 0) {
+          var testsPerChunk = gURLs.length / gTotalChunks;
+          var start = Math.round((gThisChunk-1) * testsPerChunk);
+          var end = Math.round(gThisChunk * testsPerChunk);
+          gURLs = gURLs.slice(start, end);
+          dump("REFTEST INFO | Running chunk " + gThisChunk + " out of " + gTotalChunks + " chunks.  ")
+          dump("tests " + (start+1) + "-" + end + "/" + gURLs.length + "\n");
+        }
         gTotalTests = gURLs.length;
 
         if (!gTotalTests)
