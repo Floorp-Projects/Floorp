@@ -54,7 +54,7 @@
     </resources>
 
     <content>
-        <xul:vbox class="mainBox" role="link" flex="1" chormedir="&locale.dir;">
+        <xul:vbox class="mainBox" role="link" flex="1" chromedir="&locale.dir;">
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
             <html:div class="msg msgUnsupported">&missingPlugin.label;</html:div>
