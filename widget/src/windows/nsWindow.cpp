@@ -3797,9 +3797,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
   // Handle certain sync plugin events sent to the parent which
   // trigger ipc calls that result in deadlocks.
 
-  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
-  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
-    GetPropW(mWnd, L"PluginInstanceParentProperty")) {
+  // Plugins taking focus triggering WM_SETFOCUS app messages.
+  if (msg == WM_SETFOCUS &&
+      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     ReplyMessage(0);
     return;
   }
