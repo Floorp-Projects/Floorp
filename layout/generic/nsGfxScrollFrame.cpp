@@ -469,14 +469,14 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
     availWidth = NS_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
 
+  nsPresContext* presContext = PresContext();
+
   // We're forcing the padding on our scrolled frame, so let it know what that
   // padding is.
-  mInner.mScrolledFrame->
-    SetProperty(nsGkAtoms::usedPaddingProperty,
-                new nsMargin(aState->mReflowState.mComputedPadding),
-                nsCSSOffsetState::DestroyMarginFunc);  
-  
-  nsPresContext* presContext = PresContext();
+  presContext->PropertyTable()->
+    Set(mInner.mScrolledFrame, UsedPaddingProperty(),
+        new nsMargin(aState->mReflowState.mComputedPadding));
+
   // Pass PR_FALSE for aInit so we can pass in the correct padding
   nsHTMLReflowState kidReflowState(presContext, aState->mReflowState,
                                    mInner.mScrolledFrame,

@@ -62,7 +62,7 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
 
 nsSVGPaintServerFrame *
 nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint,
-                                   nsIAtom *aType)
+                                   const FramePropertyDescriptor *aType)
 {
   if (aPaint->mType != eStyleSVGPaintType_Server)
     return nsnull;
@@ -216,7 +216,7 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
   float opacity = MaybeOptimizeOpacity(style->mFillOpacity);
 
   nsSVGPaintServerFrame *ps =
-    GetPaintServer(&style->mFill, nsGkAtoms::fill);
+    GetPaintServer(&style->mFill, nsSVGEffects::FillProperty());
   if (ps && ps->SetupPaintServer(aContext, this, opacity))
     return PR_TRUE;
 
@@ -307,7 +307,7 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
   float opacity = MaybeOptimizeOpacity(style->mStrokeOpacity);
 
   nsSVGPaintServerFrame *ps =
-    GetPaintServer(&style->mStroke, nsGkAtoms::stroke);
+    GetPaintServer(&style->mStroke, nsSVGEffects::StrokeProperty());
   if (ps && ps->SetupPaintServer(aContext, this, opacity))
     return PR_TRUE;
 

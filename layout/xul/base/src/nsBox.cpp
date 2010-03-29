@@ -180,9 +180,10 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
 
   // Another copy-over from nsHTMLReflowState.
   // Since we are in reflow, we don't need to store these properties anymore.
-  DeleteProperty(nsGkAtoms::usedBorderProperty);
-  DeleteProperty(nsGkAtoms::usedPaddingProperty);
-  DeleteProperty(nsGkAtoms::usedMarginProperty);
+  FrameProperties props = Properties();
+  props.Delete(UsedBorderProperty());
+  props.Delete(UsedPaddingProperty());
+  props.Delete(UsedMarginProperty());
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
