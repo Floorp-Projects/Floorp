@@ -48,6 +48,10 @@
 namespace mozilla {
 namespace ctypes {
 
+/*******************************************************************************
+** Function and struct API definitions
+*******************************************************************************/
+
 // for JS error reporting
 enum ErrorNum {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -126,12 +130,19 @@ struct ClosureInfo
 
 JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
 
-JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj, void* data, bool wantPrimitive, bool ownResult, jsval* result);
-JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer, bool isArgument, bool* freePointer);
-JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer);
+JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj,
+  void* data, bool wantPrimitive, bool ownResult, jsval* result);
 
-// Contents of the various slots on each JSClass. The slot indexes are given
-// enumerated names for readability.
+JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
+  void* buffer, bool isArgument, bool* freePointer);
+
+JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
+  void* buffer);
+
+/*******************************************************************************
+** JSClass reserved slot definitions
+*******************************************************************************/
+
 enum CABISlot {
   SLOT_ABICODE = 0, // ABICode of the CABI object
   CABI_SLOTS
@@ -201,195 +212,88 @@ enum Int64FunctionSlot {
   // JSFunction objects always get exactly two slots.
 };
 
-class CType {
-public:
-  static JSObject* Create(JSContext* cx, JSObject* typeProto, JSObject* dataProto, TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, PropertySpec* ps);
-  static JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName, JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type, jsval size, jsval align, ffi_type* ffiType);
-  static void Trace(JSTracer* trc, JSObject* obj);
-  static void Finalize(JSContext* cx, JSObject* obj);
-  static void FinalizeProtoClass(JSContext* cx, JSObject* obj);
+/*******************************************************************************
+** Object API definitions
+*******************************************************************************/
 
-  static JSBool ConstructAbstract(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-  static JSBool ConstructBasic(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+namespace CType {
+  JSObject* Create(JSContext* cx, JSObject* typeProto, JSObject* dataProto,
+    TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, 
+    PropertySpec* ps);
 
-  static bool IsCType(JSContext* cx, JSObject* obj);
-  static TypeCode GetTypeCode(JSContext* cx, JSObject* typeObj);
-  static bool TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2);
-  static size_t GetSize(JSContext* cx, JSObject* obj);
-  static bool GetSafeSize(JSContext* cx, JSObject* obj, size_t* result);
-  static bool IsSizeDefined(JSContext* cx, JSObject* obj);
-  static size_t GetAlignment(JSContext* cx, JSObject* obj);
-  static ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
-  static JSString* GetName(JSContext* cx, JSObject* obj);
-  static JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
-  static JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
+  JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName,
+    JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type,
+    jsval size, jsval align, ffi_type* ffiType);
 
-  static JSBool PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool NameGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Array(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
-};
+  bool IsCType(JSContext* cx, JSObject* obj);
+  TypeCode GetTypeCode(JSContext* cx, JSObject* typeObj);
+  bool TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2);
+  size_t GetSize(JSContext* cx, JSObject* obj);
+  bool GetSafeSize(JSContext* cx, JSObject* obj, size_t* result);
+  bool IsSizeDefined(JSContext* cx, JSObject* obj);
+  size_t GetAlignment(JSContext* cx, JSObject* obj);
+  ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
+  JSString* GetName(JSContext* cx, JSObject* obj);
+  JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
+  JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
+}
 
-class PointerType {
-public:
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSObject* CreateInternal(JSContext* cx, JSObject* ctor, JSObject* baseType, JSString* name);
+namespace PointerType {
+  JSObject* CreateInternal(JSContext* cx, JSObject* ctor, JSObject* baseType,
+    JSString* name);
 
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+  JSObject* GetBaseType(JSContext* cx, JSObject* obj);
+}
 
-  static JSObject* GetBaseType(JSContext* cx, JSObject* obj);
+namespace ArrayType {
+  JSObject* CreateInternal(JSContext* cx, JSObject* baseType, size_t length,
+    bool lengthDefined);
 
-  static JSBool TargetTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ContentsGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-};
+  JSObject* GetBaseType(JSContext* cx, JSObject* obj);
+  size_t GetLength(JSContext* cx, JSObject* obj);
+  bool GetSafeLength(JSContext* cx, JSObject* obj, size_t* result);
+}
 
-class ArrayType {
-public:
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSObject* CreateInternal(JSContext* cx, JSObject* baseType, size_t length, bool lengthDefined);
+namespace StructType {
+  nsTArray<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
+  FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
+}
 
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+namespace FunctionType {
+  JSObject* CreateInternal(JSContext* cx, jsval abi, jsval rtype,
+    jsval* argtypes, jsuint arglen);
 
-  static JSObject* GetBaseType(JSContext* cx, JSObject* obj);
-  static size_t GetLength(JSContext* cx, JSObject* obj);
-  static bool GetSafeLength(JSContext* cx, JSObject* obj, size_t* result);
+  JSObject* ConstructWithObject(JSContext* cx, JSObject* typeObj,
+    JSObject* refObj, PRFuncPtr fnptr, JSObject* result);
 
-  static JSBool ElementTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool LengthGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Getter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Setter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool AddressOfElement(JSContext* cx, uintN argc, jsval* vp);
-};
+  FunctionInfo* GetFunctionInfo(JSContext* cx, JSObject* obj);
+  JSObject* GetLibrary(JSContext* cx, JSObject* obj);
+}
 
-class StructType {
-public:
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+namespace CClosure {
+  JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* fnObj,
+    JSObject* thisObj, PRFuncPtr* fnptr);
+}
 
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+namespace CData {
+  JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* refObj,
+    void* data, bool ownResult);
 
-  static nsTArray<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
-  static FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
+  JSObject* GetCType(JSContext* cx, JSObject* dataObj);
+  void* GetData(JSContext* cx, JSObject* dataObj);
+  bool IsCData(JSContext* cx, JSObject* obj);
 
-  static JSBool FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool FieldGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
-};
+  // Attached by JSAPI as the function 'ctypes.cast'
+  JSBool Cast(JSContext* cx, uintN argc, jsval* vp);
+}
 
-// Helper class for handling allocation of function arguments.
-struct AutoValue
-{
-  AutoValue() : mData(NULL) { }
+namespace Int64 {
+  bool IsInt64(JSContext* cx, JSObject* obj);
+}
 
-  ~AutoValue()
-  {
-    delete[] static_cast<char*>(mData);
-  }
-
-  bool SizeToType(JSContext* cx, JSObject* type)
-  {
-    size_t size = CType::GetSize(cx, type);
-    mData = new char[size];
-    if (mData)
-      memset(mData, 0, size);
-    return mData != NULL;
-  }
-
-  void* mData;
-};
-
-class FunctionType {
-public:
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSObject* CreateInternal(JSContext* cx, jsval abi, jsval rtype, jsval* argtypes, jsuint arglen);
-
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-  static JSObject* ConstructWithObject(JSContext* cx, JSObject* typeObj, JSObject* refObj, PRFuncPtr fnptr, JSObject* result);
-
-  static JSBool Call(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-
-  static FunctionInfo* GetFunctionInfo(JSContext* cx, JSObject* obj);
-  static JSObject* GetLibrary(JSContext* cx, JSObject* obj);
-  static JSBool ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool ReturnTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool ABIGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-};
-
-class CClosure {
-public:
-  static JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* fnObj, JSObject* thisObj, PRFuncPtr* fnptr);
-  static void Trace(JSTracer* trc, JSObject* obj);
-  static void Finalize(JSContext* cx, JSObject* obj);
-
-  static void ClosureStub(ffi_cif* cif, void* result, void** args, void* userData);
-};
-
-class CData {
-public:
-  static JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* refObj, void* data, bool ownResult);
-  static void Finalize(JSContext* cx, JSObject* obj);
-
-  static JSObject* GetCType(JSContext* cx, JSObject* dataObj);
-  static void* GetData(JSContext* cx, JSObject* dataObj);
-  static bool IsCData(JSContext* cx, JSObject* obj);
-
-  static JSBool ValueGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool ValueSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Address(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Cast(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ReadString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-};
-
-class Int64Base {
-public:
-  static JSObject* Construct(JSContext* cx, JSObject* proto, PRUint64 data, bool isUnsigned);
-  static void Finalize(JSContext* cx, JSObject* obj);
-
-  static PRUint64 GetInt(JSContext* cx, JSObject* obj);
-
-  static JSBool ToString(JSContext* cx, JSObject* obj, uintN argc, jsval* vp, bool isUnsigned);
-  static JSBool ToSource(JSContext* cx, JSObject* obj, uintN argc, jsval* vp, bool isUnsigned);
-};
-
-class Int64 : public Int64Base {
-public:
-  static JSBool Construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-
-  static bool IsInt64(JSContext* cx, JSObject* obj);
-
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-
-  // ctypes.Int64 static functions
-  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
-};
-
-class UInt64 : public Int64Base {
-public:
-  static JSBool Construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
-
-  static bool IsUInt64(JSContext* cx, JSObject* obj);
-
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-
-  // ctypes.UInt64 static functions
-  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
-};
+namespace UInt64 {
+  bool IsUInt64(JSContext* cx, JSObject* obj);
+}
 
 }
 }
