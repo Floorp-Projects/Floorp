@@ -977,19 +977,19 @@ public:
                         const nsRect&               aDirtyRect,
                         nsDisplayList*              aList);
 
-  PRBool IsThemed(nsTransparencyMode* aTransparencyMode = nsnull) {
-    return IsThemed(GetStyleDisplay(), aTransparencyMode);
+  PRBool IsThemed(nsITheme::Transparency* aTransparencyState = nsnull) {
+    return IsThemed(GetStyleDisplay(), aTransparencyState);
   }
   PRBool IsThemed(const nsStyleDisplay* aDisp,
-                  nsTransparencyMode* aTransparencyMode = nsnull) {
+                  nsITheme::Transparency* aTransparencyState = nsnull) {
     if (!aDisp->mAppearance)
       return PR_FALSE;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
     if(!theme || !theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance))
       return PR_FALSE;
-    if (aTransparencyMode) {
-      *aTransparencyMode = theme->GetWidgetTransparency(aDisp->mAppearance);
+    if (aTransparencyState) {
+      *aTransparencyState = theme->GetWidgetTransparency(this, aDisp->mAppearance);
     }
     return PR_TRUE;
   }
