@@ -838,41 +838,34 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         return false;
     *vp = STRING_TO_JSVAL(name);
 
-    JSTempValueRooter tvr;
-    JSBool ok;
     {
-        MUST_FLOW_THROUGH("out");
-        JS_PUSH_TEMP_ROOT(cx, 3, localroots, &tvr);
+        AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroots), localroots);
 
 #ifdef __GNUC__
         message = filename = NULL;
 #endif
-        ok = JS_GetProperty(cx, obj, js_message_str, &localroots[0]) &&
-              (message = js_ValueToSource(cx, localroots[0]));
-        if (!ok)
-            goto out;
+        if (!JS_GetProperty(cx, obj, js_message_str, &localroots[0]) ||
+            !(message = js_ValueToSource(cx, localroots[0]))) {
+            return false;
+        }
         localroots[0] = STRING_TO_JSVAL(message);
 
-        ok = JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) &&
-             (filename = js_ValueToSource(cx, localroots[1]));
-        if (!ok)
-            goto out;
+        if (!JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) ||
+            !(filename = js_ValueToSource(cx, localroots[1]))) {
+            return false;
+        }
         localroots[1] = STRING_TO_JSVAL(filename);
 
-        ok = JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]);
-        if (!ok)
-            goto out;
+        if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]))
+            return false;
         lineno = js_ValueToECMAUint32 (cx, &localroots[2]);
-        ok = !JSVAL_IS_NULL(localroots[2]);
-        if (!ok)
-            goto out;
+        if (JSVAL_IS_NULL(localroots[2]))
+            return false;
 
         if (lineno != 0) {
             lineno_as_str = js_ValueToString(cx, localroots[2]);
-            if (!lineno_as_str) {
-                ok = JS_FALSE;
-                goto out;
-            }
+            if (!lineno_as_str)
+                return false;
             lineno_length = lineno_as_str->length();
         } else {
             lineno_as_str = NULL;
@@ -903,10 +896,8 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         }
 
         cp = chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
-        if (!chars) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!chars)
+            return false;
 
         *cp++ = '('; *cp++ = 'n'; *cp++ = 'e'; *cp++ = 'w'; *cp++ = ' ';
         js_strncpy(cp, name->chars(), name_length);
@@ -943,16 +934,11 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         result = js_NewString(cx, chars, length);
         if (!result) {
             cx->free(chars);
-            ok = JS_FALSE;
-            goto out;
+            return false;
         }
         *vp = STRING_TO_JSVAL(result);
-        ok = JS_TRUE;
+        return true;
     }
-
-  out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return JS_TRUE;
 }
 #endif
 
@@ -1003,7 +989,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         return NULL;
 
     PodArrayZero(roots);
-    JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
 #ifdef __GNUC__
     error_proto = NULL;   /* quell GCC overwarning */
@@ -1161,9 +1147,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 
     /* Protect the newly-created strings below from nesting GCs. */
     PodArrayZero(tv);
-
-    JSTempValueRooter tvr;
-    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(tv), tv, &tvr);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(tv), tv);
 
     /*
      * Try to get an appropriate prototype by looking up the corresponding
@@ -1207,7 +1191,6 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     reportp->flags |= JSREPORT_EXCEPTION;
 
 out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
     cx->generatingError = JS_FALSE;
     return ok;
 }
@@ -1229,10 +1212,7 @@ js_ReportUncaughtException(JSContext *cx)
         return false;
 
     PodArrayZero(roots);
-    JSBool ok = JS_TRUE;
-    JSTempValueRooter tvr;
-    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(roots), roots, &tvr);
-    MUST_FLOW_THROUGH("out");
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     /*
      * Because js_ValueToString below could error and an exception object
@@ -1257,49 +1237,36 @@ js_ReportUncaughtException(JSContext *cx)
     } else {
         roots[1] = STRING_TO_JSVAL(str);
         bytes = js_GetStringBytes(cx, str);
-        if (!bytes) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!bytes)
+            return false;
     }
 
     if (!reportp && exnObject && exnObject->getClass() == &js_ErrorClass) {
         const char *filename;
         uint32 lineno;
 
-        if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2])) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2]))
+            return false;
         if (JSVAL_IS_STRING(roots[2])) {
             bytes = js_GetStringBytes(cx, JSVAL_TO_STRING(roots[2]));
-            if (!bytes) {
-                ok = JS_FALSE;
-                goto out;
-            }
+            if (!bytes)
+                return false;
         }
 
-        ok = JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]);
-        if (!ok)
-            goto out;
+        if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
+            return false;
         str = js_ValueToString(cx, roots[3]);
-        if (!str) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!str)
+            return false;
         filename = StringToFilename(cx, str);
-        if (!filename) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!filename)
+            return false;
 
-        ok = JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]);
-        if (!ok)
-            goto out;
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
+            return false;
         lineno = js_ValueToECMAUint32 (cx, &roots[4]);
-        ok = !JSVAL_IS_NULL(roots[4]);
-        if (!ok)
-            goto out;
+        if (JSVAL_IS_NULL(roots[4]))
+            return false;
 
         reportp = &report;
         PodZero(&report);
@@ -1320,7 +1287,5 @@ js_ReportUncaughtException(JSContext *cx)
         JS_ClearPendingException(cx);
     }
 
-  out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+    return true;
 }
