@@ -71,6 +71,9 @@ class Visitor:
     def visitTypedef(self, tdef):
         tdef.fromtype.accept(self)
 
+    def visitUsing(self, us):
+        us.type.accept(self)
+
     def visitForwardDecl(self, fd):
         pass
 
@@ -383,6 +386,11 @@ class Typedef(Node):
         Node.__init__(self)
         self.fromtype = fromtype
         self.totypename = totypename
+
+class Using(Node):
+    def __init__(self, type):
+        Node.__init__(self)
+        self.type = type
 
 class ForwardDecl(Node):
     def __init__(self, pqname, cls=0, struct=0):
