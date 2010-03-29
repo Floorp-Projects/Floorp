@@ -2043,7 +2043,7 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
   HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
   nsWindow* topWindow = GetNSWindowPtr(hWnd);
 
-  if (!mIsTopWidgetWindow)
+  if (GetParent())
     return;
 
   mPossiblyTransparentRegion.Sub(mPossiblyTransparentRegion, aDirtyRegion);
