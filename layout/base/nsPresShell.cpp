@@ -4154,7 +4154,7 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
       rect.IntersectRect(rect, sf->GetScrollPortRect());
     }
     rect += container->GetPosition();
-    container = container->GetParent();
+    container = nsLayoutUtils::GetCrossDocParentFrame(container);
   } while (container);
 
   return didScroll;
