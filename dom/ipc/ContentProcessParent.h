@@ -83,6 +83,7 @@ public:
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
 
+    void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
 
 protected:
@@ -113,6 +114,7 @@ private:
     GeckoChildProcessHost* mSubprocess;
 
     int mRunToCompletionDepth;
+    bool mShouldCallUnblockChild;
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
 };

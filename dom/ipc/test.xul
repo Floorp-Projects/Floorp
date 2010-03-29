@@ -98,8 +98,19 @@
       // 2. Test that adding message listener works, and that receiving a sync message works.
       messageManager.addMessageListener("linkclick",
         function(m) {
-          document.getElementById("messageLog").value = m.name + ": " + m.json.href;
-          return { message: "linkclick-received" };
+          // This checks that json and CPOW sending works in sync messages. 
+          if (m.objects.length == 3 &amp;&amp;
+              m.objects[0].target.href == m.json.href &amp;&amp;
+              m.objects[1] == 123 &amp;&amp;
+              m.objects[2] == "a string") {
+            // Test that crossProcessObjectWrapper can be used in sync messages.
+            if ((document.getElementById('page')
+                         .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+                         .crossProcessObjectWrapper + "").indexOf("Window")  >= 0) {
+              document.getElementById("messageLog").value = m.name + ": " + m.json.href;
+              return { message: "linkclick-received" };
+            }
+          }
         });
 
       // 3. Test that returning multiple json results works.
@@ -124,9 +135,14 @@
       // 5. Final test to check that everything went ok.
       messageManager.addMessageListener("chrome-message-reply",
         function(m) {
-          // Check that 'this' and .target values are handled correctly.
+          // Check that 'this' and .target values are handled correctly
+          // Check also that crossProcessObjectWrapper can be used in
+          // asynchronous message handlers.
           if (m.target == document.getElementById("page") &amp;&amp;
-              this == messageManager) {
+              this == messageManager &amp;&amp;
+              (document.getElementById('page')
+                         .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+                         .crossProcessObjectWrapper + "").indexOf("Window")  >= 0) {
             // Check that the message properties are enumerable.
             var hasName = false;
             var hasSync = false;
