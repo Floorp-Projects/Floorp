@@ -73,13 +73,13 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
                     JSObject *&pobj, PropertyCacheEntry *&entry, JSAtom *&atom)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
 
-    uint32 kshape = OBJ_SHAPE(obj);
+    uint32 kshape = obj->map->shape;
     entry = &table[hash(pc, kshape)];
     PCMETER(pctestentry = entry);
     PCMETER(tests++);
     JS_ASSERT(&obj != &pobj);
+    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
     if (entry->kpc == pc && entry->kshape == kshape) {
         JSObject *tmp;
         pobj = obj;
@@ -104,12 +104,13 @@ JS_ALWAYS_INLINE bool
 PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
                           PropertyCacheEntry **entryp, JSObject **obj2p, JSAtom **atomp)
 {
-    uint32 shape = OBJ_SHAPE(obj);
+    uint32 shape = obj->map->shape;
     PropertyCacheEntry *entry = &table[hash(pc, shape)];
     *entryp = entry;
     PCMETER(pctestentry = entry);
     PCMETER(tests++);
     PCMETER(settests++);
+    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
     if (entry->kpc == pc && entry->kshape == shape && matchShape(cx, obj, shape))
         return true;
 
@@ -139,6 +140,7 @@ PropertyCache::testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj, JSScope
     PCMETER(pctestentry = entry);
     PCMETER(tests++);
     PCMETER(initests++);
+    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
 
     if (entry->kpc == pc &&
         entry->kshape == kshape &&
