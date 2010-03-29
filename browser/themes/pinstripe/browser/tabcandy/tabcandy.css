@@ -30,7 +30,7 @@ input.name{
 /* Resizable
 ----------------------------------*/
 .resizer{
-  background-image: url(resource://tabcandy/content/img/shared/resizer.png);
+  background-image: url(chrome://tabcandy/content/img/shared/resizer.png);
 }
 
 .ui-resizable { position: relative;}
