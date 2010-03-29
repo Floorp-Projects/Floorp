@@ -56,7 +56,6 @@ const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
 const NS_XREAPPINFO_CONTRACTID =
           "@mozilla.org/xre/app-info;1";
 
-
 var gLoadTimeout = 0;
 var gRemote = false;
 var gTotalChunks = 0;
@@ -324,7 +323,7 @@ function ReadManifest(aURL)
     var lines = streamBuf.split(/(\n|\r|\r\n)/);
 
     // Build the sandbox for fails-if(), etc., condition evaluation.
-    var sandbox = new Components.utils.Sandbox(aURL.spec);
+    var sandbox = Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
     sandbox.isDebugBuild = gDebug.isDebugBuild;
@@ -371,6 +370,14 @@ function ReadManifest(aURL)
         sandbox.nativeThemePref = !prefs.getBoolPref("mozilla.widget.disable-native-theme");
     } catch (e) {
         sandbox.nativeThemePref = true;
+    }
+
+    new XPCSafeJSObjectWrapper(sandbox).prefs = {
+      __exposedProps__: {
+        getIntPref: 'r',
+      },
+      _prefs:      prefs,
+      getIntPref:  function(p) { return this._prefs.getIntPref(p) }
     }
 
     var lineNo = 0;
