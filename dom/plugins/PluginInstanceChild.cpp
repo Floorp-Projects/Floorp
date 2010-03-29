@@ -100,6 +100,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 {
     memset(&mWindow, 0, sizeof(mWindow));
     mData.ndata = (void*) this;
+    mData.pdata = nsnull;
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
