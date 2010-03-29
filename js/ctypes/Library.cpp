@@ -50,6 +50,18 @@ namespace mozilla {
 namespace ctypes {
 
 /*******************************************************************************
+** JSAPI function prototypes
+*******************************************************************************/
+
+namespace Library
+{
+  static void Finalize(JSContext* cx, JSObject* obj);
+
+  static JSBool Close(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Declare(JSContext* cx, uintN argc, jsval* vp);
+}
+
+/*******************************************************************************
 ** JSObject implementation
 *******************************************************************************/
 

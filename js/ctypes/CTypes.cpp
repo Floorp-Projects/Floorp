@@ -58,11 +58,154 @@ namespace mozilla {
 namespace ctypes {
 
 /*******************************************************************************
-** JSAPI callback function prototypes
+** JSAPI function prototypes
 *******************************************************************************/
 
 static JSBool ConstructAbstract(JSContext* cx, JSObject* obj, uintN argc,
   jsval* argv, jsval* rval);
+
+namespace CType {
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+  static JSBool ConstructBasic(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+
+  static void Trace(JSTracer* trc, JSObject* obj);
+  static void Finalize(JSContext* cx, JSObject* obj);
+  static void FinalizeProtoClass(JSContext* cx, JSObject* obj);
+
+  static JSBool PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool NameGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool Array(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+}
+
+namespace PointerType {
+  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+
+  static JSBool TargetTypeGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool ContentsGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
+}
+
+namespace ArrayType {
+  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+
+  static JSBool ElementTypeGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool LengthGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool Getter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool Setter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool AddressOfElement(JSContext* cx, uintN argc, jsval* vp);
+}
+
+namespace StructType {
+  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+
+  static JSBool FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool FieldGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
+}
+
+namespace FunctionType {
+  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc,
+    jsval* argv, jsval* rval);
+
+  static JSBool Call(JSContext* cx, JSObject* obj, uintN argc, jsval* argv,
+    jsval* rval);
+
+  static JSBool ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool ReturnTypeGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool ABIGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+}
+
+namespace CClosure {
+  static void Trace(JSTracer* trc, JSObject* obj);
+  static void Finalize(JSContext* cx, JSObject* obj);
+
+  // libffi callback
+  static void ClosureStub(ffi_cif* cif, void* result, void** args,
+    void* userData);
+}
+
+namespace CData {
+  static void Finalize(JSContext* cx, JSObject* obj);
+
+  static JSBool ValueGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool ValueSetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
+  static JSBool Address(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ReadString(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+}
+
+// Int64Base provides functions common to Int64 and UInt64.
+namespace Int64Base {
+  JSObject* Construct(JSContext* cx, JSObject* proto, PRUint64 data,
+    bool isUnsigned);
+
+  PRUint64 GetInt(JSContext* cx, JSObject* obj);
+
+  JSBool ToString(JSContext* cx, JSObject* obj, uintN argc, jsval* vp,
+    bool isUnsigned);
+
+  JSBool ToSource(JSContext* cx, JSObject* obj, uintN argc, jsval* vp,
+    bool isUnsigned);
+
+  static void Finalize(JSContext* cx, JSObject* obj);
+}
+
+namespace Int64 {
+  static JSBool Construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv,
+    jsval* rval);
+
+  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+
+  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
+}
+
+namespace UInt64 {
+  static JSBool Construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv,
+    jsval* rval);
+
+  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+
+  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
+}
 
 /*******************************************************************************
 ** JSClass definitions and initialization functions
@@ -4019,6 +4162,28 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
 ** FunctionType implementation
 *******************************************************************************/
 
+// Helper class for handling allocation of function arguments.
+struct AutoValue
+{
+  AutoValue() : mData(NULL) { }
+
+  ~AutoValue()
+  {
+    delete[] static_cast<char*>(mData);
+  }
+
+  bool SizeToType(JSContext* cx, JSObject* type)
+  {
+    size_t size = CType::GetSize(cx, type);
+    mData = new char[size];
+    if (mData)
+      memset(mData, 0, size);
+    return mData != NULL;
+  }
+
+  void* mData;
+};
+
 static bool
 GetABI(JSContext* cx, jsval abiType, ffi_abi& result)
 {
@@ -5267,8 +5432,8 @@ Int64::Compare(JSContext* cx, uintN argc, jsval* vp)
   JSObject* obj1 = JSVAL_TO_OBJECT(argv[0]);
   JSObject* obj2 = JSVAL_TO_OBJECT(argv[1]);
 
-  PRInt64 i1 = GetInt(cx, obj1);
-  PRInt64 i2 = GetInt(cx, obj2);
+  PRInt64 i1 = Int64Base::GetInt(cx, obj1);
+  PRInt64 i2 = Int64Base::GetInt(cx, obj2);
 
   if (i1 == i2)
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
@@ -5295,7 +5460,7 @@ Int64::Lo(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRInt64 u = GetInt(cx, obj);
+  PRInt64 u = Int64Base::GetInt(cx, obj);
   jsdouble d = PRUint32(INT64_LO(u));
 
   jsval result;
@@ -5317,7 +5482,7 @@ Int64::Hi(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRInt64 u = GetInt(cx, obj);
+  PRInt64 u = Int64Base::GetInt(cx, obj);
   jsdouble d = PRInt32(INT64_HI(u));
 
   jsval result;
@@ -5440,8 +5605,8 @@ UInt64::Compare(JSContext* cx, uintN argc, jsval* vp)
   JSObject* obj1 = JSVAL_TO_OBJECT(argv[0]);
   JSObject* obj2 = JSVAL_TO_OBJECT(argv[1]);
 
-  PRUint64 u1 = GetInt(cx, obj1);
-  PRUint64 u2 = GetInt(cx, obj2);
+  PRUint64 u1 = Int64Base::GetInt(cx, obj1);
+  PRUint64 u2 = Int64Base::GetInt(cx, obj2);
 
   if (u1 == u2)
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
@@ -5464,7 +5629,7 @@ UInt64::Lo(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRUint64 u = GetInt(cx, obj);
+  PRUint64 u = Int64Base::GetInt(cx, obj);
   jsdouble d = PRUint32(INT64_LO(u));
 
   jsval result;
@@ -5486,7 +5651,7 @@ UInt64::Hi(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRUint64 u = GetInt(cx, obj);
+  PRUint64 u = Int64Base::GetInt(cx, obj);
   jsdouble d = PRUint32(INT64_HI(u));
 
   jsval result;
