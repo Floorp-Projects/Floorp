@@ -49,8 +49,11 @@
 
 class nsIXPConnectJSObjectHolder;
 class nsAutoPoolRelease;
-class JSAutoTempValueRooter;
-namespace js { template <class> class LazilyConstructed; }
+namespace js {
+class AutoObjectRooter;
+class AutoArrayRooter;
+template <class> class LazilyConstructed;
+}
 
 class nsJSContext : public nsIScriptContext,
                     public nsIXPCScriptNotify
@@ -215,7 +218,7 @@ protected:
                                    PRUint32 *aArgc,
                                    jsval **aArgv,
                                    js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
-                                   js::LazilyConstructed<JSAutoTempValueRooter> &aRooter);
+                                   js::LazilyConstructed<js::AutoArrayRooter> &aRooter);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 
