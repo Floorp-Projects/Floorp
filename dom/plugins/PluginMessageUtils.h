@@ -445,6 +445,61 @@ struct ParamTraits<NPString>
   }
 };
 
+#ifdef XP_MACOSX
+template <>
+struct ParamTraits<NPNSString*>
+{
+  typedef NPNSString* paramType;
+
+  // Empty string writes a length of 0 and no buffer.
+  // We don't write a NULL terminating character in buffers.
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    CFStringRef cfString = (CFStringRef)aParam;
+    long length = ::CFStringGetLength(cfString);
+    WriteParam(aMsg, length);
+    if (length == 0) {
+      return;
+    }
+
+    // Attempt to get characters without any allocation/conversion.
+    if (::CFStringGetCharactersPtr(cfString)) {
+      aMsg->WriteBytes(::CFStringGetCharactersPtr(cfString), length * sizeof(UniChar));
+    } else {
+      UniChar *buffer = (UniChar*)moz_xmalloc(length * sizeof(UniChar));
+      ::CFStringGetCharacters(cfString, ::CFRangeMake(0, length), buffer);
+      aMsg->WriteBytes(buffer, length * sizeof(UniChar));
+      free(buffer);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    long length;
+    if (!ReadParam(aMsg, aIter, &length)) {
+      return false;
+    }
+
+    UniChar* buffer = nsnull;
+    if (length != 0) {
+      if (!aMsg->ReadBytes(aIter, (const char**)&buffer, length * sizeof(UniChar)) ||
+          !buffer) {
+        return false;
+      }
+    }
+
+    *aResult = (NPNSString*)::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)buffer,
+                                                      length * sizeof(UniChar),
+                                                      kCFStringEncodingUTF16, false);
+    if (!*aResult) {
+      return false;
+    }
+
+    return true;
+  }
+};
+#endif
+
 template <>
 struct ParamTraits<NPVariant>
 {
