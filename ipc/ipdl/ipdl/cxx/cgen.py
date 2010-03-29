@@ -115,6 +115,11 @@ class CxxCodeGen(CodePrinter, Visitor):
         td.fromtype.accept(self)
         self.println(' '+ td.totypename +';')
 
+    def visitUsing(self, us):
+        self.printdent('using ')
+        us.type.accept(self)
+        self.println(';')
+
     def visitForwardDecl(self, fd):
         if fd.cls:      self.printdent('class ')
         elif fd.struct: self.printdent('struct ')
