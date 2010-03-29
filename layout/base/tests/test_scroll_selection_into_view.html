@@ -30,17 +30,6 @@
   </div>
   <div style="height:400px;"></div>
 </div>
-<div id="c4" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:600px;">
-  <iframe id="target4" style="border:none; width:100%; height:1100px; display:block;"
-          src="data:text/html,
-               <body style='margin:0; overflow:hidden;'>
-                 <div style='height:400px;'></div>
-                 <div><span id='target4'
-                            style='display:inline-block; vertical-align:top; height:300px;'>target4</span>
-                 </div>
-                 <div style='height:400px;'></div>">
-  </iframe>
-</div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -54,9 +43,6 @@ function testCollapsed(id, vPercent, startAt, expected) {
 
   var c = document.getElementById("c" + id);
   var target = document.getElementById("target" + id);
-  if (target.contentDocument) {
-    target = target.contentDocument.getElementById("target" + id);
-  }
   selection.collapse(target.parentNode, 0);
   c.scrollTop = startAt;
   selection.scrollIntoView(FOCUS, true, vPercent, 0);
@@ -91,16 +77,6 @@ function doTest() {
   // If the element can't be completely visible, we make the top edge
   // visible.
   testCollapsed("3", -1, 1000, 400);
-
-  // Test scrolling an element larger than the scrollport
-  testCollapsed("4", 0, 0, 400);
-  testCollapsed("4", 100, 0, 500);
-  testCollapsed("4", -1, 0, 400);
-  testCollapsed("4", 0, 1000, 400);
-  testCollapsed("4", 100, 1000, 500);
-  // If the element can't be completely visible, we make the top edge
-  // visible.
-  testCollapsed("4", -1, 1000, 400);
 
   SimpleTest.finish();
 }
