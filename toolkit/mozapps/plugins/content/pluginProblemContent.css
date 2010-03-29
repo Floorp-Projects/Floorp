@@ -48,3 +48,8 @@ html|applet:not([height]), html|applet[height=""] {
 .helpIcon {
   cursor: pointer;
 }
+
+#mainBox[chromedir="rtl"] {
+  direction: rtl;
+  unicode-bidi: embed;
+}

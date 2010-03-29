@@ -36,7 +36,12 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/plugins/plugins.dtd">
+<!DOCTYPE bindings [
+  <!ENTITY % pluginsDTD SYSTEM "chrome://mozapps/locale/plugins/plugins.dtd">
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %pluginsDTD;
+  %globalDTD;
+]>
 
 <bindings id="pluginBindings"
               xmlns="http://www.mozilla.org/xbl"
@@ -49,7 +54,7 @@
     </resources>
 
     <content>
-        <xul:vbox class="mainBox" role="link" flex="1">
+        <xul:vbox class="mainBox" role="link" flex="1" chormedir="&locale.dir;">
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
             <html:div class="msg msgUnsupported">&missingPlugin.label;</html:div>
