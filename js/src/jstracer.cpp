@@ -12213,7 +12213,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     JSStackFrame* fp = cx->display[level];
     const CallInfo* ci;
     int32 slot;
-    if (!fp->fun) {
+    if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
         ci = &GetUpvarStackOnTrace_ci;
         slot = cookieSlot;
     } else if (cookieSlot < fp->fun->nargs) {
