@@ -547,6 +547,18 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     else
         *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
+#ifdef XP_MACOSX
+    // Release any reference counted objects created in the child process.
+    if (evcopy.type == NPCocoaEventKeyDown ||
+        evcopy.type == NPCocoaEventKeyUp) {
+      ::CFRelease((CFStringRef)evcopy.data.key.characters);
+      ::CFRelease((CFStringRef)evcopy.data.key.charactersIgnoringModifiers);
+    }
+    else if (evcopy.type == NPCocoaEventTextInput) {
+      ::CFRelease((CFStringRef)evcopy.data.text.text);
+    }
+#endif
+
 #ifdef MOZ_X11
     if (GraphicsExpose == event.event.type) {
         // Make sure the X server completes the drawing before the parent
