@@ -334,7 +334,6 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
     vcap = entry->vcap;
 
     if (entry->kpc != pc) {
@@ -360,7 +359,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         return atom;
     }
 
-    if (entry->kshape != OBJ_SHAPE(obj)) {
+    if (entry->kshape != obj->map->shape) {
         PCMETER(kshapemisses++);
         return GetAtomFromBytecode(cx, pc, op, cs);
     }
