@@ -27,10 +27,13 @@ function isEventOverElement(event, el){
 
 // ##########
 window.Group = function(listOfEls, options) {
-  var self = this;
-  this._children = $(listOfEls).toArray();
+  this._children = [];
+  this._container = null;
+  this._padding = 30;
 
-  var boundingBox = this._getBoundingBox();
+  var self = this;
+
+  var boundingBox = this._getBoundingBox(listOfEls);
   var padding = 30;
   var container = $("<div class='group'/>")
     .css({
@@ -43,6 +46,7 @@ window.Group = function(listOfEls, options) {
       opacity: 0,
     })
     .data("group", this)
+    .data('item', this)
     .appendTo("body")
     .animate({opacity:1.0}).dequeue();
   
@@ -69,10 +73,7 @@ window.Group = function(listOfEls, options) {
     });
     
   $('.close', titlebar).click(function() {
-    $.each(self._children, function(index, child) {
-      var tab = Tabs.tab(child);
-      tab.close();
-    });
+    self.close();
   });
 
   // On delay, show the title bar.
@@ -93,15 +94,14 @@ window.Group = function(listOfEls, options) {
   })
 
   this._container = container;
-  
-  this._addHandlers(container);
-  this._updateGroup();
 
-  var els = this._children;
-  this._children = [];
-  for(var i in els){
-    this.add( els[i] );
-  }
+  $.each(listOfEls, function(index, el) {  
+    self.add(el);
+  });
+
+  this._addHandlers(container);
+  
+  Groups.register(this);
   
   // ___ Push other objects away
   if(!options || !options.suppressPush)
@@ -109,14 +109,9 @@ window.Group = function(listOfEls, options) {
 };
 
 // ----------
-window.Group.prototype = {
-  _children: [],
-  _container: null,
-  _padding: 30,
-  
+window.Group.prototype = $.extend(new Item(), {  
   // ----------  
-  _getBoundingBox: function(){
-    var els = this._children;
+  _getBoundingBox: function(els) {
     var el;
     var boundingBox = {
       top:    min( [$(el).position().top  for([,el] in Iterator(els))] ),
@@ -144,69 +139,11 @@ window.Group.prototype = {
     }
   },
   
-  // ----------  
-  pushAway: function() {
-    var buffer = 10;
-    
-    var items = Items.getTopLevelItems();
-    $.each(items, function(index, item) {
-      var data = {};
-      data.bounds = item.getBounds();
-      data.startBounds = new Rect(data.bounds);
-      item.pushAwayData = data;
-    });
-    
-    var itemsToPush = [this];
-    this.pushAwayData.anchored = true;
-
-    var pushOne = function(baseItem) {
-      var bb = new Rect(baseItem.pushAwayData.bounds);
-      bb.inset(-buffer, -buffer);
-      var bbc = bb.center();
-    
-      $.each(items, function(index, item) {
-        if(item == baseItem)
-          return;
-          
-        var data = item.pushAwayData;
-        if(data.anchored)
-          return;
-          
-        var bounds = data.bounds;
-        var box = new Rect(bounds);
-        box.inset(-buffer, -buffer);
-        if(box.intersects(bb)) {
-          var offset = new Point();
-          var center = box.center(); 
-          if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
-            if(center.y > bbc.y)
-              offset.y = bb.bottom - box.top; 
-            else
-              offset.y = bb.top - box.bottom;
-          } else {
-            if(center.x > bbc.x)
-              offset.x = bb.right - box.left; 
-            else
-              offset.x = bb.left - box.right;
-          }
-          
-          bounds.offset(offset); 
-          itemsToPush.push(item);
-        }
-      });
-    };   
-    
-    var a;
-    for(a = 0; a < 500 && itemsToPush.length; a++)
-      pushOne(itemsToPush.shift());         
-
-    $.each(items, function(index, item) {
-      var data = item.pushAwayData;
-      if(!data.bounds.equals(data.startBounds))
-        item.setPosition(data.bounds.left, data.bounds.top);
-    });
+  // ----------
+  getContainer: function() {
+    return this._container;
   },
-  
+
   // ----------  
   getBounds: function() {
     var $titlebar = $('.titlebar', this._container);
@@ -218,40 +155,75 @@ window.Group.prototype = {
   },
   
   // ----------  
-  setPosition: function(left, top) {
+  setBounds: function(rect) {
+    this.setPosition(rect.left, rect.top);
+    this.setSize(rect.width, rect.height);
+  },
+  
+  // ----------  
+  setPosition: function(left, top, immediately) {
     var box = this.getBounds();
     var offset = new Point(left - box.left, top - box.top);
     
-    $.each(this._children, function(index, value) {
-      var $el = $(this);
-      box = Utils.getBounds(this);
-      $el.animate({left: box.left + offset.x, top: box.top + offset.y});
+    $.each(this._children, function(index, child) {
+      box = child.getBounds();
+      child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
     });
         
-    var bb = Utils.getBounds(this._container);
-    $(this._container).animate({left: bb.left + offset.x, top: bb.top + offset.y});
+    box = Utils.getBounds(this._container);
+    var options = {left: box.left + offset.x, top: box.top + offset.y};
+    if(immediately)
+      $(this._container).css(options);
+    else
+      $(this._container).animate(options);
   },
 
   // ----------  
+  setSize: function(width, height) {
+    var $titlebar = $('.titlebar', this._container);
+    var titleHeight = $titlebar.height();
+    $(this._container).animate({width: width, height: height - titleHeight});
+    this.arrange();
+  },
+
+  // ----------  
+  close: function() {
+    $.each(this._children, function(index, child) {
+      child.close();
+    });
+  },
+  
+  // ----------
+  addOnClose: function(referenceObject, callback) {
+    Utils.error('Group.addOnClose not implemented');
+  },
+
+  // ----------
+  removeOnClose: function(referenceObject) {
+    Utils.error('Group.removeOnClose not implemented');
+  },
+  
+  // ----------  
   add: function($el, dropPos){
     Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
-    var el = $el.get(0);
     
-    if( typeof(dropPos) == "undefined" ) dropPos = {top:window.innerWidth, left:window.innerHeight};
+    if( typeof(dropPos) == "undefined" ) 
+      dropPos = {top:window.innerWidth, left:window.innerHeight};
+      
     var self = this;
     
     // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
     // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
-      var best = {dist: Infinity, el: null};
+      var best = {dist: Infinity, item: null};
       var index = 0;
+      var box;
       for each(var child in self._children){
-        var pos = $(child).position();
-        var [w, h] = [$(child).width(), $(child).height()];
-        var dist = Math.sqrt( Math.pow((pos.top+h/2)-dropPos.top,2) + Math.pow((pos.left+w/2)-dropPos.left,2) );
+        box = child.getBounds();
+        var dist = Math.sqrt( Math.pow((box.top+box.height/2)-dropPos.top,2) + Math.pow((box.left+box.width/2)-dropPos.left,2) );
 /*         Utils.log( index, dist ); */
         if( dist <= best.dist ){
-          best.el = child;
+          best.item = child;
           best.dist = dist;
           best.index = index;
         }
@@ -259,79 +231,77 @@ window.Group.prototype = {
       }
 
       if( self._children.length > 0 ){
-        var insertLeft = dropPos.left <= $(best.el).position().left + $(best.el).width()/2;
-        if( !insertLeft ) return best.index+1
-        else return best.index
+        box = best.item.getBounds();
+        var insertLeft = dropPos.left <= box.left + box.width/2;
+        if( !insertLeft ) 
+          return best.index+1;
+        else 
+          return best.index;
       }
-      return 0;
       
+      return 0;      
     }
     
-    var oldIndex = $.inArray(el, this._children);
+    var item = Items.item($el);
+    var oldIndex = $.inArray(item, this._children);
     if(oldIndex != -1)
       this._children.splice(oldIndex, 1); 
 
     var index = findInsertionPoint(dropPos);
-    this._children.splice( index, 0, el );
+    this._children.splice( index, 0, item );
 
-    $(el).droppable("disable");
+    $el.droppable("disable");
 
-    if( typeof(Tabs) != "undefined" ){
-      var tab = Tabs.tab(el);
-      tab.mirror.addOnClose(el, function() {
-        self.remove($el);
-      });      
-    }
+    item.addOnClose(this, function() {
+      self.remove($el);
+    });      
     
-    this._updateGroup();
+    $el.data("group", this);
     this.arrange();
   },
   
   // ----------  
-  remove: function(el){
-    var self = this;
-    $(el).data("toRemove", true);
-    this._children = this._children.filter(function(child){
-      if( $(child).data("toRemove") == true ){
-        $(child).data("group", null);
-        scaleTab( $(child), 160/$(child).width());
-        $(child).droppable("enable");    
-        if( typeof(Tabs) != "undefined" ){
-          var tab = Tabs.tab(child);
-          tab.mirror.removeOnClose(el);              
-        }
-        return false;
-      }
-      else return true;
-    });
-    
-    $(el).data("toRemove", false);
-    
-    if( this._children.length == 0 ){
-      this._container.fadeOut(function() $(this).remove());
+  // The argument a can be an Item, a DOM element, or a jQuery object
+  remove: function(a, options) {
+    var $el;  
+    var item;
+
+    if(a.isAnItem) {
+      item = a;
+      $el = $(item.getContainer());
     } else {
-      this.arrange();
+      $el = $(a);  
+      item = Items.item($el);
     }
     
+    if(typeof(options) == 'undefined')
+      options = {};
+    
+    var index = $.inArray(item, this._children);
+    if(index != -1)
+      this._children.splice(index, 1); 
+
+    $el.data("group", null);
+    scaleTab( $el, 160/$el.width());
+    $el.droppable("enable");    
+    item.removeOnClose(this);
+    
+    if(this._children.length == 0 ){
+      Groups.unregister(this);
+      this._container.fadeOut(function() {
+        $(this).remove();
+      });
+    } else if(!options.dontArrange) {
+      this.arrange();
+    }
   },
   
   // ----------
-  // TODO: could be a lot more efficient by unwrapping the remove routine
   removeAll: function() {
-    var self = this;
-    $.each(this._children, function(index, child) {
-      self.remove(child);
-    });
+    while(this._children.length)
+      this.remove(this._children[0], {dontArrange: true});
   },
-  
-  // ----------  
-  _updateGroup: function(){
-    var self = this;
-    this._children.forEach(function(el){
-      $(el).data("group", self);
-    });    
-  },
-  
+    
   // ----------  
   arrange: function(options){
     if( options && options.animate == false ) animate = false;
@@ -340,7 +310,6 @@ window.Group.prototype = {
     //Utils.log(speed);
     /*if( this._children.length < 2 ) return;*/
     var bb = this._getContainerBox();
-    var aTab = $(this._children[0]);
 
     var count = this._children.length;
     var bbAspect = bb.width/bb.height;
@@ -377,17 +346,16 @@ window.Group.prototype = {
     var tabH = (best.h-pad)/best.numRows - pad;
     
     var x = pad; var y=pad; var numInCol = 0;
-    for each(var tab in this._children){
+    for each(var item in this._children){
       var sizeOptions = {width:tabW, height:tabH, top:y+bb.top, left:x+bb.left};
       
-      if( animate ) $(tab).animate(sizeOptions).dequeue();
-      else $(tab).css(sizeOptions).dequeue()
+      if( animate ) $(item.getContainer()).animate(sizeOptions).dequeue();
+      else $(item.getContainer()).css(sizeOptions).dequeue();
       
       x += tabW + pad;
       numInCol += 1;
       if( numInCol >= best.numCols ) [x, numInCol, y] = [pad, 0, y+tabH+pad];
     }
-    
   },
   
   // ----------  
@@ -397,23 +365,24 @@ window.Group.prototype = {
     $(container).draggable({
       start: function(){
         $(container).data("origPosition", $(container).position());
-        self._children.forEach(function(el){
-          $(el).data("origPosition", $(el).position());
+        $.each(self._children, function(index, child) {
+          child.dragData = {startBounds: child.getBounds()};
         });
       },
       drag: function(e, ui){
         var origPos = $(container).data("origPosition");
         dX = ui.offset.left - origPos.left;
         dY = ui.offset.top - origPos.top;
-        $(self._children).each(function(){
-          $(this).css({
-            left: $(this).data("origPosition").left + dX,
-            top:  $(this).data("origPosition").top + dY
-          })
-        })
+        $.each(self._children, function(index, child) {
+          child.setPosition(child.dragData.startBounds.left + dX, 
+            child.dragData.startBounds.top + dY, 
+            true);
+        });
+      }, 
+      stop: function() {
+        self.pushAway();
       }
     });
-    
     
     $(container).droppable({
       over: function(){
@@ -440,11 +409,11 @@ window.Group.prototype = {
       },
       stop: function(){
         self.arrange();
+        self.pushAway();
       } 
-    })
-    
-    }
-};
+    });
+  }
+});
 
 // ##########
 var zIndex = 100;
@@ -452,6 +421,8 @@ var $dragged = null;
 var timeout = null;
 
 window.Groups = {
+  groups: [],
+  
   // ----------  
   dragOptions: {
     start:function(){
@@ -461,6 +432,9 @@ window.Groups = {
     stop: function(){
       $dragged.data('isDragging', false);
       $(this).css({zIndex: zIndex});
+      if(!$dragged.hasClass('willGroup') && !$dragged.data('group'))
+        Items.item(this).pushAway();
+
       $dragged = null;          
       zIndex += 1;
     },
@@ -520,6 +494,19 @@ window.Groups = {
   }, 
   
   // ----------  
+  register: function(group) {
+    Utils.assert('only register once per group', $.inArray(group, this.groups) == -1);
+    this.groups.push(group);
+  },
+  
+  // ----------  
+  unregister: function(group) {
+    var index = $.inArray(group, this.groups);
+    if(index != -1)
+      this.groups.splice(index, 1);     
+  },
+  
+  // ----------  
   arrange: function() {
     var $groups = $('.group');
     var count = $groups.length;
@@ -530,31 +517,25 @@ window.Groups = {
     var startY = 100;
     var totalWidth = window.innerWidth - startX;
     var totalHeight = window.innerHeight - startY;
-    var w = (totalWidth / columns) - padding;
-    var h = (totalHeight / rows) - padding;
-    var x = startX;
-    var y = startY;
+    var box = new Rect(startX, startY, 
+        (totalWidth / columns) - padding,
+        (totalHeight / rows) - padding);
     
-    $groups.each(function(i) {
-      $(this).css({left: x, top: y, width: w, height: h});
+    $.each(this.groups, function(index, group) {
+      group.setBounds(box);
       
-      $(this).data('group').arrange();
-      
-      x += w + padding;
-      if(i % columns == columns - 1) {
-        x = startX;
-        y += h + padding;
+      box.left += box.width + padding;
+      if(index % columns == columns - 1) {
+        box.left = startX;
+        box.top += box.height + padding;
       }
     });
   },
   
   // ----------
   removeAll: function() {
-    var $groups = $('.group');
-    $groups.each(function() {
-      var group = $(this).data('group');
-      group.removeAll();
-    });
+    while(this.groups.length)
+      this.groups[0].removeAll();  
   }
 };
 
