@@ -1658,7 +1658,6 @@ GK_ATOM(volumechange, "volumechange")
 // Frame property names
 GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
 GK_ATOM(changeListProperty, "ChangeListProperty") // void*
-GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
 GK_ATOM(floatContinuationProperty, "FloatContinuationProperty") // nsFrameList*
 GK_ATOM(floatRegionProperty, "FloatRegionProperty") // nsRect*

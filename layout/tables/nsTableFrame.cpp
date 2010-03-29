@@ -7258,11 +7258,7 @@ nsTableFrame::GetProperty(nsIFrame*            aFrame,
     // The property isn't set yet, so allocate a new value, set the property,
     // and return the newly allocated value
     NSPropertyDtorFunc dtorFunc = nsnull;
-    if (aPropertyName == nsGkAtoms::collapseOffsetProperty) {
-      value = new nsPoint(0, 0);
-      dtorFunc = DestroyPointFunc;
-    }
-    else if (aPropertyName == nsGkAtoms::rowUnpaginatedHeightProperty) {
+    if (aPropertyName == nsGkAtoms::rowUnpaginatedHeightProperty) {
       value = new nscoord;
       dtorFunc = DestroyCoordFunc;
     }
