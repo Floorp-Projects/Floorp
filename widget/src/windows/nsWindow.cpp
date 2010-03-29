@@ -6771,6 +6771,9 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
   }
 
+  if (topWindow->mIsVisible)
+    style |= WS_VISIBLE;
+
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
