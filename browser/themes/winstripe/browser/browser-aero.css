@@ -1,4 +1,6 @@
+%define WINSTRIPE_AERO
 %include browser.css
+%undef WINSTRIPE_AERO
 
 /* ::::: Main Window Styling ::::: */
 @media all and (-moz-windows-compositor) {
@@ -88,10 +90,6 @@
   #navigator-toolbox > toolbar {
     -moz-appearance: none;
     border-style: none;
-  }
-
-  .ac-url-text {
-    color: -moz-nativehyperlinktext;
   }
 
   /* Bug 413060, comment 16: Vista Aero is a special case where we use a
