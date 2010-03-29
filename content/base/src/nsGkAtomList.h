@@ -351,7 +351,6 @@ GK_ATOM(enctype, "enctype")
 GK_ATOM(end, "end")
 GK_ATOM(end_after, "end_after")
 GK_ATOM(end_before, "end_before")
-GK_ATOM(endsInDiacritic, "EndsInDiacritic")                // PRUint32
 GK_ATOM(equalsize, "equalsize")
 GK_ATOM(error, "error")
 GK_ATOM(even, "even")
