@@ -3825,7 +3825,7 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
 void
 nsIFrame::InvalidateOverflowRect()
 {
-  Invalidate(GetOverflowRect());
+  Invalidate(GetOverflowRectRelativeToSelf());
 }
 
 void
@@ -3965,14 +3965,14 @@ nsIFrame::GetOverflowRectRelativeToParent() const
 nsRect
 nsIFrame::GetOverflowRectRelativeToSelf() const
 {
-  if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) ||
-      !GetStyleDisplay()->HasTransform())
-    return GetOverflowRect();
-  nsRect* preEffectsBBox = static_cast<nsRect*>
-    (Properties().Get(PreEffectsBBoxProperty()));
-  if (!preEffectsBBox)
-    return GetOverflowRect();
-  return *preEffectsBBox;
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
+      GetStyleDisplay()->HasTransform()) {
+    nsRect* preTransformBBox = static_cast<nsRect*>
+      (Properties().Get(PreTransformBBoxProperty()));
+    if (preTransformBBox)
+      return *preTransformBBox;
+  }
+  return GetOverflowRect();
 }
 
 void
@@ -5666,6 +5666,8 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     (mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) && 
     GetStyleDisplay()->HasTransform();
   if (hasTransform) {
+    Properties().
+      Set(nsIFrame::PreTransformBBoxProperty(), new nsRect(*aOverflowArea));
     /* Since our size might not actually have been computed yet, we need to make sure that we use the
      * correct dimensions by overriding the stored bounding rectangle with the value the caller has
      * ensured us we'll use.
