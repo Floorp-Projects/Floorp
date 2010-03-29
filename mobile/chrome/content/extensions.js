@@ -492,6 +492,11 @@ var ExtensionsView = {
 
     let self = this;
     InstallTrigger.install(params, function(aURL, aStatus) { self._installCallback(aItem, aStatus); });
+
+    // display the progress bar early
+    let opType = aItem.getAttribute("opType");
+    if (!opType)
+      aItem.setAttribute("opType", "needs-install");
   },
 
   installFromXPI: function ev_installAddons(aItems, aManager) {
