@@ -49,7 +49,7 @@ html|applet:not([height]), html|applet[height=""] {
   cursor: pointer;
 }
 
-#mainBox[chromedir="rtl"] {
+.mainBox[chromedir="rtl"] {
   direction: rtl;
   unicode-bidi: embed;
 }
