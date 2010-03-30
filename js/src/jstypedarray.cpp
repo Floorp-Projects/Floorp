@@ -1397,7 +1397,8 @@ JS_FRIEND_API(JSObject *)
 js_CreateArrayBuffer(JSContext *cx, jsuint nbytes)
 {
     AutoValueRooter tvr(cx);
-    js_NewNumberInRootedValue(cx, jsdouble(nbytes), tvr.addr());
+    if (!js_NewNumberInRootedValue(cx, jsdouble(nbytes), tvr.addr()))
+        return NULL;
 
     AutoValueRooter rval(cx);
     if (!ArrayBuffer::class_constructor(cx, cx->globalObject,
@@ -1484,8 +1485,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
     JS_ASSERT(bufArg && ArrayBuffer::fromJSObject(bufArg));
-    /* if byteoffset is -1, length must be -1 */
-    JS_ASSERT(length < 0 || byteoffset >= 0);
+    JS_ASSERT_IF(byteoffset < 0, length < 0);
 
     jsval vals[4];
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
@@ -1494,16 +1494,18 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
     vals[0] = OBJECT_TO_JSVAL(bufArg);
 
     if (byteoffset >= 0) {
-        js_NewNumberInRootedValue(cx, jsdouble(byteoffset), &vals[1]);
+        if (!js_NewNumberInRootedValue(cx, jsdouble(byteoffset), &vals[argc]))
+            return NULL;
+
         argc++;
     }
 
     if (length >= 0) {
-        js_NewNumberInRootedValue(cx, jsdouble(length), &vals[1]);
+        if (!js_NewNumberInRootedValue(cx, jsdouble(length), &vals[argc]))
+            return NULL;
+
         argc++;
     }
-
-    js_NewNumberInRootedValue(cx, jsdouble(byteoffset), &vals[0]);
 
     if (!TypedArrayConstruct(cx, atype, argc, &vals[0], &vals[3]))
         return NULL;
