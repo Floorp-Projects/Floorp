@@ -79,6 +79,7 @@
 #include <QX11EmbedWidget>
 #include <QGraphicsView>
 #include <QGraphicsWidget>
+#include "nsQAppInstance.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
@@ -112,6 +113,9 @@ TabChild::Init()
 {
 #ifdef MOZ_WIDGET_GTK2
   gtk_init(NULL, NULL);
+#endif
+#ifdef MOZ_WIDGET_QT
+  nsQAppInstance::AddRef();
 #endif
 
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
@@ -374,6 +378,9 @@ TabChild::~TabChild()
         JS_DestroyContext(mCx);
       }
     }
+#ifdef MOZ_WIDGET_QT
+    nsQAppInstance::Release();
+#endif
 }
 
 NS_IMETHODIMP
