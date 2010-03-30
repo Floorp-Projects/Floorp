@@ -143,7 +143,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 # For bug 546813: sanity-check using HTML text, then test SVG behavior. Fails on Linux tryserver due to lack of CJK fonts.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01-ref.xhtml
-# == text-layout-01.svg text-layout-01-ref.svg #files missing Bug 388547
+== text-layout-01.svg text-layout-01-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
