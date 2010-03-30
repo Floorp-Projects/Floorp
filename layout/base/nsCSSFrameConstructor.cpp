@@ -7211,7 +7211,9 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsChangeHint aChange)
 {
   nsIPresShell *shell = aPresContext->PresShell();
-  if (shell->IsPaintingSuppressed()) {
+  PRBool isPaintingSuppressed = PR_FALSE;
+  shell->IsPaintingSuppressed(&isPaintingSuppressed);
+  if (isPaintingSuppressed) {
     // Don't allow synchronous rendering changes when painting is turned off.
     aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
     if (!aChange) {
@@ -10729,7 +10731,9 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
 
   // XXXbz how exactly would we get here while isReflowing anyway?  Should this
   // whole test be ifdef DEBUG?
-  if (mPresShell->IsReflowLocked()) {
+  PRBool isReflowing;
+  mPresShell->IsReflowLocked(&isReflowing);
+  if(isReflowing) {
     // don't ReframeContainingBlock, this will result in a crash
     // if we remove a tree that's in reflow - see bug 121368 for testcase
     NS_ERROR("Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a Reflow!!!");
