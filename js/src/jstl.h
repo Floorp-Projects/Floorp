@@ -260,7 +260,7 @@ template <class T>
 class LazilyConstructed
 {
     union {
-        void *align;
+        uint64 align;
         char bytes[sizeof(T) + 1];
     };
 
