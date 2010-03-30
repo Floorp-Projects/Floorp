@@ -138,11 +138,12 @@ struct PLArenaPool {
 #define PL_ARENA_MARK(pool) ((void *) (pool)->current->avail)
 #define PR_UPTRDIFF(p,q) ((PRUword)(p) - (PRUword)(q))
 
+#define PL_CLEAR_UNUSED_PATTERN(a, pattern) \
+	   (PR_ASSERT((a)->avail <= (a)->limit), \
+	   memset((void*)(a)->avail, (pattern), (a)->limit - (a)->avail))
 #ifdef DEBUG
 #define PL_FREE_PATTERN 0xDA
-#define PL_CLEAR_UNUSED(a) (PR_ASSERT((a)->avail <= (a)->limit), \
-                           memset((void*)(a)->avail, PL_FREE_PATTERN, \
-                           (a)->limit - (a)->avail))
+#define PL_CLEAR_UNUSED(a) PL_CLEAR_UNUSED_PATTERN((a), PL_FREE_PATTERN)
 #define PL_CLEAR_ARENA(a)  memset((void*)(a), PL_FREE_PATTERN, \
                            (a)->limit - (PRUword)(a))
 #else
