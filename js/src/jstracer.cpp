@@ -8844,13 +8844,12 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
         }
     }
     {
-        jsval tmp = JSVAL_NULL;
-        JSAutoTempValueRooter tvr(cx, 1, &tmp);
+        AutoValueRooter tvr(cx, JSVAL_NULL);
 
-        tmp = l;
-        lnum = js_ValueToNumber(cx, &tmp);
-        tmp = r;
-        rnum = js_ValueToNumber(cx, &tmp);
+        *tvr.addr() = l;
+        lnum = js_ValueToNumber(cx, tvr.addr());
+        *tvr.addr() = r;
+        rnum = js_ValueToNumber(cx, tvr.addr());
     }
     cond = EvalCmp(op, lnum, rnum);
     fp = true;
@@ -11204,7 +11203,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
 static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
 {
-    JSAutoTempValueRooter tvr(cx, funobj);
+    AutoValueRooter tvr(cx, funobj);
 
     return OBJ_SCOPE(obj)->methodWriteBarrier(cx, sprop, tvr.value());
 }
@@ -11569,7 +11568,7 @@ GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval* vp)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    JSAutoTempIdRooter idr(cx);
+    AutoIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getProperty(cx, idr.id(), vp)) {
         SetBuiltinError(cx);
         return JS_FALSE;
@@ -11914,7 +11913,7 @@ SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval* vp)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    JSAutoTempIdRooter idr(cx);
+    AutoIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp)) {
         SetBuiltinError(cx);
         return JS_FALSE;
@@ -11929,7 +11928,7 @@ InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval val)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    JSAutoTempIdRooter idr(cx);
+    AutoIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) ||
         !obj->defineProperty(cx, idr.id(), val, NULL, NULL, JSPROP_ENUMERATE)) {
         SetBuiltinError(cx);
@@ -12756,7 +12755,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
 static JSObject* FASTCALL
 MethodReadBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
 {
-    JSAutoTempValueRooter tvr(cx, funobj);
+    AutoValueRooter tvr(cx, funobj);
 
     if (!OBJ_SCOPE(obj)->methodReadBarrier(cx, sprop, tvr.addr()))
         return NULL;
@@ -14886,7 +14885,7 @@ CallIteratorNext(JSContext *cx, uintN argc, jsval *vp)
 static jsval FASTCALL
 CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 {
-    JSAutoTempValueRooter tvr(cx);
+    AutoValueRooter tvr(cx);
     JSBool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
 
     if (!ok) {
