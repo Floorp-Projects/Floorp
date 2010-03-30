@@ -47,6 +47,10 @@
 #include <float.h>
 #endif
 
+#if defined(SOLARIS)
+#include <ieeefp.h>
+#endif
+
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsINodeInfo.h"
