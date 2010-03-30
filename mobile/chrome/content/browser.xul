@@ -403,7 +403,7 @@
                   <menupopup>
                     <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
                     <menuitem id="prefs-homepage-none" label="&homepage.none;" value="none"/>
-                    <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="custom"/>
+                    <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="currentpage"/>
                   </menupopup>
                 </menulist>
               </setting>

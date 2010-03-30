@@ -196,45 +196,55 @@ var PreferencesView = {
       this.showRestart();
   },
 
+  _showHomePageHint: function _showHomePageHint(aHint) {
+    if (aHint)
+      document.getElementById("prefs-homepage").setAttribute("desc", aHint);
+    else
+      document.getElementById("prefs-homepage").removeAttribute("desc");
+  },
+
   _loadHomePage: function _loadHomePage() {
     let url = Browser.getHomePage();
     let value = "default";
     let display = url;
+    try {
+      display = gPrefService.getComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString).data;
+    } catch (e) { }
 
     switch (url) {
       case "about:blank":
         value = "none";
-        display = "";
+        display = null;
         break;
       case "about:home":
         value = "default";
-        display = "";
+        display = null;
         break;
       default:
         value = "custom";
         break;
     }
 
-    // Show or hide the URL of the custom homepage
-    document.getElementById("prefs-homepage").setAttribute("desc", display);
+    // Show or hide the title or URL of the custom homepage
+    this._showHomePageHint(display);
   
-    // Select the homepage option
+    // Add the helper "Custom Page" item in the menulist, if needed
     let options = document.getElementById("prefs-homepage-options");
     if (value == "custom") {
       // Make sure nothing is selected and just use a label to show the state
-      options.selectedIndex = -1;
-      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom2"));
-    } else {
-      // Select the right menulist item
-      options.value = value;
+      options.appendItem(Elements.browserBundle.getString("homepage.custom2"), "custom");
     }
+
+    // Select the right menulist item
+    options.value = value;
   },
 
   updateHomePage: function updateHomePage() {
-    let url = "about:home";
     let options = document.getElementById("prefs-homepage-options");
     let value = options.selectedItem.value;
-    let display = "";
+
+    let url = "about:home";
+    let display = null;
 
     switch (value) {
       case "none":
@@ -243,25 +253,40 @@ var PreferencesView = {
       case "default":
         url = "about:home";
         break;
-      case "custom":
+      case "currentpage":
         url = Browser.selectedBrowser.currentURI.spec;
-        display = url;
+        display = Browser.selectedBrowser.contentDocument.title || url;
         break;
     }
 
-    // Show or hide the URL of the custom homepage
-    document.getElementById("prefs-homepage").setAttribute("desc", display);
+    // Show or hide the title or URL of the custom homepage
+    this._showHomePageHint(display);
 
-    let options = document.getElementById("prefs-homepage-options");
-    if (value == "custom") {
-      // Make sure nothing is selected and just use a label to show the state
-      options.selectedIndex = -1;
-      options.setAttribute("label", Elements.browserBundle.getString("homepage.custom2"));
+    // Is the helper already in the list
+    let helper = null;
+    let items = options.menupopup.getElementsByAttribute("value", "custom");
+    if (items && items.length)
+      helper = items[0];
+
+    // Update the helper "Custom Page" item in the menulist
+    if (value == "currentpage") {
+      // If the helper item is not already in the list, we need to put it there
+      // (this can happen when changing from one custom page to another)
+      if (!helper)
+        helper = options.appendItem(Elements.browserBundle.getString("homepage.custom2"), "custom");
+
+      options.selectedItem = helper;
+    } else {
+      options.menupopup.removeChild(helper);
     }
 
     // Save the homepage URL to a preference
     let pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
     pls.data = url;
     gPrefService.setComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString, pls);
+
+    // Save the homepage title to a preference
+    pls.data = display;
+    gPrefService.setComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString, pls);
   }
 };
