@@ -274,10 +274,13 @@ var BrowserUI = {
   _closeOrQuit: function _closeOrQuit() {
     // Close active dialog, if we have one. If not then close the application.
     let dialog = this.activeDialog;
-    if (dialog)
+    if (dialog) {
       dialog.close();
-    else
-      window.close();
+    } else {
+      // Check to see if we should really close the window
+      if (Browser.closing())
+        window.close();
+    }
   },
 
   get activeDialog() {
