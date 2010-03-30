@@ -3294,10 +3294,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const TraceType* mp, do
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->argsobj &&
-                    js_GetArgsPrivateNative(JSVAL_TO_OBJECT(fp->argsobj))) {
+                if (fp->argsobj && GetArgsPrivateNative(JSVAL_TO_OBJECT(fp->argsobj)))
                     JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
-                }
 
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
                 JS_ASSERT(HAS_FUNCTION_CLASS(fp->calleeObject()));
@@ -11731,7 +11729,7 @@ TraceRecorder::record_JSOP_GETELEM()
         return InjectStatus(getPropertyByName(obj_ins, &idx, &lval));
     }
 
-    if (obj->getClass() == &js_ArgumentsClass) {
+    if (obj->isArguments()) {
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (afp) {
@@ -12395,7 +12393,7 @@ TraceRecorder::guardCallee(jsval& callee)
 JS_REQUIRES_STACK JSStackFrame *
 TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
 {
-    JS_ASSERT(obj->getClass() == &js_ArgumentsClass);
+    JS_ASSERT(obj->isArguments());
 
     JSStackFrame *afp = frameIfInRange(obj, depthp);
     if (!afp)
@@ -12577,7 +12575,7 @@ TraceRecorder::record_JSOP_APPLY()
                              p2i(stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH)),
                              length),
                   BRANCH_EXIT);
-        } else if (OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass) {
+        } else if (aobj->isArguments()) {
             unsigned depth;
             JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
@@ -14089,7 +14087,7 @@ TraceRecorder::record_JSOP_ARGSUB()
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
-    // The following implements js_IsOverriddenArgsLength on trace.
+    // The following implements IsOverriddenArgsLength on trace.
     // The '2' bit is set if length was overridden.
     LIns *len_ins = stobj_get_fslot(argsobj_ins, JSSLOT_ARGS_LENGTH);
     LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
@@ -14109,7 +14107,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in alu().
-    if (cx->fp->argsobj && js_IsOverriddenArgsLength(JSVAL_TO_OBJECT(cx->fp->argsobj)))
+    if (cx->fp->argsobj && IsOverriddenArgsLength(JSVAL_TO_OBJECT(cx->fp->argsobj)))
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = get(&cx->fp->argsobj);
     if (callDepth == 0) {
@@ -14983,7 +14981,7 @@ TraceRecorder::record_JSOP_LENGTH()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    if (obj->getClass() == &js_ArgumentsClass) {
+    if (obj->isArguments()) {
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (!afp)
@@ -14991,7 +14989,7 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // We must both check at record time and guard at run time that
         // arguments.length has not been reassigned, redefined or deleted.
-        if (js_IsOverriddenArgsLength(obj))
+        if (IsOverriddenArgsLength(obj))
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 

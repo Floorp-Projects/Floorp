@@ -1015,7 +1015,7 @@ class TypedArrayTemplate
             jsval v;
 
             for (uintN i = 0; i < len; ++i) {
-                if (!JS_GetElement(cx, ar, i, &v))
+                if (!ar->getProperty(cx, INT_TO_JSID(i), &v))
                     return false;
                 *dest++ = nativeFromValue(cx, v);
             }

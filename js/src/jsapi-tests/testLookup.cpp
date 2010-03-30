@@ -1,5 +1,5 @@
 #include "tests.h"
-#include "jsfun.h"  // for js_IsInternalFunctionObject
+#include "jsfun.h"  // for js::IsInternalFunctionObject
 
 BEGIN_TEST(testLookup_bug522590)
 {
@@ -21,7 +21,7 @@ BEGIN_TEST(testLookup_bug522590)
     CHECK(JSVAL_IS_OBJECT(r));
     JSObject *funobj = JSVAL_TO_OBJECT(r);
     CHECK(HAS_FUNCTION_CLASS(funobj));
-    CHECK(!js_IsInternalFunctionObject(funobj));
+    CHECK(!js::IsInternalFunctionObject(funobj));
     CHECK(GET_FUNCTION_PRIVATE(cx, funobj) != (JSFunction *) funobj);
 
     return true;

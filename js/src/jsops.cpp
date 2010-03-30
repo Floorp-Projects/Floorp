@@ -1520,21 +1520,28 @@ BEGIN_CASE(JSOP_LENGTH)
     if (JSVAL_IS_STRING(lval)) {
         str = JSVAL_TO_STRING(lval);
         regs.sp[-1] = INT_TO_JSVAL(str->length());
-    } else if (!JSVAL_IS_PRIMITIVE(lval) &&
-               (obj = JSVAL_TO_OBJECT(lval), obj->isArray())) {
-        jsuint length;
+    } else if (!JSVAL_IS_PRIMITIVE(lval)) {
+        obj = JSVAL_TO_OBJECT(lval);
+        if (obj->isArray()) {
+            /*
+             * We know that the array is created with its 'length' private data
+             * in a fixed slot at JSSLOT_ARRAY_LENGTH. See also JSOP_ARRAYPUSH,
+             * far below.
+             */
+            jsuint length = obj->fslots[JSSLOT_ARRAY_LENGTH];
 
-        /*
-         * We know that the array is created with only its 'length' private
-         * data in a fixed slot at JSSLOT_ARRAY_LENGTH. See also
-         * JSOP_ARRAYPUSH, far below.
-         */
-        length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-        if (length <= JSVAL_INT_MAX) {
+            if (length <= JSVAL_INT_MAX)
+                regs.sp[-1] = INT_TO_JSVAL(length);
+            else if (!js_NewDoubleInRootedValue(cx, (jsdouble) length, &regs.sp[-1]))
+                goto error;
+        } else if (obj->isArguments() && !IsOverriddenArgsLength(obj)) {
+            uint32 length = GetArgsLength(obj);
+
+            JS_ASSERT(INT_FITS_IN_JSVAL(length));
             regs.sp[-1] = INT_TO_JSVAL(length);
-        } else if (!js_NewDoubleInRootedValue(cx, (jsdouble) length,
-                                              &regs.sp[-1])) {
-            goto error;
+        } else {
+            i = -2;
+            goto do_getprop_with_lval;
         }
     } else {
         i = -2;
@@ -1867,17 +1874,34 @@ BEGIN_CASE(JSOP_GETELEM)
     VALUE_TO_OBJECT(cx, -2, lval, obj);
     if (JSVAL_IS_INT(rval)) {
         if (obj->isDenseArray()) {
-            jsuint length;
+            jsuint idx = jsuint(JSVAL_TO_INT(rval));
 
-            length = js_DenseArrayCapacity(obj);
-            i = JSVAL_TO_INT(rval);
-            if ((jsuint)i < length &&
-                i < obj->fslots[JSSLOT_ARRAY_LENGTH]) {
-                rval = obj->dslots[i];
+            if (idx < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) &&
+                idx < js_DenseArrayCapacity(obj)) {
+                rval = obj->dslots[idx];
                 if (rval != JSVAL_HOLE)
                     goto end_getelem;
 
                 /* Reload rval from the stack in the rare hole case. */
+                rval = FETCH_OPND(-1);
+            }
+        } else if (obj->isArguments()
+#ifdef JS_TRACER
+                   && !GetArgsPrivateNative(obj)
+#endif
+                  ) {
+            uint32 arg = uint32(JSVAL_TO_INT(rval));
+
+            if (arg < GetArgsLength(obj)) {
+                JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
+                if (afp) {
+                    rval = afp->argv[arg];
+                    goto end_getelem;
+                }
+
+                rval = GetArgsSlot(obj, arg);
+                if (rval != JSVAL_HOLE)
+                    goto end_getelem;
                 rval = FETCH_OPND(-1);
             }
         }
