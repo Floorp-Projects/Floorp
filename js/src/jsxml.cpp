@@ -71,6 +71,7 @@
 #include "jsvector.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 #ifdef DEBUG
 #include <string.h>     /* for #ifdef DEBUG memset calls */
@@ -155,9 +156,9 @@ GetSlotString(const JSObject *obj, uint32 slot)
     JS_ASSERT(slot == JSSLOT_PREFIX ||
               slot == JSSLOT_URI ||
               slot == JSSLOT_LOCAL_NAME);
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_NamespaceClass.base ||
-              IsQNameClass(STOBJ_GET_CLASS(obj)));
-    JS_ASSERT_IF(STOBJ_GET_CLASS(obj) == &js_NamespaceClass.base,
+    JS_ASSERT(obj->getClass() == &js_NamespaceClass.base ||
+              IsQNameClass(obj->getClass()));
+    JS_ASSERT_IF(obj->getClass() == &js_NamespaceClass.base,
                  slot != JSSLOT_LOCAL_NAME);
 
     v = obj->fslots[slot];
@@ -190,7 +191,7 @@ IsDeclared(const JSObject *obj)
 {
     jsval v;
 
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_NamespaceClass.base);
+    JS_ASSERT(obj->getClass() == &js_NamespaceClass.base);
     v = obj->fslots[JSSLOT_DECLARED];
     JS_ASSERT(JSVAL_IS_VOID(v) || v == JSVAL_TRUE);
     return v == JSVAL_TRUE;
@@ -226,7 +227,7 @@ namespace_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
-    if (STOBJ_GET_CLASS(obj) != &js_NamespaceClass.base)
+    if (obj->getClass() != &js_NamespaceClass.base)
         return JS_TRUE;
 
     switch (JSVAL_TO_INT(id)) {
@@ -334,7 +335,7 @@ qname_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
-    if (STOBJ_GET_CLASS(obj) != &js_QNameClass.base)
+    if (obj->getClass() != &js_QNameClass.base)
         return JS_TRUE;
 
     switch (JSVAL_TO_INT(id)) {
@@ -7284,7 +7285,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     JS_ASSERT(prop);
     sprop = (JSScopeProperty *) prop;
     JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
-    cval = OBJ_GET_SLOT(cx, pobj, sprop->slot);
+    cval = pobj->lockAndGetSlot(cx, sprop->slot);
     pobj->dropProperty(cx, prop);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 

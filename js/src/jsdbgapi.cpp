@@ -64,6 +64,7 @@
 #include "jsstr.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 #include "jsautooplen.h"
@@ -630,7 +631,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             /* NB: wp is held, so we can safely dereference it still. */
             ok = wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
-                             ? OBJ_GET_SLOT(cx, obj, sprop->slot)
+                             ? obj->lockAndGetSlot(cx, sprop->slot)
                              : JSVAL_VOID,
                              vp, wp->closure);
             if (ok) {

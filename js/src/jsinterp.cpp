@@ -561,7 +561,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[0]));
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
     obj = JSVAL_TO_OBJECT(vp[0]);
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_NoSuchMethodClass);
+    JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
     invokevp[0] = obj->fslots[JSSLOT_FOUND_FUNCTION];
     invokevp[1] = vp[1];

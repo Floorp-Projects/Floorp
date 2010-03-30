@@ -3227,12 +3227,12 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
      * slots in jsemit.cpp:EmitEnterBlock.
      */
     uintN slot = JSSLOT_FREE(&js_BlockClass) + n;
-    if (slot >= STOBJ_NSLOTS(blockObj) &&
+    if (slot >= blockObj->numSlots() &&
         !js_GrowSlots(cx, blockObj, slot + 1)) {
         return JS_FALSE;
     }
     OBJ_SCOPE(blockObj)->freeslot = slot + 1;
-    STOBJ_SET_SLOT(blockObj, slot, PRIVATE_TO_JSVAL(pn));
+    blockObj->setSlot(slot, PRIVATE_TO_JSVAL(pn));
     return JS_TRUE;
 }
 

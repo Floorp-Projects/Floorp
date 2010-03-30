@@ -2508,7 +2508,7 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
             ssr->cycle = true;
             return;
         }
-        pobj = JSVAL_TO_OBJECT(STOBJ_GET_SLOT(pobj, slot));
+        pobj = JSVAL_TO_OBJECT(pobj->getSlot(slot));
     }
 
     pobj = ssr->pobj;

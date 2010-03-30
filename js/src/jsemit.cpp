@@ -204,7 +204,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         JS_ASSERT(op == JSOP_ENTERBLOCK);
         JS_ASSERT(nuses == 0);
         blockObj = cg->objectList.lastbox->object;
-        JS_ASSERT(STOBJ_GET_CLASS(blockObj) == &js_BlockClass);
+        JS_ASSERT(blockObj->getClass() == &js_BlockClass);
         JS_ASSERT(JSVAL_IS_VOID(blockObj->fslots[JSSLOT_BLOCK_DEPTH]));
 
         OBJ_SET_BLOCK_DEPTH(cx, blockObj, cg->stackDepth);
@@ -1859,7 +1859,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     for (uintN slot = JSSLOT_FREE(&js_BlockClass),
                limit = slot + OBJ_BLOCK_COUNT(cx, blockObj);
          slot < limit; slot++) {
-        jsval v = STOBJ_GET_SLOT(blockObj, slot);
+        jsval v = blockObj->getSlot(slot);
 
         /* Beware the empty destructuring dummy. */
         if (JSVAL_IS_VOID(v)) {

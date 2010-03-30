@@ -1312,10 +1312,10 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
 
     uint32 capacity = js_DenseArrayCapacity(obj);
     if (capacity) {
-        scope->freeslot = STOBJ_NSLOTS(obj) + JS_INITIAL_NSLOTS;
+        scope->freeslot = obj->numSlots() + JS_INITIAL_NSLOTS;
         obj->dslots[-1] = JS_INITIAL_NSLOTS + capacity;
     } else {
-        scope->freeslot = STOBJ_NSLOTS(obj);
+        scope->freeslot = obj->numSlots();
     }
 
     /* Create new properties pointing to existing values in dslots */
