@@ -870,7 +870,8 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = GetPresShell();
         if (presShell) {
-          nsRefPtr<nsCaret> caret = presShell->GetCaret();
+          nsRefPtr<nsCaret> caret;
+          presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_FALSE);
             if (selection) {
@@ -941,7 +942,8 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = GetPresShell();
         if (presShell) {
-          nsRefPtr<nsCaret> caret = presShell->GetCaret();
+          nsRefPtr<nsCaret> caret;
+          presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_TRUE);
           }

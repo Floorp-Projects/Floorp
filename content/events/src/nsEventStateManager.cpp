@@ -3904,7 +3904,8 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
     }
   }
 
-  nsIFrame* frame = shell->GetEventTargetFrame();
+  nsIFrame* frame = nsnull;
+  shell->GetEventTargetFrame(&frame);
   *aFrame = mCurrentTarget = frame;
   return NS_OK;
 }
@@ -3930,7 +3931,7 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
-    *aContent = presShell->GetEventTargetContent(aEvent).get();
+    presShell->GetEventTargetContent(aEvent, aContent);
   }
 
   // Some events here may set mCurrentTarget but not set the corresponding
