@@ -1174,6 +1174,7 @@ PRBool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
     return mSlidingBuffer != nsnull;
   }
 
+  PRUint32 countRemaining = mCountRemaining;
   if (!mSlidingBuffer) {
     mSlidingBuffer = new nsScannerString(aBuf);
     if (!mSlidingBuffer)
@@ -1195,7 +1196,7 @@ PRBool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
   if (aErrorPos != -1 && !mHasInvalidCharacter) {
     mHasInvalidCharacter = PR_TRUE;
     mFirstInvalidPosition = mCurrentPosition;
-    mFirstInvalidPosition.advance(aErrorPos);
+    mFirstInvalidPosition.advance(countRemaining + aErrorPos);
   }
 
   if (mFirstNonWhitespacePosition == -1) {
