@@ -97,8 +97,10 @@
 #if defined(MOZ_IPC)
 #include "nsIUUIDGenerator.h"
 
+#if !defined(XP_MACOSX)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+#endif
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
@@ -171,8 +173,10 @@ static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
 #if defined(MOZ_IPC)
+#if !defined(XP_MACOSX)
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
+#endif
 
 #  if defined(XP_WIN)
 // If crash reporting is disabled, we hand out this "null" pipe to the
@@ -1397,6 +1401,7 @@ MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
     NS_SUCCEEDED(extraFile->MoveTo(pendingDir, EmptyString()));
 }
 
+#if !defined(XP_MACOSX)
 static void
 OnChildProcessDumpRequested(void* aContext,
                             const ClientInfo* aClientInfo,
@@ -1423,11 +1428,16 @@ OnChildProcessDumpRequested(void* aContext,
     pidToMinidump->Put(pid, minidump);
   }
 }
+#endif  // XP_MACOSX
 
 static bool
 OOPInitialized()
 {
+#if defined(XP_MACOSX)
+  return true;
+#else
   return crashServer != NULL;
+#endif
 }
 
 static void
@@ -1467,8 +1477,10 @@ OOPInit()
     &dumpPath);
 #endif
 
+#if !defined(XP_MACOSX)
   if (!crashServer->Start())
     NS_RUNTIMEABORT("can't start crash reporter server()");
+#endif
 
   pidToMinidump = new ChildMinidumpMap();
   pidToMinidump->Init();
@@ -1484,8 +1496,10 @@ OOPDeinit()
     return;
   }
 
+#if !defined(XP_MACOSX)
   delete crashServer;
   crashServer = NULL;
+#endif
 
   delete dumpMapLock;
   dumpMapLock = NULL;
@@ -1538,7 +1552,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 }
 
 //--------------------------------------------------
-#elif defined(XP_UNIX)
+#elif defined(XP_LINUX)
 
 // Parent-side API for children
 bool
@@ -1641,6 +1655,10 @@ CreatePairedMinidumps(ProcessHandle childPid,
   if (!GetEnabled())
     return false;
 
+#if defined(XP_MACOSX)
+  return false;
+#else
+
   // create the UUID for the hang dump as a pair
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -1698,8 +1716,10 @@ CreatePairedMinidumps(ProcessHandle childPid,
   parentMinidump.swap(*parentDump);
 
   return true;
+#endif  // XP_MACOSX
 }
 
+#if !defined(XP_MACOSX)
 bool
 UnsetRemoteExceptionHandler()
 {
@@ -1707,6 +1727,7 @@ UnsetRemoteExceptionHandler()
   gExceptionHandler = NULL;
   return true;
 }
+#endif  // XP_MACOSX
 
 #endif  // MOZ_IPC
 
