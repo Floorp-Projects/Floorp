@@ -194,18 +194,6 @@ nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 }
 
 void 
-nsHtml5TreeBuilder::ensureBufferSpace(PRInt32 addedLength)
-{
-  PRInt32 newCharBufferCapacity = charBufferLen + addedLength;
-  if (newCharBufferCapacity > charBuffer.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newCharBufferCapacity);
-    nsHtml5ArrayCopy::arraycopy(charBuffer, newBuf, charBufferLen);
-    charBuffer.release();
-    charBuffer = newBuf;
-  }
-}
-
-void 
 nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   if (needToDropLF) {
@@ -3074,10 +3062,6 @@ nsHtml5TreeBuilder::clearLastListSlot()
 void 
 nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 {
-  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
-
-    pop();
-  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
@@ -3092,10 +3076,6 @@ nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::silentPush(nsHtml5StackNode* node)
 {
-  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
-
-    pop();
-  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
@@ -3741,6 +3721,20 @@ nsHtml5TreeBuilder::appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes)
   appendElement(elt, current->node);
   elementPushed(kNameSpaceID_XHTML, nsHtml5Atoms::form, elt);
   elementPopped(kNameSpaceID_XHTML, nsHtml5Atoms::form, elt);
+}
+
+void 
+nsHtml5TreeBuilder::accumulateCharacter(PRUnichar c)
+{
+  PRInt32 newLen = charBufferLen + 1;
+  if (newLen > charBuffer.length) {
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newLen);
+    nsHtml5ArrayCopy::arraycopy(charBuffer, newBuf, charBufferLen);
+    charBuffer.release();
+    charBuffer = newBuf;
+  }
+  charBuffer[charBufferLen] = c;
+  charBufferLen = newLen;
 }
 
 void 
