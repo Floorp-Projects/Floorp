@@ -44,6 +44,41 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
+inline jsval
+JSObject::lockAndGetSlot(JSContext *cx, uintN slot) {
+#ifdef JS_THREADSAFE
+    /*
+     * If thread-safe, define a lockAndGetSlot() that bypasses, for a native
+     * object, the lock-free "fast path" test of
+     * (OBJ_SCOPE(obj)->ownercx == cx), to avoid needlessly switching from
+     * lock-free to lock-full scope when doing GC on a different context
+     * from the last one to own the scope.  The caller in this case is
+     * probably a JSClass.mark function, e.g., fun_mark, or maybe a
+     * finalizer.
+     */
+    OBJ_CHECK_SLOT(this, slot);
+    return (OBJ_SCOPE(this)->title.ownercx == cx)
+           ? LOCKED_OBJ_GET_SLOT(this, slot)
+           : js_GetSlotThreadSafe(cx, this, slot);
+#else
+    return LOCKED_OBJ_GET_SLOT(this, slot);
+#endif
+}
+
+inline void
+JSObject::lockAndSetSlot(JSContext *cx, uintN slot, jsval value) {
+#ifdef JS_THREADSAFE
+    /* Thread-safe way to set a slot. */
+    OBJ_CHECK_SLOT(this, slot);
+    if (OBJ_SCOPE(this)->title.ownercx == cx)
+        LOCKED_OBJ_SET_SLOT(this, slot, value);
+    else
+        js_SetSlotThreadSafe(cx, this, slot, value);
+#else
+    LOCKED_OBJ_SET_SLOT(this, slot, value);
+#endif
+}
+
 inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)

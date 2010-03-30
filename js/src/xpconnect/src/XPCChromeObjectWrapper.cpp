@@ -316,7 +316,7 @@ ThrowException(nsresult rv, JSContext *cx)
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(obj);
+  JSClass *clasp = obj->getClass();
   if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
     return obj;
   }
@@ -340,7 +340,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (STOBJ_GET_CLASS(obj) != &COWClass.base) {
+  while (obj->getClass() != &COWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -707,7 +707,7 @@ XPC_COW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
-  if (!STOBJ_GET_CLASS(wrappedObj)->convert(cx, wrappedObj, type, vp)) {
+  if (!wrappedObj->getClass()->convert(cx, wrappedObj, type, vp)) {
     return JS_FALSE;
   }
 
@@ -752,7 +752,7 @@ XPC_COW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   XPCWrappedNative *me = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
-  return ((JSExtendedClass *)STOBJ_GET_CLASS(obj))->
+  return ((JSExtendedClass *)obj->getClass())->
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
 }
 

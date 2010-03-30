@@ -80,6 +80,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
@@ -743,8 +744,8 @@ JSClass js_DeclEnvClass = {
 static JSBool
 CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
 {
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass ||
-              STOBJ_GET_CLASS(obj) == &js_DeclEnvClass);
+    JS_ASSERT(obj->getClass() == &js_CallClass ||
+              obj->getClass() == &js_DeclEnvClass);
 
     jsval v = *vp;
 
@@ -846,7 +847,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     callobj->setPrivate(fp);
     JS_ASSERT(fp->argv);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->calleeObject()));
-    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->calleeValue());
+    callobj->setSlot(JSSLOT_CALLEE, fp->calleeValue());
     fp->callobj = callobj;
 
     /*
@@ -864,7 +865,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JSObject *callobj = NewCallObject(cx, fun, scopeChain);
     if (!callobj)
         return NULL;
-    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(callee));
+    callobj->setSlot(JSSLOT_CALLEE, OBJECT_TO_JSVAL(callee));
     return callobj;
 }
 
@@ -876,8 +877,8 @@ js_GetCallObjectFunction(JSObject *obj)
 {
     jsval v;
 
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass);
-    v = STOBJ_GET_SLOT(obj, JSSLOT_CALLEE);
+    JS_ASSERT(obj->getClass() == &js_CallClass);
+    v = obj->getSlot(JSSLOT_CALLEE);
     if (JSVAL_IS_VOID(v)) {
         /* Newborn or prototype object. */
         return NULL;
@@ -902,7 +903,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->argsobj) {
         if (!(fp->flags & JSFRAME_OVERRIDE_ARGS))
-            STOBJ_SET_SLOT(callobj, JSSLOT_CALL_ARGUMENTS, fp->argsobj);
+            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, fp->argsobj);
         js_PutArgsObject(cx, fp);
     }
 
@@ -917,7 +918,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS - JSSLOT_PRIVATE ==
                      1 + CALL_CLASS_FIXED_RESERVED_SLOTS);
     if (n != 0) {
-        JS_ASSERT(STOBJ_NSLOTS(callobj) >= JS_INITIAL_NSLOTS + n);
+        JS_ASSERT(callobj->numSlots() >= JS_INITIAL_NSLOTS + n);
         n += JS_INITIAL_NSLOTS;
         CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots);
     }
@@ -926,7 +927,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (js_IsNamedLambda(fun)) {
         JSObject *env = callobj->getParent();
 
-        JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
+        JS_ASSERT(env->getClass() == &js_DeclEnvClass);
         JS_ASSERT(env->getPrivate() == fp);
         env->setPrivate(NULL);
     }
@@ -1028,7 +1029,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     jsval *array;
     if (kind == JSCPK_UPVAR) {
-        JSObject *callee = JSVAL_TO_OBJECT(STOBJ_GET_SLOT(obj, JSSLOT_CALLEE));
+        JSObject *callee = JSVAL_TO_OBJECT(obj->getSlot(JSSLOT_CALLEE));
 
 #ifdef DEBUG
         JSFunction *callee_fun = (JSFunction *) callee->getPrivate();
@@ -1048,7 +1049,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
             if (setter) {
                 if (fp)
                     fp->flags |= JSFRAME_OVERRIDE_ARGS;
-                STOBJ_SET_SLOT(obj, JSSLOT_CALL_ARGUMENTS, *vp);
+                obj->setSlot(JSSLOT_CALL_ARGUMENTS, *vp);
             } else {
                 if (fp && !(fp->flags & JSFRAME_OVERRIDE_ARGS)) {
                     JSObject *argsobj;
@@ -1058,7 +1059,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                         return false;
                     *vp = OBJECT_TO_JSVAL(argsobj);
                 } else {
-                    *vp = STOBJ_GET_SLOT(obj, JSSLOT_CALL_ARGUMENTS);
+                    *vp = obj->getSlot(JSSLOT_CALL_ARGUMENTS);
                 }
             }
             return true;
@@ -1177,13 +1178,13 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     JSPropertyOp getter, setter;
     uintN slot, attrs;
 
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass);
+    JS_ASSERT(obj->getClass() == &js_CallClass);
     JS_ASSERT(!obj->getProto());
 
     if (!JSVAL_IS_STRING(idval))
         return JS_TRUE;
 
-    callee = STOBJ_GET_SLOT(obj, JSSLOT_CALLEE);
+    callee = obj->getSlot(JSSLOT_CALLEE);
     if (JSVAL_IS_VOID(callee))
         return JS_TRUE;
     fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(callee));

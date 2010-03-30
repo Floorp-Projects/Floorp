@@ -293,7 +293,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
                        ? JS_GetStringBytes(JSVAL_TO_STRING(idval))
                        : nsnull;
     if(!name ||
-       !IS_PROTO_CLASS(STOBJ_GET_CLASS(desc.obj)) ||
+       !IS_PROTO_CLASS(desc.obj->getClass()) ||
        (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(desc.getter || desc.setter))
     {
@@ -362,7 +362,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     if(!obj2 ||
        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(getter || setter) ||
-       !IS_PROTO_CLASS(STOBJ_GET_CLASS(obj2)))
+       !IS_PROTO_CLASS(obj2->getClass()))
         return forward(cx, argc, vp);
 
     // Reify the getter and setter...
@@ -503,8 +503,8 @@ GetMemberInfo(JSObject *obj,
     // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) ||
-                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass,
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()) ||
+                 obj->getClass() == &XPC_WN_Tearoff_JSClass,
                  "obj must be a wrapper");
     XPCWrappedNativeProto *proto;
     if(IS_SLIM_WRAPPER(obj))
@@ -1092,7 +1092,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
 #ifdef DEBUG
     JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
     if(jsobj && !jsobj->getParent())
-        NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
+        NS_ASSERTION(jsobj->getClass()->flags & JSCLASS_IS_GLOBAL,
                      "Why did we recreate this wrapper?");
 #endif
 

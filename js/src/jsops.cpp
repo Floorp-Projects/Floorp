@@ -1400,7 +1400,7 @@ BEGIN_CASE(JSOP_GVARINC)
     }
     slot = JSVAL_TO_INT(lval);
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    rval = OBJ_GET_SLOT(cx, cx->activeCallStack()->getInitialVarObj(), slot);
+    rval = cx->activeCallStack()->getInitialVarObj()->lockAndGetSlot(cx, slot);
     if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
         PUSH_OPND(rval + incr2);
         rval += incr;
@@ -1412,7 +1412,7 @@ BEGIN_CASE(JSOP_GVARINC)
         rval = regs.sp[-1];
         --regs.sp;
     }
-    OBJ_SET_SLOT(cx, fp->varobj(cx), slot, rval);
+    fp->varobj(cx)->lockAndSetSlot(cx, slot, rval);
     len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
@@ -1769,7 +1769,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * reserveSlots hook to allocate a number of reserved
                  * slots that may vary with obj.
                  */
-                if (slot < STOBJ_NSLOTS(obj) &&
+                if (slot < obj->numSlots() &&
                     !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
                     ++scope->freeslot;
                 } else {
@@ -2748,7 +2748,7 @@ BEGIN_CASE(JSOP_CALLGVAR)
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
     obj = cx->activeCallStack()->getInitialVarObj();
     slot = JSVAL_TO_INT(lval);
-    rval = OBJ_GET_SLOT(cx, obj, slot);
+    rval = obj->lockAndGetSlot(cx, slot);
     PUSH_OPND(rval);
     if (op == JSOP_CALLGVAR)
         PUSH_OPND(OBJECT_TO_JSVAL(obj));
@@ -3392,7 +3392,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
         /* Fast path. Property cache hit. */
         slot = sprop->slot;
         JS_ASSERT(slot == scope->freeslot);
-        if (slot < STOBJ_NSLOTS(obj)) {
+        if (slot < obj->numSlots()) {
             ++scope->freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot))

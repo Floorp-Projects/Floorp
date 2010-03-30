@@ -213,7 +213,7 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
 static inline JSObject *
 FindSafeObject(JSObject *obj)
 {
-  while (STOBJ_GET_CLASS(obj) != &SJOWClass.base) {
+  while (obj->getClass() != &SJOWClass.base) {
     obj = obj->getProto();
 
     if (!obj) {
@@ -692,7 +692,7 @@ XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
     return JS_FALSE;
   }
 
-  JSClass *clazz = STOBJ_GET_CLASS(unsafeObj);
+  JSClass *clazz = unsafeObj->getClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, unsafeObj, id, mode, vp);
 }
@@ -804,7 +804,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // with XPCSafeJSObjectWrapper, and never let the eval function
   // object be directly wrapped.
 
-  if (STOBJ_GET_CLASS(objToWrap) == &js_ScriptClass ||
+  if (objToWrap->getClass() == &js_ScriptClass ||
       (::JS_ObjectIsFunction(cx, objToWrap) &&
        ::JS_GetFunctionFastNative(cx, ::JS_ValueToFunction(cx, argv[0])) ==
        XPCWrapper::sEvalNative)) {

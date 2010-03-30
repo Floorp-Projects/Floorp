@@ -1356,7 +1356,7 @@ xpc_InitWrappedNativeJSOps();
 inline JSBool
 DebugCheckWrapperClass(JSObject* obj)
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)),
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
                  "Forgot to check if this is a wrapper?");
     return JS_TRUE;
 }
@@ -1367,21 +1367,21 @@ DebugCheckWrapperClass(JSObject* obj)
 // also holds a pointer to its XPCWrappedNativeProto in a reserved slot, we can
 // check that slot for a non-void value to distinguish between the two.
 
-// Only use these macros if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) is true.
+// Only use these macros if IS_WRAPPER_CLASS(obj->getClass()) is true.
 #define IS_WN_WRAPPER_OBJECT(obj)                                             \
     (DebugCheckWrapperClass(obj) &&                                           \
-     JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, JSSLOT_START(STOBJ_GET_CLASS(obj)))))
+     JSVAL_IS_VOID(obj->getSlot(JSSLOT_START(obj->getClass()))))
 #define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
     (DebugCheckWrapperClass(obj) &&                                           \
-     !JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, JSSLOT_START(STOBJ_GET_CLASS(obj)))))
+     !JSVAL_IS_VOID(obj->getSlot(JSSLOT_START(obj->getClass()))))
 
-// Use these macros if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) might be false.
-// Avoid calling them if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) can only be
+// Use these macros if IS_WRAPPER_CLASS(obj->getClass()) might be false.
+// Avoid calling them if IS_WRAPPER_CLASS(obj->getClass()) can only be
 // true, as we'd do a redundant call to IS_WRAPPER_CLASS.
 #define IS_WN_WRAPPER(obj)                                                    \
-    (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) && IS_WN_WRAPPER_OBJECT(obj))
+    (IS_WRAPPER_CLASS(obj->getClass()) && IS_WN_WRAPPER_OBJECT(obj))
 #define IS_SLIM_WRAPPER(obj)                                                  \
-    (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) && IS_SLIM_WRAPPER_OBJECT(obj))
+    (IS_WRAPPER_CLASS(obj->getClass()) && IS_SLIM_WRAPPER_OBJECT(obj))
 
 // Comes from xpcwrappednativeops.cpp
 extern void
@@ -2238,7 +2238,7 @@ extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
 static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
-  jsval v = STOBJ_GET_SLOT(obj, JSSLOT_START(STOBJ_GET_CLASS(obj)));
+  jsval v = obj->getSlot(JSSLOT_START(obj->getClass()));
   return static_cast<XPCWrappedNativeProto*>(JSVAL_TO_PRIVATE(v));
 }
 

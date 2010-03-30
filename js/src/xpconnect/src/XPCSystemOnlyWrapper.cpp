@@ -223,7 +223,7 @@ using namespace SystemOnlyWrapper;
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(obj);
+  JSClass *clasp = obj->getClass();
   if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
     return obj;
   }
@@ -241,7 +241,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (STOBJ_GET_CLASS(obj) != &SOWClass.base) {
+  while (obj->getClass() != &SOWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -360,7 +360,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     return XPC_SOW_WrapFunction(cx, wrapperObj, obj, vp);
   }
 
-  if (STOBJ_GET_CLASS(obj) == &SOWClass.base) {
+  if (obj->getClass() == &SOWClass.base) {
     // We are extra careful about content-polluted wrappers here. I don't know
     // if it's possible to reach them through objects that we wrap, but figuring
     // that out is more expensive (and harder) than simply checking and
@@ -385,7 +385,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
 static JSBool
 XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  NS_ASSERTION(STOBJ_GET_CLASS(obj) == &SOWClass.base, "Wrong object");
+  NS_ASSERTION(obj->getClass() == &SOWClass.base, "Wrong object");
 
   jsval resolving;
   if (!JS_GetReservedSlot(cx, obj, sFlagsSlot, &resolving)) {
@@ -533,7 +533,7 @@ XPC_SOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_TRUE;
   }
 
-  return STOBJ_GET_CLASS(wrappedObj)->convert(cx, wrappedObj, type, vp);
+  return wrappedObj->getClass()->convert(cx, wrappedObj, type, vp);
 }
 
 static JSBool
@@ -568,7 +568,7 @@ XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_TRUE;
   }
 
-  JSClass *clasp = STOBJ_GET_CLASS(iface);
+  JSClass *clasp = iface->getClass();
 
   *bp = JS_FALSE;
   if (!clasp->hasInstance) {
@@ -614,7 +614,7 @@ XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
   if (lhs) {
     // Delegate to our wrapped object if we can.
-    JSClass *clasp = STOBJ_GET_CLASS(lhs);
+    JSClass *clasp = lhs->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
       JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
       // NB: JSExtendedClass.equality is a required field.
@@ -623,7 +623,7 @@ XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   }
 
   // We know rhs is non-null.
-  JSClass *clasp = STOBJ_GET_CLASS(rhs);
+  JSClass *clasp = rhs->getClass();
   if (clasp->flags & JSCLASS_IS_EXTENDED) {
     JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
     // NB: JSExtendedClass.equality is a required field.
