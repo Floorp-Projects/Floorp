@@ -44,10 +44,6 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 
-#ifdef MOZ_WIDGET_QT
-class QApplication;
-#endif
-
 struct ChromePackage;
 struct ResourceMapping;
 struct OverrideMapping;
@@ -99,9 +95,6 @@ private:
     nsTArray<nsAutoPtr<PTestShellChild> > mTestShells;
 
     PRBool mQuit;
-#ifdef MOZ_WIDGET_QT
-    nsAutoPtr<QApplication> mQApp;
-#endif
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
 };
