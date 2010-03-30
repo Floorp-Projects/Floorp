@@ -58,7 +58,7 @@ static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 
 
-NS_IMPL_ISUPPORTS1(nsIdleServiceQt, nsIIdleService)
+NS_IMPL_ISUPPORTS2(nsIdleServiceQt, nsIIdleService, nsIdleService)
 
 nsIdleServiceQt::nsIdleServiceQt()
     : mXssInfo(nsnull)
@@ -99,23 +99,23 @@ nsIdleServiceQt::~nsIdleServiceQt()
 #endif
 }
 
-NS_IMETHODIMP
-nsIdleServiceQt::GetIdleTime(PRUint32 *aTimeDiff)
+bool
+nsIdleServiceQt::PollIdleTime(PRUint32 *aIdleTime)
 {
     // Ask xscreensaver about idle time:
-    *aTimeDiff = 0;
+    *aIdleTime = 0;
 
     // We might not have a display (cf. in xpcshell)
     Display *dplay = QX11Info::display();
     if (!dplay) {
-        return NS_ERROR_FAILURE;
+        return false;
     }
 
     if (!sInitialized) {
         Initialize();
     }
     if (!_XSSQueryExtension || !_XSSAllocInfo || !_XSSQueryInfo) {
-        return NS_ERROR_FAILURE;
+        return false;
     }
 
     int event_base, error_base;
@@ -123,12 +123,18 @@ nsIdleServiceQt::GetIdleTime(PRUint32 *aTimeDiff)
         if (!mXssInfo)
             mXssInfo = _XSSAllocInfo();
         if (!mXssInfo)
-            return NS_ERROR_OUT_OF_MEMORY;
+            return false;
 
         _XSSQueryInfo(dplay, QX11Info::appRootWindow(), mXssInfo);
-        *aTimeDiff = mXssInfo->idle;
-        return NS_OK;
+        *aIdleTime = mXssInfo->idle;
+        return true;
     }
 
-    return NS_ERROR_FAILURE;
+    return false;
 }
+bool
+nsIdleServiceQt::UsePollMode()
+{
+    return true;
+}
+

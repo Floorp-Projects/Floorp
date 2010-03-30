@@ -42,7 +42,7 @@
 static int (*_System DSSaver_GetInactivityTime)(ULONG *, ULONG *);
 #define SSCORE_NOERROR 0 // as in the DSSaver header files
 
-NS_IMPL_ISUPPORTS1(nsIdleServiceOS2, nsIIdleService)
+NS_IMPL_ISUPPORTS2(nsIdleServiceOS2, nsIIdleService, nsIdleService)
 
 nsIdleServiceOS2::nsIdleServiceOS2()
   : mHMod(NULLHANDLE), mInitialized(PR_FALSE)
@@ -63,19 +63,26 @@ nsIdleServiceOS2::~nsIdleServiceOS2()
   }
 }
 
-NS_IMETHODIMP
-nsIdleServiceOS2::GetIdleTime(PRUint32 *aIdleTime)
+bool
+nsIdleServiceOS2::PollIdleTime(PRUint32 *aIdleTime)
 {
   if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
 
   ULONG mouse, keyboard;
   if (DSSaver_GetInactivityTime(&mouse, &keyboard) != SSCORE_NOERROR) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   // we are only interested in activity in general, so take the minimum
   // of both timers
   *aIdleTime = PR_MIN(mouse, keyboard);
-  return NS_OK;
+  return true;
 }
+
+bool
+nsIdleServiceOS2::UsePollMode()
+{
+  return mInitialized;
+}
+
