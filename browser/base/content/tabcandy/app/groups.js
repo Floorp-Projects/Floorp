@@ -27,7 +27,10 @@ function isEventOverElement(event, el){
 
 // ##########
 window.Group = function(listOfEls, options) {
-  this._children = [];
+  if(typeof(options) == 'undefined')
+    options = {};
+
+  this._children = []; // an array of Items
   this._container = null;
   this._padding = 30;
 
@@ -96,7 +99,7 @@ window.Group = function(listOfEls, options) {
   this._container = container;
 
   $.each(listOfEls, function(index, el) {  
-    self.add(el);
+    self.add(el, null, options);
   });
 
   this._addHandlers(container);
@@ -104,7 +107,7 @@ window.Group = function(listOfEls, options) {
   Groups.register(this);
   
   // ___ Push other objects away
-  if(!options || !options.suppressPush)
+  if(!options.dontPush)
     this.pushAway();   
 };
 
@@ -155,9 +158,9 @@ window.Group.prototype = $.extend(new Item(), {
   },
   
   // ----------  
-  setBounds: function(rect) {
-    this.setPosition(rect.left, rect.top);
-    this.setSize(rect.width, rect.height);
+  setBounds: function(rect, immediately) {
+    this.setPosition(rect.left, rect.top, immediately);
+    this.setSize(rect.width, rect.height, immediately);
   },
   
   // ----------  
@@ -179,11 +182,21 @@ window.Group.prototype = $.extend(new Item(), {
   },
 
   // ----------  
-  setSize: function(width, height) {
+  setSize: function(width, height, immediately) {
     var $titlebar = $('.titlebar', this._container);
     var titleHeight = $titlebar.height();
-    $(this._container).animate({width: width, height: height - titleHeight});
-    this.arrange();
+    
+    var containerOptions = {width: width, height: height - titleHeight};
+    var titleOptions = {width: width};
+    if(immediately) {
+      $(this._container).css(containerOptions);
+      $titlebar.css(titleOptions);
+    } else {
+      $(this._container).animate(containerOptions);
+      $titlebar.animate(titleOptions);
+    }
+      
+    this.arrange({animate: !immediately});
   },
 
   // ----------  
@@ -204,11 +217,14 @@ window.Group.prototype = $.extend(new Item(), {
   },
   
   // ----------  
-  add: function($el, dropPos){
+  add: function($el, dropPos, options) {
     Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
     
-    if( typeof(dropPos) == "undefined" ) 
+    if(!dropPos) 
       dropPos = {top:window.innerWidth, left:window.innerHeight};
+      
+    if(typeof(options) == 'undefined')
+      options = {};
       
     var self = this;
     
@@ -257,7 +273,9 @@ window.Group.prototype = $.extend(new Item(), {
     });      
     
     $el.data("group", this);
-    this.arrange();
+    
+    if(!options.dontArrange)
+      this.arrange();
   },
   
   // ----------  
@@ -508,13 +526,12 @@ window.Groups = {
   
   // ----------  
   arrange: function() {
-    var $groups = $('.group');
-    var count = $groups.length;
+    var count = this.groups.length;
     var columns = Math.ceil(Math.sqrt(count));
     var rows = ((columns * columns) - count >= columns ? columns - 1 : columns); 
     var padding = 12;
     var startX = padding;
-    var startY = 100;
+    var startY = Page.startY;
     var totalWidth = window.innerWidth - startX;
     var totalHeight = window.innerHeight - startY;
     var box = new Rect(startX, startY, 
@@ -522,7 +539,7 @@ window.Groups = {
         (totalHeight / rows) - padding);
     
     $.each(this.groups, function(index, group) {
-      group.setBounds(box);
+      group.setBounds(box, true);
       
       box.left += box.width + padding;
       if(index % columns == columns - 1) {

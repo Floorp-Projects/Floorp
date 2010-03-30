@@ -2,9 +2,9 @@
 // An Item is an object that adheres to an interface consisting of these methods: 
 //   getContainer: function() 
 //   getBounds: function() 
-//   setBounds: function(rect)
+//   setBounds: function(rect, immediately)
 //   setPosition: function(left, top, immediately) 
-//   setSize: function(width, height)
+//   setSize: function(width, height, immediately)
 //   close: function() 
 //   addOnClose: function(referenceObject, callback)
 //   removeOnClose: function(referenceObject)
