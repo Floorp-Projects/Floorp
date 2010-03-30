@@ -322,7 +322,8 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
     nsCoreUtils::GetPresShellFor(lastNodeWithCaret);
   NS_ENSURE_TRUE(presShell, caretRect);
 
-  nsRefPtr<nsCaret> caret = presShell->GetCaret();
+  nsRefPtr<nsCaret> caret;
+  presShell->GetCaret(getter_AddRefs(caret));
   NS_ENSURE_TRUE(caret, caretRect);
 
   nsCOMPtr<nsISelection> caretSelection(do_QueryReferent(mLastUsedSelection));

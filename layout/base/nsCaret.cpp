@@ -1005,7 +1005,9 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   NS_ENSURE_TRUE(presShell, /**/);
   {
-    if (presShell->IsPaintingSuppressed())
+    PRBool isPaintingSuppressed;
+    presShell->IsPaintingSuppressed(&isPaintingSuppressed);
+    if (isPaintingSuppressed)
     {
       if (!mDrawn)
         mPendingDraw = PR_TRUE;

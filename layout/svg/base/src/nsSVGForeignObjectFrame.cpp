@@ -400,7 +400,9 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     // PresShell and prevent it from reflowing us properly in future. Besides
     // that, nsSVGOuterSVGFrame::DidReflow will take care of reflowing us
     // synchronously, so there's no need.
-    if (!PresContext()->PresShell()->IsReflowLocked()) {
+    PRBool reflowing;
+    PresContext()->PresShell()->IsReflowLocked(&reflowing);
+    if (!reflowing) {
       UpdateGraphic(); // update mRect before requesting reflow
       RequestReflow(nsIPresShell::eResize);
     }
