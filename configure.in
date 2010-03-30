@@ -5475,6 +5475,9 @@ case "${target}" in
 powerpc-apple-darwin*)
     MOZ_IPC=
     ;;
+i386-apple-darwin*)
+    MOZ_IPC=
+    ;;
 *-wince*)
     MOZ_IPC=
     ;;
