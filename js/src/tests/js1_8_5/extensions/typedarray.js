@@ -216,6 +216,9 @@ function test()
     check(function() !(a[3] == a[3]));
     check(function() a[4] == 1);
 
+    a = new ArrayBuffer(0x10);
+    checkThrows(function() new Uint32Array(buffer, 4, 0x3FFFFFFF));
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
