@@ -55,8 +55,10 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsfun.h"      /* for JS_ARGS_LENGTH_MAX */
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsobj.h"
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jstracer.h"
@@ -279,11 +281,43 @@ JSScope::destroy(JSContext *cx)
 bool
 JSScope::initRuntimeState(JSContext *cx)
 {
-    cx->runtime->emptyBlockScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps,
-                                                            &js_BlockClass);
-    JS_ASSERT(cx->runtime->emptyBlockScope->nrefs == 2);
-    cx->runtime->emptyBlockScope->nrefs = 1;
-    return !!cx->runtime->emptyBlockScope;
+    JSRuntime *rt = cx->runtime;
+
+    rt->emptyArgumentsScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_ArgumentsClass);
+    if (!rt->emptyArgumentsScope)
+        return false;
+    JS_ASSERT(rt->emptyArgumentsScope->nrefs == 2);
+    rt->emptyArgumentsScope->nrefs = 1;
+
+    /*
+     * NewArguments allocates dslots to have enough room for the argc of the
+     * particular arguments object being created.
+     *
+     * Thus we fake freeslot in the shared empty scope for the many unmutated
+     * arguments objects so that, until and unless a scope property is defined
+     * on a particular arguments object, it can share the runtime-wide empty
+     * scope with other arguments objects, whatever their initial argc values.
+     *
+     * This allows assertions that the arg slot being got or set by a fast path
+     * is less than freeslot to succeed. As the shared emptyArgumentsScope is
+     * never mutated, it's safe to pretend to have all the slots possible.
+     *
+     * Note how the fast paths in jsops.cpp for JSOP_LENGTH and JSOP_GETELEM
+     * bypass resolution of scope properties for length and element indices on
+     * arguments objects. This helps ensure that any arguments object needing
+     * its own mutable scope (with unique shape) is a rare event.
+     */
+    rt->emptyArgumentsScope->freeslot = JS_INITIAL_NSLOTS + JS_ARGS_LENGTH_MAX;
+
+    rt->emptyBlockScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_BlockClass);
+    if (!rt->emptyBlockScope) {
+        rt->emptyArgumentsScope->drop(cx);
+        rt->emptyArgumentsScope = NULL;
+        return false;
+    }
+    JS_ASSERT(rt->emptyBlockScope->nrefs == 2);
+    rt->emptyBlockScope->nrefs = 1;
+    return true;
 }
 
 /* static */
@@ -291,6 +325,10 @@ void
 JSScope::finishRuntimeState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    if (rt->emptyArgumentsScope) {
+        rt->emptyArgumentsScope->drop(cx);
+        rt->emptyArgumentsScope = NULL;
+    }
     if (rt->emptyBlockScope) {
         rt->emptyBlockScope->drop(cx);
         rt->emptyBlockScope = NULL;

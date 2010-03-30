@@ -228,16 +228,21 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
     if (obj->isArray()) {
         *lengthp = obj->fslots[JSSLOT_ARRAY_LENGTH];
-        return JS_TRUE;
+        return true;
+    }
+
+    if (obj->isArguments() && !IsOverriddenArgsLength(obj)) {
+        *lengthp = GetArgsLength(obj);
+        return true;
     }
 
     AutoValueRooter tvr(cx, JSVAL_NULL);
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
-        return JS_FALSE;
+        return false;
 
     if (JSVAL_IS_INT(tvr.value())) {
         *lengthp = jsuint(jsint(JSVAL_TO_INT(tvr.value()))); /* jsuint cast does ToUint32 */
-        return JS_TRUE;
+        return true;
     }
 
     *lengthp = js_ValueToECMAUint32(cx, tvr.addr());
@@ -587,11 +592,9 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 JSBool
 js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
 {
-    JSClass *clasp;
+    JSObject *wrappedObj = js_GetWrappedObject(cx, obj);
 
-    clasp = OBJ_GET_CLASS(cx, js_GetWrappedObject(cx, obj));
-    *answerp = (clasp == &js_ArgumentsClass || clasp == &js_ArrayClass ||
-                clasp == &js_SlowArrayClass);
+    *answerp = wrappedObj->isArguments() || wrappedObj->isArray();
     if (!*answerp) {
         *lengthp = 0;
         return JS_TRUE;
