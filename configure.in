@@ -4727,7 +4727,7 @@ MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
-MOZ_PLACES=
+MOZ_PLACES=1
 MOZ_PLAINTEXT_EDITOR_ONLY=
 MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
@@ -6307,25 +6307,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
 dnl ========================================================
-dnl = Enable places (new history/bookmarks)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(places,
-[  --enable-places        Enable 'places' bookmark/history implementation],
-    MOZ_PLACES=1,
-    MOZ_PLACES= )
-if test -n "$MOZ_PLACES"; then
-    AC_DEFINE(MOZ_PLACES)
-    if test -z "$MOZ_MAIL_NEWS"; then
-      MOZ_MORK=
-    fi
-    MOZ_MORKREADER=1
-else
-  if test "$MOZ_BUILD_APP" = "browser"; then
-    AC_MSG_ERROR([Cannot build Firefox with --disable-places.])
-  fi
-fi
-
-dnl ========================================================
 dnl = Disable feed handling components
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(feeds,
@@ -6462,21 +6443,6 @@ else
 fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
-
-dnl ========================================================
-dnl = Enable help viewer (off by default)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(help-viewer,
-[  --enable-help-viewer        Enable help viewer],
-    MOZ_HELP_VIEWER=1,
-    MOZ_HELP_VIEWER= )
-if test -n "$MOZ_HELP_VIEWER"; then
-     AC_DEFINE(MOZ_HELP_VIEWER)
-fi
-AC_SUBST(MOZ_HELP_VIEWER)
-if test "$MOZ_BUILD_APP" = "browser" -a -n "$MOZ_HELP_VIEWER"; then
-    AC_MSG_ERROR([Cannot build Firefox with --enable-help-viewer.])
-fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
@@ -7161,27 +7127,6 @@ if test -n "$_ENABLE_CODESIGHS"; then
         AC_MSG_ERROR([Codesighs directory $srcdir/tools/codesighs required.])
     fi
 fi
-
-MOZ_ARG_ENABLE_BOOL(insure,
-[  --enable-insure         Enable insure++ instrumentation (linux only)],
-    _ENABLE_INSURE=1,
-    _ENABLE_INSURE= )
-if test -n "$_ENABLE_INSURE"; then
-    MOZ_INSURE="insure"
-    MOZ_INSURIFYING=1
-    MOZ_INSURE_DIRS="."
-    MOZ_INSURE_EXCLUDE_DIRS="config"
-fi
-
-MOZ_ARG_WITH_STRING(insure-dirs,
-[  --with-insure-dirs=DIRS
-                          Dirs to instrument with insure ],
-    MOZ_INSURE_DIRS=$withval )
-
-MOZ_ARG_WITH_STRING(insure-exclude-dirs,
-[  --with-insure-exclude-dirs=DIRS
-                          Dirs to not instrument with insure ],
-    MOZ_INSURE_EXCLUDE_DIRS="config $withval" )
 
 dnl ========================================================
 dnl = Support for Quantify (Windows)
@@ -8243,11 +8188,7 @@ AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
-AC_SUBST(MOZ_INSURE)
-AC_SUBST(MOZ_INSURE_DIRS)
-AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_QUANTIFY)
-AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_PLACES_BOOKMARKS)
@@ -8256,6 +8197,7 @@ AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
+AC_SUBST(MOZ_HELP_VIEWER)
 
 AC_SUBST(MOZ_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
