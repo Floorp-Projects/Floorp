@@ -323,7 +323,7 @@ function ReadManifest(aURL)
     var lines = streamBuf.split(/(\n|\r|\r\n)/);
 
     // Build the sandbox for fails-if(), etc., condition evaluation.
-    var sandbox = Components.utils.Sandbox(aURL.spec);
+    var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
     sandbox.isDebugBuild = gDebug.isDebugBuild;
