@@ -201,7 +201,8 @@ window.Group.prototype = $.extend(new Item(), {
 
   // ----------  
   close: function() {
-    $.each(this._children, function(index, child) {
+    var toClose = $.merge([], this._children);
+    $.each(toClose, function(index, child) {
       child.close();
     });
   },
@@ -316,8 +317,11 @@ window.Group.prototype = $.extend(new Item(), {
   
   // ----------
   removeAll: function() {
-    while(this._children.length)
-      this.remove(this._children[0], {dontArrange: true});
+    var self = this;
+    var toRemove = $.merge([], this._children);
+    $.each(toRemove, function(index, child) {
+      self.remove(child, {dontArrange: true});
+    });
   },
     
   // ----------  
@@ -551,8 +555,10 @@ window.Groups = {
   
   // ----------
   removeAll: function() {
-    while(this.groups.length)
-      this.groups[0].removeAll();  
+    var toRemove = $.merge([], this.groups);
+    $.each(toRemove, function(index, group) {
+      group.removeAll();
+    });
   }
 };
 
