@@ -40,22 +40,13 @@
 html *:not(embed):focus, *:focus > font {
   outline: 2px solid #8db8d8 !important;
   /*
-   XXX How do I preserve mac focusring without blowing focus color on other platforms?
-   outline-color: -moz-mac-focusring !important;
-   */
+    XXX How do I preserve mac focusring without blowing focus color on other platforms?
+    outline-color: -moz-mac-focusring !important;
+  */
 }
 
 html *|*:link:focus, *|*:visited:focus {
   outline-offset: -2px;
-}
-
-html button::-moz-focus-inner, input[type="reset"]::-moz-focus-inner, input[type="button"]::-moz-focus-inner, input[type="submit"]::-moz-focus-inner {
-  padding: 1px 2px 1px 2px;
-  border: 1px none transparent !important;
-} 
-
-html button:focus::-moz-focus-inner, input[type="reset"]:focus::-moz-focus-inner, input[type="button"]:focus::-moz-focus-inner, input[type="submit"]:focus::-moz-focus-inner {
-  border-color: ButtonText !important;
 }
 
 /* Style the scrollbars */
@@ -81,61 +72,155 @@ select:not([size]) > scrollbar,
 select[size="1"] > scrollbar,
 select:not([size]) scrollbarbutton,
 select[size="1"] scrollbarbutton {
-  display:block !important;
+  display: block !important;
 }
 
 /* Override inverse OS themes */
-textarea,
-select, select[size], select[multiple], select[size][multiple],
-input:not([type]),
-input[type="text"],
-input[type="file"],
-input[type="password"] {
-  color: black;
-  background-color: white;
-  border: 1px solid silver;
+html select,
+html button,
+html textarea,
+html input:not([type="image"]) {
+  -moz-border-radius: 0.25em;
 }
 
-/* Override inverse OS themes */
-button,
-input[type="button"],
-input[type="reset"],
-input[type="submit"] {
-  color: black;
-  background-color: silver;
-  border: 2px outset silver;
+html select[size],
+html select[multiple],
+html select[size][multiple],
+html textarea,
+html input:not([type="image"]) {
+  border-style: solid;
+  border-color: #7d7d7d;
+  color: #414141;
+  background: -moz-linear-gradient(top, rgb(185,185,185) 0, rgb(235,235,235) 3px, rgb(255,255,255) 16px);
 }
 
-/* Override inverse OS themes */
-input[type="radio"],
-input[type="checkbox"] {
-  color: black !important;
-  background-color: white !important;
-  border: 2px inset gray;
+html select:not([size]),
+html select[size="0"],
+html select[size="1"],
+html input[type="button"],
+html input[type="submit"],
+html input[type="reset"],
+html button {
+  border-style: solid;
+  border-color: #7d7d7d;
+  color: #414141;
+  background: -moz-linear-gradient(top, rgb(255,255,255) 0, rgb(235,235,235) 18px, rgb(185,185,185) 100%);
 }
 
-/* Override inverse OS themes */
-input[disabled],
-textarea[disabled],
-option[disabled],
-optgroup[disabled],
-select[disabled] {
-  color: silver;
-  background-color: white;
+html input[type="checkbox"] {
+  background: -moz-linear-gradient(top, rgb(185,185,185) 0, rgb(235,235,235) 2px, rgb(255,255,255) 6px);
 }
 
-/* Override inverse OS themes */
-button[disabled],
-input[type="reset"][disabled],
-input[type="button"][disabled],
-select[disabled] > input[type="button"],
-input[type="submit"][disabled] {
-  border: 2px outset silver;
-  color: gray;
+html input[type="radio"] {
+  background: -moz-radial-gradient(6px 6px, cover, rgb(255,255,255) 3px, rgb(225,225,225) 5px, rgb(185,185,185) 100%);
 }
 
-/* Override inverse OS themes */
-input[type="radio"][disabled],
-input[type="checkbox"][disabled] {
-  border: 1px inset silver;
+html select {
+  border-width: 1px;
+  padding: 1px;
+}
+
+html select:not([size]),
+html select[size="0"],
+html select[size="1"] {
+  padding: 2px 1px 2px 1px;
+}
+
+html input:not([type="image"]),
+html textarea {
+  border-width: 1px;
+  padding: 2px 1px 2px 1px;
+}
+
+html input[type="button"],
+html input[type="submit"],
+html input[type="reset"],
+html button {
+  border-width: 1px;
+  padding: 1px 7px 1px 7px;
+}
+
+html input[type="radio"],
+html input[type="checkbox"] {
+  max-width: 14px;
+  max-height: 14px;
+  border: 1px solid #a7a7a7 !important;
+  padding: 2px 1px 2px 1px;
+}
+
+html select input[type="button"] {
+  border-width: 0px !important;
+  -moz-border-radius: 0;
+  -moz-background-size: 100% 90%, 14px 14px;
+
+  background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5), url(chrome://browser/skin/images/arrowdown-16.png) !important;
+  background-position: -15px center, center center !important;
+  background-repeat: no-repeat !important;
+}
+
+html select[size]:focus,
+html select[multiple]:focus,
+html select[size][multiple]:focus,
+html input[type="file"]:focus > input[type="text"],
+html textarea:focus,
+html input:not([type="image"]):focus {
+  outline: 0px !important;
+  border-style: solid;
+  border-color: rgb(94,128,153);
+  background: -moz-linear-gradient(top, rgb(141,184,216) 0, rgba(198,225,246,0.2) 3px, rgb(255,255,255) 16px);
+}
+
+html select:not([size]):focus,
+html select[size="0"]:focus,
+html select[size="1"]:focus,
+html input[type="button"]:focus,
+html input[type="submit"]:focus,
+html input[type="reset"]:focus,
+html button:focus {
+  outline: 0px !important;
+  border-style: solid;
+  border-color: rgb(94,128,153);
+  background: -moz-linear-gradient(top, rgb(255,255,255) 0, rgba(198,2225,256,0.2) 18px, rgb(141,184,216) 100%);
+}
+
+html input[type="checkbox"]:focus,
+html input[type="radio"]:focus {
+  border-color: #99c6e0 !important;
+}
+
+html input[type="checkbox"]:focus {
+  background: -moz-linear-gradient(top, rgb(141,184,216) 0, rgba(198,225,246,0.2) 2px, rgb(255,255,255) 6px);
+}
+
+html input[type="radio"]:focus {
+  background: -moz-radial-gradient(6px 6px, cover, rgb(255,255,255) 3px, rgba(198,225,246,0.2) 5px, rgb(141,184,216) 100%);
+}
+
+html textarea[disabled="true"],
+html select[disabled="true"],
+html button[disabled="true"],
+html input:not([type="image"])[disabled="true"] {
+  color: rgba(0,0,0,0.3);
+  border-color: rgba(125,125,125,0.4);
+  border-style: solid;
+  border-width: 1px;
+  background: transparent -moz-linear-gradient(top, rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
+}
+
+html input[type="button"][disabled="true"],
+html input[type="submit"][disabled="true"],
+html input[type="reset"][disabled="true"],
+html button[disabled="true"] {
+  padding: 1px 7px 1px 7px;
+  background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+}
+
+
+html input[type="checkbox"][disabled="true"],
+html input[type="radio"][disabled="true"] {
+  border:1px solid rgba(125,125,125,0.4) !important;
+}
+
+html select[disabled="true"] input[type="button"] {
+  opacity: 0.6;
 }
