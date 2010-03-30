@@ -157,83 +157,31 @@ class nsHtml5Tokenizer
 
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
-    inline void clearStrBufAndAppendCurrentC(PRUnichar c)
-    {
-      strBuf[0] = c;
-      strBufLen = 1;
-    }
-
-    inline void clearStrBufAndAppendForceWrite(PRUnichar c)
-    {
-      strBuf[0] = c;
-      strBufLen = 1;
-    }
-
-    inline void clearStrBufForNextState()
-    {
-      strBufLen = 0;
-    }
-
-    inline void appendStrBuf(PRUnichar c)
-    {
-      strBuf[strBufLen++] = c;
-    }
-
+    void clearStrBufAndAppendCurrentC(PRUnichar c);
+    void clearStrBufAndAppendForceWrite(PRUnichar c);
+    void clearStrBufForNextState();
+    void appendStrBuf(PRUnichar c);
   protected:
     nsString* strBufToString();
   private:
     void strBufToDoctypeName();
     void emitStrBuf();
-    inline void clearLongStrBufForNextState()
-    {
-      longStrBufLen = 0;
-    }
-
-    inline void clearLongStrBuf()
-    {
-      longStrBufLen = 0;
-    }
-
-    inline void clearLongStrBufAndAppendCurrentC(PRUnichar c)
-    {
-      longStrBuf[0] = c;
-      longStrBufLen = 1;
-    }
-
-    inline void clearLongStrBufAndAppendToComment(PRUnichar c)
-    {
-      longStrBuf[0] = c;
-      longStrBufLen = 1;
-    }
-
-    inline void appendLongStrBuf(PRUnichar c)
-    {
-      longStrBuf[longStrBufLen++] = c;
-    }
-
+    void clearLongStrBufForNextState();
+    void clearLongStrBuf();
+    void clearLongStrBufAndAppendCurrentC(PRUnichar c);
+    void clearLongStrBufAndAppendToComment(PRUnichar c);
+    void appendLongStrBuf(PRUnichar c);
     void appendSecondHyphenToBogusComment();
     void adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c);
-    inline void appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length)
-    {
-      nsHtml5ArrayCopy::arraycopy(buffer, offset, longStrBuf, longStrBufLen, length);
-      longStrBufLen += length;
-    }
-
-    inline void appendStrBufToLongStrBuf()
-    {
-      appendLongStrBuf(strBuf, 0, strBufLen);
-    }
-
+    void appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length);
+    void appendLongStrBuf(jArray<PRUnichar,PRInt32> arr);
+    void appendStrBufToLongStrBuf();
     nsString* longStrBufToString();
     void emitComment(PRInt32 provisionalHyphens, PRInt32 pos);
   protected:
     void flushChars(PRUnichar* buf, PRInt32 pos);
   private:
-    inline void resetAttributes()
-    {
-      attributes = nsnull;
-    }
-
+    void resetAttributes();
     void strBufToElementNameString();
     PRInt32 emitCurrentTagToken(PRBool selfClosing, PRInt32 pos);
     void attributeNameComplete();
@@ -245,7 +193,6 @@ class nsHtml5Tokenizer
     void start();
     PRBool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
-    void ensureBufferSpace(PRInt32 addedLength);
     PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
