@@ -1346,7 +1346,7 @@ var FormHelper = {
   },
 
   _isValidSelectElement: function(aElement) {
-    return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
+    return SelectHelper.canShowUIFor(aElement);
   },
 
   _isElementVisible: function(aElement) {
@@ -1491,6 +1491,9 @@ var FormHelper = {
       return false;
 
     this._open = true;
+    this._restore ={  zoom: Browser._browserView.getZoomLevel(),
+                      scroll: Browser.getScrollboxPosition(Browser.contentScrollboxScroller)
+                    };
     window.addEventListener("keyup", this, false);
     let bv = Browser._browserView;
     bv.ignorePageScroll(true);
@@ -1500,6 +1503,11 @@ var FormHelper = {
 
     this._nodes = this._getAll();
     this.setCurrentElement(aElement);
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("FormUI", true, true, window, this._open);
+    this._container.dispatchEvent(evt);
+
     return true;
   },
 
@@ -1522,7 +1530,19 @@ var FormHelper = {
     window.removeEventListener("keyup", this, false);
     this._container.hidden = true;
     this._currentElement = null;
+
+    if (gPrefService.getBoolPref("formhelper.restore") && this._restore) {
+      bv.setZoomLevel(this._restore.zoom);
+      Browser.contentScrollboxScroller.scrollTo(this._restore.scroll.x, this._restore.scroll.y);
+      bv.onAfterVisibleMove();
+      this._restore = null;
+    }
+
     this._open = false;
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("FormUI", true, true, window, this._open);
+    this._container.dispatchEvent(evt);
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
@@ -1584,8 +1604,11 @@ var FormHelper = {
   },
 
   zoom: function formHelperZoom(aElement) {
-    let zoomLevel = Browser._getZoomLevelForElement(aElement);
-    zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+    let zoomLevel = Browser._browserView.getZoomLevel();
+    if (gPrefService.getBoolPref("formhelper.autozoom")) {
+      zoomLevel = Browser._getZoomLevelForElement(aElement);
+      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+    }
 
     let elRect = this._getRectForElement(aElement);
     let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
@@ -1804,6 +1827,14 @@ var SelectHelper = {
       this._control.fireOnChange();
   },
 
+
+  _isValidElement: function(aElement) {
+    if (!aElement || aElement.disabled)
+      return false;
+
+    return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
+  },
+
   reset: function() {
     this._updateControl();
     let empty = this._list.cloneNode(false);
@@ -1816,6 +1847,10 @@ var SelectHelper = {
     this._panel.hidden = true;
 
     this.reset();
+  },
+
+  canShowUIFor: function(aElement) {
+    return this._isValidElement(aElement);
   },
 
   unselectAll: function() {

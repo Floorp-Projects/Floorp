@@ -134,6 +134,11 @@ pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
 
+/* form helper */
+pref("formhelper.enabled", true);
+pref("formhelper.autozoom", true);
+pref("formhelper.restore", false);
+
 /* autocomplete */
 pref("browser.formfill.enable", true);
 
