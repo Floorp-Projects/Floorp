@@ -1874,8 +1874,14 @@ ContentCustomClicker.prototype = {
         if (element instanceof HTMLOptionElement)
           element = element.parentNode;
 
-        if (FormHelper.canShowUIFor(element) && FormHelper.open(element))
+        if (gPrefService.getBoolPref("formhelper.enabled")) {
+          if (FormHelper.canShowUIFor(element) && FormHelper.open(element))
+            return;
+        }
+        else if (SelectHelper.canShowUIFor(element)) {
+          SelectHelper.show(element);
           return;
+        }
 
         this._dispatchMouseEvent("mousedown", cX, cY);
         this._dispatchMouseEvent("mouseup", cX, cY);
