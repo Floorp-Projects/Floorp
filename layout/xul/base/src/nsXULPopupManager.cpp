@@ -552,7 +552,8 @@ CheckCaretDrawingState() {
     if (!presShell)
       return;
 
-    nsRefPtr<nsCaret> caret = presShell->GetCaret();
+    nsRefPtr<nsCaret> caret;
+    presShell->GetCaret(getter_AddRefs(caret));
     if (!caret)
       return;
     caret->CheckCaretDrawingState();

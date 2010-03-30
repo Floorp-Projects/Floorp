@@ -135,8 +135,10 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
   aEvent->mReply.mHasSelection = !isCollapsed;
 
-  nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  NS_ASSERTION(caret, "GetCaret returned null");
+  nsRefPtr<nsCaret> caret;
+  rv = mPresShell->GetCaret(getter_AddRefs(caret));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(caret, "GetCaret succeeded, but the result is null");
 
   nsRect r;
   nsIFrame* frame = caret->GetGeometry(mSelection, &r);
@@ -661,8 +663,10 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
   if (NS_FAILED(rv))
     return rv;
 
-  nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  NS_ASSERTION(caret, "GetCaret returned null");
+  nsRefPtr<nsCaret> caret;
+  rv = mPresShell->GetCaret(getter_AddRefs(caret));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(caret, "GetCaret succeeded, but the result is null");
 
   // When the selection is collapsed and the queried offset is current caret
   // position, we should return the "real" caret rect.
