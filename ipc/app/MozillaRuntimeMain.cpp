@@ -54,7 +54,7 @@
 int
 main(int argc, char* argv[])
 {
-#if defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_CRASHREPORTER) && !defined(XP_MACOSX)
     if (argc < 2)
         return 1;
     const char* const crashReporterArg = argv[--argc];
