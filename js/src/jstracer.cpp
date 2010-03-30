@@ -1793,7 +1793,7 @@ VisitGlobalSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
 {
     for (unsigned n = 0; n < ngslots; ++n) {
         unsigned slot = gslots[n];
-        visitor.visitGlobalSlot(&STOBJ_GET_SLOT(globalObj, slot), n, slot);
+        visitor.visitGlobalSlot(&globalObj->getSlotRef(slot), n, slot);
     }
 }
 
@@ -2504,7 +2504,7 @@ bool
 TraceRecorder::isGlobal(jsval* p) const
 {
     return ((size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS) ||
-            (size_t(p - globalObj->dslots) < (STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS)));
+            (size_t(p - globalObj->dslots) < (globalObj->numSlots() - JS_INITIAL_NSLOTS)));
 }
 
 /*
@@ -3514,9 +3514,9 @@ JS_REQUIRES_STACK void
 TraceRecorder::importGlobalSlot(unsigned slot)
 {
     JS_ASSERT(slot == uint16(slot));
-    JS_ASSERT(STOBJ_NSLOTS(globalObj) <= MAX_GLOBAL_SLOTS);
+    JS_ASSERT(globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
 
-    jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
+    jsval* vp = &globalObj->getSlotRef(slot);
     JS_ASSERT(!known(vp));
 
     /* Add the slot to the list of interned global slots. */
@@ -3548,9 +3548,9 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
      * If the global object grows too large, alloca in ExecuteTree might fail,
      * so abort tracing on global objects with unreasonably many slots.
      */
-    if (STOBJ_NSLOTS(globalObj) > MAX_GLOBAL_SLOTS)
+    if (globalObj->numSlots() > MAX_GLOBAL_SLOTS)
         return false;
-    jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
+    jsval* vp = &globalObj->getSlotRef(slot);
     if (known(vp))
         return true; /* we already have it */
     importGlobalSlot(slot);
@@ -5084,7 +5084,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
     SlotList& gslots = *tree->globalSlots;
     for (unsigned i = 0; i < gslots.length(); i++) {
         unsigned slot = gslots[i];
-        jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
+        jsval* vp = &globalObj->getSlotRef(slot);
         tracker.set(vp, NULL);
     }
 
@@ -5287,7 +5287,7 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
         return false;
     }
 
-    if (STOBJ_NSLOTS(globalObj) > MAX_GLOBAL_SLOTS) {
+    if (globalObj->numSlots() > MAX_GLOBAL_SLOTS) {
         if (tm->recorder)
             AbortRecording(cx, "too many slots in global object");
         return false;
@@ -6435,7 +6435,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
     }
 
     /* Make sure the global object is sane. */
-    JS_ASSERT(STOBJ_NSLOTS(f->globalObj) <= MAX_GLOBAL_SLOTS);
+    JS_ASSERT(f->globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
     JS_ASSERT(f->nGlobalTypes() == f->globalSlots->length());
     JS_ASSERT_IF(f->globalSlots->length() != 0,
                  OBJ_SHAPE(f->globalObj) == f->globalShape);
@@ -6478,7 +6478,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
                       f->maxNativeStackSlots,
                       f->code());
 
-    debug_only_stmt(uint32 globalSlots = STOBJ_NSLOTS(globalObj);)
+    debug_only_stmt(uint32 globalSlots = globalObj->numSlots();)
     debug_only_stmt(*(uint64*)&tm->storage->global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
 
     /* Execute trace. */
@@ -7855,7 +7855,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
             obj2->dropProperty(cx, prop);
             RETURN_STOP_A("lazy import of global slot failed");
         }
-        vp = &STOBJ_GET_SLOT(obj, sprop->slot);
+        vp = &obj->getSlotRef(sprop->slot);
         ins = get(vp);
         obj2->dropProperty(cx, prop);
         nr.tracked = true;
@@ -8506,7 +8506,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
     if (slot == SPROP_INVALID_SLOT)
         RETURN_STOP_A("incProp on invalid slot");
 
-    jsval& v = STOBJ_GET_SLOT(obj, slot);
+    jsval& v = obj->getSlotRef(slot);
     CHECK_STATUS_A(inc(v, v_ins, incr, pre));
 
     LIns* dslots_ins = NULL;
@@ -11188,7 +11188,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
-            set(&STOBJ_GET_SLOT(obj, slot), v_ins);
+            set(&obj->getSlotRef(slot), v_ins);
         } else {
             LIns* dslots_ins = NULL;
             stobj_set_slot(obj_ins, slot, dslots_ins, boxed_ins);
@@ -12744,7 +12744,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     if (!lazilyImportGlobalSlot(slot))
         RETURN_STOP_A("lazy import of global slot failed");
 
-    vp = &STOBJ_GET_SLOT(obj, slot);
+    vp = &obj->getSlotRef(slot);
     ins = get(vp);
     nr.tracked = true;
     return ARECORD_CONTINUE;
@@ -12895,7 +12895,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
     }
 
     LIns* dslots_ins = NULL;
-    LIns* v_ins = unbox_jsval(STOBJ_GET_SLOT(obj, slot),
+    LIns* v_ins = unbox_jsval(obj->getSlot(slot),
                               stobj_get_slot(obj_ins, slot, dslots_ins),
                               snapshot(BRANCH_EXIT));
 
@@ -14254,7 +14254,7 @@ TraceRecorder::record_JSOP_GETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    stack(0, get(&STOBJ_GET_SLOT(globalObj, slot)));
+    stack(0, get(&globalObj->getSlotRef(slot)));
     return ARECORD_CONTINUE;
 }
 
@@ -14270,7 +14270,7 @@ TraceRecorder::record_JSOP_SETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    set(&STOBJ_GET_SLOT(globalObj, slot), stack(-1));
+    set(&globalObj->getSlotRef(slot), stack(-1));
     return ARECORD_CONTINUE;
 }
 
@@ -14287,7 +14287,7 @@ TraceRecorder::record_JSOP_INCGVAR()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    return InjectStatus(inc(STOBJ_GET_SLOT(globalObj, slot), 1));
+    return InjectStatus(inc(globalObj->getSlotRef(slot), 1));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14303,7 +14303,7 @@ TraceRecorder::record_JSOP_DECGVAR()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    return InjectStatus(inc(STOBJ_GET_SLOT(globalObj, slot), -1));
+    return InjectStatus(inc(globalObj->getSlotRef(slot), -1));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14319,7 +14319,7 @@ TraceRecorder::record_JSOP_GVARINC()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    return InjectStatus(inc(STOBJ_GET_SLOT(globalObj, slot), 1, false));
+    return InjectStatus(inc(globalObj->getSlotRef(slot), 1, false));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14335,7 +14335,7 @@ TraceRecorder::record_JSOP_GVARDEC()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    return InjectStatus(inc(STOBJ_GET_SLOT(globalObj, slot), -1, false));
+    return InjectStatus(inc(globalObj->getSlotRef(slot), -1, false));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14826,7 +14826,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
-    jsval& v = STOBJ_GET_SLOT(globalObj, slot);
+    jsval& v = globalObj->getSlotRef(slot);
     stack(0, get(&v));
     stack(1, INS_NULL());
     return ARECORD_CONTINUE;

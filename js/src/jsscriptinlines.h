@@ -63,7 +63,7 @@ JSScript::getRegExp(size_t index)
     JSObjectArray *arr = regexps();
     JS_ASSERT((uint32) index < arr->length);
     JSObject *obj = arr->vector[index];
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_RegExpClass);
+    JS_ASSERT(obj->getClass() == &js_RegExpClass);
     return obj;
 }
 

@@ -153,7 +153,7 @@ XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
 JSBool
 XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
-    JSClass* jsclass = STOBJ_GET_CLASS(obj);
+    JSClass* jsclass = obj->getClass();
     NS_ASSERTION(jsclass, "obj has no class");
     if(jsclass &&
        (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
@@ -474,7 +474,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
 #ifdef DEBUG
                     JSObject* jsobj = JSVAL_TO_OBJECT(*d);
                     if(jsobj && !jsobj->getParent())
-                        NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                        NS_ASSERTION(jsobj->getClass()->flags & JSCLASS_IS_GLOBAL,
                                      "Why did we recreate this wrapper?");
 #endif
                 }
@@ -1185,7 +1185,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
         }
 
-        NS_ASSERTION(!flat || IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)),
+        NS_ASSERTION(!flat || IS_WRAPPER_CLASS(flat->getClass()),
                      "What kind of wrapper is this?");
 
         nsresult rv;
@@ -1397,7 +1397,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                 }
             }
 
-            const char *name = STOBJ_GET_CLASS(flat)->name;
+            const char *name = flat->getClass()->name;
             if(allowNativeWrapper &&
                !(flags & JSFILENAME_SYSTEM) &&
                !JS_IsSystemObject(ccx, flat) &&

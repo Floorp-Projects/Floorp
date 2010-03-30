@@ -218,8 +218,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     }
 
     if (!scope->table) {
-        if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
-            JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->freeslot)));
+        if (slot < obj->numSlots() && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+            JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
             ++scope->freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot))

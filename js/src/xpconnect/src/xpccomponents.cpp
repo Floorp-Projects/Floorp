@@ -3546,7 +3546,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   JSVersion jsVersion, PRBool returnStringOnly, jsval *rval)
 {
-    if (STOBJ_GET_CLASS(sandbox) != &SandboxClass)
+    if (sandbox->getClass() != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
     nsIScriptObjectPrincipal *sop =

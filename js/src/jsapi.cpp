@@ -1923,7 +1923,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
       case JSTRACE_OBJECT:
       {
         JSObject *obj = (JSObject *)thing;
-        JSClass *clasp = STOBJ_GET_CLASS(obj);
+        JSClass *clasp = obj->getClass();
 
         name = clasp->name;
 #ifdef HAVE_XPCONNECT
@@ -1975,7 +1975,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
           case JSTRACE_OBJECT:
           {
             JSObject  *obj = (JSObject *)thing;
-            JSClass *clasp = STOBJ_GET_CLASS(obj);
+            JSClass *clasp = obj->getClass();
             if (clasp == &js_FunctionClass) {
                 JSFunction *fun = GET_FUNCTION_PRIVATE(trc->context, obj);
                 if (!fun) {
@@ -2817,7 +2817,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     /* Walk slots in obj and if any value is a non-null object, seal it. */
     nslots = scope->freeslot;
     for (i = 0; i != nslots; ++i) {
-        v = STOBJ_GET_SLOT(obj, i);
+        v = obj->getSlot(i);
         if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
             continue;
         if (JSVAL_IS_PRIMITIVE(v))
@@ -4027,7 +4027,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             *idp = JSVAL_VOID;
         } else {
             *idp = ida->vector[--i];
-            STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
+            iterobj->setSlot(JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
         }
     }
     return JS_TRUE;

@@ -1638,7 +1638,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         JSObject* funObjParent = funobj->getParent();
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
-        JSClass* funObjParentClass = STOBJ_GET_CLASS(funObjParent);
+        JSClass* funObjParentClass = funObjParent->getClass();
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
@@ -1669,7 +1669,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     {
         // this is on two lines to make the compiler happy given the goto.
         JSClass* clazz;
-        clazz = STOBJ_GET_CLASS(cur);
+        clazz = cur->getClass();
 
         if(IS_WRAPPER_CLASS(clazz))
         {
@@ -1726,7 +1726,7 @@ return_tearoff:
     // If we didn't find a wrapper using the given funobj and obj, try
     // again with obj's outer object, if it's got one.
 
-    JSClass *clazz = STOBJ_GET_CLASS(obj);
+    JSClass *clazz = obj->getClass();
 
     if((clazz->flags & JSCLASS_IS_EXTENDED) &&
         ((JSExtendedClass*)clazz)->outerObject)
@@ -1735,7 +1735,7 @@ return_tearoff:
 
         // Protect against infinite recursion through XOWs.
         JSObject *unsafeObj;
-        clazz = STOBJ_GET_CLASS(outer);
+        clazz = outer->getClass();
         if(clazz == &XPCCrossOriginWrapper::XOWClass.base &&
            (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
         {

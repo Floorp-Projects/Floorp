@@ -428,7 +428,7 @@ static void PrintObjectBasics(JSObject* obj)
 {
     if(OBJ_IS_NATIVE(obj))
         printf("%p 'native' <%s>",
-               (void *)obj, STOBJ_GET_CLASS(obj)->name);
+               (void *)obj, obj->getClass()->name);
     else
         printf("%p 'host'", (void *)obj);
 }

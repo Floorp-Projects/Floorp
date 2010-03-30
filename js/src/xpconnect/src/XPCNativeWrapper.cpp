@@ -262,7 +262,7 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
   // if (HAS_FLAGS(flags, FLAG_DEEP).
   if (HAS_FLAGS(flags, FLAG_DEEP) && !primitive) {
     // Unwrap a cross origin wrapper, since we're more restrictive.
-    if (STOBJ_GET_CLASS(nativeObj) == &XPCCrossOriginWrapper::XOWClass.base) {
+    if (nativeObj->getClass() == &XPCCrossOriginWrapper::XOWClass.base) {
       if (!::JS_GetReservedSlot(cx, nativeObj, sWrappedObjSlot,
                                 &v)) {
         return JS_FALSE;
@@ -334,10 +334,10 @@ using namespace XPCNativeWrapper;
 // in the call from XPC_NW_Convert, for example.
 
 #define XPC_NW_CALL_HOOK(obj, hook, args)                                 \
-  return STOBJ_GET_CLASS(obj)->hook args;
+  return obj->getClass()->hook args;
 
 #define XPC_NW_CAST_HOOK(obj, type, hook, args)                           \
-  return ((type) STOBJ_GET_CLASS(obj)->hook) args;
+  return ((type) obj->getClass()->hook) args;
 
 static JSBool
 ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
@@ -381,7 +381,7 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
 
 #define XPC_NW_BYPASS_TEST(cx, obj, hook, args)                               \
   XPC_NW_BYPASS_BASE(cx, obj,                                                 \
-    JSClass *clasp_ = STOBJ_GET_CLASS(obj);                                  \
+    JSClass *clasp_ = obj->getClass();                                        \
     return !clasp_->hook || clasp_->hook args;                                \
   )
 
@@ -445,7 +445,7 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
           (accessType & (sSecMgrSetProp | sSecMgrGetProp)) &&
           (flatObj = wn->GetFlatJSObject())) {
         rv = ssm->CheckPropertyAccess(cx, flatObj,
-                                      STOBJ_GET_CLASS(flatObj)->name,
+                                      flatObj->getClass()->name,
                                       id, accessType);
         return NS_SUCCEEDED(rv);
       }
@@ -846,7 +846,7 @@ XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
 
   JSObject *wrapperJSObject = wrappedNative->GetFlatJSObject();
 
-  JSClass *clazz = STOBJ_GET_CLASS(wrapperJSObject);
+  JSClass *clazz = wrapperJSObject->getClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, wrapperJSObject, id, mode, vp);
 }

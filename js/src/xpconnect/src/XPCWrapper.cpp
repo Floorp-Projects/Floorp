@@ -59,7 +59,7 @@ const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(wrapper);
+  JSClass *clasp = wrapper->getClass();
   if (clasp == &XPCCrossOriginWrapper::XOWClass.base) {
     return UnwrapXOW(cx, wrapper);
   }

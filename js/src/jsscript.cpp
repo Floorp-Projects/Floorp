@@ -312,7 +312,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         JSObject **objp = &script->objects()->vector[i];
         uint32 isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
-            JSClass *clasp = STOBJ_GET_CLASS(*objp);
+            JSClass *clasp = (*objp)->getClass();
             JS_ASSERT(clasp == &js_FunctionClass ||
                       clasp == &js_BlockClass);
             isBlock = (clasp == &js_BlockClass) ? 1 : 0;

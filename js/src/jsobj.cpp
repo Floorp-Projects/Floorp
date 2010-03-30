@@ -3046,7 +3046,7 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
     }
 
     JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
-    jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
+    jsval pval = sprop ? ctor->getSlot(sprop->slot) : JSVAL_HOLE;
 
     JSObject *proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
@@ -3352,7 +3352,7 @@ JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
 {
     JS_ASSERT(!OBJ_IS_CLONED_BLOCK(proto));
-    JS_ASSERT(STOBJ_GET_CLASS(proto) == &js_BlockClass);
+    JS_ASSERT(proto->getClass() == &js_BlockClass);
 
     JSObject *clone = js_NewGCObject(cx);
     if (!clone)
@@ -3394,7 +3394,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(OBJ_SCOPE(obj)->object != obj);
 
     /* Block objects should not have reserved slots before they are put. */
-    JS_ASSERT(STOBJ_NSLOTS(obj) == JS_INITIAL_NSLOTS);
+    JS_ASSERT(obj->numSlots() == JS_INITIAL_NSLOTS);
 
     /* The block and its locals must be on the current stack for GC safety. */
     depth = OBJ_BLOCK_DEPTH(cx, obj);
@@ -3447,8 +3447,8 @@ block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     /* Values are in reserved slots immediately following DEPTH. */
     uint32 slot = JSSLOT_BLOCK_DEPTH + 1 + index;
     JS_LOCK_OBJ(cx, obj);
-    JS_ASSERT(slot < STOBJ_NSLOTS(obj));
-    *vp = STOBJ_GET_SLOT(obj, slot);
+    JS_ASSERT(slot < obj->numSlots());
+    *vp = obj->getSlot(slot);
     JS_UNLOCK_OBJ(cx, obj);
     return true;
 }
@@ -3472,8 +3472,8 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     /* Values are in reserved slots immediately following DEPTH. */
     uint32 slot = JSSLOT_BLOCK_DEPTH + 1 + index;
     JS_LOCK_OBJ(cx, obj);
-    JS_ASSERT(slot < STOBJ_NSLOTS(obj));
-    STOBJ_SET_SLOT(obj, slot, *vp);
+    JS_ASSERT(slot < obj->numSlots());
+    obj->setSlot(slot, *vp);
     JS_UNLOCK_OBJ(cx, obj);
     return true;
 }
@@ -3575,7 +3575,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(tmp >> 16);
         count = (uint16)tmp;
-        STOBJ_SET_SLOT(obj, JSSLOT_BLOCK_DEPTH, INT_TO_JSVAL(depth));
+        obj->setSlot(JSSLOT_BLOCK_DEPTH, INT_TO_JSVAL(depth));
     }
 
     /*
@@ -3907,8 +3907,8 @@ js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(!obj->dslots);
 
-    uintN nslots = JSSLOT_FREE(STOBJ_GET_CLASS(obj)) + nreserved;
-    if (nslots > STOBJ_NSLOTS(obj) && !AllocSlots(cx, obj, nslots))
+    uintN nslots = JSSLOT_FREE(obj->getClass()) + nreserved;
+    if (nslots > obj->numSlots() && !AllocSlots(cx, obj, nslots))
         return false;
 
     JSScope *scope = OBJ_SCOPE(obj);
@@ -3916,7 +3916,7 @@ js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
 #ifdef JS_THREADSAFE
         JS_ASSERT(scope->title.ownercx->thread == cx->thread);
 #endif
-        JS_ASSERT(scope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
+        JS_ASSERT(scope->freeslot == JSSLOT_FREE(obj->getClass()));
         if (scope->freeslot < nslots)
             scope->freeslot = nslots;
     }
@@ -4167,13 +4167,13 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         scope->freeslot += clasp->reserveSlots(cx, obj);
     }
 
-    if (scope->freeslot >= STOBJ_NSLOTS(obj) &&
+    if (scope->freeslot >= obj->numSlots() &&
         !js_GrowSlots(cx, obj, scope->freeslot + 1)) {
         return JS_FALSE;
     }
 
     /* js_ReallocSlots or js_FreeSlot should set the free slots to void. */
-    JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->freeslot)));
+    JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
     *slotp = scope->freeslot++;
     return JS_TRUE;
 }
@@ -4300,7 +4300,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
      * properties with the same names have been cached or traced. Call objects
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
-    if (STOBJ_GET_CLASS(obj) == &js_CallClass) {
+    if (obj->getClass() == &js_CallClass) {
         while ((obj = obj->getParent()) != NULL) {
             if (PurgeProtoChain(cx, obj, id))
                 break;
@@ -6567,7 +6567,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
          * that share their scope, scope->freeslot can be an underestimate.
          */
         size_t slots = scope->freeslot;
-        if (STOBJ_NSLOTS(obj) != slots)
+        if (obj->numSlots() != slots)
             js_ShrinkSlots(cx, obj, slots);
     }
 
@@ -6594,19 +6594,19 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     /*
      * An unmutated object that shares a prototype object's scope. We can't
      * tell how many slots are in use in obj by looking at its scope, so we
-     * use STOBJ_NSLOTS(obj).
+     * use obj->numSlots().
      *
      * NB: In case clasp->mark mutates something, leave this code here --
      * don't move it up and unify it with the |if (!traceScope)| section
      * above.
      */
-    uint32 nslots = STOBJ_NSLOTS(obj);
+    uint32 nslots = obj->numSlots();
     if (!scope->isSharedEmpty() && scope->freeslot < nslots)
         nslots = scope->freeslot;
     JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
     for (uint32 i = JSSLOT_START(clasp); i != nslots; ++i) {
-        jsval v = STOBJ_GET_SLOT(obj, i);
+        jsval v = obj->getSlot(i);
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
             js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
@@ -6632,10 +6632,10 @@ js_Clear(JSContext *cx, JSObject *obj)
         scope->clear(cx);
 
         /* Clear slot values and reset freeslot so we're consistent. */
-        i = STOBJ_NSLOTS(obj);
+        i = obj->numSlots();
         n = JSSLOT_FREE(obj->getClass());
         while (--i >= n)
-            STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+            obj->setSlot(i, JSVAL_VOID);
         scope->freeslot = n;
     }
     JS_UNLOCK_OBJ(cx, obj);
@@ -6676,7 +6676,7 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
         return false;
 
     uint32 slot = JSSLOT_START(clasp) + index;
-    *vp = (slot < STOBJ_NSLOTS(obj)) ? STOBJ_GET_SLOT(obj, slot) : JSVAL_VOID;
+    *vp = (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
     JS_UNLOCK_OBJ(cx, obj);
     return true;
 }
@@ -6717,13 +6717,13 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
      * If scope is shared, do not modify scope->freeslot. It is OK for freeslot
      * to be an underestimate in objects with shared scopes, as they will get
      * their own scopes before mutating, and elsewhere (e.g. js_TraceObject) we
-     * use STOBJ_NSLOTS(obj) rather than rely on freeslot.
+     * use obj->numSlots() rather than rely on freeslot.
      */
     JSScope *scope = OBJ_SCOPE(obj);
     if (!scope->isSharedEmpty() && slot >= scope->freeslot)
         scope->freeslot = slot + 1;
 
-    STOBJ_SET_SLOT(obj, slot, v);
+    obj->setSlot(slot, v);
     GC_POKE(cx, JS_NULL);
     JS_UNLOCK_SCOPE(cx, scope);
     return true;
@@ -6853,7 +6853,7 @@ dumpValue(jsval val)
                 (void *) fun);
     } else if (JSVAL_IS_OBJECT(val)) {
         JSObject *obj = JSVAL_TO_OBJECT(val);
-        JSClass *cls = STOBJ_GET_CLASS(obj);
+        JSClass *cls = obj->getClass();
         fprintf(stderr, "<%s%s at %p>",
                 cls->name,
                 cls == &js_ObjectClass ? "" : " object",
@@ -6924,7 +6924,7 @@ js_DumpObject(JSObject *obj)
     jsuint reservedEnd;
 
     fprintf(stderr, "object %p\n", (void *) obj);
-    clasp = STOBJ_GET_CLASS(obj);
+    clasp = obj->getClass();
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
     if (obj->isDenseArray()) {
@@ -6973,13 +6973,13 @@ js_DumpObject(JSObject *obj)
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
     slots = (OBJ_IS_NATIVE(obj) && !OBJ_SCOPE(obj)->isSharedEmpty())
             ? OBJ_SCOPE(obj)->freeslot
-            : STOBJ_NSLOTS(obj);
+            : obj->numSlots();
     for (; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
         fprintf(stderr, "= ");
-        dumpValue(STOBJ_GET_SLOT(obj, i));
+        dumpValue(obj->getSlot(i));
         fputc('\n', stderr);
     }
     fputc('\n', stderr);
