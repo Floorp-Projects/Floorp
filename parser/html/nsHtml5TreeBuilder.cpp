@@ -3062,6 +3062,10 @@ nsHtml5TreeBuilder::clearLastListSlot()
 void 
 nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 {
+  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
+
+    pop();
+  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
@@ -3076,6 +3080,10 @@ nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::silentPush(nsHtml5StackNode* node)
 {
+  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
+
+    pop();
+  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
