@@ -129,19 +129,10 @@ window.TabItems = {
         $div.css({left: p.x, top: p.y});
       }
       
-/*
-      Utils.log('each');
-      if($div.length > 1) {
-*/
-        $div.each(function() {
-          var tab = Tabs.tab(this);
-/*           Utils.log('adding', tab.url); */
-          $(this).data('tabItem', new TabItem(this, tab));
-        });
-/*
-      } else 
-          $div.data('tabItem', new TabItem($div.get(0), Tabs.tab($div.get(0))));
-*/
+      $div.each(function() {
+        var tab = Tabs.tab(this);
+        $(this).data('tabItem', new TabItem(this, tab));
+      });
       
       // TODO: Figure out this really weird bug?
       // Why is that:

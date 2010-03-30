@@ -359,7 +359,11 @@ function Tabs() {
     },
     tab: function tab(value) {
       // assuming value is a DOM element for the time being
-      return $(value).find("canvas").data("link").tab;
+      var result = $(value).data('tab');
+      if(!result)
+        result = $(value).find("canvas").data("link").tab;
+      
+      return result;
     },
     toString: function toString() {
       return "[Tabs]";
