@@ -108,6 +108,8 @@ CPPSRCS += nsNativeAppSupportUnix.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += nsNativeAppSupportQt.cpp
+CPPSRCS += nsQAppInstance.cpp
+EXPORTS += nsQAppInstance.h
 else
 CPPSRCS += nsNativeAppSupportDefault.cpp
 endif
