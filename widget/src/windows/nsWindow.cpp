@@ -140,7 +140,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsIDeviceContext.h"
-#include "nsIdleService.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"
 #include "nsRect.h"
@@ -316,24 +315,6 @@ HTCApiNavSetMode gHTCApiNavSetMode = nsnull;
 static PRBool    gCheckForHTCApi = PR_FALSE;
 #endif
 
-// The last user input event time in microseconds. If
-// there are any pending native toolkit input events
-// it returns the current time. The value is compatible
-// with PR_IntervalToMicroseconds(PR_IntervalNow()).
-#if !defined(WINCE)
-static PRUint32 gLastInputEventTime               = 0;
-#else
-PRUint32        gLastInputEventTime               = 0;
-#endif
-
-static void UpdateLastInputEventTime() {
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  nsCOMPtr<nsIIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
-  nsIdleService* is = static_cast<nsIdleService*>(idleService.get());
-  if (is)
-    is->IdleTimeWasModified();
-}
-
 // Global user preference for disabling native theme. Used
 // in NativeWindowTheme.
 PRBool          gDisableNativeTheme               = PR_FALSE;
@@ -441,8 +422,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
   } // !sInstanceCount
 
-  // Set gLastInputEventTime to some valid number
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  mIdleService = nsnull;
 
   sInstanceCount++;
 }
@@ -3226,6 +3206,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                    const nsModifierKeyState &aModKeyState,
                    PRUint32 aFlags)
 {
+  UserActivity();
+
   nsKeyEvent event(PR_TRUE, aEventType, this);
   nsIntPoint point(0, 0);
 
@@ -3339,8 +3321,6 @@ void nsWindow::DispatchPendingEvents()
     return;
   }
 
-  UpdateLastInputEventTime();
-
   // We need to ensure that reflow events do not get starved.
   // At the same time, we don't want to recurse through here
   // as that would prevent us from dispatching starved paints.
@@ -3398,6 +3378,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
                                     PRInt16 aButton)
 {
   PRBool result = PR_FALSE;
+
+  UserActivity();
 
   if (!mEventCallback) {
     return result;
@@ -5411,6 +5393,19 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
     info->flags &= ~SWP_SHOWWINDOW;
 }
 #endif
+
+void nsWindow::UserActivity()
+{
+  // Check if we have the idle service, if not we try to get it.
+  if (!mIdleService) {
+    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  }
+
+  // Check that we now have the idle service.
+  if (mIdleService) {
+    mIdleService->ResetIdleTimeOut();
+  }
+}
 
 // Gesture event processing. Handles WM_GESTURE events.
 #if !defined(WINCE)

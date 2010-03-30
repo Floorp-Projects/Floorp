@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Gijs Kruitbosch <gijskruitbosch@gmail.com> 
+ *  Gijs Kruitbosch <gijskruitbosch@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,7 +57,10 @@ class nsIdleServiceWin : public nsIdleService
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetIdleTime(PRUint32* idleTime);
+    bool PollIdleTime(PRUint32* aIdleTime);
+
+protected:
+    bool UsePollMode();
 };
 
 #endif // nsIdleServiceWin_h__
