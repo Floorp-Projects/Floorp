@@ -139,11 +139,11 @@ public:
                                   PRBool* aIsOverridable)=0;
 
 
-  typedef enum Transparency {
+  typedef enum {
     eOpaque = 0,
     eTransparent,
     eUnknownTransparency
-  };
+  } Transparency;
 
   /**
    * Returns what we know about the transparency of the widget.
