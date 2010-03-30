@@ -101,7 +101,6 @@ typedef struct JSParseNode          JSParseNode;
 typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSEmptyScope         JSEmptyScope;
-typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;
 typedef struct JSThreadData         JSThreadData;
 typedef struct JSTreeContext        JSTreeContext;
@@ -284,31 +283,6 @@ typedef struct JSDebugHooks {
     JSDebugErrorHook    debugErrorHook;
     void                *debugErrorHookData;
 } JSDebugHooks;
-
-/*
- * Type definitions for temporary GC roots that register with GC local C
- * variables. See jscntxt.h for details.
- */
-typedef void
-(* JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
-
-typedef union JSTempValueUnion {
-    jsval               value;
-    JSObject            *object;
-    JSXML               *xml;
-    JSTempValueTrace    trace;
-    JSScopeProperty     *sprop;
-    JSWeakRoots         *weakRoots;
-    JSCompiler          *compiler;
-    JSScript            *script;
-    jsval               *array;
-} JSTempValueUnion;
-
-struct JSTempValueRooter {
-    JSTempValueRooter   *down;
-    ptrdiff_t           count;
-    JSTempValueUnion    u;
-};
 
 /* JSObjectOps function pointer typedefs. */
 
