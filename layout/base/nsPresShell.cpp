@@ -2781,6 +2781,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   }
 }
 
+// note that this can return a null caret, but NS_OK
 already_AddRefed<nsCaret> PresShell::GetCaret()
 {
   nsCaret* caret = mCaret;
@@ -2788,7 +2789,7 @@ already_AddRefed<nsCaret> PresShell::GetCaret()
   return caret;
 }
 
-void PresShell::MaybeInvalidateCaretPosition()
+NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
 {
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
