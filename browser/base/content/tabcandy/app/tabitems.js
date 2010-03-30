@@ -18,22 +18,33 @@ window.TabItem.prototype = $.extend(new Item(), {
   },
   
   // ----------  
-  setBounds: function(rect) {
-    this.setPosition(rect.left, rect.top);
-    this.setSize(rect.width, rect.height);
+  setBounds: function(rect, immediately) {
+    this.setPosition(rect.left, rect.top, immediately);
+    this.setSize(rect.width, rect.height, immediately);
   },
   
   // ----------
   setPosition: function(left, top, immediately) {
     if(immediately) 
       $(this.container).css({left: left, top: top});
-    else
-      $(this.container).animate({left: left, top: top});
+    else {
+      TabMirror.pausePainting();
+      $(this.container).animate({left: left, top: top}, {complete: function() {
+        TabMirror.resumePainting();
+      }});
+    }
   },
 
   // ----------  
-  setSize: function(width, height) {
-    $(this.container).animate({width: width, height: height});
+  setSize: function(width, height, immediately) {
+    if(immediately)
+      $(this.container).css({width: width, height: height});
+    else {
+      TabMirror.pausePainting();
+      $(this.container).animate({width: width, height: height}, {complete: function() {
+        TabMirror.resumePainting();
+      }});
+    }
   },
 
   // ----------
@@ -58,6 +69,7 @@ window.TabItems = {
     var self = this;
     
     function mod($div){
+      Utils.log('mod');
       if(window.Groups) {        
         $div.draggable(window.Groups.dragOptions);
         $div.droppable(window.Groups.dropOptions);
@@ -113,13 +125,23 @@ window.TabItems = {
       $("<div class='close'>x</div>").appendTo($div);
   
       if($div.length == 1) {
-        var p = Page.findOpenSpaceFor($div);
+        var p = Page.findOpenSpaceFor($div); // TODO shouldn't know about Page
         $div.css({left: p.x, top: p.y});
       }
       
-      $div.each(function() {
-        $(this).data('tabItem', new TabItem(this, Tabs.tab(this)));
-      });
+/*
+      Utils.log('each');
+      if($div.length > 1) {
+*/
+        $div.each(function() {
+          var tab = Tabs.tab(this);
+/*           Utils.log('adding', tab.url); */
+          $(this).data('tabItem', new TabItem(this, tab));
+        });
+/*
+      } else 
+          $div.data('tabItem', new TabItem($div.get(0), Tabs.tab($div.get(0))));
+*/
       
       // TODO: Figure out this really weird bug?
       // Why is that:

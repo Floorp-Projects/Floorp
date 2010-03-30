@@ -19,7 +19,12 @@ var Tabbar = {
 }
 
 // ##########
-var Page = {
+window.Page = {
+  startX: 30, 
+  startY: 70, 
+  tabWidth: 160,
+  tabHeight: 137, 
+  
   init: function() {    
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
@@ -69,8 +74,6 @@ var Page = {
   findOpenSpaceFor: function($div) {
     var w = window.innerWidth;
     var h = 0;
-    var startX = 30;
-    var startY = 100;
     var bufferX = 30;
     var bufferY = 30;
     var rects = [];
@@ -96,7 +99,7 @@ var Page = {
     });
 
     if(!h) 
-      return { 'x': startX, 'y': startY };
+      return { 'x': this.startX, 'y': this.startY };
       
     var canvas = document.createElement('canvas');
     $(canvas).attr({width:w,height:h});
@@ -131,15 +134,15 @@ var Page = {
           && isEmpty(x1 + (divWidth - 1), y1 + (divHeight - 1)));
     }
     
-    for(var y = startY; y < h; y += strideY) {
-      for(var x = startX; x < w; x += strideX) {
+    for(var y = this.startY; y < h; y += strideY) {
+      for(var x = this.startX; x < w; x += strideX) {
         if(isEmptyBox(x, y)) {
-          for(; y > startY + 1; y--) {
+          for(; y > this.startY + 1; y--) {
             if(!isEmptyBox(x, y - 1))
               break;
           }
 
-          for(; x > startX + 1; x--) {
+          for(; x > this.startX + 1; x--) {
             if(!isEmptyBox(x - 1, y))
               break;
           }
@@ -149,7 +152,7 @@ var Page = {
   	  }
     }
 
-    return { 'x': startX, 'y': h };        
+    return { 'x': this.startX, 'y': h };        
   }
 }
 
@@ -178,25 +181,15 @@ var grid = new ArrangeClass("Grid", function(value) {
   if(typeof(value) == 'boolean')
     immediately = value;
 
-  var startX = 30;         
-  var x = startX;
-  var y = 100;
+  var box = new Rect(Page.startX, Page.startY, Page.tabWidth, Page.tabHeight); 
   $(".tab:visible").each(function(i){
-    $el = $(this);
+    var item = Items.item(this);
+    item.setBounds(box, immediately);
     
-    if(immediately)
-      $el.css({top: y,left: x});
-    else {
-      TabMirror.pausePainting();
-      $el.animate({top: y,left: x}, 500, null, function() {
-        TabMirror.resumePainting();
-      });
-    }
-    
-    x += $el.width() + 30;
-    if( x > window.innerWidth - ($el.width() + startX)){ // includes allowance for the box shadow
-      x = startX;
-      y += $el.height() + 30;
+    box.left += box.width + 30;
+    if( box.left > window.innerWidth - (box.width + Page.startX)){ // includes allowance for the box shadow
+      box.left = Page.startX;
+      box.top += box.height + 30;
     }
   });
 });
@@ -205,12 +198,6 @@ var grid = new ArrangeClass("Grid", function(value) {
 var site = new ArrangeClass("Site", function() {
   Groups.removeAll();
   
-  var startX = 30;
-  var startY = 100;
-  var x = startX;
-  var y = startY;
-  var x2; 
-  var y2;
   var groups = [];
   $(".tab:visible").each(function(i) {
     $el = $(this);
@@ -226,7 +213,7 @@ var site = new ArrangeClass("Site", function() {
       groups[mainDomain] = [$(this)];
   });
   
-  var createOptions = {suppressPush: true};
+  var createOptions = {dontPush: true, dontArrange: true};
   
   var leftovers = [];
   for(key in groups) {
