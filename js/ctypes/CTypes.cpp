@@ -50,6 +50,10 @@
 #include <float.h>
 #endif
 
+#if defined(SOLARIS)
+#include <ieeefp.h>
+#endif
+
 #ifdef HAVE_SSIZE_T
 #include <sys/types.h>
 #endif
