@@ -203,6 +203,8 @@ public:
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
+  virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
+
   /**
    * Helper methods.
    */
