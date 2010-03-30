@@ -293,7 +293,7 @@ Function::Create(JSContext* aContext,
     return NULL;
 
   JSObject* fnObj = JS_GetFunctionObject(fn);
-  JSAutoTempValueRooter fnRoot(aContext, fnObj);
+  js::AutoObjectRooter fnRoot(aContext, fnObj);
 
   // stash a pointer to self, which Function::Call will need at call time
   if (!JS_SetReservedSlot(aContext, fnObj, SLOT_FUNCTION, PRIVATE_TO_JSVAL(self.get())))
