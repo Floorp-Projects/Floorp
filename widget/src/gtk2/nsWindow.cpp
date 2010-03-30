@@ -266,14 +266,13 @@ static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
-PRUint32        gLastInputEventTime = 0;
-
-static void UpdateLastInputEventTime() {
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  nsCOMPtr<nsIIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
-  nsIdleService* is = static_cast<nsIdleService*>(idleService.get());
-  if (is)
-    is->IdleTimeWasModified();
+static void
+UpdateLastInputEventTime()
+{
+  nsCOMPtr<nsIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  if (idleService) {
+    idleService->ResetIdleTimeOut();
+  }
 }
 
 // this is the last window that had a drag event happen on it.
@@ -461,9 +460,6 @@ nsWindow::nsWindow()
 
         gBufferPixmapUsageCount++;
     }
-
-    // Set gLastInputEventTime to some valid number
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 }
 
 nsWindow::~nsWindow()

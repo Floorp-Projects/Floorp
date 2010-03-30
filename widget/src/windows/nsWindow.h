@@ -51,6 +51,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
+#include "nsIdleService.h"
 #include "nsToolkit.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -358,6 +359,12 @@ protected:
 #endif // !defined(WINCE)
 
   /**
+   * Function that registers when the user has been active (used for detecting
+   * when the user is idle).
+   */
+  void                    UserActivity();
+
+  /**
    * Methods for derived classes 
    */
   virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
@@ -459,6 +466,8 @@ protected:
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif
+
+  nsCOMPtr<nsIdleService> mIdleService;
 
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook

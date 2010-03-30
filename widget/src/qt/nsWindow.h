@@ -100,6 +100,8 @@ class QEvent;
 
 class MozQWidget;
 
+class nsIdleService;
+
 class nsWindow : public nsBaseWidget,
                  public nsSupportsWeakReference
 {
@@ -322,6 +324,7 @@ private:
     PluginType         mPluginType;
 
     nsRefPtr<gfxASurface> mThebesSurface;
+    nsCOMPtr<nsIdleService> mIdleService;
 
     PRBool       mIsTransparent;
  
@@ -362,6 +365,10 @@ private:
         *flag &= ~mask;
     }
     PRInt32 mQCursor;
+
+    // Call this function when the users activity is the direct cause of an
+    // event (like a keypress or mouse click).
+    void UserActivity();
 
     // Remember dirty area caused by ::Scroll
     QRegion mDirtyScrollArea;
