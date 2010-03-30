@@ -63,7 +63,7 @@
 #include "jsbool.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
-#include "jsversion.h"
+#include "jsfun.h"      /* for JS_ARGS_LENGTH_MAX */
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
@@ -76,6 +76,7 @@
 #include "jsstr.h"
 #include "jsbit.h"
 #include "jsvector.h"
+#include "jsversion.h"
 #include "jsstrinlines.h"
 
 using namespace js;
