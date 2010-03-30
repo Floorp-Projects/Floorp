@@ -41,6 +41,7 @@ srcdir      = @srcdir@
 VPATH       = \
   $(srcdir) \
   $(srcdir)/basic \
+  $(srcdir)/opengl \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -56,11 +57,17 @@ EXPORTS = \
         BasicLayers.h \
         ImageLayers.h \
         Layers.h \
+        LayerManagerOGL.h \
         $(NULL)
 
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
+        glWrapper.cpp \
+        LayerManagerOGL.cpp \
+        ThebesLayerOGL.cpp \
+        ContainerLayerOGL.cpp \
+        ImageLayerOGL.cpp \
         $(NULL)
 
 EXTRA_DSO_LIBS = \
