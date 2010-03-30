@@ -259,41 +259,45 @@ class SystemAllocPolicy
 template <class T>
 class LazilyConstructed
 {
-    char bytes[sizeof(T)];
-    bool constructed;
+    union {
+        void *align;
+        char bytes[sizeof(T) + 1];
+    };
+
     T &asT() { return *reinterpret_cast<T *>(bytes); }
+    char & constructed() { return bytes[sizeof(T)]; }
 
   public:
-    LazilyConstructed() : constructed(false) {}
-    ~LazilyConstructed() { if (constructed) asT().~T(); }
+    LazilyConstructed() { constructed() = false; }
+    ~LazilyConstructed() { if (constructed()) asT().~T(); }
 
-    bool empty() const { return !constructed; }
+    bool empty() const { return !constructed(); }
 
     void construct() {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T();
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1>
     void construct(const T1 &t1) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1);
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1, class T2>
     void construct(const T1 &t1, const T2 &t2) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1, t2);
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1, class T2, class T3>
     void construct(const T1 &t1, const T2 &t2, const T3 &t3) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1, t2, t3);
-        constructed = true;
+        constructed() = true;
     }
 };
 
