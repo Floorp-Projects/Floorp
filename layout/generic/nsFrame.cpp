@@ -3676,10 +3676,12 @@ nsIFrame::InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags)
   // painting is suppressed.
   nsIPresShell *shell = PresContext()->GetPresShell();
   if (shell) {
-    if (shell->IsPaintingSuppressed())
+    PRBool suppressed = PR_FALSE;
+    shell->IsPaintingSuppressed(&suppressed);
+    if (suppressed)
       return;
   }
-
+  
   InvalidateInternal(aDamageRect, 0, 0, nsnull, aFlags);
 }
 

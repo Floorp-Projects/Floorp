@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-{ 0xc8f0b83e, 0x7457, 0x4367, \
-  { 0xa9, 0x82, 0xe1, 0xfa, 0x11, 0xf9, 0x60, 0xbc } }
+{ 0x94c34e88, 0x2da3, 0x49d4, \
+  { 0xa5, 0x35, 0x51, 0xa4, 0x16, 0x92, 0xa5, 0x79 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -235,9 +235,9 @@ public:
 
   nsIDocument* GetDocument() const { return mDocument; }
 
-  nsPresContext* GetPresContext() const { return mPresContext; }
+  nsPresContext* GetPresContext() { return mPresContext; }
 
-  nsIViewManager* GetViewManager() const { return mViewManager; }
+  nsIViewManager* GetViewManager() { return mViewManager; }
 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet*  StyleSet() { return mStyleSet; }
@@ -428,7 +428,7 @@ public:
   /**
    * Recreates the frames for a node
    */
-  virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
+  NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(nsIContent* aContent);
   void RestyleForAnimation(nsIContent* aContent);
@@ -438,7 +438,7 @@ public:
    * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
    * 
    */
-  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() const = 0;
+  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() = 0;
 
   /**
    * Flush pending notifications of the type specified.  This method
@@ -455,17 +455,17 @@ public:
    * Callbacks will be called even if reflow itself fails for
    * some reason.
    */
-  virtual NS_HIDDEN_(nsresult) PostReflowCallback(nsIReflowCallback* aCallback) = 0;
-  virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
+  NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
+  NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
 
-  virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame) = 0;
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   /**
    * Given a frame, create a rendering context suitable for use with
    * the frame.
    */
-  virtual NS_HIDDEN_(nsresult) CreateRenderingContext(nsIFrame *aFrame,
-                                                      nsIRenderingContext** aContext) = 0;
+  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
+                                    nsIRenderingContext** aContext) = 0;
 
   /**
    * Informs the pres shell that the document is now at the anchor with
@@ -475,7 +475,7 @@ public:
    * the pres shell that there is no current target, and |aScroll| must
    * be false.
    */
-  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
+  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
 
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by
@@ -485,7 +485,7 @@ public:
    * scrolled to by GoToAnchor (we don't want to keep it alive if it's
    * removed from the DOM), so don't call this more than once.
    */
-  virtual NS_HIDDEN_(nsresult) ScrollToAnchor() = 0;
+  NS_IMETHOD ScrollToAnchor() = 0;
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
@@ -516,9 +516,9 @@ public:
    *                  the frame the minimum amount necessary in order for the entire
    *                  frame to be visible horizontally (if possible)
    */
-  virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
-                                                     PRIntn      aVPercent,
-                                                     PRIntn      aHPercent) = 0;
+  NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
+                                   PRIntn      aVPercent,
+                                   PRIntn      aHPercent) = 0;
 
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
@@ -568,31 +568,31 @@ public:
    * Suppress notification of the frame manager that frames are
    * being destroyed.
    */
-  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
+  NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
 
   /**
    * Notification sent by a frame informing the pres shell that it is about to
    * be destroyed.
    * This allows any outstanding references to the frame to be cleaned up
    */
-  virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+  NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
    * Get link location.
    */
-  virtual NS_HIDDEN_(nsresult) GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
+  NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() = 0;
+  NS_IMETHOD GetCaret(nsCaret **aOutCaret) = 0;
 
   /**
    * Invalidate the caret's current position if it's outside of its frame's
    * boundaries. This function is useful if you're batching selection
    * notifications and might remove the caret's frame out from under it.
    */
-  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition() = 0;
+  NS_IMETHOD_(void) MaybeInvalidateCaretPosition() = 0;
 
   /**
    * Set the current caret to a new caret. To undo this, call RestoreCaret.
@@ -652,41 +652,41 @@ public:
   /**
     * Gets the current target event frame from the PresShell
     */
-  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() = 0;
+  NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame) = 0;
 
   /**
     * Gets the current target event frame from the PresShell
     */
-  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) = 0;
+  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent) = 0;
 
   /**
    * Get and set the history state for the current document 
    */
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
+  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
 
   /**
    * Determine if reflow is currently locked
    * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
-  virtual NS_HIDDEN_(PRBool) IsReflowLocked() const = 0;
+  NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
 
   /**
    * Called to find out if painting is suppressed for this presshell.  If it is suppressd,
    * we don't allow the painting of any layer but the background, and we don't
    * recur into our children.
    */
-  virtual NS_HIDDEN_(PRBool) IsPaintingSuppressed() const = 0;
+  NS_IMETHOD IsPaintingSuppressed(PRBool* aResult)=0;
 
   /**
    * Unsuppress painting.
    */
-  virtual NS_HIDDEN_(void) UnsuppressPainting() = 0;
+  NS_IMETHOD UnsuppressPainting() = 0;
 
   /**
    * Called to disable nsITheme support in a specific presshell.
    */
-  virtual NS_HIDDEN_(void) DisableThemeSupport() = 0;
+  NS_IMETHOD DisableThemeSupport() = 0;
 
   /**
    * Indicates whether theme support is enabled.
