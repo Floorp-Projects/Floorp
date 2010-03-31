@@ -67,7 +67,7 @@ function pbObserver(aSubject, aTopic, aData) {
 function test() {
   waitForExplicitFinish();
   _obs.addObserver(pbObserver, "private-browsing", false);
-  is(gBrowser.tabContainer.childNodes.length, 1, "There should only be one tab");
+  is(gBrowser.tabs.length, 1, "There should only be one tab");
   let testTab = gBrowser.addTab();
   gBrowser.selectedTab = testTab;
   testTab.linkedBrowser.addEventListener("unload", function () {

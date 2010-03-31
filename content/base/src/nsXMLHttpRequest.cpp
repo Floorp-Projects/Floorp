@@ -619,7 +619,7 @@ nsXMLHttpRequestUpload::~nsXMLHttpRequestUpload()
 
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequestUpload)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpRequestUpload)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
@@ -1025,7 +1025,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
@@ -1277,6 +1277,18 @@ nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
   nsresult rv = NS_OK;
 
   if (httpChannel) {
+    if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
+      // Make sure we don't leak status information from denied cross-site
+      // requests.
+      if (mChannel) {
+        nsresult status;
+        mChannel->GetStatus(&status);
+        if (NS_FAILED(status)) {
+          return NS_ERROR_NOT_AVAILABLE;
+        }
+      }
+    }
+
     rv = httpChannel->GetResponseStatusText(aStatusText);
   }
 
@@ -3266,7 +3278,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpProgressEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpProgressEvent)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXMLHttpProgressEvent)

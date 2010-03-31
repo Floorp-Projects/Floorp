@@ -2454,8 +2454,9 @@ nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
   if (aEnabled && aFireTimeouts) {
     // Scripts are enabled (again?) on this context, run timeouts that
     // fired on this context while scripts were disabled.
-
-    RunTimeout(nsnull);
+    nsCOMPtr<nsIRunnable> event =
+      NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, RunTimeout);
+    NS_DispatchToCurrentThread(event);
   }
 }
 
@@ -3201,8 +3202,8 @@ nsGlobalWindow::DevToCSSIntPixels(PRInt32 px)
 {
   if (!mDocShell)
     return px; // assume 1:1
-    
-  nsCOMPtr<nsPresContext> presContext;
+
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
@@ -3215,8 +3216,8 @@ nsGlobalWindow::CSSToDevIntPixels(PRInt32 px)
 {
   if (!mDocShell)
     return px; // assume 1:1
-    
-  nsCOMPtr<nsPresContext> presContext;
+
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
@@ -3229,12 +3230,12 @@ nsGlobalWindow::DevToCSSIntPixels(nsIntSize px)
 {
   if (!mDocShell)
     return px; // assume 1:1
-    
-  nsCOMPtr<nsPresContext> presContext;
+
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
-  
+
   return nsIntSize(
       presContext->DevPixelsToIntCSSPixels(px.width),
       presContext->DevPixelsToIntCSSPixels(px.height));
@@ -3245,12 +3246,12 @@ nsGlobalWindow::CSSToDevIntPixels(nsIntSize px)
 {
   if (!mDocShell)
     return px; // assume 1:1
-    
-  nsCOMPtr<nsPresContext> presContext;
+
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
-  
+
   return nsIntSize(
     presContext->CSSPixelsToDevPixels(px.width),
     presContext->CSSPixelsToDevPixels(px.height));
@@ -3267,7 +3268,7 @@ nsGlobalWindow::GetInnerWidth(PRInt32* aInnerWidth)
   EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
 
   if (docShellWin && presContext) {
@@ -3330,7 +3331,7 @@ nsGlobalWindow::GetInnerHeight(PRInt32* aInnerHeight)
   EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
 
   if (docShellWin && presContext) {
@@ -3671,33 +3672,34 @@ nsGlobalWindow::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
     nsContentUtils::HidePopupsInDocument(doc);
 #endif
 
-    PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
-    PRInt32 winLeft, winTop, winWidth, winHeight;
-
     nsGlobalWindow* rootWindow =
       static_cast<nsGlobalWindow*>(GetPrivateRoot());
     if (rootWindow) {
       rootWindow->FlushPendingNotifications(Flush_Layout);
     }
 
-    // Get the window size
     nsCOMPtr<nsIBaseWindow> treeOwner;
     GetTreeOwner(getter_AddRefs(treeOwner));
-    if (treeOwner)
-      treeOwner->GetPositionAndSize(&winLeft, &winTop, &winWidth, &winHeight);
 
-    // convert those values to CSS pixels
-    // XXX four separate retrievals of the prescontext
-    winLeft   = DevToCSSIntPixels(winLeft);
-    winTop    = DevToCSSIntPixels(winTop);
-    winWidth  = DevToCSSIntPixels(winWidth);
-    winHeight = DevToCSSIntPixels(winHeight);
-
-    // Get the screen dimensions
-    // XXX This should use nsIScreenManager once it's fully fleshed out.
     nsCOMPtr<nsIDOMScreen> screen;
     GetScreen(getter_AddRefs(screen));
-    if (screen) {
+
+    if (treeOwner && screen) {
+      PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
+      PRInt32 winLeft, winTop, winWidth, winHeight;
+
+      // Get the window size
+      treeOwner->GetPositionAndSize(&winLeft, &winTop, &winWidth, &winHeight);
+
+      // convert those values to CSS pixels
+      // XXX four separate retrievals of the prescontext
+      winLeft   = DevToCSSIntPixels(winLeft);
+      winTop    = DevToCSSIntPixels(winTop);
+      winWidth  = DevToCSSIntPixels(winWidth);
+      winHeight = DevToCSSIntPixels(winHeight);
+
+      // Get the screen dimensions
+      // XXX This should use nsIScreenManager once it's fully fleshed out.
       screen->GetAvailLeft(&screenLeft);
       screen->GetAvailWidth(&screenWidth);
       screen->GetAvailHeight(&screenHeight);
@@ -3713,9 +3715,7 @@ nsGlobalWindow::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
 #else
       screen->GetAvailTop(&screenTop);
 #endif
-    }
 
-    if (screen && treeOwner) {
       if (aLeft) {
         if (screenLeft+screenWidth < *aLeft+winWidth)
           *aLeft = screenLeft+screenWidth - winWidth;
@@ -6579,7 +6579,7 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 
   // Obtain a presentation shell
   nsIPresShell *shell = mDoc->GetPrimaryShell();
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   if (shell) {
     // Retrieve the context
     presContext = shell->GetPresContext();
@@ -6833,52 +6833,53 @@ nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 void
 nsGlobalWindow::ActivateOrDeactivate(PRBool aActivate)
 {
-  // Set / unset the "active" attribute on the documentElement
-  // of the top level window
+  // Set / unset mIsActive on the top level window, which is used for the
+  // :-moz-window-inactive pseudoclass.
   nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-  if (mainWidget) {
-    // Get the top level widget (if the main widget is a sheet, this will
-    // be the sheet's top (non-sheet) parent).
-    nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
-    if (!topLevelWidget)
-      topLevelWidget = mainWidget;
+  if (!mainWidget)
+    return;
 
-    // Get the top level widget's nsGlobalWindow
-    nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
-    if (topLevelWidget == mainWidget) {
-      topLevelWindow = static_cast<nsIDOMWindowInternal *>(this);
-    } else {
-      // This is a workaround for the following problem:
-      // When a window with an open sheet loses focus, only the sheet window
-      // receives the NS_DEACTIVATE event. However, it's not the sheet that
-      // should lose the "active" attribute, but the containing top level window.
-      void* clientData;
-      topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
-      nsISupports* data = static_cast<nsISupports*>(clientData);
-      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-      topLevelWindow = do_GetInterface(req);
-    }
-
-    if (topLevelWindow) {
-      // Only set the attribute if the document is a XUL document and the
-      // window is a chrome window
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      topLevelWindow->GetDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(topLevelWindow);
-      if (xulDoc && chromeWin) {
-        nsCOMPtr<nsIContent> rootElem = doc->GetRootContent();
-        if (rootElem) {
-          if (aActivate)
-            rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                              NS_LITERAL_STRING("true"), PR_TRUE);
-          else
-            rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
-        }
-      }
-    }
+  // Get the top level widget (if the main widget is a sheet, this will
+  // be the sheet's top (non-sheet) parent).
+  nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
+  if (!topLevelWidget) {
+    topLevelWidget = mainWidget;
   }
+
+  // Get the top level widget's nsGlobalWindow
+  nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
+  if (topLevelWidget == mainWidget) {
+    topLevelWindow = static_cast<nsIDOMWindowInternal*>(this);
+  } else {
+    // This is a workaround for the following problem:
+    // When a window with an open sheet loses focus, only the sheet window
+    // receives the NS_DEACTIVATE event. However, it's not the sheet that
+    // should lose the active styling, but the containing top level window.
+    void* clientData;
+    topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
+    nsISupports* data = static_cast<nsISupports*>(clientData);
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+    topLevelWindow = do_GetInterface(req);
+  }
+  if (topLevelWindow) {
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(topLevelWindow));
+    piWin->SetActive(aActivate);
+  }
+}
+
+static PRBool
+NotifyDocumentTree(nsIDocument* aDocument, void* aData)
+{
+  aDocument->EnumerateSubDocuments(NotifyDocumentTree, nsnull);
+  aDocument->DocumentStatesChanged(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  return PR_TRUE;
+}
+
+void
+nsGlobalWindow::SetActive(PRBool aActive)
+{
+  nsPIDOMWindow::SetActive(aActive);
+  NotifyDocumentTree(mDoc, nsnull);
 }
 
 void
@@ -7070,7 +7071,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
     jsval jsStateObj = JSVAL_NULL;
     // Root the container which will hold our decoded state object.
-    nsAutoGCRoot(&jsStateObj, &rv);
+    nsAutoGCRoot root(&jsStateObj, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Deserialize the state object into an nsIVariant.
@@ -7088,7 +7089,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
   // Obtain a presentation shell for use in creating a popstate event.
   nsIPresShell *shell = mDoc->GetPrimaryShell();
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   if (shell) {
     presContext = shell->GetPresContext();
   }
@@ -9343,7 +9344,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     }
   }
 
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   if (mDocShell) {
     mDocShell->GetPresContext(getter_AddRefs(presContext));
   }

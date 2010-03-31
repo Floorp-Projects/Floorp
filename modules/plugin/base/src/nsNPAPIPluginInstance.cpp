@@ -895,10 +895,10 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
     mDrawingModel(NPDrawingModelQuickDraw),
 #endif
 #endif
+    mRunning(NOT_STARTED),
     mWindowless(PR_FALSE),
     mWindowlessLocal(PR_FALSE),
     mTransparent(PR_FALSE),
-    mRunning(NOT_STARTED),
     mCached(PR_FALSE),
     mWantsAllNetworkStreams(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
@@ -1677,7 +1677,8 @@ nsNPAPIPluginInstance::PrivateModeStateChanged()
         return rv;
 
       NPError error;
-      NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->setvalue)(&mNPP, NPNVprivateModeBool, &pme), mLibrary, this);
+      NPBool value = static_cast<NPBool>(pme);
+      NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->setvalue)(&mNPP, NPNVprivateModeBool, &value), mLibrary, this);
       return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
     }
   }

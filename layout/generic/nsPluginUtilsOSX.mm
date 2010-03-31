@@ -40,6 +40,7 @@
 #include "nsPluginUtilsOSX.h"
 
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 #include "nsObjCExceptions.h"
 
 #ifndef __LP64__
@@ -215,3 +216,191 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
 
   return PR_TRUE;
 }
+
+nsCARenderer::~nsCARenderer() {
+  Destroy();
+}
+
+CGColorSpaceRef CreateSystemColorSpace () {
+    CMProfileRef system_profile = NULL;
+    CGColorSpaceRef cspace = NULL;
+
+    if (::CMGetSystemProfile(&system_profile) == noErr) {
+      // Create a colorspace with the systems profile
+      cspace = ::CGColorSpaceCreateWithPlatformColorSpace(system_profile);
+
+      ::CMCloseProfile(system_profile);
+    }
+
+    return cspace;
+}
+
+void cgdata_release_callback(void *aCGData, const void *data, size_t size) {
+  if (aCGData) {
+    free(aCGData); 
+  }
+}
+
+void nsCARenderer::Destroy() {
+  if (mCARenderer) {
+    CARenderer* caRenderer = (CARenderer*)mCARenderer;
+    [caRenderer release];
+  }
+  if (mPixelBuffer) {
+    ::CGLDestroyPBuffer((CGLPBufferObj)mPixelBuffer);
+  }
+  if (mOpenGLContext) {
+    ::CGLDestroyContext((CGLContextObj)mOpenGLContext);
+  }
+  if (mCGImage) {
+    ::CGImageRelease(mCGImage);
+  }
+  // mCGData is deallocated by cgdata_release_callback
+
+  mCARenderer = nil;
+  mPixelBuffer = NULL;
+  mOpenGLContext = NULL;
+  mCGImage = NULL;
+}
+
+nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
+  CALayer* layer = (CALayer*)aCALayer;
+  CARenderer* caRenderer = NULL;
+
+  CGLPixelFormatAttribute attributes[] = {
+    kCGLPFANoRecovery,
+    kCGLPFAAccelerated,
+    kCGLPFADepthSize, (CGLPixelFormatAttribute)24,
+    (CGLPixelFormatAttribute)0
+  };
+
+  CGLError result = ::CGLCreatePBuffer(aWidth, aHeight, 
+                       GL_TEXTURE_RECTANGLE_EXT, GL_RGBA, 0, &mPixelBuffer);
+  if (result != kCGLNoError) {
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+
+  GLint screen;
+  CGLPixelFormatObj format;
+  if (::CGLChoosePixelFormat(attributes, &format, &screen) != kCGLNoError) {
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+
+  if (::CGLCreateContext(format, NULL, &mOpenGLContext) != kCGLNoError) {
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+  ::CGLDestroyPixelFormat(format);
+
+  caRenderer = [[CARenderer rendererWithCGLContext:mOpenGLContext options:NULL] retain];
+  mCARenderer = caRenderer;
+  if (caRenderer == nil) {
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+  [layer setBounds:CGRectMake(0, 0, aWidth, aHeight)];
+  [layer setPosition:CGPointMake(aWidth/2.0, aHeight/2.0)];
+  caRenderer.layer = layer;
+  caRenderer.bounds = CGRectMake(0, 0, aWidth, aHeight);
+
+  mCGData = malloc(aWidth*aHeight*4);
+  if (!mCGData) {
+    Destroy();
+  }
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(mCGData, 
+                                      mCGData, aHeight*aWidth*4, cgdata_release_callback);
+  if (!dataProvider) {
+    cgdata_release_callback(mCGData, mCGData, aHeight*aWidth*4);
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+
+  CGColorSpaceRef colorSpace = CreateSystemColorSpace();
+
+  mCGImage = ::CGImageCreate(aWidth, aHeight, 8, 32, aWidth * 4, 
+              colorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
+              dataProvider, NULL, true, kCGRenderingIntentDefault);
+
+  ::CGDataProviderRelease(dataProvider);
+  if (colorSpace) {
+    ::CGColorSpaceRelease(colorSpace);
+  }
+
+  if (!mCGImage) {
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult nsCARenderer::Render(CGContextRef aCGContext, int aWidth, int aHeight) {
+
+  if (!mCARenderer) 
+    return NS_ERROR_FAILURE;
+
+  CARenderer* caRenderer = (CARenderer*)mCARenderer;
+  int renderer_width = caRenderer.bounds.size.width;
+  int renderer_height = caRenderer.bounds.size.height;
+
+  if (renderer_width != aWidth || renderer_height != aHeight) {
+    // XXX: This should be optimized to not rescale the buffer
+    //      if we are resizing down.
+    CALayer* caLayer = [caRenderer layer];
+    Destroy();
+    if (SetupRenderer(caLayer, aWidth, aHeight) != NPERR_NO_ERROR) {
+      return NS_ERROR_FAILURE;
+    }
+    caRenderer = (CARenderer*)mCARenderer;
+  }
+  GLint screen;
+  CGLContextObj oldContext = ::CGLGetCurrentContext();
+  ::CGLSetCurrentContext(mOpenGLContext);
+  ::CGLGetVirtualScreen(mOpenGLContext, &screen);
+  ::CGLSetPBuffer(mOpenGLContext, mPixelBuffer, 0, 0, screen);
+
+  ::glClearColor(0.0, 0.0, 0.0, 0.0);
+  ::glViewport(0.0, 0.0, aWidth, aHeight);
+  ::glMatrixMode(GL_PROJECTION);   
+  ::glLoadIdentity();
+  ::glOrtho (0.0, aWidth, 0.0, aHeight, -1, 1);
+  ::glClear(GL_COLOR_BUFFER_BIT);
+  // Render upside down to speed up CGContextDrawImage
+  ::glTranslatef(0.0f, aHeight, 0.0);
+  ::glScalef(1.0, -1.0, 1.0);
+
+  double caTime = ::CACurrentMediaTime();
+  [caRenderer beginFrameAtTime:caTime timeStamp:NULL];
+  [caRenderer addUpdateRect:CGRectMake(0, 0, aWidth, aHeight)];
+  [caRenderer render];
+  [caRenderer endFrame];
+
+  ::glPixelStorei(GL_PACK_ALIGNMENT, 4);
+  ::glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+  ::glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+  ::glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+
+  ::glReadPixels(0.0f, 0.0f, aWidth, aHeight,
+                      GL_BGRA, GL_UNSIGNED_BYTE,
+                      mCGData);
+
+  if (oldContext) {
+    ::CGLSetCurrentContext(oldContext);
+  }
+
+  // Significant speed up by reseting the scaling
+  ::CGContextSetInterpolationQuality( aCGContext, kCGInterpolationNone );
+  ::CGContextTranslateCTM( aCGContext, 0, aHeight);
+  ::CGContextScaleCTM( aCGContext, 1.0, -1.0);
+
+  CGRect drawRect;
+  drawRect.origin.x = 0;
+  drawRect.origin.y = 0;
+  drawRect.size.width = aWidth;
+  drawRect.size.height = aHeight;
+  ::CGContextDrawImage( aCGContext, drawRect, mCGImage );
+  return NS_OK;
+}
+

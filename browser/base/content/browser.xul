@@ -276,9 +276,6 @@
     </panel>
 
     <panel id="allTabs-panel" hidden="true" norestorefocus="true" ignorekeys="true"
-# XXX: KUI style disabled, because the transparent background slows down
-#      interacting with the panel, esp. the search field.
-#           class="KUI-panel"
            onmouseover="allTabs._updateTabCloseButton(event);">
       <hbox id="allTabs-meta" align="center">
         <spacer flex="1"/>
@@ -311,6 +308,8 @@
               style="&dialog.style;"
               hidden="true"/>
     </panel>
+
+    <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
   </popupset>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
@@ -405,6 +404,7 @@
                  noneplaceholder="&urlbar.none.emptyText;"
                  type="autocomplete"
                  autocompletesearch="history"
+                 autocompletesearchparam="enable-actions"
                  autocompletepopup="PopupAutoCompleteRichResult"
                  completeselectedindex="true"
                  tabscrolling="true"
@@ -443,6 +443,7 @@
               </hbox>
             </hbox>
           </box>
+          <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
           <hbox id="urlbar-icons">
             <button type="menu"
                     style="-moz-user-focus: none"
@@ -514,6 +515,19 @@
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
                tooltip="bhTooltip" popupsinherittooltip="true"/>
       </toolbaritem>
+    </toolbar>
+
+    <toolbar id="TabsToolbar"
+             fullscreentoolbar="true"
+             ordinal="100"
+             collapsed="true">
+      <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+            tabbrowser="content"
+            flex="1"
+            setfocus="false"
+            tooltip="tabbrowser-tab-tooltip">
+        <tab class="tabbrowser-tab" selected="true"/>
+      </tabs>
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
@@ -603,6 +617,7 @@
     <vbox id="appcontent" flex="1">
       <tabbrowser id="content" disablehistory="true"
                   flex="1" contenttooltip="aHTMLTooltip"
+                  tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   ondrop="contentAreaDNDObserver.onDrop(event)"

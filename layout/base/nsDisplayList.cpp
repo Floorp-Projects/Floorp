@@ -98,16 +98,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   }
 }
 
-// Destructor function for the dirty rect property
-static void
-DestroyRectFunc(void*    aFrame,
-                nsIAtom* aPropertyName,
-                void*    aPropertyValue,
-                void*    aDtorData)
-{
-  delete static_cast<nsRect*>(aPropertyValue);
-}
-
 static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
   nsFrameManager* frameManager = aFrame->PresContext()->PresShell()->FrameManager();
 
@@ -129,17 +119,18 @@ static void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame
   nsRect overflowRect = aFrame->GetOverflowRect();
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
-  // if "new nsRect" fails, this won't do anything, but that's okay
-  aFrame->SetProperty(nsGkAtoms::outOfFlowDirtyRectProperty,
-                      new nsRect(dirty), DestroyRectFunc);
+  aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDirtyRectProperty(),
+                           new nsRect(dirty));
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
-  aFrame->DeleteProperty(nsGkAtoms::outOfFlowDirtyRectProperty);
+  nsPresContext* presContext = aFrame->PresContext();
+  presContext->PropertyTable()->
+    Delete(aFrame, nsDisplayListBuilder::OutOfFlowDirtyRectProperty());
 
-  nsFrameManager* frameManager = aFrame->PresContext()->PresShell()->FrameManager();
+  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
 
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, f)) {
@@ -675,14 +666,34 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       nscoord appUnitsPerDevPixel =
         item->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
       layerItems->mVisibleRect.UnionRect(layerItems->mVisibleRect,
-        item->mVisibleRect.ToOutsidePixels(appUnitsPerDevPixel));
-      layerItems->mLayer->SetVisibleRegion(nsIntRegion(layerItems->mVisibleRect));
+        item->mVisibleRect.ToNearestPixels(appUnitsPerDevPixel));
     }
   }
 
   if (!firstThebesLayerItems->mStartItem) {
     // The first Thebes layer has nothing in it. Delete the layer.
     aLayers->RemoveElementAt(0);
+  }
+
+  for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
+    LayerItems* layerItems = &aLayers->ElementAt(i);
+
+    gfxMatrix transform;
+    nsIntRect visibleRect = layerItems->mVisibleRect;
+    if (layerItems->mLayer->GetTransform().Is2D(&transform)) {
+      // if 'transform' is not invertible, then nothing will be displayed
+      // for the layer, so it doesn't really matter what we do here
+      transform.Invert();
+      gfxRect layerVisible = transform.TransformBounds(
+          gfxRect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height));
+      layerVisible.RoundOut();
+      if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(layerVisible, &visibleRect))) {
+        NS_ERROR("Visible rect transformed out of bounds");
+      }
+    } else {
+      NS_ERROR("Only 2D transformations currently supported");
+    }
+    layerItems->mLayer->SetVisibleRegion(nsIntRegion(visibleRect));
   }
 }
 
@@ -1062,7 +1073,7 @@ PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
   if (mIsThemed)
-    return PR_FALSE;
+    return mThemeTransparency == nsITheme::eOpaque;
 
   const nsStyleBackground* bg;
 

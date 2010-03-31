@@ -140,7 +140,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsIDeviceContext.h"
-#include "nsIdleService.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"
 #include "nsRect.h"
@@ -166,9 +165,9 @@
 
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
+#include "Layers.h"
 
 #if !defined(WINCE)
-#include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 #include "nsKeyboardLayout.h"
 #include "nsNativeDragTarget.h"
@@ -316,24 +315,6 @@ HTCApiNavSetMode gHTCApiNavSetMode = nsnull;
 static PRBool    gCheckForHTCApi = PR_FALSE;
 #endif
 
-// The last user input event time in microseconds. If
-// there are any pending native toolkit input events
-// it returns the current time. The value is compatible
-// with PR_IntervalToMicroseconds(PR_IntervalNow()).
-#if !defined(WINCE)
-static PRUint32 gLastInputEventTime               = 0;
-#else
-PRUint32        gLastInputEventTime               = 0;
-#endif
-
-static void UpdateLastInputEventTime() {
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  nsCOMPtr<nsIIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
-  nsIdleService* is = static_cast<nsIdleService*>(idleService.get());
-  if (is)
-    is->IdleTimeWasModified();
-}
-
 // Global user preference for disabling native theme. Used
 // in NativeWindowTheme.
 PRBool          gDisableNativeTheme               = PR_FALSE;
@@ -400,6 +381,9 @@ nsWindow::nsWindow() : nsBaseWidget()
   mTransparentSurface   = nsnull;
   mMemoryDC             = nsnull;
   mTransparencyMode     = eTransparencyOpaque;
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  memset(&mGlassMargins, 0, sizeof mGlassMargins);
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #endif
   mBackground           = ::GetSysColor(COLOR_BTNFACE);
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
@@ -438,8 +422,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
   } // !sInstanceCount
 
-  // Set gLastInputEventTime to some valid number
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  mIdleService = nsnull;
 
   sInstanceCount++;
 }
@@ -662,6 +645,12 @@ NS_METHOD nsWindow::Destroy()
 
   // During the destruction of all of our children, make sure we don't get deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  /**
+   * On windows the LayerManagerOGL destructor wants the widget to be around for
+   * cleanup. It also would like to have the HWND intact, so we NULL it here.
+   */
+  mLayerManager = NULL;
 
   // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
   // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
@@ -2017,6 +2006,92 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
   GetTopLevelWindow(PR_TRUE)->SetWindowTranslucencyInner(aMode);
 }
+
+namespace {
+  BOOL CALLBACK AddClientAreaToRegion(HWND hWnd, LPARAM lParam) {
+    nsIntRegion *region = reinterpret_cast<nsIntRegion*>(lParam);
+
+    RECT clientRect;
+    ::GetWindowRect(hWnd, &clientRect);
+    nsIntRect clientArea(clientRect.left, clientRect.top,
+                         clientRect.right - clientRect.left,
+                         clientRect.bottom - clientRect.top);
+    region->Or(*region, clientArea);
+    return TRUE;
+  }
+}
+
+void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
+                                               const nsIntRegion &aPossiblyTransparentRegion) {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if (mTransparencyMode != eTransparencyGlass)
+    return;
+
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+  nsWindow* topWindow = GetNSWindowPtr(hWnd);
+
+  if (GetParent())
+    return;
+
+  mPossiblyTransparentRegion.Sub(mPossiblyTransparentRegion, aDirtyRegion);
+  mPossiblyTransparentRegion.Or(mPossiblyTransparentRegion, aPossiblyTransparentRegion);
+
+  nsIntRegion childWindowRegion;
+
+  ::EnumChildWindows(mWnd, AddClientAreaToRegion, reinterpret_cast<LPARAM>(&childWindowRegion));
+  RECT r;
+  ::GetWindowRect(mWnd, &r);
+
+  childWindowRegion.MoveBy(-r.left, -r.top);
+
+  nsIntRect clientBounds;
+  topWindow->GetClientBounds(clientBounds);
+  nsIntRegion opaqueRegion;
+  opaqueRegion.Sub(clientBounds, mPossiblyTransparentRegion);
+  opaqueRegion.Or(opaqueRegion, childWindowRegion);
+  MARGINS margins = { 0, 0, 0, 0 };
+  DWORD_PTR dwStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
+  // If there is no opaque region or hidechrome=true then full glass
+  if (opaqueRegion.IsEmpty() || !(dwStyle & WS_CAPTION)) {
+    margins.cxLeftWidth = -1;
+  } else {
+    // Find the largest rectangle and use that to calculate the inset
+    nsIntRegionRectIterator rgnIter(opaqueRegion);
+    const nsIntRect *currentRect = rgnIter.Next();
+    nsIntRect largest = *currentRect;
+    nscoord largestArea = largest.width * largest.height;
+    while (currentRect = rgnIter.Next()) {
+      nscoord area = currentRect->width * currentRect->height;
+      if (area > largestArea) {
+        largest = *currentRect;
+        largestArea = area;
+      }
+    }
+    margins.cxLeftWidth = largest.x;
+    margins.cxRightWidth = clientBounds.width - largest.XMost();
+    margins.cyTopHeight = largest.y;
+    margins.cyBottomHeight = clientBounds.height - largest.YMost();
+  }
+  if (memcmp(&mGlassMargins, &margins, sizeof mGlassMargins)) {
+    mGlassMargins = margins;
+    UpdateGlass();
+  }
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+}
+
+void nsWindow::UpdateGlass() {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+  DWMNCRENDERINGPOLICY policy = DWMNCRP_USEWINDOWSTYLE;
+  if(eTransparencyGlass == mTransparencyMode) {
+    policy = DWMNCRP_ENABLED;
+  }
+  if(nsUXThemeData::CheckForCompositor()) {
+    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(hWnd, &mGlassMargins);
+    nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+  }
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+}
 #endif
 
 /**************************************************************
@@ -2391,6 +2466,20 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 
       ::GetUpdateRgn(mWnd, updateRgn, FALSE);
       ::OffsetRgn(updateRgn, aDelta.x, aDelta.y);
+
+      if (gfxPlatform::GetDPI() != 96 &&
+          aDelta.y < 0 &&
+          clip.bottom == (mBounds.y + mBounds.height)) {
+        // XXX - bug 548935 - we can at high DPI settings scroll an undrawn
+        // row of pixels into view. This row should be invalidated to make
+        // sure it contains the correct content.
+        HRGN scrollRgn = ::CreateRectRgn(clip.left,
+                                         clip.bottom + aDelta.y - 1,
+                                         clip.right,
+                                         clip.bottom + aDelta.y);
+        ::CombineRgn(updateRgn, updateRgn, scrollRgn, RGN_OR);
+        ::DeleteObject((HGDIOBJ)scrollRgn);
+      }
     } else {
 #endif
       ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
@@ -2800,6 +2889,30 @@ nsWindow::HasPendingInputEvent()
 
 /**************************************************************
  *
+ * SECTION: nsIWidget::GetLayerManager
+ *
+ * Get the layer manager associated with this widget.
+ *
+ **************************************************************/
+
+mozilla::layers::LayerManager*
+nsWindow::GetLayerManager()
+{
+  nsWindow *topWindow = GetNSWindowPtr(GetTopLevelHWND(mWnd, PR_TRUE));
+
+  if (!topWindow) {
+    return nsBaseWidget::GetLayerManager();
+  }
+
+  if (topWindow->GetAcceleratedRendering() != mUseAcceleratedRendering) {
+    mLayerManager = NULL;
+    mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
+  }
+  return nsBaseWidget::GetLayerManager();
+}
+
+/**************************************************************
+ *
  * SECTION: nsIWidget::GetThebesSurface
  *
  * Get the Thebes surface associated with this widget.
@@ -3093,6 +3206,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                    const nsModifierKeyState &aModKeyState,
                    PRUint32 aFlags)
 {
+  UserActivity();
+
   nsKeyEvent event(PR_TRUE, aEventType, this);
   nsIntPoint point(0, 0);
 
@@ -3206,8 +3321,6 @@ void nsWindow::DispatchPendingEvents()
     return;
   }
 
-  UpdateLastInputEventTime();
-
   // We need to ensure that reflow events do not get starved.
   // At the same time, we don't want to recurse through here
   // as that would prevent us from dispatching starved paints.
@@ -3265,6 +3378,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
                                     PRInt16 aButton)
 {
   PRBool result = PR_FALSE;
+
+  UserActivity();
 
   if (!mEventCallback) {
     return result;
@@ -3657,6 +3772,7 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
     case WM_SHOWWINDOW:
     case WM_CANCELMODE:
     case WM_MOUSEACTIVATE:
+    case WM_CONTEXTMENU:
       aResult = 0;
     return true;
 
@@ -3694,9 +3810,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
   // Handle certain sync plugin events sent to the parent which
   // trigger ipc calls that result in deadlocks.
 
-  // Windowed plugins receiving focus triggering WM_ACTIVATE app messages.
-  if (mWindowType == eWindowType_plugin && msg == WM_SETFOCUS &&
-    GetPropW(mWnd, L"PluginInstanceParentProperty")) {
+  // Plugins taking focus triggering WM_SETFOCUS app messages.
+  if (msg == WM_SETFOCUS &&
+      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     ReplyMessage(0);
     return;
   }
@@ -3879,7 +3995,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   // (Large blocks of code should be broken out into OnEvent handlers.)
   if (mWindowHook.Notify(mWnd, msg, wParam, lParam, aRetValue))
     return PR_TRUE;
-  
+
 #if defined(EVENT_DEBUG_OUTPUT)
   // First param shows all events, second param indicates whether
   // to show mouse move events. See nsWindowDbg for details.
@@ -4570,10 +4686,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   case WM_DWMCOMPOSITIONCHANGED:
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
-    if (nsUXThemeData::CheckForCompositor() && mTransparencyMode == eTransparencyGlass) {
-      MARGINS margins = { -1, -1, -1, -1 };
-      nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
-    }
+    UpdateGlass();
     Invalidate(PR_FALSE);
     break;
 #endif
@@ -4876,7 +4989,7 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, PRBool *aEventDispatched)
   }
 
   if (!nsIMM32Handler::IsComposing(this) &&
-      (aMsg.message != WM_KEYUP || aMsg.message != VK_MENU)) {
+      (aMsg.message != WM_KEYUP || aMsg.wParam != VK_MENU)) {
     // Ignore VK_MENU if it's not a system key release, so that the menu bar does not trigger
     // This helps avoid triggering the menu bar for ALT key accelerators used in
     // assistive technologies such as Window-Eyes and ZoomText, and when using Alt+Tab
@@ -5280,6 +5393,19 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
     info->flags &= ~SWP_SHOWWINDOW;
 }
 #endif
+
+void nsWindow::UserActivity()
+{
+  // Check if we have the idle service, if not we try to get it.
+  if (!mIdleService) {
+    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  }
+
+  // Check that we now have the idle service.
+  if (mIdleService) {
+    mIdleService->ResetIdleTimeOut();
+  }
+}
 
 // Gesture event processing. Handles WM_GESTURE events.
 #if !defined(WINCE)
@@ -6671,6 +6797,9 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
   }
 
+  if (topWindow->mIsVisible)
+    style |= WS_VISIBLE;
+
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
@@ -6678,18 +6807,7 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   mTransparencyMode = aMode;
 
   SetupTranslucentWindowMemoryBitmap(aMode);
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-   MARGINS margins = { 0, 0, 0, 0 };
-  DWMNCRENDERINGPOLICY policy = DWMNCRP_USEWINDOWSTYLE;
-  if(eTransparencyGlass == aMode) {
-     margins.cxLeftWidth = -1;
-    policy = DWMNCRP_ENABLED;
-  }
-  if(nsUXThemeData::sHaveCompositor) {
-    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(hWnd, &margins);
-    nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
-  }
-#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  UpdateGlass();
 #endif // #ifndef WINCE
 }
 

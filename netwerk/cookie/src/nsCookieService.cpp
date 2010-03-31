@@ -69,10 +69,9 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozIStorageService.h"
-#include "mozStorageHelper.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
+#include "mozilla/storage.h"
 
 /******************************************************************************
  * nsCookieService impl:
@@ -341,6 +340,127 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 #define COOKIE_LOGEVICTED(a)             PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #define COOKIE_LOGSTRING(a, b)           PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #endif
+
+#ifdef DEBUG
+#define NS_ASSERT_SUCCESS(res)                                               \
+  PR_BEGIN_MACRO                                                             \
+  nsresult __rv = res; /* Do not evaluate |res| more than once! */           \
+  if (NS_FAILED(__rv)) {                                                     \
+    char *msg = PR_smprintf("NS_ASSERT_SUCCESS(%s) failed with result 0x%X", \
+                            #res, __rv);                                     \
+    NS_ASSERTION(NS_SUCCEEDED(__rv), msg);                                   \
+    PR_smprintf_free(msg);                                                   \
+  }                                                                          \
+  PR_END_MACRO
+#else
+#define NS_ASSERT_SUCCESS(res) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#endif
+
+namespace {
+/******************************************************************************
+ * DBListenerErrorHandler imp:
+ * Parent class for our async storage listeners that handles the logging of
+ * errors.
+ ******************************************************************************/
+class DBListenerErrorHandler : public mozIStorageStatementCallback
+{
+protected:
+  virtual const char *GetOpType() = 0;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD HandleError(mozIStorageError* aError)
+  {
+#ifdef PR_LOGGING
+    PRInt32 result = -1;
+    aError->GetResult(&result);
+    nsCAutoString message;
+    aError->GetMessage(message);
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+                     ("Error %d occurred while performing a %s operation.  Message: `%s`\n",
+                      result, GetOpType(), message.get()));
+#endif
+    return NS_OK;
+  }
+};
+NS_IMETHODIMP_(nsrefcnt) DBListenerErrorHandler::AddRef() { return 2; }
+NS_IMETHODIMP_(nsrefcnt) DBListenerErrorHandler::Release() { return 1; }
+NS_IMPL_QUERY_INTERFACE1(DBListenerErrorHandler, mozIStorageStatementCallback)
+
+/******************************************************************************
+ * InsertCookieDBListener imp:
+ * Static mozIStorageStatementCallback used to track asynchronous insertion
+ * operations.
+ ******************************************************************************/
+class InsertCookieDBListener : public DBListenerErrorHandler
+{
+protected:
+  virtual const char *GetOpType() { return "INSERT"; }
+
+public:
+  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  {
+    NS_NOTREACHED("Unexpected call to InsertCookieDBListener::HandleResult");
+    return NS_OK;
+  }
+  NS_IMETHOD HandleCompletion(PRUint16 aReason)
+  {
+    return NS_OK;
+  }
+};
+
+static InsertCookieDBListener sInsertCookieDBListener;
+
+/******************************************************************************
+ * UpdateCookieDBListener imp:
+ * Static mozIStorageStatementCallback used to track asynchronous update
+ * operations.
+ ******************************************************************************/
+class UpdateCookieDBListener : public DBListenerErrorHandler
+{
+protected:
+  virtual const char *GetOpType() { return "UPDATE"; }
+
+public:
+  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  {
+    NS_NOTREACHED("Unexpected call to UpdateCookieDBListener::HandleResult");
+    return NS_OK;
+  }
+  NS_IMETHOD HandleCompletion(PRUint16 aReason)
+  {
+    return NS_OK;
+  }
+};
+
+static UpdateCookieDBListener sUpdateCookieDBListener;
+
+/******************************************************************************
+ * RemoveCookieDBListener imp:
+ * Static mozIStorageStatementCallback used to track asynchronous removal
+ * operations.
+ ******************************************************************************/
+class RemoveCookieDBListener :  public DBListenerErrorHandler
+{
+protected:
+  virtual const char *GetOpType() { return "REMOVE"; }
+
+public:
+  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  {
+    NS_NOTREACHED("Unexpected call to RemoveCookieDBListener::HandleResult");
+    return NS_OK;
+  }
+  NS_IMETHOD HandleCompletion(PRUint16 aReason)
+  {
+    return NS_OK;
+  }
+};
+
+static RemoveCookieDBListener sRemoveCookieDBListener;
+
+} // anonymous namespace
 
 /******************************************************************************
  * nsCookieService impl:
@@ -673,7 +793,10 @@ nsCookieService::CloseDB()
   mDefaultDBState.stmtInsert = nsnull;
   mDefaultDBState.stmtDelete = nsnull;
   mDefaultDBState.stmtUpdate = nsnull;
-  mDefaultDBState.dbConn = nsnull;
+  if (mDefaultDBState.dbConn) {
+    mDefaultDBState.dbConn->AsyncClose(NULL);
+    mDefaultDBState.dbConn = nsnull;
+  }
 }
 
 nsCookieService::~nsCookieService()
@@ -851,14 +974,33 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
     serverTime = PR_Now() / PR_USEC_PER_SEC;
   }
 
-  // start a transaction on the storage db, to optimize insertions.
-  // transaction will automically commit on completion
-  mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
- 
+  // We may be adding a bunch of cookies to the DB, so we use async batching
+  // with storage to make this super fast.
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  if (mDBState->dbConn) {
+    mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  }
+
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI, aChannel, baseDomain, requireHostMatch,
-                           cookieHeader, serverTime, aFromHttp));
+                           cookieHeader, serverTime, aFromHttp, paramsArray));
+
+  // If we had a params array, go ahead and write it out to disk now.
+  if (paramsArray) {
+    // ...but only if we have sufficient length!
+    PRUint32 length;
+    paramsArray->GetLength(&length);
+    if (length == 0)
+      return NS_OK;
+
+    rv = mDBState->stmtInsert->BindParameters(paramsArray);
+    NS_ASSERT_SUCCESS(rv);
+    nsCOMPtr<mozIStoragePendingStatement> handle;
+    rv = mDBState->stmtInsert->ExecuteAsync(&sInsertCookieDBListener,
+                                            getter_AddRefs(handle));
+    NS_ASSERT_SUCCESS(rv);
+  }
 
   return NS_OK;
 }
@@ -1137,7 +1279,7 @@ nsCookieService::Read()
     if (!newCookie)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    if (!AddCookieToList(baseDomain, newCookie, PR_FALSE))
+    if (!AddCookieToList(baseDomain, newCookie, NULL, PR_FALSE))
       // It is purpose that created us; purpose that connects us;
       // purpose that pulls us; that guides us; that drives us.
       // It is purpose that defines us; purpose that binds us.
@@ -1163,10 +1305,6 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  // start a transaction on the storage db, to optimize insertions.
-  // transaction will automically commit on completion
-  mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
 
   static const char kTrue[] = "TRUE";
 
@@ -1207,6 +1345,13 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
    * #HttpOnly_host \t isDomain \t path \t secure \t expires \t name \t cookie
    *
    */
+
+  // We will likely be adding a bunch of cookies to the DB, so we use async
+  // batching with storage to make this super fast.
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  if (mDBState->dbConn) {
+    mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  }
 
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (StringBeginsWith(buffer, NS_LITERAL_CSTRING(kHttpOnlyPrefix))) {
@@ -1278,11 +1423,29 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     // by successively decrementing the lastAccessed time
     lastAccessedCounter--;
 
-    if (originalCookieCount == 0)
-      AddCookieToList(baseDomain, newCookie);
-    else
-      AddInternal(baseDomain, newCookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
+    if (originalCookieCount == 0) {
+      AddCookieToList(baseDomain, newCookie, paramsArray);
+    }
+    else {
+      AddInternal(baseDomain, newCookie, currentTimeInUsec, NULL, NULL, PR_TRUE,
+                  paramsArray);
+    }
   }
+
+  // If we need to write to disk, do so now.
+  if (paramsArray) {
+    PRUint32 length;
+    paramsArray->GetLength(&length);
+    if (length) {
+      rv = mDBState->stmtInsert->BindParameters(paramsArray);
+      NS_ASSERT_SUCCESS(rv);
+      nsCOMPtr<mozIStoragePendingStatement> handle;
+      rv = mDBState->stmtInsert->ExecuteAsync(&sInsertCookieDBListener,
+                                              getter_AddRefs(handle));
+      NS_ASSERT_SUCCESS(rv);
+    }
+  }
+
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mDBState->cookieCount));
 
@@ -1447,15 +1610,31 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // update lastAccessed timestamps. we only do this if the timestamp is stale
   // by a certain amount, to avoid thrashing the db during pageload.
   if (stale) {
-    // start a transaction on the storage db, to optimize updates.
-    // transaction will automically commit on completion.
-    mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
+    // Create an array of parameters to bind to our update statement.
+    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+    mozIStorageStatement* stmt = mDBState->stmtUpdate;
+    if (mDBState->dbConn) {
+      stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
+    }
 
     for (PRInt32 i = 0; i < count; ++i) {
       cookie = foundCookieList.ElementAt(i);
 
       if (currentTimeInUsec - cookie->LastAccessed() > kCookieStaleThreshold)
-        UpdateCookieInList(cookie, currentTimeInUsec);
+        UpdateCookieInList(cookie, currentTimeInUsec, paramsArray);
+    }
+    // Update the database now if necessary.
+    if (paramsArray) {
+      PRUint32 length;
+      paramsArray->GetLength(&length);
+      if (length) {
+        nsresult rv = stmt->BindParameters(paramsArray);
+        NS_ASSERT_SUCCESS(rv);
+        nsCOMPtr<mozIStoragePendingStatement> handle;
+        rv = stmt->ExecuteAsync(&sUpdateCookieDBListener,
+                                getter_AddRefs(handle));
+        NS_ASSERT_SUCCESS(rv);
+      }
     }
   }
 
@@ -1497,13 +1676,14 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
 // processes a single cookie, and returns PR_TRUE if there are more cookies
 // to be processed
 PRBool
-nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
-                                   nsIChannel         *aChannel,
-                                   const nsCString    &aBaseDomain,
-                                   PRBool              aRequireHostMatch,
-                                   nsDependentCString &aCookieHeader,
-                                   PRInt64             aServerTime,
-                                   PRBool              aFromHttp)
+nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
+                                   nsIChannel                    *aChannel,
+                                   const nsCString               &aBaseDomain,
+                                   PRBool                         aRequireHostMatch,
+                                   nsDependentCString            &aCookieHeader,
+                                   PRInt64                        aServerTime,
+                                   PRBool                         aFromHttp,
+                                   mozIStorageBindingParamsArray *aParamsArray)
 {
   // create a stack-based nsCookieAttributes, to store all the
   // attributes parsed from the cookie
@@ -1588,7 +1768,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
   AddInternal(aBaseDomain, cookie, PR_Now(), aHostURI, savedCookieHeader.get(),
-              aFromHttp);
+              aFromHttp, aParamsArray);
   return newCookie;
 }
 
@@ -1598,12 +1778,13 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 // and deletes a cookie (if maximum number of cookies has been
 // reached). also performs list maintenance by removing expired cookies.
 void
-nsCookieService::AddInternal(const nsCString &aBaseDomain,
-                             nsCookie        *aCookie,
-                             PRInt64          aCurrentTimeInUsec,
-                             nsIURI          *aHostURI,
-                             const char      *aCookieHeader,
-                             PRBool           aFromHttp)
+nsCookieService::AddInternal(const nsCString               &aBaseDomain,
+                             nsCookie                      *aCookie,
+                             PRInt64                        aCurrentTimeInUsec,
+                             nsIURI                        *aHostURI,
+                             const char                    *aCookieHeader,
+                             PRBool                         aFromHttp,
+                             mozIStorageBindingParamsArray *aParamsArray)
 {
   PRInt64 currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
 
@@ -1612,11 +1793,6 @@ nsCookieService::AddInternal(const nsCString &aBaseDomain,
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
     return;
   }
-
-  // start a transaction on the storage db, to optimize deletions/insertions.
-  // transaction will automically commit on completion. if we already have a
-  // transaction (e.g. from SetCookie*()), this will have no effect. 
-  mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
 
   nsListIter matchIter;
   PRBool foundCookie = FindCookie(aBaseDomain, aCookie->Host(),
@@ -1678,7 +1854,7 @@ nsCookieService::AddInternal(const nsCString &aBaseDomain,
   }
 
   // add the cookie to head of list
-  AddCookieToList(aBaseDomain, aCookie);
+  AddCookieToList(aBaseDomain, aCookie, aParamsArray);
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
@@ -2282,12 +2458,16 @@ struct nsPurgeData
   nsPurgeData(PRInt64 aCurrentTime,
               PRInt64 aPurgeTime,
               ArrayType &aPurgeList,
-              nsIMutableArray *aRemovedList)
+              nsIMutableArray *aRemovedList,
+              mozIStorageBindingParamsArray *aParamsArray)
    : currentTime(aCurrentTime)
    , purgeTime(aPurgeTime)
    , oldestTime(LL_MAXINT)
    , purgeList(aPurgeList)
-   , removedList(aRemovedList) {}
+   , removedList(aRemovedList)
+   , paramsArray(aParamsArray)
+  {
+  }
 
   // the current time, in seconds
   PRInt64 currentTime;
@@ -2303,6 +2483,9 @@ struct nsPurgeData
 
   // list of all cookies we've removed, for notification
   nsIMutableArray *removedList;
+
+  // The array of parameters to be bound to the statement for deletion later.
+  mozIStorageBindingParamsArray *paramsArray;
 };
 
 // comparator class for lastaccessed times of cookies.
@@ -2350,6 +2533,7 @@ purgeCookiesCallback(nsCookieEntry *aEntry,
   nsPurgeData &data = *static_cast<nsPurgeData*>(aArg);
 
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+  mozIStorageBindingParamsArray *array = data.paramsArray;
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ) {
     nsListIter iter(aEntry, i);
     nsCookie *cookie = cookies[i];
@@ -2360,7 +2544,7 @@ purgeCookiesCallback(nsCookieEntry *aEntry,
       COOKIE_LOGEVICTED(cookie);
 
       // remove from list; do not increment our iterator
-      nsCookieService::gCookieService->RemoveCookieFromList(iter);
+      nsCookieService::gCookieService->RemoveCookieFromList(iter, array);
 
     } else {
       // check if the cookie is over the age limit
@@ -2396,8 +2580,14 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   if (!removedList)
     return;
 
+  mozIStorageStatement *stmt = mDBState->stmtDelete;
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  if (mDBState->dbConn) {
+    stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  }
+
   nsPurgeData data(aCurrentTimeInUsec / PR_USEC_PER_SEC,
-    aCurrentTimeInUsec - mCookiePurgeAge, purgeList, removedList);
+    aCurrentTimeInUsec - mCookiePurgeAge, purgeList, removedList, paramsArray);
   mDBState->hostTable.EnumerateEntries(purgeCookiesCallback, &data);
 
 #ifdef PR_LOGGING
@@ -2426,7 +2616,20 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
     removedList->AppendElement(cookie, PR_FALSE);
     COOKIE_LOGEVICTED(cookie);
 
-    RemoveCookieFromList(purgeList[i]);
+    RemoveCookieFromList(purgeList[i], paramsArray);
+  }
+
+  // Update the database if we have entries to purge.
+  if (paramsArray) {
+    PRUint32 length;
+    paramsArray->GetLength(&length);
+    if (length) {
+      nsresult rv = stmt->BindParameters(paramsArray);
+      NS_ASSERT_SUCCESS(rv);
+      nsCOMPtr<mozIStoragePendingStatement> handle;
+      rv = stmt->ExecuteAsync(&sRemoveCookieDBListener, getter_AddRefs(handle));
+      NS_ASSERT_SUCCESS(rv);
+    }
   }
 
   // take all the cookies in the removed list, and notify about them in one batch
@@ -2585,23 +2788,36 @@ nsCookieService::FindCookie(const nsCString      &aBaseDomain,
 
 // remove a cookie from the hashtable, and update the iterator state.
 void
-nsCookieService::RemoveCookieFromList(const nsListIter &aIter)
+nsCookieService::RemoveCookieFromList(const nsListIter              &aIter,
+                                      mozIStorageBindingParamsArray *aParamsArray)
 {
   // if it's a non-session cookie, remove it from the db
   if (!aIter.Cookie()->IsSession() && mDBState->dbConn) {
-    // use our cached sqlite "delete" statement
-    mozStorageStatementScoper scoper(mDBState->stmtDelete);
-
-    PRInt64 creationID = aIter.Cookie()->CreationID();
-    nsresult rv = mDBState->stmtDelete->BindInt64Parameter(0, creationID);
-    if (NS_SUCCEEDED(rv)) {
-      PRBool hasResult;
-      rv = mDBState->stmtDelete->ExecuteStep(&hasResult);
+    // Use the asynchronous binding methods to ensure that we do not acquire
+    // the database lock.
+    mozIStorageStatement *stmt = mDBState->stmtDelete;
+    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
+    if (!paramsArray) {
+      stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
     }
 
-    if (NS_FAILED(rv)) {
-      NS_WARNING("db remove failed!");
-      COOKIE_LOGSTRING(PR_LOG_WARNING, ("RemoveCookieFromList(): removing from db gave error %x", rv));
+    nsCOMPtr<mozIStorageBindingParams> params;
+    paramsArray->NewBindingParams(getter_AddRefs(params));
+
+    nsresult rv = params->BindInt64ByIndex(0, aIter.Cookie()->CreationID());
+    NS_ASSERT_SUCCESS(rv);
+
+    rv = paramsArray->AddParams(params);
+    NS_ASSERT_SUCCESS(rv);
+
+    // If we weren't given a params array, we'll need to remove it ourselves.
+    if (!aParamsArray) {
+      rv = stmt->BindParameters(paramsArray);
+      NS_ASSERT_SUCCESS(rv);
+      nsCOMPtr<mozIStoragePendingStatement> handle;
+      rv = stmt->ExecuteAsync(&sRemoveCookieDBListener,
+                              getter_AddRefs(handle));
+      NS_ASSERT_SUCCESS(rv);
     }
   }
 
@@ -2619,44 +2835,64 @@ nsCookieService::RemoveCookieFromList(const nsListIter &aIter)
   --mDBState->cookieCount;
 }
 
-static nsresult
-bindCookieParameters(mozIStorageStatement *aStmt, const nsCookie *aCookie)
+static void
+bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
+                     const nsCookie *aCookie)
 {
+  NS_ASSERTION(aParamsArray, "Null params array passed to bindCookieParameters!");
+  NS_ASSERTION(aCookie, "Null cookie passed to bindCookieParameters!");
   nsresult rv;
 
-  rv = aStmt->BindInt64Parameter(0, aCookie->CreationID());
-  if (NS_FAILED(rv)) return rv;
+  // Use the asynchronous binding methods to ensure that we do not acquire the
+  // database lock.
+  nsCOMPtr<mozIStorageBindingParams> params;
+  rv = aParamsArray->NewBindingParams(getter_AddRefs(params));
+  NS_ASSERT_SUCCESS(rv);
 
-  rv = aStmt->BindUTF8StringParameter(1, aCookie->Name());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindUTF8StringParameter(2, aCookie->Value());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindUTF8StringParameter(3, aCookie->Host());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindUTF8StringParameter(4, aCookie->Path());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindInt64Parameter(5, aCookie->Expiry());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindInt64Parameter(6, aCookie->LastAccessed());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindInt32Parameter(7, aCookie->IsSecure());
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = aStmt->BindInt32Parameter(8, aCookie->IsHttpOnly());
-  return rv;
+  // Bind our values to params
+  rv = params->BindInt64ByIndex(0, aCookie->CreationID());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindUTF8StringByIndex(1, aCookie->Name());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindUTF8StringByIndex(2, aCookie->Value());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindUTF8StringByIndex(3, aCookie->Host());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindUTF8StringByIndex(4, aCookie->Path());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindInt64ByIndex(5, aCookie->Expiry());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindInt64ByIndex(6, aCookie->LastAccessed());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindInt32ByIndex(7, aCookie->IsSecure());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindInt32ByIndex(8, aCookie->IsHttpOnly());
+  NS_ASSERT_SUCCESS(rv);
+
+  // Bind the params to the array.
+  rv = aParamsArray->AddParams(params);
+  NS_ASSERT_SUCCESS(rv);
 }
 
 PRBool
-nsCookieService::AddCookieToList(const nsCString &aBaseDomain,
-                                 nsCookie        *aCookie,
-                                 PRBool           aWriteToDB)
+nsCookieService::AddCookieToList(const nsCString               &aBaseDomain,
+                                 nsCookie                      *aCookie,
+                                 mozIStorageBindingParamsArray *aParamsArray,
+                                 PRBool                         aWriteToDB)
 {
+  NS_ASSERTION(!(mDBState->dbConn && !aWriteToDB && aParamsArray),
+               "Not writing to the DB but have a params array?");
+  NS_ASSERTION(!(!mDBState->dbConn && aParamsArray),
+               "Do not have a DB connection but have a params array?");
+
   nsCookieEntry *entry = mDBState->hostTable.PutEntry(aBaseDomain);
   if (!entry) {
     NS_ERROR("can't insert element into a null entry!");
@@ -2672,18 +2908,19 @@ nsCookieService::AddCookieToList(const nsCString &aBaseDomain,
 
   // if it's a non-session cookie and hasn't just been read from the db, write it out.
   if (aWriteToDB && !aCookie->IsSession() && mDBState->dbConn) {
-    // use our cached sqlite "insert" statement
-    mozStorageStatementScoper scoper(mDBState->stmtInsert);
-
-    nsresult rv = bindCookieParameters(mDBState->stmtInsert, aCookie);
-    if (NS_SUCCEEDED(rv)) {
-      PRBool hasResult;
-      rv = mDBState->stmtInsert->ExecuteStep(&hasResult);
+    nsCOMPtr<mozIStorageBindingParamsArray> array(aParamsArray);
+    if (!array) {
+      mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(array));
     }
+    bindCookieParameters(array, aCookie);
 
-    if (NS_FAILED(rv)) {
-      NS_WARNING("db insert failed!");
-      COOKIE_LOGSTRING(PR_LOG_WARNING, ("AddCookieToList(): adding to db gave error %x", rv));
+    // If we were supplied an array to store parameters, we shouldn't call
+    // executeAsync - someone up the stack will do this for us.
+    if (!aParamsArray) {
+      nsCOMPtr<mozIStoragePendingStatement> handle;
+      nsresult rv = mDBState->stmtInsert->ExecuteAsync(&sInsertCookieDBListener,
+                                                       getter_AddRefs(handle));
+      NS_ASSERT_SUCCESS(rv);
     }
   }
 
@@ -2691,29 +2928,29 @@ nsCookieService::AddCookieToList(const nsCString &aBaseDomain,
 }
 
 void
-nsCookieService::UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed)
+nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
+                                    PRInt64                        aLastAccessed,
+                                    mozIStorageBindingParamsArray *aParamsArray)
 {
-  // update the lastAccessed timestamp
+  NS_ASSERTION(aCookie, "Passing a null cookie to UpdateCookieInList!");
+
+  // udpate the lastAccessed timestamp
   aCookie->SetLastAccessed(aLastAccessed);
 
   // if it's a non-session cookie, update it in the db too
-  if (!aCookie->IsSession() && mDBState->dbConn) {
-    // use our cached sqlite "update" statement
-    mozStorageStatementScoper scoper(mDBState->stmtUpdate);
+  if (!aCookie->IsSession() && aParamsArray) {
+    // Create our params holder.
+    nsCOMPtr<mozIStorageBindingParams> params;
+    aParamsArray->NewBindingParams(getter_AddRefs(params));
 
-    nsresult rv = mDBState->stmtUpdate->BindInt64Parameter(0, aLastAccessed);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mDBState->stmtUpdate->BindInt64Parameter(1, aCookie->CreationID());
-      if (NS_SUCCEEDED(rv)) {
-        PRBool hasResult;
-        rv = mDBState->stmtUpdate->ExecuteStep(&hasResult);
-      }
-    }
+    // Bind our parameters.
+    nsresult rv = params->BindInt64ByIndex(0, aLastAccessed);
+    NS_ASSERT_SUCCESS(rv);
+    rv = params->BindInt64ByIndex(1, aCookie->CreationID());
+    NS_ASSERT_SUCCESS(rv);
 
-    if (NS_FAILED(rv)) {
-      NS_WARNING("db update failed!");
-      COOKIE_LOGSTRING(PR_LOG_WARNING, ("UpdateCookieInList(): updating db gave error %x", rv));
-    }
+    // Add our bound parameters to the array.
+    rv = aParamsArray->AddParams(params);
+    NS_ASSERT_SUCCESS(rv);
   }
 }
-

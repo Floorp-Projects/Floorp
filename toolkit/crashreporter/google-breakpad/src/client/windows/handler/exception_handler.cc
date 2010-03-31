@@ -28,6 +28,8 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ObjBase.h>
+#include <winternl.h>
+#include <psapi.h>
 
 #include <cassert>
 #include <cstdio>
@@ -37,6 +39,89 @@
 #include "client/windows/common/ipc_protocol.h"
 #include "client/windows/handler/exception_handler.h"
 #include "common/windows/guid_string.h"
+
+namespace {
+
+// Helper for GetProcId()
+bool GetProcIdViaGetProcessId(HANDLE process, DWORD* id) {
+  // Dynamically get a pointer to GetProcessId().
+  typedef DWORD (WINAPI *GetProcessIdFunction)(HANDLE);
+  static GetProcessIdFunction GetProcessIdPtr = NULL;
+  static bool initialize_get_process_id = true;
+  if (initialize_get_process_id) {
+    initialize_get_process_id = false;
+    HMODULE kernel32_handle = GetModuleHandle(L"kernel32.dll");
+    if (!kernel32_handle) {
+      return false;
+    }
+    GetProcessIdPtr = reinterpret_cast<GetProcessIdFunction>(GetProcAddress(
+        kernel32_handle, "GetProcessId"));
+  }
+  if (!GetProcessIdPtr)
+    return false;
+  // Ask for the process ID.
+  *id = (*GetProcessIdPtr)(process);
+  return true;
+}
+
+// Helper for GetProcId()
+bool GetProcIdViaNtQueryInformationProcess(HANDLE process, DWORD* id) {
+  // Dynamically get a pointer to NtQueryInformationProcess().
+  typedef NTSTATUS (WINAPI *NtQueryInformationProcessFunction)(
+      HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+  static NtQueryInformationProcessFunction NtQueryInformationProcessPtr = NULL;
+  static bool initialize_query_information_process = true;
+  if (initialize_query_information_process) {
+    initialize_query_information_process = false;
+    // According to nsylvain, ntdll.dll is guaranteed to be loaded, even though
+    // the Windows docs seem to imply that you should LoadLibrary() it.
+    HMODULE ntdll_handle = GetModuleHandle(L"ntdll.dll");
+    if (!ntdll_handle) {
+      return false;
+    }
+    NtQueryInformationProcessPtr =
+        reinterpret_cast<NtQueryInformationProcessFunction>(GetProcAddress(
+            ntdll_handle, "NtQueryInformationProcess"));
+  }
+  if (!NtQueryInformationProcessPtr)
+    return false;
+  // Ask for the process ID.
+  PROCESS_BASIC_INFORMATION info;
+  ULONG bytes_returned;
+  NTSTATUS status = (*NtQueryInformationProcessPtr)(process,
+                                                    ProcessBasicInformation,
+                                                    &info, sizeof info,
+                                                    &bytes_returned);
+  if (!SUCCEEDED(status) || (bytes_returned != (sizeof info)))
+    return false;
+
+  *id = static_cast<DWORD>(info.UniqueProcessId);
+  return true;
+}
+
+DWORD GetProcId(HANDLE process) {
+  // Get a handle to |process| that has PROCESS_QUERY_INFORMATION rights.
+  HANDLE current_process = GetCurrentProcess();
+  HANDLE process_with_query_rights;
+  if (DuplicateHandle(current_process, process, current_process,
+                      &process_with_query_rights, PROCESS_QUERY_INFORMATION,
+                      false, 0)) {
+    // Try to use GetProcessId(), if it exists.  Fall back on
+    // NtQueryInformationProcess() otherwise (< Win XP SP1).
+    DWORD id;
+    bool success =
+        GetProcIdViaGetProcessId(process_with_query_rights, &id) ||
+        GetProcIdViaNtQueryInformationProcess(process_with_query_rights, &id);
+    CloseHandle(process_with_query_rights);
+    if (success)
+      return id;
+  }
+
+  // We're screwed.
+  return 0;
+}
+
+} // namespace
 
 namespace google_breakpad {
 
@@ -205,9 +290,8 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
     }
     handler_stack_->push_back(this);
 
-    if (handler_types & HANDLER_EXCEPTION) {
+    if (handler_types & HANDLER_EXCEPTION)
       previous_filter_ = SetUnhandledExceptionFilter(HandleException);
-    }
 
 #if _MSC_VER >= 1400  // MSVC 2005/8
     if (handler_types & HANDLER_INVALID_PARAMETER)
@@ -633,6 +717,96 @@ bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
   return handler.WriteMinidump();
 }
 
+// static
+bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
+                                     bool write_exception_stream,
+                                     MinidumpCallback callback,
+                                     void* callback_context) {
+  EXCEPTION_RECORD ex;
+  CONTEXT ctx;
+  EXCEPTION_POINTERS exinfo = { NULL, NULL };
+
+  if (write_exception_stream) {
+    // MSDN says that GetThreadContext(currentThread) doesn't return a
+    // valid context, so we just fill in the crash address so as to
+    // get a signature
+    bool (*signature) (const wstring&, bool, MinidumpCallback, void*) =
+      &ExceptionHandler::WriteMinidump;
+
+    memset(&ex, 0, sizeof(ex));
+    ex.ExceptionCode = EXCEPTION_BREAKPOINT;
+    ex.ExceptionAddress = reinterpret_cast<void*>(signature);
+    memset(&ctx, 0, sizeof(ctx));
+
+    exinfo.ExceptionRecord = &ex;
+    exinfo.ContextRecord = &ctx;
+  }
+
+  ExceptionHandler handler(dump_path, NULL, callback, callback_context,
+                           HANDLER_NONE);
+  return handler.WriteMinidumpForException(exinfo.ExceptionRecord ?
+                                           &exinfo : NULL);
+}
+
+// static
+bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
+                                             DWORD child_blamed_thread,
+                                             const wstring &dump_path,
+                                             MinidumpCallback callback,
+                                             void *callback_context) {
+  DWORD childId = GetProcId(child);
+  if (0 == childId)
+    return false;
+
+  EXCEPTION_RECORD ex;
+  CONTEXT ctx;
+  EXCEPTION_POINTERS exinfo = { NULL, NULL };
+  DWORD last_suspend_cnt = -1;
+  HANDLE child_thread_handle = OpenThread(THREAD_GET_CONTEXT |
+                                          THREAD_QUERY_INFORMATION |
+                                          THREAD_SUSPEND_RESUME,
+                                          FALSE,
+                                          child_blamed_thread);
+  // this thread may have died already, so not opening the handle is a
+  // non-fatal error
+  if (NULL != child_thread_handle) {
+    if (0 <= (last_suspend_cnt = SuspendThread(child_thread_handle))) {
+      ctx.ContextFlags = CONTEXT_ALL;
+      if (GetThreadContext(child_thread_handle, &ctx)) {
+        memset(&ex, 0, sizeof(ex));
+        ex.ExceptionCode = EXCEPTION_BREAKPOINT;
+#if defined(_M_IX86)
+        ex.ExceptionAddress = reinterpret_cast<PVOID>(ctx.Eip);
+#elif defined(_M_X64)
+        ex.ExceptionAddress = reinterpret_cast<PVOID>(ctx.Rip);
+#endif
+        exinfo.ExceptionRecord = &ex;
+        exinfo.ContextRecord = &ctx;
+      }
+    }
+  }
+
+  ExceptionHandler handler(dump_path, NULL, callback, callback_context,
+                           HANDLER_NONE);
+  bool success = handler.WriteMinidumpWithExceptionForProcess(
+    child_blamed_thread,
+    exinfo.ExceptionRecord ? &exinfo : NULL,
+    NULL, child, childId, false);
+
+  if (0 <= last_suspend_cnt) {
+    ResumeThread(child_thread_handle);
+  }
+
+  CloseHandle(child_thread_handle);
+
+  if (callback) {
+    success = callback(handler.dump_path_c_, handler.next_minidump_id_c_,
+		       callback_context, NULL, NULL, success);
+  }
+
+  return success;
+}
+
 bool ExceptionHandler::WriteMinidumpWithException(
     DWORD requesting_thread_id,
     EXCEPTION_POINTERS* exinfo,
@@ -657,61 +831,12 @@ bool ExceptionHandler::WriteMinidumpWithException(
       success = crash_generation_client_->RequestDump(assertion);
     }
   } else {
-    if (minidump_write_dump_) {
-      HANDLE dump_file = CreateFile(next_minidump_path_c_,
-                                    GENERIC_WRITE,
-                                    0,  // no sharing
-                                    NULL,
-                                    CREATE_NEW,  // fail if exists
-                                    FILE_ATTRIBUTE_NORMAL,
-                                    NULL);
-      if (dump_file != INVALID_HANDLE_VALUE) {
-        MINIDUMP_EXCEPTION_INFORMATION except_info;
-        except_info.ThreadId = requesting_thread_id;
-        except_info.ExceptionPointers = exinfo;
-        except_info.ClientPointers = FALSE;
-
-        // Add an MDRawBreakpadInfo stream to the minidump, to provide additional
-        // information about the exception handler to the Breakpad processor.  The
-        // information will help the processor determine which threads are
-        // relevant.  The Breakpad processor does not require this information but
-        // can function better with Breakpad-generated dumps when it is present.
-        // The native debugger is not harmed by the presence of this information.
-        MDRawBreakpadInfo breakpad_info;
-        breakpad_info.validity = MD_BREAKPAD_INFO_VALID_DUMP_THREAD_ID |
-                               MD_BREAKPAD_INFO_VALID_REQUESTING_THREAD_ID;
-        breakpad_info.dump_thread_id = GetCurrentThreadId();
-        breakpad_info.requesting_thread_id = requesting_thread_id;
-
-        // Leave room in user_stream_array for a possible assertion info stream.
-        MINIDUMP_USER_STREAM user_stream_array[2];
-        user_stream_array[0].Type = MD_BREAKPAD_INFO_STREAM;
-        user_stream_array[0].BufferSize = sizeof(breakpad_info);
-        user_stream_array[0].Buffer = &breakpad_info;
-
-        MINIDUMP_USER_STREAM_INFORMATION user_streams;
-        user_streams.UserStreamCount = 1;
-        user_streams.UserStreamArray = user_stream_array;
-
-        if (assertion) {
-          user_stream_array[1].Type = MD_ASSERTION_INFO_STREAM;
-          user_stream_array[1].BufferSize = sizeof(MDRawAssertionInfo);
-          user_stream_array[1].Buffer = assertion;
-          ++user_streams.UserStreamCount;
-        }
-
-        // The explicit comparison to TRUE avoids a warning (C4800).
-        success = (minidump_write_dump_(GetCurrentProcess(),
-                                        GetCurrentProcessId(),
-                                        dump_file,
-                                        dump_type_,
-                                        exinfo ? &except_info : NULL,
-                                        &user_streams,
-                                        NULL) == TRUE);
-
-        CloseHandle(dump_file);
-      }
-    }
+    success = WriteMinidumpWithExceptionForProcess(requesting_thread_id,
+                                                   exinfo,
+                                                   assertion,
+                                                   GetCurrentProcess(),
+                                                   GetCurrentProcessId(),
+                                                   true);
   }
 
   if (callback_) {
@@ -721,6 +846,81 @@ bool ExceptionHandler::WriteMinidumpWithException(
     // id so they are not known to the client.
     success = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
                         exinfo, assertion, success);
+  }
+
+  return success;
+}
+
+bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
+    DWORD requesting_thread_id,
+    EXCEPTION_POINTERS* exinfo,
+    MDRawAssertionInfo* assertion,
+    HANDLE process,
+    DWORD processId,
+    bool write_requester_stream) {
+  bool success = false;
+  if (minidump_write_dump_) {
+    HANDLE dump_file = CreateFile(next_minidump_path_c_,
+                                  GENERIC_WRITE,
+                                  0,  // no sharing
+                                  NULL,
+                                  CREATE_NEW,  // fail if exists
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  NULL);
+    if (dump_file != INVALID_HANDLE_VALUE) {
+      MINIDUMP_EXCEPTION_INFORMATION except_info;
+      except_info.ThreadId = requesting_thread_id;
+      except_info.ExceptionPointers = exinfo;
+      except_info.ClientPointers = FALSE;
+
+      // Leave room in user_stream_array for possible breakpad and
+      // assertion info streams.
+      MINIDUMP_USER_STREAM user_stream_array[2];
+      MINIDUMP_USER_STREAM_INFORMATION user_streams;
+      user_streams.UserStreamCount = 0;
+      user_streams.UserStreamArray = user_stream_array;
+
+      if (write_requester_stream) {
+        // Add an MDRawBreakpadInfo stream to the minidump, to provide
+        // additional information about the exception handler to the
+        // Breakpad processor.  The information will help the
+        // processor determine which threads are relevant.  The
+        // Breakpad processor does not require this information but
+        // can function better with Breakpad-generated dumps when it
+        // is present.  The native debugger is not harmed by the
+        // presence of this information.
+        MDRawBreakpadInfo breakpad_info;
+        breakpad_info.validity = MD_BREAKPAD_INFO_VALID_DUMP_THREAD_ID |
+                                 MD_BREAKPAD_INFO_VALID_REQUESTING_THREAD_ID;
+        breakpad_info.dump_thread_id = GetCurrentThreadId();
+        breakpad_info.requesting_thread_id = requesting_thread_id;
+
+        int idx = user_streams.UserStreamCount;
+        user_stream_array[idx].Type = MD_BREAKPAD_INFO_STREAM;
+        user_stream_array[idx].BufferSize = sizeof(breakpad_info);
+        user_stream_array[idx].Buffer = &breakpad_info;
+        ++user_streams.UserStreamCount;
+      }
+
+      if (assertion) {
+        int idx = user_streams.UserStreamCount;
+        user_stream_array[idx].Type = MD_ASSERTION_INFO_STREAM;
+        user_stream_array[idx].BufferSize = sizeof(MDRawAssertionInfo);
+        user_stream_array[idx].Buffer = assertion;
+        ++user_streams.UserStreamCount;
+      }
+
+      // The explicit comparison to TRUE avoids a warning (C4800).
+      success = (minidump_write_dump_(process,
+                                      processId,
+                                      dump_file,
+                                      dump_type_,
+                                      exinfo ? &except_info : NULL,
+                                      &user_streams,
+                                      NULL) == TRUE);
+
+      CloseHandle(dump_file);
+    }
   }
 
   return success;

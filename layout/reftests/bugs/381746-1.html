@@ -1,9 +1,17 @@
-<html><head>
-<title>Testcase Bug 381746 – odd and changing border in frameset</title>
+<html class="reftest-wait"><head>
+<title>Testcase Bug 381746 - odd and changing border in frameset</title>
 <script>
+var frameOnloadCalled = false;
+function frameOnload() {
+  if (!frameOnloadCalled) {
+    frameOnloadCalled = true;
+    return;
+  }
+  document.documentElement.removeAttribute("class");
+}
 function doe() {
-document.getElementsByTagName('frame')[0].src = 'data:text/html;charset=utf-8,text';
-document.getElementsByTagName('frame')[1].src = 'data:text/html;charset=utf-8,text';
+document.getElementsByTagName('frame')[0].src = 'data:text/html;charset=utf-8,<body onload="parent.frameOnload();">text';
+document.getElementsByTagName('frame')[1].src = 'data:text/html;charset=utf-8,<body onload="parent.frameOnload();">text';
 }
 window.onload=doe;
 </script>

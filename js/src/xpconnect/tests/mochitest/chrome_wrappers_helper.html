@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <script>
+            function check_wrapper(ok, wrapper, expected, note) {
+                netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+                var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+                ok(utils.getClassName(wrapper) === expected, note);
+            }
+            function run_test(ok, xpcnw, sjow) {
+                // both wrappers should point to our window: XOW
+                check_wrapper(ok, ok, "Function", "functions are wrapped properly")
+                ok(ok.__parent__ == window, "ok is parented correctly");
+                check_wrapper(ok, xpcnw, "XPCCrossOriginWrapper", "XPCNWs are transformed correctly");
+                check_wrapper(ok, sjow, "XPCCrossOriginWrapper", "SJOWs are transformed correctly");
+            }
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

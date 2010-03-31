@@ -39,6 +39,7 @@
 
 #include "mozStorageBindingParamsArray.h"
 #include "mozStorageBindingParams.h"
+#include "StorageBaseStatementInternal.h"
 
 namespace mozilla {
 namespace storage {
@@ -46,7 +47,9 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// BindingParamsArray
 
-BindingParamsArray::BindingParamsArray(Statement *aOwningStatement)
+BindingParamsArray::BindingParamsArray(
+  StorageBaseStatementInternal *aOwningStatement
+)
 : mOwningStatement(aOwningStatement)
 , mLocked(false)
 {
@@ -63,7 +66,7 @@ BindingParamsArray::lock()
   mOwningStatement = nsnull;
 }
 
-const Statement *
+const StorageBaseStatementInternal *
 BindingParamsArray::getOwner() const
 {
   return mOwningStatement;
@@ -82,9 +85,9 @@ BindingParamsArray::NewBindingParams(mozIStorageBindingParams **_params)
 {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<mozIStorageBindingParams> params =
-    new BindingParams(this, mOwningStatement);
-  NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<mozIStorageBindingParams> params(
+    mOwningStatement->newBindingParams(this));
+  NS_ENSURE_TRUE(params, NS_ERROR_UNEXPECTED);
 
   params.forget(_params);
   return NS_OK;
@@ -106,6 +109,13 @@ BindingParamsArray::AddParams(mozIStorageBindingParams *aParameters)
   // Lock the parameters only after we've successfully added them.
   params->lock();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BindingParamsArray::GetLength(PRUint32 *_length)
+{
+  *_length = length();
   return NS_OK;
 }
 

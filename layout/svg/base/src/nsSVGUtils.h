@@ -116,6 +116,9 @@ class nsSVGDisplayContainerFrame;
 // In fact Macs can't even manage that
 #define NS_SVG_OFFSCREEN_MAX_DIMENSION 4096
 
+#define SVG_WSP_DELIM       "\x20\x9\xD\xA"
+#define SVG_COMMA_WSP_DELIM "," SVG_WSP_DELIM
+
 /*
  * Checks the svg enable preference and if a renderer could
  * successfully be created.  Declared as a function instead of a
@@ -451,13 +454,6 @@ public:
   static void SetClipRect(gfxContext *aContext,
                           const gfxMatrix &aCTM,
                           const gfxRect &aRect);
-
-  /**
-   * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
-   * coordinates in the PRInt32 range) then we set aOut to that rectangle, otherwise
-   * return failure.
-   */
-  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
 
   /**
    * Restricts aRect to pixels that intersect aGfxRect.

@@ -43,8 +43,11 @@ final class StackNode<T> {
 
     final boolean fosterParenting;
     
-    private int refcount = 1;
+    // Only used on the list of formatting elements
+    HtmlAttributes attributes;
 
+    private int refcount = 1;
+    
     /**
      * @param group
      *            TODO
@@ -57,7 +60,7 @@ final class StackNode<T> {
      */
     StackNode(int group, final @NsUri String ns, final @Local String name, final T node,
             final boolean scoping, final boolean special,
-            final boolean fosterParenting, final @Local String popName) {
+            final boolean fosterParenting, final @Local String popName, HtmlAttributes attributes) {
         this.group = group;
         this.name = name;
         this.popName = popName;
@@ -66,6 +69,7 @@ final class StackNode<T> {
         this.scoping = scoping;
         this.special = special;
         this.fosterParenting = fosterParenting;
+        this.attributes = attributes;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
@@ -87,6 +91,24 @@ final class StackNode<T> {
         this.scoping = elementName.scoping;
         this.special = elementName.special;
         this.fosterParenting = elementName.fosterParenting;
+        this.attributes = null;
+        this.refcount = 1;
+        Portability.retainLocal(name);
+        Portability.retainLocal(popName);
+        Portability.retainElement(node);
+        // not retaining namespace for now        
+    }
+
+    StackNode(final @NsUri String ns, ElementName elementName, final T node, HtmlAttributes attributes) {
+        this.group = elementName.group;
+        this.name = elementName.name;
+        this.popName = elementName.name;
+        this.ns = ns;
+        this.node = node;
+        this.scoping = elementName.scoping;
+        this.special = elementName.special;
+        this.fosterParenting = elementName.fosterParenting;
+        this.attributes = attributes;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
@@ -103,6 +125,7 @@ final class StackNode<T> {
         this.scoping = elementName.scoping;
         this.special = elementName.special;
         this.fosterParenting = elementName.fosterParenting;
+        this.attributes = null;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
@@ -119,6 +142,7 @@ final class StackNode<T> {
         this.scoping = scoping;
         this.special = false;
         this.fosterParenting = false;
+        this.attributes = null;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
@@ -130,7 +154,12 @@ final class StackNode<T> {
         Portability.releaseLocal(name);
         Portability.releaseLocal(popName);
         Portability.releaseElement(node);
-        // not releasing namespace for now        
+        // not releasing namespace for now
+        Portability.delete(attributes);
+    }
+    
+    public void dropAttributes() {
+        attributes = null;
     }
     
     // [NOCPP[

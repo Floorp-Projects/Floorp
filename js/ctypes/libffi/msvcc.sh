@@ -42,10 +42,7 @@
 # format and translated into something sensible for cl or ml.
 #
 
-# Disable specific warnings, and enable warnings-as-errors so we catch any
-# mistranslated args.
-nowarn="-wd4127 -wd4820 -wd4706 -wd4100 -wd4255 -wd4668 -wd4053 -wd4324 -wd4267 -wd4054"
-args="-nologo -W3 -WX $nowarn"
+args="-nologo -W3"
 md=-MD
 cl="cl"
 ml="ml"

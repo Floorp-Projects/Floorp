@@ -56,6 +56,8 @@ from automation import Automation
 from automationutils import *
 import tempfile
 
+VMWARE_RECORDING_HELPER_BASENAME = "vmwarerecordinghelper"
+
 #######################
 # COMMANDLINE OPTIONS #
 #######################
@@ -205,6 +207,12 @@ class MochitestOptions(optparse.OptionParser):
                            "This directory will be deleted after the tests are finished")
     defaults["profilePath"] = tempfile.mkdtemp()
 
+    self.add_option("--use-vmware-recording",
+                    action = "store_true", dest = "vmwareRecording",
+                    help = "enables recording while the application is running "
+                           "inside a VMware Workstation 7.0 or later VM")
+    defaults["vmwareRecording"] = False
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -258,6 +266,16 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     options.webServer = self._automation.DEFAULT_WEB_SERVER
     options.httpPort = self._automation.DEFAULT_HTTP_PORT
     options.sslPort = self._automation.DEFAULT_SSL_PORT
+
+    if options.vmwareRecording:
+      if not self._automation.IS_WIN32:
+        self.error("use-vmware-recording is only supported on Windows.")
+      mochitest.vmwareHelperPath = os.path.join(
+        options.utilityPath, VMWARE_RECORDING_HELPER_BASENAME + ".dll")
+      if not os.path.exists(mochitest.vmwareHelperPath):
+        self.error("%s not found, cannot automate VMWare recording." %
+                   mochitest.vmwareHelperPath)
+
     return options
 
 
@@ -334,7 +352,8 @@ class Mochitest(object):
   A11Y_PATH = "/redirect-a11y.html"
   urlOpts = []
   runSSLTunnel = True
- 
+  vmwareHelper = None
+
   oldcwd = os.getcwd()
 
   def __init__(self, automation):
@@ -486,6 +505,36 @@ class Mochitest(object):
     os.remove(manifest)
     shutil.rmtree(options.profilePath)
 
+  def startVMWareRecording(self, options):
+    """ starts recording inside VMware VM using the recording helper dll """
+    assert(self.automation.IS_WIN32)
+    from ctypes import cdll
+    self.vmwareHelper = cdll.LoadLibrary(self.vmwareHelperPath)
+    if self.vmwareHelper is None:
+      self.automation.log.warning("WARNING | runtests.py | Failed to load "
+                                  "VMWare recording helper")
+      return
+    self.automation.log.info("INFO | runtests.py | Starting VMWare recording.")
+    try:
+      self.vmwareHelper.StartRecording()
+    except Exception, e:
+      self.automation.log.warning("WARNING | runtests.py | Failed to start "
+                                  "VMWare recording: (%s)" % str(e))
+      self.vmwareHelper = None
+
+  def stopVMWareRecording(self):
+    """ stops recording inside VMware VM using the recording helper dll """
+    assert(self.automation.IS_WIN32)
+    if self.vmwareHelper is not None:
+      self.automation.log.info("INFO | runtests.py | Stopping VMWare "
+                               "recording.")
+      try:
+        self.vmwareHelper.StopRecording()
+      except Exception, e:
+        self.automation.log.warning("WARNING | runtests.py | Failed to stop "
+                                    "VMWare recording: (%s)" % str(e))
+      self.vmwareHelper = None
+
   def runTests(self, options):
     """ Prepare, configure, run tests and cleanup """
     debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
@@ -520,6 +569,10 @@ class Mochitest(object):
       timeout = None
     else:
       timeout = 330.0 # default JS harness timeout is 300 seconds
+
+    if options.vmwareRecording:
+      self.startVMWareRecording(options);
+
     self.automation.log.info("INFO | runtests.py | Running tests: start.\n")
     status = self.automation.runApp(testURL, browserEnv, options.app,
                                 options.profilePath, options.browserArgs,
@@ -530,6 +583,9 @@ class Mochitest(object):
                                 debuggerInfo=debuggerInfo,
                                 symbolsPath=options.symbolsPath,
                                 timeout = timeout)
+
+    if options.vmwareRecording:
+      self.stopVMWareRecording();
 
     self.stopWebServer(options)
     processLeakLog(self.leak_report_file, options.leakThreshold)

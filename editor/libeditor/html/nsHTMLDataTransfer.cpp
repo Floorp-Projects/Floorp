@@ -1847,14 +1847,11 @@ PRBool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
 
 NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 {
-  ForceCompositionEnd();
-
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
+  if (!FireClipboardEvent(NS_PASTE))
+    return NS_OK;
 
   // Get Clipboard Service
+  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv))
     return rv;
@@ -1932,12 +1929,8 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 
 NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
 {
-  ForceCompositionEnd();
-
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
+  if (!FireClipboardEvent(NS_PASTE))
+    return NS_OK;
 
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -1948,10 +1941,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
   nsAutoString contextStr, infoStr;
-  rv = InsertFromTransferable(aTransferable, nsnull, contextStr, infoStr,
-                              nsnull, 0, PR_TRUE);
-
-  return rv;
+  return InsertFromTransferable(aTransferable, nsnull, contextStr, infoStr,
+                                nsnull, 0, PR_TRUE);
 }
 
 // 

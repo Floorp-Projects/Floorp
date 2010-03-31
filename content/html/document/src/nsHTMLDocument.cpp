@@ -280,7 +280,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMNSHTMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
 
@@ -1067,6 +1067,21 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
   }
 
   htmldoc->EndLoad();
+}
+
+void
+nsHTMLDocument::BeginLoad()
+{
+  if (IsEditingOn()) {
+    // Reset() blows away all event listeners in the document, and our
+    // editor relies heavily on those. Midas is turned on, to make it
+    // work, re-initialize it to give it a chance to add its event
+    // listeners again.
+
+    TurnEditingOff();
+    EditingStateChanged();
+  }
+  nsDocument::BeginLoad();
 }
 
 void
@@ -1983,16 +1998,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   Reset(channel, group);
   if (baseURI) {
     mDocumentBaseURI = baseURI;
-  }
-
-  if (IsEditingOn()) {
-    // Reset() blows away all event listeners in the document, and our
-    // editor relies heavily on those. Midas is turned on, to make it
-    // work, re-initialize it to give it a chance to add its event
-    // listeners again.
-
-    TurnEditingOff();
-    EditingStateChanged();
   }
 
   // Store the security info of the caller now that we're done

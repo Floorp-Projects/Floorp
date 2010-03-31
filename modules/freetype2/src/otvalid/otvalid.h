@@ -42,6 +42,7 @@ FT_BEGIN_HEADER
   otv_GDEF_validate( FT_Bytes      table,
                      FT_Bytes      gsub,
                      FT_Bytes      gpos,
+                     FT_UInt       glyph_count,
                      FT_Validator  valid );
 
   FT_LOCAL( void )

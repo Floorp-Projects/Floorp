@@ -50,6 +50,7 @@ using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
 using NPNURLVariable;
+using NPCoordinateSpace;
 using mozilla::plugins::NativeWindowHandle;
 
 namespace mozilla {
@@ -79,9 +80,14 @@ child:
 
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
-  // special case of HandleEvent to make mediating races simpler
+  // special cases where we need to a shared memory buffer
+  rpc NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
+    returns (int16_t handled, Shmem rtnbuffer);
+  // special cases of HandleEvent to make mediating races simpler
   rpc Paint(NPRemoteEvent event)
     returns (int16_t handled);
+  // this is only used on windows to forward WM_WINDOWPOSCHANGE
+  async WindowPosChanged(NPRemoteEvent event);
 
   rpc NPP_Destroy()
     returns (NPError rv);
@@ -104,6 +110,10 @@ parent:
     returns (NPError result);
   rpc NPN_SetValue_NPPVpluginTransparent(bool transparent)
     returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginEventModel(int eventModel)
+    returns (NPError result);
 
   rpc NPN_GetURL(nsCString url, nsCString target)
     returns (NPError result);
@@ -121,11 +131,9 @@ parent:
 
   async NPN_InvalidateRect(NPRect rect);
 
-  rpc NPN_PushPopupsEnabledState(bool aState)
-    returns (bool aSuccess);
+  rpc NPN_PushPopupsEnabledState(bool aState);
 
-  rpc NPN_PopPopupsEnabledState()
-    returns (bool aSuccess);
+  rpc NPN_PopPopupsEnabledState();
 
   rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
     returns (nsCString value, NPError result);
@@ -138,6 +146,10 @@ parent:
                                 int32_t port, nsCString scheme,
                                 nsCString realm)
     returns (nsCString username, nsCString password, NPError result);
+
+  rpc NPN_ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                       NPCoordinateSpace destSpace)
+    returns (double destX, bool ignoreDestX, double destY, bool ignoreDestY, bool result);
 
 both:
   async PPluginScriptableObject();

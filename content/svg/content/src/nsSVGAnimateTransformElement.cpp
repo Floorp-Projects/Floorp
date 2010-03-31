@@ -94,7 +94,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGAnimateTransformElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGAnimationElement,
                            nsIDOMSVGAnimateTransformElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimateTransformElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimateTransformElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateTransformElementBase)
 
 //----------------------------------------------------------------------

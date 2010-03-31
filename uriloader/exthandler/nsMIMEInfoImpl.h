@@ -47,6 +47,7 @@
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
+#include "nsIProcess.h"
 
 /** 
  * UTF8 moz-icon URI string for the default handler application's icon, if 
@@ -140,6 +141,9 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
      */
     virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI) = 0;
 
+    static already_AddRefed<nsIProcess> InitProcess(nsIFile* aApp,
+                                                    nsresult* aResult);
+
     /**
      * This method can be used to launch the file or URI with a single 
      * argument (typically either a file path or a URI spec).  This is 
@@ -151,6 +155,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
      */
     static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp,
                                                    const nsCString &aArg);
+    static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp,
+                                                   const nsString &aArg);
 
     /**
      * Given a file: nsIURI, return the associated nsILocalFile

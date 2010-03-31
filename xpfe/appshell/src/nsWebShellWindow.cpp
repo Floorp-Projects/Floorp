@@ -736,7 +736,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
     nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
 
     if (docViewer) {
-      nsCOMPtr<nsPresContext> presContext;
+      nsRefPtr<nsPresContext> presContext;
       docViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;

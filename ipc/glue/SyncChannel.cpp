@@ -63,12 +63,19 @@ SyncChannel::SyncChannel(SyncListener* aListener)
     mNextSeqno(0),
     mTimeoutMs(kNoTimeout)
 {
-  MOZ_COUNT_CTOR(SyncChannel);
+    MOZ_COUNT_CTOR(SyncChannel);
+#ifdef OS_WIN
+    mEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    NS_ASSERTION(mEvent, "CreateEvent failed! Nothing is going to work!");
+#endif
 }
 
 SyncChannel::~SyncChannel()
 {
     MOZ_COUNT_DTOR(SyncChannel);
+#ifdef OS_WIN
+    CloseHandle(mEvent);
+#endif
 }
 
 // static
@@ -213,19 +220,15 @@ SyncChannel::OnChannelError()
 {
     AssertIOThread();
 
-    {
-        MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
 
-        // NB: this can race with the `Goodbye' event being processed by
-        // the worker thread
-        if (ChannelClosing != mChannelState)
-            mChannelState = ChannelError;
+    if (ChannelClosing != mChannelState)
+        mChannelState = ChannelError;
 
-        if (AwaitingSyncReply())
-            NotifyWorkerThread();
-    }
+    if (AwaitingSyncReply())
+        NotifyWorkerThread();
 
-    AsyncChannel::OnChannelError();
+    PostErrorNotifyTask();
 }
 
 //

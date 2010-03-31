@@ -401,105 +401,6 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { nsnull,                  nsnull,                                  0, 0, 0 }
 };
 
-static JSBool
-WriteCallback(const jschar* aBuffer,
-              uint32 aLength,
-              void* aData)
-{
-  nsJSONWriter* writer = static_cast<nsJSONWriter*>(aData);
-
-  nsresult rv = writer->Write((const PRUnichar*)aBuffer, (PRUint32)aLength);
-  return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
-}
-
-static nsresult
-GetStringForArgument(JSContext* aCx,
-                     jsval aVal,
-                     PRBool* aIsJSON,
-                     PRBool* aIsPrimitive,
-                     nsAutoJSValHolder& _retval)
-{
-  NS_ASSERTION(aIsJSON && aIsPrimitive, "Null pointer!");
-
-  if (JSVAL_IS_STRING(aVal)) {
-    if (!JS_MakeStringImmutable(aCx, JSVAL_TO_STRING(aVal))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    *aIsJSON = *aIsPrimitive = PR_FALSE;
-    _retval = aVal;
-    return NS_OK;
-  }
-
-  nsAutoJSValHolder jsonVal;
-
-  JSBool ok = jsonVal.Hold(aCx);
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-  if (JSVAL_IS_PRIMITIVE(aVal)) {
-    // Only objects can be serialized through JSON, currently, so if we've been
-    // given a primitive we set it as a property on a dummy object before
-    // sending it to the serializer.
-    JSObject* obj = JS_NewObject(aCx, NULL, NULL, NULL);
-    NS_ENSURE_TRUE(obj, NS_ERROR_OUT_OF_MEMORY);
-
-    jsonVal = obj;
-
-    ok = JS_DefineProperty(aCx, obj, JSON_PRIMITIVE_PROPNAME, aVal, NULL,
-                           NULL, JSPROP_ENUMERATE);
-    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
-
-    *aIsPrimitive = PR_TRUE;
-  }
-  else {
-    jsonVal = aVal;
-
-    *aIsPrimitive = PR_FALSE;
-  }
-
-  JSType type;
-  jsval* vp = jsonVal.ToJSValPtr();
-
-  // This may change vp if there is a 'toJSON' function on the object.
-  ok = JS_TryJSON(aCx, vp);
-  if (!(ok && !JSVAL_IS_PRIMITIVE(*vp) &&
-        (type = JS_TypeOfValue(aCx, *vp)) != JSTYPE_FUNCTION &&
-        type != JSTYPE_XML)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Make sure to hold the new vp in case it changed.
-  jsonVal = *vp;
-
-  nsJSONWriter writer;
-
-  ok = JS_Stringify(aCx, jsonVal.ToJSValPtr(), NULL, JSVAL_NULL, WriteCallback,
-                    &writer);
-  if (!ok) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  NS_ENSURE_TRUE(writer.DidWrite(), NS_ERROR_UNEXPECTED);
-
-  writer.FlushBuffer();
-
-  _retval = nsDOMThreadService::ShareStringAsJSVal(aCx, writer.mOutputString);
-  if (!JSVAL_IS_STRING(_retval)) {
-    // Yuck, we can't share.
-    const jschar* buf =
-      reinterpret_cast<const jschar*>(writer.mOutputString.get());
-    JSString* str = JS_NewUCStringCopyN(aCx, buf, writer.mOutputString.Length());
-    if (!str) {
-      JS_ReportOutOfMemory(aCx);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    _retval = STRING_TO_JSVAL(str);
-  }
-
-  *aIsJSON = PR_TRUE;
-  return NS_OK;
-}
-
 nsDOMWorkerScope::nsDOMWorkerScope(nsDOMWorker* aWorker)
 : mWorker(aWorker),
   mWrappedNative(nsnull),
@@ -1171,7 +1072,10 @@ nsDOMWorker::Finalize(nsIXPConnectWrappedNative* /* aWrapper */,
 
   // Do this *after* we null out mWrappedNative so that we don't hand out a
   // freed pointer.
-  TerminateInternal(PR_TRUE);
+  if (TerminateInternal(PR_TRUE) == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+    // We're shutting down, jump right to Kill.
+    Kill();
+  }
 
   return NS_OK;
 }
@@ -1428,6 +1332,16 @@ PRBool
 nsDOMWorker::IsCanceled()
 {
   nsAutoLock lock(mLock);
+  return IsCanceledNoLock();
+}
+
+PRBool
+nsDOMWorker::IsCanceledNoLock()
+{
+  // If we haven't started the close process then we're not canceled.
+  if (mStatus == eRunning) {
+    return PR_FALSE;
+  }
 
   // There are several conditions under which we want JS code to abort and all
   // other functions to bail:
@@ -1496,11 +1410,10 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
     return NS_ERROR_FAILURE;
   }
 
-  PRBool isJSON, isPrimitive;
-  rv = GetStringForArgument(cx, argv[0], &isJSON, &isPrimitive, val);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ASSERTION(JSVAL_IS_STRING(val), "Bad jsval!");
+  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], val.ToJSValPtr());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsRefPtr<nsDOMWorkerMessageEvent> message = new nsDOMWorkerMessageEvent();
   NS_ENSURE_TRUE(message, NS_ERROR_OUT_OF_MEMORY);
@@ -1510,7 +1423,7 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
                                  nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = message->SetJSONData(cx, val, isJSON, isPrimitive);
+  rv = message->SetJSVal(cx, val);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsDOMFireEventRunnable> runnable =
@@ -1866,11 +1779,8 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
     runnable->ReplaceWrappedNative(mScopeWN);
   }
 
-  rv = nsDOMThreadService::get()->Dispatch(this, runnable, aTimeoutInterval,
-                                           aClearQueue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return nsDOMThreadService::get()->Dispatch(this, runnable, aTimeoutInterval,
+                                             aClearQueue);
 }
 
 nsresult
@@ -1921,6 +1831,11 @@ nsDOMWorker::TerminateInternal(PRBool aFromFinalize)
 
   nsresult rv = FireCloseRunnable(PR_INTERVAL_NO_TIMEOUT, PR_TRUE,
                                   aFromFinalize);
+  if (rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+    return rv;
+  }
+
+  // Warn about other kinds of failures.
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1988,8 +1903,18 @@ NS_IMETHODIMP
 nsDOMWorker::DispatchEvent(nsIDOMEvent* aEvent,
                            PRBool* _retval)
 {
-  if (IsCanceled()) {
-    return NS_OK;
+  {
+    nsAutoLock lock(mLock);
+    if (IsCanceledNoLock()) {
+      return NS_OK;
+    }
+    if (mStatus == eTerminated) {
+      nsCOMPtr<nsIWorkerMessageEvent> messageEvent(do_QueryInterface(aEvent));
+      if (messageEvent) {
+        // This is a message event targeted to a terminated worker. Ignore it.
+        return NS_OK;
+      }
+    }
   }
 
   return nsDOMWorkerMessageHandler::DispatchEvent(aEvent, _retval);

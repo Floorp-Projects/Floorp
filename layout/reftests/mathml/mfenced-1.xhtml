@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Check whether whitespaces are ignored in the "separators" attribute of the mfenced tag</title>
+  </head>
+<body>
+  <math xmlns="http://www.w3.org/1998/Math/MathML">
+    <!-- Note: each blank is a whitespace sequence "U+0020 U+0009 U+000a U+000d" and must not be modified! -->
+    <mfenced separators=" 	
+; 	
+">
+      <mi>a</mi>
+      <mi>b</mi>
+      <mi>c</mi>
+      <mi>d</mi>
+    </mfenced>
+    <!-- Note: each blank is a whitespace sequence "U+0020 U+0009 U+000a U+000d" and must not be modified! -->
+    <mfenced separators=" 	
+, 	
+; 	
+.">
+      <mi>a</mi>
+      <mi>b</mi>
+      <mi>c</mi>
+      <mi>d</mi>
+    </mfenced>
+  </math>
+</body>
+</html>

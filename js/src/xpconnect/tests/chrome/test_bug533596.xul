@@ -32,7 +32,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
     is(o, XPCNativeWrapper.unwrap(o), "unwrap on a random object returns it");
 
     var win = $('ifr').contentWindow;
-    var utils = window.getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
     is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
     ok("x" in XPCNativeWrapper.unwrap(win), "actually unwrapped");
     is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "XPCSafeJSObjectWrapper",

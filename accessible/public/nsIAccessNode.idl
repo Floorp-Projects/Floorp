@@ -56,7 +56,7 @@ interface nsIDOMCSSPrimitiveValue;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(71a3b4e7-e83d-45cf-a20e-9ce292bcf19f)]
+[scriptable, uuid(bd458843-1895-42c6-b7f9-f0ca88eeab6b)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -104,11 +104,15 @@ interface nsIAccessNode : nsISupports
   readonly attribute nsIAccessNode nextSiblingNode;
 
   /**
-   * The nsIAccessibleDocument that this nsIAccessNode
-   * resides in.
+   * The document accessible that this access node resides in.
    */
-  readonly attribute nsIAccessibleDocument accessibleDocument;
-  
+  readonly attribute nsIAccessibleDocument document;
+
+  /**
+   * The root document accessible that this access node resides in.
+   */
+  readonly attribute nsIAccessibleDocument rootDocument;
+
   /**
    * The innerHTML for the DOM node
    * This is a text string of all the markup inside the DOM

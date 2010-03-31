@@ -42,6 +42,8 @@
 
 /* A namespace class for static layout utilities. */
 
+#include "jscntxt.h"
+
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"
@@ -185,6 +187,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "mozAutoDocUpdate.h"
 #include "imgICache.h"
 #include "jsinterp.h"
+#include "jsarray.h"
+#include "jsdate.h"
+#include "jsregexp.h"
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -380,7 +385,10 @@ nsContentUtils::Init()
   }
 
   rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_RUNTIMEABORT("Cannot get the history service");
+    return rv;
+  }
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
   if (!sPtrsToPtrsToRelease) {
@@ -5383,6 +5391,438 @@ nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
       aOutStr.Append(*start);
     ++start;
   }
+}
+
+namespace {
+
+const int kCloneStackFrameStackSize = 20;
+
+class CloneStackFrame
+{
+  friend class CloneStack;
+
+public:
+  // These three jsvals must all stick together as they're treated as a jsval
+  // array!
+  jsval source;
+  jsval clone;
+  jsval temp;
+  JSAutoIdArray ids;
+  jsuint index;
+
+private:
+  // Only let CloneStack access these.
+  CloneStackFrame(JSContext* aCx, jsval aSource, jsval aClone, JSIdArray* aIds)
+  : source(aSource), clone(aClone), temp(JSVAL_NULL), ids(aCx, aIds), index(0),
+    prevFrame(nsnull),  tvrVals(aCx, 3, &source)
+  {
+    MOZ_COUNT_CTOR(CloneStackFrame);
+  }
+
+  ~CloneStackFrame()
+  {
+    MOZ_COUNT_DTOR(CloneStackFrame);
+  }
+
+  CloneStackFrame* prevFrame;
+  JSAutoTempValueRooter tvrVals;
+};
+
+class CloneStack
+{
+public:
+  CloneStack(JSContext* cx)
+  : mCx(cx), mLastFrame(nsnull) {
+    mObjectSet.Init();
+  }
+
+  ~CloneStack() {
+    while (!IsEmpty()) {
+      Pop();
+    }
+  }
+
+  PRBool
+  Push(jsval source, jsval clone, JSIdArray* ids) {
+    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(source) && !JSVAL_IS_PRIMITIVE(clone),
+                 "Must be an object!");
+    if (!ids) {
+      return PR_FALSE;
+    }
+
+    CloneStackFrame* newFrame;
+    if (mObjectSet.Count() < kCloneStackFrameStackSize) {
+      // If the object can fit in our stack space then use that.
+      CloneStackFrame* buf = reinterpret_cast<CloneStackFrame*>(mStackFrames);
+      newFrame = new (buf + mObjectSet.Count())
+                     CloneStackFrame(mCx, source, clone, ids);
+    }
+    else {
+      // Use the heap.
+      newFrame = new CloneStackFrame(mCx, source, clone, ids);
+    }
+
+    mObjectSet.PutEntry(JSVAL_TO_OBJECT(source));
+
+    newFrame->prevFrame = mLastFrame;
+    mLastFrame = newFrame;
+
+    return PR_TRUE;
+  }
+
+  CloneStackFrame*
+  Peek() {
+    return mLastFrame;
+  }
+
+  void
+  Pop() {
+    if (IsEmpty()) {
+      NS_ERROR("Empty stack!");
+      return;
+    }
+
+    CloneStackFrame* lastFrame = mLastFrame;
+
+    mObjectSet.RemoveEntry(JSVAL_TO_OBJECT(lastFrame->source));
+    mLastFrame = lastFrame->prevFrame;
+
+    if (mObjectSet.Count() >= kCloneStackFrameStackSize) {
+      // Only delete if this was a heap object.
+      delete lastFrame;
+    }
+    else {
+      // Otherwise just run the destructor.
+      lastFrame->~CloneStackFrame();
+    }
+  }
+
+  PRBool
+  IsEmpty() {
+    NS_ASSERTION((!mLastFrame && !mObjectSet.Count()) ||
+                 (mLastFrame && mObjectSet.Count()),
+                 "Hashset is out of sync!");
+    return mObjectSet.Count() == 0;
+  }
+
+  PRBool
+  Search(JSObject* obj) {
+    return !!mObjectSet.GetEntry(obj);
+  }
+
+private:
+  JSContext* mCx;
+  CloneStackFrame* mLastFrame;
+  nsTHashtable<nsVoidPtrHashKey> mObjectSet;
+
+  // Use a char array instead of CloneStackFrame array to prevent the JSAuto*
+  // helpers from running until we're ready for them.
+  char mStackFrames[kCloneStackFrameStackSize * sizeof(CloneStackFrame)];
+};
+
+struct ReparentObjectData {
+  ReparentObjectData(JSContext* cx, JSObject* obj)
+  : cx(cx), obj(obj), ids(nsnull), index(0) { }
+
+  ~ReparentObjectData() {
+    if (ids) {
+      JS_DestroyIdArray(cx, ids);
+    }
+  }
+
+  JSContext* cx;
+  JSObject* obj;
+  JSIdArray* ids;
+  jsint index;
+};
+
+inline nsresult
+SetPropertyOnValueOrObject(JSContext* cx,
+                           jsval val,
+                           jsval* rval,
+                           JSObject* obj,
+                           jsid id)
+{
+  NS_ASSERTION((rval && !obj) || (!rval && obj), "Can only clone to one dest!");
+  if (rval) {
+    *rval = val;
+    return NS_OK;
+  }
+  if (!JS_DefinePropertyById(cx, obj, id, val, nsnull, nsnull,
+                             JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+inline JSObject*
+CreateEmptyObjectOrArray(JSContext* cx,
+                         JSObject* obj)
+{
+  if (JS_IsArrayObject(cx, obj)) {
+    jsuint length;
+    if (!JS_GetArrayLength(cx, obj, &length)) {
+      NS_ERROR("Failed to get array length?!");
+      return nsnull;
+    }
+    return JS_NewArrayObject(cx, length, NULL);
+  }
+  return JS_NewObject(cx, NULL, NULL, NULL);
+}
+
+nsresult
+CloneSimpleValues(JSContext* cx,
+                  jsval val,
+                  jsval* rval,
+                  PRBool* wasCloned,
+                  JSObject* robj = nsnull,
+                  jsid rid = INT_TO_JSID(0))
+{
+  *wasCloned = PR_TRUE;
+
+  // No cloning necessary for these non-GC'd jsvals.
+  if (!JSVAL_IS_GCTHING(val) || JSVAL_IS_NULL(val)) {
+    return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
+  }
+
+  // Clone doubles.
+  if (JSVAL_IS_DOUBLE(val)) {
+    jsval newVal;
+    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
+  }
+
+  // We'll use immutable strings to prevent copying if we can.
+  if (JSVAL_IS_STRING(val)) {
+    if (!JS_MakeStringImmutable(cx, JSVAL_TO_STRING(val))) {
+      return NS_ERROR_FAILURE;
+    }
+    return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
+  }
+
+  NS_ASSERTION(JSVAL_IS_OBJECT(val), "Not an object!");
+  JSObject* obj = JSVAL_TO_OBJECT(val);
+
+  // See if this JSObject is backed by some C++ object. If it is then we assume
+  // that it is inappropriate to clone.
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsContentUtils::XPConnect()->
+    GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (wrapper) {
+    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
+  }
+
+  // Security wrapped objects are auto-nulled as well.
+  JSClass* clasp = JS_GET_CLASS(cx, obj);
+  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
+      ((JSExtendedClass*)clasp)->wrappedObject) {
+    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
+  }
+
+  // Function objects don't get cloned.
+  if (JS_ObjectIsFunction(cx, obj)) {
+    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
+  }
+
+  // Date objects.
+  if (js_DateIsValid(cx, obj)) {
+    jsdouble msec = js_DateGetMsecSinceEpoch(cx, obj);
+    JSObject* newDate;
+    if (!(msec  && (newDate = js_NewDateObjectMsec(cx, msec)))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newDate), rval, robj,
+                                      rid);
+  }
+
+  // RegExp objects.
+  if (js_ObjectIsRegExp(obj)) {
+    JSObject* proto;
+    if (!js_GetClassPrototype(cx, JS_GetScopeChain(cx), JSProto_RegExp,
+                              &proto)) {
+      return NS_ERROR_FAILURE;
+    }
+    JSObject* newRegExp = js_CloneRegExpObject(cx, obj, proto);
+    if (!newRegExp) {
+      return NS_ERROR_FAILURE;
+    }
+    return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newRegExp), rval,
+                                      robj, rid);
+  }
+
+  // ImageData is just a normal JSObject with some properties in our impl.
+  // Do we support File?
+  // Do we support Blob?
+  // Do we support FileList?
+
+  *wasCloned = PR_FALSE;
+  return NS_OK;
+}
+
+} // anonymous namespace
+
+// static
+nsresult
+nsContentUtils::CreateStructuredClone(JSContext* cx,
+                                      jsval val,
+                                      jsval* rval)
+{
+  JSAutoRequest ar(cx);
+
+  nsCOMPtr<nsIXPConnect> xpconnect(sXPConnect);
+  NS_ENSURE_STATE(xpconnect);
+
+  PRBool wasCloned;
+  nsresult rv = CloneSimpleValues(cx, val, rval, &wasCloned);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (wasCloned) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(JSVAL_IS_OBJECT(val), "Not an object?!");
+  JSObject* obj = CreateEmptyObjectOrArray(cx, JSVAL_TO_OBJECT(val));
+  if (!obj) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  jsval output = OBJECT_TO_JSVAL(obj);
+  JSAutoTempValueRooter tvr(cx, output);
+
+  CloneStack stack(cx);
+  if (!stack.Push(val, OBJECT_TO_JSVAL(obj),
+                  JS_Enumerate(cx, JSVAL_TO_OBJECT(val)))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  while (!stack.IsEmpty()) {
+    CloneStackFrame* frame = stack.Peek();
+
+    NS_ASSERTION(!!frame->ids &&
+                 frame->ids.length() >= frame->index &&
+                 !JSVAL_IS_PRIMITIVE(frame->source) &&
+                 !JSVAL_IS_PRIMITIVE(frame->clone),
+                 "Bad frame state!");
+
+    if (frame->index == frame->ids.length()) {
+      // Done cloning this object, pop the frame.
+      stack.Pop();
+      continue;
+    }
+
+    // Get the current id and increment the index.
+    jsid id = frame->ids[frame->index++];
+
+    if (!JS_GetPropertyById(cx, JSVAL_TO_OBJECT(frame->source), id,
+                            &frame->temp)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JSVAL_IS_PRIMITIVE(frame->temp) &&
+        stack.Search(JSVAL_TO_OBJECT(frame->temp))) {
+      // Spec says to throw this particular exception for cyclical references.
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
+    JSObject* clone = JSVAL_TO_OBJECT(frame->clone);
+
+    PRBool wasCloned;
+    nsresult rv = CloneSimpleValues(cx, frame->temp, nsnull, &wasCloned, clone,
+                                    id);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (!wasCloned) {
+      NS_ASSERTION(JSVAL_IS_OBJECT(frame->temp), "Not an object?!");
+      obj = CreateEmptyObjectOrArray(cx, JSVAL_TO_OBJECT(frame->temp));
+      if (!obj ||
+          !stack.Push(frame->temp, OBJECT_TO_JSVAL(obj),
+                      JS_Enumerate(cx, JSVAL_TO_OBJECT(frame->temp)))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      // Set the new object as a property of the clone. We'll fill it on the
+      // next iteration.
+      if (!JS_DefinePropertyById(cx, clone, id, OBJECT_TO_JSVAL(obj), nsnull,
+                                 nsnull, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  *rval = output;
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
+                                            JSObject* obj,
+                                            JSObject* scope)
+{
+  JSAutoRequest ar(cx);
+
+  scope = JS_GetGlobalForObject(cx, scope);
+
+  nsAutoTArray<ReparentObjectData, 20> objectData;
+  objectData.AppendElement(ReparentObjectData(cx, obj));
+
+  while (!objectData.IsEmpty()) {
+    ReparentObjectData& data = objectData[objectData.Length() - 1];
+
+    if (!data.ids && !data.index) {
+      // First, fix the prototype of the object.
+      JSClass* clasp = JS_GET_CLASS(cx, data.obj);
+      JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
+      if (!protoKey) {
+        // We should never be reparenting an object that doesn't have a standard
+        // proto key.
+        return NS_ERROR_FAILURE;
+      }
+
+      JSObject* proto;
+      if (!js_GetClassPrototype(cx, scope, protoKey, &proto) ||
+          !JS_SetPrototype(cx, data.obj, proto)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Adjust the parent.
+      if (!JS_SetParent(cx, data.obj, scope)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // And now enumerate the object's properties.
+      if (!(data.ids = JS_Enumerate(cx, data.obj))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    // If we've gone through all the object's properties then we're done with
+    // this frame.
+    if (data.index == data.ids->length) {
+      objectData.RemoveElementAt(objectData.Length() - 1);
+      continue;
+    }
+
+    // Get the id and increment!
+    jsid id = data.ids->vector[data.index++];
+
+    jsval prop;
+    if (!JS_GetPropertyById(cx, data.obj, id, &prop)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Push a new frame if this property is an object.
+    if (!JSVAL_IS_PRIMITIVE(prop)) {
+      objectData.AppendElement(ReparentObjectData(cx, JSVAL_TO_OBJECT(prop)));
+    }
+  }
+
+  return NS_OK;
 }
 
 #ifdef DEBUG

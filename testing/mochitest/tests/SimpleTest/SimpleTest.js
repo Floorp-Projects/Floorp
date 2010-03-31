@@ -262,7 +262,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
         var baseWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                                      .getInterface(Components.interfaces.nsIWebNavigation)
                                      .QueryInterface(Components.interfaces.nsIBaseWindow);
-        ok(true, prefix + " -- loaded: " + targetWindow.document.readyState +
+        SimpleTest.ok(true, prefix + " -- loaded: " + targetWindow.document.readyState +
            " active window: " +
                (fm.activeWindow ? "(" + fm.activeWindow + ") " + fm.activeWindow.location : "<no window active>") +
            " focused window: " +
@@ -288,14 +288,14 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
         SimpleTest["waitForFocus_" + event.type + "ed"] = true;
         targetWindow.removeEventListener(event.type, waitForEvent, false);
         if (event.type == "MozAfterPaint")
-          ok(true, "MozAfterPaint event received");
+          SimpleTest.ok(true, "MozAfterPaint event received");
         maybeRunTests();
     }
 
     // wait for the page to load if it hasn't already
     SimpleTest.waitForFocus_loaded = (targetWindow.document.readyState == "complete");
     if (!SimpleTest.waitForFocus_loaded) {
-        ok(true, "must wait for load");
+        SimpleTest.ok(true, "must wait for load");
         targetWindow.addEventListener("load", waitForEvent, false);
     }
 
@@ -307,12 +307,12 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
     // if this is a child frame, ensure that the frame is focused
     SimpleTest.waitForFocus_focused = (focusedWindow.value == targetWindow);
     if (SimpleTest.waitForFocus_focused) {
-        ok(true, "already focused");
+        SimpleTest.ok(true, "already focused");
         // if the frame is already focused and loaded, call the callback directly
         maybeRunTests();
     }
     else {
-        ok(true, "must wait for focus");
+        SimpleTest.ok(true, "must wait for focus");
         targetWindow.addEventListener("focus", waitForEvent, false);
         targetWindow.focus();
     }

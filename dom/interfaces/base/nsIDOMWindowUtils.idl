@@ -50,8 +50,9 @@ interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsITransferable;
+interface nsIQueryContentEventResult;
 
-[scriptable, uuid(5ab44028-20ed-499a-bbe4-1805a1f350c8)]
+[scriptable, uuid(00ca8d4f-61f1-4d9c-a7c1-82651b0cf02b)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -443,4 +444,173 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void sendContentCommandEvent(in AString aType,
                                [optional] in nsITransferable aTransferable);
+
+  /**
+   * Synthesize a composition event to the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType The event type: "compositionstart" or "compositionend".
+   */
+  void sendCompositionEvent(in AString aType);
+
+  /**
+   * Synthesize a text event to the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * Currently, this method doesn't support 4 or more clauses composition
+   * string.
+   *
+   * @param aCompositionString  composition string
+   * @param a*ClauseLengh       the length of nth clause, set 0 when you
+   *                            don't need second or third clause.
+   * @param a*ClauseAttr        the attribute of nth clause, uese following
+   *                            const values.
+   * @param aCaretStart         the caret position in the composition string,
+   *                            if you set negative value, this method don't
+   *                            set the caret position to the event.
+   * @param aCaretLength        the caret length, if this is one or more,
+   *                            the caret will be wide caret, otherwise,
+   *                            it's collapsed.
+   *                            XXX nsEditor doesn't support wide caret yet.
+   */
+
+  // NOTE: These values must be same to NS_TEXTRANGE_* in nsGUIEvent.h
+
+  const unsigned long COMPOSITION_ATTR_RAWINPUT              = 0x02;
+  const unsigned long COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
+  const unsigned long COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
+  const unsigned long COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
+
+  void sendTextEvent(in AString aCompositionString,
+                     in long aFirstClauseLength,
+                     in unsigned long aFirstClauseAttr,
+                     in long aSecondClauseLength,
+                     in unsigned long aSecondClauseAttr,
+                     in long aThirdClauseLength,
+                     in unsigned long aThirdClauseAttr,
+                     in long aCaretStart,
+                     in long aCaretLength);
+
+  /**
+   * Synthesize a query content event.
+   *
+   * @param aType  On of the following const values.  And see also each comment
+   *               for the other parameters and the result.
+   */
+  nsIQueryContentEventResult sendQueryContentEvent(in unsigned long aType,
+                                                   in unsigned long aOffset,
+                                                   in unsigned long aLength,
+                                                   in long aX,
+                                                   in long aY);
+
+  // NOTE: following values are same as NS_QUERY_* in nsGUIEvent.h
+
+  /**
+   * QUERY_SELECTED_TEXT queries the first selection range's information.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return offset, reversed and text properties of the result are available.
+   */
+  const unsigned long QUERY_SELECTED_TEXT                       = 3200;
+
+  /**
+   * QUERY_TEXT_CONTENT queries the text at the specified range.
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the result text is shorter than this value.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return text property of the result is available.
+   */
+  const unsigned long QUERY_TEXT_CONTENT                        = 3201;
+
+  /**
+   * QUERY_CARET_RECT queries the (collapsed) caret rect of the offset.
+   * If the actual caret is there at the specified offset, this returns the
+   * actual caret rect.  Otherwise, this guesses the caret rect from the
+   * metrics of the text.
+   *
+   * @param aOffset   The caret offset.  0 is the left side of the first
+   *                  caracter in LTR text.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   *         The left and the top properties are offset in the client area of
+   *         the DOM window.
+   */
+  const unsigned long QUERY_CARET_RECT                          = 3203;
+
+  /**
+   * QUERY_TEXT_RECT queries the specified text's rect.
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the extra length is ignored.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   *         The left and the top properties are offset in the client area of
+   *         the DOM window.
+   */
+  const unsigned long QUERY_TEXT_RECT                           = 3204;
+
+  /**
+   * QUERY_TEXT_RECT queries the focused editor's rect.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   */
+  const unsigned long QUERY_EDITOR_RECT                         = 3205;
+
+  /**
+   * QUERY_CHARACTER_AT_POINT queries the character information at the
+   * specified point.  The point is offset in the window.
+   * NOTE: If there are some panels at the point, this method send the query
+   * event to the panel's widget automatically.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        X offset in the widget.
+   * @param aY        Y offset in the widget.
+   *
+   * @return offset, notFound, left, top, width and height properties of the
+   *         result are available.
+   */
+  const unsigned long QUERY_CHARACTER_AT_POINT                  = 3208;
+
+  /**
+   * Synthesize a selection set event to the window.
+   *
+   * This sets the selection as the specified information.
+   *
+   * @param aOffset  The caret offset of the selection start.
+   * @param aLength  The length of the selection.  If this is too long, the
+   *                 extra length is ignored.
+   * @param aReverse If true, the selection set from |aOffset + aLength| to
+   *                 |aOffset|.  Otherwise, set from |aOffset| to
+   *                 |aOffset + aLength|.
+   * @return True, if succeeded.  Otherwise, false.
+   */
+  boolean sendSelectionSetEvent(in unsigned long aOffset,
+                                in unsigned long aLength,
+                                in boolean aReverse);
 };

@@ -106,7 +106,6 @@ public:
   virtual void            SetShowsToolbarButton(PRBool aShow) {}
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
-  virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
   virtual LayerManager*   GetLayerManager();
@@ -136,6 +135,8 @@ public:
   NS_IMETHOD              SetIMEEnabled(PRUint32 aState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              GetIMEEnabled(PRUint32* aState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
+  NS_IMETHOD              SetAcceleratedRendering(PRBool aEnabled);
+  virtual PRBool          GetAcceleratedRendering();
   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -204,6 +205,7 @@ protected:
   nsWindowType      mWindowType;
   nsBorderStyle     mBorderStyle;
   PRPackedBool      mOnDestroyCalled;
+  PRPackedBool      mUseAcceleratedRendering;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped

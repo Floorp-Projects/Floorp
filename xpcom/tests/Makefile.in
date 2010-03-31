@@ -70,6 +70,7 @@ CPPSRCS		= \
 		TestBlockingProcess.cpp \
 		TestQuickReturn.cpp \
 		TestArguments.cpp \
+		TestUnicodeArguments.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -77,6 +78,7 @@ SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 CPP_UNIT_TESTS = \
                  ShowSSEConfig.cpp \
                  TestAutoPtr.cpp \
+                 TestCOMArray.cpp \
                  TestCOMPtr.cpp \
                  TestCOMPtrEq.cpp \
                  TestFactory.cpp \

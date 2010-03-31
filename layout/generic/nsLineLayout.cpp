@@ -203,6 +203,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   SetFlag(LL_IMPACTEDBYFLOATS, aImpactedByFloats);
   mTotalPlacedFrames = 0;
   SetFlag(LL_LINEISEMPTY, PR_TRUE);
+  SetFlag(LL_LINEATSTART, PR_TRUE);
   SetFlag(LL_LINEENDSINBR, PR_FALSE);
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
@@ -906,22 +907,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         if (frag) {
           pfd->SetFlag(PFD_ISNONWHITESPACETEXTFRAME,
                        !content->TextIsOnlyWhitespace());
-// fix for bug 40882
-#ifdef IBMBIDI
-          if (mPresContext->BidiEnabled()) {
-            if (frag->Is2b()) {
-              //PRBool isVisual;
-              //mPresContext->IsVisualMode(isVisual);
-              PRUnichar ch = /*(isVisual) ?
-                              *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
-              if (IS_BIDI_DIACRITIC(ch)) {
-                mPresContext->PropertyTable()->SetProperty(aFrame,
-                           nsGkAtoms::endsInDiacritic, NS_INT32_TO_PTR(ch),
-                                                           nsnull, nsnull);
-              }
-            }
-          }
-#endif // IBMBIDI
         }
       }
     }
@@ -933,7 +918,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
       }
       if (pfd->mSpan) {
-        isEmpty = !pfd->mSpan->mHasNonemptyContent;
+        isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
       } else {
         isEmpty = pfd->mFrame->IsEmpty();
       }
@@ -1020,6 +1005,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       if (!isEmpty) {
         psd->mHasNonemptyContent = PR_TRUE;
         SetFlag(LL_LINEISEMPTY, PR_FALSE);
+        if (!pfd->mSpan) {
+          // nonempty leaf content has been placed
+          SetFlag(LL_LINEATSTART, PR_FALSE);
+        }
       }
 
       // Place the frame, updating aBounds with the final size and

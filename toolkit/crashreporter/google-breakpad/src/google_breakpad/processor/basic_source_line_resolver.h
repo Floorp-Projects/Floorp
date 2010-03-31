@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -60,10 +60,10 @@ class BasicSourceLineResolver : public SourceLineResolverInterface {
   virtual bool LoadModuleUsingMapBuffer(const string &module_name,
                                         const string &map_buffer);
 
-
   virtual bool HasModule(const string &module_name) const;
-
-  virtual StackFrameInfo* FillSourceLineInfo(StackFrame *frame) const;
+  virtual void FillSourceLineInfo(StackFrame *frame) const;
+  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame) const;
+  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame) const;
 
  private:
   template<class T> class MemAddrMap;

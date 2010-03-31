@@ -19,8 +19,9 @@
   var iframe;
   var lastCount;
 
-  var suspended;
-  var resumed;
+  var suspended = false;
+  var resumed = false;
+  var finished = false;
 
   var interval;
   var oldMessageCount;
@@ -41,36 +42,57 @@
   }
 
   function finishTest() {
+    if (finished) {
+      return;
+    }
+    finished = true;
     setCachePref(false);
     iframe.terminateWorker();
     SimpleTest.finish();
   }
 
   function waitInterval() {
+    if (finished) {
+      return;
+    }
     is(iframe.location, "about:blank", "Wrong url!");
     is(suspended, true, "Not suspended?");
+    is(resumed, false, "Already resumed?!");
     is(lastCount, oldMessageCount, "Received a message while suspended!");
     if (++waitCount == 5) {
       clearInterval(interval);
-      iframe.history.back();
       resumed = true;
+      iframe.history.back();
     }
   }
 
   function badOnloadCallback() {
-    ok(false, "iframe didn't go into fastback cache!");
+    if (finished) {
+      return;
+    }
+    ok(false, "shouldn't get here!");
     finishTest();
   }
 
   function suspendCallback() {
+    if (finished) {
+      return;
+    }
     is(iframe.location, "about:blank", "Wrong url!");
-    is(suspended, true, "Not suspended?");
+    is(suspended, false, "Already suspended?");
+    is(resumed, false, "Already resumed?");
+    setCachePref(false);
+    suspended = true;
     iframe.onload = badOnloadCallback;
     oldMessageCount = lastCount;
     interval = setInterval(waitInterval, 1000);
   }
 
   function messageCallback(data) {
+    if (finished) {
+      return;
+    }
+
     if (!suspended) {
       ok(lastCount === undefined || lastCount == data - 1,
          "Data is inconsistent");
@@ -78,26 +100,31 @@
       if (lastCount == 50) {
         setCachePref(true);
         iframe.location = "about:blank";
-        suspended = true;
       }
+      return;
     }
-    else {
-      var newLocation =
-        window.location.toString().replace("test_suspend.html",
-                                           "suspend_iframe.html");
-      is(iframe.location, newLocation, "Wrong url!");
-      ok(suspended && resumed, "Got message before resumed!");
-      is(lastCount, data - 1, "Missed a message, suspend failed!");
-      finishTest();
-    }
+
+    var newLocation =
+      window.location.toString().replace("test_suspend.html",
+                                         "suspend_iframe.html");
+    is(newLocation.indexOf(iframe.location.toString()), 0, "Wrong url!");
+    is(resumed, true, "Got message before resumed!");
+    is(lastCount, data - 1, "Missed a message, suspend failed!");
+    finishTest();
   }
 
   function errorCallback(data) {
+    if (finished) {
+      return;
+    }
     ok(false, "Iframe had an error: '" + data + "'");
     finishTest();
   }
 
   function subframeLoaded() {
+    if (finished) {
+      return;
+    }
     var iframeElement = document.getElementById("workerFrame");
     iframeElement.onload = suspendCallback;
 

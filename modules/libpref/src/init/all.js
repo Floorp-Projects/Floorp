@@ -329,7 +329,6 @@ pref("extensions.spellcheck.inline.max-misspellings", 500);
 // belong in comm-central/editor/ui/composer.js
 
 pref("editor.use_custom_colors", false);
-pref("editor.htmlWrapColumn", 72);
 pref("editor.singleLine.pasteNewlines",     1);
 pref("editor.quotesPreformatted",            false);
 pref("editor.use_css",                       true);
@@ -2881,18 +2880,10 @@ pref("html5.flushtimer.startdelay", 200);
 pref("html5.flushtimer.continuedelay", 150);
 // Time in milliseconds between timer firings once the timer has starting 
 // firing.
-pref("html5.flushtimer.interval", 100);
+pref("html5.flushtimer.interval", 120);
 
 // Push/Pop/Replace State prefs
 pref("browser.history.allowPushState", true);
 pref("browser.history.allowReplaceState", true);
 pref("browser.history.allowPopState", true);
 pref("browser.history.maxStateObjectSize", 655360);
-// Initial max length for number of tree ops in on flush.
-pref("html5.opqueue.initiallengthlimit", 200);
-// Maximum time in milliseconds to spend flushing the tree op queue when not forced to completion
-pref("html5.opqueue.maxtime", 100);
-// Minimun number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
-pref("html5.opqueue.minlength", 100);
-// Maximum number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
-pref("html5.opqueue.maxlength", 4500); // most top sites stay under this value

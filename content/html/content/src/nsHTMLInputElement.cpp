@@ -1397,7 +1397,7 @@ nsHTMLInputElement::FireOnChange()
   //
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_FORM_CHANGE);
-  nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nsnull, &status);
 }
@@ -1455,7 +1455,7 @@ nsHTMLInputElement::Select()
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
   if (state == eInactiveWindow) {
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
@@ -1536,27 +1536,35 @@ nsHTMLInputElement::Click()
     if (!doc) {
       return rv;
     }
-    
-    nsIPresShell *shell = doc->GetPrimaryShell();
 
+    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsRefPtr<nsPresContext> context = nsnull;
     if (shell) {
-      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+      context = shell->GetPresContext();
+    }
 
-      if (context) {
-        // Click() is never called from native code, but it may be
-        // called from chrome JS. Mark this event trusted if Click()
-        // is called from chrome code.
-        nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                           NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-        nsEventStatus status = nsEventStatus_eIgnore;
-
-        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
-
-        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
-                                    &event, nsnull, &status);
-
-        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
+    if (!context) {
+      doc->FlushPendingNotifications(Flush_Frames);
+      shell = doc->GetPrimaryShell();
+      if (shell) {
+        context = shell->GetPresContext();
       }
+    }
+
+    if (context) {
+      // Click() is never called from native code, but it may be
+      // called from chrome JS. Mark this event trusted if Click()
+      // is called from chrome code.
+      nsMouseEvent event(nsContentUtils::IsCallerChrome(),
+                         NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+      nsEventStatus status = nsEventStatus_eIgnore;
+
+      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
+
+      nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
+                                  &event, nsnull, &status);
+
+      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
     }
   }
 
@@ -1868,7 +1876,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
               if (lastFocusMethod &
                   (nsIFocusManager::FLAG_BYKEY | nsIFocusManager::FLAG_BYMOVEFOCUS)) {
-                nsCOMPtr<nsPresContext> presContext = GetPresContext();
+                nsRefPtr<nsPresContext> presContext = GetPresContext();
                 if (DispatchSelectEvent(presContext)) {
                   SelectAll(presContext);
                 }
@@ -2659,15 +2667,18 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
     return NS_OK;
   }
 
-  // Submit
-  // (for type=image, only submit if value is non-null)
   if (mType == NS_FORM_INPUT_HIDDEN && name.EqualsLiteral("_charset_")) {
     nsCString charset;
     aFormSubmission->GetCharset(charset);
     rv = aFormSubmission->AddNameValuePair(name,
                                            NS_ConvertASCIItoUTF16(charset));
   }
-  else if (mType != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
+  else if (mType == NS_FORM_INPUT_TEXT &&
+           name.EqualsLiteral("isindex") &&
+           aFormSubmission->SupportsIsindexSubmission()) {
+    rv = aFormSubmission->AddIsindex(value);
+  }
+  else {
     rv = aFormSubmission->AddNameValuePair(name, value);
   }
 

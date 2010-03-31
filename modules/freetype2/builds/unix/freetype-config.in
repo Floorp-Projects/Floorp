@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2008 by
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -76,17 +76,7 @@ while test $# -gt 0 ; do
     exit 0
     ;;
   --ftversion)
-    major=`grep define @prefix@/include/freetype2/freetype/freetype.h \
-           | grep FREETYPE_MAJOR \
-           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
-    minor=`grep define @prefix@/include/freetype2/freetype/freetype.h \
-           | grep FREETYPE_MINOR \
-           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
-    patch=`grep define @prefix@/include/freetype2/freetype/freetype.h \
-           | grep FREETYPE_PATCH \
-           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
-    echo $major.$minor.$patch
-    exit 0
+    echo_ft_version=yes
     ;;
   --cflags)
     echo_cflags=yes
@@ -111,11 +101,11 @@ if test "$local_prefix" = "yes" ; then
 fi
 
 if test "$echo_prefix" = "yes" ; then
-  echo $prefix
+  echo ${SYSROOT}$prefix
 fi
 
 if test "$echo_exec_prefix" = "yes" ; then
-  echo $exec_prefix
+  echo ${SYSROOT}$exec_prefix
 fi
 
 if test "$exec_prefix_set" = "yes" ; then
@@ -127,10 +117,23 @@ else
   fi
 fi
 
+if test "$echo_ft_version" = "yes" ; then
+  major=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+         | grep FREETYPE_MAJOR \
+         | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+  minor=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+         | grep FREETYPE_MINOR \
+         | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+  patch=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+         | grep FREETYPE_PATCH \
+         | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+  echo $major.$minor.$patch
+fi
+
 if test "$echo_cflags" = "yes" ; then
-  cflags="-I$includedir/freetype2"
-  if test "$includedir" != "/usr/include" ; then
-    echo $cflags -I$includedir
+  cflags="-I${SYSROOT}$includedir/freetype2"
+  if test "${SYSROOT}$includedir" != "/usr/include" ; then
+    echo $cflags -I${SYSROOT}$includedir
   else
     echo $cflags
   fi
@@ -142,8 +145,8 @@ if test "$echo_libs" = "yes" ; then
     eval "rpath=\"$hardcode_libdir_flag_spec\""
   fi
   libs="-lfreetype @LIBZ@ @FT2_EXTRA_LIBS@"
-  if test "$libdir" != "/usr/lib" && test "$libdir" != "/usr/lib64"; then
-    echo -L$libdir $rpath $libs
+  if test "${SYSROOT}$libdir" != "/usr/lib" && test "${SYSROOT}$libdir" != "/usr/lib64"; then
+    echo -L${SYSROOT}$libdir $libs
   else
     echo $libs
   fi
@@ -151,7 +154,7 @@ fi
 
 if test "$echo_libtool" = "yes" ; then
   convlib="libfreetype.la"
-  echo $libdir/$convlib
+  echo ${SYSROOT}$libdir/$convlib
 fi
 
 # EOF

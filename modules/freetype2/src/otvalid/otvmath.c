@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType MATH table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2007 by                                                      */
+/*  Copyright 2007, 2008 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Written by George Williams.                                            */
@@ -92,6 +92,8 @@
 
     OTV_OPTIONAL_TABLE( Coverage );
     OTV_OPTIONAL_TABLE( DeviceTableOffset );
+
+    FT_UNUSED( isItalic );  /* only used if tracing is active */
 
 
     OTV_NAME_ENTER( isItalic ? "MathItalicsCorrectionInfo"

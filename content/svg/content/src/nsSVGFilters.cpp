@@ -175,7 +175,7 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   r.Scale(scaledSize.width/aTarget->mImage->Width(),
           scaledSize.height/aTarget->mImage->Height());
   r.RoundOut();
-  if (NS_FAILED(nsSVGUtils::GfxRectToIntRect(r, &result.mDataRect)))
+  if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(r, &result.mDataRect)))
     return result;
   
 #ifdef DEBUG_tor
@@ -435,7 +435,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEGaussianBlurElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEGaussianBlurElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEGaussianBlurElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEGaussianBlurElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEGaussianBlurElementBase)
 
 //----------------------------------------------------------------------
@@ -909,7 +909,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEBlendElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEBlendElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEBlendElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEBlendElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBlendElementBase)
 
 //----------------------------------------------------------------------
@@ -1110,7 +1110,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEColorMatrixElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEColorMatrixElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEColorMatrixElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEColorMatrixElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEColorMatrixElementBase)
 
 //----------------------------------------------------------------------
@@ -1448,7 +1448,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFECompositeElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFECompositeElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFECompositeElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFECompositeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFECompositeElementBase)
 
 //----------------------------------------------------------------------
@@ -1707,7 +1707,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEComponentTransferElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEComponentTransferElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEComponentTransferElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEComponentTransferElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEComponentTransferElementBase)
 
 //----------------------------------------------------------------------
@@ -2092,7 +2092,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncRElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncRElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFuncRElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncRElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncR)
@@ -2133,7 +2133,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncGElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncGElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFuncGElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncG)
@@ -2174,7 +2174,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncBElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncBElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFuncBElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncBElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncB)
@@ -2215,7 +2215,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncAElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncAElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFuncAElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncAElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncA)
@@ -2327,7 +2327,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEMergeElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEMergeElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEMergeElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEMergeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeElementBase)
 
 //----------------------------------------------------------------------
@@ -2400,7 +2400,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEMergeNodeElement)
    if ( aIID.Equals(NS_GET_IID(nsSVGFEMergeNodeElement)) )
      foundInterface = static_cast<nsISupports*>(static_cast<void*>(this));
    else
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEMergeNodeElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEMergeNodeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeNodeElementBase)
 
 //----------------------------------------------------------------------
@@ -2510,7 +2510,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEOffsetElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEOffsetElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEOffsetElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEOffsetElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEOffsetElementBase)
 
 //----------------------------------------------------------------------
@@ -2698,7 +2698,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEFloodElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEFloodElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFloodElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFloodElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEFloodElementBase)
 
 //----------------------------------------------------------------------
@@ -2837,7 +2837,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFETileElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFETileElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFETileElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFETileElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFETileElementBase)
 
 //----------------------------------------------------------------------
@@ -2908,7 +2908,7 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   // but nothing clips mFilterPrimitiveSubregion so this should be changed.
 
   nsIntRect tile;
-  nsresult res = nsSVGUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
+  nsresult res = nsLayoutUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
 
   NS_ENSURE_SUCCESS(res, res); // asserts on failure (not 
   if (tile.IsEmpty())
@@ -3141,7 +3141,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFETurbulenceElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFETurbulenceElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFETurbulenceElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFETurbulenceElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFETurbulenceElementBase)
 
 //----------------------------------------------------------------------
@@ -3577,7 +3577,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEMorphologyElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEMorphologyElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEMorphologyElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEMorphologyElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMorphologyElementBase)
 
 //----------------------------------------------------------------------
@@ -3931,7 +3931,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEConvolveMatrixElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEConvolveMatrixElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEConvolveMatrixElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEConvolveMatrixElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEConvolveMatrixElementBase)
 
 //----------------------------------------------------------------------
@@ -4323,7 +4323,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEDistantLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFEDistantLightElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFEDistantLightElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEDistantLightElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEDistantLightElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDistantLightElementBase)
 
 //----------------------------------------------------------------------
@@ -4409,7 +4409,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEPointLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFEPointLightElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFEPointLightElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEPointLightElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEPointLightElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEPointLightElementBase)
 
 //----------------------------------------------------------------------
@@ -4505,7 +4505,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFESpotLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFESpotLightElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFESpotLightElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFESpotLightElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFESpotLightElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFESpotLightElementBase)
 
 //----------------------------------------------------------------------
@@ -4979,7 +4979,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEDiffuseLightingElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEDiffuseLightingElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEDiffuseLightingElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEDiffuseLightingElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDiffuseLightingElementBase)
 
 //----------------------------------------------------------------------
@@ -5101,7 +5101,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFESpecularLightingElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFESpecularLightingElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFESpecularLightingElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFESpecularLightingElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFESpecularLightingElementBase)
 
 //----------------------------------------------------------------------
@@ -5310,7 +5310,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEImageElement)
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEImageElement, nsIDOMSVGURIReference,
                            imgIDecoderObserver, nsIImageLoadingContent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEImageElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEImageElementBase)
 
 //----------------------------------------------------------------------
@@ -5682,7 +5682,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEDisplacementMapElement)
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEDisplacementMapElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEDisplacementMapElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEDisplacementMapElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDisplacementMapElementBase)
 
 //----------------------------------------------------------------------

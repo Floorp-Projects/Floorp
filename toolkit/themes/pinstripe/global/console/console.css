@@ -220,7 +220,7 @@ toolbarseparator {
   -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
-:root:not([active]) #Console\:clear {
+#Console\:clear:-moz-window-inactive {
   color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through */
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

@@ -385,7 +385,7 @@ function TabWindow(win) {
 
 
   AeroPeek.windows.push(this);
-  let tabs = this.tabbrowser.mTabs;
+  let tabs = this.tabbrowser.tabs;
   for (let i = 0; i < tabs.length; i++)
     this.newTab(tabs[i]);
 
@@ -400,7 +400,7 @@ TabWindow.prototype = {
   destroy: function () {
     this._destroying = true;
 
-    let tabs = this.tabbrowser.mTabs;
+    let tabs = this.tabbrowser.tabs;
 
     for (let i = 0; i < this.events.length; i++)
       this.tabbrowser.tabContainer.removeEventListener(this.events[i], this, false);

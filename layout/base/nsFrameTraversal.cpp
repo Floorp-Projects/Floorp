@@ -514,8 +514,7 @@ nsFrameIterator::GetPlaceholderFrame(nsIFrame* aFrame)
   nsIFrame* result = aFrame;
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
-    nsIFrame* placeholder = 0;
-    presShell->GetPlaceholderFrameFor(aFrame, &placeholder);
+    nsIFrame* placeholder = presShell->GetPlaceholderFrameFor(aFrame);
     if (placeholder)
       result = placeholder;
   }

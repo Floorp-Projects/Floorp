@@ -39,19 +39,19 @@
 #include "nsIServiceManager.h"
 #import <Foundation/Foundation.h>
 
-NS_IMPL_ISUPPORTS1(nsIdleServiceX, nsIIdleService)
+NS_IMPL_ISUPPORTS2(nsIdleServiceX, nsIIdleService, nsIdleService)
 
-NS_IMETHODIMP
-nsIdleServiceX::GetIdleTime(PRUint32 *aTimeDiff)
+bool
+nsIdleServiceX::PollIdleTime(PRUint32 *aIdleTime)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   kern_return_t rval;
   mach_port_t masterPort;
 
   rval = IOMasterPort(kIOMasterPortDefault, &masterPort);
   if (rval != KERN_SUCCESS)
-    return NS_ERROR_FAILURE;
+    return false;
 
   io_iterator_t hidItr;
   rval = IOServiceGetMatchingServices(masterPort,
@@ -59,7 +59,7 @@ nsIdleServiceX::GetIdleTime(PRUint32 *aTimeDiff)
                                       &hidItr);
 
   if (rval != KERN_SUCCESS)
-    return NS_ERROR_FAILURE;
+    return false;
   NS_ASSERTION(hidItr, "Our iterator is null, but it ought not to be!");
 
   io_registry_entry_t entry = IOIteratorNext(hidItr);
@@ -72,7 +72,7 @@ nsIdleServiceX::GetIdleTime(PRUint32 *aTimeDiff)
                                            (CFMutableDictionaryRef*)&hidProps,
                                            kCFAllocatorDefault, 0);
   if (rval != KERN_SUCCESS)
-    return NS_ERROR_FAILURE;
+    return false;
   NS_ASSERTION(hidProps, "HIDProperties is null, but no error was returned.");
   [hidProps autorelease];
 
@@ -92,11 +92,18 @@ nsIdleServiceX::GetIdleTime(PRUint32 *aTimeDiff)
   // convert to ms from ns
   time /= 1000000;
   if (time > PR_UINT32_MAX) // Overflow will occur
-    return NS_ERROR_CANNOT_CONVERT_DATA;
+    return false;
 
-  *aTimeDiff = static_cast<PRUint32>(time);
+  *aIdleTime = static_cast<PRUint32>(time);
 
-  return NS_OK;
+  return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
+
+bool
+nsIdleServiceX::UsePollMode()
+{
+  return true;
+}
+

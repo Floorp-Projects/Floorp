@@ -184,7 +184,7 @@ public:
 
     virtual PRBool IsDocumentRightToLeft();
 
-    virtual void ResetDocumentDirection() { mDocDirection = Direction_Uninitialized; }
+    virtual void ResetDocumentDirection();
 
     virtual int GetDocumentLWTheme();
 
@@ -328,17 +328,6 @@ protected:
      */
 
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
-
-    /**
-     * document direction for use with the -moz-locale-dir property
-     */
-    enum DocumentDirection {
-      Direction_Uninitialized, // not determined yet
-      Direction_LeftToRight,
-      Direction_RightToLeft
-    };
-
-    DocumentDirection               mDocDirection;
 
     /**
      * document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext

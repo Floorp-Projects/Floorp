@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe5e070ce, 0xbc17, 0x4b5f, \
-    { 0xb2, 0x21, 0xbf, 0xc3, 0xe1, 0x68, 0xbe, 0x9b } }
+{ 0x94c34e88, 0x2da3, 0x49d4, \
+  { 0xa5, 0x35, 0x51, 0xa4, 0x16, 0x92, 0xa5, 0x79 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -182,11 +182,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_base, NS_IPRESSHELL_IID)
 class nsIPresShell : public nsIPresShell_base
 {
 public:
-  NS_IMETHOD Init(nsIDocument* aDocument,
-                  nsPresContext* aPresContext,
-                  nsIViewManager* aViewManager,
-                  nsStyleSet* aStyleSet,
-                  nsCompatibility aCompatMode) = 0;
+  virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
+                                   nsPresContext* aPresContext,
+                                   nsIViewManager* aViewManager,
+                                   nsStyleSet* aStyleSet,
+                                   nsCompatibility aCompatMode) = 0;
 
   /**
    * All callers are responsible for calling |Destroy| after calling
@@ -195,8 +195,8 @@ public:
    * content model and printing calls |EndObservingDocument| multiple
    * times to make form controls behave nicely when printed.
    */
-  NS_IMETHOD Destroy() = 0;
-  
+  virtual NS_HIDDEN_(void) Destroy() = 0;
+
   PRBool IsDestroying() { return mIsDestroying; }
 
   // All frames owned by the shell are allocated from an arena.  They
@@ -232,7 +232,7 @@ public:
   virtual void PushStackMemory() = 0;
   virtual void PopStackMemory() = 0;
   virtual void* AllocateStackMemory(size_t aSize) = 0;
-  
+
   nsIDocument* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() { return mPresContext; }
@@ -288,7 +288,7 @@ public:
    *
    * - initially created for bugs 31816, 20760, 22963
    */
-  NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow) = 0;
+  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(PRBool aForceReflow) = 0;
 
   /**
    * FrameSelection will return the Frame based selection API.
@@ -305,10 +305,10 @@ public:
 
   // Make shell be a document observer.  If called after Destroy() has
   // been called on the shell, this will be ignored.
-  NS_IMETHOD BeginObservingDocument() = 0;
+  virtual NS_HIDDEN_(void) BeginObservingDocument() = 0;
 
   // Make shell stop being a document observer
-  NS_IMETHOD EndObservingDocument() = 0;
+  virtual NS_HIDDEN_(void) EndObservingDocument() = 0;
 
   /**
    * Return whether InitialReflow() was previously called.
@@ -326,18 +326,18 @@ public:
    * is guaranteed to survive through arbitrary script execution.
    * Calling InitialReflow can execute arbitrary script.
    */
-  NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight) = 0;
+  virtual NS_HIDDEN_(nsresult) InitialReflow(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
+  virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Reflow the frame model with a reflow reason of eReflowReason_StyleChange
    */
-  NS_IMETHOD StyleChangeReflow() = 0;
+  virtual NS_HIDDEN_(void) StyleChangeReflow() = 0;
 
   /**
    * This calls through to the frame manager to get the root frame.
@@ -376,7 +376,7 @@ public:
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns NULL if not a paginated view.
    */
-  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const = 0;
+  virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const = 0;
 
   /**
    * Gets the real primary frame associated with the content object.
@@ -391,8 +391,7 @@ public:
    * Gets the placeholder frame associated with the specified frame. This is
    * a helper frame that forwards the request to the frame manager.
    */
-  NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
-                                    nsIFrame** aPlaceholderFrame) const = 0;
+  virtual NS_HIDDEN_(nsIFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame) const = 0;
 
   /**
    * Tell the pres shell that a frame needs to be marked dirty and needs
@@ -407,9 +406,9 @@ public:
     eTreeChange, // mark intrinsic widths dirty on aFrame and its ancestors
     eStyleChange // Do eTreeChange, plus all of aFrame's descendants
   };
-  NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame,
-                              IntrinsicDirty aIntrinsicDirty,
-                              nsFrameState aBitToAdd) = 0;
+  virtual NS_HIDDEN_(void) FrameNeedsReflow(nsIFrame *aFrame,
+                                            IntrinsicDirty aIntrinsicDirty,
+                                            nsFrameState aBitToAdd) = 0;
 
   /**
    * Tell the presshell that the given frame's reflow was interrupted.  This
@@ -422,9 +421,9 @@ public:
    * method doesn't mark any intrinsic widths dirty and doesn't add any bits
    * other than NS_FRAME_HAS_DIRTY_CHILDREN.
    */
-  NS_IMETHOD_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame) = 0;
+  virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame) = 0;
 
-  NS_IMETHOD CancelAllPendingReflows() = 0;
+  virtual NS_HIDDEN_(void) CancelAllPendingReflows() = 0;
 
   /**
    * Recreates the frames for a node
@@ -433,13 +432,13 @@ public:
 
   void PostRecreateFramesFor(nsIContent* aContent);
   void RestyleForAnimation(nsIContent* aContent);
-  
+
   /**
    * Determine if it is safe to flush all pending notifications
    * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
    * 
    */
-  NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush) = 0;
+  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() = 0;
 
   /**
    * Flush pending notifications of the type specified.  This method
@@ -450,7 +449,7 @@ public:
    *
    * @param aType the type of notifications to flush
    */
-  NS_IMETHOD FlushPendingNotifications(mozFlushType aType) = 0;
+  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType) = 0;
 
   /**
    * Callbacks will be called even if reflow itself fails for
@@ -579,25 +578,9 @@ public:
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
-   * Notify the Clipboard that we have something to copy.
-   */
-  NS_IMETHOD DoCopy() = 0;
-
-  /**
-   * Get the selection of the focussed element (either the page selection,
-   * or the selection for a text field).
-   */
-  NS_IMETHOD GetSelectionForCopy(nsISelection** outSelection) = 0;
-
-  /**
    * Get link location.
    */
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
-
-  /**
-   * Get the doc or the selection as text or html.
-   */
-  NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
@@ -627,21 +610,18 @@ public:
    * by the frames.  Visual effects may not effect layout, only display.
    * Takes effect on next repaint, does not force a repaint itself.
    *
-   * @param aEnabled  if PR_TRUE, visual selection effects are enabled
-   *                  if PR_FALSE visual selection effects are disabled
-   * @return  always NS_OK
+   * @param aInEnable  if PR_TRUE, visual selection effects are enabled
+   *                   if PR_FALSE visual selection effects are disabled
    */
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable) = 0;
 
   /** 
     * Gets the current state of non text selection effects
-    * @param aEnabled  [OUT] set to the current state of non text selection,
-    *                  as set by SetDisplayNonTextSelection
-    * @return   if aOutEnabled==null, returns NS_ERROR_INVALID_ARG
-    *           else NS_OK
+    * @return   current state of non text selection,
+    *           as set by SetDisplayNonTextSelection
     */
-  NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnabled) = 0;
-  
+  virtual NS_HIDDEN_(PRInt16) GetSelectionFlags() = 0;
+
   virtual nsISelection* GetCurrentSelection(SelectionType aType) = 0;
 
   /**

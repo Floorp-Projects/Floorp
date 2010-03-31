@@ -47,7 +47,7 @@ HOST_LIBRARY_NAME = host_breakpad_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
-ifeq ($(OS_ARCH),Darwin)
+ifeq (,$(filter-out Darwin Linux,$(OS_ARCH)))
 DIRS = dwarf
 endif
 

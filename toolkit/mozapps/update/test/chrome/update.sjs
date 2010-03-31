@@ -10,20 +10,52 @@ const SERVICE_URL = URL_HOST + URL_PATH + "empty.mar";
 
 
 function handleRequest(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "OK");
+  var params = { };
+  if (request.queryString)
+    params = parseQueryString(request.queryString);
+
+  var statusCode = params.statusCode ? parseInt(params.statusCode) : 200;
+  var statusReason = params.statusReason ? params.statusReason : "OK";
+  response.setStatusLine(request.httpVersion, statusCode, statusReason);
   response.setHeader("Cache-Control", "no-cache", false);
-  if (request.queryString.match(/^uiURL=/)) {
-    var uiURL = decodeURIComponent(request.queryString.substring(6));
+
+  // When a mar download is started by the update service it can finish
+  // downloading before the ui has loaded. By specifying a serviceURL for the
+  // update patch that points to this file and has a slowDownloadMar param the
+  // mar will be downloaded asynchronously which will allow the ui to load
+  // before the download completes.
+  if (params.slowDownloadMar) {
+    response.processAsync();
+    response.setHeader("Content-Length", "775");
+    var marFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
+                  getService(AUS_Ci.nsIProperties).
+                  get("CurWorkD", AUS_Ci.nsILocalFile);
+    var path = URL_PATH + "empty.mar";
+    var pathParts = path.split("/");
+    for(var i = 0; i < pathParts.length; ++i)
+      marFile.append(pathParts[i]);
+    var contents = readFileBytes(marFile);
+    var timer = AUS_Cc["@mozilla.org/timer;1"].
+                createInstance(AUS_Ci.nsITimer);
+    timer.initWithCallback(function() {
+      response.write(contents);
+      response.finish();
+    }, 2000, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
+    return;
+  }
+
+  if (params.uiURL) {
+    var remoteType = "";
+    if (!params.remoteNoTypeAttr &&
+        (params.uiURL == "BILLBOARD" || params.uiURL == "LICENSE"))
+      remoteType = " " + params.uiURL.toLowerCase() + "=\"1\"";
     response.write("<html><head><meta http-equiv=\"content-type\" content=" +
-                   "\"text/html; charset=utf-8\"></head><body>" + uiURL +
+                   "\"text/html; charset=utf-8\"></head><body" +
+                   remoteType + ">" + params.uiURL +
                    "<br><br>this is a test mar that will not affect your " +
                    "build.</body></html>");
     return;
   }
-
-  var params = { };
-  if (request.queryString)
-    params = parseQueryString(request.queryString);
 
   if (params.xmlMalformed) {
     response.write("xml error");
@@ -51,7 +83,15 @@ function handleRequest(request, response) {
 //  var detailsURL = params.showDetails ? URL_UPDATE + "?uiURL=DETAILS" : null;
   var detailsURL = URL_UPDATE + "?uiURL=DETAILS";
   var billboardURL = params.showBillboard ? URL_UPDATE + "?uiURL=BILLBOARD" : null;
+  if (billboardURL && params.remoteNoTypeAttr)
+    billboardURL += "&amp;remoteNoTypeAttr=1";
+  if (params.billboard404)
+    billboardURL = URL_HOST + URL_PATH + "missing.html"
   var licenseURL = params.showLicense ? URL_UPDATE + "?uiURL=LICENSE" : null;
+  if (licenseURL && params.remoteNoTypeAttr)
+    licenseURL += "&amp;remoteNoTypeAttr=1";
+  if (params.license404)
+    licenseURL = URL_HOST + URL_PATH + "missing.html"
   var showPrompt = params.showPrompt ? "true" : null;
   var showNever = params.showNever ? "true" : null;
   var showSurvey = params.showSurvey ? "true" : null;

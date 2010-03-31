@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Test update checking wizard billboard and license not found (bug 548061)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript" 
+        src="chrome://mochikit/content/MochiKit/packed.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/chrome/toolkit/mozapps/update/test/chrome/utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * test preparation
+ */
+function test01() {
+  ok(true, "Entering test01 - test preparation");
+
+  removeUpdateDirsAndFiles();
+  reloadUpdateManagerData();
+
+  var queryString = "?billboard404=1&license404=1&showDetails=1";
+  setUpdateURLOverride(URL_UPDATE + queryString);
+
+  gNextFunc = test02;
+  gPageId = PAGEID_CHECKING;
+  gUP.checkForUpdates();
+}
+
+/**
+ * updates checking page
+ */
+function test02() {
+  ok(true, "Entering test02 - updates checking page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_CHECKING,
+     "Page ID should be " + PAGEID_CHECKING);
+
+  gNextFunc = test03;
+  gPageId = PAGEID_FOUND_BASIC;
+  // This page will automatically go to the updates found basic page after the
+  // billboard without the billboard attribute loads.
+  addPageShowListener();
+}
+
+/**
+ * updates found basic page
+ */
+function test03() {
+  ok(true, "Entering test03 - updates found basic page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_FOUND_BASIC,
+     "Page ID should be " + PAGEID_FOUND_BASIC);
+
+  gNextFunc = test04;
+  gPageId = PAGEID_MANUAL_UPDATE;
+  addPageShowListener();
+  // go forward to the license page which will automatically go to the manual
+  // update page after the license without the license attribute loads.
+  gDocElem.getButton("next").click();
+}
+
+/**
+ * manual update page
+ */
+function test04(aEvent) {
+  ok(true, "Entering test04 - manual update page");
+
+  is(gDocElem.currentPage.pageid, PAGEID_MANUAL_UPDATE,
+     "Page ID should be " + PAGEID_MANUAL_UPDATE);
+
+  gNextFunc = finishTestDefault;
+  // exit by clicking the finish button
+  gDocElem.getButton("finish").click();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

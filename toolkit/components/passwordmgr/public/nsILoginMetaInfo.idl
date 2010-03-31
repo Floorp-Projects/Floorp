@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(867407d5-10e0-43a0-bc81-a324740534ca)]
+[scriptable, uuid(20d8eb40-c494-497f-b2a6-aaa32f807ebd)]
 
 /**
  * An object containing metainfo for a login stored by the login manager.
@@ -59,4 +59,27 @@ interface nsILoginMetaInfo : nsISupports {
      * addLogin and modifyLogin will throw if the GUID already exists.
      */
     attribute AString guid;
+
+    /**
+     * The time, in Unix Epoch milliseconds, when the login was first created.
+     */
+    attribute unsigned long long timeCreated;
+
+    /**
+     * The time, in Unix Epoch milliseconds, when the login was last submitted
+     * in a form or used to begin an HTTP auth session.
+     */
+    attribute unsigned long long timeLastUsed;
+
+    /**
+     * The time, in Unix Epoch milliseconds, when the login's password was
+     * last modified.
+     */
+    attribute unsigned long long timePasswordChanged;
+
+    /**
+     * The number of times the login was submitted in a form or used to begin
+     * an HTTP auth session.
+     */
+    attribute unsigned long timesUsed;
 };

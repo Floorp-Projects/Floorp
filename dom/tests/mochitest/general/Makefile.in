@@ -55,6 +55,7 @@ _TEST_FILES = \
 		test_offsets.js \
 		test_offsets.xul \
 		test_windowProperties.html \
+		test_clipboard_events.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

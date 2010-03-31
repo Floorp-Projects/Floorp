@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -61,18 +61,10 @@ class StackwalkerSPARC : public Stackwalker {
                    SourceLineResolverInterface *resolver);
 
  private:
-  // Implementation of Stackwalker, using x86 context (%ebp, %esp, %eip) and
-  // stack conventions (saved %ebp at [%ebp], saved %eip at 4[%ebp], or
-  // alternate conventions as guided by stack_frame_info_).
-  // Implementation of Stackwalker, using ppc context (stack pointer in %r1,
-  // saved program counter in %srr0) and stack conventions (saved stack
-  // pointer at 0(%r1), return address at 8(0(%r1)).
   // Implementation of Stackwalker, using sparc context (%fp, %sp, %pc) and
-  // stack conventions (saved %sp at)
+  // stack conventions
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(
-      const CallStack *stack,
-      const vector< linked_ptr<StackFrameInfo> > &stack_frame_info);
+  virtual StackFrame* GetCallerFrame(const CallStack *stack);
 
   // Stores the CPU context corresponding to the innermost stack frame to
   // be returned by GetContextFrame.

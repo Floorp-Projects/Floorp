@@ -1090,10 +1090,8 @@ js_CheckContentSecurityPolicy(JSContext *cx)
 
     // if there are callbacks, make sure that the CSP callback is installed and
     // that it permits eval().
-    if (callbacks) {
-        return callbacks->contentSecurityPolicyAllows &&
-               callbacks->contentSecurityPolicyAllows(cx);
-    }
+    if (callbacks && callbacks->contentSecurityPolicyAllows)
+        return callbacks->contentSecurityPolicyAllows(cx);
 
     return JS_TRUE;
 }
@@ -5990,11 +5988,13 @@ js_TypeOf(JSContext *cx, JSObject *obj)
 
 #ifdef NARCISSUS
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    jsval v;
 
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
         JS_ClearPendingException(cx);
-    } else if (VALUE_IS_FUNCTION(cx, v)) {
-        return JSTYPE_FUNCTION;
+    } else {
+        if (VALUE_IS_FUNCTION(cx, v))
+            return JSTYPE_FUNCTION;
     }
 #endif
 

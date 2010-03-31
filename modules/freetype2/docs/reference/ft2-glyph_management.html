@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Glyph Management
@@ -232,7 +232,7 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>You can typecast a <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> to <a href="ft2-glyph_management.html#FT_OutlineGlyph">FT_OutlineGlyph</a> if you have &lsquo;glyph-&gt;format == FT_GLYPH_FORMAT_OUTLINE&rsquo;. This lets you access the outline's content easily.</p>
+<p>You can typecast an <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> to <a href="ft2-glyph_management.html#FT_OutlineGlyph">FT_OutlineGlyph</a> if you have &lsquo;glyph-&gt;format == FT_GLYPH_FORMAT_OUTLINE&rsquo;. This lets you access the outline's content easily.</p>
 <p>As the outline is extracted from a glyph slot, its coordinates are expressed normally in 26.6 pixels, unless the flag <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a> was used in <a href="ft2-base_interface.html#FT_Load_Glyph">FT_Load_Glyph</a>() or <a href="ft2-base_interface.html#FT_Load_Char">FT_Load_Char</a>().</p>
 <p>The outline's tables are always owned by the object and are destroyed with it.</p>
 </td></tr></table>
@@ -255,7 +255,7 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>A function used to extract a glyph image from a slot.</p>
+<p>A function used to extract a glyph image from a slot. Note that the created <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> object must be released with <a href="ft2-glyph_management.html#FT_Done_Glyph">FT_Done_Glyph</a>.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>
@@ -550,7 +550,7 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
 <p></p>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>render_mode</b></td><td>
-<p>An enumeration that describe how the data is rendered.</p>
+<p>An enumeration that describes how the data is rendered.</p>
 </td></tr>
 <tr valign=top><td><b>origin</b></td><td>
 <p>A pointer to a vector used to translate the glyph image before rendering. Can be&nbsp;0 (if no translation). The origin is expressed in 26.6 pixels.</p>
@@ -564,8 +564,9 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
 <p>FreeType error code. 0&nbsp;means success.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>This function does nothing if the glyph format isn't scalable.</p>
 <p>The glyph image is translated with the &lsquo;origin&rsquo; vector before rendering.</p>
-<p>The first parameter is a pointer to an <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> handle, that will be replaced by this function. Typically, you would use (omitting error handling):</p>
+<p>The first parameter is a pointer to an <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> handle, that will be <i>replaced</i> by this function (with newly allocated data). Typically, you would use (omitting error handling):</p>
 <p></p>
 <pre class="colored">
   FT_Glyph        glyph;                                         
@@ -578,12 +579,12 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
   // extract glyph image                                         
   error = FT_Get_Glyph( face-&gt;glyph, &amp;glyph );                   
                                                                  
-  // convert to a bitmap (default render mode + destroy old)     
+  // convert to a bitmap (default render mode + destroying old)  
   if ( glyph-&gt;format != FT_GLYPH_FORMAT_BITMAP )                 
   {                                                              
-    error = FT_Glyph_To_Bitmap( &amp;glyph, FT_RENDER_MODE_DEFAULT,  
+    error = FT_Glyph_To_Bitmap( &amp;glyph, FT_RENDER_MODE_NORMAL,   
                                 0, 1 );                          
-    if ( error ) // glyph unchanged                              
+    if ( error ) // `glyph' unchanged                            
       ...                                                        
   }                                                              
                                                                  
@@ -597,7 +598,41 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
   FT_Done_Glyph( glyph );                                        
 </pre>
 <p></p>
-<p>This function does nothing if the glyph format isn't scalable.</p>
+<p>Here another example, again without error handling:</p>
+<p></p>
+<pre class="colored">
+  FT_Glyph  glyphs[MAX_GLYPHS]                                   
+                                                                 
+                                                                 
+  ...                                                            
+                                                                 
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
+    error = FT_Load_Glyph( face, idx, FT_LOAD_DEFAULT ) ||       
+            FT_Get_Glyph ( face-&gt;glyph, &amp;glyph[idx] );           
+                                                                 
+  ...                                                            
+                                                                 
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
+  {                                                              
+    FT_Glyph  bitmap = glyphs[idx];                              
+                                                                 
+                                                                 
+    ...                                                          
+                                                                 
+    // after this call, `bitmap' no longer points into           
+    // the `glyphs' array (and the old value isn't destroyed)    
+    FT_Glyph_To_Bitmap( &amp;bitmap, FT_RENDER_MODE_MONO, 0, 0 );    
+                                                                 
+    ...                                                          
+                                                                 
+    FT_Done_Glyph( bitmap );                                     
+  }                                                              
+                                                                 
+  ...                                                            
+                                                                 
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
+    FT_Done_Glyph( glyphs[idx] );                                
+</pre>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

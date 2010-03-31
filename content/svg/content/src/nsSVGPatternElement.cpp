@@ -83,7 +83,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGPatternElement)
                            nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
                            nsIDOMSVGURIReference, nsIDOMSVGPatternElement,
                            nsIDOMSVGUnitTypes)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPatternElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPatternElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 
 //----------------------------------------------------------------------

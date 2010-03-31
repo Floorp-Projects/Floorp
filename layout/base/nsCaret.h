@@ -44,13 +44,12 @@
 
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
-#include "nsIRenderingContext.h"
 #include "nsITimer.h"
 #include "nsWeakPtr.h"
 #include "nsFrameSelection.h"
 
+class nsIRenderingContext;
 class nsDisplayListBuilder;
-class nsIView;
 
 //-----------------------------------------------------------------------------
 class nsCaret : public nsISelectionListener
@@ -103,31 +102,18 @@ class nsCaret : public nsISelectionListener
     {
       return mReadOnly;
     }
-    /** GetCaretCoordinates
-     *  OBSOLETE use GetGeometry instead.
-     *  Get the position of the caret in coordinates relative to the typed
-     *  specified (aRelativeToType).
-     *  This function is virtual so that it can be used by nsCaretAccessible
-     *  without linking
-     *  @param outISCollapsed set to true if and only if selection is collapsed
-     *  @return Caret location if selection is collapsed, otherwise, location
-     *	    of focus position 
-     */
-    virtual nsresult    GetCaretCoordinates(EViewCoordinates aRelativeToType,
-                                      nsISelection *inDOMSel,
-                                      nsRect* outCoordinates,
-                                      PRBool* outIsCollapsed,
-                                      nsIView **outView);
 
     /**
-     * Replaces GetCaretCoordinates.
      * Gets the position and size of the caret that would be drawn for
      * the focus node/offset of aSelection (assuming it would be drawn,
      * i.e., disregarding blink status). The geometry is stored in aRect,
      * and we return the frame aRect is relative to.
+     * @param aRect must be non-null
+     * @param aBidiIndicatorSize if non-null, set to the bidi indicator size.
      */
     virtual nsIFrame* GetGeometry(nsISelection* aSelection,
-                                  nsRect* aRect);
+                                  nsRect* aRect,
+                                  nscoord* aBidiIndicatorSize = nsnull);
 
     /** EraseCaret
      *  this will erase the caret if its drawn and reset drawn status
@@ -162,17 +148,6 @@ class nsCaret : public nsISelectionListener
       nsRect r;
       r.UnionRect(mCaretRect, GetHookRect());
       return r;
-    }
-
-    /** GetCaretContent
-     *  Get the content that the caret was last drawn in.
-     */
-    nsIContent*   GetCaretContent()
-    {
-      if (mDrawn)
-        return mLastContent;
-
-      return nsnull;
     }
 
     /** InvalidateOutsideCaret
@@ -229,11 +204,6 @@ protected:
     void          StartBlinking();
     void          StopBlinking();
     
-    void          GetViewForRendering(nsIFrame *caretFrame,
-                                      EViewCoordinates coordType,
-                                      nsPoint &viewOffset,
-                                      nsIView **outRenderingView,
-                                      nsIView **outRelativeView);
     PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
                                          nsFrameSelection::HINT aFrameHint,
@@ -245,6 +215,10 @@ protected:
       nscoord mCaretWidth;        // full caret width including bidi indicator
     };
     Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset, nscoord aCaretHeight);
+    void GetGeometryForFrame(nsIFrame* aFrame,
+                             PRInt32   aFrameOffset,
+                             nsRect*   aRect,
+                             nscoord*  aBidiIndicatorSize);
 
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
@@ -255,9 +229,7 @@ protected:
 
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
-    nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    nsresult      UpdateHookRect(nsPresContext* aPresContext,
-                                 const Metrics& aMetrics);
+    PRBool        UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
@@ -287,8 +259,7 @@ protected:
     nsWeakPtr             mPresShell;
     nsWeakPtr             mDomSelectionWeak;
 
-    nsCOMPtr<nsITimer>              mBlinkTimer;
-    nsCOMPtr<nsIRenderingContext>   mRendContext;
+    nsCOMPtr<nsITimer>    mBlinkTimer;
 
     // XXX these fields should go away and the values be acquired as needed,
     // probably by ComputeMetrics.

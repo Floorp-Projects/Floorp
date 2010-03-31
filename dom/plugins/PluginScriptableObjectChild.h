@@ -48,6 +48,7 @@ namespace plugins {
 
 class PluginInstanceChild;
 class PluginScriptableObjectChild;
+class PPluginIdentifierChild;
 
 struct ChildNPObject : NPObject
 {
@@ -87,11 +88,11 @@ public:
   AnswerInvalidate();
 
   virtual bool
-  AnswerHasMethod(const NPRemoteIdentifier& aId,
+  AnswerHasMethod(PPluginIdentifierChild* aId,
                   bool* aHasMethod);
 
   virtual bool
-  AnswerInvoke(const NPRemoteIdentifier& aId,
+  AnswerInvoke(PPluginIdentifierChild* aId,
                const nsTArray<Variant>& aArgs,
                Variant* aResult,
                bool* aSuccess);
@@ -102,25 +103,25 @@ public:
                       bool* aSuccess);
 
   virtual bool
-  AnswerHasProperty(const NPRemoteIdentifier& aId,
+  AnswerHasProperty(PPluginIdentifierChild* aId,
                     bool* aHasProperty);
 
   virtual bool
-  AnswerGetProperty(const NPRemoteIdentifier& aId,
+  AnswerGetProperty(PPluginIdentifierChild* aId,
                     Variant* aResult,
                     bool* aSuccess);
 
   virtual bool
-  AnswerSetProperty(const NPRemoteIdentifier& aId,
+  AnswerSetProperty(PPluginIdentifierChild* aId,
                     const Variant& aValue,
                     bool* aSuccess);
 
   virtual bool
-  AnswerRemoveProperty(const NPRemoteIdentifier& aId,
+  AnswerRemoveProperty(PPluginIdentifierChild* aId,
                        bool* aSuccess);
 
   virtual bool
-  AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
+  AnswerEnumerate(nsTArray<PPluginIdentifierChild*>* aProperties,
                   bool* aSuccess);
 
   virtual bool

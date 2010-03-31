@@ -75,6 +75,10 @@ CPPSRCS = \
   mozStoragePrivateHelpers.cpp \
   mozStorageBindingParamsArray.cpp \
   mozStorageBindingParams.cpp \
+  mozStorageAsyncStatement.cpp \
+  mozStorageAsyncStatementJSHelper.cpp \
+  mozStorageAsyncStatementParams.cpp \
+  StorageBaseStatementInternal.cpp \
   SQLCollations.cpp \
   $(NULL)
 

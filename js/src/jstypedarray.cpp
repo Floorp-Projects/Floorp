@@ -16,7 +16,7 @@
  * The Original Code is Mozilla WebGL impl
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corp
+ *   Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *

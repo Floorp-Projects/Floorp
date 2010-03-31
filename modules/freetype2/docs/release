@@ -15,10 +15,14 @@ How to prepare a new release
 
 . docs/VERSION.DLL: Document changed `version_info'.
 
-. ChangeLog: Announce  new release  (both in  freetype2  and  ft2demos
-  modules).
+. ChangeLog:   Announce  new  release   (both  in  the  freetype2  and
+  freetype2-demos modules).
 
-. Copy the CVS archive to another directory and run
+. Clone the git archive to another directory with
+
+    git clone -l -s . ../freetype2.test
+
+  or something like this and run
 
     make distclean; make devel; make
     make distclean; make devel; make multi
@@ -29,16 +33,26 @@ How to prepare a new release
     make distclean; ./configure; make
     make distclean; ./configure CC=g++; make
 
-  to test compilation with both gcc and g++.
+  in the cloned repository to test compilation with both gcc and g++.
 
-. Test C++ compilation for ft2demos too.
+. Test C++ compilation  for freetype2-demos too  (using `git clone' as
+  above).
 
-. Tag the CVS (freetype2, ft2demos).
+. Run  src/tools/chktrcmp.py  and check  that there  are no  undefined
+  trace_XXXX macros.
+
+. Tag the git repositories (freetype2, freetype2-demos) with
+
+    git tag VER-<version> -m "" -u <committer>
+
+  and push the tags with
+
+    git push --tags
 
   TODO: Tag the home page CVS on savannah.nongnu.org.
 
-. Say `make  dist'  in both  the  freetype2 and  ft2demos  modules  to
-  generate the .tar.gz, .tar.bz2, and .zip files.
+. Say `make  dist' in both the  freetype2 and freetype2-demos  modules
+  to generate the .tar.gz, .tar.bz2, and .zip files.
 
 . Create     the     doc    bundles    (freetype-doc-<version>.tar.gz,
   freetype-doc-<version>.tar.bz2,    ftdoc<version>.zip).    This   is
@@ -56,7 +70,7 @@ How to prepare a new release
 
     #!/bin/sh
 
-    VERSION=2.3.7
+    VERSION=2.3.11
     SAVANNAH_USER=wl
     SOURCEFORGE_USER=wlemb
 
@@ -66,22 +80,19 @@ How to prepare a new release
 
     version=`echo $VERSION | sed "s/\\.//g"`
 
-    UNIX_PACKAGES="freetype ft2demos freetype-doc"
-    WINDOWS_PACKAGES="ft ftdmo ftdoc"
-    UNIX_ZIP="tar.gz tar.bz2"
-    WINDOWS_ZIP="zip"
+    FREETYPE_PACKAGES="freetype-$VERSION.tar.gz \
+                       freetype-$VERSION.tar.bz2 \
+                       ft$version.zip"
+    FT2DEMOS_PACKAGES="ft2demos-$VERSION.tar.gz \
+                       ft2demos-$VERSION.tar.bz2 \
+                       ftdmo$version.zip"
+    FTDOC_PACKAGES="freetype-doc-$VERSION.tar.gz \
+                    freetype-doc-$VERSION.tar.bz2 \
+                    ftdoc$version.zip"
 
-    PACKAGE_LIST=
-    for i in $UNIX_PACKAGES; do
-      for j in $UNIX_ZIP; do
-        PACKAGE_LIST="$PACKAGE_LIST $i-$VERSION.$j"
-      done
-    done
-    for i in $WINDOWS_PACKAGES; do
-      for j in $WINDOWS_ZIP; do
-        PACKAGE_LIST="$PACKAGE_LIST $i$version.$j"
-      done
-    done
+    PACKAGE_LIST="$FREETYPE_PACKAGES \
+                  $FT2DEMOS_PACKAGES \
+                  $FTDOC_PACKAGES"
 
     set -e
     unset passphrase
@@ -107,16 +118,34 @@ How to prepare a new release
       echo $passphrase | $GPG --passphrase-fd 0 -ba -o $f.sig $f
     done
 
-    SIGNATURE_LIST=
-    for i in $PACKAGE_LIST; do
-      SIGNATURE_LIST="$SIGNATURE_LIST $i.sig"
+    FREETYPE_SIGNATURES=
+    for i in $FREETYPE_PACKAGES; do
+      FREETYPE_SIGNATURES="$FREETYPE_SIGNATURES $i.sig"
     done
+
+    FT2DEMOS_SIGNATURES=
+    for i in $FT2DEMOS_PACKAGES; do
+      FT2DEMOS_SIGNATURES="$FT2DEMOS_SIGNATURES $i.sig"
+    done
+
+    FTDOC_SIGNATURES=
+    for i in $FTDOC_PACKAGES; do
+      FTDOC_SIGNATURES="$FTDOC_SIGNATURES $i.sig"
+    done
+
+    SIGNATURE_LIST="$FREETYPE_SIGNATURES \
+                    $FT2DEMOS_SIGNATURES \
+                    $FTDOC_SIGNATURES"
 
     scp $PACKAGE_LIST $SIGNATURE_LIST \
       $SAVANNAH_USER@dl.sv.nongnu.org:/releases/freetype/
 
-    rsync -avP -e ssh $PACKAGE_LIST $SIGNATURE_LIST \
-      $SOURCEFORGE_USER@frs.sf.net:uploads/
+    rsync -avP -e ssh $FREETYPE_PACKAGES $FREETYPE_SIGNATURES \
+      $SOURCEFORGE_USER,freetype@frs.sf.net:/home/frs/project/f/fr/freetype/freetype2/$VERSION/
+    rsync -avP -e ssh $FT2DEMOS_PACKAGES $FT2DEMOS_SIGNATURES \
+      $SOURCEFORGE_USER,freetype@frs.sf.net:/home/frs/project/f/fr/freetype/freetype-demos/$VERSION/
+    rsync -avP -e ssh $FTDOC_PACKAGES $FTDOC_SIGNATURES \
+      $SOURCEFORGE_USER,freetype@frs.sf.net:/home/frs/project/f/fr/freetype/freetype-docs/$VERSION/
 
     # EOF
 
@@ -153,7 +182,7 @@ How to prepare a new release
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005, 2006, 2007 by
+Copyright 2003, 2005, 2006, 2007, 2009 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

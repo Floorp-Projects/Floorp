@@ -121,7 +121,7 @@ typedef struct {
 
     cairo_bool_t supports_porter_duff;
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     /* temporary, so that we can share the xlib surface's glyphs code */
     bool xlib_has_clipping;
     cairo_surface_t *xlib_equiv;
@@ -438,7 +438,7 @@ _cairo_qpainter_surface_finish (void *abstract_surface)
     if (qs->image_equiv)
         cairo_surface_destroy ((cairo_surface_t*) qs->image_equiv);
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     if (qs->xlib_equiv)
         cairo_surface_destroy (qs->xlib_equiv);
 #endif
@@ -1365,7 +1365,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
     Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     /* If we have an equivalent X surface, let the xlib surface handle this
      * until we figure out how to do this natively with Qt.
      */
@@ -1587,7 +1587,7 @@ static const cairo_surface_backend_t cairo_qpainter_surface_backend = {
     NULL, /* show_text_glyphs */
 };
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
 void
 _cairo_qpainter_create_xlib_surface (cairo_qpainter_surface_t *qs)
 {
@@ -1661,7 +1661,7 @@ cairo_qpainter_surface_create (QPainter *painter)
 
     qs->window = painter->window();
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     _cairo_qpainter_create_xlib_surface (qs);
 #endif
 
@@ -1748,7 +1748,7 @@ cairo_qpainter_surface_create_with_qpixmap (cairo_content_t content,
 
     qs->window = QRect(0, 0, width, height);
 
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+#if defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     _cairo_qpainter_create_xlib_surface (qs);
 #endif
 

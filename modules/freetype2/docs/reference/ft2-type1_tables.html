@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Type 1 Tables
@@ -509,8 +509,8 @@ Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).
 <p>FreeType error code. 0&nbsp;means success.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>The string pointers within the font info structure are owned by the face and don't need to be freed by the caller.</p>
-<p>If the font's format is not PostScript-based, this function will return the &lsquo;FT_Err_Invalid_Argument&rsquo; error code.</p>
+<p>The string pointers within the <a href="ft2-type1_tables.html#PS_PrivateRec">PS_PrivateRec</a> structure are owned by the face and don't need to be freed by the caller.</p>
+<p>If the font's format is not PostScript-based, this function returns the &lsquo;FT_Err_Invalid_Argument&rsquo; error code.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

@@ -263,16 +263,14 @@ protected:
   {
     nsIFrame* prevCont = aFrame->GetPrevContinuation();
     if (!prevCont && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
-      nsIFrame* block =
-        static_cast<nsIFrame*>
-                   (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+      nsIFrame* block = static_cast<nsIFrame*>
+        (aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
       if (block) {
         // The {ib} properties are only stored on first continuations
         NS_ASSERTION(!block->GetPrevContinuation(),
                      "Incorrect value for IBSplitSpecialPrevSibling");
-        prevCont =
-          static_cast<nsIFrame*>
-                     (block->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+        prevCont = static_cast<nsIFrame*>
+          (block->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
         NS_ASSERTION(prevCont, "How did that happen?");
       }
     }
@@ -285,13 +283,11 @@ protected:
     if (!nextCont && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       // The {ib} properties are only stored on first continuations
       aFrame = aFrame->GetFirstContinuation();
-      nsIFrame* block =
-        static_cast<nsIFrame*>
-                   (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+      nsIFrame* block = static_cast<nsIFrame*>
+        (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
       if (block) {
-        nextCont =
-          static_cast<nsIFrame*>
-                     (block->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+        nextCont = static_cast<nsIFrame*>
+          (block->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
         NS_ASSERTION(nextCont, "How did that happen?");
       }
     }
@@ -675,7 +671,7 @@ static nsRect
 GetOutlineInnerRect(nsIFrame* aFrame)
 {
   nsRect* savedOutlineInnerRect = static_cast<nsRect*>
-    (aFrame->GetProperty(nsGkAtoms::outlineInnerRectProperty));
+    (aFrame->Properties().Get(nsIFrame::OutlineInnerRectProperty()));
   if (savedOutlineInnerRect)
     return *savedOutlineInnerRect;
   return aFrame->GetOverflowRect();
@@ -3660,6 +3656,8 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
   }
 }
 
+#define MAX_BLUR_RADIUS 300
+
 // -----
 // nsContextBoxBlur
 // -----
@@ -3675,6 +3673,7 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
   }
 
   PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
+  blurRadius = PR_MIN(blurRadius, MAX_BLUR_RADIUS);
   mDestinationCtx = aDestinationCtx;
 
   // If not blurring, draw directly onto the destination device
@@ -3685,7 +3684,6 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
 
   // Convert from app units to device pixels
   gfxRect rect = RectToGfxRect(aRect, aAppUnitsPerDevPixel);
-  rect.RoundOut();
 
   gfxRect dirtyRect = RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();

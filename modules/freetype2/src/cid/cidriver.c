@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,7 +20,6 @@
 #include "cidriver.h"
 #include "cidgload.h"
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
 
 #include "ciderrs.h"
 
@@ -74,13 +73,23 @@
                         PS_FontInfoRec*  afont_info )
   {
     *afont_info = ((CID_Face)face)->cid.font_info;
-    return 0;
+
+    return CID_Err_Ok;
   }
 
+  static FT_Error
+  cid_ps_get_font_extra( FT_Face          face,
+                        PS_FontExtraRec*  afont_extra )
+  {
+    *afont_extra = ((CID_Face)face)->font_extra;
+
+    return CID_Err_Ok;
+  }
 
   static const FT_Service_PsInfoRec  cid_service_ps_info =
   {
     (PS_GetFontInfoFunc)   cid_ps_get_font_info,
+    (PS_GetFontExtraFunc)  cid_ps_get_font_extra,
     (PS_HasGlyphNamesFunc) NULL,        /* unsupported with CID fonts */
     (PS_GetFontPrivateFunc)NULL         /* unsupported                */
   };
@@ -112,9 +121,42 @@
   }
 
 
+  static FT_Error
+  cid_get_is_cid( CID_Face  face,
+                  FT_Bool  *is_cid )
+  {
+    FT_Error  error = CID_Err_Ok;
+    FT_UNUSED( face );
+
+
+    if ( is_cid )
+      *is_cid = 1; /* cid driver is only used for CID keyed fonts */
+
+    return error;
+  }
+
+
+  static FT_Error
+  cid_get_cid_from_glyph_index( CID_Face  face,
+                                FT_UInt   glyph_index,
+                                FT_UInt  *cid )
+  {
+    FT_Error  error = CID_Err_Ok;
+    FT_UNUSED( face );
+
+
+    if ( cid )
+      *cid = glyph_index; /* identity mapping */
+
+    return error;
+  }
+
+
   static const FT_Service_CIDRec  cid_service_cid_info =
   {
-    (FT_CID_GetRegistryOrderingSupplementFunc)cid_get_ros
+     (FT_CID_GetRegistryOrderingSupplementFunc)cid_get_ros,
+     (FT_CID_GetIsInternallyCIDKeyedFunc)      cid_get_is_cid,
+     (FT_CID_GetCIDFromGlyphIndexFunc)         cid_get_cid_from_glyph_index
   };
 
 

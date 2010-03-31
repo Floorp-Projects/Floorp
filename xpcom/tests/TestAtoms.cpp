@@ -186,12 +186,12 @@ isStaticAtom(nsIAtom* atom)
   // Don't use logic && in order to ensure that all addrefs/releases are always
   // run, even if one of the tests fail. This allows us to run this code on a
   // non-static atom without affecting its refcount.
-  return atom->AddRef() == 2 &
-         atom->AddRef() == 2 &
-         atom->AddRef() == 2 &
-         atom->Release() == 1 &
-         atom->Release() == 1 &
-         atom->Release() == 1;
+  return (atom->AddRef() == 2) &
+         (atom->AddRef() == 2) &
+         (atom->AddRef() == 2) &
+         (atom->Release() == 1) &
+         (atom->Release() == 1) &
+         (atom->Release() == 1);
 }
 
 PRBool

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2010 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -46,6 +46,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsAHtml5EncodingDeclarationHandler.h"
 
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
@@ -2349,46 +2350,70 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               reconsume = PR_TRUE;
               goto stateloop;
             }
-            entCol = -1;
-            lo = 0;
-            hi = (nsHtml5NamedCharacters::NAMES.length - 1);
-            candidate = -1;
-            strBufMark = 0;
-            state = NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP;
-            reconsume = PR_TRUE;
+            if (c >= 'a' && c <= 'z') {
+              firstCharKey = c - 'a' + 26;
+            } else if (c >= 'A' && c <= 'Z') {
+              firstCharKey = c - 'A';
+            } else {
+
+              emitOrAppendStrBuf(returnState);
+              if (!(returnState & (~1))) {
+                cstart = pos;
+              }
+              state = returnState;
+              reconsume = PR_TRUE;
+              goto stateloop;
+            }
+            appendStrBuf(c);
+            state = NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP;
           }
         }
       }
-      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP: {
-        for (; ; ) {
-          if (reconsume) {
-            reconsume = PR_FALSE;
-          } else {
-            if (++pos == endPos) {
-              goto stateloop_end;
-            }
-            c = checkChar(buf, pos);
+      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP: {
+        {
+          if (++pos == endPos) {
+            goto stateloop_end;
           }
+          c = checkChar(buf, pos);
+          if (c == '\0') {
+            goto stateloop_end;
+          }
+          PRInt32 hilo = 0;
+          if (c <= 'z') {
+            const PRInt32* row = nsHtml5NamedCharacters::HILO_ACCEL[c];
+            if (!!row) {
+              hilo = row[firstCharKey];
+            }
+          }
+          if (!hilo) {
+
+            emitOrAppendStrBuf(returnState);
+            if (!(returnState & (~1))) {
+              cstart = pos;
+            }
+            state = returnState;
+            reconsume = PR_TRUE;
+            goto stateloop;
+          }
+          appendStrBuf(c);
+          lo = hilo & 0xFFFF;
+          hi = hilo >> 16;
+          entCol = -1;
+          candidate = -1;
+          strBufMark = 0;
+          state = NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL;
+        }
+      }
+      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
           if (c == '\0') {
             goto stateloop_end;
           }
           entCol++;
-          for (; ; ) {
-            if (hi == -1) {
-              goto hiloop_end;
-            }
-            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
-              goto hiloop_end;
-            }
-            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
-              goto outer_end;
-            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
-              hi--;
-            } else {
-              goto hiloop_end;
-            }
-          }
-          hiloop_end: ;
           for (; ; ) {
             if (hi < lo) {
               goto outer_end;
@@ -2406,6 +2431,22 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
           }
           loloop_end: ;
+          for (; ; ) {
+            if (hi < lo) {
+              goto outer_end;
+            }
+            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
+              goto hiloop_end;
+            }
+            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
+              goto outer_end;
+            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
+              hi--;
+            } else {
+              goto hiloop_end;
+            }
+          }
+          hiloop_end: ;
           if (hi < lo) {
             goto outer_end;
           }
@@ -2423,8 +2464,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           reconsume = PR_TRUE;
           goto stateloop;
         } else {
-          jArray<PRUnichar,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (candidateArr[candidateArr.length - 1] != ';') {
+          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
             if ((returnState & (~1))) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
@@ -2446,8 +2487,12 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
 
             }
           }
-          jArray<PRUnichar,PRInt32> val = nsHtml5NamedCharacters::VALUES[candidate];
-          emitOrAppend(val, returnState);
+          const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
+          if ((val[0] & 0xFC00) == 0xD800) {
+            emitOrAppendTwo(val, returnState);
+          } else {
+            emitOrAppendOne(val, returnState);
+          }
           if (strBufMark < strBufLen) {
             if ((returnState & (~1))) {
               for (PRInt32 i = strBufMark; i < strBufLen; i++) {
@@ -3417,9 +3462,6 @@ nsHtml5Tokenizer::handleNcrValue(PRInt32 returnState)
 
       PRUnichar* val = nsHtml5NamedCharacters::WINDOWS_1252[value - 0x80];
       emitOrAppendOne(val, returnState);
-    } else if (value == 0x0D) {
-
-      emitOrAppendOne(nsHtml5Tokenizer::LF, returnState);
     } else if (value == 0x0) {
 
       emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
@@ -3434,7 +3476,7 @@ nsHtml5Tokenizer::handleNcrValue(PRInt32 returnState)
   } else if (value <= 0x10FFFF) {
     astralChar[0] = (PRUnichar) (NS_HTML5TOKENIZER_LEAD_OFFSET + (value >> 10));
     astralChar[1] = (PRUnichar) (0xDC00 + (value & 0x3FF));
-    emitOrAppend(astralChar, returnState);
+    emitOrAppendTwo(astralChar, returnState);
   } else {
 
     emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
@@ -3625,7 +3667,13 @@ nsHtml5Tokenizer::eof()
         state = returnState;
         continue;
       }
-      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP: {
+      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP: {
+
+        emitOrAppendStrBuf(returnState);
+        state = returnState;
+        continue;
+      }
+      case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL: {
         for (; ; ) {
           PRUnichar c = '\0';
           entCol++;
@@ -3674,8 +3722,8 @@ nsHtml5Tokenizer::eof()
           state = returnState;
           goto eofloop;
         } else {
-          jArray<PRUnichar,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (candidateArr[candidateArr.length - 1] != ';') {
+          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
             if ((returnState & (~1))) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
@@ -3696,8 +3744,12 @@ nsHtml5Tokenizer::eof()
 
             }
           }
-          jArray<PRUnichar,PRInt32> val = nsHtml5NamedCharacters::VALUES[candidate];
-          emitOrAppend(val, returnState);
+          const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
+          if ((val[0] & 0xFC00) == 0xD800) {
+            emitOrAppendTwo(val, returnState);
+          } else {
+            emitOrAppendOne(val, returnState);
+          }
           if (strBufMark < strBufLen) {
             if ((returnState & (~1))) {
               for (PRInt32 i = strBufMark; i < strBufLen; i++) {
@@ -3759,17 +3811,18 @@ nsHtml5Tokenizer::internalEncodingDeclaration(nsString* internalCharset)
 }
 
 void 
-nsHtml5Tokenizer::emitOrAppend(jArray<PRUnichar,PRInt32> val, PRInt32 returnState)
+nsHtml5Tokenizer::emitOrAppendTwo(const PRUnichar* val, PRInt32 returnState)
 {
   if ((returnState & (~1))) {
-    appendLongStrBuf(val);
+    appendLongStrBuf(val[0]);
+    appendLongStrBuf(val[1]);
   } else {
-    tokenHandler->characters(val, 0, val.length);
+    tokenHandler->characters(val, 0, 2);
   }
 }
 
 void 
-nsHtml5Tokenizer::emitOrAppendOne(PRUnichar* val, PRInt32 returnState)
+nsHtml5Tokenizer::emitOrAppendOne(const PRUnichar* val, PRInt32 returnState)
 {
   if ((returnState & (~1))) {
     appendLongStrBuf(val[0]);
@@ -3864,6 +3917,7 @@ nsHtml5Tokenizer::resetToDataState()
   forceQuirks = PR_FALSE;
   additional = '\0';
   entCol = -1;
+  firstCharKey = -1;
   lo = 0;
   hi = (nsHtml5NamedCharacters::NAMES.length - 1);
   candidate = -1;
@@ -3912,6 +3966,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   forceQuirks = other->forceQuirks;
   additional = other->additional;
   entCol = other->entCol;
+  firstCharKey = other->firstCharKey;
   lo = other->lo;
   hi = other->hi;
   candidate = other->candidate;
@@ -3976,7 +4031,7 @@ nsHtml5Tokenizer::initializeWithoutStarting()
 }
 
 void 
-nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler)
+nsHtml5Tokenizer::setEncodingDeclarationHandler(nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler)
 {
   this->encodingDeclarationHandler = encodingDeclarationHandler;
 }

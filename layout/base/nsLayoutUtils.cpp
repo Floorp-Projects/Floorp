@@ -89,6 +89,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
+#include "ImageLayers.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -96,6 +97,12 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #endif
+
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
+
+using namespace mozilla::layers;
 
 /**
  * A namespace class for static layout utilities.
@@ -776,6 +783,28 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
   return widgetToView - aFrame->GetOffsetTo(rootFrame);
 }
 
+nsIFrame*
+nsLayoutUtils::GetPopupFrameForEventCoordinates(const nsEvent* aEvent)
+{
+#ifdef MOZ_XUL
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (!pm) {
+    return nsnull;
+  }
+  nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
+  PRUint32 i;
+  // Search from top to bottom
+  for (i = 0; i < popups.Length(); i++) {
+    nsIFrame* popup = popups[i];
+    if (popup->GetOverflowRect().Contains(
+          GetEventCoordinatesRelativeTo(aEvent, popup))) {
+      return popup;
+    }
+  }
+#endif
+  return nsnull;
+}
+
 gfxMatrix
 nsLayoutUtils::ChangeMatrixBasis(const gfxPoint &aOrigin,
                                  const gfxMatrix &aMatrix)
@@ -890,6 +919,15 @@ nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
 
   /* Otherwise, invert the CTM and use it to transform the point. */
   return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
+}
+
+nsresult
+nsLayoutUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
+{
+  *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
+                    PRInt32(aIn.Width()), PRInt32(aIn.Height()));
+  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height) == aIn
+    ? NS_OK : NS_ERROR_FAILURE;
 }
 
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
@@ -1191,6 +1229,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
+    nsIWidget *widget = aFrame->GetWindow();
+    PRInt32 pixelRatio = widget->GetDeviceContext()->AppUnitsPerDevPixel();
+    nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
+    nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
+
+    widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
   }
   list.Paint(&builder, aRenderingContext, flags);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
@@ -1784,7 +1828,7 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
     // frame in the continuation chain. Walk back to find that frame now.
     aFrame = aFrame->GetFirstContinuation();
 
-    void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+    void* value = aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling());
     return static_cast<nsIFrame*>(value);
   }
 
@@ -1798,7 +1842,7 @@ nsLayoutUtils::GetFirstContinuationOrSpecialSibling(nsIFrame *aFrame)
   if (result->GetStateBits() & NS_FRAME_IS_SPECIAL) {
     while (PR_TRUE) {
       nsIFrame *f = static_cast<nsIFrame*>
-        (result->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+        (result->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
       if (!f)
         break;
       result = f;
@@ -3200,9 +3244,11 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  nsTransparencyMode transparency;
+  nsITheme::Transparency transparency;
   if (aCSSRootFrame->IsThemed(&transparency))
-    return transparency;
+    return transparency == nsITheme::eTransparent
+         ? eTransparencyTransparent
+         : eTransparencyOpaque;
 
   if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
@@ -3427,26 +3473,31 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     if (!principal)
       return result;
 
-    PRUint32 w, h;
-    rv = video->GetVideoWidth(&w);
-    rv |= video->GetVideoHeight(&h);
-    if (NS_FAILED(rv))
+    ImageContainer *container = video->GetImageContainer();
+    if (!container)
       return result;
 
-    nsRefPtr<gfxASurface> surf;
-    if (wantImageSurface) {
-      surf = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
-    } else {
-      surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+    gfxIntSize size;
+    nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
+    if (!surf)
+      return result;
+
+    if (wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage) {
+      nsRefPtr<gfxImageSurface> imgSurf =
+        new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+      if (!imgSurf)
+        return result;
+
+      nsRefPtr<gfxContext> ctx = new gfxContext(imgSurf);
+      if (!ctx)
+        return result;
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->DrawSurface(surf, size);
+      surf = imgSurf;
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    video->Paint(ctx, gfxPattern::FILTER_NEAREST, gfxRect(0, 0, w, h));
-
     result.mSurface = surf;
-    result.mSize = gfxIntSize(w, h);
+    result.mSize = size;
     result.mPrincipal = principal;
     result.mIsWriteOnly = PR_FALSE;
 
