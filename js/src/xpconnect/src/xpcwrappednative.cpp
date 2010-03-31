@@ -1456,8 +1456,11 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     {
         flat = cache->GetWrapper();
         if(flat && !IS_SLIM_WRAPPER_OBJECT(flat))
+        {
             wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
-        
+            NS_ASSERTION(wrapper->GetScope() == aOldScope,
+                         "Incorrect scope passed");
+        }
     }
     else
     {
@@ -1601,10 +1604,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
     // Now we can just fix up the parent and return the wrapper
 
-    if(!JS_SetParent(ccx, flat, aNewParent))
-    {
+    if(aNewParent && !JS_SetParent(ccx, flat, aNewParent))
         return NS_ERROR_FAILURE;
-    }
 
     *aWrapper = nsnull;
     wrapper.swap(*aWrapper);
