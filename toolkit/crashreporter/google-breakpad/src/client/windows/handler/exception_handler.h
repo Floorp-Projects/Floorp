@@ -192,7 +192,11 @@ class ExceptionHandler {
 
   // Write a minidump of |child| immediately.  This can be used to
   // capture the execution state of |child| independently of a crash.
+  // Pass a meaningful |child_blamed_thread| to make that thread in
+  // the child process the one from which a crash signature is
+  // extracted.
   static bool WriteMinidumpForChild(HANDLE child,
+                                    DWORD child_blamed_thread,
                                     const wstring &dump_path,
                                     MinidumpCallback callback,
                                     void *callback_context);
