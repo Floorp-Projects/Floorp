@@ -788,15 +788,12 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
     return NS_OK;
   }
 
-  nsRefPtr<nsCaret> caret;
-  nsresult result = mShell->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(result))
-    return result;
+  nsRefPtr<nsCaret> caret = mShell->GetCaret();
   if (!caret)
     return NS_ERROR_NULL_POINTER;
 
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  result = caret->SetCaretDOMSelection(mDomSelections[index]);
+  nsresult result = caret->SetCaretDOMSelection(mDomSelections[index]);
   if (NS_FAILED(result))
     return result;
 
@@ -2086,7 +2083,6 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
   // expected behavior for PageMove is to scroll AND move the caret
   // and remain relative position of the caret in view. see Bug 4302.
 
-  nsresult result;
   //get the frame from the scrollable view
 
   nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
@@ -2098,12 +2094,9 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
   nsISelection* domSel = GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (!domSel) 
     return;
-  
-  nsRefPtr<nsCaret> caret;
-  result = mShell->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(result)) 
-    return;
-  
+
+  nsRefPtr<nsCaret> caret = mShell->GetCaret();
+
   nsRect caretPos;
   nsIFrame* caretFrame = caret->GetGeometry(domSel, &caretPos);
   if (!caretFrame) 
@@ -4195,9 +4188,8 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
   nsFrameSelection::HINT hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    nsRefPtr<nsCaret> caret;
-    nsresult result = presShell->GetCaret(getter_AddRefs(caret));
-    if (NS_FAILED(result) || !caret)
+    nsRefPtr<nsCaret> caret = presShell->GetCaret();
+    if (!caret)
       return NS_ERROR_FAILURE;
     
     PRUint8 caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
@@ -5558,8 +5550,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
   result = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
     return result;
-  nsRefPtr<nsCaret> caret;
-  presShell->GetCaret(getter_AddRefs(caret));
+  nsRefPtr<nsCaret> caret = presShell->GetCaret();
   if (caret)
   {
     // Now that text frame character offsets are always valid (though not

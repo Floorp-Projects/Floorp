@@ -811,8 +811,8 @@ public:
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
 
   // caret handling
-  NS_IMETHOD GetCaret(nsCaret **aOutCaret);
-  NS_IMETHOD_(void) MaybeInvalidateCaretPosition();
+  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret();
+  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition();
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
@@ -2784,17 +2784,14 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   return NS_OK;
 }
 
-// note that this can return a null caret, but NS_OK
-NS_IMETHODIMP PresShell::GetCaret(nsCaret **outCaret)
+already_AddRefed<nsCaret> PresShell::GetCaret()
 {
-  NS_ENSURE_ARG_POINTER(outCaret);
-  
-  *outCaret = mCaret;
-  NS_IF_ADDREF(*outCaret);
-  return NS_OK;
+  nsCaret* caret = mCaret;
+  NS_IF_ADDREF(caret);
+  return caret;
 }
 
-NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
+void PresShell::MaybeInvalidateCaretPosition()
 {
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
@@ -6635,9 +6632,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   nsresult rv;
 
   // check caret visibility
-  nsRefPtr<nsCaret> caret;
-  rv = GetCaret(getter_AddRefs(caret));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsRefPtr<nsCaret> caret = GetCaret();
   NS_ENSURE_TRUE(caret, PR_FALSE);
 
   PRBool caretVisible = PR_FALSE;
