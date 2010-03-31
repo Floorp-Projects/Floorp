@@ -741,7 +741,6 @@ public:
 
   virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
-  virtual NS_HIDDEN_(PRBool) IsPaintingSuppressed() const;
   virtual NS_HIDDEN_(void) UnsuppressPainting();
 
   virtual NS_HIDDEN_(void) DisableThemeSupport();
@@ -759,7 +758,6 @@ public:
   virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame();
   virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent);
 
-  virtual NS_HIDDEN_(PRBool) IsReflowLocked() const;
 
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
@@ -823,7 +821,6 @@ public:
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
-  virtual NS_HIDDEN_(PRInt16) GetSelectionFlags();
 
   // nsISelectionController
 
@@ -1046,7 +1043,6 @@ protected:
   nsTArray<nsIFrame*> mDirtyRoots;
 
   PRPackedBool mDocumentLoading;
-  PRPackedBool mIsReflowing;
 
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mHaveShutDown;
@@ -1065,7 +1061,6 @@ protected:
   nscoord                       mLastAnchorScrollPositionY;
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
-  PRInt16                       mSelectionFlags;
   nsPresArena                   mFrameArena;
   StackArena                    mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
@@ -1188,7 +1183,6 @@ protected:
   PRPackedBool      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
 
   PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
-  PRPackedBool      mPaintingSuppressed;  // For all documents we initially lock down painting.
                                           // We will refuse to paint the document until either
                                           // (a) our timer fires or (b) all frames are constructed.
   PRPackedBool      mShouldUnsuppressPainting;  // Indicates that it is safe to unlock painting once all pending
@@ -2869,11 +2863,6 @@ NS_IMETHODIMP PresShell::GetSelectionFlags(PRInt16 *aOutEnable)
   return NS_OK;
 }
 
-PRInt16 PresShell::GetSelectionFlags()
-{
-  return mSelectionFlags;
-}
-
 //implementation of nsISelectionController
 
 NS_IMETHODIMP 
@@ -4393,12 +4382,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   return NS_OK;
 }
 
-PRBool
-PresShell::IsPaintingSuppressed() const
-{
-  return mPaintingSuppressed;
-}
-
 void
 PresShell::UnsuppressAndInvalidate()
 {
@@ -4693,12 +4676,6 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     }
     batch.EndUpdateViewBatch(updateFlags);
   }
-}
-
-PRBool
-PresShell::IsReflowLocked() const
-{
-  return mIsReflowing;
 }
 
 void
