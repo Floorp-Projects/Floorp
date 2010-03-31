@@ -6307,6 +6307,18 @@ dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
 dnl ========================================================
+dnl = Places, no configure argument
+dnl ========================================================
+if test -n "$MOZ_PLACES"; then
+    AC_DEFINE(MOZ_PLACES)
+    if test -z "$MOZ_MAIL_NEWS"; then
+      MOZ_MORK=
+    fi
+    MOZ_MORKREADER=1
+fi
+
+
+dnl ========================================================
 dnl = Disable feed handling components
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(feeds,
