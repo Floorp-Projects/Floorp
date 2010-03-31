@@ -61,14 +61,10 @@ public:
     NS_DECL_ISUPPORTS
     nsIdleServiceGTK();
 
-    bool PollIdleTime(PRUint32* aIdleTime);
-
+    NS_IMETHOD GetIdleTime(PRUint32* idleTime);
 private:
     ~nsIdleServiceGTK();
     XScreenSaverInfo* mXssInfo;
-
-protected:
-    bool UsePollMode();
 };
 
 #endif // nsIdleServiceGTK_h__
