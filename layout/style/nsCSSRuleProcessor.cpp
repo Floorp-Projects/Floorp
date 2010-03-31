@@ -2040,10 +2040,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #undef STATE_CHECK
 
 // Right now, there are four operators:
-//   PRUnichar(0), the descendant combinator, is greedy
+//   ' ', the descendant combinator, is greedy
 //   '~', the indirect adjacent sibling combinator, is greedy
 //   '+' and '>', the direct adjacent sibling and child combinators, are not
-#define NS_IS_GREEDY_OPERATOR(ch) (ch == PRUnichar(0) || ch == PRUnichar('~'))
+#define NS_IS_GREEDY_OPERATOR(ch) \
+  ((ch) == PRUnichar(' ') || (ch) == PRUnichar('~'))
 
 static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
                                   nsCSSSelector* aSelector,
@@ -2052,6 +2053,10 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
   nsCSSSelector* selector = aSelector;
   RuleProcessorData* prevdata = &aPrevData;
   while (selector) { // check compound selectors
+    NS_ASSERTION(!selector->mNext ||
+                 selector->mNext->mOperator != PRUnichar(0),
+                 "compound selector without combinator");
+
     // If we don't already have a RuleProcessorData for the next
     // appropriate content (whether parent or previous sibling), create
     // one.
@@ -2112,7 +2117,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
           selector->mNext &&
           selector->mNext->mOperator != selector->mOperator &&
           !(selector->mOperator == '~' &&
-            (selector->mNext->mOperator == PRUnichar(0) ||
+            (selector->mNext->mOperator == PRUnichar(' ') ||
              selector->mNext->mOperator == PRUnichar('>')))) {
 
         // pretend the selector didn't match, and step through content

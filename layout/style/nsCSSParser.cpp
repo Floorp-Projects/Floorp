@@ -385,7 +385,8 @@ protected:
   nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
                                                      nsCSSSelector& aSelector);
 
-  nsSelectorParsingStatus ParseSelector(nsCSSSelectorList* aList);
+  nsSelectorParsingStatus ParseSelector(nsCSSSelectorList* aList,
+                                        PRUnichar aPrevCombinator);
 
   // If aTerminateAtBrace is true, the selector list is done when we
   // hit a '{'.  Otherwise, it's done when we hit EOF.
@@ -2517,12 +2518,12 @@ static PRBool IsUniversalSelector(const nsCSSSelector& aSelector)
 PRBool
 CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
 {
-  PRBool another;
+  PRUnichar combinator = 0;
   nsSelectorParsingStatus parsingStatus;
   nsAutoPtr<nsCSSSelectorList> list(new nsCSSSelectorList());
 
   do {
-    parsingStatus = ParseSelector(list);
+    parsingStatus = ParseSelector(list, combinator);
     if (parsingStatus == eSelectorParsingStatus_Error ||
         parsingStatus == eSelectorParsingStatus_Empty) {
       break;
@@ -2531,7 +2532,7 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
                  "should not have left ParseSelector then");
 
     // Look for a combinator.
-    another = PR_FALSE;
+    combinator = PRUnichar(0);
     if (!GetToken(PR_FALSE)) {
       break;
     }
@@ -2539,26 +2540,24 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
       if (!GetToken(PR_TRUE)) {
         break;
       }
-      another = PR_TRUE; // ' ' combinator, unless followed by comma or {
+      combinator = PRUnichar(' ');
     }
 
     if (mToken.mType == eCSSToken_Symbol &&
         (mToken.mSymbol == '+' ||
          mToken.mSymbol == '>' ||
          mToken.mSymbol == '~')) {
-      another = PR_TRUE;
-      list->mSelectors->SetOperator(mToken.mSymbol);
+      combinator = mToken.mSymbol;
     } else {
       if (mToken.mType == eCSSToken_Symbol &&
           (mToken.mSymbol == '{' ||
            mToken.mSymbol == ',')) {
-        // End of this selector group
-        another = PR_FALSE;
+        combinator = PRUnichar(0); // end of this selector group
       }
       UngetToken(); // give it back to selector if we're not done, or make
                     // sure we see it as the end of selector if we are.
     }
-  } while (another);
+  } while (combinator);
 
   if (parsingStatus == eSelectorParsingStatus_Error) {
     return PR_FALSE;
@@ -3424,14 +3423,15 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
  * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
  */
 CSSParserImpl::nsSelectorParsingStatus
-CSSParserImpl::ParseSelector(nsCSSSelectorList* aList)
+CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
+                             PRUnichar aPrevCombinator)
 {
   if (! GetToken(PR_TRUE)) {
     REPORT_UNEXPECTED_EOF(PESelectorEOF);
     return eSelectorParsingStatus_Error;
   }
 
-  nsAutoPtr<nsCSSSelector> selector(new nsCSSSelector());
+  nsCSSSelector* selector = aList->AddSelector(aPrevCombinator);
   nsCOMPtr<nsIAtom> pseudoElement;
   nsAutoPtr<nsPseudoClassList> pseudoElementArgs;
   nsCSSPseudoElements::Type pseudoElementType =
@@ -3483,7 +3483,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList)
   if (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox) {
     // We got an anonymous box pseudo-element; it must be the only
     // thing in this selector group.
-    if (aList->mSelectors || !IsUniversalSelector(*selector)) {
+    if (selector->mNext || !IsUniversalSelector(*selector)) {
       REPORT_UNEXPECTED(PEAnonBoxNotAlone);
       return eSelectorParsingStatus_Error;
     }
@@ -3493,24 +3493,19 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList)
     selector->mLowercaseTag.swap(pseudoElement);
     selector->mPseudoClassList = pseudoElementArgs.forget();
     selector->SetPseudoType(pseudoElementType);
-    aList->AddSelector(selector);
     return parsingStatus;
   }
 
   aList->mWeight += selector->CalcWeight();
-  aList->AddSelector(selector);
 
   // Pseudo-elements other than anonymous boxes are represented as
   // direct children ('>' combinator) of the rest of the selector.
   if (pseudoElement) {
-    aList->mSelectors->SetOperator('>');
+    selector = aList->AddSelector('>');
 
-    nsAutoPtr<nsCSSSelector> pseudo(new nsCSSSelector());
-    pseudo->mLowercaseTag.swap(pseudoElement);
-    pseudo->mPseudoClassList = pseudoElementArgs.forget();
-    pseudo->SetPseudoType(pseudoElementType);
-    aList->AddSelector(pseudo);
-    // The pseudo does not contribute to selector weight.
+    selector->mLowercaseTag.swap(pseudoElement);
+    selector->mPseudoClassList = pseudoElementArgs.forget();
+    selector->SetPseudoType(pseudoElementType);
   }
 
   return parsingStatus;
