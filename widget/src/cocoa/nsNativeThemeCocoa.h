@@ -90,7 +90,7 @@ public:
   PRBool WidgetIsContainer(PRUint8 aWidgetType);
   PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
   PRBool ThemeNeedsComboboxDropmarker();
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType);
+  virtual nsTransparencyMode GetWidgetTransparency(PRUint8 aWidgetType);
 
 protected:  
 
