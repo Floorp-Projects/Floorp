@@ -1160,15 +1160,6 @@ typedef struct JSResolvingEntry {
 
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
-/*
- * Wraps a stack frame which has been temporarily popped from its call stack
- * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
- */
-struct JSGCReachableFrame {
-    JSGCReachableFrame  *next;
-    JSStackFrame        *frame;
-};
-
 namespace js {
 class AutoGCRooter;
 }
@@ -1290,19 +1281,6 @@ struct JSContext
     /* Client opaque pointers. */
     void                *data;
     void                *data2;
-
-    /* Linked list of frames temporarily popped from their chain. */
-    JSGCReachableFrame  *reachableFrames;
-
-    void pushGCReachableFrame(JSGCReachableFrame &gcrf, JSStackFrame *f) {
-        gcrf.next = reachableFrames;
-        gcrf.frame = f;
-        reachableFrames = &gcrf;
-    }
-
-    void popGCReachableFrame() {
-        reachableFrames = reachableFrames->next;
-    }
 
   private:
 #ifdef __GNUC__
