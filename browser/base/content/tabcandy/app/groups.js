@@ -469,46 +469,19 @@ window.Groups = {
     tolerance: "pointer",
     greedy: true,
     drop: function(e){
-      $target = $(e.target);
+    $target = $(e.target);  
+    $dragged.removeClass("willGroup")   
   
-      // Only drop onto the top z-index
-      if( $target.css("zIndex") < $dragged.data("topDropZIndex") ) return;
-      $dragged.data("topDropZIndex", $target.css("zIndex") );
-      $dragged.data("topDrop", $target);
-      
-      // This strange timeout thing solves the problem of when
-      // something is dropped onto multiple potential drop targets.
-      // We wait a little bit to see get all drops, and then we have saved
-      // the top-most one and drop onto that.
-      clearTimeout( timeout );
-      var dragged = $dragged;
-      var target = $target;
-      timeout = setTimeout( function(){
-        dragged.removeClass("willGroup")   
-  
-        dragged.animate({
-          top: target.position().top+15,
-          left: target.position().left+15,      
-        }, 100);
-        
-        setTimeout( function(){
-          var group = $(target).data("group");
-          if( group == null ){
-            var group = new Group([target, dragged]);
-          } else {
-            group.add( dragged );
-          }
-          
-        }, 100);
-        
-        
-      }, 10 );
-      
+    var group = $target.data("group");
+    if( group == null ){
+      var group = new Group([$target, $dragged]);
+    } else {
+      group.add( $dragged );
+    }
       
     },
     over: function(e){
-      $dragged.addClass("willGroup");
-      $dragged.data("topDropZIndex", 0);    
+      $dragged.addClass("willGroup");    
     },
     out: function(){      
       $dragged.removeClass("willGroup");
