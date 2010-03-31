@@ -732,7 +732,8 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-  return presShell->DisableNonTestMouseEvents(aDisable);
+  presShell->DisableNonTestMouseEvents(aDisable);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
