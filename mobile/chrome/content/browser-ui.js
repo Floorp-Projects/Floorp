@@ -485,11 +485,15 @@ var BrowserUI = {
   },
 
   getDisplayURI : function(browser) {
-    var uri = browser.currentURI;
+    if (Browser.selectedTab.isLoading() && browser.lastSpec == browser.currentURI.spec) {
+      // onLocationChange has probably not fired yet (bug 521828)
+      return this._edit.value;
+    }
 
     if (!this._URIFixup)
       this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
 
+    let uri = browser.currentURI;
     try {
       uri = this._URIFixup.createExposableURI(uri);
     } catch (ex) {}
@@ -1491,9 +1495,10 @@ var FormHelper = {
       return false;
 
     this._open = true;
-    this._restore ={  zoom: Browser._browserView.getZoomLevel(),
+    this._restore = { zoom: Browser._browserView.getZoomLevel(),
                       scroll: Browser.getScrollboxPosition(Browser.contentScrollboxScroller)
                     };
+
     window.addEventListener("keyup", this, false);
     let bv = Browser._browserView;
     bv.ignorePageScroll(true);
