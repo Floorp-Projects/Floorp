@@ -106,8 +106,7 @@ extern JSObject * JS_FASTCALL
 js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
-                  JSBool holey = JS_FALSE);
+js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey = false);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
