@@ -3244,11 +3244,9 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  nsITheme::Transparency transparency;
+  nsTransparencyMode transparency;
   if (aCSSRootFrame->IsThemed(&transparency))
-    return transparency == nsITheme::eTransparent
-         ? eTransparencyTransparent
-         : eTransparencyOpaque;
+    return transparency;
 
   if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;

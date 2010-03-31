@@ -1069,7 +1069,7 @@ PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
   if (mIsThemed)
-    return mThemeTransparency == nsITheme::eOpaque;
+    return PR_FALSE;
 
   const nsStyleBackground* bg;
 
