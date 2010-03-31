@@ -265,7 +265,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
  * must not be a JSVAL_VOID.
  */
 extern JSObject *
-js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv);
+js_ComputeThis(JSContext *cx, jsval *argv);
 
 extern const uint16 js_PrimitiveTestFlags[];
 
@@ -280,7 +280,7 @@ js_ComputeThisForFrame(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->flags & JSFRAME_COMPUTED_THIS)
         return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
-    JSObject* obj = js_ComputeThis(cx, JS_TRUE, fp->argv);
+    JSObject* obj = js_ComputeThis(cx, fp->argv);
     if (!obj)
         return NULL;
     fp->thisv = OBJECT_TO_JSVAL(obj);
@@ -421,7 +421,7 @@ js_FreeRawStack(JSContext *cx, void *mark);
  * The alert should display "true".
  */
 extern JSObject *
-js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
+js_ComputeGlobalThis(JSContext *cx, jsval *argv);
 
 extern JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex);
