@@ -12056,37 +12056,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                                         avmplus::AvmCore::use_cmov()),
                                         avmplus::AvmCore::use_cmov());
             } else {
-                switch (tarray->type) {
-                  case js::TypedArray::TYPE_INT8:
-                  case js::TypedArray::TYPE_UINT8:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-                    lir->insStore(LIR_stb, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
-                    break;
-                  case js::TypedArray::TYPE_INT16:
-                  case js::TypedArray::TYPE_UINT16:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 1));
-                    lir->insStore(LIR_sts, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
-                    break;
-                  case js::TypedArray::TYPE_INT32:
-                  case js::TypedArray::TYPE_UINT32:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
-                    lir->insStore(LIR_sti, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
-                    break;
-                  case js::TypedArray::TYPE_FLOAT32:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
-                    lir->insStore(LIR_st32f, v_ins, addr_ins, 0);
-                    break;
-                  case js::TypedArray::TYPE_FLOAT64:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
-                    lir->insStore(LIR_stfi, v_ins, addr_ins, 0);
-                    break;
-                  case js::TypedArray::TYPE_UINT8_CLAMPED:
-                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-                    lir->insStore(LIR_stb, lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins), addr_ins, 0);
-                    break;
-                  default:
-                    JS_NOT_REACHED("Unknown typed array type in tracer");
-                }
+                v_ins = lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins);
             }
             break;
           case js::TypedArray::TYPE_FLOAT32:

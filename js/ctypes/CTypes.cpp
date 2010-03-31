@@ -663,7 +663,7 @@ InitTypeConstructor(JSContext* cx,
   dataProto = JS_NewObject(cx, &sCDataProtoClass, CDataProto, parent);
   if (!dataProto)
     return false;
-  JSAutoTempValueRooter protoroot(cx, dataProto);
+  js::AutoValueRooter protoroot(cx, dataProto);
 
   // Define functions and properties on the 'dataProto' object that are common
   // to all CData objects created from this type constructor. (These will
@@ -797,25 +797,25 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
          sPointerInstanceProps, protos[SLOT_POINTERPROTO],
          protos[SLOT_POINTERDATAPROTO]))
     return false;
-  JSAutoTempValueRooter proot(cx, protos[SLOT_POINTERDATAPROTO]);
+  js::AutoValueRooter proot(cx, protos[SLOT_POINTERDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
          sArrayFunction, sArrayProps, sArrayInstanceFunctions, sArrayInstanceProps,
          protos[SLOT_ARRAYPROTO], protos[SLOT_ARRAYDATAPROTO]))
     return false;
-  JSAutoTempValueRooter aroot(cx, protos[SLOT_ARRAYDATAPROTO]);
+  js::AutoValueRooter aroot(cx, protos[SLOT_ARRAYDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
          sStructFunction, sStructProps, sStructInstanceFunctions, NULL,
          protos[SLOT_STRUCTPROTO], protos[SLOT_STRUCTDATAPROTO]))
     return false;
-  JSAutoTempValueRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
+  js::AutoValueRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
          sFunctionFunction, sFunctionProps, NULL, NULL,
          protos[SLOT_FUNCTIONPROTO], protos[SLOT_FUNCTIONDATAPROTO]))
     return false;
-  JSAutoTempValueRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
+  js::AutoValueRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
 
   protos[SLOT_CDATAPROTO] = CDataProto;
 
@@ -3787,7 +3787,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
   if (!fieldsProp)
     return JS_FALSE;
-  JSAutoTempValueRooter root(cx, fieldsProp);
+  js::AutoValueRooter root(cx, fieldsProp);
   JS_ASSERT(len == 0 || fieldsVec);
 
   nsAutoPtr<ffi_type> ffiType(new ffi_type);
@@ -4366,7 +4366,7 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
 
   // Pull out the argument types from the array, if any.
   JS_ASSERT(!argTypes.Length() || arrayObj);
-  JSAutoTempValueRooter items(cx, argTypes.Length(), argTypes.Elements());
+  js::AutoArrayRooter items(cx, argTypes.Length(), argTypes.Elements());
   for (jsuint i = 0; i < argTypes.Length(); ++i) {
     if (!JS_GetElement(cx, arrayObj, i, &argTypes[i]))
       return JS_FALSE;
@@ -4407,7 +4407,7 @@ FunctionType::CreateInternal(JSContext* cx,
                         &ffi_type_pointer, NULL);
   if (!typeObj)
     return NULL;
-  JSAutoTempValueRooter root(cx, typeObj);
+  js::AutoValueRooter root(cx, typeObj);
 
   // Stash the FunctionInfo in a reserved slot.
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_FNINFO,
@@ -4467,7 +4467,7 @@ FunctionType::ConstructData(JSContext* cx,
       JSObject* closureObj = CClosure::Create(cx, obj, fnObj, thisObj, data);
       if (!closureObj)
         return JS_FALSE;
-      JSAutoTempValueRooter root(cx, closureObj);
+      js::AutoValueRooter root(cx, closureObj);
 
       // Set the closure object as the referent of the new CData object.
       if (!JS_SetReservedSlot(cx, result, SLOT_REFERENT,
@@ -4612,7 +4612,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* v
     js_NewArrayObjectWithCapacity(cx, len, &vec);
   if (!argTypes)
     return JS_FALSE;
-  JSAutoTempValueRooter argsroot(cx, argTypes);
+  js::AutoValueRooter argsroot(cx, argTypes);
   JS_ASSERT(len == 0 || vec);
 
   for (PRUint32 i = 0; i < len; ++i)
@@ -4667,7 +4667,7 @@ CClosure::Create(JSContext* cx,
   JSObject* result = JS_NewObject(cx, &sCClosureClass, NULL, NULL);
   if (!result)
     return NULL;
-  JSAutoTempValueRooter root(cx, result);
+  js::AutoValueRooter root(cx, result);
 
   // Get the FunctionInfo from the FunctionType.
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
@@ -4813,7 +4813,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   JS_ASSERT(cif == &fninfo->mCIF);
 
   // Get a death grip on 'closureObj'.
-  JSAutoTempValueRooter root(cx, cinfo->closureObj);
+  js::AutoValueRooter root(cx, cinfo->closureObj);
 
   // Set up an array for converted arguments.
   nsAutoTArray<jsval, 16> argv;
@@ -4825,7 +4825,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   for (PRUint32 i = 0; i < cif->nargs; ++i)
     argv[i] = JSVAL_VOID;
 
-  JSAutoTempValueRooter roots(cx, argv.Length(), argv.Elements());
+  js::AutoArrayRooter roots(cx, argv.Length(), argv.Elements());
   for (PRUint32 i = 0; i < cif->nargs; ++i) {
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.
