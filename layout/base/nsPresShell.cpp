@@ -702,7 +702,7 @@ public:
                                             nsFrameState aBitToAdd);
   virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame);
   virtual NS_HIDDEN_(void) CancelAllPendingReflows();
-  virtual NS_HIDDEN_(PRBool) IsSafeToFlush();
+  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() const;
   virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType);
 
   /**
@@ -4580,7 +4580,7 @@ PresShell::HandlePostedReflowCallbacks(PRBool aInterruptible)
 }
 
 PRBool
-PresShell::IsSafeToFlush()
+PresShell::IsSafeToFlush() const
 {
   // Not safe if we are reflowing or in the middle of frame construction
   PRBool isSafeToFlush = !mIsReflowing &&

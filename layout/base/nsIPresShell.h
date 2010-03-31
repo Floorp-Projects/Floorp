@@ -235,9 +235,9 @@ public:
 
   nsIDocument* GetDocument() const { return mDocument; }
 
-  nsPresContext* GetPresContext() { return mPresContext; }
+  nsPresContext* GetPresContext() const { return mPresContext; }
 
-  nsIViewManager* GetViewManager() { return mViewManager; }
+  nsIViewManager* GetViewManager() const { return mViewManager; }
 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet*  StyleSet() { return mStyleSet; }
@@ -438,7 +438,7 @@ public:
    * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
    * 
    */
-  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() = 0;
+  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() const = 0;
 
   /**
    * Flush pending notifications of the type specified.  This method
