@@ -759,7 +759,7 @@ public:
   virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame();
   virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent);
 
-  NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
+  virtual NS_HIDDEN_(PRBool) IsReflowLocked() const;
 
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
@@ -4697,11 +4697,10 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   }
 }
 
-NS_IMETHODIMP
-PresShell::IsReflowLocked(PRBool* aIsReflowLocked) 
+PRBool
+PresShell::IsReflowLocked() const
 {
-  *aIsReflowLocked = mIsReflowing;
-  return NS_OK;
+  return mIsReflowing;
 }
 
 void

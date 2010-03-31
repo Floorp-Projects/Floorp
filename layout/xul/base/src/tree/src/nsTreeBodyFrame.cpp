@@ -370,9 +370,7 @@ void
 nsTreeBodyFrame::EnsureView()
 {
   if (!mView) {
-    PRBool isInReflow;
-    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
-    if (isInReflow) {
+    if (PresContext()->PresShell()->IsReflowLocked()) {
       if (!mReflowCallbackPosted) {
         mReflowCallbackPosted = PR_TRUE;
         PresContext()->PresShell()->PostReflowCallback(this);
@@ -532,9 +530,7 @@ nsTreeBodyFrame::SetView(nsITreeView * aView)
     NS_ENSURE_STATE(weakFrame.IsAlive());
     mView->GetRowCount(&mRowCount);
  
-    PRBool isInReflow;
-    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
-    if (!isInReflow) {
+    if (!PresContext()->PresShell()->IsReflowLocked()) {
       // The scrollbar will need to be updated.
       FullScrollbarsUpdate(PR_FALSE);
     } else if (!mReflowCallbackPosted) {
