@@ -285,7 +285,7 @@ WrapObject(JSContext *cx, JSObject *scope, jsval v, jsval *vp)
   // with XPCSafeJSObjectWrapper, and never let the eval function
   // object be directly wrapped.
 
-  if (STOBJ_GET_CLASS(objToWrap) == &js_ScriptClass ||
+  if (objToWrap->getClass() == &js_ScriptClass ||
       (JS_ObjectIsFunction(cx, objToWrap) &&
        JS_GetFunctionFastNative(cx, JS_ValueToFunction(cx, v)) ==
        XPCWrapper::sEvalNative)) {
@@ -406,7 +406,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
     // parent we pass in here, the construct hook will ensure we get
     // the right parent for the wrapper.
     JSObject *safeObj = JSVAL_TO_OBJECT(*rval);
-    if (STOBJ_GET_CLASS(safeObj) == &SJOWClass.base &&
+    if (safeObj->getClass() == &SJOWClass.base &&
         JS_GetGlobalForObject(cx, obj) != JS_GetGlobalForObject(cx, safeObj)) {
       // Check to see if the new object we just wrapped is accessible
       // from the unsafe object we got the new object through. If not,

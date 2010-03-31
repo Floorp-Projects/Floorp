@@ -264,7 +264,7 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
                         argv[1], argv[2], &argv[3], argc - 3);
   if (!typeObj)
     return JS_FALSE;
-  JSAutoTempValueRooter root(cx, typeObj);
+  js::AutoValueRooter root(cx, typeObj);
 
   JSObject* fn = CData::Create(cx, typeObj, obj, &func, true);
   if (!fn)

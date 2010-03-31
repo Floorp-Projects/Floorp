@@ -3221,7 +3221,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
                                                    nsnull, nsnull);
     if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
-    JSAutoTempValueRooter tvr(cx, sandbox);
+    js::AutoValueRooter tvr(cx, sandbox);
 
     nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(prinOrSop));
 
