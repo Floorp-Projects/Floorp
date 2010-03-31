@@ -65,12 +65,12 @@ public:
         , mGlobal(NULL)
     {}
 
-    bool GetGlobalJSObject(JSContext* cx, JSObject** globalp) {
+    JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp) {
         if (!mGlobal)
-            return false;
+            return JS_FALSE;
         mGlobalHolder.Hold(cx);
         mGlobalHolder = *globalp = mGlobal->GetJSObject(cx);
-        return true;
+        return JS_TRUE;
     }
 
     ObjectWrapperParent* GetGlobalObjectWrapper() const {
