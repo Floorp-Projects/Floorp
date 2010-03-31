@@ -652,12 +652,12 @@ public:
   /**
     * Gets the current target event frame from the PresShell
     */
-  NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame) = 0;
+  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() = 0;
 
   /**
     * Gets the current target event frame from the PresShell
     */
-  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent) = 0;
+  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) = 0;
 
   /**
    * Get and set the history state for the current document 
