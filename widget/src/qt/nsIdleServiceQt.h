@@ -59,14 +59,10 @@ public:
     NS_DECL_ISUPPORTS
     nsIdleServiceQt();
 
-    bool PollIdleTime(PRUint32* aIdleTime);
-
+    NS_IMETHOD GetIdleTime(PRUint32* idleTime);
 private:
     ~nsIdleServiceQt();
     XScreenSaverInfo* mXssInfo;
-
-protected:
-    bool UsePollMode();
 };
 
 #endif // nsIdleServiceQt_h__

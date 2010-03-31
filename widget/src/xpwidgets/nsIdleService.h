@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,8 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Gijs Kruitbosch <gijskruitbosch@gmail.com>
- *  Mike Kristoffersen <moz@mikek.dk>
+ *  Gijs Kruitbosch <gijskruitbosch@gmail.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,170 +46,43 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsIObserver.h"
-#include "nsIIdleService.h"
 
-/**
- * Class we can use to store an observer with its associated idle time
- * requirement and whether or not the observer thinks it's "idle".
- */
+// Class we can use to store an observer with its associated idle time
+// requirement and whether or not the observer thinks it's "idle".
 class IdleListener {
 public:
-  nsCOMPtr<nsIObserver> observer;
-  PRUint32 reqIdleTime;
-  bool isIdle;
+    nsCOMPtr<nsIObserver> observer;
+    PRUint32 reqIdleTime;
+    PRBool isIdle;
 
-  IdleListener(nsIObserver* obs, PRUint32 reqIT, bool aIsIdle = false) :
-    observer(obs), reqIdleTime(reqIT), isIdle(aIsIdle) {}
-  ~IdleListener() {}
-};
-
-// This one will be declared later.
-class nsIdleService;
-
-/**
- * Class to handle the daily idle timer.
- */
-class nsIdleServiceDaily : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  /**
-   * Function to call to tell the daily idle service that the idle service
-   * is ready.
-   *
-   * @param aIdleService
-   *        Pointer to the idle service.
-   */
-  void Init(nsIdleService *aIdleService);
-
-  /**
-   * This function will make this class release its allocated resources (its
-   * idle timer and/or its normal timer).
-   */
-  void Shutdown();
-
-private:
-  /**
-   * @note This is a normal pointer, or the idle service could keep it self
-   * alive.
-   */
-  nsIdleService *mIdleService;
-
-  /**
-   * Place to hold the timer used by this class to determine when a day has
-   * passed, after that it will wait for idle time to be detected.
-   */
-  nsCOMPtr<nsITimer> mTimer;
-
-  /**
-   * Function that is called back once a day.
-   */
-  static void DailyCallback(nsITimer* aTimer, void* aClosure);
+    IdleListener(nsIObserver* obs, PRUint32 reqIT, PRBool aIsIdle = PR_FALSE) :
+        observer(obs), reqIdleTime(reqIT), isIdle(aIsIdle) {}
+    ~IdleListener() {}
 };
 
 class nsIdleService : public nsIIdleService
 {
 public:
-  nsIdleService();
+    nsIdleService();
 
-  // Implement nsIIdleService methods.
-  NS_IMETHOD AddIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime);
-  NS_IMETHOD RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime);
-  NS_IMETHOD GetIdleTime(PRUint32* idleTime);
+    // Implement nsIIdleService methods, but not the idleTime getter,
+    // which is platform-dependent.
+    NS_IMETHOD AddIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime);
+    NS_IMETHOD RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime);
 
-  void ResetIdleTimeOut();
+    static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
+    
+    void IdleTimeWasModified();
 
 protected:
-  ~nsIdleService();
-
-  /**
-   * If there is a platform specific function to poll the system idel time
-   * then that must be returned in this function, and the function MUST return
-   * true, otherwise then the function should be left unimplemented or made
-   * to return false (this can also be used for systems where it depends on
-   * the configuration of the system if the idle time can be determined)
-   *
-   * @param aIdleTime
-   *        The idle time in ms.
-   *
-   * @return true if the idle time could be polled, false otherwise.
-   *
-   * @note The time returned by this function can be different than the one
-   *       returned by GetIdleTime, as that is corrected by any calls to
-   *       ResetIdleTimeOut(), unless you overwrite that function too...
-   */
-  virtual bool PollIdleTime(PRUint32* aIdleTime);
-
-  /**
-   * Function that determines if we are in poll mode or not.
-   *
-   * @return true if polling is supported, false otherwise.
-   */
-  virtual bool UsePollMode();
-
-  /**
-   * Send expired events and start timers.
-   *
-   * @param aNoTimeReset
-   *        If true new times will not be calculated.
-   */
-  void CheckAwayState(bool aNoTimeReset);
+    void CheckAwayState();
+    ~nsIdleService();
 
 private:
-  /**
-   * Start the internal timer, restart it if it is allready running.
-   *
-   * @param aDelay
-   *        The time in seconds that should pass before the next timeout.
-   */
-
-  void StartTimer(PRUint32 aDelay);
-
-  /**
-   * Stop the internal timer, it is safe to call this function, even when
-   * there are no timers running.
-   */
-  void StopTimer();
-
-  /**
-   * mTimer holds the internal timer used by this class to detect when to poll
-   * for idle time, when to check if idle timers should expire etc.
-   */
-  nsCOMPtr<nsITimer> mTimer;
-
-  /**
-   * Array of listeners that wants to be notified about idle time.
-   */
-  nsTArray<IdleListener> mArrayListeners;
-
-  /**
-   * Object keeping track of the daily idle thingy.
-   */
-  nsCOMPtr<nsIdleServiceDaily> mDailyIdle;
-
-  /**
-   * Contains the time of the last idle reset or 0 if there haven't been a
-   * reset.
-   * <p>
-   * Time is kept in seconds since the epoch at midnight, January 1, 1970 UTC.
-   */
-  PRUint32 mLastIdleReset;
-
-  /**
-   * The time since the last handled activity (which might be different than
-   * mLastIdleReset, since the activity that reset the idle timer could just
-   * have happend, and not handled yet).
-   * <p>
-   * Time is kept in seconds since the epoch at midnight, January 1, 1970 UTC.
-   */
-  PRUint32 mLastHandledActivity;
-
-  /**
-   * Callback function that is called when the internal timer expires.
-   */
-  static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
+    void StartTimer(PRUint32 aDelay);
+    void StopTimer();
+    nsCOMPtr<nsITimer> mTimer;
+    nsTArray<IdleListener> mArrayListeners;
 };
 
 #endif // nsIdleService_h__
