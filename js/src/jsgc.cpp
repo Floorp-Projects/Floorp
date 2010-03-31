@@ -2412,10 +2412,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         }
     }
 
-    /* Trace frames that have been temporarily removed but need to be marked. */
-    for (JSGCReachableFrame *rf = acx->reachableFrames; rf; rf = rf->next)
-        TraceFrameChain(trc, rf->frame);
-
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
