@@ -217,6 +217,7 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
     nsCOMPtr<nsILocalFile> pluginDump;
     nsCOMPtr<nsILocalFile> browserDump;
     if (CrashReporter::CreatePairedMinidumps(OtherProcess(),
+                                             0, // FIXME/bug 555309
                                              &mHangID,
                                              getter_AddRefs(pluginDump),
                                              getter_AddRefs(browserDump)) &&

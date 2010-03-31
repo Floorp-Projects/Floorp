@@ -64,6 +64,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIINIParser.h"
 #if defined(MOZ_IPC)
+#  include "common/linux/linux_syscall_support.h"
 #  include "client/linux/crash_generation/client_info.h"
 #  include "client/linux/crash_generation/crash_generation_server.h"
 #endif
@@ -1646,8 +1647,23 @@ PairedDumpCallback(const XP_CHAR* dump_path,
   return WriteExtraForMinidump(minidump, blacklist, getter_AddRefs(extra));
 }
 
+ThreadId
+CurrentThreadId()
+{
+#if defined(XP_WIN)
+  return ::GetCurrentThreadId();
+#elif defined(XP_LINUX)
+  return sys_gettid();
+#elif defined(XP_MACOSX)
+  return -1;
+#else
+#  error "Unsupported platform"
+#endif
+}
+
 bool
 CreatePairedMinidumps(ProcessHandle childPid,
+                      ThreadId/* unused: FIXME/bug 555309 */,
                       nsAString* pairGUID,
                       nsILocalFile** childDump,
                       nsILocalFile** parentDump)
