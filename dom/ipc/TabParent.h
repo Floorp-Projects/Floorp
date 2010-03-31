@@ -43,6 +43,7 @@
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
+#include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIWebProgress.h"
@@ -159,7 +160,7 @@ public:
     virtual PContextWrapperParent* AllocPContextWrapper();
     virtual bool DeallocPContextWrapper(PContextWrapperParent* actor);
 
-    bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
+    JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESS

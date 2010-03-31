@@ -75,7 +75,7 @@ public:
   PContextWrapperParent* AllocPContextWrapper();
   bool DeallocPContextWrapper(PContextWrapperParent* actor);
 
-  bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
+  JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 };
 
 

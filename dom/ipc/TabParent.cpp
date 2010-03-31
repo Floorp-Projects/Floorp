@@ -437,28 +437,17 @@ TabParent::DeallocPContextWrapper(PContextWrapperParent* actor)
     return true;
 }
 
-bool
+JSBool
 TabParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
 {
     // TODO Unify this code with TestShellParent::GetGlobalJSObject.
     nsTArray<PContextWrapperParent*> cwps(1);
     ManagedPContextWrapperParent(cwps);
     if (cwps.Length() < 1)
-        return false;
-
-    // This is temporary until we decide whether to return
-    // TabChildGlobal or top level page's global object.
-    // Currently this returns the page global object.
-    // Note, TabChildGlobal's context doesn't report its global object here!
-    NS_ASSERTION(cwps.Length() <= 2, "More than two PContextWrappers?");
+        return JS_FALSE;
+    NS_ASSERTION(cwps.Length() == 1, "More than one PContextWrapper?");
     ContextWrapperParent* cwp = static_cast<ContextWrapperParent*>(cwps[0]);
-    if (cwp->GetGlobalObjectWrapper()) {
-      return cwp->GetGlobalJSObject(cx, globalp);
-    } else if (cwps.Length() == 2) {
-      cwp = static_cast<ContextWrapperParent*>(cwps[1]);
-      return cwp->GetGlobalJSObject(cx, globalp);
-    }
-    return false;
+    return cwp->GetGlobalJSObject(cx, globalp);
 }
 
 void
