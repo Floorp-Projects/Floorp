@@ -1708,13 +1708,11 @@ public:
         } else if (isFCmpOpcode(v)) {
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fcmp to cmp
-                v = LOpcode(v + (LIR_eq - LIR_feq));
+                v = f64cmp_to_i32cmp(v);
                 return out->ins2(v, demote(out, s0), demote(out, s1));
             } else if (isPromoteUint(s0) && isPromoteUint(s1)) {
                 // uint compare
-                v = LOpcode(v + (LIR_eq - LIR_feq));
-                if (v != LIR_eq)
-                    v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
+                v = f64cmp_to_u32cmp(v);
                 return out->ins2(v, demote(out, s0), demote(out, s1));
             }
         }
@@ -8860,7 +8858,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      */
     if (!fp) {
         JS_ASSERT(isFCmpOpcode(op));
-        op = LOpcode(op + (LIR_eq - LIR_feq));
+        op = f64cmp_to_i32cmp(op);
     }
     x = lir->ins2(op, l_ins, r_ins);
 
