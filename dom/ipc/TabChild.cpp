@@ -483,8 +483,6 @@ TabChild::RecvloadURL(const nsCString& uri)
         NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
     }
 
-    SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
-
     return true;
 }
 
@@ -543,28 +541,10 @@ TabChild::RecvsendKeyEvent(const nsString& aType,
   return true;
 }
 
-static JSContext*
-GetJSContextFrom(nsIWebNavigation* webNav)
-{
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    nsCOMPtr<nsIDocument> document;
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    nsCOMPtr<nsIScriptContext> context;
-
-    if (NS_SUCCEEDED(webNav->GetDocument(getter_AddRefs(domDocument))) &&
-        (document = do_QueryInterface(domDocument)) &&
-        (global = do_QueryInterface(document->GetScriptGlobalObject())) &&
-        (context = do_QueryInterface(global->GetContext()))) {
-        return static_cast<JSContext*>(context->GetNativeContext());
-    }
-
-    return NULL;
-}
-
 PContextWrapperChild*
 TabChild::AllocPContextWrapper()
 {
-    return new ContextWrapperChild(GetJSContextFrom(mWebNav));
+    return new ContextWrapperChild(mCx);
 }
 
 bool
@@ -855,7 +835,12 @@ TabChild::InitTabChildGlobal()
 
   mContextWrapper = new ContextWrapperChild(mCx);
   SendPContextWrapperConstructor(mContextWrapper);
-  
+
+  jsval cval;
+  if (JS_GetProperty(cx, global, "content", &cval) &&
+      JSVAL_IS_OBJECT(cval))
+      mContextWrapper->GetOrCreateWrapper(JSVAL_TO_OBJECT(cval),
+                                          true); // make global
   return true;
 }
 
