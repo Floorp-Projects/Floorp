@@ -62,7 +62,8 @@ static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nsnull;
 static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 
-NS_IMPL_ISUPPORTS2(nsIdleServiceGTK, nsIdleService, nsIIdleService)
+
+NS_IMPL_ISUPPORTS1(nsIdleServiceGTK, nsIIdleService)
 
 static void Initialize()
 {
@@ -121,18 +122,28 @@ nsIdleServiceGTK::~nsIdleServiceGTK()
 #endif
 }
 
-bool
-nsIdleServiceGTK::PollIdleTime(PRUint32 *aIdleTime)
+NS_IMETHODIMP
+nsIdleServiceGTK::GetIdleTime(PRUint32 *aTimeDiff)
 {
     if (!sInitialized) {
-        // For some reason, we could not find xscreensaver.  This this might be
-        // because we are on a mobile platforms (e.g. Maemo/OSSO).  In this
-        // case, let the base class handle it
-        return false;
+        // For some reason, we could not find xscreensaver.  This this might be because
+        // we are on a mobile platforms (e.g. Maemo/OSSO).  In this case, fall back to
+        // using gLastInputEventTime which is 
+
+        // The last user input event time in microseconds. If there are any pending
+        // native toolkit input events it returns the current time. The value is
+        // compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
+        // DEFINED IN widget/src/gtk2/nsWindow.cpp
+        extern PRUint32 gLastInputEventTime;
+
+        PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+        *aTimeDiff = (nowTime - gLastInputEventTime) / 1000;
+        return NS_OK;
     }
 
+
     // Ask xscreensaver about idle time:
-    *aIdleTime = 0;
+    *aTimeDiff = 0;
 
     // We might not have a display (cf. in xpcshell)
     Display *dplay = GDK_DISPLAY();
@@ -140,11 +151,11 @@ nsIdleServiceGTK::PollIdleTime(PRUint32 *aIdleTime)
 #ifdef PR_LOGGING
         PR_LOG(sIdleLog, PR_LOG_WARNING, ("No display found!\n"));
 #endif
-        return false;
+        return NS_ERROR_FAILURE;
     }
 
     if (!_XSSQueryExtension || !_XSSAllocInfo || !_XSSQueryInfo) {
-        return false;
+        return NS_ERROR_FAILURE;
     }
 
     int event_base, error_base;
@@ -153,21 +164,15 @@ nsIdleServiceGTK::PollIdleTime(PRUint32 *aIdleTime)
         if (!mXssInfo)
             mXssInfo = _XSSAllocInfo();
         if (!mXssInfo)
-            return false;
+            return NS_ERROR_OUT_OF_MEMORY;
         _XSSQueryInfo(dplay, GDK_ROOT_WINDOW(), mXssInfo);
-        *aIdleTime = mXssInfo->idle;
-        return true;
+        *aTimeDiff = mXssInfo->idle;
+        return NS_OK;
     }
     // If we get here, we couldn't get to XScreenSaver:
 #ifdef PR_LOGGING
     PR_LOG(sIdleLog, PR_LOG_WARNING, ("XSSQueryExtension returned false!\n"));
 #endif
-    return false;
-}
-
-bool
-nsIdleServiceGTK::UsePollMode()
-{
-    return sInitialized;
+    return NS_ERROR_FAILURE;
 }
 
