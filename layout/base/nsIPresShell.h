@@ -620,7 +620,7 @@ public:
     * @return   current state of non text selection,
     *           as set by SetDisplayNonTextSelection
     */
-  virtual NS_HIDDEN_(PRInt16) GetSelectionFlags() = 0;
+  PRInt16 GetSelectionFlags() const { return mSelectionFlags; }
 
   virtual nsISelection* GetCurrentSelection(SelectionType aType) = 0;
 
@@ -667,16 +667,16 @@ public:
 
   /**
    * Determine if reflow is currently locked
-   * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
+   * returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
-  virtual NS_HIDDEN_(PRBool) IsReflowLocked() const = 0;
+  PRBool IsReflowLocked() const { return mIsReflowing; }
 
   /**
    * Called to find out if painting is suppressed for this presshell.  If it is suppressd,
    * we don't allow the painting of any layer but the background, and we don't
    * recur into our children.
    */
-  virtual NS_HIDDEN_(PRBool) IsPaintingSuppressed() const = 0;
+  PRBool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
   /**
    * Unsuppress painting.
@@ -1011,9 +1011,13 @@ protected:
   nsIFrame*                 mDrawEventTargetFrame;
 #endif
 
+  PRInt16                   mSelectionFlags;
+
   PRPackedBool              mStylesHaveChanged;
   PRPackedBool              mDidInitialReflow;
   PRPackedBool              mIsDestroying;
+  PRPackedBool              mIsReflowing;
+  PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
 
 #ifdef ACCESSIBILITY
   /**
