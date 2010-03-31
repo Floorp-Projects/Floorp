@@ -718,6 +718,10 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
   nsCOMPtr<nsIDOMSVGLengthList> dyList = GetDy();
   nsCOMPtr<nsIDOMSVGNumberList> rotateList = GetRotate();
 
+  PRBool rotateAllGlyphs = (GetNumberOfNumberListItems(rotateList) == 1);
+  gfxFloat overallGlyphRotation =
+    rotateAllGlyphs ? GetNumberListValue(rotateList, 0) * radPerDeg : 0.0;
+
   gfxPoint pos = mPosition;
 
   nsSVGTextPathFrame *textPath = FindTextPathParent();
@@ -758,7 +762,8 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
                                       &(cp[i].angle));
         cp[i].pos =
           pt - gfxPoint(cos(cp[i].angle), sin(cp[i].angle)) * halfAdvance;
-        cp[i].angle += GetNumberListValue(rotateList, i) * radPerDeg;
+        cp[i].angle += rotateAllGlyphs ? overallGlyphRotation :
+          GetNumberListValue(rotateList, i) * radPerDeg;
       }
       pos.x += 2 * halfAdvance;
     }
@@ -806,7 +811,8 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
     pos.y += GetLengthListValue(dyList, i);
     cp[i].pos = pos;
     pos.x += advance;
-    cp[i].angle = GetNumberListValue(rotateList, i) * radPerDeg;
+    cp[i].angle = rotateAllGlyphs ? overallGlyphRotation :
+      GetNumberListValue(rotateList, i) * radPerDeg;
   }
   return PR_TRUE;
 }
