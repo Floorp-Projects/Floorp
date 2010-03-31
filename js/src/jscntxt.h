@@ -415,13 +415,6 @@ struct TraceMonitor {
     JSBool                  needFlush;
 
     /*
-     * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
-     * The JIT uses this to ensure that leaving a trace tree can't fail.
-     */
-    JSBool                  useReservedObjects;
-    JSObject                *reservedObjects;
-
-    /*
      * Fragment map for the regular expression compiler.
      */
     REHashMap*              reFragments;
