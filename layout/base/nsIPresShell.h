@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x1ebeb94c, 0x2112, 0x431d, \
-  { 0xac, 0x6b, 0xdf, 0x26, 0x13, 0x83, 0xea, 0xfb } }
+{ 0x3c00dd85, 0xdc61, 0x4acc, \
+  { 0xa4, 0x0e, 0x9b, 0x91, 0xd2, 0xea, 0x4b, 0x27 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -338,10 +338,15 @@ public:
 
   /**
    * This calls through to the frame manager to get the root frame.
-   * Callers inside of gklayout should use FrameManager()->GetRootFrame()
-   * instead, as it's more efficient.
    */
-  virtual NS_HIDDEN_(nsIFrame*) GetRootFrame() const;
+  virtual NS_HIDDEN_(nsIFrame*) GetRootFrameExternal() const;
+  nsIFrame* GetRootFrame() const {
+#ifdef _IMPL_NS_LAYOUT
+    return mFrameManager.GetRootFrame();
+#else
+    return GetRootFrameExternal();
+#endif
+  }
 
   /*
    * Get root scroll frame from FrameManager()->GetRootFrame().
