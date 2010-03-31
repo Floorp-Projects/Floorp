@@ -455,6 +455,30 @@ namespace nanojit
     }
 #endif
 
+    LOpcode f64cmp_to_i32cmp(LOpcode op)
+    {
+        switch (op) {
+        case LIR_feq:    return LIR_eq;
+        case LIR_flt:    return LIR_lt;
+        case LIR_fgt:    return LIR_gt;
+        case LIR_fle:    return LIR_le;
+        case LIR_fge:    return LIR_ge;
+        default:        NanoAssert(0); return LIR_skip;
+        }
+    }
+
+    LOpcode f64cmp_to_u32cmp(LOpcode op)
+    {
+        switch (op) {
+        case LIR_feq:    return LIR_eq;
+        case LIR_flt:    return LIR_ult;
+        case LIR_fgt:    return LIR_ugt;
+        case LIR_fle:    return LIR_ule;
+        case LIR_fge:    return LIR_uge;
+        default:        NanoAssert(0); return LIR_skip;
+        }
+    }
+
     // This is never called, but that's ok because it contains only static
     // assertions.
     void LIns::staticSanityCheck()

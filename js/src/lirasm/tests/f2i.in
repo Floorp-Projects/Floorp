@@ -1,6 +1,6 @@
-a = alloc 8
-d = float 5.0
-stfi d a 0
-x = ldf a 0
-i = f2i x
-ret i
+a = allocp 8
+d = immd 5.0
+std d a 0
+x = ldd a 0
+i = d2l x
+retl i
