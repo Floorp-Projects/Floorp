@@ -203,8 +203,10 @@ const JSExtendedClass ObjectWrapperParent::sCPOW_JSClass = {
 void
 ObjectWrapperParent::ActorDestroy(ActorDestroyReason)
 {
-    if (mObj)
+    if (mObj) {
         mObj->setPrivate(NULL);
+        mObj = NULL;
+    }
 }
 
 ContextWrapperParent*
@@ -635,8 +637,10 @@ ObjectWrapperParent::CPOW_Finalize(JSContext* cx, JSObject* obj)
     CPOW_LOG(("Calling CPOW_Finalize..."));
     
     ObjectWrapperParent* self = Unwrap(cx, obj);
-    if (self)
+    if (self) {
+        self->mObj = NULL;
         ObjectWrapperParent::Send__delete__(self);
+    }
 }
 
 /*static*/ JSBool
