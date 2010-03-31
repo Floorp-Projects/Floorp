@@ -676,12 +676,12 @@ public:
    * we don't allow the painting of any layer but the background, and we don't
    * recur into our children.
    */
-  NS_IMETHOD IsPaintingSuppressed(PRBool* aResult)=0;
+  virtual NS_HIDDEN_(PRBool) IsPaintingSuppressed() const = 0;
 
   /**
    * Unsuppress painting.
    */
-  NS_IMETHOD UnsuppressPainting() = 0;
+  virtual NS_HIDDEN_(void) UnsuppressPainting() = 0;
 
   /**
    * Called to disable nsITheme support in a specific presshell.

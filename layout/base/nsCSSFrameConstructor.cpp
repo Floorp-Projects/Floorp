@@ -7223,9 +7223,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsChangeHint aChange)
 {
   nsIPresShell *shell = aPresContext->PresShell();
-  PRBool isPaintingSuppressed = PR_FALSE;
-  shell->IsPaintingSuppressed(&isPaintingSuppressed);
-  if (isPaintingSuppressed) {
+  if (shell->IsPaintingSuppressed()) {
     // Don't allow synchronous rendering changes when painting is turned off.
     aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
     if (!aChange) {
