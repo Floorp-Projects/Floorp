@@ -1717,6 +1717,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &parentMinidump, &parentExtra, parentBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
          gExceptionHandler->dump_path(),
+         true,                  // write exception stream
          PairedDumpCallback,
          &parentCtx))
     return false;
