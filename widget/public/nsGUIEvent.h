@@ -51,6 +51,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMDataTransfer.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
@@ -526,9 +527,9 @@ public:
   // Event targets, needed by DOM Events
   // Using nsISupports, not nsIDOMEventTarget because in some cases
   // nsIDOMEventTarget is implemented as a tearoff.
-  nsCOMPtr<nsISupports> target;
-  nsCOMPtr<nsISupports> currentTarget;
-  nsCOMPtr<nsISupports> originalTarget;
+  nsCOMPtr<nsPIDOMEventTarget> target;
+  nsCOMPtr<nsPIDOMEventTarget> currentTarget;
+  nsCOMPtr<nsPIDOMEventTarget> originalTarget;
 };
 
 /**

@@ -96,7 +96,7 @@ public:
     return !!(mTarget);
   }
 
-  nsISupports* GetNewTarget()
+  nsPIDOMEventTarget* GetNewTarget()
   {
     return mNewTarget;
   }
@@ -280,7 +280,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 {
   PRUint32 createdELMs = nsEventListenerManager::sCreatedCount;
   // Save the target so that it can be restored later.
-  nsCOMPtr<nsISupports> firstTarget = aVisitor.mEvent->target;
+  nsCOMPtr<nsPIDOMEventTarget> firstTarget = aVisitor.mEvent->target;
 
   // Capture
   nsEventTargetChainItem* item = this;
@@ -300,7 +300,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
       // item is at anonymous boundary. Need to retarget for the child items.
       nsEventTargetChainItem* nextTarget = item->mChild;
       while (nextTarget) {
-        nsISupports* newTarget = nextTarget->GetNewTarget();
+        nsPIDOMEventTarget* newTarget = nextTarget->GetNewTarget();
         if (newTarget) {
           aVisitor.mEvent->target = newTarget;
           break;
@@ -333,7 +333,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
   item = item->mParent;
   while (item) {
-    nsISupports* newTarget = item->GetNewTarget();
+    nsPIDOMEventTarget* newTarget = item->GetNewTarget();
     if (newTarget) {
       // Item is at anonymous boundary. Need to retarget for the current item
       // and for parent items.
@@ -454,6 +454,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
                  NS_ERROR_ILLEGAL_VALUE);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
+  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(aTarget);
 
   if (aEvent->flags & NS_EVENT_FLAG_ONLY_CHROME_DISPATCH) {
     nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
@@ -471,13 +472,12 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       // If we can't dispatch the event to chrome, do nothing.
       NS_ENSURE_TRUE(win && win->GetChromeEventHandler(), NS_OK);
       // Set the target to be the original dispatch target,
-      aEvent->target = aTarget;
+      aEvent->target = target;
       // but use chrome event handler for event target chain.
       aTarget = win->GetChromeEventHandler();
     }
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(aTarget);
 #ifdef DEBUG
   if (!nsContentUtils::IsSafeToRunScript()) {
     nsresult rv = NS_ERROR_FAILURE;
@@ -532,9 +532,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     //     which are dispatched to |window| but have document as their target.
     //
     // Make sure that the event target points to the right object.
-    nsCOMPtr<nsPIDOMEventTarget> t = do_QueryInterface(aEvent->target);
-    NS_ENSURE_STATE(t);
-    aEvent->target = t->GetTargetForEventTargetChain();
+    aEvent->target = aEvent->target->GetTargetForEventTargetChain();
     NS_ENSURE_STATE(aEvent->target);
   }
   aEvent->originalTarget = aEvent->target;
