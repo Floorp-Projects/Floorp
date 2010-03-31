@@ -766,9 +766,9 @@ public:
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
-  NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
-                            nscolor aBackgroundColor,
-                            gfxContext* aThebesContext);
+  virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, PRUint32 aFlags,
+                                              nscolor aBackgroundColor,
+                                              gfxContext* aThebesContext);
 
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
                                                    nsIRegion* aRegion,
@@ -884,11 +884,14 @@ public:
   virtual void WillRefresh(mozilla::TimeStamp aTime);
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD DumpReflows();
-  NS_IMETHOD CountReflows(const char * aName, nsIFrame * aFrame);
-  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
-
-  NS_IMETHOD SetPaintFrameCount(PRBool aOn);
+  virtual NS_HIDDEN_(void) DumpReflows();
+  virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame);
+  virtual NS_HIDDEN_(void) PaintCount(const char * aName,
+                                      nsIRenderingContext* aRenderingContext,
+                                      nsPresContext* aPresContext,
+                                      nsIFrame * aFrame,
+                                      PRUint32 aColor);
+  virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn);
   virtual PRBool IsPaintingFrameCounts();
 #endif
 
@@ -904,7 +907,7 @@ public:
   static PRLogModuleInfo* gLog;
 #endif
 
-  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable);
+  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(PRBool aDisable);
 
   virtual void UpdateCanvasBackground();
 
@@ -5083,7 +5086,7 @@ PrepareContext(const nsRect& aRect, nscolor aBackgroundColor,
   return needsGroup;
 }
 
-NS_IMETHODIMP
+nsresult
 PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                           nscolor aBackgroundColor,
                           gfxContext* aThebesContext)
@@ -5837,11 +5840,10 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::DisableNonTestMouseEvents(PRBool aDisable)
 {
   sDisableNonTestMouseEvents = aDisable;
-  return NS_OK;
 }
 
 already_AddRefed<nsPIDOMWindow>
@@ -7824,8 +7826,7 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   nsRefPtr<gfxContext> context = new gfxContext(surface);
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = shell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
-  NS_ENSURE_SUCCESS(rv, rv);
+  shell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
 
   imgContext->DrawSurface(surface, gfxSize(width, height));
 
@@ -8009,7 +8010,7 @@ PresShell::VerifyStyleTree()
 //=============================================================
 #ifdef MOZ_REFLOW_PERF
 //-------------------------------------------------------------
-NS_IMETHODIMP
+void
 PresShell::DumpReflows()
 {
   if (mReflowCountMgr) {
@@ -8024,43 +8025,42 @@ PresShell::DumpReflows()
     mReflowCountMgr->DisplayHTMLTotals(uriStr.get());
     mReflowCountMgr->DisplayDiffsInTotals("Differences");
   }
-  return NS_OK;
 }
 
 //-------------------------------------------------------------
-NS_IMETHODIMP
+void
 PresShell::CountReflows(const char * aName, nsIFrame * aFrame)
 {
   if (mReflowCountMgr) {
     mReflowCountMgr->Add(aName, aFrame);
   }
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------
-NS_IMETHODIMP
-PresShell::PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor)
+void
+PresShell::PaintCount(const char * aName,
+                      nsIRenderingContext* aRenderingContext,
+                      nsPresContext* aPresContext,
+                      nsIFrame * aFrame,
+                      PRUint32 aColor)
 {
   if (mReflowCountMgr) {
     mReflowCountMgr->PaintCount(aName, aRenderingContext, aPresContext, aFrame, aColor);
   }
-  return NS_OK;
 }
 
 //-------------------------------------------------------------
-NS_IMETHODIMP
+void
 PresShell::SetPaintFrameCount(PRBool aPaintFrameCounts)
-{ 
+{
   if (mReflowCountMgr) {
     mReflowCountMgr->SetPaintFrameCounts(aPaintFrameCounts);
   }
-  return NS_OK; 
 }
 
 PRBool
 PresShell::IsPaintingFrameCounts()
-{ 
+{
   if (mReflowCountMgr)
     return mReflowCountMgr->IsPaintingFrameCounts();
   return PR_FALSE;

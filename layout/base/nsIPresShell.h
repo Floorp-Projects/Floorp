@@ -747,14 +747,14 @@ public:
   virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD DumpReflows() = 0;
-  NS_IMETHOD CountReflows(const char * aName, nsIFrame * aFrame) = 0;
-  NS_IMETHOD PaintCount(const char * aName, 
-                        nsIRenderingContext* aRenderingContext, 
-                        nsPresContext * aPresContext, 
-                        nsIFrame * aFrame,
-                        PRUint32 aColor) = 0;
-  NS_IMETHOD SetPaintFrameCount(PRBool aOn) = 0;
+  virtual NS_HIDDEN_(void) DumpReflows() = 0;
+  virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame) = 0;
+  virtual NS_HIDDEN_(void) PaintCount(const char * aName,
+                                      nsIRenderingContext* aRenderingContext,
+                                      nsPresContext * aPresContext,
+                                      nsIFrame * aFrame,
+                                      PRUint32 aColor) = 0;
+  virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn) = 0;
   virtual PRBool IsPaintingFrameCounts() = 0;
 #endif
 
@@ -832,9 +832,9 @@ public:
     RENDER_CARET = 0x04,
     RENDER_USE_WIDGET_LAYERS = 0x08
   };
-  NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
-                            nscolor aBackgroundColor,
-                            gfxContext* aRenderedContext) = 0;
+  virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, PRUint32 aFlags,
+                                              nscolor aBackgroundColor,
+                                              gfxContext* aRenderedContext) = 0;
 
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used
@@ -901,7 +901,7 @@ public:
    * @param aDisable If true, disable all non synthetic test mouse
    * events on all presShells.  Otherwise, enable them.
    */
-  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable) = 0;
+  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(PRBool aDisable) = 0;
 
   /**
    * Record the background color of the most recently drawn canvas. This color
