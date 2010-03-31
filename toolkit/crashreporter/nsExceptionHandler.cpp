@@ -1663,7 +1663,7 @@ CurrentThreadId()
 
 bool
 CreatePairedMinidumps(ProcessHandle childPid,
-                      ThreadId/* unused: FIXME/bug 555309 */,
+                      ThreadId childBlamedThread,
                       nsAString* pairGUID,
                       nsILocalFile** childDump,
                       nsILocalFile** parentDump)
@@ -1702,6 +1702,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &childMinidump, &childExtra, childBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
          childPid,
+         childBlamedThread,
          gExceptionHandler->dump_path(),
          PairedDumpCallback,
          &childCtx))

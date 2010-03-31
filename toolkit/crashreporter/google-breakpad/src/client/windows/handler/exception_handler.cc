@@ -719,17 +719,54 @@ bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
 
 // static
 bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
-					     const wstring &dump_path,
-					     MinidumpCallback callback,
-					     void *callback_context) {
+                                             DWORD child_blamed_thread,
+                                             const wstring &dump_path,
+                                             MinidumpCallback callback,
+                                             void *callback_context) {
   DWORD childId = GetProcId(child);
   if (0 == childId)
     return false;
 
+  EXCEPTION_RECORD ex;
+  CONTEXT ctx;
+  EXCEPTION_POINTERS exinfo = { NULL, NULL };
+  DWORD last_suspend_cnt = -1;
+  HANDLE child_thread_handle = OpenThread(THREAD_GET_CONTEXT |
+                                          THREAD_QUERY_INFORMATION |
+                                          THREAD_SUSPEND_RESUME,
+                                          FALSE,
+                                          child_blamed_thread);
+  // this thread may have died already, so not opening the handle is a
+  // non-fatal error
+  if (NULL != child_thread_handle) {
+    if (0 <= (last_suspend_cnt = SuspendThread(child_thread_handle))) {
+      ctx.ContextFlags = CONTEXT_ALL;
+      if (GetThreadContext(child_thread_handle, &ctx)) {
+        memset(&ex, 0, sizeof(ex));
+        ex.ExceptionCode = EXCEPTION_BREAKPOINT;
+#if defined(_M_IX86)
+        ex.ExceptionAddress = reinterpret_cast<PVOID>(ctx.Eip);
+#elif defined(_M_X64)
+        ex.ExceptionAddress = reinterpret_cast<PVOID>(ctx.Rip);
+#endif
+        exinfo.ExceptionRecord = &ex;
+        exinfo.ContextRecord = &ctx;
+      }
+    }
+  }
+
   ExceptionHandler handler(dump_path, NULL, callback, callback_context,
                            HANDLER_NONE);
   bool success = handler.WriteMinidumpWithExceptionForProcess(
-      0, NULL, NULL, child, childId, false);
+    child_blamed_thread,
+    exinfo.ExceptionRecord ? &exinfo : NULL,
+    NULL, child, childId, false);
+
+  if (0 <= last_suspend_cnt) {
+    ResumeThread(child_thread_handle);
+  }
+
+  CloseHandle(child_thread_handle);
 
   if (callback) {
     success = callback(handler.dump_path_c_, handler.next_minidump_id_c_,
