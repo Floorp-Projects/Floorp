@@ -525,8 +525,6 @@ public:
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
-  // Using nsISupports, not nsIDOMEventTarget because in some cases
-  // nsIDOMEventTarget is implemented as a tearoff.
   nsCOMPtr<nsPIDOMEventTarget> target;
   nsCOMPtr<nsPIDOMEventTarget> currentTarget;
   nsCOMPtr<nsPIDOMEventTarget> originalTarget;
