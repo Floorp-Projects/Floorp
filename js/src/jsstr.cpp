@@ -2147,103 +2147,97 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 static JSBool
 str_split(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSString *str, *sub;
-    JSObject *arrayobj;
-    jsval v;
-    JSBool ok, limited;
-    JSRegExp *re;
-    JSSubString *sep, tmp;
-    jsdouble d;
-    jsint i, j;
-    uint32 len, limit;
-
+    JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
-    arrayobj = js_NewArrayObject(cx, 0, NULL);
-    if (!arrayobj)
-        return JS_FALSE;
-    *vp = OBJECT_TO_JSVAL(arrayobj);
-
     if (argc == 0) {
-        v = STRING_TO_JSVAL(str);
-        ok = arrayobj->setProperty(cx, INT_TO_JSID(0), &v);
-    } else {
-        if (VALUE_IS_REGEXP(cx, vp[2])) {
-            re = (JSRegExp *) JSVAL_TO_OBJECT(vp[2])->getPrivate();
-            sep = &tmp;
-
-            /* Set a magic value so we can detect a successful re match. */
-            sep->chars = NULL;
-            sep->length = 0;
-        } else {
-            JSString *str2 = js_ValueToString(cx, vp[2]);
-            if (!str2)
-                return JS_FALSE;
-            vp[2] = STRING_TO_JSVAL(str2);
-
-            /*
-             * Point sep at a local copy of str2's header because find_split
-             * will modify sep->length.
-             */
-            str2->getCharsAndLength(tmp.chars, tmp.length);
-            sep = &tmp;
-            re = NULL;
-        }
-
-        /* Use the second argument as the split limit, if given. */
-        limited = (argc > 1) && !JSVAL_IS_VOID(vp[3]);
-        limit = 0; /* Avoid warning. */
-        if (limited) {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
-                return JS_FALSE;
-
-            /* Clamp limit between 0 and 1 + string length. */
-            limit = js_DoubleToECMAUint32(d);
-            if (limit > str->length())
-                limit = 1 + str->length();
-        }
-
-        len = i = 0;
-        while ((j = find_split(cx, str, re, &i, sep)) >= 0) {
-            if (limited && len >= limit)
-                break;
-            sub = js_NewDependentString(cx, str, i, (size_t)(j - i));
-            if (!sub)
-                return JS_FALSE;
-            v = STRING_TO_JSVAL(sub);
-            if (!JS_SetElement(cx, arrayobj, len, &v))
-                return JS_FALSE;
-            len++;
-
-            /*
-             * Imitate perl's feature of including parenthesized substrings
-             * that matched part of the delimiter in the new array, after the
-             * split substring that was delimited.
-             */
-            if (re && sep->chars) {
-                uintN num;
-                JSSubString *parsub;
-
-                for (num = 0; num < cx->regExpStatics.parenCount; num++) {
-                    if (limited && len >= limit)
-                        break;
-                    parsub = REGEXP_PAREN_SUBSTRING(&cx->regExpStatics, num);
-                    sub = js_NewStringCopyN(cx, parsub->chars, parsub->length);
-                    if (!sub)
-                        return JS_FALSE;
-                    v = STRING_TO_JSVAL(sub);
-                    if (!JS_SetElement(cx, arrayobj, len, &v))
-                        return JS_FALSE;
-                    len++;
-                }
-                sep->chars = NULL;
-            }
-            i = j + sep->length;
-        }
-        ok = (j != -2);
+        jsval v = STRING_TO_JSVAL(str);
+        JSObject *aobj = js_NewArrayObject(cx, 1, &v);
+        if (!aobj)
+            return false;
+        *vp = OBJECT_TO_JSVAL(aobj);
+        return true;
     }
-    return ok;
+
+    JSRegExp *re;
+    JSSubString *sep, tmp;
+    if (VALUE_IS_REGEXP(cx, vp[2])) {
+        re = (JSRegExp *) JSVAL_TO_OBJECT(vp[2])->getPrivate();
+        sep = &tmp;
+
+        /* Set a magic value so we can detect a successful re match. */
+        sep->chars = NULL;
+        sep->length = 0;
+    } else {
+        JSString *str2 = js_ValueToString(cx, vp[2]);
+        if (!str2)
+            return false;
+        vp[2] = STRING_TO_JSVAL(str2);
+
+        /*
+         * Point sep at a local copy of str2's header because find_split
+         * will modify sep->length.
+         */
+        str2->getCharsAndLength(tmp.chars, tmp.length);
+        sep = &tmp;
+        re = NULL;
+    }
+
+    /* Use the second argument as the split limit, if given. */
+    uint32 limit = 0; /* Avoid warning. */
+    bool limited = (argc > 1) && !JSVAL_IS_VOID(vp[3]);
+    if (limited) {
+        jsdouble d = js_ValueToNumber(cx, &vp[3]);
+        if (JSVAL_IS_NULL(vp[3]))
+            return false;
+
+        /* Clamp limit between 0 and 1 + string length. */
+        limit = js_DoubleToECMAUint32(d);
+        if (limit > str->length())
+            limit = 1 + str->length();
+    }
+
+    AutoValueVector splits(cx);
+
+    jsint i, j;
+    uint32 len = i = 0;
+    while ((j = find_split(cx, str, re, &i, sep)) >= 0) {
+        if (limited && len >= limit)
+            break;
+
+        JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
+        if (!sub || !splits.push(sub))
+            return false;
+        len++;
+
+        /*
+         * Imitate perl's feature of including parenthesized substrings that
+         * matched part of the delimiter in the new array, after the split
+         * substring that was delimited.
+         */
+        if (re && sep->chars) {
+            for (uintN num = 0; num < cx->regExpStatics.parenCount; num++) {
+                if (limited && len >= limit)
+                    break;
+                JSSubString *parsub = REGEXP_PAREN_SUBSTRING(&cx->regExpStatics, num);
+                sub = js_NewStringCopyN(cx, parsub->chars, parsub->length);
+                if (!sub || !splits.push(sub))
+                    return false;
+                len++;
+            }
+            sep->chars = NULL;
+        }
+        i = j + sep->length;
+    }
+
+    if (j == -2)
+        return false;
+
+    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.buffer());
+    if (!aobj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(aobj);
+    return true;
 }
 
 #if JS_HAS_PERL_SUBSTR
