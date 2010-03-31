@@ -741,8 +741,8 @@ public:
 
   virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
-  NS_IMETHOD IsPaintingSuppressed(PRBool* aResult);
-  NS_IMETHOD UnsuppressPainting();
+  virtual NS_HIDDEN_(PRBool) IsPaintingSuppressed() const;
+  virtual NS_HIDDEN_(void) UnsuppressPainting();
 
   virtual NS_HIDDEN_(void) DisableThemeSupport();
   virtual PRBool IsThemeSupportEnabled();
@@ -4393,11 +4393,10 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PresShell::IsPaintingSuppressed(PRBool* aResult)
+PRBool
+PresShell::IsPaintingSuppressed() const
 {
-  *aResult = mPaintingSuppressed;
-  return NS_OK;
+  return mPaintingSuppressed;
 }
 
 void
@@ -4434,7 +4433,7 @@ PresShell::UnsuppressAndInvalidate()
     mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
-NS_IMETHODIMP
+void
 PresShell::UnsuppressPainting()
 {
   if (mPaintSuppressionTimer) {
@@ -4443,7 +4442,7 @@ PresShell::UnsuppressPainting()
   }
 
   if (mIsDocumentGone || !mPaintingSuppressed)
-    return NS_OK;
+    return;
 
   // If we have reflows pending, just wait until we process
   // the reflows and get all the frames where we want them
@@ -4453,7 +4452,6 @@ PresShell::UnsuppressPainting()
     mShouldUnsuppressPainting = PR_TRUE;
   else
     UnsuppressAndInvalidate();
-  return NS_OK;
 }
 
 void
