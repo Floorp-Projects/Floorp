@@ -585,14 +585,14 @@ public:
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  NS_IMETHOD GetCaret(nsCaret **aOutCaret) = 0;
+  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() = 0;
 
   /**
    * Invalidate the caret's current position if it's outside of its frame's
    * boundaries. This function is useful if you're batching selection
    * notifications and might remove the caret's frame out from under it.
    */
-  NS_IMETHOD_(void) MaybeInvalidateCaretPosition() = 0;
+  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition() = 0;
 
   /**
    * Set the current caret to a new caret. To undo this, call RestoreCaret.
