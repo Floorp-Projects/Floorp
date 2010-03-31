@@ -1,20 +1,3 @@
-<!ENTITY  newTab.label           "New Tab">
-<!ENTITY  newTab.accesskey       "N">
 <!ENTITY  closeTab.label         "Close Tab">
-<!ENTITY  closeTab.accesskey         "c">
-<!ENTITY  closeOtherTabs.accesskey  "o">
-<!ENTITY  closeOtherTabs.label   "Close Other Tabs">
-<!ENTITY  reloadAllTabs.label    "Reload All Tabs">
-<!ENTITY  reloadAllTabs.accesskey         "A">
-<!ENTITY  reloadTab.label        "Reload Tab">
-<!ENTITY  reloadTab.accesskey         "r">
-<!ENTITY  openTabInNewWindow.label    "Open in a New Window">
-<!ENTITY  openTabInNewWindow.accesskey "W">
 <!ENTITY  listAllTabs.label      "List all tabs">
-<!ENTITY  bookmarkAllTabs.label       "Bookmark All Tabs…">
-<!ENTITY  bookmarkAllTabs.accesskey   "T">
-<!ENTITY  bookmarkThisTab.label       "Bookmark This Tab">
-<!ENTITY  bookmarkThisTab.accesskey   "B">
-<!ENTITY  undoCloseTab.label          "Undo Close Tab">
-<!ENTITY  undoCloseTab.accesskey      "U">
 <!ENTITY  newTabButton.tooltip        "Open a new tab">

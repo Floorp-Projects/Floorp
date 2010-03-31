@@ -53,14 +53,11 @@ public:
   ~nsIdleServiceOS2();
 
   // ask the DSSaver DLL (sscore.dll) for the time of the last activity
-  bool PollIdleTime(PRUint32 *aIdleTime);
+  NS_IMETHOD GetIdleTime(PRUint32 *aIdleTime);
 
 private:
   HMODULE mHMod; // module handle for screensaver DLL
   PRBool mInitialized; // fully initialized (function found in screensaver DLL?)
-
-protected:
-  bool UsePollMode();
 };
 
 #endif // nsIdleServiceOS2_h__
