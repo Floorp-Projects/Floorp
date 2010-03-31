@@ -258,7 +258,7 @@ toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
 
 .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
-  opacity: .6;
+  opacity: .5;
 }
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,

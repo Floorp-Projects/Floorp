@@ -59,7 +59,8 @@ class nsIAtom;
 // IID for the nsITheme interface
 // {887e8902-db6b-41b4-8481-a80f49c5a93a}
  #define NS_ITHEME_IID     \
-{ 0x23db7c13, 0x873d, 0x4fb5, { 0xaf, 0x29, 0xc1, 0xe9, 0xed, 0x91, 0x23, 0xf9 } }
+{ 0x887e8902, 0xdb6b, 0x41b4, { 0x84, 0x81, 0xa8, 0x0f, 0x49, 0xc5, 0xa9, 0x3a } }
+
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
 { 0xd930e29b, 0x6909, 0x44e5, { 0xab, 0x4b, 0xaf, 0x10, 0xd6, 0x92, 0x37, 0x5 } }
@@ -138,18 +139,7 @@ public:
                                   nsIntSize* aResult,
                                   PRBool* aIsOverridable)=0;
 
-
-  typedef enum {
-    eOpaque = 0,
-    eTransparent,
-    eUnknownTransparency
-  } Transparency;
-
-  /**
-   * Returns what we know about the transparency of the widget.
-   */
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
-  { return eUnknownTransparency; }
+  virtual nsTransparencyMode GetWidgetTransparency(PRUint8 aWidgetType)=0;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint)=0;

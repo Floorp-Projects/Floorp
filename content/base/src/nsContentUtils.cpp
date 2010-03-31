@@ -1305,7 +1305,7 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return sXPConnect->ReparentScopeAwareWrappers(cx, oldScopeObj, newScopeObj);
+  return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
 }
 
 nsIDocShell *

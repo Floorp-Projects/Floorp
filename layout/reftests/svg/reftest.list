@@ -144,6 +144,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01-ref.xhtml
 == text-layout-01.svg text-layout-01-ref.svg
+== text-layout-02.svg text-layout-02-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
