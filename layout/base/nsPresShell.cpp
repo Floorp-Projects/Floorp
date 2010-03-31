@@ -2779,7 +2779,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   }
 }
 
-already_AddRefed<nsCaret> PresShell::GetCaret()
+already_AddRefed<nsCaret> PresShell::GetCaret() const
 {
   nsCaret* caret = mCaret;
   NS_IF_ADDREF(caret);
