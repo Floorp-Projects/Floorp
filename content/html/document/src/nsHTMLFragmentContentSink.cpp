@@ -134,7 +134,6 @@ public:
                                  nsIContent* aContent);
 
   nsresult AddText(const nsAString& aString);
-  nsresult AddTextToContent(nsIContent* aContent, const nsAString& aText);
   nsresult FlushText();
 
   void ProcessBaseTag(nsIContent* aContent);
@@ -761,26 +760,6 @@ nsHTMLFragmentContentSink::AddText(const nsAString& aString)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent, const nsAString& aText) {
-  NS_ASSERTION(aContent !=nsnull, "can't add text w/o a content");
-
-  nsresult result=NS_OK;
-
-  if(aContent) {
-    if (!aText.IsEmpty()) {
-      nsCOMPtr<nsIContent> text;
-      result = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
-      if (NS_SUCCEEDED(result)) {
-        text->SetText(aText, PR_TRUE);
-
-        result = aContent->AppendChildTo(text, PR_FALSE);
-      }
-    }
-  }
-  return result;
 }
 
 nsresult
