@@ -277,7 +277,7 @@ var FullZoom = {
 
     // Avoid the cps roundtrip and apply the default/global pref.
     if (aURI.spec == "about:blank") {
-      this._applyPrefToSetting();
+      this._applyPrefToSetting(undefined, aBrowser);
       return;
     }
 
