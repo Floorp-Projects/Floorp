@@ -2918,15 +2918,17 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
-  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
-  if (ownerDoc) {
-    nsIContent* insertionParent = ownerDoc->BindingManager()->
-      GetInsertionParent(aContent);
-    NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
-                   aVisitor.mEventTargetAtParent != insertionParent),
-                 "Retargeting and having insertion parent!");
-    if (insertionParent) {
-      parent = insertionParent;
+  if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIDocument* ownerDoc = aContent->GetOwnerDoc();
+    if (ownerDoc) {
+      nsIContent* insertionParent = ownerDoc->BindingManager()->
+        GetInsertionParent(aContent);
+      NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
+                     aVisitor.mEventTargetAtParent != insertionParent),
+                   "Retargeting and having insertion parent!");
+      if (insertionParent) {
+        parent = insertionParent;
+      }
     }
   }
 

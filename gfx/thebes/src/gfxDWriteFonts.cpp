@@ -181,11 +181,23 @@ gfxDWriteFont::ComputeMetrics()
     mMetrics.strikeoutSize = 
         ((gfxFloat)fontMetrics.strikethroughThickness /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.subscriptOffset = 0;
+    mMetrics.superscriptOffset = 0;
     mMetrics.subscriptOffset = 0;
 
     SanitizeMetrics(&mMetrics, PR_FALSE);
- }
+
+#if 0
+    printf("Font: %p (%s) size: %f\n", this,
+           NS_ConvertUTF16toUTF8(GetName()).get(), mStyle.size);
+    printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
+    printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
+    printf("    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
+    printf("    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
+    printf("    uOff: %f uSize: %f stOff: %f stSize: %f supOff: %f subOff: %f\n",
+           mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize,
+           mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+#endif
+}
 
 PRUint32
 gfxDWriteFont::GetSpaceGlyph()

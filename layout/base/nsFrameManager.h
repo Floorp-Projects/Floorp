@@ -92,18 +92,6 @@ public:
   NS_HIDDEN_(void) Destroy();
 
   /*
-   * Gets and sets the root frame (typically the viewport). The lifetime of the
-   * root frame is controlled by the frame manager. When the frame manager is
-   * destroyed, it destroys the entire frame hierarchy.
-   */
-  NS_HIDDEN_(nsIFrame*) GetRootFrame() { return mRootFrame; }
-  NS_HIDDEN_(void)      SetRootFrame(nsIFrame* aRootFrame)
-  {
-    NS_ASSERTION(!mRootFrame, "already have a root frame");
-    mRootFrame = aRootFrame;
-  }
-
-  /*
    * Get the canvas frame, searching from the root frame down.
    * The canvas frame may or may not exist, so this may return null.
    */
