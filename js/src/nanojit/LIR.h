@@ -60,17 +60,226 @@ namespace nanojit
 #  define PTR_SIZE(a,b)  a
 #endif
 
-        // pointer op aliases
-        LIR_ldp     = PTR_SIZE(LIR_ld,     LIR_ldq),
+        // Pointer-sized synonyms.
+
+        LIR_paramp  = PTR_SIZE(LIR_paraml, LIR_paramq),
+
+        LIR_allocp  = PTR_SIZE(LIR_allocl, LIR_allocq),
+
+        LIR_retp    = PTR_SIZE(LIR_retl,   LIR_retq),
+
+        LIR_livep   = PTR_SIZE(LIR_livel,  LIR_liveq),
+
+        LIR_ldp     = PTR_SIZE(LIR_ldl,    LIR_ldq),
+
+        LIR_stp     = PTR_SIZE(LIR_stl,    LIR_stq),
+
+        LIR_callp   = PTR_SIZE(LIR_calll,  LIR_callq),
+
+        LIR_eqp     = PTR_SIZE(LIR_eql,    LIR_eqq),
+        LIR_ltp     = PTR_SIZE(LIR_ltl,    LIR_ltq),
+        LIR_gtp     = PTR_SIZE(LIR_gtl,    LIR_gtq),
+        LIR_lep     = PTR_SIZE(LIR_lel,    LIR_leq),
+        LIR_gep     = PTR_SIZE(LIR_gel,    LIR_geq),
+        LIR_ltup    = PTR_SIZE(LIR_ltul,   LIR_ltuq),
+        LIR_gtup    = PTR_SIZE(LIR_gtul,   LIR_gtuq),
+        LIR_leup    = PTR_SIZE(LIR_leul,   LIR_leuq),
+        LIR_geup    = PTR_SIZE(LIR_geul,   LIR_geuq),
+
+        LIR_addp    = PTR_SIZE(LIR_addl,   LIR_addq),
+
+        LIR_andp    = PTR_SIZE(LIR_andl,   LIR_andq),
+        LIR_orp     = PTR_SIZE(LIR_orl,    LIR_orq),
+        LIR_xorp    = PTR_SIZE(LIR_xorl,   LIR_xorq),
+
+        LIR_lshp    = PTR_SIZE(LIR_lshl,   LIR_lshq),
+        LIR_rshp    = PTR_SIZE(LIR_rshl,   LIR_rshq),
+        LIR_rshup   = PTR_SIZE(LIR_rshul,  LIR_rshuq),
+
+        LIR_cmovp   = PTR_SIZE(LIR_cmovl,  LIR_cmovq),
+
+        // XXX: temporary synonyms for old opcode names and old pointer-sized
+        // synonyms, for the Great Opcode Renaming transition period (bug
+        // 504506).  Those in comments have not changed and so don't need a
+        // temporary synonym.
+
+        // LIR_start
+
+        // LIR_regfence
+
+        // LIR_skip
+
+#ifndef NANOJIT_64BIT
+        LIR_iparam  = LIR_paraml,
+#else
+        LIR_qparam  = LIR_paramq,
+#endif
+
+#ifndef NANOJIT_64BIT
+        LIR_ialloc  = LIR_allocl,
+#else
+        LIR_qalloc  = LIR_allocq,
+#endif
+
+        LIR_ret     = LIR_retl,
+#ifdef NANOJIT_64BIT
+        LIR_qret    = LIR_retq,
+#endif
+        LIR_fret    = LIR_retd,
+
+        LIR_live    = LIR_livel,
+#ifdef NANOJIT_64BIT
+        LIR_qlive   = LIR_liveq,
+#endif
+        LIR_flive   = LIR_lived,
+
+        // file
+        // line
+
+        LIR_ldsb    = LIR_ldb2l,
+        LIR_ldss    = LIR_ldw2l,
+        LIR_ldzb    = LIR_ldub2ul,
+        LIR_ldzs    = LIR_lduw2ul,
+        LIR_ld      = LIR_ldl,
+        // LIR_ldq
+        LIR_ldf     = LIR_ldd,
+        LIR_ld32f   = LIR_lds2d,
+
+        // LIR_stb
+        LIR_sts     = LIR_stw,
+        LIR_sti     = LIR_stl,
+#ifdef NANOJIT_64BIT
+        LIR_stqi    = LIR_stq,
+#endif
+        LIR_stfi    = LIR_std,
+        LIR_st32f   = LIR_std2s,
+
+        LIR_icall   = LIR_calll,
+#ifdef NANOJIT_64BIT
+        LIR_qcall   = LIR_callq,
+#endif
+        LIR_fcall   = LIR_calld,
+
+        // LIR_j
+        // LIR_jt
+        // LIR_jf
+        // LIR_jtbl
+
+        // LIR_label   = LIR_label
+
+        // LIR_x
+        // LIR_xt
+        // LIR_xf
+        // LIR_xtbl
+        // LIR_xbarrier
+
+        LIR_int     = LIR_imml,
+#ifdef NANOJIT_64BIT
+        LIR_quad    = LIR_immq,
+#endif
+        LIR_float   = LIR_immd,
+
+        LIR_eq      = LIR_eql,
+        LIR_lt      = LIR_ltl,
+        LIR_gt      = LIR_gtl,
+        LIR_le      = LIR_lel,
+        LIR_ge      = LIR_gel,
+        LIR_ult     = LIR_ltul,
+        LIR_ugt     = LIR_gtul,
+        LIR_ule     = LIR_leul,
+        LIR_uge     = LIR_geul,
+
+#ifdef NANOJIT_64BIT
+        LIR_qeq     = LIR_eqq,
+        LIR_qlt     = LIR_ltq,
+        LIR_qgt     = LIR_gtq,
+        LIR_qle     = LIR_leq,
+        LIR_qge     = LIR_geq,
+        LIR_qult    = LIR_ltuq,
+        LIR_qugt    = LIR_gtuq,
+        LIR_qule    = LIR_leuq,
+        LIR_quge    = LIR_geuq,
+#endif
+
+        LIR_feq     = LIR_eqd,
+        LIR_flt     = LIR_ltd,
+        LIR_fgt     = LIR_gtd,
+        LIR_fle     = LIR_led,
+        LIR_fge     = LIR_ged,
+
+        LIR_neg     = LIR_negl,
+        LIR_add     = LIR_addl,
+        LIR_sub     = LIR_subl,
+        LIR_mul     = LIR_mull,
+        LIR_div     = LIR_divl,
+        LIR_mod     = LIR_modl,
+
+        LIR_not     = LIR_notl,
+        LIR_and     = LIR_andl,
+        LIR_or      = LIR_orl,
+        LIR_xor     = LIR_xorl,
+
+        LIR_lsh     = LIR_lshl,
+        LIR_rsh     = LIR_rshl,
+        LIR_ush     = LIR_rshul,
+
+#ifdef NANOJIT_64BIT
+        LIR_qiadd   = LIR_addq,
+
+        LIR_qiand   = LIR_andq,
+        LIR_qior    = LIR_orq,
+        LIR_qxor    = LIR_xorq,
+
+        LIR_qilsh   = LIR_lshq,
+        LIR_qirsh   = LIR_rshq,
+        LIR_qursh   = LIR_rshuq,
+#endif
+
+        LIR_fneg    = LIR_negd,
+        LIR_fadd    = LIR_addd,
+        LIR_fsub    = LIR_subd,
+        LIR_fmul    = LIR_muld,
+        LIR_fdiv    = LIR_divd,
+        LIR_fmod    = LIR_modd,
+
+        LIR_cmov    = LIR_cmovl,
+#ifdef NANOJIT_64BIT
+        LIR_qcmov   = LIR_cmovq,
+#endif
+
+#ifdef NANOJIT_64BIT
+        LIR_i2q     = LIR_l2q,
+        LIR_u2q     = LIR_ul2uq,
+        LIR_q2i     = LIR_q2l,
+#endif
+
+        LIR_i2f     = LIR_l2d,
+        LIR_u2f     = LIR_ul2d,
+        LIR_f2i     = LIR_d2l,
+
+        LIR_addxov  = LIR_addxovl,
+        LIR_subxov  = LIR_subxovl,
+        LIR_mulxov  = LIR_mulxovl,
+
+#if NJ_SOFTFLOAT_SUPPORTED
+        LIR_qlo     = LIR_dlo2l,
+        LIR_qhi     = LIR_dhi2l,
+        LIR_qjoin   = LIR_ll2d,
+        LIR_callh   = LIR_hcalll,
+#endif
+
+        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
+
+        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
+
+        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret),
+
+        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
+
         LIR_stpi    = PTR_SIZE(LIR_sti,    LIR_stqi),
-        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
-        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
-        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
-        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
-        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
-        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov),
-        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
-        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
+
+        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
+
         LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
         LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
         LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
@@ -80,11 +289,17 @@ namespace nanojit
         LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
         LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
         LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
-        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
-        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
-        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
-        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret)
+        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
+
+        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
+        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
+        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
+
+        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
+        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
+        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
+
+        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov)
     };
 
     // 32-bit integer comparisons must be contiguous, as must 64-bit integer
@@ -426,6 +641,8 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
     LOpcode i32cmp_to_i64cmp(LOpcode op);
 #endif
+    LOpcode f64cmp_to_i32cmp(LOpcode op);
+    LOpcode f64cmp_to_u32cmp(LOpcode op);
 
     // Array holding the 'repKind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];

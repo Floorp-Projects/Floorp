@@ -1,5 +1,5 @@
-pi = float 3.14
-half = float 0.5
-halfpi = fmul pi half
-res = fcall sin cdecl halfpi
-fret res
+pi = immd 3.14
+half = immd 0.5
+halfpi = muld pi half
+res = calld sin cdecl halfpi
+retd res
