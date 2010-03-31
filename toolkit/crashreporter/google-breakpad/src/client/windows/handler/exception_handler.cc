@@ -718,6 +718,37 @@ bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
 }
 
 // static
+bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
+                                     bool write_exception_stream,
+                                     MinidumpCallback callback,
+                                     void* callback_context) {
+  EXCEPTION_RECORD ex;
+  CONTEXT ctx;
+  EXCEPTION_POINTERS exinfo = { NULL, NULL };
+
+  if (write_exception_stream) {
+    // MSDN says that GetThreadContext(currentThread) doesn't return a
+    // valid context, so we just fill in the crash address so as to
+    // get a signature
+    bool (*signature) (const wstring&, bool, MinidumpCallback, void*) =
+      &ExceptionHandler::WriteMinidump;
+
+    memset(&ex, 0, sizeof(ex));
+    ex.ExceptionCode = EXCEPTION_BREAKPOINT;
+    ex.ExceptionAddress = reinterpret_cast<void*>(signature);
+    memset(&ctx, 0, sizeof(ctx));
+
+    exinfo.ExceptionRecord = &ex;
+    exinfo.ContextRecord = &ctx;
+  }
+
+  ExceptionHandler handler(dump_path, NULL, callback, callback_context,
+                           HANDLER_NONE);
+  return handler.WriteMinidumpForException(exinfo.ExceptionRecord ?
+                                           &exinfo : NULL);
+}
+
+// static
 bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
                                              DWORD child_blamed_thread,
                                              const wstring &dump_path,

@@ -154,11 +154,22 @@ class ExceptionHandler {
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
 
+  // Variant of WriteMinidump() above that optionally allows writing
+  // an artificial exception stream in the minidump.
+  bool WriteMinidump(bool write_exception_stream);
+
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
   static bool WriteMinidump(const std::string &dump_path,
                             MinidumpCallback callback,
                             void *callback_context);
+
+  // Variant of WriteMinidump() above that optionally allows writing
+  // an artificial exception stream in the minidump.
+  static bool WriteMinidump(const std::string &dump_path,
+                            bool write_exception_stream,
+                            MinidumpCallback callback,
+                            void* callback_context);
 
   // Write a minidump of |child| immediately.  This can be used to
   // capture the execution state of |child| independently of a crash.

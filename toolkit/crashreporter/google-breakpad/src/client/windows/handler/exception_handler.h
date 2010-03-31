@@ -190,6 +190,12 @@ class ExceptionHandler {
   static bool WriteMinidump(const wstring &dump_path,
                             MinidumpCallback callback, void* callback_context);
 
+  // Variant of WriteMinidump() above that optionally allows writing
+  // an artificial exception stream in the minidump.
+  static bool WriteMinidump(const wstring &dump_path,
+                            bool write_exception_stream,
+                            MinidumpCallback callback, void* callback_context);
+
   // Write a minidump of |child| immediately.  This can be used to
   // capture the execution state of |child| independently of a crash.
   // Pass a meaningful |child_blamed_thread| to make that thread in
