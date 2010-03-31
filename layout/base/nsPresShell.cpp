@@ -731,13 +731,13 @@ public:
                                          PRIntn        aHPercent,
                                          PRUint32      aFlags);
   virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
-                                             const nsRect &aRect, 
-                                             nscoord aMinTwips);
+                                             const nsRect &aRect,
+                                             nscoord aMinTwips) const;
 
   virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(PRBool aIgnore);
   virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  virtual NS_HIDDEN_(nsresult) GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString);
+  virtual NS_HIDDEN_(nsresult) GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString) const;
 
   virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
@@ -809,7 +809,7 @@ public:
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
 
   // caret handling
-  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret();
+  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const;
   virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition();
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
@@ -1492,15 +1492,16 @@ nsresult
 NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
+
+  if (!aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
-  }
-  PresShell* it = new PresShell();
-  if (nsnull == it) {
+
+  *aInstancePtrResult = new PresShell();
+  if (!*aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIPresShell),
-                            (void **) aInstancePtrResult);
+
+  NS_ADDREF(*aInstancePtrResult);
+  return NS_OK;
 }
 
 PresShell::PresShell()
@@ -1948,7 +1949,7 @@ nsIPresShell::SetAuthorStyleDisabled(PRBool aStyleDisabled)
 }
 
 PRBool
-nsIPresShell::GetAuthorStyleDisabled()
+nsIPresShell::GetAuthorStyleDisabled() const
 {
   return mStyleSet->GetAuthorStyleDisabled();
 }
@@ -4154,8 +4155,8 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
 
 nsRectVisibility
 PresShell::GetRectVisibility(nsIFrame* aFrame,
-                             const nsRect &aRect, 
-                             nscoord aMinTwips)
+                             const nsRect &aRect,
+                             nscoord aMinTwips) const
 {
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   NS_ASSERTION(rootFrame,
@@ -4191,7 +4192,7 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
 }
 
 // GetLinkLocation: copy link location to clipboard
-nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString)
+nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString) const
 {
 #ifdef DEBUG_dr
   printf("dr :: PresShell::GetLinkLocation\n");
