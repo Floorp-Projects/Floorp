@@ -356,6 +356,8 @@ struct JSObject {
             JS_CALL_OBJECT_TRACER(trc, parent, "__parent__");
     }
 
+    JSObject *getGlobal();
+
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         jsval v = fslots[JSSLOT_PRIVATE];
