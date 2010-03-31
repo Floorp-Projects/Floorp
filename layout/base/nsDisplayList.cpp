@@ -82,9 +82,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
-  PRBool suppressed;
-  shell->IsPaintingSuppressed(&suppressed);
-  mIsBackgroundOnly = suppressed;
+  mIsBackgroundOnly = shell->IsPaintingSuppressed();
   if (pc->IsRenderingOnlySelection()) {
     nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
     if (selcon) {
