@@ -282,12 +282,8 @@ nsBindingValues::GetAssignmentFor(nsXULTemplateResultRDF* aResult,
                 nsCOMPtr<nsIRDFNode> subjectValue;
                 aResult->GetAssignment(binding->mSubjectVariable,
                                        getter_AddRefs(subjectValue));
-
-                NS_ASSERTION(subjectValue, "Value of subject is not set");
-
                 if (subjectValue) {
                     nsCOMPtr<nsIRDFResource> subject = do_QueryInterface(subjectValue);
-
                     ds->GetTarget(subject, binding->mPredicate, PR_TRUE, aValue);
                     if (*aValue)
                         mValues[idx] = *aValue;

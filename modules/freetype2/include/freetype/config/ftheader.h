@@ -729,6 +729,18 @@
 #define FT_GASP_H  <freetype/ftgasp.h>
 
 
+  /*************************************************************************
+   *
+   * @macro:
+   *   FT_ADVANCES_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing the
+   *   FreeType~2 API which returns individual and ranged glyph advances.
+   */
+#define FT_ADVANCES_H  <freetype/ftadvanc.h>
+
+
   /* */
 
 #define FT_ERROR_DEFINITIONS_H  <freetype/fterrdef.h>

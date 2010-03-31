@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,11 +19,9 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_OUTLINE_H
-#include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 
 #include "cffobjs.h"
@@ -110,8 +109,14 @@
     cff_op_callgsubr,
     cff_op_return,
 
-    cff_op_hsbw,        /* Type 1 opcode: invalid but seen in real life */
-    cff_op_closepath,   /* ditto */
+    /* Type 1 opcodes: invalid but seen in real life */
+    cff_op_hsbw,
+    cff_op_closepath,
+    cff_op_callothersubr,
+    cff_op_pop,
+    cff_op_seac,
+    cff_op_sbw,
+    cff_op_setcurrentpoint,
 
     /* do not remove */
     cff_op_max
@@ -123,6 +128,11 @@
 #define CFF_COUNT_EXACT        0x40
 #define CFF_COUNT_CLEAR_STACK  0x20
 
+  /* count values which have the `CFF_COUNT_CHECK_WIDTH' flag set are  */
+  /* used for checking the width and requested numbers of arguments    */
+  /* only; they are set to zero afterwards                             */
+
+  /* the other two flags are informative only and unused currently     */
 
   static const FT_Byte  cff_argument_counts[] =
   {
@@ -193,7 +203,12 @@
     0,
 
     2, /* hsbw */
-    0
+    0,
+    0,
+    0,
+    5, /* seac */
+    4, /* sbw */
+    2  /* setcurrentpoint */
   };
 
 
@@ -311,17 +326,23 @@
   /*    subroutines.                                                       */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    num_subrs :: The number of glyph subroutines.                      */
+  /*    in_charstring_type :: The `CharstringType' value of the top DICT   */
+  /*                          dictionary.                                  */
+  /*                                                                       */
+  /*    num_subrs          :: The number of glyph subroutines.             */
   /*                                                                       */
   /* <Return>                                                              */
   /*    The bias value.                                                    */
   static FT_Int
-  cff_compute_bias( FT_UInt  num_subrs )
+  cff_compute_bias( FT_Int   in_charstring_type,
+                    FT_UInt  num_subrs )
   {
     FT_Int  result;
 
 
-    if ( num_subrs < 1240 )
+    if ( in_charstring_type == 1 )
+      result = 0;
+    else if ( num_subrs < 1240 )
       result = 107;
     else if ( num_subrs < 33900U )
       result = 1131;
@@ -372,9 +393,12 @@
     cff_builder_init( &decoder->builder, face, size, slot, hinting );
 
     /* initialize Type2 decoder */
+    decoder->cff          = cff;
     decoder->num_globals  = cff->num_global_subrs;
     decoder->globals      = cff->global_subrs;
-    decoder->globals_bias = cff_compute_bias( decoder->num_globals );
+    decoder->globals_bias = cff_compute_bias(
+                              cff->top_font.font_dict.charstring_type,
+                              decoder->num_globals );
 
     decoder->hint_mode    = hint_mode;
   }
@@ -406,9 +430,11 @@
         goto Exit;
       }
 
+      FT_TRACE4(( "glyph index %d (subfont %d):\n", glyph_index, fd_index ));
+
       sub = cff->subfonts[fd_index];
 
-      if ( builder->hints_funcs )
+      if ( builder->hints_funcs && size )
       {
         CFF_Internal  internal = (CFF_Internal)size->root.internal;
 
@@ -417,10 +443,16 @@
         builder->hints_globals = (void *)internal->subfonts[fd_index];
       }
     }
+#ifdef FT_DEBUG_LEVEL_TRACE
+    else
+      FT_TRACE4(( "glyph index %d:\n", glyph_index ));
+#endif
 
     decoder->num_locals    = sub->num_local_subrs;
     decoder->locals        = sub->local_subrs;
-    decoder->locals_bias   = cff_compute_bias( decoder->num_locals );
+    decoder->locals_bias   = cff_compute_bias(
+                               decoder->cff->top_font.font_dict.charstring_type,
+                               decoder->num_locals );
 
     decoder->glyph_width   = sub->private_dict.default_width;
     decoder->nominal_width = sub->private_dict.nominal_width;
@@ -458,8 +490,6 @@
       point->x = x >> 16;
       point->y = y >> 16;
       *control = (FT_Byte)( flag ? FT_CURVE_TAG_ON : FT_CURVE_TAG_CUBIC );
-
-      builder->last = *point;
     }
 
     outline->n_points++;
@@ -538,26 +568,23 @@
   cff_builder_close_contour( CFF_Builder*  builder )
   {
     FT_Outline*  outline = builder->current;
+    FT_Int       first;
 
 
     if ( !outline )
       return;
 
-    /* XXXX: We must not include the last point in the path if it */
-    /*       is located on the first point.                       */
+    first = outline->n_contours <= 1
+            ? 0 : outline->contours[outline->n_contours - 2] + 1;
+
+    /* We must not include the last point in the path if it */
+    /* is located on the first point.                       */
     if ( outline->n_points > 1 )
     {
-      FT_Int      first   = 0;
       FT_Vector*  p1      = outline->points + first;
       FT_Vector*  p2      = outline->points + outline->n_points - 1;
       FT_Byte*    control = (FT_Byte*)outline->tags + outline->n_points - 1;
 
-
-      if ( outline->n_contours > 1 )
-      {
-        first = outline->contours[outline->n_contours - 2] + 1;
-        p1    = outline->points + first;
-      }
 
       /* `delete' last point only if it coincides with the first    */
       /* point and if it is not a control point (which can happen). */
@@ -567,8 +594,18 @@
     }
 
     if ( outline->n_contours > 0 )
-      outline->contours[outline->n_contours - 1] =
-        (short)( outline->n_points - 1 );
+    {
+      /* Don't add contours only consisting of one point, i.e., */
+      /* check whether begin point and last point are the same. */
+      if ( first == outline->n_points - 1 )
+      {
+        outline->n_contours--;
+        outline->n_points--;
+      }
+      else
+        outline->contours[outline->n_contours - 1] =
+          (short)( outline->n_points - 1 );
+    }
   }
 
 
@@ -658,7 +695,7 @@
       data.length  = length;
 
       face->root.internal->incremental_interface->funcs->free_glyph_data(
-        face->root.internal->incremental_interface->object,&data );
+        face->root.internal->incremental_interface->object, &data );
     }
     else
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
@@ -674,6 +711,7 @@
 
   static FT_Error
   cff_operator_seac( CFF_Decoder*  decoder,
+                     FT_Pos        asb,
                      FT_Pos        adx,
                      FT_Pos        ady,
                      FT_Int        bchar,
@@ -686,7 +724,17 @@
     FT_Vector     left_bearing, advance;
     FT_Byte*      charstring;
     FT_ULong      charstring_len;
+    FT_Pos        glyph_width;
 
+
+    if ( decoder->seac )
+    {
+      FT_ERROR(( "cff_operator_seac: invalid nested seac\n" ));
+      return CFF_Err_Syntax_Error;
+    }
+
+    adx += decoder->builder.left_bearing.x;
+    ady += decoder->builder.left_bearing.y;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     /* Incremental fonts don't necessarily have valid charsets.        */
@@ -708,8 +756,8 @@
 
     if ( bchar_index < 0 || achar_index < 0 )
     {
-      FT_ERROR(( "cff_operator_seac:" ));
-      FT_ERROR(( " invalid seac character code arguments\n" ));
+      FT_ERROR(( "cff_operator_seac:"
+                 " invalid seac character code arguments\n" ));
       return CFF_Err_Syntax_Error;
     }
 
@@ -758,8 +806,11 @@
                                 &charstring, &charstring_len );
     if ( !error )
     {
+      /* the seac operator must not be nested */
+      decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
                                              charstring_len );
+      decoder->seac = FALSE;
 
       if ( error )
         goto Exit;
@@ -767,16 +818,17 @@
       cff_free_glyph_data( face, &charstring, charstring_len );
     }
 
-    /* Save the left bearing and width of the base character */
-    /* as they will be erased by the next load.              */
+    /* Save the left bearing, advance and glyph width of the base */
+    /* character as they will be erased by the next load.         */
 
     left_bearing = builder->left_bearing;
     advance      = builder->advance;
+    glyph_width  = decoder->glyph_width;
 
     builder->left_bearing.x = 0;
     builder->left_bearing.y = 0;
 
-    builder->pos_x = adx;
+    builder->pos_x = adx - asb;
     builder->pos_y = ady;
 
     /* Now load `achar' on top of the base outline. */
@@ -784,8 +836,11 @@
                                 &charstring, &charstring_len );
     if ( !error )
     {
+      /* the seac operator must not be nested */
+      decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
                                              charstring_len );
+      decoder->seac = FALSE;
 
       if ( error )
         goto Exit;
@@ -793,10 +848,11 @@
       cff_free_glyph_data( face, &charstring, charstring_len );
     }
 
-    /* Restore the left side bearing and advance width */
-    /* of the base character.                          */
+    /* Restore the left side bearing, advance and glyph width */
+    /* of the base character.                                 */
     builder->left_bearing = left_bearing;
     builder->advance      = advance;
+    decoder->glyph_width  = glyph_width;
 
     builder->pos_x = 0;
     builder->pos_y = 0;
@@ -838,6 +894,8 @@
     FT_Pos             x, y;
     FT_Fixed           seed;
     FT_Fixed*          stack;
+    FT_Int             charstring_type =
+                         decoder->cff->top_font.font_dict.charstring_type;
 
     T2_Hints_Funcs     hinter;
 
@@ -847,9 +905,10 @@
     decoder->read_width = 1;
 
     /* compute random seed from stack address of parameter */
-    seed = (FT_Fixed)(char*)&seed           ^
-           (FT_Fixed)(char*)&decoder        ^
-           (FT_Fixed)(char*)&charstring_base;
+    seed = (FT_Fixed)( ( (FT_PtrDist)(char*)&seed              ^
+                         (FT_PtrDist)(char*)&decoder           ^
+                         (FT_PtrDist)(char*)&charstring_base ) &
+                         FT_ULONG_MAX ) ;
     seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFFL;
     if ( seed == 0 )
       seed = 0x7384;
@@ -904,18 +963,18 @@
           ip += 2;
         }
         else if ( v < 247 )
-          val = (FT_Long)v - 139;
+          val = (FT_Int32)v - 139;
         else if ( v < 251 )
         {
           if ( ip >= limit )
             goto Syntax_Error;
-          val = ( (FT_Long)v - 247 ) * 256 + *ip++ + 108;
+          val = ( (FT_Int32)v - 247 ) * 256 + *ip++ + 108;
         }
         else if ( v < 255 )
         {
           if ( ip >= limit )
             goto Syntax_Error;
-          val = -( (FT_Long)v - 251 ) * 256 - *ip++ - 108;
+          val = -( (FT_Int32)v - 251 ) * 256 - *ip++ - 108;
         }
         else
         {
@@ -926,7 +985,8 @@
                 ( (FT_Int32)ip[2] <<  8 ) |
                             ip[3];
           ip    += 4;
-          shift  = 0;
+          if ( charstring_type == 2 )
+            shift = 0;
         }
         if ( decoder->top - stack >= CFF_MAX_OPERANDS )
           goto Stack_Overflow;
@@ -944,6 +1004,11 @@
       }
       else
       {
+        /* The specification says that normally arguments are to be taken */
+        /* from the bottom of the stack.  However, this seems not to be   */
+        /* correct, at least for Acroread 7.0.8 on GNU/Linux: It pops the */
+        /* arguments similar to a PS interpreter.                         */
+
         FT_Fixed*  args     = decoder->top;
         FT_Int     num_args = (FT_Int)( args - decoder->stack );
         FT_Int     req_args;
@@ -995,6 +1060,12 @@
             case 0:
               op = cff_op_dotsection;
               break;
+            case 1: /* this is actually the Type1 vstem3 operator */
+              op = cff_op_vstem;
+              break;
+            case 2: /* this is actually the Type1 hstem3 operator */
+              op = cff_op_hstem;
+              break;
             case 3:
               op = cff_op_and;
               break;
@@ -1003,6 +1074,12 @@
               break;
             case 5:
               op = cff_op_not;
+              break;
+            case 6:
+              op = cff_op_seac;
+              break;
+            case 7:
+              op = cff_op_sbw;
               break;
             case 8:
               op = cff_op_store;
@@ -1027,6 +1104,12 @@
               break;
             case 15:
               op = cff_op_eq;
+              break;
+            case 16:
+              op = cff_op_callothersubr;
+              break;
+            case 17:
+              op = cff_op_pop;
               break;
             case 18:
               op = cff_op_drop;
@@ -1060,6 +1143,9 @@
               break;
             case 30:
               op = cff_op_roll;
+              break;
+            case 33:
+              op = cff_op_setcurrentpoint;
               break;
             case 34:
               op = cff_op_hflex;
@@ -1128,8 +1214,9 @@
           op = cff_op_hvcurveto;
           break;
         default:
-          ;
+          break;
         }
+
         if ( op == cff_op_unknown )
           goto Syntax_Error;
 
@@ -1137,8 +1224,6 @@
         req_args = cff_argument_counts[op];
         if ( req_args & CFF_COUNT_CHECK_WIDTH )
         {
-          args = stack;
-
           if ( num_args > 0 && decoder->read_width )
           {
             /* If `nominal_width' is non-zero, the number is really a      */
@@ -1172,7 +1257,7 @@
             case cff_op_endchar:
               /* If there is a width specified for endchar, we either have */
               /* 1 argument or 5 arguments.  We like to argue.             */
-              set_width_ok = ( ( num_args == 5 ) || ( num_args == 1 ) );
+              set_width_ok = ( num_args == 5 ) || ( num_args == 1 );
               break;
 
             default:
@@ -1185,9 +1270,14 @@
               decoder->glyph_width = decoder->nominal_width +
                                        ( stack[0] >> 16 );
 
+              if ( decoder->width_only )
+              {
+                /* we only want the advance width; stop here */
+                break;
+              }
+
               /* Consumed an argument. */
               num_args--;
-              args++;
             }
           }
 
@@ -1201,6 +1291,14 @@
         args     -= req_args;
         num_args -= req_args;
 
+        /* At this point, `args' points to the first argument of the  */
+        /* operand in case `req_args' isn't zero.  Otherwise, we have */
+        /* to adjust `args' manually.                                 */
+
+        /* Note that we only pop arguments from the stack which we    */
+        /* really need and can digest so that we can continue in case */
+        /* of superfluous stack elements.                             */
+
         switch ( op )
         {
         case cff_op_hstem:
@@ -1208,15 +1306,16 @@
         case cff_op_hstemhm:
         case cff_op_vstemhm:
           /* the number of arguments is always even here */
-          FT_TRACE4(( op == cff_op_hstem   ? " hstem"   :
-                    ( op == cff_op_vstem   ? " vstem"   :
-                    ( op == cff_op_hstemhm ? " hstemhm" : " vstemhm" ) ) ));
+          FT_TRACE4((
+              op == cff_op_hstem   ? " hstem\n"   :
+            ( op == cff_op_vstem   ? " vstem\n"   :
+            ( op == cff_op_hstemhm ? " hstemhm\n" : " vstemhm\n" ) ) ));
 
           if ( hinter )
             hinter->stems( hinter->hints,
                            ( op == cff_op_hstem || op == cff_op_hstemhm ),
                            num_args / 2,
-                           args );
+                           args - ( num_args & ~1 ) );
 
           decoder->num_hints += num_args / 2;
           args = stack;
@@ -1236,7 +1335,7 @@
               hinter->stems( hinter->hints,
                              0,
                              num_args / 2,
-                             args );
+                             args - ( num_args & ~1 ) );
 
             decoder->num_hints += num_args / 2;
           }
@@ -1259,12 +1358,14 @@
             FT_UInt maskbyte;
 
 
-            FT_TRACE4(( " " ));
+            FT_TRACE4(( " (maskbytes: " ));
 
             for ( maskbyte = 0;
                   maskbyte < (FT_UInt)(( decoder->num_hints + 7 ) >> 3);
                   maskbyte++, ip++ )
               FT_TRACE4(( "0x%02X", *ip ));
+
+            FT_TRACE4(( ")\n" ));
           }
 #else
           ip += ( decoder->num_hints + 7 ) >> 3;
@@ -1275,44 +1376,44 @@
           break;
 
         case cff_op_rmoveto:
-          FT_TRACE4(( " rmoveto" ));
+          FT_TRACE4(( " rmoveto\n" ));
 
           cff_builder_close_contour( builder );
           builder->path_begun = 0;
-          x   += args[0];
-          y   += args[1];
+          x   += args[-2];
+          y   += args[-1];
           args = stack;
           break;
 
         case cff_op_vmoveto:
-          FT_TRACE4(( " vmoveto" ));
+          FT_TRACE4(( " vmoveto\n" ));
 
           cff_builder_close_contour( builder );
           builder->path_begun = 0;
-          y   += args[0];
+          y   += args[-1];
           args = stack;
           break;
 
         case cff_op_hmoveto:
-          FT_TRACE4(( " hmoveto" ));
+          FT_TRACE4(( " hmoveto\n" ));
 
           cff_builder_close_contour( builder );
           builder->path_begun = 0;
-          x   += args[0];
+          x   += args[-1];
           args = stack;
           break;
 
         case cff_op_rlineto:
-          FT_TRACE4(( " rlineto" ));
+          FT_TRACE4(( " rlineto\n" ));
 
           if ( cff_builder_start_point ( builder, x, y ) ||
                check_points( builder, num_args / 2 )     )
             goto Fail;
 
-          if ( num_args < 2 || num_args & 1 )
+          if ( num_args < 2 )
             goto Stack_Underflow;
 
-          args = stack;
+          args -= num_args & ~1;
           while ( args < decoder->top )
           {
             x += args[0];
@@ -1329,8 +1430,11 @@
             FT_Int  phase = ( op == cff_op_hlineto );
 
 
-            FT_TRACE4(( op == cff_op_hlineto ? " hlineto"
-                                             : " vlineto" ));
+            FT_TRACE4(( op == cff_op_hlineto ? " hlineto\n"
+                                             : " vlineto\n" ));
+
+            if ( num_args < 1 )
+              goto Stack_Underflow;
 
             if ( cff_builder_start_point ( builder, x, y ) ||
                  check_points( builder, num_args )         )
@@ -1355,125 +1459,164 @@
           break;
 
         case cff_op_rrcurveto:
-          FT_TRACE4(( " rrcurveto" ));
-
-          /* check number of arguments; must be a multiple of 6 */
-          if ( num_args % 6 != 0 )
-            goto Stack_Underflow;
-
-          if ( cff_builder_start_point ( builder, x, y ) ||
-               check_points( builder, num_args / 2 )     )
-            goto Fail;
-
-          args = stack;
-          while ( args < decoder->top )
           {
-            x += args[0];
-            y += args[1];
-            cff_builder_add_point( builder, x, y, 0 );
-            x += args[2];
-            y += args[3];
-            cff_builder_add_point( builder, x, y, 0 );
-            x += args[4];
-            y += args[5];
-            cff_builder_add_point( builder, x, y, 1 );
-            args += 6;
+            FT_Int  nargs;
+
+
+            FT_TRACE4(( " rrcurveto\n" ));
+
+            if ( num_args < 6 )
+              goto Stack_Underflow;
+
+            nargs = num_args - num_args % 6;
+
+            if ( cff_builder_start_point ( builder, x, y ) ||
+                 check_points( builder, nargs / 2 )     )
+              goto Fail;
+
+            args -= nargs;
+            while ( args < decoder->top )
+            {
+              x += args[0];
+              y += args[1];
+              cff_builder_add_point( builder, x, y, 0 );
+              x += args[2];
+              y += args[3];
+              cff_builder_add_point( builder, x, y, 0 );
+              x += args[4];
+              y += args[5];
+              cff_builder_add_point( builder, x, y, 1 );
+              args += 6;
+            }
+            args = stack;
           }
-          args = stack;
           break;
 
         case cff_op_vvcurveto:
-          FT_TRACE4(( " vvcurveto" ));
-
-          if ( cff_builder_start_point( builder, x, y ) )
-            goto Fail;
-
-          args = stack;
-          if ( num_args & 1 )
           {
-            x += args[0];
-            args++;
-            num_args--;
+            FT_Int  nargs;
+
+
+            FT_TRACE4(( " vvcurveto\n" ));
+
+            if ( num_args < 4 )
+              goto Stack_Underflow;
+
+            /* if num_args isn't of the form 4n or 4n+1, */
+            /* we reduce it to 4n+1                      */
+
+            nargs = num_args - num_args % 4;
+            if ( num_args - nargs > 0 )
+              nargs += 1;
+
+            if ( cff_builder_start_point( builder, x, y ) )
+              goto Fail;
+
+            args -= nargs;
+
+            if ( nargs & 1 )
+            {
+              x += args[0];
+              args++;
+              nargs--;
+            }
+
+            if ( check_points( builder, 3 * ( nargs / 4 ) ) )
+              goto Fail;
+
+            while ( args < decoder->top )
+            {
+              y += args[0];
+              cff_builder_add_point( builder, x, y, 0 );
+              x += args[1];
+              y += args[2];
+              cff_builder_add_point( builder, x, y, 0 );
+              y += args[3];
+              cff_builder_add_point( builder, x, y, 1 );
+              args += 4;
+            }
+            args = stack;
           }
-
-          if ( num_args % 4 != 0 )
-            goto Stack_Underflow;
-
-          if ( check_points( builder, 3 * ( num_args / 4 ) ) )
-            goto Fail;
-
-          while ( args < decoder->top )
-          {
-            y += args[0];
-            cff_builder_add_point( builder, x, y, 0 );
-            x += args[1];
-            y += args[2];
-            cff_builder_add_point( builder, x, y, 0 );
-            y += args[3];
-            cff_builder_add_point( builder, x, y, 1 );
-            args += 4;
-          }
-          args = stack;
           break;
 
         case cff_op_hhcurveto:
-          FT_TRACE4(( " hhcurveto" ));
-
-          if ( cff_builder_start_point( builder, x, y ) )
-            goto Fail;
-
-          args = stack;
-          if ( num_args & 1 )
           {
-            y += args[0];
-            args++;
-            num_args--;
+            FT_Int  nargs;
+
+
+            FT_TRACE4(( " hhcurveto\n" ));
+
+            if ( num_args < 4 )
+              goto Stack_Underflow;
+
+            /* if num_args isn't of the form 4n or 4n+1, */
+            /* we reduce it to 4n+1                      */
+
+            nargs = num_args - num_args % 4;
+            if ( num_args - nargs > 0 )
+              nargs += 1;
+
+            if ( cff_builder_start_point( builder, x, y ) )
+              goto Fail;
+
+            args -= nargs;
+            if ( nargs & 1 )
+            {
+              y += args[0];
+              args++;
+              nargs--;
+            }
+
+            if ( check_points( builder, 3 * ( nargs / 4 ) ) )
+              goto Fail;
+
+            while ( args < decoder->top )
+            {
+              x += args[0];
+              cff_builder_add_point( builder, x, y, 0 );
+              x += args[1];
+              y += args[2];
+              cff_builder_add_point( builder, x, y, 0 );
+              x += args[3];
+              cff_builder_add_point( builder, x, y, 1 );
+              args += 4;
+            }
+            args = stack;
           }
-
-          if ( num_args % 4 != 0 )
-            goto Stack_Underflow;
-
-          if ( check_points( builder, 3 * ( num_args / 4 ) ) )
-            goto Fail;
-
-          while ( args < decoder->top )
-          {
-            x += args[0];
-            cff_builder_add_point( builder, x, y, 0 );
-            x += args[1];
-            y += args[2];
-            cff_builder_add_point( builder, x, y, 0 );
-            x += args[3];
-            cff_builder_add_point( builder, x, y, 1 );
-            args += 4;
-          }
-          args = stack;
           break;
 
         case cff_op_vhcurveto:
         case cff_op_hvcurveto:
           {
             FT_Int  phase;
+            FT_Int  nargs;
 
 
-            FT_TRACE4(( op == cff_op_vhcurveto ? " vhcurveto"
-                                               : " hvcurveto" ));
+            FT_TRACE4(( op == cff_op_vhcurveto ? " vhcurveto\n"
+                                               : " hvcurveto\n" ));
 
             if ( cff_builder_start_point( builder, x, y ) )
               goto Fail;
 
-            args = stack;
-            if ( num_args < 4 || ( num_args % 4 ) > 1 )
+            if ( num_args < 4 )
               goto Stack_Underflow;
 
-            if ( check_points( builder, ( num_args / 4 ) * 3 ) )
+            /* if num_args isn't of the form 8n, 8n+1, 8n+4, or 8n+5, */
+            /* we reduce it to the largest one which fits             */
+
+            nargs = num_args - num_args % 4;
+            if ( num_args - nargs > 0 )
+              nargs += 1;
+
+            args -= nargs;
+            if ( check_points( builder, ( nargs / 4 ) * 3 ) )
               goto Stack_Underflow;
 
             phase = ( op == cff_op_hvcurveto );
 
-            while ( num_args >= 4 )
+            while ( nargs >= 4 )
             {
-              num_args -= 4;
+              nargs -= 4;
               if ( phase )
               {
                 x += args[0];
@@ -1482,7 +1625,7 @@
                 y += args[2];
                 cff_builder_add_point( builder, x, y, 0 );
                 y += args[3];
-                if ( num_args == 1 )
+                if ( nargs == 1 )
                   x += args[4];
                 cff_builder_add_point( builder, x, y, 1 );
               }
@@ -1494,7 +1637,7 @@
                 y += args[2];
                 cff_builder_add_point( builder, x, y, 0 );
                 x += args[3];
-                if ( num_args == 1 )
+                if ( nargs == 1 )
                   y += args[4];
                 cff_builder_add_point( builder, x, y, 1 );
               }
@@ -1507,19 +1650,23 @@
 
         case cff_op_rlinecurve:
           {
-            FT_Int  num_lines = ( num_args - 6 ) / 2;
+            FT_Int  num_lines;
+            FT_Int  nargs;
 
 
-            FT_TRACE4(( " rlinecurve" ));
+            FT_TRACE4(( " rlinecurve\n" ));
 
-            if ( num_args < 8 || ( num_args - 6 ) & 1 )
+            if ( num_args < 8 )
               goto Stack_Underflow;
+
+            nargs     = num_args & ~1;
+            num_lines = ( nargs - 6 ) / 2;
 
             if ( cff_builder_start_point( builder, x, y ) ||
                  check_points( builder, num_lines + 3 )   )
               goto Fail;
 
-            args = stack;
+            args -= nargs;
 
             /* first, add the line segments */
             while ( num_lines > 0 )
@@ -1547,19 +1694,24 @@
 
         case cff_op_rcurveline:
           {
-            FT_Int  num_curves = ( num_args - 2 ) / 6;
+            FT_Int  num_curves;
+            FT_Int  nargs;
 
 
-            FT_TRACE4(( " rcurveline" ));
+            FT_TRACE4(( " rcurveline\n" ));
 
-            if ( num_args < 8 || ( num_args - 2 ) % 6 )
+            if ( num_args < 8 )
               goto Stack_Underflow;
 
+            nargs      = num_args - 2;
+            nargs      = nargs - nargs % 6 + 2;
+            num_curves = ( nargs - 2 ) / 6;
+
             if ( cff_builder_start_point ( builder, x, y ) ||
-                 check_points( builder, num_curves*3 + 2 ) )
+                 check_points( builder, num_curves * 3 + 2 ) )
               goto Fail;
 
-            args = stack;
+            args -= nargs;
 
             /* first, add the curves */
             while ( num_curves > 0 )
@@ -1590,18 +1742,16 @@
             FT_Pos start_y;
 
 
-            FT_TRACE4(( " hflex1" ));
+            FT_TRACE4(( " hflex1\n" ));
 
-            args = stack;
-
-            /* adding five more points; 4 control points, 1 on-curve point */
-            /* make sure we have enough space for the start point if it    */
+            /* adding five more points: 4 control points, 1 on-curve point */
+            /* -- make sure we have enough space for the start point if it */
             /* needs to be added                                           */
             if ( cff_builder_start_point( builder, x, y ) ||
                  check_points( builder, 6 )               )
               goto Fail;
 
-            /* Record the starting point's y position for later use */
+            /* record the starting point's y position for later use */
             start_y = y;
 
             /* first control point */
@@ -1643,9 +1793,7 @@
             FT_Pos start_y;
 
 
-            FT_TRACE4(( " hflex" ));
-
-            args = stack;
+            FT_TRACE4(( " hflex\n" ));
 
             /* adding six more points; 4 control points, 2 on-curve points */
             if ( cff_builder_start_point( builder, x, y ) ||
@@ -1690,14 +1838,15 @@
 
         case cff_op_flex1:
           {
-            FT_Pos    start_x, start_y; /* record start x, y values for */
-                                        /* alter use                                */
-            FT_Fixed  dx = 0, dy = 0;   /* used in horizontal/vertical  */
-                                        /* algorithm below              */
-            FT_Int    horizontal, count;
+            FT_Pos     start_x, start_y; /* record start x, y values for */
+                                         /* alter use                    */
+            FT_Fixed   dx = 0, dy = 0;   /* used in horizontal/vertical  */
+                                         /* algorithm below              */
+            FT_Int     horizontal, count;
+            FT_Fixed*  temp;
 
 
-            FT_TRACE4(( " flex1" ));
+            FT_TRACE4(( " flex1\n" ));
 
             /* adding six more points; 4 control points, 2 on-curve points */
             if ( cff_builder_start_point( builder, x, y ) ||
@@ -1711,21 +1860,20 @@
             /* XXX: figure out whether this is supposed to be a horizontal */
             /*      or vertical flex; the Type 2 specification is vague... */
 
-            args = stack;
+            temp = args;
 
             /* grab up to the last argument */
             for ( count = 5; count > 0; count-- )
             {
-              dx += args[0];
-              dy += args[1];
-              args += 2;
+              dx += temp[0];
+              dy += temp[1];
+              temp += 2;
             }
 
-            /* rewind */
-            args = stack;
-
-            if ( dx < 0 ) dx = -dx;
-            if ( dy < 0 ) dy = -dy;
+            if ( dx < 0 )
+              dx = -dx;
+            if ( dy < 0 )
+              dy = -dy;
 
             /* strange test, but here it is... */
             horizontal = ( dx > dy );
@@ -1734,7 +1882,8 @@
             {
               x += args[0];
               y += args[1];
-              cff_builder_add_point( builder, x, y, (FT_Bool)( count == 3 ) );
+              cff_builder_add_point( builder, x, y,
+                                     (FT_Bool)( count == 3 ) );
               args += 2;
             }
 
@@ -1761,13 +1910,12 @@
             FT_UInt  count;
 
 
-            FT_TRACE4(( " flex" ));
+            FT_TRACE4(( " flex\n" ));
 
             if ( cff_builder_start_point( builder, x, y ) ||
                  check_points( builder, 6 )               )
               goto Fail;
 
-            args = stack;
             for ( count = 6; count > 0; count-- )
             {
               x += args[0];
@@ -1781,22 +1929,34 @@
           }
           break;
 
+        case cff_op_seac:
+            FT_TRACE4(( " seac\n" ));
+
+            error = cff_operator_seac( decoder,
+                                       args[0], args[1], args[2],
+                                       (FT_Int)( args[3] >> 16 ),
+                                       (FT_Int)( args[4] >> 16 ) );
+
+            /* add current outline to the glyph slot */
+            FT_GlyphLoader_Add( builder->loader );
+
+            /* return now! */
+            FT_TRACE4(( "\n" ));
+            return error;
+
         case cff_op_endchar:
-          FT_TRACE4(( " endchar" ));
+          FT_TRACE4(( " endchar\n" ));
 
           /* We are going to emulate the seac operator. */
-          if ( num_args == 4 )
+          if ( num_args >= 4 )
           {
             /* Save glyph width so that the subglyphs don't overwrite it. */
             FT_Pos  glyph_width = decoder->glyph_width;
 
-
             error = cff_operator_seac( decoder,
-                                       args[0],
-                                       args[1],
-                                       (FT_Int)( args[2] >> 16 ),
-                                       (FT_Int)( args[3] >> 16 ) );
-            args += 4;
+                                       0L, args[-4], args[-3],
+                                       (FT_Int)( args[-2] >> 16 ),
+                                       (FT_Int)( args[-1] >> 16 ) );
 
             decoder->glyph_width = glyph_width;
           }
@@ -1826,11 +1986,11 @@
           }
 
           /* return now! */
-          FT_TRACE4(( "\n\n" ));
+          FT_TRACE4(( "\n" ));
           return error;
 
         case cff_op_abs:
-          FT_TRACE4(( " abs" ));
+          FT_TRACE4(( " abs\n" ));
 
           if ( args[0] < 0 )
             args[0] = -args[0];
@@ -1838,28 +1998,28 @@
           break;
 
         case cff_op_add:
-          FT_TRACE4(( " add" ));
+          FT_TRACE4(( " add\n" ));
 
           args[0] += args[1];
           args++;
           break;
 
         case cff_op_sub:
-          FT_TRACE4(( " sub" ));
+          FT_TRACE4(( " sub\n" ));
 
           args[0] -= args[1];
           args++;
           break;
 
         case cff_op_div:
-          FT_TRACE4(( " div" ));
+          FT_TRACE4(( " div\n" ));
 
           args[0] = FT_DivFix( args[0], args[1] );
           args++;
           break;
 
         case cff_op_neg:
-          FT_TRACE4(( " neg" ));
+          FT_TRACE4(( " neg\n" ));
 
           args[0] = -args[0];
           args++;
@@ -1870,7 +2030,7 @@
             FT_Fixed  Rand;
 
 
-            FT_TRACE4(( " rand" ));
+            FT_TRACE4(( " rand\n" ));
 
             Rand = seed;
             if ( Rand >= 0x8000L )
@@ -1885,14 +2045,14 @@
           break;
 
         case cff_op_mul:
-          FT_TRACE4(( " mul" ));
+          FT_TRACE4(( " mul\n" ));
 
           args[0] = FT_MulFix( args[0], args[1] );
           args++;
           break;
 
         case cff_op_sqrt:
-          FT_TRACE4(( " sqrt" ));
+          FT_TRACE4(( " sqrt\n" ));
 
           if ( args[0] > 0 )
           {
@@ -1917,7 +2077,7 @@
 
         case cff_op_drop:
           /* nothing */
-          FT_TRACE4(( " drop" ));
+          FT_TRACE4(( " drop\n" ));
 
           break;
 
@@ -1926,7 +2086,7 @@
             FT_Fixed  tmp;
 
 
-            FT_TRACE4(( " exch" ));
+            FT_TRACE4(( " exch\n" ));
 
             tmp     = args[0];
             args[0] = args[1];
@@ -1940,7 +2100,7 @@
             FT_Int  idx = (FT_Int)( args[0] >> 16 );
 
 
-            FT_TRACE4(( " index" ));
+            FT_TRACE4(( " index\n" ));
 
             if ( idx < 0 )
               idx = 0;
@@ -1957,7 +2117,7 @@
             FT_Int  idx   = (FT_Int)( args[1] >> 16 );
 
 
-            FT_TRACE4(( " roll" ));
+            FT_TRACE4(( " roll\n" ));
 
             if ( count <= 0 )
               count = 1;
@@ -1999,10 +2159,10 @@
           break;
 
         case cff_op_dup:
-          FT_TRACE4(( " dup" ));
+          FT_TRACE4(( " dup\n" ));
 
           args[1] = args[0];
-          args++;
+          args += 2;
           break;
 
         case cff_op_put:
@@ -2011,9 +2171,9 @@
             FT_Int    idx = (FT_Int)( args[1] >> 16 );
 
 
-            FT_TRACE4(( " put" ));
+            FT_TRACE4(( " put\n" ));
 
-            if ( idx >= 0 && idx < decoder->len_buildchar )
+            if ( idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS )
               decoder->buildchar[idx] = val;
           }
           break;
@@ -2024,9 +2184,9 @@
             FT_Fixed  val = 0;
 
 
-            FT_TRACE4(( " get" ));
+            FT_TRACE4(( " get\n" ));
 
-            if ( idx >= 0 && idx < decoder->len_buildchar )
+            if ( idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS )
               val = decoder->buildchar[idx];
 
             args[0] = val;
@@ -2035,18 +2195,18 @@
           break;
 
         case cff_op_store:
-          FT_TRACE4(( " store "));
+          FT_TRACE4(( " store\n"));
 
           goto Unimplemented;
 
         case cff_op_load:
-          FT_TRACE4(( " load" ));
+          FT_TRACE4(( " load\n" ));
 
           goto Unimplemented;
 
         case cff_op_dotsection:
           /* this operator is deprecated and ignored by the parser */
-          FT_TRACE4(( " dotsection" ));
+          FT_TRACE4(( " dotsection\n" ));
           break;
 
         case cff_op_closepath:
@@ -2054,7 +2214,7 @@
           /* exist fonts which are incorrectly converted from probably */
           /* Type 1 to CFF, and some parsers seem to accept it         */
 
-          FT_TRACE4(( " closepath (invalid op)" ));
+          FT_TRACE4(( " closepath (invalid op)\n" ));
 
           args = stack;
           break;
@@ -2064,13 +2224,68 @@
           /* exist fonts which are incorrectly converted from probably */
           /* Type 1 to CFF, and some parsers seem to accept it         */
 
-          FT_TRACE4(( " hsbw (invalid op)" ));
+          FT_TRACE4(( " hsbw (invalid op)\n" ));
 
-          decoder->glyph_width = decoder->nominal_width +
-                                   (args[1] >> 16);
-          x    = args[0];
-          y    = 0;
+          decoder->glyph_width = decoder->nominal_width + ( args[1] >> 16 );
+
+          decoder->builder.left_bearing.x = args[0];
+          decoder->builder.left_bearing.y = 0;
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y;
           args = stack;
+          break;
+
+        case cff_op_sbw:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " sbw (invalid op)\n" ));
+
+          decoder->glyph_width = decoder->nominal_width + ( args[2] >> 16 );
+
+          decoder->builder.left_bearing.x = args[0];
+          decoder->builder.left_bearing.y = args[1];
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y + args[1];
+          args = stack;
+          break;
+
+        case cff_op_setcurrentpoint:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " setcurrentpoint (invalid op)\n" ));
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y + args[1];
+          args = stack;
+          break;
+
+        case cff_op_callothersubr:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " callothersubr (invalid op)\n" ));
+
+          /* subsequent `pop' operands should add the arguments,       */
+          /* this is the implementation described for `unknown' other  */
+          /* subroutines in the Type1 spec.                            */
+          args -= 2 + ( args[-2] >> 16 );
+          break;
+
+        case cff_op_pop:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " pop (invalid op)\n" ));
+
+          args++;
           break;
 
         case cff_op_and:
@@ -2078,7 +2293,7 @@
             FT_Fixed  cond = args[0] && args[1];
 
 
-            FT_TRACE4(( " and" ));
+            FT_TRACE4(( " and\n" ));
 
             args[0] = cond ? 0x10000L : 0;
             args++;
@@ -2090,7 +2305,7 @@
             FT_Fixed  cond = args[0] || args[1];
 
 
-            FT_TRACE4(( " or" ));
+            FT_TRACE4(( " or\n" ));
 
             args[0] = cond ? 0x10000L : 0;
             args++;
@@ -2102,7 +2317,7 @@
             FT_Fixed  cond = !args[0];
 
 
-            FT_TRACE4(( " eq" ));
+            FT_TRACE4(( " eq\n" ));
 
             args[0] = cond ? 0x10000L : 0;
             args++;
@@ -2114,7 +2329,7 @@
             FT_Fixed  cond = ( args[2] <= args[3] );
 
 
-            FT_TRACE4(( " ifelse" ));
+            FT_TRACE4(( " ifelse\n" ));
 
             if ( !cond )
               args[0] = args[1];
@@ -2128,12 +2343,12 @@
                                       decoder->locals_bias );
 
 
-            FT_TRACE4(( " callsubr(%d)", idx ));
+            FT_TRACE4(( " callsubr(%d)\n", idx ));
 
             if ( idx >= decoder->num_locals )
             {
-              FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( " invalid local subr index\n" ));
+              FT_ERROR(( "cff_decoder_parse_charstrings:"
+                         " invalid local subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2154,7 +2369,7 @@
             if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
-                         " invoking empty subrs!\n" ));
+                         " invoking empty subrs\n" ));
               goto Syntax_Error;
             }
 
@@ -2170,12 +2385,12 @@
                                       decoder->globals_bias );
 
 
-            FT_TRACE4(( " callgsubr(%d)", idx ));
+            FT_TRACE4(( " callgsubr(%d)\n", idx ));
 
             if ( idx >= decoder->num_globals )
             {
-              FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( " invalid global subr index\n" ));
+              FT_ERROR(( "cff_decoder_parse_charstrings:"
+                         " invalid global subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2196,7 +2411,7 @@
             if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
-                         " invoking empty subrs!\n" ));
+                         " invoking empty subrs\n" ));
               goto Syntax_Error;
             }
 
@@ -2207,7 +2422,7 @@
           break;
 
         case cff_op_return:
-          FT_TRACE4(( " return" ));
+          FT_TRACE4(( " return\n" ));
 
           if ( decoder->zone <= decoder->zones )
           {
@@ -2245,15 +2460,15 @@
     return error;
 
   Syntax_Error:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: syntax error!" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: syntax error\n" ));
     return CFF_Err_Invalid_File_Format;
 
   Stack_Underflow:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: stack underflow!" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: stack underflow\n" ));
     return CFF_Err_Too_Few_Arguments;
 
   Stack_Overflow:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: stack overflow!" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: stack overflow\n" ));
     return CFF_Err_Stack_Overflow;
   }
 
@@ -2341,9 +2556,9 @@
   {
     FT_Error     error;
     CFF_Decoder  decoder;
-    TT_Face      face     = (TT_Face)glyph->root.face;
+    TT_Face      face = (TT_Face)glyph->root.face;
     FT_Bool      hinting, force_scaling;
-    CFF_Font     cff      = (CFF_Font)face->extra.data;
+    CFF_Font     cff  = (CFF_Font)face->extra.data;
 
     FT_Matrix    font_matrix;
     FT_Vector    font_offset;
@@ -2357,9 +2572,14 @@
     if ( cff->top_font.font_dict.cid_registry != 0xFFFFU &&
          cff->charset.cids                               )
     {
-      glyph_index = cff_charset_cid_to_gindex( &cff->charset, glyph_index );
-      if ( glyph_index == 0 )
-        return CFF_Err_Invalid_Argument;
+      /* don't handle CID 0 (.notdef) which is directly mapped to GID 0 */
+      if ( glyph_index != 0 )
+      {
+        glyph_index = cff_charset_cid_to_gindex( &cff->charset,
+                                                 glyph_index );
+        if ( glyph_index == 0 )
+          return CFF_Err_Invalid_Argument;
+      }
     }
     else if ( glyph_index >= cff->num_glyphs )
       return CFF_Err_Invalid_Argument;
@@ -2451,8 +2671,8 @@
       FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select,
                                              glyph_index );
 
-      FT_Int  top_upm = cff->top_font.font_dict.units_per_em;
-      FT_Int  sub_upm = cff->subfonts[fd_index]->font_dict.units_per_em;
+      FT_ULong  top_upm = cff->top_font.font_dict.units_per_em;
+      FT_ULong  sub_upm = cff->subfonts[fd_index]->font_dict.units_per_em;
 
 
       font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
@@ -2488,8 +2708,11 @@
       cff_decoder_init( &decoder, face, size, glyph, hinting,
                         FT_LOAD_TARGET_MODE( load_flags ) );
 
+      if ( load_flags & FT_LOAD_ADVANCE_ONLY )
+        decoder.width_only = TRUE;
+
       decoder.builder.no_recurse =
-        (FT_Bool)( ( load_flags & FT_LOAD_NO_RECURSE ) != 0 );
+        (FT_Bool)( load_flags & FT_LOAD_NO_RECURSE );
 
       /* now load the unscaled outline */
       error = cff_get_glyph_data( face, glyph_index,
@@ -2541,23 +2764,25 @@
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
-    if ( !error                                                              &&
-         face->root.internal->incremental_interface                          &&
+    if ( !error                                                               &&
+         face->root.internal->incremental_interface                           &&
          face->root.internal->incremental_interface->funcs->get_glyph_metrics )
     {
       FT_Incremental_MetricsRec  metrics;
 
 
       metrics.bearing_x = decoder.builder.left_bearing.x;
-      metrics.bearing_y = decoder.builder.left_bearing.y;
+      metrics.bearing_y = 0;
       metrics.advance   = decoder.builder.advance.x;
+      metrics.advance_v = decoder.builder.advance.y;
+
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
                 glyph_index, FALSE, &metrics );
+
       decoder.builder.left_bearing.x = metrics.bearing_x;
-      decoder.builder.left_bearing.y = metrics.bearing_y;
       decoder.builder.advance.x      = metrics.advance;
-      decoder.builder.advance.y      = 0;
+      decoder.builder.advance.y      = metrics.advance_v;
     }
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
@@ -2594,9 +2819,14 @@
         glyph->root.linearHoriAdvance           = decoder.glyph_width;
         glyph->root.internal->glyph_transformed = 0;
 
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
         has_vertical_info = FT_BOOL( face->vertical_info                   &&
                                      face->vertical.number_Of_VMetrics > 0 &&
-                                     face->vertical.long_metrics != 0 );
+                                     face->vertical.long_metrics           );
+#else
+        has_vertical_info = FT_BOOL( face->vertical_info                   &&
+                                     face->vertical.number_Of_VMetrics > 0 );
+#endif
 
         /* get the vertical metrics from the vtmx table if we have one */
         if ( has_vertical_info )
@@ -2633,8 +2863,8 @@
 
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
-        /* apply the font matrix -- `xx' has already been normalized */
-        if ( !( font_matrix.yy == 0x10000L &&
+        if ( !( font_matrix.xx == 0x10000L &&
+                font_matrix.yy == 0x10000L &&
                 font_matrix.xy == 0        &&
                 font_matrix.yx == 0        ) )
           FT_Outline_Transform( &glyph->root.outline, &font_matrix );
@@ -2687,10 +2917,14 @@
         metrics->horiBearingY = cbox.yMax;
 
         if ( has_vertical_info )
-          metrics->vertBearingX = -metrics->width / 2;
-        else
-          ft_synthesize_vertical_metrics( metrics,
-                                          metrics->vertAdvance );
+          metrics->vertBearingX = metrics->horiBearingX -
+                                    metrics->horiAdvance / 2;
+        else 
+        {
+          if ( load_flags & FT_LOAD_VERTICAL_LAYOUT )
+            ft_synthesize_vertical_metrics( metrics,
+                                            metrics->vertAdvance );
+        }
       }
     }
 

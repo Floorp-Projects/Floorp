@@ -223,7 +223,7 @@ NS_IMPL_RELEASE(nsCanvasGradient)
 NS_INTERFACE_MAP_BEGIN(nsCanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsCanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasGradient)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasGradient)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -269,7 +269,7 @@ NS_IMPL_RELEASE(nsCanvasPattern)
 NS_INTERFACE_MAP_BEGIN(nsCanvasPattern)
   NS_INTERFACE_MAP_ENTRY(nsCanvasPattern)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasPattern)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasPattern)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasPattern)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -306,7 +306,7 @@ NS_IMPL_RELEASE(nsTextMetrics)
 NS_INTERFACE_MAP_BEGIN(nsTextMetrics)
   NS_INTERFACE_MAP_ENTRY(nsTextMetrics)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTextMetrics)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TextMetrics)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TextMetrics)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -668,7 +668,7 @@ NS_INTERFACE_MAP_BEGIN(nsCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCanvasRenderingContext2D)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasRenderingContext2D)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasRenderingContext2D)
 NS_INTERFACE_MAP_END
 
 /**
@@ -3345,7 +3345,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     if (!(flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH))
         FlushLayoutForTree(aWindow);
 
-    nsCOMPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
     if (win) {
         nsIDocShell* docshell = win->GetDocShell();

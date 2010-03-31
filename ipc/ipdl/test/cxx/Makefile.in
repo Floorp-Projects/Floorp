@@ -58,23 +58,24 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
-  TestSanity  \
-  TestRPCErrorCleanup \
-  TestCrashCleanup \
-  TestStackHooks \
-  TestSyncWakeup \
-  TestLatency \
-  TestRPCRaces \
-  TestRacyRPCReplies  \
-  TestRPCShutdownRace \
-  TestHangs \
+  TestArrays \
   TestBlockChild \
-  TestManyChildAllocs  \
+  TestCrashCleanup \
   TestDesc \
+  TestHangs \
+  TestLatency \
+  TestManyChildAllocs  \
   TestMultiMgrs  \
+  TestNestedLoops \
+  TestRPCErrorCleanup \
+  TestRPCRaces \
+  TestRPCShutdownRace \
+  TestRacyRPCReplies  \
+  TestSanity  \
   TestShmem \
   TestShutdown \
-  TestArrays \
+  TestStackHooks \
+  TestSyncWakeup \
   $(NULL)
 
 IPDLTESTSRCS = $(addsuffix .cpp,$(IPDLTESTS))

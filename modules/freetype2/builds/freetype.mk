@@ -168,14 +168,14 @@ OBJECTS_LIST :=
 
 
 # Define $(PUBLIC_H) as the list of all public header files located in
-# `$(TOP_DIR)/include/freetype'.  $(BASE_H), and $(CONFIG_H) are defined
+# `$(TOP_DIR)/include/freetype'.  $(INTERNAL_H), and $(CONFIG_H) are defined
 # similarly.
 #
 # This is used to simplify the dependency rules -- if one of these files
 # changes, the whole library is recompiled.
 #
 PUBLIC_H   := $(wildcard $(PUBLIC_DIR)/*.h)
-BASE_H     := $(wildcard $(INTERNAL_DIR)/*.h) \
+INTERNAL_H := $(wildcard $(INTERNAL_DIR)/*.h) \
               $(wildcard $(SERVICES_DIR)/*.h)
 CONFIG_H   := $(wildcard $(CONFIG_DIR)/*.h) \
               $(wildcard $(BUILD_DIR)/freetype/config/*.h) \
@@ -183,7 +183,7 @@ CONFIG_H   := $(wildcard $(CONFIG_DIR)/*.h) \
               $(FTOPTION_H)
 DEVEL_H    := $(wildcard $(TOP_DIR)/devel/*.h)
 
-FREETYPE_H := $(PUBLIC_H) $(BASE_H) $(CONFIG_H) $(DEVEL_H)
+FREETYPE_H := $(PUBLIC_H) $(INTERNAL_H) $(CONFIG_H) $(DEVEL_H)
 
 
 # ftsystem component

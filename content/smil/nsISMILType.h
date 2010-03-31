@@ -85,11 +85,10 @@ protected:
    * Initialises aValue and sets it to some identity value such that adding
    * aValue to another value of the same type has no effect.
    *
-   * @pre (aValue.mType == this && aValue.mU is valid)
-   *      || aValue.mType == null-type
-   * @post aValue.mType == this || NS_FAILED(rv)
+   * @pre  aValue.IsNull()
+   * @post aValue.mType == this
    */
-  virtual nsresult Init(nsSMILValue& aValue) const = 0;
+  virtual void Init(nsSMILValue& aValue) const = 0;
 
   /**
    * Destroys any data associated with a value of this type.

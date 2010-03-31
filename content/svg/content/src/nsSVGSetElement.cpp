@@ -81,7 +81,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGSetElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGSetElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGAnimationElement,
                            nsIDOMSVGSetElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSetElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSetElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSetElementBase)
 
 //----------------------------------------------------------------------

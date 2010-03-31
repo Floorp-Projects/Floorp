@@ -69,9 +69,9 @@ TEST(LineReaderTest, OneLineTerminated) {
   LineReader reader(fd);
 
   const char *line;
-  unsigned len;
+  unsigned int len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned int)1);
   ASSERT_EQ(line[0], 'a');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
@@ -90,7 +90,7 @@ TEST(LineReaderTest, OneLine) {
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned)1);
   ASSERT_EQ(line[0], 'a');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
@@ -109,13 +109,13 @@ TEST(LineReaderTest, TwoLinesTerminated) {
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned)1);
   ASSERT_EQ(line[0], 'a');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned)1);
   ASSERT_EQ(line[0], 'b');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
@@ -134,13 +134,13 @@ TEST(LineReaderTest, TwoLines) {
   const char *line;
   unsigned len;
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned)1);
   ASSERT_EQ(line[0], 'a');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);
 
   ASSERT_TRUE(reader.GetNextLine(&line, &len));
-  ASSERT_EQ(len, 1);
+  ASSERT_EQ(len, (unsigned)1);
   ASSERT_EQ(line[0], 'b');
   ASSERT_EQ(line[1], 0);
   reader.PopLine(len);

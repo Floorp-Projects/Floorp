@@ -126,11 +126,6 @@ class nsDOMWorker : public nsDOMWorkerMessageHandler,
                                      const char* aMessage,
                                      JSErrorReport* aReport);
 
-#ifdef DEBUG
-  // For fun assertions.
-  friend class nsDOMFireEventRunnable;
-#endif
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMEVENTTARGET
@@ -167,7 +162,9 @@ public:
   void Suspend();
   void Resume();
 
+  // This just calls IsCanceledNoLock with an autolock around the call.
   PRBool IsCanceled();
+
   PRBool IsClosing();
   PRBool IsSuspended();
 
@@ -291,6 +288,10 @@ private:
   }
 
   PRBool QueueSuspendedRunnable(nsIRunnable* aRunnable);
+
+  // Determines if the worker should be considered "canceled". See the large
+  // comment in the implementation for more details.
+  PRBool IsCanceledNoLock();
 
 private:
 

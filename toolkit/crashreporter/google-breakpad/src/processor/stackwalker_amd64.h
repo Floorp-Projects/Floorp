@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/stackwalker.h"
+#include "google_breakpad/processor/stack_frame_cpu.h"
+#include "processor/cfi_frame_info.h"
 
 namespace google_breakpad {
 
@@ -61,16 +63,29 @@ class StackwalkerAMD64 : public Stackwalker {
                    SourceLineResolverInterface *resolver);
 
  private:
+  // A STACK CFI-driven frame walker for the AMD64
+  typedef SimpleCFIWalker<u_int64_t, MDRawContextAMD64> CFIWalker;
+
   // Implementation of Stackwalker, using amd64 context (stack pointer in %rsp,
   // stack base in %rbp) and stack conventions (saved stack pointer at 0(%rbp))
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(
-      const CallStack *stack,
-      const vector< linked_ptr<StackFrameInfo> > &stack_frame_info);
+  virtual StackFrame* GetCallerFrame(const CallStack *stack);
+
+  // Use cfi_frame_info (derived from STACK CFI records) to construct
+  // the frame that called frames.back(). The caller takes ownership
+  // of the returned frame. Return NULL on failure.
+  StackFrameAMD64 *GetCallerByCFIFrameInfo(const vector<StackFrame *> &frames,
+                                           CFIFrameInfo *cfi_frame_info);
 
   // Stores the CPU context corresponding to the innermost stack frame to
   // be returned by GetContextFrame.
   const MDRawContextAMD64 *context_;
+
+  // Our register map, for cfi_walker_.
+  static const CFIWalker::RegisterSet cfi_register_map_[];
+
+  // Our CFI frame walker.
+  const CFIWalker cfi_walker_;
 };
 
 

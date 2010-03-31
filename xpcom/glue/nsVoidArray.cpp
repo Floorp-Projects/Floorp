@@ -376,6 +376,52 @@ nsVoidArray::~nsVoidArray()
     free(reinterpret_cast<char*>(mImpl));
 }
 
+PRBool nsVoidArray::SetCount(PRInt32 aNewCount)
+{
+  NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
+  if (aNewCount < 0)
+    return PR_FALSE;
+
+  if (aNewCount == 0)
+  {
+    Clear();
+    return PR_TRUE;
+  }
+
+  if (PRUint32(aNewCount) > PRUint32(GetArraySize()))
+  {
+    PRInt32 oldCount = Count();
+    PRInt32 growDelta = aNewCount - oldCount;
+
+    // frees old mImpl IF this succeeds
+    if (!GrowArrayBy(growDelta))
+      return PR_FALSE;
+  }
+
+  if (aNewCount > mImpl->mCount)
+  {
+    // Make sure that new entries added to the array by this
+    // SetCount are cleared to 0.  Some users of this assume that.
+    // This code means we don't have to memset when we allocate an array.
+    memset(&mImpl->mArray[mImpl->mCount], 0,
+           (aNewCount - mImpl->mCount) * sizeof(mImpl->mArray[0]));
+  }
+
+  mImpl->mCount = aNewCount;
+
+#if DEBUG_VOIDARRAY
+  if (mImpl->mCount > mMaxCount &&
+      mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+  {
+    MaxElements[mImpl->mCount]++;
+    MaxElements[mMaxCount]--;
+    mMaxCount = mImpl->mCount;
+  }
+#endif
+
+  return PR_TRUE;
+}
+
 PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
 {
   if (mImpl)

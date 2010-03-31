@@ -43,14 +43,12 @@
 
 /*static*/ nsSMILFloatType nsSMILFloatType::sSingleton;
 
-nsresult
+void
 nsSMILFloatType::Init(nsSMILValue& aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this || aValue.IsNull(),
-    "Unexpected value type");
+  NS_PRECONDITION(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mDouble = 0.0;
   aValue.mType = this;
-  return NS_OK;
 }
 
 void

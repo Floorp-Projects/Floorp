@@ -155,7 +155,7 @@
     <!-- note: the localized strings used by remotecontent are prefixed by the
                id for the remotecontent (e.g. updateMoreInfoContentNotFound,
                updateMoreInfoContentDownloading, etc.) -->
-    <remotecontent id="updateMoreInfoContent" flex="1"/>
+    <remotecontent id="updateMoreInfoContent" flex="1" remotetype="billboard"/>
   </wizardpage>
   
   <wizardpage id="license" pageid="license" next="downloading"
@@ -167,7 +167,7 @@
       <!-- note: the localized strings used by remotecontent are prefixed by
                  the id for the remotecontent (e.g. licenseContentNotFound,
                  licenseContentDownloading, etc.) -->
-      <remotecontent id="licenseContent" flex="1"/>
+      <remotecontent id="licenseContent" flex="1" remotetype="license"/>
       <separator class="thin"/>
       <radiogroup id="acceptDeclineLicense" align="start"
                   onselect="gLicensePage.onAcceptDeclineRadio();">
@@ -191,7 +191,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="downloading" pageid="downloading" next="finished"
+  <wizardpage id="downloading" pageid="downloading"
               object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
               onpageshow="gDownloadingPage.onPageShow();">
     <updateheader label="&downloadPage.title;"/>

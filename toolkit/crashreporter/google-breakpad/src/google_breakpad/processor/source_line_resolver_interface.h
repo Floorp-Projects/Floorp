@@ -1,4 +1,6 @@
-// Copyright (c) 2006, Google Inc.
+// -*- mode: C++ -*-
+
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,7 +42,8 @@ namespace google_breakpad {
 using std::string;
 
 struct StackFrame;
-struct StackFrameInfo;
+struct WindowsFrameInfo;
+struct CFIFrameInfo;
 
 class SourceLineResolverInterface {
  public:
@@ -65,12 +68,22 @@ class SourceLineResolverInterface {
 
   // Fills in the function_base, function_name, source_file_name,
   // and source_line fields of the StackFrame.  The instruction and
-  // module_name fields must already be filled in.  Additional debugging
-  // information, if available, is returned.  If the information is not
-  // available, returns NULL.  A NULL return value does not indicate an
-  // error.  The caller takes ownership of any returned StackFrameInfo
-  // object.
-  virtual StackFrameInfo* FillSourceLineInfo(StackFrame *frame) const = 0;
+  // module_name fields must already be filled in.  
+  virtual void FillSourceLineInfo(StackFrame *frame) const = 0;
+
+  // If Windows stack walking information is available covering
+  // FRAME's instruction address, return a WindowsFrameInfo structure
+  // describing it. If the information is not available, returns NULL.
+  // A NULL return value does not indicate an error. The caller takes
+  // ownership of any returned WindowsFrameInfo object.
+  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame) 
+    const = 0; 
+
+  // If CFI stack walking information is available covering ADDRESS,
+  // return a CFIFrameInfo structure describing it. If the information
+  // is not available, return NULL. The caller takes ownership of any
+  // returned CFIFrameInfo object.
+  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame) const = 0;
 
  protected:
   // SourceLineResolverInterface cannot be instantiated except by subclasses

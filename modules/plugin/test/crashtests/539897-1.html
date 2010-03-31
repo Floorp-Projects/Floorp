@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function crashplugin() {
+  var plugin = document.getElementById('p');
+  plugin.reinitWidget();
+  plugin.reinitWidget();
+}
+
+function getTestCases() {
+  return [
+    { testPassed:
+      (function () {
+        var plugin = document.getElementById('p');
+        try {
+          plugin.getPaintCount();
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }),
+      testDescription:
+      (function () {
+        return "plugin should not crash";
+      })
+    }
+  ];
+}
+</script>
+</head>
+<body onload="crashplugin();">
+<embed id="p" type="application/x-test" wmode="window"/>
+</body>
+</html>

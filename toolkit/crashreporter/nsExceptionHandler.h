@@ -39,6 +39,7 @@
 #define nsExceptionHandler_h__
 
 #include "nscore.h"
+#include "nsDataHashtable.h"
 #include "nsXPCOM.h"
 #include "nsStringGlue.h"
 
@@ -64,6 +65,17 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data);
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID);
+
+// Functions for working with minidumps and .extras
+typedef nsDataHashtable<nsCStringHashKey, nsCString> AnnotationTable;
+
+bool GetMinidumpForID(const nsAString& id, nsILocalFile** minidump);
+bool GetIDFromMinidump(nsILocalFile* minidump, nsAString& id);
+bool GetExtraFileForID(const nsAString& id, nsILocalFile** extraFile);
+bool GetExtraFileForMinidump(nsILocalFile* minidump, nsILocalFile** extraFile);
+bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
+bool AppendExtraData(nsILocalFile* extraFile, const AnnotationTable& data);
+
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
 #endif
@@ -77,8 +89,39 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 // Out-of-process crash reporter API.
 
 // Return true iff a dump was found for |childPid|, and return the
-// path in |dump|.
-bool GetMinidumpForChild(PRUint32 childPid, nsIFile** dump NS_OUTPARAM);
+// path in |dump|.  The caller owns the last reference to |dump| if it
+// is non-NULL.
+bool TakeMinidumpForChild(PRUint32 childPid,
+                          nsILocalFile** dump NS_OUTPARAM);
+
+#ifdef XP_WIN
+typedef HANDLE ProcessHandle;
+typedef DWORD ThreadId;
+#else
+typedef int ProcessHandle;
+typedef int ThreadId;
+#endif
+
+// Return the current thread's ID.
+//
+// XXX: this is a somewhat out-of-place interface to expose through
+// crashreporter, but it takes significant work to call sys_gettid()
+// correctly on Linux and breakpad has already jumped through those
+// hoops for us.
+ThreadId CurrentThreadId();
+
+// Create new minidumps that are snapshots of the state of this parent
+// process and |childPid|.  Return true on success along with the
+// minidumps and a new UUID that can be used to correlate the dumps.
+//
+// If this function fails, it's the caller's responsibility to clean
+// up |childDump| and |parentDump|.  Either or both can be created and
+// returned non-null on failure.
+bool CreatePairedMinidumps(ProcessHandle childPid,
+                           ThreadId childBlamedThread,
+                           nsAString* pairGUID NS_OUTPARAM,
+                           nsILocalFile** childDump NS_OUTPARAM,
+                           nsILocalFile** parentDump NS_OUTPARAM);
 
 #  if defined(XP_WIN32)
 // Parent-side API for children

@@ -78,11 +78,20 @@
                                                             [this.update_name]);
           this._setMessageValue(statusText);
           this.setAttribute("state", "error");
+          var e = document.createEvent("Events");
+          e.initEvent("load", false, true);
+          this.dispatchEvent(e);
         ]]></body>
       </method>
 
       <method name="onLoad">
         <body><![CDATA[
+          var doc = this._content.contentDocument;
+          var type = this.getAttribute("remotetype");
+          if (!doc.body.hasAttribute(type)) {
+            this.onError();
+            return;
+          }
           // The remote html can tell us to zoom out the page if the page
           // will create scrollbars by adding a zoomOutToFit attribute to the
           // body of the billboard's html. Since zooming out will not always

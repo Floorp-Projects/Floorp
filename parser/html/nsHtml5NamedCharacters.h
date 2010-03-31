@@ -8,9 +8,10 @@
 class nsHtml5NamedCharacters
 {
   public:
-    static jArray<jArray<PRUnichar,PRInt32>,PRInt32> NAMES;
-    static jArray<PRUnichar,PRInt32>* VALUES;
+    static jArray<jArray<PRInt8,PRInt32>,PRInt32> NAMES;
+    static const PRUnichar VALUES[][2];
     static PRUnichar** WINDOWS_1252;
+    static const PRInt32* const HILO_ACCEL[];
     static void initializeStatics();
     static void releaseStatics();
 };

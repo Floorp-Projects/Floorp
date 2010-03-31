@@ -82,7 +82,7 @@ public:
     nsresult rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->BindUTF8StringParameter(0, spec);
+    rv = BindStatementURLCString(stmt, 0, spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<VisitedQuery> callback = new VisitedQuery(aURI);

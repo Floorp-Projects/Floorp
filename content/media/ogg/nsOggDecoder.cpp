@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -56,6 +56,7 @@
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using namespace mozilla::layers;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gOggDecoderLog;
@@ -371,6 +372,9 @@ public:
   // be called with the decode monitor held.
   void ClearPositionChangeFlag();
 
+  // Called by decoder and main thread.
+  nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
+
   // Must be called with the decode monitor held. Can be called by main
   // thread.
   PRBool HaveNextFrameData() const {
@@ -406,6 +410,27 @@ protected:
   // called only when the current state > DECODING_METADATA.
   void HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayDataHeader* aVideoHeader);
   void HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize);
+
+  void UpdateReadyState() {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
+
+    nsCOMPtr<nsIRunnable> event;
+    switch (GetNextFrameStatus()) {
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailableBuffering);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameAvailable);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailable);
+        break;
+      default:
+        PR_NOT_REACHED("unhandled frame state");
+    }
+
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
 
   // These methods can only be called on the decoding thread.
   void LoadOggHeaders(nsChannelReader* aReader);
@@ -936,6 +961,12 @@ void nsOggDecodeStateMachine::PlayFrame() {
         time = hwtime < 0.0 ?
           (TimeStamp::Now() - mPlayStartTime - mPauseDuration).ToSeconds() :
           hwtime;
+        // Resynchronize the system clock against the audio clock.
+        if (hwtime >= 0.0) {
+          mPlayStartTime = TimeStamp::Now();
+          mPlayStartTime -= TimeDuration::FromMilliseconds(hwtime * 1000.0);
+          mPauseDuration = TimeDuration(0);
+        }
         // Is it time for the next frame?  Using an integer here avoids f.p.
         // rounding errors that can cause multiple 0ms waits (Bug 495352)
         PRInt64 wait = PRInt64((frame->mTime - time)*1000);
@@ -985,35 +1016,63 @@ void nsOggDecodeStateMachine::PlayFrame() {
   }
 }
 
+static void ToARGBHook(const PlanarYCbCrImage::Data& aData, PRUint8* aOutput)
+{
+  OggPlayYUVChannels yuv;
+  NS_ASSERTION(aData.mYStride == aData.mYSize.width,
+               "Stride not supported");
+  NS_ASSERTION(aData.mCbCrStride == aData.mCbCrSize.width,
+               "Stride not supported");
+  yuv.ptry = aData.mYChannel;
+  yuv.ptru = aData.mCbChannel;
+  yuv.ptrv = aData.mCrChannel;
+  yuv.uv_width = aData.mCbCrSize.width;
+  yuv.uv_height = aData.mCbCrSize.height;
+  yuv.y_width = aData.mYSize.width;
+  yuv.y_height = aData.mYSize.height;
+
+  OggPlayRGBChannels rgb;
+  rgb.ptro = aOutput;
+  rgb.rgb_width = aData.mYSize.width;
+  rgb.rgb_height = aData.mYSize.height;
+
+  oggplay_yuv2bgra(&yuv, &rgb);  
+}
+
 void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 {
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   if (aFrame && aFrame->mVideoHeader) {
-    OggPlayVideoData* videoData = oggplay_callback_info_get_video_data(aFrame->mVideoHeader);
+    ImageContainer* container = mDecoder->GetImageContainer();
+    // Currently our Ogg decoder only knows how to output to PLANAR_YCBCR
+    // format.
+    Image::Format format = Image::PLANAR_YCBCR;
+    nsRefPtr<Image> image;
+    if (container) {
+      image = container->CreateImage(&format, 1);
+    }
+    if (image) {
+      NS_ASSERTION(image->GetFormat() == Image::PLANAR_YCBCR,
+                   "Wrong format?");
+      PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(image.get());
 
-    OggPlayYUVChannels yuv;
-    yuv.ptry = videoData->y;
-    yuv.ptru = videoData->u;
-    yuv.ptrv = videoData->v;
-    yuv.uv_width = aFrame->mUVWidth;
-    yuv.uv_height = aFrame->mUVHeight;
-    yuv.y_width = aFrame->mVideoWidth;
-    yuv.y_height = aFrame->mVideoHeight;
+      // XXX this is only temporary until we get YUV code in the layer
+      // system.
+      videoImage->SetRGBConverter(ToARGBHook);
 
-    size_t size = aFrame->mVideoWidth * aFrame->mVideoHeight * 4;
-    nsAutoArrayPtr<unsigned char> buffer(new unsigned char[size]);
-    if (!buffer)
-      return;
+      OggPlayVideoData* videoData = oggplay_callback_info_get_video_data(aFrame->mVideoHeader);
+      PlanarYCbCrImage::Data data;
+      data.mYChannel = videoData->y;
+      data.mYSize = gfxIntSize(aFrame->mVideoWidth, aFrame->mVideoHeight);
+      data.mYStride = data.mYSize.width;
+      data.mCbChannel = videoData->u;
+      data.mCrChannel = videoData->v;
+      data.mCbCrSize = gfxIntSize(aFrame->mUVWidth, aFrame->mUVHeight);
+      data.mCbCrStride = data.mCbCrSize.width;
+      videoImage->SetData(data);
 
-    OggPlayRGBChannels rgb;
-    rgb.ptro = buffer;
-    rgb.rgb_width = aFrame->mVideoWidth;
-    rgb.rgb_height = aFrame->mVideoHeight;
-
-    oggplay_yuv2bgra(&yuv, &rgb);
-
-    mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight,
-                         mFramerate, mAspectRatio, buffer.forget());
+      mDecoder->SetVideoData(data.mYSize, mAspectRatio, image);
+    }
 
     // Don't play the frame's video data more than once.
     aFrame->ClearVideoHeader();
@@ -1084,9 +1143,6 @@ void nsOggDecodeStateMachine::StartPlayback()
     // Null out mPauseStartTime
     mPauseStartTime = TimeStamp();
   }
-  mPlayStartTime = TimeStamp::Now();
-  mPauseDuration = 0;
-
 }
 
 void nsOggDecodeStateMachine::StopPlayback()
@@ -1095,7 +1151,9 @@ void nsOggDecodeStateMachine::StopPlayback()
   mLastFrame = mDecodedFrames.ResetTimes(mCallbackPeriod);
   StopAudio();
   mPlaying = PR_FALSE;
-  mPauseStartTime = TimeStamp::Now();
+  mPauseStartTime = TimeStamp();
+  mPauseDuration = 0;
+  mPlayStartTime = TimeStamp();
 }
 
 void nsOggDecodeStateMachine::PausePlayback()
@@ -1107,9 +1165,6 @@ void nsOggDecodeStateMachine::PausePlayback()
   mAudioStream->Pause();
   mPlaying = PR_FALSE;
   mPauseStartTime = TimeStamp::Now();
-  if (mAudioStream->GetPosition() < 0) {
-    mLastFrame = mDecodedFrames.ResetTimes(mCallbackPeriod);
-  }
 }
 
 void nsOggDecodeStateMachine::ResumePlayback()
@@ -1128,8 +1183,6 @@ void nsOggDecodeStateMachine::ResumePlayback()
    // Null out mPauseStartTime
    mPauseStartTime = TimeStamp();
  }
- mPlayStartTime = TimeStamp::Now();
- mPauseDuration = 0;
 }
 
 void nsOggDecodeStateMachine::UpdatePlaybackPosition(float aTime)
@@ -1149,17 +1202,16 @@ void nsOggDecodeStateMachine::QueueDecodedFrames()
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   FrameData* frame;
   while (!mDecodedFrames.IsFull() && (frame = NextFrame())) {
-    if (mDecodedFrames.GetCount() < 2) {
+    PRUint32 oldFrameCount = mDecodedFrames.GetCount();
+    mDecodedFrames.Push(frame);
+    if (oldFrameCount < 2) {
       // Transitioning from 0 to 1 frames or from 1 to 2 frames could
       // affect HaveNextFrameData and hence what UpdateReadyStateForData does.
       // This could change us from HAVE_CURRENT_DATA to HAVE_FUTURE_DATA
       // (or even HAVE_ENOUGH_DATA), so we'd better trigger an
-      // UpdateReadyStateForData.
-      nsCOMPtr<nsIRunnable> event = 
-        NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+      // update to the ready state.
+      UpdateReadyState();
     }
-    mDecodedFrames.Push(frame);
   }
 }
 
@@ -1167,6 +1219,17 @@ void nsOggDecodeStateMachine::ClearPositionChangeFlag()
 {
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
   mPositionChangeQueued = PR_FALSE;
+}
+
+nsHTMLMediaElement::NextFrameStatus nsOggDecodeStateMachine::GetNextFrameStatus()
+{
+  nsAutoMonitor mon(mDecoder->GetMonitor());
+  if (IsBuffering() || IsSeeking()) {
+    return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+  } else if (HaveNextFrameData()) {
+    return nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+  }
+  return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
 }
 
 void nsOggDecodeStateMachine::SetVolume(float volume)
@@ -1509,7 +1572,10 @@ nsresult nsOggDecodeStateMachine::Run()
         QueueDecodedFrames();
         while (mDecodedFrames.IsEmpty() && !mDecodingCompleted &&
                !mBufferExhausted) {
-          mon.Wait(PR_MillisecondsToInterval(PRInt64(mCallbackPeriod*500)));
+          if (mPlaying) {
+            PausePlayback();
+          }
+          mon.Wait();
           if (mState != DECODER_STATE_DECODING)
             break;
           QueueDecodedFrames();
@@ -1551,9 +1617,7 @@ nsresult nsOggDecodeStateMachine::Run()
           // we just trigger UpdateReadyStateForData; when it runs, it
           // will check the current state and decide whether to tell
           // the element we're buffering or not.
-          nsCOMPtr<nsIRunnable> event = 
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          UpdateReadyState();
 
           mBufferingStart = TimeStamp::Now();
           PRPackedBool reliable;
@@ -1696,9 +1760,7 @@ nsresult nsOggDecodeStateMachine::Run()
           mBufferExhausted = PR_FALSE;
           // Notify to allow blocked decoder thread to continue
           mon.NotifyAll();
-          nsCOMPtr<nsIRunnable> event = 
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          UpdateReadyState();
           if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
             if (!mPlaying) {
               ResumePlayback();
@@ -1838,7 +1900,8 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
       int y_width;
       int y_height;
       oggplay_get_video_y_size(mPlayer, i, &y_width, &y_height);
-      mDecoder->SetRGBData(y_width, y_height, mFramerate, mAspectRatio, nsnull);
+      mDecoder->SetVideoData(gfxIntSize(y_width, y_height), mAspectRatio,
+                             nsnull);
     }
     else if (mAudioTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_VORBIS) {
       mAudioTrack = i;
@@ -1977,6 +2040,8 @@ PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
 
   mReader = new nsChannelReader();
   NS_ENSURE_TRUE(mReader, PR_FALSE);
+
+  mImageContainer = aElement->GetImageContainer();
 
   return PR_TRUE;
 }
@@ -2387,23 +2452,41 @@ void nsOggDecoder::NotifyBytesConsumed(PRInt64 aBytes)
   }
 }
 
-void nsOggDecoder::UpdateReadyStateForData()
+void nsOggDecoder::NextFrameUnavailableBuffering()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mElement || mShuttingDown || !mDecodeStateMachine)
     return;
 
-  nsHTMLMediaElement::NextFrameStatus frameStatus;
-  {
-    nsAutoMonitor mon(mMonitor);
-    if (mDecodeStateMachine->IsBuffering() ||
-        mDecodeStateMachine->IsSeeking()) {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-    } else if (mDecodeStateMachine->HaveNextFrameData()) {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
-    } else {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
-    }
-  }
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING);
+}
+
+void nsOggDecoder::NextFrameAvailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_AVAILABLE);
+}
+
+void nsOggDecoder::NextFrameUnavailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE);
+}
+
+void nsOggDecoder::UpdateReadyStateForData()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  nsHTMLMediaElement::NextFrameStatus frameStatus =
+    mDecodeStateMachine->GetNextFrameStatus();
   mElement->UpdateReadyStateForData(frameStatus);
 }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2010 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -56,7 +56,6 @@
 #include "nsAHtml5TreeBuilderState.h"
 
 class nsHtml5StreamParser;
-class nsHtml5SpeculativeLoader;
 
 class nsHtml5Tokenizer;
 class nsHtml5MetaScanner;
@@ -101,7 +100,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void startTokenization(nsHtml5Tokenizer* self);
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks);
     void comment(PRUnichar* buf, PRInt32 start, PRInt32 length);
-    void characters(PRUnichar* buf, PRInt32 start, PRInt32 length);
+    void characters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
     void eof();
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, PRBool selfClosing);
@@ -182,7 +181,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
     void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
-    void accumulateCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length);
+    void accumulateCharacters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
     void accumulateCharacter(PRUnichar c);
     void requestSuspension();
     nsIContent** createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
@@ -244,6 +243,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
+#define NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH 200
 #define NS_HTML5TREE_BUILDER_OTHER 0
 #define NS_HTML5TREE_BUILDER_A 1
 #define NS_HTML5TREE_BUILDER_BASE 2

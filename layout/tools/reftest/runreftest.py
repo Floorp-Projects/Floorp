@@ -75,6 +75,11 @@ class RefTest(object):
     prefsFile.write('user_pref("reftest.timeout", %d);\n' % (options.timeout * 1000))
     prefsFile.write('user_pref("ui.caretBlinkTime", -1);\n')
 
+    if options.totalChunks != None:
+      prefsFile.write('user_pref("reftest.totalChunks", %d);\n' % options.totalChunks)
+    if options.thisChunk != None:
+      prefsFile.write('user_pref("reftest.thisChunk", %d);\n' % options.thisChunk)
+
     for v in options.extraPrefs:
       thispref = v.split("=")
       if len(thispref) < 2:
@@ -208,6 +213,16 @@ class ReftestOptions(OptionParser):
                            "programs (xpcshell, ssltunnel, certutil)")
     defaults["utilityPath"] = automation.DIST_BIN
 
+    self.add_option("--total-chunks",
+                    type = "int", dest = "totalChunks",
+                    help = "how many chunks to split the tests up into")
+    defaults["totalChunks"] = None
+
+    self.add_option("--this-chunk",
+                    type = "int", dest = "thisChunk",
+                    help = "which chunk to run between 1 and --total-chunks")
+    defaults["thisChunk"] = None
+
     self.set_defaults(**defaults)
 
 def main():
@@ -236,6 +251,15 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
   if options.symbolsPath:
     options.symbolsPath = reftest.getFullPath(options.symbolsPath)
   options.utilityPath = reftest.getFullPath(options.utilityPath)
+
+  if options.totalChunks is not None and options.thisChunk is None:
+    print "thisChunk must be specified when totalChunks is specified"
+    sys.exit(1)
+
+  if options.totalChunks:
+    if not 1 <= options.thisChunk <= options.totalChunks:
+      print "thisChunk must be between 1 and totalChunks"
+      sys.exit(1)
 
   sys.exit(reftest.runTests(args[0], options))
   

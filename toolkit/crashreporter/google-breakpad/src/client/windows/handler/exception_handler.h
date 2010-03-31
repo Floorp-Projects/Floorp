@@ -190,6 +190,23 @@ class ExceptionHandler {
   static bool WriteMinidump(const wstring &dump_path,
                             MinidumpCallback callback, void* callback_context);
 
+  // Variant of WriteMinidump() above that optionally allows writing
+  // an artificial exception stream in the minidump.
+  static bool WriteMinidump(const wstring &dump_path,
+                            bool write_exception_stream,
+                            MinidumpCallback callback, void* callback_context);
+
+  // Write a minidump of |child| immediately.  This can be used to
+  // capture the execution state of |child| independently of a crash.
+  // Pass a meaningful |child_blamed_thread| to make that thread in
+  // the child process the one from which a crash signature is
+  // extracted.
+  static bool WriteMinidumpForChild(HANDLE child,
+                                    DWORD child_blamed_thread,
+                                    const wstring &dump_path,
+                                    MinidumpCallback callback,
+                                    void *callback_context);
+
   // Get the thread ID of the thread requesting the dump (either the exception
   // thread or any other thread that called WriteMinidump directly).  This
   // may be useful if you want to include additional thread state in your
@@ -268,14 +285,30 @@ class ExceptionHandler {
   bool WriteMinidumpOnHandlerThread(EXCEPTION_POINTERS* exinfo,
                                     MDRawAssertionInfo* assertion);
 
-  // This function does the actual writing of a minidump.  It is called
-  // on the handler thread.  requesting_thread_id is the ID of the thread
+  // This function is called on the handler thread.  It calls into
+  // WriteMinidumpWithExceptionForProcess() with a handle to the
+  // current process.  requesting_thread_id is the ID of the thread
   // that requested the dump.  If the dump is requested as a result of
   // an exception, exinfo contains exception information, otherwise,
   // it is NULL.
   bool WriteMinidumpWithException(DWORD requesting_thread_id,
                                   EXCEPTION_POINTERS* exinfo,
                                   MDRawAssertionInfo* assertion);
+
+  // This function does the actual writing of a minidump.  It is
+  // called on the handler thread.  requesting_thread_id is the ID of
+  // the thread that requested the dump, if that information is
+  // meaningful.  If the dump is requested as a result of an
+  // exception, exinfo contains exception information, otherwise, it
+  // is NULL.  process is the one that will be dumped.  If
+  // requesting_thread_id is meaningful and should be added to the
+  // minidump, write_requester_stream is |true|.
+  bool WriteMinidumpWithExceptionForProcess(DWORD requesting_thread_id,
+                                            EXCEPTION_POINTERS* exinfo,
+                                            MDRawAssertionInfo* assertion,
+                                            HANDLE process,
+                                            DWORD processId,
+                                            bool write_requester_stream);
 
   // Generates a new ID and stores it in next_minidump_id_, and stores the
   // path of the next minidump to be written in next_minidump_path_.

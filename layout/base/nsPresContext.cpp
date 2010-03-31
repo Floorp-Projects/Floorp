@@ -320,7 +320,7 @@ nsPresContext::~nsPresContext()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPresContext)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsISupports)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -1434,6 +1434,20 @@ nsPresContext::GetBidi() const
   return Document()->GetBidiOptions();
 }
 #endif //IBMBIDI
+
+PRBool
+nsPresContext::IsTopLevelWindowInactive()
+{
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryReferent(mContainer));
+  if (!treeItem)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  nsCOMPtr<nsPIDOMWindow> domWindow(do_GetInterface(rootItem));
+
+  return domWindow && !domWindow->IsActive();
+}
 
 nsITheme*
 nsPresContext::GetTheme()

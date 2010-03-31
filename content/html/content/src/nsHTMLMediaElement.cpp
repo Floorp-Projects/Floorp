@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -57,6 +57,7 @@
 #include "prlock.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsFrameManager.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
@@ -73,13 +74,16 @@
 #include "nsCommaSeparatedTokenizer.h"
 #include "nsMediaStream.h"
 
+#include "nsIDOMHTMLVideoElement.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsICachingChannel.h"
 #include "nsLayoutUtils.h"
 #include "nsVideoFrame.h"
+#include "BasicLayers.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -97,6 +101,8 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #define LOG(type, msg)
 #define LOG_EVENT(type, msg)
 #endif
+
+using namespace mozilla::layers;
 
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
@@ -635,7 +641,7 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
                      nsnull,
                      loadGroup,
                      nsnull,
-                     nsIRequest::LOAD_NORMAL);
+                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // The listener holds a strong reference to us.  This creates a reference
@@ -1737,26 +1743,62 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
   }
 }
 
-void nsHTMLMediaElement::Paint(gfxContext* aContext,
-                               gfxPattern::GraphicsFilter aFilter,
-                               const gfxRect& aRect)
+/**
+ * Returns a layer manager to use for the given document. Basically we
+ * look up the document hierarchy for the first document which has
+ * a presentation with an associated widget, and use that widget's
+ * layer manager.
+ */
+static already_AddRefed<LayerManager> GetLayerManagerForDoc(nsIDocument* aDoc)
 {
-  if (mPrintSurface) {
-    nsRefPtr<gfxPattern> pat = new gfxPattern(mPrintSurface);
-    if (!pat)
-      return;
-    // Make the source image fill the rectangle completely
-    pat->SetMatrix(gfxMatrix().Scale(mMediaSize.width/aRect.Width(),
-                                     mMediaSize.height/aRect.Height()));
+  while (aDoc) {
+    nsIDocument* displayDoc = aDoc->GetDisplayDocument();
+    if (displayDoc) {
+      aDoc = displayDoc;
+      continue;
+    }
 
-    pat->SetFilter(aFilter);
-
-    aContext->NewPath();
-    aContext->PixelSnappedRectangleAndSetPattern(aRect, pat);
-    aContext->Fill();
-  } else if (mDecoder) {
-    mDecoder->Paint(aContext, aFilter, aRect);
+    nsIPresShell* shell = aDoc->GetPrimaryShell();
+    if (shell) {
+      nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
+      if (rootFrame) {
+        nsIWidget* widget =
+          nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+        if (widget) {
+          nsRefPtr<LayerManager> manager = widget->GetLayerManager();
+          return manager.forget();
+        }
+      }
+    }
+    aDoc = aDoc->GetParentDocument();
   }
+
+  nsRefPtr<LayerManager> manager = new BasicLayerManager(nsnull);
+  return manager.forget();
+}
+
+ImageContainer* nsHTMLMediaElement::GetImageContainer()
+{
+  if (mImageContainer)
+    return mImageContainer;
+
+  // If we have a print surface, this is just a static image so
+  // no image container is required
+  if (mPrintSurface)
+    return nsnull;
+
+  // Only video frames need an image container.
+  nsCOMPtr<nsIDOMHTMLVideoElement> video =
+    do_QueryInterface(static_cast<nsIContent*>(this));
+  if (!video)
+    return nsnull;
+
+  nsRefPtr<LayerManager> manager = GetLayerManagerForDoc(GetOwnerDoc());
+  if (!manager)
+    return nsnull;
+
+  mImageContainer = manager->CreateImageContainer();
+  return mImageContainer;
 }
 
 nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)

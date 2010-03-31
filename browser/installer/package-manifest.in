@@ -81,7 +81,7 @@
 #ifdef XP_MACOSX
 @BINPATH@/plugins/DefaultPlugin.plugin/
 #elifdef XP_UNIX
-@BINPATH@/plugins/libnullplugin.so
+@BINPATH@/plugins/libnullplugin@DLL_SUFFIX@
 #elifdef XP_WIN32
 #ifndef WINCE
 @BINPATH@/plugins/npnul32.dll
@@ -191,12 +191,11 @@
 @BINPATH@/components/layout_xul.xpt
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-@BINPATH@/components/libimgicon.so
+@BINPATH@/components/libimgicon@DLL_SUFFIX@
 #endif
 #endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
-@BINPATH@/components/microsummaries.xpt
 #ifndef WINCE
 @BINPATH@/components/migration.xpt
 #endif

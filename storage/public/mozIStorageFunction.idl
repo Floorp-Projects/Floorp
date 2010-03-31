@@ -39,8 +39,9 @@
 
 #include "nsISupports.idl"
 
+#include "mozIStorageValueArray.idl"
+
 interface mozIStorageConnection;
-interface mozIStorageValueArray;
 interface nsIArray;
 interface nsIVariant;
 

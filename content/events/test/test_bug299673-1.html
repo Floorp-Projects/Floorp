@@ -54,12 +54,7 @@ INPUT(popupText1): blur \n\
   setPrefAndDoTest(eventLogForNewWindow,'Body',2);  // 2 = open new window as window
 }
 
-if (navigator.platform.indexOf("Lin") == -1 && navigator.platform.indexOf("SunOS") == -1) {
-  SimpleTest.waitForExplicitFinish(); // the finish() call is in bug299673.js
-  addLoadEvent(doTest);
-} else {
-  todo(false, "Please write a better test for bug 299673 that also works on Linux");
-}
+todo(false, "Please write a test for bug 299673 that actually works");
 
 </script>
 </pre>

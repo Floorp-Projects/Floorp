@@ -1,11 +1,11 @@
 var expected = ["TabOpen", "onLocationChange", "onStateChange", "onLinkIconAvailable"];
 var actual = [];
 var tabIndex = -1;
-__defineGetter__("tab", function () gBrowser.tabContainer.childNodes[tabIndex]);
+__defineGetter__("tab", function () gBrowser.tabs[tabIndex]);
 
 function test() {
   waitForExplicitFinish();
-  tabIndex = gBrowser.tabContainer.childElementCount;
+  tabIndex = gBrowser.tabs.length;
   gBrowser.addTabsProgressListener(progressListener);
   gBrowser.tabContainer.addEventListener("TabOpen", TabOpen, false);
   gBrowser.addTab("data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>");

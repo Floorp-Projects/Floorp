@@ -177,6 +177,11 @@ class nsStyleSet
                          nsStyleContext* aStyleContext,
                          nsStyleContext* aNewParentContext);
 
+  // Test if style is dependent on a document state.
+  PRBool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
+                                        nsIContent*    aContent,
+                                        PRInt32        aStateMask);
+
   // Test if style is dependent on content state
   nsReStyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
@@ -328,7 +333,8 @@ class nsStyleSet
   // Enumerate all the rules in a way that doesn't care about the order
   // of the rules and break out if the enumeration is halted.
   void WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
-                          RuleProcessorData* aData);
+                          RuleProcessorData* aData,
+                          PRBool aWalkAllXBLStylesheets);
 
   already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
                                               nsStyleContext* aParentContext,

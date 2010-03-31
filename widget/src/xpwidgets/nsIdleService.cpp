@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -24,6 +24,7 @@
  * Contributor(s):
  *  Gijs Kruitbosch <gijskruitbosch@gmail.com>
  *  Edward Lee <edward.lee@engineering.uiuc.edu>
+ *  Mike Kristoffersen <moz@mikek.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,201 +48,367 @@
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "nsCOMArray.h"
+#include "prinrval.h"
 
 // observer topics used:
 #define OBSERVER_TOPIC_IDLE "idle"
 #define OBSERVER_TOPIC_BACK "back"
 #define OBSERVER_TOPIC_IDLE_DAILY "idle-daily"
-// interval in milliseconds between internal idle time requests
-#define MIN_IDLE_POLL_INTERVAL 5000
-#define MAX_IDLE_POLL_INTERVAL 300000
-// Pref for last time (seconds since epoch) daily notification was sent
+// interval in seconds between internal idle time requests.
+#define MIN_IDLE_POLL_INTERVAL 5
+#define MAX_IDLE_POLL_INTERVAL 300 /* 5 min */
+// Pref for last time (seconds since epoch) daily notification was sent.
 #define PREF_LAST_DAILY "idle.lastDailyNotification"
 
 // Use this to find previously added observers in our array:
 class IdleListenerComparator
 {
 public:
-    PRBool Equals(IdleListener a, IdleListener b) const
-    {
-        return (a.observer == b.observer) &&
-               (a.reqIdleTime == b.reqIdleTime);
-    }
+  PRBool Equals(IdleListener a, IdleListener b) const
+  {
+    return (a.observer == b.observer) &&
+           (a.reqIdleTime == b.reqIdleTime);
+  }
 };
 
-nsIdleService::nsIdleService()
+NS_IMPL_ISUPPORTS1(nsIdleServiceDaily, nsIObserver)
+
+NS_IMETHODIMP
+nsIdleServiceDaily::Observe(nsISupports *,
+                            const char *,
+                            const PRUnichar *)
 {
-    // Immediately create a timer to handle the daily notification
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    StartTimer(MAX_IDLE_POLL_INTERVAL);
+  // Notify anyone who cares.
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+
+  observerService->NotifyObservers(nsnull,
+                                   OBSERVER_TOPIC_IDLE_DAILY,
+                                   nsnull);
+  // Remove from idle timeout.
+  mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL);
+
+  // Start timer for next search in 1 day.
+  if (mTimer) {
+    mTimer->InitWithFuncCallback(DailyCallback, this, 24*60*60*1000,
+                                                       nsITimer::TYPE_ONE_SHOT);
+  }
+
+  return NS_OK;
+}
+
+void
+nsIdleServiceDaily::Init(nsIdleService *aIdleService)
+{
+  nsresult rv;
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+
+  mIdleService = aIdleService;
+
+  // Wait for the user to become idle, so we can do todays idle tasks.
+  DailyCallback(0, this);
+}
+
+void
+nsIdleServiceDaily::Shutdown()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+  if (mIdleService) {
+    mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL);
+    mIdleService = nsnull;
+  }
+}
+
+void
+nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsIdleServiceDaily* me = static_cast<nsIdleServiceDaily*>(aClosure);
+
+  // The one thing we do every day is to start waiting for the user to "have
+  // a significant idle time".
+  me->mIdleService->AddIdleObserver(me, MAX_IDLE_POLL_INTERVAL);
+}
+
+nsIdleService::nsIdleService() : mLastIdleReset(0), mLastHandledActivity(0)
+{
+  mDailyIdle = new nsIdleServiceDaily;
+  if (mDailyIdle) {
+    mDailyIdle->Init(this);
+  }
 }
 
 nsIdleService::~nsIdleService()
 {
-    StopTimer();
+  StopTimer();
+  mDailyIdle->Shutdown();
 }
 
 NS_IMETHODIMP
 nsIdleService::AddIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime)
 {
-    NS_ENSURE_ARG_POINTER(aObserver);
-    NS_ENSURE_ARG(aIdleTime);
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_ARG(aIdleTime);
 
-    // Put the time + observer in a struct we can keep:
-    IdleListener listener(aObserver, aIdleTime * 1000);
+  // Put the time + observer in a struct we can keep:
+  IdleListener listener(aObserver, aIdleTime);
 
-    if (!mArrayListeners.AppendElement(listener))
-        return NS_ERROR_OUT_OF_MEMORY;
+  if (!mArrayListeners.AppendElement(listener)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    // Create our timer callback if it's not there already
-    if (!mTimer) {
-        nsresult rv;
-        mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+  // Create our timer callback if it's not there already.
+  if (!mTimer) {
+    nsresult rv;
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-    // Make sure our observer goes into 'idle' immediately if applicable.
-    CheckAwayState();
+  // Make sure our observer goes into 'idle' immediately if applicable.
+  CheckAwayState(false);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aTime)
 {
-    NS_ENSURE_ARG_POINTER(aObserver);
-    NS_ENSURE_ARG(aTime);
-    IdleListener listener(aObserver, aTime * 1000);
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_ARG(aTime);
+  IdleListener listener(aObserver, aTime);
 
-    // Find the entry and remove it:
-    IdleListenerComparator c;
-    if (mArrayListeners.RemoveElement(listener, c)) {
-        if (mArrayListeners.IsEmpty()) {
-            StopTimer();
-        }
-        return NS_OK;
+  // Find the entry and remove it:
+  IdleListenerComparator c;
+  if (mArrayListeners.RemoveElement(listener, c)) {
+    if (mArrayListeners.IsEmpty()) {
+      StopTimer();
     }
+    return NS_OK;
+  }
 
-    // If we get here, we haven't removed anything:
-    return NS_ERROR_FAILURE;
+  // If we get here, we haven't removed anything:
+  return NS_ERROR_FAILURE;
+}
+
+void
+nsIdleService::ResetIdleTimeOut()
+{
+  mLastIdleReset = PR_IntervalToSeconds(PR_IntervalNow());
+  // A zero in mLastIdleReset indicates that this function has never been
+  // called.
+  if (!mLastIdleReset) mLastIdleReset = 1;
+
+  // Now check if this changes anything
+  CheckAwayState(true);
+}
+
+NS_IMETHODIMP
+nsIdleService::GetIdleTime(PRUint32* idleTime)
+{
+  // Check sanity of in parameter.
+  if (!idleTime) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // Polled idle time in ms
+  PRUint32 polledIdleTimeMS;
+  bool polledIdleTimeIsValid;
+
+  polledIdleTimeIsValid = PollIdleTime(&polledIdleTimeMS);
+
+  // If we don't have any valid data, then we are not in idle - pr. definition.
+  if (!polledIdleTimeIsValid && 0 == mLastIdleReset) {
+    *idleTime = 0;
+    return NS_OK;
+  }
+
+  // If we never got a reset, just return the pulled time.
+  if (0 == mLastIdleReset) {
+    *idleTime = polledIdleTimeMS;
+    return NS_OK;
+  }
+
+  // timeSinceReset is in seconds.
+  PRUint32 timeSinceReset =
+    PR_IntervalToSeconds(PR_IntervalNow()) - mLastIdleReset;
+
+  // If we did't get pulled data, return the time since last idle reset.
+  if (!polledIdleTimeIsValid) {
+    // We need to convert to ms before returning the time.
+    *idleTime = timeSinceReset * 1000;
+    return NS_OK;
+  }
+
+  // Otherwise return the shortest time detected (in ms).
+  *idleTime = NS_MIN(timeSinceReset * 1000, polledIdleTimeMS);
+
+  return NS_OK;
+}
+
+
+bool
+nsIdleService::PollIdleTime(PRUint32* /*aIdleTime*/)
+{
+  // Default behavior is not to have the ability to poll an idle time.
+  return false;
+}
+
+bool
+nsIdleService::UsePollMode()
+{
+  PRUint32 dummy;
+  return PollIdleTime(&dummy);
 }
 
 void
 nsIdleService::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-    static_cast<nsIdleService*>(aClosure)->CheckAwayState();
+  static_cast<nsIdleService*>(aClosure)->CheckAwayState(false);
 }
 
 void
-nsIdleService::CheckAwayState()
+nsIdleService::CheckAwayState(bool aNoTimeReset)
 {
-    // Get the idle time.
-    PRUint32 idleTime;
-    if (NS_FAILED(GetIdleTime(&idleTime)))
-        return;
+  /**
+   * Find our last detected idle time (it's important this happens before the
+   * call below to GetIdleTime, as we use the two values to detect if there
+   * has been user activity since the last time we were here).
+   */
+  PRUint32 curTime = PR_Now() / PR_USEC_PER_SEC;
+  PRUint32 lastTime = curTime - mLastHandledActivity;
 
-    // Dynamically figure out what's the best time to poll again
-    PRUint32 nextPoll = MAX_IDLE_POLL_INTERVAL;
+  // Get the idle time (in seconds).
+  PRUint32 idleTime;
+  if (NS_FAILED(GetIdleTime(&idleTime))) {
+    return;
+  }
 
-    nsAutoString timeStr;
-    timeStr.AppendInt(idleTime);
+  // GetIdleTime returns the time in ms, internally we only calculate in s.
+  idleTime /= 1000;
 
-    // Change state first, and save observers that need notification, so
-    // removing things will always work without upsetting notifications.
-    nsCOMArray<nsIObserver> idleListeners;
-    nsCOMArray<nsIObserver> hereListeners;
+  // We need a text string to send with any state change events.
+  nsAutoString timeStr;
+  timeStr.AppendInt(idleTime);
+
+  // Set the time for last user activity.
+  mLastHandledActivity = curTime - idleTime;
+
+  /**
+   * Now, if the idle time, is less than what we expect, it means the
+   * user was active since last time that we checked.
+   */
+  nsCOMArray<nsIObserver> notifyList;
+
+  if (lastTime > idleTime) {
+    // Loop trough all listeners, and find any that have detected idle.
     for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
-        IdleListener& curListener = mArrayListeners.ElementAt(i);
+      IdleListener& curListener = mArrayListeners.ElementAt(i);
 
-        // Assume the next best poll time is the time left before idle
-        PRUint32 curPoll = curListener.reqIdleTime - idleTime;
-
-        // For listeners that haven't gone idle yet:
-        if (!curListener.isIdle) {
-            // User has been idle longer than the listener expects
-            if (idleTime >= curListener.reqIdleTime) {
-                curListener.isIdle = PR_TRUE;
-                idleListeners.AppendObject(curListener.observer);
-
-                // We'll need to poll frequently to notice if the user is back
-                curPoll = MIN_IDLE_POLL_INTERVAL;
-            }
-        }
-        // For listeners that are waiting for the user to come back:
-        else {
-            // Short idle time means the user is back
-            if (idleTime < curListener.reqIdleTime) {
-                curListener.isIdle = PR_FALSE;
-                hereListeners.AppendObject(curListener.observer);
-            }
-            // Keep polling frequently to detect if the user comes back
-            else {
-                curPoll = MIN_IDLE_POLL_INTERVAL;
-            }
-        }
-
-        // Take the shortest poll time needed for each listener
-        nextPoll = PR_MIN(nextPoll, curPoll);
+      if (curListener.isIdle) {
+        notifyList.AppendObject(curListener.observer);
+        curListener.isIdle = false;
+      }
     }
 
-    // Notify listeners gone idle:
-    for (PRInt32 i = 0; i < idleListeners.Count(); i++) {
-        idleListeners[i]->Observe(this, OBSERVER_TOPIC_IDLE, timeStr.get());
+    // Send the "non-idle" events.
+    for (PRInt32 i = 0; i < notifyList.Count(); i++) {
+      notifyList[i]->Observe(this, OBSERVER_TOPIC_BACK, timeStr.get());
+    }
+  }
+
+  /**
+   * Now we need to check for listeners that have expired, and while we are
+   * looping through all the elements, we will also calculate when, if ever
+   * the next one will need to be notified.
+   */
+
+  // Clean up the list, so it's ready for the next iteration.
+  notifyList.Clear();
+
+  // Bail out if we don't need to calculate new times.
+  if (aNoTimeReset) {
+    return;
+  }
+  /**
+   * Placet to store the wait time to the next notification, note that
+   * PR_UINT32_MAX means no-one are listening (or that they have such a big
+   * delay that it doesn't matter).
+   */
+  PRUint32 nextWaitTime = PR_UINT32_MAX;
+
+  /**
+   * Place to remember if there are any listeners that are in the idle state,
+   * if there are, we need to poll frequently in a polling environment to detect
+   * when the user becomes active again.
+   */
+  bool anyOneIdle = false;
+
+  for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
+    IdleListener& curListener = mArrayListeners.ElementAt(i);
+
+    // We are only interested in items, that are not in the idle state.
+    if (!curListener.isIdle) {
+      // If they have an idle time smaller than the actual idle time.
+      if (curListener.reqIdleTime <= idleTime) {
+        // then add the listener to the list of listeners that should be
+        // notified.
+        notifyList.AppendObject(curListener.observer);
+        // This listener is now idle.
+        curListener.isIdle = true;
+      } else {
+        // If it hasn't expired yet, then we should note the time when it should
+        // expire.
+        nextWaitTime = PR_MIN(nextWaitTime, curListener.reqIdleTime);
+      }
     }
 
-    // Notify listeners that came back:
-    for (PRInt32 i = 0; i < hereListeners.Count(); i++) {
-        hereListeners[i]->Observe(this, OBSERVER_TOPIC_BACK, timeStr.get());
-    }
+    // Remember if anyone becomes idle (it's safe to do this as a binary compare
+    // as we are or'ing).
+    anyOneIdle |= curListener.isIdle;
+  }
 
-    // The user has been idle for a while, so try sending the daily idle
-    if (idleTime >= MAX_IDLE_POLL_INTERVAL) {
-        nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (pref) {
-            // Get the current number of seconds since epoch
-            PRUint32 nowSec = PR_Now() / PR_USEC_PER_SEC;
+  // In order to find when the next idle event should time out, we need to
+  // subtract the time we should wait, from the time that has already passed.
+  nextWaitTime -= idleTime;
 
-            // Get the last notification time; default to 0 for the first time
-            PRInt32 lastDaily = 0;
-            pref->GetIntPref(PREF_LAST_DAILY, &lastDaily);
+  // Notify all listeners that just timed out.
+  for (PRInt32 i = 0; i < notifyList.Count(); i++) {
+    notifyList[i]->Observe(this, OBSERVER_TOPIC_IDLE, timeStr.get());
+  }
 
-            // Has it been a day (24*60*60 seconds) since the last notification
-            if (nowSec - lastDaily > 86400) {
-                nsCOMPtr<nsIObserverService> observerService =
-                    do_GetService("@mozilla.org/observer-service;1");
-                observerService->NotifyObservers(nsnull,
-                                                 OBSERVER_TOPIC_IDLE_DAILY,
-                                                 nsnull);
+  // If we are in poll mode, we need to poll for activity if anyone are idle,
+  // otherwise we can wait polling until they would expire.
+  if (UsePollMode() &&
+      anyOneIdle &&
+      nextWaitTime > MIN_IDLE_POLL_INTERVAL) {
+    nextWaitTime = MIN_IDLE_POLL_INTERVAL;
+  }
 
-                pref->SetIntPref(PREF_LAST_DAILY, nowSec);
-            }
-        }
-    }
-
-    // Restart the timer with the dynamically optimized poll time
-    StartTimer(nextPoll);
+  // Start the timer if there is anything to wait for.
+  if (PR_UINT32_MAX != nextWaitTime) {
+    StartTimer(nextWaitTime);
+  }
 }
 
 void
 nsIdleService::StartTimer(PRUint32 aDelay)
 {
-    if (mTimer) {
-        StopTimer();
-        mTimer->InitWithFuncCallback(IdleTimerCallback, this, aDelay,
-                                     nsITimer::TYPE_ONE_SHOT);
+  if (mTimer) {
+    StopTimer();
+    if (aDelay) {
+      mTimer->InitWithFuncCallback(IdleTimerCallback, this, aDelay*1000,
+                                   nsITimer::TYPE_ONE_SHOT);
     }
+  }
 }
 
 void
 nsIdleService::StopTimer()
 {
-    if (mTimer) {
-        mTimer->Cancel();
-    }
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 }
 
-void
-nsIdleService::IdleTimeWasModified()
-{
-    StartTimer(0);
-}

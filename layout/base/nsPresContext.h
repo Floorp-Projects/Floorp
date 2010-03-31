@@ -57,7 +57,7 @@
 #include "nsITimer.h"
 #include "nsCRT.h"
 #include "nsIPrintSettings.h"
-#include "nsPropertyTable.h"
+#include "FramePropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsRefPtrHashtable.h"
@@ -174,6 +174,8 @@ class nsRootPresContext;
 
 class nsPresContext : public nsIObserver {
 public:
+  typedef mozilla::FramePropertyTable FramePropertyTable;
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -757,6 +759,8 @@ public:
 
   PRBool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
 
+  NS_HIDDEN_(PRBool) IsTopLevelWindowInactive();
+
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
    */
@@ -781,7 +785,7 @@ public:
   nsIPrintSettings* GetPrintSettings() { return mPrintSettings; }
 
   /* Accessor for table of frame properties */
-  nsPropertyTable* PropertyTable() { return &mPropertyTable; }
+  FramePropertyTable* PropertyTable() { return &mPropertyTable; }
 
   /* Helper function that ensures that this prescontext is shown in its
      docshell if it's the most recent prescontext for the docshell.  Returns
@@ -1024,7 +1028,7 @@ protected:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
-  nsPropertyTable       mPropertyTable;
+  FramePropertyTable    mPropertyTable;
 
   nsInvalidateRequestList mInvalidateRequests;
 

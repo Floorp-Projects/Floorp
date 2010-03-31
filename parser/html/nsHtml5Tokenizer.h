@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2010 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -47,9 +47,9 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5StreamParser;
-class nsHtml5SpeculativeLoader;
 
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
@@ -85,7 +85,7 @@ class nsHtml5Tokenizer
     static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
   protected:
     nsHtml5TreeBuilder* tokenHandler;
-    nsHtml5StreamParser* encodingDeclarationHandler;
+    nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler;
     PRBool lastCR;
     PRInt32 stateSave;
   private:
@@ -96,6 +96,7 @@ class nsHtml5Tokenizer
     PRBool forceQuirks;
     PRUnichar additional;
     PRInt32 entCol;
+    PRInt32 firstCharKey;
     PRInt32 lo;
     PRInt32 hi;
     PRInt32 candidate;
@@ -251,8 +252,8 @@ class nsHtml5Tokenizer
   public:
     void internalEncodingDeclaration(nsString* internalCharset);
   private:
-    void emitOrAppend(jArray<PRUnichar,PRInt32> val, PRInt32 returnState);
-    void emitOrAppendOne(PRUnichar* val, PRInt32 returnState);
+    void emitOrAppendTwo(const PRUnichar* val, PRInt32 returnState);
+    void emitOrAppendOne(const PRUnichar* val, PRInt32 returnState);
   public:
     void end();
     void requestSuspension();
@@ -265,7 +266,7 @@ class nsHtml5Tokenizer
     void resetToDataState();
     void loadState(nsHtml5Tokenizer* other);
     void initializeWithoutStarting();
-    void setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler);
+    void setEncodingDeclarationHandler(nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler);
     static void initializeStatics();
     static void releaseStatics();
 };
@@ -336,7 +337,7 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #define NS_HTML5TOKENIZER_DOCTYPE_YSTEM 41
 #define NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE 42
 #define NS_HTML5TOKENIZER_CONSUME_NCR 43
-#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP 44
+#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL 44
 #define NS_HTML5TOKENIZER_HEX_NCR_LOOP 45
 #define NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP 46
 #define NS_HTML5TOKENIZER_HANDLE_NCR_VALUE 47
@@ -364,6 +365,7 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH 69
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH 70
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END 71
+#define NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP 72
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
 #define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 

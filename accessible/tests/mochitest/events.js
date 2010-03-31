@@ -599,7 +599,8 @@ function synthClick(aNodeOrID, aChecker, aEventType)
   this.invoke = function synthClick_invoke()
   {
     // Scroll the node into view, otherwise synth click may fail.
-    this.DOMNode.scrollIntoView(true);
+    if (this.DOMNode instanceof nsIDOMNSHTMLElement)
+      this.DOMNode.scrollIntoView(true);
 
     synthesizeMouse(this.DOMNode, 1, 1, {});
   }
@@ -607,6 +608,25 @@ function synthClick(aNodeOrID, aChecker, aEventType)
   this.getID = function synthClick_getID()
   {
     return prettyName(aNodeOrID) + " click"; 
+  }
+}
+
+/**
+ * Mouse move invoker.
+ */
+function synthMouseMove(aNodeOrID, aChecker, aEventType)
+{
+  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+
+  this.invoke = function synthMouseMove_invoke()
+  {
+    synthesizeMouse(this.DOMNode, 1, 1, { type: "mousemove" });
+    synthesizeMouse(this.DOMNode, 2, 2, { type: "mousemove" });
+  }
+
+  this.getID = function synthMouseMove_getID()
+  {
+    return prettyName(aNodeOrID) + " mouse move"; 
   }
 }
 
@@ -716,6 +736,25 @@ function synthFocus(aNodeOrID, aChecker, aEventType)
   this.getID = function synthFocus_getID() 
   { 
     return prettyName(aNodeOrID) + " focus";
+  }
+}
+
+/**
+ * Focus invoker. Focus the HTML body of content document of iframe.
+ */
+function synthFocusOnFrame(aNodeOrID, aChecker, aEventType)
+{
+  this.__proto__ = new synthAction(getNode(aNodeOrID).contentDocument,
+                                   aChecker, aEventType);
+  
+  this.invoke = function synthFocus_invoke()
+  {
+    this.DOMNode.body.focus();
+  }
+  
+  this.getID = function synthFocus_getID() 
+  { 
+    return prettyName(aNodeOrID) + " frame document focus";
   }
 }
 

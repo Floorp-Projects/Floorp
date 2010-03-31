@@ -151,7 +151,13 @@ function checkResults(root, step)
   if (step > 0)
     adjtestid += " dynamic step " + step;
 
-  if (debug) {
+  var stilltodo = ((step == 0 && notWorkingYet) || (step > 0 && notWorkingYetDynamic));
+  if (stilltodo)
+    todo(false, adjtestid);
+  else
+    ok(!error, adjtestid);
+
+  if ((!stilltodo && error) || debug) {
     // for debugging, serialize the XML output
     var serializedXML = "";
     var rootNodes = actualoutput.childNodes;
@@ -163,14 +169,11 @@ function checkResults(root, step)
 
     // remove the XUL namespace declarations to make the output more readable
     const nsrepl = new RegExp("xmlns=\"" + XUL_NS + "\" ", "g");
-    dump("-------- " + adjtestid + "  " + error + ":\n" +
-         serializedXML.replace(nsrepl, "") + "\n");
+    serializedXML = serializedXML.replace(nsrepl, "");
+    if (debug)
+      dump("-------- " + adjtestid + "  " + error + ":\n" + serializedXML + "\n");
+    is(serializedXML, "Same", "Error is: " + error);
   }
-
-  if ((step == 0 && notWorkingYet) || (step > 0 && notWorkingYetDynamic))
-    todo(false, adjtestid);
-  else
-    ok(!error, adjtestid);
 }
 
 /**

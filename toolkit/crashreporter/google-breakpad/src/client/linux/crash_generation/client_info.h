@@ -1,4 +1,4 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@ namespace google_breakpad {
 class CrashGenerationServer;
 
 struct ClientInfo {
+  pid_t pid() const { return pid_; }
+
   CrashGenerationServer* crash_server_;
   pid_t pid_;
 };

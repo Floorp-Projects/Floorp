@@ -55,8 +55,10 @@ function run_test() {
                                  "http://billboard1/", "http://license1/",
                                  "http://service1/", "1238441300314",
                                  "test status text", "false", "test_channel",
-                                 "true", "true", "true", "true", "test extra1",
-                                 "test version", "3.0", "3.0");
+                                 "true", "true", "true", "true",
+                                 "test version", "3.0", "3.0",
+                                 "custom1_attr=\"custom1 value\"",
+                                 "custom2_attr=\"custom2 value\"");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
@@ -68,7 +70,9 @@ function run_test() {
                                  "http://service2/", null,
                                  getString("patchApplyFailure"), "true",
                                  "test_channel", "false", null, null, null,
-                                 null, "version 3", "3.0", null);
+                                 "version 3", "3.0", null,
+                                 "custom3_attr=\"custom3 value\"",
+                                 "custom4_attr=\"custom4 value\"");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
   standardInit();
@@ -76,7 +80,7 @@ function run_test() {
   do_check_eq(gUpdateManager.activeUpdate, null);
   do_check_eq(gUpdateManager.updateCount, 2);
 
-  update = gUpdateManager.getUpdateAt(0);
+  update = gUpdateManager.getUpdateAt(0).QueryInterface(AUS_Ci.nsIPropertyBag);
   do_check_eq(update.state, STATE_SUCCEEDED);
   do_check_eq(update.type, "major");
   do_check_eq(update.name, "New");
@@ -96,8 +100,10 @@ function run_test() {
   do_check_true(update.showPrompt);
   do_check_true(update.showNeverForVersion);
   do_check_true(update.showSurvey);
-  do_check_eq(update.extra1, "test extra1");
   do_check_eq(update.previousAppVersion, "3.0");
+  // Custom attributes
+  do_check_eq(update.getProperty("custom1_attr"), "custom1 value");
+  do_check_eq(update.getProperty("custom2_attr"), "custom2 value");
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "partial");
@@ -108,7 +114,7 @@ function run_test() {
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_SUCCEEDED);
 
-  update = gUpdateManager.getUpdateAt(1);
+  update = gUpdateManager.getUpdateAt(1).QueryInterface(AUS_Ci.nsIPropertyBag);
   do_check_eq(update.state, STATE_FAILED);
   do_check_eq(update.name, "Existing");
   do_check_eq(update.type, "major");
@@ -130,8 +136,10 @@ function run_test() {
   do_check_false(update.showPrompt);
   do_check_false(update.showNeverForVersion);
   do_check_false(update.showSurvey);
-  do_check_eq(update.extra1, null);
   do_check_eq(update.previousAppVersion, null);
+  // Custom attributes
+  do_check_eq(update.getProperty("custom3_attr"), "custom3 value");
+  do_check_eq(update.getProperty("custom4_attr"), "custom4 value");
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "complete");
@@ -154,7 +162,7 @@ function run_test() {
                                  "http://license/", "http://service/",
                                  "1238441400314", "test status text", null,
                                  "test_channel", "true", "true", "true", "true",
-                                 "test extra1", "version 4.0", "4.0", "3.0");
+                                 "version 4.0", "4.0", "3.0");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
@@ -166,7 +174,7 @@ function run_test() {
                                  null, "http://service/", null,
                                  getString("patchApplyFailure"), null,
                                  "test_channel", "false", null, null, null,
-                                 null, "version 3", null, null);
+                                 "version 3", null, null);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
   reloadUpdateManagerData();

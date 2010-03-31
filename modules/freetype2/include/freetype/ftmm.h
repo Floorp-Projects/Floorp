@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Multiple Master font interface (specification).             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 1996-2001, 2003, 2004, 2006, 2009 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -257,7 +257,7 @@ FT_BEGIN_HEADER
   /*    face    :: A handle to the source face.                            */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    amaster :: The Multiple Masters descriptor.                        */
+  /*    amaster :: The Multiple Masters/GX var descriptor.                 */
   /*               Allocates a data structure, which the user must free    */
   /*               (a single call to FT_FREE will do it).                  */
   /*                                                                       */

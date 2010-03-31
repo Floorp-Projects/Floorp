@@ -264,7 +264,7 @@ js_ValueToECMAUint32(JSContext *cx, jsval *vp);
 static inline int32
 js_DoubleToECMAInt32(jsdouble d)
 {
-#ifdef __i386__
+#if defined(__i386__) || defined(__i386)
     jsdpun du, duh, two32;
     uint32 di_h, u_tmp, expon, shift_amount;
     int32 mask32;

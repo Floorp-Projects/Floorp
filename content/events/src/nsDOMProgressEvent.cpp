@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -42,7 +42,7 @@
 
 NS_INTERFACE_MAP_BEGIN(nsDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ProgressEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ProgressEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMProgressEvent, nsDOMEvent)

@@ -79,7 +79,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGTranslatePoint::DOMVal)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPoint)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPoint)
 NS_INTERFACE_MAP_END
 
 nsresult
@@ -185,7 +185,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGSVGElement)
                            nsIDOMSVGElement, nsIDOMSVGSVGElement,
                            nsIDOMSVGFitToViewBox, nsIDOMSVGLocatable,
                            nsIDOMSVGZoomAndPan)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSVGElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 
 //----------------------------------------------------------------------
@@ -1091,15 +1091,15 @@ nsSVGSVGElement::WillBeOutermostSVG(nsIContent* aParent,
 void
 nsSVGSVGElement::InvalidateTransformNotifyFrame()
 {
-  nsISVGSVGFrame* svgframe = do_QueryFrame(GetPrimaryFrame());
+  nsIFrame* frame = GetPrimaryFrame();
+  nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
   if (svgframe) {
     svgframe->NotifyViewportChange();
   }
 #ifdef DEBUG
-  else {
-    // XXX we get here during nsSVGOuterSVGFrame::Init() since that
-    // function is called before the presshell association between us
-    // and our frame is established.
+  else if (frame) {
+    // Uh oh -- we have a primary frame, but it failed the do_QueryFrame to the
+    // expected type!
     NS_WARNING("wrong frame type");
   }
 #endif

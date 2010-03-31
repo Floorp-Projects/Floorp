@@ -125,10 +125,31 @@ CSRCS = \
 	aflatin2.c	\
 	afcjk.c		\
 	afdummy.c	\
+	afpic.c		\
+	basepic.c	\
+	ftadvanc.c	\
+	ftfstype.c	\
+	ftpic.c		\
+	ftsnames.c	\
+	cffpic.c	\
+	pshpic.c	\
+	pspic.c		\
+	rastpic.c	\
+	sfntpic.c	\
+	ftspic.c	\
+	ttpic.c		\
 	$(NULL)
 
 
-DEFINES += -DFT2_BUILD_LIBRARY -DFT_OPTION_AUTOFIT2 -FI $(srcdir)/include/freetype/config/ftstdlib.h
+DEFINES += -DFT2_BUILD_LIBRARY -DFT_OPTION_AUTOFIT2
+
+ifdef _MSC_VER
+DEFINES += -FI $(srcdir)/include/freetype/config/ftstdlib.h
+DEFINES += -FI $(srcdir)/include/freetype/config/ftheader.h
+else
+DEFINES += -include $(srcdir)/include/freetype/config/ftstdlib.h
+DEFINES += -include $(srcdir)/include/freetype/config/ftheader.h
+endif
 
 ifdef WINCE
 DEFINES += -DCHAR_BIT=8

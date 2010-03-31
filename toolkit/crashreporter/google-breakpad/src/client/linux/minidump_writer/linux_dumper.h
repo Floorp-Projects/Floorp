@@ -44,7 +44,7 @@ namespace google_breakpad {
 typedef typeof(((struct user*) 0)->u_debugreg[0]) debugreg_t;
 
 // Typedef for our parsing of the auxv variables in /proc/pid/auxv.
-#if defined(__i386)
+#if defined(__i386) || defined(__ARM_EABI__)
 typedef Elf32_auxv_t elf_aux_entry;
 #elif defined(__x86_64__)
 typedef Elf64_auxv_t elf_aux_entry;
@@ -56,6 +56,7 @@ const char kLinuxGateLibraryName[] = "linux-gate.so";
 
 // We produce one of these structures for each thread in the crashed process.
 struct ThreadInfo {
+  pid_t tid;    // thread id
   pid_t tgid;   // thread group id
   pid_t ppid;   // parent process
 
@@ -64,16 +65,20 @@ struct ThreadInfo {
   const void* stack;  // pointer to the stack area
   size_t stack_len;  // length of the stack to copy
 
-  user_regs_struct regs;
-  user_fpregs_struct fpregs;
-#if defined(__i386)
-  user_fpxregs_struct fpxregs;
-#endif
 
 #if defined(__i386) || defined(__x86_64)
-
+  user_regs_struct regs;
+  user_fpregs_struct fpregs;
   static const unsigned kNumDebugRegisters = 8;
   debugreg_t dregs[8];
+#if defined(__i386)
+  user_fpxregs_struct fpxregs;
+#endif  // defined(__i386)
+
+#elif defined(__ARM_EABI__)
+  // Mimicking how strace does this(see syscall.c, search for GETREGS)
+  struct user_regs regs;
+  struct user_fpregs fpregs;
 #endif
 };
 
@@ -86,6 +91,16 @@ struct MappingInfo {
   char name[NAME_MAX];
 };
 
+// Suspend a thread by attaching to it.
+bool AttachThread(pid_t pid);
+
+// Resume a thread by detaching from it.
+bool DetachThread(pid_t pid);
+
+// Fill |info| with the register state of |info->tid|.  The thread
+// must be attached to the calling process.  Return true on success.
+bool GetThreadRegisters(ThreadInfo* info);
+
 class LinuxDumper {
  public:
   explicit LinuxDumper(pid_t pid);
@@ -93,13 +108,13 @@ class LinuxDumper {
   // Parse the data for |threads| and |mappings|.
   bool Init();
 
-  // Suspend/resume all threads in the given process.
-  bool ThreadsSuspend();
-  bool ThreadsResume();
+  // Attach/detach all threads in the given process.
+  bool ThreadsAttach();
+  bool ThreadsDetach();
 
   // Read information about the given thread. Returns true on success. One must
-  // have called |ThreadsSuspend| first.
-  bool ThreadInfoGet(pid_t tid, ThreadInfo* info);
+  // have called |ThreadsAttach| first.
+  bool ThreadInfoGet(ThreadInfo* info);
 
   // These are only valid after a call to |Init|.
   const wasteful_vector<pid_t> &threads() { return threads_; }
@@ -141,7 +156,7 @@ class LinuxDumper {
 
   mutable PageAllocator allocator_;
 
-  bool threads_suspened_;
+  bool threads_suspended_;
   wasteful_vector<pid_t> threads_;  // the ids of all the threads
   wasteful_vector<MappingInfo*> mappings_;  // info from /proc/<pid>/maps
 };

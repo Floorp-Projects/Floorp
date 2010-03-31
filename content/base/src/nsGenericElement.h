@@ -431,7 +431,7 @@ public:
   virtual void SaveSubtreeState();
 
 #ifdef MOZ_SMIL
-  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* /*aName*/)
+  virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* /*aName*/)
   {
     return nsnull;
   }
@@ -493,12 +493,21 @@ public:
                          const nsAString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
   NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+  nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                        nsIDOMNode** aReturn)
+  {
+    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+  }
+  nsresult ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                        nsIDOMNode** aReturn)
+  {
+    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+  }
+  nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+  {
+    return nsINode::RemoveChild(aOldChild, aReturn);
+  }
+  nsresult AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
     return InsertBefore(aNewChild, nsnull, aReturn);
   }
@@ -588,39 +597,6 @@ public:
     GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion);
 
   static PRBool ShouldBlur(nsIContent *aContent);
-
-  /**
-   * Actual implementation of the DOM InsertBefore and ReplaceChild methods.
-   * Shared by nsDocument. When called from nsDocument, aParent will be null.
-   *
-   * @param aReplace  True if aNewChild should replace aRefChild. False if
-   *                  aNewChild should be inserted before aRefChild.
-   * @param aNewChild The child to insert
-   * @param aRefChild The child to insert before or replace
-   * @param aParent The parent to use for the new child
-   * @param aDocument The document to use for the new child.
-   *                  Must be non-null, if aParent is null and must match
-   *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aReturn [out] the child we insert
-   */
-  static nsresult doReplaceOrInsertBefore(PRBool aReplace, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                                          nsIContent* aParent, nsIDocument* aDocument,
-                                          nsIDOMNode** aReturn);
-
-  /**
-   * Actual implementation of the DOM RemoveChild method.  Shared by
-   * nsDocument.  When called from nsDocument, aParent will be null.
-   *
-   * @param aOldChild The child to remove
-   * @param aParent The parent to use for the new child
-   * @param aDocument The document to use for the new child.
-   *                  Must be non-null if aParent is null and must match
-   *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aReturn [out] the child we remove
-   */
-  static nsresult doRemoveChild(nsIDOMNode* aOldChild,
-                                nsIContent* aParent, nsIDocument* aDocument,
-                                nsIDOMNode** aReturn);
 
   /**
    * Most of the implementation of the nsINode InsertChildAt method.  Shared by

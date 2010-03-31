@@ -1,0 +1,322 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Clipboard Events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="border: 3px solid black; padding: 3em;">CONTENT TEXT<input id="content-input" value="INPUT TEXT"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+// Enable full privledges for clipboard read/write operations.
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+var content = document.getElementById("content");
+var contentInput = document.getElementById("content-input");
+var clipboardInitialValue = "empty";
+
+// Test that clearing and reading the clipboard works.  A random number
+// is used to make sure that leftover clipboard values from a previous
+// test run don't cause a false-positive test.
+var cb_text = "empty_" + Math.random();
+setClipboardText(cb_text);
+is(getClipboardText(), cb_text, "set/get clipboard text failed");
+
+// Some test functions need to be run with delays.
+var delayedTests = [];
+
+// Ensure window focus before running tests, otherwise key events can
+// misfire.  We set the onfocus event handler here to actually begin
+// running tests, and call window.focus() afterwards.
+window.onfocus = function()
+{
+  window.onfocus = null;
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // A list of test functions to run.  Before each test function is run, the
+  // clipboard is initialized to clipboardInitialValue, and the contents of
+  // div#content are set as the window's selection.
+  var testFunctions = [
+    test_dom_oncopy,
+    test_dom_oncut,
+    test_dom_onpaste,
+    test_dom_oncopy_abort,
+    test_input_oncopy,
+    test_input_oncut,
+    test_input_onpaste,
+    test_input_oncopy_abort,
+    test_input_oncut_abort,
+    test_input_onpaste_abort,
+    ];
+  
+  // Run the main tests.  This will also populate the delayedTests array
+  for (let i = 0; i < testFunctions.length; i++) {
+    // Init clipboard
+    setClipboardText(clipboardInitialValue);
+  
+    // Reset value of contentInput.
+    contentInput.value = "INPUT TEXT";
+    
+    var func = testFunctions[i];
+    func();
+  }
+  
+  SimpleTest.finish();
+}
+
+// Calling .focus begins the test run.
+SimpleTest.waitForExplicitFinish();
+window.focus();
+
+function getClipboardText() {
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+    .createInstance();
+  trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+  trans.addDataFlavor("text/unicode");
+  
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+    .getService();
+  clipboard = clipboard.QueryInterface(Components.interfaces.nsIClipboard);
+  clipboard.getData(trans, clipboard.kGlobalClipboard);
+
+  var str = new Object();
+  var strLen = new Object();
+    
+  try {
+    trans.getTransferData("text/unicode", str, strLen);
+  } catch(e) {
+    // NS_ERROR_FAILURE will occur if the transferable object has no
+    // text/unicode data in it.  In that case, it's not an error:
+    if (e instanceof Components.interfaces.nsIXPCException &&
+      e.result == Components.results.NS_ERROR_FAILURE) {
+      return null;
+    } else {
+      // if we don't know how to handle it then rethrow
+      throw e;
+    }
+  }
+    
+  if (!str) return null;
+
+  str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+  if (!str) return null;
+ 
+  str = str.data.substring(0, strLen.value / 2);
+  if (!str) return null;
+ 
+  return str;
+}
+
+
+function setClipboardText(text) {
+  var helper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(Components.interfaces.nsIClipboardHelper);
+  helper.copyString(text);
+}
+
+function selectContentDiv() {
+  // Set selection
+  var selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.selectAllChildren(content);
+}
+
+function selectContentInput() {
+  contentInput.select();
+  contentInput.focus();
+}
+
+function test_dom_oncopy() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and the clipboard contents have set to CONTENT TEXT.
+  // Test firing oncopy event on ctrl-c:
+  selectContentDiv();
+  var oncopy_fired = false;
+  content.oncopy = function() { oncopy_fired = true; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "copy event firing on DOM element");
+    is(getClipboardText(), "CONTENT TEXT",
+      "copy on DOM element set clipboard correctly");
+  } finally {
+    content.oncopy = null;
+  }
+}
+
+function test_dom_oncut() {
+  // Setup an oncut event handler, fire cut.  Ensure that the event handler
+  // was called.  The <div> doesn't handle a cut, so ensure that the
+  // clipboard text is clipboardInitialValue, NOT "CONTENT TEXT".
+  selectContentDiv();
+  var oncut_fired = false;
+  content.oncut = function() { oncut_fired = true; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(!oncut_fired, "cut event firing on DOM element")
+    is(getClipboardText(), clipboardInitialValue,
+      "cut on DOM element did not modify clipboard");
+  } finally {
+    content.oncut = null;
+  }
+}
+
+
+function test_dom_onpaste() {
+  // Setup an onpaste event handler, fire paste.  Ensure that the event
+  // handler was called.
+  selectContentDiv();
+  var onpaste_fired = false;
+  content.onpaste = function() { onpaste_fired = true; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(!onpaste_fired, "paste event firing on DOM element");
+  } finally {
+    content.onpaste = null;
+  }
+}
+
+
+function test_dom_oncopy_abort() {
+  // Setup an oncopy event handler that aborts the copy, and fire the copy
+  // event.  Ensure that the event handler was fired, and the clipboard
+  // contents have not been modified.
+  selectContentDiv();
+  var oncopy_fired = false;
+  content.oncopy = function() { oncopy_fired = true; return false; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "copy event (to-be-cancelled) firing on DOM element");
+    is(getClipboardText(), clipboardInitialValue,
+      "aborted copy on DOM element did not modify clipboard");
+  } finally {
+    content.oncopy = null;
+  }
+}
+
+
+function test_input_oncopy() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and the clipboard contents have set to INPUT TEXT.
+  // Test firing oncopy event on ctrl-c:
+  selectContentInput();
+  var oncopy_fired = false;
+  contentInput.oncopy = function() { oncopy_fired = true; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "copy event firing on plaintext editor");
+    is(getClipboardText(), "INPUT TEXT",
+      "copy on plaintext editor set clipboard correctly");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_oncut() {
+  // Setup an oncut event handler, and fire cut.  Ensure that the event
+  // handler was fired, the clipboard contains the INPUT TEXT, and
+  // that the input itself is empty.
+  selectContentInput();
+  var oncut_fired = false;
+  contentInput.oncut = function() { oncut_fired = true; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncut_fired, "cut event firing on plaintext editor");
+    is(getClipboardText(), "INPUT TEXT",
+      "cut on plaintext editor set clipboard correctly");
+    is(contentInput.value, "",
+      "cut on plaintext editor emptied editor");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_onpaste() {
+  // Setup an onpaste event handler, and fire paste.  Ensure that the event
+  // handler was fired, the clipboard contents didn't change, and that the
+  // input value did change (ie. paste succeeded).
+  selectContentInput();
+  var onpaste_fired = false;
+  contentInput.onpaste = function() { onpaste_fired = true; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired, "paste event firing on plaintext editor");
+    is(getClipboardText(), clipboardInitialValue,
+      "paste on plaintext editor did not modify clipboard contents");
+    is(contentInput.value, clipboardInitialValue,
+      "paste on plaintext editor did modify editor value");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+
+function test_input_oncopy_abort() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and that the clipboard value did NOT change.
+  selectContentInput();
+  var oncopy_fired = false;
+  contentInput.oncopy = function() { oncopy_fired = true; return false; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "copy event (to-be-cancelled) firing on plaintext editor");
+    is(getClipboardText(), clipboardInitialValue,
+      "aborted copy on plaintext editor did not modify clipboard");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_oncut_abort() {
+  // Setup an oncut event handler, and fire cut.  Ensure that the event
+  // handler was fired, the clipboard contains the INPUT TEXT, and
+  // that the input itself is empty.
+  selectContentInput();
+  var oncut_fired = false;
+  contentInput.oncut = function() { oncut_fired = true; return false; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncut_fired, "cut event (to-be-cancelled) firing on plaintext editor");
+    is(getClipboardText(), clipboardInitialValue,
+      "aborted cut on plaintext editor did not modify clipboard.");
+    is(contentInput.value, "INPUT TEXT",
+      "aborted cut on plaintext editor did not modify editor contents");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_onpaste_abort() {
+  // Setup an onpaste event handler, and fire paste.  Ensure that the event
+  // handler was fired, the clipboard contents didn't change, and that the
+  // input value did change (ie. paste succeeded).
+  selectContentInput();
+  var onpaste_fired = false;
+  contentInput.onpaste = function() { onpaste_fired = true; return false; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired,
+      "paste event (to-be-cancelled) firing on plaintext editor");
+    is(getClipboardText(), clipboardInitialValue,
+      "aborted paste on plaintext editor did not modify clipboard");
+    is(contentInput.value, "INPUT TEXT",
+      "aborted paste on plaintext editor did not modify modified editor value");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
+

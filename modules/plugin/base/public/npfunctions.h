@@ -108,8 +108,8 @@ typedef bool         (*NPN_HasPropertyProcPtr)(NPP npp, NPObject *obj, NPIdentif
 typedef bool         (*NPN_HasMethodProcPtr)(NPP npp, NPObject *obj, NPIdentifier propertyName);
 typedef void         (*NPN_ReleaseVariantValueProcPtr)(NPVariant *variant);
 typedef void         (*NPN_SetExceptionProcPtr)(NPObject *obj, const NPUTF8 *message);
-typedef bool         (*NPN_PushPopupsEnabledStateProcPtr)(NPP npp, NPBool enabled);
-typedef bool         (*NPN_PopPopupsEnabledStateProcPtr)(NPP npp);
+typedef void         (*NPN_PushPopupsEnabledStateProcPtr)(NPP npp, NPBool enabled);
+typedef void         (*NPN_PopPopupsEnabledStateProcPtr)(NPP npp);
 typedef bool         (*NPN_EnumerateProcPtr)(NPP npp, NPObject *obj, NPIdentifier **identifier, uint32_t *count);
 typedef void         (*NPN_PluginThreadAsyncCallProcPtr)(NPP instance, void (*func)(void *), void *userData);
 typedef bool         (*NPN_ConstructProcPtr)(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result);

@@ -61,7 +61,7 @@ function testHtmlSerializer_1 () {
   //------------ OutputEncodeW3CEntities
   encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeW3CEntities);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_2_entw3c.xhtml");
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
   is(out, expected, "test OutputEncodeW3CEntities");
 
   //------------ OutputEncodeBasicEntities
@@ -73,13 +73,13 @@ function testHtmlSerializer_1 () {
   //------------ OutputEncodeLatin1Entities
   encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeLatin1Entities);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_2_latin1.xhtml");
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
   is(out, expected, "test OutputEncodeLatin1Entities");
 
   //------------ OutputEncodeHTMLEntities
   encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeHTMLEntities);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_2_enthtml.xhtml");
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
   is(out, expected, "test OutputEncodeHTMLEntities");
 
   // tests on the serialization of selections

@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -50,10 +50,10 @@ class MemoryRegion {
   virtual ~MemoryRegion() {}
 
   // The base address of this memory region.
-  virtual u_int64_t GetBase() = 0;
+  virtual u_int64_t GetBase() const = 0;
 
   // The size of this memory region.
-  virtual u_int32_t GetSize() = 0;
+  virtual u_int32_t GetSize() const = 0;
 
   // Access to data of various sizes within the memory region.  address
   // is a pointer to read, and it must lie within the memory region as
@@ -63,10 +63,10 @@ class MemoryRegion {
   // program.  Returns true on success.  Fails and returns false if address
   // is out of the region's bounds (after considering the width of value),
   // or for other types of errors.
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int8_t*  value) = 0;
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int16_t* value) = 0;
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int32_t* value) = 0;
-  virtual bool GetMemoryAtAddress(u_int64_t address, u_int64_t* value) = 0;
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int8_t*  value) const =0;
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int16_t* value) const =0;
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int32_t* value) const =0;
+  virtual bool GetMemoryAtAddress(u_int64_t address, u_int64_t* value) const =0;
 };
 
 

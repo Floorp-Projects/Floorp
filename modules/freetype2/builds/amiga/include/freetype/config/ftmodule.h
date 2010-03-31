@@ -80,77 +80,77 @@
 /* Now include the modules */
 
 #ifdef FT_USE_AUTOFIT
-FT_USE_MODULE(autofit_module_class)
+FT_USE_MODULE( FT_Module_Class, autofit_module_class )
 #endif
 
 #ifdef FT_USE_TT
-FT_USE_MODULE(tt_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, tt_driver_class )
 #endif
 
 #ifdef FT_USE_T1
-FT_USE_MODULE(t1_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, t1_driver_class )
 #endif
 
 #ifdef FT_USE_CFF
-FT_USE_MODULE(cff_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, cff_driver_class )
 #endif
 
 #ifdef FT_USE_T1CID
-FT_USE_MODULE(t1cid_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, t1cid_driver_class )
 #endif
 
 #ifdef FT_USE_PFR
-FT_USE_MODULE(pfr_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, pfr_driver_class )
 #endif
 
 #ifdef FT_USE_T42
-FT_USE_MODULE(t42_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, t42_driver_class )
 #endif
 
 #ifdef FT_USE_WINFNT
-FT_USE_MODULE(winfnt_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, winfnt_driver_class )
 #endif
 
 #ifdef FT_USE_PCF
-FT_USE_MODULE(pcf_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, pcf_driver_class )
 #endif
 
 #ifdef FT_USE_PSAUX
-FT_USE_MODULE(psaux_module_class)
+FT_USE_MODULE( FT_Module_Class, psaux_module_class )
 #endif
 
 #ifdef FT_USE_PSNAMES
-FT_USE_MODULE(psnames_module_class)
+FT_USE_MODULE( FT_Module_Class, psnames_module_class )
 #endif
 
 #ifdef FT_USE_PSHINT
-FT_USE_MODULE(pshinter_module_class)
+FT_USE_MODULE( FT_Module_Class, pshinter_module_class )
 #endif
 
 #ifdef FT_USE_RASTER
-FT_USE_MODULE(ft_raster1_renderer_class)
+FT_USE_MODULE( FT_Renderer_Class, ft_raster1_renderer_class )
 #endif
 
 #ifdef FT_USE_SFNT
-FT_USE_MODULE(sfnt_module_class)
+FT_USE_MODULE( FT_Module_Class, sfnt_module_class )
 #endif
 
 #ifdef FT_USE_SMOOTH
-FT_USE_MODULE(ft_smooth_renderer_class)
-FT_USE_MODULE(ft_smooth_lcd_renderer_class)
-FT_USE_MODULE(ft_smooth_lcdv_renderer_class)
+FT_USE_MODULE( FT_Renderer_Class, ft_smooth_renderer_class )
+FT_USE_MODULE( FT_Renderer_Class, ft_smooth_lcd_renderer_class )
+FT_USE_MODULE( FT_Renderer_Class, ft_smooth_lcdv_renderer_class )
 #endif
 
 #ifdef FT_USE_OTV
-FT_USE_MODULE(otv_module_class)
+FT_USE_MODULE( FT_Module_Class, otv_module_class )
 #endif
 
 #ifdef FT_USE_BDF
-FT_USE_MODULE(bdf_driver_class)
+FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
 #endif
 
 #ifdef FT_USE_GXV
-FT_USE_MODULE(gxv_module_class)
+FT_USE_MODULE( FT_Module_Class, gxv_module_class )
 #endif
 
 /*

@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -458,6 +458,12 @@ protected:
   // position. It dispatches a timeupdate event and invalidates the frame.
   // This must be called on the main thread only.
   void PlaybackPositionChanged();
+
+  // Calls mElement->UpdateReadyStateForData, telling it which state we have
+  // entered.  Main thread only.
+  void NextFrameUnavailableBuffering();
+  void NextFrameAvailable();
+  void NextFrameUnavailable();
 
   // Calls mElement->UpdateReadyStateForData, telling it whether we have
   // data for the next frame and if we're buffering. Main thread only.

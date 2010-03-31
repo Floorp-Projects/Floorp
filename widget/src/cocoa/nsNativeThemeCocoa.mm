@@ -2469,12 +2469,12 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
   return PR_FALSE;
 }
 
-nsTransparencyMode
-nsNativeThemeCocoa::GetWidgetTransparency(PRUint8 aWidgetType)
+nsITheme::Transparency
+nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP)
-    return eTransparencyTransparent;
+    return eTransparent;
 
-  return eTransparencyOpaque;
+  return eUnknownTransparency;
 }

@@ -49,11 +49,17 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
 HOST_CPPSRCS = \
   bytereader.cc \
+  dwarf2diehandler.cc \
   dwarf2reader.cc \
-  functioninfo.cc \
   $(NULL)
 
-HOST_CXXFLAGS += -funsigned-char
+ifeq (Darwin,$(HOST_OS_ARCH))
+HOST_CPPSRCS += functioninfo.cc
+endif
+
+# This code is only compiled for build-time tools,
+# so enabling RTTI should be fine.
+HOST_CXXFLAGS := -funsigned-char $(filter-out -fno-rtti,$(HOST_CXXFLAGS))
 
 # need static lib
 FORCE_STATIC_LIB = 1

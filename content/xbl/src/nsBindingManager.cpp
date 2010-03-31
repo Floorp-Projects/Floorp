@@ -142,7 +142,7 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
     NS_INTERFACE_TABLE_ENTRY(nsAnonymousContentList, nsAnonymousContentList)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
@@ -1328,6 +1328,39 @@ EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
     }
   }
   return PL_DHASH_NEXT;
+}
+
+struct WalkAllRulesData {
+  nsIStyleRuleProcessor::EnumFunc mFunc;
+  RuleProcessorData* mData;
+};
+
+static PLDHashOperator
+EnumWalkAllRules(nsVoidPtrHashKey *aKey, void* aClosure)
+{
+  nsIStyleRuleProcessor *ruleProcessor =
+    static_cast<nsIStyleRuleProcessor*>(const_cast<void*>(aKey->GetKey()));
+  WalkAllRulesData *data = static_cast<WalkAllRulesData*>(aClosure);
+
+  (*(data->mFunc))(ruleProcessor, data->mData);
+
+  return PL_DHASH_NEXT;
+}
+
+void
+nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
+                               RuleProcessorData* aData)
+{
+  if (!mBindingTable.IsInitialized())
+    return;
+
+  RuleProcessorSet set;
+  mBindingTable.EnumerateRead(EnumRuleProcessors, &set);
+  if (!set.IsInitialized())
+    return;
+
+  WalkAllRulesData data = { aFunc, aData };
+  set.EnumerateEntries(EnumWalkAllRules, &data);
 }
 
 struct MediumFeaturesChangedData {

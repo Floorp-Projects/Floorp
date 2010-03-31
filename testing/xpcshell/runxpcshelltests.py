@@ -211,8 +211,8 @@ class XPCShellTests(object):
     """
     testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
     if self.singleFile:
-      if singleFile in [os.path.basename(x) for x in testfiles]:
-        testfiles = [os.path.join(testdir, singleFile)]
+      if self.singleFile in [os.path.basename(x) for x in testfiles]:
+        testfiles = [os.path.join(testdir, self.singleFile)]
       else: # not in this dir? skip it
         return None
             
@@ -366,7 +366,7 @@ class XPCShellTests(object):
     for testdir in testdirs:
       self.buildXpcsCmd(testdir)
 
-      if testPath and not testdir.endswith(testPath):
+      if self.testPath and not testdir.endswith(self.testPath):
         continue
 
       testdir = os.path.abspath(testdir)

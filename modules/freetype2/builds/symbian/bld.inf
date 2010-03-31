@@ -2,7 +2,7 @@
 // FreeType 2 project for the symbian platform
 //
 
-// Copyright 2008 by
+// Copyright 2008, 2009 by
 // David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 // This file is part of the FreeType project, and may only be used, modified,
@@ -29,7 +29,7 @@ PRJ_EXPORTS
 ../../include/freetype/ftbdf.h			freetype/ftbdf.h
 ../../include/freetype/ftbitmap.h		freetype/ftbitmap.h
 ../../include/freetype/ftcache.h		freetype/ftcache.h
-../../include/freetype/ftchapters.h		freetype/ftchapters.h
+../../include/freetype/ftcid.h			freetype/ftcid.h
 ../../include/freetype/fterrdef.h		freetype/fterrdef.h
 ../../include/freetype/fterrors.h		freetype/fterrors.h
 ../../include/freetype/ftgasp.h			freetype/ftgasp.h
@@ -63,4 +63,3 @@ PRJ_EXPORTS
 ../../include/freetype/tttables.h		freetype/tttables.h
 ../../include/freetype/tttags.h			freetype/tttags.h
 ../../include/freetype/ttunpat.h		freetype/ttunpat.h
-

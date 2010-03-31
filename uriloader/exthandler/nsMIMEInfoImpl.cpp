@@ -40,7 +40,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#include "nsIProcess.h"
 #include "nsILocalFile.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
@@ -374,22 +373,48 @@ nsMIMEInfoBase::CopyBasicDataTo(nsMIMEInfoBase* aOther)
 }
 
 /* static */
-nsresult
-nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
+already_AddRefed<nsIProcess>
+nsMIMEInfoBase::InitProcess(nsIFile* aApp, nsresult* aResult)
 {
   NS_ASSERTION(aApp, "Unexpected null pointer, fix caller");
 
-  nsresult rv;
-  nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID,
+                                                   aResult);
+  if (NS_FAILED(*aResult))
+    return nsnull;
 
-  if (NS_FAILED(rv = process->Init(aApp)))
+  if (NS_FAILED(process->Init(aApp)))
+    return nsnull;
+
+  return process.forget();
+}
+
+/* static */
+nsresult
+nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProcess> process = InitProcess(aApp, &rv);
+  if (NS_FAILED(rv))
     return rv;
 
   const char *string = aArg.get();
 
   return process->Run(PR_FALSE, &string, 1);
+}
+
+/* static */
+nsresult
+nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsString& aArg)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProcess> process = InitProcess(aApp, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  const PRUnichar *string = aArg.get();
+
+  return process->Runw(PR_FALSE, &string, 1);
 }
 
 // nsMIMEInfoImpl implementation

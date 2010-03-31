@@ -204,6 +204,9 @@ public:
   nsresult WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                      RuleProcessorData* aData,
                      PRBool* aCutOffInheritance);
+
+  void WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
+                    RuleProcessorData* aData);
   /**
    * Do any processing that needs to happen as a result of a change in
    * the characteristics of the medium, and return whether this rule

@@ -56,9 +56,14 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(5f5a6f98-835d-4771-8bfe-a0c7cdc85fec)]
+[scriptable, uuid(3df14f00-7253-4b9c-97c2-b4632090da23)]
 interface nsIAccessibleRetrieval : nsISupports
 {
+  /**
+   * Return application accessible.
+   */
+  nsIAccessible getApplicationAccessible();
+
   /**
    * Return an nsIAccessible for a DOM node in pres shell 0.
    * Create a new accessible of the appropriate type if necessary,

@@ -14,7 +14,7 @@ const ENCTYPE_SDR = 1;
 
 // Current schema version used by storage-mozStorage.js. This will need to be
 // kept in sync with the version there (or else the tests fail).
-const CURRENT_SCHEMA = 3;
+const CURRENT_SCHEMA = 4;
 
 function run_test() {
 
@@ -230,6 +230,69 @@ dbConnection.close();
 
 LoginTest.deleteFile(OUTDIR, "signons-v2v3.sqlite");
 
+
+/* ========== 7 ========== */
+testnum++;
+testdesc = "Test upgrade from v3->v4 storage"
+
+LoginTest.copyFile("signons-v3.sqlite");
+// Sanity check the test file.
+dbConnection = LoginTest.openDB("signons-v3.sqlite");
+do_check_eq(3, dbConnection.schemaVersion);
+
+storage = LoginTest.reloadStorage(OUTDIR, "signons-v3.sqlite");
+do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
+
+// Check that timestamps and counts were initialized correctly
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+var logins = storage.getAllLogins();
+for (var i = 0; i < 2; i++) {
+    do_check_true(logins[i] instanceof Ci.nsILoginMetaInfo);
+    do_check_eq(1, logins[i].timesUsed);
+    do_check_true(LoginTest.is_about_now(logins[i].timeCreated));
+    do_check_true(LoginTest.is_about_now(logins[i].timeLastUsed));
+    do_check_true(LoginTest.is_about_now(logins[i].timePasswordChanged));
+}
+
+/* ========== 8 ========== */
+testnum++;
+testdesc = "Test upgrade from v3->v4->v3 storage"
+
+LoginTest.copyFile("signons-v3v4.sqlite");
+// Sanity check the test file.
+dbConnection = LoginTest.openDB("signons-v3v4.sqlite");
+do_check_eq(3, dbConnection.schemaVersion);
+
+storage = LoginTest.reloadStorage(OUTDIR, "signons-v3v4.sqlite");
+do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
+
+// testuser1 already has timestamps, testuser2 does not.
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+var logins = storage.getAllLogins();
+
+var t1, t2;
+if (logins[0].username == "testuser1") {
+    t1 = logins[0];
+    t2 = logins[1];
+} else {
+    t1 = logins[1];
+    t2 = logins[0];
+}
+
+do_check_true(t1 instanceof Ci.nsILoginMetaInfo);
+do_check_true(t2 instanceof Ci.nsILoginMetaInfo);
+
+do_check_eq(9, t1.timesUsed);
+do_check_eq(1262049951275, t1.timeCreated);
+do_check_eq(1262049951275, t1.timeLastUsed);
+do_check_eq(1262049951275, t1.timePasswordChanged);
+
+do_check_eq(1, t2.timesUsed);
+do_check_true(LoginTest.is_about_now(t2.timeCreated));
+do_check_true(LoginTest.is_about_now(t2.timeLastUsed));
+do_check_true(LoginTest.is_about_now(t2.timePasswordChanged));
 
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;

@@ -51,12 +51,14 @@ type format  format type    access     driver   documents
 ---  ---     BDF    ---     ---        bdf      5005.BDF_Spec.pdf, X11
 
 
----  SFNT    PS     TYPE_1  ---        ---      Type 1 GX Font Format
-                                                (for the Mac)
-MAC  SFNT    PS     TYPE_1  ---        ---      Type 1 GX Font Format
-                                                (for the Mac)
----  SFNT    PS     TYPE_1  CID        ---      5180.sfnt.pdf (for the Mac)
-MAC  SFNT    PS     TYPE_1  CID        ---      5180.sfnt.pdf (for the Mac)
+---  SFNT    PS     TYPE_1  ---        type1    Type 1 GX Font Format
+                                                (for the Mac) [3]
+MAC  SFNT    PS     TYPE_1  ---        type1    Type 1 GX Font Format
+                                                (for the Mac) [3]
+---  SFNT    PS     TYPE_1  CID        cid      5180.sfnt.pdf (for the Mac)
+                                                [3]
+MAC  SFNT    PS     TYPE_1  CID        cid      5180.sfnt.pdf (for the Mac)
+                                                [3]
 ---  SFNT    PS     CFF     ---        cff      OT spec, 5176.CFF.pdf
                                                 (`OTTO' format)
 MAC  SFNT    PS     CFF     ---        cff      OT spec, 5176.CFF.pdf
@@ -109,8 +111,8 @@ MAC  ---     PS     TYPE_1  ---        type1    T1_SPEC.pdf
 ---  ?       ?      CEF     ?          cff      ?
 
 
----  ---     PCF    ---     ---        pcf      X11
----  LZW     PCF    ---     ---        pcf      X11
+---  ---     PCF    ---     ---        pcf      X11, [4]
+---  LZW     PCF    ---     ---        pcf      X11, [4]
 
 
 ---  ---     PFR    PFR0    ---        pfr      [2]
@@ -139,9 +141,17 @@ MAC  ---     PS     TYPE_1  ---        type1    T1_SPEC.pdf
 
     (free registration required).
 
+[3] Support is rudimentary currently; some tables are not loaded yet.
+
+[4] There is no formal PCF specification; you have to deduce the exact
+    format from the source code within X11.  George Williams did this for
+    his FontForge editor:
+
+      http://fontforge.sourceforge.net/pcf-format.html
+
 ------------------------------------------------------------------------
 
-Copyright 2004, 2005 by
+Copyright 2004, 2005, 2008, 2009 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

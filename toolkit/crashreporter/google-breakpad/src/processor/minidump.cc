@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1063,7 +1063,7 @@ void MinidumpContext::Print() {
       for (unsigned int fpe_index = 0;
            fpe_index < MD_FLOATINGSAVEAREA_ARM_FPEXTRA_COUNT;
            ++fpe_index) {
-        printf("  float_save.extra[%2d] = 0x%" PRIx64 "\n",
+        printf("  float_save.extra[%2d] = 0x%" PRIx32 "\n",
                fpe_index, context_arm->float_save.extra[fpe_index]);
       }
 
@@ -1106,7 +1106,7 @@ void MinidumpMemoryRegion::SetDescriptor(MDMemoryDescriptor* descriptor) {
 }
 
 
-const u_int8_t* MinidumpMemoryRegion::GetMemory() {
+const u_int8_t* MinidumpMemoryRegion::GetMemory() const {
   if (!valid_) {
     BPLOG(ERROR) << "Invalid MinidumpMemoryRegion for GetMemory";
     return NULL;
@@ -1145,7 +1145,7 @@ const u_int8_t* MinidumpMemoryRegion::GetMemory() {
 }
 
 
-u_int64_t MinidumpMemoryRegion::GetBase() {
+u_int64_t MinidumpMemoryRegion::GetBase() const {
   if (!valid_) {
     BPLOG(ERROR) << "Invalid MinidumpMemoryRegion for GetBase";
     return static_cast<u_int64_t>(-1);
@@ -1155,7 +1155,7 @@ u_int64_t MinidumpMemoryRegion::GetBase() {
 }
 
 
-u_int32_t MinidumpMemoryRegion::GetSize() {
+u_int32_t MinidumpMemoryRegion::GetSize() const {
   if (!valid_) {
     BPLOG(ERROR) << "Invalid MinidumpMemoryRegion for GetSize";
     return 0;
@@ -1173,7 +1173,7 @@ void MinidumpMemoryRegion::FreeMemory() {
 
 template<typename T>
 bool MinidumpMemoryRegion::GetMemoryAtAddressInternal(u_int64_t address,
-                                                      T*        value) {
+                                                      T*        value) const {
   BPLOG_IF(ERROR, !value) << "MinidumpMemoryRegion::GetMemoryAtAddressInternal "
                              "requires |value|";
   assert(value);
@@ -1215,25 +1215,25 @@ bool MinidumpMemoryRegion::GetMemoryAtAddressInternal(u_int64_t address,
 
 
 bool MinidumpMemoryRegion::GetMemoryAtAddress(u_int64_t  address,
-                                              u_int8_t*  value) {
+                                              u_int8_t*  value) const {
   return GetMemoryAtAddressInternal(address, value);
 }
 
 
 bool MinidumpMemoryRegion::GetMemoryAtAddress(u_int64_t  address,
-                                              u_int16_t* value) {
+                                              u_int16_t* value) const {
   return GetMemoryAtAddressInternal(address, value);
 }
 
 
 bool MinidumpMemoryRegion::GetMemoryAtAddress(u_int64_t  address,
-                                              u_int32_t* value) {
+                                              u_int32_t* value) const {
   return GetMemoryAtAddressInternal(address, value);
 }
 
 
 bool MinidumpMemoryRegion::GetMemoryAtAddress(u_int64_t  address,
-                                              u_int64_t* value) {
+                                              u_int64_t* value) const {
   return GetMemoryAtAddressInternal(address, value);
 }
 
@@ -3747,8 +3747,8 @@ bool Minidump::ReadBytes(void* bytes, size_t count) {
   }
   stream_->read(static_cast<char*>(bytes), count);
   size_t bytes_read = stream_->gcount();
-  if (static_cast<size_t>(bytes_read) != count) {
-    if (bytes_read == -1) {
+  if (bytes_read != count) {
+    if (bytes_read == size_t(-1)) {
       string error_string;
       int error_code = ErrnoString(&error_string);
       BPLOG(ERROR) << "ReadBytes: error " << error_code << ": " << error_string;

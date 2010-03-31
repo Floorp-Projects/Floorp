@@ -1760,7 +1760,12 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState)
   NS_ENSURE_SUCCESS(rv, pref);
   AddBorderAndPadding(pref);
 
-  mPrefSize = pref;
+  PRBool widthSet, heightSet;
+  nsIBox::AddCSSPrefSize(this, pref, widthSet, heightSet);
+
+  nsSize minSize = GetMinSize(aState);
+  nsSize maxSize = GetMaxSize(aState);
+  mPrefSize = BoundsCheck(minSize, pref, maxSize);
 
 #ifdef DEBUG_rods
   {
@@ -1774,7 +1779,7 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState)
   }
 #endif
 
-  return pref;
+  return mPrefSize;
 }
 
 nsSize
@@ -1864,6 +1869,11 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 
   if (NS_SUCCEEDED(InitFocusedValue()))
     MaybeBeginSecureKeyboardInput();
+
+  // Scroll the current selection into view
+  mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                   nsISelectionController::SELECTION_FOCUS_REGION,
+                                   PR_FALSE);
 
   // tell the caret to use our selection
 
@@ -2001,7 +2011,13 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return selection->AddRange(range);
+  rv = selection->AddRange(range);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Scroll the selection into view (see bug 231389)
+  return mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                          nsISelectionController::SELECTION_FOCUS_REGION,
+                                          PR_FALSE);
 }
 
 nsresult

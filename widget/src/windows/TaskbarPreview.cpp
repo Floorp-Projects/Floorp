@@ -153,6 +153,13 @@ TaskbarPreview::SetVisible(PRBool visible) {
   if (mVisible == visible) return NS_OK;
   mVisible = visible;
 
+  // If the nsWindow has already been destroyed but the caller is still trying
+  // to use it then just pretend that everything succeeded.  The caller doesn't
+  // actually have a way to detect this since it's the same case as when we
+  // CanMakeTaskbarCalls returns false.
+  if (!mWnd)
+    return NS_OK;
+
   return visible ? Enable() : Disable();
 }
 
@@ -288,10 +295,20 @@ TaskbarPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 
 PRBool
 TaskbarPreview::CanMakeTaskbarCalls() {
-  nsWindow *window = nsWindow::GetNSWindowPtr(mWnd);
-  NS_ASSERTION(window, "Cannot use taskbar previews in an embedded context!");
-
-  return mVisible && window->HasTaskbarIconBeenCreated();
+  // If the nsWindow has already been destroyed and we know it but our caller
+  // clearly doesn't so we can't make any calls.
+  if (!mWnd)
+    return PR_FALSE;
+  // Certain functions like SetTabOrder seem to require a visible window. During
+  // window close, the window seems to be hidden before being destroyed.
+  if (!::IsWindowVisible(mWnd))
+    return PR_FALSE;
+  if (mVisible) {
+    nsWindow *window = nsWindow::GetNSWindowPtr(mWnd);
+    NS_ASSERTION(window, "Could not get nsWindow from HWND");
+    return window->HasTaskbarIconBeenCreated();
+  }
+  return PR_FALSE;
 }
 
 WindowHook&

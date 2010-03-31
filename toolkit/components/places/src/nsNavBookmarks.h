@@ -48,6 +48,17 @@
 #include "nsToolkitCompsCID.h"
 #include "nsCategoryCache.h"
 
+namespace mozilla {
+namespace places {
+
+  enum BookmarkStatementId {
+    DB_FIND_REDIRECTED_BOOKMARK = 0
+  };
+
+} // namespace places
+} // namespace mozilla
+
+
 class nsIOutputStream;
 
 class nsNavBookmarks : public nsINavBookmarksService,
@@ -125,6 +136,18 @@ public:
    * Finalize all internal statements.
    */
   nsresult FinalizeStatements();
+
+  mozIStorageStatement* GetStatementById(
+    enum mozilla::places::BookmarkStatementId aStatementId
+  )
+  {
+    using namespace mozilla::places;
+    switch(aStatementId) {
+      case DB_FIND_REDIRECTED_BOOKMARK:
+        return GetStatement(mDBFindRedirectedBookmark);
+    }
+    return nsnull;
+  }
 
 private:
   static nsNavBookmarks* gBookmarksService;

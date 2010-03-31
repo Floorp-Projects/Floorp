@@ -1606,7 +1606,7 @@ nsDocShell::GetPresShell(nsIPresShell ** aPresShell)
     NS_ENSURE_ARG_POINTER(aPresShell);
     *aPresShell = nsnull;
 
-    nsCOMPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
     (void) GetPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
@@ -1624,7 +1624,7 @@ nsDocShell::GetEldestPresShell(nsIPresShell** aPresShell)
     NS_ENSURE_ARG_POINTER(aPresShell);
     *aPresShell = nsnull;
 
-    nsCOMPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
     (void) GetEldestPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
@@ -2814,7 +2814,7 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   aParentNode->GetItemType(&type);
   nsCOMPtr<nsIPresShell> presShell;
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
 

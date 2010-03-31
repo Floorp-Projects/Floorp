@@ -82,7 +82,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGGElement,nsSVGGElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGGElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGGElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGGElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGGElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGElementBase)
 
 //----------------------------------------------------------------------

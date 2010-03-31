@@ -116,6 +116,16 @@ typedef struct {
 
 } MDRawContextARM;
 
+/* Indices into iregs for registers with a dedicated or conventional 
+ * purpose.
+ */
+enum MDARMRegisterNumbers {
+  MD_CONTEXT_ARM_REG_FP = 11,
+  MD_CONTEXT_ARM_REG_SP = 13,
+  MD_CONTEXT_ARM_REG_LR = 14,
+  MD_CONTEXT_ARM_REG_PC = 15
+};
+
 /* For (MDRawContextARM).context_flags.  These values indicate the type of
  * context stored in the structure. */
 #define MD_CONTEXT_ARM_INTEGER           (MD_CONTEXT_ARM | 0x00000002)

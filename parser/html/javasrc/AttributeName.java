@@ -31,18 +31,27 @@ import nu.validator.htmlparser.annotation.NsUri;
 import nu.validator.htmlparser.annotation.Prefix;
 import nu.validator.htmlparser.annotation.QName;
 import nu.validator.htmlparser.annotation.Virtual;
+import nu.validator.htmlparser.common.Interner;
 
 public final class AttributeName
 // Uncomment to regenerate
-//        implements Comparable<AttributeName> 
+// implements Comparable<AttributeName>
 {
 
-    private static final @NoLength @NsUri String[] ALL_NO_NS = { "", "", "",
+    /**
+     * An array representing no namespace regardless of namespace mode (HTML,
+     * SVG, MathML, lang-mapping HTML) used.
+     */
+    static final @NoLength @NsUri String[] ALL_NO_NS = { "", "", "",
     // [NOCPP[
             ""
     // ]NOCPP]
     };
 
+    /**
+     * An array that has no namespace for the HTML mode but the XMLNS namespace
+     * for the SVG and MathML modes.
+     */
     private static final @NoLength @NsUri String[] XMLNS_NS = { "",
             "http://www.w3.org/2000/xmlns/", "http://www.w3.org/2000/xmlns/",
             // [NOCPP[
@@ -50,6 +59,10 @@ public final class AttributeName
     // ]NOCPP]
     };
 
+    /**
+     * An array that has no namespace for the HTML mode but the XML namespace
+     * for the SVG and MathML modes.
+     */
     private static final @NoLength @NsUri String[] XML_NS = { "",
             "http://www.w3.org/XML/1998/namespace",
             "http://www.w3.org/XML/1998/namespace",
@@ -58,6 +71,10 @@ public final class AttributeName
     // ]NOCPP]
     };
 
+    /**
+     * An array that has no namespace for the HTML mode but the XLink namespace
+     * for the SVG and MathML modes.
+     */
     private static final @NoLength @NsUri String[] XLINK_NS = { "",
             "http://www.w3.org/1999/xlink", "http://www.w3.org/1999/xlink",
             // [NOCPP[
@@ -66,18 +83,28 @@ public final class AttributeName
     };
 
     // [NOCPP[
+    /**
+     * An array that has no namespace for the HTML, SVG and MathML modes but has
+     * the XML namespace for the lang-mapping HTML mode.
+     */
     private static final @NoLength @NsUri String[] LANG_NS = { "", "", "",
             "http://www.w3.org/XML/1998/namespace" };
 
     // ]NOCPP]
 
-    private static final @NoLength @Prefix String[] ALL_NO_PREFIX = { null,
-            null, null,
-            // [NOCPP[
+    /**
+     * An array for no prefixes in any mode.
+     */
+    static final @NoLength @Prefix String[] ALL_NO_PREFIX = { null, null, null,
+    // [NOCPP[
             null
     // ]NOCPP]
     };
 
+    /**
+     * An array for no prefixe in the HTML mode and the <code>xmlns</code>
+     * prefix in the SVG and MathML modes.
+     */
     private static final @NoLength @Prefix String[] XMLNS_PREFIX = { null,
             "xmlns", "xmlns",
             // [NOCPP[
@@ -85,6 +112,10 @@ public final class AttributeName
     // ]NOCPP]
     };
 
+    /**
+     * An array for no prefixe in the HTML mode and the <code>xlink</code>
+     * prefix in the SVG and MathML modes.
+     */
     private static final @NoLength @Prefix String[] XLINK_PREFIX = { null,
             "xlink", "xlink",
             // [NOCPP[
@@ -92,6 +123,10 @@ public final class AttributeName
     // ]NOCPP]
     };
 
+    /**
+     * An array for no prefixe in the HTML mode and the <code>xml</code> prefix
+     * in the SVG and MathML modes.
+     */
     private static final @NoLength @Prefix String[] XML_PREFIX = { null, "xml",
             "xml",
             // [NOCPP[
@@ -122,6 +157,16 @@ public final class AttributeName
 
     // ]NOCPP]
 
+    /**
+     * An initialization helper for having a one name in the SVG mode and
+     * another name in the other modes.
+     * 
+     * @param name
+     *            the name for the non-SVG modes
+     * @param camel
+     *            the name for the SVG mode
+     * @return the initialized name array
+     */
     private static @NoLength @Local String[] SVG_DIFFERENT(@Local String name,
             @Local String camel) {
         @NoLength @Local String[] arr = new String[4];
@@ -134,6 +179,16 @@ public final class AttributeName
         return arr;
     }
 
+    /**
+     * An initialization helper for having a one name in the MathML mode and
+     * another name in the other modes.
+     * 
+     * @param name
+     *            the name for the non-MathML modes
+     * @param camel
+     *            the name for the MathML mode
+     * @return the initialized name array
+     */
     private static @NoLength @Local String[] MATH_DIFFERENT(@Local String name,
             @Local String camel) {
         @NoLength @Local String[] arr = new String[4];
@@ -146,6 +201,16 @@ public final class AttributeName
         return arr;
     }
 
+    /**
+     * An initialization helper for having a different local name in the HTML
+     * mode and the SVG and MathML modes.
+     * 
+     * @param name
+     *            the name for the HTML mode
+     * @param suffix
+     *            the name for the SVG and MathML modes
+     * @return the initialized name array
+     */
     private static @NoLength @Local String[] COLONIFIED_LOCAL(
             @Local String name, @Local String suffix) {
         @NoLength @Local String[] arr = new String[4];
@@ -158,7 +223,14 @@ public final class AttributeName
         return arr;
     }
 
-    private static @NoLength @Local String[] SAME_LOCAL(@Local String name) {
+    /**
+     * An initialization helper for having the same local name in all modes.
+     * 
+     * @param name
+     *            the name
+     * @return the initialized name array
+     */
+    static @NoLength @Local String[] SAME_LOCAL(@Local String name) {
         @NoLength @Local String[] arr = new String[4];
         arr[0] = name;
         arr[1] = name;
@@ -178,23 +250,28 @@ public final class AttributeName
      * HtmlAttributes and released upon clearing or destroying that object.
      * 
      * @param buf
+     *            the buffer
      * @param offset
+     *            ignored
      * @param length
+     *            length of data
      * @param checkNcName
-     * @return
+     *            whether to check ncnameness
+     * @return an <code>AttributeName</code> corresponding to the argument data
      */
     static AttributeName nameByBuffer(@NoLength char[] buf, int offset,
             int length
             // [NOCPP[
             , boolean checkNcName
-    // ]NOCPP]
-    ) {
+            // ]NOCPP]
+            , Interner interner) {
         // XXX deal with offset
         int hash = AttributeName.bufToHash(buf, length);
         int index = Arrays.binarySearch(AttributeName.ATTRIBUTE_HASHES, hash);
         if (index < 0) {
             return AttributeName.createAttributeName(
-                    Portability.newLocalNameFromBuffer(buf, offset, length)
+                    Portability.newLocalNameFromBuffer(buf, offset, length,
+                            interner)
                     // [NOCPP[
                     , checkNcName
             // ]NOCPP]
@@ -204,7 +281,8 @@ public final class AttributeName
             @Local String name = attributeName.getLocal(AttributeName.HTML);
             if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
                 return AttributeName.createAttributeName(
-                        Portability.newLocalNameFromBuffer(buf, offset, length)
+                        Portability.newLocalNameFromBuffer(buf, offset, length,
+                                interner)
                         // [NOCPP[
                         , checkNcName
                 // ]NOCPP]
@@ -238,42 +316,83 @@ public final class AttributeName
         return hash ^ hash2;
     }
 
+    /**
+     * The mode value for HTML.
+     */
     public static final int HTML = 0;
 
+    /**
+     * The mode value for MathML.
+     */
     public static final int MATHML = 1;
 
+    /**
+     * The mode value for SVG.
+     */
     public static final int SVG = 2;
 
     // [NOCPP[
 
+    /**
+     * The mode value for lang-mapping HTML.
+     */
     public static final int HTML_LANG = 3;
 
+    /**
+     * The XML data type of this attribute.
+     */
     private final @IdType String type;
 
     // ]NOCPP]
 
+    /**
+     * The namespaces indexable by mode.
+     */
     private final @NsUri @NoLength String[] uri;
 
+    /**
+     * The local names indexable by mode.
+     */
     private final @Local @NoLength String[] local;
 
+    /**
+     * The prefixes indexably by mode.
+     */
     private final @Prefix @NoLength String[] prefix;
 
     // [NOCPP[
 
+    /**
+     * The qnames indexable by mode.
+     */
     private final @QName @NoLength String[] qName;
 
     // XXX convert to bitfield
+    /**
+     * Data on which names are ncnames indexable by mode.
+     */
     private final @NoLength boolean[] ncname;
 
+    /**
+     * This in an xmlns attribute.
+     */
     private final boolean xmlns;
 
     /**
-     * @param type
+     * The run-time constructor.
+     * 
      * @param uri
+     *            the namespace
      * @param local
-     * @param name
+     *            the local name
+     * @param prefix
+     *            the prefix
      * @param ncname
+     *            the ncnameness
      * @param xmlns
+     *            whether this is an xmlns attribute
+     * @param type
+     *            the XML datatype
      */
     private AttributeName(@NsUri @NoLength String[] uri,
             @Local @NoLength String[] local, @Prefix @NoLength String[] prefix,
@@ -290,6 +409,20 @@ public final class AttributeName
 
     // ]NOCPP]
 
+    /**
+     * The startup-time constructor.
+     * 
+     * @param uri
+     *            the namespace
+     * @param local
+     *            the local name
+     * @param prefix
+     *            the prefix
+     * @param ncname
+     *            the ncnameness
+     * @param xmlns
+     *            whether this is an xmlns attribute
+     */
     protected AttributeName(@NsUri @NoLength String[] uri,
             @Local @NoLength String[] local, @Prefix @NoLength String[] prefix
             // [NOCPP[
@@ -309,6 +442,15 @@ public final class AttributeName
         // ]NOCPP]
     }
 
+    /**
+     * Creates an <code>AttributeName</code> for a local name.
+     * 
+     * @param name
+     *            the name
+     * @param checkNcName
+     *            whether to check ncnameness
+     * @return an <code>AttributeName</code>
+     */
     private static AttributeName createAttributeName(@Local String name
     // [NOCPP[
             , boolean checkNcName
@@ -334,17 +476,35 @@ public final class AttributeName
         );
     }
 
+    /**
+     * Deletes runtime-allocated instances in C++.
+     */
     @Virtual void release() {
         // No-op in Java.
         // Implement as |delete this;| in subclass.
     }
 
+    /**
+     * The C++ destructor.
+     */
     @SuppressWarnings("unused") private void destructor() {
         Portability.releaseLocal(local[0]); // this must be a no-op for static
         // locals
         // for non-static cases the other array slots contain the same pointer
         // as weak references.
         Portability.deleteArray(local);
+    }
+
+    /**
+     * Clones the attribute using an interner. Returns <code>this</code> in Java
+     * and for non-dynamic instances in C++.
+     * 
+     * @param interner
+     *            an interner
+     * @return a clone
+     */
+    @Virtual public AttributeName cloneAttributeName(Interner interner) {
+        return this;
     }
 
     // [NOCPP[
@@ -440,158 +600,158 @@ public final class AttributeName
 
     // START CODE ONLY USED FOR GENERATING CODE uncomment to regenerate
 
-//    /**
-//     * @see java.lang.Object#toString()
-//     */
-//    @Override public String toString() {
-//        return "(" + formatNs() + ", " + formatLocal() + ", " + formatPrefix()
-//                + ", " + formatNcname() + ", " + (xmlns ? "true" : "false")
-//                + ("ID" == type ? ", \"ID\"" : "") + ")";
-//    }
-//
-//    public int compareTo(AttributeName other) {
-//        int thisHash = this.hash();
-//        int otherHash = other.hash();
-//        if (thisHash < otherHash) {
-//            return -1;
-//        } else if (thisHash == otherHash) {
-//            return 0;
-//        } else {
-//            return 1;
-//        }
-//    }
-//
-//    private String formatPrefix() {
-//        if (prefix[0] == null && prefix[1] == null && prefix[2] == null
-//                && prefix[3] == null) {
-//            return "ALL_NO_PREFIX";
-//        } else if (prefix[0] == null && prefix[1] == prefix[2]
-//                && prefix[3] == null) {
-//            if ("xmlns".equals(prefix[1])) {
-//                return "XMLNS_PREFIX";
-//            } else if ("xml".equals(prefix[1])) {
-//                return "XML_PREFIX";
-//            } else if ("xlink".equals(prefix[1])) {
-//                return "XLINK_PREFIX";
-//            } else {
-//                throw new IllegalStateException();
-//            }
-//        } else if (prefix[0] == null && prefix[1] == null && prefix[2] == null
-//                && prefix[3] == "xml") {
-//            return "LANG_PREFIX";
-//        } else {
-//            throw new IllegalStateException();
-//        }
-//    }
-//
-//    private String formatLocal() {
-//        if (local[0] == local[1] && local[0] == local[3]
-//                && local[0] != local[2]) {
-//            return "SVG_DIFFERENT(\"" + local[0] + "\", \"" + local[2] + "\")";
-//        }
-//        if (local[0] == local[2] && local[0] == local[3]
-//                && local[0] != local[1]) {
-//            return "MATH_DIFFERENT(\"" + local[0] + "\", \"" + local[1] + "\")";
-//        }
-//        if (local[0] == local[3] && local[1] == local[2]
-//                && local[0] != local[1]) {
-//            return "COLONIFIED_LOCAL(\"" + local[0] + "\", \"" + local[1]
-//                    + "\")";
-//        }
-//        for (int i = 1; i < local.length; i++) {
-//            if (local[0] != local[i]) {
-//                throw new IllegalStateException();
-//            }
-//        }
-//        return "SAME_LOCAL(\"" + local[0] + "\")";
-//    }
-//
-//    private String formatNs() {
-//        if (uri[0] == "" && uri[1] == "" && uri[2] == "" && uri[3] == "") {
-//            return "ALL_NO_NS";
-//        } else if (uri[0] == "" && uri[1] == uri[2] && uri[3] == "") {
-//            if ("http://www.w3.org/2000/xmlns/".equals(uri[1])) {
-//                return "XMLNS_NS";
-//            } else if ("http://www.w3.org/XML/1998/namespace".equals(uri[1])) {
-//                return "XML_NS";
-//            } else if ("http://www.w3.org/1999/xlink".equals(uri[1])) {
-//                return "XLINK_NS";
-//            } else {
-//                throw new IllegalStateException();
-//            }
-//        } else if (uri[0] == "" && uri[1] == "" && uri[2] == ""
-//                && uri[3] == "http://www.w3.org/XML/1998/namespace") {
-//            return "LANG_NS";
-//        } else {
-//            throw new IllegalStateException();
-//        }
-//    }
-//
-//    private String formatNcname() {
-//        for (int i = 0; i < ncname.length; i++) {
-//            if (!ncname[i]) {
-//                return "new boolean[]{" + ncname[0] + ", " + ncname[1] + ", "
-//                        + ncname[2] + ", " + ncname[3] + "}";
-//            }
-//        }
-//        return "ALL_NCNAME";
-//    }
-//
-//    private String constName() {
-//        String name = getLocal(HTML);
-//        char[] buf = new char[name.length()];
-//        for (int i = 0; i < name.length(); i++) {
-//            char c = name.charAt(i);
-//            if (c == '-' || c == ':') {
-//                buf[i] = '_';
-//            } else if (c >= 'a' && c <= 'z') {
-//                buf[i] = (char) (c - 0x20);
-//            } else {
-//                buf[i] = c;
-//            }
-//        }
-//        return new String(buf);
-//    }
-//
-//    private int hash() {
-//        String name = getLocal(HTML);
-//        return bufToHash(name.toCharArray(), name.length());
-//    }
-//
-//    /**
-//     * Regenerate self
-//     * 
-//     * @param args
-//     */
-//    public static void main(String[] args) {
-//        Arrays.sort(ATTRIBUTE_NAMES);
-//        for (int i = 1; i < ATTRIBUTE_NAMES.length; i++) {
-//            if (ATTRIBUTE_NAMES[i].hash() == ATTRIBUTE_NAMES[i - 1].hash()) {
-//                System.err.println("Hash collision: "
-//                        + ATTRIBUTE_NAMES[i].getLocal(HTML) + ", "
-//                        + ATTRIBUTE_NAMES[i - 1].getLocal(HTML));
-//                return;
-//            }
-//        }
-//        for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
-//            AttributeName att = ATTRIBUTE_NAMES[i];
-//            System.out.println("public static final AttributeName "
-//                    + att.constName() + " = new AttributeName" + att.toString()
-//                    + ";");
-//        }
-//        System.out.println("private final static @NoLength AttributeName[] ATTRIBUTE_NAMES = {");
-//        for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
-//            AttributeName att = ATTRIBUTE_NAMES[i];
-//            System.out.println(att.constName() + ",");
-//        }
-//        System.out.println("};");
-//        System.out.println("private final static int[] ATTRIBUTE_HASHES = {");
-//        for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
-//            AttributeName att = ATTRIBUTE_NAMES[i];
-//            System.out.println(Integer.toString(att.hash()) + ",");
-//        }
-//        System.out.println("};");
-//    }
+    // /**
+    // * @see java.lang.Object#toString()
+    // */
+    // @Override public String toString() {
+    // return "(" + formatNs() + ", " + formatLocal() + ", " + formatPrefix()
+    // + ", " + formatNcname() + ", " + (xmlns ? "true" : "false")
+    // + ("ID" == type ? ", \"ID\"" : "") + ")";
+    // }
+    //
+    // public int compareTo(AttributeName other) {
+    // int thisHash = this.hash();
+    // int otherHash = other.hash();
+    // if (thisHash < otherHash) {
+    // return -1;
+    // } else if (thisHash == otherHash) {
+    // return 0;
+    // } else {
+    // return 1;
+    // }
+    // }
+    //
+    // private String formatPrefix() {
+    // if (prefix[0] == null && prefix[1] == null && prefix[2] == null
+    // && prefix[3] == null) {
+    // return "ALL_NO_PREFIX";
+    // } else if (prefix[0] == null && prefix[1] == prefix[2]
+    // && prefix[3] == null) {
+    // if ("xmlns".equals(prefix[1])) {
+    // return "XMLNS_PREFIX";
+    // } else if ("xml".equals(prefix[1])) {
+    // return "XML_PREFIX";
+    // } else if ("xlink".equals(prefix[1])) {
+    // return "XLINK_PREFIX";
+    // } else {
+    // throw new IllegalStateException();
+    // }
+    // } else if (prefix[0] == null && prefix[1] == null && prefix[2] == null
+    // && prefix[3] == "xml") {
+    // return "LANG_PREFIX";
+    // } else {
+    // throw new IllegalStateException();
+    // }
+    // }
+    //
+    // private String formatLocal() {
+    // if (local[0] == local[1] && local[0] == local[3]
+    // && local[0] != local[2]) {
+    // return "SVG_DIFFERENT(\"" + local[0] + "\", \"" + local[2] + "\")";
+    // }
+    // if (local[0] == local[2] && local[0] == local[3]
+    // && local[0] != local[1]) {
+    // return "MATH_DIFFERENT(\"" + local[0] + "\", \"" + local[1] + "\")";
+    // }
+    // if (local[0] == local[3] && local[1] == local[2]
+    // && local[0] != local[1]) {
+    // return "COLONIFIED_LOCAL(\"" + local[0] + "\", \"" + local[1]
+    // + "\")";
+    // }
+    // for (int i = 1; i < local.length; i++) {
+    // if (local[0] != local[i]) {
+    // throw new IllegalStateException();
+    // }
+    // }
+    // return "SAME_LOCAL(\"" + local[0] + "\")";
+    // }
+    //
+    // private String formatNs() {
+    // if (uri[0] == "" && uri[1] == "" && uri[2] == "" && uri[3] == "") {
+    // return "ALL_NO_NS";
+    // } else if (uri[0] == "" && uri[1] == uri[2] && uri[3] == "") {
+    // if ("http://www.w3.org/2000/xmlns/".equals(uri[1])) {
+    // return "XMLNS_NS";
+    // } else if ("http://www.w3.org/XML/1998/namespace".equals(uri[1])) {
+    // return "XML_NS";
+    // } else if ("http://www.w3.org/1999/xlink".equals(uri[1])) {
+    // return "XLINK_NS";
+    // } else {
+    // throw new IllegalStateException();
+    // }
+    // } else if (uri[0] == "" && uri[1] == "" && uri[2] == ""
+    // && uri[3] == "http://www.w3.org/XML/1998/namespace") {
+    // return "LANG_NS";
+    // } else {
+    // throw new IllegalStateException();
+    // }
+    // }
+    //
+    // private String formatNcname() {
+    // for (int i = 0; i < ncname.length; i++) {
+    // if (!ncname[i]) {
+    // return "new boolean[]{" + ncname[0] + ", " + ncname[1] + ", "
+    // + ncname[2] + ", " + ncname[3] + "}";
+    // }
+    // }
+    // return "ALL_NCNAME";
+    // }
+    //
+    // private String constName() {
+    // String name = getLocal(HTML);
+    // char[] buf = new char[name.length()];
+    // for (int i = 0; i < name.length(); i++) {
+    // char c = name.charAt(i);
+    // if (c == '-' || c == ':') {
+    // buf[i] = '_';
+    // } else if (c >= 'a' && c <= 'z') {
+    // buf[i] = (char) (c - 0x20);
+    // } else {
+    // buf[i] = c;
+    // }
+    // }
+    // return new String(buf);
+    // }
+    //
+    // private int hash() {
+    // String name = getLocal(HTML);
+    // return bufToHash(name.toCharArray(), name.length());
+    // }
+    //
+    // /**
+    // * Regenerate self
+    // *
+    // * @param args
+    // */
+    // public static void main(String[] args) {
+    // Arrays.sort(ATTRIBUTE_NAMES);
+    // for (int i = 1; i < ATTRIBUTE_NAMES.length; i++) {
+    // if (ATTRIBUTE_NAMES[i].hash() == ATTRIBUTE_NAMES[i - 1].hash()) {
+    // System.err.println("Hash collision: "
+    // + ATTRIBUTE_NAMES[i].getLocal(HTML) + ", "
+    // + ATTRIBUTE_NAMES[i - 1].getLocal(HTML));
+    // return;
+    // }
+    // }
+    // for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
+    // AttributeName att = ATTRIBUTE_NAMES[i];
+    // System.out.println("public static final AttributeName "
+    // + att.constName() + " = new AttributeName" + att.toString()
+    // + ";");
+    // }
+    // System.out.println("private final static @NoLength AttributeName[] ATTRIBUTE_NAMES = {");
+    // for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
+    // AttributeName att = ATTRIBUTE_NAMES[i];
+    // System.out.println(att.constName() + ",");
+    // }
+    // System.out.println("};");
+    // System.out.println("private final static int[] ATTRIBUTE_HASHES = {");
+    // for (int i = 0; i < ATTRIBUTE_NAMES.length; i++) {
+    // AttributeName att = ATTRIBUTE_NAMES[i];
+    // System.out.println(Integer.toString(att.hash()) + ",");
+    // }
+    // System.out.println("};");
+    // }
 
     // START GENERATED CODE
     public static final AttributeName D = new AttributeName(ALL_NO_NS,

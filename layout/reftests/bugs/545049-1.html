@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<table>
+  <td id="d" style="-moz-transform:translateX(400px); width:20px; height:20px; background:lime;">
+  </td>
+</table>
+<script>
+function doTest() {
+  document.getElementById("d").style.MozTransform = "translateX(10px)";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

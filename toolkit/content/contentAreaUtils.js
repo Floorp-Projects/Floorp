@@ -47,6 +47,14 @@ var ContentAreaUtils = {
     return this.ioService =
       Components.classes["@mozilla.org/network/io-service;1"]
                 .getService(Components.interfaces.nsIIOService);
+  },
+
+  get stringBundle() {
+    delete this.stringBundle;
+    return this.stringBundle =
+      Components.classes["@mozilla.org/intl/stringbundle;1"]
+                .getService(Components.interfaces.nsIStringBundleService)
+                .createBundle("chrome://global/locale/contentAreaCommands.properties");
   }
 }
 
@@ -422,9 +430,9 @@ function internalPersist(persistArgs)
       filesFolder = persistArgs.targetFile.clone();
 
       var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
-      var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
-                                                                       [nameWithoutExtension],
-                                                                       1);
+      var filesFolderLeafName =
+        ContentAreaUtils.stringBundle
+                        .formatStringFromName("filesFolder", [nameWithoutExtension], 1);
 
       filesFolder.leafName = filesFolderLeafName;
     }
@@ -590,8 +598,7 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
 
   var fp = makeFilePicker();
   var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
-  var bundle = getStringBundle();
-  fp.init(window, bundle.GetStringFromName(titleKey),
+  fp.init(window, ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
           Components.interfaces.nsIFilePicker.modeSave);
 
   fp.displayDirectory = dir;
@@ -670,7 +677,6 @@ const SAVEMODE_COMPLETE_TEXT = 0x02;
 // filter must be the third filter appended.
 function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, aSaveMode)
 {
-  var bundle = getStringBundle();
   // The bundle name for saving only a specific content type.
   var bundleName;
   // The corresponding filter string for a specific content type.
@@ -726,10 +732,12 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
   }
 
   if (aSaveMode & SAVEMODE_COMPLETE_DOM) {
-    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), filterString);
+    aFilePicker.appendFilter(ContentAreaUtils.stringBundle.GetStringFromName("WebPageCompleteFilter"),
+                             filterString);
     // We should always offer a choice to save document only if
     // we allow saving as complete.
-    aFilePicker.appendFilter(bundle.GetStringFromName(bundleName), filterString);
+    aFilePicker.appendFilter(ContentAreaUtils.stringBundle.GetStringFromName(bundleName),
+                             filterString);
   }
 
   if (aSaveMode & SAVEMODE_COMPLETE_TEXT)
@@ -753,13 +761,6 @@ function getPostData(aDocument)
   catch (e) {
   }
   return null;
-}
-
-function getStringBundle()
-{
-  return Components.classes["@mozilla.org/intl/stringbundle;1"]
-                   .getService(Components.interfaces.nsIStringBundleService)
-                   .createBundle("chrome://global/locale/contentAreaCommands.properties");
 }
 
 // Get the preferences branch ("browser.download." for normal 'save' mode)...
@@ -904,7 +905,7 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
   }
   try {
     // 7) Use the default file name
-    return getStringBundle().GetStringFromName("DefaultSaveFileName");
+    return ContentAreaUtils.stringBundle.GetStringFromName("DefaultSaveFileName");
   } catch (e) {
     //in case localized string cannot be found
   }

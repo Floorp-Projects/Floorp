@@ -1214,13 +1214,14 @@ nsXULTreeItemAccessible::Shutdown()
 nsresult
 nsXULTreeItemAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  nsCOMPtr<nsITreeColumn> column =
-    nsCoreUtils::GetFirstSensibleColumn(mTree);
+  nsCOMPtr<nsITreeColumns> columns;
+  mTree->GetColumns(getter_AddRefs(columns));
+  NS_ENSURE_STATE(columns);
 
-  PRBool isPrimary = PR_FALSE;
-  column->GetPrimary(&isPrimary);
+  nsCOMPtr<nsITreeColumn> primaryColumn;
+  columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
 
-  *aRole = isPrimary ?
+  *aRole = primaryColumn ?
     nsIAccessibleRole::ROLE_OUTLINEITEM :
     nsIAccessibleRole::ROLE_LISTITEM;
 

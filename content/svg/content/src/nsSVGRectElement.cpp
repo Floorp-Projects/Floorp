@@ -98,7 +98,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGRectElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGRectElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGRectElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGRectElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGRectElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGRectElementBase)
 
 //----------------------------------------------------------------------
@@ -175,14 +175,26 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
 
   /* In a perfect world, this would be handled by the DOM, and
      return a DOM exception. */
-  if (width <= 0 || height <= 0 || ry < 0 || rx < 0)
+  if (width <= 0 || height <= 0)
     return;
+
+  rx = NS_MAX(rx, 0.0f);
+  ry = NS_MAX(ry, 0.0f);
 
   /* optimize the no rounded corners case */
   if (rx == 0 && ry == 0) {
     aCtx->Rectangle(gfxRect(x, y, width, height));
     return;
   }
+
+  /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
+     have to set it to the value of the other. */
+  PRBool hasRx = HasAttr(kNameSpaceID_None, nsGkAtoms::rx);
+  PRBool hasRy = HasAttr(kNameSpaceID_None, nsGkAtoms::ry);
+  if (hasRx && !hasRy)
+    ry = rx;
+  else if (hasRy && !hasRx)
+    rx = ry;
 
   /* Clamp rx and ry to half the rect's width and height respectively. */
   float halfWidth  = width/2;
@@ -191,24 +203,6 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
     rx = halfWidth;
   if (ry > halfHeight)
     ry = halfHeight;
-
-  /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
-     have to set it to the value of the other. We do this after clamping rx and
-     ry since omitting one of the attributes implicitly means they should both
-     be the same. */
-  PRBool hasRx = HasAttr(kNameSpaceID_None, nsGkAtoms::rx);
-  PRBool hasRy = HasAttr(kNameSpaceID_None, nsGkAtoms::ry);
-  if (hasRx && !hasRy)
-    ry = rx;
-  else if (hasRy && !hasRx)
-    rx = ry;
-
-  /* However, we may now have made rx > width/2 or else ry > height/2. (If this
-     is the case, we know we must be giving rx and ry the same value.) */
-  if (rx > halfWidth)
-    rx = ry = halfWidth;
-  else if (ry > halfHeight)
-    rx = ry = halfHeight;
 
   gfxSize corner(rx, ry);
   aCtx->RoundedRectangle(gfxRect(x, y, width, height),

@@ -20,12 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
 
   
     //var test.window = null;
-    var testInterval = 2000;
+    var testInterval = 3000;
 
     var gTests = [
       {
         // <html><body onload="document.designMode='on'"><p>designModeDocument</p></body></html>
-        url: 'data:text/html;charset=utf-8;base64,PGh0bWw%2BPGJvZHkgb25sb2FkPSJkb2N1bWVudC5kZXNpZ25Nb2RlPSdvbiciPjxwPmRlc2lnbk1vZGVEb2N1bWVudDwvcD48L2JvZHk%2BPC9odG1sPg0K',
+        url: "data:text/html;charset=utf-8,<html><body onload=%22document.designMode='on'%22><p>designModeDocument</p></body></html>",
         name: 'designModeNavigate',
         expectedBodyBeforeEdit: '<p>designModeDocument</p>',
         expectedBodyAfterEdit:  '<p>EDITED designModeDocument</p>',
@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       },
       {
         // <html><body contentEditable="true"><p>contentEditable</p></body></html>
-        url: 'data:text/html;charset=utf-8;base64,PGh0bWw%2BPGJvZHkgY29udGVudEVkaXRhYmxlPSJ0cnVlIj48cD5jb250ZW50RWRpdGFibGU8L3A%2BPC9ib2R5PjwvaHRtbD4NCg0KDQo%3D',
+        url: 'data:text/html;charset=utf-8,<html><body contentEditable="true"><p>contentEditable</p></body></html>',
         name: 'contentEditableNavigate',
         expectedBodyBeforeEdit: '<br><p>contentEditable</p>',
         expectedBodyAfterEdit:  'EDITED <br><p>contentEditable</p>',

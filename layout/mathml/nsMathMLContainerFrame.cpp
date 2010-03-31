@@ -65,6 +65,8 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIReflowCallback.h"
 
+using namespace mozilla;
+
 //
 // nsMathMLContainerFrame implementation
 //
@@ -172,11 +174,12 @@ IsForeignChild(const nsIFrame* aFrame)
 }
 
 static void
-DeleteHTMLReflowMetrics(void *aObject, nsIAtom *aPropertyName,
-                        void *aPropertyValue, void *aData)
+DestroyHTMLReflowMetrics(void *aPropertyValue)
 {
   delete static_cast<nsHTMLReflowMetrics*>(aPropertyValue);
 }
+
+NS_DECLARE_FRAME_PROPERTY(HTMLReflowMetricsProperty, DestroyHTMLReflowMetrics)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
@@ -185,8 +188,7 @@ nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*               
 {
   nsHTMLReflowMetrics *metrics = new nsHTMLReflowMetrics(aReflowMetrics);
   metrics->mBoundingMetrics = aBoundingMetrics;
-  aFrame->SetProperty(nsGkAtoms::HTMLReflowMetricsProperty, metrics,
-                      DeleteHTMLReflowMetrics);
+  aFrame->Properties().Set(HTMLReflowMetricsProperty(), metrics);
 }
 
 // helper method to facilitate getting the reflow and bounding metrics
@@ -199,7 +201,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
   NS_PRECONDITION(aFrame, "null arg");
 
   nsHTMLReflowMetrics *metrics = static_cast<nsHTMLReflowMetrics*>
-    (aFrame->GetProperty(nsGkAtoms::HTMLReflowMetricsProperty));
+    (aFrame->Properties().Get(HTMLReflowMetricsProperty()));
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the
@@ -227,8 +229,9 @@ void
 nsMathMLContainerFrame::ClearSavedChildMetrics()
 {
   nsIFrame* childFrame = mFrames.FirstChild();
+  FramePropertyTable* props = PresContext()->PropertyTable();
   while (childFrame) {
-    childFrame->DeleteProperty(nsGkAtoms::HTMLReflowMetricsProperty);
+    props->Delete(childFrame, HTMLReflowMetricsProperty());
     childFrame = childFrame->GetNextSibling();
   }
 }
@@ -761,8 +764,10 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
   if (!parent)
     return NS_OK;
 
-  return frame->PresContext()->PresShell()->
+  frame->PresContext()->PresShell()->
     FrameNeedsReflow(frame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+
+  return NS_OK;
 }
 
 // There are precise rules governing children of a MathML frame,
@@ -839,9 +844,10 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
   // XXX Since they are numerous MathML attributes that affect layout, and
   // we can't check all of them here, play safe by requesting a reflow.
   // XXXldb This should only do work for attributes that cause changes!
-  return PresContext()->PresShell()->
-           FrameNeedsReflow(this, nsIPresShell::eStyleChange,
-                            NS_FRAME_IS_DIRTY);
+  PresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+
+  return NS_OK;
 }
 
 void

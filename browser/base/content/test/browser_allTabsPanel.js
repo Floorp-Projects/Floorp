@@ -32,8 +32,8 @@ function pickOne(array) {
   return array[rand(0, array.length - 1)];
 }
 function pickOneTab() {
-  var tab = pickOne(gBrowser.tabContainer.childNodes);
-  return [tab, Array.indexOf(gBrowser.tabContainer.childNodes, tab)];
+  var tab = pickOne(gBrowser.tabs);
+  return [tab, Array.indexOf(gBrowser.tabs, tab)];
 }
 function nextSequence() {
   while (gBrowser.browsers.length > 1)

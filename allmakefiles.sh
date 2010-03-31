@@ -85,7 +85,7 @@ if [ "$WINCE" ]; then
   "
 fi
 
-if [ "$MOZ_MEMORY" ]; then
+if [ "$MOZ_MEMORY" -a "$LIBXUL_SDK" = "" ]; then
   add_makefiles "
     memory/jemalloc/Makefile
   "

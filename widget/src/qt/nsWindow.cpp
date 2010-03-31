@@ -71,6 +71,7 @@
 
 #include "nsToolkit.h"
 #include "nsIDeviceContext.h"
+#include "nsIdleService.h"
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
@@ -184,6 +185,10 @@ nsWindow::nsWindow()
     mSizeState           = nsSizeMode_Normal;
     mPluginType          = PluginType_NONE;
     mQCursor             = Qt::ArrowCursor;
+    mNeedsResize         = PR_FALSE;
+    mNeedsMove           = PR_FALSE;
+    mListenForResizes    = PR_FALSE;
+    mNeedsShow           = PR_FALSE;
     
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
@@ -441,7 +446,7 @@ nsWindow::SetModal(PRBool aModal)
 NS_IMETHODIMP
 nsWindow::IsVisible(PRBool & aState)
 {
-    aState = mWidget ? mWidget->isVisible() : PR_FALSE;
+    aState = mIsShown;
     return NS_OK;
 }
 
@@ -482,8 +487,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
 
-    if (mWindowType == eWindowType_toplevel ||
-        mWindowType == eWindowType_dialog) {
+    if (mIsTopLevel) {
         SetSizeMode(nsSizeMode_Normal);
 
         // the internal QGraphicsWidget is always in the top corner of
@@ -538,20 +542,23 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         return rv;
     }
 
+    QWidget *widget = GetViewWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+
     switch (aMode) {
     case nsSizeMode_Maximized:
-        GetViewWidget()->showMaximized();
+        widget->showMaximized();
         break;
     case nsSizeMode_Minimized:
-        GetViewWidget()->showMinimized();
+        widget->showMinimized();
         break;
     case nsSizeMode_Fullscreen:
-        GetViewWidget()->showFullScreen();
+        widget->showFullScreen();
         break;
 
     default:
         // nsSizeMode_Normal, really.
-        GetViewWidget()->showNormal();
+        widget->showNormal();
         break;
     }
 
@@ -565,16 +572,23 @@ nsWindow::SetSizeMode(PRInt32 aMode)
 // set to visible if one of their ancestors is invisible)
 static void find_first_visible_parent(QGraphicsItem* aItem, QGraphicsItem*& aVisibleItem)
 {
-    if (!aItem)
-        return;
+    NS_ENSURE_TRUE(aItem, );
 
-    if (!aVisibleItem && aItem->isVisible())
-        aVisibleItem = aItem;
-    else if (aVisibleItem && !aItem->isVisible())
-        aVisibleItem = nsnull;
-
-    // check further up the chain
-    find_first_visible_parent(aItem->parentItem(), aVisibleItem);
+    aVisibleItem = nsnull;
+    QGraphicsItem* parItem = nsnull;
+    while (!aVisibleItem) {
+        if (aItem->isVisible())
+            aVisibleItem = aItem;
+        else {
+            parItem = aItem->parentItem();
+            if (parItem)
+                aItem = parItem;
+            else {
+                aItem->setVisible(true);
+                aVisibleItem = aItem;
+            }
+        }
+    }
 }
 
 NS_IMETHODIMP
@@ -587,7 +601,10 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!mWidget)
         return NS_ERROR_FAILURE;
 
-    // Because QGraphicsItem cannot get the focus if they are 
+    if (mWidget->hasFocus())
+        return NS_OK;
+
+    // Because QGraphicsItem cannot get the focus if they are
     // invisible, we look up the chain, for the lowest visible
     // parent and focus that one
     QGraphicsItem* realFocusItem = nsnull;
@@ -598,7 +615,9 @@ nsWindow::SetFocus(PRBool aRaise)
 
     if (aRaise) {
         // the raising has to happen on the view widget
-        GetViewWidget()->raise();
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->raise();
         realFocusItem->setFocus(Qt::ActiveWindowFocusReason);
     }
     else
@@ -658,11 +677,16 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     if (!mWidget)
         return NS_OK;
 
+    mDirtyScrollArea = mDirtyScrollArea.united(QRect(aRect.x, aRect.y, aRect.width, aRect.height));
+
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
     // QGraphicsItems cannot trigger a repaint themselves, so we start it on the view
-    if (aIsSynchronous)
-        GetViewWidget()->repaint();
+    if (aIsSynchronous) {
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->repaint();
+    }
 
     return NS_OK;
 }
@@ -734,7 +758,7 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 QWidget* nsWindow::GetViewWidget()
 {
     NS_ASSERTION(mWidget, "Calling GetViewWidget without mWidget created");
-    if (!mWidget)
+    if (!mWidget || !mWidget->scene())
         return nsnull;
 
     NS_ASSERTION(mWidget->scene()->views().size() == 1, "Not exactly one view for our scene!");
@@ -758,11 +782,12 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         return SetupPluginPort();
         break;
 
-#ifdef Q_WS_X11
     case NS_NATIVE_DISPLAY:
-        return GetViewWidget()->x11Info().display();
+        {
+            QWidget *widget = GetViewWidget();
+            return widget ? widget->x11Info().display() : nsnull;
+        }
         break;
-#endif
 
     case NS_NATIVE_GRAPHIC: {
         NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
@@ -783,8 +808,11 @@ NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     QString qStr(QString::fromUtf16(aTitle.BeginReading(), aTitle.Length()));
-    if (mIsTopLevel)
-        GetViewWidget()->setWindowTitle(qStr);
+    if (mIsTopLevel) {
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->setWindowTitle(qStr);
+    }
     else if (mWidget)
         mWidget->setWindowTitle(qStr);
 
@@ -855,10 +883,14 @@ nsWindow::CaptureMouse(PRBool aCapture)
 
     if (!mWidget)
         return NS_OK;
+
+    QWidget *widget = GetViewWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+
     if (aCapture)
-        GetViewWidget()->grabMouse();
+        widget->grabMouse();
     else
-        GetViewWidget()->releaseMouse();
+        widget->releaseMouse();
 
     return NS_OK;
 }
@@ -1234,6 +1266,9 @@ nsWindow::InitButtonEvent(nsMouseEvent &aMoveEvent,
 nsEventStatus
 nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
 {
+    // The user has done something.
+    UserActivity();
+
     QPointF pos = aEvent->pos();
 
     // we check against the widgets geometry, so use parent coordinates
@@ -1281,6 +1316,9 @@ nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
 nsEventStatus
 nsWindow::OnButtonReleaseEvent(QGraphicsSceneMouseEvent *aEvent)
 {
+    // The user has done something.
+    UserActivity();
+
     PRUint16 domButton;
 
     switch (aEvent->button()) {
@@ -1378,6 +1416,9 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
+    // The user has done something.
+    UserActivity();
+
     PRBool setNoDefault = PR_FALSE;
 
     // before we dispatch a key, check if it's the context menu key.
@@ -1432,6 +1473,9 @@ nsEventStatus
 nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
+
+    // The user has done something.
+    UserActivity();
 
     if (isContextMenuKeyEvent(aEvent)) {
         // er, what do we do here? DoDefault or NoDefault?
@@ -1741,6 +1785,10 @@ nsWindow::Create(nsIWidget        *aParent,
     // resize so that everything is set to the right dimensions
     Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
+    // check if we should listen for resizes
+    mListenForResizes = (aNativeParent ||
+                         (aInitData && aInitData->mListenForResizes));
+
     return NS_OK;
 }
 
@@ -1753,7 +1801,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsXPIDLString brandName;
     GetBrandName(brandName);
 
-#ifdef Q_WS_X11
     XClassHint *class_hint = XAllocClassHint();
     if (!class_hint)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1795,7 +1842,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsMemory::Free(class_hint->res_class);
     nsMemory::Free(class_hint->res_name);
     XFree(class_hint);
-#endif
 
     return NS_OK;
 }
@@ -1805,6 +1851,8 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
+
+    mNeedsResize = PR_FALSE;
 
     mWidget->resize( aWidth, aHeight);
 
@@ -1820,6 +1868,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
 
+    mNeedsResize = PR_FALSE;
+    mNeedsMove = PR_FALSE;
+
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
 
     if (aRepaint)
@@ -1829,8 +1880,15 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 void
 nsWindow::NativeShow(PRBool aAction)
 {
-    if (aAction == PR_TRUE)
+    if (aAction) {
+        QWidget *widget = GetViewWidget();
+        if (widget && !widget->isVisible())
+            MakeFullScreen(mSizeMode == nsSizeMode_Fullscreen);
         mWidget->show();
+
+        // unset our flag now that our window has been shown
+        mNeedsShow = PR_FALSE;
+    }
     else
         mWidget->hide();
 }
@@ -1876,7 +1934,9 @@ nsWindow::SetWindowIconList(const nsTArray<nsCString> &aIconList)
         icon.addFile(path);
     }
 
-    GetViewWidget()->setWindowIcon(icon);
+    QWidget *widget = GetViewWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+    widget->setWindowIcon(icon);
 
     return NS_OK;
 }
@@ -1895,32 +1955,37 @@ void nsWindow::QWidgetDestroyed()
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
+    QWidget *widget = GetViewWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
     if (aFullScreen) {
         if (mSizeMode != nsSizeMode_Fullscreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-        GetViewWidget()->showFullScreen();
+        widget->showFullScreen();
     }
     else {
         mSizeMode = mLastSizeMode;
 
         switch (mSizeMode) {
         case nsSizeMode_Maximized:
-            GetViewWidget()->showMaximized();
+            widget->showMaximized();
             break;
         case nsSizeMode_Minimized:
-            GetViewWidget()->showMinimized();
+            widget->showMinimized();
             break;
         case nsSizeMode_Normal:
-            GetViewWidget()->showNormal();
+            widget->showNormal();
+            break;
+        default:
+            widget->showNormal();
             break;
         }
     }
-    
+
     NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
                  "mLastSizeMode should never be fullscreen");
-    return NS_OK;
+    return nsBaseWidget::MakeFullScreen(aFullScreen);
 }
 
 NS_IMETHODIMP
@@ -1952,9 +2017,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // and flush the queue here so that we don't end up with a BadWindow
     // error later when this happens (when the persistence timer fires
     // and GetWindowPos is called)
-#ifdef Q_WS_X11
-    XSync(GetViewWidget()->x11Info().display(), False);
-#endif
+    QWidget *widget = GetViewWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+    XSync(widget->x11Info().display(), False);
 
     return NS_OK;
 }
@@ -2091,7 +2156,6 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 #endif
         newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        newView->showNormal();
 
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         // Top level widget is just container, and should not be painted
@@ -2246,12 +2310,25 @@ nsWindow::Show(PRBool aState)
 
     mIsShown = aState;
 
-    if (!mWidget)
+    if ((aState && !AreBoundsSane()) || !mWidget) {
+        LOG(("\tbounds are insane or window hasn't been created yet\n"));
+        mNeedsShow = PR_TRUE;
         return NS_OK;
+    }
 
-    mWidget->setVisible(aState);
-    if (mWindowType == eWindowType_popup && aState)
-        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
+    if (aState) {
+        if (mNeedsMove) {
+            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+                         PR_FALSE);
+        } else if (mNeedsResize) {
+            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
+        }
+    }
+    else
+        // If someone is hiding this widget, clear any needing show flag.
+        mNeedsShow = PR_FALSE;
+
+    NativeShow(aState);
 
     return NS_OK;
 }
@@ -2265,14 +2342,47 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     if (!mWidget)
         return NS_OK;
 
-    mWidget->resize(aWidth, aHeight);
+    if (mIsShown) {
+        if (AreBoundsSane()) {
+            if (mIsTopLevel || mNeedsShow)
+                NativeResize(mBounds.x, mBounds.y,
+                             mBounds.width, mBounds.height, aRepaint);
+            else
+                NativeResize(mBounds.width, mBounds.height, aRepaint);
 
-    if (mIsTopLevel) {
-        GetViewWidget()->resize(aWidth,aHeight);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
+    }
+    else if (AreBoundsSane() && mListenForResizes) {
+        // For widgets that we listen for resizes for (widgets created
+        // with native parents) we apparently _always_ have to resize.  I
+        // dunno why, but apparently we're lame like that.
+        NativeResize(aWidth, aHeight, aRepaint);
+    }
+    else {
+        mNeedsResize = PR_TRUE;
     }
 
-    if (aRepaint)
-        mWidget->update();
+    // synthesize a resize event if this isn't a toplevel
+    if (mIsTopLevel || mListenForResizes) {
+        nsIntRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
+    }
 
     return NS_OK;
 }
@@ -2291,10 +2401,47 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     if (!mWidget)
         return NS_OK;
 
-    mWidget->setGeometry(aX, aY, aWidth, aHeight);
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
+    }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown
+    else if (AreBoundsSane() && mListenForResizes) {
+        // For widgets that we listen for resizes for (widgets created
+        // with native parents) we apparently _always_ have to resize.  I
+        // dunno why, but apparently we're lame like that.
+        NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+    }
+    else {
+        mNeedsResize = PR_TRUE;
+        mNeedsMove = PR_TRUE;
+    }
 
-    if (mIsTopLevel) {
-        GetViewWidget()->resize(aWidth,aHeight);
+    if (mIsTopLevel || mListenForResizes) {
+        // synthesize a resize event
+        nsIntRect rect(aX, aY, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
     }
 
     if (aRepaint)
@@ -2375,5 +2522,17 @@ nsWindow::GetIMEEnabled(PRUint32* aState)
 
     *aState = mWidget->isVKBOpen() ? IME_STATUS_ENABLED : IME_STATUS_DISABLED;
     return NS_OK;
+}
+
+void
+nsWindow::UserActivity()
+{
+  if (!mIdleService) {
+    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  }
+
+  if (mIdleService) {
+    mIdleService->ResetIdleTimeOut();
+  }
 }
 

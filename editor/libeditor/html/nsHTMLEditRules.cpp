@@ -24,6 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
  *   Neil Deakin <neil@mozdevgroup.com>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1919,10 +1920,17 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   nsresult res = NS_OK;
   PRBool bPlaintext = mFlags & nsIPlaintextEditor::eEditorPlaintextMask;
   
-  PRBool bCollapsed;
+  PRBool bCollapsed, join = PR_FALSE;
   res = aSelection->GetIsCollapsed(&bCollapsed);
   if (NS_FAILED(res)) return res;
-  
+
+  // origCollapsed is used later to determine whether we should join 
+  // blocks. We don't really care about bCollapsed because it will be 
+  // modified by ExtendSelectionForDelete later. JoinBlocks should 
+  // happen if the original selection is collapsed and the cursor is 
+  // at the end of a block element, in which case ExtendSelectionForDelete 
+  // would always make the selection not collapsed.
+  PRBool origCollapsed = bCollapsed;
   nsCOMPtr<nsIDOMNode> startNode, selNode;
   PRInt32 startOffset, selOffset;
   
@@ -2466,6 +2474,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         if (!enumerator) return NS_ERROR_UNEXPECTED;
 
+        join = PR_TRUE;
+
         for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
         {
           nsCOMPtr<nsISupports> currentItem;
@@ -2492,6 +2502,17 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
             nsIDOMNode* somenode = arrayOfNodes[0];
             res = DeleteNonTableElements(somenode);
             arrayOfNodes.RemoveObjectAt(0);
+            // If something visible is deleted, no need to join.
+            // Visible means all nodes except non-visible textnodes and breaks.
+            if (join && origCollapsed) {
+              if (mHTMLEditor->IsTextNode(somenode)) {
+                mHTMLEditor->IsVisTextNode(somenode, &join, PR_TRUE);
+              }
+              else {
+                join = nsTextEditUtils::IsBreak(somenode) && 
+                       !mHTMLEditor->IsVisBreak(somenode);
+              }
+            }
           }
         }
         
@@ -2525,14 +2546,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           }
         }
 
-        PRBool join = leftBlockParent == rightBlockParent;
-        if (!join) {
-          nsCOMPtr<nsINode> parent1 = do_QueryInterface(leftParent);
-          nsCOMPtr<nsINode> parent2 = do_QueryInterface(rightParent);
-          PRUint16 pos = nsContentUtils::ComparePosition(parent1, parent2);
-          join = (pos & (nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
-                         nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY)) != 0;
-        }
         if (join) {
           res = JoinBlocks(address_of(leftParent), address_of(rightParent),
                            aCancel);
@@ -2541,7 +2554,15 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
     }
   }
-  if (aAction == nsIEditor::eNext)
+  //If we're joining blocks: if deleting forward the selection should be 
+  //collapsed to the end of the selection, if deleting backward the selection 
+  //should be collapsed to the beginning of the selection. But if we're not 
+  //joining then the selection should collapse to the beginning of the 
+  //selection if we'redeleting forward, because the end of the selection will 
+  //still be in the next block. And same thing for deleting backwards 
+  //(selection should collapse to the end, because the beginning will still 
+  //be in the first block). See Bug 507936
+  if (join ? aAction == nsIEditor::eNext : aAction == nsIEditor::ePrevious)
   {
     res = aSelection->Collapse(endNode,endOffset);
   }
@@ -4451,9 +4472,13 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     }
   }
   
+  nsCOMPtr<nsIDOMElement> rootElement;
+  res = aDoc->GetDocumentElement(getter_AddRefs(rootElement));
+  NS_ENSURE_SUCCESS(res, res);
+
   // process clearing any styles first
   mHTMLEditor->mTypeInState->TakeClearProperty(getter_Transfers(item));
-  while (item)
+  while (item && node != rootElement)
   {
     nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent, savedBR;
     res = mHTMLEditor->SplitStyleAbovePoint(address_of(node), &offset, item->tag, &item->attr, address_of(leftNode), address_of(rightNode));

@@ -41,6 +41,33 @@
 #include "prtypes.h"
 PR_BEGIN_EXTERN_C
 
+/* replace compare/jump/add/shift sequence with x86 BSF/BSR instruction */
+#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64))
+  unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
+  unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
+# pragma  intrinsic(_BitScanForward,_BitScanReverse)
+  __forceinline static int __prBitScanForward32(unsigned int val)
+  { 
+    unsigned long idx;
+    _BitScanForward(&idx, (unsigned long)val);
+    return( (int)idx );
+  }
+  __forceinline static int __prBitScanReverse32(unsigned int val)
+  {
+    unsigned long idx;
+    _BitScanReverse(&idx, (unsigned long)val);
+    return( (int)(31-idx) );
+  }
+# define pr_bitscan_ctz32(val)  __prBitScanForward32(val)
+# define pr_bitscan_clz32(val)  __prBitScanReverse32(val)
+# define  PR_HAVE_BUILTIN_BITSCAN32
+#elif ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && \
+       (defined(__i386__) || defined(__x86_64__))
+# define pr_bitscan_ctz32(val)  __builtin_ctz(val)
+# define pr_bitscan_clz32(val)  __builtin_clz(val)
+# define  PR_HAVE_BUILTIN_BITSCAN32
+#endif /* MSVC || GCC */
+
 /*
 ** A prbitmap_t is a long integer that can be used for bitmaps
 */
@@ -67,6 +94,13 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 ** Macro version of PR_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
+#ifdef PR_HAVE_BUILTIN_BITSCAN32 
+#define PR_CEILING_LOG2(_log2,_n)      \
+  PR_BEGIN_MACRO                       \
+    PRUint32 j_ = (PRUint32)(_n);      \
+    (_log2) = (j_ <= 1 ? 0 : 32 - pr_bitscan_clz32(j_ - 1)); \
+  PR_END_MACRO
+#else
 #define PR_CEILING_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
     PRUint32 j_ = (PRUint32)(_n); 	\
@@ -84,6 +118,7 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
     if ((j_) >> 1)                  \
 	(_log2) += 1;               \
   PR_END_MACRO
+#endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 
 /*
 ** Macro version of PR_FloorLog2: Compute the log of the greatest power of
@@ -91,6 +126,13 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 **
 ** This is equivalent to finding the highest set bit in the word.
 */
+#ifdef PR_HAVE_BUILTIN_BITSCAN32
+#define PR_FLOOR_LOG2(_log2,_n)     \
+  PR_BEGIN_MACRO                    \
+    PRUint32 j_ = (PRUint32)(_n);   \
+    (_log2) = 31 - pr_bitscan_clz32((j_) | 1); \
+  PR_END_MACRO
+#else
 #define PR_FLOOR_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
     PRUint32 j_ = (PRUint32)(_n); 	\
@@ -106,6 +148,7 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
     if ((j_) >> 1)                  \
 	(_log2) += 1;               \
   PR_END_MACRO
+#endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 
 /*
 ** Macros for rotate left and right. The argument 'a' must be an unsigned

@@ -626,7 +626,7 @@ sanityCheck(const uint8_t * woffData, uint32_t woffLen)
   const woffHeader * header;
   uint16_t numTables, i;
   const woffDirEntry * dirEntry;
-  uint32_t tableTotal = 0;
+  uint64_t tableTotal = 0;
 
   if (!woffData || !woffLen) {
     return eWOFF_bad_parameter;
@@ -652,17 +652,17 @@ sanityCheck(const uint8_t * woffData, uint32_t woffLen)
 
   dirEntry = (const woffDirEntry *) (woffData + sizeof(woffHeader));
   for (i = 0; i < numTables; ++i) {
-    uint32_t offs = READ32BE(dirEntry->offset);
-    uint32_t orig = READ32BE(dirEntry->origLen);
-    uint32_t comp = READ32BE(dirEntry->compLen);
+    uint64_t offs = READ32BE(dirEntry->offset);
+    uint64_t orig = READ32BE(dirEntry->origLen);
+    uint64_t comp = READ32BE(dirEntry->compLen);
     if (comp > orig || comp > woffLen || offs > woffLen - comp) {
       return eWOFF_invalid;
     }
     orig = (orig + 3) & ~3;
-    if (tableTotal > 0xffffffffU - orig) {
+    tableTotal += orig;
+    if (tableTotal > 0xffffffffU) {
       return eWOFF_invalid;
     }
-    tableTotal += orig;
     ++dirEntry;
   }
 

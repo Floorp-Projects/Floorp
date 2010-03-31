@@ -67,7 +67,7 @@ MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
                                                 aDeviceRect->width, aDeviceRect->height));
     r.RoundOut();
     nsIntRect intRect;
-    if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(r, &intRect))) {
+    if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(r, &intRect))) {
       rect = intRect;
     }
   }
@@ -236,7 +236,7 @@ TransformFilterSpaceToDeviceSpace(nsSVGFilterInstance *aInstance, nsIntRect *aRe
   r = m.TransformBounds(r);
   r.RoundOut();
   nsIntRect deviceRect;
-  nsresult rv = nsSVGUtils::GfxRectToIntRect(r, &deviceRect);
+  nsresult rv = nsLayoutUtils::GfxRectToIntRect(r, &deviceRect);
   if (NS_FAILED(rv))
     return rv;
   *aRect = deviceRect;

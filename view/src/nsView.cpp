@@ -328,16 +328,16 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
   }
 }
 
-PRBool nsView::IsEffectivelyVisible()
+PRBool nsIView::IsEffectivelyVisible()
 {
-  for (nsView* v = this; v; v = v->mParent) {
+  for (nsIView* v = this; v; v = v->mParent) {
     if (v->GetVisibility() == nsViewVisibility_kHide)
       return PR_FALSE;
   }
   return PR_TRUE;
 }
 
-nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
+nsIntRect nsIView::CalcWidgetBounds(nsWindowType aType)
 {
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
@@ -364,7 +364,8 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 
   nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
                         NSIntPixelsToAppUnits(newBounds.y, p2a));
-  mViewToWidgetOffset = viewBounds.TopLeft() - roundedOffset;
+  // mViewToWidgetOffset is added to view coordinates to get widget coordinates
+  mViewToWidgetOffset = roundedOffset - viewBounds.TopLeft();
 
   return newBounds;
 }

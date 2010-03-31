@@ -1,0 +1,986 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Testing composition, text and query content events"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onunload="onunload();">
+
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+  <panel id="panel" hidden="true"
+         orient="vertical"
+         onpopupshown="onPanelShown(event);"
+         onpopuphidden="onPanelHidden(event);">
+    <vbox id="vbox">
+      <textbox id="textbox" onfocus="onFocusPanelTextbox(event);"
+               multiline="true" cols="20" rows="4"/>
+    </vbox>
+  </panel>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+<textarea id="textarea" cols="20" rows="4"></textarea>
+<iframe id="iframe" width="300" height="150"
+        src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
+
+function ok(aCondition, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function finish()
+{
+  window.close();
+}
+
+function onunload()
+{
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+var textarea = document.getElementById("textarea");
+var panel = document.getElementById("panel");
+var textbox = document.getElementById("textbox");
+var iframe = document.getElementById("iframe");
+var textareaInFrame;
+
+const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+
+const kIsWin = (navigator.platform.indexOf("Win") == 0);
+const kIsMac = (navigator.platform.indexOf("Mac") == 0);
+
+function checkQueryContentResult(aResult, aMessage, aID)
+{
+  ok(aResult, aMessage + ": the result is null");
+  if (!aResult) {
+    return false;
+  }
+  ok(aResult.succeeded, aMessage + ": the query content failed");
+  return aResult.succeeded;
+}
+
+function checkContent(aExpectedText, aMessage, aID)
+{
+  var textContent = synthesizeQueryTextContent(0, 100);
+  if (!checkQueryContentResult(textContent, aMessage +
+                               ": synthesizeQueryTextContent " + aID)) {
+    return false;
+  }
+  is(textContent.text, aExpectedText,
+     aMessage + ": composition string is wrong" + aID);
+  return textContent.text == aExpectedText;
+}
+
+function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
+{
+  var selectedText = synthesizeQuerySelectedText();
+  if (!checkQueryContentResult(selectedText, aMessage +
+                               ": synthesizeQuerySelectedText " + aID)) {
+    return false;
+  }
+  is(selectedText.offset, aExpectedOffset,
+     aMessage + ": selection offset is wrong" + aID);
+  is(selectedText.text, aExpectedText,
+     aMessage + ": selected text is wrong" + aID);
+  return selectedText.offset == aExpectedOffset &&
+         selectedText.text == aExpectedText;
+}
+
+function checkRect(aRect, aExpectedRect, aMessage)
+{
+  is(aRect.left, aExpectedRect.left, aMessage + ": left is wrong");
+  is(aRect.top, aExpectedRect.top, aMessage + " top is wrong");
+  is(aRect.width, aExpectedRect.width, aMessage + ": width is wrong");
+  is(aRect.height, aExpectedRect.height, aMessage + ": height is wrong");
+  return aRect.left == aExpectedRect.left &&
+         aRect.top == aExpectedRect.top &&
+         aRect.width == aExpectedRect.width &&
+         aRect.height == aExpectedRect.height;
+}
+
+function checkRectContainsRect(aRect, aContainer, aMessage)
+{
+  var container = { left: Math.ceil(aContainer.left),
+                    top:  Math.ceil(aContainer.top),
+                    width: Math.floor(aContainer.width),
+                    height: Math.floor(aContainer.height) };
+
+  var ret = container.left <= aRect.left &&
+            container.top <= aRect.top &&
+            container.left + container.width >= aRect.left + aRect.width &&
+            container.top + container.height >= aRect.top + aRect.height;
+  ret = ret && aMessage;
+  ok(ret, aMessage + " container={ left=" + container.left + ", top=" +
+     container.top + ", width=" + container.width + ", height=" +
+     container.height + " } rect={ left=" + aRect.left + ", top=" + aRect.top +
+     ", width=" + aRect.width + ", height=" + aRect.height + " }");
+  return ret;
+}
+
+function runCompositionTest()
+{
+  textarea.value = "";
+  textarea.focus();
+  var caretRects = [];
+
+  var caretRect = synthesizeQueryCaretRect(0);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #0")) {
+    return false;
+  }
+  caretRects[0] = caretRect;
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input first character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u3089", "runCompositionTest", "#1-1") ||
+      !checkSelection(1, "", "runCompositionTest", "#1-1")) {
+    return;
+  }
+
+  caretRect = synthesizeQueryCaretRect(1);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #1-1")) {
+    return false;
+  }
+  caretRects[1] = caretRect;
+
+  // input second character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC", "runCompositionTest", "#1-2") ||
+      !checkSelection(2, "", "runCompositionTest", "#1-2")) {
+    return;
+  }
+
+  caretRect = synthesizeQueryCaretRect(2);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #1-2")) {
+    return false;
+  }
+  caretRects[2] = caretRect;
+
+  isnot(caretRects[2].left, caretRects[1].left,
+        "runCompositionTest: caret isn't moved (#1-2)");
+  is(caretRects[2].top, caretRects[1].top,
+     "runCompositionTest: caret is moved to another line (#1-2)");
+  is(caretRects[2].width, caretRects[1].width,
+     "runCompositionTest: caret width is wrong (#1-2)");
+  is(caretRects[2].height, caretRects[1].height,
+     "runCompositionTest: caret width is wrong (#1-2)");
+
+  // input third character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", "runCompositionTest", "#1-3") ||
+      !checkSelection(3, "", "runCompositionTest", "#1-3")) {
+    return;
+  }
+
+  caretRect = synthesizeQueryCaretRect(3);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #1-3")) {
+    return false;
+  }
+  caretRects[3] = caretRect;
+
+  isnot(caretRects[3].left, caretRects[2].left,
+        "runCompositionTest: caret isn't moved (#1-3)");
+  is(caretRects[3].top, caretRects[2].top,
+     "runCompositionTest: caret is moved to another line (#1-3)");
+  is(caretRects[3].width, caretRects[2].width,
+     "runCompositionTest: caret width is wrong (#1-3)");
+  is(caretRects[3].height, caretRects[2].height,
+     "runCompositionTest: caret height is wrong (#1-3)");
+
+  // moves the caret left
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", "runCompositionTest", "#1-3-1") ||
+      !checkSelection(2, "", "runCompositionTest", "#1-3-1")) {
+    return;
+  }
+
+
+  caretRect = synthesizeQueryCaretRect(2);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #1-3-1")) {
+    return false;
+  }
+
+  is(caretRect.left, caretRects[2].left,
+     "runCompositionTest: caret rects are different (#1-3-1, left)");
+  is(caretRect.top, caretRects[2].top,
+     "runCompositionTest: caret rects are different (#1-3-1, top)");
+  // by bug 335359, the caret width depends on the right side's character.
+  is(caretRect.width, caretRects[2].width + 1,
+     "runCompositionTest: caret rects are different (#1-3-1, width)");
+  is(caretRect.height, caretRects[2].height,
+     "runCompositionTest: caret rects are different (#1-3-1, height)");
+
+  // moves the caret left
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", "runCompositionTest", "#1-3-2") ||
+      !checkSelection(1, "", "runCompositionTest", "#1-3-2")) {
+    return;
+  }
+
+
+  caretRect = synthesizeQueryCaretRect(1);
+  if (!checkQueryContentResult(caretRect,
+        "runCompositionTest: synthesizeQueryCaretRect #1-3-2")) {
+    return false;
+  }
+
+  is(caretRect.left, caretRects[1].left,
+     "runCompositionTest: caret rects are different (#1-3-2, left)");
+  is(caretRect.top, caretRects[1].top,
+     "runCompositionTest: caret rects are different (#1-3-2, top)");
+  // by bug 335359, the caret width depends on the right side's character.
+  is(caretRect.width, caretRects[1].width + 1,
+     "runCompositionTest: caret rects are different (#1-3-2, width)");
+  is(caretRect.height, caretRects[1].height,
+     "runCompositionTest: caret rects are different (#1-3-2, height)");
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093", "runCompositionTest", "#1-4") ||
+      !checkSelection(4, "", "runCompositionTest", "#1-4")) {
+    return;
+  }
+
+
+  // backspace
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", "runCompositionTest", "#1-5") ||
+      !checkSelection(3, "", "runCompositionTest", "#1-5")) {
+    return;
+  }
+
+  // re-input
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093", "runCompositionTest", "#1-6") ||
+      !checkSelection(4, "", "runCompositionTest", "#1-6")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055",
+        "clauses":
+        [
+          { "length": 5, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 5, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055", "runCompositionTest", "#1-7") ||
+      !checkSelection(5, "", "runCompositionTest", "#1-7")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
+        "clauses":
+        [
+          { "length": 6, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 6, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044", "runCompositionTest", "#1-8") ||
+      !checkSelection(6, "", "runCompositionTest", "#1-8")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
+        "clauses":
+        [
+          { "length": 7, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 7, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044\u3053", "runCompositionTest", "#1-8") ||
+      !checkSelection(7, "", "runCompositionTest", "#1-8")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
+        "clauses":
+        [
+          { "length": 8, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
+                    "runCompositionTest", "#1-9") ||
+      !checkSelection(8, "", "runCompositionTest", "#1-9")) {
+    return;
+  }
+
+  // convert
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+        "clauses":
+        [
+          { "length": 4,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT },
+          { "length": 2,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_CONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+                    "runCompositionTest", "#1-10") ||
+      !checkSelection(6, "", "runCompositionTest", "#1-10")) {
+    return;
+  }
+
+  // change the selected clause
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+        "clauses":
+        [
+          { "length": 4,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_CONVERTEDTEXT },
+          { "length": 2,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 6, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+                    "runCompositionTest", "#1-11") ||
+      !checkSelection(6, "", "runCompositionTest", "#1-11")) {
+    return;
+  }
+
+  // reset clauses
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
+        "clauses":
+        [
+          { "length": 5,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT },
+          { "length": 3,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_CONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 5, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
+                    "runCompositionTest", "#1-12") ||
+      !checkSelection(8, "", "runCompositionTest", "#1-12")) {
+    return;
+  }
+
+
+  var textRect1 = synthesizeQueryTextRect(0, 1);
+  var textRect2 = synthesizeQueryTextRect(1, 1);
+  if (!checkQueryContentResult(textRect1,
+        "runCompositionTest: synthesizeQueryTextRect #1-12-1") ||
+      !checkQueryContentResult(textRect2,
+        "runCompositionTest: synthesizeQueryTextRect #1-12-2")) {
+    return false;
+  }
+
+  // commit the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
+                    "runCompositionTest", "#1-13") ||
+      !checkSelection(8, "", "runCompositionTest", "#1-13")) {
+    return;
+  }
+
+  synthesizeComposition(false);
+
+  var textRect3 = synthesizeQueryTextRect(0, 1);
+  var textRect4 = synthesizeQueryTextRect(1, 1);
+
+  if (!checkQueryContentResult(textRect3,
+        "runCompositionTest: synthesizeQueryTextRect #1-13-1") ||
+      !checkQueryContentResult(textRect4,
+        "runCompositionTest: synthesizeQueryTextRect #1-13-2")) {
+    return false;
+  }
+
+  checkRect(textRect3, textRect1, "runCompositionTest: textRect #1-13-1");
+  checkRect(textRect4, textRect2, "runCompositionTest: textRect #1-13-2");
+
+  // restart composition
+  synthesizeComposition(true);
+
+  // input characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3057",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3057",
+                    "runCompositionTest", "#2-1") ||
+      !checkSelection(8 + 1, "", "runCompositionTest", "#2-1")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3058",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3058",
+                    "runCompositionTest", "#2-2") ||
+      !checkSelection(8 + 1, "", "runCompositionTest", "#2-2")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3058\u3087",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3058\u3087",
+                    "runCompositionTest", "#2-3") ||
+      !checkSelection(8 + 2, "", "runCompositionTest", "#2-3")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3058\u3087\u3046",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3058\u3087\u3046",
+                    "runCompositionTest", "#2-4") ||
+      !checkSelection(8 + 3, "", "runCompositionTest", "#2-4")) {
+    return;
+  }
+
+  // commit the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "\u3058\u3087\u3046",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3058\u3087\u3046",
+                    "runCompositionTest", "#2-4") ||
+      !checkSelection(8 + 3, "", "runCompositionTest", "#2-4")) {
+    return;
+  }
+
+  synthesizeComposition(false);
+
+  // set selection
+  var selectionSetTest = synthesizeSelectionSet(4, 7, false);
+  ok(selectionSetTest, "runCompositionTest: selectionSetTest failed");
+
+  if (!checkSelection(4, "\u3055\u884C\u3053\u3046\u3058\u3087\u3046", "runCompositionTest", "#3-1")) {
+    return;
+  }
+
+  // start composition with selection
+  synthesizeComposition(true);
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u304A",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u304A",
+                    "runCompositionTest", "#3-2") ||
+      !checkSelection(4 + 1, "", "runCompositionTest", "#3-2")) {
+    return;
+  }
+
+  // remove the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#3-3") ||
+      !checkSelection(4, "", "runCompositionTest", "#3-3")) {
+    return;
+  }
+
+  // re-input the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "\u3046",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3046",
+                    "runCompositionTest", "#3-4") ||
+      !checkSelection(4 + 1, "", "runCompositionTest", "#3-4")) {
+    return;
+  }
+
+  // cancel the composition
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  synthesizeComposition(false);
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#3-5") ||
+      !checkSelection(4, "", "runCompositionTest", "#3-5")) {
+    return;
+  }
+}
+
+function runCharAtPointTest(aFocusedEditor, aTargetName)
+{
+  aFocusedEditor.value = "This is a test of the\nContent Events";
+                       // 012345678901234567890  12345678901234
+                       // 0         1         2           3    
+
+  const kLFLen = kIsWin ? 2 : 1;
+
+  const kNone = -1;
+  const kTestingOffset   = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
+  const kLeftSideOffset  = [ kNone,  9,    19,       kNone, 33 + kLFLen];
+  const kRightSideOffset = [     1, 11, kNone, 22 + kLFLen,       kNone];
+
+  var editorRect = synthesizeQueryEditorRect();
+  if (!checkQueryContentResult(editorRect,
+        "runCharAtPointTest (" + aTargetName + "): editorRect")) {
+    return;
+  }
+
+  for (var i = 0; i < kTestingOffset.length; i++) {
+    var textRect = synthesizeQueryTextRect(kTestingOffset[i], 1);
+    if (!checkQueryContentResult(textRect,
+          "runCharAtPointTest (" + aTargetName + "): textRect", "i=" + i)) {
+      continue;
+    }
+
+    checkRectContainsRect(textRect, editorRect,
+      "runCharAtPointTest (" + aTargetName +
+      "): the text rect isn't in the editor");
+
+    // Test #1, getting same character rect by the point near the top-left.
+    var charAtPt1 = synthesizeCharAtPoint(textRect.left + 1,
+                                          textRect.top + 1);
+    if (checkQueryContentResult(charAtPt1,
+          "runCharAtPointTest (" + aTargetName + "): charAtPt1", "i=" + i)) {
+      ok(!charAtPt1.notFound,
+         "runCharAtPointTest (" + aTargetName + "): charAtPt1 isn't found: i=" + i);
+      if (!charAtPt1.notFound) {
+        is(charAtPt1.offset, kTestingOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): charAtPt1 offset is wrong: i=" + i);
+        checkRect(charAtPt1, textRect, "runCharAtPointTest (" + aTargetName +
+                  "): charAtPt1 left is wrong: i=" + i);
+      }
+    }
+
+    // Test #2, getting same character rect by the point near the bottom-right.
+    var charAtPt2 = synthesizeCharAtPoint(textRect.left + textRect.width - 2,
+                                          textRect.top + textRect.height - 2);
+    if (checkQueryContentResult(charAtPt2,
+          "runCharAtPointTest (" + aTargetName + "): charAtPt2", "i=" + i)) {
+      ok(!charAtPt2.notFound,
+         "runCharAtPointTest (" + aTargetName + "): charAtPt2 isn't found: i=" + i);
+      if (!charAtPt2.notFound) {
+        is(charAtPt2.offset, kTestingOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): charAtPt2 offset is wrong: i=" + i);
+        checkRect(charAtPt2, textRect, "runCharAtPointTest (" + aTargetName +
+                  "): charAtPt1 left is wrong: i=" + i);
+      }
+    }
+
+    // Test #3, getting left character offset.
+    var charAtPt3 = synthesizeCharAtPoint(textRect.left - 2,
+                                          textRect.top + 1);
+    if (checkQueryContentResult(charAtPt3,
+          "runCharAtPointTest (" + aTargetName + "): charAtPt3", "i=" + i)) {
+      is(charAtPt3.notFound, kLeftSideOffset[i] == kNone,
+         kLeftSideOffset[i] == kNone ?
+           "runCharAtPointTest (" + aTargetName + "): charAtPt3 is found: i=" + i :
+           "runCharAtPointTest (" + aTargetName + "): charAtPt3 isn't found: i=" + i);
+      if (!charAtPt3.notFound) {
+        is(charAtPt3.offset, kLeftSideOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): charAtPt3 offset is wrong: i=" + i);
+      }
+    }
+
+    // Test #4, getting right character offset.
+    var charAtPt4 = synthesizeCharAtPoint(textRect.left + textRect.width + 1,
+                                          textRect.top + textRect.height - 2);
+    if (checkQueryContentResult(charAtPt4,
+          "runCharAtPointTest (" + aTargetName + "): charAtPt4", "i=" + i)) {
+      is(charAtPt4.notFound, kRightSideOffset[i] == kNone,
+         kRightSideOffset[i] == kNone ?
+           "runCharAtPointTest (" + aTargetName + "): charAtPt4 is found: i=" + i :
+           "runCharAtPointTest (" + aTargetName + "): charAtPt4 isn't found: i=" + i);
+      if (!charAtPt4.notFound) {
+        is(charAtPt4.offset, kRightSideOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): charAtPt4 offset is wrong: i=" + i);
+      }
+    }
+  }
+}
+
+function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
+{
+  aFocusedEditor.value = "";
+
+  var editorRect = synthesizeQueryEditorRect();
+  if (!checkQueryContentResult(editorRect, aTestName + ": editorRect")) {
+    return;
+  }
+
+  var r = aPanelOrFrame.getBoundingClientRect();
+  var parentRect = { "left": r.left, "top": r.top, "width": r.right - r.left,
+                     "height": r.bottom - r.top };
+  checkRectContainsRect(editorRect, parentRect, aTestName +
+                        ": the editor rect coordinates are wrong");
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3078\u3093\u3057\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u3078\u3093\u3057\u3093", aTestName, "#1-1") ||
+      !checkSelection(4, "", aTestName, "#1-1")) {
+    return;
+  }
+
+  // convert them #1
+  synthesizeText(
+    { "composition":
+      { "string": "\u8FD4\u4FE1",
+        "clauses":
+        [
+          { "length": 2,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u8FD4\u4FE1", aTestName, "#1-2") ||
+      !checkSelection(2, "", aTestName, "#1-2")) {
+    return;
+  }
+
+  // convert them #2
+  synthesizeText(
+    { "composition":
+      { "string": "\u5909\u8EAB",
+        "clauses":
+        [
+          { "length": 2,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u5909\u8EAB", aTestName, "#1-3") ||
+      !checkSelection(2, "", aTestName, "#1-3")) {
+    return;
+  }
+
+  // commit them
+  synthesizeText(
+    { "composition":
+      { "string": "\u5909\u8EAB",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u5909\u8EAB", aTestName, "#1-4") ||
+      !checkSelection(2, "", aTestName, "#1-4")) {
+    return;
+  }
+
+  synthesizeComposition(false);
+
+  is(aFocusedEditor.value, "\u5909\u8EAB",
+     aTestName + ": composition isn't in the focused editor");
+  if (aFocusedEditor.value != "\u5909\u8EAB") {
+    return;
+  }
+
+  var textRect = synthesizeQueryTextRect(0, 1);
+  var caretRect = synthesizeQueryCaretRect(2);
+  if (!checkQueryContentResult(textRect,
+                               aTestName + ": synthesizeQueryTextRect") ||
+      !checkQueryContentResult(caretRect,
+                               aTestName + ": synthesizeQueryCaretRect")) {
+    return;
+  }
+  checkRectContainsRect(textRect, editorRect, aTestName + ":testRect");
+  checkRectContainsRect(caretRect, editorRect, aTestName + ":caretRect");
+}
+
+function runFrameTest()
+{
+  var textareaInFrame = iframe.contentDocument.getElementById("textarea");
+  textareaInFrame.focus();
+  runTestOnAnotherContext(iframe, textareaInFrame, "runFrameTest");
+  runCharAtPointTest(textareaInFrame, "textarea in the iframe");
+}
+
+var gPanelShown = false;
+var gPanelFocused = false;
+function onPanelShown(aEvent)
+{
+  gPanelShown = true;
+  textbox.focus();
+  setTimeout(doPanelTest, 0);
+}
+
+function onFocusPanelTextbox(aEvent)
+{
+  gPanelFocused = true;
+  setTimeout(doPanelTest, 0);
+}
+
+var gIsPanelHiding = false;
+var gIsRunPanelTestInternal = false;
+function doPanelTest()
+{
+  if (!gPanelFocused || !gPanelShown) {
+    return;
+  }
+  if (gIsRunPanelTestInternal) {
+    return;
+  }
+  gIsRunPanelTestInternal = true;
+  runTestOnAnotherContext(panel, textbox, "runPanelTest");
+  runCharAtPointTest(textbox, "textbox in the panel");
+  gIsPanelHiding = true;
+  panel.hidePopup();
+}
+
+function onPanelHidden(aEvent)
+{
+  panel.hidden = true;
+  ok(gIsPanelHiding, "runPanelTest: the panel is hidden unexpectedly");
+  finish();
+}
+
+function runPanelTest()
+{
+  panel.hidden = false;
+  panel.openPopupAtScreen(window.screenX + window.outerWidth, 0, false);
+}
+
+function runTest()
+{
+  runCompositionTest();
+  runCharAtPointTest(textarea, "textarea in the document");
+  runFrameTest();
+  runPanelTest();
+}
+
+]]>
+</script>
+
+</window>

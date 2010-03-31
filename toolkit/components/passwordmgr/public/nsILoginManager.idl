@@ -88,6 +88,9 @@ interface nsILoginManager : nsISupports {
      * If newLoginData is a nsIPropertyBag, only the specified properties
      * will be changed. The nsILoginMetaInfo properties of oldLogin can be
      * changed in this manner.
+     *
+     * If the propertybag contains an item named "timesUsedIncrement", the
+     * login's timesUsed property will be incremented by the item's value.
      */
     void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
 

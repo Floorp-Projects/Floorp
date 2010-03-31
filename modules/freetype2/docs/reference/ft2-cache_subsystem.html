@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 Cache Sub-System
@@ -643,7 +643,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <p>The source face ID.</p>
 </td></tr>
 <tr valign=top><td><b>cmap_index</b></td><td>
-<p>The index of the charmap in the source face.</p>
+<p>The index of the charmap in the source face. Any negative value means to use the cache <a href="ft2-base_interface.html#FT_Face">FT_Face</a>'s default charmap.</p>
 </td></tr>
 <tr valign=top><td><b>char_code</b></td><td>
 <p>The character code (in the corresponding charmap).</p>
@@ -891,6 +891,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <p>The returned glyph is owned and managed by the glyph image cache. Never try to transform or discard it manually! You can however create a copy with <a href="ft2-glyph_management.html#FT_Glyph_Copy">FT_Glyph_Copy</a> and modify the new one.</p>
 <p>If &lsquo;anode&rsquo; is <i>not</i> NULL, it receives the address of the cache node containing the glyph image, after increasing its reference count. This ensures that the node (as well as the <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>) will always be kept in the cache until you call <a href="ft2-cache_subsystem.html#FTC_Node_Unref">FTC_Node_Unref</a> to &lsquo;release&rsquo; it.</p>
 <p>If &lsquo;anode&rsquo; is NULL, the cache node is left unchanged, which means that the <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> could be flushed out of the cache on the next call to one of the caching sub-system APIs. Don't assume that it is persistent!</p>
+<p>Calls to <a href="ft2-base_interface.html#FT_Set_Char_Size">FT_Set_Char_Size</a> and friends have no effect on cached glyphs; you should always use the FreeType cache API instead.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

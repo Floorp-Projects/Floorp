@@ -1,9 +1,13 @@
 == other-float-outside-rule-3-left.html other-float-outside-rule-3-left-ref.html
 == other-float-outside-rule-3-right.html other-float-outside-rule-3-right-ref.html
-# Maybe the spec should change here.
+# Maybe the spec should change here.  See:
+#   http://lists.w3.org/Archives/Public/www-style/2009Jan/0445.html
+#   http://wiki.csswg.org/spec/css2.1#issue-101
 fails == other-float-outside-rule-3-left-2.html other-float-outside-rule-3-left-2-ref.html
 fails == other-float-outside-rule-3-right-2.html other-float-outside-rule-3-right-2-ref.html
-# It's possible the spec should change here too.
+# It's possible the spec should change here too.  See:
+#   http://lists.w3.org/Archives/Public/www-style/2009Jan/0445.html
+#   http://wiki.csswg.org/spec/css2.1#issue-101
 fails == other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html
 fails == other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html
 == float-outside-block-push.html float-outside-block-push-ref.html

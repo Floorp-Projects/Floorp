@@ -8,7 +8,8 @@
 /*  This file is for Mac OS X only; see builds/mac/ftoldmac.c for          */
 /*  classic platforms built by MPW.                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,         */
+/*            2009 by                                                      */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -67,7 +68,9 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_STREAM_H
+#include "ftbase.h"
 
   /* This is for Mac OS X.  Without redefinition, OS_INLINE */
   /* expands to `static inline' which doesn't survive the   */
@@ -77,25 +80,31 @@
 #define OS_INLINE  static __inline__
 #endif
 
-  /* The ResourceIndex type was available SDKs on 10.5 */
+  /* `configure' checks the availability of `ResourceIndex' strictly */
+  /* and sets HAVE_TYPE_RESOURCE_INDEX 1 or 0 always.  If it is      */
+  /* not set (e.g., a build without `configure'), the availability   */
+  /* is guessed from the SDK version.                                */
 #ifndef HAVE_TYPE_RESOURCE_INDEX
-typedef short ResourceIndex;
+#if !defined( MAC_OS_X_VERSION_10_5 ) || \
+    ( MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_5 )
+#define HAVE_TYPE_RESOURCE_INDEX 0
+#else
+#define HAVE_TYPE_RESOURCE_INDEX 1
+#endif
+#endif /* !HAVE_TYPE_RESOURCE_INDEX */
+
+#if ( HAVE_TYPE_RESOURCE_INDEX == 0 )
+  typedef short  ResourceIndex;
 #endif
 
 #include <CoreServices/CoreServices.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <sys/syslimits.h> /* PATH_MAX */
 
+  /* Don't want warnings about our own use of deprecated functions. */
 #define FT_DEPRECATED_ATTRIBUTE
 
 #include FT_MAC_H
-
-  /* undefine blocking-macros in ftmac.h */
-#undef FT_GetFile_From_Mac_Name( a, b, c )
-#undef FT_GetFile_From_Mac_ATS_Name( a, b, c )
-#undef FT_New_Face_From_FOND( a, b, c, d )
-#undef FT_New_Face_From_FSSpec( a, b, c, d )
-#undef FT_New_Face_From_FSRef( a, b, c, d )
 
 #ifndef kATSOptionFlagsUnRestrictedScope /* since Mac OS X 10.1 */
 #define kATSOptionFlagsUnRestrictedScope kATSOptionFlagsDefault
@@ -589,8 +598,7 @@ typedef short ResourceIndex;
 
     for (;;)
     {
-      post_data = Get1Resource( FT_MAKE_TAG( 'P', 'O', 'S', 'T' ),
-                                res_id++ );
+      post_data = Get1Resource( TTAG_POST, res_id++ );
       if ( post_data == NULL )
         break;  /* we are done */
 
@@ -629,8 +637,7 @@ typedef short ResourceIndex;
 
     for (;;)
     {
-      post_data = Get1Resource( FT_MAKE_TAG( 'P', 'O', 'S', 'T' ),
-                                res_id++ );
+      post_data = Get1Resource( TTAG_POST, res_id++ );
       if ( post_data == NULL )
         break;  /* we are done */
 
@@ -682,110 +689,7 @@ typedef short ResourceIndex;
   }
 
 
-  /* Finalizer for a memory stream; gets called by FT_Done_Face().
-     It frees the memory it uses. */
-  static void
-  memory_stream_close( FT_Stream  stream )
-  {
-    FT_Memory  memory = stream->memory;
-
-
-    FT_FREE( stream->base );
-
-    stream->size  = 0;
-    stream->base  = 0;
-    stream->close = 0;
-  }
-
-
-  /* Create a new memory stream from a buffer and a size. */
-  static FT_Error
-  new_memory_stream( FT_Library           library,
-                     FT_Byte*             base,
-                     FT_ULong             size,
-                     FT_Stream_CloseFunc  close,
-                     FT_Stream*           astream )
-  {
-    FT_Error   error;
-    FT_Memory  memory;
-    FT_Stream  stream;
-
-
-    if ( !library )
-      return FT_Err_Invalid_Library_Handle;
-
-    if ( !base )
-      return FT_Err_Invalid_Argument;
-
-    *astream = 0;
-    memory = library->memory;
-    if ( FT_NEW( stream ) )
-      goto Exit;
-
-    FT_Stream_OpenMemory( stream, base, size );
-
-    stream->close = close;
-
-    *astream = stream;
-
-  Exit:
-    return error;
-  }
-
-
-  /* Create a new FT_Face given a buffer and a driver name. */
-  static FT_Error
-  open_face_from_buffer( FT_Library   library,
-                         FT_Byte*     base,
-                         FT_ULong     size,
-                         FT_Long      face_index,
-                         const char*  driver_name,
-                         FT_Face*     aface )
-  {
-    FT_Open_Args  args;
-    FT_Error      error;
-    FT_Stream     stream;
-    FT_Memory     memory = library->memory;
-
-
-    error = new_memory_stream( library,
-                               base,
-                               size,
-                               memory_stream_close,
-                               &stream );
-    if ( error )
-    {
-      FT_FREE( base );
-      return error;
-    }
-
-    args.flags  = FT_OPEN_STREAM;
-    args.stream = stream;
-    if ( driver_name )
-    {
-      args.flags  = args.flags | FT_OPEN_DRIVER;
-      args.driver = FT_Get_Module( library, driver_name );
-    }
-
-    /* At this point, face_index has served its purpose;      */
-    /* whoever calls this function has already used it to     */
-    /* locate the correct font data.  We should not propagate */
-    /* this index to FT_Open_Face() (unless it is negative).  */
-
-    if ( face_index > 0 )
-      face_index = 0;
-
-    error = FT_Open_Face( library, &args, face_index, aface );
-    if ( error == FT_Err_Ok )
-      (*aface)->face_flags &= ~FT_FACE_FLAG_EXTERNAL_STREAM;
-    else
-      FT_Stream_Free( stream, 0 );
-
-    return error;
-  }
-
-
-  /* Create a new FT_Face from a file spec to an LWFN file. */
+  /* Create a new FT_Face from a file path to an LWFN file. */
   static FT_Error
   FT_New_Face_From_LWFN( FT_Library    library,
                          const UInt8*  pathname,
@@ -829,10 +733,10 @@ typedef short ResourceIndex;
     size_t     sfnt_size;
     FT_Error   error  = FT_Err_Ok;
     FT_Memory  memory = library->memory;
-    int        is_cff;
+    int        is_cff, is_sfnt_ps;
 
 
-    sfnt = GetResource( FT_MAKE_TAG( 's', 'f', 'n', 't' ), sfnt_id );
+    sfnt = GetResource( TTAG_sfnt, sfnt_id );
     if ( sfnt == NULL )
       return FT_Err_Invalid_Handle;
 
@@ -846,21 +750,45 @@ typedef short ResourceIndex;
     ft_memcpy( sfnt_data, *sfnt, sfnt_size );
     ReleaseResource( sfnt );
 
-    is_cff = sfnt_size > 4 && sfnt_data[0] == 'O' &&
-                              sfnt_data[1] == 'T' &&
-                              sfnt_data[2] == 'T' &&
-                              sfnt_data[3] == 'O';
+    is_cff     = sfnt_size > 4 && !ft_memcmp( sfnt_data, "OTTO", 4 );
+    is_sfnt_ps = sfnt_size > 4 && !ft_memcmp( sfnt_data, "typ1", 4 );
 
-    return open_face_from_buffer( library,
-                                  sfnt_data,
-                                  sfnt_size,
-                                  face_index,
-                                  is_cff ? "cff" : "truetype",
-                                  aface );
+    if ( is_sfnt_ps )
+    {
+      FT_Stream  stream;
+
+
+      if ( FT_NEW( stream ) )
+        goto Try_OpenType;
+
+      FT_Stream_OpenMemory( stream, sfnt_data, sfnt_size );
+      if ( !open_face_PS_from_sfnt_stream( library,
+                                           stream,
+                                           face_index,
+                                           0, NULL,
+                                           aface ) )
+      {
+        FT_Stream_Close( stream );
+        FT_FREE( stream );
+        FT_FREE( sfnt_data );
+        goto Exit;
+      }
+
+      FT_FREE( stream );
+    }
+  Try_OpenType:
+    error = open_face_from_buffer( library,
+                                   sfnt_data,
+                                   sfnt_size,
+                                   face_index,
+                                   is_cff ? "cff" : "truetype",
+                                   aface );
+  Exit:
+    return error;
   }
 
 
-  /* Create a new FT_Face from a file spec to a suitcase file. */
+  /* Create a new FT_Face from a file path to a suitcase file. */
   static FT_Error
   FT_New_Face_From_Suitcase( FT_Library    library,
                              const UInt8*  pathname,
@@ -884,8 +812,7 @@ typedef short ResourceIndex;
     num_faces_in_res = 0;
     for ( res_index = 1; ; ++res_index )
     {
-      fond = Get1IndResource( FT_MAKE_TAG( 'F', 'O', 'N', 'D' ),
-                              res_index );
+      fond = Get1IndResource( TTAG_FOND, res_index );
       if ( ResError() )
         break;
 
@@ -924,7 +851,7 @@ typedef short ResourceIndex;
 
 
     GetResInfo( fond, &fond_id, &fond_type, fond_name );
-    if ( ResError() != noErr || fond_type != FT_MAKE_TAG( 'F', 'O', 'N', 'D' ) )
+    if ( ResError() != noErr || fond_type != TTAG_FOND )
       return FT_Err_Invalid_File_Format;
 
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, face_index );
@@ -991,7 +918,7 @@ typedef short ResourceIndex;
 
     /* LWFN is a (very) specific file format, check for it explicitly */
     file_type = get_file_type_from_path( pathname );
-    if ( file_type == FT_MAKE_TAG( 'L', 'W', 'F', 'N' ) )
+    if ( file_type == TTAG_LWFN )
       return FT_New_Face_From_LWFN( library, pathname, face_index, aface );
 
     /* Otherwise the file type doesn't matter (there are more than  */

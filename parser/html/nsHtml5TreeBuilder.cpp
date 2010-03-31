@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2010 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -194,7 +194,7 @@ nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 }
 
 void 
-nsHtml5TreeBuilder::characters(PRUnichar* buf, PRInt32 start, PRInt32 length)
+nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   if (needToDropLF) {
     if (buf[start] == '\n') {
@@ -223,6 +223,7 @@ nsHtml5TreeBuilder::characters(PRUnichar* buf, PRInt32 start, PRInt32 length)
           case ' ':
           case '\t':
           case '\n':
+          case '\r':
           case '\f': {
             switch(mode) {
               case NS_HTML5TREE_BUILDER_INITIAL:
@@ -3061,6 +3062,10 @@ nsHtml5TreeBuilder::clearLastListSlot()
 void 
 nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 {
+  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
+
+    pop();
+  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
@@ -3075,6 +3080,10 @@ nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::silentPush(nsHtml5StackNode* node)
 {
+  if (currentPtr == NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH) {
+
+    pop();
+  }
   currentPtr++;
   if (currentPtr == stack.length) {
     jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
@@ -3810,6 +3819,7 @@ nsHtml5TreeBuilder::charBufferContainsNonWhitespace()
       case ' ':
       case '\t':
       case '\n':
+      case '\r':
       case '\f': {
         continue;
       }

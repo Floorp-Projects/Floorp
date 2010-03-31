@@ -109,7 +109,14 @@ typedef enum JSShellExitCode {
 size_t gStackChunkSize = 8192;
 
 /* Assume that we can not use more than 5e5 bytes of C stack by default. */
+#if defined(DEBUG) && defined(__SUNPRO_CC)
+/* Sun compiler uses larger stack space for js_Interpret() with debug
+   Use a bigger gMaxStackSize to make "make check" happy. */
+static size_t gMaxStackSize = 5000000;
+#else
 static size_t gMaxStackSize = 500000;
+#endif
+
 
 #ifdef JS_THREADSAFE
 static PRUintn gStackBaseThreadIndex;

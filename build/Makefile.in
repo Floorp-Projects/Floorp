@@ -134,6 +134,27 @@ check::
         else \
           echo "TEST-PASS | build/ | unify produced a universal binary!"; \
         fi
+# try building an x86-64 binary. if that succeeds, try unifying it
+# with an i386 binary
+	rm -f unify-test-x86_64 unify-test-universal-64
+	-$(HOST_CC) -arch x86_64 $(srcdir)/unify-test.c -o unify-test-x86_64
+	@if test -f ./unify-test-x86_64; then \
+          if ! $(srcdir)/macosx/universal/unify ./unify-test-x86_64 ./unify-test-i386 \
+            ./unify-test-universal-64; then \
+            echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary with a 64-bit input!"; \
+            false; \
+          fi; \
+          if test ! -f ./unify-test-universal-64; then \
+            echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary with a 64-bit input!"; \
+            false; \
+          fi; \
+          if ! file -b ./unify-test-universal-64 | head -n1 | grep -q "^Mach-O universal binary"; then \
+            echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary with a 64-bit input!"; \
+            false; \
+          else \
+            echo "TEST-PASS | build/ | unify produced a universal binary with a 64-bit input!"; \
+          fi \
+        fi
 # try unifying two identical Java class files
 	rm -f unifytesta.class unifytestb.class unifytestc.class
 	cp $(srcdir)/unifytest.class ./unifytesta.class

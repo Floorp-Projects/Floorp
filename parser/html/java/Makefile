@@ -74,6 +74,12 @@ translate:: translator \
     htmlparser/src/nu/validator/htmlparser/impl \
     .. ../nsHtml5AtomList.h
 
+translate_from_snapshot:: translator \
+; mkdir -p ../javasrc ; \
+  java -jar translator.jar \
+    ../javasrc \
+    .. ../nsHtml5AtomList.h
+
 named_characters:: translator \
 ; java -cp translator.jar \
     nu.validator.htmlparser.generator.GenerateNamedCharactersCpp \

@@ -24,6 +24,7 @@
 #include "pstables.h"
 
 #include "psnamerr.h"
+#include "pspic.h"
 
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
@@ -33,7 +34,7 @@
 
 
 #define VARIANT_BIT         0x80000000UL
-#define BASE_GLYPH( code )  ( (code) & ~VARIANT_BIT )
+#define BASE_GLYPH( code )  ( (FT_UInt32)( (code) & ~VARIANT_BIT ) )
 
 
   /* Return the Unicode value corresponding to a given glyph.  Note that */
@@ -57,7 +58,7 @@
       /*      `uniXXXXYYYYZZZZ'...                                   */
 
       FT_Int       count;
-      FT_ULong     value = 0;
+      FT_UInt32    value = 0;
       const char*  p     = glyph_name + 3;
 
 
@@ -92,7 +93,7 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value | VARIANT_BIT;
+          return (FT_UInt32)( value | VARIANT_BIT );
       }
     }
 
@@ -101,7 +102,7 @@
     if ( glyph_name[0] == 'u' )
     {
       FT_Int       count;
-      FT_ULong     value = 0;
+      FT_UInt32    value = 0;
       const char*  p     = glyph_name + 1;
 
 
@@ -132,7 +133,7 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value | VARIANT_BIT;
+          return (FT_UInt32)( value | VARIANT_BIT );
       }
     }
 
@@ -154,9 +155,10 @@
 
       /* now look up the glyph in the Adobe Glyph List */
       if ( !dot )
-        return ft_get_adobe_glyph_index( glyph_name, p );
+        return (FT_UInt32)ft_get_adobe_glyph_index( glyph_name, p );
       else
-        return ft_get_adobe_glyph_index( glyph_name, dot ) | VARIANT_BIT;
+        return (FT_UInt32)( ft_get_adobe_glyph_index( glyph_name, dot ) |
+                            VARIANT_BIT );
     }
   }
 
@@ -174,18 +176,34 @@
 
     /* sort base glyphs before glyph variants */
     if ( unicode1 == unicode2 )
-      return map1->unicode - map2->unicode;
+    {
+      if ( map1->unicode > map2->unicode )
+        return 1;
+      else if ( map1->unicode < map2->unicode )
+        return -1;
+      else
+        return 0;
+    }
     else
-      return unicode1 - unicode2;
+    {
+      if ( unicode1 > unicode2 )
+        return 1;
+      else if ( unicode1 < unicode2 )
+        return -1;
+      else
+        return 0;
+    }
   }
 
 
-  /* support for old WGL4 fonts */
+  /* support for extra glyphs not handled (well) in AGL; */
+  /* we add extra mappings for them if necessary         */
 
-#define WGL_EXTRA_LIST_SIZE  8
+#define EXTRA_GLYPH_LIST_SIZE  10
 
-  static const FT_UInt32  ft_wgl_extra_unicodes[WGL_EXTRA_LIST_SIZE] =
+  static const FT_UInt32  ft_extra_glyph_unicodes[EXTRA_GLYPH_LIST_SIZE] =
   {
+    /* WGL 4 */
     0x0394,
     0x03A9,
     0x2215,
@@ -193,10 +211,13 @@
     0x02C9,
     0x03BC,
     0x2219,
-    0x00A0
+    0x00A0,
+    /* Romanian */
+    0x021A,
+    0x021B
   };
 
-  static const char  ft_wgl_extra_glyph_names[] =
+  static const char  ft_extra_glyph_names[] =
   {
     'D','e','l','t','a',0,
     'O','m','e','g','a',0,
@@ -205,11 +226,13 @@
     'm','a','c','r','o','n',0,
     'm','u',0,
     'p','e','r','i','o','d','c','e','n','t','e','r','e','d',0,
-    's','p','a','c','e',0
+    's','p','a','c','e',0,
+    'T','c','o','m','m','a','a','c','c','e','n','t',0,
+    't','c','o','m','m','a','a','c','c','e','n','t',0
   };
 
   static const FT_Int
-  ft_wgl_extra_glyph_name_offsets[WGL_EXTRA_LIST_SIZE] =
+  ft_extra_glyph_name_offsets[EXTRA_GLYPH_LIST_SIZE] =
   {
      0,
      6,
@@ -218,29 +241,31 @@
     28,
     35,
     38,
-    53
+    53,
+    59,
+    72
   };
 
 
   static void
-  ps_check_wgl_name( const char*  gname,
-                     FT_UInt      glyph,
-                     FT_UInt*     wgl_glyphs,
-                     FT_UInt     *states )
+  ps_check_extra_glyph_name( const char*  gname,
+                             FT_UInt      glyph,
+                             FT_UInt*     extra_glyphs,
+                             FT_UInt     *states )
   {
     FT_UInt  n;
 
 
-    for ( n = 0; n < WGL_EXTRA_LIST_SIZE; n++ )
+    for ( n = 0; n < EXTRA_GLYPH_LIST_SIZE; n++ )
     {
-      if ( ft_strcmp( ft_wgl_extra_glyph_names +
-                        ft_wgl_extra_glyph_name_offsets[n], gname ) == 0 )
+      if ( ft_strcmp( ft_extra_glyph_names +
+                        ft_extra_glyph_name_offsets[n], gname ) == 0 )
       {
         if ( states[n] == 0 )
         {
-          /* mark this WGL extra glyph as a candidate for the cmap */
+          /* mark this extra glyph as a candidate for the cmap */
           states[n]     = 1;
-          wgl_glyphs[n] = glyph;
+          extra_glyphs[n] = glyph;
         }
 
         return;
@@ -250,17 +275,17 @@
 
 
   static void
-  ps_check_wgl_unicode( FT_UInt32  uni_char,
-                        FT_UInt   *states )
+  ps_check_extra_glyph_unicode( FT_UInt32  uni_char,
+                                FT_UInt   *states )
   {
     FT_UInt  n;
 
 
-    for ( n = 0; n < WGL_EXTRA_LIST_SIZE; n++ )
+    for ( n = 0; n < EXTRA_GLYPH_LIST_SIZE; n++ )
     {
-      if ( uni_char == ft_wgl_extra_unicodes[n] )
+      if ( uni_char == ft_extra_glyph_unicodes[n] )
       {
-        /* disable this WGL extra glyph from being added to the cmap */
+        /* disable this extra glyph from being added to the cmap */
         states[n] = 2;
 
         return;
@@ -280,15 +305,15 @@
   {
     FT_Error  error;
 
-    FT_UInt  wgl_list_states[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    FT_UInt  wgl_glyphs[WGL_EXTRA_LIST_SIZE];
+    FT_UInt  extra_glyph_list_states[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    FT_UInt  extra_glyphs[EXTRA_GLYPH_LIST_SIZE];
 
 
     /* we first allocate the table */
     table->num_maps = 0;
     table->maps     = 0;
 
-    if ( !FT_NEW_ARRAY( table->maps, num_glyphs + WGL_EXTRA_LIST_SIZE ) )
+    if ( !FT_NEW_ARRAY( table->maps, num_glyphs + EXTRA_GLYPH_LIST_SIZE ) )
     {
       FT_UInt     n;
       FT_UInt     count;
@@ -305,12 +330,14 @@
 
         if ( gname )
         {
-          ps_check_wgl_name( gname, n, wgl_glyphs, wgl_list_states );
+          ps_check_extra_glyph_name( gname, n,
+                                     extra_glyphs, extra_glyph_list_states );
           uni_char = ps_unicode_value( gname );
 
           if ( BASE_GLYPH( uni_char ) != 0 )
           {
-            ps_check_wgl_unicode( uni_char, wgl_list_states );
+            ps_check_extra_glyph_unicode( uni_char,
+                                          extra_glyph_list_states );
             map->unicode     = uni_char;
             map->glyph_index = n;
             map++;
@@ -321,15 +348,15 @@
         }
       }
 
-      for ( n = 0; n < WGL_EXTRA_LIST_SIZE; n++ )
+      for ( n = 0; n < EXTRA_GLYPH_LIST_SIZE; n++ )
       {
-        if ( wgl_list_states[n] == 1 )
+        if ( extra_glyph_list_states[n] == 1 )
         {
-          /* This glyph name has an additional WGL4 representation. */
-          /* Add it to the cmap.                                    */
+          /* This glyph name has an additional representation. */
+          /* Add it to the cmap.                               */
 
-          map->unicode     = ft_wgl_extra_unicodes[n];
-          map->glyph_index = wgl_glyphs[n];
+          map->unicode     = ft_extra_glyph_unicodes[n];
+          map->glyph_index = extra_glyphs[n];
           map++;
         }
       }
@@ -410,7 +437,7 @@
   }
 
 
-  static FT_ULong
+  static FT_UInt32
   ps_unicodes_char_next( PS_Unicodes  table,
                          FT_UInt32   *unicode )
   {
@@ -491,38 +518,43 @@
   }
 
 
-  static
-  const FT_Service_PsCMapsRec  pscmaps_interface =
-  {
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
-
+  FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface, 
     (PS_Unicode_ValueFunc)     ps_unicode_value,
     (PS_Unicodes_InitFunc)     ps_unicodes_init,
     (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,
     (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,
-
-#else
-
-    0,
-    0,
-    0,
-    0,
-
-#endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
     (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
     (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
 
     t1_standard_encoding,
     t1_expert_encoding
-  };
+  )
+
+#else
+
+  FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface, 
+    0,
+    0,
+    0,
+    0,
+
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
+
+    t1_standard_encoding,
+    t1_expert_encoding
+  )
+
+#endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
 
-  static const FT_ServiceDescRec  pscmaps_services[] =
-  {
-    { FT_SERVICE_ID_POSTSCRIPT_CMAPS, &pscmaps_interface },
-    { NULL, NULL }
-  };
+  FT_DEFINE_SERVICEDESCREC1(pscmaps_services, 
+    FT_SERVICE_ID_POSTSCRIPT_CMAPS, &FT_PSCMAPS_INTERFACE_GET
+  )
+
+
 
 
   static FT_Pointer
@@ -531,16 +563,20 @@
   {
     FT_UNUSED( module );
 
-    return ft_service_list_lookup( pscmaps_services, service_id );
+    return ft_service_list_lookup( FT_PSCMAPS_SERVICES_GET, service_id );
   }
 
 #endif /* FT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
 
+#ifndef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
+#define PUT_PS_NAMES_SERVICE(a) 0
+#else
+#define PUT_PS_NAMES_SERVICE(a) a
+#endif
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Module_Class  psnames_module_class =
-  {
+  FT_DEFINE_MODULE(psnames_module_class,
+  
     0,  /* this is not a font driver, nor a renderer */
     sizeof ( FT_ModuleRec ),
 
@@ -548,18 +584,12 @@
     0x10000L,   /* driver version                      */
     0x20000L,   /* driver requires FreeType 2 or above */
 
-#ifndef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    0,
+    PUT_PS_NAMES_SERVICE((void*)&FT_PSCMAPS_INTERFACE_GET),   /* module specific interface */
     (FT_Module_Constructor)0,
     (FT_Module_Destructor) 0,
-    (FT_Module_Requester)  0
-#else
-    (void*)&pscmaps_interface,   /* module specific interface */
-    (FT_Module_Constructor)0,
-    (FT_Module_Destructor) 0,
-    (FT_Module_Requester)  psnames_get_service
-#endif
-  };
+    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE(psnames_get_service)
+  )
+
 
 
 /* END */

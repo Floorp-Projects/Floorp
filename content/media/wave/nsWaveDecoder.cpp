@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -161,7 +161,7 @@ public:
   // Called on the decoder thread
   void NotifyBytesConsumed(PRInt64 aBytes);
 
-  // Called by the main thread only
+  // Called by decoder and main thread.
   nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
 
   // Clear the flag indicating that a playback position change event is
@@ -177,6 +177,27 @@ private:
   // aBytesRead is non-null, the number of bytes read will be returned via
   // this.
   PRBool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead);
+
+  void UpdateReadyState() {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
+
+    nsCOMPtr<nsIRunnable> event;
+    switch (GetNextFrameStatus()) {
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+        event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, NextFrameUnavailableBuffering);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, NextFrameAvailable);
+        break;
+      case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
+        event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, NextFrameUnavailable);
+        break;
+      default:
+        PR_NOT_REACHED("unhandled frame state");
+    }
+
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
 
   // Change the current state and wake the playback thread if it is waiting
   // on mMonitor.  Used by public member functions called from both threads,
@@ -529,9 +550,7 @@ nsWaveStateMachine::Run()
         monitor.Wait(PR_MillisecondsToInterval(1000));
       } else {
         ChangeState(mNextState);
-        nsCOMPtr<nsIRunnable> event =
-          NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, UpdateReadyStateForData);
-        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        UpdateReadyState();
       }
 
       break;
@@ -590,9 +609,7 @@ nsWaveStateMachine::Run()
           mNextState = mState;
           ChangeState(STATE_BUFFERING);
 
-          nsCOMPtr<nsIRunnable> event =
-            NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, UpdateReadyStateForData);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          UpdateReadyState();
           break;
         }
 
@@ -1486,8 +1503,43 @@ nsWaveDecoder::Observe(nsISupports* aSubject, const char* aTopic, const PRUnicha
 }
 
 void
+nsWaveDecoder::NextFrameUnavailableBuffering()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mPlaybackStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING);
+}
+
+void
+nsWaveDecoder::NextFrameAvailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mPlaybackStateMachine)
+    return;
+
+  if (!mMetadataLoadedReported) {
+    mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE);
+  } else {
+    mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_AVAILABLE);
+  }
+}
+
+void
+nsWaveDecoder::NextFrameUnavailable()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+  if (!mElement || mShuttingDown || !mPlaybackStateMachine)
+    return;
+
+  mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE);
+}
+
+void
 nsWaveDecoder::UpdateReadyStateForData()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mElement || mShuttingDown || !mPlaybackStateMachine)
     return;
 

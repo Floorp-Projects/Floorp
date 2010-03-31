@@ -194,7 +194,7 @@ public:
   /**
    * Used to create stub.
    */
-  nsStateMapEntry() {}
+  nsStateMapEntry();
 
   /**
    * Used for ARIA attributes having boolean or mixed values.
@@ -240,33 +240,33 @@ public:
 
 private:
   // ARIA attribute name
-  nsIAtom** attributeName;
+  nsIAtom** mAttributeName;
 
   // Indicates if attribute is token (can be undefined)
-  PRBool isToken;
+  PRBool mIsToken;
 
   // State applied always if attribute is defined
-  PRUint32 permanentState;
+  PRUint32 mPermanentState;
 
   // States applied if attribute value is matched to the stored value
-  const char* value1;
-  PRUint32 state1;
-  PRUint32 extraState1;
+  const char* mValue1;
+  PRUint32 mState1;
+  PRUint32 mExtraState1;
 
-  const char* value2;
-  PRUint32 state2;
-  PRUint32 extraState2;
+  const char* mValue2;
+  PRUint32 mState2;
+  PRUint32 mExtraState2;
 
-  const char* value3;
-  PRUint32 state3;
-  PRUint32 extraState3;
+  const char* mValue3;
+  PRUint32 mState3;
+  PRUint32 mExtraState3;
 
   // States applied if no stored values above are matched
-  PRUint32 defaultState;
-  PRUint32 defaultExtraState;
+  PRUint32 mDefaultState;
+  PRUint32 mDefaultExtraState;
 
   // Permanent and false states are applied if attribute is absent
-  PRBool definedIfAbsent;
+  PRBool mDefinedIfAbsent;
 };
 
 
