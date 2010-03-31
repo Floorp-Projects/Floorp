@@ -669,7 +669,7 @@ public:
    * Determine if reflow is currently locked
    * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
-  NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
+  virtual NS_HIDDEN_(PRBool) IsReflowLocked() const = 0;
 
   /**
    * Called to find out if painting is suppressed for this presshell.  If it is suppressd,
