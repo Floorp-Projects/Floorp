@@ -127,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x3c00dd85, 0xdc61, 0x4acc, \
-  { 0xa4, 0x0e, 0x9b, 0x91, 0xd2, 0xea, 0x4b, 0x27 } }
+{ 0x6736ae7e, 0x25f9, 0x4594, \
+  { 0xb5, 0x26, 0x49, 0x39, 0x17, 0x63, 0x2f, 0x94 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -630,26 +630,26 @@ public:
     * Interface to dispatch events via the presshell
     * @note The caller must have a strong reference to the PresShell.
     */
-  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent,
-                                   nsIFrame* aFrame,
-                                   nsIContent* aContent,
-                                   nsEventStatus* aStatus) = 0;
+  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(nsEvent* aEvent,
+                                                     nsIFrame* aFrame,
+                                                     nsIContent* aContent,
+                                                     nsEventStatus* aStatus) = 0;
 
   /**
    * Dispatch event to content only (NOT full processing)
    * @note The caller must have a strong reference to the PresShell.
    */
-  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                      nsEvent* aEvent,
-                                      nsEventStatus* aStatus) = 0;
+  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                                        nsEvent* aEvent,
+                                                        nsEventStatus* aStatus) = 0;
 
   /**
    * Dispatch event to content only (NOT full processing)
    * @note The caller must have a strong reference to the PresShell.
    */
-  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                      nsIDOMEvent* aEvent,
-                                      nsEventStatus* aStatus) = 0;
+  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                                        nsIDOMEvent* aEvent,
+                                                        nsEventStatus* aStatus) = 0;
 
   /**
     * Gets the current target event frame from the PresShell
