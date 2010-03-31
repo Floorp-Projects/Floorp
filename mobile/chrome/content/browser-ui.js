@@ -1663,7 +1663,9 @@ SelectWrapper.prototype = {
     evt.initEvent("change", true, true, window, 0,
                   false, false,
                   false, false, null);
-    control.dispatchEvent(evt);
+    setTimeout(function() {
+      control.dispatchEvent(evt)
+    }, 0);
   }
 };
 
@@ -1690,7 +1692,9 @@ MenulistWrapper.prototype = {
     evt.initCommandEvent("command", true, true, window, 0,
                          false, false,
                          false, false, null);
-    control.dispatchEvent(evt);
+    setTimeout(function() {
+      control.dispatchEvent(evt)
+    }, 0);
   }
 };
 
