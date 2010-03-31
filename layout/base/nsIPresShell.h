@@ -428,7 +428,7 @@ public:
   /**
    * Recreates the frames for a node
    */
-  NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
+  virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(nsIContent* aContent);
   void RestyleForAnimation(nsIContent* aContent);
@@ -455,17 +455,17 @@ public:
    * Callbacks will be called even if reflow itself fails for
    * some reason.
    */
-  NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
-  NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
+  virtual NS_HIDDEN_(nsresult) PostReflowCallback(nsIReflowCallback* aCallback) = 0;
+  virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
 
-  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
+  virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   /**
    * Given a frame, create a rendering context suitable for use with
    * the frame.
    */
-  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
-                                    nsIRenderingContext** aContext) = 0;
+  virtual NS_HIDDEN_(nsresult) CreateRenderingContext(nsIFrame *aFrame,
+                                                      nsIRenderingContext** aContext) = 0;
 
   /**
    * Informs the pres shell that the document is now at the anchor with
@@ -475,7 +475,7 @@ public:
    * the pres shell that there is no current target, and |aScroll| must
    * be false.
    */
-  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
+  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
 
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by
@@ -485,7 +485,7 @@ public:
    * scrolled to by GoToAnchor (we don't want to keep it alive if it's
    * removed from the DOM), so don't call this more than once.
    */
-  NS_IMETHOD ScrollToAnchor() = 0;
+  virtual NS_HIDDEN_(nsresult) ScrollToAnchor() = 0;
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
@@ -516,9 +516,9 @@ public:
    *                  the frame the minimum amount necessary in order for the entire
    *                  frame to be visible horizontally (if possible)
    */
-  NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
-                                   PRIntn      aVPercent,
-                                   PRIntn      aHPercent) = 0;
+  virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
+                                                     PRIntn      aVPercent,
+                                                     PRIntn      aHPercent) = 0;
 
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
@@ -568,19 +568,19 @@ public:
    * Suppress notification of the frame manager that frames are
    * being destroyed.
    */
-  NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
+  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
 
   /**
    * Notification sent by a frame informing the pres shell that it is about to
    * be destroyed.
    * This allows any outstanding references to the frame to be cleaned up
    */
-  NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+  virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
    * Get link location.
    */
-  NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
+  virtual NS_HIDDEN_(nsresult) GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
@@ -663,7 +663,7 @@ public:
    * Get and set the history state for the current document 
    */
 
-  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
+  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
 
   /**
    * Determine if reflow is currently locked
@@ -686,7 +686,7 @@ public:
   /**
    * Called to disable nsITheme support in a specific presshell.
    */
-  NS_IMETHOD DisableThemeSupport() = 0;
+  virtual NS_HIDDEN_(void) DisableThemeSupport() = 0;
 
   /**
    * Indicates whether theme support is enabled.
