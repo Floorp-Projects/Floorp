@@ -1112,7 +1112,7 @@ GlobalSlotHash(JSContext* cx, unsigned slot)
         fp = fp->down;
 
     HashAccum(h, uintptr_t(fp->script), ORACLE_MASK);
-    HashAccum(h, uintptr_t(OBJ_SHAPE(JS_GetGlobalForObject(cx, fp->scopeChain))), ORACLE_MASK);
+    HashAccum(h, uintptr_t(OBJ_SHAPE(fp->scopeChain->getGlobal())), ORACLE_MASK);
     HashAccum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
@@ -1810,7 +1810,7 @@ template <typename Visitor>
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitGlobalSlots(Visitor &visitor, JSContext *cx, SlotList &gslots)
 {
-    VisitGlobalSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
+    VisitGlobalSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                      gslots.length(), gslots.data());
 }
 
@@ -1829,7 +1829,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor& visitor, JSContext* cx, unsigned callDepth,
            unsigned ngslots, uint16* gslots)
 {
-    VisitSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
+    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                callDepth, ngslots, gslots);
 }
 
@@ -1847,7 +1847,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor &visitor, JSContext *cx, unsigned callDepth,
            const SlotList& slots)
 {
-    VisitSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
+    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                callDepth, slots.length(), slots.data());
 }
 
@@ -2164,7 +2164,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     generatedSpecializedNative(),
     tempTypeMap(cx)
 {
-    JS_ASSERT(globalObj == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
+    JS_ASSERT(globalObj == cx->fp->scopeChain->getGlobal());
     JS_ASSERT(cx->fp->regs->pc == (jsbytecode*)fragment->ip);
 
     fragment->lirbuf = lirbuf;
@@ -5906,7 +5906,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
+    if (OBJ_SCOPE(cx->fp->scopeChain->getGlobal())->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return false; /* we stay away from shared global objects */
     }
@@ -5929,7 +5929,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
     if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
@@ -6397,7 +6397,7 @@ ExecuteTrace(JSContext* cx, Fragment* f, InterpState& state)
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
 ScopeChainCheck(JSContext* cx, TreeFragment* f)
 {
-    JS_ASSERT(f->globalObj == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
+    JS_ASSERT(f->globalObj == cx->fp->scopeChain->getGlobal());
 
     /*
      * The JIT records and expects to execute with two scope-chain
@@ -6894,7 +6894,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
@@ -9421,7 +9421,7 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::getThis(LIns*& this_ins)
 {
     /*
-     * js_ComputeThisForFrame updates cx->fp->argv[-1], so sample it into 'original' first.
+     * JSStackFrame::getThisObject updates cx->fp->argv[-1], so sample it into 'original' first.
      */
     jsval original = JSVAL_NULL;
     if (cx->fp->argv) {
@@ -9433,9 +9433,9 @@ TraceRecorder::getThis(LIns*& this_ins)
         }
     }
 
-    JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
+    JSObject* thisObj = cx->fp->getThisObject(cx);
     if (!thisObj)
-        RETURN_ERROR("js_ComputeThisForFrame failed");
+        RETURN_ERROR("fp->getThisObject failed");
 
     /* In global code, bake in the global object as 'this' object. */
     if (!cx->fp->callee()) {
@@ -9457,7 +9457,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * a null value in argv[-1], this trace will only match if we see null at
      * runtime as well.  Bake in the global object as 'this' object, updating
      * the tracker as well. We can only detect this condition prior to calling
-     * js_ComputeThisForFrame, since it updates the interpreter's copy of
+     * JSStackFrame::getThisObject, since it updates the interpreter's copy of
      * argv[-1].
      */
     JSClass* clasp = NULL;;
@@ -9809,7 +9809,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
          * Make sure the shape of the global object still matches (this might
          * flush the JIT cache).
          */
-        JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+        JSObject* globalObj = cx->fp->scopeChain->getGlobal();
         uint32 globalShape = -1;
         SlotList* globalSlots = NULL;
         if (!CheckGlobalObjectShape(cx, traceMonitor, globalObj, &globalShape, &globalSlots))
@@ -12423,7 +12423,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
         return RECORD_CONTINUE;
     }
 
-    if (JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(fval)) != globalObj)
+    if (JSVAL_TO_OBJECT(fval)->getGlobal() != globalObj)
         RETURN_STOP("JSOP_CALL or JSOP_NEW crosses global scopes");
 
     JSStackFrame* fp = cx->fp;

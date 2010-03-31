@@ -1420,7 +1420,7 @@ BEGIN_CASE(JSOP_GVARINC)
 
 #define COMPUTE_THIS(cx, fp, obj)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (!(obj = js_ComputeThisForFrame(cx, fp)))                          \
+        if (!(obj = (fp)->getThisObject(cx)))                                 \
             goto error;                                                       \
     JS_END_MACRO
 
