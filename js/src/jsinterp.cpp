@@ -399,7 +399,7 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
  * The alert should display "true".
  */
 JS_STATIC_INTERPRET JSObject *
-js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
+js_ComputeGlobalThis(JSContext *cx, jsval *argv)
 {
     JSObject *thisp;
 
@@ -407,57 +407,14 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
         !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
         thisp = cx->globalObject;
     } else {
-        jsid id;
-        jsval v;
-        uintN attrs;
-        JSBool ok;
-        JSObject *parent;
-
-        /*
-         * Walk up the parent chain, first checking that the running script
-         * has access to the callee's parent object. Note that if lazy, the
-         * running script whose principals we want to check is the script
-         * associated with fp->down, not with fp.
-         *
-         * FIXME: 417851 -- this access check should not be required, as it
-         * imposes a performance penalty on all js_ComputeGlobalThis calls,
-         * and it represents a maintenance hazard.
-         *
-         * When the above FIXME is made fixed, the whole GC reachable frame
-         * mechanism can be removed as well.
-         */
-        JSStackFrame *fp = js_GetTopStackFrame(cx);
-        JSGCReachableFrame reachable;
-        if (lazy) {
-            JS_ASSERT(fp->argv == argv);
-            cx->fp = fp->down;
-            fp->down = NULL;
-            cx->pushGCReachableFrame(reachable, fp);
-        }
-        thisp = JSVAL_TO_OBJECT(argv[-2]);
-        id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
-
-        ok = thisp->checkAccess(cx, id, JSACC_PARENT, &v, &attrs);
-        if (lazy) {
-            fp->down = cx->fp;
-            cx->fp = fp;
-            cx->popGCReachableFrame();
-        }
-        if (!ok)
-            return NULL;
-
-        if (v != JSVAL_NULL) {
-            thisp = JSVAL_IS_VOID(v) ? thisp->getParent() : JSVAL_TO_OBJECT(v);
-            while ((parent = thisp->getParent()) != NULL)
-                thisp = parent;
-        }
+        thisp = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(argv[-2]));
     }
 
     return CallThisObjectHook(cx, thisp, argv);
 }
 
 static JSObject *
-ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
+ComputeThis(JSContext *cx, jsval *argv)
 {
     JSObject *thisp;
 
@@ -471,18 +428,18 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 
     thisp = JSVAL_TO_OBJECT(argv[-1]);
     if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass || OBJ_GET_CLASS(cx, thisp) == &js_BlockClass)
-        return js_ComputeGlobalThis(cx, lazy, argv);
+        return js_ComputeGlobalThis(cx, argv);
 
     return CallThisObjectHook(cx, thisp, argv);
 }
 
 JSObject *
-js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
+js_ComputeThis(JSContext *cx, jsval *argv)
 {
     JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
     if (JSVAL_IS_NULL(argv[-1]))
-        return js_ComputeGlobalThis(cx, lazy, argv);
-    return ComputeThis(cx, lazy, argv);
+        return js_ComputeGlobalThis(cx, argv);
+    return ComputeThis(cx, argv);
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -723,7 +680,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
          * the appropriate this-computing bytecode, e.g., JSOP_THIS.
          */
         if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-            if (!js_ComputeThis(cx, JS_FALSE, vp + 2)) {
+            if (!js_ComputeThis(cx, vp + 2)) {
                 ok = JS_FALSE;
                 goto out2;
             }
