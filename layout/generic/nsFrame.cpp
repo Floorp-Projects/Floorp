@@ -6752,6 +6752,13 @@ nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList)
   }
 }
 
+nscolor
+nsIFrame::GetCaretColorAt(PRInt32 aOffset)
+{
+  // Use text color.
+  return GetStyleColor()->mColor;
+}
+
 // Start Display Reflow
 #ifdef DEBUG
 
