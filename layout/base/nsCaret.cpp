@@ -497,7 +497,7 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   return rv;
 }
 
-nsIFrame * nsCaret::GetCaretFrame(PRInt32 *aOffset)
+nsIFrame * nsCaret::GetCaretFrame()
 {
   // Return null if we're not drawn to prevent anybody from trying to draw us.
   if (!mDrawn)
@@ -505,17 +505,14 @@ nsIFrame * nsCaret::GetCaretFrame(PRInt32 *aOffset)
 
   // Recompute the frame that we're supposed to draw in to guarantee that
   // we're not going to try to draw into a stale (dead) frame.
-  PRInt32 offset;
+  PRInt32 unused;
   nsIFrame *frame = nsnull;
   nsresult rv = GetCaretFrameForNodeOffset(mLastContent, mLastContentOffset,
                                            mLastHint, mLastBidiLevel, &frame,
-                                           &offset);
+                                           &unused);
   if (NS_FAILED(rv))
     return nsnull;
 
-  if (aOffset) {
-    *aOffset = offset;
-  }
   return frame;
 }
 
@@ -548,10 +545,7 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   NS_ASSERTION(mDrawn, "The caret shouldn't be drawing");
 
   const nsRect drawCaretRect = mCaretRect + aOffset;
-  PRInt32 contentOffset;
-  nsIFrame* frame = GetCaretFrame(&contentOffset);
-  NS_ASSERTION(frame == aForFrame, "We're referring different frame");
-  nscolor foregroundColor = aForFrame->GetCaretColorAt(contentOffset);
+  nscolor cssColor = aForFrame->GetStyleColor()->mColor;
 
   // Only draw the native caret if the foreground color matches that of
   // -moz-fieldtext (the color of the text in a textbox). If it doesn't match
@@ -565,7 +559,7 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
       nsILookAndFeel* lookAndFeel = presContext->LookAndFeel();
       nscolor fieldText;
       if (NS_SUCCEEDED(lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_fieldtext, fieldText)) &&
-          fieldText == foregroundColor) {
+          fieldText == cssColor) {
         theme->DrawWidgetBackground(aCtx, aForFrame, NS_THEME_TEXTFIELD_CARET,
                                     drawCaretRect, drawCaretRect);
         return;
@@ -573,7 +567,7 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
     }
   }
 
-  aCtx->SetColor(foregroundColor);
+  aCtx->SetColor(cssColor);
   aCtx->FillRect(drawCaretRect);
   if (!GetHookRect().IsEmpty())
     aCtx->FillRect(GetHookRect() + aOffset);
