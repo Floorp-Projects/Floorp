@@ -474,7 +474,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       // Set the target to be the original dispatch target,
       aEvent->target = target;
       // but use chrome event handler for event target chain.
-      aTarget = win->GetChromeEventHandler();
+      target = do_QueryInterface(win->GetChromeEventHandler());
     }
   }
 
