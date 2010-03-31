@@ -3073,7 +3073,7 @@ PresShell::StyleChangeReflow()
 }
 
 nsIFrame*
-nsIPresShell::GetRootFrame() const
+nsIPresShell::GetRootFrameExternal() const
 {
   return FrameManager()->GetRootFrame();
 }
