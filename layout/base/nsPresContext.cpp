@@ -1623,7 +1623,7 @@ nsPresContext::EnsureVisible()
     // Make sure this is the content viewer we belong with
     nsCOMPtr<nsIDocumentViewer> docV(do_QueryInterface(cv));
     if (docV) {
-      nsCOMPtr<nsPresContext> currentPresContext;
+      nsRefPtr<nsPresContext> currentPresContext;
       docV->GetPresContext(getter_AddRefs(currentPresContext));
       if (currentPresContext == this) {
         // OK, this is us.  We want to call Show() on the content viewer.
