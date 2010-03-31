@@ -67,6 +67,8 @@
 #undef NOISY_VERTICAL_ALIGN
 #endif
 
+using namespace mozilla;
+
 // Prefs-driven control for |text-decoration: blink|
 static PRPackedBool sPrefIsLoaded = PR_FALSE;
 static PRPackedBool sBlinkIsAllowed = PR_TRUE;
@@ -588,14 +590,6 @@ nsHTMLReflowState::InitFrameType()
   mFrameType = frameType;
 }
 
-static void
-nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
-            void *aPropertyValue, void *aDtorData)
-{
-  nsPoint *point = static_cast<nsPoint*>(aPropertyValue);
-  delete point;
-}
-
 void
 nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
                                           nscoord aContainingBlockWidth,
@@ -705,16 +699,14 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   }
 
   // Store the offset
-  nsPropertyTable* propTable = aPresContext->PropertyTable();
+  FrameProperties props(aPresContext->PropertyTable(), frame);
   nsPoint* offsets = static_cast<nsPoint*>
-                                (propTable->GetProperty(frame, nsGkAtoms::computedOffsetProperty));
-  if (offsets)
+    (props.Get(nsIFrame::ComputedOffsetProperty()));
+  if (offsets) {
     offsets->MoveTo(mComputedOffsets.left, mComputedOffsets.top);
-  else {
-    offsets = new nsPoint(mComputedOffsets.left, mComputedOffsets.top);
-    if (offsets)
-      propTable->SetProperty(frame, nsGkAtoms::computedOffsetProperty,
-                              offsets, nsPointDtor, nsnull);
+  } else {
+    props.Set(nsIFrame::ComputedOffsetProperty(),
+              new nsPoint(mComputedOffsets.left, mComputedOffsets.top));
   }
 }
 
@@ -1152,8 +1144,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   // Get the placeholder frame
   nsIFrame*     placeholderFrame;
 
-  aPresContext->PresShell()->GetPlaceholderFrameFor(outOfFlow,
-                                                    &placeholderFrame);
+  placeholderFrame = aPresContext->PresShell()->GetPlaceholderFrameFor(outOfFlow);
   NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
 
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
@@ -1651,9 +1642,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                    const nsMargin* aPadding)
 {
   // Since we are in reflow, we don't need to store these properties anymore
-  frame->DeleteProperty(nsGkAtoms::usedBorderProperty);
-  frame->DeleteProperty(nsGkAtoms::usedPaddingProperty);
-  frame->DeleteProperty(nsGkAtoms::usedMarginProperty);
+  FrameProperties props(aPresContext->PropertyTable(), frame);
+  props.Delete(nsIFrame::UsedBorderProperty());
+  props.Delete(nsIFrame::UsedPaddingProperty());
+  props.Delete(nsIFrame::UsedMarginProperty());
 
   // If this is the root frame, then set the computed width and
   // height equal to the available space
@@ -2148,16 +2140,6 @@ nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
   return lineHeight;
 }
 
-/* static */
-void
-nsCSSOffsetState::DestroyMarginFunc(void*    aFrame,
-                                    nsIAtom* aPropertyName,
-                                    void*    aPropertyValue,
-                                    void*    aDtorData)
-{
-  delete static_cast<nsMargin*>(aPropertyValue);
-}
-
 void
 nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
 {
@@ -2200,9 +2182,8 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
     // ... but if we did that, we'd need to fix nsFrame::GetUsedMargin
     // to use it even when the margins are all zero (since sometimes
     // they get treated as auto)
-    frame->SetProperty(nsGkAtoms::usedMarginProperty,
-                       new nsMargin(mComputedMargin),
-                       DestroyMarginFunc);
+    frame->Properties().Set(nsIFrame::UsedMarginProperty(),
+                            new nsMargin(mComputedMargin));
   }
 }
 
@@ -2229,9 +2210,8 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth)
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  stylePadding->mPadding.GetBottom());
 
-    frame->SetProperty(nsGkAtoms::usedPaddingProperty,
-                       new nsMargin(mComputedPadding),
-                       DestroyMarginFunc);
+    frame->Properties().Set(nsIFrame::UsedPaddingProperty(),
+                            new nsMargin(mComputedPadding));
   }
   // a table row/col group, row/col doesn't have padding
   // XXXldb Neither do border-collapse tables.

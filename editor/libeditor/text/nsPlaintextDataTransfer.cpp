@@ -60,6 +60,7 @@
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsCopySupport.h"
 
 // Misc
 #include "nsEditorUtils.h"
@@ -409,14 +410,11 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
 
 NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
 {
-  ForceCompositionEnd();
-
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
+  if (!FireClipboardEvent(NS_PASTE))
+    return NS_OK;
 
   // Get Clipboard Service
+  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if ( NS_FAILED(rv) )
     return rv;
@@ -446,12 +444,8 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
 
 NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferable)
 {
-  ForceCompositionEnd();
-
-  PRBool preventDefault;
-  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
-  if (NS_FAILED(rv) || preventDefault)
-    return rv;
+  if (!FireClipboardEvent(NS_PASTE))
+    return NS_OK;
 
   if (!IsModifiable())
     return NS_OK;
@@ -464,9 +458,7 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
 
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  rv = InsertTextFromTransferable(aTransferable, nsnull, nsnull, PR_TRUE);
-
-  return rv;
+  return InsertTextFromTransferable(aTransferable, nsnull, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)

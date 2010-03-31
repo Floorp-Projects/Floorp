@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -58,7 +58,8 @@ nsresult TestGoodSurrogatePair()
     return NS_ERROR_FAILURE;
   }
 
-  const char expected8[] = { 0xF0, 0x90, 0x8C, 0x82, 0x65, 0x78, 0x0 };
+  const unsigned char expected8[] =
+    { 0xF0, 0x90, 0x8C, 0x82, 0x65, 0x78, 0x0 };
   if (0 != memcmp(expected8, goodPair8, sizeof(expected8)))
   {
     fail("wrong translation to UTF8");
@@ -67,7 +68,7 @@ nsresult TestGoodSurrogatePair()
 
   // This takes a different code path from the above, so test it to make sure
   // the UTF-16 enumeration remains in sync with the UTF-8 enumeration.
-  nsDependentCString expected(expected8);
+  nsDependentCString expected((const char*)expected8);
   if (0 != CompareUTF8toUTF16(expected, goodPair16))
   {
     fail("bad comparison between UTF-8 and equivalent UTF-16");
@@ -101,7 +102,7 @@ nsresult TestBackwardsSurrogatePair()
     return NS_ERROR_FAILURE;
   }
 
-  const char expected8[] =
+  const unsigned char expected8[] =
     { 0xEF, 0xBF, 0xBD, 0xEF, 0xBF, 0xBD, 0x65, 0x78, 0x0 };
   if (0 != memcmp(expected8, backwardsPair8, sizeof(expected8)))
   {
@@ -111,7 +112,7 @@ nsresult TestBackwardsSurrogatePair()
 
   // This takes a different code path from the above, so test it to make sure
   // the UTF-16 enumeration remains in sync with the UTF-8 enumeration.
-  nsDependentCString expected(expected8);
+  nsDependentCString expected((const char*)expected8);
   if (0 != CompareUTF8toUTF16(expected, backwardsPair16))
   {
     fail("bad comparison between UTF-8 and malformed but equivalent UTF-16");
@@ -145,7 +146,8 @@ nsresult TestMalformedUTF16OrphanHighSurrogate()
     return NS_ERROR_FAILURE;
   }
 
-  const char expected8[] = { 0xEF, 0xBF, 0xBD, 0x74, 0x65, 0x78, 0x74, 0x0 };
+  const unsigned char expected8[] =
+    { 0xEF, 0xBF, 0xBD, 0x74, 0x65, 0x78, 0x74, 0x0 };
   if (0 != memcmp(expected8, highSurrogate8, sizeof(expected8)))
   {
     fail("wrong translation to UTF8");
@@ -154,7 +156,7 @@ nsresult TestMalformedUTF16OrphanHighSurrogate()
 
   // This takes a different code path from the above, so test it to make sure
   // the UTF-16 enumeration remains in sync with the UTF-8 enumeration.
-  nsDependentCString expected(expected8);
+  nsDependentCString expected((const char*)expected8);
   if (0 != CompareUTF8toUTF16(expected, highSurrogate16))
   {
     fail("bad comparison between UTF-8 and malformed but equivalent UTF-16");
@@ -188,7 +190,8 @@ nsresult TestMalformedUTF16OrphanLowSurrogate()
     return NS_ERROR_FAILURE;
   }
 
-  const char expected8[] = { 0xEF, 0xBF, 0xBD, 0x74, 0x65, 0x78, 0x74, 0x0 };
+  const unsigned char expected8[] =
+    { 0xEF, 0xBF, 0xBD, 0x74, 0x65, 0x78, 0x74, 0x0 };
   if (0 != memcmp(expected8, lowSurrogate8, sizeof(expected8)))
   {
     fail("wrong translation to UTF8");
@@ -197,7 +200,7 @@ nsresult TestMalformedUTF16OrphanLowSurrogate()
 
   // This takes a different code path from the above, so test it to make sure
   // the UTF-16 enumeration remains in sync with the UTF-8 enumeration.
-  nsDependentCString expected(expected8);
+  nsDependentCString expected((const char*)expected8);
   if (0 != CompareUTF8toUTF16(expected, lowSurrogate16))
   {
     fail("bad comparison between UTF-8 and malformed but equivalent UTF-16");

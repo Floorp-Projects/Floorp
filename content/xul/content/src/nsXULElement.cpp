@@ -379,7 +379,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
                                    new nsXULElementTearoff(this))
     NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFrameLoaderOwner,
                                    new nsXULElementTearoff(this))
-    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULElement)
+    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULElement)
 NS_ELEMENT_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
@@ -2058,7 +2058,7 @@ nsXULElement::Click()
         nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
         if (shell) {
             // strong ref to PresContext so events don't destroy it
-            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+            nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
             PRBool isCallerChrome = nsContentUtils::IsCallerChrome();
 

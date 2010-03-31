@@ -61,7 +61,7 @@ include syncbase/reftest.list
 fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1none.svg anim-standard-ref.svg
 == anim-fillopacity-1css.svg  anim-standard-ref.svg
-fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
+== anim-fillopacity-1xml.svg  anim-standard-ref.svg
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
@@ -121,7 +121,7 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
-fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
+== anim-strokewidth-1xml.svg anim-standard-ref.svg
 
 == anim-targethref-1.svg anim-standard-ref.svg
 == anim-targethref-2.svg anim-standard-ref.svg
@@ -154,6 +154,8 @@ fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
 
+== api-sanity-1.svg lime.svg
+
 == freeze-applied-late-1.svg anim-standard-ref.svg
 == freeze-applied-late-2.svg anim-standard-ref.svg
 == freeze-applied-late-3.svg anim-standard-ref.svg
@@ -162,7 +164,14 @@ fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 == inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
 == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
-== smil-transitions-interaction-1.svg lime.svg
-== smil-transitions-interaction-2.svg lime.svg
-== smil-transitions-interaction-3.svg lime.svg
-== smil-transitions-interaction-4.svg lime.svg
+# interaction between xml mapped attributes and their css equivalents
+== mapped-attr-vs-css-prop-1.svg lime.svg
+
+== smil-transitions-interaction-1a.svg lime.svg
+== smil-transitions-interaction-1b.svg lime.svg
+== smil-transitions-interaction-2a.svg lime.svg
+== smil-transitions-interaction-2b.svg lime.svg
+== smil-transitions-interaction-3a.svg lime.svg
+== smil-transitions-interaction-3b.svg lime.svg
+== smil-transitions-interaction-4a.svg lime.svg
+== smil-transitions-interaction-4b.svg lime.svg

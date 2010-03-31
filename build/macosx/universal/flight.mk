@@ -67,7 +67,7 @@ ifeq ($(MOZ_BUILD_APP),camino) # {
 INSTALLER_DIR = camino/installer
 MOZ_PKG_APPNAME = camino
 APPNAME = Camino.app
-BUILDCONFIG_JAR = Contents/MacOS/chrome/embed.jar
+BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
 else # } {
 MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app

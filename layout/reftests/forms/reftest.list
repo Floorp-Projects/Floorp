@@ -11,6 +11,8 @@ HTTP(..) == input-text-centering-1.xul input-text-centering-1-ref.xul
 HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 == input-text-dynamic-height-1.xul input-text-dynamic-height-1-ref.xul
 == textbox-align-baseline-1.xul textbox-align-baseline-1-ref.xul # test for bug 494901
+== textbox-setsize.xul textbox-setsize-ref.xul
+== textarea-resize.html textarea-resize-ref.html
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html
 == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741

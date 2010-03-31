@@ -117,6 +117,7 @@ _BROWSER_FILES = \
                  browser_bug520538.js \
                  browser_bug521216.js \
                  browser_bug537474.js \
+                 browser_bug555224.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -150,6 +151,7 @@ _BROWSER_FILES = \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
+                 browser_tabMatchesInAwesomebar.js \
     $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

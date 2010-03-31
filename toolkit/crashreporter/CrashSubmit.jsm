@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 let EXPORTED_SYMBOLS = [
   "CrashSubmit"
 ];
@@ -43,6 +45,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const STATE_START = Ci.nsIWebProgressListener.STATE_START;
 const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+
+const SUCCESS = "success";
+const FAILED  = "failed";
+const SUBMITTING = "submitting";
 
 let reportURL = null;
 let strings = null;
@@ -160,6 +166,8 @@ function writeSubmittedReport(crashID, viewURL) {
   let reportFile = directoryService.get("UAppData", Ci.nsIFile);
   reportFile.append("Crash Reports");
   reportFile.append("submitted");
+  if (!reportFile.exists())
+    reportFile.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
   reportFile.append(crashID + ".txt");
   var fstream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
@@ -191,6 +199,7 @@ Submitter.prototype = {
   submitSuccess: function Submitter_submitSuccess(ret)
   {
     if (!ret.CrashID) {
+      this.notifyStatus(FAILED);
       this.cleanup();
       return;
     }
@@ -207,8 +216,7 @@ Submitter.prototype = {
       // report an error? not much the user can do here.
     }
 
-    if (this.successCallback)
-      this.successCallback(this.id, ret);
+    this.notifyStatus(SUCCESS, ret);
     this.cleanup();
   },
 
@@ -272,9 +280,7 @@ Submitter.prototype = {
       // check general request status first
       if (!Components.isSuccessCode(aStatus)) {
         this.element.removeChild(this.iframe);
-        if (this.errorCallback) {
-          this.errorCallback(this.id);
-        }
+        this.notifyStatus(FAILED);
         this.cleanup();
         return 0;
       }
@@ -282,9 +288,7 @@ Submitter.prototype = {
       if (aRequest instanceof Ci.nsIHttpChannel &&
           aRequest.responseStatus != 200) {
         this.element.removeChild(this.iframe);
-        if (this.errorCallback) {
-          this.errorCallback(this.id);
-        }
+        this.notifyStatus(FAILED);
         this.cleanup();
         return 0;
       }
@@ -301,13 +305,39 @@ Submitter.prototype = {
   onStatusChange: function() {return 0;},
   onSecurityChange: function() {return 0;},
 
+  notifyStatus: function Submitter_notify(status, ret)
+  {
+    let propBag = Cc["@mozilla.org/hash-property-bag;1"].
+                  createInstance(Ci.nsIWritablePropertyBag2);
+    propBag.setPropertyAsAString("minidumpID", this.id);
+
+    Services.obs.notifyObservers(propBag, "crash-report-status", status);
+
+    switch (status) {
+      case SUCCESS:
+        if (this.successCallback)
+          this.successCallback(this.id, ret);
+        break;
+      case FAILED:
+        if (this.errorCallback)
+          this.errorCallback(this.id);
+        break;
+      default:
+        // no callbacks invoked.
+    }
+  },
+
   submit: function Submitter_submit()
   {
     let [dump, extra] = getPendingMinidump(this.id);
     if (!dump.exists() || !extra.exists()) {
+      this.notifyStatus(FAILED);
       this.cleanup();
       return false;
     }
+
+    this.notifyStatus(SUBMITTING);
+
     this.dump = dump;
     this.extra = extra;
     let iframe = this.document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "iframe");
@@ -320,8 +350,10 @@ Submitter.prototype = {
       if (iframe.contentWindow.location == "about:blank")
         return;
       iframe.removeEventListener("load", loadHandler, true);
-      if (!self.submitForm())
+      if (!self.submitForm()) {
+        this.notifyStatus(FAILED);
         self.cleanup();
+      }
     }
 
     iframe.addEventListener("load", loadHandler, true);

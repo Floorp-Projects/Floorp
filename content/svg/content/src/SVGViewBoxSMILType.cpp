@@ -44,17 +44,14 @@ namespace mozilla {
   
 /*static*/ SVGViewBoxSMILType SVGViewBoxSMILType::sSingleton;
 
-nsresult
+void
 SVGViewBoxSMILType::Init(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
 
   nsSVGViewBoxRect* viewBox = new nsSVGViewBoxRect();
-  NS_ENSURE_TRUE(viewBox, NS_ERROR_OUT_OF_MEMORY);
   aValue.mU.mPtr = viewBox;
   aValue.mType = this;
-
-  return NS_OK;
 }
 
 void

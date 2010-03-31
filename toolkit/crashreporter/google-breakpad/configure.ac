@@ -35,7 +35,7 @@ dnl Sanity check: the argument is just a file that should exist.
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_AUX_DIR(autotools)
 
-AM_INIT_AUTOMAKE(subdir-objects tar-ustar)
+AM_INIT_AUTOMAKE(subdir-objects tar-ustar 1.11.1)
 AM_CONFIG_HEADER(src/config.h)
 
 AC_PROG_CC
@@ -46,6 +46,26 @@ AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
 AC_HEADER_STDC
+m4_include(m4/ax_pthread.m4)
+AX_PTHREAD
+
+AC_ARG_ENABLE(m32,
+              AS_HELP_STRING([--enable-m32],
+                             [Compile/build with -m32]
+                             [(default is no)]),
+              [case "${enableval}" in
+                 yes)
+		   CFLAGS=$(CFLAGS) -m32
+                   usem32=true
+                   ;;
+                 no)
+                   usem32=false
+                   ;;
+                 *)
+                   AC_MSG_ERROR(bad value ${enableval} for --enable-m32)
+                   ;;
+               esac],
+              [usem32=false])
 
 AC_ARG_ENABLE(selftest,
               AS_HELP_STRING([--enable-selftest],

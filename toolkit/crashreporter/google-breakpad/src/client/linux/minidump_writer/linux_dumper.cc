@@ -59,8 +59,9 @@
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 
-// Suspend a thread by attaching to it.
-static bool SuspendThread(pid_t pid) {
+namespace google_breakpad {
+
+bool AttachThread(pid_t pid) {
   // This may fail if the thread has just died or debugged.
   errno = 0;
   if (sys_ptrace(PTRACE_ATTACH, pid, NULL, NULL) != 0 &&
@@ -76,16 +77,42 @@ static bool SuspendThread(pid_t pid) {
   return true;
 }
 
-// Resume a thread by detaching from it.
-static bool ResumeThread(pid_t pid) {
+bool DetachThread(pid_t pid) {
   return sys_ptrace(PTRACE_DETACH, pid, NULL, NULL) >= 0;
 }
 
-namespace google_breakpad {
+bool GetThreadRegisters(ThreadInfo* info) {
+  pid_t tid = info->tid;
+
+  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1 ||
+      sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
+    return false;
+  }
+
+#if defined(__i386)
+  if (sys_ptrace(PTRACE_GETFPXREGS, tid, NULL, &info->fpxregs) == -1)
+    return false;
+#endif
+
+#if defined(__i386) || defined(__x86_64)
+  for (unsigned i = 0; i < ThreadInfo::kNumDebugRegisters; ++i) {
+    if (sys_ptrace(
+        PTRACE_PEEKUSER, tid,
+        reinterpret_cast<void*> (offsetof(struct user,
+                                          u_debugreg[0]) + i *
+                                 sizeof(debugreg_t)),
+        &info->dregs[i]) == -1) {
+      return false;
+    }
+  }
+#endif
+
+  return true;
+}
 
 LinuxDumper::LinuxDumper(int pid)
     : pid_(pid),
-      threads_suspened_(false),
+      threads_suspended_(false),
       threads_(&allocator_, 8),
       mappings_(&allocator_) {
 }
@@ -95,23 +122,23 @@ bool LinuxDumper::Init() {
          EnumerateMappings(&mappings_);
 }
 
-bool LinuxDumper::ThreadsSuspend() {
-  if (threads_suspened_)
+bool LinuxDumper::ThreadsAttach() {
+  if (threads_suspended_)
     return true;
   bool good = true;
   for (size_t i = 0; i < threads_.size(); ++i)
-    good &= SuspendThread(threads_[i]);
-  threads_suspened_ = true;
+    good &= AttachThread(threads_[i]);
+  threads_suspended_ = true;
   return good;
 }
 
-bool LinuxDumper::ThreadsResume() {
-  if (!threads_suspened_)
+bool LinuxDumper::ThreadsDetach() {
+  if (!threads_suspended_)
     return false;
   bool good = true;
   for (size_t i = 0; i < threads_.size(); ++i)
-    good &= ResumeThread(threads_[i]);
-  threads_suspened_ = false;
+    good &= DetachThread(threads_[i]);
+  threads_suspended_ = false;
   return good;
 }
 
@@ -312,11 +339,12 @@ bool LinuxDumper::EnumerateThreads(wasteful_vector<pid_t>* result) const {
 }
 
 // Read thread info from /proc/$pid/status.
-// Fill out the |tgid|, |ppid| and |pid| members of |info|. If unavailible,
+// Fill out the |tgid|, |ppid| and |pid| members of |info|. If unavailable,
 // these members are set to -1. Returns true iff all three members are
-// availible.
-bool LinuxDumper::ThreadInfoGet(pid_t tid, ThreadInfo* info) {
+// available.
+bool LinuxDumper::ThreadInfoGet(ThreadInfo* info) {
   assert(info != NULL);
+  pid_t tid = info->tid;
   char status_path[80];
   BuildProcPath(status_path, tid, "status");
 
@@ -343,34 +371,16 @@ bool LinuxDumper::ThreadInfoGet(pid_t tid, ThreadInfo* info) {
   if (info->ppid == -1 || info->tgid == -1)
     return false;
 
-  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1 ||
-      sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
-    return false;
-  }
-
-#if defined(__i386)
-  if (sys_ptrace(PTRACE_GETFPXREGS, tid, NULL, &info->fpxregs) == -1)
-    return false;
-#endif
-
-#if defined(__i386) || defined(__x86_64)
-  for (unsigned i = 0; i < ThreadInfo::kNumDebugRegisters; ++i) {
-    if (sys_ptrace(
-        PTRACE_PEEKUSER, tid,
-        reinterpret_cast<void*> (offsetof(struct user,
-                                          u_debugreg[0]) + i *
-                                 sizeof(debugreg_t)),
-        &info->dregs[i]) == -1) {
+  if (!GetThreadRegisters(info))
       return false;
-    }
-  }
-#endif
 
   const uint8_t* stack_pointer;
 #if defined(__i386)
   memcpy(&stack_pointer, &info->regs.esp, sizeof(info->regs.esp));
 #elif defined(__x86_64)
   memcpy(&stack_pointer, &info->regs.rsp, sizeof(info->regs.rsp));
+#elif defined(__ARM_EABI__)
+  memcpy(&stack_pointer, &info->regs.uregs[R13], sizeof(info->regs.uregs[R13]));
 #else
 #error "This code hasn't been ported to your platform yet."
 #endif
@@ -387,13 +397,9 @@ bool LinuxDumper::ThreadInfoGet(pid_t tid, ThreadInfo* info) {
 // unwind. So we just grab, up to, 32k of stack.
 bool LinuxDumper::GetStackInfo(const void** stack, size_t* stack_len,
                                uintptr_t int_stack_pointer) {
-#if defined(__i386) || defined(__x86_64)
-  static const bool stack_grows_down = true;
-  static const uintptr_t page_size = 4096;
-#else
-#error "This code has not been ported to your platform yet."
-#endif
   // Move the stack pointer to the bottom of the page that it's in.
+  const uintptr_t page_size = getpagesize();
+
   uint8_t* const stack_pointer =
       reinterpret_cast<uint8_t*>(int_stack_pointer & ~(page_size - 1));
 
@@ -403,26 +409,19 @@ bool LinuxDumper::GetStackInfo(const void** stack, size_t* stack_len,
   const MappingInfo* mapping = FindMapping(stack_pointer);
   if (!mapping)
     return false;
-  if (stack_grows_down) {
-    const ptrdiff_t offset = stack_pointer - (uint8_t*) mapping->start_addr;
-    const ptrdiff_t distance_to_end =
-        static_cast<ptrdiff_t>(mapping->size) - offset;
-    *stack_len = distance_to_end > kStackToCapture ?
-                 kStackToCapture : distance_to_end;
-    *stack = stack_pointer;
-  } else {
-    const ptrdiff_t offset = stack_pointer - (uint8_t*) mapping->start_addr;
-    *stack_len = offset > kStackToCapture ? kStackToCapture : offset;
-    *stack = stack_pointer - *stack_len;
-  }
-
+  const ptrdiff_t offset = stack_pointer - (uint8_t*) mapping->start_addr;
+  const ptrdiff_t distance_to_end =
+      static_cast<ptrdiff_t>(mapping->size) - offset;
+  *stack_len = distance_to_end > kStackToCapture ?
+      kStackToCapture : distance_to_end;
+  *stack = stack_pointer;
   return true;
 }
 
 // static
 void LinuxDumper::CopyFromProcess(void* dest, pid_t child, const void* src,
                                   size_t length) {
-  unsigned long tmp;
+  unsigned long tmp = 55;
   size_t done = 0;
   static const size_t word_size = sizeof(tmp);
   uint8_t* const local = (uint8_t*) dest;
@@ -430,8 +429,9 @@ void LinuxDumper::CopyFromProcess(void* dest, pid_t child, const void* src,
 
   while (done < length) {
     const size_t l = length - done > word_size ? word_size : length - done;
-    if (sys_ptrace(PTRACE_PEEKDATA, child, remote + done, &tmp) == -1)
+    if (sys_ptrace(PTRACE_PEEKDATA, child, remote + done, &tmp) == -1) {
       tmp = 0;
+    }
     memcpy(local + done, &tmp, l);
     done += l;
   }

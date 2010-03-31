@@ -292,6 +292,12 @@ function() {
  * Test adaptive autocomplete
  */
 function run_test() {
+  // always search in history + bookmarks, no matter what the default is
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  prefs.setIntPref("browser.urlbar.search.sources", 3);
+  prefs.setIntPref("browser.urlbar.default.behavior", 0);
+
   do_test_pending();
   next_test();
 }

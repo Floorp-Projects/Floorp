@@ -138,6 +138,13 @@ class nsHtml5TreeOperation {
       mOne.node = aNode;
       mTwo.node = aParent;
     }
+    
+    inline void Init(eHtml5TreeOperation aOpCode, 
+                     const nsACString& aString,
+                     PRInt32 aInt32) {
+      Init(aOpCode, aString);
+      mInt = aInt32;
+    }
 
     inline void Init(eHtml5TreeOperation aOpCode,
                      nsIContent** aNode,

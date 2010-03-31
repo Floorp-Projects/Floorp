@@ -45,22 +45,23 @@
 #include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
+#include "PluginIdentifierParent.h"
 
 #include "nsContentUtils.h"
 #include "nsCRT.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 #include "nsNPAPIPlugin.h"
 
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
-using mozilla::ipc::NPRemoteIdentifier;
 using mozilla::ipc::SyncChannel;
 
 using namespace mozilla::plugins;
 
 static const char kTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
-
-PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 
 template<>
 struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
@@ -90,15 +91,16 @@ PluginModuleParent::LoadModule(const char* aFilePath)
 
 PluginModuleParent::PluginModuleParent(const char* aFilePath)
     : mSubprocess(new PluginProcessParent(aFilePath))
+    , mPluginThread(0)
     , mShutdown(false)
     , mNPNIface(NULL)
     , mPlugin(NULL)
     , mProcessStartTime(time(NULL))
-    , mPluginCrashedTask(NULL)
+    , mTaskFactory(this)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
-    if (!mValidIdentifiers.Init()) {
+    if (!mIdentifiers.Init()) {
         NS_ERROR("Out of memory");
     }
 
@@ -108,11 +110,6 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 PluginModuleParent::~PluginModuleParent()
 {
     NS_ASSERTION(OkToCleanup(), "unsafe destruction");
-
-    if (mPluginCrashedTask) {
-        mPluginCrashedTask->Cancel();
-        mPluginCrashedTask = 0;
-    }
 
     if (!mShutdown) {
         NS_WARNING("Plugin host deleted the module without shutting down.");
@@ -129,48 +126,21 @@ PluginModuleParent::~PluginModuleParent()
     nsContentUtils::UnregisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
 }
 
+#ifdef MOZ_CRASHREPORTER
 void
-PluginModuleParent::WriteExtraDataEntry(nsIFileOutputStream* stream,
-                                        const char* key,
-                                        const char* value)
+PluginModuleParent::WritePluginExtraDataForMinidump(const nsAString& id)
 {
-    PRUint32 written;
-    stream->Write(key, strlen(key), &written);
-    stream->Write("=", 1, &written);
-    stream->Write(value, strlen(value), &written);
-    stream->Write("\n", 1, &written);
-}
+    typedef nsDependentCString CS;
 
-void
-PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
-{
-    // get a reference to the extra file, and add some more entries
-    nsCOMPtr<nsIFile> extraFile;
-    nsresult rv = dumpFile->Clone(getter_AddRefs(extraFile));
-    if (NS_FAILED(rv))
+    CrashReporter::AnnotationTable notes;
+    if (!notes.Init(32))
         return;
 
-    nsAutoString leafName;
-    rv = extraFile->GetLeafName(leafName);
-    if (NS_FAILED(rv))
-        return;
+    notes.Put(CS("ProcessType"), CS("plugin"));
 
-    leafName.Replace(leafName.Length() - 3, 3,
-                     NS_LITERAL_STRING("extra"));
-    rv = extraFile->SetLeafName(leafName);
-    if (NS_FAILED(rv))
-        return;
-
-    nsCOMPtr<nsIFileOutputStream> stream =
-        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    // PR_WRONLY | PR_APPEND
-    rv = stream->Init(extraFile, 0x12, 0600, 0);
-    if (NS_FAILED(rv))
-        return;
-    WriteExtraDataEntry(stream, "ProcessType", "plugin");
     char startTime[32];
     sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
-    WriteExtraDataEntry(stream, "StartupTime", startTime);
+    notes.Put(CS("StartupTime"), CS(startTime));
 
     // Get the plugin filename, try to get just the file leafname
     const std::string& pluginFile = mSubprocess->GetPluginFilePath();
@@ -179,20 +149,38 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
         filePos = 0;
     else
         filePos++;
-    WriteExtraDataEntry(stream, "PluginFilename",
-                        pluginFile.substr(filePos).c_str());
+    notes.Put(CS("PluginFilename"), CS(pluginFile.substr(filePos).c_str()));
+
     //TODO: add plugin name and version: bug 539841
     // (as PluginName, PluginVersion)
-    WriteExtraDataEntry(stream, "PluginName", "");
-    WriteExtraDataEntry(stream, "PluginVersion", "");
+    notes.Put(CS("PluginName"), CS(""));
+    notes.Put(CS("PluginVersion"), CS(""));
 
-    if (!mCrashNotes.IsEmpty()) {
-        WriteExtraDataEntry(stream, "Notes", mCrashNotes.get());
-    }
+    if (!mCrashNotes.IsEmpty())
+        notes.Put(CS("Notes"), CS(mCrashNotes.get()));
 
-    stream->Close();
+    if (!mHangID.IsEmpty())
+        notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(mHangID));
+
+    if (!CrashReporter::AppendExtraData(id, notes))
+        NS_WARNING("problem appending plugin data to .extra");
 }
 
+void
+PluginModuleParent::WriteExtraDataForHang()
+{
+    // this writes HangID
+    WritePluginExtraDataForMinidump(mPluginDumpID);
+
+    CrashReporter::AnnotationTable notes;
+    if (!notes.Init(4))
+        return;
+
+    notes.Put(nsDependentCString("HangID"), NS_ConvertUTF16toUTF8(mHangID));
+    if (!CrashReporter::AppendExtraData(mBrowserDumpID, notes))
+        NS_WARNING("problem appending browser data to .extra");
+}
+#endif  // MOZ_CRASHREPORTER
 
 bool
 PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
@@ -204,7 +192,7 @@ PluginModuleParent::RecvAppendNotesToCrashReport(const nsCString& aNotes)
 int
 PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
-    AssertPluginThread();
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thead!");
     NS_ABORT_IF_FALSE(!strcmp(aPref, kTimeoutPref),
                       "unexpected pref callback");
 
@@ -226,31 +214,39 @@ PluginModuleParent::CleanupFromTimeout()
 bool
 PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
-    // FIXME/bug 544095: pop up a dialog asking the user what to do
-    bool waitMoar = false;
+#ifdef MOZ_CRASHREPORTER
+    nsCOMPtr<nsILocalFile> pluginDump;
+    nsCOMPtr<nsILocalFile> browserDump;
+    if (CrashReporter::CreatePairedMinidumps(OtherProcess(),
+                                             mPluginThread,
+                                             &mHangID,
+                                             getter_AddRefs(pluginDump),
+                                             getter_AddRefs(browserDump)) &&
+        CrashReporter::GetIDFromMinidump(pluginDump, mPluginDumpID) &&
+        CrashReporter::GetIDFromMinidump(browserDump, mBrowserDumpID)) {
 
-    if (!waitMoar) {
-        // We can't depend on the IO thread notifying us of a channel
-        // error, because there's an inherent race between killing the
-        // subprocess and shutting down the socket.  It would be nice
-        // to call Close() here and do all the IPDL cleanup
-        // immediately, but we might have arbitrary junk below us on
-        // the stack.  So, a compromise: enqueue an event now that
-        // will Close(), *before* killing the child process.  This
-        // guarantees that the Close() event will be processed before
-        // the IO error event, if it's delivered.
-        MessageLoop::current()->PostTask(
-            FROM_HERE,
-            NewRunnableMethod(this, &PluginModuleParent::CleanupFromTimeout));
-
-        // FIXME/bug 544095: kill the subprocess in a way that
-        // triggers breakpad, and also capture a minidump for this
-        // process
-        KillProcess(ChildProcessHandle(), 1, false);
+        PLUGIN_LOG_DEBUG(
+            ("generated paired browser/plugin minidumps: %s/%s (ID=%s)",
+             NS_ConvertUTF16toUTF8(mBrowserDumpID).get(),
+             NS_ConvertUTF16toUTF8(mPluginDumpID).get(),
+             NS_ConvertUTF16toUTF8(mHangID).get()));
     }
-    
+    else {
+        NS_WARNING("failed to capture paired minidumps from hang");
+    }
+#endif
 
-    return waitMoar;
+    // this must run before the error notification from the channel,
+    // or not at all
+    MessageLoop::current()->PostTask(
+        FROM_HERE,
+        mTaskFactory.NewRunnableMethod(
+            &PluginModuleParent::CleanupFromTimeout));
+
+    if (!KillProcess(OtherProcess(), 1, false))
+        NS_WARNING("failed to kill subprocess!");
+
+    return false;
 }
 
 void
@@ -258,26 +254,30 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown: {
-        nsCOMPtr<nsIFile> dump;
-        if (GetMinidump(getter_AddRefs(dump))) {
-            WriteExtraDataForMinidump(dump);
-            if (NS_SUCCEEDED(dump->GetLeafName(mDumpID))) {
-                mDumpID.Replace(mDumpID.Length() - 4, 4,
-                                NS_LITERAL_STRING(""));
-            }
+#ifdef MOZ_CRASHREPORTER
+        nsCOMPtr<nsILocalFile> pluginDump;
+        if (TakeMinidump(getter_AddRefs(pluginDump)) &&
+            CrashReporter::GetIDFromMinidump(pluginDump, mPluginDumpID)) {
+            PLUGIN_LOG_DEBUG(("got child minidump: %s",
+                              NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
+            WritePluginExtraDataForMinidump(mPluginDumpID);
+        }
+        else if (!mPluginDumpID.IsEmpty() && !mBrowserDumpID.IsEmpty()) {
+            WriteExtraDataForHang();
         }
         else {
             NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
         }
+#endif
 
         mShutdown = true;
         // Defer the PluginCrashed method so that we don't re-enter
         // and potentially modify the actor child list while enumerating it.
-        if (mPlugin) {
-            mPluginCrashedTask = NewRunnableMethod(
-                this, &PluginModuleParent::NotifyPluginCrashed);
-            MessageLoop::current()->PostTask(FROM_HERE, mPluginCrashedTask);
-        }
+        if (mPlugin)
+            MessageLoop::current()->PostTask(
+                FROM_HERE,
+                mTaskFactory.NewRunnableMethod(
+                    &PluginModuleParent::NotifyPluginCrashed));
         break;
     }
     case NormalShutdown:
@@ -292,11 +292,42 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 void
 PluginModuleParent::NotifyPluginCrashed()
 {
-    // MessageLoop owns this
-    mPluginCrashedTask = NULL;
+    if (!OkToCleanup()) {
+        // there's still plugin code on the C++ stack.  try again
+        MessageLoop::current()->PostDelayedTask(
+            FROM_HERE,
+            mTaskFactory.NewRunnableMethod(
+                &PluginModuleParent::NotifyPluginCrashed), 10);
+        return;
+    }
 
     if (mPlugin)
-        mPlugin->PluginCrashed(mDumpID);
+        mPlugin->PluginCrashed(mPluginDumpID, mBrowserDumpID);
+}
+
+PPluginIdentifierParent*
+PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
+                                           const int32_t& aInt)
+{
+    NPIdentifier npident = aString.IsVoid() ?
+        mozilla::plugins::parent::_getintidentifier(aInt) :
+        mozilla::plugins::parent::_getstringidentifier(aString.get());
+
+    if (!npident) {
+        NS_WARNING("Failed to get identifier!");
+        return nsnull;
+    }
+
+    PluginIdentifierParent* ident = new PluginIdentifierParent(npident);
+    mIdentifiers.Put(npident, ident);
+    return ident;
+}
+
+bool
+PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
+{
+    delete aActor;
+    return true;
 }
 
 PPluginInstanceParent*
@@ -361,30 +392,6 @@ PluginModuleParent::NPP_Destroy(NPP instance,
 
     (void) PluginInstanceParent::Call__delete__(parentInstance);
     return retval;
-}
-
-bool
-PluginModuleParent::EnsureValidNPIdentifier(NPIdentifier aIdentifier)
-{
-    if (!mValidIdentifiers.GetEntry(aIdentifier)) {
-        nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(aIdentifier);
-        if (!newEntry) {
-            NS_ERROR("Out of memory?");
-            return false;
-        }
-    }
-    return true;
-}
-
-NPIdentifier
-PluginModuleParent::GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier)
-{
-    NS_ASSERTION(mValidIdentifiers.IsInitialized(), "Not initialized!");
-    if (aRemoteIdentifier &&
-        mValidIdentifiers.GetEntry((NPIdentifier)aRemoteIdentifier)) {
-        return (NPIdentifier)aRemoteIdentifier;
-    }
-    return 0;
 }
 
 NPError
@@ -517,141 +524,36 @@ PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
     return true;
 }
 
-bool
-PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
-                                                NPRemoteIdentifier* aId)
+PPluginIdentifierParent*
+PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
 {
-    if (aString.IsVoid()) {
-        NS_ERROR("Someone sent over a void string?!");
-        return false;
-    }
-
-    NPIdentifier ident =
-        mozilla::plugins::parent::_getstringidentifier(aString.BeginReading());
-    if (!ident) {
-        *aId = 0;
-        return true;
-    }
-
-    if (!EnsureValidNPIdentifier(ident)) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    *aId = (NPRemoteIdentifier)ident;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
-                                             NPRemoteIdentifier* aId)
-{
-    NPIdentifier ident = mozilla::plugins::parent::_getintidentifier(aInt);
-    if (!ident) {
-        *aId = 0;
-        return true;
-    }
-
-    if (!EnsureValidNPIdentifier(ident)) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    *aId = (NPRemoteIdentifier)ident;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
-                                               NPError *err,
-                                               nsCString* aString)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    NPUTF8* val = mozilla::plugins::parent::_utf8fromidentifier(ident);
-    if (!val) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    aString->Assign(val);
-    *err = NPERR_NO_ERROR;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
-                                              NPError* err,
-                                              int32_t* aInt)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *err = NPERR_INVALID_PARAM;
-        return true;
-    }
-
-    *aInt = mozilla::plugins::parent::_intfromidentifier(ident);
-    *err = NPERR_NO_ERROR;
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
-                                               bool* aIsString)
-{
-    NPIdentifier ident = GetValidNPIdentifier(aId);
-    if (!ident) {
-        *aIsString = false;
-        return true;
-    }
-
-    *aIsString = mozilla::plugins::parent::_identifierisstring(ident);
-    return true;
-}
-
-bool
-PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
-                                                 nsTArray<NPRemoteIdentifier>* aIds)
-{
-    NS_ASSERTION(aIds->IsEmpty(), "Non-empty array!");
-
-    PRUint32 count = aNames.Length();
-    if (!count) {
-        NS_ERROR("No names to get!");
-        return false;
-    }
-
-    nsTArray<NPUTF8*> buffers;
-    nsTArray<NPIdentifier> ids;
-
-    if (!(buffers.SetLength(count) &&
-          ids.SetLength(count))) {
-        NS_ERROR("Out of memory?");
-        return false;
-    }
-
-    for (PRUint32 index = 0; index < count; ++index)
-        buffers[index] = const_cast<NPUTF8*>(NullableStringGet(aNames[index]));
-
-    mozilla::plugins::parent::_getstringidentifiers(
-        const_cast<const NPUTF8**>(buffers.Elements()), count, ids.Elements());
-
-    for (PRUint32 index = 0; index < count; index++) {
-        NPIdentifier& id = ids[index];
-        if (id) {
-            if (!EnsureValidNPIdentifier(id)) {
-                NS_ERROR("Out of memory?");
-                return false;
+    PluginIdentifierParent* ident;
+    if (!mIdentifiers.Get(aIdentifier, &ident)) {
+        nsCString string;
+        int32_t intval = -1;
+        if (mozilla::plugins::parent::_identifierisstring(aIdentifier)) {
+            NPUTF8* chars =
+                mozilla::plugins::parent::_utf8fromidentifier(aIdentifier);
+            if (!chars) {
+                return nsnull;
             }
+            string.Adopt(chars);
         }
-        aIds->AppendElement((NPRemoteIdentifier)id);
+        else {
+            intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
+            if (intval == -1) {
+                return nsnull;
+            }
+            string.SetIsVoid(PR_TRUE);
+        }
+        ident = new PluginIdentifierParent(aIdentifier);
+        if (!SendPPluginIdentifierConstructor(ident, string, intval)) {
+            delete ident;
+            return nsnull;
+        }
+        mIdentifiers.Put(aIdentifier, ident);
     }
-
-    return true;
+    return ident;
 }
 
 PluginInstanceParent*
@@ -706,7 +608,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
         return NS_ERROR_FAILURE;
     }
 
-    if (!CallNP_Initialize(error)) {
+    if (!CallNP_Initialize(&mPluginThread, error)) {
         return NS_ERROR_FAILURE;
     }
     else if (*error != NPERR_NO_ERROR) {
@@ -729,7 +631,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         return NS_ERROR_FAILURE;
     }
 
-    if (!CallNP_Initialize(error))
+    if (!CallNP_Initialize(&mPluginThread, error))
         return NS_ERROR_FAILURE;
 
     return NS_OK;

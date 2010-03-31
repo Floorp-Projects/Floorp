@@ -313,3 +313,24 @@ test_7_byte_struct_return(RECT r)
   s.g = r.bottom;
   return s;
 }
+
+void *
+test_fnptr()
+{
+  return (void*)test_ansi_len;
+}
+
+PRInt32
+test_closure_cdecl(PRInt8 i, PRInt32 (*f)(PRInt8))
+{
+  return f(i);
+}
+
+#if defined(_WIN32) && !defined(__WIN64)
+PRInt32
+test_closure_cdecl(PRInt8 i, PRInt32 (NS_STDCALL *f)(PRInt8))
+{
+  return f(i);
+}
+#endif /* defined(_WIN32) && !defined(__WIN64) */
+

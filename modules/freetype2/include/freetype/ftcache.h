@@ -609,7 +609,8 @@ FT_BEGIN_HEADER
    *     The source face ID.
    *
    *   cmap_index ::
-   *     The index of the charmap in the source face.
+   *     The index of the charmap in the source face.  Any negative value
+   *     means to use the cache @FT_Face's default charmap.
    *
    *   char_code ::
    *     The character code (in the corresponding charmap).
@@ -831,6 +832,9 @@ FT_BEGIN_HEADER
   /*    that the @FT_Glyph could be flushed out of the cache on the next   */
   /*    call to one of the caching sub-system APIs.  Don't assume that it  */
   /*    is persistent!                                                     */
+  /*                                                                       */
+  /*    Calls to @FT_Set_Char_Size and friends have no effect on cached    */
+  /*    glyphs; you should always use the FreeType cache API instead.      */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FTC_ImageCache_LookupScaler( FTC_ImageCache  cache,

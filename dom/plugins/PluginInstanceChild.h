@@ -88,6 +88,8 @@ protected:
 
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
+    virtual bool
+    AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event, Shmem& mem, int16_t* handled, Shmem* rtnmem);
 
     NS_OVERRIDE
     virtual bool
@@ -95,6 +97,10 @@ protected:
     {
         return AnswerNPP_HandleEvent(event, handled);
     }
+
+    NS_OVERRIDE
+    virtual bool
+    RecvWindowPosChanged(const NPRemoteEvent& event);
 
     virtual bool
     AnswerNPP_Destroy(NPError* result);
@@ -188,12 +194,21 @@ public:
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
+    void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
+
 private:
     friend class PluginModuleChild;
 
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
-        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1, // Win32
+        // Win32: Translate mouse input based on WM_WINDOWPOSCHANGED
+        // windowing events due to winless shared dib rendering. See
+        // WinlessHandleEvent for details.
+        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1,
+        // Win32: Hook TrackPopupMenu api so that we can swap out parent
+        // hwnds. The api will fail with parents not associated with our
+        // child ui thread. See WinlessHandleEvent for details.
+        QUIRK_WINLESS_TRACKPOPUP_HOOK = 2,
     };
 
     void InitQuirksModes(const nsCString& aMimeType);
@@ -213,6 +228,9 @@ private:
     void ResetNestedEventHook();
     void SetNestedInputPumpHook();
     void ResetPumpHooks();
+    void CreateWinlessPopupSurrogate();
+    void DestroyWinlessPopupSurrogate();
+    void InitPopupMenuHook();
     void InternalCallSetNestedEventState(bool aState);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
@@ -232,6 +250,13 @@ private:
     static LRESULT CALLBACK NestedInputPumpHook(int code,
                                                 WPARAM wParam,
                                                 LPARAM lParam);
+    static BOOL WINAPI TrackPopupHookProc(HMENU hMenu,
+                                          UINT uFlags,
+                                          int x,
+                                          int y,
+                                          int nReserved,
+                                          HWND hWnd,
+                                          CONST RECT *prcRect);
 #endif
 
     const NPPluginFuncs* mPluginIface;
@@ -250,16 +275,17 @@ private:
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
     HHOOK mNestedEventHook;
-    HHOOK mNestedPumpHook;
     int mNestedEventLevelDepth;
     bool mNestedEventState;
     HWND mCachedWinlessPluginHWND;
-    UINT_PTR mEventPumpTimer;
+    HWND mWinlessPopupSurrogateHWND;
     nsIntPoint mPluginSize;
     nsIntPoint mPluginOffset;
 #endif
 
     friend class ChildAsyncCall;
+
+    Mutex mAsyncCallMutex;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 

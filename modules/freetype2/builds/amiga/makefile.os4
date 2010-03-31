@@ -4,7 +4,7 @@
 #
 
 
-# Copyright 2005, 2006, 2007 by
+# Copyright 2005, 2006, 2007, 2009 by
 # Werner Lemberg and Detlef Würkner.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -89,12 +89,18 @@ ftbdf.ppc.o: FT:src/base/ftbdf.c
 ftbitmap.ppc.o: FT:src/base/ftbitmap.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftbitmap.c
 
+ftcid.ppc.o: FT:src/base/ftcid.c
+	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftcid.c
+
 ftdebug.ppc.o: FT:src/base/ftdebug.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftdebug.c
 
 # pure version for use in run-time library etc
 ftdebugpure.ppc.o: src/base/ftdebug.c
 	$(CC) -c $(CFLAGS) -o $@ src/base/ftdebug.c
+
+ftfstype.ppc.o: FT:src/base/ftfstype.c
+	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftfstype.c
 
 ftgasp.ppc.o: FT:src/base/ftgasp.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftgasp.c
@@ -113,6 +119,9 @@ ftmm.ppc.o: FT:src/base/ftmm.c
 
 ftotval.ppc.o: FT:src/base/ftotval.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftotval.c
+
+ftpatent.ppc.o: FT:src/base/ftpatent.c
+	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftpatent.c
 
 ftpfr.ppc.o: FT:src/base/ftpfr.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftpfr.c
@@ -258,10 +267,11 @@ gxvalid.ppc.o: FT:src/gxvalid/gxvalid.c
 otvalid.ppc.o: FT:src/otvalid/otvalid.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/otvalid/otvalid.c
 
-BASE =  ftbase.ppc.o ftbbox.ppc.o ftbdf.ppc.o ftbitmap.ppc.o    \
-	ftgasp.ppc.o ftglyph.ppc.o ftgxval.ppc.o ftlcdfil.ppc.o \
-	ftmm.ppc.o ftotval.ppc.o ftpfr.ppc.o ftstroke.ppc.o     \
-	ftsynth.ppc.o fttype1.ppc.o ftwinfnt.ppc.o ftxf86.ppc.o
+BASE = ftbase.ppc.o ftbbox.ppc.o ftbdf.ppc.o ftbitmap.ppc.o ftcid.ppc.o   \
+       ftfstype.ppc.o ftgasp.ppc.o ftglyph.ppc.o ftgxval.ppc.o            \
+       ftlcdfil.ppc.o ftmm.ppc.o ftotval.ppc.o ftpatent.ppc.o ftpfr.ppc.o \
+       ftstroke.ppc.o ftsynth.ppc.o fttype1.ppc.o ftwinfnt.ppc.o          \
+       ftxf86.ppc.o
 
 DEBUG = ftdebug.ppc.o ftdebugpure.ppc.o
 

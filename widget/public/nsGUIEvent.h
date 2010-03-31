@@ -999,12 +999,11 @@ typedef nsTextRange* nsTextRangeArray;
 struct nsTextEventReply
 {
   nsTextEventReply()
-    : mCursorIsCollapsed(PR_FALSE), mReferenceWidget(nsnull)
+    : mReferenceWidget(nsnull)
   {
   }
 
   nsIntRect mCursorPosition;
-  PRBool mCursorIsCollapsed;
   nsIWidget* mReferenceWidget;
 };
 
@@ -1217,13 +1216,14 @@ class nsSelectionEvent : public nsGUIEvent
 public:
   nsSelectionEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
     nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_SELECTION_EVENT),
-    mSucceeded(PR_FALSE)
+    mExpandToClusterBoundary(PR_TRUE), mSucceeded(PR_FALSE)
   {
   }
 
   PRUint32 mOffset; // start offset of selection
   PRUint32 mLength; // length of selection
   PRPackedBool mReversed; // selection "anchor" should be in front
+  PRPackedBool mExpandToClusterBoundary; // cluster-based or character-based
   PRPackedBool mSucceeded;
 };
 

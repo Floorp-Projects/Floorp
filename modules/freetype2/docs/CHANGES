@@ -1,3 +1,214 @@
+CHANGES BETWEEN 2.3.11 and 2.3.12
+
+  I. IMPORTANT CHANGES
+
+    - For  `FT_Open_Face',  new  parameters  are  available  to ignore
+      preferred family names: FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY and
+      FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY.
+
+  II. MISCELLANEOUS
+
+    - Support  for  incremental  font  loading  (controlled  with  the
+      FT_CONFIG_OPTION_INCREMENTAL macro) is now active by default.
+
+    - Better support for vertical metrics.
+
+    - Various minor bug fixes.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.3.10 and 2.3.11
+
+  I. IMPORTANT BUG FIXES
+
+    - Version 2.3.10 broke PCF support.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.3.10 and 2.3.9
+
+  I. IMPORTANT BUG FIXES
+
+    - If all  ASCII digits in a  font have the  same (unscaled) width,
+      the autohinter respects this and won't change it.
+
+    - TrueType fonts  are now  rasterized correctly  if the horizontal
+      and vertical resolution differ.
+
+    - Type 1 fonts are now handled with increased precision internally
+      to avoid serious rounding issues if non-integral coordinates are
+      encountered.
+
+    - Horizontally  condensed CFF  fonts (using the font  matrix) were
+      rendered  incorrectly.   This  bug  has  been  introduced  after
+      release 2.3.5.
+
+
+  II. IMPORTANT CHANGES
+
+    - Support for the SFNT cmap 13 table format (as defined by the new
+      OpenType 1.6 specification) has been added.
+
+    - B/W rasterization  of well-hinted TrueType  fonts at small sizes
+      has been greatly improved.
+
+    - Calculation  of  vertical  metrics in  OpenType  fonts has  been
+      improved.
+
+
+  III. MISCELLANEOUS
+
+    - It  is now  possible to  change  the emboldening  factor in  the
+      `ftview' demo program with keys `e' and `E'.
+
+    - It is  now possible  to change the  slant value in  the `ftview'
+      demo program with keys `s' and `S'.
+
+    - The  5-levels  grayscale  mode of  the `ftraster'  module (which
+      FreeType doesn't use by default) was broken since version 2.3.0.
+
+    - Compilation of the  `ftgrays' and `ftraster' modules  was broken
+      in stand-alone mode.
+
+    - Various fixes for compilation on 64bit and 16bit architectures.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.3.9 and 2.3.8
+
+  I. IMPORTANT BUG FIXES
+
+    - Very unfortunately, FreeType 2.3.8 contained a change that broke
+      its  official ABI.  The  end result  is  that programs  compiled
+      against previous versions of the library, but dynamically linked
+      to  2.3.8 can  experience  memory corruption  if  they call  the
+      `FT_Get_PS_Font_Info' function.
+
+      We recommend all users to  upgrade to 2.3.9 as soon as possible,
+      or to downgrade to a previous  release of the library if this is
+      not an option.
+
+      The  origin of the  bug is  that a  new field  was added  to the
+      publicly  defined  `PS_FontInfoRec'  structure.   Unfortunately,
+      objects of this  type can be stack or  heap allocated by callers
+      of   `FT_Get_PS_Font_Info',  resulting   in   a  memory   buffer
+      overwrite with its implementation in 2.3.8.
+
+      If  you want to  know whether  your code  is vulnerable  to this
+      issue,  simply  search  for  the  substrings  `PS_FontInfo'  and
+      `PS_Font_Info' in your source code.  If none is found, your code
+      is safe and is not affected.
+
+      The FreeType team apologizes for the problem.
+
+    - The POSIX support  of MacOS resource-fork fonts  (Suitcase fonts
+      and LaserWriter Type1 PostScript fonts) was broken in 2.3.8.  If
+      FreeType2 is built without Carbon framework, these fonts are not
+      handled correctly.  Version 2.3.7 didn't have this bug.
+
+    - `FT_Get_Advance' (and `FT_Get_Advances') returned bad values for
+      almost all font formats except TrueType fonts.
+
+    - Fix a bug  in the SFNT  kerning table  loader/parser which could
+      crash the engine if certain malformed tables were encountered.
+
+    - Composite SFNT bitmaps are now handled correctly.
+
+
+  II. IMPORTANT CHANGES
+
+    - The   new  functions   `FT_Get_CID_Is_Internally_CID_keyed'  and
+      `FT_Get_CID_From_Glyph_Index'  can be  used to  access CID-keyed
+      CFF fonts  via CID  values.  This code  has been  contributed by
+      Michael Toftdal.
+
+
+  III. MISCELLANEOUS
+
+    - `FT_Outline_Get_InsideBorder'  returns   FT_STROKER_BORDER_RIGHT
+      for empty outlines.  This was incorrectly documented.
+
+    - The `ftview' demo program now supports UTF-8 encoded strings.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.3.8 and 2.3.7
+
+  I. IMPORTANT BUG FIXES
+
+    - CID-keyed fonts in an SFNT wrapper were not handled correctly.
+
+    - The smooth renderer produced truncated images (on the right) for
+      outline parts with negative horizontal values.  Most fonts don't
+      contain outlines left  to the y coordinate axis, but  the effect
+      was very noticeable for outlines processed with FT_Glyph_Stroke,
+      using thick strokes.
+
+    - `FT_Get_TrueType_Engine_Type'  returned a  wrong  value if  both
+      configuration  macros  TT_CONFIG_OPTION_BYTECODE_INTERPRETER and
+      TT_CONFIG_OPTION_UNPATENTED_HINTING were defined.
+
+    - The  `face_index'  field  in   the  `FT_Face'  structure  wasn't
+      initialized properly after calling FT_Open_Face and friends with
+      a positive face index for CFFs,  WinFNTs, and, most importantly,
+      for TrueType Collections (TTCs).
+
+
+  II. IMPORTANT CHANGES
+
+    - Rudimentary support for Type 1  fonts and CID-keyed Type 1 fonts
+      in an SFNT wrapper has been  added -- such fonts are used on the
+      Mac.  The core  SFNT tables `TYP1' and `CID '  are passed to the
+      PS Type 1  and CID-keyed PS font drivers;  other tables (`ALMX',
+      `BBOX', etc.) are not supported yet.
+
+    - A  new interface  to extract  advance values  of glyphs  without
+      loading their outlines has been added.  The functions are called
+      `FT_Get_Advance' and `FT_Get_Advances'; they are defined in file
+      `ftadvanc.h' (to be accessed as FT_ADVANCES_H).
+
+    - A new function `FT_Get_FSType_Flags' (in FT_FREETYPE_H) has been
+      contributed  by   David  Bevan  to  access   the  embedding  and
+      subsetting restriction information of fonts.
+
+
+  III. MISCELLANEOUS
+
+    - FT_MulFix is now an inlined function; by default, assembler code
+      is provided for x86 and ARM.  See FT_CONFIG_OPTION_INLINE_MULFIX
+      and FT_CONFIG_OPTION_NO_ASSEMBLER (in ftoption.h) for more.
+
+    - The handling of `tricky' fonts  (this is, fonts which don't work
+      with the  autohinter, needing the font  format's hinting engine)
+      has been generalized and changed slightly:
+
+      . A new  face flag  FT_FACE_FLAG_TRICKY indicates that  the font
+        format's  hinting engine is  necessary for  correct rendering.
+        The macro FT_IS_TRICKY can be used to check this flag.
+
+      . FT_LOAD_NO_HINTING is now ignored for tricky fonts.  To really
+        force  raw  loading  of  such fonts  (without  hinting),  both
+        FT_LOAD_NO_HINTING  and FT_LOAD_NO_AUTOHINT  must  be used  --
+        this is something which you probably never want to do.
+
+      . Tricky  TrueType fonts  always use  the  bytecode interpreter,
+        either the patented or unpatented version.
+
+    - The  function  `FT_GlyphSlot_Own_Bitmap'  has  been  moved  from
+      FT_SYNTHESIS_H to FT_BITMAP_H; it  is now part of the `official'
+      API.   (The functions  in  FT_SYNTHESIS_H are  still subject  to
+      change, however.)
+
+    - In the  `ftdiff'  demo  program you  can now  toggle the  use of
+      FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH with key `a'.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.3.7 and 2.3.6
 
   I. IMPORTANT BUG FIXES
@@ -3167,7 +3378,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

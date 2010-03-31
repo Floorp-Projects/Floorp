@@ -72,7 +72,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
                                     new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties,
                                     new CSS2PropertiesTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleDeclaration)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleDeclaration)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP

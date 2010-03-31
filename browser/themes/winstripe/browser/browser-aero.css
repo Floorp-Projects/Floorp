@@ -1,60 +1,123 @@
+%define WINSTRIPE_AERO
 %include browser.css
+%undef WINSTRIPE_AERO
 
-/* ::::: Main Window Styling ::::: */
-#navigator-toolbox:-moz-system-metric(windows-default-theme) > toolbar {
-  -moz-appearance: none;
-  border-style: none;
+%if 0
+@media all and (-moz-windows-compositor) {
+  #main-window:not(:-moz-lwtheme) {
+    -moz-appearance: -moz-win-glass;
+    background: transparent;
+  }
+
+  #navigator-toolbox:not(:-moz-lwtheme),
+  #navigator-toolbox > toolbar {
+    -moz-appearance: none;
+    background: transparent;
+    border-style: none;
+  }
+
+  #navigator-toolbox:not(:-moz-lwtheme) {
+    color: black;
+    text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
+  }
+
+  #browser:not(:-moz-lwtheme),
+  #browser-bottombox:not(:-moz-lwtheme) {
+    background-color: -moz-dialog;
+  }
+
+  #urlbar,
+  .searchbar-textbox {
+    background-color: rgba(255,255,255,.725);
+    color: black;
+  }
+
+  /*XXX :-moz-placeholder isn't implemented yet (bug 457801)
+  #urlbar > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
+  .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
+    color: #777;
+  }
+  */
+
+  #urlbar:hover,
+  .searchbar-textbox:hover {
+    background-color: rgba(255,255,255,.898);
+  }
+
+  #urlbar[focused="true"],
+  .searchbar-textbox[focused="true"] {
+    background-color: white;
+  }
+
+  #TabsToolbar:not(:-moz-lwtheme) {
+    margin-bottom: 0;
+    -moz-box-shadow: ThreeDDarkShadow 0 -1px inset;
+  }
+
+  .tabbrowser-tab:not(:-moz-lwtheme),
+  .tabbrowser-arrowscrollbox > .scrollbutton-up:not(:-moz-lwtheme),
+  .tabbrowser-arrowscrollbox > .scrollbutton-down:not(:-moz-lwtheme),
+  .tabs-newtab-button:not(:-moz-lwtheme),
+  .tabs-alltabs-button:not(:-moz-lwtheme) {
+    background-color: rgba(255,255,255,.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,.4);
+  }
+
+  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+    background-color: white;
+    text-shadow: none;
+  }
+
+  #allTabs-panel,
+  #ctrlTab-panel {
+    background: transparent;
+    -moz-appearance: -moz-win-glass;
+    -moz-border-radius: 0;
+    border: none;
+    font: normal 1.2em "Segoe UI";
+    color: black;
+    text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
+  }
+}
+%endif
+
+@media not all and (-moz-windows-compositor) {
+  #print-preview-toolbar:not(:-moz-lwtheme) {
+    -moz-appearance: -moz-win-browsertabbar-toolbox;
+  }
 }
 
-#print-preview-toolbar:not(:-moz-lwtheme) {
-  -moz-appearance: -moz-win-browsertabbar-toolbox;
-}
+@media all and (-moz-windows-default-theme) {
+  #navigator-toolbox > toolbar {
+    -moz-appearance: none;
+    border-style: none;
+  }
 
-/* ::::: Location Bar AutoComplete Styling ::::: */
+  /* Bug 413060, comment 16: Vista Aero is a special case where we use a
+     tooltip appearance for the address bar popup panels */
+  #identity-popup,
+  #editBookmarkPanel {
+    -moz-appearance: tooltip;
+    color: InfoText;
+  }
 
-.ac-url-text:-moz-system-metric(windows-default-theme) {
-  color: -moz-nativehyperlinktext;
-}
+  /* Make the left and right paddings smaller, to compensate for the horizontal
+     space added by the tooltip appearance, see bug 432529. */
+  #identity-popup-container {
+    -moz-padding-start: 6px;
+    -moz-padding-end: 6px;
+  }
 
-/* ::::: Identity Indicator Styling ::::: */
-
-/* Bug 413060, comment 16: Vista Aero is a special case where we use a
-   tooltip appearance for the address bar popup panels */
-#identity-popup:-moz-system-metric(windows-default-theme),
-#editBookmarkPanel:-moz-system-metric(windows-default-theme) {
-  -moz-appearance: tooltip;
-  color: InfoText;
-}
-
-/* Make the left and right paddings smaller, to compensate for the horizontal
-   space added by the tooltip appearance, see bug 432529. */
-#identity-popup-container:-moz-system-metric(windows-default-theme) {
-  -moz-padding-start: 6px;
-  -moz-padding-end: 6px;
-}
-
-#sidebar-splitter:-moz-system-metric(windows-default-theme) {
-  border: 0;
-  -moz-border-end: 1px solid;
-  -moz-border-right-colors: #A9B7C9;
-  -moz-border-left-colors: #A9B7C9;
-  min-width: 0;
-  width: 3px;
-  background-color: transparent;
-  -moz-margin-start: -3px;
-  position: relative;
-  z-index: 10;
-}
-
-#allTabs-panel:-moz-system-metric(windows-compositor),
-#ctrlTab-panel:-moz-system-metric(windows-compositor) {
-  background: transparent;
-  -moz-appearance: -moz-win-glass;
-  -moz-border-radius: 0;
-  border: none;
-  font: normal 1.2em "Segoe UI";
-  color: black;
-  text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
+  #sidebar-splitter {
+    border: 0;
+    -moz-border-end: 1px solid #A9B7C9;
+    min-width: 0;
+    width: 3px;
+    background-color: transparent;
+    -moz-margin-start: -3px;
+    position: relative;
+    z-index: 10;
+  }
 }
 
 /* ::::: fullscreen window controls ::::: */

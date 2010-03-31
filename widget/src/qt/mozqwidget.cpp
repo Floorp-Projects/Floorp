@@ -18,13 +18,12 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
 {
-    setFlag(QGraphicsItem::ItemAcceptsInputMethod);
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+     setFlag(QGraphicsItem::ItemAcceptsInputMethod);
 
-    // Enable gestures: only available in qt > 4.6
- #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
      setAcceptTouchEvents(true);
      grabGesture(Qt::PinchGesture);
- #endif
+#endif
 }
 
 MozQWidget::~MozQWidget()
@@ -40,11 +39,15 @@ void MozQWidget::paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOpti
 
 void MozQWidget::activate()
 {
+    // ensure that the keyboard is hidden when we activate the window
+    hideVKB();
     mReceiver->DispatchActivateEvent();
 }
 
 void MozQWidget::deactivate()
 {
+    // ensure that the keyboard is hidden when we deactivate the window
+    hideVKB();
     mReceiver->DispatchDeactivateEvent();
 }
 
@@ -265,6 +268,7 @@ QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 
 void MozQWidget::showVKB()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QWidget* focusWidget = qApp->focusWidget();
 
     if (focusWidget) {
@@ -279,10 +283,14 @@ void MozQWidget::showVKB()
         focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
         inputContext->setFocusWidget(focusWidget);
     }
+#else
+    LOG(("VKB not supported in Qt < 4.6\n"));
+#endif
 }
 
 void MozQWidget::hideVKB()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QInputContext *inputContext = qApp->inputContext();
     if (!inputContext) {
         NS_WARNING("Closing SIP: but no input context");
@@ -292,24 +300,15 @@ void MozQWidget::hideVKB()
     QEvent request(QEvent::CloseSoftwareInputPanel);
     inputContext->filterEvent(&request);
     inputContext->reset();
+#else
+    LOG(("VKB not supported in Qt < 4.6\n"));
+#endif
 }
 
-/**
-    This method checks the state of the virtual keyboard by checking the list
-    of occupied rectangles. If this list is empty, the keyboard is considered
-    to be closed.
-
-    @return true, if opened; false if closed
-*/
 bool MozQWidget::isVKBOpen()
 {
-    QVariantList areas;
-    QInputContext* input_context = qApp->inputContext();
-
-    if (input_context)
-        areas = input_context->property("InputMethodArea").toList();
-
-    // if it is empty, no VKB visible; otherwise it is
-    return areas.empty();
+    // There is no clear API in Pure QT about how to get OPEN/CLOSED vkb state
+    // FIXME in bug 555019.
+    return PR_FALSE;
 }
 

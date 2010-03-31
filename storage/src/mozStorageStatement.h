@@ -48,6 +48,8 @@
 #include "mozStorageBindingParamsArray.h"
 #include "mozStorageStatementData.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageValueArray.h"
+#include "StorageBaseStatementInternal.h"
 
 class nsIXPConnectJSObjectHolder;
 struct sqlite3_stmt;
@@ -56,14 +58,18 @@ namespace mozilla {
 namespace storage {
 class StatementJSHelper;
 class Connection;
-class BindingParams;
 
 class Statement : public mozIStorageStatement
+                , public mozIStorageValueArray
+                , public StorageBaseStatementInternal
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGESTATEMENT
-  NS_DECL_MOZISTORAGEVALUEARRAY
+  NS_DECL_MOZISTORAGEBASESTATEMENT
+  NS_DECL_MOZISTORAGEBINDINGPARAMS
+  // NS_DECL_MOZISTORAGEVALUEARRAY (methods in mozIStorageStatement)
+  NS_DECL_STORAGEBASESTATEMENTINTERNAL
 
   Statement();
 
@@ -94,20 +100,9 @@ public:
     return mParamsArray.forget();
   }
 
-  /**
-   * Obtains the StatementData needed for asynchronous execution.
-   *
-   * @param _data
-   *        A reference to a StatementData object that will be populated upon
-   *        successful execution of this method.
-   * @return an nsresult indicating success or failure.
-   */
-  nsresult getAsynchronousStatementData(StatementData &_data);
-
 private:
     ~Statement();
 
-    nsRefPtr<Connection> mDBConnection;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
@@ -118,7 +113,7 @@ private:
      * @return a pointer to the BindingParams object to use with our Bind*
      *         method.
      */
-    BindingParams *getParams();
+    mozIStorageBindingParams *getParams();
 
     /**
      * Holds the array of parameters to bind to this statement when we execute
@@ -127,27 +122,21 @@ private:
     nsRefPtr<BindingParamsArray> mParamsArray;
 
     /**
-     * Holds a copy of mDBStatement that we can use asynchronously.  Access to
-     * this is serialized on the asynchronous thread, so it does not need to be
-     * protected.  We will finalize this statement in our destructor.
-     */
-    sqlite3_stmt *mCachedAsyncStatement;
-
-    /**
-     * Obtains the statement to use on the background thread.
-     *
-     * @param _stmt
-     *        An outparm where the new statement should be placed.
-     * @return a SQLite result code indicating success or failure.
-     */
-    int getAsyncStatement(sqlite3_stmt **_stmt);
-
-    /**
      * The following two members are only used with the JS helper.  They cache
      * the row and params objects.
      */
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementRowHolder;
+
+  /**
+   * Internal version of finalize that allows us to tell it if it is being
+   * called from the destructor so it can know not to dispatch events that
+   * require a reference to us.
+   *
+   * @param aDestructing
+   *        Is the destructor calling?
+   */
+  nsresult internalFinalize(bool aDestructing);
 
     friend class StatementJSHelper;
 };

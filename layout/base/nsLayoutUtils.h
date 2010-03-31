@@ -388,6 +388,14 @@ public:
                                                nsIFrame* aFrame);
 
   /**
+   * Get the popup frame of a given native mouse event.
+   * @param aEvent  the event.
+   * @return        Null, if there is no popup frame at the point, otherwise,
+   *                returns top-most popup frame at the point.
+   */
+  static nsIFrame* GetPopupFrameForEventCoordinates(const nsEvent* aEvent);
+
+/**
    * Translate from widget coordinates to the view's coordinates
    * @param aPresContext the PresContext for the view
    * @param aWidget the widget
@@ -474,6 +482,12 @@ public:
    */
   static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor);
 
+  /**
+   * If aIn can be represented exactly using an nsIntRect (i.e.
+   * integer-aligned edges and coordinates in the PRInt32 range) then we
+   * set aOut to that rectangle, otherwise return failure.
+   */
+  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
 
   enum {
     PAINT_IN_TRANSFORM = 0x01,
@@ -1087,7 +1101,7 @@ public:
   static PRBool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
   }
 
   /**
@@ -1097,7 +1111,7 @@ public:
   static PRBool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialSibling());
   }
 
   /**

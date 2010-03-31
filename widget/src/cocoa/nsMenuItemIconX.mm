@@ -439,10 +439,16 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
   
+  nsRefPtr<gfxImageSurface> frame;
+  nsresult rv = imageContainer->CopyFrame(  imgIContainer::FRAME_CURRENT,
+                                            imgIContainer::FLAG_SYNC_DECODE,
+                                            getter_AddRefs(frame));
+  if (NS_FAILED(rv) || !frame) {
+    [mNativeMenuItem setImage:nil];
+    return NS_ERROR_FAILURE;
+  }      
   CGImageRef origImage = NULL;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromImageContainer(imageContainer, 
-                                                              imgIContainer::FRAME_CURRENT, 
-                                                              &origImage);
+  rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &origImage);
   if (NS_FAILED(rv) || !origImage) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
@@ -487,6 +493,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
   }
   CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
+  ::CGContextClearRect(bitmapContext, iconRect);
   ::CGContextDrawImage(bitmapContext, iconRect, finalImage);
   
   CGImageRef iconImage = ::CGBitmapContextCreateImage(bitmapContext);

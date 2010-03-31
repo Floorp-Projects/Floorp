@@ -39,6 +39,7 @@ window.addEventListener("message", function(e) {\n\
   }\n\
   xhr.onload = function () {\n\
     res.status = xhr.status;\n\
+    res.statusText = xhr.statusText;\n\
     res.responseXML = xhr.responseXML ?\n\
       (new XMLSerializer()).serializeToString(xhr.responseXML) :\n\
       null;\n\
@@ -48,6 +49,10 @@ window.addEventListener("message", function(e) {\n\
   xhr.onerror = function () {\n\
     res.didFail = true;\n\
     res.status = xhr.status;\n\
+    try {\n\
+      res.statusText = xhr.statusText;\n\
+    } catch (e) {\n\
+    }\n\
     res.responseXML = xhr.responseXML ?\n\
       (new XMLSerializer()).serializeToString(xhr.responseXML) :\n\
       null;\n\

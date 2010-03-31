@@ -627,12 +627,6 @@ nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
     return PR_TRUE;
 }
 
-nsTransparencyMode
-nsNativeThemeQt::GetWidgetTransparency(PRUint8 aWidgetType)
-{
-  return eTransparencyOpaque;
-}
-
 void
 nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
                                  nsIFrame* aFrame,

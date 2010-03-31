@@ -28,9 +28,7 @@
 
 #placesView > splitter:-moz-system-metric(windows-default-theme) {
   border: 0;
-  -moz-border-end: 1px solid;
-  -moz-border-right-colors: #A9B7C9;
-  -moz-border-left-colors: #A9B7C9;
+  -moz-border-end: 1px solid #A9B7C9;
   min-width: 0;
   width: 3px !important;
   background-color: transparent;

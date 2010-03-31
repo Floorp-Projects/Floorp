@@ -150,6 +150,8 @@
 #include "nsSVGOuterSVGFrame.h"
 #endif
 
+using namespace mozilla;
+
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -460,10 +462,9 @@ static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
 
   // We only store the "special sibling" annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.
-  return
-    static_cast<nsIFrame*>
+  return static_cast<nsIFrame*>
     (aFrame->GetFirstContinuation()->
-       GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+       Properties().Get(nsIFrame::IBSplitSpecialSibling()));
 }
 
 static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
@@ -472,10 +473,9 @@ static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
   
   // We only store the "special sibling" annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.  
-  return
-    static_cast<nsIFrame*>
+  return static_cast<nsIFrame*>
     (aFrame->GetFirstContinuation()->
-       GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+       Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
 }
 
 static nsIFrame*
@@ -517,8 +517,9 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
-    aFrame->SetProperty(nsGkAtoms::IBSplitSpecialSibling, aSpecialSibling);
-    aSpecialSibling->SetProperty(nsGkAtoms::IBSplitSpecialPrevSibling, aFrame);
+    FramePropertyTable* props = aFrame->PresContext()->PropertyTable();
+    props->Set(aFrame, nsIFrame::IBSplitSpecialSibling(), aSpecialSibling);
+    props->Set(aSpecialSibling, nsIFrame::IBSplitSpecialPrevSibling(), aFrame);
   }
 }
 
@@ -4745,6 +4746,11 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
+  // We don't need frames for animation elements
+  if (aContent->IsNodeOfType(nsINode::eANIMATION)) {
+    return &sSuppressData;
+  }
+
   // Reduce the number of frames we create unnecessarily. Note that this is not
   // where we select which frame in a <switch> to render! That happens in
   // nsSVGSwitchFrame::PaintSVG.
@@ -5290,14 +5296,25 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 }
 
-static void DestroyContent(void *aObject,
-                           nsIAtom *aPropertyName,
-                           void *aPropertyValue,
-                           void *aData)
+static void
+DestroyContent(void* aPropertyValue)
 {
   nsIContent* content = static_cast<nsIContent*>(aPropertyValue);
   content->UnbindFromTree();
   NS_RELEASE(content);
+}
+
+NS_DECLARE_FRAME_PROPERTY(BeforeProperty, DestroyContent)
+NS_DECLARE_FRAME_PROPERTY(AfterProperty, DestroyContent)
+
+static const FramePropertyDescriptor*
+GenConPseudoToProperty(nsIAtom* aPseudo)
+{
+  NS_ASSERTION(aPseudo == nsCSSPseudoElements::before ||
+               aPseudo == nsCSSPseudoElements::after,
+               "Bad gen-con pseudo");
+  return aPseudo == nsCSSPseudoElements::before ? BeforeProperty()
+      : AfterProperty();
 }
 
 /**
@@ -5401,8 +5418,8 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // setting it on a table pseudo-frame inserted under that instead.  That's
     // OK, though; we just need to do the property set so that the content will
     // get cleaned up when the frame is destroyed.
-    aParentFrame->SetProperty(styleContext->GetPseudo(),
-                              item.mContent, DestroyContent);
+    aParentFrame->Properties().Set(GenConPseudoToProperty(styleContext->GetPseudo()),
+                                   item.mContent);
 
     // Now that we've passed ownership of item.mContent to the frame, unset
     // our generated content flag so we don't release or unbind it ourselves.
@@ -5822,8 +5839,7 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
   // If the frame is out-of-flow, GetPrimaryFrame() will have returned the
   // out-of-flow frame; we want the placeholder.
   if (sibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    nsIFrame* placeholderFrame;
-    mPresShell->GetPlaceholderFrameFor(sibling, &placeholderFrame);
+    nsIFrame* placeholderFrame = mPresShell->FrameManager()->GetPlaceholderFrameFor(sibling);
     NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
     sibling = placeholderFrame;
   }
@@ -7195,7 +7211,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         }
 #endif
       } else {
-        aFrame->Invalidate(aFrame->GetOverflowRect());
+        aFrame->InvalidateOverflowRect();
       }
     }
   }
@@ -7289,7 +7305,7 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
   nsIViewManager::UpdateViewBatch batch(presShell->GetViewManager());
   nsIFrame* rootFrame = presShell->GetRootFrame();
-  rootFrame->Invalidate(rootFrame->GetOverflowRect());
+  rootFrame->InvalidateOverflowRect();
   batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
@@ -7408,6 +7424,8 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   return rv;
 }
 
+NS_DECLARE_FRAME_PROPERTY(ChangeListProperty, nsnull)
+
 nsresult
 nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
@@ -7422,7 +7440,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   BeginUpdate();
 
   nsPresContext* presContext = mPresShell->GetPresContext();
-  nsPropertyTable *propTable = presContext->PropertyTable();
+  FramePropertyTable* propTable = presContext->PropertyTable();
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
@@ -7433,9 +7451,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      propTable->SetProperty(changeData->mFrame,
-                             nsGkAtoms::changeListProperty,
-                             nsnull, nsnull, nsnull);
+      propTable->Set(changeData->mFrame, ChangeListProperty(),
+                     NS_INT32_TO_PTR(1));
     }
   }
 
@@ -7464,11 +7481,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
     // skip any frame that has been destroyed due to a ripple effect
     if (frame) {
-      nsresult res;
-
-      propTable->GetProperty(frame, nsGkAtoms::changeListProperty, &res);
-
-      if (NS_PROPTABLE_PROP_NOT_THERE == res)
+      if (!propTable->Get(frame, ChangeListProperty()))
         continue;
     }
 
@@ -7518,8 +7531,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      propTable->DeleteProperty(changeData->mFrame,
-                                nsGkAtoms::changeListProperty);
+      propTable->Delete(changeData->mFrame, ChangeListProperty());
     }
 
 #ifdef DEBUG
@@ -8242,8 +8254,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   // are within fixed frames, because that would cause duplicates on the new
   // page - bug 389619)
   for (nsIFrame* fixed = firstFixed; fixed; fixed = fixed->GetNextSibling()) {
-    nsIFrame* prevPlaceholder = nsnull;
-    mPresShell->GetPlaceholderFrameFor(fixed, &prevPlaceholder);
+    nsIFrame* prevPlaceholder = mPresShell->FrameManager()->GetPlaceholderFrameFor(fixed);
     if (prevPlaceholder &&
         nsLayoutUtils::IsProperAncestorFrame(prevCanvasFrame, prevPlaceholder)) {
       nsresult rv = ConstructFrame(state, fixed->GetContent(),
@@ -10160,10 +10171,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   //
   // {ib} splits maintain the following invariants:
   // 1) All frames in the split have the NS_FRAME_IS_SPECIAL bit set.
-  // 2) Each frame in the split has the nsGkAtoms::IBSplitSpecialSibling
+  // 2) Each frame in the split has the nsIFrame::IBSplitSpecialSibling
   //    property pointing to the next frame in the split, except for the last
   //    one, which does not have it set.
-  // 3) Each frame in the split has the nsGkAtoms::IBSplitSpecialPrevSibling
+  // 3) Each frame in the split has the nsIFrame::IBSplitSpecialPrevSibling
   //    property pointing to the previous frame in the split, except for the
   //    first one, which does not have it set.
   // 4) The first and last frame in the split are always inlines.

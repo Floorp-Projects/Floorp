@@ -532,8 +532,13 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     if (NS_FAILED(rv))
         return JS_FALSE; // Not just absence of principal, but failure.
 
-    if (!subjectPrincipal)
-        return JS_FALSE;
+    if (!subjectPrincipal) {
+        // See bug 553448 for discussion of this case.
+        NS_ASSERTION(!JS_GetSecurityCallbacks(cx)->findObjectPrincipals,
+                     "CSP: Should have been able to find subject principal. "
+                     "Reluctantly granting access.");
+        return JS_TRUE;
+    }
 
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
@@ -808,13 +813,13 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     {
         nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
         nsCOMPtr<nsIInterfaceInfo> interfaceInfo;
-        const nsIID* objIID;
+        const nsIID* objIID = nsnull;
         rv = aCallContext->GetCalleeWrapper(getter_AddRefs(wrapper));
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && wrapper)
             rv = wrapper->FindInterfaceWithMember(aProperty, getter_AddRefs(interfaceInfo));
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && interfaceInfo)
             rv = interfaceInfo->GetIIDShared(&objIID);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && objIID)
         {
             switch (aAction)
             {

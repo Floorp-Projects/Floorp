@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=265203
+-->
+<head>
+  <title>Test for Bug 265203</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=265203">Mozilla Bug 265203</a>
+<p id="display">
+<a id="a1" href="http://www.mozilla.org">Mozilla</a><a id="a2" 
+ href="http://www.mozilla.org/products/firefox">Firefox</a><br>
+<br>
+<table cellpadding="2" cellspacing="2" border="1"
+ style="text-align: left; width: 100%;">
+  <tbody>
+
+    <tr>
+      <td style="vertical-align: top;"><a id="a3" href="http://www.mozilla.org">Mozilla</a></td>
+      <td style="vertical-align: top;"><a
+ href="http://www.mozilla.org/products/firefox">Firefox</a></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a href="http://www.mozilla.org">Mozilla</a></td>
+      <td style="vertical-align: top;"><a
+ href="http://www.mozilla.org/products/firefox">Firefox</a></td>
+
+    </tr>
+  </tbody>
+</table>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 265203 **/
+
+var gTestStarted = false;
+var expectedResult = [ null, 0, null ];
+var nextTest;
+var test = 0;
+
+function testFocus() {
+    var selection = window.getSelection()
+    is(selection.focusNode, expectedResult[0],"test" + test + ": " + "caret node");
+    is(selection.focusOffset, expectedResult[1],"test" + test + ": " + "caret offset");
+    is(document.activeElement, expectedResult[2],"test" + test + ": " + "focused node");
+    ++test;
+    if (nextTest)
+      nextTest();
+}
+
+function test0() {
+    $("a1").focus();
+    expectedResult = [ $("a1"), 0, $("a1") ]
+    nextTest = test1;
+    testFocus();
+}
+function test1() {
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    expectedResult = [ $("a1").firstChild, 7, $("a2") ]
+    nextTest = test2;
+    testFocus();
+}
+function test2() {
+    $("a3").focus();
+    expectedResult = [ $("a3"), 0, $("a3") ]
+    nextTest = test3;
+    testFocus();
+}
+function test3() {
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("VK_RIGHT", { });
+    expectedResult = [ $("a3").firstChild, 7, $("a3") ]
+    nextTest = endTest;
+    testFocus();
+}
+
+function endTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch);
+  try {
+    prefs.setBoolPref("accessibility.browsewithcaret", false);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  if (gTestStarted)
+    return;
+  gTestStarted = true;
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch);
+  try {
+    prefs.setBoolPref("accessibility.browsewithcaret", true);
+    test0();
+  } catch(e) {
+    endTest();
+  }
+}
+
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest);
+
+
+</script>
+</pre>
+</body>
+</html>

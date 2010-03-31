@@ -97,7 +97,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 NS_INTERFACE_TABLE_HEAD(nsSVGEllipseElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGEllipseElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGEllipseElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGEllipseElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGEllipseElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGEllipseElementBase)
 
 //----------------------------------------------------------------------

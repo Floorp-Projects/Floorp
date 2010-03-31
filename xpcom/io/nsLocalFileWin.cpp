@@ -2753,7 +2753,7 @@ nsLocalFile::Reveal()
     nsAutoString explorerPath;
     rv = winDir->GetPath(explorerPath);  
     NS_ENSURE_SUCCESS(rv, rv);
-#ifdef WINCE
+#ifndef WINCE
     explorerPath.Append(L"\\explorer.exe");
 #else
     explorerPath.Append(L"\\fexplorer.exe");

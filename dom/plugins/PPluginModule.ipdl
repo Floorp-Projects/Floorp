@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+include protocol "PPluginIdentifier.ipdl";
 include protocol "PPluginInstance.ipdl";
 
 include "npapi.h";
@@ -44,7 +45,7 @@ include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using NPNVariable;
-using mozilla::ipc::NPRemoteIdentifier;
+using mozilla::plugins::NativeThreadId;
 
 namespace mozilla {
 namespace plugins {
@@ -52,10 +53,24 @@ namespace plugins {
 rpc protocol PPluginModule
 {
   manages PPluginInstance;
+  manages PPluginIdentifier;
+
+both:
+  /**
+   * Sending a void string to this constructor creates an int identifier whereas
+   * sending a non-void string will create a string identifier. This constructor
+   * may be called by either child or parent. If a race occurs by calling the
+   * constructor with the same string or int argument then we create two actors
+   * and detect the second instance in the child. We prevent the parent's actor
+   * from leaking out to plugin code and only allow the child's to be used.
+   */
+  async PPluginIdentifier(nsCString aString,
+                          int32_t aInt);
 
 child:
+  // Return the plugin's thread ID, if it can be found.
   rpc NP_Initialize()
-    returns (NPError rv);
+    returns (NativeThreadId tid, NPError rv);
 
   rpc PPluginInstance(nsCString aMimeType,
                       uint16_t aMode,
@@ -67,28 +82,9 @@ child:
     returns (NPError rv);
 
 parent:
+  async XXX_HACK_FIXME_cjones(Shmem _);
   rpc NPN_UserAgent()
     returns (nsCString userAgent);
-
-  sync NPN_GetStringIdentifier(nsCString aString)
-    returns (NPRemoteIdentifier aId);
-  sync NPN_GetIntIdentifier(int32_t aInt)
-    returns (NPRemoteIdentifier aId);
-
-  // for the following two methods, the returned value is valid iff
-  // |err == NPERR_NO_ERROR|
-  sync NPN_UTF8FromIdentifier(NPRemoteIdentifier aId)
-    returns (NPError err, nsCString aString);
-  // technically |aInt| is undefined when |aId| is invalid.  but it's
-  // nice to let the other side know that |aId| was invalid
-  sync NPN_IntFromIdentifier(NPRemoteIdentifier aId)
-    returns (NPError err, int32_t aInt);
-
-  sync NPN_IdentifierIsString(NPRemoteIdentifier aId)
-    returns (bool aIsString);
-
-  sync NPN_GetStringIdentifiers(nsCString[] aNames)
-    returns (NPRemoteIdentifier[] aIds);
 
   rpc NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
     returns (NPError aError,

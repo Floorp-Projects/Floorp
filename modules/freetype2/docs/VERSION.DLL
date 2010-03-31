@@ -53,6 +53,11 @@ systems, but not all of them:
 
     release    libtool      so
   -------------------------------
+     2.3.12     10.0.4    6.4.0
+     2.3.11     9.22.3    6.3.22
+     2.3.10     9.21.3    6.3.21
+     2.3.9      9.20.3    6.3.20
+     2.3.8      9.19.3    6.3.19
      2.3.7      9.18.3    6.3.18
      2.3.6      9.17.3    6.3.17
      2.3.5      9.16.3    6.3.16
@@ -120,7 +125,7 @@ other release numbers.
 
 ------------------------------------------------------------------------
 
-Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008 by
+Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

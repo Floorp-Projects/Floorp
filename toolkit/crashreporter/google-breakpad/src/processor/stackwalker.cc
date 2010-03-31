@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,6 @@
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"
 #include "processor/scoped_ptr.h"
-#include "processor/stack_frame_info.h"
 #include "processor/stackwalker_ppc.h"
 #include "processor/stackwalker_sparc.h"
 #include "processor/stackwalker_x86.h"
@@ -65,8 +64,8 @@ Stackwalker::Stackwalker(const SystemInfo *system_info,
     : system_info_(system_info),
       memory_(memory),
       modules_(modules),
-      supplier_(supplier),
-      resolver_(resolver) {
+      resolver_(resolver),
+      supplier_(supplier) {
 }
 
 
@@ -74,11 +73,6 @@ bool Stackwalker::Walk(CallStack *stack) {
   BPLOG_IF(ERROR, !stack) << "Stackwalker::Walk requires |stack|";
   assert(stack);
   stack->Clear();
-
-  // stack_frame_info parallels the CallStack.  The vector is passed to the
-  // GetCallerFrame function.  It contains information that may be helpful
-  // for stackwalking.
-  vector< linked_ptr<StackFrameInfo> > stack_frame_info;
 
   // Begin with the context frame, and keep getting callers until there are
   // no more.
@@ -91,8 +85,6 @@ bool Stackwalker::Walk(CallStack *stack) {
     // frame_pointer fields.  The frame structure comes from either the
     // context frame (above) or a caller frame (below).
 
-    linked_ptr<StackFrameInfo> frame_info;
-
     // Resolve the module information, if a module map was provided.
     if (modules_) {
       const CodeModule *module =
@@ -101,6 +93,8 @@ bool Stackwalker::Walk(CallStack *stack) {
         frame->module = module;
         if (resolver_ &&
             !resolver_->HasModule(frame->module->code_file()) &&
+            no_symbol_modules_.find(
+                module->code_file()) == no_symbol_modules_.end() &&
             supplier_) {
           string symbol_data, symbol_file;
           SymbolSupplier::SymbolResult symbol_result =
@@ -113,12 +107,13 @@ bool Stackwalker::Walk(CallStack *stack) {
                                                   symbol_data);
               break;
             case SymbolSupplier::NOT_FOUND:
+              no_symbol_modules_.insert(module->code_file());
               break;  // nothing to do
             case SymbolSupplier::INTERRUPT:
               return false;
           }
         }
-        frame_info.reset(resolver_->FillSourceLineInfo(frame.get()));
+        resolver_->FillSourceLineInfo(frame.get());
       }
     }
 
@@ -126,12 +121,8 @@ bool Stackwalker::Walk(CallStack *stack) {
     // over the frame, because the stack now owns it.
     stack->frames_.push_back(frame.release());
 
-    // Add the frame info to the parallel stack.
-    stack_frame_info.push_back(frame_info);
-    frame_info.reset(NULL);
-
     // Get the next frame and take ownership.
-    frame.reset(GetCallerFrame(stack, stack_frame_info));
+    frame.reset(GetCallerFrame(stack));
   }
 
   return true;

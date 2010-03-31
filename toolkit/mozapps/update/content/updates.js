@@ -73,6 +73,7 @@ const SRCEVT_BACKGROUND       = 2;
 var gConsole    = null;
 var gPref       = null;
 var gLogEnabled = false;
+var gUpdatesFoundPageId;
 
 // Notes:
 // 1. use the wizard's goTo method whenever possible to change the wizard
@@ -525,9 +526,10 @@ var gUpdates = {
    * on the update's metadata.
    */
   get updatesFoundPageId() {
-    delete this.updatesFoundPageId;
-    return this.updatesFoundPageId = this.update.billboardURL ? "updatesfoundbillboard"
-                                                              : "updatesfoundbasic";
+    if (gUpdatesFoundPageId)
+      return gUpdatesFoundPageId;
+    return gUpdatesFoundPageId = this.update.billboardURL ? "updatesfoundbillboard"
+                                                          : "updatesfoundbasic";
   },
 
   /**
@@ -582,8 +584,8 @@ var gCheckingPage = {
      */
     onProgress: function(request, position, totalSize) {
       var pm = document.getElementById("checkingProgress");
-      checkingProgress.setAttribute("mode", "normal");
-      checkingProgress.setAttribute("value", Math.floor(100 * (position / totalSize)));
+      pm.mode = "normal";
+      pm.value = Math.floor(100 * (position / totalSize));
     },
 
     /**
@@ -596,6 +598,9 @@ var gCheckingPage = {
       if (gUpdates.update) {
         LOG("gCheckingPage", "onCheckComplete - update found");
         if (!aus.canApplyUpdates) {
+          // Prevent multiple notifications for the same update when the user is
+          // unable to apply updates.
+          gUpdates.never();
           gUpdates.wiz.goTo("manualUpdate");
           return;
         }
@@ -837,10 +842,6 @@ var gManualUpdatePage = {
     manualUpdateLinkLabel.value = manualURL;
     manualUpdateLinkLabel.setAttribute("url", manualURL);
 
-    // Prevent multiple notifications for the same update when the user is
-    // unable to apply updates.
-    gUpdates.never();
-
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
   }
@@ -929,6 +930,9 @@ var gUpdatesFoundBillboardPage = {
       return;
 
     var remoteContent = document.getElementById("updateMoreInfoContent");
+    remoteContent.addEventListener("load",
+                                   gUpdatesFoundBillboardPage.onBillboardLoad,
+                                   false);
     // update_name and update_version need to be set before url
     // so that when attempting to download the url, we can show
     // the formatted "Download..." string
@@ -957,6 +961,25 @@ var gUpdatesFoundBillboardPage = {
     gPref.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
 
     this._billboardLoaded = true;
+  },
+
+  /**
+   * When the billboard document has loaded
+   */
+  onBillboardLoad: function(aEvent) {
+    var remoteContent = document.getElementById("updateMoreInfoContent");
+    // Note: may be called multiple times due to multiple onLoad events.
+    var state = remoteContent.getAttribute("state");
+    if (state == "loading" || !aEvent.originalTarget.isSameNode(remoteContent))
+      return;
+
+    remoteContent.removeEventListener("load", gUpdatesFoundBillboardPage.onBillboardLoad, false);
+    if (state == "error") {
+      gUpdatesFoundPageId = "updatesfoundbasic";
+      var next = gUpdates.wiz.getPageById("updatesfoundbillboard").getAttribute("next");
+      gUpdates.wiz.getPageById(gUpdates.updatesFoundPageId).setAttribute("next", next);
+      gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
+    }
   },
 
   onExtra1: function() {
@@ -1028,20 +1051,24 @@ var gLicensePage = {
   /**
    * When the license document has loaded
    */
-  onLicenseLoad: function() {
+  onLicenseLoad: function(aEvent) {
     var licenseContent = document.getElementById("licenseContent");
     // Disable or enable the radiogroup based on the state attribute of
     // licenseContent.
     // Note: may be called multiple times due to multiple onLoad events.
     var state = licenseContent.getAttribute("state");
-    if (state == "loading")
+    if (state == "loading" || !aEvent.originalTarget.isSameNode(licenseContent))
       return;
 
     licenseContent.removeEventListener("load", gLicensePage.onLicenseLoad, false);
 
-    var errorLoading = (state == "error");
-    document.getElementById("acceptDeclineLicense").disabled = errorLoading;
-    gLicensePage._licenseLoaded = !errorLoading;
+    if (state == "error") {
+      gUpdates.wiz.goTo("manualUpdate");
+      return;
+    }
+
+    gLicensePage._licenseLoaded = true;
+    document.getElementById("acceptDeclineLicense").disabled = false;
     gUpdates.wiz.getButton("extra1").disabled = false;
   },
 
@@ -1167,8 +1194,10 @@ var gDownloadingPage = {
    * Member variables for updating download status
    */
   _lastSec: Infinity,
-  _startTime: Date.now(),
+  _startTime: null,
   _pausedStatus: "",
+
+  _hiding: false,
 
   /**
    * Initialize
@@ -1199,6 +1228,8 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onPageShow - no valid update to download?!");
       return;
     }
+
+    this._startTime = Date.now();
 
     try {
       // Say that this was a foreground download, not a background download,
@@ -1332,9 +1363,24 @@ var gDownloadingPage = {
   },
 
   /**
+   * When the user has closed the window using a Window Manager control (this
+   * page doesn't have a cancel button) cancel the update in progress.
+   */
+  onWizardCancel: function() {
+    if (this._hiding)
+      return;
+
+    this.removeDownloadListener();
+ },
+
+  /**
    * When the user closes the Wizard UI by clicking the Hide button
    */
   onHide: function() {
+    // Set _hiding to false to prevent onWizardCancel from cancelling the update
+    // that is in progress.
+    this._hiding = true;
+
     // Remove ourself as a download listener so that we don't continue to be
     // fed progress and state notifications after the UI we're updating has
     // gone away.

@@ -349,12 +349,13 @@ menuitem.menuitem-non-iconic {
 
 %ifdef MOZ_WIDGET_GTK2
 /********* detection of system setting to use icons in menus ***********/
-menuitem:not([type]):not(:-moz-system-metric(images-in-menus)) > .menu-iconic-left {
-  visibility: hidden;
-}
-
-menu:not(:-moz-system-metric(images-in-menus)) > .menu-iconic-left {
-  visibility: hidden;
+@media not all and (-moz-images-in-menus) {
+  menuitem:not([type]):not(.menuitem-with-favicon) > .menu-iconic-left {
+    visibility: hidden;
+  }
+  menu > .menu-iconic-left {
+    visibility: hidden;
+  }
 }
 %endif
 
@@ -692,6 +693,14 @@ textbox[multiline="true"] {
 
 .textbox-input-box {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box");
+}
+
+html|textarea.textbox-textarea {
+  -moz-resize: none;
+}
+
+textbox[resizable="true"] > .textbox-input-box > html|textarea.textbox-textarea {
+  -moz-resize: both;
 }
 
 .textbox-input-box[spellcheck="true"] {

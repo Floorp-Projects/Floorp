@@ -178,6 +178,10 @@ Tester.prototype = {
     // Import utils in the test scope.
     this.currentTest.scope.EventUtils = this.EventUtils;
     this.currentTest.scope.SimpleTest = this.SimpleTest;
+    // Override SimpleTest methods with ours.
+    ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot"].forEach(function(m) {
+      this.SimpleTest[m] = this[m];
+    }, this.currentTest.scope);
 
     // Import head.js script if it exists.
     var currentTestDirPath =

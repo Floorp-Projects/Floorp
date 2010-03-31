@@ -185,5 +185,15 @@ NS_EXTERN_C
   NS_EXPORT FIVE_BYTE test_5_byte_struct_return(RECT);
   NS_EXPORT SIX_BYTE test_6_byte_struct_return(RECT);
   NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(RECT);
+
+  NS_EXPORT void * test_fnptr();
+
+  NS_EXPORT PRInt32 test_closure_cdecl(PRInt8, PRInt32 (*)(PRInt8));
+#if defined(_WIN32) && !defined(__WIN64)
+  NS_EXPORT PRInt32 test_closure_stdcall(PRInt8, PRInt32 (NS_STDCALL *)(PRInt8));
+#endif /* defined(_WIN32) && !defined(__WIN64) */
+
+  NS_EXPORT PRInt32 test_callme(PRInt8);
+  NS_EXPORT void* test_getfn();
 }
 

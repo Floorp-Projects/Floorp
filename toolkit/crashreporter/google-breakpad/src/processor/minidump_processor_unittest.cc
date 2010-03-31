@@ -34,6 +34,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <map>
 #include "breakpad_googletest_includes.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
@@ -46,6 +47,8 @@
 #include "google_breakpad/processor/symbol_supplier.h"
 #include "processor/logging.h"
 #include "processor/scoped_ptr.h"
+
+using std::map;
 
 namespace google_breakpad {
 class MockMinidump : public Minidump {
@@ -74,6 +77,10 @@ using google_breakpad::scoped_ptr;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
 using std::string;
+using ::testing::_;
+using ::testing::Mock;
+using ::testing::Ne;
+using ::testing::Property;
 using ::testing::Return;
 
 static const char *kSystemInfoOS = "Windows NT";
@@ -155,6 +162,19 @@ SymbolSupplier::SymbolResult TestSymbolSupplier::GetSymbolFile(
   return s;
 }
 
+// A mock symbol supplier that always returns NOT_FOUND; one current
+// use for testing the processor's caching of symbol lookups.
+class MockSymbolSupplier : public SymbolSupplier {
+ public:
+  MockSymbolSupplier() { }
+  MOCK_METHOD3(GetSymbolFile, SymbolResult(const CodeModule*,
+                                           const SystemInfo*,
+                                           string*));
+  MOCK_METHOD4(GetSymbolFile, SymbolResult(const CodeModule*,
+                                           const SystemInfo*,
+                                           string*,
+                                           string*));
+};
 
 class MinidumpProcessorTest : public ::testing::Test {
 
@@ -186,6 +206,43 @@ TEST_F(MinidumpProcessorTest, TestCorruptMinidumps) {
             google_breakpad::PROCESS_ERROR_NO_THREAD_LIST);
 }
 
+// This test case verifies that the symbol supplier is only consulted
+// once per minidump per module.
+TEST_F(MinidumpProcessorTest, TestSymbolSupplierLookupCounts) {
+  MockSymbolSupplier supplier;
+  BasicSourceLineResolver resolver;
+  MinidumpProcessor processor(&supplier, &resolver);
+
+  string minidump_file = string(getenv("srcdir") ? getenv("srcdir") : ".") +
+                         "/src/processor/testdata/minidump2.dmp";
+  ProcessState state;
+  EXPECT_CALL(supplier, GetSymbolFile(
+      Property(&google_breakpad::CodeModule::code_file,
+               "c:\\test_app.exe"),
+      _, _, _)).WillOnce(Return(SymbolSupplier::NOT_FOUND));
+  EXPECT_CALL(supplier, GetSymbolFile(
+      Property(&google_breakpad::CodeModule::code_file,
+               Ne("c:\\test_app.exe")),
+      _, _, _)).WillRepeatedly(Return(SymbolSupplier::NOT_FOUND));
+  ASSERT_EQ(processor.Process(minidump_file, &state),
+            google_breakpad::PROCESS_OK);
+
+  ASSERT_TRUE(Mock::VerifyAndClearExpectations(&supplier));
+
+  // We need to verify that across minidumps, the processor will refetch
+  // symbol files, even with the same symbol supplier.
+  EXPECT_CALL(supplier, GetSymbolFile(
+      Property(&google_breakpad::CodeModule::code_file,
+               "c:\\test_app.exe"),
+      _, _, _)).WillOnce(Return(SymbolSupplier::NOT_FOUND));
+  EXPECT_CALL(supplier, GetSymbolFile(
+      Property(&google_breakpad::CodeModule::code_file,
+               Ne("c:\\test_app.exe")),
+      _, _, _)).WillRepeatedly(Return(SymbolSupplier::NOT_FOUND));
+  ASSERT_EQ(processor.Process(minidump_file, &state),
+            google_breakpad::PROCESS_OK);
+}
+
 TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   TestSymbolSupplier supplier;
   BasicSourceLineResolver resolver;
@@ -204,16 +261,16 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   ASSERT_EQ(state.system_info()->cpu_info, kSystemInfoCPUInfo);
   ASSERT_TRUE(state.crashed());
   ASSERT_EQ(state.crash_reason(), "EXCEPTION_ACCESS_VIOLATION");
-  ASSERT_EQ(state.crash_address(), 0x45);
-  ASSERT_EQ(state.threads()->size(), 1);
+  ASSERT_EQ(state.crash_address(), 0x45U);
+  ASSERT_EQ(state.threads()->size(), size_t(1));
   ASSERT_EQ(state.requesting_thread(), 0);
 
   CallStack *stack = state.threads()->at(0);
   ASSERT_TRUE(stack);
-  ASSERT_EQ(stack->frames()->size(), 4);
+  ASSERT_EQ(stack->frames()->size(), 4U);
 
   ASSERT_TRUE(stack->frames()->at(0)->module);
-  ASSERT_EQ(stack->frames()->at(0)->module->base_address(), 0x400000);
+  ASSERT_EQ(stack->frames()->at(0)->module->base_address(), 0x400000U);
   ASSERT_EQ(stack->frames()->at(0)->module->code_file(), "c:\\test_app.exe");
   ASSERT_EQ(stack->frames()->at(0)->function_name,
             "`anonymous namespace'::CrashFunction");
@@ -221,7 +278,7 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   ASSERT_EQ(stack->frames()->at(0)->source_line, 58);
 
   ASSERT_TRUE(stack->frames()->at(1)->module);
-  ASSERT_EQ(stack->frames()->at(1)->module->base_address(), 0x400000);
+  ASSERT_EQ(stack->frames()->at(1)->module->base_address(), 0x400000U);
   ASSERT_EQ(stack->frames()->at(1)->module->code_file(), "c:\\test_app.exe");
   ASSERT_EQ(stack->frames()->at(1)->function_name, "main");
   ASSERT_EQ(stack->frames()->at(1)->source_file_name, "c:\\test_app.cc");
@@ -229,7 +286,7 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
 
   // This comes from the CRT
   ASSERT_TRUE(stack->frames()->at(2)->module);
-  ASSERT_EQ(stack->frames()->at(2)->module->base_address(), 0x400000);
+  ASSERT_EQ(stack->frames()->at(2)->module->base_address(), 0x400000U);
   ASSERT_EQ(stack->frames()->at(2)->module->code_file(), "c:\\test_app.exe");
   ASSERT_EQ(stack->frames()->at(2)->function_name, "__tmainCRTStartup");
   ASSERT_EQ(stack->frames()->at(2)->source_file_name,
@@ -238,14 +295,14 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
 
   // No debug info available for kernel32.dll
   ASSERT_TRUE(stack->frames()->at(3)->module);
-  ASSERT_EQ(stack->frames()->at(3)->module->base_address(), 0x7c800000);
+  ASSERT_EQ(stack->frames()->at(3)->module->base_address(), 0x7c800000U);
   ASSERT_EQ(stack->frames()->at(3)->module->code_file(),
             "C:\\WINDOWS\\system32\\kernel32.dll");
   ASSERT_TRUE(stack->frames()->at(3)->function_name.empty());
   ASSERT_TRUE(stack->frames()->at(3)->source_file_name.empty());
   ASSERT_EQ(stack->frames()->at(3)->source_line, 0);
 
-  ASSERT_EQ(state.modules()->module_count(), 13);
+  ASSERT_EQ(state.modules()->module_count(), 13U);
   ASSERT_TRUE(state.modules()->GetMainModule());
   ASSERT_EQ(state.modules()->GetMainModule()->code_file(), "c:\\test_app.exe");
   ASSERT_FALSE(state.modules()->GetModuleForAddress(0));

@@ -72,7 +72,7 @@ public:
   nsCOMPtr<nsIDocShell>    mDocShell;
   nsCOMPtr<nsIDocument>    mDocument;
 
-  nsCOMPtr<nsPresContext>  mPresContext;
+  nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;

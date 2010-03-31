@@ -97,7 +97,7 @@ RPCChannel::RPCChannel(RPCListener* aListener)
     mDeferred(),
     mRemoteStackDepthGuess(0),
     mBlockedOnParent(false),
-    mCxxStackFrames(0)
+    mSawRPCOutMsg(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 
@@ -109,7 +109,7 @@ RPCChannel::RPCChannel(RPCListener* aListener)
 RPCChannel::~RPCChannel()
 {
     MOZ_COUNT_DTOR(RPCChannel);
-    RPC_ASSERT(0 == mCxxStackFrames, "mismatched CxxStackFrame ctor/dtors");
+    RPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 }
 
 void
@@ -123,6 +123,7 @@ RPCChannel::Clear()
 #ifdef OS_WIN
 // static
 int RPCChannel::sInnerEventLoopDepth = 0;
+int RPCChannel::sModalEventCount = 0;
 #endif
 
 bool
@@ -142,14 +143,16 @@ RPCChannel::EventOccurred()
 bool
 RPCChannel::Send(Message* msg)
 {
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
     return AsyncChannel::Send(msg);
 }
 
 bool
 RPCChannel::Send(Message* msg, Message* reply)
 {
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
     return SyncChannel::Send(msg, reply);
 }
 
@@ -162,7 +165,8 @@ RPCChannel::Call(Message* msg, Message* reply)
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
 
-    CxxStackFrame f(*this);
+    Message copy = *msg;
+    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
 
     MutexAutoLock lock(mMutex);
 
@@ -200,7 +204,11 @@ RPCChannel::Call(Message* msg, Message* reply)
         while (!EventOccurred()) {
             bool maybeTimedOut = !RPCChannel::WaitForNotify();
 
-            if (EventOccurred())
+            if (EventOccurred() ||
+                // we might have received a "subtly deferred" message
+                // in a nested loop that it's now time to process
+                (!maybeTimedOut &&
+                 (!mDeferred.empty() || !mOutOfTurnReplies.empty())))
                 break;
 
             if (maybeTimedOut && !ShouldContinueFromTimeout())
@@ -220,14 +228,25 @@ RPCChannel::Call(Message* msg, Message* reply)
             recvd = it->second;
             mOutOfTurnReplies.erase(it);
         }
-        else {
+        else if (!mPending.empty()) {
             recvd = mPending.front();
             mPending.pop();
+        }
+        else {
+            // because of subtleties with nested event loops, it's
+            // possible that we got here and nothing happened.  or, we
+            // might have a deferred in-call that needs to be
+            // processed.  either way, we won't break the inner while
+            // loop again until something new happens.
+            continue;
         }
 
         if (!recvd.is_sync() && !recvd.is_rpc()) {
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             AsyncChannel::OnDispatchMessage(recvd);
+
             continue;
         }
 
@@ -235,7 +254,10 @@ RPCChannel::Call(Message* msg, Message* reply)
             RPC_ASSERT(mPending.empty(),
                        "other side should have been blocked");
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             SyncChannel::OnDispatchMessage(recvd);
+
             continue;
         }
 
@@ -271,14 +293,6 @@ RPCChannel::Call(Message* msg, Message* reply)
             }
 
             if (0 == StackDepth()) {
-                // we may have received new messages while waiting for
-                // our reply.  because we were awaiting a reply,
-                // StackDepth > 0, and the IO thread didn't enqueue
-                // OnMaybeDequeueOne() events for us.  so to avoid
-                // "losing" the new messages, we do that now.
-                EnqueuePendingMessages();
-
-                
                 RPC_ASSERT(
                     mOutOfTurnReplies.empty(),
                     "still have pending replies with no pending out-calls",
@@ -296,6 +310,7 @@ RPCChannel::Call(Message* msg, Message* reply)
         {
             MutexAutoUnlock unlock(mMutex);
             // someone called in to us from the other side.  handle the call
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             Incall(recvd, stackDepth);
             // FIXME/cjones: error handling
         }
@@ -332,6 +347,8 @@ RPCChannel::MaybeProcessDeferredIncall()
 
     MutexAutoUnlock unlock(mMutex);
     fprintf(stderr, "  (processing deferred in-call)\n");
+
+    CxxStackFrame f(*this, IN_MESSAGE, &call);
     Incall(call, stackDepth);
 }
 
@@ -383,7 +400,14 @@ RPCChannel::OnMaybeDequeueOne()
         mPending.pop();
     }
 
-    CxxStackFrame f(*this);
+    if (IsOnCxxStack() && recvd.is_rpc() && recvd.is_reply()) {
+        // We probably just received a reply in a nested loop for an
+        // RPC call sent before entering that loop.
+        mOutOfTurnReplies[recvd.seqno()] = recvd;
+        return;
+    }
+
+    CxxStackFrame f(*this, IN_MESSAGE, &recvd);
 
     if (recvd.is_rpc())
         return Incall(recvd, 0);
@@ -554,6 +578,8 @@ RPCChannel::BlockOnParent()
             mPending.pop();
 
             MutexAutoUnlock unlock(mMutex);
+
+            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             if (recvd.is_rpc()) {
                 // stack depth must be 0 here
                 Incall(recvd, 0);
@@ -582,6 +608,18 @@ RPCChannel::UnblockFromParent()
 }
 
 void
+RPCChannel::ExitedCxxStack()
+{
+    Listener()->OnExitedCxxStack();
+    if (mSawRPCOutMsg) {
+        MutexAutoLock lock(mMutex);
+        // see long comment in OnMaybeDequeueOne()
+        EnqueuePendingMessages();
+        mSawRPCOutMsg = false;
+    }
+}
+
+void
 RPCChannel::DebugAbort(const char* file, int line, const char* cond,
                        const char* why,
                        const char* type, bool reply)
@@ -594,8 +632,7 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
             why,
             type, reply ? "reply" : "");
     // technically we need the mutex for this, but we're dying anyway
-    fprintf(stderr, "  local RPC stack size: %lu\n",
-            mStack.size());
+    DumpRPCStack(stderr, "  ");
     fprintf(stderr, "  remote RPC stack guess: %lu\n",
             mRemoteStackDepthGuess);
     fprintf(stderr, "  deferred stack size: %lu\n",
@@ -613,6 +650,28 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
     }
 
     NS_RUNTIMEABORT(why);
+}
+
+void
+RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx)
+{
+    NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
+                     "The worker thread had better be paused in a debugger!");
+
+    if (!outfile)
+        outfile = stdout;
+
+    fprintf(outfile, "%sRPCChannel 'backtrace':\n", pfx);
+
+    // print a python-style backtrace, first frame to last
+    for (PRUint32 i = 0; i < mCxxStackFrames.size(); ++i) {
+        int32 id;
+        const char* dir, *sems, *name;
+        mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
+
+        fprintf(outfile, "%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
+                i, dir, sems, name, id);
+    }
 }
 
 //
@@ -654,20 +713,16 @@ RPCChannel::OnChannelError()
 {
     AssertIOThread();
 
-    {
-        MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
 
-        // NB: this can race with the `Goodbye' event being processed by
-        // the worker thread
-        if (ChannelClosing != mChannelState)
-            mChannelState = ChannelError;
+    if (ChannelClosing != mChannelState)
+        mChannelState = ChannelError;
 
-        // skip SyncChannel::OnError(); we subsume its duties
-        if (AwaitingSyncReply() || 0 < StackDepth())
-            NotifyWorkerThread();
-    }
+    // skip SyncChannel::OnError(); we subsume its duties
+    if (AwaitingSyncReply() || 0 < StackDepth())
+        NotifyWorkerThread();
 
-    AsyncChannel::OnChannelError();
+    PostErrorNotifyTask();
 }
 
 } // namespace ipc

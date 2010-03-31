@@ -51,6 +51,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
+#include "nsIdleService.h"
 #include "nsToolkit.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -77,6 +78,9 @@
 #include "nsIAccessible.h"
 #endif
 
+#if !defined(WINCE)
+#include "nsUXThemeData.h"
+#endif // !defined(WINCE)
 /**
  * Forward class definitions
  */
@@ -160,6 +164,7 @@ public:
                                               PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
+  virtual LayerManager*   GetLayerManager();
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
@@ -182,6 +187,7 @@ public:
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
+  virtual void            UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion, const nsIntRegion& aPossiblyTransparentRegion);
 #endif // MOZ_XUL
 #ifdef NS_ENABLE_TSF
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus);
@@ -353,6 +359,12 @@ protected:
 #endif // !defined(WINCE)
 
   /**
+   * Function that registers when the user has been active (used for detecting
+   * when the user is idle).
+   */
+  void                    UserActivity();
+
+  /**
    * Methods for derived classes 
    */
   virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
@@ -385,6 +397,7 @@ private:
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force = PR_FALSE);
   nsresult                UpdateTranslucentWindow();
   void                    SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode);
+  void                    UpdateGlass();
 protected:
 #endif // MOZ_XUL
 
@@ -454,6 +467,8 @@ protected:
   static PRUint32       sOOPPPluginFocusEvent;
 #endif
 
+  nsCOMPtr<nsIdleService> mIdleService;
+
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook
   // messages.
@@ -492,6 +507,10 @@ protected:
   nsRefPtr<gfxWindowsSurface> mTransparentSurface;
   HDC                   mMemoryDC;
   nsTransparencyMode    mTransparencyMode;
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  nsIntRegion           mPossiblyTransparentRegion;
+  MARGINS               mGlassMargins;
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #endif // MOZ_XUL
 
   // Win7 Gesture processing and management

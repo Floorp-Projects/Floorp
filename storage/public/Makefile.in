@@ -65,6 +65,8 @@ XPIDLSRCS = \
   mozIStorageBindingParamsArray.idl \
   mozIStorageBindingParams.idl \
   mozIStorageCompletionCallback.idl \
+  mozIStorageBaseStatement.idl \
+  mozIStorageAsyncStatement.idl \
 	$(NULL)
 
 EXPORTS_NAMESPACES = mozilla

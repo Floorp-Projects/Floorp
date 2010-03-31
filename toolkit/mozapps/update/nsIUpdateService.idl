@@ -113,7 +113,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(31eced2b-8adb-46f9-992b-26858ab3d558)]
+[scriptable, uuid(2379e2e1-8eab-4084-8d8c-94ffeee56804)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -188,17 +188,6 @@ interface nsIUpdate : nsISupports
    * The channel used to retrieve this update from the Update Service.
    */
   attribute AString channel;
-
-  /**
-   * Stores custom string data provided by the update xml for use by the
-   * application.
-   *
-   * Implementation Note: After an update has been successfully applied this
-   * value will be added to the app.update.extra preference and if an
-   * application uses this preference to determine that an update has been
-   * applied it should also delete the preference.
-   */
-  attribute AString extra1;
 
   /**
    * Whether to show the update prompt which requires user confirmation when an

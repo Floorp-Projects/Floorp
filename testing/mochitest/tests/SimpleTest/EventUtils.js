@@ -546,3 +546,261 @@ function disableNonTestMouseEvents(aDisable)
   if (utils)
     utils.disableNonTestMouseEvents(aDisable);
 }
+
+function _getDOMWindowUtils(aWindow)
+{
+  if (!aWindow) {
+    aWindow = window;
+  }
+  return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+}
+
+/**
+ * Synthesize a composition event.
+ *
+ * @param aIsCompositionStart  If true, this synthesize compositionstart event.
+ *                             Otherwise, compositionend event.
+ * @param aWindow              Optional (If null, current |window| will be used)
+ */
+function synthesizeComposition(aIsCompositionStart, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return;
+  }
+
+  utils.sendCompositionEvent(aIsCompositionStart ?
+                               "compositionstart" : "compositionend");
+}
+
+/**
+ * Synthesize a text event.
+ *
+ * @param aEvent   The text event's information, this has |composition|
+ *                 and |caret| members.  |composition| has |string| and
+ *                 |clauses| members.  |clauses| must be array object.  Each
+ *                 object has |length| and |attr|.  And |caret| has |start| and
+ *                 |length|.  See the following tree image.
+ *
+ *                 aEvent
+ *                   +-- composition
+ *                   |     +-- string
+ *                   |     +-- clauses[]
+ *                   |           +-- length
+ *                   |           +-- attr
+ *                   +-- caret
+ *                         +-- start
+ *                         +-- length
+ *
+ *                 Set the composition string to |composition.string|.  Set its
+ *                 clauses information to the |clauses| array.
+ *
+ *                 When it's composing, set the each clauses' length to the
+ *                 |composition.clauses[n].length|.  The sum of the all length
+ *                 values must be same as the length of |composition.string|.
+ *                 Set nsIDOMWindowUtils.COMPOSITION_ATTR_* to the
+ *                 |composition.clauses[n].attr|.
+ *
+ *                 When it's not composing, set 0 to the
+ *                 |composition.clauses[0].length| and
+ *                 |composition.clauses[0].attr|.
+ *
+ *                 Set caret position to the |caret.start|. It's offset from
+ *                 the start of the composition string.  Set caret length to
+ *                 |caret.length|.  If it's larger than 0, it should be wide
+ *                 caret.  However, current nsEditor doesn't support wide
+ *                 caret, therefore, you should always set 0 now.
+ *
+ * @param aWindow  Optional (If null, current |window| will be used)
+ */
+function synthesizeText(aEvent, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return;
+  }
+
+  if (!aEvent.composition || !aEvent.composition.clauses ||
+      !aEvent.composition.clauses[0]) {
+    return;
+  }
+
+  var firstClauseLength = aEvent.composition.clauses[0].length;
+  var firstClauseAttr   = aEvent.composition.clauses[0].attr;
+  var secondClauseLength = 0;
+  var secondClauseAttr = 0;
+  var thirdClauseLength = 0;
+  var thirdClauseAttr = 0;
+  if (aEvent.composition.clauses[1]) {
+    secondClauseLength = aEvent.composition.clauses[1].length;
+    secondClauseAttr   = aEvent.composition.clauses[1].attr;
+    if (aEvent.composition.clauses[2]) {
+      thirdClauseLength = aEvent.composition.clauses[2].length;
+      thirdClauseAttr   = aEvent.composition.clauses[2].attr;
+    }
+  }
+
+  var caretStart = -1;
+  var caretLength = 0;
+  if (aEvent.caret) {
+    caretStart = aEvent.caret.start;
+    caretLength = aEvent.caret.length;
+  }
+
+  utils.sendTextEvent(aEvent.composition.string,
+                      firstClauseLength, firstClauseAttr,
+                      secondClauseLength, secondClauseAttr,
+                      thirdClauseLength, thirdClauseAttr,
+                      caretStart, caretLength);
+}
+
+/**
+ * Synthesize a query selected text event.
+ *
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeQuerySelectedText(aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_SELECTED_TEXT, 0, 0, 0, 0);
+}
+
+/**
+ * Synthesize a query text content event.
+ *
+ * @param aOffset  The character offset.  0 means the first character in the
+ *                 selection root.
+ * @param aLength  The length of getting text.  If the length is too long,
+ *                 the extra length is ignored.
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeQueryTextContent(aOffset, aLength, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_TEXT_CONTENT,
+                                     aOffset, aLength, 0, 0);
+}
+
+/**
+ * Synthesize a query caret rect event.
+ *
+ * @param aOffset  The caret offset.  0 means left side of the first character
+ *                 in the selection root.
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeQueryCaretRect(aOffset, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_CARET_RECT,
+                                     aOffset, 0, 0, 0);
+}
+
+/**
+ * Synthesize a query text rect event.
+ *
+ * @param aOffset  The character offset.  0 means the first character in the
+ *                 selection root.
+ * @param aLength  The length of the text.  If the length is too long,
+ *                 the extra length is ignored.
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeQueryTextRect(aOffset, aLength, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_TEXT_RECT,
+                                     aOffset, aLength, 0, 0);
+}
+
+/**
+ * Synthesize a query editor rect event.
+ *
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeQueryEditorRect(aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_EDITOR_RECT, 0, 0, 0, 0);
+}
+
+/**
+ * Synthesize a character at point event.
+ *
+ * @param aX, aY   The offset in the client area of the DOM window.
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         An nsIQueryContentEventResult object.  If this failed,
+ *                 the result might be null.
+ */
+function synthesizeCharAtPoint(aX, aY, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return nsnull;
+  }
+  return utils.sendQueryContentEvent(utils.QUERY_CHARACTER_AT_POINT,
+                                     0, 0, aX, aY);
+}
+
+/**
+ * Synthesize a selection set event.
+ *
+ * @param aOffset  The character offset.  0 means the first character in the
+ *                 selection root.
+ * @param aLength  The length of the text.  If the length is too long,
+ *                 the extra length is ignored.
+ * @param aReverse If true, the selection is from |aOffset + aLength| to
+ *                 |aOffset|.  Otherwise, from |aOffset| to |aOffset + aLength|.
+ * @param aWindow  Optional (If null, current |window| will be used)
+ * @return         True, if succeeded.  Otherwise false.
+ */
+function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return false;
+  }
+  return utils.sendSelectionSetEvent(aOffset, aLength, aReverse);
+}

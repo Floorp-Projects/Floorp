@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1202,25 +1203,6 @@ nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   return rv;
 }
 
-//
-// Get an appropriate wrap width for saving this document.
-// This class just uses a pref; subclasses are expected to
-// override if they know more about the document.
-//
-NS_IMETHODIMP
-nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
-{
-  NS_ENSURE_ARG_POINTER(aWrapColumn);
-  *aWrapColumn = 72;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefBranch)
-    (void) prefBranch->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsEditor::Cut()
 {
@@ -2042,18 +2024,15 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
 
       // XXX_kin: END HACK! HACK! HACK!
 
-      nsIView *view = nsnull;
       nsRect rect;
-      result =
-        caretP->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
-                                    selection,
-                                    &rect,
-                                    &(aReply->mCursorIsCollapsed),
-                                    &view);
+      nsIFrame* frame = caretP->GetGeometry(selection, &rect);
+      if (!frame)
+        return NS_ERROR_FAILURE;
+      nsPoint nearestWidgetOffset;
+      aReply->mReferenceWidget = frame->GetWindowOffset(nearestWidgetOffset);
+      rect.MoveBy(nearestWidgetOffset);
       aReply->mCursorPosition =
-        rect.ToOutsidePixels(ps->GetPresContext()->AppUnitsPerDevPixel());
-      if (NS_SUCCEEDED(result) && view)
-        aReply->mReferenceWidget = view->GetWidget();
+        rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
     }
   }
   return result;

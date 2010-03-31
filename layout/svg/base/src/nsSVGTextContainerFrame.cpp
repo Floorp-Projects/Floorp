@@ -40,6 +40,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
+#include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsDOMError.h"
 
@@ -60,16 +61,13 @@ nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
     textFrame->NotifyGlyphMetricsChange();
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextContainerFrame::GetX()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
     do_QueryInterface(mContent);
 
   if (!tpElement)
-    return nsnull;
-
-  if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::x))
     return nsnull;
 
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
@@ -79,16 +77,13 @@ nsSVGTextContainerFrame::GetX()
   return retval;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextContainerFrame::GetY()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
     do_QueryInterface(mContent);
 
   if (!tpElement)
-    return nsnull;
-
-  if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::y))
     return nsnull;
 
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
@@ -98,7 +93,7 @@ nsSVGTextContainerFrame::GetY()
   return retval;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextContainerFrame::GetDx()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
@@ -114,7 +109,7 @@ nsSVGTextContainerFrame::GetDx()
   return retval;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextContainerFrame::GetDy()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
@@ -127,6 +122,22 @@ nsSVGTextContainerFrame::GetDy()
   tpElement->GetDy(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
   animLengthList->GetAnimVal(&retval);
+  return retval;
+}
+
+already_AddRefed<nsIDOMSVGNumberList>
+nsSVGTextContainerFrame::GetRotate()
+{
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
+    do_QueryInterface(mContent);
+
+  if (!tpElement)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMSVGAnimatedNumberList> animNumberList;
+  tpElement->GetRotate(getter_AddRefs(animNumberList));
+  nsIDOMSVGNumberList *retval;
+  animNumberList->GetAnimVal(&retval);
   return retval;
 }
 

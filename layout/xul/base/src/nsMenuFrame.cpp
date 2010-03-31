@@ -145,7 +145,7 @@ public:
 
 private:
   nsCOMPtr<nsIContent> mMenu;
-  nsCOMPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
   PRBool mIsActivate;
 };
 
@@ -1259,9 +1259,10 @@ PRBool
 nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!IsCollapsed(aState)) {
+    PRBool widthSet, heightSet;
     nsSize tmpSize(-1, 0);
-    nsIBox::AddCSSPrefSize(aState, this, tmpSize);
-    if (tmpSize.width == -1 && GetFlex(aState) == 0) {
+    nsIBox::AddCSSPrefSize(this, tmpSize, widthSet, heightSet);
+    if (!widthSet && GetFlex(aState) == 0) {
       if (!mPopupFrame)
         return PR_FALSE;
       tmpSize = mPopupFrame->GetPrefSize(aState);

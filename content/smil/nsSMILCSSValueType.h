@@ -60,7 +60,7 @@ public:
 protected:
   // nsISMILType Methods
   // -------------------
-  NS_OVERRIDE virtual nsresult Init(nsSMILValue& aValue) const;
+  NS_OVERRIDE virtual void     Init(nsSMILValue& aValue) const;
   NS_OVERRIDE virtual void     Destroy(nsSMILValue&) const;
   NS_OVERRIDE virtual nsresult Assign(nsSMILValue& aDest,
                                       const nsSMILValue& aSrc) const;

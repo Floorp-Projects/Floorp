@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.7 API Reference</title>
+<title>FreeType-2.3.12 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.7 API Reference</h1></center>
+<center><h1>FreeType-2.3.12 API Reference</h1></center>
 
 <center><h1>
 BDF and PCF Files
@@ -246,6 +246,8 @@ Defined in FT_BDF_H (freetype/ftbdf.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>This function works with BDF <i>and</i> PCF fonts. It returns an error otherwise. It also returns an error if the property is not in the font.</p>
+<p>A &lsquo;property&rsquo; is a either key-value pair within the STARTPROPERTIES ... ENDPROPERTIES block of a BDF font or a key-value pair from the &lsquo;info-&gt;props&rsquo; array within a &lsquo;FontRec&rsquo; structure of a PCF font.</p>
+<p>Integer properties are always stored as &lsquo;signed&rsquo; within PCF fonts; consequently, <a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_CARDINAL</a> is a possible return value for BDF fonts only.</p>
 <p>In case of error, &lsquo;aproperty-&gt;type&rsquo; is always set to <a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_NONE</a>.</p>
 </td></tr></table>
 </td></tr></table>

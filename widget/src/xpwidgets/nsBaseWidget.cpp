@@ -50,6 +50,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "BasicLayers.h"
+#include "LayerManagerOGL.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -101,6 +102,7 @@ nsBaseWidget::nsBaseWidget()
 , mWindowType(eWindowType_child)
 , mBorderStyle(eBorderStyle_none)
 , mOnDestroyCalled(PR_FALSE)
+, mUseAcceleratedRendering(PR_FALSE)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nsnull)
 , mClipRectCount(0)
@@ -639,6 +641,8 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   BasicLayerManager* manager =
     static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
+    NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
+      "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     manager->SetDefaultTarget(aTarget);
   }
 }
@@ -648,6 +652,8 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   BasicLayerManager* manager =
     static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
+    NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
+      "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     manager->SetDefaultTarget(nsnull);
   }
 }
@@ -655,45 +661,25 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 LayerManager* nsBaseWidget::GetLayerManager()
 {
   if (!mLayerManager) {
-    mLayerManager = new BasicLayerManager(nsnull);
+    if (mUseAcceleratedRendering) {
+      nsRefPtr<LayerManagerOGL> layerManager =
+        new mozilla::layers::LayerManagerOGL(this);
+      /**
+       * XXX - On several OSes initialization is expected to fail for now.
+       * If we'd get a none-basic layer manager they'd crash. This is ok though
+       * since on those platforms it will fail. Anyone implementing new
+       * platforms on LayerManagerOGL should ensure their widget is able to
+       * deal with it though!
+       */
+      if (layerManager->Initialize()) {
+        mLayerManager = layerManager;
+      }
+    }
+    if (!mLayerManager) {
+      mLayerManager = new BasicLayerManager(nsnull);
+    }
   }
   return mLayerManager;
-}
-
-//-------------------------------------------------------------------------
-//
-// Create a rendering context from this nsBaseWidget
-//
-//-------------------------------------------------------------------------
-nsIRenderingContext* nsBaseWidget::GetRenderingContext()
-{
-  nsresult                      rv;
-  nsCOMPtr<nsIRenderingContext> renderingCtx;
-
-  if (mOnDestroyCalled)
-    return nsnull;
-
-  rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
-  if (NS_SUCCEEDED(rv)) {
-    gfxASurface* surface = GetThebesSurface();
-    NS_ENSURE_TRUE(surface, nsnull);
-    rv = renderingCtx->Init(mContext, surface);
-    if (NS_SUCCEEDED(rv)) {
-      nsIRenderingContext *ret = renderingCtx;
-      /* Increment object refcount that the |ret| object is still a valid one
-       * after we leave this function... */
-      NS_ADDREF(ret);
-      return ret;
-    }
-    else {
-      NS_WARNING("GetRenderingContext: nsIRenderingContext::Init() failed.");
-    }  
-  }
-  else {
-    NS_WARNING("GetRenderingContext: Cannot create RenderingContext.");
-  }  
-  
-  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -846,6 +832,23 @@ PRBool
 nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsBaseWidget::SetAcceleratedRendering(PRBool aEnabled)
+{
+  if (mUseAcceleratedRendering == aEnabled) {
+    return NS_OK;
+  }
+  mUseAcceleratedRendering = aEnabled;
+  mLayerManager = NULL;
+  return NS_OK;
+}
+
+PRBool
+nsBaseWidget::GetAcceleratedRendering()
+{
+  return mUseAcceleratedRendering;
 }
 
 NS_IMETHODIMP

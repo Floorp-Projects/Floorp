@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,23 +41,23 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_STACKWALKER_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_STACKWALKER_H__
 
-#include <vector>
+#include <set>
+#include <string>
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 class CallStack;
+class CodeModule;
 class CodeModules;
-template<typename T> class linked_ptr;
 class MemoryRegion;
 class MinidumpContext;
 class SourceLineResolverInterface;
 struct StackFrame;
-struct StackFrameInfo;
 class SymbolSupplier;
 class SystemInfo;
 
-using std::vector;
+using std::set;
 
 
 class Stackwalker {
@@ -118,6 +118,10 @@ class Stackwalker {
   // This field is optional and may be NULL.
   const CodeModules *modules_;
 
+ protected:
+  // The SourceLineResolver implementation.
+  SourceLineResolverInterface *resolver_;
+
  private:
   // Obtains the context frame, the innermost called procedure in a stack
   // trace.  Returns NULL on failure.  GetContextFrame allocates a new
@@ -133,15 +137,15 @@ class Stackwalker {
   // the end of the stack has been reached).  GetCallerFrame allocates a new
   // StackFrame (or StackFrame subclass), ownership of which is taken by
   // the caller.
-  virtual StackFrame* GetCallerFrame(
-      const CallStack *stack,
-      const vector< linked_ptr<StackFrameInfo> > &stack_frame_info) = 0;
+  virtual StackFrame* GetCallerFrame(const CallStack *stack) = 0;
 
   // The optional SymbolSupplier for resolving source line info.
   SymbolSupplier *supplier_;
 
-  // The SourceLineResolver implementation
-  SourceLineResolverInterface *resolver_;
+  // A list of modules that we haven't found symbols for.  We track
+  // this in order to avoid repeatedly looking them up again within
+  // one minidump.
+  set<std::string> no_symbol_modules_;
 };
 
 

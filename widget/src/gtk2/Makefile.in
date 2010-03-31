@@ -79,6 +79,7 @@ CPPSRCS		= \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
 		nsAccelerometerUnix.cpp \
+		nsGtkIMModule.cpp \
 		$(NULL)
 
 ifdef MOZ_X11
@@ -152,7 +153,6 @@ CXXFLAGS += $(MOZ_GCONF_CFLAGS)
 endif
 endif
 
-DEFINES         += -DUSE_XIM
 DEFINES		+= -DCAIRO_GFX
 
 ifdef MOZ_ENABLE_POSTSCRIPT

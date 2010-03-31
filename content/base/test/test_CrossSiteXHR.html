@@ -134,8 +134,9 @@ function runTest() {
       loaderWindow.postMessage(req.toSource(), isNullOrigin ? "*" : origin);
 
       res = eval(yield);
-      is(res.didFail, false, "shouldn't have failed");
-      is(res.status, 200, "wrong status");
+      is(res.didFail, false, "shouldn't have failed for " + allowOrigin);
+      is(res.status, 200, "wrong status for " + allowOrigin);
+      is(res.statusText, "OK", "wrong status text for " + allowOrigin);
       is(res.responseXML,
          "<res>hello pass</res>",
          "wrong responseXML in test for " + allowOrigin);
@@ -157,6 +158,7 @@ function runTest() {
       is(res.didFail, true, "should have failed for " + allowOrigin);
       is(res.responseText, "", "should have no text for " + allowOrigin);
       is(res.status, 0, "should have no status for " + allowOrigin);
+      is(res.statusText, undefined, "wrong status text for " + allowOrigin);
       is(res.responseXML, null, "should have no XML for " + allowOrigin);
       is(res.events.join(","),
          "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
@@ -480,6 +482,7 @@ function runTest() {
     is(res.didFail, false,
       "shouldn't have failed in test for " + test.toSource());
     is(res.status, 200, "wrong status in test for " + test.toSource());
+    is(res.statusText, "OK", "wrong status text for " + test.toSource());
     if (test.method !== "HEAD") {
       is(res.responseXML, "<res>hello pass</res>",
          "wrong responseXML in test for " + test.toSource());
@@ -523,6 +526,7 @@ function runTest() {
     is(res.didFail, true,
       "should have failed in test for " + test.toSource());
     is(res.status, 0, "wrong status in test for " + test.toSource());
+    is(res.statusText, undefined, "wrong status in test for " + test.toSource());
     is(res.responseXML, null,
        "wrong responseXML in test for " + test.toSource());
     is(res.responseText, "",
@@ -642,6 +646,7 @@ function runTest() {
       is(res.didFail, false,
         "shouldn't have failed in test for " + test.toSource());
       is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.statusText, "OK", "wrong status text for " + test.toSource());
       is(res.responseXML, "<res>hello pass</res>",
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "<res>hello pass</res>\n",
@@ -654,6 +659,7 @@ function runTest() {
       is(res.didFail, true,
         "should have failed in test for " + test.toSource());
       is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.statusText, undefined, "wrong status in test for " + test.toSource());
       is(res.responseXML, null,
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",
@@ -909,6 +915,7 @@ function runTest() {
       is(res.didFail, false,
         "shouldn't have failed in test for " + test.toSource());
       is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.statusText, "OK", "wrong status text for " + test.toSource());
       is(res.responseXML, "<res>hello pass</res>",
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "<res>hello pass</res>\n",
@@ -921,6 +928,7 @@ function runTest() {
       is(res.didFail, true,
         "should have failed in test for " + test.toSource());
       is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.statusText, undefined, "wrong status in test for " + test.toSource());
       is(res.responseXML, null,
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",

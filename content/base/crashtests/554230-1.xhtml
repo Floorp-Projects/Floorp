@@ -1,0 +1,15 @@
+<html class="reftest-wait" xmlns="http://www.w3.org/1999/xhtml"><iframe contenteditable="true"></iframe><span></span><script style="display: none;" id="fuzz1" type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.getElementsByTagName("iframe")[0].focus();
+  document.getElementsByTagName("span")[0].appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
+  document.execCommand("selectAll", false, null);
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></html>

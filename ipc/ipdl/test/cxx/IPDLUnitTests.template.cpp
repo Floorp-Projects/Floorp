@@ -126,11 +126,13 @@ IPDLUnitTestMain(void* aData)
     IPDLUnitTestType test = IPDLUnitTestFromString(testString);
     if (!test) {
         // use this instead of |fail()| because we don't know what the test is
-        fprintf(stderr, MOZ_IPDL_TESTFAIL_LABEL "| %s | unknown unit test %s\\n",
+        fprintf(stderr, MOZ_IPDL_TESTFAIL_LABEL "| %s | unknown unit test %s\n",
                 "<--->", testString);
         NS_RUNTIMEABORT("can't continue");
     }
     gIPDLUnitTestName = testString;
+
+    printf(MOZ_IPDL_TESTINFO_LABEL "| running test | %s\n", gIPDLUnitTestName);
 
     std::vector<std::string> testCaseArgs;
     testCaseArgs.push_back(testString);

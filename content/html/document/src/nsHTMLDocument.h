@@ -101,6 +101,8 @@ public:
                                      nsIContentSink* aSink = nsnull);
   virtual void StopDocumentLoad();
 
+  virtual void BeginLoad();
+
   virtual void EndLoad();
 
   virtual nsresult AddImageMap(nsIDOMHTMLMapElement* aMap);

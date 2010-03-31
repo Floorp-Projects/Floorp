@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div style="display:-moz-box; width:400px;">
+  <div id="d" style="overflow:auto; height:100px; width:400px; font-size:20px;">
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    <span id="s">Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.
+    Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty. Hello Kitty.</span>
+  </div>
+</div>
+<script>
+var d = document.getElementById("d");
+d.scrollTop = 200;
+/* Force the scrolled div d to be reflowed. We want to check that calculation
+   of the XUL preferred width doesn't temporarily give d a small height
+   and cause d to clamp the scroll position */
+var s = document.getElementById("s");
+s.style.fontSize = "22px";
+</script>
+</body>
+</html>

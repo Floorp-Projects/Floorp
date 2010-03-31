@@ -28,8 +28,8 @@ wizardpage {
 }
 
 .wizard-buttons-btm {
-  padding: 3px 0;
-  margin: 12px;
+  padding: 15px 12px;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 
 /* Don't use top margin - it can cause a scrollbar on the incompatible page */
@@ -57,7 +57,7 @@ wizardpage {
   -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
-:root:not([active]) .wizard-buttons button {
+.wizard-buttons button:-moz-window-inactive {
   color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through, bug 392188 */
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

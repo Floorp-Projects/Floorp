@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Andrew Sutherland <asutherland@asutherland.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +36,179 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file tests the functionality of mozIStorageStatement::executeAsync
+/*
+ * This file tests the functionality of mozIStorageBaseStatement::executeAsync
+ * for both mozIStorageStatement and mozIStorageAsyncStatement.
+ */
 
 const INTEGER = 1;
 const TEXT = "this is test text";
 const REAL = 3.23;
 const BLOB = [1, 2];
 
+/**
+ * Execute the given statement asynchronously, spinning an event loop until the
+ * async statement completes.
+ *
+ * @param aStmt
+ *        The statement to execute.
+ * @param [aOptions={}]
+ * @param [aOptions.error=false]
+ *        If true we should expect an error whose code we do not care about.  If
+ *        a numeric value, that's the error code we expect and require.  If we
+ *        are expecting an error, we expect a completion reason of REASON_ERROR.
+ *        Otherwise we expect no error notification and a completion reason of
+ *        REASON_FINISHED.
+ * @param [aOptions.cancel]
+ *        If true we cancel the pending statement and additionally return the
+ *        pending statement in case you want to further manipulate it.
+ * @param [aOptions.returnPending=false]
+ *        If true we keep the pending statement around and return it to you.  We
+ *        normally avoid doing this to try and minimize the amount of time a
+ *        reference is held to the returned pending statement.
+ * @param [aResults]
+ *        If omitted, we assume no results rows are expected.  If it is a
+ *        number, we assume it is the number of results rows expected.  If it is
+ *        a function, we assume it is a function that takes the 1) result row
+ *        number, 2) result tuple, 3) call stack for the original call to
+ *        execAsync as arguments.  If it is a list, we currently assume it is a
+ *        list of functions where each function is intended to evaluate the
+ *        result row at that ordinal position and takes the result tuple and
+ *        the call stack for the original call.
+ */
+function execAsync(aStmt, aOptions, aResults)
+{
+  let caller = Components.stack.caller;
+  if (aOptions == null)
+    aOptions = {};
+
+  let resultsExpected;
+  let resultsChecker;
+  if (aResults == null) {
+    resultsExpected = 0;
+  }
+  else if (typeof(aResults) == "number") {
+    resultsExpected = aResults;
+  }
+  else if (typeof(aResults) == "function") {
+    resultsChecker = aResults;
+  }
+  else { // array
+    resultsExpected = aResults.length;
+    resultsChecker = function(aResultNum, aTup, aCaller) {
+      aResults[aResultNum](aTup, aCaller);
+    };
+  }
+  let resultsSeen = 0;
+
+  let errorCodeExpected = false;
+  let reasonExpected = Ci.mozIStorageStatementCallback.REASON_FINISHED;
+  let altReasonExpected = null;
+  if ("error" in aOptions) {
+    errorCodeExpected = aOptions.error;
+    if (errorCodeExpected)
+      reasonExpected = Ci.mozIStorageStatementCallback.REASON_ERROR;
+  }
+  let errorCodeSeen = false;
+
+  if ("cancel" in aOptions && aOptions.cancel)
+    altReasonExpected = Ci.mozIStorageStatementCallback.REASON_CANCELED;
+
+  let completed = false;
+
+  let listener = {
+    handleResult: function(aResultSet)
+    {
+      let row, resultsSeenThisCall = 0;
+      while ((row = aResultSet.getNextRow()) != null) {
+        if (resultsChecker)
+          resultsChecker(resultsSeen, row, caller);
+        resultsSeen++;
+        resultsSeenThisCall++;
+      }
+
+      if (!resultsSeenThisCall)
+        do_throw("handleResult invoked with 0 result rows!");
+    },
+    handleError: function(aError)
+    {
+      if (errorCodeSeen != false)
+        do_throw("handleError called when we already had an error!");
+      errorCodeSeen = aError.result;
+    },
+    handleCompletion: function(aReason)
+    {
+      if (completed) // paranoia check
+        do_throw("Received a second handleCompletion notification!", caller);
+
+      if (resultsSeen != resultsExpected)
+        do_throw("Expected " + resultsExpected + " rows of results but " +
+                 "got " + resultsSeen + " rows!", caller);
+
+      if (errorCodeExpected == true && errorCodeSeen == false)
+        do_throw("Expected an error, but did not see one.", caller);
+      else if (errorCodeExpected != errorCodeSeen)
+        do_throw("Expected error code " + errorCodeExpected + " but got " +
+                 errorCodeSeen, caller);
+
+      if (aReason != reasonExpected && aReason != altReasonExpected)
+        do_throw("Expected reason " + reasonExpected +
+                 (altReasonExpected ? (" or " + altReasonExpected) : "") +
+                 " but got " + aReason, caller);
+
+      completed = true;
+    }
+  };
+
+  let pending;
+  // Only get a pending reference if we're supposed to do.
+  // (note: This does not stop XPConnect from holding onto one currently.)
+  if (("cancel" in aOptions && aOptions.cancel) ||
+      ("returnPending" in aOptions && aOptions.returnPending)) {
+    pending = aStmt.executeAsync(listener);
+  }
+  else {
+    aStmt.executeAsync(listener);
+  }
+
+  if ("cancel" in aOptions && aOptions.cancel)
+    pending.cancel();
+
+  let curThread = Components.classes["@mozilla.org/thread-manager;1"]
+                            .getService().currentThread;
+  while (!completed && !_quit)
+    curThread.processNextEvent(true);
+
+  return pending;
+}
+
+/**
+ * Make sure that illegal SQL generates the expected runtime error and does not
+ * result in any crashes.  Async-only since the synchronous case generates the
+ * error synchronously (and is tested elsewhere).
+ */
+function test_illegal_sql_async_deferred()
+{
+  // gibberish
+  let stmt = makeTestStatement("I AM A ROBOT. DO AS I SAY.");
+  execAsync(stmt, {error: Ci.mozIStorageError.ERROR});
+  stmt.finalize();
+
+  // legal SQL syntax, but with semantics issues.
+  stmt = makeTestStatement("SELECT destination FROM funkytown");
+  execAsync(stmt, {error: Ci.mozIStorageError.ERROR});
+  stmt.finalize();
+
+  run_next_test();
+}
+test_illegal_sql_async_deferred.asyncOnly = true;
+
 function test_create_table()
 {
-  // Ensure our table doesn't exists
+  // Ensure our table doesn't exist
   do_check_false(getOpenedDatabase().tableExists("test"));
 
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "CREATE TABLE test (" +
       "id INTEGER, " +
       "string TEXT, " +
@@ -56,43 +217,23 @@ function test_create_table()
       "blober BLOB" +
     ")"
   );
-
-  stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      dump("handleResult("+aResultSet+");\n");
-      do_throw("unexpected results obtained!");
-    },
-    handleError: function(aError)
-    {
-      print("error code " + aerror.result + " with message '" +
-            aerror.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason + ") for test_create_table");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-
-      // Check that the table has been created
-      do_check_true(getOpenedDatabase().tableExists("test"));
-
-      // Verify that it's created correctly (this will throw if it wasn't)
-      var stmt = getOpenedDatabase().createStatement(
-        "SELECT id, string, number, nuller, blober FROM test"
-      );
-      stmt.finalize();
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+  execAsync(stmt);
   stmt.finalize();
+
+  // Check that the table has been created
+  do_check_true(getOpenedDatabase().tableExists("test"));
+
+  // Verify that it's created correctly (this will throw if it wasn't)
+  let checkStmt = getOpenedDatabase().createStatement(
+    "SELECT id, string, number, nuller, blober FROM test"
+  );
+  checkStmt.finalize();
+  run_next_test();
 }
 
 function test_add_data()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
   );
@@ -102,68 +243,25 @@ function test_add_data()
   stmt.bindStringParameter(1, TEXT);
   stmt.bindInt32Parameter(0, INTEGER);
 
-  stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      do_throw("unexpected results obtained!");
-    },
-    handleError: function(aError)
-    {
-      print("error code " + aerror.result + " with message '" +
-            aerror.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason + ") for test_add_data");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-
-      // Check that the result is in the table
-      var stmt = getOpenedDatabase().createStatement(
-        "SELECT string, number, nuller, blober FROM test WHERE id = ?"
-      );
-      stmt.bindInt32Parameter(0, INTEGER);
-      try {
-        do_check_true(stmt.executeStep());
-        do_check_eq(TEXT, stmt.getString(0));
-        do_check_eq(REAL, stmt.getDouble(1));
-        do_check_true(stmt.getIsNull(2));
-        var count = { value: 0 };
-        var blob = { value: null };
-        stmt.getBlob(3, count, blob);
-        do_check_eq(BLOB.length, count.value);
-        for (var i = 0; i < BLOB.length; i++)
-          do_check_eq(BLOB[i], blob.value[i]);
-      }
-      finally {
-        stmt.reset();
-        stmt.finalize();
-      }
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+  execAsync(stmt);
   stmt.finalize();
+
+  // Check that the result is in the table
+  verifyQuery("SELECT string, number, nuller, blober FROM test WHERE id = ?",
+              INTEGER,
+              [TEXT, REAL, null, BLOB]);
+  run_next_test();
 }
 
 function test_get_data()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "SELECT string, number, nuller, blober, id FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, INTEGER);
-
-  stmt.executeAsync({
-    resultObtained: false,
-    handleResult: function(aResultSet)
+  execAsync(stmt, {}, [
+    function(tuple)
     {
-      dump("handleResult("+aResultSet+");\n");
-      do_check_false(this.resultObtained);
-      this.resultObtained = true;
-
-      // Check that we have a result
-      var tuple = aResultSet.getNextRow();
       do_check_neq(null, tuple);
 
       // Check that it's what we expect
@@ -208,46 +306,18 @@ function test_get_data()
       do_check_eq(INTEGER, tuple.getResultByName("id"));
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
                   tuple.getTypeOfIndex(4));
-
-      // check that we have no more results
-      tuple = aResultSet.getNextRow();
-      do_check_eq(null, tuple);
-    },
-    handleError: function(aError)
-    {
-      print("error code " + aerror.result + " with message '" +
-            aerror.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason + ") for test_get_data");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-      do_check_true(this.resultObtained);
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+    }]);
   stmt.finalize();
+  run_next_test();
 }
 
 function test_tuple_out_of_bounds()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "SELECT string FROM test"
   );
-
-  stmt.executeAsync({
-    resultObtained: false,
-    handleResult: function(aResultSet)
-    {
-      dump("handleResult("+aResultSet+");\n");
-      do_check_false(this.resultObtained);
-      this.resultObtained = true;
-
-      // Check that we have a result
-      var tuple = aResultSet.getNextRow();
+  execAsync(stmt, {}, [
+    function(tuple) {
       do_check_neq(null, tuple);
 
       // Check all out of bounds - should throw
@@ -280,30 +350,14 @@ function test_tuple_out_of_bounds()
       catch (e) {
         do_check_eq(Cr.NS_ERROR_ILLEGAL_VALUE, e.result);
       }
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_tuple_out_of_bounds");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-      do_check_true(this.resultObtained);
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+    }]);
   stmt.finalize();
+  run_next_test();
 }
 
 function test_no_listener_works_on_success()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
@@ -316,7 +370,7 @@ function test_no_listener_works_on_success()
 
 function test_no_listener_works_on_results()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "SELECT ?"
   );
   stmt.bindInt32Parameter(0, 1);
@@ -330,7 +384,7 @@ function test_no_listener_works_on_results()
 function test_no_listener_works_on_error()
 {
   // commit without a transaction will trigger an error
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "COMMIT"
   );
   stmt.executeAsync();
@@ -342,7 +396,7 @@ function test_no_listener_works_on_error()
 
 function test_partial_listener_works()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
@@ -367,130 +421,80 @@ function test_partial_listener_works()
   run_next_test();
 }
 
+/**
+ * Dubious cancellation test that depends on system loading may or may not
+ * succeed in canceling things.  It does at least test if calling cancel blows
+ * up.  test_AsyncCancellation in test_true_async.cpp is our test that canceling
+ * actually works correctly.
+ */
 function test_immediate_cancellation()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
-  var pendingStatement = stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      do_throw("unexpected result!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_immediate_cancellation");
-      // It is possible that we finished before we canceled.
-      do_check_true(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ||
-                    aReason == Ci.mozIStorageStatementCallback.REASON_CANCELED);
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
-
-  // Cancel immediately
-  pendingStatement.cancel()
-
+  execAsync(stmt, {cancel: true});
   stmt.finalize();
+  run_next_test();
 }
 
+/**
+ * Test that calling cancel twice throws the second time.
+ */
 function test_double_cancellation()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
-  var pendingStatement = stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      do_throw("unexpected result!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_double_cancellation");
-      // It is possible that we finished before we canceled.
-      do_check_true(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ||
-                    aReason == Ci.mozIStorageStatementCallback.REASON_CANCELED);
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
-
-  // Cancel immediately
-  pendingStatement.cancel()
-
+  let pendingStatement = execAsync(stmt, {cancel: true});
   // And cancel again - expect an exception
-  try {
-    pendingStatement.cancel();
-    do_throw("function call should have thrown!");
-  }
-  catch (e) {
-    do_check_eq(Cr.NS_ERROR_UNEXPECTED, e.result);
-  }
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() pendingStatement.cancel());
 
   stmt.finalize();
+  run_next_test();
 }
 
+/**
+ * Verify that nothing untoward happens if we try and cancel something after it
+ * has fully run to completion.
+ */
+function test_cancellation_after_execution()
+{
+  var stmt = makeTestStatement(
+    "DELETE FROM test WHERE id = ?"
+  );
+  stmt.bindInt32Parameter(0, 0);
+  let pendingStatement = execAsync(stmt, {returnPending: true});
+  // (the statement has fully executed at this point)
+  // canceling after the statement has run to completion should not throw!
+  pendingStatement.cancel();
+
+  stmt.finalize();
+  run_next_test();
+}
+
+/**
+ * Verifies that a single statement can be executed more than once.  Might once
+ * have been intended to also ensure that callback notifications were not
+ * incorrectly interleaved, but that part was brittle (it's totally fine for
+ * handleResult to get called multiple times) and not comprehensive.
+ */
 function test_double_execute()
 {
-  var stmt = getOpenedDatabase().createStatement(
-    "SELECT * FROM test"
+  var stmt = makeTestStatement(
+    "SELECT 1"
   );
-
-  var listener = {
-    _timesCompleted: 0,
-    _hasResults: false,
-    handleResult: function(aResultSet)
-    {
-      do_check_false(this._hasResults);
-      this._hasResults = true;
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_double_execute (iteration " +
-            (this._timesCompleted + 1) + ")");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-      do_check_true(this._hasResults);
-      this._hasResults = false;
-      this._timesCompleted++;
-
-      // Run the next test.
-      if (this._timesCompleted == 2)
-        run_next_test();
-    }
-  }
-  stmt.executeAsync(listener);
-  stmt.executeAsync(listener);
+  execAsync(stmt, null, 1);
+  execAsync(stmt, null, 1);
   stmt.finalize();
+  run_next_test();
 }
 
 function test_finalized_statement_does_not_crash()
 {
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "SELECT * FROM TEST"
   );
   stmt.finalize();
@@ -504,10 +508,94 @@ function test_finalized_statement_does_not_crash()
   run_next_test();
 }
 
+/**
+ * Bind by mozIStorageBindingParams on the mozIStorageBaseStatement by index.
+ */
+function test_bind_direct_binding_params_by_index()
+{
+  var stmt = makeTestStatement(
+    "INSERT INTO test (id, string, number, nuller, blober) " +
+    "VALUES (?, ?, ?, ?, ?)"
+  );
+  let insertId = nextUniqueId++;
+  stmt.bindByIndex(0, insertId);
+  stmt.bindByIndex(1, TEXT);
+  stmt.bindByIndex(2, REAL);
+  stmt.bindByIndex(3, null);
+  stmt.bindBlobByIndex(4, BLOB, BLOB.length);
+  execAsync(stmt);
+  stmt.finalize();
+  verifyQuery("SELECT string, number, nuller, blober FROM test WHERE id = ?",
+              insertId,
+              [TEXT, REAL, null, BLOB]);
+  run_next_test();
+}
+
+/**
+ * Bind by mozIStorageBindingParams on the mozIStorageBaseStatement by name.
+ */
+function test_bind_direct_binding_params_by_name()
+{
+  var stmt = makeTestStatement(
+    "INSERT INTO test (id, string, number, nuller, blober) " +
+    "VALUES (:int, :text, :real, :null, :blob)"
+  );
+  let insertId = nextUniqueId++;
+  stmt.bindByName("int", insertId);
+  stmt.bindByName("text", TEXT);
+  stmt.bindByName("real", REAL);
+  stmt.bindByName("null", null);
+  stmt.bindBlobByName("blob", BLOB, BLOB.length);
+  execAsync(stmt);
+  stmt.finalize();
+  verifyQuery("SELECT string, number, nuller, blober FROM test WHERE id = ?",
+              insertId,
+              [TEXT, REAL, null, BLOB]);
+  run_next_test();
+}
+
+function test_bind_js_params_helper_by_index()
+{
+  var stmt = makeTestStatement(
+    "INSERT INTO test (id, string, number, nuller, blober) " +
+    "VALUES (?, ?, ?, ?, NULL)"
+  );
+  let insertId = nextUniqueId++;
+  // we cannot bind blobs this way; no blober
+  stmt.params[3] = null;
+  stmt.params[2] = REAL;
+  stmt.params[1] = TEXT;
+  stmt.params[0] = insertId;
+  execAsync(stmt);
+  stmt.finalize();
+  verifyQuery("SELECT string, number, nuller FROM test WHERE id = ?", insertId,
+              [TEXT, REAL, null]);
+  run_next_test();
+}
+
+function test_bind_js_params_helper_by_name()
+{
+  var stmt = makeTestStatement(
+    "INSERT INTO test (id, string, number, nuller, blober) " +
+    "VALUES (:int, :text, :real, :null, NULL)"
+  );
+  let insertId = nextUniqueId++;
+  // we cannot bind blobs this way; no blober
+  stmt.params.null = null;
+  stmt.params.real = REAL;
+  stmt.params.text = TEXT;
+  stmt.params.int = insertId;
+  execAsync(stmt);
+  stmt.finalize();
+  verifyQuery("SELECT string, number, nuller FROM test WHERE id = ?", insertId,
+              [TEXT, REAL, null]);
+  run_next_test();
+}
+
 function test_bind_multiple_rows_by_index()
 {
   const AMOUNT_TO_ADD = 5;
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
   );
@@ -520,63 +608,21 @@ function test_bind_multiple_rows_by_index()
     bp.bindByIndex(3, null);
     bp.bindBlobByIndex(4, BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
-  // Get our current number of rows in the table.
-  var currentRows = 0;
-  var countStmt = getOpenedDatabase().createStatement(
-    "SELECT COUNT(1) AS count FROM test"
-  );
-  try {
-    do_check_true(countStmt.executeStep());
-    currentRows = countStmt.row.count;
-    print("We have " + currentRows + " rows in test_bind_multiple_rows_by_index");
-  }
-  finally {
-    countStmt.reset();
-  }
-
-  // Execute asynchronously.
-  stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      do_throw("Unexpected call to handleResult!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_bind_multiple_rows_by_index");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-
-      // Check to make sure we added all of our rows.
-      try {
-        do_check_true(countStmt.executeStep());
-        print("We now have " + currentRows +
-              " rows in test_bind_multiple_rows_by_index");
-        do_check_eq(currentRows + AMOUNT_TO_ADD, countStmt.row.count);
-      }
-      finally {
-        countStmt.finalize();
-      }
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+  let rowCount = getTableRowCount("test");
+  execAsync(stmt);
+  do_check_eq(rowCount + AMOUNT_TO_ADD, getTableRowCount("test"));
   stmt.finalize();
+  run_next_test();
 }
 
 function test_bind_multiple_rows_by_name()
 {
   const AMOUNT_TO_ADD = 5;
-  var stmt = getOpenedDatabase().createStatement(
+  var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (:int, :text, :real, :null, :blob)"
   );
@@ -589,62 +635,24 @@ function test_bind_multiple_rows_by_name()
     bp.bindByName("null", null);
     bp.bindBlobByName("blob", BLOB, BLOB.length);
     array.addParams(bp);
+    do_check_eq(array.length, i + 1);
   }
   stmt.bindParameters(array);
 
-  // Get our current number of rows in the table.
-  var currentRows = 0;
-  var countStmt = getOpenedDatabase().createStatement(
-    "SELECT COUNT(1) AS count FROM test"
-  );
-  try {
-    do_check_true(countStmt.executeStep());
-    currentRows = countStmt.row.count;
-    print("We have " + currentRows + " rows in test_bind_multiple_rows_by_name");
-  }
-  finally {
-    countStmt.reset();
-  }
-
-  // Execute asynchronously.
-  stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-      do_throw("Unexpected call to handleResult!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_bind_multiple_rows_by_name");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-
-      // Check to make sure we added all of our rows.
-      try {
-        do_check_true(countStmt.executeStep());
-        print("We now have " + currentRows +
-              " rows in test_bind_multiple_rows_by_name");
-        do_check_eq(currentRows + AMOUNT_TO_ADD, countStmt.row.count);
-      }
-      finally {
-        countStmt.finalize();
-      }
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
+  let rowCount = getTableRowCount("test");
+  execAsync(stmt);
+  do_check_eq(rowCount + AMOUNT_TO_ADD, getTableRowCount("test"));
   stmt.finalize();
+  run_next_test();
 }
 
-function test_bind_out_of_bounds()
+/**
+ * Verify that a mozIStorageStatement instance throws immediately when we
+ * try and bind to an illegal index.
+ */
+function test_bind_out_of_bounds_sync_immediate()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (?)"
   );
@@ -653,38 +661,45 @@ function test_bind_out_of_bounds()
   let bp = array.newBindingParams();
 
   // Check variant binding.
-  let exceptionCaught = false;
-  try {
-    bp.bindByIndex(1, INTEGER);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
-
+  expectError(Cr.NS_ERROR_INVALID_ARG,
+              function() bp.bindByIndex(1, INTEGER));
   // Check blob binding.
-  exceptionCaught = false;
-  try {
-    bp.bindBlobByIndex(1, BLOB, BLOB.length);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_INVALID_ARG,
+              function() bp.bindBlobByIndex(1, BLOB, BLOB.length));
 
   stmt.finalize();
-
-  // Run the next test.
   run_next_test();
 }
+test_bind_out_of_bounds_sync_immediate.syncOnly = true;
 
-function test_bind_no_such_name()
+/**
+ * Verify that a mozIStorageAsyncStatement reports an error asynchronously when
+ * we bind to an illegal index.
+ */
+function test_bind_out_of_bounds_async_deferred()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
+    "INSERT INTO test (id) " +
+    "VALUES (?)"
+  );
+
+  let array = stmt.newBindingParamsArray();
+  let bp = array.newBindingParams();
+
+  // There is no difference between variant and blob binding for async purposes.
+  bp.bindByIndex(1, INTEGER);
+  array.addParams(bp);
+  stmt.bindParameters(array);
+  execAsync(stmt, {error: Ci.mozIStorageError.RANGE});
+
+  stmt.finalize();
+  run_next_test();
+}
+test_bind_out_of_bounds_async_deferred.asyncOnly = true;
+
+function test_bind_no_such_name_sync_immediate()
+{
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:foo)"
   );
@@ -693,122 +708,82 @@ function test_bind_no_such_name()
   let bp = array.newBindingParams();
 
   // Check variant binding.
-  let exceptionCaught = false;
-  try {
-    bp.bindByName("doesnotexist", INTEGER);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
-
+  expectError(Cr.NS_ERROR_INVALID_ARG,
+              function() bp.bindByName("doesnotexist", INTEGER));
   // Check blob binding.
-  exceptionCaught = false;
-  try {
-    bp.bindBlobByName("doesnotexist", BLOB, BLOB.length);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_INVALID_ARG,
+              function() bp.bindBlobByName("doesnotexist", BLOB, BLOB.length));
 
   stmt.finalize();
-
-  // Run the next test.
   run_next_test();
 }
+test_bind_no_such_name_sync_immediate.syncOnly = true;
+
+function test_bind_no_such_name_async_deferred()
+{
+  let stmt = makeTestStatement(
+    "INSERT INTO test (id) " +
+    "VALUES (:foo)"
+  );
+
+  let array = stmt.newBindingParamsArray();
+  let bp = array.newBindingParams();
+
+  bp.bindByName("doesnotexist", INTEGER);
+  array.addParams(bp);
+  stmt.bindParameters(array);
+  execAsync(stmt, {error: Ci.mozIStorageError.RANGE});
+
+  stmt.finalize();
+  run_next_test();
+}
+test_bind_no_such_name_async_deferred.asyncOnly = true;
 
 function test_bind_bogus_type_by_index()
 {
   // We try to bind a JS Object here that should fail to bind.
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (blober) " +
     "VALUES (?)"
   );
 
-  // We get an error after calling executeAsync, not when we bind.
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
+  // We get an error after calling executeAsync, not when we bind.
   bp.bindByIndex(0, run_test);
   array.addParams(bp);
   stmt.bindParameters(array);
 
-  stmt.executeAsync({
-    _errorObtained: false,
-    handleResult: function(aResultSet)
-    {
-      do_throw("Unexpected call to handleResult!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      this._errorObtained = true;
-      do_check_eq(aError.result, Ci.mozIStorageError.MISMATCH);
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_bind_bogus_type_by_index");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_ERROR, aReason);
-      do_check_true(this._errorObtained);
+  execAsync(stmt, {error: Ci.mozIStorageError.MISMATCH});
 
-      // Run the next test.
-      run_next_test();
-    }
-  });
   stmt.finalize();
+  run_next_test();
 }
 
 function test_bind_bogus_type_by_name()
 {
   // We try to bind a JS Object here that should fail to bind.
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (blober) " +
     "VALUES (:blob)"
   );
 
-  // We get an error after calling executeAsync, not when we bind.
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
+  // We get an error after calling executeAsync, not when we bind.
   bp.bindByName("blob", run_test);
   array.addParams(bp);
   stmt.bindParameters(array);
 
-  stmt.executeAsync({
-    _errorObtained: false,
-    handleResult: function(aResultSet)
-    {
-      do_throw("Unexpected call to handleResult!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      this._errorObtained = true;
-      do_check_eq(aError.result, Ci.mozIStorageError.MISMATCH);
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_bind_bogus_type_by_name");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_ERROR, aReason);
-      do_check_true(this._errorObtained);
+  execAsync(stmt, {error: Ci.mozIStorageError.MISMATCH});
 
-      // Run the next test.
-      run_next_test();
-    }
-  });
   stmt.finalize();
+  run_next_test();
 }
 
 function test_bind_params_already_locked()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
@@ -819,24 +794,16 @@ function test_bind_params_already_locked()
   array.addParams(bp);
 
   // We should get an error after we call addParams and try to bind again.
-  let exceptionCaught = false;
-  try {
-    bp.bindByName("int", INTEGER);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() bp.bindByName("int", INTEGER));
 
-  // Run the next test.
+  stmt.finalize();
   run_next_test();
 }
 
 function test_bind_params_array_already_locked()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
@@ -850,24 +817,16 @@ function test_bind_params_array_already_locked()
   bp2.bindByName("int", INTEGER);
 
   // We should get an error after we have bound the array to the statement.
-  let exceptionCaught = false;
-  try {
-    array.addParams(bp2);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() array.addParams(bp2));
 
-  // Run the next test.
+  stmt.finalize();
   run_next_test();
 }
 
 function test_no_binding_params_from_locked_array()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
@@ -880,24 +839,16 @@ function test_no_binding_params_from_locked_array()
 
   // We should not be able to get a new BindingParams object after we have bound
   // to the statement.
-  let exceptionCaught = false;
-  try {
-    bp = array.newBindingParams();
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() array.newBindingParams());
 
-  // Run the next test.
+  stmt.finalize();
   run_next_test();
 }
 
 function test_not_right_owning_array()
 {
-  let stmt = getOpenedDatabase().createStatement(
+  let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
@@ -908,28 +859,20 @@ function test_not_right_owning_array()
   bp.bindByName("int", INTEGER);
 
   // We should not be able to add bp to array2 since it was created from array1.
-  let exceptionCaught = false;
-  try {
-    array2.addParams(bp);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() array2.addParams(bp));
 
-  // Run the next test.
+  stmt.finalize();
   run_next_test();
 }
 
 function test_not_right_owning_statement()
 {
-  let stmt1 = getOpenedDatabase().createStatement(
+  let stmt1 = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
-  let stmt2 = getOpenedDatabase().createStatement(
+  let stmt2 = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
   );
@@ -941,72 +884,80 @@ function test_not_right_owning_statement()
   array1.addParams(bp);
 
   // We should not be able to bind array1 since it was created from stmt1.
-  let exceptionCaught = false;
-  try {
-    stmt2.bindParameters(array1);
-    do_throw("we should have an exception!");
-  }
-  catch(e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-    exceptionCaught = true;
-  }
-  do_check_true(exceptionCaught);
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() stmt2.bindParameters(array1));
 
-  // Run the next test.
+  stmt1.finalize();
+  stmt2.finalize();
+  run_next_test();
+}
+
+function test_bind_empty_array()
+{
+  let stmt = makeTestStatement(
+    "INSERT INTO test (id) " +
+    "VALUES (:int)"
+  );
+
+  let paramsArray = stmt.newBindingParamsArray();
+
+  // We should not be able to bind this array to the statement because it is
+  // empty.
+  expectError(Cr.NS_ERROR_UNEXPECTED,
+              function() stmt.bindParameters(paramsArray));
+
+  stmt.finalize();
   run_next_test();
 }
 
 function test_multiple_results()
 {
-  // First, we need to know how many rows we are expecting.
-  let stmt = createStatement("SELECT COUNT(1) FROM test");
-  try {
-    do_check_true(stmt.executeStep());
-    var expectedResults = stmt.getInt32(0);
-  }
-  finally {
-    stmt.finalize();
-  }
-
+  let expectedResults = getTableRowCount("test");
   // Sanity check - we should have more than one result, but let's be sure.
   do_check_true(expectedResults > 1);
 
   // Now check that we get back two rows of data from our async query.
-  stmt = createStatement("SELECT * FROM test");
-  stmt.executeAsync({
-    _results: 0,
-    handleResult: function(aResultSet)
-    {
-      while (aResultSet.getNextRow())
-        this._results++;
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("Unexpected call to handleError!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_multiple_results");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
+  let stmt = makeTestStatement("SELECT * FROM test");
+  execAsync(stmt, {}, expectedResults);
 
-      // Make sure we have the right number of results.
-      do_check_eq(this._results, expectedResults);
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
   stmt.finalize();
+  run_next_test();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
+
+const TEST_PASS_SYNC = 0;
+const TEST_PASS_ASYNC = 1;
+/**
+ * We run 2 passes against the test.  One where makeTestStatement generates
+ * synchronous (mozIStorageStatement) statements and one where it generates
+ * asynchronous (mozIStorageAsyncStatement) statements.
+ *
+ * Because of differences in the ability to know the number of parameters before
+ * dispatching, some tests are sync/async specific.  These functions are marked
+ * with 'syncOnly' or 'asyncOnly' attributes and run_next_test knows what to do.
+ */
+let testPass = TEST_PASS_SYNC;
+
+/**
+ * Create a statement of the type under test per testPass.
+ *
+ * @param aSQL
+ *        The SQL string from which to build a statement.
+ * @return a statement of the type under test per testPass.
+ */
+function makeTestStatement(aSQL) {
+  if (testPass == TEST_PASS_SYNC)
+    return getOpenedDatabase().createStatement(aSQL);
+  else
+    return getOpenedDatabase().createAsyncStatement(aSQL);
+}
+
 var tests =
 [
+  test_illegal_sql_async_deferred,
   test_create_table,
   test_add_data,
   test_get_data,
@@ -1017,16 +968,24 @@ var tests =
   test_partial_listener_works,
   test_immediate_cancellation,
   test_double_cancellation,
+  test_cancellation_after_execution,
   test_double_execute,
   test_finalized_statement_does_not_crash,
+  test_bind_direct_binding_params_by_index,
+  test_bind_direct_binding_params_by_name,
+  test_bind_js_params_helper_by_index,
+  test_bind_js_params_helper_by_name,
   test_bind_multiple_rows_by_index,
   test_bind_multiple_rows_by_name,
-  test_bind_out_of_bounds,
-  test_bind_no_such_name,
+  test_bind_out_of_bounds_sync_immediate,
+  test_bind_out_of_bounds_async_deferred,
+  test_bind_no_such_name_sync_immediate,
+  test_bind_no_such_name_async_deferred,
   test_bind_bogus_type_by_index,
   test_bind_bogus_type_by_name,
   test_bind_params_already_locked,
   test_bind_params_array_already_locked,
+  test_bind_empty_array,
   test_no_binding_params_from_locked_array,
   test_not_right_owning_array,
   test_not_right_owning_statement,
@@ -1034,15 +993,53 @@ var tests =
 ];
 let index = 0;
 
+const STARTING_UNIQUE_ID = 2;
+let nextUniqueId = STARTING_UNIQUE_ID;
+
 function run_next_test()
 {
-  if (index < tests.length) {
-    do_test_pending();
-    print("Running the next test: " + tests[index].name);
-    tests[index++]();
+  function _run_next_test() {
+    // use a loop so we can skip tests...
+    while (index < tests.length) {
+      let test = tests[index++];
+      // skip tests not appropriate to the current test pass
+      if ((testPass == TEST_PASS_SYNC && ("asyncOnly" in test)) ||
+          (testPass == TEST_PASS_ASYNC && ("syncOnly" in test)))
+        continue;
+
+      // Asynchronous tests means that exceptions don't kill the test.
+      try {
+        print("****** Running the next test: " + test.name);
+        test();
+        return;
+      }
+      catch (e) {
+        do_throw(e);
+      }
+    }
+
+    // if we only completed the first pass, move to the next pass
+    if (testPass == TEST_PASS_SYNC) {
+      print("********* Beginning mozIStorageAsyncStatement pass.");
+      testPass++;
+      index = 0;
+      // a new pass demands a new database
+      asyncCleanup();
+      nextUniqueId = STARTING_UNIQUE_ID;
+      _run_next_test();
+      return;
+    }
+
+    // we did some async stuff; we need to clean up.
+    asyncCleanup();
+    do_test_finished();
   }
 
-  do_test_finished();
+  // Don't actually schedule another test if we're quitting.
+  if (!_quit) {
+    // For saner stacks, we execute this code RSN.
+    do_execute_soon(_run_next_test);
+  }
 }
 
 function run_test()

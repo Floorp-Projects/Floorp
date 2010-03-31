@@ -46,6 +46,7 @@
 		F9C7ECE50E8ABCA600E953AD /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE20E8ABCA600E953AD /* bytereader.cc */; };
 		F9C7ECE60E8ABCA600E953AD /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */; };
 		F9C7ECE70E8ABCA600E953AD /* functioninfo.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */; };
+		F9F0706710FBC02D0037B88B /* stackwalker_arm.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9F0706510FBC02D0037B88B /* stackwalker_arm.cc */; };
 		FD6625CD0CF4D45C004AC844 /* stackwalker_amd64.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */; };
 		FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */; };
 		FD8EDEAF0CADDAD400A5EDF1 /* stackwalker_sparc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */; };
@@ -133,6 +134,8 @@
 		F9C7ECE20E8ABCA600E953AD /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
 		F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
 		F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
+		F9F0706510FBC02D0037B88B /* stackwalker_arm.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_arm.cc; path = ../../../processor/stackwalker_arm.cc; sourceTree = SOURCE_ROOT; };
+		F9F0706610FBC02D0037B88B /* stackwalker_arm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackwalker_arm.h; path = ../../../processor/stackwalker_arm.h; sourceTree = SOURCE_ROOT; };
 		FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_amd64.cc; path = ../../../processor/stackwalker_amd64.cc; sourceTree = SOURCE_ROOT; };
 		FD6625C50CF4D438004AC844 /* stackwalker_amd64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackwalker_amd64.h; path = ../../../processor/stackwalker_amd64.h; sourceTree = SOURCE_ROOT; };
 		FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_sparc.cc; path = ../../../processor/stackwalker_sparc.cc; sourceTree = SOURCE_ROOT; };
@@ -238,6 +241,8 @@
 		9BDF17280B1B8B0200F8391B /* processor */ = {
 			isa = PBXGroup;
 			children = (
+				F9F0706510FBC02D0037B88B /* stackwalker_arm.cc */,
+				F9F0706610FBC02D0037B88B /* stackwalker_arm.h */,
 				9B3904980B2E52FD0059FABE /* basic_source_line_resolver.cc */,
 				9BDF1AFA0B1BEB6300F8391B /* address_map-inl.h */,
 				9BDF1AFB0B1BEB6300F8391B /* address_map.h */,
@@ -352,6 +357,7 @@
 				F9C7ECE50E8ABCA600E953AD /* bytereader.cc in Sources */,
 				F9C7ECE60E8ABCA600E953AD /* dwarf2reader.cc in Sources */,
 				F9C7ECE70E8ABCA600E953AD /* functioninfo.cc in Sources */,
+				F9F0706710FBC02D0037B88B /* stackwalker_arm.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

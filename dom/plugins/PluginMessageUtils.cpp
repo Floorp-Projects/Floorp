@@ -82,10 +82,16 @@ RPCChannel::RacyRPCPolicy
 MediateRace(const RPCChannel::Message& parent,
             const RPCChannel::Message& child)
 {
-  // our code relies on the frame list not changing during paints
-  bool isPaint = (PPluginInstance::Msg_Paint__ID == parent.type());
+  switch (parent.type()) {
+  case PPluginInstance::Msg_Paint__ID:
+  case PPluginInstance::Msg_NPP_SetWindow__ID:
+    // our code relies on the frame list not changing during paints and
+    // reflows
+    return RPCChannel::RRPParentWins;
 
-  return isPaint ? RPCChannel::RRPParentWins : RPCChannel::RRPChildWins;
+  default:
+    return RPCChannel::RRPChildWins;
+  }
 }
 
 PRLogModuleInfo* gPluginLog = PR_NewLogModule("IPCPlugins");

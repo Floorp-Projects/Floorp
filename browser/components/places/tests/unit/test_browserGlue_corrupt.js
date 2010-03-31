@@ -41,6 +41,32 @@
  * database is corrupt and one backup is available.
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "bs",
+                                   "@mozilla.org/browser/nav-bookmarks-service;1",
+                                   "nsINavBookmarksService");
+XPCOMUtils.defineLazyServiceGetter(this, "anno",
+                                   "@mozilla.org/browser/annotation-service;1",
+                                   "nsIAnnotationService");
+
+let bookmarksObserver = {
+  onBeginUpdateBatch: function() {},
+  onEndUpdateBatch: function() {
+    let itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
+    do_check_neq(itemId, -1);
+    if (anno.itemHasAnnotation(itemId, "Places/SmartBookmark"))
+      continue_test();
+  },
+  onItemAdded: function() {},
+  onBeforeItemRemoved: function(id) {},
+  onItemRemoved: function(id, folder, index, itemType) {},
+  onItemChanged: function() {},
+  onItemVisited: function(id, visitID, time) {},
+  onItemMoved: function() {},
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+};
+
 function run_test() {
   do_test_pending();
 
@@ -74,30 +100,15 @@ function run_test() {
   // nsBrowserGlue uses databaseStatus to manage initialization.
   do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CORRUPT);
 
-  // Wait for restore to finish.
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(observer, "bookmarks-restore-success");
-      os.removeObserver(observer, "bookmarks-restore-failed");
-      do_check_eq(aTopic, "bookmarks-restore-success");
-      do_check_eq(aData, "json");
-      continue_test();
-    }
-  }
-  os.addObserver(observer, "bookmarks-restore-success", false);
-  os.addObserver(observer, "bookmarks-restore-failed", false);
+  // The test will continue once restore has finished and smart bookmarks
+  // have been created.
+  bs.addObserver(bookmarksObserver, false);
 }
 
 function continue_test() {
-  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-
   // Check that JSON backup has been restored.
   // Notice restore from JSON notification is fired before smart bookmarks creation.
-  let itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
-  do_check_neq(itemId, -1);
+  let itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
   do_check_eq(bs.getItemTitle(itemId), "examplejson");
 
   remove_bookmarks_html();

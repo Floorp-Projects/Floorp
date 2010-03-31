@@ -894,8 +894,9 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHor
   // set in CSS?
   if (box) 
   {
+    PRBool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIBox::AddCSSPrefSize(aState, box, cssSize);
+    nsIBox::AddCSSPrefSize(box, cssSize, widthSet, heightSet);
 
     row->mPref = GET_HEIGHT(cssSize, aIsHorizontal);
 
@@ -969,8 +970,9 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHori
 
   // set in CSS?
   if (box) {
+    PRBool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIBox::AddCSSMinSize(aState, box, cssSize);
+    nsIBox::AddCSSMinSize(aState, box, cssSize, widthSet, heightSet);
 
     row->mMin = GET_HEIGHT(cssSize, aIsHorizontal);
 
@@ -1043,11 +1045,10 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHori
 
   // set in CSS?
   if (box) {
-    nsSize cssSize;
-    cssSize.width = -1;
-    cssSize.height = -1;
-    nsIBox::AddCSSMaxSize(aState, box, cssSize);
-    
+    PRBool widthSet, heightSet;
+    nsSize cssSize(-1, -1);
+    nsIBox::AddCSSMaxSize(box, cssSize, widthSet, heightSet);
+
     row->mMax = GET_HEIGHT(cssSize, aIsHorizontal);
 
     // yep do nothing.

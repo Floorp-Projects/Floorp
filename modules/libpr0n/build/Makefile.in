@@ -91,11 +91,11 @@ EXTRA_DSO_LDOPTS = \
 GARBAGE += _img_list nsImgBuildDefines.h
 
 export::
-	@{ \
+	{ \
 	$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-		echo "#define IMG_BUILD_DECODER_${d}";) \
+		echo "#define IMG_BUILD_DECODER_${d}" ; ) \
 	$(foreach d,$(MOZ_IMG_ENCODERS), \
-		echo "#define IMG_BUILD_ENCODER_${d}";) \
+		echo "#define IMG_BUILD_ENCODER_${d}" ; ) \
 	} > nsImgBuildDefines.tmp
 	@if `cmp -s nsImgBuildDefines.h nsImgBuildDefines.tmp`; then \
 		rm -f nsImgBuildDefines.tmp; \

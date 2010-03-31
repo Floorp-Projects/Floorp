@@ -57,11 +57,11 @@ public:
 
     virtual ~gfxCoreTextShaper();
 
-    virtual void InitTextRun(gfxContext *aContext,
-                             gfxTextRun *aTextRun,
-                             const PRUnichar *aString,
-                             PRUint32 aRunStart,
-                             PRUint32 aRunLength);
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength);
 
     // clean up static objects that may have been cached
     static void Shutdown();

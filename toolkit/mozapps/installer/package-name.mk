@@ -172,4 +172,4 @@ else
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
 endif
 
-MOZ_SOURCE_STAMP = $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
+MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null))

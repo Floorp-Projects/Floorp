@@ -35,18 +35,26 @@
       }
     }
 
-    function focusDocument(aFrameID)
+    function focusElmWhileSubdocIsFocused(aID)
     {
-      this.DOMNode = getNode(aFrameID).contentDocument;
+      this.DOMNode = getNode(aID);
 
-      this.invoke = function focusDocument_invoke()
+      this.invoke = function focusElmWhileSubdocIsFocused_invoke()
       {
-        this.DOMNode.body.focus();
+        this.DOMNode.focus();
       }
 
-      this.getID = function focusDocument_getID()
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.DOMNode)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument)
+      ];
+
+      this.getID = function focusElmWhileSubdocIsFocused_getID()
       {
-        return "Focus document of " + prettyName(aFrameID);
+        return "Focus element while subdocument is focused " + prettyName(aID);
       }
     }
 
@@ -60,7 +68,7 @@
 
     function doTests()
     {
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
+      gQueue = new eventQueue(EVENT_FOCUS);
 
       gQueue.push(new synthFocus("editablearea"));
       gQueue.push(new synthFocus("textbox"));
@@ -69,8 +77,10 @@
       gQueue.push(new openCloseDialog("button"));
 
       var frameNode = getNode("editabledoc");
-      gQueue.push(new focusDocument(frameNode));
+      gQueue.push(new synthFocusOnFrame(frameNode));
       gQueue.push(new openCloseDialog(frameNode.contentDocument));
+
+      gQueue.push(new focusElmWhileSubdocIsFocused("button"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -86,6 +96,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=551679"
      title="focus is not fired for focused document when switching between windows">
     Mozilla Bug 551679
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=352220"
+     title=" Inconsistent focus events when returning to a document frame">
+    Mozilla Bug 352220
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

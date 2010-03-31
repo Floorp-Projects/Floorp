@@ -70,6 +70,8 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsIDeviceContext.h"
 #include "prmem.h"
 
+#include "LayerManagerOGL.h"
+
 #ifndef WINCE
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
@@ -411,266 +413,280 @@ PRBool nsWindow::OnPaint(HDC aDC)
                          (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 
-    nsRefPtr<gfxASurface> targetSurface;
+    switch (GetLayerManager()->GetBackendType()) {
+      case LayerManager::LAYERS_BASIC:
+        {
+          nsRefPtr<gfxASurface> targetSurface;
 
 #if defined(MOZ_XUL)
-    // don't support transparency for non-GDI rendering, for now
-    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) && eTransparencyTransparent == mTransparencyMode) {
-      if (mTransparentSurface == nsnull)
-        SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
-      targetSurface = mTransparentSurface;
-    }
+          // don't support transparency for non-GDI rendering, for now
+          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) && eTransparencyTransparent == mTransparencyMode) {
+            if (mTransparentSurface == nsnull)
+              SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
+            targetSurface = mTransparentSurface;
+          }
 #endif
 
-    nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
-    if (!targetSurface &&
-        IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
-    {
-      targetSurfaceWin = new gfxWindowsSurface(hDC);
-      targetSurface = targetSurfaceWin;
-    }
+          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
+          if (!targetSurface &&
+              IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
+          {
+            targetSurfaceWin = new gfxWindowsSurface(hDC);
+            targetSurface = targetSurfaceWin;
+          }
 #ifdef CAIRO_HAS_D2D_SURFACE
-    if (!targetSurface &&
-        IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
-    {
-      if (!mD2DWindowSurface) {
-        mD2DWindowSurface = new gfxD2DSurface(mWnd);
-      }
-      targetSurface = mD2DWindowSurface;
-    }
+          if (!targetSurface &&
+              IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
+          {
+            if (!mD2DWindowSurface) {
+              mD2DWindowSurface = new gfxD2DSurface(mWnd);
+            }
+            targetSurface = mD2DWindowSurface;
+          }
 #endif
 #ifdef CAIRO_HAS_DDRAW_SURFACE
-    nsRefPtr<gfxDDrawSurface> targetSurfaceDDraw;
-    if (!targetSurface &&
-        (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
-         IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL)))
-    {
-      if (!glpDD) {
-        if (!nsWindowGfx::InitDDraw()) {
-          NS_WARNING("DirectDraw init failed; falling back to RENDER_IMAGE_STRETCH24");
-          gfxWindowsPlatform::GetPlatform()->SetRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24);
-          goto DDRAW_FAILED;
-        }
-      }
+          nsRefPtr<gfxDDrawSurface> targetSurfaceDDraw;
+          if (!targetSurface &&
+              (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL)))
+          {
+            if (!glpDD) {
+              if (!nsWindowGfx::InitDDraw()) {
+                NS_WARNING("DirectDraw init failed; falling back to RENDER_IMAGE_STRETCH24");
+                gfxWindowsPlatform::GetPlatform()->SetRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24);
+                goto DDRAW_FAILED;
+              }
+            }
 
-      // create a rect that maps the window in screen space
-      // create a new sub-surface that aliases this one
-      RECT winrect;
-      GetClientRect(mWnd, &winrect);
-      MapWindowPoints(mWnd, NULL, (LPPOINT)&winrect, 2);
+            // create a rect that maps the window in screen space
+            // create a new sub-surface that aliases this one
+            RECT winrect;
+            GetClientRect(mWnd, &winrect);
+            MapWindowPoints(mWnd, NULL, (LPPOINT)&winrect, 2);
 
-      targetSurfaceDDraw = new gfxDDrawSurface(gpDDSurf.get(), winrect);
-      targetSurface = targetSurfaceDDraw;
-    }
+            targetSurfaceDDraw = new gfxDDrawSurface(gpDDSurf.get(), winrect);
+            targetSurface = targetSurfaceDDraw;
+          }
 #endif
 
 DDRAW_FAILED:
-    nsRefPtr<gfxImageSurface> targetSurfaceImage;
-    if (!targetSurface &&
-        (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
-         IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
-    {
-      gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
-                             ps.rcPaint.bottom - ps.rcPaint.top);
+          nsRefPtr<gfxImageSurface> targetSurfaceImage;
+          if (!targetSurface &&
+              (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
+          {
+            gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
+                                   ps.rcPaint.bottom - ps.rcPaint.top);
 
-      if (!EnsureSharedSurfaceSize(surfaceSize)) {
-        NS_ERROR("Couldn't allocate a shared image surface!");
-        return NS_ERROR_FAILURE;
-      }
-
-      // don't use the shared surface directly; instead, create a new one
-      // that just reuses its buffer.
-      targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
-                                               surfaceSize,
-                                               surfaceSize.width * 4,
-                                               gfxASurface::ImageFormatRGB24);
-
-      if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
-        targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
-        targetSurface = targetSurfaceImage;
-      }
-    }
-
-    if (!targetSurface) {
-      NS_ERROR("Invalid RenderMode!");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
-    thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-    if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
-      const nsIntRect* r;
-      for (nsIntRegionRectIterator iter(event.region);
-           (r = iter.Next()) != nsnull;) {
-        thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
-      }
-      thebesContext->Clip();
-    }
-#ifdef WINCE
-    thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
-#endif
-
-    // don't need to double buffer with anything but GDI
-    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
-# if defined(MOZ_XUL) && !defined(WINCE)
-      if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
-        thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-      } else if (eTransparencyTransparent == mTransparencyMode) {
-        // If we're rendering with translucency, we're going to be
-        // rendering the whole window; make sure we clear it first
-        thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-        thebesContext->Paint();
-        thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
-      } else
-#endif
-      {
-        // If we're not doing translucency, then double buffer
-        thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
-      }
-    }
-
-    {
-      AutoLayerManagerSetup setupLayerManager(this, thebesContext);
-      result = DispatchWindowEvent(&event, eventStatus);
-    }
-
-#ifdef MOZ_XUL
-    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) &&
-        eTransparencyTransparent == mTransparencyMode) {
-      // Data from offscreen drawing surface was copied to memory bitmap of transparent
-      // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
-      // that displayed on the screen.
-      UpdateTranslucentWindow();
-    } else
-#endif
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (result) {
-      if (mD2DWindowSurface) {
-        mD2DWindowSurface->Present();
-      }
-    }
-#endif
-    if (result) {
-      if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
-        // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
-        // this, and we'll just end up painting with black.
-        thebesContext->PopGroupToSource();
-        thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-        thebesContext->Paint();
-      } else if (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
-                 IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL))
-      {
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-        // blit with direct draw
-        HRESULT hr = glpDDClipper->SetHWnd(0, mWnd);
-
-#ifdef DEBUG
-        if (FAILED(hr))
-          DDError("SetHWnd", hr);
-#endif
-
-        // blt from the affected area from the window back-buffer to the
-        // screen-relative coordinates of the window paint area
-        RECT dst_rect = ps.rcPaint;
-        MapWindowPoints(mWnd, NULL, (LPPOINT)&dst_rect, 2);
-        hr = glpDDPrimary->Blt(&dst_rect,
-                               gpDDSurf->GetDDSurface(),
-                               &dst_rect,
-                               DDBLT_WAITNOTBUSY,
-                               NULL);
-#ifdef DEBUG
-        if (FAILED(hr))
-          DDError("SetHWnd", hr);
-#endif
-#endif
-      } else if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
-                 IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32)) 
-      {
-        gfxIntSize surfaceSize = targetSurfaceImage->GetSize();
-
-        // Just blit this directly
-        BITMAPINFOHEADER bi;
-        memset(&bi, 0, sizeof(BITMAPINFOHEADER));
-        bi.biSize = sizeof(BITMAPINFOHEADER);
-        bi.biWidth = surfaceSize.width;
-        bi.biHeight = - surfaceSize.height;
-        bi.biPlanes = 1;
-        bi.biBitCount = 32;
-        bi.biCompression = BI_RGB;
-
-        if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
-          // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
-          // seem to be far faster to blit than 32bpp (see bug 484864).
-          // So, convert the bits to 24bpp by stripping out the unused
-          // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
-          // aligned though, so that must be taken into account.
-          int srcstride = surfaceSize.width*4;
-          int dststride = surfaceSize.width*3;
-          dststride = (dststride + 3) & ~3;
-
-          // Convert in place
-          for (int j = 0; j < surfaceSize.height; ++j) {
-            unsigned int *src = (unsigned int*) (targetSurfaceImage->Data() + j*srcstride);
-            unsigned int *dst = (unsigned int*) (targetSurfaceImage->Data() + j*dststride);
-
-            // go 4 pixels at a time, since each 4 pixels
-            // turns into 3 DWORDs when converted into BGR:
-            // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
-            //
-            // However, since we're dealing with little-endian ints, this is actually:
-            // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
-            int width_left = surfaceSize.width;
-            while (width_left >= 4) {
-              unsigned int a = *src++;
-              unsigned int b = *src++;
-              unsigned int c = *src++;
-              unsigned int d = *src++;
-
-              *dst++ =  (a & 0x00ffffff)        | (b << 24);
-              *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
-              *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
-
-              width_left -= 4;
+            if (!EnsureSharedSurfaceSize(surfaceSize)) {
+              NS_ERROR("Couldn't allocate a shared image surface!");
+              return NS_ERROR_FAILURE;
             }
 
-            // then finish up whatever number of pixels are left,
-            // using bytes.
-            unsigned char *bsrc = (unsigned char*) src;
-            unsigned char *bdst = (unsigned char*) dst;
-            switch (width_left) {
-              case 3:
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                bsrc++;
-              case 2:
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                bsrc++;
-              case 1:
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                *bdst++ = *bsrc++;
-                bsrc++;
-              case 0:
-                break;
+            // don't use the shared surface directly; instead, create a new one
+            // that just reuses its buffer.
+            targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
+                                                     surfaceSize,
+                                                     surfaceSize.width * 4,
+                                                     gfxASurface::ImageFormatRGB24);
+
+            if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
+              targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
+              targetSurface = targetSurfaceImage;
             }
           }
 
-          bi.biBitCount = 24;
-        }
+          if (!targetSurface) {
+            NS_ERROR("Invalid RenderMode!");
+            return NS_ERROR_FAILURE;
+          }
 
-        StretchDIBits(hDC,
-                      ps.rcPaint.left, ps.rcPaint.top,
-                      surfaceSize.width, surfaceSize.height,
-                      0, 0,
-                      surfaceSize.width, surfaceSize.height,
-                      targetSurfaceImage->Data(),
-                      (BITMAPINFO*) &bi,
-                      DIB_RGB_COLORS,
-                      SRCCOPY);
-      }
+          nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+          thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+          if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
+            const nsIntRect* r;
+            for (nsIntRegionRectIterator iter(event.region);
+                 (r = iter.Next()) != nsnull;) {
+              thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
+            }
+            thebesContext->Clip();
+          }
+#ifdef WINCE
+          thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
+#endif
+
+          // don't need to double buffer with anything but GDI
+          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
+# if defined(MOZ_XUL) && !defined(WINCE)
+            if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
+              thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+            } else if (eTransparencyTransparent == mTransparencyMode) {
+              // If we're rendering with translucency, we're going to be
+              // rendering the whole window; make sure we clear it first
+              thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+              thebesContext->Paint();
+              thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+            } else
+#endif
+            {
+              // If we're not doing translucency, then double buffer
+              thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
+            }
+          }
+
+          {
+            AutoLayerManagerSetup setupLayerManager(this, thebesContext);
+            result = DispatchWindowEvent(&event, eventStatus);
+          }
+
+#ifdef MOZ_XUL
+          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) &&
+              eTransparencyTransparent == mTransparencyMode) {
+            // Data from offscreen drawing surface was copied to memory bitmap of transparent
+            // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
+            // that displayed on the screen.
+            UpdateTranslucentWindow();
+          } else
+#endif
+#ifdef CAIRO_HAS_D2D_SURFACE
+          if (result) {
+            if (mD2DWindowSurface) {
+              mD2DWindowSurface->Present();
+            }
+          }
+#endif
+          if (result) {
+            if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
+              // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
+              // this, and we'll just end up painting with black.
+              thebesContext->PopGroupToSource();
+              thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+              thebesContext->Paint();
+            } else if (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
+                       IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL))
+            {
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+              // blit with direct draw
+              HRESULT hr = glpDDClipper->SetHWnd(0, mWnd);
+
+#ifdef DEBUG
+              if (FAILED(hr))
+                DDError("SetHWnd", hr);
+#endif
+
+              // blt from the affected area from the window back-buffer to the
+              // screen-relative coordinates of the window paint area
+              RECT dst_rect = ps.rcPaint;
+              MapWindowPoints(mWnd, NULL, (LPPOINT)&dst_rect, 2);
+              hr = glpDDPrimary->Blt(&dst_rect,
+                                     gpDDSurf->GetDDSurface(),
+                                     &dst_rect,
+                                     DDBLT_WAITNOTBUSY,
+                                     NULL);
+#ifdef DEBUG
+              if (FAILED(hr))
+                DDError("SetHWnd", hr);
+#endif
+#endif
+            } else if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
+                       IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32)) 
+            {
+              gfxIntSize surfaceSize = targetSurfaceImage->GetSize();
+
+              // Just blit this directly
+              BITMAPINFOHEADER bi;
+              memset(&bi, 0, sizeof(BITMAPINFOHEADER));
+              bi.biSize = sizeof(BITMAPINFOHEADER);
+              bi.biWidth = surfaceSize.width;
+              bi.biHeight = - surfaceSize.height;
+              bi.biPlanes = 1;
+              bi.biBitCount = 32;
+              bi.biCompression = BI_RGB;
+
+              if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
+                // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
+                // seem to be far faster to blit than 32bpp (see bug 484864).
+                // So, convert the bits to 24bpp by stripping out the unused
+                // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
+                // aligned though, so that must be taken into account.
+                int srcstride = surfaceSize.width*4;
+                int dststride = surfaceSize.width*3;
+                dststride = (dststride + 3) & ~3;
+
+                // Convert in place
+                for (int j = 0; j < surfaceSize.height; ++j) {
+                  unsigned int *src = (unsigned int*) (targetSurfaceImage->Data() + j*srcstride);
+                  unsigned int *dst = (unsigned int*) (targetSurfaceImage->Data() + j*dststride);
+
+                  // go 4 pixels at a time, since each 4 pixels
+                  // turns into 3 DWORDs when converted into BGR:
+                  // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
+                  //
+                  // However, since we're dealing with little-endian ints, this is actually:
+                  // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
+                  int width_left = surfaceSize.width;
+                  while (width_left >= 4) {
+                    unsigned int a = *src++;
+                    unsigned int b = *src++;
+                    unsigned int c = *src++;
+                    unsigned int d = *src++;
+
+                    *dst++ =  (a & 0x00ffffff)        | (b << 24);
+                    *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
+                    *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
+
+                    width_left -= 4;
+                  }
+
+                  // then finish up whatever number of pixels are left,
+                  // using bytes.
+                  unsigned char *bsrc = (unsigned char*) src;
+                  unsigned char *bdst = (unsigned char*) dst;
+                  switch (width_left) {
+                    case 3:
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      bsrc++;
+                    case 2:
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      bsrc++;
+                    case 1:
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      *bdst++ = *bsrc++;
+                      bsrc++;
+                    case 0:
+                      break;
+                  }
+                }
+
+                bi.biBitCount = 24;
+              }
+
+              StretchDIBits(hDC,
+                            ps.rcPaint.left, ps.rcPaint.top,
+                            surfaceSize.width, surfaceSize.height,
+                            0, 0,
+                            surfaceSize.width, surfaceSize.height,
+                            targetSurfaceImage->Data(),
+                            (BITMAPINFO*) &bi,
+                            DIB_RGB_COLORS,
+                            SRCCOPY);
+            }
+          }
+        }
+        break;
+      case LayerManager::LAYERS_OPENGL:
+        static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
+          SetClippingRegion(event.region);
+        result = DispatchWindowEvent(&event, eventStatus);
+        break;
+      default:
+        NS_ERROR("Unknown layers backend used!");
+        break;
     }
   }
 

@@ -124,7 +124,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMAttribute, nsIDOMAttr)
@@ -384,10 +384,7 @@ nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
 NS_IMETHODIMP
 nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aOldChild);
-  PRInt32 index = IndexOf(content);
-  return (index == -1) ? NS_ERROR_DOM_NOT_FOUND_ERR :
-    RemoveChildAt(index, PR_TRUE);
+  return nsINode::RemoveChild(aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
@@ -542,9 +539,10 @@ NS_IMETHODIMP
 nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther,
                             PRBool* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
   *aReturn = PR_FALSE;
+
+  if (!aOther)
+    return NS_OK;
 
   // Node type check by QI.  We also reuse this later.
   nsCOMPtr<nsIAttribute> aOtherAttr = do_QueryInterface(aOther);

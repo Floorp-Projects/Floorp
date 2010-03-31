@@ -1095,10 +1095,10 @@ nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 
     NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, nsnull);
 
-    nsRefPtr<nsApplicationAccessibleWrap> appAccWrap =
+    nsApplicationAccessible *applicationAcc =
         nsAccessNode::GetApplicationAccessible();
     nsAccessibleWrap* tmpAppAccWrap =
-        static_cast<nsAccessibleWrap*>(appAccWrap.get());
+        static_cast<nsAccessibleWrap*>(applicationAcc);
 
     if (tmpAppAccWrap != tmpAccWrap && !tmpAccWrap->IsValidObject())
         return nsnull;

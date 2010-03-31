@@ -248,14 +248,6 @@ NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
 
 #endif /* defined(DEBUG) || defined(FORCE_PR_ASSERT) */
 
-/*
-** Compile-time assert. "condition" must be a constant expression.
-** The macro can be used only in places where an "extern" declaration is
-** allowed.
-*/
-#define PR_STATIC_ASSERT(condition) \
-    extern void pr_static_assert(int arg[(condition) ? 1 : -1])
-
 PR_END_EXTERN_C
 
 #endif /* prlog_h___ */
