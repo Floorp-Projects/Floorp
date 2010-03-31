@@ -1338,21 +1338,14 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     }
 
     /*
-     * Render our formerly-reserved count property GC-safe. If length fits in
-     * a jsval, set our slow/sparse COUNT to the current length as a jsval, so
-     * we can tell when only named properties have been added to a dense array
-     * to make it slow-but-not-sparse.
-     *
+     * Render our formerly-reserved count property GC-safe.
      * We do not need to make the length slot GC-safe as this slot is private
      * where the implementation can store an arbitrary value.
      */
     {
         JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
         JS_ASSERT(js_SlowArrayClass.flags & JSCLASS_HAS_PRIVATE);
-        uint32 length = uint32(obj->fslots[JSSLOT_ARRAY_LENGTH]);
-        obj->fslots[JSSLOT_ARRAY_COUNT] = INT_FITS_IN_JSVAL(length)
-                                          ? INT_TO_JSVAL(length)
-                                          : JSVAL_VOID;
+        obj->fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
     }
 
     /* Make sure we preserve any flags borrowing bits in classword. */
