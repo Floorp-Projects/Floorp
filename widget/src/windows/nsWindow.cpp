@@ -166,6 +166,7 @@
 
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
+#include "Layers.h"
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
@@ -664,6 +665,12 @@ NS_METHOD nsWindow::Destroy()
 
   // During the destruction of all of our children, make sure we don't get deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  /**
+   * On windows the LayerManagerOGL destructor wants the widget to be around for
+   * cleanup. It also would like to have the HWND intact, so we NULL it here.
+   */
+  mLayerManager = NULL;
 
   // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
   // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
@@ -2898,6 +2905,30 @@ nsWindow::HasPendingInputEvent()
     return PR_FALSE;
   return GUI_INMOVESIZE == (guiInfo.flags & GUI_INMOVESIZE);
 #endif
+}
+
+/**************************************************************
+ *
+ * SECTION: nsIWidget::GetLayerManager
+ *
+ * Get the layer manager associated with this widget.
+ *
+ **************************************************************/
+
+mozilla::layers::LayerManager*
+nsWindow::GetLayerManager()
+{
+  nsWindow *topWindow = GetNSWindowPtr(GetTopLevelHWND(mWnd, PR_TRUE));
+
+  if (!topWindow) {
+    return nsBaseWidget::GetLayerManager();
+  }
+
+  if (topWindow->GetAcceleratedRendering() != mUseAcceleratedRendering) {
+    mLayerManager = NULL;
+    mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
+  }
+  return nsBaseWidget::GetLayerManager();
 }
 
 /**************************************************************
