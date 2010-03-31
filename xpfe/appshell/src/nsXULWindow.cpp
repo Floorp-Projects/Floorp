@@ -1374,6 +1374,13 @@ void nsXULWindow::SyncAttributesToWidget()
     mWindow->HideWindowChrome(PR_TRUE);
   }
 
+  // "accelerated" attribute
+  PRBool isAccelerated;
+  rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
+  if (NS_SUCCEEDED(rv)) {
+    mWindow->SetAcceleratedRendering(isAccelerated);
+  }
+
   // "windowtype" attribute
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("windowtype"), attr);
   if (NS_SUCCEEDED(rv) && !attr.IsEmpty()) {
