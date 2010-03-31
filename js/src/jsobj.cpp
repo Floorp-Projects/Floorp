@@ -1352,7 +1352,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
          * with object to maintain invariants in the engine (see bug 520164).
          */
         if (scopeobj->getParent()) {
-            JSObject *global = JS_GetGlobalForObject(cx, scopeobj);
+            JSObject *global = scopeobj->getGlobal();
             withGuard.obj = js_NewWithObject(cx, scopeobj, global, 0);
             if (!withGuard.obj)
                 return JS_FALSE;
@@ -6743,6 +6743,15 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
         if (xclasp->wrappedObject && (obj2 = xclasp->wrappedObject(cx, obj)))
             return obj2;
     }
+    return obj;
+}
+
+JSObject *
+JSObject::getGlobal()
+{
+    JSObject *obj = this;
+    while (JSObject *parent = obj->getParent())
+        obj = parent;
     return obj;
 }
 
