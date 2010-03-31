@@ -39,6 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
+ * This file is best viewed with 128 columns:
+12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
+ *
  * Definitions of LIR opcodes.  If you need to allocate an opcode, look
  * for one defined using OP_UN() and claim it.
  *
@@ -47,8 +50,8 @@
  *   #define OPxyz(op, number, repKind, retType) ...
  *
  * Selected arguments can then be used within the macro expansions.
- * - op         Bytecode name, token-pasted after "LIR_" to form an LOpcode.
- * - number     Bytecode number, used as the LOpcode enum value.
+ * - op         Opcode name, token-pasted after "LIR_" to form an LOpcode.
+ * - number     Opcode number, used as the LOpcode enum value.
  * - repKind    Indicates how the instruction is represented in memory;  XYZ
  *              corresponds to LInsXYZ and LRK_XYZ.
  * - retType    Type (LTy) of the value returned by the instruction.
@@ -56,11 +59,22 @@
  *              can, -1 if things are more complicated -- in which case
  *              isCseOpcode() shouldn't be called on this opcode.
  *
- * This file is best viewed with 128 columns:
-12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
+ * Opcodes use type-indicators suffixes that are based on the Intel asm ones:
+ * - 'b': "byte", ie. 8-bit integer
+ * - 'w': "word", ie. 16-bit integer [*]
+ * - 'l': "long", ie. 32-bit integer
+ * - 'q': "quad", ie. 64-bit integer
+ * - 'u': "unsigned", is used as a prefix on integer type-indicators when necessary
+ * - 's': "single", ie. 32-bit floating point value
+ * - 'd': "double", ie. 64-bit floating point value
+ * - 'p': "pointer", ie. a long on 32-bit machines, a quad on 64-bit machines
  *
- * Aliases for pointer-sized operations that choose 32-bit or 64-bit instructions
- * are given in the LOpcode enum in LIR.h just after including LIRopcodes.tbl.
+ * [*] This meaning of "word" is used in direct relation to LIR types.  But
+ *     you'll probably see it elsewhere (eg. in comments) where it has the
+ *     sense of "pointer-sized" word.
+ *
+ * 'p' opcodes are all aliases of long and quad opcodes, they're given in LIR.h
+ * and chosen according to the platform pointer size.
  *
  * Certain opcodes aren't supported on all platforms, so OPxyz must be one of
  * the following:
@@ -95,201 +109,238 @@
 #   define OP_86(a, b, c, d, e)     OP_UN(b)
 #endif
 
-
-// Special operations.
+//---------------------------------------------------------------------------
+// Miscellaneous operations
+//---------------------------------------------------------------------------
 OP___(start,     0, Op0,  Void, 0)  // start of a fragment
-OP___(regfence,  1, Op0,  Void, 0)  // register fence, no register allocation is allowed across this meta instruction
-OP___(skip,      2, Sk,   Void, 0)  // used to link code chunks
 
-// Impure operations.
-OP___(ldsb,      3, Ld,   I32, -1)  //  8-bit integer load, sign-extend to 32-bit
-OP___(ldss,      4, Ld,   I32, -1)  // 16-bit integer load, sign-extend to 32-bit
-OP___(ldzb,      5, Ld,   I32, -1)  //  8-bit integer load, zero-extend to 32-bit
-OP___(ldzs,      6, Ld,   I32, -1)  // 16-bit integer load, zero-extend to 32-bit
-OP_32(iaddp,     7, Op2,  I32,  0)  // 32-bit integer addition for temporary pointer calculations
-OP_32(iparam,    8, P,    I32,  0)  // load a parameter (32-bit register or stack location)
-OP___(stb,       9, Sti,  Void, 0)  //  8-bit integer store
-OP___(ld,       10, Ld,   I32, -1)  // 32-bit integer load
-OP_32(ialloc,   11, I,    I32,  0)  // allocate some stack space (result is a 32-bit address)
-OP___(sti,      12, Sti,  Void, 0)  // 32-bit integer store
-OP___(ret,      13, Op1,  Void, 0)  // return a 32-bit integer
-OP___(live,     14, Op1,  Void, 0)  // extend live range of a 32-bit integer
-OP___(flive,    15, Op1,  Void, 0)  // extend live range of a 64-bit float
-OP___(icall,    16, C,    I32, -1)  // subroutine call returning a 32-bit value
-OP___(sts,      17, Sti,  Void, 0)  // 16-bit integer store
+// A register fence causes no code to be generated, but it affects register
+// allocation so that no registers are live when it is reached.
+OP___(regfence,  1, Op0,  Void, 0)
 
-OP___(x,        18, Op2,  Void, 0)  // exit always
+OP___(skip,      2, Sk,   Void, 0)  // links code chunks
 
-// Branches.  'jt' and 'jf' must be adjacent so that (op ^ 1) gives the
-// opposite one.  Static assertions in LIR.h check this requirement.
-OP___(j,        19, Op2,  Void, 0)  // jump always
-OP___(jt,       20, Op2,  Void, 0)  // jump if true
-OP___(jf,       21, Op2,  Void, 0)  // jump if false
-OP___(label,    22, Op0,  Void, 0)  // a jump target (no machine code is emitted for this)
-OP___(jtbl,     23, Jtbl, Void, 0)  // jump to address in table
+OP_32(paraml,    3, P,    I32,  0)  // load a long parameter (register or stack location)
+OP_64(paramq,    4, P,    I64,  0)  // load a quad parameter (register or stack location)
 
-OP___(int,      24, I,    I32,  1)  // constant 32-bit integer
-OP___(cmov,     25, Op3,  I32,  1)  // conditional move
-// LIR_callh is a hack that's only used on 32-bit platforms that use SoftFloat.
-// Its operand is always a LIR_icall, but one that specifies a function that
-// returns a 64-bit float.  It indicates that the 64-bit float return value is
-// being returned via two 32-bit integer registers.  The result is always used
-// as the second operand of a LIR_qjoin.
-OP_SF(callh,    26, Op1,  I32,  1)
+OP_32(allocl,    5, I,    I32,  0)  // allocate stack space (result is a long address)
+OP_64(allocq,    6, I,    I64,  0)  // allocate stack space (result is a quad address)
 
-// 64-bit float comparisons.  Their order must be preserved so that, except for
-// 'feq', (op ^ 1) gives the opposite one (eg. flt ^ 1 == fgt).  They must also
-// remain contiguous so that opcode range checking works correctly.
-// Static assertions in LIR.h check these requirements.
-OP___(feq,      27, Op2,  I32,  1)  // floating-point equality
-OP___(flt,      28, Op2,  I32,  1)  // floating-point less-than
-OP___(fgt,      29, Op2,  I32,  1)  // floating-point greater-than
-OP___(fle,      30, Op2,  I32,  1)  // floating-point less-than-or-equal
-OP___(fge,      31, Op2,  I32,  1)  // floating-point greater-than-or-equal
+OP___(retl,      7, Op1,  Void, 0)  // return a long
+OP_64(retq,      8, Op1,  Void, 0)  // return a quad
+OP___(retd,      9, Op1,  Void, 0)  // return a double
 
+OP___(livel,    10, Op1,  Void, 0)  // extend live range of a long
+OP_64(liveq,    11, Op1,  Void, 0)  // extend live range of a quad
+OP___(lived,    12, Op1,  Void, 0)  // extend live range of a double
+
+OP___(file,     13, Op1,  Void, 0)  // source filename for debug symbols
+OP___(line,     14, Op1,  Void, 0)  // source line number for debug symbols
+
+OP_UN(15)
+OP_UN(16)
+
+//---------------------------------------------------------------------------
+// Loads and stores
+//---------------------------------------------------------------------------
+OP___(ldb2l,    17, Ld,   I32, -1)  // load byte and sign-extend to a long
+OP___(ldw2l,    18, Ld,   I32, -1)  // load word and sign-extend to a long
+OP___(ldub2ul,  19, Ld,   I32, -1)  // load unsigned byte and zero-extend to an unsigned long
+OP___(lduw2ul,  20, Ld,   I32, -1)  // load unsigned word and zero-extend to an unsigned long
+OP___(ldl,      21, Ld,   I32, -1)  // load long
+OP_64(ldq,      22, Ld,   I64, -1)  // load quad
+OP___(ldd,      23, Ld,   F64, -1)  // load double
+OP___(lds2d,    24, Ld,   F64, -1)  // load single and extend to a double
+
+OP___(stb,      25, Sti,  Void, 0)  // store byte
+OP___(stw,      26, Sti,  Void, 0)  // store word
+OP___(stl,      27, Sti,  Void, 0)  // store long
+OP_64(stq,      28, Sti,  Void, 0)  // store quad
+OP___(std,      29, Sti,  Void, 0)  // store double
+OP___(std2s,    30, Sti,  Void, 0)  // store double as a single (losing precision)
+
+OP_UN(31)
 OP_UN(32)
-OP_UN(33)
-OP_UN(34)
 
-OP___(neg,      35, Op1,  I32,  1)  // 32-bit integer negation
-OP___(add,      36, Op2,  I32,  1)  // 32-bit integer addition
-OP___(sub,      37, Op2,  I32,  1)  // 32-bit integer subtraction
-OP___(mul,      38, Op2,  I32,  1)  // 32-bit integer multiplication
-OP_86(div,      39, Op2,  I32,  1)  // 32-bit integer division
-// LIR_mod is a hack.  It's only used on i386/X64.  The operand is the result
-// of a LIR_div because on i386/X64 div and mod results are computed by the
-// same instruction.
-OP_86(mod,      40, Op1,  I32,  1)  // 32-bit integer modulus
+//---------------------------------------------------------------------------
+// Calls
+//---------------------------------------------------------------------------
+OP___(calll,    33, C,    I32, -1)  // call subroutine that returns a long
+OP_64(callq,    34, C,    I64, -1)  // call subroutine that returns a quad
+OP___(calld,    35, C,    F64, -1)  // call subroutine that returns a double
 
-OP___(and,      41, Op2,  I32,  1)  // 32-bit bitwise AND
-OP___(or,       42, Op2,  I32,  1)  // 32-bit bitwise OR
-OP___(xor,      43, Op2,  I32,  1)  // 32-bit bitwise XOR
-OP___(not,      44, Op1,  I32,  1)  // 32-bit bitwise NOT
-OP___(lsh,      45, Op2,  I32,  1)  // 32-bit left shift
-OP___(rsh,      46, Op2,  I32,  1)  // 32-bit right shift with sign-extend (>>)
-OP___(ush,      47, Op2,  I32,  1)  // 32-bit unsigned right shift (>>>)
+OP_UN(36)
 
-// Conditional guards.  'xt' and 'xf' must be adjacent so that (op ^ 1) gives
-// the opposite one.  Static assertions in LIR.h check this requirement.
-OP___(xt,       48, Op2,  Void, 1)  // exit if true   (0x30 0011 0000)
-OP___(xf,       49, Op2,  Void, 1)  // exit if false  (0x31 0011 0001)
+//---------------------------------------------------------------------------
+// Branches and labels
+//---------------------------------------------------------------------------
+// 'jt' and 'jf' must be adjacent so that (op ^ 1) gives the opposite one.
+// Static assertions in LIR.h check this requirement.
+OP___(j,        37, Op2,  Void, 0)  // jump always
+OP___(jt,       38, Op2,  Void, 0)  // jump if true
+OP___(jf,       39, Op2,  Void, 0)  // jump if false
+OP___(jtbl,     40, Jtbl, Void, 0)  // jump to address in table
 
-OP_SF(qlo,      50, Op1,  I32,  1)  // get the low  32 bits of a 64-bit value
-OP_SF(qhi,      51, Op1,  I32,  1)  // get the high 32 bits of a 64-bit value
+OP___(label,    41, Op0,  Void, 0)  // a jump target (no machine code is emitted for this)
+
+OP_UN(42)
+
+//---------------------------------------------------------------------------
+// Guards
+//---------------------------------------------------------------------------
+// 'xt' and 'xf' must be adjacent so that (op ^ 1) gives the opposite one.
+// Static assertions in LIR.h check this requirement.
+OP___(x,        43, Op2,  Void, 0)  // exit always
+OP___(xt,       44, Op2,  Void, 1)  // exit if true
+OP___(xf,       45, Op2,  Void, 1)  // exit if false
+OP___(xtbl,     46, Op2,  Void, 0)  // exit via indirect jump
+// A LIR_xbarrier cause no code to be generated, but it acts like a never-taken
+// guard in that it inhibits certain optimisations, such as dead stack store
+// elimination.
+OP___(xbarrier, 47, Op2,  Void, 0)
+
+OP_UN(48)
+
+//---------------------------------------------------------------------------
+// Immediates
+//---------------------------------------------------------------------------
+OP___(imml,     49, I,    I32,  1)  // long immediate
+OP_64(immq,     50, N64,  I64,  1)  // quad immediate
+OP___(immd,     51, N64,  F64,  1)  // double immediate
 
 OP_UN(52)
-OP_UN(53)
 
-OP___(addxov,   54, Op3,  I32,  1)  // 32-bit integer addition;       exit if overflow occurred, result is valid on either path
-OP___(subxov,   55, Op3,  I32,  1)  // 32-bit integer subtraction;    exit if overflow occurred, result is valid on either path
-OP___(mulxov,   56, Op3,  I32,  1)  // 32-bit integer multiplication; exit if overflow occurred, result is valid on either path
+//---------------------------------------------------------------------------
+// Comparisons
+//---------------------------------------------------------------------------
 
-// 32-bit integer comparisons.  Their order must be preserved so that, except
-// for 'eq', (op ^ 1) gives the opposite one (eg. lt ^ 1 == gt).  They must
-// also remain contiguous so that opcode range checking works correctly.
-// Static assertions in LIR.h check these requirements.
-OP___(eq,       57, Op2,  I32,  1)  //          integer equality
-OP___(lt,       58, Op2,  I32,  1)  //   signed integer less-than             (0x38 0011 1000)
-OP___(gt,       59, Op2,  I32,  1)  //   signed integer greater-than          (0x39 0011 1001)
-OP___(le,       60, Op2,  I32,  1)  //   signed integer less-than-or-equal    (0x3A 0011 1010)
-OP___(ge,       61, Op2,  I32,  1)  //   signed integer greater-than-or-equal (0x3B 0011 1011)
-OP___(ult,      62, Op2,  I32,  1)  // unsigned integer less-than             (0x3C 0011 1100)
-OP___(ugt,      63, Op2,  I32,  1)  // unsigned integer greater-than          (0x3D 0011 1101)
-OP___(ule,      64, Op2,  I32,  1)  // unsigned integer less-than-or-equal    (0x3E 0011 1110)
-OP___(uge,      65, Op2,  I32,  1)  // unsigned integer greater-than-or-equal (0x3F 0011 1111)
+// Within each size group, order must be preserved so that, except for eq*, (op
+// ^ 1) gives the opposite one (eg. lt ^ 1 == gt).  eq* must have odd numbers
+// for this to work.  They must also remain contiguous so that opcode range
+// checking works correctly.  Static assertions in LIR.h check these
+// requirements.
+OP___(eql,      53, Op2,  I32,  1)  //          long equality
+OP___(ltl,      54, Op2,  I32,  1)  //   signed long less-than
+OP___(gtl,      55, Op2,  I32,  1)  //   signed long greater-than
+OP___(lel,      56, Op2,  I32,  1)  //   signed long less-than-or-equal
+OP___(gel,      57, Op2,  I32,  1)  //   signed long greater-than-or-equal
+OP___(ltul,     58, Op2,  I32,  1)  // unsigned long less-than
+OP___(gtul,     59, Op2,  I32,  1)  // unsigned long greater-than
+OP___(leul,     60, Op2,  I32,  1)  // unsigned long less-than-or-equal
+OP___(geul,     61, Op2,  I32,  1)  // unsigned long greater-than-or-equal
 
-OP___(file,     66, Op1,  Void, 0)  // source filename for debug symbols
-OP___(line,     67, Op1,  Void, 0)  // source line number for debug symbols
+OP_UN(62)
 
-OP___(xbarrier, 68, Op2,  Void, 0)  // memory barrier;  doesn't exit, but flushes all values to the stack
-OP___(xtbl,     69, Op2,  Void, 0)  // exit via indirect jump
+OP_64(eqq,      63, Op2,  I32,  1)  //          long equality
+OP_64(ltq,      64, Op2,  I32,  1)  //   signed long less-than
+OP_64(gtq,      65, Op2,  I32,  1)  //   signed long greater-than
+OP_64(leq,      66, Op2,  I32,  1)  //   signed long less-than-or-equal
+OP_64(geq,      67, Op2,  I32,  1)  //   signed long greater-than-or-equal
+OP_64(ltuq,     68, Op2,  I32,  1)  // unsigned long less-than
+OP_64(gtuq,     69, Op2,  I32,  1)  // unsigned long greater-than
+OP_64(leuq,     70, Op2,  I32,  1)  // unsigned long less-than-or-equal
+OP_64(geuq,     71, Op2,  I32,  1)  // unsigned long greater-than-or-equal
 
-OP_64(qlive,    70, Op1,  Void, 0)  // extend live range of a 64-bit integer
+OP_UN(72)
 
-OP_64(qaddp,    71, Op2,  I64,  0)  // 64-bit integer addition for temp pointer calculations
-OP_64(qparam,   72, P,    I64,  0)  // load a parameter (64bit register or stack location)
+OP___(eqd,      73, Op2,  I32,  1)  // double equality
+OP___(ltd,      74, Op2,  I32,  1)  // double less-than
+OP___(gtd,      75, Op2,  I32,  1)  // double greater-than
+OP___(led,      76, Op2,  I32,  1)  // double less-than-or-equal
+OP___(ged,      77, Op2,  I32,  1)  // double greater-than-or-equal
 
-OP___(ldf,      73, Ld,   F64, -1)  // 64-bit float load
-OP_64(ldq,      74, Ld,   I64, -1)  // 64-bit integer load
+OP_UN(78)
 
-OP_64(qalloc,   75, I,    I64,  0)  // allocate some stack space (result is a 64-bit address)
+//---------------------------------------------------------------------------
+// Arithmetic
+//---------------------------------------------------------------------------
+OP___(negl,     79, Op1,  I32,  1)  // negate long
+OP___(addl,     80, Op2,  I32,  1)  // add long
+OP___(subl,     81, Op2,  I32,  1)  // subtract long
+OP___(mull,     82, Op2,  I32,  1)  // multiply long
+OP_86(divl,     83, Op2,  I32,  1)  // divide long
+// LIR_modl is a hack.  It's only used on i386/X64.  The operand is the result
+// of a LIR_divl because on i386/X64 div and mod results are computed by the
+// same instruction.
+OP_86(modl,     84, Op1,  I32,  1)  // modulo long
 
-OP_64(stqi,     76, Sti,  Void, 0)  // 64-bit integer store
+OP___(notl,     85, Op1,  I32,  1)  // bitwise-NOT long
+OP___(andl,     86, Op2,  I32,  1)  // bitwise-AND long
+OP___(orl,      87, Op2,  I32,  1)  // bitwise-OR long
+OP___(xorl,     88, Op2,  I32,  1)  // bitwise-XOR long
 
-OP___(st32f,    77, Sti,  Void, 0)  // store 64-bit float as a 32-bit float (dropping precision)
-OP___(ld32f,    78, Ld,   F64, -1)  // load 32-bit float and widen to 64-bit float
+OP___(lshl,     89, Op2,  I32,  1)  // left shift long
+OP___(rshl,     90, Op2,  I32,  1)  // right shift long (>>)
+OP___(rshul,    91, Op2,  I32,  1)  // right shift unsigned long (>>>)
 
-OP___(fcall,    79, C,    F64, -1)  // subroutine call returning 64-bit float value
-OP_64(qcall,    80, C,    I64, -1)  // subroutine call returning 64-bit integer value
+OP_64(addq,     92, Op2,  I64,  1)  // add quad
 
-OP___(stfi,     81, Sti,  Void, 0)  // 64-bit float store
+OP_64(andq,     93, Op2,  I64,  1)  // bitwise-AND quad
+OP_64(orq,      94, Op2,  I64,  1)  // bitwise-OR quad
+OP_64(xorq,     95, Op2,  I64,  1)  // bitwise-XOR quad
 
-OP___(fret,     82, Op1,  Void, 0)  // return a 64-bit float
-OP_64(qret,     83, Op1,  Void, 0)  // return a 64-bit integer
+OP_64(lshq,     96, Op2,  I64,  1)  // left shift quad;           2nd operand is a long
+OP_64(rshq,     97, Op2,  I64,  1)  // right shift quad;          2nd operand is a long
+OP_64(rshuq,    98, Op2,  I64,  1)  // right shift unsigned quad; 2nd operand is a long
 
-OP_UN(84)
-OP_UN(85)
-OP_UN(86)
-OP_UN(87)
-
-OP_64(quad,     88, N64,  I64,  1)  // 64-bit integer constant value
-OP_64(qcmov,    89, Op3,  I64,  1)  // 64-bit conditional move
-
-OP_64(i2q,      90, Op1,  I64,  1)  // sign-extend i32 to i64
-OP_64(u2q,      91, Op1,  I64,  1)  // zero-extend u32 to u64
-OP___(i2f,      92, Op1,  F64,  1)  // convert a signed 32-bit integer to a float
-OP___(u2f,      93, Op1,  F64,  1)  // convert an unsigned 32-bit integer to a float
-OP___(f2i,      94, Op1,  I32,  1)  // f2i conversion, no exception raised, platform rounding rules.
-
-OP_UN(95)
-OP_UN(96)
-OP_UN(97)
-OP_UN(98)
-
-OP___(fneg,     99, Op1,  F64,  1)  // floating-point negation
-OP___(fadd,    100, Op2,  F64,  1)  // floating-point addition
-OP___(fsub,    101, Op2,  F64,  1)  // floating-point subtraction
-OP___(fmul,    102, Op2,  F64,  1)  // floating-point multiplication
-OP___(fdiv,    103, Op2,  F64,  1)  // floating-point division
-// LIR_fmod is just a place-holder opcode, ie. the back-ends cannot generate
+OP___(negd,     99, Op1,  F64,  1)  // negate double
+OP___(addd,    100, Op2,  F64,  1)  // add double
+OP___(subd,    101, Op2,  F64,  1)  // subtract double
+OP___(muld,    102, Op2,  F64,  1)  // multiply double
+OP___(divd,    103, Op2,  F64,  1)  // divide double
+// LIR_modd is just a place-holder opcode, ie. the back-ends cannot generate
 // code for it.  It's used in TraceMonkey briefly but is always demoted to a
-// LIR_mod or converted to a function call before Nanojit has to do anything
+// LIR_modl or converted to a function call before Nanojit has to do anything
 // serious with it.
-OP___(fmod,    104, Op2,  F64,  1)  // floating-point modulus
+OP___(modd,    104, Op2,  F64,  1)  // modulo double
 
-OP_64(qiand,   105, Op2,  I64,  1)  // 64-bit bitwise AND
-OP_64(qior,    106, Op2,  I64,  1)  // 64-bit bitwise OR
-OP_64(qxor,    107, Op2,  I64,  1)  // 64-bit bitwise XOR
+OP___(cmovl,   105, Op3,  I32,  1)  // conditional move long
+OP_64(cmovq,   106, Op3,  I64,  1)  // conditional move quad
+
+OP_UN(107)
 OP_UN(108)
-OP_64(qilsh,   109, Op2,  I64,  1)  // 64-bit left shift;           2nd operand is a 32-bit integer
-OP_64(qirsh,   110, Op2,  I64,  1)  // 64-bit signed right shift;   2nd operand is a 32-bit integer
-OP_64(qursh,   111, Op2,  I64,  1)  // 64-bit unsigned right shift; 2nd operand is a 32-bit integer
-OP_64(qiadd,   112, Op2,  I64,  1)  // 64-bit bitwise ADD
 
-OP_UN(113)
+//---------------------------------------------------------------------------
+// Conversions
+//---------------------------------------------------------------------------
+OP_64(l2q,     109, Op1,  I64,  1)  // sign-extend long to quad
+OP_64(ul2uq,   110, Op1,  I64,  1)  // zero-extend unsigned long to unsigned quad
+OP_64(q2l,     111, Op1,  I32,  1)  // truncate quad to long (removes the high 32 bits)
 
-OP_SF(qjoin,   114, Op2,  F64,  1)  // join two 32-bit values (1st arg is low bits, 2nd is high)
-OP_64(q2i,     115, Op1,  I32,  1)  // truncate i64 to i32
+OP___(l2d,     112, Op1,  F64,  1)  // convert long to double
+OP___(ul2d,    113, Op1,  F64,  1)  // convert unsigned long to double
+OP___(d2l,     114, Op1,  I32,  1)  // convert double to long (no exceptions raised, platform rounding rules)
 
+OP_UN(115)
 OP_UN(116)
-OP_UN(117)
 
-OP___(float,   118, N64,  F64,  1)  // 64-bit float constant value
+//---------------------------------------------------------------------------
+// Overflow arithmetic
+//---------------------------------------------------------------------------
+// These all exit if overflow occurred.  The results is valid on either path.
+OP___(addxovl, 117, Op3,  I32,  1)  // add long and exit on overflow
+OP___(subxovl, 118, Op3,  I32,  1)  // sub long and exit on overflow
+OP___(mulxovl, 119, Op3,  I32,  1)  // multiply long and exit on overflow
 
-// 64-bit integer comparisons.  Their order must be preserved so that, except
-// for 'qeq', (op ^ 1) gives the opposite one (eg. qlt ^ 1 == qgt).  They must
-// also remain contiguous so that opcode range checking works correctly.
-// Static assertions in LIR.h check these requirements.
-OP_64(qeq,     119, Op2,  I32,  1)  //          integer equality
-OP_64(qlt,     120, Op2,  I32,  1)  //   signed integer less-than             (0x78 0111 1000)
-OP_64(qgt,     121, Op2,  I32,  1)  //   signed integer greater-than          (0x79 0111 1001)
-OP_64(qle,     122, Op2,  I32,  1)  //   signed integer less-than-or-equal    (0x7A 0111 1010)
-OP_64(qge,     123, Op2,  I32,  1)  //   signed integer greater-than-or-equal (0x7B 0111 1011)
-OP_64(qult,    124, Op2,  I32,  1)  // unsigned integer less-than             (0x7C 0111 1100)
-OP_64(qugt,    125, Op2,  I32,  1)  // unsigned integer greater-than          (0x7D 0111 1101)
-OP_64(qule,    126, Op2,  I32,  1)  // unsigned integer less-than-or-equal    (0x7E 0111 1110)
-OP_64(quge,    127, Op2,  I32,  1)  // unsigned integer greater-than-or-equal (0x7F 0111 1111)
+OP_UN(120)
 
+//---------------------------------------------------------------------------
+// SoftFloat
+//---------------------------------------------------------------------------
+OP_SF(dlo2l,   121, Op1,  I32,  1)  // get the low  32 bits of a double as a long
+OP_SF(dhi2l,   122, Op1,  I32,  1)  // get the high 32 bits of a double as a long
+OP_SF(ll2d,    123, Op2,  F64,  1)  // join two longs (1st arg is low bits, 2nd is high)
+
+// LIR_hcalll is a hack that's only used on 32-bit platforms that use
+// SoftFloat.  Its operand is always a LIR_calll, but one that specifies a
+// function that returns a double.  It indicates that the double result is
+// returned via two 32-bit integer registers.  The result is always used as the
+// second operand of a LIR_ll2d.
+OP_SF(hcalll,  124, Op1,  I32,  1)
+
+OP_UN(125)
+OP_UN(126)
+OP_UN(127)
 
 #undef OP_UN
 #undef OP_32
