@@ -211,8 +211,10 @@ namespace nanojit
         LIR_add     = LIR_addl,
         LIR_sub     = LIR_subl,
         LIR_mul     = LIR_mull,
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
         LIR_div     = LIR_divl,
         LIR_mod     = LIR_modl,
+#endif
 
         LIR_not     = LIR_notl,
         LIR_and     = LIR_andl,
