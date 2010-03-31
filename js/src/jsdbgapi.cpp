@@ -1227,28 +1227,8 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->flags & JSFRAME_COMPUTED_THIS)
-        return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
-
-    /* js_ComputeThis gets confused if fp != cx->fp, so set it aside. */
-    JSStackFrame *afp = js_GetTopStackFrame(cx);
-    JSGCReachableFrame reachable;
-    if (afp != fp) {
-        if (afp) {
-            cx->fp = fp;
-            cx->pushGCReachableFrame(reachable, afp);
-        }
-    } else {
-        afp = NULL;
-    }
-
-    if (fp->argv)
+    if (!(fp->flags & JSFRAME_COMPUTED_THIS) && fp->argv)
         fp->thisv = OBJECT_TO_JSVAL(js_ComputeThis(cx, fp->argv));
-
-    if (afp) {
-        cx->fp = afp;
-        cx->popGCReachableFrame();
-    }
 
     return JSVAL_TO_OBJECT(fp->thisv);
 }
