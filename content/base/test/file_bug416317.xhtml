@@ -714,6 +714,11 @@
       t( "Comma Support", "a.blog ,p", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
       t( "Comma Support", "a.blog,p", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
 
+      t( "Outer Whitespace", " a.blog,p", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
+      t( "Outer Whitespace", "a.blog,p ", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
+      t( "Outer Whitespace", " p,a.blog", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
+      t( "Outer Whitespace", "p,a.blog ", ['firstp','ap','mark','sndp','en','sap','simon','first'] );
+
       t( "Child", "p > a", ["simon1","google","groups","mark","yahoo","simon"] );
       t( "Child", "p> a", ["simon1","google","groups","mark","yahoo","simon"] );
       t( "Child", "p >a", ["simon1","google","groups","mark","yahoo","simon"] );
