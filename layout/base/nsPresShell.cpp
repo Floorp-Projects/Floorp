@@ -756,8 +756,8 @@ public:
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
                                    nsIContent* aContent,
                                    nsEventStatus* aStatus);
-  NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
-  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
+  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame();
+  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 
@@ -5754,28 +5754,29 @@ PresShell::GetCurrentEventFrame()
   return mCurrentEventFrame;
 }
 
-NS_IMETHODIMP
-PresShell::GetEventTargetFrame(nsIFrame** aFrame)
+nsIFrame*
+PresShell::GetEventTargetFrame()
 {
-  *aFrame = GetCurrentEventFrame();
-  return NS_OK;
+  return GetCurrentEventFrame();
 }
 
-NS_IMETHODIMP
-PresShell::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
+already_AddRefed<nsIContent>
+PresShell::GetEventTargetContent(nsEvent* aEvent)
 {
+  nsIContent* content = nsnull;
+
   if (mCurrentEventContent) {
-    *aContent = mCurrentEventContent;
-    NS_IF_ADDREF(*aContent);
+    content = mCurrentEventContent;
+    NS_IF_ADDREF(content);
   } else {
     nsIFrame* currentEventFrame = GetCurrentEventFrame();
     if (currentEventFrame) {
-      currentEventFrame->GetContentForEvent(mPresContext, aEvent, aContent);
+      currentEventFrame->GetContentForEvent(mPresContext, aEvent, &content);
     } else {
-      *aContent = nsnull;
+      content = nsnull;
     }
   }
-  return NS_OK;
+  return content;
 }
 
 void
