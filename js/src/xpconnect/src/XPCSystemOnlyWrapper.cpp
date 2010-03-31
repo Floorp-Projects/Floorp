@@ -154,7 +154,7 @@ MakeSOW(JSContext *cx, JSObject *obj)
 {
 #ifdef DEBUG
   {
-    JSClass *clasp = STOBJ_GET_CLASS(obj);
+    JSClass *clasp = obj->getClass();
     NS_ASSERTION(clasp != &SystemOnlyWrapper::SOWClass.base &&
                  clasp != &XPCCrossOriginWrapper::XOWClass.base &&
                  strcmp(clasp->name, "XPCNativeWrapper"),

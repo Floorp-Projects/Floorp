@@ -5407,7 +5407,7 @@ public:
   jsval source;
   jsval clone;
   jsval temp;
-  JSAutoIdArray ids;
+  js::AutoIdArray ids;
   jsuint index;
 
 private:
@@ -5425,7 +5425,7 @@ private:
   }
 
   CloneStackFrame* prevFrame;
-  JSAutoTempValueRooter tvrVals;
+  js::AutoArrayRooter tvrVals;
 };
 
 class CloneStack
@@ -5691,7 +5691,7 @@ nsContentUtils::CreateStructuredClone(JSContext* cx,
   }
 
   jsval output = OBJECT_TO_JSVAL(obj);
-  JSAutoTempValueRooter tvr(cx, output);
+  js::AutoValueRooter tvr(cx, output);
 
   CloneStack stack(cx);
   if (!stack.Push(val, OBJECT_TO_JSVAL(obj),

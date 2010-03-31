@@ -386,7 +386,7 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, iterObj);
+  js::AutoValueRooter tvr(cx, iterObj);
   if (!propertyContainer) {
     if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(nsnull)) ||
         !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
