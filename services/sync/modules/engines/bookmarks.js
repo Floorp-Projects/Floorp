@@ -509,6 +509,9 @@ BookmarksStore.prototype = {
         record._insertPos);
       this._log.debug(["created folder", newId, "under", record._parent, "at",
         record._insertPos, "as", record.title].join(" "));
+
+      if (record.description)
+        Utils.anno(newId, "bookmarkProperties/description", record.description);
       break;
     case "livemark":
       let siteURI = null;
@@ -767,6 +770,7 @@ BookmarksStore.prototype = {
 
       record.parentName = Svc.Bookmark.getItemTitle(parent);
       record.title = this._bms.getItemTitle(placeId);
+      record.description = this._getDescription(placeId);
       break;
 
     case this._bms.TYPE_SEPARATOR:

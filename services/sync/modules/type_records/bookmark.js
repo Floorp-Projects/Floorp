@@ -127,7 +127,7 @@ BookmarkFolder.prototype = {
   _logName: "Record.Folder",
 };
 
-Utils.deferGetSet(BookmarkFolder, "cleartext", "title");
+Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title"]);
 
 function Livemark(uri) {
   BookmarkFolder.call(this, uri, "livemark");
