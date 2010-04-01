@@ -246,9 +246,9 @@
           <!-- Content viewport -->
           <vbox class="window-width window-height">
             <stack id="tile-stack" class="window-width" flex="1">
-              <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
+              <scrollbox id="content-scrollbox" class="window-width" flex="1">
                 <!-- Content viewport -->
-                <html:div id="tile-container" style="overflow: hidden;">
+                <html:div id="tile-container" style="overflow: hidden; z-index: 0 !important;">
                   <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000;">
                   </html:canvas>
                 </html:div>

@@ -50,29 +50,91 @@ html *|*:link:focus, *|*:visited:focus {
 }
 
 /* Style the scrollbars */
-scrollbar {
-  -moz-appearance: none !important;
-  display: none !important;
+:root > scrollbar {
+  display: none;
 }
 
-scrollbarbutton {
-  -moz-appearance: none !important;
-  display: none !important;
+scrollbox {
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
-thumb {
-  min-width: 10px !important;
+div > scrollbar,
+scrollbox > scrollbar {
   -moz-appearance: none !important;
-  background-color: gray !important;
-  border: 1px solid gray !important;
-  -moz-border-radius: 4px !important;
+  display: -moz-box;
+  visibility: hidden;
+  position: relative;
+  background-color: transparent !important;
+  background-image: none !important;
+  z-index: 99999 !important;
+}
+
+div > scrollbar[orient="horizontal"],
+div > scrollbar[orient="vertical"],
+*[panning] > scrollbar[orient="horizontal"],
+*[panning] > scrollbar[orient="vertical"] {
+  visibility: visible;
+}
+
+div > scrollbar[orient="vertical"],
+scrollbox > scrollbar[orient="vertical"] {
+  min-width: 10px;
+  margin-left: -10px;
+}
+
+div > scrollbar[orient="vertical"] thumb,
+scrollbox > scrollbar[orient="vertical"] thumb {
+  max-width: 8px !important;
+}
+
+div > scrollbar[orient="horizontal"],
+scrollbox > scrollbar[orient="horizontal"] {
+  min-height: 10px;
+  margin-top: -10px;
+}
+
+div > scrollbar[orient="horizontal"] thumb,
+scrollbox > scrollbar[orient="horizontal"] thumb {
+  max-height: 8px;
+}
+
+div > scrollbar > scrollbarbutton,
+scrollbox > scrollbar > scrollbarbutton {
+  -moz-appearance: none;
+  visibility: hidden;
+  position: relative;
+  min-height: 10px;
+  min-width: 10px;
+}
+
+div > scrollbar > scrollbarbutton[sbattr="scrollbar-up-top"],
+scrollbox > scrollbar > scrollbarbutton[sbattr="scrollbar-up-top"] {
+  min-height: 1px;
+  min-width: 1px;
+}
+
+div > scrollbar thumb,
+scrollbox > scrollbar thumb {
+  background-color: rgba(192, 192, 192, 0.8) !important;
+  border: 1px solid rgb(192, 192, 192) !important;
+  -moz-border-top-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-left-colors: none !important;
+}
+
+select > scrollbar,
+select > scrollbarbutton {
+  visibility: hidden;
 }
 
 select:not([size]) > scrollbar,
 select[size="1"] > scrollbar,
 select:not([size]) scrollbarbutton,
 select[size="1"] scrollbarbutton {
-  display: block !important;
+  position: static;
+  visibility: visible !important;
 }
 
 /* Override inverse OS themes */

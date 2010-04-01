@@ -1257,8 +1257,6 @@ var Browser = {
    * @return Element at position, null if no active browser or no element found
    */
   elementFromPoint: function elementFromPoint(x, y) {
-    //Util.dumpLn("*** elementFromPoint: page ", x, ",", y);
-
     let browser = this._browserView.getBrowser();
     if (!browser) return null;
 
@@ -1330,73 +1328,84 @@ Browser.MainDragger = function MainDragger(browserView) {
 Browser.MainDragger.prototype = {
   isDraggable: function isDraggable(target, scroller) { return true; },
 
+  _getScrollableHTMLElement: function _getScrollableHTLMElement(element) {
+    let win = element.ownerDocument.defaultView;
+    while (!(element instanceof HTMLBodyElement)) {
+      let style= win.getComputedStyle(element, null);
+      let overflow = ["overflow", "overflow-x", "overflow-y"].map(style.getPropertyValue);
+
+      let rect = element.getBoundingClientRect();
+      let isAuto = (overflow.indexOf("auto") != -1 &&
+                   (rect.height < element.scrollHeight || rect.width < element.scrollWidth));
+
+      let isScroll = (overflow.indexOf("scroll") != -1);
+      if (isScroll || isAuto)
+        return [element, this._createDivScrollBox(element)];
+
+      element = element.parentNode;
+    }
+
+    return [null, null];
+  },
+
+  _getScrollableXULElement: function _getScrollableXULElement(element) {
+    do {
+      if (element.localName == "treechildren")
+        return [element.parentNode, this._createTreeScrollBox(element.parentNode)];
+
+      let wrapper = element.wrappedJSObject;
+      try {
+        let scrollable = (wrapper.scrollBoxObject || wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject));
+        if (scrollable)
+          return [element, scrollable];
+      }
+      catch(e) {}
+
+      element = element.parentNode;
+    } while (element instanceof XULElement);
+
+    return [null, null];
+  },
+
   dragStart: function dragStart(clientX, clientY, target, scroller) {
+    this.draggedFrame = null;
+    this.scrolledElement = scroller.element;
+    this.contentScrollbox = null;
+
     // Make sure pausing occurs before any early returns.
     this.bv.pauseRendering();
+
+    let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
+    let element = Browser.elementFromPoint(x, y);
+    if (!element)
+      return;
+
+    if (element instanceof HTMLElement && element.tagName != "HTML")
+      [this.scrolledElement, this.contentScrollbox] = this._getScrollableHTMLElement(element);
+    else if (element instanceof XULElement)
+      [this.scrolledElement, this.contentScrollbox] = this._getScrollableXULElement(element);
+
+    if (!this.contentScrollbox)
+      this.draggedFrame = element.ownerDocument.defaultView;
+
+    let isRootFrame = (element.ownerDocument == Browser.selectedBrowser.contentDocument);
+    if (isRootFrame && !this.scrolledElement)
+      this.scrolledElement = scroller.element;
+    else if (!isRootFrame || !this.scrolledElement)
+      this.scrolledElement = element.ownerDocument.documentElement
+
+    this.scrolledElement.setAttribute("panning", "true");
 
     // XXX shouldn't know about observer
     // adding pause in pauseRendering isn't so great, because tiles will hardly ever prefetch while
     // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
     // into the aggressive flag).
     this.bv._idleServiceObserver.pause();
-
-    let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
-    let element = Browser.elementFromPoint(x, y);
-
-    this.draggedFrame = null;
-    this.contentScrollbox = null;
-
-    // Check if we are in a scrollable HTML element
-    let htmlElement = element;
-    if (htmlElement && htmlElement instanceof HTMLElement) {
-      let win = htmlElement.ownerDocument.defaultView;
-      let oScroll;
-      let oAuto;
-      for (; htmlElement; htmlElement = htmlElement.parentNode) {
-        try {
-          let cs = win.getComputedStyle(htmlElement, null);
-          let overflow = cs.getPropertyValue("overflow");
-          let overflowX = cs.getPropertyValue("overflow-x");
-          let overflowY = cs.getPropertyValue("overflow-y");
-          let cbr = htmlElement.getBoundingClientRect();
-          oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
-          oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
-
-          if (oScroll ||
-              (oAuto && (cbr.height < htmlElement.scrollHeight || cbr.width < htmlElement.scrollWidth))) {
-            this.contentScrollbox = this._createDivScrollBox(htmlElement);
-            return;
-          }
-        } catch(e) {}
-      }
-    }
-
-    // Check if we are in XUL land
-    let xulElement = element;
-    if (xulElement && xulElement instanceof XULElement) {
-      for (; xulElement; xulElement = xulElement.parentNode) {
-        if (xulElement.localName == "treechildren") {
-          this.contentScrollbox = this._createTreeScrollBox(xulElement.parentNode);
-          return;
-        }
-        let wrapper = xulElement.wrappedJSObject;
-        let scrollable = false;
-        try {
-          scrollable = (wrapper.scrollBoxObject != null) || (wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject));
-        } catch(e) {}
-        if (scrollable) {
-          this.contentScrollbox = wrapper.scrollBoxObject || wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-          return;
-        }
-      }
-    }
-
-    if (element)
-      this.draggedFrame = element.ownerDocument.defaultView;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
     this.draggedFrame = null;
+    this.scrolledElement.removeAttribute("panning");
     this.dragMove(Browser.snapSidebars(), 0, scroller);
 
     Browser.tryUnfloatToolbar();
@@ -1453,25 +1462,25 @@ Browser.MainDragger.prototype = {
   */
   _createDivScrollBox: function(div) {
     let sbo = {
-     getScrolledSize: function(width, height) {
-       width.value = div.scrollWidth;
-       height.value = div.scrollHeight;
-     },
+      getScrolledSize: function(width, height) {
+        width.value = div.scrollWidth;
+        height.value = div.scrollHeight;
+      },
 
-     getPosition: function(x, y) {
-       x.value = div.scrollLeft;
-       y.value = div.scrollTop;
-     },
+      getPosition: function(x, y) {
+        x.value = div.scrollLeft;
+        y.value = div.scrollTop;
+      },
 
-     scrollBy: function(dx, dy) {
-       div.scrollTop += dy;
-       div.scrollLeft += dx;
-     }
-   }
-   return sbo;
+      scrollBy: function(dx, dy) {
+        div.scrollTop += dy;
+        div.scrollLeft += dx;
+      }
+    }
+    return sbo;
   },
 
- /**
+  /**
   * builds a minimal implementation of scrollBoxObject for trees
   */
   _createTreeScrollBox: function(tree) {
