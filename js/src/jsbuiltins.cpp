@@ -328,8 +328,8 @@ JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanIntToString, CONTEXT, INT32, 1, A
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
 {
-    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
-    JS_ASSERT(HAS_FUNCTION_CLASS(proto));
+    JS_ASSERT(funobj->isFunction());
+    JS_ASSERT(proto->isFunction());
     JS_ASSERT(JS_ON_TRACE(cx));
 
     JSFunction *fun = (JSFunction*) funobj;

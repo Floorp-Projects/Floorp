@@ -312,13 +312,13 @@ struct JSObject {
     }
 
     /*
-     * These ones are for multi-threaded objects.  Use getSlot(),
+     * These ones are for multi-threaded ("MT") objects.  Use getSlot(),
      * getSlotRef(), setSlot() to directly manipulate slots in obj when only
      * one thread can access obj, or when accessing read-only slots within
      * JS_INITIAL_NSLOTS.
      */
-    jsval lockAndGetSlot(JSContext *cx, uintN slot);
-    void lockAndSetSlot(JSContext *cx, uintN slot, jsval value);
+    inline jsval getSlotMT(JSContext *cx, uintN slot);
+    inline void setSlotMT(JSContext *cx, uintN slot, jsval value);
 
     JSObject *getProto() const {
         return JSVAL_TO_OBJECT(fslots[JSSLOT_PROTO]);
@@ -483,9 +483,6 @@ struct JSObject {
 
     inline bool unbrand(JSContext *cx);
 };
-
-/* Compatibility macro. */
-#define OBJ_IS_NATIVE(obj)              ((obj)->isNative())
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \

@@ -20,7 +20,7 @@ BEGIN_TEST(testLookup_bug522590)
     CHECK(JS_LookupProperty(cx, xobj, "f", r.addr()));
     CHECK(JSVAL_IS_OBJECT(r));
     JSObject *funobj = JSVAL_TO_OBJECT(r);
-    CHECK(HAS_FUNCTION_CLASS(funobj));
+    CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
     CHECK(GET_FUNCTION_PRIVATE(cx, funobj) != (JSFunction *) funobj);
 
