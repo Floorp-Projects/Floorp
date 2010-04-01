@@ -197,14 +197,39 @@ FormStore.prototype = {
 
 function FormTracker(name) {
   Tracker.call(this, name);
+  Svc.Obs.add("form-notifier", this);
   Svc.Observer.addObserver(this, "earlyformsubmit", false);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIFormSubmitObserver,
+    Ci.nsIObserver]),
 
-  /* 10 points per form element */
+  trackEntry: function trackEntry(name, value) {
+    this.addChangedID(Utils.sha1(name + value));
+    this.score += 10;
+  },
+
+  observe: function observe(subject, topic, data) {
+    let name, value;
+
+    // Figure out if it's a function that we care about tracking
+    let formCall = JSON.parse(data);
+    let func = formCall.func;
+    if ((func == "addEntry" && formCall.type == "after") ||
+        (func == "removeEntry" && formCall.type == "before"))
+      [name, value] = formCall.args;
+
+    // Skip if there's nothing of interest
+    if (name == null || value == null)
+      return;
+
+    this._log.trace("Logging form action: " + [func, name, value]);
+    this.trackEntry(name, value);
+  },
+
   notify: function FormTracker_notify(formElement, aWindow, actionURI) {
     if (this.ignoreAll)
       return;
@@ -268,8 +293,7 @@ FormTracker.prototype = {
       }
 
       this._log.trace("Logging form element: " + name + " :: " + el.value);
-      this.addChangedID(Utils.sha1(name + el.value));
-      this.score += 10;
+      this.trackEntry(name, el.value);
     }
   }
 };
