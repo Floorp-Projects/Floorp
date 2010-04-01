@@ -2751,7 +2751,7 @@ BEGIN_CASE(JSOP_CALLGVAR)
     rval = obj->getSlotMT(cx, slot);
     PUSH_OPND(rval);
     if (op == JSOP_CALLGVAR)
-        PUSH_OPND(OBJECT_TO_JSVAL(obj));
+        PUSH_OPND(JSVAL_NULL);
 END_CASE(JSOP_GETGVAR)
 
 BEGIN_CASE(JSOP_SETGVAR)
