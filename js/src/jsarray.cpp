@@ -2292,9 +2292,9 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             ca.elemroot  = js_AllocStack(cx, 2 + 2, &mark);
             if (!ca.elemroot)
                 return false;
-            bool ok = js_MergeSort(vec, size_t(newlen), sizeof(jsval),
-                                   comparator_stack_cast(sort_compare),
-                                   &ca, mergesort_tmp);
+            bool ok = !!js_MergeSort(vec, size_t(newlen), sizeof(jsval),
+                                     comparator_stack_cast(sort_compare),
+                                     &ca, mergesort_tmp);
             js_FreeStack(cx, mark);
             if (!ok)
                 return false;
