@@ -76,6 +76,8 @@
 */
 
 #define NO_GLOBAL_STATE
+#define MALLOC js_malloc
+#define FREE js_free
 #include "dtoa.c"
 
 /* Mapping of JSDToStrMode -> js_dtoa mode */
