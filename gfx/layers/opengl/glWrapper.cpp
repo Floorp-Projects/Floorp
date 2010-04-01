@@ -38,7 +38,6 @@
 #include "glWrapper.h"
 #include "nsDebug.h"
 
-
 #ifdef XP_WIN
 #define glGetProcAddress wGetProcAddress
 #else
@@ -80,14 +79,32 @@ glWrapper::wCreateContext(HDC aDC)
     }
     
     wCreateContextInternal = (PFNWGLCREATECONTEXTPROC)
-      PR_FindSymbol(mOGLLibrary, "wglCreateContext");
+      PR_FindFunctionSymbol(mOGLLibrary, "wglCreateContext");
     wDeleteContext = (PFNWGLDELETECONTEXTPROC)
-      PR_FindSymbol(mOGLLibrary, "wglDeleteContext");
+      PR_FindFunctionSymbol(mOGLLibrary, "wglDeleteContext");
     wMakeCurrent = (PFNWGLMAKECURRENTPROC)
-      PR_FindSymbol(mOGLLibrary, "wglMakeCurrent");
+      PR_FindFunctionSymbol(mOGLLibrary, "wglMakeCurrent");
     wGetProcAddress = (PFNWGLGETPROCADDRESSPROC)
-      PR_FindSymbol(mOGLLibrary, "wglGetProcAddress");
+      PR_FindFunctionSymbol(mOGLLibrary, "wglGetProcAddress");
   }
+  PIXELFORMATDESCRIPTOR pfd;
+  ZeroMemory(&pfd, sizeof(pfd));
+
+  pfd.nSize = sizeof(pfd);
+  pfd.nVersion = 1;
+  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+  pfd.iPixelType = PFD_TYPE_RGBA;
+  pfd.cColorBits = 32;
+  pfd.cDepthBits = 0;
+  pfd.iLayerType = PFD_MAIN_PLANE;
+  int iFormat = ChoosePixelFormat(aDC, &pfd);
+
+  /**
+   * We need to make sure we call SetPixelFormat -after- loading the OGL
+   * library, otherwise it can load/unload the dll and wglCreateContext
+   * will fail.
+   */
+  SetPixelFormat(aDC, iFormat, &pfd);
   HGLRC retval = wCreateContextInternal(aDC);
 
   if (!retval) {
