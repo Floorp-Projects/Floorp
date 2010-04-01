@@ -95,7 +95,7 @@ img {
   float: left;
 }
 
-#footer.nav li {
+#footer .nav li {
   list-style: none;
   float: left;
   margin: 0 1em 0 0;
@@ -103,7 +103,7 @@ img {
   border-right: 1px solid #e7e7e7;
 }
 
-#footer.nav li:last-child {
+#footer .nav li:last-child {
   border: 0;
 }
 
