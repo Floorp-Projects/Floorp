@@ -47,6 +47,89 @@ Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/forms.js");
 
+let FormWrapper = {
+  getAllEntries: function getAllEntries() {
+    let entries = [];
+    let query = Svc.Form.DBConnection.createStatement(
+      "SELECT fieldname, value FROM moz_formhistory");
+    while (query.executeStep()) {
+      entries.push({
+        name: query.row.fieldname,
+        value: query.row.value
+      });
+    }
+    return entries;
+  },
+
+  getEntry: function getEntry(guid) {
+    let query = Svc.Form.DBConnection.createStatement(
+      "SELECT fieldname, value FROM moz_formhistory WHERE guid = :guid");
+    query.params.guid = guid;
+    if (!query.executeStep())
+      return;
+
+    return {
+      name: query.row.fieldname,
+      value: query.row.value
+    };
+  },
+
+  getGUID: function getGUID(name, value) {
+    let getQuery = "SELECT guid FROM moz_formhistory " +
+      "WHERE fieldname = :name AND value = :value";
+    try {
+      getQuery = Svc.Form.DBConnection.createStatement(getQuery);
+    }
+    catch(ex) {
+      // The column must not exist yet, so add it with an index
+      Svc.Form.DBConnection.executeSimpleSQL(
+        "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT");
+      Svc.Form.DBConnection.executeSimpleSQL(
+        "CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index " +
+        "ON moz_formhistory (guid)");
+
+      // Try creating the query now that the column exists
+      getQuery = Svc.Form.DBConnection.createStatement(getQuery);
+    }
+
+    // Query for the provided entry
+    getQuery.params.name = name;
+    getQuery.params.value = value;
+    getQuery.executeStep();
+
+    // Give the guid if we found one
+    if (getQuery.row.guid != null)
+      return getQuery.row.guid;
+
+    // We need to create a guid for this entry
+    let setQuery = Svc.Form.DBConnection.createStatement(
+      "UPDATE moz_formhistory SET guid = :guid " +
+      "WHERE fieldname = :name AND value = :value");
+    let guid = Utils.makeGUID();
+    setQuery.params.guid = guid;
+    setQuery.params.name = name;
+    setQuery.params.value = value;
+    setQuery.execute();
+
+    return guid;
+  },
+
+  hasGUID: function hasGUID(guid) {
+    let query = Svc.Form.DBConnection.createStatement(
+      "SELECT 1 FROM moz_formhistory WHERE guid = :guid");
+    query.params.guid = guid;
+    return query.executeStep();
+  },
+
+  replaceGUID: function replaceGUID(oldGUID, newGUID) {
+    let query = Svc.Form.DBConnection.createStatement(
+      "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
+    query.params.oldGUID = oldGUID;
+    query.params.newGUID = newGUID;
+    query.execute();
+  }
+};
+
 function FormEngine() {
   SyncEngine.call(this, "Forms");
 }
@@ -57,133 +140,59 @@ FormEngine.prototype = {
   _recordObj: FormRec,
   get prefName() "history",
 
-  _syncStartup: function FormEngine__syncStartup() {
-    this._store.cacheFormItems();
-    SyncEngine.prototype._syncStartup.call(this);
-  },
-
-  /* Wipe cache when sync finishes */
-  _syncFinish: function FormEngine__syncFinish(error) {
-    this._store.clearFormCache();
-    SyncEngine.prototype._syncFinish.call(this);
-  },
-
   _findDupe: function _findDupe(item) {
-    // Search through the items to find a matching name/value
-    for (let [guid, {name, value}] in Iterator(this._store._formItems))
-      if (name == item.name && value == item.value)
-        return guid;
+    if (Svc.Form.entryExists(item.name, item.value))
+      return FormWrapper.getGUID(item.name, item.value);
   }
 };
-
 
 function FormStore(name) {
   Store.call(this, name);
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
-  _formItems: null,
-
-  get _formDB() {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
-    file.append("formhistory.sqlite");
-    let stor = Cc["@mozilla.org/storage/service;1"].
-      getService(Ci.mozIStorageService);
-    let formDB = stor.openDatabase(file);
-
-    this.__defineGetter__("_formDB", function() formDB);
-    return formDB;
-  },
-
-  get _formHistory() {
-    let formHistory = Cc["@mozilla.org/satchel/form-history;1"].
-      getService(Ci.nsIFormHistory2);
-    this.__defineGetter__("_formHistory", function() formHistory);
-    return formHistory;
-  },
-
-  get _formStatement() {
-    // This is essentially:
-    // SELECT * FROM moz_formhistory ORDER BY 1.0 * (lastUsed - minLast) /
-    // (maxLast - minLast) * timesUsed / minTimes DESC LIMIT 200
-    let stmnt = this._formDB.createStatement(
-        "SELECT * FROM moz_formhistory ORDER BY 1.0 * (lastUsed - \
-        (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / \
-        ((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - \
-        (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * \
-        timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) \
-        DESC LIMIT 200"
-    );
-
-    this.__defineGetter__("_formStatement", function() stmnt);
-    return stmnt;
-  },
-
-  cacheFormItems: function FormStore_cacheFormItems() {
-    this._log.trace("Caching all form items");
-    this._formItems = this.getAllIDs();
-  },
-
-  clearFormCache: function FormStore_clearFormCache() {
-    this._log.trace("Clearing form cache");
-    this._formItems = null;
-  },
 
   getAllIDs: function FormStore_getAllIDs() {
-    let items = {};
-    let stmnt = this._formStatement;
-
-    while (stmnt.executeStep()) {
-      let nam = stmnt.getUTF8String(1);
-      let val = stmnt.getUTF8String(2);
-      let key = Utils.sha1(nam + val);
-
-      items[key] = { name: nam, value: val };
-    }
-    stmnt.reset();
-
-    return items;
+    let guids = {};
+    for each (let {name, value} in FormWrapper.getAllEntries())
+      guids[FormWrapper.getGUID(name, value)] = true;
+    return guids;
   },
 
   changeItemID: function FormStore_changeItemID(oldID, newID) {
-    this._log.warn("FormStore IDs are data-dependent, cannot change!");
+    FormWrapper.replaceGUID(oldID, newID);
   },
 
   itemExists: function FormStore_itemExists(id) {
-    return (id in this._formItems);
+    return FormWrapper.hasGUID(id);
   },
 
   createRecord: function createRecord(guid) {
     let record = new FormRec();
-
-    if (guid in this._formItems) {
-      let item = this._formItems[guid];
-      record.name = item.name;
-      record.value = item.value;
-    } else {
-      record.deleted = true;
+    let entry = FormWrapper.getEntry(guid);
+    if (entry != null) {
+      record.name = entry.name;
+      record.value = entry.value
     }
-
+    else
+      record.deleted = true;
     return record;
   },
 
   create: function FormStore_create(record) {
-    this._log.debug("Adding form record for " + record.name);
-    this._formHistory.addEntry(record.name, record.value);
+    this._log.trace("Adding form record for " + record.name);
+    Svc.Form.addEntry(record.name, record.value);
   },
 
   remove: function FormStore_remove(record) {
     this._log.trace("Removing form record: " + record.id);
 
-    if (record.id in this._formItems) {
-      let item = this._formItems[record.id];
-      this._formHistory.removeEntry(item.name, item.value);
+    // Just skip remove requests for things already gone
+    let entry = FormWrapper.getEntry(record.id);
+    if (entry == null)
       return;
-    }
 
-    this._log.trace("Invalid GUID found, ignoring remove request.");
+    Svc.Form.removeEntry(entry.name, entry.value);
   },
 
   update: function FormStore_update(record) {
@@ -191,7 +200,7 @@ FormStore.prototype = {
   },
 
   wipe: function FormStore_wipe() {
-    this._formHistory.removeAllEntries();
+    Svc.Form.removeAllEntries();
   }
 };
 
@@ -208,7 +217,7 @@ FormTracker.prototype = {
     Ci.nsIObserver]),
 
   trackEntry: function trackEntry(name, value) {
-    this.addChangedID(Utils.sha1(name + value));
+    this.addChangedID(FormWrapper.getGUID(name, value));
     this.score += 10;
   },
 
@@ -292,8 +301,11 @@ FormTracker.prototype = {
         continue;
       }
 
-      this._log.trace("Logging form element: " + name + " :: " + el.value);
-      this.trackEntry(name, el.value);
+      // Get the GUID on a delay so that it can be added to the DB first...
+      Utils.delay(function() {
+        this._log.trace("Logging form element: " + [name, el.value]);
+        this.trackEntry(name, el.value);
+      }, 0, this);
     }
   }
 };

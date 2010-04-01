@@ -584,14 +584,18 @@ SyncEngine.prototype = {
   },
 
   _handleDupe: function _handleDupe(item, dupeId) {
-    // The local dupe is the lower id, so pretend the incoming is for it
-    if (dupeId < item.id) {
+    // Prefer shorter guids; for ties, just do an ASCII compare
+    let preferLocal = dupeId.length < item.id.length ||
+      (dupeId.length == item.id.length && dupeId < item.id);
+
+    if (preferLocal) {
+      this._log.trace("Preferring local id: " + [dupeId, item.id]);
       this._deleteId(item.id);
       item.id = dupeId;
       this._tracker.changedIDs[dupeId] = true;
     }
-    // The incoming item has the lower id, so change the dupe to it
     else {
+      this._log.trace("Switching local id to incoming: " + [item.id, dupeId]);
       this._store.changeItemID(dupeId, item.id);
       this._deleteId(dupeId);
     }
