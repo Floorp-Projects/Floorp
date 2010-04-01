@@ -146,6 +146,8 @@ namespace FunctionType {
   static JSBool ReturnTypeGetter(JSContext* cx, JSObject* obj, jsval idval,
     jsval* vp);
   static JSBool ABIGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
+  static JSBool IsVariadicGetter(JSContext* cx, JSObject* obj, jsval idval,
+    jsval* vp);
 }
 
 namespace CClosure {
@@ -366,6 +368,7 @@ static JSPropertySpec sFunctionProps[] = {
   { "argTypes", 0, CTYPESPROP_FLAGS, FunctionType::ArgTypesGetter, NULL },
   { "returnType", 0, CTYPESPROP_FLAGS, FunctionType::ReturnTypeGetter, NULL },
   { "abi", 0, CTYPESPROP_FLAGS, FunctionType::ABIGetter, NULL },
+  { "isVariadic", 0, CTYPESPROP_FLAGS, FunctionType::IsVariadicGetter, NULL },
   { 0, 0, 0, NULL, NULL }
 };
 
@@ -2017,9 +2020,12 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
         JSString* argName = CType::GetName(cx, fninfo->mArgTypes[i]);
         result.Append(GetString(argName));
-        if (i != fninfo->mArgTypes.Length() - 1)
+        if (i != fninfo->mArgTypes.Length() - 1 ||
+            fninfo->mIsVariadic)
           result.Append(NS_LITERAL_STRING(", "));
       }
+      if (fninfo->mIsVariadic)
+        result.Append(NS_LITERAL_STRING("..."));
       result.Append(')');
 
       // Set 'currentType' to the return type, and let the loop process it.
@@ -2110,9 +2116,12 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
       result.Append(NS_LITERAL_STRING(", ["));
       for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
         result.Append(BuildTypeSource(cx, fninfo->mArgTypes[i], true));
-        if (i != fninfo->mArgTypes.Length() - 1)
+        if (i != fninfo->mArgTypes.Length() - 1 ||
+            fninfo->mIsVariadic)
           result.Append(NS_LITERAL_STRING(", "));
       }
+      if (fninfo->mIsVariadic)
+        result.Append(NS_LITERAL_STRING("\"...\""));
       result.Append(']');
     }
 
@@ -2658,6 +2667,9 @@ CType::TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2)
       return false;
 
     if (f1->mArgTypes.Length() != f2->mArgTypes.Length())
+      return false;
+
+    if (f1->mIsVariadic != f2->mIsVariadic)
       return false;
 
     for (PRUint32 i = 0; i < f1->mArgTypes.Length(); ++i) {
@@ -4189,7 +4201,7 @@ struct AutoValue
 };
 
 static bool
-GetABI(JSContext* cx, jsval abiType, ffi_abi& result)
+GetABI(JSContext* cx, jsval abiType, ffi_abi* result)
 {
   if (JSVAL_IS_PRIMITIVE(abiType))
     return false;
@@ -4201,11 +4213,11 @@ GetABI(JSContext* cx, jsval abiType, ffi_abi& result)
   // C calling convention (cdecl) on each platform.
   switch (abi) {
   case ABI_DEFAULT:
-    result = FFI_DEFAULT_ABI;
+    *result = FFI_DEFAULT_ABI;
     return true;
   case ABI_STDCALL:
 #if (defined(_WIN32) && !defined(_WIN64)) || defined(_OS2)
-    result = FFI_STDCALL;
+    *result = FFI_STDCALL;
     return true;
 #endif
   case INVALID_ABI:
@@ -4270,6 +4282,52 @@ PrepareReturnType(JSContext* cx, jsval type)
   return result;
 }
 
+static JS_ALWAYS_INLINE bool
+IsEllipsis(jsval v)
+{
+  if (!JSVAL_IS_STRING(v))
+    return false;
+  JSString* str = JSVAL_TO_STRING(v);
+  if (JS_GetStringLength(str) != 3)
+    return false;
+  jschar* chars = JS_GetStringChars(str), dot('.');
+  return (chars[0] == dot &&
+          chars[1] == dot &&
+          chars[2] == dot);
+}
+
+static JSBool
+PrepareCIF(JSContext* cx,
+           FunctionInfo* fninfo)
+{
+  ffi_abi abi;
+  if (!GetABI(cx, OBJECT_TO_JSVAL(fninfo->mABI), &abi)) {
+    JS_ReportError(cx, "Invalid ABI specification");
+    return false;
+  }
+
+  ffi_status status =
+    ffi_prep_cif(&fninfo->mCIF,
+                 abi,
+                 fninfo->mFFITypes.Length(),
+                 CType::GetFFIType(cx, fninfo->mReturnType),
+                 fninfo->mFFITypes.Elements());
+
+  switch (status) {
+  case FFI_OK:
+    return true;
+  case FFI_BAD_ABI:
+    JS_ReportError(cx, "Invalid ABI specification");
+    return false;
+  case FFI_BAD_TYPEDEF:
+    JS_ReportError(cx, "Invalid type specification");
+    return false;
+  default:
+    JS_ReportError(cx, "Unknown libffi error");
+    return false;
+  }
+}
+
 static FunctionInfo*
 NewFunctionInfo(JSContext* cx,
                 jsval abiType,
@@ -4283,19 +4341,12 @@ NewFunctionInfo(JSContext* cx,
     return NULL;
   }
 
-  // determine the ABI
-  ffi_abi abi;
-  if (!GetABI(cx, abiType, abi)) {
-    JS_ReportError(cx, "Invalid ABI specification");
-    return NULL;
-  }
   fninfo->mABI = JSVAL_TO_OBJECT(abiType);
 
   // prepare the result type
   fninfo->mReturnType = PrepareReturnType(cx, returnType);
   if (!fninfo->mReturnType)
     return NULL;
-  ffi_type* rtype = CType::GetFFIType(cx, fninfo->mReturnType);
 
   // prepare the argument types
   if (!fninfo->mArgTypes.SetCapacity(argLength) ||
@@ -4304,7 +4355,29 @@ NewFunctionInfo(JSContext* cx,
     return NULL;
   }
 
+  fninfo->mIsVariadic = false;
+
   for (PRUint32 i = 0; i < argLength; ++i) {
+    if (IsEllipsis(argTypes[i])) {
+      fninfo->mIsVariadic = true;
+      if (i < 1) {
+        JS_ReportError(cx, "\"...\" may not be the first and only parameter "
+                       "type of a variadic function declaration");
+        return NULL;
+      }
+      if (i < argLength - 1) {
+        JS_ReportError(cx, "\"...\" must be the last parameter type of a "
+                       "variadic function declaration");
+        return NULL;
+      }
+      if (GetABICode(cx, fninfo->mABI) != ABI_DEFAULT) {
+        JS_ReportError(cx, "Variadic functions must use the __cdecl calling "
+                       "convention");
+        return NULL;
+      }
+      break;
+    }
+
     JSObject* argType = PrepareType(cx, argTypes[i]);
     if (!argType)
       return NULL;
@@ -4313,21 +4386,14 @@ NewFunctionInfo(JSContext* cx,
     fninfo->mFFITypes.AppendElement(CType::GetFFIType(cx, argType));
   }
 
-  ffi_status status = ffi_prep_cif(&fninfo->mCIF, abi,
-    fninfo->mFFITypes.Length(), rtype, fninfo->mFFITypes.Elements());
-  switch (status) {
-  case FFI_OK:
+  if (fninfo->mIsVariadic)
+    // wait to PrepareCIF until function is called
     return fninfo.forget();
-  case FFI_BAD_ABI:
-    JS_ReportError(cx, "Invalid ABI specification");
+
+  if (!PrepareCIF(cx, fninfo))
     return NULL;
-  case FFI_BAD_TYPEDEF:
-    JS_ReportError(cx, "Invalid type specification");
-    return NULL;
-  default:
-    JS_ReportError(cx, "Unknown libffi error");
-    return NULL;
-  }
+
+  return fninfo.forget();
 }
 
 JSBool
@@ -4453,6 +4519,11 @@ FunctionType::ConstructData(JSContext* cx,
     PRFuncPtr* data = static_cast<PRFuncPtr*>(CData::GetData(cx, result));
 
     if (JSVAL_IS_OBJECT(arg) && JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(arg))) {
+      FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, obj);
+      if (fninfo->mIsVariadic) {
+        JS_ReportError(cx, "Can't declare a variadic callback function");
+        return JS_FALSE;
+      }
       // Construct from a JS function, and allow an optional 'this' argument.
       JSObject* thisObj = NULL;
       if (argc == 2) {
@@ -4493,6 +4564,35 @@ FunctionType::ConstructData(JSContext* cx,
   return JS_FALSE;
 }
 
+typedef nsAutoTArray<AutoValue, 16> AutoValueAutoArray;
+
+static JSBool
+ConvertArgument(JSContext* cx,
+                jsval arg,
+                JSObject* type,
+                AutoValueAutoArray* values,
+                AutoValueAutoArray* strings)
+{
+  AutoValue* value = values->AppendElement();
+
+  if (!value->SizeToType(cx, type)) {
+    JS_ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  bool freePointer = false;
+  if (!ImplicitConvert(cx, arg, type, value->mData, true, &freePointer))
+    return false;
+
+  if (freePointer) {
+    // ImplicitConvert converted a string for us, which we have to free.
+    // Keep track of it.
+    strings->AppendElement()->mData = *static_cast<char**>(value->mData);
+  }
+
+  return true;
+}
+
 JSBool
 FunctionType::Call(JSContext* cx,
                    JSObject* obj,
@@ -4514,8 +4614,10 @@ FunctionType::Call(JSContext* cx,
   }
 
   FunctionInfo* fninfo = GetFunctionInfo(cx, typeObj);
+  PRUint32 argcFixed = fninfo->mArgTypes.Length();
 
-  if (argc != fninfo->mArgTypes.Length()) {
+  if ((!fninfo->mIsVariadic && argc != argcFixed) ||
+      (fninfo->mIsVariadic && argc < argcFixed)) {
     JS_ReportError(cx, "Number of arguments does not match declaration");
     return false;
   }
@@ -4532,25 +4634,41 @@ FunctionType::Call(JSContext* cx,
   }
 
   // prepare the values for each argument
-  nsAutoTArray<AutoValue, 16> values;
-  nsAutoTArray<AutoValue, 16> strings;
-  for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
-    AutoValue* value = values.AppendElement();
-    bool freePointer = false;
-    if (!value->SizeToType(cx, fninfo->mArgTypes[i])) {
-      JS_ReportAllocationOverflow(cx);
-      return false;
-    }
+  AutoValueAutoArray values;
+  AutoValueAutoArray strings;
 
-    if (!ImplicitConvert(cx, argv[i], fninfo->mArgTypes[i], value->mData, true,
-           &freePointer))
+  for (PRUint32 i = 0; i < argcFixed; ++i)
+    if (!ConvertArgument(cx, argv[i], fninfo->mArgTypes[i], &values, &strings))
       return false;
 
-    if (freePointer) {
-      // ImplicitConvert converted a string for us, which we have to free.
-      // Keep track of it.
-      strings.AppendElement()->mData = *static_cast<char**>(value->mData);
+  if (fninfo->mIsVariadic) {
+    fninfo->mFFITypes.SetLength(argcFixed);
+    ASSERT_OK(fninfo->mFFITypes.SetCapacity(argc));
+
+    JSObject* obj;  // Could reuse obj instead of declaring a second
+    JSObject* type; // JSObject*, but readability would suffer.
+
+    for (PRUint32 i = argcFixed; i < argc; ++i) {
+      if (JSVAL_IS_PRIMITIVE(argv[i]) ||
+          !CData::IsCData(cx, obj = JSVAL_TO_OBJECT(argv[i]))) {
+        // Since we know nothing about the CTypes of the ... arguments,
+        // they absolutely must be CData objects already.
+        JS_ReportError(cx, "argument %d of type %s is not a CData object",
+                       i, JS_GetTypeName(cx, JS_TypeOfValue(cx, argv[i])));
+        return false;
+      }
+      if (!(type = CData::GetCType(cx, obj)) ||
+          !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
+          // Relying on ImplicitConvert only for the limited purpose of
+          // converting one CType to another (e.g., T[] to T*).
+          !ConvertArgument(cx, argv[i], type, &values, &strings)) {
+        // These functions report their own errors.
+        return false;
+      }
+      fninfo->mFFITypes.AppendElement(CType::GetFFIType(cx, type));
     }
+    if (!PrepareCIF(cx, fninfo))
+      return false;
   }
 
   // initialize a pointer to an appropriate location, for storing the result
@@ -4590,13 +4708,21 @@ FunctionType::GetFunctionInfo(JSContext* cx, JSObject* obj)
   return static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot));
 }
 
-JSBool
-FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
+static JSBool
+CheckFunctionType(JSContext* cx, JSObject* obj)
 {
   if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_function) {
     JS_ReportError(cx, "not a FunctionType");
     return JS_FALSE;
   }
+  return JS_TRUE;
+}
+
+JSBool
+FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
+{
+  if (!CheckFunctionType(cx, obj))
+    return JS_FALSE;
 
   // Check if we have a cached argTypes array.
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_ARGS_T, vp));
@@ -4630,10 +4756,8 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* v
 JSBool
 FunctionType::ReturnTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
 {
-  if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_function) {
-    JS_ReportError(cx, "not a FunctionType");
+  if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
-  }
 
   // Get the returnType object from the FunctionInfo.
   *vp = OBJECT_TO_JSVAL(GetFunctionInfo(cx, obj)->mReturnType);
@@ -4643,13 +4767,21 @@ FunctionType::ReturnTypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval*
 JSBool
 FunctionType::ABIGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
 {
-  if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_function) {
-    JS_ReportError(cx, "not a FunctionType");
+  if (!CheckFunctionType(cx, obj))
     return JS_FALSE;
-  }
 
   // Get the abi object from the FunctionInfo.
   *vp = OBJECT_TO_JSVAL(GetFunctionInfo(cx, obj)->mABI);
+  return JS_TRUE;
+}
+
+JSBool
+FunctionType::IsVariadicGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
+{
+  if (!CheckFunctionType(cx, obj))
+    return JS_FALSE;
+
+  *vp = BOOLEAN_TO_JSVAL(GetFunctionInfo(cx, obj)->mIsVariadic);
   return JS_TRUE;
 }
 
@@ -4671,6 +4803,7 @@ CClosure::Create(JSContext* cx,
 
   // Get the FunctionInfo from the FunctionType.
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
+  JS_ASSERT(!fninfo->mIsVariadic);
 
   nsAutoPtr<ClosureInfo> cinfo(new ClosureInfo());
   if (!cinfo) {
