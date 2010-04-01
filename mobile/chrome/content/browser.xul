@@ -322,7 +322,7 @@
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
       <vbox>
-        <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" class="button-dark" oncommand="BookmarkHelper.edit(); BrowserUI.hideControls();"/>
+        <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" class="button-dark" oncommand="BookmarkHelper.edit();"/>
         <spacer/>
         <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="BookmarkPopup.hide(); removeBookmarksForURI(getBrowser().currentURI);"/>
       </vbox>
