@@ -103,7 +103,8 @@ public:
                                                               GLenum,
                                                               GLenum,
                                                               GLuint,
-                                                              GLint); 
+                                                              GLint);
+  typedef GLenum (GLAPIENTRY * PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) (GLenum);
 
   typedef void (GLAPIENTRY * PFNGLBUFFERDATAPROC) (GLenum,
                                                  GLsizeiptr,
@@ -214,6 +215,8 @@ public:
   PFNGLGENFRAMEBUFFERSEXTPROC GenFramebuffersEXT;
   PFNGLDELETETEXTURESPROC DeleteTextures;
   PFNGLDELETEFRAMEBUFFERSEXTPROC DeleteFramebuffersEXT;
+
+  PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC CheckFramebufferStatusEXT;
   
   PFNGLBINDTEXTUREPROC BindTexture;
   PFNGLBINDBUFFERPROC BindBuffer;

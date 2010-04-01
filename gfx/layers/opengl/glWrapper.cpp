@@ -38,6 +38,7 @@
 #include "glWrapper.h"
 #include "nsDebug.h"
 
+
 #ifdef XP_WIN
 #define glGetProcAddress wGetProcAddress
 #else
@@ -170,6 +171,7 @@ glWrapper::EnsureInitialized()
     { (PRFuncPtr*) &BindFramebufferEXT, "glBindFramebufferEXT" },
 
     { (PRFuncPtr*) &FramebufferTexture2DEXT, "glFramebufferTexture2DEXT" }, 
+    { (PRFuncPtr*) &CheckFramebufferStatusEXT, "glCheckFramebufferStatusEXT" },
 
     { (PRFuncPtr*) &BufferData, "glBufferData" },
 
