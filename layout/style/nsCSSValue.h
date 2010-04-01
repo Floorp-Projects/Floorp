@@ -51,7 +51,6 @@
 #include "nsCRTGlue.h"
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
-#include "nsISupportsImpl.h"
 
 class imgIRequest;
 class nsIDocument;
@@ -380,9 +379,26 @@ public:
     nsCOMPtr<nsIURI> mReferrer;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
-    NS_INLINE_DECL_REFCOUNTING(URL)
-
+    void AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      ++mRefCnt;
+      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::URL", sizeof(*this));
+    }
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::URL");
+      if (mRefCnt == 0)
+        delete this;
+    }
   protected:
+    nsrefcnt mRefCnt;
 
     // not to be implemented
     URL(const URL& aOther);
@@ -404,7 +420,25 @@ public:
 
     // Override AddRef and Release to not only log ourselves correctly, but
     // also so that we delete correctly without a virtual destructor
-    NS_INLINE_DECL_REFCOUNTING(Image)
+    void AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
+        return;
+      }
+      ++mRefCnt;
+      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Image", sizeof(*this));
+    }
+
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
+        return;
+      }
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Image");
+      if (mRefCnt == 0)
+        delete this;
+    }
   };
 
 private:
@@ -495,9 +529,28 @@ struct nsCSSValueGradient {
     return !(*this == aOther);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
+  void AddRef() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
+      return;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Gradient", sizeof(*this));
+  }
+  void Release() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
+      return;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Gradient");
+    if (mRefCnt == 0)
+      delete this;
+  }
 
 private:
+  nsrefcnt mRefCnt;
+
   // not to be implemented
   nsCSSValueGradient(const nsCSSValueGradient& aOther);
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther);
@@ -535,8 +588,6 @@ struct nsCSSValue::Array {
     return PR_TRUE;
   }
 
-  // XXXdholbert This uses a 16-bit ref count to save space. Should we use
-  // a variant of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
   void AddRef() {
     if (mRefCnt == PR_UINT16_MAX) {
       NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
