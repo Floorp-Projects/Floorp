@@ -723,7 +723,7 @@ pageaction .pageaction-desc[value=""] {
 
 #form-helper-autofill {
   padding: 0.25mm 0; /* half core spacing & none (autorepeat arrows compensate) */
-  border-top: 0.25mm solid #36373b;
+  border-top: 0.1mm solid #36373b;
   background-color: rgb(235,235,235);
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }

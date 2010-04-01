@@ -1037,7 +1037,7 @@ pageaction .pageaction-desc[value=""] {
 
 #form-helper-autofill {
   padding: 4px 0; /* half core spacing & none (autorepeat arrows compensate) */
-  border-top: 4px solid #36373b;
+  border-top: 2px solid #36373b;
   background-color: rgb(235,235,235);
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
