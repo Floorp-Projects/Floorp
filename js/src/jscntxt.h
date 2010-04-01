@@ -704,9 +704,15 @@ struct JSClassProtoCache {
 
     GlobalAndProto  entries[JSProto_LIMIT - JSProto_Object];
 
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
     friend JSBool js_GetClassPrototype(JSContext *cx, JSObject *scope,
                                        JSProtoKey protoKey, JSObject **protop,
                                        JSClass *clasp);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 };
 
 struct JSRuntime {
@@ -1617,7 +1623,13 @@ class AutoGCRooter {
 
     inline void trace(JSTracer *trc);
 
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
     friend void ::js_TraceContext(JSTracer *trc, JSContext *acx);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 
   protected:
     AutoGCRooter * const down;
