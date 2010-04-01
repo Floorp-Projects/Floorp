@@ -552,7 +552,6 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
        kidFrame = kidFrame->GetNextSibling()) {
     nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
     if (cellFrame) {
-      nscoord availWidth = cellFrame->GetPriorAvailWidth();
       nsSize desSize = cellFrame->GetDesiredSize();
       if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !GetPrevInFlow()) {
         CalculateCellActualHeight(cellFrame, desSize.height);
