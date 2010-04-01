@@ -90,6 +90,16 @@ enum gfxBreakPriority {
     eNormalBreak
 };
 
+/**
+ * Define refcounting for Thebes.  For now use the stuff from nsISupportsImpl
+ * even though it forces the functions to be virtual...
+ */
+#include "nsISupportsImpl.h"
+#include "nsAutoPtr.h"
+
+#define THEBES_INLINE_DECL_REFCOUNTING(_class)                                \
+    NS_INLINE_DECL_REFCOUNTING(_class)
+
 #define THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(_class)                     \
 public:                                                                       \
     nsrefcnt AddRef(void) {                                                   \
