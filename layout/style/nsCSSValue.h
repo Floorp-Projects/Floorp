@@ -380,7 +380,7 @@ public:
     nsCOMPtr<nsIURI> mReferrer;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
-    NS_INLINE_DECL_REFCOUNTING(URL)
+    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::URL)
 
   protected:
 
@@ -404,7 +404,7 @@ public:
 
     // Override AddRef and Release to not only log ourselves correctly, but
     // also so that we delete correctly without a virtual destructor
-    NS_INLINE_DECL_REFCOUNTING(Image)
+    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::Image)
   };
 
 private:
