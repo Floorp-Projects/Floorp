@@ -447,6 +447,8 @@ case "$target" in
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
+        # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
+        CXXFLAGS="$CXXFLAGS -wd4345"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
