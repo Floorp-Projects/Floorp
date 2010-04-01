@@ -139,13 +139,13 @@ inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 
 /**
- * |nsReStyleHint| is a bitfield for the result of |HasStateDependentStyle|
+ * |nsRestyleHint| is a bitfield for the result of |HasStateDependentStyle|
  * and |HasAttributeDependentStyle|.  All values have an implied "and
- * descendants."  When no restyling is necessary, use |nsReStyleHint(0)|.
+ * descendants."  When no restyling is necessary, use |nsRestyleHint(0)|.
  */
-enum nsReStyleHint {
-  eReStyle_Self = 0x1,
-  eReStyle_LaterSiblings = 0x2
+enum nsRestyleHint {
+  eRestyle_Self = 0x1,
+  eRestyle_LaterSiblings = 0x2
 };
 
 
