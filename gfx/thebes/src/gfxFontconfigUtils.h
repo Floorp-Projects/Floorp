@@ -44,7 +44,6 @@
 #include "nsAutoRef.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
-#include "nsISupportsImpl.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -88,7 +87,7 @@ class gfxIgnoreCaseCStringComparator
 class gfxFontNameList : public nsTArray<nsString>
 {
 public:
-    NS_INLINE_DECL_REFCOUNTING(gfxFontNameList)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontNameList)
     PRBool Exists(nsAString& aName);
 };
 

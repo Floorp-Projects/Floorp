@@ -41,7 +41,6 @@
 #include "nsSVGValue.h"
 #include <math.h>
 #include "nsContentUtils.h"
-#include "nsISupportsImpl.h"
 
 const double radPerDegree = 2.0*3.1415926535 / 360.0;
 

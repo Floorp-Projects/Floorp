@@ -48,7 +48,6 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxPath.h"
-#include "nsISupportsImpl.h"
 
 typedef struct _cairo cairo_t;
 
@@ -67,7 +66,7 @@ typedef struct _cairo cairo_t;
  * as opposed to app units.
  */
 class THEBES_API gfxContext {
-    NS_INLINE_DECL_REFCOUNTING(gfxContext)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxContext)
 
 public:
     /**
