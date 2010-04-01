@@ -4717,6 +4717,48 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   return PR_TRUE;
 }
 
+nscolor
+nsTextFrame::GetCaretColorAt(PRInt32 aOffset)
+{
+  NS_PRECONDITION(aOffset >= 0, "aOffset must be positive");
+
+  gfxSkipCharsIterator iter = EnsureTextRun();
+  PropertyProvider provider(this, iter);
+  PRInt32 contentOffset = provider.GetStart().GetOriginalOffset();
+  PRInt32 contentLength = provider.GetOriginalLength();
+  NS_PRECONDITION(aOffset >= contentOffset &&
+                  aOffset <= contentOffset + contentLength,
+                  "aOffset must be in the frame's range");
+  PRInt32 offsetInFrame = aOffset - contentOffset;
+  if (offsetInFrame < 0 || offsetInFrame >= contentLength) {
+    return nsFrame::GetCaretColorAt(aOffset);
+  }
+
+  nsTextPaintStyle textPaintStyle(this);
+  SelectionDetails* details = GetSelectionDetails();
+  SelectionDetails* sdptr = details;
+  nscolor result = nsFrame::GetCaretColorAt(aOffset);
+  SelectionType type = 0;
+  while (sdptr) {
+    PRInt32 start = NS_MAX(0, sdptr->mStart - contentOffset);
+    PRInt32 end = NS_MIN(contentLength, sdptr->mEnd - contentOffset);
+    if (start <= offsetInFrame && offsetInFrame < end &&
+        (type == 0 || sdptr->mType < type)) {
+      nscolor foreground, background;
+      if (GetSelectionTextColors(sdptr->mType, textPaintStyle,
+                                 sdptr->mTextRangeStyle,
+                                 &foreground, &background)) {
+        result = foreground;
+        type = sdptr->mType;
+      }
+    }
+    sdptr = sdptr->mNext;
+  }
+
+  DestroySelectionDetails(details);
+  return result;
+}
+
 static PRUint32
 ComputeTransformedLength(PropertyProvider& aProvider)
 {
