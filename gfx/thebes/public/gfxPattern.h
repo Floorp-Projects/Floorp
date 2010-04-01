@@ -42,8 +42,6 @@
 
 #include "gfxColor.h"
 #include "gfxMatrix.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 
 class gfxContext;
 class gfxASurface;
@@ -51,7 +49,7 @@ typedef struct _cairo_pattern cairo_pattern_t;
 
 
 class THEBES_API gfxPattern {
-    NS_INLINE_DECL_REFCOUNTING(gfxPattern)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
     gfxPattern(cairo_pattern_t *aPattern);
