@@ -91,6 +91,7 @@
 #include "nsIObserverService.h"
 
 #include "nsIdleService.h"
+#include "nsIPropertyBag2.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -4264,6 +4265,13 @@ nsWindow::Create(nsIWidget        *aParent,
 #ifdef MOZ_PLATFORM_MAEMO
         if (mWindowType == eWindowType_toplevel) {
             GdkWindow *gdkwin = mShell->window;
+
+            // Tell the Hildon desktop that we support being rotated
+            gulong portrait_set = 1;
+            GdkAtom support = gdk_atom_intern("_HILDON_PORTRAIT_MODE_SUPPORT", FALSE);
+            gdk_property_change(gdkwin, support, gdk_x11_xatom_to_atom(XA_CARDINAL),
+                                32, GDK_PROP_MODE_REPLACE,
+                                (const guchar *) &portrait_set, 1);
 
             // Tell maemo-status-volume daemon to ungrab keys
             gulong volume_set = 1;
