@@ -206,7 +206,9 @@ Resource.prototype = {
     catch(ex) {
       // Combine the channel stack with this request stack
       let error = Error(ex.message);
-      let chanStack = ex.stack.trim().split(/\n/).slice(1);
+      let chanStack = [];
+      if (ex.stack)
+        chanStack = ex.stack.trim().split(/\n/).slice(1);
       let requestStack = error.stack.split(/\n/).slice(1);
 
       // Strip out the args for the last 2 frames because they're usually HUGE!
@@ -301,13 +303,22 @@ function ChannelListener(onComplete, onProgress, logger) {
   this._log = logger;
 }
 ChannelListener.prototype = {
+  // Wait 5 minutes before killing a request
+  ABORT_TIMEOUT: 300000,
+
   onStartRequest: function Channel_onStartRequest(channel) {
     channel.QueryInterface(Ci.nsIHttpChannel);
     this._log.trace(channel.requestMethod + " " + channel.URI.spec);
     this._data = '';
+
+    // Create an abort timer to kill dangling requests
+    Utils.delay(this.abortRequest, this.ABORT_TIMEOUT, this, "abortTimer");
   },
 
   onStopRequest: function Channel_onStopRequest(channel, context, status) {
+    // Clear the abort timer now that the channel is done
+    this.abortTimer.clear();
+
     if (this._data == '')
       this._data = null;
 
@@ -325,6 +336,16 @@ ChannelListener.prototype = {
 
     this._data += siStream.read(count);
     this._onProgress();
+
+    // Update the abort timer to wait an extra timeout
+    Utils.delay(this.abortRequest, this.ABORT_TIMEOUT, this, "abortTimer");
+  },
+
+  abortRequest: function abortRequest() {
+    // Ignore any callbacks if we happen to get any now
+    this.onStopRequest = function() {};
+    this.onDataAvailable = function() {};
+    this._onComplete.throw(Error("Aborting due to channel inactivity."));
   }
 };
 
