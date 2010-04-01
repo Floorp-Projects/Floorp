@@ -1400,7 +1400,7 @@ BEGIN_CASE(JSOP_GVARINC)
     }
     slot = JSVAL_TO_INT(lval);
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    rval = cx->activeCallStack()->getInitialVarObj()->lockAndGetSlot(cx, slot);
+    rval = cx->activeCallStack()->getInitialVarObj()->getSlotMT(cx, slot);
     if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
         PUSH_OPND(rval + incr2);
         rval += incr;
@@ -1412,7 +1412,7 @@ BEGIN_CASE(JSOP_GVARINC)
         rval = regs.sp[-1];
         --regs.sp;
     }
-    fp->varobj(cx)->lockAndSetSlot(cx, slot, rval);
+    fp->varobj(cx)->setSlotMT(cx, slot, rval);
     len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
@@ -1714,7 +1714,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             if (!sprop->hasSlot()) {
                 if (entry->vcapTag() == 0 ||
                     ((obj2 = obj->getProto()) &&
-                     OBJ_IS_NATIVE(obj2) &&
+                     obj2->isNative() &&
                      OBJ_SHAPE(obj2) == entry->vshape())) {
                     goto fast_set_propcache_hit;
                 }
@@ -2329,7 +2329,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     /* Take the slow path if prop was not found in a native object. */
-    if (!OBJ_IS_NATIVE(obj) || !OBJ_IS_NATIVE(obj2)) {
+    if (!obj->isNative() || !obj2->isNative()) {
         obj2->dropProperty(cx, prop);
         if (!obj->getProperty(cx, id, &rval))
             goto error;
@@ -2748,7 +2748,7 @@ BEGIN_CASE(JSOP_CALLGVAR)
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
     obj = cx->activeCallStack()->getInitialVarObj();
     slot = JSVAL_TO_INT(lval);
-    rval = obj->lockAndGetSlot(cx, slot);
+    rval = obj->getSlotMT(cx, slot);
     PUSH_OPND(rval);
     if (op == JSOP_CALLGVAR)
         PUSH_OPND(OBJECT_TO_JSVAL(obj));
@@ -2841,7 +2841,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     if (!fp->fun &&
         index < GlobalVarCount(fp) &&
         obj2 == obj &&
-        OBJ_IS_NATIVE(obj)) {
+        obj->isNative()) {
         sprop = (JSScopeProperty *) prop;
         if (!sprop->configurable() &&
             SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
@@ -3365,7 +3365,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     /* Load the object being initialized into lval/obj. */
     lval = FETCH_OPND(-2);
     obj = JSVAL_TO_OBJECT(lval);
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
     JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
     JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
 

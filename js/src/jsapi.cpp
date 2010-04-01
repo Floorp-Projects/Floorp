@@ -2770,7 +2770,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
 
-    if (!OBJ_IS_NATIVE(obj)) {
+    if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_SEAL_OBJECT,
                              OBJ_GET_CLASS(cx, obj)->name);
@@ -2851,7 +2851,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                    JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                    uintN flags, intN tinyid)
 {
-    if (flags != 0 && OBJ_IS_NATIVE(obj)) {
+    if (flags != 0 && obj->isNative()) {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                          attrs, flags, tinyid, NULL);
@@ -2894,7 +2894,7 @@ DefineUCProperty(JSContext *cx, JSObject *obj,
     atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
-    if (flags != 0 && OBJ_IS_NATIVE(obj)) {
+    if (flags != 0 && obj->isNative()) {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
         return !!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), value,
                                          getter, setter, attrs, flags, tinyid,
@@ -3045,7 +3045,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
-    if (obj2 != obj || !OBJ_IS_NATIVE(obj)) {
+    if (obj2 != obj || !obj->isNative()) {
         obj2->dropProperty(cx, prop);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              alias, name, OBJ_GET_CLASS(cx, obj2)->name);
@@ -3077,7 +3077,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
     }
 
     JSBool ok = JS_TRUE;
-    if (OBJ_IS_NATIVE(obj2)) {
+    if (obj2->isNative()) {
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
         if (sprop->isMethod()) {
@@ -3127,7 +3127,7 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     ok = obj2->getAttributes(cx, id, prop, &desc->attrs);
     if (ok) {
-        if (OBJ_IS_NATIVE(obj2)) {
+        if (obj2->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
             desc->getter = sprop->getter();
@@ -3257,7 +3257,7 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
 {
     JSScope *scope;
 
-    if (!OBJ_IS_NATIVE(obj)) {
+    if (!obj->isNative()) {
         JSObject *obj2;
         JSProperty *prop;
 
@@ -3381,7 +3381,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = OBJ_IS_NATIVE(obj)
+    ok = obj->isNative()
          ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
          : obj->lookupProperty(cx, id, objp, &prop);
     if (ok)
@@ -3727,7 +3727,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
-    if (obj2 != obj || !OBJ_IS_NATIVE(obj)) {
+    if (obj2 != obj || !obj->isNative()) {
         char numBuf[12];
         obj2->dropProperty(cx, prop);
         JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
@@ -3959,7 +3959,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     if (!iterobj)
         return NULL;
 
-    if (OBJ_IS_NATIVE(obj)) {
+    if (obj->isNative()) {
         /* Native case: start with the last property in obj's own scope. */
         scope = OBJ_SCOPE(obj);
         pdata = scope->lastProperty();
@@ -3999,7 +3999,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
         obj = iterobj->getParent();
-        JS_ASSERT(OBJ_IS_NATIVE(obj));
+        JS_ASSERT(obj->isNative());
         scope = OBJ_SCOPE(obj);
         sprop = (JSScopeProperty *) iterobj->getPrivate();
 

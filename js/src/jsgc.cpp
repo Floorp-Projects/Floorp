@@ -2550,7 +2550,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
         jsdtrace_object_finalize(obj);
 #endif
 
-    if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
+    if (JS_LIKELY(obj->isNative())) {
         JSScope *scope = OBJ_SCOPE(obj);
         if (scope->isSharedEmpty())
             static_cast<JSEmptyScope *>(scope)->dropFromGC(cx);

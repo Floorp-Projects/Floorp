@@ -108,7 +108,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
              * non-native ones on the prototype chain. The non-natives can
              * mutate in arbitrary way without changing any shapes.
              */
-            if (!tmp || !OBJ_IS_NATIVE(tmp)) {
+            if (!tmp || !tmp->isNative()) {
                 PCMETER(noprotos++);
                 return JS_NO_PROP_CACHE_FILL;
             }
@@ -240,7 +240,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                      * __proto__ assignment we may not find one.
                      */
                     JSObject *proto = obj->getProto();
-                    if (!proto || !OBJ_IS_NATIVE(proto))
+                    if (!proto || !proto->isNative())
                         return JS_NO_PROP_CACHE_FILL;
                     JSScope *protoscope = OBJ_SCOPE(proto);
                     if (!protoscope->emptyScope ||
@@ -374,7 +374,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     if (JOF_MODE(cs.format) == JOF_NAME) {
         while (vcap & (PCVCAP_SCOPEMASK << PCVCAP_PROTOBITS)) {
             tmp = pobj->getParent();
-            if (!tmp || !OBJ_IS_NATIVE(tmp))
+            if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;
             vcap -= PCVCAP_PROTOSIZE;
@@ -385,7 +385,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     while (vcap & PCVCAP_PROTOMASK) {
         tmp = pobj->getProto();
-        if (!tmp || !OBJ_IS_NATIVE(tmp))
+        if (!tmp || !tmp->isNative())
             break;
         pobj = tmp;
         --vcap;

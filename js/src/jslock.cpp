@@ -1313,7 +1313,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
     JSScope *scope;
     JSTitle *title;
 
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
 
     /*
      * We must test whether the GC is calling and return without mutating any
@@ -1345,7 +1345,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
 void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
     js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
 }
 

@@ -508,7 +508,7 @@ class TypedArrayTemplate
                 return false;
 
             if (prop) {
-                if (OBJ_IS_NATIVE(obj2)) {
+                if (obj2->isNative()) {
                     sprop = (JSScopeProperty *) prop;
                     if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
                         return false;

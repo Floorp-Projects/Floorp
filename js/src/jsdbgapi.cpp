@@ -631,7 +631,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             /* NB: wp is held, so we can safely dereference it still. */
             ok = wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
-                             ? obj->lockAndGetSlot(cx, sprop->slot)
+                             ? obj->getSlotMT(cx, sprop->slot)
                              : JSVAL_VOID,
                              vp, wp->closure);
             if (ok) {
@@ -846,7 +846,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     if (origobj != obj && !obj->checkAccess(cx, propid, JSACC_WATCH, &v, &attrs))
         return JS_FALSE;
 
-    if (!OBJ_IS_NATIVE(obj)) {
+    if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
                              OBJ_GET_CLASS(cx, obj)->name);
         return JS_FALSE;
@@ -874,7 +874,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         uintN attrs, flags;
         intN shortid;
 
-        if (OBJ_IS_NATIVE(pobj)) {
+        if (pobj->isNative()) {
             value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))
                     ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
                     : JSVAL_VOID;
@@ -1242,7 +1242,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
     if (!fp->fun)
         return NULL;
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee()));
+    JS_ASSERT(fp->callee()->isFunction());
     JS_ASSERT(fp->callee()->getPrivate() == fp->fun);
     return fp->callee();
 }
@@ -1501,7 +1501,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     JSScopeProperty *sprop;
 
     clasp = OBJ_GET_CLASS(cx, obj);
-    if (!OBJ_IS_NATIVE(obj) || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
+    if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
         return JS_FALSE;
@@ -1652,7 +1652,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
         nbytes += ((uint32)obj->dslots[-1] - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }
-    if (OBJ_IS_NATIVE(obj)) {
+    if (obj->isNative()) {
         scope = OBJ_SCOPE(obj);
         if (!scope->isSharedEmpty()) {
             nbytes += sizeof *scope;
