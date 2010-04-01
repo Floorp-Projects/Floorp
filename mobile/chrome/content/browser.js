@@ -1877,8 +1877,13 @@ ContentCustomClicker.prototype = {
           return;
         }
 
-        this._dispatchMouseEvent("mousedown", cX, cY);
-        this._dispatchMouseEvent("mouseup", cX, cY);
+        gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
+
+        let self = this;
+        Util.executeSoon(function() {
+          self._dispatchMouseEvent("mousedown", cX, cY);
+          self._dispatchMouseEvent("mouseup", cX, cY);
+        });
       }
       else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
         let uri = Util.getHrefForElement(element);
