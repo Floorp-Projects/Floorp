@@ -43,7 +43,7 @@
 #include "nsUTF8Utils.h"
 #include "nsCRTGlue.h"
 #include "prlog.h"
-#include "prdtoa.h"
+#include "jsdtoa.h"
 
 #include <math.h>
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -2218,12 +2218,14 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
 #define DEFINE_FLOAT_TYPE(name, type, ffiType)                                 \
   case TYPE_##name: {                                                          \
     /* Serialize as a primitive double. */                                     \
-    PRFloat64 fp = *static_cast<type*>(data);                                  \
-    PRIntn decpt, sign;                                                        \
-    char buf[128];                                                             \
-    PRStatus rv = PR_dtoa(fp, 0, 0, &decpt, &sign, NULL, buf, sizeof(buf));    \
-    JS_ASSERT(rv == PR_SUCCESS);                                               \
-    result.AppendASCII(buf);                                                   \
+    double fp = *static_cast<type*>(data);                                     \
+    char buf[DTOSTR_STANDARD_BUFFER_SIZE];                                     \
+    char* str = JS_dtostr(buf, sizeof(buf), DTOSTR_STANDARD, 0, fp);           \
+    JS_ASSERT(str);                                                            \
+    if (!str)                                                                  \
+      break;                                                                   \
+                                                                               \
+    result.AppendASCII(str);                                                   \
     break;                                                                     \
   }
 #define DEFINE_CHAR_TYPE(name, type, ffiType)                                  \
