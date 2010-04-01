@@ -286,7 +286,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 // Test if style is dependent on content state
-nsReStyleHint
+nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   if (aData->mIsHTMLContent &&
@@ -295,10 +295,10 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
   
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 PRBool
@@ -307,12 +307,12 @@ nsHTMLStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
   return PR_FALSE;
 }
 
-nsReStyleHint
+nsRestyleHint
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Do nothing on before-change checks
   if (!aData->mAttrHasChanged) {
-    return nsReStyleHint(0);
+    return nsRestyleHint(0);
   }
 
   // Note: no need to worry about whether some states changed with this
@@ -326,7 +326,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
       content &&
       content->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
 
   // Don't worry about the mDocumentColorRule since it only applies
@@ -334,10 +334,10 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 
   // Handle the content style rules.
   if (content && content->IsAttributeMapped(aData->mAttribute)) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
 
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 NS_IMETHODIMP

@@ -183,12 +183,12 @@ class nsStyleSet
                                         PRInt32        aStateMask);
 
   // Test if style is dependent on content state
-  nsReStyleHint HasStateDependentStyle(nsPresContext* aPresContext,
+  nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        PRInt32         aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
-  nsReStyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
+  nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
                                            nsIContent*    aContent,
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,

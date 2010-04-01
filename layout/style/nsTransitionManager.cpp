@@ -886,10 +886,10 @@ nsTransitionManager::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
-nsReStyleHint
+nsRestyleHint
 nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 PRBool
@@ -898,10 +898,10 @@ nsTransitionManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aDat
   return PR_FALSE;
 }
 
-nsReStyleHint
+nsRestyleHint
 nsTransitionManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 NS_IMETHODIMP
