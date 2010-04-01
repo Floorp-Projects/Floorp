@@ -790,7 +790,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_FALSE;
 
         if (prop) {
-            if (OBJ_IS_NATIVE(obj2)) {
+            if (obj2->isNative()) {
                 sprop = (JSScopeProperty *) prop;
                 if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
                     return JS_FALSE;
@@ -889,7 +889,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
          * a native object (possibly a slow array) that has indexed properties,
          * return true.
          */
-        if (!OBJ_IS_NATIVE(obj))
+        if (!obj->isNative())
             return JS_TRUE;
         if (OBJ_SCOPE(obj)->hadIndexedProperties())
             return JS_TRUE;

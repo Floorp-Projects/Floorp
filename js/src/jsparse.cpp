@@ -223,7 +223,7 @@ JSFunctionBox *
 JSCompiler::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 {
     JS_ASSERT(obj);
-    JS_ASSERT(HAS_FUNCTION_CLASS(obj));
+    JS_ASSERT(obj->isFunction());
 
     /*
      * We use JSContext.tempPool to allocate parsed objects and place them on

@@ -1037,7 +1037,7 @@ GetPromotedType(jsval v)
     if (JSVAL_IS_OBJECT(v)) {
         if (JSVAL_IS_NULL(v))
             return TT_NULL;
-        if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
+        if (JSVAL_TO_OBJECT(v)->isFunction())
             return TT_FUNCTION;
         return TT_OBJECT;
     }
@@ -1061,7 +1061,7 @@ getCoercedType(jsval v)
     if (JSVAL_IS_OBJECT(v)) {
         if (JSVAL_IS_NULL(v))
             return TT_NULL;
-        if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
+        if (JSVAL_TO_OBJECT(v)->isFunction())
             return TT_FUNCTION;
         return TT_OBJECT;
     }
@@ -2566,7 +2566,7 @@ ValueToNative(JSContext* cx, jsval v, TraceType type, double* slot)
     switch (type) {
       case TT_OBJECT:
         JS_ASSERT(tag == JSVAL_OBJECT);
-        JS_ASSERT(!JSVAL_IS_NULL(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)));
+        JS_ASSERT(!JSVAL_IS_NULL(v) && !JSVAL_TO_OBJECT(v)->isFunction());
         *(JSObject**)slot = JSVAL_TO_OBJECT(v);
         debug_only_printf(LC_TMTracer,
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
@@ -2805,7 +2805,7 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
         break;
 
       case TT_FUNCTION: {
-        JS_ASSERT(HAS_FUNCTION_CLASS(*(JSObject**)slot));
+        JS_ASSERT((*(JSObject**)slot)->isFunction());
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
 #ifdef DEBUG
         JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
@@ -3296,7 +3296,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const TraceType* mp, do
                     JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
 
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
-                JS_ASSERT(HAS_FUNCTION_CLASS(fp->calleeObject()));
+                JS_ASSERT(fp->calleeObject()->isFunction());
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
 
                 if (FUN_INTERPRETED(fp->fun) &&
@@ -3844,7 +3844,7 @@ TraceRecorder::determineSlotType(jsval* vp)
     } else if (JSVAL_IS_OBJECT(*vp)) {
         if (JSVAL_IS_NULL(*vp))
             m = TT_NULL;
-        else if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp)))
+        else if (JSVAL_TO_OBJECT(*vp)->isFunction())
             m = TT_FUNCTION;
         else
             m = TT_OBJECT;
@@ -5241,7 +5241,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
     if (!prop)
         return status;
 
-    if (!OBJ_IS_NATIVE(pobj)) {
+    if (!pobj->isNative()) {
         // We can't rely on __iterator__ being present on trace just because
         // it's there now, if found in a non-native object.
         status = RECORD_STOP;
@@ -6077,7 +6077,7 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
     switch (*m) {
       case TT_OBJECT:
         if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
-            !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
+            !JSVAL_TO_OBJECT(*vp)->isFunction()) {
             return true;
         }
         debug_only_printf(LC_TMTracer, "object != tag%u ", tag);
@@ -6122,7 +6122,7 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
       default:
         JS_ASSERT(*m == TT_FUNCTION);
         if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
-            HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
+            JSVAL_TO_OBJECT(*vp)->isFunction()) {
             return true;
         }
         debug_only_printf(LC_TMTracer, "fun != tag%u ", tag);
@@ -9161,7 +9161,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
 
             if (prop) {
-                if (!OBJ_IS_NATIVE(obj2)) {
+                if (!obj2->isNative()) {
                     obj2->dropProperty(cx, prop);
                     RETURN_STOP_A("property found on non-native object");
                 }
@@ -9394,7 +9394,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
                             INS_CONSTWORD(JSVAL_OBJECT)),
                   exit);
 
-            guard(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)),
+            guard(JSVAL_TO_OBJECT(v)->isFunction(),
                   lir->ins2(LIR_peq,
                             lir->ins2(LIR_piand,
                                       lir->insLoad(LIR_ldp, v_ins, offsetof(JSObject, classword),
@@ -10364,7 +10364,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 #ifdef DEBUG
     /* Double-check that a native proto has a matching emptyScope. */
     if (key != JSProto_Array) {
-        JS_ASSERT(OBJ_IS_NATIVE(proto));
+        JS_ASSERT(proto->isNative());
         JSEmptyScope *emptyScope = OBJ_SCOPE(proto)->emptyScope;
         JS_ASSERT(emptyScope);
         JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(emptyScope->clasp) == key);
@@ -12163,7 +12163,7 @@ TraceRecorder::record_JSOP_CALLNAME()
     if (pcval.isNull() || !pcval.isObject())
         RETURN_STOP_A("callee is not an object");
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(pcval.toObject()));
+    JS_ASSERT(pcval.toObject()->isFunction());
 
     stack(0, INS_CONSTOBJ(pcval.toObject()));
     stack(1, obj_ins);
@@ -12812,7 +12812,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
-            if (OBJ_IS_NATIVE(obj)) {
+            if (obj->isNative()) {
                 CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, OBJ_SHAPE(obj),
                                                        "guard(shape)", exit)));
             } else if (!guardDenseArray(obj, obj_ins, exit)) {
@@ -14565,7 +14565,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         if (pcval.isNull())
             RETURN_STOP_A("callprop of missing method");
 
-        JS_ASSERT(HAS_FUNCTION_CLASS(pcval.toObject()));
+        JS_ASSERT(pcval.toObject()->isFunction());
 
         if (JSVAL_IS_PRIMITIVE(l)) {
             JSFunction* fun = GET_FUNCTION_PRIVATE(cx, pcval.toObject());
@@ -15017,7 +15017,7 @@ TraceRecorder::record_JSOP_LENGTH()
                                                 stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE),
                                                 js::TypedArray::lengthOffset(), ACC_READONLY));
     } else {
-        if (!OBJ_IS_NATIVE(obj))
+        if (!obj->isNative())
             RETURN_STOP_A("can't trace length property access on non-array, non-native object");
         return getProp(obj, obj_ins);
     }

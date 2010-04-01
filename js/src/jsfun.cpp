@@ -2458,7 +2458,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     JSFunction *fun;
 
     if (funobj) {
-        JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+        JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
         funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);

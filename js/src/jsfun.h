@@ -248,20 +248,18 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
-#define HAS_FUNCTION_CLASS(obj) (obj)->isFunction()
-
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define VALUE_IS_FUNCTION(cx, v)                                              \
-    (!JSVAL_IS_PRIMITIVE(v) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
+    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction())
 
 /*
  * Macro to access the private slot of the function object after the slot is
  * initialized.
  */
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
-    (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
+    (JS_ASSERT((funobj)->isFunction()),                                       \
      (JSFunction *) (funobj)->getPrivate())
 
 namespace js {
@@ -274,7 +272,7 @@ namespace js {
 inline bool
 IsInternalFunctionObject(JSObject *funobj)
 {
-    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+    JS_ASSERT(funobj->isFunction());
     JSFunction *fun = (JSFunction *) funobj->getPrivate();
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }

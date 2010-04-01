@@ -1142,7 +1142,7 @@ JSScope::clear(JSContext *cx)
     JSEmptyScope *emptyScope;
     uint32 newShape;
     if (proto &&
-        OBJ_IS_NATIVE(proto) &&
+        proto->isNative() &&
         (emptyScope = OBJ_SCOPE(proto)->emptyScope) &&
         emptyScope->clasp == clasp) {
         newShape = emptyScope->shape;

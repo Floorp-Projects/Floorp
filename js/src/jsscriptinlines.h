@@ -50,7 +50,7 @@ inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSObject *funobj = getObject(index);
-    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+    JS_ASSERT(funobj->isFunction());
     JS_ASSERT(funobj == (JSObject *) funobj->getPrivate());
     JSFunction *fun = (JSFunction *) funobj;
     JS_ASSERT(FUN_INTERPRETED(fun));

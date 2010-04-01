@@ -1821,7 +1821,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
         JSObjectArray *objects = script->objects();
         for (uintN i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
-            if (HAS_FUNCTION_CLASS(obj)) {
+            if (obj->isFunction()) {
                 putchar('\n');
                 if (!DisassembleValue(cx, OBJECT_TO_JSVAL(obj),
                                       lines, recursive)) {
@@ -3107,7 +3107,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ZERO;
         return JS_TRUE;
     }
-    if (!OBJ_IS_NATIVE(obj)) {
+    if (!obj->isNative()) {
         *vp = INT_TO_JSVAL(-1);
         return JS_TRUE;
     }

@@ -5261,7 +5261,7 @@ out:
     return ok;
 }
 
-/* Use NULL for objectMap so XML objects satisfy OBJ_IS_NATIVE tests. */
+/* Use NULL for objectMap so XML objects satisfy obj->isNative() tests. */
 JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     NULL,
     xml_lookupProperty,         xml_defineProperty,
@@ -7285,7 +7285,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     JS_ASSERT(prop);
     sprop = (JSScopeProperty *) prop;
     JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
-    cval = pobj->lockAndGetSlot(cx, sprop->slot);
+    cval = pobj->getSlotMT(cx, sprop->slot);
     pobj->dropProperty(cx, prop);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
