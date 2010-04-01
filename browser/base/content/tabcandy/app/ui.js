@@ -21,10 +21,8 @@ var Tabbar = {
 // ##########
 window.Page = {
   startX: 30, 
-  startY: 70, 
-  tabWidth: 160,
-  tabHeight: 137, 
-  
+  startY: 70,
+    
   init: function() {    
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
@@ -181,7 +179,7 @@ var grid = new ArrangeClass("Grid", function(value) {
   if(typeof(value) == 'boolean')
     immediately = value;
 
-  var box = new Rect(Page.startX, Page.startY, Page.tabWidth, Page.tabHeight); 
+  var box = new Rect(Page.startX, Page.startY, TabItems.tabWidth, TabItems.tabHeight); 
   $(".tab:visible").each(function(i){
     var item = Items.item(this);
     item.setBounds(box, immediately);
