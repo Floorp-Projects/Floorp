@@ -973,6 +973,13 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
       new (aBuilder) nsDisplayCaret(this, aBuilder->GetCaret()));
 }
 
+nscolor
+nsIFrame::GetCaretColorAt(PRInt32 aOffset)
+{
+  // Use text color.
+  return GetStyleColor()->mColor;
+}
+
 PRBool
 nsIFrame::HasBorder() const
 {
