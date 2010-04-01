@@ -908,8 +908,6 @@ struct JSFunctionBoxQueue {
 
 #define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
 
-class JSTreeContext;
-
 typedef struct BindData BindData;
 
 struct JSCompiler : private js::AutoGCRooter {
@@ -940,7 +938,7 @@ struct JSCompiler : private js::AutoGCRooter {
     ~JSCompiler();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
-    friend class JSTreeContext;
+    friend struct JSTreeContext;
 
     /*
      * Initialize a compiler. Parameters are passed on to init tokenStream.
