@@ -935,7 +935,7 @@ GetFontGroup(PangoContext *aContext)
 
 class gfxFcPangoFontSet {
 public:
-    NS_INLINE_DECL_REFCOUNTING(gfxFcPangoFontSet)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFcPangoFontSet)
     
     explicit gfxFcPangoFontSet(FcPattern *aPattern,
                                gfxUserFontSet *aUserFontSet)
