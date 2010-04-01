@@ -433,6 +433,16 @@ function do_register_cleanup(aFunction)
  * @return nsILocalFile of the profile directory.
  */
 function do_get_profile() {
+  // Since we have a profile, we will notify profile shutdown topics at
+  // the end of the current test, to ensure correct cleanup on shutdown.
+  do_register_cleanup(function() {
+    let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
+                 getService(Components.interfaces.nsIObserverService);
+    obsSvc.notifyObservers(null, "profile-change-net-teardown", null);
+    obsSvc.notifyObservers(null, "profile-change-teardown", null);
+    obsSvc.notifyObservers(null, "profile-before-change", null);
+  });
+
   let env = Components.classes["@mozilla.org/process/environment;1"]
                       .getService(Components.interfaces.nsIEnvironment);
   // the python harness sets this in the environment for us
