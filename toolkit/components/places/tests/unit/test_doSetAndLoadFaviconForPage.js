@@ -64,7 +64,7 @@ function checkAddSucceeded(pageURI, mimetype, data) {
 
 var favicons = [
   {
-    uri: iosvc.newFileURI(do_get_file("favicon-normal32.png")),
+    uri: uri(do_get_file("favicon-normal32.png")),
     data: readFileData(do_get_file("favicon-normal32.png")),
     mimetype: "image/png"
   }

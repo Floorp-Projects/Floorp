@@ -286,10 +286,10 @@ const querySwitches = [
         aQuery.setFolders([], 0);
       },
       function (aQuery, aQueryOptions) {
-        aQuery.setFolders([bmsvc.placesRoot], 1);
+        aQuery.setFolders([PlacesUtils.placesRootId], 1);
       },
       function (aQuery, aQueryOptions) {
-        aQuery.setFolders([bmsvc.placesRoot, bmsvc.tagsFolder], 2);
+        aQuery.setFolders([PlacesUtils.placesRootId, PlacesUtils.tagsFolderId], 2);
       }
     ]
   },
@@ -754,8 +754,8 @@ function runQuerySequences(aHowManyLo, aHowManyHi)
       // ]
       cartProd(runs, function (runSet) {
         // Create a new query, apply the switches in runSet, and test it.
-        var query = histsvc.getNewQuery();
-        var opts = histsvc.getNewQueryOptions();
+        var query = PlacesUtils.history.getNewQuery();
+        var opts = PlacesUtils.history.getNewQueryOptions();
         for (let i = 0; i < runSet.length; i++) {
           runSet[i](query, opts);
         }
@@ -793,13 +793,13 @@ function runQuerySequences(aHowManyLo, aHowManyHi)
  */
 function serializeDeserialize(aQueryArr, aQueryOptions)
 {
-  var queryStr = histsvc.queriesToQueryString(aQueryArr,
-                                              aQueryArr.length,
-                                              aQueryOptions);
+  var queryStr = PlacesUtils.history.queriesToQueryString(aQueryArr,
+                                                        aQueryArr.length,
+                                                        aQueryOptions);
   print("  " + queryStr);
   var queryArr2 = {};
   var opts2 = {};
-  histsvc.queryStringToQueries(queryStr, queryArr2, {}, opts2);
+  PlacesUtils.history.queryStringToQueries(queryStr, queryArr2, {}, opts2);
   queryArr2 = queryArr2.value;
   opts2 = opts2.value;
 
