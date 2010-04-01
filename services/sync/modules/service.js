@@ -247,31 +247,9 @@ WeaveSvc.prototype = {
    * Prepare to initialize the rest of Weave after waiting a little bit
    */
   onStartup: function onStartup() {
-    Status.service = STATUS_DELAYED;
-
-    // Figure out how many seconds to delay loading Weave based on the app
-    let wait = 0;
-    switch (Svc.AppInfo.ID) {
-      case FIREFOX_ID:
-        // Add one second delay for each tab in every window
-        let enum = Svc.WinMediator.getEnumerator("navigator:browser");
-        while (enum.hasMoreElements())
-          wait += enum.getNext().gBrowser.mTabs.length;
-        break;
-    }
-
-    // Make sure we wait a little but but not too long in the worst case
-    wait = Math.ceil(Math.max(5, Math.min(20, wait)));
-
     this._initLogs();
-    this._log.info("Loading Weave " + WEAVE_VERSION + " in " + wait + " sec.");
-    Utils.delay(this._onStartup, wait * 1000, this, "_startupTimer");
-  },
+    this._log.info("Loading Weave " + WEAVE_VERSION);
 
-  // one-time initialization like setting up observers and the like
-  // xxx we might need to split some of this out into something we can call
-  //     again when username/server/etc changes
-  _onStartup: function _onStartup() {
     Status.service = STATUS_OK;
     this.enabled = true;
 
@@ -309,8 +287,27 @@ WeaveSvc.prototype = {
     // Send an event now that Weave service is ready
     Svc.Obs.notify("weave:service:ready");
 
-    if (Svc.Prefs.get("autoconnect"))
-      this._autoConnect();
+    // Wait a little before checking how long to wait to autoconnect
+    if (Svc.Prefs.get("autoconnect")) {
+      Utils.delay(function() {
+        // Figure out how many seconds to delay autoconnect based on the app
+        let wait = 3;
+        switch (Svc.AppInfo.ID) {
+          case FIREFOX_ID:
+            // Add one second delay for each busy tab in every window
+            let enum = Svc.WinMediator.getEnumerator("navigator:browser");
+            while (enum.hasMoreElements()) {
+              Array.forEach(enum.getNext().gBrowser.mTabs, function(tab) {
+                wait += tab.hasAttribute("busy");
+              });
+            }
+            break;
+        }
+
+        this._log.debug("Autoconnecting in " + wait + " seconds");
+        Utils.delay(this._autoConnect, wait * 1000, this, "_autoTimer");
+      }, 2000, this, "_autoTimer");
+    }
   },
 
   _initLogs: function WeaveSvc__initLogs() {
