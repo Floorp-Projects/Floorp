@@ -724,7 +724,8 @@ pageaction .pageaction-desc[value=""] {
 #form-helper-autofill {
   padding: 0.25mm 0; /* half core spacing & none (autorepeat arrows compensate) */
   border-top: 0.25mm solid #36373b;
-  background-color: white;
+  background-color: rgb(235,235,235);
+  background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
 #form-helper-autofill .autorepeatbutton-down {
@@ -744,11 +745,14 @@ pageaction .pageaction-desc[value=""] {
 #form-helper-autofill > label {
   padding: 0.75mm 0.5mm; /* 0.75 helps get row size for the labels */
   margin: 0;
-  border-right: 1px solid gray;
+  border-color: transparent rgb(215,215,215) transparent rgb(255,255,255);
+  border-style: solid;
+  border-width: 1px;
 }
 
 #form-helper-autofill > label:first-child {
   padding-left: -moz-initial; /* the arrowscrollbox creates enough left padding */
+  border-left: none;
 }
 
 #form-helper-autofill > label:last-child {
