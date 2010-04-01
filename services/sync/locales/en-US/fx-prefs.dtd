@@ -53,7 +53,7 @@
 <!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it. It is never stored on the server, so don't lose this!">
 <!ENTITY passphraseDesc2.label        "This must be at least 12 characters long and cannot match your account password.">
 <!ENTITY passphraseDesc3.label        "Please enter your secret phrase. This must be the same secret phrase that you used to encrypt your data.">
-<!ENTITY passphraseHelp.label         "Your secret phrase is at least 12 characters long and is not your password. You can find your saved secret phrase by going to your other computer and checking the Saved Passwords under Security. If you still cannot get the correct secret phrase, you can choose to reset it, but you will need to enter this new secret phrase on your other computer.">
+<!ENTITY passphraseHelp.label         "Your secret phrase is at least 12 characters long and is not your password. You can find your saved secret phrase by going to your other computer and checking the Saved Passwords under Security. If you still cannot get the correct secret phrase, you can choose to reset it, but you will lose any data stored on the server.">
 <!ENTITY connecting.label             "Connecting…">
 <!ENTITY verifying.label              "Verifying…">
 
@@ -87,7 +87,6 @@
 <!ENTITY changePassword.label         "Change Password">
 <!ENTITY recoverPassword.label        "Recover Password">
 <!ENTITY changePassphrase.label       "Change Secret Phrase">
-<!ENTITY resetPassphrase.label        "Reset Secret Phrase">
 <!ENTITY resetSync.label              "Reset Sync">
 <!ENTITY differentAccount.label       "Use a Different Account">
 <!ENTITY startOver.label              "Start Over">

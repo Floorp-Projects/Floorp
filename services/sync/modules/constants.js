@@ -107,6 +107,7 @@ KEYS_DOWNLOAD_FAIL:                    "error.sync.reason.keys_download_fail",
 NO_KEYS_NO_KEYGEN:                     "error.sync.reason.no_keys_no_keygen",
 KEYS_UPLOAD_FAIL:                      "error.sync.reason.keys_upload_fail",
 SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passphrase",
+CREDENTIALS_CHANGED:                   "error.sync.reason.credentials_changed",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
 
@@ -128,9 +129,7 @@ FIREFOX_ID:                            "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
 FENNEC_ID:                             "{a23983c0-fd0e-11dc-95ff-0800200c9a66}",
 SEAMONKEY_ID:                          "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
 
-// UI constants
-
-// How many data types (bookmarks, history, etc) to display per row
-UI_DATA_TYPES_PER_ROW:                 3,
+MIN_PP_LENGTH:                         12,
+MIN_PASS_LENGTH:                       8
 
 }))];
