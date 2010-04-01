@@ -107,6 +107,45 @@ window.Rect.prototype = {
 };
 
 // ##########
+// TODO generalize for any number of events
+window.Subscribable = function() {
+  this.onCloseSubscribers = [];
+};
+
+window.Subscribable.prototype = {
+  // ----------
+  addOnClose: function(referenceElement, callback) {
+    var existing = jQuery.grep(this.onCloseSubscribers, function(element) {
+      return element.referenceElement == referenceElement;
+    });
+    
+    if(existing.size) {
+      Utils.assert('should only ever be one', existing.size == 1);
+      existing[0].callback = callback;
+    } else {  
+      this.onCloseSubscribers.push({
+        referenceElement: referenceElement, 
+        callback: callback
+      });
+    }
+  },
+  
+  // ----------
+  removeOnClose: function(referenceElement) {
+    this.onCloseSubscribers = jQuery.grep(this.onCloseSubscribers, function(element) {
+      return element.referenceElement == referenceElement;
+    }, true);
+  },
+  
+  // ----------
+  _sendOnClose: function() {
+    jQuery.each(this.onCloseSubscribers, function(index, object) { 
+      object.callback(this);
+    });
+  }
+};
+
+// ##########
 var Utils = {
   // ___ Windows and Tabs
   get activeWindow(){
