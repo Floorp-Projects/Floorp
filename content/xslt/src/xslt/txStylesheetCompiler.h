@@ -77,8 +77,8 @@ public:
 class txACompileObserver
 {
 public:
-    virtual void AddRef() = 0;
-    virtual void Release() = 0;
+    virtual nsrefcnt AddRef() = 0;
+    virtual nsrefcnt Release() = 0;
 
     virtual nsresult loadURI(const nsAString& aUri,
                              const nsAString& aReferrerUri,
@@ -90,11 +90,13 @@ public:
 };
 
 #define TX_DECL_ACOMPILEOBSERVER \
+  nsrefcnt AddRef(); \
+  nsrefcnt Release(); \
   nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
                    txStylesheetCompiler* aCompiler); \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const PRUnichar *aErrorText = nsnull, \
-                       const PRUnichar *aParam = nsnull);
+                       const PRUnichar *aParam = nsnull)
 
 class txStylesheetCompilerState : public txIParseContext
 {
@@ -213,6 +215,8 @@ public:
                          txStylesheet* aStylesheet,
                          txListIterator* aInsertPosition,
                          txACompileObserver* aObserver);
+    virtual nsrefcnt AddRef();
+    virtual nsrefcnt Release();
 
     void setBaseURI(const nsString& aBaseURI);
 
@@ -231,8 +235,12 @@ public:
 
     txStylesheet* getStylesheet();
 
-    TX_DECL_ACOMPILEOBSERVER
-    NS_INLINE_DECL_REFCOUNTING(txStylesheetCompiler)
+    // txACompileObserver
+    nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri,
+                     txStylesheetCompiler* aCompiler);
+    void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
+                         const PRUnichar *aErrorText = nsnull,
+                         const PRUnichar *aParam = nsnull);
 
 private:
     nsresult startElementInternal(PRInt32 aNamespaceID, nsIAtom* aLocalName,
@@ -245,6 +253,7 @@ private:
     nsresult ensureNewElementContext();
     nsresult maybeDoneCompiling();
 
+    nsAutoRefCnt mRefCnt;
     nsString mCharacters;
     nsresult mStatus;
 };
