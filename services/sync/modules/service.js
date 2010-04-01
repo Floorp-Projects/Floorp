@@ -641,6 +641,18 @@ WeaveSvc.prototype = {
     return false;
   },
 
+  startOver: function() {
+    this.logout();
+    // Reset all engines
+    this.resetClient();
+    // Reset Weave prefs
+    Svc.Prefs.resetBranch("");
+    // Find weave logins and remove them.
+    Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
+      Svc.Login.removeLogin(login);
+    });
+  },
+
   _autoConnect: let (attempts = 0) function _autoConnect() {
     let reason = "";
     if (this._mpLocked())
