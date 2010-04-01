@@ -144,6 +144,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
                         LOCAL_GL_BGRA,
                         LOCAL_GL_UNSIGNED_BYTE,
                         NULL);
+  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
 
   /**
    * Create the framebuffer and bind it to make our content render into our
@@ -157,6 +159,10 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
                                      LOCAL_GL_TEXTURE_2D,
                                      containerSurface,
                                      0);
+
+  NS_ASSERTION(
+      sglWrapper.CheckFramebufferStatusEXT(LOCAL_GL_FRAMEBUFFER_EXT) ==
+	LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
 
   RGBLayerProgram *rgbProgram =
     static_cast<LayerManagerOGL*>(mManager)->GetRGBLayerProgram();
