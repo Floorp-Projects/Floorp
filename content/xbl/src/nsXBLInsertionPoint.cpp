@@ -57,19 +57,6 @@ nsXBLInsertionPoint::~nsXBLInsertionPoint()
   }
 }
 
-nsrefcnt
-nsXBLInsertionPoint::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsXBLInsertionPoint");
-  if (mRefCnt == 0) {
-    mRefCnt = 1;
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLInsertionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPoint)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)

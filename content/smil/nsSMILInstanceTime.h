@@ -124,36 +124,7 @@ public:
   PRUint32 Serial() const { return mSerial; }
   void SetSerial(PRUint32 aIndex) { mSerial = aIndex; }
 
-  nsrefcnt AddRef()
-  {
-    if (mRefCnt == PR_UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking nsSMILInstanceTime");
-      return mRefCnt;
-    }
-    NS_ASSERT_OWNINGTHREAD(_class);
-    NS_ABORT_IF_FALSE(_mOwningThread.GetThread() == PR_GetCurrentThread(),
-        "nsSMILInstanceTime addref isn't thread-safe!");
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsSMILInstanceTime", sizeof(*this));
-    return mRefCnt;
-  }
-
-  nsrefcnt Release()
-  {
-    if (mRefCnt == PR_UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking nsSMILInstanceTime");
-      return mRefCnt;
-    }
-    NS_ABORT_IF_FALSE(_mOwningThread.GetThread() == PR_GetCurrentThread(),
-        "nsSMILInstanceTime release isn't thread-safe!");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsSMILInstanceTime");
-    if (mRefCnt == 0) {
-      delete this;
-      return 0;
-    }
-    return mRefCnt;
-  }
+  NS_INLINE_DECL_REFCOUNTING(nsSMILInstanceTime)
 
 protected:
   void SetBaseInterval(nsSMILInterval* aBaseInterval);
@@ -161,9 +132,6 @@ protected:
   const nsSMILInstanceTime* GetBaseTime() const;
 
   nsSMILTimeValue mTime;
-
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 
   // Internal flags used for represent behaviour of different instance times`
   enum {
