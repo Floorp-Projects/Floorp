@@ -144,7 +144,7 @@ class TraceRecorder;
 struct TraceMonitor;
 class CallStack;
 
-struct TokenStream;
+class TokenStream;
 struct Token;
 struct TokenPos;
 struct TokenPtr;
