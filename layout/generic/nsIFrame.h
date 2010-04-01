@@ -977,6 +977,13 @@ public:
                         const nsRect&               aDirtyRect,
                         nsDisplayList*              aList);
 
+  /**
+   * Get the preferred caret color at the offset.
+   *
+   * @param aOffset is offset of the content.
+   */
+  virtual nscolor GetCaretColorAt(PRInt32 aOffset);
+
   PRBool IsThemed(nsTransparencyMode* aTransparencyMode = nsnull) {
     return IsThemed(GetStyleDisplay(), aTransparencyMode);
   }
