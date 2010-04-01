@@ -71,7 +71,6 @@
 
 #include "nsIDOMSVGMatrix.h"
 #include "gfxMatrix.h"
-#include "nsAutoPtr.h"
 
 nsresult
 NS_NewSVGMatrix(nsIDOMSVGMatrix** result,

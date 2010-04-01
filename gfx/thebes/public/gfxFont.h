@@ -55,7 +55,6 @@
 #include "gfxFontConstants.h"
 #include "gfxPlatform.h"
 #include "nsIAtom.h"
-#include "nsISupportsImpl.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -161,7 +160,7 @@ struct THEBES_API gfxFontStyle {
 
 class gfxFontEntry {
 public:
-    NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
     gfxFontEntry(const nsAString& aName, gfxFontFamily *aFamily = nsnull,
                  PRBool aIsStandardFace = PR_FALSE) : 
@@ -290,7 +289,7 @@ struct FontSearch {
 
 class gfxFontFamily {
 public:
-    NS_INLINE_DECL_REFCOUNTING(gfxFontFamily)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontFamily)
 
     gfxFontFamily(const nsAString& aName) :
         mName(aName),
@@ -956,7 +955,7 @@ protected:
 };
 
 class THEBES_API gfxTextRunFactory {
-    NS_INLINE_DECL_REFCOUNTING(gfxTextRunFactory)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxTextRunFactory)
 
 public:
     // Flags in the mask 0xFFFF0000 are reserved for textrun clients
