@@ -514,19 +514,26 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 static JSBool
 InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
 {
+    AutoValueRooter gap(cx, space);
+
     if (!JSVAL_IS_PRIMITIVE(space)) {
-        JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(space));
-        if (clasp == &js_StringClass || clasp == &js_NumberClass)
-            return js_ValueToCharBuffer(cx, space, cb);
+        JSObject *obj = JSVAL_TO_OBJECT(space);
+        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        if (clasp == &js_NumberClass || clasp == &js_StringClass)
+            *gap.addr() = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     }
 
-    if (JSVAL_IS_STRING(space))
-        return js_ValueToCharBuffer(cx, space, cb);
+    if (JSVAL_IS_STRING(gap.value())) {
+        if (!js_ValueToCharBuffer(cx, gap.value(), cb))
+            return JS_FALSE;
+        if (cb.length() > 10)
+            cb.resize(10);
+    }
 
-    if (JSVAL_IS_NUMBER(space)) {
-        jsdouble d = JSVAL_IS_INT(space)
-                     ? JSVAL_TO_INT(space)
-                     : js_DoubleToInteger(*JSVAL_TO_DOUBLE(space));
+    if (JSVAL_IS_NUMBER(gap.value())) {
+        jsdouble d = JSVAL_IS_INT(gap.value())
+                     ? JSVAL_TO_INT(gap.value())
+                     : js_DoubleToInteger(*JSVAL_TO_DOUBLE(gap.value()));
         d = JS_MIN(10, d);
         if (d >= 1 && !cb.appendN(' ', uint32(d)))
             return JS_FALSE;
