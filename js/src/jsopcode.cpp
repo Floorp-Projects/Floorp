@@ -753,9 +753,9 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     JS_InitArenaPool(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
     jp->indent = indent;
-    jp->pretty = pretty;
-    jp->grouped = grouped;
-    jp->strict = strict;
+    jp->pretty = !!pretty;
+    jp->grouped = !!grouped;
+    jp->strict = !!strict;
     jp->script = NULL;
     jp->dvgfence = NULL;
     jp->pcstack = NULL;
