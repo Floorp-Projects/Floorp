@@ -120,7 +120,7 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
         size_t length;
         s->getCharsAndLength(chars, length);
         ok = js_ConsumeJSONText(cx, jp, chars, length);
-        ok &= js_FinishJSONParse(cx, jp, reviver.value());
+        ok &= !!js_FinishJSONParse(cx, jp, reviver.value());
     }
 
     return ok;
