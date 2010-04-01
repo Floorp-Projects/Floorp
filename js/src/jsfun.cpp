@@ -1695,7 +1695,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         }
 #endif
         for (i = 0; i != bitmapLength; ++i) {
-            ok = JS_XDRUint32(xdr, &bitmap[i]);
+            ok = !!JS_XDRUint32(xdr, &bitmap[i]);
             if (!ok)
                 goto release_mark;
         }
@@ -1704,7 +1704,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                 !(bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
                   JS_BIT(i & (JS_BITS_PER_UINT32 - 1)))) {
                 if (xdr->mode == JSXDR_DECODE) {
-                    ok = js_AddLocal(xdr->cx, fun, NULL, JSLOCAL_ARG);
+                    ok = !!js_AddLocal(xdr->cx, fun, NULL, JSLOCAL_ARG);
                     if (!ok)
                         goto release_mark;
                 } else {
@@ -1714,7 +1714,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             }
             if (xdr->mode == JSXDR_ENCODE)
                 name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-            ok = js_XDRStringAtom(xdr, &name);
+            ok = !!js_XDRStringAtom(xdr, &name);
             if (!ok)
                 goto release_mark;
             if (xdr->mode == JSXDR_DECODE) {
@@ -1726,7 +1726,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                                ? JSLOCAL_CONST
                                : JSLOCAL_VAR)
                             : JSLOCAL_UPVAR;
-                ok = js_AddLocal(xdr->cx, fun, name, localKind);
+                ok = !!js_AddLocal(xdr->cx, fun, name, localKind);
                 if (!ok)
                     goto release_mark;
             }
