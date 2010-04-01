@@ -316,13 +316,11 @@ public:
 public:                                                                       \
   void AddRef(void) {                                                         \
     NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
-    NS_ASSERT_OWNINGTHREAD(_class);                                           \
     ++mRefCnt;                                                                \
     NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                     \
   }                                                                           \
   void Release(void) {                                                        \
     NS_PRECONDITION(0 != mRefCnt, "dup release");                             \
-    NS_ASSERT_OWNINGTHREAD(_class);                                           \
     --mRefCnt;                                                                \
     NS_LOG_RELEASE(this, mRefCnt, #_class);                                   \
     if (mRefCnt == 0) {                                                       \
@@ -332,7 +330,6 @@ public:                                                                       \
   }                                                                           \
 protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                       \
-  NS_DECL_OWNINGTHREAD                                                        \
 public:
 
 /**
