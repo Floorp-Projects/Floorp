@@ -163,14 +163,38 @@ public:
   // stops are in the order specified in the stylesheet
   nsTArray<nsStyleGradientStop> mStops;
 
+  nsrefcnt AddRef() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsStyleGradient");
+      return mRefCnt;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsStyleGradient", sizeof(*this));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsStyleGradient");
+      return mRefCnt;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsStyleGradient");
+    if (mRefCnt == 0) {
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
+
   PRBool operator==(const nsStyleGradient& aOther) const;
   PRBool operator!=(const nsStyleGradient& aOther) const {
     return !(*this == aOther);
   };
 
-  NS_INLINE_DECL_REFCOUNTING(nsStyleGradient)
-
 private:
+  nsrefcnt mRefCnt;
+
   ~nsStyleGradient() {}
 
   // Not to be implemented
@@ -647,7 +671,7 @@ class nsCSSShadowArray {
     }
 
     nsCSSShadowArray(PRUint32 aArrayLen) :
-      mLength(aArrayLen)
+      mLength(aArrayLen), mRefCnt(0)
     {
       MOZ_COUNT_CTOR(nsCSSShadowArray);
       for (PRUint32 i = 1; i < mLength; ++i) {
@@ -663,6 +687,15 @@ class nsCSSShadowArray {
       }
     }
 
+    nsrefcnt AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking object");
+        return mRefCnt;
+      }
+      return ++mRefCnt;
+    }
+    nsrefcnt Release();
+
     PRUint32 Length() const { return mLength; }
     nsCSSShadowItem* ShadowAt(PRUint32 i) {
       NS_ABORT_IF_FALSE(i < mLength, "Accessing too high an index in the text shadow array!");
@@ -673,10 +706,9 @@ class nsCSSShadowArray {
       return &mArray[i];
     }
 
-    NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
-
   private:
     PRUint32 mLength;
+    PRUint32 mRefCnt;
     nsCSSShadowItem mArray[1]; // This MUST be the last item
 };
 
