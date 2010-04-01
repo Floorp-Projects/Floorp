@@ -43,12 +43,15 @@
  * Here is an example of using these to create some bookmark folders:
  */
  // Create Folder1 from root
- bmsvc.createFolder(bmsvc.placesRoot, "Folder 1", bmsvc.DEFAULT_INDEX);
- var folder1Id = bmsvc.getChildFolder(bmsvc.placesRoot, "Folder 1");
+ PlacesUtils.bookmarks.createFolder(PlacesUtils.placesRootId, "Folder 1",
+                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
+ var folder1Id = PlacesUtils.bookmarks.getChildFolder(PlacesUtils.placesRootId,
+                                                      "Folder 1");
 
  // Make Folder 1a a child of Folder 1
- bmsvc.createFolder(folder1Id, "Folder 1a", bmsvc.DEFAULT_INDEX);
- var folder1aId = bmsvc.getChildFolder(folder1Id, "Folder 1a");
+ PlacesUtils.bookmarks.createFolder(folder1Id, "Folder 1a",
+                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
+ var folder1aId = PlacesUtils.bookmarks.getChildFolder(folder1Id, "Folder 1a");
  
 /** 
  * The next thing we do is create a test database for us.  Each test runs with
@@ -90,15 +93,15 @@ function run_test() {
   populateDB(testData);
 
   // Query
-  var query = histsvc.getNewQuery();
+  var query = PlacesUtils.history.getNewQuery();
   // Set query attributes here...
   
   // query options
-  var options = histsvc.getNewQueryOptions();
+  var options = PlacesUtils.history.getNewQueryOptions();
   // Set queryOptions attributes here
 
   // Results - this gets the result set and opens it for reading and modification.
-  var result = histsvc.executeQuery(query, options);
+  var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
   
@@ -130,7 +133,7 @@ function run_test() {
     }
   };
 
-  histsvc.runInBatchMode(updateBatch, null);
+  PlacesUtils.history.runInBatchMode(updateBatch, null);
 
   // Close the container when finished
   root.containerOpen = false;
