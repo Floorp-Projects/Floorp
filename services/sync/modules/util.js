@@ -863,6 +863,7 @@ Svc.Obs = Observers;
  ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
  ["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
  ["Favicon", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
+ ["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
