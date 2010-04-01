@@ -452,7 +452,7 @@ function do_get_profile() {
       throw Components.results.NS_ERROR_FAILURE;
     },
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsIDirectoryProvider) ||
+      if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
           iid.equals(Components.interfaces.nsISupports)) {
         return this;
       }
