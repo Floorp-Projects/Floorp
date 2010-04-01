@@ -79,7 +79,7 @@ function run_test() {
   do_check_eq(typeof PlacesUtils, "object");
 
   // make json file
-  var jsonFile = dirSvc.get("ProfD", Ci.nsILocalFile);
+  var jsonFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   jsonFile.append("bookmarks.json");
   if (jsonFile.exists())
     jsonFile.remove(false);

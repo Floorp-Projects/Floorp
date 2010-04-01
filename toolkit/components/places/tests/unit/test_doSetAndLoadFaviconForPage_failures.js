@@ -59,13 +59,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "prefs",
 
 let favicons = [
   {
-    uri: iosvc.newFileURI(do_get_file("favicon-normal16.png")),
+    uri: uri(do_get_file("favicon-normal16.png")),
     data: readFileData(do_get_file("favicon-normal16.png")),
     mimetype: "image/png",
     size: 286
   },
   {
-    uri: iosvc.newFileURI(do_get_file("favicon-normal32.png")),
+    uri: uri(do_get_file("favicon-normal32.png")),
     data: readFileData(do_get_file("favicon-normal32.png")),
     mimetype: "image/png",
     size: 344
@@ -154,7 +154,7 @@ let historyObserver = {
     do_check_true(pageURI.equals(uri("http://test4.bar/")));
 
     // Ensure there is only one entry in favicons table.
-    let stmt = DBConn().createStatement(
+    let stmt = PlacesServices.DBConn.createStatement(
       "SELECT url FROM moz_favicons"
     );
     let c = 0;

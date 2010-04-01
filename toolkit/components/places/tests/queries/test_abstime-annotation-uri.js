@@ -96,7 +96,7 @@ var testData = [
   // Test uri included with isRedirect=true, different transtype
   {isInQuery: true, isVisit: true, isDetails: true, title: "moz",
    isRedirect: true, uri: "http://foo.com/redirect", lastVisit: jan11_800,
-   transType: histsvc.TRANSITION_LINK},
+   transType: PlacesUtils.history.TRANSITION_LINK},
 
   // Test leading time edge with tag string is included
   {isInQuery: true, isVisit: true, isDetails: true, title: "taggariffic",
@@ -156,11 +156,11 @@ function run_test() {
   populateDB(testData);
 
   // Query
-  var query = histsvc.getNewQuery();
+  var query = PlacesUtils.history.getNewQuery();
   query.beginTime = beginTime;
   query.endTime = endTime;
-  query.beginTimeReference = histsvc.TIME_RELATIVE_EPOCH;
-  query.endTimeReference = histsvc.TIME_RELATIVE_EPOCH;
+  query.beginTimeReference = PlacesUtils.history.TIME_RELATIVE_EPOCH;
+  query.endTimeReference = PlacesUtils.history.TIME_RELATIVE_EPOCH;
   query.searchTerms = "moz";
   query.uri = uri("http://foo.com");
   query.uriIsPrefix = true;
@@ -168,7 +168,7 @@ function run_test() {
   query.annotationIsNot = true;
 
   // Options
-  var options = histsvc.getNewQueryOptions();
+  var options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_URI_ASCENDING;
   options.resultType = options.RESULTS_AS_URI;
   // The next two options should be ignored
@@ -176,7 +176,7 @@ function run_test() {
   // options.excludeItems = true;
 
   // Results
-  var result = histsvc.executeQuery(query, options);
+  var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
 
@@ -243,7 +243,7 @@ function run_test() {
     }
   };
 
-  histsvc.runInBatchMode(updateBatch, null);
+  PlacesUtils.history.runInBatchMode(updateBatch, null);
   LOG("LiveUpdate by updating title in batch mode");
   do_check_eq(isInResult({uri: "http://foo.com/changeme2"}, root), true);
 
