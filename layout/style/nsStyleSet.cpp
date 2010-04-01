@@ -1072,9 +1072,9 @@ struct StatefulData : public StateRuleProcessorData {
   StatefulData(nsPresContext* aPresContext,
                nsIContent* aContent, PRInt32 aStateMask)
     : StateRuleProcessorData(aPresContext, aContent, aStateMask),
-      mHint(nsReStyleHint(0))
+      mHint(nsRestyleHint(0))
   {}
-  nsReStyleHint   mHint;
+  nsRestyleHint   mHint;
 };
 
 static PRBool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
@@ -1082,7 +1082,7 @@ static PRBool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
 {
   StatefulData* data = (StatefulData*)aData;
   if (aProcessor->HasDocumentStateDependentStyle(data)) {
-    data->mHint = eReStyle_Self;
+    data->mHint = eRestyle_Self;
     return PR_FALSE; // don't continue
   }
   return PR_TRUE; // continue
@@ -1106,18 +1106,18 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
                                     void *aData)
 {
   StatefulData* data = (StatefulData*)aData;
-  nsReStyleHint hint = aProcessor->HasStateDependentStyle(data);
-  data->mHint = nsReStyleHint(data->mHint | hint);
+  nsRestyleHint hint = aProcessor->HasStateDependentStyle(data);
+  data->mHint = nsRestyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
 
 // Test if style is dependent on content state
-nsReStyleHint
+nsRestyleHint
 nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
                                    nsIContent*     aContent,
                                    PRInt32         aStateMask)
 {
-  nsReStyleHint result = nsReStyleHint(0);
+  nsRestyleHint result = nsRestyleHint(0);
 
   if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
     StatefulData data(aPresContext, aContent, aStateMask);
@@ -1134,29 +1134,29 @@ struct AttributeData : public AttributeRuleProcessorData {
                 PRBool aAttrHasChanged)
     : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType,
                                  aAttrHasChanged),
-      mHint(nsReStyleHint(0))
+      mHint(nsRestyleHint(0))
   {}
-  nsReStyleHint   mHint;
+  nsRestyleHint   mHint;
 }; 
 
 static PRBool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
-  nsReStyleHint hint = aProcessor->HasAttributeDependentStyle(data);
-  data->mHint = nsReStyleHint(data->mHint | hint);
+  nsRestyleHint hint = aProcessor->HasAttributeDependentStyle(data);
+  data->mHint = nsRestyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
 
 // Test if style is dependent on content state
-nsReStyleHint
+nsRestyleHint
 nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*    aContent,
                                        nsIAtom*       aAttribute,
                                        PRInt32        aModType,
                                        PRBool         aAttrHasChanged)
 {
-  nsReStyleHint result = nsReStyleHint(0);
+  nsRestyleHint result = nsRestyleHint(0);
 
   if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
     AttributeData data(aPresContext, aContent, aAttribute, aModType,

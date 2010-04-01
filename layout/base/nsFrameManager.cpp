@@ -1505,13 +1505,13 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
 }
 
 
-nsReStyleHint
+nsRestyleHint
 nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
                                            nsIAtom *aAttribute,
                                            PRInt32 aModType,
                                            PRBool aAttrHasChanged)
 {
-  nsReStyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
+  nsRestyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
                                                              aContent,
                                                              aAttribute,
                                                              aModType,
@@ -1521,7 +1521,7 @@ nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
     // it doesn't really matter.  Or we could even let
     // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
-    hint = nsReStyleHint(hint | eReStyle_Self);
+    hint = nsRestyleHint(hint | eRestyle_Self);
   }
 
   return hint;

@@ -2271,7 +2271,7 @@ IsSiblingOperator(PRUnichar oper)
   return oper == PRUnichar('+') || oper == PRUnichar('~');
 }
 
-nsReStyleHint
+nsRestyleHint
 nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
@@ -2287,15 +2287,15 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
   // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
   // |IsStateSelector| below determines which selectors are in
   // |cascade->mStateSelectors|.
-  nsReStyleHint hint = nsReStyleHint(0);
+  nsRestyleHint hint = nsRestyleHint(0);
   if (cascade) {
     nsCSSSelector **iter = cascade->mStateSelectors.Elements(),
                   **end = iter + cascade->mStateSelectors.Length();
     for(; iter != end; ++iter) {
       nsCSSSelector* selector = *iter;
 
-      nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
-        eReStyle_LaterSiblings : eReStyle_Self;
+      nsRestyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
+        eRestyle_LaterSiblings : eRestyle_Self;
 
       // If hint already includes all the bits of possibleChange,
       // don't bother calling SelectorMatches, since even if it returns false
@@ -2303,7 +2303,7 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
       if ((possibleChange & ~hint) &&
           SelectorMatches(*aData, selector, aData->mStateMask, PR_FALSE) &&
           SelectorMatchesTree(*aData, selector->mNext, PR_FALSE)) {
-        hint = nsReStyleHint(hint | possibleChange);
+        hint = nsRestyleHint(hint | possibleChange);
       }
     }
   }
@@ -2320,10 +2320,10 @@ nsCSSRuleProcessor::HasDocumentStateDependentStyle(StateRuleProcessorData* aData
 
 struct AttributeEnumData {
   AttributeEnumData(AttributeRuleProcessorData *aData)
-    : data(aData), change(nsReStyleHint(0)) {}
+    : data(aData), change(nsRestyleHint(0)) {}
 
   AttributeRuleProcessorData *data;
-  nsReStyleHint change;
+  nsRestyleHint change;
 };
 
 
@@ -2332,8 +2332,8 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 {
   AttributeRuleProcessorData *data = aData->data;
 
-  nsReStyleHint possibleChange = IsSiblingOperator(aSelector->mOperator) ?
-    eReStyle_LaterSiblings : eReStyle_Self;
+  nsRestyleHint possibleChange = IsSiblingOperator(aSelector->mOperator) ?
+    eRestyle_LaterSiblings : eRestyle_Self;
 
   // If enumData->change already includes all the bits of possibleChange, don't
   // bother calling SelectorMatches, since even if it returns false
@@ -2341,11 +2341,11 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   if ((possibleChange & ~(aData->change)) &&
       SelectorMatches(*data, aSelector, 0, PR_FALSE) &&
       SelectorMatchesTree(*data, aSelector->mNext, PR_FALSE)) {
-    aData->change = nsReStyleHint(aData->change | possibleChange);
+    aData->change = nsRestyleHint(aData->change | possibleChange);
   }
 }
 
-nsReStyleHint
+nsRestyleHint
 nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
@@ -2365,7 +2365,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
         aData->mNameSpaceID == kNameSpaceID_XUL &&
         aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
       {
-        data.change = nsReStyleHint(data.change | eReStyle_Self);
+        data.change = nsRestyleHint(data.change | eRestyle_Self);
       }
   }
 
