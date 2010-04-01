@@ -104,14 +104,34 @@ struct PropertySpec
   JSPropertyOp setter;
 };
 
-// Descriptor of ABI, return type, and argument types for a FunctionType.
+// Descriptor of ABI, return type, argument types, and variadicity for a
+// FunctionType.
 struct FunctionInfo
 {
+  // Initialized in NewFunctionInfo when !mIsVariadic, but only later, in
+  // FunctionType::Call, when mIsVariadic. Not always consistent with
+  // mFFITypes, due to lazy initialization when mIsVariadic.
   ffi_cif mCIF;
-  JSObject* mABI;
+
+  // Calling convention of the function. Convert to ffi_abi using GetABI
+  // and OBJECT_TO_JSVAL. Stored as a JSObject* for ease of tracing.
+  JSObject* mABI;                
+
+  // The CType of the value returned by the function.
   JSObject* mReturnType;
-  nsTArray<JSObject*> mArgTypes;
+
+  // A fixed array of known parameter types, excluding any variadic
+  // parameters (if mIsVariadic).
+  nsTArray<JSObject*> mArgTypes; 
+
+  // A variable array of ffi_type*s corresponding to both known parameter
+  // types and dynamic (variadic) parameter types. Longer than mArgTypes
+  // only if mIsVariadic.
   nsTArray<ffi_type*> mFFITypes;
+
+  // Flag indicating whether the function behaves like a C function with
+  // ... as the final formal parameter.
+  bool mIsVariadic;
 };
 
 // Parameters necessary for invoking a JS function from a C closure.
