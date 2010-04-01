@@ -885,7 +885,7 @@ WeaveSvc.prototype = {
       return false;
     }
     else if (meta.payload.syncID != this.syncID) {
-      this.resetService();
+      this.resetClient();
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 

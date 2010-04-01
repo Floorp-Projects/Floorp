@@ -68,6 +68,7 @@ function Tracker(name) {
   this._score = 0;
   this._ignored = [];
   this.ignoreAll = false;
+  this.changedIDs = {};
   this.loadChangedIDs();
 }
 Tracker.prototype = {
@@ -95,29 +96,15 @@ Tracker.prototype = {
     this._score = 0;
   },
 
-  /*
-   * Changed IDs are in an object (hash) to make it easy to check if
-   * one is already set or not.
-   * Note that it would be nice to make these methods asynchronous so
-   * as to not block when writing to disk.  However, these will often
-   * get called from observer callbacks, and so it is better to make
-   * them synchronous.
-   */
-
-  get changedIDs() {
-    let items = {};
-    this.__defineGetter__("changedIDs", function() items);
-    return items;
-  },
-
   saveChangedIDs: function T_saveChangedIDs() {
-    Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
+    Utils.delay(function() {
+      Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
+    }, 1000, this, "_lazySave");
   },
 
   loadChangedIDs: function T_loadChangedIDs() {
     Utils.jsonLoad("changes/" + this.file, this, function(json) {
-      for (let id in json)
-        this.changedIDs[id] = 1;
+      this.changedIDs = json;
     });
   },
 
@@ -136,16 +123,22 @@ Tracker.prototype = {
       this._ignored.splice(index, 1);
   },
 
-  addChangedID: function T_addChangedID(id) {
+  addChangedID: function addChangedID(id, when) {
     if (!id) {
       this._log.warn("Attempted to add undefined ID to tracker");
       return false;
     }
     if (this.ignoreAll || (id in this._ignored))
       return false;
-    if (!this.changedIDs[id]) {
-      this._log.trace("Adding changed ID " + id);
-      this.changedIDs[id] = true;
+
+    // Default to the current time in seconds if no time is provided
+    if (when == null)
+      when = Math.floor(Date.now() / 1000);
+
+    // Add/update the entry if we have a newer time
+    if ((this.changedIDs[id] || -Infinity) < when) {
+      this._log.trace("Adding changed ID: " + [id, when]);
+      this.changedIDs[id] = when;
       this.saveChangedIDs();
     }
     return true;
@@ -158,7 +151,7 @@ Tracker.prototype = {
     }
     if (this.ignoreAll || (id in this._ignored))
       return false;
-    if (this.changedIDs[id]) {
+    if (this.changedIDs[id] != null) {
       this._log.trace("Removing changed ID " + id);
       delete this.changedIDs[id];
       this.saveChangedIDs();
@@ -168,9 +161,7 @@ Tracker.prototype = {
 
   clearChangedIDs: function T_clearChangedIDs() {
     this._log.trace("Clearing changed ID list");
-    for (let id in this.changedIDs) {
-      delete this.changedIDs[id];
-    }
+    this.changedIDs = {};
     this.saveChangedIDs();
   }
 };

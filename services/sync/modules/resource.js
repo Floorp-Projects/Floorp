@@ -308,6 +308,13 @@ ChannelListener.prototype = {
 
   onStartRequest: function Channel_onStartRequest(channel) {
     channel.QueryInterface(Ci.nsIHttpChannel);
+
+    // Save the latest server timestamp when possible
+    try {
+      Resource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
+    }
+    catch(ex) {}
+
     this._log.trace(channel.requestMethod + " " + channel.URI.spec);
     this._data = '';
 

@@ -434,14 +434,11 @@ SyncEngine.prototype = {
       CryptoMetas.set(meta.uri, meta);
     }
 
-    // first sync special case: upload all items
-    // NOTE: we use a backdoor (of sorts) to the tracker so it
-    // won't save to disk this list over and over
+    // Mark all items to be uploaded, but treat them as changed from long ago
     if (!this.lastSync) {
       this._log.debug("First sync, uploading all items");
-      this._tracker.clearChangedIDs();
-      [i for (i in this._store.getAllIDs())]
-        .forEach(function(id) this._tracker.changedIDs[id] = true, this);
+      for (let id in this._store.getAllIDs())
+        this._tracker.addChangedID(id, 0);
     }
 
     let outnum = [i for (i in this._tracker.changedIDs)].length;
@@ -592,7 +589,7 @@ SyncEngine.prototype = {
       this._log.trace("Preferring local id: " + [dupeId, item.id]);
       this._deleteId(item.id);
       item.id = dupeId;
-      this._tracker.changedIDs[dupeId] = true;
+      this._tracker.addChangedID(dupeId, 0);
     }
     else {
       this._log.trace("Switching local id to incoming: " + [item.id, dupeId]);
@@ -601,44 +598,36 @@ SyncEngine.prototype = {
     }
   },
 
-  // Reconciliation has three steps:
-  // 1) Check for the same item (same ID) on both the incoming and outgoing
-  //    queues.  This means the same item was modified on this profile and
-  //    another at the same time.  In this case, this client wins (which really
-  //    means, the last profile you sync wins).
-  // 2) Check if the incoming item's ID exists locally.  In that case it's an
-  //    update and we should not try a similarity check (step 3)
-  // 3) Check if any incoming & outgoing items are actually the same, even
-  //    though they have different IDs.  This happens when the same item is
-  //    added on two different machines at the same time.  It's also the common
-  //    case when syncing for the first time two machines that already have the
-  //    same bookmarks.  In this case we change the IDs to match.
   _reconcile: function SyncEngine__reconcile(item) {
     if (this._log.level <= Log4Moz.Level.Trace)
       this._log.trace("Incoming: " + item);
 
-    // Step 1: Check for conflicts
-    //         If same as local record, do not upload
-    this._log.trace("Reconcile step 1");
+    this._log.trace("Reconcile step 1: Check for conflicts");
     if (item.id in this._tracker.changedIDs) {
-      if (this._isEqual(item))
+      // If the incoming and local changes are the same, skip
+      if (this._isEqual(item)) {
         this._tracker.removeChangedID(item.id);
-      return false;
+        return false;
+      }
+
+      // Records differ so figure out which to take
+      let recordAge = Resource.serverTime - item.modified;
+      let localAge = Date.now() / 1000 - this._tracker.changedIDs[item.id];
+      this._log.trace("Record age vs local age: " + [recordAge, localAge]);
+
+      // Apply the record if the record is newer (server wins)
+      return recordAge < localAge;
     }
 
-    // Step 2: Check for updates
-    //         If different from local record, apply server update
-    this._log.trace("Reconcile step 2");
+    this._log.trace("Reconcile step 2: Check for updates");
     if (this._store.itemExists(item.id))
       return !this._isEqual(item);
 
-    // If the incoming item has been deleted, skip step 3
-    this._log.trace("Reconcile step 2.5");
+    this._log.trace("Reconcile step 2.5: Don't dupe deletes");
     if (item.deleted)
       return true;
 
-    // Step 3: Check for similar items
-    this._log.trace("Reconcile step 3");
+    this._log.trace("Reconcile step 3: Find dupes");
     let dupeId = this._findDupe(item);
     if (dupeId)
       this._handleDupe(item, dupeId);

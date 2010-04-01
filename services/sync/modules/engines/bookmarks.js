@@ -206,7 +206,7 @@ BookmarksEngine.prototype = {
     // Trigger id change from dupe to winning and update the server
     this._store.changeItemID(dupeId, item.id);
     this._deleteId(dupeId);
-    this._tracker.changedIDs[item.id] = true;
+    this._tracker.addChangedID(item.id, 0);
   }
 };
 

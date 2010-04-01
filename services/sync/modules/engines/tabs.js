@@ -75,11 +75,6 @@ TabEngine.prototype = {
     this._store.wipe();
   },
 
-  _syncFinish: function _syncFinish() {
-    SyncEngine.prototype._syncFinish.call(this);
-    this._tracker.resetChanged();
-  },
-
   /* The intent is not to show tabs in the menu if they're already
    * open locally.  There are a couple ways to interpret this: for
    * instance, we could do it by removing a tab from the list when
@@ -209,8 +204,6 @@ TabStore.prototype = {
 function TabTracker(name) {
   Tracker.call(this, name);
 
-  this.resetChanged();
-
   // Make sure "this" pointer is always set correctly for event listeners
   this.onTab = Utils.bind2(this, this.onTab);
 
@@ -257,15 +250,10 @@ TabTracker.prototype = {
   onTab: function onTab(event) {
     this._log.trace(event.type);
     this.score += 1;
-    this._changedIDs[Clients.localID] = true;
+    this.addChangedID(Clients.localID);
 
     // Store a timestamp in the tab to track when it was last used
     Svc.Session.setTabValue(event.originalTarget, "weaveLastUsed",
                             Math.floor(Date.now() / 1000));
   },
-
-  get changedIDs() this._changedIDs,
-
-  // Provide a way to empty out the changed ids
-  resetChanged: function resetChanged() this._changedIDs = {}
 }
