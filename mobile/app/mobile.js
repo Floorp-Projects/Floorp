@@ -44,14 +44,6 @@ pref("browser.startup.homepage", "about:firstrun");
 
 pref("browser.tabs.warnOnClose", true);
 
-#if MOZ_PLATFORM_MAEMO
-pref("browser.ui.cursor", false);
-#elifdef WINCE
-pref("browser.ui.cursor", false);
-#else // DESKTOP
-pref("browser.ui.cursor", true);
-#endif
-
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
 

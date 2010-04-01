@@ -449,21 +449,6 @@ var Browser = {
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
-    var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
-
-    // Should we hide the cursors
-    var hideCursor = gPrefService.getBoolPref("browser.ui.cursor") == false;
-    if (hideCursor) {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).setCursor("none");
-
-      var styleURI = gIOService.newURI("chrome://browser/content/cursor.css", null, null);
-      styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
-    }
-
-    // load styles for scrollbars
-    var styleURI = gIOService.newURI("chrome://browser/content/content.css", null, null);
-    styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
-
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);

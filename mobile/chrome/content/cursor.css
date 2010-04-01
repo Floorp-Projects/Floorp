@@ -35,8 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 @namespace html url(http://www.w3.org/1999/xhtml);
 
-html|* {
+xul|*:-moz-system-metric(touch-enabled) {
+  cursor: none !important;
+}
+
+html|*:-moz-system-metric(touch-enabled) {
   cursor: none !important;
 }
