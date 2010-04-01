@@ -953,6 +953,19 @@ function run_float_tests(library, t, name, size) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function () { d.value = vals[i]; }, TypeError);
 
+  // Check that values roundtrip through toSource() correctly.
+  function test_roundtrip(t, val)
+  {
+    let f1 = t(val);
+    eval("let f2 = " + f1.toSource());
+    do_check_eq(f1.value, f2.value);
+  }
+  let vals = [Infinity, -Infinity, -0, 0, 1, -1, 1/3, -1/3, 1/4, -1/4,
+              1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
+  for (let i = 0; i < vals.length; i++)
+    test_roundtrip(t, vals[i]);
+  do_check_eq(t(NaN).toSource(), t.toSource() + "(NaN)");
+
   do_check_true(d.address().constructor === t.ptr);
   do_check_eq(d.address().contents, d.value);
   do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
