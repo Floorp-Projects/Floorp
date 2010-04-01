@@ -304,35 +304,6 @@ public:
 #define NS_INIT_ISUPPORTS() ((void)0)
 
 /**
- * Use this macro to declare and implement the AddRef & Release methods for a
- * given non-XPCOM <i>_class</i>.
- *
- * The implementations here should match NS_IMPL_ADDREF/NS_IMPL_RELEASE, minus
- * the nsrefcnt return-value and the NS_ASSERT_OWNINGTHREAD() call.
- *
- * @param _class The name of the class implementing the method
- */
-#define NS_INLINE_DECL_REFCOUNTING(_class)                                    \
-public:                                                                       \
-  void AddRef(void) {                                                         \
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
-    ++mRefCnt;                                                                \
-    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                     \
-  }                                                                           \
-  void Release(void) {                                                        \
-    NS_PRECONDITION(0 != mRefCnt, "dup release");                             \
-    --mRefCnt;                                                                \
-    NS_LOG_RELEASE(this, mRefCnt, #_class);                                   \
-    if (mRefCnt == 0) {                                                       \
-      mRefCnt = 1; /* stabilize */                                            \
-      NS_DELETEXPCOM(this);                                                   \
-    }                                                                         \
-  }                                                                           \
-protected:                                                                    \
-  nsAutoRefCnt mRefCnt;                                                       \
-public:
-
-/**
  * Use this macro to implement the AddRef method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
