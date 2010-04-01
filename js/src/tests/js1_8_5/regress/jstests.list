@@ -8,3 +8,5 @@ script regress-541255-3.js
 script regress-541255-4.js
 script regress-541455.js
 script regress-546615.js
+script regress-555246-0.js
+fails script regress-555246-1.js
