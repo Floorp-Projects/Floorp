@@ -42,6 +42,8 @@
 #include "nsRegion.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsISupportsImpl.h"
+#include "nsAutoPtr.h"
 #include "gfx3DMatrix.h"
 
 class gfxContext;
@@ -106,7 +108,7 @@ class ImageContainer;
  * root layer, and each container layer holds a reference to its children.
  */
 class THEBES_API LayerManager {
-  THEBES_INLINE_DECL_REFCOUNTING(LayerManager)  
+  NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
   enum LayersBackend {
@@ -181,7 +183,7 @@ public:
  * surface.
  */
 class THEBES_API Layer {
-  THEBES_INLINE_DECL_REFCOUNTING(Layer)  
+  NS_INLINE_DECL_REFCOUNTING(Layer)  
 
 public:
   virtual ~Layer() {}
