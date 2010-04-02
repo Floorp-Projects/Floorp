@@ -74,7 +74,7 @@
 	<key>CFBundleExecutable</key>
 	<string>fennec</string>
 	<key>CFBundleGetInfoString</key>
-	<string>%APP_NAME% %APP_VERSION%, © 1998-2008 Contributors</string>
+	<string>%APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
 	<string>fennec</string>
 	<key>CFBundleIdentifier</key>
