@@ -1725,7 +1725,7 @@ ImplicitConvert(JSContext* cx,
         size_t nbytes =
           js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
         if (nbytes == (size_t) -1)
-            return false;
+          return false;
 
         if (targetLength < nbytes) {
           JS_ReportError(cx, "ArrayType has insufficient length");
@@ -4610,7 +4610,7 @@ ConvertArgument(JSContext* cx,
       JS_ReportOutOfMemory(cx);
       return false;
     }
-    *strings[i].mData = *static_cast<char**>(value->mData);
+    strings->back().mData = *static_cast<char**>(value->mData);
   }
 
   return true;
