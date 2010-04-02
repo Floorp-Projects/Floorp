@@ -36,12 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
 #include "CTypes.h"
 #include "Library.h"
-#include "nsAutoPtr.h"
-#include "nsUTF8Utils.h"
-#include "nsCRTGlue.h"
 #include "prlog.h"
 #include "jsdtoa.h"
 
@@ -58,7 +54,7 @@
 #include <sys/types.h>
 #endif
 
-namespace mozilla {
+namespace js {
 namespace ctypes {
 
 /*******************************************************************************
@@ -447,20 +443,9 @@ ASSERT_OK(JSBool ok)
 }
 
 JS_ALWAYS_INLINE JSString*
-NewUCString(JSContext* cx, const nsString& from)
+NewUCString(JSContext* cx, const AutoString& from)
 {
-  JS_ASSERT(from.get());
-  return JS_NewUCStringCopyN(cx,
-    reinterpret_cast<const jschar*>(from.get()), from.Length());
-}
-
-JS_ALWAYS_INLINE const nsDependentString
-GetString(JSString* str)
-{
-  JS_ASSERT(str);
-  const jschar* chars = JS_GetStringChars(str);
-  size_t length = JS_GetStringLength(str);
-  return nsDependentString(reinterpret_cast<const PRUnichar*>(chars), length);
+  return JS_NewUCStringCopyN(cx, from.begin(), from.length());
 }
 
 JS_ALWAYS_INLINE size_t
@@ -1312,13 +1297,14 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
 }
 
 template<class IntegerType>
-nsAutoString
-IntegerToString(IntegerType i, jsuint radix)
+void
+IntegerToString(IntegerType i, jsuint radix, AutoString& result)
 {
   // The buffer must be big enough for all the bits of IntegerType to fit,
   // in base-2, including '-'.
-  PRUnichar buffer[sizeof(IntegerType) * 8 + 1];
-  PRUnichar* cp = buffer + sizeof(buffer) / sizeof(PRUnichar);
+  jschar buffer[sizeof(IntegerType) * 8 + 1];
+  jschar* end = buffer + sizeof(buffer) / sizeof(jschar);
+  jschar* cp = end;
 
   // Build the string in reverse. We use multiplication and subtraction
   // instead of modulus because that's much faster.
@@ -1335,7 +1321,7 @@ IntegerToString(IntegerType i, jsuint radix)
     *--cp = '-';
 
   JS_ASSERT(cp >= buffer);
-  return nsAutoString(cp, buffer + sizeof(buffer) / sizeof(PRUnichar) - cp);
+  result.append(cp, end);
 }
 
 template<class IntegerType>
@@ -1768,7 +1754,7 @@ ImplicitConvert(JSContext* cx,
       // Convert into an intermediate, in case of failure.
       size_t elementSize = CType::GetSize(cx, baseType);
       size_t arraySize = elementSize * targetLength;
-      nsAutoArrayPtr<char> intermediate(new char[arraySize]);
+      AutoPtr<char>::Array intermediate(new char[arraySize]);
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -1779,12 +1765,12 @@ ImplicitConvert(JSContext* cx,
         if (!JS_GetElement(cx, sourceArray, i, item.addr()))
           return false;
 
-        char* data = intermediate + elementSize * i;
+        char* data = intermediate.get() + elementSize * i;
         if (!ImplicitConvert(cx, item.value(), baseType, data, false, NULL))
           return false;
       }
 
-      memcpy(buffer, intermediate, arraySize);
+      memcpy(buffer, intermediate.get(), arraySize);
 
     } else {
       // Don't implicitly convert to string. Users can implicitly convert
@@ -1795,8 +1781,6 @@ ImplicitConvert(JSContext* cx,
   }
   case TYPE_struct: {
     if (!JSVAL_IS_PRIMITIVE(val) && !sourceData) {
-      nsTArray<FieldInfo>* fields = StructType::GetFieldInfo(cx, targetType);
-
       // Enumerate the properties of the object; if they match the struct
       // specification, convert the fields.
       JSObject* obj = JSVAL_TO_OBJECT(val);
@@ -1807,14 +1791,14 @@ ImplicitConvert(JSContext* cx,
 
       // Convert into an intermediate, in case of failure.
       size_t structSize = CType::GetSize(cx, targetType);
-      nsAutoArrayPtr<char> intermediate(new char[structSize]);
+      AutoPtr<char>::Array intermediate(new char[structSize]);
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
       }
 
       jsid id;
-      jsuint i = 0;
+      size_t i = 0;
       while (1) {
         if (!JS_NextProperty(cx, iter, &id))
           return false;
@@ -1843,19 +1827,20 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         // Convert the field via ImplicitConvert().
-        char* fieldData = intermediate + field->mOffset;
+        char* fieldData = intermediate.get() + field->mOffset;
         if (!ImplicitConvert(cx, prop.value(), field->mType, fieldData, false, NULL))
           return false;
 
         ++i;
       }
 
-      if (i != fields->Length()) {
+      Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, targetType);
+      if (i != fields->length()) {
         JS_ReportError(cx, "missing fields");
         return false;
       }
 
-      memcpy(buffer, intermediate, structSize);
+      memcpy(buffer, intermediate.get(), structSize);
       break;
     }
 
@@ -1952,16 +1937,17 @@ ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer)
 // corresponding to 'typeObj'. For instance, the CType constructed from
 // 'ctypes.int32_t.ptr.array(4).ptr.ptr' will result in the type string
 // 'int32_t*(**)[4]'.
-static nsAutoString
+static JSString*
 BuildTypeName(JSContext* cx, JSObject* typeObj)
 {
+  AutoString result;
+
   // Walk the hierarchy of types, outermost to innermost, building up the type
   // string. This consists of the base type, which goes on the left.
   // Derived type modifiers (* and []) build from the inside outward, with
   // pointers on the left and arrays on the right. An excellent description
   // of the rules for building C type declarations can be found at:
   // http://unixwiz.net/techtips/reading-cdecl.html
-  nsAutoString result;
   JSObject* currentType = typeObj;
   JSObject* nextType;
   TypeCode prevGrouping = CType::GetTypeCode(cx, currentType), currentGrouping;
@@ -1976,7 +1962,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       }
 
       // Pointer types go on the left.
-      result.Insert('*', 0);
+      PrependString(result, "*");
 
       currentType = nextType;
       prevGrouping = currentGrouping;
@@ -1985,17 +1971,17 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
     case TYPE_array: {
       if (prevGrouping == TYPE_pointer) {
         // Outer type is pointer, inner type is array. Grouping is required.
-        result.Insert('(', 0);
-        result.Append(')');
-      }
+        PrependString(result, "(");
+        AppendString(result, ")");
+      } 
 
       // Array types go on the right.
-      result.Append('[');
+      AppendString(result, "[");
       size_t length;
-      if (ArrayType::GetSafeLength(cx, currentType, &length)) {
-        result.Append(IntegerToString(length, 10));
-      }
-      result.Append(']');
+      if (ArrayType::GetSafeLength(cx, currentType, &length))
+        IntegerToString(length, 10, result);
+
+      AppendString(result, "]");
 
       currentType = ArrayType::GetBaseType(cx, currentType);
       prevGrouping = currentGrouping;
@@ -2005,28 +1991,28 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, currentType);
 
       // Function pointer goes on the left.
-      result.Insert('*', 0);
+      PrependString(result, "*");
 
       // Add in the calling convention, if it's not cdecl.
       if (GetABICode(cx, fninfo->mABI) == ABI_STDCALL)
-        result.Insert(NS_LITERAL_STRING("__stdcall "), 0);
+        PrependString(result, "__stdcall ");
 
       // Wrap the entire expression so far with parens.
-      result.Insert('(', 0);
-      result.Append(')');
+      PrependString(result, "(");
+      AppendString(result, ")");
 
       // Argument list goes on the right.
-      result.Append('(');
-      for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
+      AppendString(result, "(");
+      for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i) {
         JSString* argName = CType::GetName(cx, fninfo->mArgTypes[i]);
-        result.Append(GetString(argName));
-        if (i != fninfo->mArgTypes.Length() - 1 ||
+        AppendString(result, argName);
+        if (i != fninfo->mArgTypes.length() - 1 ||
             fninfo->mIsVariadic)
-          result.Append(NS_LITERAL_STRING(", "));
+          AppendString(result, ", ");
       }
       if (fninfo->mIsVariadic)
-        result.Append(NS_LITERAL_STRING("..."));
-      result.Append(')');
+        AppendString(result, "...");
+      AppendString(result, ")");
 
       // Set 'currentType' to the return type, and let the loop process it.
       currentType = fninfo->mReturnType;
@@ -2042,8 +2028,8 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
 
   // Stick the base type and derived type parts together.
   JSString* baseName = CType::GetName(cx, currentType);
-  result.Insert(GetString(baseName), 0);
-  return result;
+  PrependString(result, baseName);
+  return NewUCString(cx, result);
 }
 
 // Given a CType 'typeObj', generate a string 'result' such that 'eval(result)'
@@ -2053,55 +2039,57 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
 // (This means the type comparison function CType::TypesEqual will return true
 // when comparing the input and output of BuildTypeSource, since struct
 // equality is determined by strict JSObject pointer equality.)
-static nsAutoString
-BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
+static void
+BuildTypeSource(JSContext* cx,
+                JSObject* typeObj, 
+                bool makeShort, 
+                AutoString& result)
 {
   // Walk the types, building up the toSource() string.
-  nsAutoString result;
   switch (CType::GetTypeCode(cx, typeObj)) {
   case TYPE_void_t:
 #define DEFINE_TYPE(name, type, ffiType)  \
   case TYPE_##name:
 #include "typedefs.h"
   {
-    result.Append(NS_LITERAL_STRING("ctypes."));
+    AppendString(result, "ctypes.");
     JSString* nameStr = CType::GetName(cx, typeObj);
-    result.Append(GetString(nameStr));
+    AppendString(result, nameStr);
     break;
   }
   case TYPE_pointer: {
     JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
     if (!baseType) {
       // Opaque pointer type. Use the type's name.
-      result.Append(NS_LITERAL_STRING("ctypes.PointerType(\""));
+      AppendString(result, "ctypes.PointerType(\"");
       JSString* baseName = CType::GetName(cx, typeObj);
-      result.Append(GetString(baseName));
-      result.Append(NS_LITERAL_STRING("\")"));
+      AppendString(result, baseName);
+      AppendString(result, "\")");
       break;
     }
 
     // Specialcase ctypes.voidptr_t.
     if (CType::GetTypeCode(cx, baseType) == TYPE_void_t) {
-      result.Append(NS_LITERAL_STRING("ctypes.voidptr_t"));
+      AppendString(result, "ctypes.voidptr_t");
       break;
     }
 
     // Recursively build the source string, and append '.ptr'.
-    result.Append(BuildTypeSource(cx, baseType, makeShort));
-    result.Append(NS_LITERAL_STRING(".ptr"));
+    BuildTypeSource(cx, baseType, makeShort, result);
+    AppendString(result, ".ptr");
     break;
   }
   case TYPE_function: {
     FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
 
-    result.Append(NS_LITERAL_STRING("ctypes.FunctionType("));
+    AppendString(result, "ctypes.FunctionType(");
 
     switch (GetABICode(cx, fninfo->mABI)) {
     case ABI_DEFAULT:
-      result.Append(NS_LITERAL_STRING("ctypes.default_abi, "));
+      AppendString(result, "ctypes.default_abi, ");
       break;
     case ABI_STDCALL:
-      result.Append(NS_LITERAL_STRING("ctypes.stdcall_abi, "));
+      AppendString(result, "ctypes.stdcall_abi, ");
       break;
     case INVALID_ABI:
       JS_NOT_REACHED("invalid abi");
@@ -2110,22 +2098,22 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
 
     // Recursively build the source string describing the function return and
     // argument types.
-    result.Append(BuildTypeSource(cx, fninfo->mReturnType, true));
+    BuildTypeSource(cx, fninfo->mReturnType, true, result);
 
-    if (fninfo->mArgTypes.Length() > 0) {
-      result.Append(NS_LITERAL_STRING(", ["));
-      for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i) {
-        result.Append(BuildTypeSource(cx, fninfo->mArgTypes[i], true));
-        if (i != fninfo->mArgTypes.Length() - 1 ||
+    if (fninfo->mArgTypes.length() > 0) {
+      AppendString(result, ", [");
+      for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i) {
+        BuildTypeSource(cx, fninfo->mArgTypes[i], true, result);
+        if (i != fninfo->mArgTypes.length() - 1 ||
             fninfo->mIsVariadic)
-          result.Append(NS_LITERAL_STRING(", "));
+          AppendString(result, ", ");
       }
       if (fninfo->mIsVariadic)
-        result.Append(NS_LITERAL_STRING("\"...\""));
-      result.Append(']');
+        AppendString(result, "\"...\"");
+      AppendString(result, "]");
     }
 
-    result.Append(')');
+    AppendString(result, ")");
     break;
   }
   case TYPE_array: {
@@ -2133,14 +2121,14 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
     // where n is the array length, or the empty string if the array length
     // is undefined.
     JSObject* baseType = ArrayType::GetBaseType(cx, typeObj);
-    result.Append(BuildTypeSource(cx, baseType, makeShort));
-    result.Append(NS_LITERAL_STRING(".array("));
+    BuildTypeSource(cx, baseType, makeShort, result);
+    AppendString(result, ".array(");
 
     size_t length;
     if (ArrayType::GetSafeLength(cx, typeObj, &length))
-      result.Append(IntegerToString(length, 10));
+      IntegerToString(length, 10, result);
 
-    result.Append(')');
+    AppendString(result, ")");
     break;
   }
   case TYPE_struct: {
@@ -2149,33 +2137,31 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
     if (makeShort) {
       // Shorten the type declaration by assuming that StructType 't' is bound
       // to an in-scope variable of name 't.name'.
-      result.Append(GetString(name));
+      AppendString(result, name);
       break;
     }
 
     // Write the full struct declaration.
-    result.Append(NS_LITERAL_STRING("ctypes.StructType(\""));
-    result.Append(GetString(name));
-    result.Append(NS_LITERAL_STRING("\", ["));
+    AppendString(result, "ctypes.StructType(\"");
+    AppendString(result, name);
+    AppendString(result, "\", [");
 
-    nsTArray<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (PRUint32 i = 0; i < fields->Length(); ++i) {
-      const FieldInfo& field = fields->ElementAt(i);
-      result.Append(NS_LITERAL_STRING("{ \""));
-      result.Append(field.mName);
-      result.Append(NS_LITERAL_STRING("\": "));
-      result.Append(BuildTypeSource(cx, field.mType, true));
-      result.Append(NS_LITERAL_STRING(" }"));
-      if (i != fields->Length() - 1)
-        result.Append(NS_LITERAL_STRING(", "));
+    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
+    for (size_t i = 0; i < fields->length(); ++i) {
+      FieldInfo* field = fields->begin() + i;
+      AppendString(result, "{ \"");
+      AppendString(result, field->mName);
+      AppendString(result, "\": ");
+      BuildTypeSource(cx, field->mType, true, result);
+      AppendString(result, " }");
+      if (i != fields->length() - 1)
+        AppendString(result, ", ");
     }
 
-    result.Append(NS_LITERAL_STRING("])"));
+    AppendString(result, "])");
     break;
   }
   }
-
-  return result;
 }
 
 // Given a CData object of CType 'typeObj' with binary value 'data', generate a
@@ -2188,63 +2174,69 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj, bool makeShort)
 // resulting string can ImplicitConvert successfully if passed to another data
 // constructor. (This is important when called recursively, since fields of
 // structs and arrays are converted with ImplicitConvert.)
-static nsAutoString
-BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
+static JSBool
+BuildDataSource(JSContext* cx,
+                JSObject* typeObj, 
+                void* data, 
+                bool isImplicit, 
+                AutoString& result)
 {
-  nsAutoString result;
   TypeCode type = CType::GetTypeCode(cx, typeObj);
   switch (type) {
   case TYPE_bool:
-    result.Append(*static_cast<bool*>(data) ?
-                  NS_LITERAL_STRING("true") :
-                  NS_LITERAL_STRING("false"));
+    if (*static_cast<bool*>(data))
+      AppendString(result, "true");
+    else
+      AppendString(result, "false");
     break;
 #define DEFINE_INT_TYPE(name, type, ffiType)                                   \
   case TYPE_##name:                                                            \
     /* Serialize as a primitive decimal integer. */                            \
-    result.Append(IntegerToString(*static_cast<type*>(data), 10));             \
+    IntegerToString(*static_cast<type*>(data), 10, result);                    \
     break;
 #define DEFINE_WRAPPED_INT_TYPE(name, type, ffiType)                           \
   case TYPE_##name:                                                            \
     /* Serialize as a wrapped decimal integer. */                              \
     if (IsUnsigned<type>())                                                    \
-      result.Append(NS_LITERAL_STRING("ctypes.UInt64(\""));                    \
+      AppendString(result, "ctypes.UInt64(\"");                                \
     else                                                                       \
-      result.Append(NS_LITERAL_STRING("ctypes.Int64(\""));                     \
+      AppendString(result, "ctypes.Int64(\"");                                 \
                                                                                \
-    result.Append(IntegerToString(*static_cast<type*>(data), 10));             \
-    result.Append(NS_LITERAL_STRING("\")"));                                   \
+    IntegerToString(*static_cast<type*>(data), 10, result);                    \
+    AppendString(result, "\")");                                               \
     break;
 #define DEFINE_FLOAT_TYPE(name, type, ffiType)                                 \
   case TYPE_##name: {                                                          \
     /* Serialize as a primitive double. */                                     \
     double fp = *static_cast<type*>(data);                                     \
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];                                     \
-    char* str = JS_dtostr(buf, sizeof(buf), DTOSTR_STANDARD, 0, fp);           \
+    char* str = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof(buf),     \
+                          DTOSTR_STANDARD, 0, fp);                             \
     JS_ASSERT(str);                                                            \
     if (!str)                                                                  \
       break;                                                                   \
                                                                                \
-    result.AppendASCII(str);                                                   \
+    result.append(str, strlen(str));                                           \
     break;                                                                     \
   }
 #define DEFINE_CHAR_TYPE(name, type, ffiType)                                  \
   case TYPE_##name:                                                            \
     /* Serialize as an integer. */                                             \
-    result.Append(IntegerToString(*static_cast<type*>(data), 10));             \
+    IntegerToString(*static_cast<type*>(data), 10, result);                    \
     break;
 #include "typedefs.h"
   case TYPE_jschar: {
-    /* Serialize as a 1-character JS string. */
+    // Serialize as a 1-character JS string.
     JSString* str = JS_NewUCStringCopyN(cx, static_cast<jschar*>(data), 1);
     if (!str)
-      break;
+      return false;
 
+    // Escape characters, and quote as necessary.
     JSString* src = JS_ValueToSource(cx, STRING_TO_JSVAL(str));
     if (!src)
-      break;
+      return false;
 
-    result.Append(GetString(src));
+    AppendString(result, src);
     break;
   }
   case TYPE_pointer:
@@ -2252,18 +2244,18 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
     if (isImplicit) {
       // The result must be able to ImplicitConvert successfully.
       // Wrap in a type constructor, then serialize for ExplicitConvert.
-      result.Append(BuildTypeSource(cx, typeObj, true));
-      result.Append('(');
+      BuildTypeSource(cx, typeObj, true, result);
+      AppendString(result, "(");
     }
 
     // Serialize the pointer value as a wrapped hexadecimal integer.
     uintptr_t ptr = *static_cast<uintptr_t*>(data);
-    result.Append(NS_LITERAL_STRING("ctypes.UInt64(\"0x"));
-    result.Append(IntegerToString(ptr, 16));
-    result.Append(NS_LITERAL_STRING("\")"));
+    AppendString(result, "ctypes.UInt64(\"0x");
+    IntegerToString(ptr, 16, result);
+    AppendString(result, "\")");
 
     if (isImplicit)
-      result.Append(')');
+      AppendString(result, ")");
 
     break;
   }
@@ -2271,17 +2263,19 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
     // Serialize each element of the array recursively. Each element must
     // be able to ImplicitConvert successfully.
     JSObject* baseType = ArrayType::GetBaseType(cx, typeObj);
-    result.Append('[');
+    AppendString(result, "[");
 
     size_t length = ArrayType::GetLength(cx, typeObj);
     size_t elementSize = CType::GetSize(cx, baseType);
     for (size_t i = 0; i < length; ++i) {
       char* element = static_cast<char*>(data) + elementSize * i;
-      result.Append(BuildDataSource(cx, baseType, element, true));
+      if (!BuildDataSource(cx, baseType, element, true, result))
+        return false;
+
       if (i + 1 < length)
-        result.Append(NS_LITERAL_STRING(", "));
+        AppendString(result, ", ");
     }
-    result.Append(']');
+    AppendString(result, "]");
     break;
   }
   case TYPE_struct: {
@@ -2289,29 +2283,31 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
       // The result must be able to ImplicitConvert successfully.
       // Serialize the data as an object with properties, rather than
       // a sequence of arguments to the StructType constructor.
-      result.Append('{');
+      AppendString(result, "{");
     }
 
     // Serialize each field of the struct recursively. Each field must
     // be able to ImplicitConvert successfully.
-    nsTArray<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (size_t i = 0; i < fields->Length(); ++i) {
-      const FieldInfo& field = fields->ElementAt(i);
-      char* fieldData = static_cast<char*>(data) + field.mOffset;
+    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
+    for (size_t i = 0; i < fields->length(); ++i) {
+      FieldInfo* field = fields->begin() + i;
+      char* fieldData = static_cast<char*>(data) + field->mOffset;
 
       if (isImplicit) {
-        result.Append('"');
-        result.Append(field.mName);
-        result.Append(NS_LITERAL_STRING("\": "));
+        AppendString(result, "\"");
+        AppendString(result, field->mName);
+        AppendString(result, "\": ");
       }
 
-      result.Append(BuildDataSource(cx, field.mType, fieldData, true));
-      if (i + 1 != fields->Length())
-        result.Append(NS_LITERAL_STRING(", "));
+      if (!BuildDataSource(cx, field->mType, fieldData, true, result))
+        return false;
+
+      if (i + 1 != fields->length())
+        AppendString(result, ", ");
     }
 
     if (isImplicit)
-      result.Append('}');
+      AppendString(result, "}");
 
     break;
   }
@@ -2320,7 +2316,7 @@ BuildDataSource(JSContext* cx, JSObject* typeObj, void* data, bool isImplicit)
     break;
   }
 
-  return result;
+  return true;
 }
 
 /*******************************************************************************
@@ -2537,8 +2533,10 @@ CType::Finalize(JSContext* cx, JSObject* obj)
   case TYPE_struct:
     // Free the FieldInfo array.
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
-    if (!JSVAL_IS_VOID(slot))
-      delete static_cast<nsTArray<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
+    if (!JSVAL_IS_VOID(slot)) {
+      void* info = JSVAL_TO_PRIVATE(slot);
+      delete static_cast<js::ctypes::Array<FieldInfo>*>(info);
+    }
 
     // Fall through.
   case TYPE_array: {
@@ -2598,7 +2596,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     // Identify our objects to the tracer.
     JS_CALL_TRACER(trc, fninfo->mABI, JSTRACE_OBJECT, "abi");
     JS_CALL_TRACER(trc, fninfo->mReturnType, JSTRACE_OBJECT, "returnType");
-    for (PRUint32 i = 0; i < fninfo->mArgTypes.Length(); ++i)
+    for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i)
       JS_CALL_TRACER(trc, fninfo->mArgTypes[i], JSTRACE_OBJECT, "argType");
 
     break;
@@ -2668,13 +2666,13 @@ CType::TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2)
     if (!TypesEqual(cx, f1->mReturnType, f2->mReturnType))
       return false;
 
-    if (f1->mArgTypes.Length() != f2->mArgTypes.Length())
+    if (f1->mArgTypes.length() != f2->mArgTypes.length())
       return false;
 
     if (f1->mIsVariadic != f2->mIsVariadic)
       return false;
 
-    for (PRUint32 i = 0; i < f1->mArgTypes.Length(); ++i) {
+    for (size_t i = 0; i < f1->mArgTypes.length(); ++i) {
       if (!TypesEqual(cx, f1->mArgTypes[i], f2->mArgTypes[i]))
         return false;
     }
@@ -2923,9 +2921,9 @@ CType::ToString(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  nsAutoString type(NS_LITERAL_STRING("type "));
-  JSString* right = GetName(cx, obj);
-  type.Append(GetString(right));
+  AutoString type;
+  AppendString(type, "type ");
+  AppendString(type, GetName(cx, obj));
 
   JSString* result = NewUCString(cx, type);
   if (!result)
@@ -2946,7 +2944,8 @@ CType::ToSource(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  nsAutoString source = BuildTypeSource(cx, obj, false);
+  AutoString source;
+  BuildTypeSource(cx, obj, false, source);
   JSString* result = NewUCString(cx, source);
   if (!result)
     return JS_FALSE;
@@ -3062,8 +3061,7 @@ PointerType::CreateInternal(JSContext* cx,
 
   if (baseType) {
     // Determine the name of the PointerType, since it wasn't supplied.
-    nsAutoString typeName = BuildTypeName(cx, typeObj);
-    JSString* nameStr = NewUCString(cx, typeName);
+    JSString* nameStr = BuildTypeName(cx, typeObj);
     if (!nameStr ||
         !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(nameStr)))
       return NULL;
@@ -3358,8 +3356,7 @@ ArrayType::CreateInternal(JSContext* cx,
     return NULL;
 
   // Determine the name of the ArrayType.
-  nsAutoString typeName = BuildTypeName(cx, typeObj);
-  JSString* name = NewUCString(cx, typeName);
+  JSString* name = BuildTypeName(cx, typeObj);
   if (!name ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name)))
     return NULL;
@@ -3718,11 +3715,12 @@ ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
   }
 
   JSString* name = JSVAL_TO_STRING(nameVal.value());
-  const jschar* nameChars = JS_GetStringChars(name);
-  size_t namelen = JS_GetStringLength(name);
-  field->mName.Assign(reinterpret_cast<const PRUnichar*>(nameChars), namelen);
+  field->mName.clear();
+  AppendString(field->mName, name);
 
   js::AutoValueRooter propVal(cx);
+  const jschar* nameChars = JS_GetStringChars(name);
+  size_t namelen = JS_GetStringLength(name);
   if (!JS_GetUCProperty(cx, obj, nameChars, namelen, propVal.addr()))
     return false;
 
@@ -3751,7 +3749,7 @@ static JSBool
 AddFieldToArray(JSContext* cx,
                 JSObject* arrayObj,
                 jsval* element,
-                const nsString& name,
+                const String& name,
                 JSObject* typeObj)
 {
   JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, arrayObj);
@@ -3761,7 +3759,7 @@ AddFieldToArray(JSContext* cx,
   *element = OBJECT_TO_JSVAL(fieldObj);
 
   if (!JS_DefineUCProperty(cx, fieldObj,
-         reinterpret_cast<const jschar*>(name.get()), name.Length(),
+         name.begin(), name.length(),
          OBJECT_TO_JSVAL(typeObj), NULL, NULL,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
@@ -3804,7 +3802,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   js::AutoValueRooter root(cx, fieldsProp);
   JS_ASSERT(len == 0 || fieldsVec);
 
-  nsAutoPtr<ffi_type> ffiType(new ffi_type);
+  AutoPtr<ffi_type> ffiType(new ffi_type);
   if (!ffiType) {
     JS_ReportOutOfMemory(cx);
     return JS_FALSE;
@@ -3814,15 +3812,16 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   // Create an array of FieldInfo objects to stash on the type object, and an
   // array of PropertySpecs to reflect the struct fields as properties
   // on CData objects created from this type.
-  nsAutoPtr< nsTArray<FieldInfo> > fields(new nsTArray<FieldInfo>());
-  nsAutoTArray<PropertySpec, 16> instanceProps;
+  AutoPtr< Array<FieldInfo> > fields(new Array<FieldInfo>);
+  Array<PropertySpec> instanceProps;
   if (!fields ||
-      !fields->SetCapacity(len) ||
-      !instanceProps.SetCapacity(len + 1)) {
+      !fields->resize(len) ||
+      !instanceProps.resize(len + 1)) {
     JS_ReportOutOfMemory(cx);
     return JS_FALSE;
   }
-  nsAutoArrayPtr<ffi_type*> elements;
+
+  AutoPtr<ffi_type*>::Array elements;
 
   // Process the field types and fill in the ffi_type fields.
   size_t structSize = 0, structAlign = 0;
@@ -3839,13 +3838,14 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
       if (!JS_GetElement(cx, fieldsObj, i, item.addr()))
         return JS_FALSE;
 
-      FieldInfo* info = fields->AppendElement();
+      FieldInfo* info = fields->begin() + i;
       if (!ExtractStructField(cx, item.value(), info))
         return JS_FALSE;
 
       // Make sure each field name is unique.
-      for (PRUint32 j = 0; j < fields->Length() - 1; ++j) {
-        if (fields->ElementAt(j).mName == info->mName) {
+      for (size_t j = 0; j < i; ++j) {
+        FieldInfo* field = fields->begin() + j;
+        if (StringsEqual(field->mName, info->mName)) {
           JS_ReportError(cx, "struct fields must have unique names");
           return JS_FALSE;
         }
@@ -3857,9 +3857,9 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
         return JS_FALSE;
 
       // Fill in the PropertySpec for the field.
-      PropertySpec* instanceProp = instanceProps.AppendElement();
-      instanceProp->name = reinterpret_cast<const jschar*>(info->mName.get());
-      instanceProp->namelen = info->mName.Length();
+      PropertySpec* instanceProp = instanceProps.begin() + i;
+      instanceProp->name = info->mName.begin();
+      instanceProp->namelen = info->mName.length();
       instanceProp->flags = JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT;
       instanceProp->getter = StructType::FieldGetter;
       instanceProp->setter = StructType::FieldSetter;
@@ -3907,7 +3907,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     elements[1] = NULL;
   }
 
-  ffiType->elements = elements;
+  ffiType->elements = elements.get();
 
 #ifdef DEBUG
   // Perform a sanity check: the result of our struct size and alignment
@@ -3916,7 +3916,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   ffi_cif cif;
   ffiType->size = 0;
   ffiType->alignment = 0;
-  ffi_status status = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 0, ffiType, NULL);
+  ffi_status status = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 0, ffiType.get(), NULL);
   JS_ASSERT(status == FFI_OK);
   JS_ASSERT(structSize == ffiType->size);
   JS_ASSERT(structAlign == ffiType->alignment);
@@ -3930,7 +3930,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 #endif
 
   // Terminate the PropertySpec array.
-  instanceProps.AppendElement()->name = NULL;
+  instanceProps[len].name = NULL;
 
   jsval sizeVal;
   if (!SizeTojsval(cx, structSize, &sizeVal))
@@ -3945,8 +3945,8 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_struct,
                         JSVAL_TO_STRING(name), sizeVal,
-                        INT_TO_JSVAL(structAlign), ffiType,
-                        instanceProps.Elements());
+                        INT_TO_JSVAL(structAlign), ffiType.get(),
+                        instanceProps.begin());
   if (!typeObj)
     return JS_FALSE;
   ffiType.forget();
@@ -3991,7 +3991,7 @@ StructType::ConstructData(JSContext* cx,
     return JS_TRUE;
 
   char* buffer = static_cast<char*>(CData::GetData(cx, result));
-  nsTArray<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
 
   if (argc == 1) {
     // There are two possible interpretations of the argument:
@@ -4006,7 +4006,7 @@ StructType::ConstructData(JSContext* cx,
     if (ExplicitConvert(cx, argv[0], obj, buffer))
       return JS_TRUE;
 
-    if (fields->Length() != 1)
+    if (fields->length() != 1)
       return JS_FALSE;
 
     // If ExplicitConvert failed, and there is no pending exception, then assume
@@ -4023,10 +4023,10 @@ StructType::ConstructData(JSContext* cx,
 
   // We have a type constructor of the form 'ctypes.StructType(a, b, c, ...)'.
   // ImplicitConvert each field.
-  if (argc == fields->Length()) {
-    for (PRUint32 i = 0; i < fields->Length(); ++i) {
-      FieldInfo& field = fields->ElementAt(i);
-      if (!ImplicitConvert(cx, argv[i], field.mType, buffer + field.mOffset,
+  if (argc == fields->length()) {
+    for (size_t i = 0; i < fields->length(); ++i) {
+      FieldInfo* field = fields->begin() + i;
+      if (!ImplicitConvert(cx, argv[i], field->mType, buffer + field->mOffset,
              false, NULL))
         return JS_FALSE;
     }
@@ -4035,11 +4035,11 @@ StructType::ConstructData(JSContext* cx,
   }
 
   JS_ReportError(cx, "constructor takes 0, 1, or %u arguments",
-    fields->Length());
+    fields->length());
   return JS_FALSE;
 }
 
-nsTArray<FieldInfo>*
+Array<FieldInfo>*
 StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
@@ -4049,7 +4049,7 @@ StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
   JS_ASSERT(!JSVAL_IS_VOID(slot) && JSVAL_TO_PRIVATE(slot));
 
-  return static_cast<nsTArray<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
+  return static_cast<Array<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
 }
 
 FieldInfo*
@@ -4058,18 +4058,20 @@ StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
   JS_ASSERT(CType::IsCType(cx, obj));
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
 
-  nsTArray<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
 
-  JSString* nameStr = JSVAL_TO_STRING(idval);
-  const nsDependentString name(GetString(nameStr));
-
-  for (PRUint32 i = 0; i < fields->Length(); ++i) {
-    if (fields->ElementAt(i).mName.Equals(name))
-      return &fields->ElementAt(i);
+  JSString* name = JSVAL_TO_STRING(idval);
+  for (size_t i = 0; i < fields->length(); ++i) {
+    FieldInfo* field = fields->begin() + i;
+    if (StringsEqual(field->mName, name))
+      return field;
   }
 
-  JS_ReportError(cx, "%s does not name a field",
-    NS_LossyConvertUTF16toASCII(name).get());
+  const char* bytes = JS_GetStringBytesZ(cx, name);
+  if (!bytes)
+    return NULL;
+
+  JS_ReportError(cx, "%s does not name a field", bytes);
   return NULL;
 }
 
@@ -4311,9 +4313,9 @@ PrepareCIF(JSContext* cx,
   ffi_status status =
     ffi_prep_cif(&fninfo->mCIF,
                  abi,
-                 fninfo->mFFITypes.Length(),
+                 fninfo->mFFITypes.length(),
                  CType::GetFFIType(cx, fninfo->mReturnType),
-                 fninfo->mFFITypes.Elements());
+                 fninfo->mFFITypes.begin());
 
   switch (status) {
   case FFI_OK:
@@ -4337,7 +4339,7 @@ NewFunctionInfo(JSContext* cx,
                 jsval* argTypes,
                 uintN argLength)
 {
-  nsAutoPtr<FunctionInfo> fninfo(new FunctionInfo());
+  AutoPtr<FunctionInfo> fninfo(new FunctionInfo());
   if (!fninfo) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -4351,8 +4353,8 @@ NewFunctionInfo(JSContext* cx,
     return NULL;
 
   // prepare the argument types
-  if (!fninfo->mArgTypes.SetCapacity(argLength) ||
-      !fninfo->mFFITypes.SetCapacity(argLength)) {
+  if (!fninfo->mArgTypes.reserve(argLength) ||
+      !fninfo->mFFITypes.reserve(argLength)) {
     JS_ReportOutOfMemory(cx);
     return NULL;
   }
@@ -4384,15 +4386,15 @@ NewFunctionInfo(JSContext* cx,
     if (!argType)
       return NULL;
 
-    fninfo->mArgTypes.AppendElement(argType);
-    fninfo->mFFITypes.AppendElement(CType::GetFFIType(cx, argType));
+    fninfo->mArgTypes.append(argType);
+    fninfo->mFFITypes.append(CType::GetFFIType(cx, argType));
   }
 
   if (fninfo->mIsVariadic)
     // wait to PrepareCIF until function is called
     return fninfo.forget();
 
-  if (!PrepareCIF(cx, fninfo))
+  if (!PrepareCIF(cx, fninfo.get()))
     return NULL;
 
   return fninfo.forget();
@@ -4408,7 +4410,7 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  nsAutoTArray<jsval, 16> argTypes;
+  Array<jsval, 16> argTypes;
   JSObject* arrayObj = NULL;
 
   if (argc == 3) {
@@ -4423,7 +4425,7 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
     jsuint len;
     ASSERT_OK(JS_GetArrayLength(cx, arrayObj, &len));
 
-    if (!argTypes.SetLength(len)) {
+    if (!argTypes.resize(len)) {
       JS_ReportOutOfMemory(cx);
       return JS_FALSE;
     }
@@ -4433,15 +4435,15 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
 
   // Pull out the argument types from the array, if any.
-  JS_ASSERT(!argTypes.Length() || arrayObj);
-  js::AutoArrayRooter items(cx, argTypes.Length(), argTypes.Elements());
-  for (jsuint i = 0; i < argTypes.Length(); ++i) {
+  JS_ASSERT(!argTypes.length() || arrayObj);
+  js::AutoArrayRooter items(cx, argTypes.length(), argTypes.begin());
+  for (jsuint i = 0; i < argTypes.length(); ++i) {
     if (!JS_GetElement(cx, arrayObj, i, &argTypes[i]))
       return JS_FALSE;
   }
 
   JSObject* result = CreateInternal(cx, argv[0], argv[1],
-      argTypes.Elements(), argTypes.Length());
+      argTypes.begin(), argTypes.length());
   if (!result)
     return JS_FALSE;
 
@@ -4457,7 +4459,7 @@ FunctionType::CreateInternal(JSContext* cx,
                              jsuint arglen)
 {
   // Determine and check the types, and prepare the function CIF.
-  nsAutoPtr<FunctionInfo> fninfo(NewFunctionInfo(cx, abi, rtype, argtypes, arglen));
+  AutoPtr<FunctionInfo> fninfo(NewFunctionInfo(cx, abi, rtype, argtypes, arglen));
   if (!fninfo)
     return NULL;
 
@@ -4484,8 +4486,7 @@ FunctionType::CreateInternal(JSContext* cx,
   fninfo.forget();
 
   // Determine the name of the FunctionType.
-  nsAutoString typeName = BuildTypeName(cx, typeObj);
-  JSString* name = NewUCString(cx, typeName);
+  JSString* name = BuildTypeName(cx, typeObj);
   if (!name ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name)))
     return NULL;
@@ -4566,17 +4567,15 @@ FunctionType::ConstructData(JSContext* cx,
   return JS_FALSE;
 }
 
-typedef nsAutoTArray<AutoValue, 16> AutoValueAutoArray;
+typedef Array<AutoValue, 16> AutoValueAutoArray;
 
 static JSBool
 ConvertArgument(JSContext* cx,
                 jsval arg,
                 JSObject* type,
-                AutoValueAutoArray* values,
+                AutoValue* value,
                 AutoValueAutoArray* strings)
 {
-  AutoValue* value = values->AppendElement();
-
   if (!value->SizeToType(cx, type)) {
     JS_ReportAllocationOverflow(cx);
     return false;
@@ -4589,7 +4588,11 @@ ConvertArgument(JSContext* cx,
   if (freePointer) {
     // ImplicitConvert converted a string for us, which we have to free.
     // Keep track of it.
-    strings->AppendElement()->mData = *static_cast<char**>(value->mData);
+    if (!strings->growBy(1)) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
+    *strings[i].mData = *static_cast<char**>(value->mData);
   }
 
   return true;
@@ -4616,7 +4619,7 @@ FunctionType::Call(JSContext* cx,
   }
 
   FunctionInfo* fninfo = GetFunctionInfo(cx, typeObj);
-  PRUint32 argcFixed = fninfo->mArgTypes.Length();
+  PRUint32 argcFixed = fninfo->mArgTypes.length();
 
   if ((!fninfo->mIsVariadic && argc != argcFixed) ||
       (fninfo->mIsVariadic && argc < argcFixed)) {
@@ -4638,14 +4641,20 @@ FunctionType::Call(JSContext* cx,
   // prepare the values for each argument
   AutoValueAutoArray values;
   AutoValueAutoArray strings;
+  if (!values.resize(fninfo->mArgTypes.length())) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
 
-  for (PRUint32 i = 0; i < argcFixed; ++i)
-    if (!ConvertArgument(cx, argv[i], fninfo->mArgTypes[i], &values, &strings))
+  for (jsuint i = 0; i < argcFixed; ++i)
+    if (!ConvertArgument(cx, argv[i], fninfo->mArgTypes[i], &values[i], &strings))
       return false;
 
   if (fninfo->mIsVariadic) {
-    fninfo->mFFITypes.SetLength(argcFixed);
-    ASSERT_OK(fninfo->mFFITypes.SetCapacity(argc));
+    if (!fninfo->mFFITypes.resize(argc)) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
 
     JSObject* obj;  // Could reuse obj instead of declaring a second
     JSObject* type; // JSObject*, but readability would suffer.
@@ -4663,11 +4672,11 @@ FunctionType::Call(JSContext* cx,
           !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
           // Relying on ImplicitConvert only for the limited purpose of
           // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, argv[i], type, &values, &strings)) {
+          !ConvertArgument(cx, argv[i], type, &values[i], &strings)) {
         // These functions report their own errors.
         return false;
       }
-      fninfo->mFFITypes.AppendElement(CType::GetFFIType(cx, type));
+      fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
     }
     if (!PrepareCIF(cx, fninfo))
       return false;
@@ -4688,7 +4697,7 @@ FunctionType::Call(JSContext* cx,
   jsrefcount rc = JS_SuspendRequest(cx);
 
   ffi_call(&fninfo->mCIF, FFI_FN(fn), returnValue.mData,
-    reinterpret_cast<void**>(values.Elements()));
+    reinterpret_cast<void**>(values.begin()));
 
   JS_ResumeRequest(cx, rc);
 
@@ -4732,7 +4741,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* v
     return JS_TRUE;
 
   FunctionInfo* fninfo = GetFunctionInfo(cx, obj);
-  PRUint32 len = fninfo->mArgTypes.Length();
+  size_t len = fninfo->mArgTypes.length();
 
   // Prepare a new array.
   jsval* vec;
@@ -4743,7 +4752,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* v
   js::AutoValueRooter argsroot(cx, argTypes);
   JS_ASSERT(len == 0 || vec);
 
-  for (PRUint32 i = 0; i < len; ++i)
+  for (size_t i = 0; i < len; ++i)
     vec[i] = OBJECT_TO_JSVAL(fninfo->mArgTypes[i]);
 
   // Seal and cache it.
@@ -4807,7 +4816,7 @@ CClosure::Create(JSContext* cx,
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
   JS_ASSERT(!fninfo->mIsVariadic);
 
-  nsAutoPtr<ClosureInfo> cinfo(new ClosureInfo());
+  AutoPtr<ClosureInfo> cinfo(new ClosureInfo());
   if (!cinfo) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -4861,7 +4870,7 @@ CClosure::Create(JSContext* cx,
   }
 
   ffi_status status = ffi_prep_closure_loc(cinfo->closure, &fninfo->mCIF,
-    CClosure::ClosureStub, cinfo, code);
+    CClosure::ClosureStub, cinfo.get(), code);
   if (status != FFI_OK) {
     ffi_closure_free(cinfo->closure);
     JS_ReportError(cx, "couldn't create closure - libffi error");
@@ -4951,8 +4960,8 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   js::AutoValueRooter root(cx, cinfo->closureObj);
 
   // Set up an array for converted arguments.
-  nsAutoTArray<jsval, 16> argv;
-  if (!argv.SetLength(cif->nargs)) {
+  Array<jsval, 16> argv;
+  if (!argv.resize(cif->nargs)) {
     JS_ReportOutOfMemory(cx);
     return;
   }
@@ -4960,7 +4969,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   for (PRUint32 i = 0; i < cif->nargs; ++i)
     argv[i] = JSVAL_VOID;
 
-  js::AutoArrayRooter roots(cx, argv.Length(), argv.Elements());
+  js::AutoArrayRooter roots(cx, argv.length(), argv.begin());
   for (PRUint32 i = 0; i < cif->nargs; ++i) {
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.
@@ -4973,7 +4982,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // will find an appropriate object to use.
   jsval rval;
   if (!JS_CallFunctionValue(cx, thisObj, OBJECT_TO_JSVAL(jsfnObj), cif->nargs,
-       argv.Elements(), &rval))
+       argv.begin(), &rval))
     return;
 
   // Convert the result. Note that we pass 'isArgument = false', such that
@@ -5358,10 +5367,13 @@ CData::ToSource(JSContext* cx, uintN argc, jsval *vp)
   // 't.array([n])' for arrays;
   // 'n' for structs, where n = t.name, the struct's name. (We assume this is
   // bound to a variable in the current scope.)
-  nsAutoString source = BuildTypeSource(cx, typeObj, true);
-  source.Append('(');
-  source.Append(BuildDataSource(cx, typeObj, data, false));
-  source.Append(')');
+  AutoString source;
+  BuildTypeSource(cx, typeObj, true, source);
+  AppendString(source, "(");
+  if (!BuildDataSource(cx, typeObj, data, false, source))
+    return JS_FALSE;
+
+  AppendString(source, ")");
 
   JSString* result = NewUCString(cx, source);
   if (!result)
@@ -5447,11 +5459,11 @@ Int64Base::ToString(JSContext* cx,
     }
   }
 
-  nsAutoString intString;
+  AutoString intString;
   if (isUnsigned) {
-    intString = IntegerToString(GetInt(cx, obj), radix);
+    IntegerToString(GetInt(cx, obj), radix, intString);
   } else {
-    intString = IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), radix);
+    IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), radix, intString);
   }
 
   JSString *result = NewUCString(cx, intString);
@@ -5475,15 +5487,15 @@ Int64Base::ToSource(JSContext* cx,
   }
 
   // Return a decimal string suitable for constructing the number.
-  nsAutoString source;
+  AutoString source;
   if (isUnsigned) {
-    source.Append(NS_LITERAL_STRING("ctypes.UInt64(\""));
-    source.Append(IntegerToString(GetInt(cx, obj), 10));
+    AppendString(source, "ctypes.UInt64(\"");
+    IntegerToString(GetInt(cx, obj), 10, source);
   } else {
-    source.Append(NS_LITERAL_STRING("ctypes.Int64(\""));
-    source.Append(IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), 10));
+    AppendString(source, "ctypes.Int64(\"");
+    IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), 10, source);
   }
-  source.Append(NS_LITERAL_STRING("\")"));
+  AppendString(source, "\")");
 
   JSString *result = NewUCString(cx, source);
   if (!result)

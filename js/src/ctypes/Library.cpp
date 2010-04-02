@@ -46,7 +46,7 @@
 #include "nsILocalFile.h"
 #include "nsNativeCharsetUtils.h"
 
-namespace mozilla {
+namespace js {
 namespace ctypes {
 
 /*******************************************************************************
