@@ -773,12 +773,11 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   // XXXbz can oldContext really ever be null?
   if (oldContext) {
-    nsPresContext *presContext = GetPresContext();
     nsRefPtr<nsStyleContext> newContext;
     nsIFrame* providerFrame = nsnull;
     PRBool providerIsChild = PR_FALSE;
     nsIFrame* providerChild = nsnull;
-    aFrame->GetParentStyleContextFrame(presContext, &providerFrame,
+    aFrame->GetParentStyleContextFrame(GetPresContext(), &providerFrame,
                                        &providerIsChild);
     nsStyleContext* newParentContext = nsnull;
     if (providerIsChild) {
@@ -835,7 +834,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       // continuation).
       newContext = prevContinuationContext;
     } else {
-      newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
+      newContext = mStyleSet->ReparentStyleContext(oldContext,
                                                    newParentContext);
     }
 
@@ -848,7 +847,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // nsTransitionManager::ConsiderStartingTransition.
 #if 0
         if (!copyFromContinuation) {
-          TryStartingTransition(presContext, aFrame->GetContent(),
+          TryStartingTransition(GetPresContext(), aFrame->GetContent(),
                                 oldContext, &newContext);
         }
 #endif
@@ -918,8 +917,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
             aFrame->GetAdditionalStyleContext(++contextIndex);
           if (oldExtraContext) {
             nsRefPtr<nsStyleContext> newExtraContext;
-            newExtraContext = mStyleSet->ReParentStyleContext(presContext,
-                                                              oldExtraContext,
+            newExtraContext = mStyleSet->ReparentStyleContext(oldExtraContext,
                                                               newContext);
             if (newExtraContext) {
               if (newExtraContext != oldExtraContext) {
