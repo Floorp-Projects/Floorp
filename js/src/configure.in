@@ -4221,6 +4221,22 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_MALLOC_LIB=$withval)
 
 dnl ========================================================
+dnl = Build jsctypes if it's enabled
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ctypes,
+[  --enable-ctypes         Enable js-ctypes (default=no)],
+    JS_HAS_CTYPES=1,
+    JS_HAS_CTYPES= )
+AC_SUBST(JS_HAS_CTYPES)
+if test "$JS_HAS_CTYPES"; then
+  if test "$_MSC_VER" && test -z $AS; then
+    # Error out if we're on MSVC and MASM is unavailable.
+    AC_MSG_ERROR([No suitable assembler found. An assembler is required to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK.])
+  fi
+  AC_DEFINE(JS_HAS_CTYPES)
+fi
+
+dnl ========================================================
 dnl = Use TraceVis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(tracevis,
@@ -5171,6 +5187,8 @@ MAKEFILES="
   Makefile
   shell/Makefile
   lirasm/Makefile
+  ctypes/Makefile
+  ctypes/tests/Makefile
   jsapi-tests/Makefile
   tests/Makefile
   config/Makefile
@@ -5221,3 +5239,55 @@ fi
 # 'js-config' in Makefile.in.
 AC_MSG_RESULT(invoking make to create js-config script)
 $MAKE js-config
+
+# Build jsctypes if it's enabled.
+if test "$JS_HAS_CTYPES"; then
+  # Run the libffi 'configure' script.
+  ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+  if test "$MOZ_DEBUG"; then
+    ac_configure_args="$ac_configure_args --enable-debug"
+  fi
+  if test "$DSO_PIC_CFLAGS"; then
+    ac_configure_args="$ac_configure_args --with-pic"
+  fi
+  if test "$CROSS_COMPILE"; then
+    case "$target" in
+    *-mingw*)
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    esac
+  fi
+  if test "$_MSC_VER"; then
+    # Use a wrapper script for cl and ml that looks more like gcc.
+    # autotools can't quite handle an MSVC build environment yet.
+    ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
+    case "${target_cpu}" in
+    x86_64)
+      # Need target since MSYS tools into mozilla-build may be 32bit
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args CC=$_topsrcdir/ctypes/libffi/msvcc.sh"
+      ;;
+    esac
+  fi
+  if test "$SOLARIS_SUNPRO_CC"; then
+    # Always use gcc for libffi on Solaris
+    ac_configure_args="$ac_configure_args CC=gcc"
+  fi
+
+  # Use a separate cache file for libffi, since it does things differently
+  # from our configure.
+  old_cache_file=$cache_file
+  cache_file=ctypes/libffi/config.cache
+  old_config_files=$CONFIG_FILES
+  unset CONFIG_FILES
+  AC_OUTPUT_SUBDIRS(ctypes/libffi)
+  cache_file=$old_cache_file
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  CONFIG_FILES=$old_config_files
+fi
+
