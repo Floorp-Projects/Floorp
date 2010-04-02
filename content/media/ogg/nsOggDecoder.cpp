@@ -89,7 +89,6 @@ float nsOggDecoder::GetDuration()
 }
 
 nsOggDecoder::nsOggDecoder() :
-  mMonitor("media.decoder"),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -97,6 +96,7 @@ nsOggDecoder::nsOggDecoder() :
   mRequestedSeekTime(-1.0),
   mDuration(-1),
   mSeekable(PR_TRUE),
+  mMonitor("media.decoder"),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
   mResourceLoaded(PR_FALSE),
