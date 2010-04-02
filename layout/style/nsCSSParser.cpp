@@ -215,7 +215,8 @@ public:
                          nsIURI* aBaseURL,
                          nsIPrincipal* aSheetPrincipal,
                          nsCSSDeclaration* aDeclaration,
-                         PRBool* aChanged);
+                         PRBool* aChanged,
+                         PRBool aIsImportant);
 
   nsresult ParseMediaList(const nsSubstring& aBuffer,
                           nsIURI* aURL, // for error reporting
@@ -1089,7 +1090,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              nsIURI* aBaseURI,
                              nsIPrincipal* aSheetPrincipal,
                              nsCSSDeclaration* aDeclaration,
-                             PRBool* aChanged)
+                             PRBool* aChanged,
+                             PRBool aIsImportant)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   AssertInitialState();
@@ -1117,17 +1119,20 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   mData.AssertInitialState();
   mTempData.AssertInitialState();
 
-  // We know that our new value is not !important, and that we don't need to
-  // force a ValueAppended call for it.  So if there's already a value for this
-  // property in the declaration, and it's not !important, and our prop is not
-  // a shorthand, we parse successfully, then we can just directly copy our
-  // parsed value into the declaration without going through the whole
-  // expand/compress thing.
+  // We know we don't need to force a ValueAppended call for the new
+  // value.  So if we are not processing an !important decl or a
+  // shorthand, there's already a value for this property in the
+  // declaration, it's not !important, and we parse successfully, then
+  // we can just directly copy our parsed value into the declaration
+  // without going through the whole expand/compress thing.
   if (!aDeclaration->EnsureMutable()) {
     NS_WARNING("out of memory");
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  void* valueSlot = aDeclaration->SlotForValue(aPropID);
+  void* valueSlot = nsnull;
+  if (!aIsImportant) {
+    valueSlot = aDeclaration->SlotForValue(aPropID);
+  }
   if (!valueSlot) {
     // Do it the slow way
     aDeclaration->ExpandTo(&mData);
@@ -1139,7 +1144,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
       CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
       mTempData.ClearPropertyBit(aPropID);
     } else {
-      TransferTempData(aDeclaration, aPropID, PR_FALSE, PR_FALSE, aChanged);
+      TransferTempData(aDeclaration, aPropID, aIsImportant, PR_FALSE, aChanged);
     }
   } else {
     if (parsedOK) {
@@ -9229,11 +9234,12 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            nsIURI*             aBaseURI,
                            nsIPrincipal*       aSheetPrincipal,
                            nsCSSDeclaration*   aDeclaration,
-                           PRBool*             aChanged)
+                           PRBool*             aChanged,
+                           PRBool              aIsImportant)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
-                  aSheetPrincipal, aDeclaration, aChanged);
+                  aSheetPrincipal, aDeclaration, aChanged, aIsImportant);
 }
 
 nsresult
