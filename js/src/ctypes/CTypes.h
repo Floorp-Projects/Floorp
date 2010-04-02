@@ -39,14 +39,167 @@
 #ifndef CTYPES_H
 #define CTYPES_H
 
+#include "jscntxt.h"
 #include "jsapi.h"
-#include "nsString.h"
-#include "nsTArray.h"
 #include "prlink.h"
 #include "ffi.h"
 
-namespace mozilla {
+namespace js {
 namespace ctypes {
+
+/*******************************************************************************
+** Utility classes
+*******************************************************************************/
+
+template<class T>
+class OperatorDelete
+{
+public:
+  static void destroy(T* ptr) { delete ptr; }
+};
+
+template<class T>
+class OperatorArrayDelete
+{
+public:
+  static void destroy(T* ptr) { delete[] ptr; }
+};
+
+// Class that takes ownership of a pointer T*, and calls operator delete or
+// operator delete[] upon destruction.
+template<class T, class DeleteTraits = OperatorDelete<T> >
+class AutoPtr {
+private:
+  typedef AutoPtr<T, DeleteTraits> self_type;
+
+public:
+  // An AutoPtr variant that calls operator delete[] instead.
+  typedef AutoPtr<T, OperatorArrayDelete<T> > Array;
+
+  AutoPtr() : mPtr(NULL) { }
+  explicit AutoPtr(T* ptr) : mPtr(ptr) { }
+  ~AutoPtr() { DeleteTraits::destroy(mPtr); }
+
+  T*   operator->()         { return mPtr; }
+  bool operator!()          { return mPtr == NULL; }
+  T&   operator[](size_t i) { return *(mPtr + i); }
+  // Note: we cannot safely provide an 'operator T*()', since this would allow
+  // the compiler to perform implicit conversion from one AutoPtr to another
+  // via the constructor AutoPtr(T*).
+
+  T*   get()         { return mPtr; }
+  void set(T* other) { JS_ASSERT(mPtr == NULL); mPtr = other; }
+  T*   forget()      { T* result = mPtr; mPtr = NULL; return result; }
+
+  self_type& operator=(T* rhs) { mPtr = rhs; return *this; }
+
+private:
+  // Do not allow copy construction or assignment from another AutoPtr.
+  template<class U> AutoPtr(AutoPtr<T, U>&);
+  template<class U> self_type& operator=(AutoPtr<T, U>& rhs);
+
+  T* mPtr;
+};
+
+// Container class for Vector, using SystemAllocPolicy.
+template<class T, size_t N = 0>
+class Array : public Vector<T, N, SystemAllocPolicy>
+{
+};
+
+// String and AutoString classes, based on Vector.
+typedef Vector<jschar,  0, SystemAllocPolicy> String;
+typedef Vector<jschar, 64, SystemAllocPolicy> AutoString;
+
+// Convenience functions to append, insert, and compare Strings.
+template <class T, size_t N, class AP, size_t ArrayLength>
+void
+AppendString(Vector<T, N, AP> &v, const char (&array)[ArrayLength])
+{
+  // Don't include the trailing '\0'.
+  size_t alen = ArrayLength - 1;
+  size_t vlen = v.length();
+  if (!v.resize(vlen + alen))
+    return;
+
+  for (size_t i = 0; i < alen; ++i)
+    v[i + vlen] = array[i];
+}
+
+template <class T, size_t N, size_t M, class AP>
+void
+AppendString(Vector<T, N, AP> &v, Vector<T, M, AP> &w)
+{
+  v.append(w.begin(), w.length());
+}
+
+template <size_t N, class AP>
+void
+AppendString(Vector<jschar, N, AP> &v, JSString* str)
+{
+  JS_ASSERT(str);
+  const jschar* chars = JS_GetStringChars(str);
+  size_t length = JS_GetStringLength(str);
+  v.append(chars, length);
+}
+
+template <class T, size_t N, class AP, size_t ArrayLength>
+void
+PrependString(Vector<T, N, AP> &v, const char (&array)[ArrayLength])
+{
+  // Don't include the trailing '\0'.
+  size_t alen = ArrayLength - 1;
+  size_t vlen = v.length();
+  if (!v.resize(vlen + alen))
+    return;
+
+  // Move vector data forward. This is safe since we've already resized.
+  memmove(v.begin() + alen, v.begin(), vlen * sizeof(T));
+
+  // Copy data to insert.
+  for (size_t i = 0; i < alen; ++i)
+    v[i] = array[i];
+}
+
+template <size_t N, class AP>
+void
+PrependString(Vector<jschar, N, AP> &v, JSString* str)
+{
+  JS_ASSERT(str);
+  size_t vlen = v.length();
+  size_t alen = JS_GetStringLength(str);
+  if (!v.resize(vlen + alen))
+    return;
+
+  // Move vector data forward. This is safe since we've already resized.
+  memmove(v.begin() + alen, v.begin(), vlen * sizeof(jschar));
+
+  // Copy data to insert.
+  memcpy(v.begin(), JS_GetStringChars(str), alen * sizeof(jschar));
+}
+
+template <class T, size_t N, size_t M, class AP>
+bool
+StringsEqual(Vector<T, N, AP> &v, Vector<T, M, AP> &w)
+{
+  if (v.length() != w.length())
+    return false;
+
+  return memcmp(v.begin(), w.begin(), v.length() * sizeof(T)) == 0;
+}
+
+template <size_t N, class AP>
+bool
+StringsEqual(Vector<jschar, N, AP> &v, JSString* str)
+{
+  JS_ASSERT(str);
+  size_t length = JS_GetStringLength(str);
+  if (v.length() != length)
+    return false;
+
+  const jschar* chars = JS_GetStringChars(str);
+  return memcmp(v.begin(), chars, length * sizeof(jschar)) == 0;
+}
 
 /*******************************************************************************
 ** Function and struct API definitions
@@ -89,7 +242,14 @@ enum TypeCode {
 
 struct FieldInfo
 {
-  nsString  mName;
+  // We need to provide a copy constructor because of Vector.
+  FieldInfo() {}
+  FieldInfo(const FieldInfo& other)
+  {
+    JS_NOT_REACHED("shouldn't be copy constructing FieldInfo");
+  }
+
+  String    mName;
   JSObject* mType;
   size_t    mOffset;
 };
@@ -122,12 +282,12 @@ struct FunctionInfo
 
   // A fixed array of known parameter types, excluding any variadic
   // parameters (if mIsVariadic).
-  nsTArray<JSObject*> mArgTypes; 
+  Array<JSObject*> mArgTypes; 
 
   // A variable array of ffi_type*s corresponding to both known parameter
   // types and dynamic (variadic) parameter types. Longer than mArgTypes
   // only if mIsVariadic.
-  nsTArray<ffi_type*> mFFITypes;
+  Array<ffi_type*> mFFITypes;
 
   // Flag indicating whether the function behaves like a C function with
   // ... as the final formal parameter.
@@ -275,7 +435,7 @@ namespace ArrayType {
 }
 
 namespace StructType {
-  nsTArray<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
+  Array<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
   FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
 }
 
