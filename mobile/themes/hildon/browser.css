@@ -939,7 +939,7 @@ pageaction .pageaction-title {
 
 pageaction .pageaction-desc {
   font-size: 14px !important;
-  color: darkgray;
+  color: #414141;
 }
 
 pageaction:hover:active  .pageaction-desc {
