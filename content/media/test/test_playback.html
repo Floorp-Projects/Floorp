@@ -30,7 +30,9 @@ function startTests() {
       continue;
 
     v.src = test.name;
+    v.name = test.name;
     var check = function(test, v) { return function() {
+      is(test.name, v.name, "Name should match test.name #1");
       checkMetadata(test.name, v, test);
     }}(test, v);
     var noLoad = function(test, v) { return function() {
@@ -39,8 +41,9 @@ function startTests() {
     var checkEnded = function(test, v) { return function() {
       if (test.duration) {
         ok(Math.abs(v.currentTime - test.duration) < 0.1,
-           test.name + " current time at end: " + v.currentTime);
+           test.name + " current time at end: " + v.currentTime + " should be: " + test.duration);
       }
+      is(test.name, v.name, "Name should match test.name #2");
       is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
       ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
       ok(v.ended, test.name + " checking playback has ended");
@@ -50,6 +53,7 @@ function startTests() {
       }
     }}(test, v);
     var checkSuspended = function(test, v) { return function() {
+      is(test.name, v.name, "Name should match test.name #3");
       if (v.seenSuspend)
         return;
 
@@ -61,12 +65,13 @@ function startTests() {
       }
     }}(test, v);
     v.prevTime = 0;
-    var timeUpdate = function(v) { return function() {
+    var timeUpdate = function(test, v) { return function() {
+      is(test.name, v.name, "Name should match test.name #4");
       ok(v.prevTime <= v.currentTime,
          test.name + " time should run forwards: p=" +
          v.prevTime + " c=" + v.currentTime);
       v.prevTime = v.currentTime;
-    }}(v);
+    }}(test, v);
     v.addEventListener("load", noLoad, false);
     v.addEventListener("loadedmetadata", check, false);
     v.addEventListener("timeupdate", timeUpdate, false);

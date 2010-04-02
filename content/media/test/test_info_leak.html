@@ -158,7 +158,7 @@ function checkState() {
           "Ready state of " + gMedia.readyState + " was leaked");
   test_is(gMedia.seeking, false, "Seeking leaked");
   test_is(gMedia.currentTime, 0, "Leaked currentTime");
-  test_is(gMedia.duration, 0, "Leaked duration");
+  test_ok(isNaN(gMedia.duration), "Leaked duration");
   test_is(gMedia.paused, true, "Paused leaked");
   test_is(gMedia.ended, false, "Ended leaked");
   test_is(gMedia.autoplay, false, "Autoplay leaked");
