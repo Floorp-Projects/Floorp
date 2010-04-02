@@ -33,6 +33,7 @@ window.Group = function(listOfEls, options) {
   this._children = []; // an array of Items
   this._container = null;
   this._padding = 30;
+  this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
 
   var self = this;
 
@@ -110,7 +111,7 @@ window.Group = function(listOfEls, options) {
 };
 
 // ----------
-window.Group.prototype = $.extend(new Item(), {  
+window.Group.prototype = $.extend(new Item(), new Subscribable(), {  
   // ----------  
   _getBoundingBox: function(els) {
     var el;
@@ -158,7 +159,14 @@ window.Group.prototype = $.extend(new Item(), {
   // ----------  
   setBounds: function(rect, immediately) {
     this.setPosition(rect.left, rect.top, immediately);
-    this.setSize(rect.width, rect.height, immediately);
+    this.setSize(rect.width, rect.height, immediately, {dontArrange: true});
+
+    var $titlebar = $('.titlebar', this._container);
+    var titleHeight = $titlebar.height();
+    var box = new Rect(rect);
+    box.top += titleHeight;
+    box.height -= titleHeight;
+    this.arrange({animate: !immediately, bounds: box});
   },
   
   // ----------  
@@ -176,11 +184,14 @@ window.Group.prototype = $.extend(new Item(), {
     if(immediately)
       $(this._container).css(options);
     else
-      $(this._container).animate(options);
+      $(this._container).animate(options).dequeue();
   },
 
   // ----------  
-  setSize: function(width, height, immediately) {
+  setSize: function(width, height, immediately, options) {
+    if(typeof(options) == 'undefined')
+      options = {};
+      
     var $titlebar = $('.titlebar', this._container);
     var titleHeight = $titlebar.height();
     
@@ -190,11 +201,18 @@ window.Group.prototype = $.extend(new Item(), {
       $(this._container).css(containerOptions);
       $titlebar.css(titleOptions);
     } else {
-      $(this._container).animate(containerOptions);
-      $titlebar.animate(titleOptions);
+      $(this._container).animate(containerOptions).dequeue();
+      $titlebar.animate(titleOptions).dequeue();
     }
-      
-    this.arrange({animate: !immediately});
+    
+    if(!options.dontArrange) {
+      //TODO sort out the bounds and titlebar stuff for real 
+      var box = this.getBounds();
+      box.width = width;
+      box.top += titleHeight;
+      box.height = height - titleHeight;
+      this.arrange({animate: !immediately, bounds: box});
+    }
   },
 
   // ----------  
@@ -203,16 +221,8 @@ window.Group.prototype = $.extend(new Item(), {
     $.each(toClose, function(index, child) {
       child.close();
     });
-  },
-  
-  // ----------
-  addOnClose: function(referenceObject, callback) {
-    Utils.error('Group.addOnClose not implemented');
-  },
-
-  // ----------
-  removeOnClose: function(referenceObject) {
-    Utils.error('Group.removeOnClose not implemented');
+    
+    this._sendOnClose();
   },
   
   // ----------  
@@ -299,7 +309,7 @@ window.Group.prototype = $.extend(new Item(), {
       this._children.splice(index, 1); 
 
     $el.data("group", null);
-    scaleTab( $el, 160/$el.width());
+    item.setSize(item.defaultSize.x, item.defaultSize.y);
     $el.droppable("enable");    
     item.removeOnClose(this);
     
@@ -323,13 +333,18 @@ window.Group.prototype = $.extend(new Item(), {
   },
     
   // ----------  
-  arrange: function(options){
-    if( options && options.animate == false ) animate = false;
-    else animate = true;
+  arrange: function(options) {
+    if( options && options.animate == false ) 
+      animate = false;
+    else 
+      animate = true;
+
+    if(typeof(options) == 'undefined')
+      options = {};
     
     /*if( this._children.length < 2 ) return;*/
     if( this._rectToBe ) var bb = this._rectToBe;
-    else var bb = this._getContainerBox();
+    else var bb = (options.bounds ? options.bounds : this._getContainerBox());
 
     var count = this._children.length;
     var bbAspect = bb.width/bb.height;
@@ -367,14 +382,12 @@ window.Group.prototype = $.extend(new Item(), {
     
     var x = pad; var y=pad; var numInCol = 0;
     for each(var item in this._children){
-      var sizeOptions = {width:tabW, height:tabH, top:y+bb.top, left:x+bb.left};
-      
-      if( animate ) $(item.getContainer()).animate(sizeOptions).dequeue();
-      else $(item.getContainer()).css(sizeOptions).dequeue();
+      item.setBounds(new Rect(x + bb.left, y + bb.top, tabW, tabH), !animate);
       
       x += tabW + pad;
       numInCol += 1;
-      if( numInCol >= best.numCols ) [x, numInCol, y] = [pad, 0, y+tabH+pad];
+      if( numInCol >= best.numCols ) 
+        [x, numInCol, y] = [pad, 0, y+tabH+pad];
     }
   },
   
@@ -384,6 +397,7 @@ window.Group.prototype = $.extend(new Item(), {
     
     $(container).draggable({
       start: function(){
+        $dragged = $(this);
         $(container).data("origPosition", $(container).position());
         $.each(self._children, function(index, child) {
           child.dragData = {startBounds: child.getBounds()};
@@ -398,10 +412,17 @@ window.Group.prototype = $.extend(new Item(), {
             child.dragData.startBounds.top + dY, 
             true);
         });
+
+/*         $(this).css({zIndex: zIndex}); */
+/*         zIndex += 1; */
       }, 
       stop: function() {
-        self.pushAway();
-      }
+        if(!$dragged.hasClass('willGroup') && !$dragged.data('group'))
+          Items.item(this).pushAway();
+
+        $dragged = null; 
+      },
+/*       zIndex: 999 */
     });
     
     $(container).droppable({
@@ -418,7 +439,7 @@ window.Group.prototype = $.extend(new Item(), {
         $dragged.removeClass("willGroup");
         self.add( $dragged, {left:event.pageX, top:event.pageY} )
       },
-      accept: ".tab",
+      accept: ".tab, .group",
     });
         
     $(container).resizable({
@@ -567,20 +588,8 @@ window.Groups = {
 };
 
 // ##########
-function scaleTab( el, factor ){  
-  var $el = $(el);
-
-  $el.animate({
-    width: $el.width()*factor,
-    height: $el.height()*factor,
-    fontSize: parseInt($el.css("fontSize"))*factor,
-  },250).dequeue();
-}
-
-
 $(".tab").data('isDragging', false)
   .draggable(window.Groups.dragOptions)
   .droppable(window.Groups.dropOptions);
-
 
 })();

@@ -104,7 +104,7 @@ TabCanvas.prototype = {
   }
 }
 
-// ----------
+// ##########
 function Mirror(tab, manager) {
   this.tab = tab;
   this.manager = manager;
@@ -124,7 +124,6 @@ function Mirror(tab, manager) {
   this.favEl = $('.fav', div).get(0);
   this.nameEl = $('.name', div).get(0);
   this.canvasEl = $('.thumb', div).get(0);
-  this.onCloseSubscribers = [];
       
   var doc = this.tab.contentDocument;
   if( !_isIframe(doc) ) {
@@ -134,52 +133,29 @@ function Mirror(tab, manager) {
   }
 }
 
-Mirror.prototype.triggerPaint = function() {
-	var date = new Date();
-	this.needsPaint = date.getTime();
-};
-
-Mirror.prototype.forceCanvasSize = function(w, h) {
-  this.canvasSizeForced = true;
-  var $canvas = $(this.canvasEl);
-  $canvas.attr('width', w);
-  $canvas.attr('height', h);
-  this.tabCanvas.paint();
-};
-
-Mirror.prototype.unforceCanvasSize = function() {
-  this.canvasSizeForced = false;
-};
-
-Mirror.prototype.addOnClose = function(referenceElement, callback) {
-  var existing = jQuery.grep(this.onCloseSubscribers, function(element) {
-    return element.referenceElement == referenceElement;
-  });
+Mirror.prototype = $.extend(new Subscribable(), {  
+  // ----------
+  triggerPaint: function() {
+  	var date = new Date();
+  	this.needsPaint = date.getTime();
+  },
   
-  if(existing.size) {
-    Utils.assert('should only ever be one', existing.size == 1);
-    existing[0].callback = callback;
-  } else {  
-    this.onCloseSubscribers.push({
-      referenceElement: referenceElement, 
-      callback: callback
-    });
+  // ----------
+  forceCanvasSize: function(w, h) {
+    this.canvasSizeForced = true;
+    var $canvas = $(this.canvasEl);
+    $canvas.attr('width', w);
+    $canvas.attr('height', h);
+    this.tabCanvas.paint();
+  },
+  
+  // ----------
+  unforceCanvasSize: function() {
+    this.canvasSizeForced = false;
   }
-};
+});
 
-Mirror.prototype.removeOnClose = function(referenceElement) {
-  this.onCloseSubscribers = jQuery.grep(this.onCloseSubscribers, function(element) {
-    return element.referenceElement == referenceElement;
-  }, true);
-};
-
-Mirror.prototype._sendOnClose = function() {
-  jQuery.each(this.onCloseSubscribers, function(index, object) { 
-    object.callback(this);
-  });
-};
-
-// ----------
+// ##########
 var TabMirror = function( ){ this.init() }
 TabMirror.prototype = {
   init: function(){

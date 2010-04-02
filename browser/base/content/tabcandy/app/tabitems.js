@@ -3,6 +3,8 @@ window.TabItem = function(container, tab) {
   this.container = container;
   this.tab = tab;
   
+  this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
+  
   $(this.container).data('item', this);
 };
 
@@ -19,32 +21,22 @@ window.TabItem.prototype = $.extend(new Item(), {
   
   // ----------  
   setBounds: function(rect, immediately) {
-    this.setPosition(rect.left, rect.top, immediately);
-    this.setSize(rect.width, rect.height, immediately);
+    var css = $.extend(this._getSizeCSS(rect.width, rect.height), {
+      left: rect.left,
+      top: rect.top,
+    });
+    
+    this._change(css, immediately);
   },
   
   // ----------
   setPosition: function(left, top, immediately) {
-    if(immediately) 
-      $(this.container).css({left: left, top: top});
-    else {
-      TabMirror.pausePainting();
-      $(this.container).animate({left: left, top: top}, {complete: function() {
-        TabMirror.resumePainting();
-      }});
-    }
+    this._change({left: left, top: top}, immediately);
   },
 
   // ----------  
   setSize: function(width, height, immediately) {
-    if(immediately)
-      $(this.container).css({width: width, height: height});
-    else {
-      TabMirror.pausePainting();
-      $(this.container).animate({width: width, height: height}, {complete: function() {
-        TabMirror.resumePainting();
-      }});
-    }
+    this._change(this._getSizeCSS(width, height), immediately);
   },
 
   // ----------
@@ -60,17 +52,45 @@ window.TabItem.prototype = $.extend(new Item(), {
   // ----------
   removeOnClose: function(referenceObject) {
     this.tab.mirror.removeOnClose(referenceObject);      
+  },
+  
+  // ----------  
+  _getSizeCSS: function(width, height) {
+    var scale = width / TabItems.tabWidth;
+    
+    return {
+      width: width,
+      height: height,
+      fontSize: TabItems.fontSize * scale
+    };
+  },
+  
+  // ----------  
+  _change: function(css, immediately) {
+    if(immediately) 
+      $(this.container).css(css);
+    else {
+      TabMirror.pausePainting();
+      $(this.container).animate(css, {complete: function() {
+        TabMirror.resumePainting();
+      }}).dequeue();
+    }
   }
 });
 
 // ##########
 window.TabItems = {
+  tabWidth: 160,
+  tabHeight: 137, 
+  fontSize: 9,
+
   init: function() {
     var self = this;
     
     function mod($div){
       Utils.log('mod');
       if(window.Groups) {        
+        $div.data('isDragging', false);
         $div.draggable(window.Groups.dragOptions);
         $div.droppable(window.Groups.dropOptions);
       }
