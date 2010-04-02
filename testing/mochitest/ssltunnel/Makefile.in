@@ -43,10 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# This isn't XPCOM code, but it wants to use STL, so disable the STL
-# wrappers
-STL_FLAGS =
-
 PROGRAM = ssltunnel$(BIN_SUFFIX)
 
 CPPSRCS = ssltunnel.cpp
