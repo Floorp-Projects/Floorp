@@ -368,13 +368,13 @@ void nsOggPlayStateMachine::AudioLoop()
           mAudioStream->Write(sound->mAudioData,
                               sound->AudioDataLength(),
                               PR_TRUE);
+          mAudioEndTime = sound->mTime + sound->mDuration;
         } else {
           mReader->mAudioQueue.PushFront(sound);
           sound.forget();
         }
       }
     }
-    mAudioEndTime = sound->mTime + sound->mDuration;
     sound = nsnull;
 
     if (mReader->mAudioQueue.AtEndOfStream()) {
