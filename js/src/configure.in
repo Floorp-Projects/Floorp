@@ -207,6 +207,72 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT= )
 
 dnl ========================================================
+dnl = Android uses a very custom (hacky) toolchain; we need to do this
+dnl = here, so that the compiler checks can succeed
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(android-ndk,
+[  --with-android-ndk=DIR
+                           location where the Android NDK can be found],
+    android_ndk=$withval)
+
+MOZ_ARG_WITH_STRING(android-toolchain,
+[  --with-android-toolchain=DIR
+                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+    android_toolchain=$withval)
+
+MOZ_ARG_WITH_STRING(android-platform,
+[  --with-android-platform=DIR
+                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+    android_platform=$withval)
+
+if test "$target" = "arm-android-eabi" ; then
+    if test -z "$android_ndk" ; then
+        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
+    fi
+
+    if test -z "$android_toolchain" ; then
+        android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+    fi
+
+    if test -z "$android_platform" ; then
+        android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+    fi
+
+    dnl set up compilers
+    AS="$android_toolchain"/bin/arm-eabi-as
+    CC="$android_toolchain"/bin/arm-eabi-gcc
+    CXX="$android_toolchain"/bin/arm-eabi-g++
+    CPP="$android_toolchain"/bin/arm-eabi-cpp
+    LD="$android_toolchain"/bin/arm-eabi-ld
+    AR="$android_toolchain"/bin/arm-eabi-ar
+    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
+    STRIP="$android_toolchain"/bin/arm-eabi-strip
+
+    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
+    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+    AC_DEFINE(FORCE_LITTLE_ENDIAN)
+fi
+
+dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 
@@ -1204,9 +1270,7 @@ x86_64 | ia64)
     ;;
 
 arm)
-    if test "$OS_ARCH" = "WINCE"; then
-        CPU_ARCH="$OS_TEST"
-    fi
+    CPU_ARCH=arm
     ;;
 esac
 
@@ -1248,8 +1312,8 @@ if test "$GNU_CC"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, or arm since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
@@ -1311,8 +1375,8 @@ if test "$GNU_CXX"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, or arm since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
@@ -2529,24 +2593,24 @@ sparc-*)
     ;;
 esac
 
-case "$target_os" in
-linux*)
+case "$target" in
+*-linux*|*-android-eabi)
     AC_DEFINE(AVMPLUS_UNIX)
     AC_DEFINE(AVMPLUS_LINUX)
     ;;
-darwin*)
+*-darwin*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-solaris*)
+*-solaris*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-freebsd*|kfreebsd*)
+*-freebsd*|*-kfreebsd*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-*cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
+*-cygwin*|*-mingw*|*-mks*|*-msvc*|*-wince|*-winmo)
     AC_DEFINE(AVMPLUS_WIN32)
     ;;
-*os2*)
+*-os2*)
     AC_DEFINE(AVMPLUS_OS2)
     ;;
 *)
@@ -3476,8 +3540,29 @@ dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
 
+ARM_ABI_PREFIX=
 HAVE_GCC3_ABI=
 if test "$GNU_CC"; then
+  if test "$CPU_ARCH" = "arm" ; then
+    AC_CACHE_CHECK(for ARM EABI,
+        ac_cv_gcc_arm_eabi,
+        [AC_TRY_COMPILE([],
+                        [
+#if defined(__ARM_EABI__)
+  return 0;
+#else
+#error Not ARM EABI.
+#endif
+                        ],
+                        ac_cv_gcc_arm_eabi="yes",
+                        ac_cv_gcc_arm_eabi="no")])
+    if test "$ac_cv_gcc_arm_eabi" = "yes"; then
+        ARM_ABI_PREFIX=eabi-
+    else
+        ARM_ABI_PREFIX=oabi-
+    fi
+  fi
+
   AC_CACHE_CHECK(for gcc 3.0 ABI,
       ac_cv_gcc_three_abi,
       [AC_TRY_COMPILE([],
@@ -3491,10 +3576,10 @@ if test "$GNU_CC"; then
                       ac_cv_gcc_three_abi="yes",
                       ac_cv_gcc_three_abi="no")])
   if test "$ac_cv_gcc_three_abi" = "yes"; then
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc3}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
       HAVE_GCC3_ABI=1
   else
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc2}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc2}"
   fi
 fi
 AC_SUBST(HAVE_GCC3_ABI)
@@ -5071,6 +5156,7 @@ dnl JavaScript shell
 dnl ========================================================
 
 AC_HAVE_FUNCS(setlocale)
+AC_HAVE_FUNCS(localeconv)
 
 dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
