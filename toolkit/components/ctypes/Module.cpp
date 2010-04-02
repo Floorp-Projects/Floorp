@@ -38,8 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Module.h"
-#include "Library.h"
-#include "CTypes.h"
+#include "jsapi.h"
 #include "nsIGenericFactory.h"
 #include "nsMemory.h"
 
@@ -70,29 +69,6 @@ Module::~Module()
 #define XPC_MAP_FLAGS nsIXPCScriptable::WANT_CALL
 #include "xpc_map_end.h"
 
-NS_IMETHODIMP
-Module::Call(nsIXPConnectWrappedNative* wrapper,
-             JSContext* cx,
-             JSObject* obj,
-             PRUint32 argc,
-             jsval* argv,
-             jsval* vp,
-             PRBool* _retval)
-{
-  JSObject* global = JS_GetGlobalObject(cx);
-  *_retval = Init(cx, global);
-  return NS_OK;
-}
-
-#define CTYPESFN_FLAGS \
-  (JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
-
-static JSFunctionSpec sModuleFunctions[] = {
-  JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
-  JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
-  JS_FS_END
-};
-
 static JSBool
 SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
 {
@@ -109,39 +85,37 @@ SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
          JS_SealObject(cx, prototype, JS_FALSE);
 }
 
-JSBool
-Module::Init(JSContext* cx, JSObject* aGlobal)
+static JSBool
+InitAndSealCTypesClass(JSContext* cx, JSObject* global)
 {
-  // attach ctypes property to global object
-  JSObject* ctypes = JS_NewObject(cx, NULL, NULL, NULL);
-  if (!ctypes)
+  // Init the ctypes object.
+  if (!JS_InitCTypesClass(cx, global))
     return false;
 
-  if (!JS_DefineProperty(cx, aGlobal, "ctypes", OBJECT_TO_JSVAL(ctypes),
-         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return false;
-
-  if (!InitTypeClasses(cx, ctypes))
-    return false;
-
-  // attach API functions
-  if (!JS_DefineFunctions(cx, ctypes, sModuleFunctions))
-    return false;
-
-  // Seal the ctypes object, to prevent modification. (This single object
-  // instance is shared amongst everyone who imports the ctypes module.)
-  if (!JS_SealObject(cx, ctypes, JS_FALSE))
-    return false;
-
-  // Seal up Object, Function, and Array and their prototypes.
-  if (!SealObjectAndPrototype(cx, aGlobal, "Object") ||
-      !SealObjectAndPrototype(cx, aGlobal, "Function") ||
-      !SealObjectAndPrototype(cx, aGlobal, "Array"))
+  // Seal up Object, Function, and Array and their prototypes.  (This single
+  // object instance is shared amongst everyone who imports the ctypes module.)
+  if (!SealObjectAndPrototype(cx, global, "Object") ||
+      !SealObjectAndPrototype(cx, global, "Function") ||
+      !SealObjectAndPrototype(cx, global, "Array"))
     return false;
 
   // Finally, seal the global object, for good measure. (But not recursively;
   // this breaks things.)
-  return JS_SealObject(cx, aGlobal, JS_FALSE);
+  return JS_SealObject(cx, global, JS_FALSE);
+}
+
+NS_IMETHODIMP
+Module::Call(nsIXPConnectWrappedNative* wrapper,
+             JSContext* cx,
+             JSObject* obj,
+             PRUint32 argc,
+             jsval* argv,
+             jsval* vp,
+             PRBool* _retval)
+{
+  JSObject* global = JS_GetGlobalObject(cx);
+  *_retval = InitAndSealCTypesClass(cx, global);
+  return NS_OK;
 }
 
 }
