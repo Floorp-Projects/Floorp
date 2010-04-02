@@ -337,6 +337,7 @@ ValueFromStringHelper(nsCSSProperty aPropID,
                       nsIContent* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
+                      PRBool aUseSVGMode,
                       nsStyleAnimation::Value& aStyleAnimValue)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
@@ -351,8 +352,8 @@ ValueFromStringHelper(nsCSSProperty aPropID,
     subStringBegin = (PRUint32)absValuePos; // Start parsing after '-' sign
   }
   nsDependentSubstring subString(aString, subStringBegin);
-  if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement,
-                                      subString, aStyleAnimValue)) {
+  if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
+                                      aUseSVGMode, aStyleAnimValue)) {
     return PR_FALSE;
   }
   if (isNegative) {
@@ -375,6 +376,7 @@ void
 nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     nsIContent* aTargetElement,
                                     const nsAString& aString,
+                                    PRBool aUseSVGMode,
                                     nsSMILValue& aValue)
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
@@ -386,7 +388,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 
   nsStyleAnimation::Value parsedValue;
   if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
-                            aString, parsedValue)) {
+                            aString, aUseSVGMode, parsedValue)) {
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue, presContext);
     if (!aValue.mU.mPtr) {
