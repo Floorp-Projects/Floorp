@@ -113,6 +113,14 @@ window.Rect.prototype = {
     var newRect = new Rect(newLeft, newTop, newWidth, newHeight); 
   
     return newRect;
+  },
+  
+  // ----------
+  copy: function(a) {
+    this.left = a.left;
+    this.top = a.top;
+    this.width = a.width;
+    this.height = a.height;
   }
 };
 
