@@ -1399,7 +1399,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 534526-1b.html 534526-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
-== 534919-1.html 534919-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 534919-1.html 534919-1-ref.html # fails on 10.6, bug 554188
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
 == 537471-1.html 537471-1-ref.html
