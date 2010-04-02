@@ -65,6 +65,11 @@ ifdef WINCE_WINDOWS_MOBILE
 CPPSRCS         += WinMobileLocationProvider.cpp
 endif
 
+ifdef  MOZ_PLATFORM_MAEMO
+CPPSRCS         += MaemoLocationProvider.cpp
+LOCAL_INCLUDES	+= $(MOZ_PLATFORM_MAEMO_CFLAGS)
+endif
+
 EXTRA_COMPONENTS = \
                  NetworkGeolocationProvider.js \
                  GPSDGeolocationProvider.js \

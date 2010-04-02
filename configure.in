@@ -6595,6 +6595,13 @@ if test $MOZ_PLATFORM_MAEMO; then
       if test -z "$_LIB_FOUND"; then
          AC_MSG_ERROR([Hildon FM-2 is required when building for Maemo])
       fi
+
+      PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
+      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
+      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
+      if test -z "$_LIB_FOUND"; then
+         AC_MSG_ERROR([liblocation is required when building for Maemo])
+      fi
    fi
 
    AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
