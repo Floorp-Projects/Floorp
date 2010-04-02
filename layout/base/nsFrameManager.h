@@ -148,7 +148,7 @@ public:
    *
    * @param aFrame the root of the subtree to reparent.  Must not be null.
    */
-  NS_HIDDEN_(nsresult) ReParentStyleContext(nsIFrame* aFrame);
+  NS_HIDDEN_(nsresult) ReparentStyleContext(nsIFrame* aFrame);
 
   /*
    * Re-resolve the style contexts for a frame tree, building

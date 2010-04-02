@@ -393,7 +393,7 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
   NS_PRECONDITION(aOldStyleContext->GetPseudo() ==
                       aNewStyleContext->GetPseudo(),
                   "pseudo type mismatch");
-  // If we were called from ReParentStyleContext, this assertion would
+  // If we were called from ReparentStyleContext, this assertion would
   // actually fire.  If we need to be called from there, we can probably
   // just remove it; the condition probably isn't critical, although
   // it's worth thinking about some more.
