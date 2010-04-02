@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Chris Double <chris.double@double.co.nz>
+ *  Chris Pearce <chris@pearce.org.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,55 +37,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /*
-Each video element has two threads. The first thread, called the Decode thread,
-owns the resources for downloading and reading the video file. It goes through the
-file, prcessing any decoded theora and vorbis data. It handles the sending of the
-audio data to the sound device and the presentation of the video data at the correct
-frame rate.
+Each video element has three threads. 
 
-The second thread is the step decode thread. It uses OggPlay to decode the video and
-audio data. It indirectly uses an nsMediaStream to do the file reading and seeking via 
-Oggplay. 
+  1) The state machine thread owns the resources for downloading and reading
+     the media file. It controls the lifetime of the other two threads
+     and renders the video data at the correct time during playback.
 
-All file reads and seeks must occur on these two threads. Synchronisation is done via
-liboggplay internal mutexes to ensure that access to the liboggplay structures is
-done correctly in the presence of the threads.
+  2) The Audio thread writes the decoded audio data to the audio
+     hardware.  This is done in a seperate thread to ensure that the
+     audio hardware gets a constant stream of data without
+     interruption due to decoding or diplay. At some point
+     libsydneyaudio will be refactored to have a callback interface
+     where it asks for data and an extra thread will no longer be
+     needed.
 
-The step decode thread is created and destroyed in the decode thread. When decoding
-needs to be done it is created and event dispatched to it to start the decode loop.
-This event exits when decoding is completed or no longer required (during seeking
-or shutdown).
+  3) The decode thread. This thread reads from the media stream and decodes
+     the Theora and Vorbis data. It places the decoded data in a queue 
+     for the other threads to pull from.
+
+All file reads and seeks must occur on either the state machine thread
+or the decode thread. Synchronisation is done via a monitor owned by
+nsOggDecoder.
+
+The decode thread and the audio thread are created and destroyed in the
+state machine thread. When playback needs to occur they are created and
+events dispatched to them to start them. These events exit when
+decoding is completed or no longer required (during seeking or
+shutdown).
     
-When the decode thread is created an event is dispatched to it. The event
-runs for the lifetime of the playback of the resource. The decode thread
-synchronises with the main thread via a single monitor held by the 
-nsOggDecoder object.
+All threads have one event that is dispatched to it and that event
+runs for the lifetime of the playback of the resource. State shared
+between them is synchronised with the main thread via a monitor
+held by the nsOggDecoder object. The decode thread also has its own
+monitor to ensure that its internal state is independent of the other
+threads, and to ensure that it's not hogging the monitor while decoding.
 
-The event contains a Run method which consists of an infinite loop
-that checks the state that the state machine is in and processes
-operations on that state.
+The events consist of a Run method which is an infinite loop that
+perform the threads operation and checks the state that the state
+machine is in and processes operations on that state.
 
-The nsOggDecodeStateMachine class is the event that gets dispatched to
-the decode thread. It has the following states:
+The nsOggPlayStateMachine class is the event that gets dispatched to
+the state machine thread. It has the following states:
 
 DECODING_METADATA
   The Ogg headers are being loaded, and things like framerate, etc are
   being determined, and the first frame of audio/video data is being decoded.
 DECODING
-  Video/Audio frames are being decoded.
+  The decode and audio threads are started and video frames displayed at
+  the required time. 
 SEEKING
   A seek operation is in progress.
 BUFFERING
   Decoding is paused while data is buffered for smooth playback.
 COMPLETED
-  The resource has completed decoding. 
+  The resource has completed decoding, but not finished playback. 
 SHUTDOWN
   The decoder object is about to be destroyed.
 
 The following result in state transitions.
 
 Shutdown()
-  Clean up any resources the nsOggDecodeStateMachine owns.
+  Clean up any resources the nsOggPlayStateMachine owns.
 Decode()
   Start decoding video frames.
 Buffer
@@ -163,7 +176,7 @@ player SHUTDOWN  decoder SHUTDOWN
 The general sequence of events with these objects is:
 
 1) The video element calls Load on nsMediaDecoder. This creates the
-   decode thread and starts the channel for downloading the file. It
+   state machine thread and starts the channel for downloading the file. It
    instantiates and starts the Decode state machine. The high level
    LOADING state is entered, which results in the decode state machine
    to start decoding metadata. These are the headers that give the
@@ -188,66 +201,52 @@ The general sequence of events with these objects is:
    video, if the correct frame time comes around and the decoder
    play state is PLAYING.
    
-a/v synchronisation is done by a combination of liboggplay and the
-Decoder state machine. liboggplay ensures that a decoded frame of data
-has both the audio samples and the YUV data for that period of time.
+a/v synchronisation is handled by the stete machine thread. It examines the
+audio playback time and compares this to the next frame in the queue
+of frames. If it is time to play the video frame it is then displayed.
 
-When a frame is decoded by the decode state machine it converts the
-YUV encoded video to RGB and copies the sound data to an internal
-FrameData object. This is stored in a queue of available decoded frames.
-Included in the FrameData object is the time that that frame should
-be displayed.
+Frame skipping is done in the following ways:
 
-The display state machine keeps track of the time since the last frame it
-played. After decoding a frame it checks if it is time to display the next
-item in the decoded frame queue. If so, it pops the item off the queue
-and displays it.
+  1) The state machine thread will skip all frames in the video queue whose
+     display time is less than the current audio time. This ensures
+     the correct frame for the current time is always displayed.
 
-Ideally a/v sync would take into account the actual audio clock of the
-audio hardware for the sync rather than using the system clock.
-Unfortunately getting valid time data out of the audio hardware has proven
-to be unreliable across platforms (and even distributions in Linux) depending
-on audio hardware, audio backend etc. The current approach works fine in practice
-and is a compromise until this issue can be sorted. The plan is to eventually
-move to synchronising using the audio hardware.
+  2) The decode thread will stop decoding interframes and read to the
+     next keyframe if it determines that decoding the remaining
+     interframes will cause playback issues. It detects this by:
+       a) If the amount of audio data in the audio queue drops
+          below a threshold whereby audio may start to skip.
+       b) If the video queue drops below a threshold where it
+          will be decoding video data that won't be displayed due
+          to the decode thread dropping the frame immediately.
 
-To prevent audio skipping and framerate dropping it is very important to
-make sure no blocking occurs during the decoding process and minimise
-expensive time operations at the time a frame is to be displayed. This is
-managed by immediately converting video data to RGB on decode (an expensive
-operation to do at frame display time) and checking if the sound device will
-not block before writing sound data to it.
+YCbCr conversion is done on the decode thread when it is time to display
+the video frame. This means frames that are skipped will not have the
+YCbCr conversion done, improving playback.
 
-Shutdown needs to ensure that the event posted to the decode
-thread is completed. The decode thread can potentially block internally
-inside liboggplay when reading, seeking, or its internal buffers containing
-decoded data are full. When blocked in this manner a call from the main thread
-to Shutdown() will hang.  
+The decode thread pushes decoded audio and videos frames into two
+separate queues - one for audio and one for video. These are kept
+separate to make it easy to constantly feed audio data to the sound
+hardware while allowing frame skipping of video data. These queues are
+threadsafe, and neither the decode, audio, or state machine thread should
+be able to monopolize them, and cause starvation of the other threads.
 
-This is fixed with a protocol to ensure that the decode event cleanly
-completes. The nsMediaStream that the nsChannelReader uses has a
-Cancel() method. Calling this before Shutdown() will close any
-internal streams or listeners resulting in blocked i/o completing with
-an error, and all future i/o on the stream having an error.
+Both queues are bounded by a maximum size. When this size is reached
+the decode thread will no longer decode video or audio depending on the
+queue that has reached the threshold.
 
-This causes the decode thread to exit and Shutdown() can occur.
+During playback the audio thread will be idle (via a Wait() on the
+monitor) if the audio queue is empty. Otherwise it constantly pops an
+item off the queue and plays it with a blocking write to the audio
+hardware (via nsAudioStream and libsydneyaudio).
 
-If the decode thread is seeking then the same Cancel() operation
-causes an error to be returned from the seek call to liboggplay which
-exits out of the seek operation, and stops the seek state running on the
-decode thread.
-
-If the decode thread is blocked due to internal decode buffers being
-full, it is unblocked during the shutdown process by calling
-oggplay_prepare_for_close.
-
-In practice the OggPlay internal buffer should never fill as we retrieve and
-process the frame immediately on decoding.
+The decode thread idles if the video queue is empty or if it is
+not yet time to display the next frame.
 
 The Shutdown method on nsOggDecoder can spin the event loop as it waits
 for threads to complete. Spinning the event loop is a bad thing to happen
 during certain times like destruction of the media element. To work around
-this the Shutdown method does nothing by queue an event to the main thread
+this the Shutdown method does nothing but queue an event to the main thread
 to perform the actual Shutdown. This way the shutdown can occur at a safe
 time. 
 
@@ -263,25 +262,27 @@ when destroying the nsOggDecoder object.
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "nsIChannel.h"
-#include "nsChannelReader.h"
 #include "nsIObserver.h"
 #include "nsIFrame.h"
 #include "nsAutoPtr.h"
 #include "nsSize.h"
 #include "prlog.h"
-#include "prmon.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
-#include "oggplay/oggplay.h"
+#include "nsMediaStream.h"
+#include "nsMediaDecoder.h"
+#include "mozilla/Monitor.h"
+
+using mozilla::Monitor;
 
 class nsAudioStream;
-class nsOggDecodeStateMachine;
-class nsOggStepDecodeEvent;
+class nsOggPlayStateMachine;
+class nsOggReader;
 
 class nsOggDecoder : public nsMediaDecoder
 {
-  friend class nsOggDecodeStateMachine;
-  friend class nsOggStepDecodeEvent;
+  friend class nsOggReader;
+  friend class nsOggPlayStateMachine;
 
   // ISupports
   NS_DECL_ISUPPORTS
@@ -336,7 +337,8 @@ class nsOggDecoder : public nsMediaDecoder
   virtual void NotifySuspendedStatusChanged();
   virtual void NotifyBytesDownloaded();
   virtual void NotifyDownloadEnded(nsresult aStatus);
-  // Called by nsChannelReader on the decoder thread
+  // Called by the decode thread to keep track of the number of bytes read
+  // from the resource.
   void NotifyBytesConsumed(PRInt64 aBytes);
 
   // Called when the video file has completed downloading.
@@ -366,9 +368,6 @@ class nsOggDecoder : public nsMediaDecoder
   // Return PR_TRUE if seeking is supported.
   virtual PRBool GetSeekable();
 
-  // Returns the channel reader.
-  nsChannelReader* GetReader() { return mReader; }
-
   virtual Statistics GetStatistics();
 
   // Suspend any media downloads that are in progress. Called by the
@@ -384,23 +383,25 @@ class nsOggDecoder : public nsMediaDecoder
   // Tells our nsMediaStream to put all loads in the background.
   virtual void MoveLoadsToBackground();
 
-  // Stop the state machine thread and drop references to the thread,
-  // state machine and channel reader.
+  // Stop the state machine thread and drop references to the thread and
+  // state machine.
   void Stop();
+
+  // Called by the state machine to notify the decoder that the duration
+  // has changed.
+  void DurationChanged();
 
 protected:
 
   // Returns the monitor for other threads to synchronise access to
   // state.
-  PRMonitor* GetMonitor() 
-  { 
+  Monitor& GetMonitor() { 
     return mMonitor; 
   }
 
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
-  PlayState GetState()
-  {
+  PlayState GetState() {
     return mPlayState;
   }
 
@@ -496,8 +497,8 @@ private:
   // time of the last decoded video frame).
   nsChannelStatistics mPlaybackStatistics;
 
-  // Thread to handle decoding of Ogg data.
-  nsCOMPtr<nsIThread> mDecodeThread;
+  // Thread to manage playback state machine.
+  nsCOMPtr<nsIThread> mStateMachineThread;
 
   // The current playback position of the media resource in units of
   // seconds. This is updated approximately at the framerate of the
@@ -506,14 +507,12 @@ private:
   float mCurrentTime;
 
   // Volume that playback should start at.  0.0 = muted. 1.0 = full
-  // volume.  Readable/Writeable from the main thread. Read from the
-  // audio thread when it is first started to get the initial volume
-  // level.
+  // volume.  Readable/Writeable from the main thread.
   float mInitialVolume;
 
   // Position to seek to when the seek notification is received by the
-  // decoding thread. Written by the main thread and read via the
-  // decoding thread. Synchronised using mPlayStateMonitor. If the
+  // decode thread. Written by the main thread and read via the
+  // decode thread. Synchronised using mMonitor. If the
   // value is negative then no seek has been requested. When a seek is
   // started this is reset to negative.
   float mRequestedSeekTime;
@@ -531,26 +530,20 @@ private:
    * The following member variables can be accessed from any thread.
    ******/
 
-  // The state machine object for handling the decoding via
-  // oggplay. It is safe to call methods of this object from other
-  // threads. Its internal data is synchronised on a monitor. The
-  // lifetime of this object is after mPlayState is LOADING and before
-  // mPlayState is SHUTDOWN. It is safe to access it during this
-  // period.
-  nsCOMPtr<nsOggDecodeStateMachine> mDecodeStateMachine;
+  // The state machine object for handling the decoding. It is safe to
+  // call methods of this object from other threads. Its internal data
+  // is synchronised on a monitor. The lifetime of this object is
+  // after mPlayState is LOADING and before mPlayState is SHUTDOWN. It
+  // is safe to access it during this period.
+  nsCOMPtr<nsOggPlayStateMachine> mDecodeStateMachine;
 
-  // OggPlay object used to read data from a channel. Created on main
-  // thread. Passed to liboggplay and the locking for multithreaded
-  // access is handled by that library. Some methods are called from
-  // the decoder thread, and the state machine for that thread keeps
-  // a pointer to this reader. This is safe as the only methods called
-  // are threadsafe (via the threadsafe nsMediaStream).
-  nsAutoPtr<nsChannelReader> mReader;
+  // Stream of media data.
+  nsAutoPtr<nsMediaStream> mStream;
 
   // Monitor for detecting when the video play state changes. A call
   // to Wait on this monitor will block the thread until the next
   // state change.
-  PRMonitor* mMonitor;
+  Monitor mMonitor;
 
   // Set to one of the valid play states. It is protected by the
   // monitor mMonitor. This monitor must be acquired when reading or
