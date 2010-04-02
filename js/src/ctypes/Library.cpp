@@ -41,10 +41,7 @@
 #include "jscntxt.h"
 #include "Library.h"
 #include "CTypes.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIXPConnect.h"
-#include "nsILocalFile.h"
-#include "nsNativeCharsetUtils.h"
+#include "prlink.h"
 
 namespace js {
 namespace ctypes {
@@ -98,56 +95,37 @@ Library::Create(JSContext* cx, jsval aPath)
   if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
     return NULL;
 
-  nsresult rv;
-  PRLibrary* library;
+  if (!JSVAL_IS_STRING(aPath)) {
+    JS_ReportError(cx, "open takes a string argument");
+    return NULL;
+  }
 
-  // get the path argument. we accept either an nsILocalFile or a string path.
-  // determine which we have...
-  if (JSVAL_IS_STRING(aPath)) {
-    const PRUnichar* path = reinterpret_cast<const PRUnichar*>(
-      JS_GetStringCharsZ(cx, JSVAL_TO_STRING(aPath)));
-    if (!path)
-      return NULL;
-
-    // We don't use nsILocalFile, because it doesn't use the system search
-    // rules when resolving library path.
-    PRLibSpec libSpec;
+  PRLibSpec libSpec;
 #ifdef XP_WIN
-    // On Windows, converting to native charset may corrupt path string.
-    // So, we have to use Unicode path directly.
-    libSpec.value.pathname_u = path;
-    libSpec.type = PR_LibSpec_PathnameU;
+  // On Windows, converting to native charset may corrupt path string.
+  // So, we have to use Unicode path directly.
+  const PRUnichar* path = reinterpret_cast<const PRUnichar*>(
+    JS_GetStringCharsZ(cx, JSVAL_TO_STRING(aPath)));
+  if (!path)
+    return NULL;
+
+  libSpec.value.pathname_u = path;
+  libSpec.type = PR_LibSpec_PathnameU;
 #else
-    nsCAutoString nativePath;
-    NS_CopyUnicodeToNative(nsDependentString(path), nativePath);
-    libSpec.value.pathname = nativePath.get();
-    libSpec.type = PR_LibSpec_Pathname;
+  // Assume the JS string is not UTF-16, but is in the platform's native
+  // charset. (This basically means ASCII.) It would be nice to have a
+  // UTF-16 -> native charset implementation available. :(
+  const char* path = JS_GetStringBytesZ(cx, JSVAL_TO_STRING(aPath));
+  if (!path)
+    return NULL;
+
+  libSpec.value.pathname = path;
+  libSpec.type = PR_LibSpec_Pathname;
 #endif
-    library = PR_LoadLibraryWithFlags(libSpec, 0);
-    if (!library) {
-      JS_ReportError(cx, "couldn't open library");
-      return NULL;
-    }
 
-  } else if (!JSVAL_IS_PRIMITIVE(aPath)) {
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-
-    nsISupports* file = xpc->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(aPath));
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file);
-    if (!localFile) {
-      JS_ReportError(cx, "open takes a string or nsILocalFile argument");
-      return NULL;
-    }
-
-    rv = localFile->Load(&library);
-    if (NS_FAILED(rv)) {
-      JS_ReportError(cx, "couldn't open library");
-      return NULL;
-    }
-
-  } else {
-    // don't convert the argument
-    JS_ReportError(cx, "open takes a string or nsIFile argument");
+  PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
+  if (!library) {
+    JS_ReportError(cx, "couldn't open library");
     return NULL;
   }
 
