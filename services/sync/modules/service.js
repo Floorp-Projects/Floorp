@@ -879,7 +879,7 @@ WeaveSvc.prototype = {
       // XXX Bug 531005 Wait long enough to allow potentially another concurrent
       // sync to finish generating the keypair and uploading them
       Sync.sleep(15000);
-      
+
       // bug 545725 - re-verify creds and fail sanely
       if (!this._verifyLogin()) {
         Status.sync = CREDENTIALS_CHANGED;
@@ -1063,7 +1063,7 @@ WeaveSvc.prototype = {
 
   /**
    * Hits info/collections on the server to see if there are new clients.
-   * This is only called when the account has one active client, and if more 
+   * This is only called when the account has one active client, and if more
    * are found will trigger a sync to change client sync frequency and update data.
    */
 
@@ -1077,7 +1077,7 @@ WeaveSvc.prototype = {
       if (info && info.success) {
         // if clients.lastModified doesn't match what the server has,
         // we have another client in play
-        this._log.trace("Remote timestamp:" + info.obj["clients"] + 
+        this._log.trace("Remote timestamp:" + info.obj["clients"] +
                         " Local timestamp: " + Clients.lastSync);
         if (info.obj["clients"] > Clients.lastSync) {
           this._log.debug("New clients detected, triggering a full sync");
@@ -1092,7 +1092,7 @@ WeaveSvc.prototype = {
     } catch(ex) {
       // if something throws unexpectedly, not a big deal
       this._log.debug("Heartbeat failed unexpectedly: " + ex);
-    } 
+    }
 
     // no joy, schedule the next heartbeat
     this._scheduleHeartbeat();
@@ -1100,7 +1100,7 @@ WeaveSvc.prototype = {
 
   /**
    * Sets up a heartbeat ping to check for new clients.  This is not a critical
-   * behaviour for the client, so if we hit server/network issues, we'll just drop 
+   * behaviour for the client, so if we hit server/network issues, we'll just drop
    * this until the next sync.
    */
   _scheduleHeartbeat: function WeaveSvc__scheduleNextHeartbeat() {
@@ -1109,7 +1109,7 @@ WeaveSvc.prototype = {
         Status.enforceBackoff)
       return;
 
-    this._log.trace("Setting up heartbeat, next ping in " + 
+    this._log.trace("Setting up heartbeat, next ping in " +
                     Math.ceil(interval / 1000) + " sec.");
     Utils.delay(function() this._doHeartbeat(), interval, this, "_heartbeatTimer");
   },
@@ -1178,7 +1178,7 @@ WeaveSvc.prototype = {
     this._clearSyncTriggers();
     this.nextSync = 0;
 
-    // reset backoff info, if the server tells us to continue backing off, 
+    // reset backoff info, if the server tells us to continue backing off,
     // we'll handle that later
     Status.resetBackoff();
 
