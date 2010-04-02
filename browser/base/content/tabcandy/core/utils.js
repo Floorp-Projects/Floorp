@@ -103,6 +103,14 @@ window.Rect.prototype = {
         && a.top == this.top
         && a.right == this.right
         && a.bottom == this.bottom);
+  },
+
+  // ----------
+  copy: function(a) {
+    this.left = a.left;
+    this.top = a.top;
+    this.width = a.width;
+    this.height = a.height;
   }
 };
 
