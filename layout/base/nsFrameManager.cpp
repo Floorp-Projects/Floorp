@@ -757,7 +757,7 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
 }
 
 nsresult
-nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
+nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
     // Also reparent the out-of-flow
@@ -765,7 +765,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     NS_ASSERTION(outOfFlow, "no out-of-flow frame");
 
-    ReParentStyleContext(outOfFlow);
+    ReparentStyleContext(outOfFlow);
   }
 
   // DO NOT verify the style tree before reparenting.  The frame
@@ -781,7 +781,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
                                        &providerIsChild);
     nsStyleContext* newParentContext = nsnull;
     if (providerIsChild) {
-      ReParentStyleContext(providerFrame);
+      ReparentStyleContext(providerFrame);
       newParentContext = providerFrame->GetStyleContext();
       providerChild = providerFrame;
     } else if (providerFrame) {
@@ -841,7 +841,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
     if (newContext) {
       if (newContext != oldContext) {
         // We probably don't want to initiate transitions from
-        // ReParentStyleContext, since we call it during frame
+        // ReparentStyleContext, since we call it during frame
         // construction rather than in response to dynamic changes.
         // Also see the comment at the start of
         // nsTransitionManager::ConsiderStartingTransition.
@@ -886,7 +886,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
               }
 #endif
 
-              ReParentStyleContext(child);
+              ReparentStyleContext(child);
             }
 
             child = child->GetNextSibling();
@@ -906,7 +906,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
           nsIFrame* sib = static_cast<nsIFrame*>
             (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
           if (sib) {
-            ReParentStyleContext(sib);
+            ReparentStyleContext(sib);
           }
         }
 
