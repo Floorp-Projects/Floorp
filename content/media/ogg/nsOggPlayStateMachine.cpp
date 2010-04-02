@@ -319,8 +319,7 @@ void nsOggPlayStateMachine::AudioLoop()
              !mStopDecodeThreads &&
              (!IsPlaying() ||
               mState == DECODER_STATE_BUFFERING ||
-              (mState == DECODER_STATE_DECODING &&
-               mReader->mAudioQueue.GetSize() == 0 &&
+              (mReader->mAudioQueue.GetSize() == 0 &&
                !mReader->mAudioQueue.AtEndOfStream())))
       {
         mon.Wait();
@@ -335,8 +334,7 @@ void nsOggPlayStateMachine::AudioLoop()
       }
     }
 
-    NS_ASSERTION(mReader->mAudioQueue.GetSize() > 0 &&
-                 !mReader->mAudioQueue.AtEndOfStream(),
+    NS_ASSERTION(mReader->mAudioQueue.GetSize() > 0,
                  "Should have data to play");
     nsAutoPtr<SoundData> sound(mReader->mAudioQueue.PopFront());
     {
