@@ -46,6 +46,7 @@ LIBRARY_NAME	= breakpad_windows_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 DEFINES += -DUNICODE -D_UNICODE
+STL_FLAGS 	=
 
 CPPSRCS		= \
 		guid_string.cc \
