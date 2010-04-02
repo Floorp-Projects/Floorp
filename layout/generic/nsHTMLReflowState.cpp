@@ -710,16 +710,22 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   }
 }
 
+static nsIFrame*
+GetNearestContainingBlock(nsIFrame *aFrame)
+{
+  nsIFrame *cb = aFrame;
+  do {
+    cb = cb->GetParent();
+  } while (!cb->IsContainingBlock());
+  return cb;
+}
+
 nsIFrame*
 nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
                                                nscoord& aCBLeftEdge,
                                                nscoord& aCBWidth)
 {
-  do {
-    aFrame = aFrame->GetParent();
-    NS_ASSERTION(aFrame, "Must find containing block somewhere");
-  } while (!aFrame->IsContainingBlock());
-
+  aFrame = GetNearestContainingBlock(aFrame);
   NS_ASSERTION(aFrame != frame, "How did that happen?");
 
   /* Now aFrame is the containing block we want */
@@ -751,16 +757,6 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
   }
 
   return aFrame;
-}
-
-static nsIFrame*
-GetNearestContainingBlock(nsIFrame *aFrame)
-{
-  nsIFrame *cb = aFrame;
-  do {
-    cb = cb->GetParent();
-  } while (!cb->IsContainingBlock());
-  return cb;
 }
 
 // When determining the hypothetical box that would have been if the element
@@ -966,14 +962,19 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   const nsStyleVisibility* blockVis = aContainingBlock->GetStyleVisibility();
 
   // Get the placeholder x-offset and y-offset in the coordinate
-  // space of the block frame that contains it
+  // space of its containing block
   // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
   nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aContainingBlock);
 
-  // First, determine the hypothetical box's mTop
-  nsBlockFrame* blockFrame = nsLayoutUtils::GetAsBlock(aContainingBlock);
+  // First, determine the hypothetical box's mTop.  We want to check the
+  // content insertion frame of aContainingBlock for block-ness, but make
+  // sure to compute all coordinates in the coordinate system of
+  // aContainingBlock.
+  nsBlockFrame* blockFrame =
+    nsLayoutUtils::GetAsBlock(aContainingBlock->GetContentInsertionFrame());
   if (blockFrame) {
+    nscoord blockYOffset = blockFrame->GetOffsetTo(aContainingBlock).y;
     PRBool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
     NS_ASSERTION(isValid, "Can't find placeholder!");
@@ -985,7 +986,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
       // Use the top of the inline box which the placeholder lives in as the
       // hypothetical box's top.
-      aHypotheticalBox.mTop = lineBox->mBounds.y;
+      aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
     } else {
       // The element would have been block-level which means it would be below
       // the line containing the placeholder frame, unless all the frames
@@ -1010,14 +1011,14 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
           // The top of the hypothetical box is the top of the line containing
           // the placeholder, since there is nothing in the line before our
           // placeholder except empty frames.
-          aHypotheticalBox.mTop = lineBox->mBounds.y;
+          aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
         } else {
           // The top of the hypothetical box is just below the line containing
           // the placeholder.
-          aHypotheticalBox.mTop = lineBox->mBounds.YMost();
+          aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
         }
       } else {
-        // Just use the placeholder's y-offset
+        // Just use the placeholder's y-offset wrt the containing block
         aHypotheticalBox.mTop = placeholderOffset.y;
       }
     }
