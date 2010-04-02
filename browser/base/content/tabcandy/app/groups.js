@@ -38,26 +38,23 @@ window.Group = function(listOfEls, options) {
 
   var boundingBox = this._getBoundingBox(listOfEls);
   var padding = 30;
-  var container = $("<div class='group'/>")
-    .css({
-      position: "absolute",
-      top: boundingBox.top-padding,
-      left: boundingBox.left-padding,
-      width: boundingBox.width+padding*2,
-      height: boundingBox.height+padding*2,
-      zIndex: -100,
-      opacity: 0,
-    })
+  var container = options.container;
+  this._rectToBe = new Rect(
+    boundingBox.left-padding,
+    boundingBox.top-padding,
+    boundingBox.width+padding*2,
+    boundingBox.height+padding*2
+  )
+  container
+    .css({zIndex: -100})
+    .animate(this._rectToBe, function(){
+      self._rectToBe = null;
+     })
     .data("group", this)
     .data('item', this)
     .appendTo("body")
-    .animate({opacity:1.0}).dequeue();
-  
-/*
-  var contentEl = $('<div class="group-content"/>')
-    .appendTo(container);
-*/
-  
+    .dequeue();    
+    
   var resizer = $("<div class='resizer'/>")
     .css({
       position: "absolute",
@@ -65,6 +62,7 @@ window.Group = function(listOfEls, options) {
       bottom: 0, right: 0,
     }).appendTo(container);
 
+  /*
   var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
     .appendTo(container)
   
@@ -94,7 +92,7 @@ window.Group = function(listOfEls, options) {
     shouldShow = false;
     if( isEventOverElement(e, container.get(0) )) return;
     titlebar.animate({opacity:0}).dequeue();
-  })
+  })*/
 
   this._container = container;
 
@@ -329,9 +327,9 @@ window.Group.prototype = $.extend(new Item(), {
     if( options && options.animate == false ) animate = false;
     else animate = true;
     
-    //Utils.log(speed);
     /*if( this._children.length < 2 ) return;*/
-    var bb = this._getContainerBox();
+    if( this._rectToBe ) var bb = this._rectToBe;
+    else var bb = this._getContainerBox();
 
     var count = this._children.length;
     var bbAspect = bb.width/bb.height;
@@ -466,25 +464,58 @@ window.Groups = {
   // ----------  
   dropOptions: {
     accept: ".tab",
-    tolerance: "pointer",
+    tolerance: "intersect",
     greedy: true,
     drop: function(e){
-    $target = $(e.target);  
-    $dragged.removeClass("willGroup")   
-  
-    var group = $target.data("group");
-    if( group == null ){
-      var group = new Group([$target, $dragged]);
-    } else {
-      group.add( $dragged );
-    }
+      $target = $(e.target);  
+      $dragged.removeClass("willGroup");
+      var phantom = $target.data("phantomGroup")
+      
+      var group = $target.data("group");
+      if( group == null ){
+        phantom.removeClass("phantom");
+        var group = new Group([$target, $dragged], {container:phantom});
+        $(group._container).css({
+          left:   phantom.css("left"),
+          top:    phantom.css("top"),
+          width:  phantom.width(),
+          height: phantom.height()
+        });
+        }
+      else group.add( $dragged );
       
     },
     over: function(e){
-      $dragged.addClass("willGroup");    
+      var $target = $(e.target);
+      
+      function elToRect($el){
+       return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
+      }
+      
+      var height = elToRect($target).height * 1.5 +10;
+      var width = elToRect($target).width * 1.5 + 10;
+      var unionRect = elToRect($target).union( elToRect($dragged) );
+      
+      var newLeft = unionRect.left + unionRect.width/2 - width/2;
+      var newTop = unionRect.top + unionRect.height/2 - height/2;
+      
+      $(".phantom").remove();
+      var phantom = $("<div class='group phantom'/>").css({
+        width: width,
+        height: height,
+        position:"absolute",
+        top: newTop,
+        left: newLeft,
+        zIndex: -99
+      }).appendTo("body").hide().fadeIn();
+      
+      $target.data("phantomGroup", phantom);
+      
     },
-    out: function(){      
-      $dragged.removeClass("willGroup");
+    out: function(e){      
+      $(e.target).data("phantomGroup").fadeOut(function(){
+        $(this).remove();
+      });
     }
   }, 
   
