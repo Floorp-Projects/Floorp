@@ -39,9 +39,7 @@
 
 function test() {
   // initialization
-  let prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
@@ -61,6 +59,6 @@ function test() {
      "The undo history of the URL bar should be cleared after leaving the private browsing mode");
 
   // cleanup
-  prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+  Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
 }
 
