@@ -148,7 +148,7 @@ public:
    *
    * @param aFrame the root of the subtree to reparent.  Must not be null.
    */
-  NS_HIDDEN_(nsresult) ReParentStyleContext(nsIFrame* aFrame);
+  NS_HIDDEN_(nsresult) ReparentStyleContext(nsIFrame* aFrame);
 
   /*
    * Re-resolve the style contexts for a frame tree, building
@@ -163,7 +163,7 @@ public:
   // Determine whether an attribute affects style
   // If aAttrHasChanged is false, the attribute's value is about to
   // change. If it's true, it has already changed.
-  NS_HIDDEN_(nsReStyleHint) HasAttributeDependentStyle(nsIContent *aContent,
+  NS_HIDDEN_(nsRestyleHint) HasAttributeDependentStyle(nsIContent *aContent,
                                                        nsIAtom *aAttribute,
                                                        PRInt32 aModType,
                                                        PRBool aAttrHasChanged);

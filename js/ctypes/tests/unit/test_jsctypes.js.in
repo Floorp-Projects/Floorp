@@ -53,8 +53,10 @@ function do_check_throws(f, type, stack)
   try {
     f();
   } catch (exc) {
-    if (exc instanceof type)
+    if (exc instanceof type) {
+      do_check_true(true);
       return;
+    }
     do_throw("expected " + type.name + " exception, caught " + exc, stack);
   }
   do_throw("expected " + type.name + " exception, none thrown", stack);
@@ -189,6 +191,7 @@ function run_test()
   run_struct_tests(library);
   run_function_tests(library);
   run_closure_tests(library);
+  run_variadic_tests(library);
 
   // test the string version of ctypes.open() as well
   let libpath = libfile.path;
@@ -950,6 +953,19 @@ function run_float_tests(library, t, name, size) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function () { d.value = vals[i]; }, TypeError);
 
+  // Check that values roundtrip through toSource() correctly.
+  function test_roundtrip(t, val)
+  {
+    let f1 = t(val);
+    eval("let f2 = " + f1.toSource());
+    do_check_eq(f1.value, f2.value);
+  }
+  let vals = [Infinity, -Infinity, -0, 0, 1, -1, 1/3, -1/3, 1/4, -1/4,
+              1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
+  for (let i = 0; i < vals.length; i++)
+    test_roundtrip(t, vals[i]);
+  do_check_eq(t(NaN).toSource(), t.toSource() + "(NaN)");
+
   do_check_true(d.address().constructor === t.ptr);
   do_check_eq(d.address().contents, d.value);
   do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
@@ -1663,7 +1679,8 @@ function run_FunctionType_tests() {
   run_type_ctor_class_tests(ctypes.FunctionType,
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t),
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.int32_t ]),
-    [ "abi", "returnType", "argTypes" ], undefined, undefined, undefined, undefined);
+    [ "abi", "returnType", "argTypes", "isVariadic" ],
+    undefined, undefined, undefined, undefined);
 
   do_check_throws(function() { ctypes.FunctionType(); }, Error);
   do_check_throws(function() {
@@ -2109,6 +2126,94 @@ function run_single_closure_tests(library, abi, suffix)
   let closure2 = fn_t(closure_fn, thisobj);
   do_check_eq(closure2(-17), -17 + thisobj.a);
   do_check_eq(test_closure(-52, closure2), -52 + thisobj.a);
+}
+
+function run_variadic_tests(library) {
+  let sum_va_type = ctypes.FunctionType(ctypes.default_abi,
+                                        ctypes.int32_t,
+                                        [ctypes.uint8_t, "..."]),
+      sum_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.int32_t,
+                               ctypes.uint8_t, "...");
+
+  do_check_eq(sum_va_type.toSource(),
+              'ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.uint8_t, "..."])');
+  do_check_eq(sum_va.constructor.name, "int32_t(*)(uint8_t, ...)");
+  do_check_true(sum_va.constructor.isVariadic);
+
+  do_check_eq(sum_va(3,
+                     ctypes.int32_t(1),
+                     ctypes.int32_t(2),
+                     ctypes.int32_t(3)),
+              6);
+
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.bool,
+                        [ctypes.bool, "...", ctypes.bool]);
+  }, Error);
+
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.default_abi, ctypes.bool, ["..."]);
+  }, Error);
+
+#ifdef _WIN32
+#ifndef _WIN64
+  do_check_throws(function() {
+      ctypes.FunctionType(ctypes.stdcall_abi, ctypes.bool,
+                          [ctypes.bool, "..."]);
+  }, Error);
+#endif
+#endif
+
+  do_check_throws(function() {
+    // No variadic closure callbacks allowed.
+    sum_va_type(function(){});
+  }, Error);
+
+  let count_true_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.uint8_t,
+                                      ctypes.uint8_t, "...");
+  do_check_eq(count_true_va(8,
+                            ctypes.bool(false),
+                            ctypes.bool(false),
+                            ctypes.bool(false),
+                            ctypes.bool(true),
+                            ctypes.bool(true),
+                            ctypes.bool(false),
+                            ctypes.bool(true),
+                            ctypes.bool(true)),
+              4);
+
+  let add_char_short_int_va = library.declare("test_add_char_short_int_va_cdecl",
+                                              ctypes.default_abi, ctypes.void_t,
+                                              ctypes.uint32_t.ptr, "..."),
+      result = ctypes.uint32_t(3);
+
+  add_char_short_int_va(result.address(),
+                        ctypes.char(5),
+                        ctypes.short(7),
+                        ctypes.uint32_t(11));
+
+  do_check_eq(result.value, 3 + 5 + 7 + 11);
+
+  let result = ctypes.int32_t.array(3)([1,1,1]),
+      v1 = ctypes.int32_t.array(4)([1,2,3,5]),
+      v2 = ctypes.int32_t.array(3)([7,11,13]),
+      vector_add_va = library.declare("test_vector_add_va_cdecl",
+                                      ctypes.default_abi, ctypes.int32_t.ptr,
+                                      ctypes.uint8_t, ctypes.uint8_t, "..."),
+      // Note that vector_add_va zeroes out result first.
+      vec_sum = vector_add_va(2, 3, result, v1, v2);
+  do_check_eq(vec_sum.contents, 8);
+  do_check_eq(result[0], 8);
+  do_check_eq(result[1], 13);
+  do_check_eq(result[2], 16);
+  
+  do_check_true(!!(sum_va_type().value = sum_va_type()));
+  let sum_notva_type = ctypes.FunctionType(sum_va_type.abi,
+                                           sum_va_type.returnType,
+                                           [ctypes.uint8_t]);
+  do_check_throws(function() {
+    sum_va_type().value = sum_notva_type();
+  }, Error);
 }
 
 // bug 522360 - try loading system library without full path

@@ -94,7 +94,8 @@ let EXPORTED_SYMBOLS = [ "ctypes" ];
  *     @returnType  The return type of the function. Must be a type constant
  *                  from ctypes.
  *     @argTypes    Argument types. Must be a type constant (other than void_t)
- *                  from ctypes.
+ *                  from ctypes, or the literal string "..." to denote a
+ *                  variadic function.
  *     @returns     A function object.
  *
  *   A function object can then be used to call the C function it represents
@@ -108,7 +109,9 @@ let EXPORTED_SYMBOLS = [ "ctypes" ];
  *   Arguments will be checked against the types supplied at declaration, and
  *   some attempt to convert values (e.g. boolean true/false to integer 0/1)
  *   will be made. Otherwise, if types do not match, or conversion fails,
- *   an exception will be thrown.
+ *   an exception will be thrown. Arguments passed as variadic parameters
+ *   must have an explicit ctypes type, since their types are not declared
+ *   in the signature.
  */
 
 // Initialize the ctypes object. You do not need to do this yourself.

@@ -80,6 +80,7 @@ using mozilla::gfx::SharedDIB;
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#include "nsPluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
@@ -99,6 +100,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessPopupSurrogateHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
+#if defined(OS_MACOSX)  
+    , mShColorSpace(NULL)
+    , mShContext(NULL)
+#endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
     mData.ndata = (void*) this;
@@ -126,6 +131,14 @@ PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
+#endif
+#if defined(OS_MACOSX)
+    if (mShColorSpace) {
+        ::CGColorSpaceRelease(mShColorSpace);
+    }
+    if (mShContext) {
+        ::CGContextRelease(mShContext);
+    }
 #endif
 }
 
@@ -585,28 +598,34 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-    // We return access to the shared memory buffer after returning.
-
     NPCocoaEvent evcopy = event.event;
 
     if (evcopy.type == NPCocoaEventDrawRect) {
-        CGColorSpaceRef cSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-        if (!cSpace) {
-            PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
-            *handled = false;
-            *rtnmem = mem;
-            return true;
-        } 
-        void* cgContextByte = mem.get<char>();
-        CGContextRef ctxt = ::CGBitmapContextCreate(cgContextByte, mWindow.width, mWindow.height, 8, mWindow.width * 4, cSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        ::CGColorSpaceRelease(cSpace);
-        if (!ctxt) {
-            PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
-            *handled = false;
-            *rtnmem = mem;
-            return true;
+        if (!mShColorSpace) {
+            mShColorSpace = CreateSystemColorSpace();
+            if (!mShColorSpace) {
+                PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
+                *handled = false;
+                *rtnmem = mem;
+                return true;
+            } 
         }
-        evcopy.data.draw.context = ctxt; 
+        if (!mShContext) {
+            void* cgContextByte = mem.get<char>();
+            mShContext = ::CGBitmapContextCreate(cgContextByte, 
+                              mWindow.width, mWindow.height, 8, 
+                              mWindow.width * 4, mShColorSpace, 
+                              kCGImageAlphaPremultipliedFirst |
+                              kCGBitmapByteOrder32Host);
+    
+            if (!mShContext) {
+                PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
+                *handled = false;
+                *rtnmem = mem;
+                return true;
+            }
+        }
+        evcopy.data.draw.context = mShContext; 
     } else {
         PLUGIN_LOG_DEBUG(("Invalid event type for AnswerNNP_HandleEvent_Shmem."));
         *handled = false;
@@ -618,11 +637,6 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
         *handled = false;
     } else {
         *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
-    }
-
-    // Some events need cleaning up.
-    if (evcopy.type == NPCocoaEventDrawRect) {
-        ::CGContextRelease(evcopy.data.draw.context);
     }
 
     *rtnmem = mem;
@@ -778,6 +792,13 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     mWindow.height = aWindow.height;
     mWindow.clipRect = aWindow.clipRect;
     mWindow.type = aWindow.type;
+
+    if (mShContext) {
+        // Release the shared context so that it is reallocated
+        // with the new size. 
+        ::CGContextRelease(mShContext);
+        mShContext = NULL;
+    }
 
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);

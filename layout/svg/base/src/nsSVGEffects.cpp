@@ -255,7 +255,7 @@ nsSVGFilterProperty::DoUpdate()
     NS_UpdateHint(changeHint, nsChangeHint_ReflowFrame);
   }
   mFramePresShell->FrameConstructor()->PostRestyleEvent(
-    mFrame->GetContent(), nsReStyleHint(0), changeHint);
+    mFrame->GetContent(), nsRestyleHint(0), changeHint);
 }
 
 void
@@ -272,7 +272,7 @@ nsSVGMarkerProperty::DoUpdate()
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
 
   mFramePresShell->FrameConstructor()->PostRestyleEvent(
-    mFrame->GetContent(), nsReStyleHint(0), changeHint);
+    mFrame->GetContent(), nsRestyleHint(0), changeHint);
 }
 
 void

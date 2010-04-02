@@ -310,12 +310,12 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
-    if (argc < 7 || (argc > 7 && argc < 9))
+    if (argc < 7)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 intargs[8];
+    int32 intargs[9];
 
     // convert the first six args, they must be ints
     for (jsuint i = 0; i < 6; ++i) {

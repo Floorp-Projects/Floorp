@@ -757,7 +757,7 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
 }
 
 nsresult
-nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
+nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
     // Also reparent the out-of-flow
@@ -765,7 +765,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     NS_ASSERTION(outOfFlow, "no out-of-flow frame");
 
-    ReParentStyleContext(outOfFlow);
+    ReparentStyleContext(outOfFlow);
   }
 
   // DO NOT verify the style tree before reparenting.  The frame
@@ -773,16 +773,15 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   // XXXbz can oldContext really ever be null?
   if (oldContext) {
-    nsPresContext *presContext = GetPresContext();
     nsRefPtr<nsStyleContext> newContext;
     nsIFrame* providerFrame = nsnull;
     PRBool providerIsChild = PR_FALSE;
     nsIFrame* providerChild = nsnull;
-    aFrame->GetParentStyleContextFrame(presContext, &providerFrame,
+    aFrame->GetParentStyleContextFrame(GetPresContext(), &providerFrame,
                                        &providerIsChild);
     nsStyleContext* newParentContext = nsnull;
     if (providerIsChild) {
-      ReParentStyleContext(providerFrame);
+      ReparentStyleContext(providerFrame);
       newParentContext = providerFrame->GetStyleContext();
       providerChild = providerFrame;
     } else if (providerFrame) {
@@ -835,20 +834,20 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       // continuation).
       newContext = prevContinuationContext;
     } else {
-      newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
+      newContext = mStyleSet->ReparentStyleContext(oldContext,
                                                    newParentContext);
     }
 
     if (newContext) {
       if (newContext != oldContext) {
         // We probably don't want to initiate transitions from
-        // ReParentStyleContext, since we call it during frame
+        // ReparentStyleContext, since we call it during frame
         // construction rather than in response to dynamic changes.
         // Also see the comment at the start of
         // nsTransitionManager::ConsiderStartingTransition.
 #if 0
         if (!copyFromContinuation) {
-          TryStartingTransition(presContext, aFrame->GetContent(),
+          TryStartingTransition(GetPresContext(), aFrame->GetContent(),
                                 oldContext, &newContext);
         }
 #endif
@@ -887,7 +886,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
               }
 #endif
 
-              ReParentStyleContext(child);
+              ReparentStyleContext(child);
             }
 
             child = child->GetNextSibling();
@@ -907,7 +906,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
           nsIFrame* sib = static_cast<nsIFrame*>
             (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
           if (sib) {
-            ReParentStyleContext(sib);
+            ReparentStyleContext(sib);
           }
         }
 
@@ -918,8 +917,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
             aFrame->GetAdditionalStyleContext(++contextIndex);
           if (oldExtraContext) {
             nsRefPtr<nsStyleContext> newExtraContext;
-            newExtraContext = mStyleSet->ReParentStyleContext(presContext,
-                                                              oldExtraContext,
+            newExtraContext = mStyleSet->ReparentStyleContext(oldExtraContext,
                                                               newContext);
             if (newExtraContext) {
               if (newExtraContext != oldExtraContext) {
@@ -1505,13 +1503,13 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
 }
 
 
-nsReStyleHint
+nsRestyleHint
 nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
                                            nsIAtom *aAttribute,
                                            PRInt32 aModType,
                                            PRBool aAttrHasChanged)
 {
-  nsReStyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
+  nsRestyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
                                                              aContent,
                                                              aAttribute,
                                                              aModType,
@@ -1521,7 +1519,7 @@ nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
     // it doesn't really matter.  Or we could even let
     // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
-    hint = nsReStyleHint(hint | eReStyle_Self);
+    hint = nsRestyleHint(hint | eRestyle_Self);
   }
 
   return hint;
