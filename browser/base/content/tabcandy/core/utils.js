@@ -23,7 +23,7 @@ window.Point = function(x, y) {
   this.y = (typeof(y) == 'undefined' ? 0 : y);
 }
 
-// ##########
+// ##########  perhaps 'a' should really be called 'rectOrLeft'
 window.Rect = function(a, top, width, height) {
   if(typeof(a.left) != 'undefined' && typeof(a.top) != 'undefined'
       && typeof(a.right) != 'undefined' && typeof(a.bottom) != 'undefined') {
@@ -103,6 +103,16 @@ window.Rect.prototype = {
         && a.top == this.top
         && a.right == this.right
         && a.bottom == this.bottom);
+  },
+  
+  union: function(a){
+    var newLeft = Math.min(a.left, this.left);
+    var newTop = Math.min(a.top, this.top);
+    var newWidth = Math.max(a.right, this.right) - newLeft;
+    var newHeight = Math.max(a.bottom, this.bottom) - newTop;
+    var newRect = new Rect(newLeft, newTop, newWidth, newHeight); 
+  
+    return newRect;
   }
 };
 
