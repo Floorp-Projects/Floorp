@@ -747,6 +747,7 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
     GtkWidget *menuBar = gtk_menu_bar_new();
+    GtkWidget *entry = gtk_entry_new();
 
     gtk_container_add(GTK_CONTAINER(button), label);
     gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
@@ -756,6 +757,7 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_container_add(GTK_CONTAINER(parent), combobox);
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
     gtk_container_add(GTK_CONTAINER(window), parent);
+    gtk_container_add(GTK_CONTAINER(parent), entry);
 
     gtk_widget_set_style(button, NULL);
     gtk_widget_set_style(label, NULL);
@@ -764,6 +766,7 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_widget_set_style(combobox, NULL);
     gtk_widget_set_style(comboboxLabel, NULL);
     gtk_widget_set_style(menuBar, NULL);
+    gtk_widget_set_style(entry, NULL);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
@@ -772,6 +775,7 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_widget_realize(combobox);
     gtk_widget_realize(comboboxLabel);
     gtk_widget_realize(menuBar);
+    gtk_widget_realize(entry);
 
     style = gtk_widget_get_style(label);
     if (style) {
@@ -840,11 +844,7 @@ nsLookAndFeel::InitLookAndFeel()
         sNativeHyperLinkText = NS_RGB(0x00,0x00,0xEE);
     }
 
-    gtk_widget_destroy(window);
-
     // invisible character styles
-    GtkWidget *entry = gtk_entry_new();
-    g_object_ref_sink(entry);
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
@@ -854,8 +854,7 @@ nsLookAndFeel::InitLookAndFeel()
                          "cursor-aspect-ratio", &sCaretRatio,
                          NULL);
 
-    gtk_widget_destroy(entry);
-    g_object_unref(entry);
+    gtk_widget_destroy(window);
 }
 
 // virtual
