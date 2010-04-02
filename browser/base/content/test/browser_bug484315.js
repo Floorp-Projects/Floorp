@@ -1,8 +1,6 @@
 function test() {
   var contentWin = window.open("about:blank", "", "width=100,height=100");
-  var enumerator = Cc["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Ci.nsIWindowMediator)
-                     .getEnumerator("navigator:browser");
+  var enumerator = Services.wm.getEnumerator("navigator:browser");
 
   while (enumerator.hasMoreElements()) {
     let win = enumerator.getNext();

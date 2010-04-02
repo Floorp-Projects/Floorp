@@ -3,8 +3,7 @@ function test() {
 
   var newTab;
   var newBrowser;
-  const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
-                   getService(Components.interfaces.nsIScriptSecurityManager);
+  const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
   function testLoad(event) {
     newBrowser.removeEventListener("load", testLoad, true);
