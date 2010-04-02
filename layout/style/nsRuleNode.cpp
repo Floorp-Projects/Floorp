@@ -2326,6 +2326,12 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
       if (RTLlogical)
         aValueRect.*(nsCSSRect::sides[aSide]) = aRTLLogicalValue;
     }
+  } else if (aLTRLogicalValue.GetUnit() == eCSSUnit_Inherit ||
+             aRTLLogicalValue.GetUnit() == eCSSUnit_Inherit) {
+    // It actually is valid to store this in the ruletree, since
+    // LTRlogical and RTLlogical are both false, but doing that will
+    // trigger asserts.  Silence those.
+    aCanStoreInRuleTree = PR_FALSE;
   }
 }
 
