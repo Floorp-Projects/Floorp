@@ -73,10 +73,6 @@ CPPSRCS		= \
 		TestUnicodeArguments.cpp \
 		$(NULL)
 
-ifdef WRAP_STL_INCLUDES
-CPPSRCS += TestSTLWrappers.cpp
-endif
-
 SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
