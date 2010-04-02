@@ -1179,6 +1179,9 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   if (!targetNode)
     return;
 
+  // Note: For universal/global ARIA states and properties we don't care if
+  // there is an ARIA role present or not.
+
   if (aAttribute == nsAccessibilityAtoms::aria_required) {
     nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
@@ -1206,6 +1209,24 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
       if (rootAcc)
         rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
     }
+    return;
+  }
+
+  // For aria drag and drop changes we fire a generic attribute change event;
+  // at least until native API comes up with a more meaningful event.
+  if (aAttribute == nsAccessibilityAtoms::aria_grabbed ||
+      aAttribute == nsAccessibilityAtoms::aria_dropeffect) {
+    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
+                               targetNode);
+  }
+
+  // We treat aria-expanded as a global ARIA state for historical reasons
+  if (aAttribute == nsAccessibilityAtoms::aria_expanded) {
+    nsRefPtr<nsAccEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_EXPANDED,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
     return;
   }
 
@@ -1249,15 +1270,6 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::aria_expanded) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::STATE_EXPANDED,
-                                PR_FALSE);
-    FireDelayedAccessibleEvent(event);
-    return;
-  }
-
   if (aAttribute == nsAccessibilityAtoms::aria_readonly) {
     nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
@@ -1289,14 +1301,6 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     InvalidateCacheSubtree(aContent,
                            nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE);
     return;
-  }
-
-  // For aria drag and drop changes we fire a generic attribute change event;
-  // at least until native API comes up with a more meaningful event.
-  if (aAttribute == nsAccessibilityAtoms::aria_grabbed ||
-      aAttribute == nsAccessibilityAtoms::aria_dropeffect) {
-    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
-                               targetNode);
   }
 }
 
