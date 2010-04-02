@@ -40,10 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function LOG(str) {
-  dump("*** " + str + "\n");
-}
-
 var EXPORTED_SYMBOLS = ["PlacesUtils"];
 
 var Ci = Components.interfaces;
@@ -52,6 +48,8 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
@@ -107,87 +105,13 @@ var PlacesUtils = {
   TYPE_UNICODE: "text/unicode",
 
   /**
-   * The Bookmarks Service.
-   */
-  get bookmarks() {
-    delete this.bookmarks;
-    return this.bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                            getService(Ci.nsINavBookmarksService);
-  },
-
-  /**
-   * The Nav History Service.
-   */
-  get history() {
-    delete this.history;
-    return this.history = Cc["@mozilla.org/browser/nav-history-service;1"].
-                          getService(Ci.nsINavHistoryService);
-  },
-
-  /**
-   * The Live Bookmark Service.
-   */
-  get livemarks() {
-    delete this.livemarks;
-    return this.livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
-                            getService(Ci.nsILivemarkService);
-  },
-
-  /**
-   * The Annotations Service.
-   */
-  get annotations() {
-    delete this.annotations;
-    return this.annotations = Cc["@mozilla.org/browser/annotation-service;1"].
-                              getService(Ci.nsIAnnotationService);
-  },
-
-  /**
-   * The Favicons Service
-   */
-  get favicons() {
-    delete this.favicons;
-    return this.favicons = Cc["@mozilla.org/browser/favicon-service;1"].
-                           getService(Ci.nsIFaviconService);
-  },
-
-  /**
-   * The Places Tagging Service
-   */
-  get tagging() {
-    delete this.tagging;
-    return this.tagging = Cc["@mozilla.org/browser/tagging-service;1"].
-                          getService(Ci.nsITaggingService);
-  },
-
-  get observerSvc() {
-    delete this.observerSvc;
-    return this.observerSvc = Cc["@mozilla.org/observer-service;1"].
-                              getService(Ci.nsIObserverService);
-  },
-
-  /**
    * Makes a URI from a spec.
    * @param   aSpec
    *          The string spec of the URI
    * @returns A URI object for the spec.
    */
   _uri: function PU__uri(aSpec) {
-    return Cc["@mozilla.org/network/io-service;1"].
-           getService(Ci.nsIIOService).
-           newURI(aSpec, null, null);
-  },
-
-  /**
-   * String bundle helpers
-   */
-  get _bundle() {
-    const PLACES_STRING_BUNDLE_URI =
-        "chrome://places/locale/places.properties";
-    delete this._bundle;
-    return this._bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                          getService(Ci.nsIStringBundleService).
-                          createBundle(PLACES_STRING_BUNDLE_URI);
+    return NetUtil.newURI(aSpec);
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
@@ -298,7 +222,7 @@ var PlacesUtils = {
     this.annotations.addObserver(this, false);
 
     // observe shutdown, so we can remove the anno observer
-    this.observerSvc.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
 
     var readOnly = this.annotations.getItemsWithAnnotation(READ_ONLY_ANNO);
     this.__defineGetter__("_readOnly", function() readOnly);
@@ -312,7 +236,7 @@ var PlacesUtils = {
   observe: function PU_observe(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
       this.annotations.removeObserver(this);
-      this.observerSvc.removeObserver(this, "xpcom-shutdown");
+      Services.obs.removeObserver(this, "xpcom-shutdown");
     }
   },
 
@@ -717,7 +641,6 @@ var PlacesUtils = {
         }
         break;
       default:
-        LOG("Cannot unwrap data of type " + type);
         throw Cr.NS_ERROR_INVALID_ARG;
     }
     return nodes;
@@ -1495,9 +1418,7 @@ var PlacesUtils = {
             }
             return true;
           });
-        } catch(ex) {
-          LOG(ex);
-        }
+        } catch(ex) {}
         if (annos.length != 0)
           aJSNode.annos = annos;
       }
@@ -1682,9 +1603,9 @@ var PlacesUtils = {
   restoreBookmarksFromJSONFile:
   function PU_restoreBookmarksFromJSONFile(aFile) {
     let failed = false;
-    this.observerSvc.notifyObservers(null,
-                                     RESTORE_BEGIN_NSIOBSERVER_TOPIC,
-                                     RESTORE_NSIOBSERVER_DATA);
+    Services.obs.notifyObservers(null,
+                                 RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                                 RESTORE_NSIOBSERVER_DATA);
 
     try {
       // open file stream
@@ -1710,17 +1631,17 @@ var PlacesUtils = {
     }
     catch (exc) {
       failed = true;
-      this.observerSvc.notifyObservers(null,
-                                       RESTORE_FAILED_NSIOBSERVER_TOPIC,
-                                       RESTORE_NSIOBSERVER_DATA);
+      Services.obs.notifyObservers(null,
+                                   RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                                   RESTORE_NSIOBSERVER_DATA);
       Cu.reportError("Bookmarks JSON restore failed: " + exc);
       throw exc;
     }
     finally {
       if (!failed) {
-        this.observerSvc.notifyObservers(null,
-                                         RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
-                                         RESTORE_NSIOBSERVER_DATA);
+        Services.obs.notifyObservers(null,
+                                     RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                                     RESTORE_NSIOBSERVER_DATA);
       }
     }
   },
@@ -1763,9 +1684,7 @@ var PlacesUtils = {
     },
 
     get folder() {
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties);
-      let bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsILocalFile);
+      let bookmarksBackupDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       bookmarksBackupDir.append("bookmarkbackups");
       if (!bookmarksBackupDir.exists()) {
         bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
@@ -2014,3 +1933,46 @@ var PlacesUtils = {
     Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
   }
 };
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
+                                   "@mozilla.org/browser/nav-history-service;1",
+                                   "nsINavHistoryService");
+
+XPCOMUtils.defineLazyGetter(PlacesUtils, "bhistory", function() {
+  return PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
+});
+
+XPCOMUtils.defineLazyGetter(PlacesUtils, "ghistory2", function() {
+  return PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory2);
+});
+
+XPCOMUtils.defineLazyGetter(PlacesUtils, "ghistory3", function() {
+  return PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory3);
+});
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "favicons",
+                                   "@mozilla.org/browser/favicon-service;1",
+                                   "nsIFaviconService");
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "bookmarks",
+                                   "@mozilla.org/browser/nav-bookmarks-service;1",
+                                   "nsINavBookmarksService");
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "annotations",
+                                   "@mozilla.org/browser/annotation-service;1",
+                                   "nsIAnnotationService");
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "tagging",
+                                   "@mozilla.org/browser/tagging-service;1",
+                                   "nsITaggingService");
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "livemarks",
+                                   "@mozilla.org/browser/livemark-service;2",
+                                   "nsILivemarkService");
+
+XPCOMUtils.defineLazyGetter(PlacesUtils, "_bundle", function() {
+  const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
+  return Cc["@mozilla.org/intl/stringbundle;1"].
+         getService(Ci.nsIStringBundleService).
+         createBundle(PLACES_STRING_BUNDLE_URI);
+});

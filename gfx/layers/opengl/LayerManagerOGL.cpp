@@ -83,19 +83,7 @@ LayerManagerOGL::Initialize()
 {
 #ifdef XP_WIN
   mDC = (HDC)mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
-  PIXELFORMATDESCRIPTOR pfd;
-  ZeroMemory(&pfd, sizeof(pfd));
 
-  pfd.nSize = sizeof(pfd);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 32;
-  pfd.cDepthBits = 0;
-  pfd.iLayerType = PFD_MAIN_PLANE;
-  int iFormat = ChoosePixelFormat(mDC, &pfd);
-
-  SetPixelFormat(mDC, iFormat, &pfd);
   mContext = sglWrapper.wCreateContext(mDC);
 
   if (!mContext) {

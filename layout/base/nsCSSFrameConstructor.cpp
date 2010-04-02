@@ -422,7 +422,7 @@ ReparentFrame(nsFrameManager* aFrameManager,
               nsIFrame* aFrame)
 {
   aFrame->SetParent(aNewParentFrame);
-  aFrameManager->ReParentStyleContext(aFrame);
+  aFrameManager->ReparentStyleContext(aFrame);
   if (aFrame->GetStateBits() &
       (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     // No need to walk up the tree, since the bits are already set
@@ -7645,7 +7645,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
       }
     }
 
-    nsReStyleHint rshint = 
+    nsRestyleHint rshint = 
       styleSet->HasStateDependentStyle(presContext, aContent, aStateMask);
       
     if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
@@ -7662,7 +7662,7 @@ nsCSSFrameConstructor::AttributeWillChange(nsIContent* aContent,
                                            nsIAtom* aAttribute,
                                            PRInt32 aModType)
 {
-  nsReStyleHint rshint =
+  nsRestyleHint rshint =
     mPresShell->FrameManager()->HasAttributeDependentStyle(aContent,
                                                            aAttribute,
                                                            aModType,
@@ -7749,7 +7749,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   // See if we can optimize away the style re-resolution -- must be called after
   // the frame's AttributeChanged() in case it does something that affects the style
   nsFrameManager *frameManager = shell->FrameManager();
-  nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
+  nsRestyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
                                                                   aAttribute,
                                                                   aModType,
                                                                   PR_TRUE);
@@ -8601,7 +8601,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       // ContentRemoved triggered reconstruction, then we don't need to do this
       // because the frames will already have been built.
       if (aAsyncInsert) {
-        PostRestyleEvent(aContent, nsReStyleHint(0), nsChangeHint_ReconstructFrame);
+        PostRestyleEvent(aContent, nsRestyleHint(0), nsChangeHint_ReconstructFrame);
       } else {
         rv = ContentInserted(container, aContent,
                              indexInContainer, mTempFrameTreeState);
@@ -10797,7 +10797,7 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
     return;
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -10817,7 +10817,7 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
       }
     }
     if (wasEmpty) {
-      PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+      PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
       // Restyling the container is the most we can do here, so we're done.
       return;
     }
@@ -10827,7 +10827,7 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
     for (PRInt32 index = aNewIndexInContainer - 1; index >= 0; --index) {
       nsIContent *content = aContainer->GetChildAt(index);
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
-        PostRestyleEvent(content, eReStyle_Self, NS_STYLE_HINT_NONE);
+        PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         break;
       }
     }
@@ -10853,7 +10853,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
 
   if (selectorFlags & (NODE_HAS_SLOW_SELECTOR |
                        NODE_HAS_SLOW_SELECTOR_NOAPPEND)) {
-    PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -10877,7 +10877,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
       }
     }
     if (wasEmpty) {
-      PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+      PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
       // Restyling the container is the most we can do here, so we're done.
       return;
     }
@@ -10896,7 +10896,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
       }
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
         if (passedChild) {
-          PostRestyleEvent(content, eReStyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
         break;
       }
@@ -10912,7 +10912,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
       }
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
         if (passedChild) {
-          PostRestyleEvent(content, eReStyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
         break;
       }
@@ -10934,7 +10934,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
 
   if (selectorFlags & (NODE_HAS_SLOW_SELECTOR |
                        NODE_HAS_SLOW_SELECTOR_NOAPPEND)) {
-    PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -10956,7 +10956,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
       }
     }
     if (isEmpty) {
-      PostRestyleEvent(aContainer, eReStyle_Self, NS_STYLE_HINT_NONE);
+      PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
       // Restyling the container is the most we can do here, so we're done.
       return;
     }
@@ -10970,7 +10970,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
         break; // went through all children
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
         if (index >= aIndexInContainer) {
-          PostRestyleEvent(content, eReStyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
         break;
       }
@@ -10981,7 +10981,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
       nsIContent *content = aContainer->GetChildAt(index);
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
         if (index < aIndexInContainer) {
-          PostRestyleEvent(content, eReStyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
         break;
       }
@@ -11012,7 +11012,7 @@ CollectRestyles(nsISupports* aContent,
 
 void
 nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
-                                         nsReStyleHint aRestyleHint,
+                                         nsRestyleHint aRestyleHint,
                                          nsChangeHint aChangeHint)
 {
   NS_PRECONDITION(aContent, "Must have content node");
@@ -11025,7 +11025,7 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
   }
   
   nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
-  if (aRestyleHint & eReStyle_Self) {
+  if (aRestyleHint & eRestyle_Self) {
     RestyleElement(aContent, primaryFrame, aChangeHint);
   } else if (aChangeHint &&
                (primaryFrame ||
@@ -11036,7 +11036,7 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
     ProcessRestyledFrames(changeList);
   }
 
-  if (aRestyleHint & eReStyle_LaterSiblings) {
+  if (aRestyleHint & eRestyle_LaterSiblings) {
     RestyleLaterSiblings(aContent);
   }
 }
@@ -11141,6 +11141,10 @@ nsCSSFrameConstructor::ProcessPendingRestyleTable(
     count = aRestyles.Count();
   }
 
+  // Set mInStyleRefresh to false now, since the EndUpdate call might
+  // add more restyles.
+  mInStyleRefresh = PR_FALSE;
+
   EndUpdate();
 
 #ifdef DEBUG
@@ -11163,8 +11167,9 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
 
   ProcessPendingRestyleTable(mPendingRestyles);
 
-  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
-                   "We should have processed mPendingRestyles to completion");
+#ifdef DEBUG
+  PRUint32 oldPendingRestyleCount = mPendingRestyles.Count();
+#endif
 
   // ...and then process animation restyles.  This needs to happen
   // second because we need to start animations that resulted from the
@@ -11179,12 +11184,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   presContext->SetProcessingAnimationStyleChange(PR_FALSE);
 
   presContext->SetProcessingRestyles(PR_FALSE);
-  mInStyleRefresh = PR_FALSE;
-
-  NS_POSTCONDITION(mPendingAnimationRestyles.Count() == 0,
-                   "We should have processed mPendingAnimationRestyles to "
-                   "completion");
-  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
+  NS_POSTCONDITION(mPendingRestyles.Count() == oldPendingRestyleCount,
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
 
@@ -11198,7 +11198,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
 
 void
 nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
-                                              nsReStyleHint aRestyleHint,
+                                              nsRestyleHint aRestyleHint,
                                               nsChangeHint aMinChangeHint,
                                               PRBool aForAnimation)
 {
@@ -11215,7 +11215,7 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
                "Shouldn't be trying to restyle non-elements directly");
 
   RestyleData existingData;
-  existingData.mRestyleHint = nsReStyleHint(0);
+  existingData.mRestyleHint = nsRestyleHint(0);
   existingData.mChangeHint = NS_STYLE_HINT_NONE;
 
   nsDataHashtable<nsISupportsHashKey, RestyleData> &restyles =
@@ -11223,7 +11223,7 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
 
   restyles.Get(aContent, &existingData);
   existingData.mRestyleHint =
-    nsReStyleHint(existingData.mRestyleHint | aRestyleHint);
+    nsRestyleHint(existingData.mRestyleHint | aRestyleHint);
   NS_UpdateHint(existingData.mChangeHint, aMinChangeHint);
 
   restyles.Put(aContent, existingData);

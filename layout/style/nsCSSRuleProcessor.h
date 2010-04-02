@@ -102,11 +102,11 @@ public:
   NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
 #endif
 
-  virtual nsReStyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
+  virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
 
   virtual PRBool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
 
-  virtual nsReStyleHint
+  virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
 
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,

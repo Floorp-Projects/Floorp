@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import re, sys, os, os.path, logging, shutil, signal
+import re, sys, os, os.path, logging, shutil, signal, math
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
@@ -57,24 +57,73 @@ class XPCShellTests(object):
     self.log.setLevel(logging.INFO)
     self.log.addHandler(handler)
 
-  def readManifest(self, manifest):
+  def readManifest(self):
     """
-      Given a manifest file containing a list of test directories,
-      return a list of absolute paths to the directories contained within.
+      For a given manifest file, read the contents and populate self.testdirs
     """
-    manifestdir = os.path.dirname(manifest)
-    testdirs = []
+    manifestdir = os.path.dirname(self.manifest)
     try:
-      f = open(manifest, "r")
+      f = open(self.manifest, "r")
       for line in f:
-        dir = line.rstrip()
-        path = os.path.join(manifestdir, dir)
+        path = os.path.join(manifestdir, line.rstrip())
         if os.path.isdir(path):
-          testdirs.append(path)
+          self.testdirs.append(path)
       f.close()
     except:
       pass # just eat exceptions
-    return testdirs
+
+  def buildTestList(self):
+    """
+      Builds a dict of {"testdir" : ["testfile1", "testfile2", ...], "testdir2"...}.
+      If manifest is given override testdirs to build initial list of directories and tests.
+      If testpath is given, use that, otherwise chunk if requested.
+      The resulting set of tests end up in self.alltests
+    """
+    self.buildTestPath()
+
+    self.alltests = {}
+    if self.manifest is not None:
+      self.readManifest()
+
+    for dir in self.testdirs:
+      tests = self.getTestFiles(dir)
+      if tests:
+        self.alltests[os.path.abspath(dir)] = tests
+
+    if self.singleFile is None and self.totalChunks > 1:
+      self.chunkTests()
+
+  def chunkTests(self):
+    """
+      Split the list of tests up into [totalChunks] pieces and filter the
+      self.alltests based on thisChunk, so we only run a subset.
+    """
+    totalTests = 0
+    for dir in self.alltests:
+      totalTests += len(self.alltests[dir])
+
+    testsPerChunk = math.ceil(totalTests / float(self.totalChunks))
+    start = int(round((self.thisChunk-1) * testsPerChunk))
+    end = start + testsPerChunk
+    currentCount = 0
+
+    templist = {}
+    for dir in self.alltests:
+      startPosition = 0
+      dirCount = len(self.alltests[dir])
+      endPosition = dirCount
+      if currentCount < start and currentCount + dirCount >= start:
+        startPosition = int(start - currentCount)        
+      if currentCount + dirCount > end:
+        endPosition = int(end - currentCount)
+      if end - currentCount < 0 or (currentCount + dirCount < start):
+        endPosition = 0
+
+      if startPosition is not endPosition:
+        templist[dir] = self.alltests[dir][startPosition:endPosition]
+      currentCount += dirCount
+
+    self.alltests = templist
 
   def setAbsPath(self):
     """
@@ -167,7 +216,7 @@ class XPCShellTests(object):
       |singleFile| will be the optional test only, or |None|.
     """
     self.singleFile = None
-    if self.testPath:
+    if self.testPath is not None:
       if self.testPath.endswith('.js'):
         # Split into path and file.
         if self.testPath.find('/') == -1:
@@ -209,10 +258,10 @@ class XPCShellTests(object):
 
       On a remote system, this is overloaded to find files in the remote directory structure.
     """
-    testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
+    testfiles = sorted(glob(os.path.join(os.path.abspath(testdir), "test_*.js")))
     if self.singleFile:
       if self.singleFile in [os.path.basename(x) for x in testfiles]:
-        testfiles = [os.path.join(testdir, self.singleFile)]
+        testfiles = [os.path.abspath(os.path.join(testdir, self.singleFile))]
       else: # not in this dir? skip it
         return None
             
@@ -313,7 +362,8 @@ class XPCShellTests(object):
   def runTests(self, xpcshell, xrePath=None, symbolsPath=None,
                manifest=None, testdirs=[], testPath=None,
                interactive=False, logfiles=True,
-               debuggerInfo=None):
+               thisChunk=1, totalChunks=1, debugger=None,
+               debuggerArgs=None, debuggerInteractive=False):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -341,7 +391,9 @@ class XPCShellTests(object):
     self.testPath = testPath
     self.interactive = interactive
     self.logfiles = logfiles
-    self.debuggerInfo = debuggerInfo
+    self.totalChunks = totalChunks
+    self.thisChunk = thisChunk
+    self.debuggerInfo = getDebuggerInfo(self.oldcwd, debugger, debuggerArgs, debuggerInteractive)
 
     if not testdirs and not manifest:
       # nothing to test!
@@ -356,39 +408,26 @@ class XPCShellTests(object):
     self.buildEnvironment()
     pStdout, pStderr = self.getPipes()
 
-    # Override testdirs.
-    if manifest is not None:
-      testdirs = self.readManifest(os.path.abspath(manifest))
+    self.buildTestList()
 
-    self.buildTestPath()
-
-    # Process each test directory individually.
-    for testdir in testdirs:
-      self.buildXpcsCmd(testdir)
-
+    for testdir in sorted(self.alltests.keys()):
       if self.testPath and not testdir.endswith(self.testPath):
         continue
 
-      testdir = os.path.abspath(testdir)
-
+      self.buildXpcsCmd(testdir)
       testHeadFiles = self.getHeadFiles(testdir)
       testTailFiles = self.getTailFiles(testdir)
-
-      testfiles = self.getTestFiles(testdir)
-      if testfiles == None:
-        continue
-
       cmdH = self.buildCmdHead(testHeadFiles, testTailFiles, self.xpcsCmd)
 
       # Now execute each test individually.
-      for test in testfiles:
+      for test in self.alltests[testdir]:
         # create a temp dir that the JS harness can stick a profile in
         self.profileDir = self.setupProfileDir()
         self.leakLogFile = self.setupLeakLogging()
 
         # The test file will have to be loaded after the head files.
         cmdT = ['-e', 'const _TEST_FILE = ["%s"];' %
-                replaceBackSlashes(os.path.join(testdir, test))]
+                replaceBackSlashes(test)]
 
         try:
           proc = self.launchProcess(cmdH + cmdT + self.xpcsRunArgs,
@@ -455,6 +494,12 @@ class XPCShellOptions(OptionParser):
     self.add_option("--test-path",
                     type="string", dest="testPath", default=None,
                     help="single path and/or test filename to test")
+    self.add_option("--total-chunks",
+                    type = "int", dest = "totalChunks", default=1,
+                    help = "how many chunks to split the tests up into")
+    self.add_option("--this-chunk",
+                    type = "int", dest = "thisChunk", default=1,
+                    help = "which chunk to run between 1 and --total-chunks")
 
 def main():
   parser = XPCShellOptions()
@@ -468,23 +513,12 @@ def main():
      sys.exit(1)
 
   xpcsh = XPCShellTests()
-  debuggerInfo = getDebuggerInfo(xpcsh.oldcwd, options.debugger, options.debuggerArgs,
-    options.debuggerInteractive);
 
   if options.interactive and not options.testPath:
     print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
     sys.exit(1)
 
-    
-  if not xpcsh.runTests(args[0],
-                        xrePath=options.xrePath,
-                        symbolsPath=options.symbolsPath,
-                        manifest=options.manifest,
-                        testdirs=args[1:],
-                        testPath=options.testPath,
-                        interactive=options.interactive,
-                        logfiles=options.logfiles,
-                        debuggerInfo=debuggerInfo):
+  if not xpcsh.runTests(args[0], testdirs=args[1:], **options.__dict__):
     sys.exit(1)
 
 if __name__ == '__main__':

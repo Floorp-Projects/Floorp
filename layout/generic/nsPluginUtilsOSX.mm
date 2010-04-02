@@ -221,15 +221,17 @@ nsCARenderer::~nsCARenderer() {
   Destroy();
 }
 
-CGColorSpaceRef CreateSystemColorSpace () {
+CGColorSpaceRef CreateSystemColorSpace() {
     CMProfileRef system_profile = NULL;
     CGColorSpaceRef cspace = NULL;
 
     if (::CMGetSystemProfile(&system_profile) == noErr) {
       // Create a colorspace with the systems profile
       cspace = ::CGColorSpaceCreateWithPlatformColorSpace(system_profile);
-
       ::CMCloseProfile(system_profile);
+    } else {
+      // Default to generic
+      cspace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     }
 
     return cspace;

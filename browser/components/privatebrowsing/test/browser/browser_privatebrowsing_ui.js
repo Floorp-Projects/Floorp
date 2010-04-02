@@ -48,9 +48,7 @@ function test() {
     if (aTopic == "private-browsing")
       observerData = aData;
   }
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver(observer, "private-browsing", false);
+  Services.obs.addObserver(observer, "private-browsing", false);
   let pbMenuItem = document.getElementById("privateBrowsingItem");
   // add a new blank tab to ensure the title can be meaningfully compared later
   gBrowser.selectedTab = gBrowser.addTab();
@@ -92,6 +90,6 @@ function test() {
 
   // cleanup
   gBrowser.removeCurrentTab();
-  os.removeObserver(observer, "private-browsing");
+  Services.obs.removeObserver(observer, "private-browsing");
   gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
 }

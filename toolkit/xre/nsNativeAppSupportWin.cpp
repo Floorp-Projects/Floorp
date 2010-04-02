@@ -343,7 +343,6 @@ private:
     static void ActivateLastWindow();
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow();
-    static nsresult ReParent( nsISupports *window, HWND newParent );
     static void     SetupSysTrayIcon();
     static void     RemoveSysTrayIcon();
 

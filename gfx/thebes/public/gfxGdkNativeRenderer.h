@@ -39,6 +39,7 @@
 #define GFXGDKNATIVERENDER_H_
 
 #include "gfxColor.h"
+#include "nsAutoPtr.h"
 #include <gdk/gdk.h>
 
 class gfxASurface;

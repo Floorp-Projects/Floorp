@@ -35,21 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+// Import common head.
+let (commonFile = do_get_file("../head_common.js", false)) {
+  let uri = Services.io.newFileURI(commonFile);
+  Services.scriptloader.loadSubScript(uri.spec, this);
+}
+
+// Put any other stuff relative to this test folder below.
+
+
 /**
  * Header file for autocomplete testcases that create a set of pages with uris,
  * titles, tags and tests that a given search term matches certain pages.
  */
-
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
-const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
-const TRANSITION_BOOKMARK = Ci.nsINavHistoryService.TRANSITION_BOOKMARK;
-const TRANSITION_EMBED = Ci.nsINavHistoryService.TRANSITION_EMBED;
-const TRANSITION_FRAMED_LINK = Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK;
-const TRANSITION_REDIRECT_PERMANENT = Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT;
-const TRANSITION_REDIRECT_TEMPORARY = Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
-const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
 
 let current_test = 0;
 
@@ -72,12 +77,14 @@ AutoCompleteInput.prototype = {
   setSelectedIndex: function() {},
   get searchCount() { return this.searches.length; },
   getSearchAt: function(aIndex) this.searches[aIndex],
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput, Ci.nsIAutoCompletePopup])
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIAutoCompleteInput,
+    Ci.nsIAutoCompletePopup,
+  ])
 };
 
-function toURI(aSpec)
-{
-  return iosvc.newURI(aSpec, null, null);
+function toURI(aSpec) {
+  return uri(aSpec);
 }
 
 let appendTags = true;
@@ -188,72 +195,6 @@ let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 // Store the page info for each uri
 let gPages = [];
 
-/**
- * Function gets current database connection, if the connection has been closed
- * it will try to reconnect to the places.sqlite database.
- */
-function DBConn()
-{
-  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsPIPlacesDatabase).
-           DBConnection;
-  if (db.connectionReady)
-    return db;
-
-  // open a new connection if needed
-  let file = dirSvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  let storageService = Cc["@mozilla.org/storage/service;1"].
-                       getService(Ci.mozIStorageService);
-  try {
-    var dbConn = storageService.openDatabase(file);
-  } catch (ex) {
-    return null;
-  }
-  return dbConn;
-}
-
-/**
- * Sets title synchronously for a page in moz_places synchronously.
- * History.SetPageTitle uses LAZY_ADD so we can't rely on it.
- *
- * @param aURI
- *        An nsIURI to set the title for.
- * @param aTitle
- *        The title to set the page to.
- * @throws if the page is not found in the database.
- *
- * @note this function only exists because we have no API to do this. It should
- *       be added in bug 421897.
- */
-function setPageTitle(aURI, aTitle) {
-  let dbConn = DBConn();
-  // Check that the page exists.
-  let stmt = dbConn.createStatement(
-    "SELECT id FROM moz_places_view WHERE url = :url");
-  stmt.params.url = aURI.spec;
-  try {
-    if (!stmt.executeStep()) {
-      do_throw("Unable to find page " + aURIString);
-      return;
-    }
-  }
-  finally {
-    stmt.finalize();
-  }
-
-  // Update the title
-  stmt = dbConn.createStatement(
-    "UPDATE moz_places_view SET title = :title WHERE url = :url");
-  stmt.params.title = aTitle;
-  stmt.params.url = aURI.spec;
-  try {
-    stmt.execute();
-  }
-  finally {
-    stmt.finalize();
-  }
-}
 
 /**
  * Adds a livemark container with a single child, and creates various properties

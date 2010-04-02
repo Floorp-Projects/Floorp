@@ -173,9 +173,8 @@ class nsStyleSet
   // The new context will be the same as the old if the new parent is the
   // same as the old parent.
   already_AddRefed<nsStyleContext>
-    ReParentStyleContext(nsPresContext* aPresContext,
-                         nsStyleContext* aStyleContext,
-                         nsStyleContext* aNewParentContext);
+  ReparentStyleContext(nsStyleContext* aStyleContext,
+                       nsStyleContext* aNewParentContext);
 
   // Test if style is dependent on a document state.
   PRBool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
@@ -183,12 +182,12 @@ class nsStyleSet
                                         PRInt32        aStateMask);
 
   // Test if style is dependent on content state
-  nsReStyleHint HasStateDependentStyle(nsPresContext* aPresContext,
+  nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        PRInt32         aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
-  nsReStyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
+  nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
                                            nsIContent*    aContent,
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,
@@ -336,11 +335,11 @@ class nsStyleSet
                           RuleProcessorData* aData,
                           PRBool aWalkAllXBLStylesheets);
 
-  already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
-                                              nsStyleContext* aParentContext,
-                                              nsRuleNode* aRuleNode,
-                                              nsIAtom* aPseudoTag,
-                                              nsCSSPseudoElements::Type aPseudoType);
+  already_AddRefed<nsStyleContext>
+  GetContext(nsStyleContext* aParentContext,
+             nsRuleNode* aRuleNode,
+             nsIAtom* aPseudoTag,
+             nsCSSPseudoElements::Type aPseudoType);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 

@@ -214,7 +214,20 @@ PlanarYCbCrImageOGL::AllocateTextures()
   mManager->MakeCurrent();
   sglWrapper.GenTextures(3, mTextures);
 
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mData.mYStride);
+  GLint alignment;
+
+  if (!((ptrdiff_t)mData.mYStride & 0x7) && !((ptrdiff_t)mData.mYChannel & 0x7)) {
+    alignment = 8;
+  } else if (!((ptrdiff_t)mData.mYStride & 0x3)) {
+    alignment = 4;
+  } else if (!((ptrdiff_t)mData.mYStride & 0x1)) {
+    alignment = 2;
+  } else {
+    alignment = 1;
+  }
+
+  // Set texture alignment for Y plane.
+  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
 
   sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTextures[0]);
 
@@ -232,8 +245,21 @@ PlanarYCbCrImageOGL::AllocateTextures()
                LOCAL_GL_LUMINANCE,
                LOCAL_GL_UNSIGNED_BYTE,
                mData.mYChannel);
+
+  if (!((ptrdiff_t)mData.mCbCrStride & 0x7) && 
+      !((ptrdiff_t)mData.mCbChannel & 0x7) &&
+      !((ptrdiff_t)mData.mCrChannel & 0x7)) {
+    alignment = 8;
+  } else if (!((ptrdiff_t)mData.mCbCrStride & 0x3)) {
+    alignment = 4;
+  } else if (!((ptrdiff_t)mData.mCbCrStride & 0x1)) {
+    alignment = 2;
+  } else {
+    alignment = 1;
+  }
   
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mData.mCbCrStride);
+  // Set texture alignment for Cb/Cr plane
+  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
 
   sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTextures[1]);
 
@@ -269,7 +295,8 @@ PlanarYCbCrImageOGL::AllocateTextures()
                LOCAL_GL_UNSIGNED_BYTE,
                mData.mCrChannel);
 
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+  // Reset alignment to default
+  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
 void
