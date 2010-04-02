@@ -422,7 +422,7 @@ ReparentFrame(nsFrameManager* aFrameManager,
               nsIFrame* aFrame)
 {
   aFrame->SetParent(aNewParentFrame);
-  aFrameManager->ReParentStyleContext(aFrame);
+  aFrameManager->ReparentStyleContext(aFrame);
   if (aFrame->GetStateBits() &
       (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     // No need to walk up the tree, since the bits are already set

@@ -120,7 +120,7 @@ public:
 protected:
 
   virtual PRIntn GetSkipSides() const;
-  void ReParentFrameList(const nsFrameList& aFrameList);
+  void ReparentFrameList(const nsFrameList& aFrameList);
 
   nsIFrame* mLegendFrame;
   nsIFrame* mContentFrame;
@@ -621,7 +621,7 @@ nsFieldSetFrame::AppendFrames(nsIAtom*       aListName,
                               nsFrameList&   aFrameList)
 {
   // aFrameList is not allowed to contain "the legend" for this fieldset
-  ReParentFrameList(aFrameList);
+  ReparentFrameList(aFrameList);
   return mContentFrame->AppendFrames(aListName, aFrameList);
 }
 
@@ -635,7 +635,7 @@ nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
                "inserting after sibling frame with different parent");
 
   // aFrameList is not allowed to contain "the legend" for this fieldset
-  ReParentFrameList(aFrameList);
+  ReparentFrameList(aFrameList);
   if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
     aPrevFrame = nsnull;
   }
@@ -665,14 +665,14 @@ NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 void
-nsFieldSetFrame::ReParentFrameList(const nsFrameList& aFrameList)
+nsFieldSetFrame::ReparentFrameList(const nsFrameList& aFrameList)
 {
   nsFrameManager* frameManager = PresContext()->FrameManager();
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(mLegendFrame || e.get()->GetType() != nsGkAtoms::legendFrame,
                  "The fieldset's legend is not allowed in this list");
     e.get()->SetParent(mContentFrame);
-    frameManager->ReParentStyleContext(e.get());
+    frameManager->ReparentStyleContext(e.get());
   }
   mContentFrame->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
 }

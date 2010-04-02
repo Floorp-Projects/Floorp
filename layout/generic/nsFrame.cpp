@@ -5824,7 +5824,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   }
 
   // Otherwise, walk up out of all anon boxes.  For placeholder frames, walk out
-  // of all pseudo-elements as well.  Otherwise ReParentStyleContext could cause
+  // of all pseudo-elements as well.  Otherwise ReparentStyleContext could cause
   // style data to be out of sync with the frame tree.
   nsIFrame* parent = aProspectiveParent;
   do {
