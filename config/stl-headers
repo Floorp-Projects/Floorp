@@ -1,0 +1,19 @@
+#
+# This file contains a list the of STL headers that have been reviewed
+# for exception safety and approved. See
+#
+#   https://bugzilla.mozilla.org/show_bug.cgi?id=551254
+#
+# At build time, each header listed here is converted into a "wrapper
+# header" that is installed into dist/stl_includes.
+#
+# If you would like to request a new STL header <foo> be added, please
+# file a Core:XPCOM bug with a title like "STL: Review exception
+# safety of <foo> for gcc and MSVC".
+#
+
+# FIXME: these headers haven't been reviewed yet, but we use them
+# unsafely in modules/libpr0n, so we might as well prevent it from
+# throwing exceptions
+algorithm
+vector

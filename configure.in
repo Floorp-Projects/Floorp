@@ -759,6 +759,9 @@ EOF
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WS03, 0x05020000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_LONGHORN, 0x06000000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
+
+    STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
+    WRAP_STL_INCLUDES=1
     ;;
 esac
 
@@ -806,6 +809,9 @@ AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 AC_SUBST(INTEL_CC)
 AC_SUBST(INTEL_CXX)
+
+AC_SUBST(STL_FLAGS)
+AC_SUBST(WRAP_STL_INCLUDES)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -3126,6 +3132,8 @@ EOF
                 "$ac_cv_have_visibility_class_bug" = "no"; then
           VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
+          STL_FLAGS='-I$(DIST)/stl_wrappers'
+          WRAP_STL_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
         fi # have visibility pragma bug
