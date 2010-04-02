@@ -31,7 +31,6 @@ window.Group = function(listOfEls, options) {
     options = {};
 
   this._children = []; // an array of Items
-  this._container = null;
   this._padding = 30;
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
 
@@ -53,9 +52,20 @@ window.Group = function(listOfEls, options) {
      })
     .data("group", this)
     .data('item', this)
+
     .appendTo("body")
     .dequeue();    
     
+  this._init(container.get(0));
+
+  if(this.$debug) 
+    this.$debug.css({zIndex: -1000});
+  
+/*
+  var contentEl = $('<div class="group-content"/>')
+    .appendTo(container);
+*/
+  
   var resizer = $("<div class='resizer'/>")
     .css({
       position: "absolute",
@@ -95,8 +105,6 @@ window.Group = function(listOfEls, options) {
     titlebar.animate({opacity:0}).dequeue();
   })*/
 
-  this._container = container;
-
   $.each(listOfEls, function(index, el) {  
     self.add(el, null, options);
   });
@@ -127,94 +135,81 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
-  _getContainerBox: function(){
-    var pos = $(this._container).position();
-    var w = $(this._container).width();
-    var h = $(this._container).height();
-    return {
-      top: pos.top,
-      left: pos.left,
-      bottom: pos.top + h,
-      right: pos.left + w,
-      height: h,
-      width: w
-    }
+  getContentBounds: function() {
+    var box = this.getBounds();
+    var $titlebar = $('.titlebar', this.container);
+    var titleHeight = $titlebar.height();
+    box.top += titleHeight;
+    box.height -= titleHeight;
+    return box;
   },
   
-  // ----------
-  getContainer: function() {
-    return this._container;
-  },
-
   // ----------  
-  getBounds: function() {
-    var $titlebar = $('.titlebar', this._container);
-    var bb = Utils.getBounds(this._container);
+  reloadBounds: function() {
+    var $titlebar = $('.titlebar', this.container);
+    var bb = Utils.getBounds(this.container);
     var titleHeight = $titlebar.height();
     bb.top -= titleHeight;
     bb.height += titleHeight;
-    return bb;
+    
+    if(this.bounds)
+      this.setBounds(bb, true);
+    else {
+      this.bounds = bb;
+      this._updateDebugBounds();
+    }
   },
   
   // ----------  
   setBounds: function(rect, immediately) {
-    this.setPosition(rect.left, rect.top, immediately);
-    this.setSize(rect.width, rect.height, immediately, {dontArrange: true});
-
-    var $titlebar = $('.titlebar', this._container);
+    var $titlebar = $('.titlebar', this.container);
     var titleHeight = $titlebar.height();
-    var box = new Rect(rect);
-    box.top += titleHeight;
-    box.height -= titleHeight;
-    this.arrange({animate: !immediately, bounds: box});
+    var css = {};
+
+    if(rect.left != this.bounds.left)
+      css.left = rect.left;
+      
+    if(rect.top != this.bounds.top) 
+      css.top = rect.top + titleHeight;
+      
+    if(rect.width != this.bounds.width)
+      css.width = rect.width;
+
+    if(rect.height != this.bounds.height)
+      css.height = rect.height - titleHeight; 
+      
+    if($.isEmptyObject(css))
+      return;
+      
+    var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
+    this.bounds = new Rect(rect);
+
+    if(css.width || css.height) {
+      this.arrange({animate: !immediately});
+    } else if(css.left || css.top) {
+      $.each(this._children, function(index, child) {
+        var box = child.getBounds();
+        child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+      });
+    }
+      
+    if(immediately) {
+      $(this.container).css(css);
+      if(css.width)
+        $titlebar.css({width: css.width});
+    } else {
+      TabMirror.pausePainting();
+      $(this.container).animate(css, {complete: function() {
+        TabMirror.resumePainting();
+      }}).dequeue();
+      
+      if(css.width)
+        $titlebar.animate({width: css.width}).dequeue();        
+    }
+
+    this._updateDebugBounds();
   },
   
-  // ----------  
-  setPosition: function(left, top, immediately) {
-    var box = this.getBounds();
-    var offset = new Point(left - box.left, top - box.top);
-    
-    $.each(this._children, function(index, child) {
-      box = child.getBounds();
-      child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
-    });
-        
-    box = Utils.getBounds(this._container);
-    var options = {left: box.left + offset.x, top: box.top + offset.y};
-    if(immediately)
-      $(this._container).css(options);
-    else
-      $(this._container).animate(options).dequeue();
-  },
-
-  // ----------  
-  setSize: function(width, height, immediately, options) {
-    if(typeof(options) == 'undefined')
-      options = {};
-      
-    var $titlebar = $('.titlebar', this._container);
-    var titleHeight = $titlebar.height();
-    
-    var containerOptions = {width: width, height: height - titleHeight};
-    var titleOptions = {width: width};
-    if(immediately) {
-      $(this._container).css(containerOptions);
-      $titlebar.css(titleOptions);
-    } else {
-      $(this._container).animate(containerOptions).dequeue();
-      $titlebar.animate(titleOptions).dequeue();
-    }
-    
-    if(!options.dontArrange) {
-      //TODO sort out the bounds and titlebar stuff for real 
-      var box = this.getBounds();
-      box.width = width;
-      box.top += titleHeight;
-      box.height = height - titleHeight;
-      this.arrange({animate: !immediately, bounds: box});
-    }
-  },
-
   // ----------  
   close: function() {
     var toClose = $.merge([], this._children);
@@ -295,7 +290,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
     if(a.isAnItem) {
       item = a;
-      $el = $(item.getContainer());
+      $el = $(item.container);
     } else {
       $el = $(a);  
       item = Items.item($el);
@@ -315,7 +310,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     if(this._children.length == 0 ){
       Groups.unregister(this);
-      this._container.fadeOut(function() {
+      $(this.container).fadeOut(function() {
         $(this).remove();
       });
     } else if(!options.dontArrange) {
@@ -344,7 +339,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     /*if( this._children.length < 2 ) return;*/
     if( this._rectToBe ) var bb = this._rectToBe;
-    else var bb = (options.bounds ? options.bounds : this._getContainerBox());
+    else var bb = this.getContentBounds();
 
     var count = this._children.length;
     var bbAspect = bb.width/bb.height;
@@ -397,47 +392,34 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     $(container).draggable({
       start: function(){
-        $dragged = $(this);
-        $(container).data("origPosition", $(container).position());
-        $.each(self._children, function(index, child) {
-          child.dragData = {startBounds: child.getBounds()};
-        });
+        drag.info = new DragInfo(this);
       },
       drag: function(e, ui){
-        var origPos = $(container).data("origPosition");
-        dX = ui.offset.left - origPos.left;
-        dY = ui.offset.top - origPos.top;
-        $.each(self._children, function(index, child) {
-          child.setPosition(child.dragData.startBounds.left + dX, 
-            child.dragData.startBounds.top + dY, 
-            true);
-        });
+        drag.info.drag(e, ui);
 
 /*         $(this).css({zIndex: zIndex}); */
 /*         zIndex += 1; */
       }, 
       stop: function() {
-        if(!$dragged.hasClass('willGroup') && !$dragged.data('group'))
-          Items.item(this).pushAway();
-
-        $dragged = null; 
+        drag.info.stop();
+        drag.info = null;
       },
 /*       zIndex: 999 */
     });
     
     $(container).droppable({
       over: function(){
-        $dragged.addClass("willGroup");
+        drag.info.$el.addClass("willGroup");
       },
       out: function(){
-        var $group = $dragged.data("group");
+        var $group = drag.info.$el.data("group");
         if($group)
-          $group.remove($dragged);
-        $dragged.removeClass("willGroup");
+          $group.remove(drag.info.$el);
+        drag.info.$el.removeClass("willGroup");
       },
       drop: function(event){
-        $dragged.removeClass("willGroup");
-        self.add( $dragged, {left:event.pageX, top:event.pageY} )
+        drag.info.$el.removeClass("willGroup");
+        self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
       },
       accept: ".tab, .group",
     });
@@ -446,10 +428,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       handles: "se",
       aspectRatio: false,
       resize: function(){
-        self.arrange({animate: false});
+        self.reloadBounds();
       },
       stop: function(){
-        self.arrange();
+        self.reloadBounds();
         self.pushAway();
       } 
     });
@@ -457,27 +439,52 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 });
 
 // ##########
-var zIndex = 100;
-var $dragged = null;
-var timeout = null;
+var DragInfo = function(element) {
+  this.el = element;
+  this.$el = $(this.el);
+  this.item = Items.item(this.el);
+  
+  this.$el.data('isDragging', true);
+};
 
+DragInfo.prototype = {
+  // ----------  
+  drag: function(e, ui) {
+    this.item.reloadBounds();
+  },
+
+  // ----------  
+  stop: function() {
+    this.$el.data('isDragging', false);
+    if(!this.$el.hasClass('willGroup') && !this.$el.data('group')) {
+      this.item.reloadBounds();
+      this.item.pushAway();
+    }
+  }
+};
+
+var drag = {
+  info: null,
+  zIndex: 100
+};
+
+// ##########
 window.Groups = {
   groups: [],
   
   // ----------  
   dragOptions: {
-    start:function(){
-      $dragged = $(this);
-      $dragged.data('isDragging', true);
+    start: function() {
+      drag.info = new DragInfo(this);
     },
-    stop: function(){
-      $dragged.data('isDragging', false);
-      $(this).css({zIndex: zIndex});
-      if(!$dragged.hasClass('willGroup') && !$dragged.data('group'))
-        Items.item(this).pushAway();
-
-      $dragged = null;          
-      zIndex += 1;
+    drag: function(e, ui) {
+      drag.info.drag(e, ui);
+    },
+    stop: function() {
+      drag.info.$el.css({zIndex: drag.zIndex});
+      drag.info.stop();
+      drag.info = null;
+      drag.zIndex += 1;
     },
     zIndex: 999,
   },
@@ -485,17 +492,17 @@ window.Groups = {
   // ----------  
   dropOptions: {
     accept: ".tab",
-    tolerance: "intersect",
+    tolerance: "pointer",
     greedy: true,
     drop: function(e){
       $target = $(e.target);  
-      $dragged.removeClass("willGroup");
+      drag.info.$el.removeClass("willGroup")   
       var phantom = $target.data("phantomGroup")
       
       var group = $target.data("group");
       if( group == null ){
         phantom.removeClass("phantom");
-        var group = new Group([$target, $dragged], {container:phantom});
+        var group = new Group([$target, drag.info.$el], {container:phantom});
         $(group._container).css({
           left:   phantom.css("left"),
           top:    phantom.css("top"),
@@ -503,23 +510,22 @@ window.Groups = {
           height: phantom.height()
         });
         }
-      else group.add( $dragged );
-      
+      else group.add( drag.info.$el );      
     },
     over: function(e){
       var $target = $(e.target);
-      
+
       function elToRect($el){
        return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
       }
-      
-      var height = elToRect($target).height * 1.5 +10;
-      var width = elToRect($target).width * 1.5 + 10;
-      var unionRect = elToRect($target).union( elToRect($dragged) );
-      
+
+      var height = elToRect($target).height * 1.5 + 20;
+      var width = elToRect($target).width * 1.5 + 20;
+      var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
+
       var newLeft = unionRect.left + unionRect.width/2 - width/2;
       var newTop = unionRect.top + unionRect.height/2 - height/2;
-      
+
       $(".phantom").remove();
       var phantom = $("<div class='group phantom'/>").css({
         width: width,
@@ -529,9 +535,7 @@ window.Groups = {
         left: newLeft,
         zIndex: -99
       }).appendTo("body").hide().fadeIn();
-      
-      $target.data("phantomGroup", phantom);
-      
+      $target.data("phantomGroup", phantom);      
     },
     out: function(e){      
       $(e.target).data("phantomGroup").fadeOut(function(){
