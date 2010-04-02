@@ -44,10 +44,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Don't use the STL wrappers in the crashreporter clients; they don't
-# link with -lmozalloc, and it really doesn't matter here anyway.
-STL_FLAGS =
-
 PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
 
