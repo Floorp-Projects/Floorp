@@ -43,36 +43,30 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = jsctypes-test
-LIBRARY_NAME = jsctypes-test
-SHORT_LIBNAME = jscttest
-FORCE_SHARED_LIB = 1
-NO_DIST_INSTALL = 1
+MODULE = jsctypes
+MODULE_NAME = jsctypes
+GRE_MODULE = 1
 
-CPPSRCS = jsctypes-test.cpp
+EXTRA_JS_MODULES = \
+    ctypes.jsm \
+    $(NULL)
+
+LIBRARY_NAME = jsctypes
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+
+CPPSRCS = \
+    Module.cpp \
+    $(NULL)
 
 EXTRA_DSO_LDOPTS += \
-    $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-    $(MOZALLOC_LIB) \
-    $(NSPR_LIBS) \
+    $(MOZ_COMPONENT_LIBS) \
+    $(MOZ_JS_LIBS) \
     $(NULL)
 
-XPCSHELL_TESTS = unit
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
 
 include $(topsrcdir)/config/rules.mk
-
-xpctestdir = $(testxpcobjdir)/$(MODULE)/unit
-
-# preprocess and install our unit test into the appropriate directory,
-# and install the test library as well. the xpcshell test rules will
-# install the .js.in from the tests srcdir, so remove it when we're done.
-libs:: unit/test_jsctypes.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  -DCTYPES_TEST_LIB=\"$(SHARED_LIBRARY)\" $^ > $(xpctestdir)/test_jsctypes.js
-	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
-	$(RM) $(xpctestdir)/test_jsctypes.js.in
-
-GARBAGE += \
-    $(xpctestdir)/test_jsctypes.js \
-    $(xpctestdir)/$(SHARED_LIBRARY) \
-    $(NULL)

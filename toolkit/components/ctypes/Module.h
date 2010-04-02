@@ -52,9 +52,6 @@ public:
 
   Module();
 
-  // Creates the ctypes object and attaches it to the global object.
-  JSBool Init(JSContext* aContext, JSObject* aGlobal);
-
 private:
   ~Module();
 };
