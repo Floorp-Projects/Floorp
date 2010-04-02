@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef CROSS_COMPILE
+#if defined(CROSS_COMPILE) && !defined(FORCE_BIG_ENDIAN) && !defined(FORCE_LITTLE_ENDIAN)
 #include <prtypes.h>
 #endif
 
@@ -91,10 +91,10 @@ int main(int argc, char **argv)
     printf("#undef  IS_LITTLE_ENDIAN\n");
     printf("#define IS_BIG_ENDIAN 1\n");
     printf("#endif\n\n");
-#elif defined(IS_LITTLE_ENDIAN)
+#elif defined(IS_LITTLE_ENDIAN) || defined(FORCE_LITTLE_ENDIAN)
     printf("#define IS_LITTLE_ENDIAN 1\n");
     printf("#undef  IS_BIG_ENDIAN\n\n");
-#elif defined(IS_BIG_ENDIAN)
+#elif defined(IS_BIG_ENDIAN) || defined(FORCE_BIG_ENDIAN)
     printf("#undef  IS_LITTLE_ENDIAN\n");
     printf("#define IS_BIG_ENDIAN 1\n\n");
 #else

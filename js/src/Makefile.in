@@ -60,7 +60,8 @@ DIRS += shell
 endif
 
 # FIXME: bug 515383 covers getting these working on wince
-ifndef WINCE
+# bug 530688 covers Android
+ifneq (,$(filter-out WINCE ANDROID,$(OS_ARCH)))
 ifdef ENABLE_TESTS
 DIRS += jsapi-tests
 endif
