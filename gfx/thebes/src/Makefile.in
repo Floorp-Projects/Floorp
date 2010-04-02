@@ -140,7 +140,7 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp gfxSharedImageSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 ifdef MOZ_PANGO
 CPPSRCS += gfxPangoFonts.cpp
