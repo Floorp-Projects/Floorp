@@ -823,6 +823,15 @@ JS_GetScopeChain(JSContext *cx);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
+#ifdef JS_HAS_CTYPES
+/*
+ * Initialize the 'ctypes' object on a global variable 'obj'. The 'ctypes'
+ * object will be sealed.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_InitCTypesClass(JSContext *cx, JSObject *global);
+#endif
+
 /*
  * Macros to hide interpreter stack layout details from a JSFastNative using
  * its jsval *vp parameter. The stack layout underlying invocation can't change

@@ -428,6 +428,12 @@ static JSFunctionSpec sUInt64Functions[] = {
   JS_FS_END
 };
 
+static JSFunctionSpec sModuleFunctions[] = {
+  JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
+  JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
+  JS_FS_END
+};
+
 static inline bool FloatIsFinite(jsdouble f) {
 #ifdef WIN32
   return _finite(f);
@@ -881,6 +887,33 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
 
   return true;
 }
+
+JS_BEGIN_EXTERN_C
+
+JS_PUBLIC_API(JSBool)
+JS_InitCTypesClass(JSContext* cx, JSObject* global)
+{
+  // attach ctypes property to global object
+  JSObject* ctypes = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!ctypes)
+    return false;
+
+  if (!JS_DefineProperty(cx, global, "ctypes", OBJECT_TO_JSVAL(ctypes),
+         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+    return false;
+
+  if (!InitTypeClasses(cx, ctypes))
+    return false;
+
+  // attach API functions
+  if (!JS_DefineFunctions(cx, ctypes, sModuleFunctions))
+    return false;
+
+  // Seal the ctypes object, to prevent modification.
+  return JS_SealObject(cx, ctypes, JS_FALSE);
+}
+
+JS_END_EXTERN_C
 
 /*******************************************************************************
 ** Type conversion functions
