@@ -493,15 +493,15 @@ BookmarksStore.prototype = {
         this._log.debug("   \-> is a microsummary");
         Utils.anno(newId, "bookmarks/staticTitle", record.staticTitle || "");
         let genURI = Utils.makeURI(record.generatorUri);
-	if (this._ms) {
+        if (this._ms) {
           try {
             let micsum = this._ms.createMicrosummary(uri, genURI);
             this._ms.setMicrosummary(newId, micsum);
           }
           catch(ex) { /* ignore "missing local generator" exceptions */ }
-	} else {
-	  this._log.warn("Can't create microsummary -- not supported.");
-	}
+        }
+        else
+          this._log.warn("Can't create microsummary -- not supported.");
       }
     } break;
     case "folder":
@@ -620,12 +620,12 @@ BookmarksStore.prototype = {
         try {
           let micsumURI = this._bms.getBookmarkURI(itemId);
           let genURI = Utils.makeURI(val);
-	  if (this._ms == SERVICE_NOT_SUPPORTED) {
-	    this._log.warn("Can't create microsummary -- not supported.");
-	  } else {
+          if (this._ms == SERVICE_NOT_SUPPORTED)
+            this._log.warn("Can't create microsummary -- not supported.");
+          else {
             let micsum = this._ms.createMicrosummary(micsumURI, genURI);
             this._ms.setMicrosummary(itemId, micsum);
-	  }
+          }
         } catch (e) {
           this._log.debug("Could not set microsummary generator URI: " + e);
         }
