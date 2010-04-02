@@ -5153,6 +5153,18 @@ js_CheckUndeclaredVarAssignment(JSContext *cx)
                                         JSMSG_UNDECLARED_VAR, bytes);
 }
 
+namespace js {
+
+JSBool
+ReportReadOnly(JSContext* cx, jsid id, uintN flags)
+{
+    return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
+                                    JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
+                                    NULL, NULL);
+}
+
+}
+
 /*
  * Note: all non-error exits in this function must notify the tracer using
  * SetPropHit when called from the interpreter, which is detected by testing
@@ -5184,10 +5196,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
      * We peek at OBJ_SCOPE(obj) without locking obj. Any race means a failure
      * to seal before sharing, which is inherently ambiguous.
      */
-    if (OBJ_SCOPE(obj)->sealed() && OBJ_SCOPE(obj)->object == obj) {
-        flags = JSREPORT_ERROR;
-        goto read_only_error;
-    }
+    if (OBJ_SCOPE(obj)->sealed() && OBJ_SCOPE(obj)->object == obj)
+        return ReportReadOnly(cx, id, JSREPORT_ERROR);
 
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
                                             &pobj, &prop);
@@ -5230,37 +5240,39 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          */
         scope = OBJ_SCOPE(pobj);
 
-        if (!sprop->writable() || (scope->sealed() && !sprop->hasSlot())) {
-            JS_UNLOCK_SCOPE(cx, scope);
+        /* ES5 8.12.4 [[Put]] step 2. */
+        if (sprop->isAccessorDescriptor()) {
+            if (sprop->hasDefaultSetter()) {
+                JS_UNLOCK_SCOPE(cx, scope);
+                return js_ReportGetterOnlyAssignment(cx);
+            }
+        } else {
+            JS_ASSERT(sprop->isDataDescriptor());
 
-            /*
-             * Here, we'll either return true or goto read_only_error, which
-             * reports a strict warning or throws an error.  So we redefine
-             * the |flags| local variable to be JSREPORT_* flags to pass to
-             * JS_ReportErrorFlagsAndNumberUC at label read_only_error.  We
-             * must likewise re-task flags further below for the other 'goto
-             * read_only_error;' case.
-             */
-            flags = JSREPORT_ERROR;
             if (!sprop->writable()) {
-                if (!JS_HAS_STRICT_OPTION(cx)) {
-                    /* Just return true per ECMA if not in strict mode. */
-                    PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
-                    if (defineHow & JSDNP_CACHE_RESULT) {
-                        JS_ASSERT_NOT_ON_TRACE(cx);
-                        TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
-                    }
-                    return JS_TRUE;
-#ifdef JS_TRACER
-                error: // TRACE_2 jumps here in case of error.
-                    return JS_FALSE;
-#endif
-                }
+                JS_UNLOCK_SCOPE(cx, scope);
 
                 /* Strict mode: report a read-only strict warning. */
-                flags = JSREPORT_STRICT | JSREPORT_WARNING;
+                if (JS_HAS_STRICT_OPTION(cx))
+                    return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+
+                /* Just return true per ECMA if not in strict mode. */
+                PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
+                if (defineHow & JSDNP_CACHE_RESULT) {
+                    JS_ASSERT_NOT_ON_TRACE(cx);
+                    TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
+                }
+                return JS_TRUE;
+
+#ifdef JS_TRACER
+              error: // TRACE_2 jumps here in case of error.
+                return JS_FALSE;
+#endif
             }
-            goto read_only_error;
+        }
+        if (scope->sealed() && !sprop->hasSlot()) {
+            JS_UNLOCK_SCOPE(cx, scope);
+            return ReportReadOnly(cx, id, JSREPORT_ERROR);
         }
 
         attrs = sprop->attributes();
@@ -5388,11 +5400,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
-
-  read_only_error:
-    return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
-                                    NULL, NULL);
 }
 
 JSBool
