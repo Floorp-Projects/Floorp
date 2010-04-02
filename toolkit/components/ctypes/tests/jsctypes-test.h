@@ -67,7 +67,7 @@ NS_EXTERN_C
                                         size_t* nalign, size_t* nsize,         \
                                         size_t offsets[]);
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 #if defined(_WIN32) && !defined(__WIN64)
   EXPORT_STDCALL(void) test_void_t_stdcall();
@@ -87,7 +87,7 @@ NS_EXTERN_C
     type, type, type, type, type, type, type, type, type,                      \
     type, type, type, type, type, type, type, type, type);
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 #endif /* defined(_WIN32) && !defined(__WIN64) */
 

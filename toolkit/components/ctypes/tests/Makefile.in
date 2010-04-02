@@ -36,58 +36,47 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH = ../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = jsctypes
-MODULE_NAME = jsctypes
-GRE_MODULE = 1
+MODULE = jsctypes-test
+LIBRARY_NAME = jsctypes-test
+SHORT_LIBNAME = jscttest
+FORCE_SHARED_LIB = 1
+NO_DIST_INSTALL = 1
 
-# package the js module whether ctypes is enabled or not.
-EXTRA_JS_MODULES = \
-    ctypes.jsm \
-    $(NULL)
-
-ifdef BUILD_CTYPES
-
-LIBRARY_NAME = jsctypes
-LIBXUL_LIBRARY = 1
-EXPORT_LIBRARY = 1
-IS_COMPONENT = 1
-
-CPPSRCS = \
-    Library.cpp \
-    CTypes.cpp \
-    Module.cpp \
-    $(NULL)
+CPPSRCS = jsctypes-test.cpp
 
 LOCAL_INCLUDES = \
-    -Ilibffi/include \
-    $(NULL)
-
-ifeq ($(OS_ARCH),OS2)
-# libffi builds an aout lib on OS/2; convert it to an OMF lib.
-libffi/.libs/libffi.$(LIB_SUFFIX): libffi/.libs/libffi.a
-	emxomf $<
-endif
-
-SHARED_LIBRARY_LIBS = \
-    libffi/.libs/libffi.$(LIB_SUFFIX) \
+    -I$(topsrcdir)/js/src/ctypes \
     $(NULL)
 
 EXTRA_DSO_LDOPTS += \
-    $(MOZ_COMPONENT_LIBS) \
-    $(MOZ_JS_LIBS) \
+    $(XPCOM_STANDALONE_GLUE_LDOPTS) \
+    $(MOZALLOC_LIB) \
+    $(NSPR_LIBS) \
     $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
-
-endif
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
+
+xpctestdir = $(testxpcobjdir)/$(MODULE)/unit
+
+# preprocess and install our unit test into the appropriate directory,
+# and install the test library as well. the xpcshell test rules will
+# install the .js.in from the tests srcdir, so remove it when we're done.
+libs:: unit/test_jsctypes.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	  -DCTYPES_TEST_LIB=\"$(SHARED_LIBRARY)\" $^ > $(xpctestdir)/test_jsctypes.js
+	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
+	$(RM) $(xpctestdir)/test_jsctypes.js.in
+
+GARBAGE += \
+    $(xpctestdir)/test_jsctypes.js \
+    $(xpctestdir)/$(SHARED_LIBRARY) \
+    $(NULL)

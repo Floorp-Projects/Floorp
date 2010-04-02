@@ -769,6 +769,11 @@ MAKEFILES_xulapp="
   toolkit/xre/Makefile
 "
 
+MAKEFILES_ctypes="
+  toolkit/components/ctypes/Makefile
+  toolkit/components/ctypes/tests/Makefile
+"
+
 MAKEFILES_libpr0n="
   modules/libpr0n/Makefile
   modules/libpr0n/build/Makefile
