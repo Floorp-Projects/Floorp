@@ -261,7 +261,7 @@ class XPCShellTests(object):
     testfiles = sorted(glob(os.path.join(os.path.abspath(testdir), "test_*.js")))
     if self.singleFile:
       if self.singleFile in [os.path.basename(x) for x in testfiles]:
-        testfiles = os.path.abspath([os.path.join(testdir, self.singleFile)])
+        testfiles = [os.path.abspath(os.path.join(testdir, self.singleFile))]
       else: # not in this dir? skip it
         return None
             
@@ -518,7 +518,7 @@ def main():
     print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
     sys.exit(1)
 
-  if not xpcsh.runTests(args[0], **options.__dict__):
+  if not xpcsh.runTests(args[0], testdirs=args[1:], **options.__dict__):
     sys.exit(1)
 
 if __name__ == '__main__':
