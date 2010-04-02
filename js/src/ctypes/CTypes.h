@@ -303,9 +303,6 @@ struct ClosureInfo
   JSObject* thisObj;     // 'this' object to use for the JS function call
   JSObject* jsfnObj;     // JS function
   ffi_closure* closure;  // The C closure itself
-#ifdef DEBUG
-  PRThread* thread;      // The thread the closure was created on
-#endif
 };
 
 JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
