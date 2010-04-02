@@ -38,7 +38,6 @@
 
 #include "CTypes.h"
 #include "Library.h"
-#include "prlog.h"
 #include "jsdtoa.h"
 
 #include <math.h>
@@ -169,10 +168,10 @@ namespace CData {
 
 // Int64Base provides functions common to Int64 and UInt64.
 namespace Int64Base {
-  JSObject* Construct(JSContext* cx, JSObject* proto, PRUint64 data,
+  JSObject* Construct(JSContext* cx, JSObject* proto, JSUint64 data,
     bool isUnsigned);
 
-  PRUint64 GetInt(JSContext* cx, JSObject* obj);
+  JSUint64 GetInt(JSContext* cx, JSObject* obj);
 
   JSBool ToString(JSContext* cx, JSObject* obj, uintN argc, jsval* vp,
     bool isUnsigned);
@@ -716,7 +715,7 @@ AttachProtos(JSContext* cx, JSObject* proto, JSObject** protos)
   // For a given 'proto' of [[Class]] "CTypeProto", attach each of the 'protos'
   // to the appropriate CTypeProtoSlot. (SLOT_UINT64PROTO is the last slot
   // of [[Class]] "CTypeProto".)
-  for (PRUint32 i = 0; i <= SLOT_UINT64PROTO; ++i) {
+  for (JSUint32 i = 0; i <= SLOT_UINT64PROTO; ++i) {
     if (!JS_SetReservedSlot(cx, proto, i, OBJECT_TO_JSVAL(protos[i])))
       return false;
   }
@@ -924,16 +923,15 @@ JS_END_EXTERN_C
 // autoconverts to a primitive JS number; to support ILP64 architectures, it
 // would need to autoconvert to an Int64 object instead. Therefore we enforce
 // this invariant here.)
-PR_STATIC_ASSERT(sizeof(bool) == 1 || sizeof(bool) == 4);
-PR_STATIC_ASSERT(sizeof(char) == 1);
-PR_STATIC_ASSERT(sizeof(short) == 2);
-PR_STATIC_ASSERT(sizeof(int) == 4);
-PR_STATIC_ASSERT(sizeof(unsigned) == 4);
-PR_STATIC_ASSERT(sizeof(long) == 4 || sizeof(long) == 8);
-PR_STATIC_ASSERT(sizeof(long long) == 8);
-PR_STATIC_ASSERT(sizeof(size_t) == sizeof(uintptr_t));
-PR_STATIC_ASSERT(sizeof(float) == 4);
-PR_STATIC_ASSERT(sizeof(jschar) == sizeof(PRUnichar));
+JS_STATIC_ASSERT(sizeof(bool) == 1 || sizeof(bool) == 4);
+JS_STATIC_ASSERT(sizeof(char) == 1);
+JS_STATIC_ASSERT(sizeof(short) == 2);
+JS_STATIC_ASSERT(sizeof(int) == 4);
+JS_STATIC_ASSERT(sizeof(unsigned) == 4);
+JS_STATIC_ASSERT(sizeof(long) == 4 || sizeof(long) == 8);
+JS_STATIC_ASSERT(sizeof(long long) == 8);
+JS_STATIC_ASSERT(sizeof(size_t) == sizeof(uintptr_t));
+JS_STATIC_ASSERT(sizeof(float) == 4);
 
 template<class IntegerType>
 static JS_ALWAYS_INLINE IntegerType
@@ -946,12 +944,12 @@ Convert(jsdouble d)
 // MSVC can't perform double to unsigned __int64 conversion when the
 // double is greater than 2^63 - 1. Help it along a little.
 template<>
-JS_ALWAYS_INLINE PRUint64
-Convert<PRUint64>(jsdouble d)
+JS_ALWAYS_INLINE JSUint64
+Convert<JSUint64>(jsdouble d)
 {
   return d > 0x7fffffffffffffffui64 ?
-         PRUint64(d - 0x8000000000000000ui64) + 0x8000000000000000ui64 :
-         PRUint64(d);
+         JSUint64(d - 0x8000000000000000ui64) + 0x8000000000000000ui64 :
+         JSUint64(d);
 }
 #endif
 
@@ -1066,23 +1064,23 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
     }
 
     if (Int64::IsInt64(cx, obj)) {
-      PRInt64 i = Int64Base::GetInt(cx, obj);
+      JSInt64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
 
       // Make sure the integer fits in IntegerType.
       if (IsUnsigned<IntegerType>() && i < 0)
         return false;
-      return PRInt64(*result) == i;
+      return JSInt64(*result) == i;
     }
 
     if (UInt64::IsUInt64(cx, obj)) {
-      PRUint64 i = Int64Base::GetInt(cx, obj);
+      JSUint64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
 
       // Make sure the integer fits in IntegerType.
       if (!IsUnsigned<IntegerType>() && *result < 0)
         return false;
-      return PRUint64(*result) == i;
+      return JSUint64(*result) == i;
     }
 
     return false; 
@@ -1202,23 +1200,23 @@ jsvalToBigInteger(JSContext* cx,
     // Allow conversion from an Int64 or UInt64 object directly.
     JSObject* obj = JSVAL_TO_OBJECT(val);
     if (UInt64::IsUInt64(cx, obj)) {
-      PRUint64 i = Int64Base::GetInt(cx, obj);
+      JSUint64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
 
       // Make sure the integer fits in IntegerType.
       if (!IsUnsigned<IntegerType>() && *result < 0)
         return false;
-      return PRUint64(*result) == i;
+      return JSUint64(*result) == i;
     }
 
     if (Int64::IsInt64(cx, obj)) {
-      PRInt64 i = Int64Base::GetInt(cx, obj);
+      JSInt64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
 
       // Make sure the integer fits in IntegerType.
       if (IsUnsigned<IntegerType>() && i < 0)
         return false;
-      return PRInt64(*result) == i;
+      return JSInt64(*result) == i;
     }
   }
   return false;
@@ -1264,12 +1262,12 @@ jsvalToIntegerExplicit(JSContext* cx, jsval val, IntegerType* result)
     // Convert Int64 and UInt64 values by C-style cast.
     JSObject* obj = JSVAL_TO_OBJECT(val);
     if (Int64::IsInt64(cx, obj)) {
-      PRInt64 i = Int64Base::GetInt(cx, obj);
+      JSInt64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
       return true;
     }
     if (UInt64::IsUInt64(cx, obj)) {
-      PRUint64 i = Int64Base::GetInt(cx, obj);
+      JSUint64 i = Int64Base::GetInt(cx, obj);
       *result = IntegerType(i);
       return true;
     }
@@ -1308,22 +1306,22 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
   if (!JSVAL_IS_PRIMITIVE(val)) {
     JSObject* obj = JSVAL_TO_OBJECT(val);
     if (Int64::IsInt64(cx, obj)) {
-      PRInt64 i = Int64Base::GetInt(cx, obj);
+      JSInt64 i = Int64Base::GetInt(cx, obj);
       intptr_t p = intptr_t(i);
 
       // Make sure the integer fits in the alotted precision.
-      if (PRInt64(p) != i)
+      if (JSInt64(p) != i)
         return false;
       *result = uintptr_t(p);
       return true;
     }
 
     if (UInt64::IsUInt64(cx, obj)) {
-      PRUint64 i = Int64Base::GetInt(cx, obj);
+      JSUint64 i = Int64Base::GetInt(cx, obj);
 
       // Make sure the integer fits in the alotted precision.
       *result = uintptr_t(i);
-      return PRUint64(*result) == i;
+      return JSUint64(*result) == i;
     }
   }
   return false;
@@ -1462,14 +1460,14 @@ ConvertToJS(JSContext* cx,
 #define DEFINE_WRAPPED_INT_TYPE(name, type, ffiType)                           \
   case TYPE_##name: {                                                          \
     /* Return an Int64 or UInt64 object - do not convert to a JS number. */    \
-    PRUint64 value;                                                            \
+    JSUint64 value;                                                            \
     JSObject* proto;                                                           \
     if (IsUnsigned<type>()) {                                                  \
       value = *static_cast<type*>(data);                                       \
       /* Get ctypes.UInt64.prototype from ctypes.CType.prototype. */           \
       proto = CType::GetProtoFromType(cx, typeObj, SLOT_UINT64PROTO);          \
     } else {                                                                   \
-      value = PRInt64(*static_cast<type*>(data));                              \
+      value = JSInt64(*static_cast<type*>(data));                              \
       /* Get ctypes.Int64.prototype from ctypes.CType.prototype. */            \
       proto = CType::GetProtoFromType(cx, typeObj, SLOT_INT64PROTO);           \
     }                                                                          \
@@ -2233,9 +2231,10 @@ BuildDataSource(JSContext* cx,
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];                                     \
     char* str = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof(buf),     \
                           DTOSTR_STANDARD, 0, fp);                             \
-    JS_ASSERT(str);                                                            \
-    if (!str)                                                                  \
-      break;                                                                   \
+    if (!str) {                                                                \
+      JS_ReportOutOfMemory(cx);                                                \
+      return false;                                                            \
+    }                                                                          \
                                                                                \
     result.append(str, strlen(str));                                           \
     break;                                                                     \
@@ -4380,7 +4379,7 @@ NewFunctionInfo(JSContext* cx,
 
   fninfo->mIsVariadic = false;
 
-  for (PRUint32 i = 0; i < argLength; ++i) {
+  for (JSUint32 i = 0; i < argLength; ++i) {
     if (IsEllipsis(argTypes[i])) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
@@ -4638,7 +4637,7 @@ FunctionType::Call(JSContext* cx,
   }
 
   FunctionInfo* fninfo = GetFunctionInfo(cx, typeObj);
-  PRUint32 argcFixed = fninfo->mArgTypes.length();
+  JSUint32 argcFixed = fninfo->mArgTypes.length();
 
   if ((!fninfo->mIsVariadic && argc != argcFixed) ||
       (fninfo->mIsVariadic && argc < argcFixed)) {
@@ -4678,7 +4677,7 @@ FunctionType::Call(JSContext* cx,
     JSObject* obj;  // Could reuse obj instead of declaring a second
     JSObject* type; // JSObject*, but readability would suffer.
 
-    for (PRUint32 i = argcFixed; i < argc; ++i) {
+    for (JSUint32 i = argcFixed; i < argc; ++i) {
       if (JSVAL_IS_PRIMITIVE(argv[i]) ||
           !CData::IsCData(cx, obj = JSVAL_TO_OBJECT(argv[i]))) {
         // Since we know nothing about the CTypes of the ... arguments,
@@ -4875,9 +4874,6 @@ CClosure::Create(JSContext* cx,
   cinfo->typeObj = typeObj;
   cinfo->thisObj = thisObj;
   cinfo->jsfnObj = fnObj;
-#ifdef DEBUG
-  cinfo->thread = PR_GetCurrentThread();
-#endif
 
   // Create an ffi_closure object and initialize it.
   void* code;
@@ -4963,10 +4959,9 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   JSObject* thisObj = cinfo->thisObj;
   JSObject* jsfnObj = cinfo->jsfnObj;
 
-#ifdef DEBUG
+#ifdef JS_THREADSAFE
   // Assert that we're on the thread we were created from.
-  PRThread* thread = PR_GetCurrentThread();
-  JS_ASSERT(thread == cinfo->thread);
+  JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
 #endif
 
   JSAutoRequest ar(cx);
@@ -4985,11 +4980,11 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
     return;
   }
 
-  for (PRUint32 i = 0; i < cif->nargs; ++i)
+  for (JSUint32 i = 0; i < cif->nargs; ++i)
     argv[i] = JSVAL_VOID;
 
   js::AutoArrayRooter roots(cx, argv.length(), argv.begin());
-  for (PRUint32 i = 0; i < cif->nargs; ++i) {
+  for (JSUint32 i = 0; i < cif->nargs; ++i) {
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.
     if (!ConvertToJS(cx, fninfo->mArgTypes[i], NULL, args[i], false, false,
@@ -5416,7 +5411,7 @@ CData::ToSource(JSContext* cx, uintN argc, jsval *vp)
 JSObject*
 Int64Base::Construct(JSContext* cx,
                      JSObject* proto,
-                     PRUint64 data,
+                     JSUint64 data,
                      bool isUnsigned)
 {
   JSClass* clasp = isUnsigned ? &sUInt64Class : &sInt64Class;
@@ -5426,7 +5421,7 @@ Int64Base::Construct(JSContext* cx,
   js::AutoValueRooter root(cx, result);
 
   // attach the Int64's data
-  PRUint64* buffer = new PRUint64(data);
+  JSUint64* buffer = new JSUint64(data);
   if (!buffer) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -5450,16 +5445,16 @@ Int64Base::Finalize(JSContext* cx, JSObject* obj)
   if (!JS_GetReservedSlot(cx, obj, SLOT_INT64, &slot) || JSVAL_IS_VOID(slot))
     return;
 
-  delete static_cast<PRUint64*>(JSVAL_TO_PRIVATE(slot));
+  delete static_cast<JSUint64*>(JSVAL_TO_PRIVATE(slot));
 }
 
-PRUint64
+JSUint64
 Int64Base::GetInt(JSContext* cx, JSObject* obj) {
   JS_ASSERT(Int64::IsInt64(cx, obj) || UInt64::IsUInt64(cx, obj));
 
   jsval slot;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_INT64, &slot));
-  return *static_cast<PRUint64*>(JSVAL_TO_PRIVATE(slot));
+  return *static_cast<JSUint64*>(JSVAL_TO_PRIVATE(slot));
 }
 
 JSBool
@@ -5489,7 +5484,7 @@ Int64Base::ToString(JSContext* cx,
   if (isUnsigned) {
     IntegerToString(GetInt(cx, obj), radix, intString);
   } else {
-    IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), radix, intString);
+    IntegerToString(static_cast<JSInt64>(GetInt(cx, obj)), radix, intString);
   }
 
   JSString *result = NewUCString(cx, intString);
@@ -5519,7 +5514,7 @@ Int64Base::ToSource(JSContext* cx,
     IntegerToString(GetInt(cx, obj), 10, source);
   } else {
     AppendString(source, "ctypes.Int64(\"");
-    IntegerToString(static_cast<PRInt64>(GetInt(cx, obj)), 10, source);
+    IntegerToString(static_cast<JSInt64>(GetInt(cx, obj)), 10, source);
   }
   AppendString(source, "\")");
 
@@ -5544,7 +5539,7 @@ Int64::Construct(JSContext* cx,
     return JS_FALSE;
   }
 
-  PRInt64 i;
+  JSInt64 i;
   if (!jsvalToBigInteger(cx, argv[0], true, &i))
     return TypeError(cx, "int64", argv[0]);
 
@@ -5609,8 +5604,8 @@ Int64::Compare(JSContext* cx, uintN argc, jsval* vp)
   JSObject* obj1 = JSVAL_TO_OBJECT(argv[0]);
   JSObject* obj2 = JSVAL_TO_OBJECT(argv[1]);
 
-  PRInt64 i1 = Int64Base::GetInt(cx, obj1);
-  PRInt64 i2 = Int64Base::GetInt(cx, obj2);
+  JSInt64 i1 = Int64Base::GetInt(cx, obj1);
+  JSInt64 i2 = Int64Base::GetInt(cx, obj2);
 
   if (i1 == i2)
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
@@ -5622,7 +5617,7 @@ Int64::Compare(JSContext* cx, uintN argc, jsval* vp)
   return JS_TRUE;
 }
 
-#define LO_MASK ((PRUint64(1) << 32) - 1)
+#define LO_MASK ((JSUint64(1) << 32) - 1)
 #define INT64_LO(i) ((i) & LO_MASK)
 #define INT64_HI(i) ((i) >> 32)
 
@@ -5637,8 +5632,8 @@ Int64::Lo(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRInt64 u = Int64Base::GetInt(cx, obj);
-  jsdouble d = PRUint32(INT64_LO(u));
+  JSInt64 u = Int64Base::GetInt(cx, obj);
+  jsdouble d = JSUint32(INT64_LO(u));
 
   jsval result;
   if (!JS_NewNumberValue(cx, d, &result))
@@ -5659,8 +5654,8 @@ Int64::Hi(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRInt64 u = Int64Base::GetInt(cx, obj);
-  jsdouble d = PRInt32(INT64_HI(u));
+  JSInt64 u = Int64Base::GetInt(cx, obj);
+  jsdouble d = JSInt32(INT64_HI(u));
 
   jsval result;
   if (!JS_NewNumberValue(cx, d, &result))
@@ -5679,14 +5674,14 @@ Int64::Join(JSContext* cx, uintN argc, jsval* vp)
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  PRInt32 hi;
-  PRUint32 lo;
+  JSInt32 hi;
+  JSUint32 lo;
   if (!jsvalToInteger(cx, argv[0], &hi))
     return TypeError(cx, "int32", argv[0]);
   if (!jsvalToInteger(cx, argv[1], &lo))
     return TypeError(cx, "uint32", argv[1]);
 
-  PRInt64 i = (PRInt64(hi) << 32) + PRInt64(lo);
+  JSInt64 i = (JSInt64(hi) << 32) + JSInt64(lo);
 
   // Get Int64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv));
@@ -5717,7 +5712,7 @@ UInt64::Construct(JSContext* cx,
     return JS_FALSE;
   }
 
-  PRUint64 u;
+  JSUint64 u;
   if (!jsvalToBigInteger(cx, argv[0], true, &u))
     return TypeError(cx, "uint64", argv[0]);
 
@@ -5782,8 +5777,8 @@ UInt64::Compare(JSContext* cx, uintN argc, jsval* vp)
   JSObject* obj1 = JSVAL_TO_OBJECT(argv[0]);
   JSObject* obj2 = JSVAL_TO_OBJECT(argv[1]);
 
-  PRUint64 u1 = Int64Base::GetInt(cx, obj1);
-  PRUint64 u2 = Int64Base::GetInt(cx, obj2);
+  JSUint64 u1 = Int64Base::GetInt(cx, obj1);
+  JSUint64 u2 = Int64Base::GetInt(cx, obj2);
 
   if (u1 == u2)
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
@@ -5806,8 +5801,8 @@ UInt64::Lo(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRUint64 u = Int64Base::GetInt(cx, obj);
-  jsdouble d = PRUint32(INT64_LO(u));
+  JSUint64 u = Int64Base::GetInt(cx, obj);
+  jsdouble d = JSUint32(INT64_LO(u));
 
   jsval result;
   if (!JS_NewNumberValue(cx, d, &result))
@@ -5828,8 +5823,8 @@ UInt64::Hi(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-  PRUint64 u = Int64Base::GetInt(cx, obj);
-  jsdouble d = PRUint32(INT64_HI(u));
+  JSUint64 u = Int64Base::GetInt(cx, obj);
+  jsdouble d = JSUint32(INT64_HI(u));
 
   jsval result;
   if (!JS_NewNumberValue(cx, d, &result))
@@ -5848,14 +5843,14 @@ UInt64::Join(JSContext* cx, uintN argc, jsval* vp)
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  PRUint32 hi;
-  PRUint32 lo;
+  JSUint32 hi;
+  JSUint32 lo;
   if (!jsvalToInteger(cx, argv[0], &hi))
     return TypeError(cx, "uint32_t", argv[0]);
   if (!jsvalToInteger(cx, argv[1], &lo))
     return TypeError(cx, "uint32_t", argv[1]);
 
-  PRUint64 u = (PRUint64(hi) << 32) + PRUint64(lo);
+  JSUint64 u = (JSUint64(hi) << 32) + JSUint64(lo);
 
   // Get UInt64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv));
