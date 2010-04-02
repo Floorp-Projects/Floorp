@@ -122,7 +122,8 @@ protected:
                                             mozilla::css::Loader** aCSSLoader) = 0;
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
-                              const nsAString& aPropValue);
+                              const nsAString& aPropValue,
+                              PRBool aIsImportant);
   nsresult ParseDeclaration(const nsAString& aDecl,
                             PRBool aParseOnlyOneDecl, PRBool aClearOldDecl);
 
