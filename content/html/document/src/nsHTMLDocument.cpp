@@ -1849,7 +1849,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (!IsHTML() || mDisableDocWrite) {
     // No calling document.open() on XHTML
 
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
@@ -2099,7 +2099,7 @@ nsHTMLDocument::Close()
   if (!IsHTML()) {
     // No calling document.close() on XHTML!
 
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   nsresult rv = NS_OK;
@@ -2164,7 +2164,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   if (!IsHTML() || mDisableDocWrite) {
     // No calling document.write*() on XHTML!
 
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   nsresult rv = NS_OK;
