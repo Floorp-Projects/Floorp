@@ -212,10 +212,6 @@ MAKEFILES_jsdebugger="
   js/jsd/idl/Makefile
 "
 
-MAKEFILES_jsctypes="
-  js/ctypes/Makefile
-"
-
 MAKEFILES_content="
   content/Makefile
   content/base/Makefile

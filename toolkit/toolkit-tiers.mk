@@ -111,15 +111,8 @@ endif
 
 tier_platform_dirs += \
 		js/src/xpconnect \
-		js/ctypes \
 		intl/chardet \
 		$(NULL)
-
-ifdef BUILD_CTYPES
-tier_platform_staticdirs += \
-		js/ctypes/libffi \
-		$(NULL)
-endif
 
 ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
