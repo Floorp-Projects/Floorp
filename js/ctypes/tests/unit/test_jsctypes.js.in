@@ -75,8 +75,8 @@ function run_test()
   // Test ctypes.CType and ctypes.CData are set up correctly.
   run_abstract_class_tests();
 
-  // open the library with an nsILocalFile
-  let libfile = do_get_file(CTYPES_TEST_LIB);
+  // open the library
+  let libfile = do_get_file(CTYPES_TEST_LIB).path;
   let library = ctypes.open(libfile);
 
   // Make sure we can call a function in the library.
@@ -193,11 +193,6 @@ function run_test()
   run_closure_tests(library);
   run_variadic_tests(library);
 
-  // test the string version of ctypes.open() as well
-  let libpath = libfile.path;
-  library = ctypes.open(libpath);
-  run_void_tests(library);
-
   // test library.close
   let test_void_t = library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
   library.close();
@@ -207,7 +202,7 @@ function run_test()
   }, Error);
 
   // test that library functions throw when bound to other objects
-  library = ctypes.open(libpath);
+  library = ctypes.open(libfile);
   let obj = {};
   obj.declare = library.declare;
   do_check_throws(function () { run_void_tests(obj); }, Error);
