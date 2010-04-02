@@ -102,7 +102,7 @@ static PRBool test_basic_array(ElementType *data,
     if (ary.BinaryIndexOf(ary[i]) != i)
       return PR_FALSE;
   }
-  if (ary.BinaryIndexOf(extra) != -1)
+  if (ary.BinaryIndexOf(extra) != ary.NoIndex)
     return PR_FALSE;
   PRUint32 oldLen = ary.Length();
   ary.RemoveElement(data[dataLen / 2]);
@@ -315,7 +315,7 @@ static PRBool test_string_array() {
     if (strArray.BinaryIndexOf(strArray[i]) != i)
       return PR_FALSE;
   }
-  if (strArray.BinaryIndexOf(EmptyCString()) != -1)
+  if (strArray.BinaryIndexOf(EmptyCString()) != strArray.NoIndex)
     return PR_FALSE;
 
   nsCString rawArray[NS_ARRAY_LENGTH(kdata)-1];
@@ -518,7 +518,7 @@ static PRBool test_indexof() {
   array.AppendElement(5);
   array.RemoveElementAt(1);
   // we should not find the 5!
-  return array.IndexOf(5, 1) == -1;
+  return array.IndexOf(5, 1) == array.NoIndex;
 }
 
 //----
