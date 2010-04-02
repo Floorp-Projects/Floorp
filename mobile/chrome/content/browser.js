@@ -2895,8 +2895,16 @@ Tab.prototype = {
       browser.className = "browser-viewport";
       browser.style.width = viewportW + "px";
       browser.style.height = viewportH + "px";
-    } else if (browser.contentDocument instanceof XULDocument) {
-       // XXX XUL documents do not receive scroll change event
+    } else {
+      browser.className = "browser";
+      browser.style.removeProperty("width");
+      browser.style.removeProperty("height");
+    }
+
+    // Some documents are not firing MozScrolledAreaChanged and/or fired it for
+    // sub-documents only
+    let doc = browser.contentDocument;
+    if (doc instanceof XULDocument || doc.body instanceof HTMLFrameSetElement) {
        let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
        let event = document.createEvent("Event");
        event.initEvent("MozScrolledAreaChanged", true, false);
@@ -2905,10 +2913,6 @@ Tab.prototype = {
        event.width = w;
        event.height = h;
        browser.dispatchEvent(event);
-    } else {
-      browser.className = "browser";
-      browser.style.removeProperty("width");
-      browser.style.removeProperty("height");
     }
 
     this.setIcon(browser.mIconURL);
