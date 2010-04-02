@@ -1307,7 +1307,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
-  tabPreviews.init();
   ctrlTab.readPref();
   gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
   gPrefService.addObserver(allTabs.prefName, allTabs, false);
@@ -1373,7 +1372,6 @@ function BrowserShutdown()
 
   gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
   gPrefService.removeObserver(allTabs.prefName, allTabs);
-  tabPreviews.uninit();
   ctrlTab.uninit();
   allTabs.uninit();
 

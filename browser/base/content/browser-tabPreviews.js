@@ -44,18 +44,26 @@
 var tabPreviews = {
   aspectRatio: 0.5625, // 16:9
   init: function tabPreviews_init() {
+    if (this._selectedTab)
+      return;
+    this._selectedTab = gBrowser.selectedTab;
+
     this.width = Math.ceil(screen.availWidth / 5.75);
     this.height = Math.round(this.width * this.aspectRatio);
 
+    window.addEventListener("unload", this, false);
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
     gBrowser.tabContainer.addEventListener("SSTabRestored", this, false);
   },
   uninit: function tabPreviews_uninit() {
+    window.removeEventListener("unload", this, false);
     gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
     gBrowser.tabContainer.removeEventListener("SSTabRestored", this, false);
     this._selectedTab = null;
   },
   get: function tabPreviews_get(aTab) {
+    this.init();
+
     if (aTab.__thumbnail_lastURI &&
         aTab.__thumbnail_lastURI != aTab.linkedBrowser.currentURI.spec) {
       aTab.__thumbnail = null;
@@ -64,6 +72,8 @@ var tabPreviews = {
     return aTab.__thumbnail || this.capture(aTab, !aTab.hasAttribute("busy"));
   },
   capture: function tabPreviews_capture(aTab, aStore) {
+    this.init();
+
     var thumbnail = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     thumbnail.mozOpaque = true;
     thumbnail.height = this.height;
@@ -104,6 +114,9 @@ var tabPreviews = {
         break;
       case "SSTabRestored":
         this.capture(event.target, true);
+        break;
+      case "unload":
+        this.uninit();
         break;
     }
   }
@@ -225,6 +238,8 @@ var ctrlTab = {
 
   init: function ctrlTab_init() {
     if (!this._recentlyUsedTabs) {
+      tabPreviews.init();
+
       this._recentlyUsedTabs = [gBrowser.selectedTab];
       this._init(true);
     }
@@ -576,6 +591,8 @@ var allTabs = {
     if (this._initiated)
       return;
     this._initiated = true;
+
+    tabPreviews.init();
 
     Array.forEach(gBrowser.tabs, function (tab) {
       this._addPreview(tab);
