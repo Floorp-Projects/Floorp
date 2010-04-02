@@ -129,7 +129,7 @@ public:
 protected:
   nsresult GetAttributeValue(const nsIParserNode* node, nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const PRUnichar* aStringToAdd, PRInt32 aLength);
-  void EndLine(PRBool softlinebreak);
+  void EndLine(PRBool softlinebreak, PRBool aBreakBySpace = PR_FALSE);
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
   void OutputQuotesAndIndent(PRBool stripTrailingSpaces=PR_FALSE);
