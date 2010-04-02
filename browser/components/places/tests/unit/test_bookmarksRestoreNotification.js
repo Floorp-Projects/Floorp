@@ -115,7 +115,7 @@ var tests = [
     data:       NSIOBSERVER_DATA_JSON,
     folderId:   null,
     run:        function () {
-      this.file = dirSvc.get("ProfD", Ci.nsILocalFile);
+      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
         PlacesUtils.restoreBookmarksFromJSONFile(this.file);
@@ -169,7 +169,7 @@ var tests = [
     data:       NSIOBSERVER_DATA_HTML,
     folderId:   null,
     run:        function () {
-      this.file = dirSvc.get("ProfD", Ci.nsILocalFile);
+      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
         importer.importHTMLFromFile(this.file, false);
@@ -223,7 +223,7 @@ var tests = [
     data:       NSIOBSERVER_DATA_HTML_INIT,
     folderId:   null,
     run:        function () {
-      this.file = dirSvc.get("ProfD", Ci.nsILocalFile);
+      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
         importer.importHTMLFromFile(this.file, true);
@@ -284,7 +284,7 @@ var tests = [
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML,
     run:        function () {
-      this.file = dirSvc.get("ProfD", Ci.nsILocalFile);
+      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       this.folderId = bmsvc.createFolder(bmsvc.unfiledBookmarksFolder,
                                          "test folder",
@@ -407,7 +407,7 @@ function checkBookmarksExist() {
  * @return The nsILocalFile
  */
 function createFile(aBasename) {
-  var file = dirSvc.get("ProfD", Ci.nsILocalFile);
+  var file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   file.append(aBasename);
   if (file.exists())
     file.remove(false);

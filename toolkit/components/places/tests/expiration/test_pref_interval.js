@@ -47,7 +47,6 @@
  * If the pref is set to a number <= 0 we will use the default value.
  */
 
-const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
 const MAX_WAIT_SECONDS = 4;
 const INTERVAL_CUSHION = 2;
 

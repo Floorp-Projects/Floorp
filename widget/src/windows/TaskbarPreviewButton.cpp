@@ -150,7 +150,7 @@ TaskbarPreviewButton::SetImage(imgIContainer *img) {
 
 NS_IMETHODIMP
 TaskbarPreviewButton::GetVisible(PRBool *visible) {
-  *visible = (Button().dwFlags & THBF_HIDDEN) == THBF_HIDDEN;
+  *visible = (Button().dwFlags & THBF_HIDDEN) != THBF_HIDDEN;
   return NS_OK;
 }
 

@@ -90,36 +90,6 @@ enum gfxBreakPriority {
     eNormalBreak
 };
 
-/**
- * Define refcounting for Thebes.  For now use the stuff from nsISupportsImpl
- * even though it forces the functions to be virtual...
- */
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
-
-#define THEBES_INLINE_DECL_REFCOUNTING(_class)                                \
-public:                                                                       \
-    nsrefcnt AddRef(void) {                                                   \
-        NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");             \
-        ++mRefCnt;                                                            \
-        NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                 \
-        return mRefCnt;                                                       \
-    }                                                                         \
-    nsrefcnt Release(void) {                                                  \
-        NS_PRECONDITION(0 != mRefCnt, "dup release");                         \
-        --mRefCnt;                                                            \
-        NS_LOG_RELEASE(this, mRefCnt, #_class);                               \
-        if (mRefCnt == 0) {                                                   \
-            mRefCnt = 1; /* stabilize */                                      \
-            NS_DELETEXPCOM(this);                                             \
-            return 0;                                                         \
-        }                                                                     \
-        return mRefCnt;                                                       \
-    }                                                                         \
-protected:                                                                    \
-    nsAutoRefCnt mRefCnt;                                                     \
-public:
-
 #define THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(_class)                     \
 public:                                                                       \
     nsrefcnt AddRef(void) {                                                   \

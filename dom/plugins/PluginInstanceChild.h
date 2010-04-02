@@ -320,6 +320,11 @@ private:
       HBITMAP         bmp;
     } mAlphaExtract;
 #endif // defined(OS_WIN)
+#if defined(OS_MACOSX)
+private:
+    CGColorSpaceRef mShColorSpace;
+    CGContextRef mShContext;
+#endif
 };
 
 } // namespace plugins

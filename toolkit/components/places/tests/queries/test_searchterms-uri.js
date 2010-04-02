@@ -48,7 +48,7 @@
     // Test subdomain included with isRedirect=true, different transtype
     {isInQuery: true, isVisit: true, isDetails: true, title: "amozzie",
      isRedirect: true, uri: "http://foo.com/redirect", lastVisit: old,
-     referrer: "http://myreferrer.com", transType: histsvc.TRANSITION_LINK},
+     referrer: "http://myreferrer.com", transType: PlacesUtils.history.TRANSITION_LINK},
 
     // Test www. style URI is included, with a tag
     {isInQuery: true, isVisit: true, isDetails: true, isTag: true,
@@ -85,18 +85,18 @@
   */
  function run_test() {
    populateDB(testData);
-   var query = histsvc.getNewQuery();
+   var query = PlacesUtils.history.getNewQuery();
    query.searchTerms = "moz";
    query.uri = uri("http://foo.com");
    query.uriIsPrefix = true;
 
    // Options
-   var options = histsvc.getNewQueryOptions();
+   var options = PlacesUtils.history.getNewQueryOptions();
    options.sortingMode = options.SORT_BY_DATE_ASCENDING;
    options.resultType = options.RESULTS_AS_URI;
    
    // Results
-   var result = histsvc.executeQuery(query, options);
+   var result = PlacesUtils.history.executeQuery(query, options);
    var root = result.root;
    root.containerOpen = true;
 
@@ -112,7 +112,7 @@
    // Add to the query set
    LOG("Adding item to query")
    var change1 = [{isVisit: true, isDetails: true, uri: "http://foo.com/added.htm",
-                   title: "moz", transType: histsvc.TRANSITION_LINK}];
+                   title: "moz", transType: PlacesUtils.history.TRANSITION_LINK}];
    populateDB(change1);
    do_check_true(isInResult(change1, root));
 
@@ -137,7 +137,7 @@
        populateDB(batchchange);
      }
    };
-   histsvc.runInBatchMode(updateBatch, null);
+   PlacesUtils.history.runInBatchMode(updateBatch, null);
    do_check_true(isInResult({uri: "http://foo.com/changeme2.htm"}, root));
    do_check_true(isInResult({uri: "http://foo.com/yiihah"}, root));
    do_check_false(isInResult({uri: "http://foo.com/redirect"}, root));

@@ -199,13 +199,13 @@ function test_query_callback(aSequence) {
   }
 
   // Create a new query with required options.
-  var query = histsvc.getNewQuery();
-  var options = histsvc.getNewQueryOptions();
+  var query = PlacesUtils.history.getNewQuery();
+  var options = PlacesUtils.history.getNewQueryOptions();
   options.resultType = resultType.value;
   options.sortingMode = sortingMode.value;
 
   // Compare resultset with expectedData.
-  var result = histsvc.executeQuery(query, options);
+  var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
 

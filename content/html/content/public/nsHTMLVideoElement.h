@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#if !defined(nsHTMLVideoElement_h__)
+#define nsHTMLVideoElement_h__
+
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsHTMLMediaElement.h"
 
@@ -76,3 +79,5 @@ public:
   // If there is no video frame, returns the given default size.
   nsIntSize GetVideoSize(nsIntSize defaultSize);
 };
+
+#endif

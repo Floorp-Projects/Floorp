@@ -39,120 +39,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-const NS_APP_HISTORY_50_FILE = "UHist";
-
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
 
-function LOG(aMsg) {
-  aMsg = ("*** PLACES TESTS: " + aMsg);
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
-                                      logStringMessage(aMsg);
-  print(aMsg);
+Cu.import("resource://gre/modules/Services.jsm");
+
+// Import common head.
+let (commonFile = do_get_file("../head_common.js", false)) {
+  let uri = Services.io.newFileURI(commonFile);
+  Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
-// If there's no location registered for the profile direcotry, register one now.
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-var profileDir = null;
-try {
-  profileDir = dirSvc.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
-} catch (e) {}
-if (!profileDir) {
-  // Register our own provider for the profile directory.
-  // It will simply return the current directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == NS_APP_USER_PROFILE_50_DIR) {
-        return dirSvc.get("CurProcD", Ci.nsIFile);
-      }
-      if (prop == NS_APP_HISTORY_50_FILE) {
-        var histFile = dirSvc.get("CurProcD", Ci.nsIFile);
-        histFile.append("history.dat");
-        return histFile;
-      }
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
+// Put any other stuff relative to this test folder below.
 
-var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-function uri(spec) {
-  return iosvc.newURI(spec, null, null);
-}
-
-// Delete a previously created sqlite file
-function clearDB() {
-  try {
-    var file = dirSvc.get('ProfD', Ci.nsIFile);
-    file.append("places.sqlite");
-    if (file.exists())
-      file.remove(false);
-  } catch(ex) { dump("Exception: " + ex); }
-}
-clearDB();
-
-/**
- * Dumps the rows of a table out to the console.
- *
- * @param aName
- *        The name of the table or view to output.
- */
-function dump_table(aName)
-{
-  let db = DBConn()
-  let stmt = db.createStatement("SELECT * FROM " + aName);
-
-  dump("\n*** Printing data from " + aName + ":\n");
-  let count = 0;
-  while (stmt.executeStep()) {
-    let columns = stmt.numEntries;
-
-    if (count == 0) {
-      // print the column names
-      for (let i = 0; i < columns; i++)
-        dump(stmt.getColumnName(i) + "\t");
-      dump("\n");
-    }
-
-    // print the row
-    for (let i = 0; i < columns; i++) {
-      switch (stmt.getTypeOfIndex(i)) {
-        case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
-          dump("NULL\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
-          dump(stmt.getInt64(i) + "\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
-          dump(stmt.getDouble(i) + "\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
-          dump(stmt.getString(i) + "\t");
-          break;
-      }
-    }
-    dump("\n");
-
-    count++;
-  }
-  dump("*** There were a total of " + count + " rows of data.\n\n");
-
-  stmt.reset();
-  stmt.finalize();
-  stmt = null;
-}
 
 /**
  * Function tests to see if the place associated with the bookmark with id
@@ -170,8 +71,7 @@ function dump_table(aName)
  */
 function new_test_bookmark_uri_event(aBookmarkId, aExpectedURI, aExpected, aFinish)
 {
-  let db = DBConn();
-  let stmt = db.createStatement(
+  let stmt = DBConn().createStatement(
     "SELECT moz_places.url " +
     "FROM moz_bookmarks INNER JOIN moz_places " +
     "ON moz_bookmarks.fk = moz_places.id " +
@@ -194,6 +94,7 @@ function new_test_bookmark_uri_event(aBookmarkId, aExpectedURI, aExpected, aFini
     do_test_finished();
 }
 
+
 /**
  * Function tests to see if the place associated with the visit with id aVisitId
  * has the uri aExpectedURI.  The event will call do_test_finished() if aFinish is
@@ -210,8 +111,7 @@ function new_test_bookmark_uri_event(aBookmarkId, aExpectedURI, aExpected, aFini
  */
 function new_test_visit_uri_event(aVisitId, aExpectedURI, aExpected, aFinish)
 {
-  let db = DBConn();
-  let stmt = db.createStatement(
+  let stmt = DBConn().createStatement(
     "SELECT moz_places.url " +
     "FROM moz_historyvisits INNER JOIN moz_places " +
     "ON moz_historyvisits.place_id = moz_places.id " +
@@ -234,50 +134,3 @@ function new_test_visit_uri_event(aVisitId, aExpectedURI, aExpected, aFinish)
     do_test_finished();
 }
 
-/**
- * Function gets current database connection, if the connection has been closed
- * it will try to reconnect to the places.sqlite database.
- */
-function DBConn()
-{
-  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsPIPlacesDatabase).
-           DBConnection;
-  if (db.connectionReady)
-    return db;
-
-  // open a new connection if needed
-  let file = dirSvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  let storageService = Cc["@mozilla.org/storage/service;1"].
-                       getService(Ci.mozIStorageService);
-  try {
-    var dbConn = storageService.openDatabase(file);
-  } catch (ex) {
-    return null;
-  }
-  return dbConn;
-}
-
-/**
- * Flushes any events in the event loop of the main thread.
- */
-function flush_main_thread_events()
-{
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  while (tm.mainThread.hasPendingEvents())
-    tm.mainThread.processNextEvent(false);
-}
-
-// Simulates a Places shutdown.
-function shutdownPlaces()
-{
-  const TOPIC_XPCOM_SHUTDOWN = "xpcom-shutdown";
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsIObserver);
-  hs.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
-  let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
-  sync.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
-  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
-  expire.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
-}

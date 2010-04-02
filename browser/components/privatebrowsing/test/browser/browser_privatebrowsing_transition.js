@@ -42,8 +42,6 @@ let cookieManager = Cc["@mozilla.org/cookiemanager;1"].
                     getService(Ci.nsICookieManager2);
 let pb = Cc["@mozilla.org/privatebrowsing;1"].
          getService(Ci.nsIPrivateBrowsingService);
-let _obs = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
 let observerNotified = 0, firstUnloadFired = 0, secondUnloadFired = 0;
 
 function pbObserver(aSubject, aTopic, aData) {
@@ -56,7 +54,7 @@ function pbObserver(aSubject, aTopic, aData) {
       is(firstUnloadFired, 1, "The first unload event should have been processed by now");
       break;
     case "exit":
-      _obs.removeObserver(pbObserver, "private-browsing");
+      Services.obs.removeObserver(pbObserver, "private-browsing");
       observerNotified++;
       is(observerNotified, 2, "This should be the second notification");
       is(secondUnloadFired, 1, "The second unload event should have been processed by now");
@@ -66,7 +64,7 @@ function pbObserver(aSubject, aTopic, aData) {
 
 function test() {
   waitForExplicitFinish();
-  _obs.addObserver(pbObserver, "private-browsing", false);
+  Services.obs.addObserver(pbObserver, "private-browsing", false);
   is(gBrowser.tabs.length, 1, "There should only be one tab");
   let testTab = gBrowser.addTab();
   gBrowser.selectedTab = testTab;

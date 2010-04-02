@@ -4,8 +4,7 @@ var gTestBrowser = null;
 var gNextTest = null;
 
 function get_test_plugin() {
-  var ph = Components.classes["@mozilla.org/plugin/host;1"]
-                     .getService(Components.interfaces.nsIPluginHost);
+  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   var tags = ph.getPluginTags();
   
   // Find the test plugin
@@ -23,9 +22,7 @@ function WindowOpenListener(url, opencallback, closecallback) {
   this.opencallback = opencallback;
   this.closecallback = closecallback;
 
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  wm.addListener(this);
+  Services.wm.addListener(this);
 }
 
 WindowOpenListener.prototype = {
@@ -61,9 +58,7 @@ WindowOpenListener.prototype = {
     if (this.window != window)
       return;
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    wm.removeListener(this);
+    Services.wm.removeListener(this);
     this.opencallback = null;
     this.window = null;
     this.domwindow = null;

@@ -8,10 +8,7 @@ function test() {
 
   searchBar.value = "test";
 
-  var obs = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-  var ss = Cc["@mozilla.org/browser/search-service;1"].
-           getService(Ci.nsIBrowserSearchService);
+  var ss = Services.search;
 
   function observer(aSub, aTopic, aData) {
     switch (aData) {
@@ -26,13 +23,13 @@ function test() {
         testReturn();
         break;
       case "engine-removed":
-        obs.removeObserver(observer, "browser-search-engine-modified");
+        Services.obs.removeObserver(observer, "browser-search-engine-modified");
         finish();
         break;
     }
   }
 
-  obs.addObserver(observer, "browser-search-engine-modified", false);
+  Services.obs.addObserver(observer, "browser-search-engine-modified", false);
   ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
                Ci.nsISearchEngine.DATA_XML, "data:image/x-icon,%00",
                false);

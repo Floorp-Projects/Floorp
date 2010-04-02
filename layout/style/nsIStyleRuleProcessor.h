@@ -118,14 +118,14 @@ public:
     HasDocumentStateDependentStyle(StateRuleProcessorData* aData) = 0;
 
   /**
-   * Return how (as described by nsReStyleHint) style can depend on a
+   * Return how (as described by nsRestyleHint) style can depend on a
    * change of the given content state on the given content node.  This
    * test is used for optimization only, and may err on the side of
    * reporting more dependencies than really exist.
    *
    * Event states are defined in nsIEventStateManager.h.
    */
-  virtual nsReStyleHint
+  virtual nsRestyleHint
     HasStateDependentStyle(StateRuleProcessorData* aData) = 0;
 
   /**
@@ -144,7 +144,7 @@ public:
    * only, and may err on the side of reporting more dependencies than
    * really exist.
    */
-  virtual nsReStyleHint
+  virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) = 0;
 
   /**

@@ -44,26 +44,26 @@
 var testData = [
   // Normal folder
   { isInQuery: true, isFolder: true, title: "Folder 1",
-    parentFolder: bmsvc.toolbarFolder },
+    parentFolder: PlacesUtils.toolbarFolderId },
 
   // Read only folder
   { isInQuery: false, isFolder: true, title: "Folder 2 RO",
-    parentFolder: bmsvc.toolbarFolder, readOnly: true }
+    parentFolder: PlacesUtils.toolbarFolderId, readOnly: true }
 ];
 
 function run_test() {
   populateDB(testData);
 
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.toolbarFolder], 1);
+  var query = PlacesUtils.history.getNewQuery();
+  query.setFolders([PlacesUtils.toolbarFolderId], 1);
 
   // Options
-  var options = histsvc.getNewQueryOptions();
+  var options = PlacesUtils.history.getNewQueryOptions();
   options.excludeQueries = true;
   options.excludeReadOnlyFolders = true;
 
   // Results
-  var result = histsvc.executeQuery(query, options);
+  var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   displayResultSet(root);
   // The readonly folder should not be in our result set.

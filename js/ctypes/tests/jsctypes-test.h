@@ -195,5 +195,11 @@ NS_EXTERN_C
 
   NS_EXPORT PRInt32 test_callme(PRInt8);
   NS_EXPORT void* test_getfn();
-}
 
+  EXPORT_CDECL(PRInt32) test_sum_va_cdecl(PRUint8 n, ...);
+  EXPORT_CDECL(PRUint8) test_count_true_va_cdecl(PRUint8 n, ...);
+  EXPORT_CDECL(void) test_add_char_short_int_va_cdecl(PRUint32* result, ...);
+  EXPORT_CDECL(PRInt32*) test_vector_add_va_cdecl(PRUint8 num_vecs,
+                                                  PRUint8 vec_len,
+                                                  PRInt32* result, ...);
+}

@@ -142,10 +142,10 @@ nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 }
 
 // Test if style is dependent on content state
-nsReStyleHint
+nsRestyleHint
 nsHTMLCSSStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 PRBool
@@ -155,10 +155,10 @@ nsHTMLCSSStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aDat
 }
 
 // Test if style is dependent on attribute
-nsReStyleHint
+nsRestyleHint
 nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 NS_IMETHODIMP

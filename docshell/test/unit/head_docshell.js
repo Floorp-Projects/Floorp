@@ -67,7 +67,7 @@ var provider = {
     throw Cr.NS_ERROR_FAILURE;
   },
   QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIDirectoryProvider) ||
+    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
         iid.equals(Ci.nsISupports)) {
       return this;
     }
