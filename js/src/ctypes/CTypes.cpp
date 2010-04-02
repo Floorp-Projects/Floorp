@@ -1373,21 +1373,6 @@ StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
   return true;
 }
 
-static bool
-IsUTF16(const jschar* string, size_t length)
-{
-  PRBool error;
-  const PRUnichar* buffer = reinterpret_cast<const PRUnichar*>(string);
-  const PRUnichar* end = buffer + length;
-  while (buffer != end) {
-    UTF16CharEnumerator::NextChar(&buffer, end, &error);
-    if (error)
-      return false;
-  }
-
-  return true;
-}
-
 template<class CharType>
 static size_t
 strnlen(const CharType* begin, size_t max)
@@ -1643,21 +1628,22 @@ ImplicitConvert(JSContext* cx,
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
         // Convert from UTF-16 to UTF-8.
-        if (!IsUTF16(sourceChars, sourceLength))
-          return TypeError(cx, "UTF-16 string", val);
-
-        NS_ConvertUTF16toUTF8 converted(
-          reinterpret_cast<const PRUnichar*>(sourceChars), sourceLength);
+        size_t nbytes =
+          js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        if (nbytes == (size_t) -1)
+          return false;
 
         char** charBuffer = static_cast<char**>(buffer);
-        *charBuffer = new char[converted.Length() + 1];
+        *charBuffer = new char[nbytes + 1];
         if (!*charBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
         }
 
+        ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
+                    *charBuffer, &nbytes));
+        (*charBuffer)[nbytes] = 0;
         *freePointer = true;
-        memcpy(*charBuffer, converted.get(), converted.Length() + 1);
         break;
       }
       case TYPE_jschar: {
@@ -1705,20 +1691,22 @@ ImplicitConvert(JSContext* cx,
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
         // Convert from UTF-16 to UTF-8.
-        if (!IsUTF16(sourceChars, sourceLength))
-          return TypeError(cx, "UTF-16 string", val);
+        size_t nbytes =
+          js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        if (nbytes == (size_t) -1)
+            return false;
 
-        NS_ConvertUTF16toUTF8 converted(
-          reinterpret_cast<const PRUnichar*>(sourceChars), sourceLength);
-
-        if (targetLength < converted.Length()) {
+        if (targetLength < nbytes) {
           JS_ReportError(cx, "ArrayType has insufficient length");
           return false;
         }
 
-        memcpy(buffer, converted.get(), converted.Length());
-        if (targetLength > converted.Length())
-          static_cast<char*>(buffer)[converted.Length()] = 0;
+        char* charBuffer = static_cast<char*>(buffer);
+        ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
+                    charBuffer, &nbytes));
+
+        if (targetLength > nbytes)
+          charBuffer[nbytes] = 0;
 
         break;
       }
@@ -3423,14 +3411,12 @@ ArrayType::ConstructData(JSContext* cx,
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Convert from UTF-16 to UTF-8 to determine the length. :(
-        if (!IsUTF16(sourceChars, sourceLength))
-          return TypeError(cx, "UTF-16 string", argv[0]);
+        // Determine the UTF-8 length.
+        length = js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        if (length == (size_t) -1)
+          return false;
 
-        NS_ConvertUTF16toUTF8 converted(
-          reinterpret_cast<const PRUnichar*>(sourceChars), sourceLength);
-
-        length = converted.Length() + 1;
+        ++length;
         break;
       }
       case TYPE_jschar:
@@ -5312,13 +5298,20 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
   case TYPE_unsigned_char: {
     char* bytes = static_cast<char*>(data);
     size_t length = strnlen(bytes, maxLength);
-    nsDependentCSubstring string(bytes, bytes + length);
-    if (!IsUTF8(string)) {
-      JS_ReportError(cx, "not a UTF-8 string");
-      return JS_FALSE;
-    }
 
-    result = NewUCString(cx, NS_ConvertUTF8toUTF16(string));
+    // Determine the length.
+    size_t dstlen;
+    if (!js_InflateUTF8StringToBuffer(cx, bytes, length, NULL, &dstlen))
+      return JS_FALSE;
+
+    jschar* dst =
+      static_cast<jschar*>(JS_malloc(cx, (dstlen + 1) * sizeof(jschar)));
+    if (!dst)
+      return JS_FALSE;
+
+    ASSERT_OK(js_InflateUTF8StringToBuffer(cx, bytes, length, dst, &dstlen));
+
+    result = JS_NewUCString(cx, dst, dstlen);
     break;
   }
   case TYPE_int16_t:
