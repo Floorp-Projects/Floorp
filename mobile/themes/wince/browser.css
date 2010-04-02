@@ -619,7 +619,7 @@ pageaction .pageaction-title {
 
 pageaction .pageaction-desc {
   font-size: 8pt !important;
-  color: darkgray;
+  color: #414141;
 }
 
 pageaction:hover:active .pageaction-desc {
