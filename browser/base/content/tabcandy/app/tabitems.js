@@ -1,44 +1,53 @@
 // ##########
 window.TabItem = function(container, tab) {
-  this.container = container;
+  this._init(container);
   this.tab = tab;
-  
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
-  
-  $(this.container).data('item', this);
 };
 
 window.TabItem.prototype = $.extend(new Item(), {
-  // ----------
-  getContainer: function() {
-    return this.container;
-  },
-  
-  // ----------
-  getBounds: function() {
-    return Utils.getBounds(this.container);
+  // ----------  
+  reloadBounds: function() {
+    this.bounds = Utils.getBounds(this.container);
+    this._updateDebugBounds();
   },
   
   // ----------  
   setBounds: function(rect, immediately) {
-    var css = $.extend(this._getSizeCSS(rect.width, rect.height), {
-      left: rect.left,
-      top: rect.top,
-    });
-    
-    this._change(css, immediately);
+    var css = {};
+
+    if(rect.left != this.bounds.left)
+      css.left = rect.left;
+      
+    if(rect.top != this.bounds.top)
+      css.top = rect.top;
+      
+    if(rect.width != this.bounds.width) {
+      css.width = rect.width;
+      var scale = rect.width / TabItems.tabWidth;
+      css.fontSize = TabItems.fontSize * scale;
+    }
+
+    if(rect.height != this.bounds.height)
+      css.height = rect.height; 
+      
+    if($.isEmptyObject(css))
+      return;
+      
+    this.bounds.copy(rect);
+
+    if(immediately) 
+      $(this.container).css(css);
+    else {
+      TabMirror.pausePainting();
+      $(this.container).animate(css, {complete: function() {
+        TabMirror.resumePainting();
+      }}).dequeue();
+    }
+
+    this._updateDebugBounds();
   },
   
-  // ----------
-  setPosition: function(left, top, immediately) {
-    this._change({left: left, top: top}, immediately);
-  },
-
-  // ----------  
-  setSize: function(width, height, immediately) {
-    this._change(this._getSizeCSS(width, height), immediately);
-  },
-
   // ----------
   close: function() {
     this.tab.close();
@@ -52,29 +61,6 @@ window.TabItem.prototype = $.extend(new Item(), {
   // ----------
   removeOnClose: function(referenceObject) {
     this.tab.mirror.removeOnClose(referenceObject);      
-  },
-  
-  // ----------  
-  _getSizeCSS: function(width, height) {
-    var scale = width / TabItems.tabWidth;
-    
-    return {
-      width: width,
-      height: height,
-      fontSize: TabItems.fontSize * scale
-    };
-  },
-  
-  // ----------  
-  _change: function(css, immediately) {
-    if(immediately) 
-      $(this.container).css(css);
-    else {
-      TabMirror.pausePainting();
-      $(this.container).animate(css, {complete: function() {
-        TabMirror.resumePainting();
-      }}).dequeue();
-    }
   }
 });
 
