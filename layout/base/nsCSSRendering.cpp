@@ -575,7 +575,8 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // for determining the background color
   nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
     (aStyleContext, compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE);
-  const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   border = aStyleBorder.GetComputedBorder();
   if ((0 == border.left) && (0 == border.right) &&
@@ -659,7 +660,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                          borderColors,
                          compositeColors,
                          aSkipSides,
-                         bgColor->mBackgroundColor);
+                         bgColor);
   br.DrawBorders();
 
   ctx->Restore();
@@ -702,7 +703,8 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
   nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
     (aStyleContext, PR_FALSE);
-  const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   // get the radius for our outline
   GetBorderRadiusTwips(aOutlineStyle.mOutlineRadius, aBorderArea.width,
@@ -800,7 +802,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                          outlineRadii,
                          outlineColors,
                          nsnull, 0,
-                         bgColor->mBackgroundColor);
+                         bgColor);
   br.DrawBorders();
 
   ctx->Restore();
@@ -926,6 +928,8 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
   
   while (context) {
     const nsStyleBackground* bg = context->GetStyleBackground();
+    // No need to call GetVisitedDependentColor because it always uses
+    // this alpha component anyway.
     if (NS_GET_A(bg->mBackgroundColor) > 0)
       break;
 
@@ -1562,9 +1566,9 @@ DetermineBackgroundColorInternal(nsPresContext* aPresContext,
   }
 
   nscolor bgColor;
-  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
   if (aDrawBackgroundColor) {
-    bgColor = bg->mBackgroundColor;
+    bgColor =
+      aStyleContext->GetVisitedDependentColor(eCSSProperty_background_color);
     if (NS_GET_A(bgColor) == 0)
       aDrawBackgroundColor = PR_FALSE;
   } else {
@@ -1573,7 +1577,8 @@ DetermineBackgroundColorInternal(nsPresContext* aPresContext,
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (aDrawBackgroundImage || !bg->IsTransparent())
+    if (aDrawBackgroundImage ||
+        !aStyleContext->GetStyleBackground()->IsTransparent())
       aDrawBackgroundColor = PR_TRUE;
     else
       bgColor = NS_RGBA(0,0,0,0);
@@ -3016,6 +3021,8 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
       nscoord endBevel =   (aEndBevelOffset > 0) 
                             ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, PR_TRUE) : 0;
       PRUint8 ridgeGrooveSide = (horizontal) ? NS_SIDE_TOP : NS_SIDE_LEFT;
+      // FIXME: In theory, this should use the visited-dependent
+      // background color, but I don't care.
       aContext.SetColor ( 
         MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor));
       nsRect rect(aBorder);
@@ -3049,6 +3056,8 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
 
       rect = aBorder;
       ridgeGrooveSide = (NS_SIDE_TOP == ridgeGrooveSide) ? NS_SIDE_BOTTOM : NS_SIDE_RIGHT;
+      // FIXME: In theory, this should use the visited-dependent
+      // background color, but I don't care.
       aContext.SetColor ( 
         MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor));
       if (horizontal) {
