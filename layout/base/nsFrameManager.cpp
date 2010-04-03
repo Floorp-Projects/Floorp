@@ -261,31 +261,6 @@ nsFrameManager::Destroy()
   mPresShell = nsnull;
 }
 
-nsIFrame*
-nsFrameManager::GetCanvasFrame()
-{
-  if (mRootFrame) {
-    // walk the children of the root frame looking for a frame with type==canvas
-    // start at the root
-    nsIFrame* childFrame = mRootFrame;
-    while (childFrame) {
-      // get each sibling of the child and check them, startig at the child
-      nsIFrame *siblingFrame = childFrame;
-      while (siblingFrame) {
-        if (siblingFrame->GetType() == nsGkAtoms::canvasFrame) {
-          // this is it
-          return siblingFrame;
-        } else {
-          siblingFrame = siblingFrame->GetNextSibling();
-        }
-      }
-      // move on to the child's child
-      childFrame = childFrame->GetFirstChild(nsnull);
-    }
-  }
-  return nsnull;
-}
-
 //----------------------------------------------------------------------
 
 // Placeholder frame functions
@@ -489,19 +464,6 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
         ClearUndisplayedContentIn(child, child->GetParent());
       }
     }
-  }
-}
-
-void
-nsFrameManager::ClearUndisplayedContentMap()
-{
-#ifdef DEBUG_UNDISPLAYED_MAP
-  static int i = 0;
-  printf("ClearUndisplayedContentMap(%d)\n", i++);
-#endif
-
-  if (mUndisplayedMap) {
-    mUndisplayedMap->Clear();
   }
 }
 

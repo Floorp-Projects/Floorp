@@ -878,13 +878,6 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
   return item;
 }
 
-void nsDisplayList::DeleteBottom() {
-  nsDisplayItem* item = RemoveBottom();
-  if (item) {
-    item->~nsDisplayItem();
-  }
-}
-
 void nsDisplayList::DeleteAll() {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nsnull) {

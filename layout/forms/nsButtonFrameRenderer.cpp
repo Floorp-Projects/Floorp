@@ -349,20 +349,6 @@ nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
   return result;
 }
 
-nsMargin
-nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
-{
-  nsMargin borderAndPadding(0,0,0,0);
-  return borderAndPadding;
-}
-
-// gets the full size of our border with all the focus borders
-nsMargin
-nsButtonFrameRenderer::GetFullButtonBorderAndPadding()
-{
-  return GetAddedButtonBorderAndPadding() + GetButtonBorderAndPadding();
-}
-
 // gets all the focus borders and padding that will be added to the regular border
 nsMargin
 nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()

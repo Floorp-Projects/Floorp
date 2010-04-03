@@ -414,12 +414,6 @@ void nsCSSValue::SetDummyInheritValue()
   mUnit = eCSSUnit_DummyInherit;
 }
 
-void nsCSSValue::SetRectIsAutoValue()
-{
-  Reset();
-  mUnit = eCSSUnit_RectIsAuto;
-}
-
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
   NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");

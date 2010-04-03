@@ -170,40 +170,6 @@ nsBidi::nsBidi()
   mMayAllocateRuns=PR_TRUE;
 }
 
-nsBidi::nsBidi(PRUint32 aMaxLength, PRUint32 aMaxRunCount)
-{
-  Init();
-  nsresult rv = NS_OK;
-
-  /* allocate memory for arrays as requested */
-  if(aMaxLength>0) {
-    if( !GETINITIALDIRPROPSMEMORY(aMaxLength) ||
-        !GETINITIALLEVELSMEMORY(aMaxLength)
-      ) {
-      mMayAllocateText=PR_FALSE;
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    mMayAllocateText=PR_TRUE;
-  }
-
-  if(aMaxRunCount>0) {
-    if(aMaxRunCount==1) {
-      /* use simpleRuns[] */
-      mRunsSize=sizeof(Run);
-    } else if(!GETINITIALRUNSMEMORY(aMaxRunCount)) {
-      mMayAllocateRuns=PR_FALSE;
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    mMayAllocateRuns=PR_TRUE;
-  }
-
-  if(NS_FAILED(rv)) {
-    Free();
-  }
-}
-
 nsBidi::~nsBidi()
 {
   Free();

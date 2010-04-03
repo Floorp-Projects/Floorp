@@ -1760,63 +1760,6 @@ nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
 }
 
 nsIFrame*
-nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
-                                                       nsIFrame* aFrame2,
-                                                       nsIFrame* aKnownCommonAncestorHint)
-{
-  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
-  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
-
-  nsPresContext* presContext = aFrame1->PresContext();
-  if (presContext != aFrame2->PresContext()) {
-    // different documents, no common ancestor
-    return nsnull;
-  }
-  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
-
-  nsAutoTArray<nsIFrame*, 8> frame1Ancestors;
-  nsIFrame* f1;
-  for (f1 = aFrame1; f1 && f1 != aKnownCommonAncestorHint;
-       f1 = GetParentOrPlaceholderFor(frameManager, f1)) {
-    frame1Ancestors.AppendElement(f1);
-  }
-  if (!f1 && aKnownCommonAncestorHint) {
-    // So, it turns out aKnownCommonAncestorHint was not an ancestor of f1. Oops.
-    // Never mind. We can continue as if aKnownCommonAncestorHint was null.
-    aKnownCommonAncestorHint = nsnull;
-  }
-
-  nsAutoTArray<nsIFrame*, 8> frame2Ancestors;
-  nsIFrame* f2;
-  for (f2 = aFrame2; f2 && f2 != aKnownCommonAncestorHint;
-       f2 = GetParentOrPlaceholderFor(frameManager, f2)) {
-    frame2Ancestors.AppendElement(f2);
-  }
-  if (!f2 && aKnownCommonAncestorHint) {
-    // So, it turns out aKnownCommonAncestorHint was not an ancestor of f2.
-    // We need to retry with no common ancestor hint.
-    return GetClosestCommonAncestorViaPlaceholders(aFrame1, aFrame2, nsnull);
-  }
-
-  // now frame1Ancestors and frame2Ancestors give us the parent frame chain
-  // up to aKnownCommonAncestorHint, or if that is null, up to and including
-  // the root frame. We need to walk from the end (i.e., the top of the
-  // frame (sub)tree) down to aFrame1/aFrame2 looking for the first difference.
-  nsIFrame* lastCommonFrame = aKnownCommonAncestorHint;
-  PRInt32 last1 = frame1Ancestors.Length() - 1;
-  PRInt32 last2 = frame2Ancestors.Length() - 1;
-  while (last1 >= 0 && last2 >= 0) {
-    nsIFrame* frame1 = frame1Ancestors.ElementAt(last1);
-    if (frame1 != frame2Ancestors.ElementAt(last2))
-      break;
-    lastCommonFrame = frame1;
-    last1--;
-    last2--;
-  }
-  return lastCommonFrame;
-}
-
-nsIFrame*
 nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
 {
   nsIFrame *result = aFrame->GetNextContinuation();

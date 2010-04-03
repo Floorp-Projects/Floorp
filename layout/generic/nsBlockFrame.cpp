@@ -2848,27 +2848,6 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   return PR_FALSE;
 }
 
-nsIFrame*
-nsBlockFrame::GetTopBlockChild(nsPresContext* aPresContext)
-{
-  if (mLines.empty())
-    return nsnull;
-
-  nsLineBox *firstLine = mLines.front();
-  if (firstLine->IsBlock())
-    return firstLine->mFirstChild;
-
-  if (!firstLine->CachedIsEmpty())
-    return nsnull;
-
-  line_iterator secondLine = begin_lines();
-  ++secondLine;
-  if (secondLine == end_lines() || !secondLine->IsBlock())
-    return nsnull;
-
-  return secondLine->mFirstChild;
-}
-
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                line_iterator aLine,
