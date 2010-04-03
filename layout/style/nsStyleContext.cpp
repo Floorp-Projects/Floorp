@@ -168,8 +168,12 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
 
 already_AddRefed<nsStyleContext>
 nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                   nsRuleNode* aRuleNode)
+                                   nsRuleNode* aRuleNode,
+                                   nsRuleNode* aRulesIfVisited,
+                                   PRBool aRelevantLinkVisited)
 {
+  NS_ABORT_IF_FALSE(aRulesIfVisited || !aRelevantLinkVisited,
+    "aRelevantLinkVisited should only be set when we have a separate style");
   PRUint32 threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
@@ -179,9 +183,20 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   if (list) {
     nsStyleContext *child = list;
     do {
-      if (child->mRuleNode == aRuleNode && child->mPseudoTag == aPseudoTag) {
-        result = child;
-        break;
+      if (child->mRuleNode == aRuleNode &&
+          child->mPseudoTag == aPseudoTag &&
+          child->RelevantLinkVisited() == aRelevantLinkVisited) {
+        PRBool match = PR_FALSE;
+        if (aRulesIfVisited) {
+          match = child->GetStyleIfVisited() &&
+                  child->GetStyleIfVisited()->mRuleNode == aRulesIfVisited;
+        } else {
+          match = !child->GetStyleIfVisited();
+        }
+        if (match) {
+          result = child;
+          break;
+        }
       }
       child = child->mNextSibling;
       threshold--;

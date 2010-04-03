@@ -443,7 +443,8 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   nsStyleContext* result = nsnull;
 
   if (aParentContext)
-    result = aParentContext->FindChildWithRules(aPseudoTag, aRuleNode).get();
+    result = aParentContext->FindChildWithRules(aPseudoTag, aRuleNode,
+                                                nsnull, PR_FALSE).get();
 
 #ifdef NOISY_DEBUG
   if (result)
