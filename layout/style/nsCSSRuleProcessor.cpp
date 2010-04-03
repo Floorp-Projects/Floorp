@@ -1219,10 +1219,6 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
  * A |TreeMatchContext| has data about matching a selector (containing
  * combinators) against a node and the tree that that node is in.  It
  * contains both input to and output from the matching.
- *
- * (In contrast, a RuleProcessorData has information needed to match a
- * selector (without combinators) against a single node; it only
- * has input to the matching.)
  */
 struct TreeMatchContext {
   // Is this matching operation for the creation of a style context?
@@ -1232,6 +1228,36 @@ struct TreeMatchContext {
 
   TreeMatchContext(PRBool aForStyling)
     : mForStyling(aForStyling)
+  {
+  }
+};
+
+/**
+ * A |NodeMatchContext| has data about matching a selector (without
+ * combinators) against a single node.  It contains only input to the
+ * matching.
+ *
+ * Unlike |RuleProcessorData|, which is similar, a |NodeMatchContext|
+ * can vary depending on the selector matching process.  In other words,
+ * there might be multiple NodeMatchContexts corresponding to a single
+ * node, but only one possible RuleProcessorData.
+ */
+struct NodeMatchContext {
+  // In order to implement nsCSSRuleProcessor::HasStateDependentStyle,
+  // we need to be able to see if a node might match an
+  // event-state-dependent selector for any value of that event state.
+  // So mStateMask contains the states that should NOT be tested.
+  //
+  // NOTE: For |aStateMask| to work correctly, it's important that any
+  // change that changes multiple state bits include all those state
+  // bits in the notification.  Otherwise, if multiple states change but
+  // we do separate notifications then we might determine the style is
+  // not state-dependent when it really is (e.g., determining that a
+  // :hover:active rule no longer matches when both states are unset).
+  const PRInt32 mStateMask;
+
+  NodeMatchContext(PRInt32 aStateMask)
+    : mStateMask(aStateMask)
   {
   }
 };
@@ -1834,13 +1860,6 @@ static const PseudoClassInfo sPseudoClassInfo[] = {
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassInfo) >
                    nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
 
-// NOTE: For |aStateMask| to work correctly, it's important that any change
-// that changes multiple state bits include all those state bits in the
-// notification.  Otherwise, if multiple states change but we do separate
-// notifications then we might determine the style is not state-dependent when
-// it really is (e.g., determining that a :hover:active rule no longer matches
-// when both states are unset).
-
 // |aDependence| has two functions:
 //  * when non-null, it indicates that we're processing a negation,
 //    which is done only when SelectorMatches calls itself recursively
@@ -1848,7 +1867,7 @@ PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassInfo) >
 //    because of aStateMask
 static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
-                              PRInt32 aStateMask, // states NOT to test
+                              NodeMatchContext& aNodeMatchContext,
                               TreeMatchContext& aTreeMatchContext,
                               PRBool* const aDependence = nsnull) 
 
@@ -1929,7 +1948,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // generally quick to test, and thus earlier).  If they were later,
   // we'd probably avoid setting those bits in more cases where setting
   // them is unnecessary.
-  NS_ASSERTION(aStateMask == 0 || !aTreeMatchContext.mForStyling,
+  NS_ASSERTION(aNodeMatchContext.mStateMask == 0 ||
+               !aTreeMatchContext.mForStyling,
                "mForStyling must be false if we're just testing for "
                "state-dependence");
 
@@ -1961,7 +1981,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         // selectors ":hover" and ":active".
         return PR_FALSE;
       } else {
-        if (aStateMask & statesToCheck) {
+        if (aNodeMatchContext.mStateMask & statesToCheck) {
           if (aDependence)
             *aDependence = PR_TRUE;
         } else {
@@ -2056,7 +2076,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     for (nsCSSSelector *negation = aSelector->mNegations;
          result && negation; negation = negation->mNegations) {
       PRBool dependence = PR_FALSE;
-      result = !SelectorMatches(data, negation, aStateMask,
+      result = !SelectorMatches(data, negation, aNodeMatchContext,
                                 aTreeMatchContext, &dependence);
       // If the selector does match due to the dependence on aStateMask,
       // then we want to keep result true so that the final result of
@@ -2138,7 +2158,8 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
     if (! data) {
       return PR_FALSE;
     }
-    if (SelectorMatches(*data, selector, 0, aTreeMatchContext)) {
+    NodeMatchContext nodeContext(0);
+    if (SelectorMatches(*data, selector, nodeContext, aTreeMatchContext)) {
       // to avoid greedy matching, we need to recur if this is a
       // descendant or general sibling combinator and the next
       // combinator is different, but we can make an exception for
@@ -2182,7 +2203,8 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
   RuleProcessorData* data = (RuleProcessorData*)aData;
 
   TreeMatchContext treeContext(PR_TRUE);
-  if (SelectorMatches(*data, aSelector, 0, treeContext)) {
+  NodeMatchContext nodeContext(0);
+  if (SelectorMatches(*data, aSelector, nodeContext, treeContext)) {
     nsCSSSelector *next = aSelector->mNext;
     if (!next || SelectorMatchesTree(*data, next, treeContext)) {
       // for performance, require that every implementation of
@@ -2333,8 +2355,9 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
       // don't bother calling SelectorMatches, since even if it returns false
       // hint won't change.
       TreeMatchContext treeContext(PR_FALSE);
+      NodeMatchContext nodeContext(aData->mStateMask);
       if ((possibleChange & ~hint) &&
-          SelectorMatches(*aData, selector, aData->mStateMask, treeContext) &&
+          SelectorMatches(*aData, selector, nodeContext, treeContext) &&
           SelectorMatchesTree(*aData, selector->mNext, treeContext)) {
         hint = nsRestyleHint(hint | possibleChange);
       }
@@ -2372,8 +2395,9 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
   TreeMatchContext treeContext(PR_FALSE);
+  NodeMatchContext nodeContext(0);
   if ((possibleChange & ~(aData->change)) &&
-      SelectorMatches(*data, aSelector, 0, treeContext) &&
+      SelectorMatches(*data, aSelector, nodeContext, treeContext) &&
       SelectorMatchesTree(*data, aSelector->mNext, treeContext)) {
     aData->change = nsRestyleHint(aData->change | possibleChange);
   }
@@ -2916,7 +2940,8 @@ nsCSSRuleProcessor::SelectorListMatches(RuleProcessorData& aData,
     NS_ASSERTION(sel, "Should have *some* selectors");
     NS_ASSERTION(!sel->IsPseudoElement(), "Shouldn't have been called");
     TreeMatchContext treeContext(PR_FALSE);
-    if (SelectorMatches(aData, sel, 0, treeContext)) {
+    NodeMatchContext nodeContext(0);
+    if (SelectorMatches(aData, sel, nodeContext, treeContext)) {
       nsCSSSelector* next = sel->mNext;
       if (!next || SelectorMatchesTree(aData, next, treeContext)) {
         return PR_TRUE;
