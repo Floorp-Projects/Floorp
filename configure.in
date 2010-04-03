@@ -2254,6 +2254,7 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
+        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
     else
         TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
