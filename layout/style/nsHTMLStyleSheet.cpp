@@ -241,9 +241,11 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
           PRUint32 state = aData->ContentState();
           if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
             ruleWalker->Forward(mLinkRule);
+            ruleWalker->SetHaveRelevantLink();
           }
           else if (mVisitedRule && (state & NS_EVENT_STATE_VISITED)) {
             ruleWalker->Forward(mVisitedRule);
+            ruleWalker->SetHaveRelevantLink();
           }
 
           // No need to add to the active rule if it's not a link
