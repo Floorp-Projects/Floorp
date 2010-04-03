@@ -176,6 +176,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_value_cloning.html \
 		test_value_computation.html \
 		test_value_storage.html \
+		test_visited_lying.html \
 		test_visited_pref.html \
 		test_visited_reftests.html \
 		css_properties.js \
@@ -202,6 +203,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		ccd-standards.html \
 		ccd.sjs \
 		visited-pref-iframe.html \
+		visited-lying-inner.html \
 		$(NULL)
 
 _VISITED_REFTEST_FILES = \
