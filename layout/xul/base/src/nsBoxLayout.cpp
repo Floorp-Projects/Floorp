@@ -57,19 +57,6 @@ nsBoxLayout::nsBoxLayout()
 }
 
 void
-nsBoxLayout::GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent)
-{
-  nsIBox* parent = aBox->GetParentBox();
-  if (parent)
-  {
-    parent->GetLayoutManager(aParent);
-    return;
-  }
-
-  *aParent = nsnull;
-}
-
-void
 nsBoxLayout::AddBorderAndPadding(nsIBox* aBox, nsSize& aSize)
 {
   nsBox::AddBorderAndPadding(aBox, aSize);

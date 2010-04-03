@@ -271,12 +271,6 @@ public:
    */
   PRBool CheckForCollapsedBottomMarginFromClearanceLine();
 
-  /** return the topmost block child based on y-index.
-    * almost always the first or second line, if there is one.
-    * accounts for lines that hold only compressed white space, etc.
-    */
-  nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
-
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);

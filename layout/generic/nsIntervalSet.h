@@ -76,11 +76,6 @@ public:
     void IncludeInterval(coord_type aBegin, coord_type aEnd);
 
     /*
-     * Is the point aPoint contained within the set of intervals?
-     */
-    PRBool HasPoint(coord_type aPoint) const;
-
-    /*
      * Are _some_ points in [aBegin, aEnd] contained within the set
      * of intervals?
      */

@@ -93,16 +93,6 @@ nsFramesetDrag::nsFramesetDrag()
   UnSet();
 }
 
-nsFramesetDrag::nsFramesetDrag(PRBool               aVertical, 
-                               PRInt32              aIndex, 
-                               PRInt32              aChange, 
-                               nsHTMLFramesetFrame* aSource) 
-{
-  mVertical = aVertical;
-  mIndex    = aIndex;
-  mChange   = aChange; 
-  mSource   = aSource;
-}
 void nsFramesetDrag::Reset(PRBool               aVertical, 
                            PRInt32              aIndex, 
                            PRInt32              aChange, 

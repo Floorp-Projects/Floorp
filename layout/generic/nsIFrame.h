@@ -888,13 +888,7 @@ public:
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
    * other rectangles of the frame, in app units, relative to the parent.
-   *
-   * Note that GetMarginRect is not meaningful for blocks (anything with
-   * 'display:block', whether block frame or not) because of both the
-   * collapsing and 'auto' issues with GetUsedMargin (on which it
-   * depends).
    */
-  nsRect GetMarginRect() const;
   nsRect GetPaddingRect() const;
   nsRect GetContentRect() const;
 
@@ -1032,15 +1026,6 @@ public:
                         const nsRect&           aClipRect,
                         PRBool                  aClipBorderBackground = PR_FALSE,
                         PRBool                  aClipAll = PR_FALSE);
-
-  /**
-   * Clips the display items of aFromSet, putting the results in aToSet.
-   * All items are clipped.
-   */
-  nsresult Clip(nsDisplayListBuilder* aBuilder,
-                const nsDisplayListSet& aFromSet,
-                const nsDisplayListSet& aToSet,
-                const nsRect& aClipRect);
 
   enum {
     DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,

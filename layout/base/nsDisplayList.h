@@ -768,10 +768,6 @@ public:
   nsDisplayItem* RemoveBottom();
   
   /**
-   * Remove an item from the bottom of the list and call its destructor.
-   */
-  void DeleteBottom();
-  /**
    * Remove all items from the list and call their destructors.
    */
   void DeleteAll();
