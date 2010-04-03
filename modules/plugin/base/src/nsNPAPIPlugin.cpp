@@ -314,12 +314,35 @@ namespace {
 
 #ifdef MOZ_IPC
 
+#ifdef XP_MACOSX
+static PRInt32 OSXVersion()
+{
+  static PRInt32 gOSXVersion = 0x0;
+  if (gOSXVersion == 0x0) {
+    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
+    if (err != noErr) {
+      // This should probably be changed when our minimum version changes
+      NS_ERROR("Couldn't determine OS X version, assuming 10.5");
+      gOSXVersion = 0x00001050;
+    }
+  }
+  return gOSXVersion;
+}
+#endif
+
 inline PRBool
 OOPPluginsEnabled(const char* aFilePath)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
   }
+
+#ifdef XP_MACOSX
+  // Only allow on Mac OS X 10.6 or higher.
+  if (OSXVersion() < 0x00001060) {
+    return PR_FALSE;
+  }
+#endif
 
 #ifdef XP_WIN
   OSVERSIONINFO osVerInfo = {0};
