@@ -66,6 +66,7 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
+#include "nsComputedDOMStyle.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -1223,4 +1224,27 @@ nsDOMWindowUtils::GetClassName(char **aName)
 
   *aName = NS_strdup(JS_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[0]))->name);
   return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetVisitedDependentComputedStyle(
+                    nsIDOMElement *aElement, const nsAString& aPseudoElement,
+                    const nsAString& aPropertyName, nsAString& aResult)
+{
+  aResult.Truncate();
+
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
+  nsresult rv =
+    mWindow->GetComputedStyle(aElement, aPseudoElement, getter_AddRefs(decl));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(PR_TRUE);
+  rv = decl->GetPropertyValue(aPropertyName, aResult);
+  static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(PR_FALSE);
+
+  return rv;
 }
