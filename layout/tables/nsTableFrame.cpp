@@ -1366,13 +1366,11 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
   if (NS_FAILED(rv)) return;
 
   if (GetStyleVisibility()->IsVisible()) {
-    const nsStyleBorder* border = GetStyleBorder();
     if (!IsBorderCollapse()) {
       PRIntn skipSides = GetSkipSides();
       nsRect rect(aPt, mRect.Size());
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext,
-                                  skipSides);
+                                  aDirtyRect, rect, mStyleContext, skipSides);
     }
     else {
       // XXX we should probably get rid of this translation at some stage

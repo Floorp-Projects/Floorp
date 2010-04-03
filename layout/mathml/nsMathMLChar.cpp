@@ -2008,8 +2008,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   nsStyleContext* styleContext = mFrame->GetStyleContext();
   nsRect rect = mRect + aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
-                              mVisibleRect, rect, *border, styleContext,
-                              skipSides);
+                              mVisibleRect, rect, styleContext, skipSides);
   nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,
                                mVisibleRect, rect, *border,
                                *mFrame->GetStyleOutline(), styleContext);

@@ -306,8 +306,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext,
-                                skipSides);
+                                aDirtyRect, rect, mStyleContext, skipSides);
 
     aRenderingContext.PopState();
 
@@ -321,8 +320,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext,
-                                skipSides);
+                                aDirtyRect, rect, mStyleContext, skipSides);
 
     aRenderingContext.PopState();
 
@@ -335,8 +333,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext,
-                                skipSides);
+                                aDirtyRect, rect, mStyleContext, skipSides);
 
     aRenderingContext.PopState();
   } else {
@@ -344,7 +341,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect,
                                 nsRect(aPt, mRect.Size()),
-                                *borderStyle, mStyleContext, skipSides);
+                                mStyleContext, skipSides);
   }
 }
 
