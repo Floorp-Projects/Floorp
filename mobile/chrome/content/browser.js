@@ -2876,25 +2876,32 @@ Tab.prototype = {
       browser.className = "browser-handheld";
       browser.style.removeProperty("width");
       browser.style.removeProperty("height");
-    } else if (metaData.reason == "viewport") {
-      let screenW = window.innerWidth;
-      let screenH = window.innerHeight;
-      let viewportW = metaData.width;
-      let viewportH = metaData.height;
-      let validW = viewportW > 0;
-      let validH = viewportH > 0;
-
-      if (validW && !validH) {
-        viewportH = viewportW * (screenH / screenW);
-      } else if (!validW && validH) {
-        viewportW = viewportH * (screenW / screenH);
-      } else {
-        viewportW = kDefaultBrowserWidth;
-        viewportH = kDefaultBrowserWidth * (screenH / screenW);
-      }
+    } else if (metaData.reason == "viewport") {  
       browser.className = "browser-viewport";
-      browser.style.width = viewportW + "px";
-      browser.style.height = viewportH + "px";
+      if (metaData.autoSize) {
+        browser.classList.add("window-width");
+        browser.classList.add("window-height");
+      }
+      else {
+        let screenW = window.innerWidth;
+        let screenH = window.innerHeight;
+        let viewportW = metaData.width;
+        let viewportH = metaData.height;
+        let validW = viewportW > 0;
+        let validH = viewportH > 0;
+  
+        if (validW && !validH) {
+          viewportH = viewportW * (screenH / screenW);
+        } else if (!validW && validH) {
+          viewportW = viewportH * (screenW / screenH);
+        } else {
+          viewportW = kDefaultBrowserWidth;
+          viewportH = kDefaultBrowserWidth * (screenH / screenW);
+        }
+
+        browser.style.width = viewportW + "px";
+        browser.style.height = viewportH + "px";
+      }
     } else {
       browser.className = "browser";
       browser.style.removeProperty("width");
