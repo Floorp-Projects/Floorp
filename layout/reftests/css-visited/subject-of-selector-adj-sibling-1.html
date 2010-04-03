@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none }
+span + :link { color: olive; }
+span + :visited { color: fuchsia; }
+
+</style>
+<span></span><a href="unvisited-page.html">unvisited</a>
+<span></span><a href="visited-page.html">visited</a>

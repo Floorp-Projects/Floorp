@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style type="text/css">
+
+body > span { text-decoration: underline }
+body > span > span { text-decoration: overline }
+body > span > span > span { text-decoration: line-through }
+
+.link { color: olive }
+.link > span { color: fuchsia }
+.link > span > span { color: black }
+.visited { color: gray }
+.visited > span { color: maroon }
+.visited > span > span { color: purple }
+
+</style>
+<span class="link"><span><span>unvisited</span></span></span>
+<span class="visited"><span><span>visited</span></span></span>

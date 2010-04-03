@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none }
+:link + :link { color: olive; }
+:visited + :link { color: red; }
+:link + :visited { color: fuchsia; }
+:visited + :visited { color: red; }
+
+</style>
+<a href="unvisited-page.html"></a><a href="unvisited-page.html">unvisited + unvisited</a>
+<a href="unvisited-page.html"></a><a href="visited-page.html">unvisited + visited</a>
+<a href="visited-page.html"></a><a href="unvisited-page.html">visited + unvisited</a>
+<a href="visited-page.html"></a><a href="visited-page.html">visited + visited</a>
