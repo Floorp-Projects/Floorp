@@ -18,13 +18,10 @@ function test() {
   cm.add("example.com", "/browser/xpinstall/tests", "xpinstall", "true", false,
          false, true, (Date.now() / 1000) + 60);
 
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
+  var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setIntPref("network.cookie.cookieBehavior", 1);
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Cookie check": TESTROOT2 + "cookieRedirect.sjs?" + TESTROOT + "unsigned.xpi"
@@ -42,15 +39,9 @@ function finish_test() {
                      .getService(Components.interfaces.nsICookieManager2);
   cm.remove("example.com", "xpinstall", "/browser/xpinstall/tests", false);
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.clearUserPref("network.cookie.cookieBehavior");
-
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
-  pm.remove("example.com", "install");
+  Services.prefs.clearUserPref("network.cookie.cookieBehavior");
+  Services.perms.remove("example.com", "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();
 }
-// ----------------------------------------------------------------------------

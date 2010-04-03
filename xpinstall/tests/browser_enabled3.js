@@ -8,9 +8,7 @@ scriptLoader.loadSubScript("chrome://mochikit/content/browser/xpinstall/tests/ha
 function test() {
   waitForExplicitFinish();
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("xpinstall.enabled", false);
+  Services.prefs.setBoolPref("xpinstall.enabled", false);
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": TESTROOT + "unsigned.xpi"
@@ -25,9 +23,7 @@ function test() {
 }
 
 function page_loaded() {
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.clearUserPref("xpinstall.enabled");
+  Services.prefs.clearUserPref("xpinstall.enabled");
 
   var doc = gBrowser.contentDocument;
   is(doc.getElementById("return").textContent, "false", "installTrigger should have not been enabled");
