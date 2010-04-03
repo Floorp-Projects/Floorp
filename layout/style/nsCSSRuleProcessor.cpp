@@ -2262,6 +2262,10 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
       // nsStyleSet will deal with the !important rule
     }
   }
+
+  if (treeContext.mHaveRelevantLink) {
+    data->mRuleWalker->SetHaveRelevantLink();
+  }
 }
 
 NS_IMETHODIMP
