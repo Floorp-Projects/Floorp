@@ -1072,10 +1072,10 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  const nsStyleBackground* bg;
-
-  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg))
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
     return PR_FALSE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
 
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
 
@@ -1098,11 +1098,12 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  const nsStyleBackground* bg;
+  nsStyleContext *bgSC;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
   if (!hasBG)
     return PR_TRUE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (bg->BottomLayer().mImage.IsEmpty() &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
@@ -1118,11 +1119,12 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
               "IsVaryingRelativeToMovingFrame called on non-moving frame!");
 
   nsPresContext* presContext = mFrame->PresContext();
-  const nsStyleBackground* bg;
+  nsStyleContext *bgSC;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(presContext, mFrame, &bg);
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
   if (!hasBG)
     return PR_FALSE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (!bg->HasFixedBackground())
     return PR_FALSE;
 

@@ -3992,8 +3992,8 @@ nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
 static void
 InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
 {
-  const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg)) {
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bgSC)) {
     nsIFrame* rootFrame =
       aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
     rootFrame->Invalidate(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
