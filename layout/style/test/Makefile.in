@@ -200,6 +200,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		ccd-quirks.html \
 		ccd-standards.html \
 		ccd.sjs \
+		visited-pref-iframe.html \
 		$(NULL)
 
 _BROWSER_FILES = \
