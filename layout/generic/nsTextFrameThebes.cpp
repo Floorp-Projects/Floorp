@@ -3092,11 +3092,11 @@ nsTextPaintStyle::InitCommonColors()
   nsStyleContext* bgContext =
     nsCSSRendering::FindNonTransparentBackground(sc);
   NS_ASSERTION(bgContext, "Cannot find NonTransparentBackground.");
-  const nsStyleBackground* bg = bgContext->GetStyleBackground();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
-  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
-                                           bg->mBackgroundColor);
+  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   if (bgContext->GetStyleDisplay()->mAppearance) {
     // Assume a native widget has sufficient contrast always
@@ -3166,8 +3166,8 @@ nsTextPaintStyle::InitSelectionColors()
                               mFrame->GetStyleContext());
     // Use -moz-selection pseudo class.
     if (sc) {
-      const nsStyleBackground* bg = sc->GetStyleBackground();
-      mSelectionBGColor = bg->mBackgroundColor;
+      mSelectionBGColor =
+        sc->GetVisitedDependentColor(eCSSProperty_background_color);
       mSelectionTextColor = sc->GetVisitedDependentColor(eCSSProperty_color);
       return PR_TRUE;
     }
