@@ -7652,6 +7652,13 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
       ++mHoverGeneration;
     }
 
+    if (aStateMask & NS_EVENT_STATE_VISITED) {
+      // Exposing information to the page about whether the link is
+      // visited or not isn't really something we can worry about here.
+      // FIXME: We could probably do this a bit better.
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    }
+
     PostRestyleEvent(aContent, rshint, hint);
   }
 }

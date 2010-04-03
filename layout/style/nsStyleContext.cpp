@@ -463,12 +463,118 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 
 #undef DO_STRUCT_DIFFERENCE
 
+  // Note that we do not check whether this->RelevantLinkVisited() !=
+  // aOther->RelevantLinkVisited(); we don't need to since
+  // nsCSSFrameConstructor::DoContentStateChanged always adds
+  // nsChangeHint_RepaintFrame for NS_EVENT_STATE_VISITED changes (and
+  // needs to, since HasStateDependentStyle probably doesn't work right
+  // for NS_EVENT_STATE_VISITED).  Hopefully this doesn't actually
+  // expose whether links are visited to performance tests since all
+  // link coloring happens asynchronously at a time when it's hard for
+  // the page to measure.
+  // However, we do need to compute the larger of the changes that can
+  // happen depending on whether the link is visited or unvisited, since
+  // doing only the one that's currently appropriate would expose which
+  // links are in history to easy performance measurement.  Therefore,
+  // here, we add nsChangeHint_RepaintFrame hints (the maximum for
+  // things that can depend on :visited) for the properties on which we
+  // call GetVisitedDependentColor.
+  nsStyleContext *thisVis = GetStyleIfVisited(),
+                *otherVis = aOther->GetStyleIfVisited();
+  if (!thisVis != !otherVis) {
+    // One style context has a style-if-visited and the other doesn't.
+    // Presume a difference.
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
+    // Both style contexts have a style-if-visited.
+    PRBool change = PR_FALSE;
+
+    // NB: Calling Peek on |this|, not |thisVis|, since callers may look
+    // at a struct on |this| without looking at the same struct on
+    // |thisVis| (including this function if we skip one of these checks
+    // due to change being true already or due to the old style context
+    // not having a style-if-visited), but not the other way around.
+    if (PeekStyleColor()) {
+      if (thisVis->GetStyleColor()->mColor !=
+          otherVis->GetStyleColor()->mColor) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleBackground()) {
+      if (thisVis->GetStyleBackground()->mBackgroundColor !=
+          otherVis->GetStyleBackground()->mBackgroundColor) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleBorder()) {
+      const nsStyleBorder *thisVisBorder = thisVis->GetStyleBorder();
+      const nsStyleBorder *otherVisBorder = otherVis->GetStyleBorder();
+      NS_FOR_CSS_SIDES(side) {
+        PRBool thisFG, otherFG;
+        nscolor thisColor, otherColor;
+        thisVisBorder->GetBorderColor(side, thisColor, thisFG);
+        otherVisBorder->GetBorderColor(side, otherColor, otherFG);
+        if (thisFG != otherFG || (!thisFG && thisColor != otherColor)) {
+          change = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleOutline()) {
+      const nsStyleOutline *thisVisOutline = thisVis->GetStyleOutline();
+      const nsStyleOutline *otherVisOutline = otherVis->GetStyleOutline();
+      PRBool haveColor;
+      nscolor thisColor, otherColor;
+      if (thisVisOutline->GetOutlineInitialColor() != 
+            otherVisOutline->GetOutlineInitialColor() ||
+          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) != 
+            otherVisOutline->GetOutlineColor(otherColor) ||
+          (haveColor && thisColor != otherColor)) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleColumn()) {
+      const nsStyleColumn *thisVisColumn = thisVis->GetStyleColumn();
+      const nsStyleColumn *otherVisColumn = otherVis->GetStyleColumn();
+      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor ||
+          thisVisColumn->mColumnRuleColorIsForeground !=
+            otherVisColumn->mColumnRuleColorIsForeground) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleSVG()) {
+      const nsStyleSVG *thisVisSVG = thisVis->GetStyleSVG();
+      const nsStyleSVG *otherVisSVG = otherVis->GetStyleSVG();
+      if (thisVisSVG->mFill != otherVisSVG->mFill ||
+          thisVisSVG->mStroke != otherVisSVG->mStroke) {
+        change = PR_TRUE;
+      }
+    }
+
+    if (change) {
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    }
+  }
+
   return hint;
 }
 
 void
 nsStyleContext::Mark()
 {
+  if (mStyleIfVisited)
+    mStyleIfVisited->Mark();
+
   // Mark our rule node.
   mRuleNode->Mark();
 
