@@ -51,6 +51,7 @@
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "prlog.h"
+#include "nsStyleAnimation.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -685,3 +686,57 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
   return context;
 }
 
+static nscolor ExtractColor(nsCSSProperty aProperty,
+                            nsStyleContext *aStyleContext)
+{
+  nsStyleAnimation::Value val;
+#ifdef DEBUG
+  PRBool success =
+#endif
+    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext, val);
+  NS_ABORT_IF_FALSE(success,
+                    "aProperty must be extractable by nsStyleAnimation");
+  return val.GetColorValue();
+}
+
+struct ColorIndexSet {
+  PRUint8 colorIndex, alphaIndex;
+};
+
+static const ColorIndexSet gVisitedIndices[2] = { { 0, 0 }, { 1, 0 } };
+
+nscolor
+nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
+{
+  NS_ASSERTION(aProperty == eCSSProperty_color ||
+               aProperty == eCSSProperty_background_color ||
+               aProperty == eCSSProperty_border_top_color ||
+               aProperty == eCSSProperty_border_right_color_value ||
+               aProperty == eCSSProperty_border_bottom_color ||
+               aProperty == eCSSProperty_border_left_color_value ||
+               aProperty == eCSSProperty_outline_color ||
+               aProperty == eCSSProperty__moz_column_rule_color ||
+               aProperty == eCSSProperty_fill ||
+               aProperty == eCSSProperty_stroke,
+               "we need to add to nsStyleContext::CalcStyleDifference");
+
+  nscolor colors[2];
+  colors[0] = ExtractColor(aProperty, this);
+
+  nsStyleContext *visitedStyle = this->GetStyleIfVisited();
+  if (!visitedStyle) {
+    return colors[0];
+  }
+
+  colors[1] = ExtractColor(aProperty, visitedStyle);
+
+  // NOTE: We want this code to have as little timing dependence as
+  // possible on whether this->RelevantLinkVisited() is true.
+  const ColorIndexSet &set =
+    gVisitedIndices[this->RelevantLinkVisited() ? 1 : 0];
+
+  nscolor colorColor = colors[set.colorIndex];
+  nscolor alphaColor = colors[set.alphaIndex];
+  return NS_RGBA(NS_GET_R(colorColor), NS_GET_G(colorColor),
+                 NS_GET_B(colorColor), NS_GET_A(alphaColor));
+}

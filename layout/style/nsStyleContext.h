@@ -248,6 +248,16 @@ public:
 
   NS_HIDDEN_(nsChangeHint) CalcStyleDifference(nsStyleContext* aOther);
 
+  /**
+   * Get a color that depends on link-visitedness using this and
+   * this->GetStyleIfVisited().
+   *
+   * aProperty must be a color-valued property that nsStyleAnimation
+   * knows how to extract.  It must also be a property that we know to
+   * do change handling for in nsStyleContext::CalcDifference.
+   */
+  NS_HIDDEN_(nscolor) GetVisitedDependentColor(nsCSSProperty aProperty);
+
 #ifdef DEBUG
   NS_HIDDEN_(void) List(FILE* out, PRInt32 aIndent);
 #endif
