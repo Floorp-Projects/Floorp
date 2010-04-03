@@ -607,7 +607,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ElementFromPoint(PRInt32 aX, PRInt32 aY,
+nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
                                    PRBool aIgnoreRootScrollFrame,
                                    PRBool aFlushLayout,
                                    nsIDOMElement** aReturn)
