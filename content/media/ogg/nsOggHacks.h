@@ -69,7 +69,7 @@ namespace mozilla {
  *
  * MUCH PREFERRED to bare calls to Monitor.Exit and Enter.
  */ 
-class NS_COM_GLUE NS_STACK_CLASS MonitorAutoExit
+class MonitorAutoExit
 {
 public:
     /**
