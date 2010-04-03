@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none; display: list-item; margin-left: 4em }
+:link { color: rgba(255, 177, 83, 0.8) }
+:visited { color: rgba(128, 99, 12, 0.4) }
+
+</style>
+<!-- FIXME: workaround list numbering bug by using ol instead of div -->
+<ol style="list-style-type: decimal; margin: 0; padding: 0">
+<a href="unvisited-page.html">unvisited</a>
+<a href="visited-page.html">visited</a>
+</ol>
+<div style="list-style-type: disc">
+<a href="unvisited-page.html">unvisited</a>
+<a href="visited-page.html">visited</a>
+</div>

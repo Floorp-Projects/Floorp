@@ -177,6 +177,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_value_computation.html \
 		test_value_storage.html \
 		test_visited_pref.html \
+		test_visited_reftests.html \
 		css_properties.js \
 		property_database.js \
 		descriptor_database.js \
@@ -203,6 +204,10 @@ _TEST_FILES =	test_acid3_test46.html \
 		visited-pref-iframe.html \
 		$(NULL)
 
+_VISITED_REFTEST_FILES = \
+		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
+		$(NULL)
+
 _BROWSER_FILES = \
 		browser_bug453896.js \
 		bug453896_iframe.html \
@@ -211,6 +216,9 @@ _BROWSER_FILES = \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_VISITED_REFTEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
 
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777): implicit default color for 'border'</title>
+<style type="text/css">
+
+a { text-decoration: none; display: block; margin: 2px; }
+:link { color: maroon; border: medium solid; border-top: dashed thin blue; }
+:visited { color: gray; border: thick dotted fuchsia; border-right: thin double; }
+
+</style>
+<a href="unvisited-page.html">unvisited</a>
+<a href="visited-page.html">visited</a>
