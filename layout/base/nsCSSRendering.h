@@ -95,9 +95,22 @@ struct nsCSSRendering {
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleBorder& aBorderStyle,
                           nsStyleContext* aStyleContext,
                           PRIntn aSkipSides = 0);
+
+  /**
+   * Like PaintBorder, but taking an nsStyleBorder argument instead of
+   * getting it from aStyleContext.
+   */
+  static void PaintBorderWithStyleBorder(nsPresContext* aPresContext,
+                                         nsIRenderingContext& aRenderingContext,
+                                         nsIFrame* aForFrame,
+                                         const nsRect& aDirtyRect,
+                                         const nsRect& aBorderArea,
+                                         const nsStyleBorder& aBorderStyle,
+                                         nsStyleContext* aStyleContext,
+                                         PRIntn aSkipSides = 0);
+
 
   /**
    * Render the outline for an element using css rendering rules

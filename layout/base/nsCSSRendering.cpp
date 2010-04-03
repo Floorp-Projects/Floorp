@@ -78,6 +78,7 @@
 #include "gfxImageSurface.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsCSSProps.h"
 
 #include "nsCSSRenderingBorders.h"
 
@@ -542,9 +543,40 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsIFrame* aForFrame,
                             const nsRect& aDirtyRect,
                             const nsRect& aBorderArea,
-                            const nsStyleBorder& aStyleBorder,
                             nsStyleContext* aStyleContext,
                             PRIntn aSkipSides)
+{
+  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  const nsStyleBorder *styleBorder = aStyleContext->GetStyleBorder();
+  // Don't check RelevantLinkVisited here, since we want to take the
+  // same amount of time whether or not it's true.
+  if (!styleIfVisited) {
+    PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
+                               aDirtyRect, aBorderArea, *styleBorder,
+                               aStyleContext, aSkipSides);
+    return;
+  }
+
+  nsStyleBorder newStyleBorder(*styleBorder);
+  NS_FOR_CSS_SIDES(side) {
+    newStyleBorder.SetBorderColor(side,
+      aStyleContext->GetVisitedDependentColor(
+        nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]));
+  }
+  PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
+                             aDirtyRect, aBorderArea, newStyleBorder,
+                             aStyleContext, aSkipSides);
+}
+
+void
+nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
+                                           nsIRenderingContext& aRenderingContext,
+                                           nsIFrame* aForFrame,
+                                           const nsRect& aDirtyRect,
+                                           const nsRect& aBorderArea,
+                                           const nsStyleBorder& aStyleBorder,
+                                           nsStyleContext* aStyleContext,
+                                           PRIntn aSkipSides)
 {
   nsMargin            border;
   nscoord             twipsRadii[8];
