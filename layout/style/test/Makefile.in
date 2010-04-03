@@ -208,6 +208,8 @@ _TEST_FILES =	test_acid3_test46.html \
 
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
+		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02.svg \
+		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
 		$(NULL)
 
 _BROWSER_FILES = \
