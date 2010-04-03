@@ -68,17 +68,19 @@ window.Group = function(listOfEls, options) {
 */
   
   // ___ Resizer
-  var resizer = $("<div class='resizer'/>")
+  this.$resizer = $("<div class='resizer'/>")
     .css({
       position: "absolute",
       width: 16, height: 16,
       bottom: 0, right: 0,
-    }).appendTo($container);
+    })
+    .appendTo($container)
+    .hide();
 
+  // ___ Titlebar
     var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
     .appendTo($container)
   
-  // ___ Titlebar
   titlebar.css({
       width: $container.width(),
       position: "relative",
@@ -114,6 +116,7 @@ window.Group = function(listOfEls, options) {
 
   // ___ Finish Up
   this._addHandlers($container);
+  this.setResizable(true);
   
   Groups.register(this);
   
@@ -216,14 +219,20 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this._updateDebugBounds();
   },
   
+  // ----------
+  setZ: function(value) {
+    $(this.container).css({zIndex: value});
+    $.each(this._children, function(index, child) {
+      child.setZ(value + 1);
+    });
+  },
+    
   // ----------  
   close: function() {
     var toClose = $.merge([], this._children);
     $.each(toClose, function(index, child) {
       child.close();
     });
-    
-    this._sendOnClose();
   },
   
   // ----------  
@@ -277,12 +286,16 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this._children.splice( index, 0, item );
 
     $el.droppable("disable");
+    item.setZ(this.getZ() + 1);
 
     item.addOnClose(this, function() {
       self.remove($el);
     });      
     
     $el.data("group", this);
+    
+    if(typeof(item.setResizable) == 'function')
+      item.setResizable(false);
     
     if(!options.dontArrange)
       this.arrange();
@@ -314,7 +327,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     $el.droppable("enable");    
     item.removeOnClose(this);
     
-    if(this._children.length == 0 ){
+    if(typeof(item.setResizable) == 'function')
+      item.setResizable(true);
+
+    if(this._children.length == 0 ){  
+      this._sendOnClose();
       Groups.unregister(this);
       $(this.container).fadeOut(function() {
         $(this).remove();
@@ -400,15 +417,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       },
       drag: function(e, ui){
         drag.info.drag(e, ui);
-
-/*         $(this).css({zIndex: zIndex}); */
-/*         zIndex += 1; */
       }, 
       stop: function() {
         drag.info.stop();
         drag.info = null;
-      },
-/*       zIndex: 999 */
+      }
     });
     
     $(container).droppable({
@@ -427,18 +440,29 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       },
       accept: ".tab, .group",
     });
-        
-    $(container).resizable({
-      handles: "se",
-      aspectRatio: false,
-      resize: function(){
-        self.reloadBounds();
-      },
-      stop: function(){
-        self.reloadBounds();
-        self.pushAway();
-      } 
-    });
+  },
+
+  // ----------  
+  setResizable: function(value){
+    var self = this;
+    
+    if(value) {
+      this.$resizer.fadeIn();
+      $(this.container).resizable({
+        handles: "se",
+        aspectRatio: false,
+        resize: function(){
+          self.reloadBounds();
+        },
+        stop: function(){
+          self.reloadBounds();
+          self.pushAway();
+        } 
+      });
+    } else {
+      this.$resizer.fadeOut();
+      $(this.container).resizable('disable');
+    }
   }
 });
 
@@ -449,6 +473,7 @@ var DragInfo = function(element) {
   this.item = Items.item(this.el);
   
   this.$el.data('isDragging', true);
+  this.item.setZ(9999);
 };
 
 DragInfo.prototype = {
@@ -459,8 +484,11 @@ DragInfo.prototype = {
 
   // ----------  
   stop: function() {
-    this.$el.data('isDragging', false);
-    if(!this.$el.hasClass('willGroup') && !this.$el.data('group')) {
+    this.$el.data('isDragging', false);    
+    if(this.item && !this.$el.hasClass('willGroup') && !this.$el.data('group')) {
+      this.item.setZ(drag.zIndex);
+      drag.zIndex++;
+      
       this.item.reloadBounds();
       this.item.pushAway();
     }
@@ -485,12 +513,9 @@ window.Groups = {
       drag.info.drag(e, ui);
     },
     stop: function() {
-      drag.info.$el.css({zIndex: drag.zIndex});
       drag.info.stop();
       drag.info = null;
-      drag.zIndex += 1;
-    },
-    zIndex: 999,
+    }
   },
   
   // ----------  

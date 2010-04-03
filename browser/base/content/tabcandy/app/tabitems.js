@@ -36,9 +36,9 @@ window.TabItem.prototype = $.extend(new Item(), {
       
     this.bounds.copy(rect);
 
-    if(immediately) 
+    if(immediately) {
       $(this.container).css(css);
-    else {
+    } else {
       TabMirror.pausePainting();
       $(this.container).animate(css, {complete: function() {
         TabMirror.resumePainting();
@@ -47,7 +47,12 @@ window.TabItem.prototype = $.extend(new Item(), {
 
     this._updateDebugBounds();
   },
-  
+
+  // ----------
+  setZ: function(value) {
+    $(this.container).css({zIndex: value});
+  },
+    
   // ----------
   close: function() {
     this.tab.close();
@@ -74,7 +79,6 @@ window.TabItems = {
     var self = this;
     
     function mod($div){
-      Utils.log('mod');
       if(window.Groups) {        
         $div.data('isDragging', false);
         $div.draggable(window.Groups.dragOptions);
