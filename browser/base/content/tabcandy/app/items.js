@@ -1,10 +1,12 @@
 // ##########
 // An Item is an object that adheres to an interface consisting of these methods: 
 //   reloadBounds: function() 
-//   getBounds: function() 
+//   getBounds: function(), inherited from Item 
 //   setBounds: function(rect, immediately)
-//   setPosition: function(left, top, immediately) 
-//   setSize: function(width, height, immediately)
+//   setPosition: function(left, top, immediately), inherited from Item
+//   setSize: function(width, height, immediately), inherited from Item
+//   getZ: function(), inherited from Item  
+//   setZ: function(value)
 //   close: function() 
 //   addOnClose: function(referenceObject, callback)
 //   removeOnClose: function(referenceObject)
@@ -62,6 +64,11 @@ window.Item.prototype = {
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
+  // ----------
+  getZ: function() {
+    return parseInt($(this.container).css('zIndex'));
+  },
+    
   // ----------  
   pushAway: function() {
     var buffer = 10;
