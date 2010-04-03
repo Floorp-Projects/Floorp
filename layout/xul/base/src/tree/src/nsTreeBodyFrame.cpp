@@ -3908,8 +3908,9 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                         aStyleContext, *myBorder,
                                         nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
 
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, aRect, *myBorder, mStyleContext);
+  nsCSSRendering::PaintBorderWithStyleBorder(aPresContext, aRenderingContext,
+                                             this, aDirtyRect, aRect,
+                                             *myBorder, mStyleContext);
 
   nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                aDirtyRect, aRect, *myBorder, *myOutline,
