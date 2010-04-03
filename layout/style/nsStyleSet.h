@@ -339,6 +339,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   GetContext(nsStyleContext* aParentContext,
              nsRuleNode* aRuleNode,
+             nsRuleNode* aVisitedRuleNode,
              nsIAtom* aPseudoTag,
              nsCSSPseudoElements::Type aPseudoType);
 
