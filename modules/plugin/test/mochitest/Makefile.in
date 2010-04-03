@@ -80,19 +80,14 @@ _MOCHITEST_FILES = \
   test_streamatclose.html \
   neverending.sjs \
   test_newstreamondestroy.html \
-  $(NULL)
-
-#  test_npruntime_npnsetexception.html \ Disabled for e10s
-
-ifdef MOZ_IPC
-_MOCHITEST_FILES += \
   test_crashing.html \
   test_crashing2.html \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
   $(NULL)
-endif
+
+#  test_npruntime_npnsetexception.html \ Disabled for e10s
 
 ifeq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \
@@ -102,6 +97,8 @@ endif
 
 _MOCHICHROME_FILES = \
   test_bug479979.xul \
+  test_crash_notify.xul \
+  test_crash_notify_no_report.xul \
   test_npruntime.xul   \
   test_privatemode.xul \
   test_wmode.xul \
@@ -117,13 +114,6 @@ ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 _MOCHITEST_FILES += \
 		test_copyText.html \
 		$(NULL)
-endif
-
-ifdef MOZ_IPC
-_MOCHICHROME_FILES += \
-  test_crash_notify.xul \
-  test_crash_notify_no_report.xul \
-  $(NULL)
 endif
 
 libs:: $(_MOCHICHROME_FILES)
