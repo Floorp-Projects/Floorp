@@ -747,12 +747,8 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
   if (coverRule) {
     nsCOMArray<nsIStyleRule> rules;
     rules.AppendObject(coverRule);
-    *aNewStyleContext = aPresContext->StyleSet()->ResolveStyleForRules(
-                     (*aNewStyleContext)->GetParent(),
-                     (*aNewStyleContext)->GetPseudo(),
-                     (*aNewStyleContext)->GetPseudoType(),
-                     (*aNewStyleContext)->GetRuleNode(),
-                     rules);
+    *aNewStyleContext = aPresContext->StyleSet()->
+                          ResolveStyleByAddingRules(*aNewStyleContext, rules);
   }
 }
 
