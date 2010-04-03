@@ -753,16 +753,11 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
-                                 nsIAtom* aPseudoTag,
-                                 nsCSSPseudoElements::Type aPseudoType,
-                                 nsRuleNode *aRuleNode,
                                  const nsCOMArray<nsIStyleRule> &aRules)
 {
   NS_ENSURE_FALSE(mInShutdown, nsnull);
 
   nsRuleWalker ruleWalker(mRuleTree);
-  if (aRuleNode)
-    ruleWalker.SetCurrentNode(aRuleNode);
   // FIXME: Perhaps this should be passed in, but it probably doesn't
   // matter.
   ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
@@ -771,7 +766,26 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(),
-                    aPseudoTag, aPseudoType);
+                    nsnull, nsCSSPseudoElements::ePseudo_NotPseudoElement);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
+                                      const nsCOMArray<nsIStyleRule> &aRules)
+{
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+
+  nsRuleWalker ruleWalker(mRuleTree);
+  ruleWalker.SetCurrentNode(aBaseContext->GetRuleNode());
+  // FIXME: Perhaps this should be passed in, but it probably doesn't
+  // matter.
+  ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
+  for (PRInt32 i = 0; i < aRules.Count(); i++) {
+    ruleWalker.Forward(aRules.ObjectAt(i));
+  }
+  return GetContext(aBaseContext->GetParent(), ruleWalker.CurrentNode(),
+                    aBaseContext->GetPseudo(),
+                    aBaseContext->GetPseudoType());
 }
 
 already_AddRefed<nsStyleContext>

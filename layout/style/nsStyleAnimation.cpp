@@ -1034,11 +1034,7 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
   nsCOMArray<nsIStyleRule> ruleArray;
   ruleArray.AppendObject(styleRule);
   nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
-  return styleSet->ResolveStyleForRules(styleContext->GetParent(),
-                                        styleContext->GetPseudo(),
-                                        styleContext->GetPseudoType(),
-                                        styleContext->GetRuleNode(),
-                                        ruleArray);
+  return styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
 }
 
 PRBool
