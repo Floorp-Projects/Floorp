@@ -1,0 +1,8 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style type="text/css">
+a { text-decoration: none }
+:link:before { content: "link"; color: fuchsia; }
+:visited:before { content: "visited"; color: purple; }
+</style>
+<a href="visited-page.html"></a>
