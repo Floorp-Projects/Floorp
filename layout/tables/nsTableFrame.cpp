@@ -73,6 +73,7 @@
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
+#include "nsCSSProps.h"
 
 using namespace mozilla;
 
@@ -4479,11 +4480,8 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
     return;
   }
-  PRBool foreground;
-  styleData->GetBorderColor(aSide, aColor, foreground);
-  if (foreground) {
-    aColor = aFrame->GetStyleColor()->mColor;
-  }
+  aColor = aFrame->GetStyleContext()->GetVisitedDependentColor(
+             nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[aSide]);
 }
 
 /** coerce the paint style as required by CSS2.1
