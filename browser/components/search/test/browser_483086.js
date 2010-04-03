@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 let gSS = Services.search;
-let gObs = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
 
 function test() {
   waitForExplicitFinish();

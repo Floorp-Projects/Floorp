@@ -11,8 +11,7 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
+  var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
@@ -23,15 +22,10 @@ function test() {
 }
 
 function download_progress(addon, value, maxValue) {
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService2);
-
   try {
-    ioService.manageOfflineStatus = false;
-    prefs.setBoolPref("browser.offline", true);
-    ioService.offline = true;
+    Services.io.manageOfflineStatus = false;
+    Services.prefs.setBoolPref("browser.offline", true);
+    Services.io.offline = true;
   } catch (ex) {
   }
 }
@@ -41,21 +35,14 @@ function check_xpi_install(addon, status) {
 }
 
 function finish_test() {
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService2);
   try {
-    prefs.setBoolPref("browser.offline", false);
-    ioService.offline = false;
+    Services.prefs.setBoolPref("browser.offline", false);
+    Services.io.offline = false;
   } catch (ex) {
   }
 
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
-  pm.remove("example.com", "install");
+  Services.perms.remove("example.com", "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();
 }
-// ----------------------------------------------------------------------------
