@@ -109,7 +109,7 @@ public:
   PRInt32 GetRowCount();
   PRInt32 GetRowHeightAppUnits() { return mRowHeight; }
   PRInt32 GetFixedRowSize();
-  void SetRowHeight(PRInt32 aRowHeight);
+  void SetRowHeight(nscoord aRowHeight);
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
   nscoord ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState);

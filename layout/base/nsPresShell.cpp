@@ -1092,11 +1092,6 @@ protected:
   public:
     virtual ~nsDelayedEvent() {};
     virtual void Dispatch(PresShell* aShell) {}
-    // This is needed only by nsDelayedFocusBlur.
-    virtual PRBool Equals(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
-    {
-      return PR_FALSE;
-    }
   };
 
   class nsDelayedInputEvent : public nsDelayedEvent
@@ -1429,16 +1424,6 @@ void
 nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 {
   gVerifyReflowEnabled = aEnabled;
-}
-
-PRInt32
-nsIPresShell::GetVerifyReflowFlags()
-{
-#ifdef NS_DEBUG
-  return gVerifyReflowFlags;
-#else
-  return 0;
-#endif
 }
 
 /* virtual */ void

@@ -741,11 +741,6 @@ public:
    */
   static void SetVerifyReflowEnable(PRBool aEnabled);
 
-  /**
-   * Get the flags associated with the VerifyReflow debug tool
-   */
-  static PRInt32 GetVerifyReflowFlags();
-
   virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
 #ifdef MOZ_REFLOW_PERF

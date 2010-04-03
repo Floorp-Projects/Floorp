@@ -709,16 +709,6 @@ nsIFrame::ApplySkipSides(nsMargin& aMargin) const
 }
 
 nsRect
-nsIFrame::GetMarginRect() const
-{
-  nsMargin m(GetUsedMargin());
-  ApplySkipSides(m);
-  nsRect r(mRect);
-  r.Inflate(m);
-  return r;
-}
-
-nsRect
 nsIFrame::GetPaddingRect() const
 {
   nsMargin b(GetUsedBorder());
@@ -1200,16 +1190,6 @@ nsIFrame::OverflowClip(nsDisplayListBuilder*   aBuilder,
                        PRBool                  aClipAll)
 {
   nsOverflowClipWrapper wrapper(this, aClipRect, aClipBorderBackground, aClipAll);
-  return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
-}
-
-nsresult
-nsIFrame::Clip(nsDisplayListBuilder*   aBuilder,
-               const nsDisplayListSet& aFromSet,
-               const nsDisplayListSet& aToSet,
-               const nsRect&           aClipRect)
-{
-  nsAbsPosClipWrapper wrapper(this, aClipRect);
   return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
 }
 

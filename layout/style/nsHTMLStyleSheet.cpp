@@ -497,42 +497,6 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
 }
 
 nsresult
-nsHTMLStyleSheet::GetLinkColor(nscolor& aColor)
-{
-  if (!mLinkRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mLinkRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetActiveLinkColor(nscolor& aColor)
-{
-  if (!mActiveRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mActiveRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetVisitedLinkColor(nscolor& aColor)
-{
-  if (!mVisitedRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mVisitedRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
 nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
 {
   if (mLinkRule) {

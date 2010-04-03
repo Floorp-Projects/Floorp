@@ -512,20 +512,6 @@ nsGrid::DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState)
   mMarkingDirty = PR_FALSE;
 }
 
-nsGridRow* nsGrid::GetColumns()
-{
-  RebuildIfNeeded();
-
-  return mColumns;
-}
-
-nsGridRow* nsGrid::GetRows()
-{
-  RebuildIfNeeded();
-
-  return mRows;
-}
-
 nsGridRow*
 nsGrid::GetColumnAt(PRInt32 aIndex, PRBool aIsHorizontal)
 {
