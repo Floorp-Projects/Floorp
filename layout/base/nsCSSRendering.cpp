@@ -716,17 +716,16 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              nsIFrame* aForFrame,
                              const nsRect& aDirtyRect,
                              const nsRect& aBorderArea,
-                             const nsStyleBorder& aStyleBorder,
-                             const nsStyleOutline& aOutlineStyle,
                              nsStyleContext* aStyleContext)
 {
   nscoord             twipsRadii[8];
 
   // Get our style context's color struct.
   const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
+  const nsStyleOutline* ourOutline = aStyleContext->GetStyleOutline();
 
   nscoord width;
-  aOutlineStyle.GetOutlineWidth(width);
+  ourOutline->GetOutlineWidth(width);
 
   if (width == 0) {
     // Empty outline
@@ -739,7 +738,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   // get the radius for our outline
-  GetBorderRadiusTwips(aOutlineStyle.mOutlineRadius, aBorderArea.width,
+  GetBorderRadiusTwips(ourOutline->mOutlineRadius, aBorderArea.width,
                        twipsRadii);
 
   // When the outline property is set on :-moz-anonymous-block or
@@ -774,7 +773,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   }
 
   innerRect += aBorderArea.TopLeft();
-  nscoord offset = aOutlineStyle.mOutlineOffset;
+  nscoord offset = ourOutline->mOutlineOffset;
   innerRect.Inflate(offset, offset);
   // If the dirty rect is completely inside the border area (e.g., only the
   // content is being painted), then we can skip out now
@@ -799,17 +798,16 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   ComputePixelRadii(twipsRadii, outerRect, 0, twipsPerPixel,
                     &outlineRadii);
 
-  PRUint8 outlineStyle = aOutlineStyle.GetOutlineStyle();
+  PRUint8 outlineStyle = ourOutline->GetOutlineStyle();
   PRUint8 outlineStyles[4] = { outlineStyle,
                                outlineStyle,
                                outlineStyle,
                                outlineStyle };
 
-  nscolor outlineColor;
-  // PR_FALSE means use the initial color; PR_TRUE means a color was
-  // set.
-  if (!aOutlineStyle.GetOutlineColor(outlineColor))
-    outlineColor = ourColor->mColor;
+  // This handles treating the initial color as 'currentColor'; if we
+  // ever want 'invert' back we'll need to do a bit of work here too.
+  nscolor outlineColor =
+    aStyleContext->GetVisitedDependentColor(eCSSProperty_outline_color);
   nscolor outlineColors[4] = { outlineColor,
                                outlineColor,
                                outlineColor,
