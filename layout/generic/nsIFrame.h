@@ -722,6 +722,12 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
+#ifdef _IMPL_NS_LAYOUT
+  /** Also forward GetVisitedDependentColor to the style context */
+  nscolor GetVisitedDependentColor(nsCSSProperty aProperty)
+    { return mStyleContext->GetVisitedDependentColor(aProperty); }
+#endif
+
   /**
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
