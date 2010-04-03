@@ -261,6 +261,16 @@ public:
    */
   NS_HIDDEN_(nscolor) GetVisitedDependentColor(nsCSSProperty aProperty);
 
+  /**
+   * aColors should be a two element array of nscolor in which the first
+   * color is the unvisited color and the second is the visited color.
+   *
+   * Combine the R, G, and B components of whichever of aColors should
+   * be used based on aLinkIsVisited with the A component of aColors[0].
+   */
+  static nscolor CombineVisitedColors(nscolor *aColors,
+                                      PRBool aLinkIsVisited);
+
 #ifdef DEBUG
   NS_HIDDEN_(void) List(FILE* out, PRInt32 aIndent);
 #endif

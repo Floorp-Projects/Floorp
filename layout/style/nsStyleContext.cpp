@@ -730,13 +730,20 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
 
   colors[1] = ExtractColor(aProperty, visitedStyle);
 
+  return nsStyleContext::CombineVisitedColors(colors,
+                                              this->RelevantLinkVisited());
+}
+
+/* static */ nscolor
+nsStyleContext::CombineVisitedColors(nscolor *aColors, PRBool aLinkIsVisited)
+{
   // NOTE: We want this code to have as little timing dependence as
   // possible on whether this->RelevantLinkVisited() is true.
   const ColorIndexSet &set =
-    gVisitedIndices[this->RelevantLinkVisited() ? 1 : 0];
+    gVisitedIndices[aLinkIsVisited ? 1 : 0];
 
-  nscolor colorColor = colors[set.colorIndex];
-  nscolor alphaColor = colors[set.alphaIndex];
+  nscolor colorColor = aColors[set.colorIndex];
+  nscolor alphaColor = aColors[set.alphaIndex];
   return NS_RGBA(NS_GET_R(colorColor), NS_GET_G(colorColor),
                  NS_GET_B(colorColor), NS_GET_A(alphaColor));
 }
