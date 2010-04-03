@@ -824,11 +824,21 @@ public:
     delete static_cast<nsPoint*>(aPropertyValue);
   }
 
+#ifdef _MSC_VER
+// XXX Workaround MSVC issue by making the static FramePropertyDescriptor
+// non-const.  See bug 555727.
+#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
+  static const FramePropertyDescriptor* prop() {                \
+    static FramePropertyDescriptor descriptor = { dtor };       \
+    return &descriptor;                                         \
+  }
+#else
 #define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
   static const FramePropertyDescriptor* prop() {                \
     static const FramePropertyDescriptor descriptor = { dtor }; \
     return &descriptor;                                         \
   }
+#endif
 
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nsnull)
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nsnull)
