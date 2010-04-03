@@ -151,7 +151,7 @@ private:
   // subscript is 0 for nth- and 1 for nth-last-.
   PRInt32 mNthIndices[2][2];
 
-  // mContentState, mLinkState, mIsLink are initialized lazily.
+  // mContentState is initialized lazily.
   PRInt32 mContentState;  // eventStateMgr->GetContentState() or
                           // mContent->IntrinsicState() if we have no ESM
   PRPackedBool mGotContentState;
