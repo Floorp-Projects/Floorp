@@ -1119,10 +1119,10 @@ nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilde
 /* static */ void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
-  const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bgSC))
     return;
-  if (!bg->HasFixedBackground())
+  if (!bgSC->GetStyleBackground()->HasFixedBackground())
     return;
 
   mPartHasFixedBackground = PR_TRUE;
