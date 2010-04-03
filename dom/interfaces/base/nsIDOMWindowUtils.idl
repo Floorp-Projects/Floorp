@@ -52,7 +52,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(1e9d7efa-997d-42c0-acdf-f5f1cc8eb539)]
+[scriptable, uuid(25ada920-d727-45b6-ac70-847a3aa9c7cf)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -298,8 +298,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *        null for coordinates outside of the viewport.
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    */
-  nsIDOMElement elementFromPoint(in long aX,
-                                 in long aY,
+  nsIDOMElement elementFromPoint(in float aX,
+                                 in float aY,
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
 

@@ -115,8 +115,8 @@ class Link;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x94fb5716, 0xff00, 0x4b97, \
- { 0x90, 0x01, 0x91, 0x65, 0x1a, 0x5f, 0xbe, 0x64 } }
+{ 0x5a428059, 0x4f29, 0x4d7c, \
+ { 0x93, 0xae, 0x7c, 0x68, 0xd6, 0x5a, 0x86, 0x45 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -985,7 +985,7 @@ public:
    *
    * @see nsIDOMWindowUtils::elementFromPoint
    */
-  virtual nsresult ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+  virtual nsresult ElementFromPointHelper(float aX, float aY,
                                           PRBool aIgnoreRootScrollFrame,
                                           PRBool aFlushLayout,
                                           nsIDOMElement** aReturn) = 0;
