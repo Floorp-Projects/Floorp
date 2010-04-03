@@ -340,6 +340,8 @@ class nsStyleSet
   GetContext(nsStyleContext* aParentContext,
              nsRuleNode* aRuleNode,
              nsRuleNode* aVisitedRuleNode,
+             PRBool aIsLink,
+             PRBool aIsVisitedLink,
              nsIAtom* aPseudoTag,
              nsCSSPseudoElements::Type aPseudoType);
 
