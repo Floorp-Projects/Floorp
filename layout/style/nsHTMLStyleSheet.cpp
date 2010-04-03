@@ -238,7 +238,11 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          PRUint32 state = aData->ContentState();
+          PRUint32 state = aData->GetContentStateForVisitedHandling(
+                                    ruleWalker->VisitedHandling(),
+                                    // If the node being matched is a link,
+                                    // it's the relevant link.
+                                    aData->IsLink());
           if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
             ruleWalker->Forward(mLinkRule);
             ruleWalker->SetHaveRelevantLink();
