@@ -1175,8 +1175,6 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
                                nsRect(offset, mFrame->GetSize()),
-                               *mFrame->GetStyleBorder(),
-                               *mFrame->GetStyleOutline(),
                                mFrame->GetStyleContext());
 }
 

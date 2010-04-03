@@ -3901,8 +3901,7 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                       const nsRect&        aDirtyRect)
 {
   const nsStyleBorder* myBorder = aStyleContext->GetStyleBorder();
-  const nsStyleOutline* myOutline = aStyleContext->GetStyleOutline();
-  
+
   nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
                                         this, aDirtyRect, aRect,
                                         aStyleContext, *myBorder,
@@ -3913,8 +3912,7 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                              *myBorder, mStyleContext);
 
   nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, aRect, *myBorder, *myOutline,
-                               aStyleContext);
+                               aDirtyRect, aRect, aStyleContext);
 }
 
 // Scrolling

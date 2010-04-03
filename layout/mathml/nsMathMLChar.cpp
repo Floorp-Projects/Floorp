@@ -2010,8 +2010,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
                               mVisibleRect, rect, styleContext, skipSides);
   nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,
-                               mVisibleRect, rect, *border,
-                               *mFrame->GetStyleOutline(), styleContext);
+                               mVisibleRect, rect, styleContext);
 }
 #endif
 

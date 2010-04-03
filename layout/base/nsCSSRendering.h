@@ -125,8 +125,6 @@ struct nsCSSRendering {
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleBorder& aBorderStyle,
-                          const nsStyleOutline& aOutlineStyle,
                           nsStyleContext* aStyleContext);
 
   /**
