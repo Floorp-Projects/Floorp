@@ -115,8 +115,17 @@ public:
                                                   NS_STYLE_CONTEXT_TYPE_SHIFT);
   }
 
+  // Find, if it already exists *and is easily findable* (i.e., near the
+  // start of the child list), a style context whose:
+  //  * GetPseudo() matches aPseudoTag
+  //  * GetRuleNode() matches aRules
+  //  * !GetStyleIfVisited() == !aRulesIfVisited, and, if they're
+  //    non-null, GetStyleIfVisited()->GetRuleNode() == aRulesIfVisited
+  //  * RelevantLinkVisited() == aRelevantLinkVisited
   NS_HIDDEN_(already_AddRefed<nsStyleContext>)
-  FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
+  FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
+                     nsRuleNode* aRulesIfVisited,
+                     PRBool aRelevantLinkVisited);
 
   // Does this style context or any of its ancestors have text
   // decorations?
