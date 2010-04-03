@@ -48,11 +48,12 @@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
+@BINPATH@/mozilla-runtime@BIN_SUFFIX@
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
-#endif
 #ifdef MOZ_IPC
 @BINPATH@/mozilla-runtime@BIN_SUFFIX@
+#endif
 #endif
 #ifdef WINCE
 @BINPATH@/mozce_shunt.dll
