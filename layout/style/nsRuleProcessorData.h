@@ -49,12 +49,12 @@
 #include "nsChangeHint.h"
 #include "nsIContent.h"
 #include "nsCSSPseudoElements.h"
+#include "nsRuleWalker.h"
 
 class nsIStyleSheet;
 class nsPresContext;
 class nsIAtom;
 class nsICSSPseudoComparator;
-class nsRuleWalker;
 class nsAttrValue;
 
 // The implementation of the constructor and destructor are currently in
@@ -111,6 +111,10 @@ public:
   PRUint32 DocumentState();
   PRBool IsLink();
 
+  PRUint32 GetContentStateForVisitedHandling(
+             nsRuleWalker::VisitedHandlingType aVisitedHandling,
+             PRBool aIsRelevantLink);
+
   // Returns a 1-based index of the child in its parent.  If the child
   // is not in its parent's child list (i.e., it is anonymous content),
   // returns 0.
@@ -154,6 +158,8 @@ private:
   // mContentState is initialized lazily.
   PRInt32 mContentState;  // eventStateMgr->GetContentState() or
                           // mContent->IntrinsicState() if we have no ESM
+                          // adjusted for not supporting :visited (but with
+                          // visitedness information when we support it)
   PRPackedBool mGotContentState;
 };
 
