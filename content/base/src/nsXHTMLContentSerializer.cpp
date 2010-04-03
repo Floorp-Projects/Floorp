@@ -104,11 +104,8 @@ nsXHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
   // compatibility with the existing calling code
-  // XXXLJ perhaps we should remove these two default settings later ?
+  // XXXLJ perhaps should we remove this default settings later ?
   if (aFlags & nsIDocumentEncoder::OutputFormatted ) {
-      aFlags = aFlags | nsIDocumentEncoder::OutputWrap;
-  }
-  else if (!(aFlags & nsIDocumentEncoder::OutputRaw)) {
       aFlags = aFlags | nsIDocumentEncoder::OutputWrap;
   }
 
@@ -185,7 +182,9 @@ nsXHTMLContentSerializer::AppendText(nsIDOMText* aText,
     PRInt32 lastNewlineOffset = kNotFound;
     if (HasLongLines(data, lastNewlineOffset)) {
       // We have long lines, rewrap
+      mDoWrap = PR_TRUE;
       AppendToStringWrapped(data, aStr);
+      mDoWrap = PR_FALSE;
     }
     else {
       AppendToStringConvertLF(data, aStr);
