@@ -127,12 +127,15 @@ window.Rect.prototype = {
 // ##########
 // TODO generalize for any number of events
 window.Subscribable = function() {
-  this.onCloseSubscribers = [];
+  this.onCloseSubscribers = null;
 };
 
 window.Subscribable.prototype = {
   // ----------
   addOnClose: function(referenceElement, callback) {
+    if(!this.onCloseSubscribers)
+      this.onCloseSubscribers = [];
+      
     var existing = jQuery.grep(this.onCloseSubscribers, function(element) {
       return element.referenceElement == referenceElement;
     });
@@ -150,6 +153,9 @@ window.Subscribable.prototype = {
   
   // ----------
   removeOnClose: function(referenceElement) {
+    if(!this.onCloseSubscribers)
+      return;
+      
     this.onCloseSubscribers = jQuery.grep(this.onCloseSubscribers, function(element) {
       return element.referenceElement == referenceElement;
     }, true);
@@ -157,6 +163,9 @@ window.Subscribable.prototype = {
   
   // ----------
   _sendOnClose: function() {
+    if(!this.onCloseSubscribers)
+      return;
+      
     jQuery.each(this.onCloseSubscribers, function(index, object) { 
       object.callback(this);
     });
