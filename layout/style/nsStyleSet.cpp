@@ -59,6 +59,7 @@
 #include "nsContentUtils.h"
 #include "nsRuleProcessorData.h"
 #include "nsTransitionManager.h"
+#include "nsIEventStateManager.h"
 
 NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
 
@@ -435,6 +436,12 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                        // because aParentContext has one, then aRuleNode
                        // should be used.)
                        nsRuleNode* aVisitedRuleNode,
+                       // NB: ReparentStyleContext and
+                       // ResolveStyleByAddingRules pass bogus values
+                       // that work based on what this function is known
+                       // to do with aIsLink and aIsVisitedLink
+                       PRBool aIsLink,
+                       PRBool aIsVisitedLink,
                        nsIAtom* aPseudoTag,
                        nsCSSPseudoElements::Type aPseudoType)
 {
@@ -472,7 +479,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   if (aParentContext)
     result = aParentContext->FindChildWithRules(aPseudoTag, aRuleNode,
                                                 aVisitedRuleNode,
-                                                PR_FALSE);
+                                                aIsVisitedLink);
 
 #ifdef NOISY_DEBUG
   if (result)
@@ -494,6 +501,13 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
         return nsnull;
       }
       result->SetStyleIfVisited(resultIfVisited.forget());
+
+      PRBool relevantLinkVisited =
+        aIsLink ? aIsVisitedLink
+                : (aParentContext && aParentContext->RelevantLinkVisited());
+      if (relevantLinkVisited) {
+        result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
+      }
     }
     if (!aParentContext)
       mRoots.AppendElement(result);
@@ -798,6 +812,8 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
+                    data.IsLink(),
+                    (data.ContentState() & NS_EVENT_STATE_VISITED) != 0,
                     nsnull, nsCSSPseudoElements::ePseudo_NotPseudoElement);
 }
 
@@ -816,6 +832,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nsnull,
+                    PR_FALSE, PR_FALSE,
                     nsnull, nsCSSPseudoElements::ePseudo_NotPseudoElement);
 }
 
@@ -846,6 +863,9 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   }
 
   return GetContext(aBaseContext->GetParent(), ruleNode, visitedRuleNode,
+                    // bogus values for aIsLink and aIsVisitedLink that
+                    // we know will make GetContext do the right thing.
+                    PR_TRUE, aBaseContext->RelevantLinkVisited(),
                     aBaseContext->GetPseudo(),
                     aBaseContext->GetPseudoType());
 }
@@ -854,6 +874,7 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nsnull,
+                    PR_FALSE, PR_FALSE,
                     nsCSSAnonBoxes::mozNonElement,
                     nsCSSPseudoElements::ePseudo_AnonBox);
 }
@@ -901,6 +922,9 @@ nsStyleSet::ResolvePseudoElementStyle(nsIContent* aParentContent,
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
+                    // For pseudos, |data.IsLink()| being true means that
+                    // our parent node is a link.
+                    PR_FALSE, PR_FALSE,
                     nsCSSPseudoElements::GetPseudoAtom(aType), aType);
 }
 
@@ -943,6 +967,9 @@ nsStyleSet::ProbePseudoElementStyle(nsIContent* aParentContent,
 
   nsRefPtr<nsStyleContext> result =
     GetContext(aParentContext, ruleNode, visitedRuleNode,
+               // For pseudos, |data.IsLink()| being true means that
+               // our parent node is a link.
+               PR_FALSE, PR_FALSE,
                pseudoTag, aType);
 
   // For :before and :after pseudo-elements, having display: none or no
@@ -984,6 +1011,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
             &ruleWalker);
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nsnull,
+                    PR_FALSE, PR_FALSE,
                     aPseudoTag, nsCSSPseudoElements::ePseudo_AnonBox);
 }
 
@@ -1019,6 +1047,9 @@ nsStyleSet::ResolveXULTreePseudoStyle(nsIContent* aParentContent,
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
+                    // For pseudos, |data.IsLink()| being true means that
+                    // our parent node is a link.
+                    PR_FALSE, PR_FALSE,
                     aPseudoTag, nsCSSPseudoElements::ePseudo_XULTree);
 }
 #endif
@@ -1142,6 +1173,9 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   }
 
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
+                    // bogus values for aIsLink and aIsVisitedLink that
+                    // we know will make GetContext do the right thing.
+                    PR_TRUE, aStyleContext->RelevantLinkVisited(),
                     pseudoTag, pseudoType);
 }
 
