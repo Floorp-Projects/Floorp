@@ -96,6 +96,7 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsAutoJSValHolder.h"
+#include "mozilla/AutoRestore.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
@@ -305,7 +306,7 @@ static inline void xpc_NotifyAll(XPCLock* lock)
 // Note that xpconnect only makes *one* monitor and *mostly* holds it locked
 // only through very small critical sections.
 
-class XPCAutoLock : public nsAutoLockBase {
+class NS_STACK_CLASS XPCAutoLock : public nsAutoLockBase {
 public:
 
     static XPCLock* NewLock(const char* name)
@@ -313,7 +314,7 @@ public:
     static void     DestroyLock(XPCLock* lock)
                         {nsAutoMonitor::DestroyMonitor(lock);}
 
-    XPCAutoLock(XPCLock* lock)
+    XPCAutoLock(XPCLock* lock MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
 #ifdef DEBUG_jband
         : nsAutoLockBase(lock ? (void*) lock : (void*) this, eAutoMonitor),
 #else
@@ -321,6 +322,7 @@ public:
 #endif
           mLock(lock)
     {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
         if(mLock)
             PR_EnterMonitor(mLock);
     }
@@ -339,6 +341,7 @@ public:
 
 private:
     XPCLock*  mLock;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an XPCAutoLock object incorrectly.
@@ -358,12 +361,13 @@ private:
 
 /************************************************/
 
-class XPCAutoUnlock : public nsAutoUnlockBase {
+class NS_STACK_CLASS XPCAutoUnlock : public nsAutoUnlockBase {
 public:
-    XPCAutoUnlock(XPCLock* lock)
+    XPCAutoUnlock(XPCLock* lock MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
         : nsAutoUnlockBase(lock),
           mLock(lock)
     {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
         if(mLock)
         {
 #ifdef DEBUG
@@ -382,6 +386,7 @@ public:
 
 private:
     XPCLock*  mLock;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an XPCAutoUnlock object incorrectly.
@@ -3772,11 +3777,14 @@ private:
 /***************************************************************************/
 // XXX allowing for future notifications to XPCCallContext
 
-class AutoJSRequest
+class NS_STACK_CLASS AutoJSRequest
 {
 public:
-    AutoJSRequest(XPCCallContext& aCCX)
-      : mCCX(aCCX), mCX(aCCX.GetJSContext()) {BeginRequest();}
+    AutoJSRequest(XPCCallContext& aCCX MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mCCX(aCCX), mCX(aCCX.GetJSContext()) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+        BeginRequest();
+    }
     ~AutoJSRequest() {EndRequest();}
 
     void EndRequest() {
@@ -3795,13 +3803,18 @@ private:
 private:
     XPCCallContext& mCCX;
     JSContext* mCX;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoJSSuspendRequest
+class NS_STACK_CLASS AutoJSSuspendRequest
 {
 public:
-    AutoJSSuspendRequest(XPCCallContext& aCCX)
-      : mCX(aCCX.GetJSContext()) {SuspendRequest();}
+    AutoJSSuspendRequest(XPCCallContext& aCCX
+                         MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mCX(aCCX.GetJSContext()) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+        SuspendRequest();
+    }
     ~AutoJSSuspendRequest() {ResumeRequest();}
 
     void ResumeRequest() {
@@ -3820,13 +3833,18 @@ private:
 private:
     JSContext* mCX;
     jsrefcount mDepth;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoJSSuspendRequestWithNoCallContext
+class NS_STACK_CLASS AutoJSSuspendRequestWithNoCallContext
 {
 public:
-    AutoJSSuspendRequestWithNoCallContext(JSContext *aCX)
-      : mCX(aCX) {SuspendRequest();}
+    AutoJSSuspendRequestWithNoCallContext(JSContext *aCX
+                                          MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mCX(aCX) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+        SuspendRequest();
+    }
     ~AutoJSSuspendRequestWithNoCallContext() {ResumeRequest();}
 
     void ResumeRequest() {
@@ -3845,13 +3863,18 @@ private:
 private:
     JSContext* mCX;
     jsrefcount mDepth;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoJSSuspendNonMainThreadRequest
+class NS_STACK_CLASS AutoJSSuspendNonMainThreadRequest
 {
 public:
-    AutoJSSuspendNonMainThreadRequest(JSContext *aCX)
-        : mCX(aCX) {SuspendRequest();}
+    AutoJSSuspendNonMainThreadRequest(JSContext *aCX
+                                      MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mCX(aCX) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+        SuspendRequest();
+    }
     ~AutoJSSuspendNonMainThreadRequest() {ResumeRequest();}
 
     void ResumeRequest() {
@@ -3871,15 +3894,21 @@ private:
 
     JSContext *mCX;
     jsrefcount mDepth;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
         
 
 /*****************************************/
 
-class AutoJSRequestWithNoCallContext
+class NS_STACK_CLASS AutoJSRequestWithNoCallContext
 {
 public:
-    AutoJSRequestWithNoCallContext(JSContext* aCX) : mCX(aCX) {BeginRequest();}
+    AutoJSRequestWithNoCallContext(JSContext* aCX
+                                   MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mCX(aCX) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+        BeginRequest();
+    }
     ~AutoJSRequestWithNoCallContext() {EndRequest();}
 
     void EndRequest() {
@@ -3897,16 +3926,20 @@ private:
     }
 private:
     JSContext* mCX;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /***************************************************************************/
-class AutoJSErrorAndExceptionEater
+class NS_STACK_CLASS AutoJSErrorAndExceptionEater
 {
 public:
-    AutoJSErrorAndExceptionEater(JSContext* aCX)
+    AutoJSErrorAndExceptionEater(JSContext* aCX
+                                 MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
         : mCX(aCX),
           mOldErrorReporter(JS_SetErrorReporter(mCX, nsnull)),
-          mOldExceptionState(JS_SaveExceptionState(mCX)) {}
+          mOldExceptionState(JS_SaveExceptionState(mCX)) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+    }
     ~AutoJSErrorAndExceptionEater()
     {
         JS_SetErrorReporter(mCX, mOldErrorReporter);
@@ -3916,22 +3949,25 @@ private:
     JSContext*        mCX;
     JSErrorReporter   mOldErrorReporter;
     JSExceptionState* mOldExceptionState;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /******************************************************************************
  * Handles pre/post script processing and the setting/resetting the error
  * reporter
  */
-class AutoScriptEvaluate
+class NS_STACK_CLASS AutoScriptEvaluate
 {
 public:
     /**
      * Saves the JSContext as well as initializing our state
      * @param cx The JSContext, this can be null, we don't do anything then
      */
-    AutoScriptEvaluate(JSContext * cx)
+    AutoScriptEvaluate(JSContext * cx MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
          : mJSContext(cx), mState(0), mErrorReporterSet(PR_FALSE),
-           mEvaluated(PR_FALSE), mContextHasThread(0) {}
+           mEvaluated(PR_FALSE), mContextHasThread(0) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+    }
 
     /**
      * Does the pre script evaluation and sets the error reporter if given
@@ -3951,6 +3987,7 @@ private:
     PRBool mErrorReporterSet;
     PRBool mEvaluated;
     jsword mContextHasThread;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
     AutoScriptEvaluate(const AutoScriptEvaluate &);
@@ -3958,13 +3995,16 @@ private:
 };
 
 /***************************************************************************/
-class AutoResolveName
+class NS_STACK_CLASS AutoResolveName
 {
 public:
-    AutoResolveName(XPCCallContext& ccx, jsval name)
+    AutoResolveName(XPCCallContext& ccx, jsval name
+                    MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
         : mTLS(ccx.GetThreadData()),
           mOld(mTLS->SetResolveName(name)),
-          mCheck(name) {}
+          mCheck(name) {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+    }
     ~AutoResolveName()
         {
 #ifdef DEBUG
@@ -3978,6 +4018,7 @@ private:
     XPCPerThreadData* mTLS;
     jsval mOld;
     jsval mCheck;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /***************************************************************************/
