@@ -262,11 +262,6 @@ public:
     *                       frame. -1 if the frame cannot be found.
     */
   virtual PRInt32 FindLineContaining(nsIFrame* aFrame);
-  
-  /** not implemented
-    * the function is also not called in our tree
-    */
-  virtual PRInt32 FindLineAt(nscoord aY);
 
   /** Find the orginating cell frame on a row that is the nearest to the
     * coordinate X.

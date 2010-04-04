@@ -91,10 +91,9 @@ function testHtmlSerializer_1 () {
 
 
   //------------ OutputWrap
-  // by default, this flag is set, so we should have the same result as
-  // when there are no flags.
   encoder.init(doc, "text/html", de.OutputLFLineBreak |de.OutputWrap);
   out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_wrap.html");
   isRoughly(out, expected, "test OutputWrap");
 
   //------------ OutputFormatted

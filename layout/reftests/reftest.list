@@ -62,6 +62,10 @@ include css-transitions/reftest.list
 # css values and units
 include css-valuesandunits/reftest.list
 
+# Reftests in css-visited are run using
+# layout/style/test/test_visited_reftests instead of using the reftest
+# harness.
+
 # columns/
 include columns/reftest.list
 

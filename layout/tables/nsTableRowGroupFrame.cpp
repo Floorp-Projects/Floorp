@@ -1695,13 +1695,6 @@ nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame)
   return rowFrame->GetRowIndex() - GetStartRowIndex();
 }
 
-PRInt32
-nsTableRowGroupFrame::FindLineAt(nscoord  aY)
-{
-  NS_NOTREACHED("Not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 #ifdef IBMBIDI
 NS_IMETHODIMP
 nsTableRowGroupFrame::CheckLineOrder(PRInt32                  aLine,

@@ -356,26 +356,6 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
   }
 }
 
-nsLineBox*
-nsLineBox::FindLineContaining(nsLineList& aLines, nsIFrame* aFrame,
-                              PRInt32* aFrameIndexInLine)
-{
-  NS_PRECONDITION(aFrameIndexInLine && !aLines.empty() && aFrame, "null ptr");
-  for (nsLineList::iterator line = aLines.begin(),
-                            line_end = aLines.end();
-       line != line_end;
-       ++line)
-  {
-    PRInt32 ix = line->IndexOf(aFrame);
-    if (ix >= 0) {
-      *aFrameIndexInLine = ix;
-      return line;
-    }
-  }
-  *aFrameIndexInLine = -1;
-  return nsnull;
-}
-
 PRBool
 nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                const nsLineList::iterator& aBegin,
@@ -654,23 +634,6 @@ nsLineIterator::FindLineContaining(nsIFrame* aFrame)
     line = mLines[++lineNumber];
   }
   return -1;
-}
-
-/* virtual */ PRInt32
-nsLineIterator::FindLineAt(nscoord aY)
-{
-  nsLineBox* line = mLines[0];
-  if (!line || (aY < line->mBounds.y)) {
-    return -1;
-  }
-  PRInt32 lineNumber = 0;
-  while (lineNumber != mNumLines) {
-    if ((aY >= line->mBounds.y) && (aY < line->mBounds.YMost())) {
-      return lineNumber;
-    }
-    line = mLines[++lineNumber];
-  }
-  return mNumLines;
 }
 
 #ifdef IBMBIDI

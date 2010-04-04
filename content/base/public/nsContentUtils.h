@@ -1495,10 +1495,12 @@ public:
    * origin is set to 'null'.
    *
    * The ASCII versions return a ASCII strings that are puny-code encoded,
-   * suitable for for example header values. The UTF versions return strings
+   * suitable for, for example, header values. The UTF versions return strings
    * containing international characters.
    *
-   * aPrincipal/aOrigin must not be null.
+   * @pre aPrincipal/aOrigin must not be null.
+   *
+   * @note this should be used for HTML5 origin determination.
    */
   static nsresult GetASCIIOrigin(nsIPrincipal* aPrincipal,
                                  nsCString& aOrigin);

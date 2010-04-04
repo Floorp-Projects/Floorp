@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=147777
   <title>Test for visited link coloring pref Bug 147777</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
 
@@ -18,13 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=147777
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=147777">Mozilla Bug 147777</a>
-<p id="display"><a id="mylink" href="test_visited_pref.html">link to this page</a></p>
+<iframe id="iframe" src="visited-pref-iframe.html" style="width: 10em; height: 5em"></iframe>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 147777 **/
-
-// NOTE: this test will fail when ran by itself because the URL is different!
 
 function reinsert_node(e) {
   var sib = e.nextSibling;
@@ -50,41 +49,80 @@ function set_pref(val)
     dispBranch.setBoolPref("visited_links_enabled", val);
 }
 
-is(get_pref(), true, "pref defaults to true");
+function snapshotsEqual(snap1, snap2)
+{
+  return compareSnapshots(snap1, snap2, true)[0];
+}
 
-// Link coloring is asynchronous (and non-deterministic), so we wait until it
-// changes.
-var thread = Components.classes["@mozilla.org/thread-manager;1"].
-               getService(Components.interfaces.nsIThreadManager).
-               mainThread;
-var link = document.getElementById("mylink");
-var cs;
-var start = Date.now();
-do {
-  while (thread.hasPendingEvents())
-    thread.processNextEvent(false);
-  cs = getComputedStyle(link, "");
-} while(cs.cssFloat != "right");
-var end = Date.now();
-is(cs.cssFloat, "right", ":visited selector applies given default preferences");
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("load", step1, false);
 
-set_pref(false);
+var iframe, subdoc, subwin;
+var link;
+var start;
+var timeout;
 
-// we don't handle dynamic changes of this pref; it only takes effect
-// when a new page loads
-reinsert_node(link);
+var unvisref; // reference image for unvisited style
 
-// Wait a while to make sure we don't update the style on our reinserted node.
-setTimeout(function() {
-  is(cs.cssFloat, "left", ":visited selector does not apply given false preference");
+function step1()
+{
+  is(get_pref(), true, "pref defaults to true");
+
+  iframe = document.getElementById("iframe");
+  subdoc = iframe.contentDocument;
+  subwin = iframe.contentWindow;
+  link = subdoc.getElementById("link");
+
+  unvisref = snapshotWindow(subwin, false);
+
+  // Now set the href of the link to a location that's actually visited.
+  link.href = window.location;
+
+  start = Date.now();
+
+  // And wait for the link to get restyled when the history lets us
+  // know it is (asynchronously).
+  setTimeout(poll_for_visited_style, 100);
+}
+
+function poll_for_visited_style()
+{
+  var snapshot = snapshotWindow(subwin, false);
+  if (snapshotsEqual(unvisref, snapshot)) {
+    // hasn't been styled yet
+    setTimeout(poll_for_visited_style, 100);
+
+    // If it never gets styled correctly, this test will fail because
+    // this loop will never complete.
+  } else {
+    var end = Date.now();
+    timeout = 3 * Math.max(end - start, 300);
+    step2();
+  }
+}
+
+function step2()
+{
+  set_pref(false);
+
+  // we don't handle dynamic changes of this pref; it only takes effect
+  // when a new page loads
+  reinsert_node(link);
+
+  setTimeout(step3, timeout);
+}
+
+function step3()
+{
+  var snapshot = snapshotWindow(subwin, false);
+  ok(snapshotsEqual(unvisref, snapshot),
+     ":visited selector does not apply given false preference");
 
   // Set the pref back for the rest of the tests.
   set_pref(true);
 
   SimpleTest.finish();
-}, 10 * Math.max(end - start, 100));
-
-SimpleTest.waitForExplicitFinish();
+}
 
 </script>
 </pre>

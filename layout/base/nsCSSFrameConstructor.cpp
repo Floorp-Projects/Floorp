@@ -7233,8 +7233,8 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 
   // If the frame's background is propagated to an ancestor, walk up to
   // that ancestor.
-  const nsStyleBackground *bg;
-  while (!nsCSSRendering::FindBackground(aPresContext, aFrame, &bg)) {
+  nsStyleContext *bgSC;
+  while (!nsCSSRendering::FindBackground(aPresContext, aFrame, &bgSC)) {
     aFrame = aFrame->GetParent();
     NS_ASSERTION(aFrame, "root frame must paint");
   }
@@ -7650,6 +7650,13 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
       
     if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
       ++mHoverGeneration;
+    }
+
+    if (aStateMask & NS_EVENT_STATE_VISITED) {
+      // Exposing information to the page about whether the link is
+      // visited or not isn't really something we can worry about here.
+      // FIXME: We could probably do this a bit better.
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     }
 
     PostRestyleEvent(aContent, rshint, hint);

@@ -410,7 +410,7 @@ nsBox::SizeNeedsRecalc(nsSize& aSize)
 }
 
 void
-nsBox::CoordNeedsRecalc(PRInt32& aFlex)
+nsBox::CoordNeedsRecalc(nscoord& aFlex)
 {
   aFlex = -1;
 }
@@ -916,12 +916,6 @@ void
 nsBox::AddBorderAndPadding(nsSize& aSize)
 {
   AddBorderAndPadding(this, aSize);
-}
-
-void
-nsBox::AddMargin(nsSize& aSize)
-{
-  AddMargin(this, aSize);
 }
 
 void

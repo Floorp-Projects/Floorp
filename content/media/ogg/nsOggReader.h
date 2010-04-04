@@ -70,8 +70,8 @@ public:
   : mTime(aTime),
     mDuration(aDuration),
     mSamples(aSamples),
-    mAudioData(aData),
-    mChannels(aChannels)
+    mChannels(aChannels),
+    mAudioData(aData)
   {
     MOZ_COUNT_CTOR(SoundData);
   }
@@ -83,8 +83,8 @@ public:
   : mTime(-1),
     mDuration(aDuration),
     mSamples(aSamples),
-    mAudioData(aData),
-    mChannels(aChannels)
+    mChannels(aChannels),
+    mAudioData(aData)
   {
     MOZ_COUNT_CTOR(SoundData);
   }
