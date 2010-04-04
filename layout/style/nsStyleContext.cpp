@@ -51,6 +51,7 @@
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "prlog.h"
+#include "nsStyleAnimation.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -167,8 +168,12 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
 
 already_AddRefed<nsStyleContext>
 nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                   nsRuleNode* aRuleNode)
+                                   nsRuleNode* aRuleNode,
+                                   nsRuleNode* aRulesIfVisited,
+                                   PRBool aRelevantLinkVisited)
 {
+  NS_ABORT_IF_FALSE(aRulesIfVisited || !aRelevantLinkVisited,
+    "aRelevantLinkVisited should only be set when we have a separate style");
   PRUint32 threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
@@ -178,9 +183,20 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   if (list) {
     nsStyleContext *child = list;
     do {
-      if (child->mRuleNode == aRuleNode && child->mPseudoTag == aPseudoTag) {
-        result = child;
-        break;
+      if (child->mRuleNode == aRuleNode &&
+          child->mPseudoTag == aPseudoTag &&
+          child->RelevantLinkVisited() == aRelevantLinkVisited) {
+        PRBool match = PR_FALSE;
+        if (aRulesIfVisited) {
+          match = child->GetStyleIfVisited() &&
+                  child->GetStyleIfVisited()->mRuleNode == aRulesIfVisited;
+        } else {
+          match = !child->GetStyleIfVisited();
+        }
+        if (match) {
+          result = child;
+          break;
+        }
       }
       child = child->mNextSibling;
       threshold--;
@@ -463,12 +479,118 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 
 #undef DO_STRUCT_DIFFERENCE
 
+  // Note that we do not check whether this->RelevantLinkVisited() !=
+  // aOther->RelevantLinkVisited(); we don't need to since
+  // nsCSSFrameConstructor::DoContentStateChanged always adds
+  // nsChangeHint_RepaintFrame for NS_EVENT_STATE_VISITED changes (and
+  // needs to, since HasStateDependentStyle probably doesn't work right
+  // for NS_EVENT_STATE_VISITED).  Hopefully this doesn't actually
+  // expose whether links are visited to performance tests since all
+  // link coloring happens asynchronously at a time when it's hard for
+  // the page to measure.
+  // However, we do need to compute the larger of the changes that can
+  // happen depending on whether the link is visited or unvisited, since
+  // doing only the one that's currently appropriate would expose which
+  // links are in history to easy performance measurement.  Therefore,
+  // here, we add nsChangeHint_RepaintFrame hints (the maximum for
+  // things that can depend on :visited) for the properties on which we
+  // call GetVisitedDependentColor.
+  nsStyleContext *thisVis = GetStyleIfVisited(),
+                *otherVis = aOther->GetStyleIfVisited();
+  if (!thisVis != !otherVis) {
+    // One style context has a style-if-visited and the other doesn't.
+    // Presume a difference.
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
+    // Both style contexts have a style-if-visited.
+    PRBool change = PR_FALSE;
+
+    // NB: Calling Peek on |this|, not |thisVis|, since callers may look
+    // at a struct on |this| without looking at the same struct on
+    // |thisVis| (including this function if we skip one of these checks
+    // due to change being true already or due to the old style context
+    // not having a style-if-visited), but not the other way around.
+    if (PeekStyleColor()) {
+      if (thisVis->GetStyleColor()->mColor !=
+          otherVis->GetStyleColor()->mColor) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleBackground()) {
+      if (thisVis->GetStyleBackground()->mBackgroundColor !=
+          otherVis->GetStyleBackground()->mBackgroundColor) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleBorder()) {
+      const nsStyleBorder *thisVisBorder = thisVis->GetStyleBorder();
+      const nsStyleBorder *otherVisBorder = otherVis->GetStyleBorder();
+      NS_FOR_CSS_SIDES(side) {
+        PRBool thisFG, otherFG;
+        nscolor thisColor, otherColor;
+        thisVisBorder->GetBorderColor(side, thisColor, thisFG);
+        otherVisBorder->GetBorderColor(side, otherColor, otherFG);
+        if (thisFG != otherFG || (!thisFG && thisColor != otherColor)) {
+          change = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleOutline()) {
+      const nsStyleOutline *thisVisOutline = thisVis->GetStyleOutline();
+      const nsStyleOutline *otherVisOutline = otherVis->GetStyleOutline();
+      PRBool haveColor;
+      nscolor thisColor, otherColor;
+      if (thisVisOutline->GetOutlineInitialColor() != 
+            otherVisOutline->GetOutlineInitialColor() ||
+          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) != 
+            otherVisOutline->GetOutlineColor(otherColor) ||
+          (haveColor && thisColor != otherColor)) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleColumn()) {
+      const nsStyleColumn *thisVisColumn = thisVis->GetStyleColumn();
+      const nsStyleColumn *otherVisColumn = otherVis->GetStyleColumn();
+      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor ||
+          thisVisColumn->mColumnRuleColorIsForeground !=
+            otherVisColumn->mColumnRuleColorIsForeground) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleSVG()) {
+      const nsStyleSVG *thisVisSVG = thisVis->GetStyleSVG();
+      const nsStyleSVG *otherVisSVG = otherVis->GetStyleSVG();
+      if (thisVisSVG->mFill != otherVisSVG->mFill ||
+          thisVisSVG->mStroke != otherVisSVG->mStroke) {
+        change = PR_TRUE;
+      }
+    }
+
+    if (change) {
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    }
+  }
+
   return hint;
 }
 
 void
 nsStyleContext::Mark()
 {
+  if (mStyleIfVisited)
+    mStyleIfVisited->Mark();
+
   // Mark our rule node.
   mRuleNode->Mark();
 
@@ -579,3 +701,64 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
   return context;
 }
 
+static nscolor ExtractColor(nsCSSProperty aProperty,
+                            nsStyleContext *aStyleContext)
+{
+  nsStyleAnimation::Value val;
+#ifdef DEBUG
+  PRBool success =
+#endif
+    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext, val);
+  NS_ABORT_IF_FALSE(success,
+                    "aProperty must be extractable by nsStyleAnimation");
+  return val.GetColorValue();
+}
+
+struct ColorIndexSet {
+  PRUint8 colorIndex, alphaIndex;
+};
+
+static const ColorIndexSet gVisitedIndices[2] = { { 0, 0 }, { 1, 0 } };
+
+nscolor
+nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
+{
+  NS_ASSERTION(aProperty == eCSSProperty_color ||
+               aProperty == eCSSProperty_background_color ||
+               aProperty == eCSSProperty_border_top_color ||
+               aProperty == eCSSProperty_border_right_color_value ||
+               aProperty == eCSSProperty_border_bottom_color ||
+               aProperty == eCSSProperty_border_left_color_value ||
+               aProperty == eCSSProperty_outline_color ||
+               aProperty == eCSSProperty__moz_column_rule_color ||
+               aProperty == eCSSProperty_fill ||
+               aProperty == eCSSProperty_stroke,
+               "we need to add to nsStyleContext::CalcStyleDifference");
+
+  nscolor colors[2];
+  colors[0] = ExtractColor(aProperty, this);
+
+  nsStyleContext *visitedStyle = this->GetStyleIfVisited();
+  if (!visitedStyle) {
+    return colors[0];
+  }
+
+  colors[1] = ExtractColor(aProperty, visitedStyle);
+
+  return nsStyleContext::CombineVisitedColors(colors,
+                                              this->RelevantLinkVisited());
+}
+
+/* static */ nscolor
+nsStyleContext::CombineVisitedColors(nscolor *aColors, PRBool aLinkIsVisited)
+{
+  // NOTE: We want this code to have as little timing dependence as
+  // possible on whether this->RelevantLinkVisited() is true.
+  const ColorIndexSet &set =
+    gVisitedIndices[aLinkIsVisited ? 1 : 0];
+
+  nscolor colorColor = aColors[set.colorIndex];
+  nscolor alphaColor = aColors[set.alphaIndex];
+  return NS_RGBA(NS_GET_R(colorColor), NS_GET_G(colorColor),
+                 NS_GET_B(colorColor), NS_GET_A(alphaColor));
+}

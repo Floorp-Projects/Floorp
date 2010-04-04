@@ -1397,16 +1397,6 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
   aOffset = offset;
 }
 
-nsresult nsBidiPresUtils::GetBidiEngine(nsBidi** aBidiEngine)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mBidiEngine) {
-    *aBidiEngine = mBidiEngine;
-    rv = NS_OK;
-  }
-  return rv; 
-}
-
 nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
                                       PRInt32                aLength,
                                       nsBidiDirection        aBaseDirection,

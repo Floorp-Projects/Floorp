@@ -99,17 +99,18 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
-  // Get a style context (with the given parent and pseudo-tag/type) for a
-  // sequence of style rules consisting of the concatenation of:
-  //  (1) the rule sequence represented by aRuleNode (which is the empty
-  //      sequence if aRuleNode is null or the root of the rule tree), and
-  //  (2) the rules in the |aRules| array.
+  // Get a style context (with the given parent) for the
+  // sequence of style rules in the |aRules| array.
   already_AddRefed<nsStyleContext>
   ResolveStyleForRules(nsStyleContext* aParentContext,
-                       nsIAtom* aPseudoTag,
-                       nsCSSPseudoElements::Type aPseudoType,
-                       nsRuleNode *aRuleNode,
                        const nsCOMArray<nsIStyleRule> &aRules);
+
+  // Get a style context that represents aBaseContext, but as though
+  // it additionally matched the rules in the aRules array (in that
+  // order, as more specific than any other rules).
+  already_AddRefed<nsStyleContext>
+  ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
+                            const nsCOMArray<nsIStyleRule> &aRules);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
@@ -338,6 +339,9 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   GetContext(nsStyleContext* aParentContext,
              nsRuleNode* aRuleNode,
+             nsRuleNode* aVisitedRuleNode,
+             PRBool aIsLink,
+             PRBool aIsVisitedLink,
              nsIAtom* aPseudoTag,
              nsCSSPseudoElements::Type aPseudoType);
 

@@ -93,9 +93,6 @@ public:
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   nsresult Reset(nsIURI* aURL);
-  nsresult GetLinkColor(nscolor& aColor);
-  nsresult GetActiveLinkColor(nscolor& aColor);
-  nsresult GetVisitedLinkColor(nscolor& aColor);
   nsresult SetLinkColor(nscolor aColor);
   nsresult SetActiveLinkColor(nscolor aColor);
   nsresult SetVisitedLinkColor(nscolor aColor);

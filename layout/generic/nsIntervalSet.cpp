@@ -97,17 +97,6 @@ void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd)
     }
 }
 
-PRBool nsIntervalSet::HasPoint(coord_type aPoint) const
-{
-    Interval *current = mList;
-    while (current && current->mBegin <= aPoint) {
-        if (current->mEnd >= aPoint)
-            return PR_TRUE;
-        current = current->mNext;
-    }
-    return PR_FALSE;
-}
-
 PRBool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const
 {
     Interval *current = mList;

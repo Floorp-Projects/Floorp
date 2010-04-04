@@ -112,6 +112,13 @@ function loadNextTest() {
   iframe.src = prefix + subtests[testNum-1];
 }
 
+function getColor(doc, win, id) {
+  var elem = doc.getElementById(id);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.getVisitedDependentComputedStyle(elem, "", "color");
+}
 
 function checkTest() {
   switch (testNum) {
@@ -123,24 +130,21 @@ function checkTest() {
       // run outside of private mode, link should appear as visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
-      var style = win.getComputedStyle(doc.getElementById("link"), "");
-      is(style.getPropertyValue("color"), kRed, "Visited link coloring should work outside of private mode");
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
       break;
 
     case 3:
       // run inside of private mode, link should appear as not visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
-      var style = win.getComputedStyle(doc.getElementById("link"), "");
-      is(style.getPropertyValue("color"), kBlue, "Visited link coloring should not work inside of private mode");
+      is(getColor(doc, win, "link"), kBlue, "Visited link coloring should not work inside of private mode");
       break;
 
     case 4:
       // run outside of private mode, link should appear as visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
-      var style = win.getComputedStyle(doc.getElementById("link"), "");
-      is(style.getPropertyValue("color"), kRed, "Visited link coloring should work outside of private mode");
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
       break;
 
     default:

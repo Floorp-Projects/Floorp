@@ -722,6 +722,12 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
+#ifdef _IMPL_NS_LAYOUT
+  /** Also forward GetVisitedDependentColor to the style context */
+  nscolor GetVisitedDependentColor(nsCSSProperty aProperty)
+    { return mStyleContext->GetVisitedDependentColor(aProperty); }
+#endif
+
   /**
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
@@ -818,11 +824,21 @@ public:
     delete static_cast<nsPoint*>(aPropertyValue);
   }
 
+#ifdef _MSC_VER
+// XXX Workaround MSVC issue by making the static FramePropertyDescriptor
+// non-const.  See bug 555727.
+#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
+  static const FramePropertyDescriptor* prop() {                \
+    static FramePropertyDescriptor descriptor = { dtor };       \
+    return &descriptor;                                         \
+  }
+#else
 #define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
   static const FramePropertyDescriptor* prop() {                \
     static const FramePropertyDescriptor descriptor = { dtor }; \
     return &descriptor;                                         \
   }
+#endif
 
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nsnull)
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nsnull)
@@ -882,13 +898,7 @@ public:
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
    * other rectangles of the frame, in app units, relative to the parent.
-   *
-   * Note that GetMarginRect is not meaningful for blocks (anything with
-   * 'display:block', whether block frame or not) because of both the
-   * collapsing and 'auto' issues with GetUsedMargin (on which it
-   * depends).
    */
-  nsRect GetMarginRect() const;
   nsRect GetPaddingRect() const;
   nsRect GetContentRect() const;
 
@@ -1026,15 +1036,6 @@ public:
                         const nsRect&           aClipRect,
                         PRBool                  aClipBorderBackground = PR_FALSE,
                         PRBool                  aClipAll = PR_FALSE);
-
-  /**
-   * Clips the display items of aFromSet, putting the results in aToSet.
-   * All items are clipped.
-   */
-  nsresult Clip(nsDisplayListBuilder* aBuilder,
-                const nsDisplayListSet& aFromSet,
-                const nsDisplayListSet& aToSet,
-                const nsRect& aClipRect);
 
   enum {
     DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,

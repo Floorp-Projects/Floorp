@@ -240,9 +240,7 @@ public:
   static nsIFrame* GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
-  PRBool IsAutoWidth(PRBool* aIsPctWidth = nsnull);
   PRBool IsAutoHeight();
-  static PRBool IsPctHeight(nsStyleContext* aStyleContext);
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -381,9 +379,6 @@ public:
   /** return the width of the column at aColIndex    */
   virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
 
-  /** set the width of the column at aColIndex to aWidth    */
-  virtual void SetColumnWidth(PRInt32 aColIndex, nscoord aWidth);
-
   /** helper to get the cell spacing X style value */
   virtual nscoord GetCellSpacingX();
 
@@ -422,11 +417,6 @@ public:
     * or is spanned from the rows above
     */
   PRBool HasMoreThanOneCell(PRInt32 aRowIndex) const;
-
-  /** return the value of the COLS attribute, adjusted for the 
-    * actual number of columns in the table
-    */
-  PRInt32 GetEffectiveCOLSAttribute();
 
   /** return the column frame associated with aColIndex
     * returns nsnull if the col frame has not yet been allocated, or if
@@ -655,14 +645,6 @@ public:
   // which spans into the next row,  the number of effective
   // columns limits the search up to that column
   PRBool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
-
-  // Returns PR_TRUE if there are any cells to the left of the column at
-  // aColIndex and spanning into the column at aColIndex     
-  PRBool ColIsSpannedInto(PRInt32 aColIndex);
-
-  // Returns PR_TRUE if there is a cell originating in aColIndex
-  // which spans into the next col
-  PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
 protected:
 

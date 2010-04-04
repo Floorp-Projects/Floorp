@@ -709,16 +709,6 @@ nsIFrame::ApplySkipSides(nsMargin& aMargin) const
 }
 
 nsRect
-nsIFrame::GetMarginRect() const
-{
-  nsMargin m(GetUsedMargin());
-  ApplySkipSides(m);
-  nsRect r(mRect);
-  r.Inflate(m);
-  return r;
-}
-
-nsRect
 nsIFrame::GetPaddingRect() const
 {
   nsMargin b(GetUsedBorder());
@@ -1200,16 +1190,6 @@ nsIFrame::OverflowClip(nsDisplayListBuilder*   aBuilder,
                        PRBool                  aClipAll)
 {
   nsOverflowClipWrapper wrapper(this, aClipRect, aClipBorderBackground, aClipAll);
-  return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
-}
-
-nsresult
-nsIFrame::Clip(nsDisplayListBuilder*   aBuilder,
-               const nsDisplayListSet& aFromSet,
-               const nsDisplayListSet& aToSet,
-               const nsRect&           aClipRect)
-{
-  nsAbsPosClipWrapper wrapper(this, aClipRect);
   return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
 }
 
@@ -3992,8 +3972,8 @@ nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
 static void
 InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
 {
-  const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg)) {
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bgSC)) {
     nsIFrame* rootFrame =
       aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
     rootFrame->Invalidate(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
@@ -6004,10 +5984,13 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // When clicked on, the selection position within the element 
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
-        if (scrollFrame && scrollFrame->GetScrollbarVisibility() != 0) {
-          // Scroll bars will be used for overflow
-          isFocusable = PR_TRUE;
-          tabIndex = 0;
+        if (scrollFrame) {
+          nsMargin margin = scrollFrame->GetActualScrollbarSizes();
+          if (margin.top || margin.right || margin.bottom || margin.left) {
+            // Scroll bars will be used for overflow
+            isFocusable = PR_TRUE;
+            tabIndex = 0;
+          }
         }
       }
     }

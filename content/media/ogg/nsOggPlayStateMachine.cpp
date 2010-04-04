@@ -1021,9 +1021,9 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
   PRUint32 picXLimit;
   PRUint32 picYLimit;
   if (!AddOverflow(mInfo.mPicture.x, mInfo.mPicture.width, picXLimit) ||
-      picXLimit > PR_ABS(aData->mBuffer[0].stride) ||
+      picXLimit > PRUint32(PR_ABS(aData->mBuffer[0].stride)) ||
       !AddOverflow(mInfo.mPicture.y, mInfo.mPicture.height, picYLimit) ||
-      picYLimit > PR_ABS(aData->mBuffer[0].height))
+      picYLimit > PRUint32(PR_ABS(aData->mBuffer[0].height)))
   {
     // The specified picture dimensions can't be contained inside the video
     // frame, we'll stomp memory if we try to copy it. Fail.
@@ -1049,10 +1049,9 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
   unsigned char* cr = cb + (cbCrStride * PR_ABS(aData->mBuffer[1].height));
 
   unsigned char* p = y;
-  unsigned yStride = mInfo.mPicture.width;
   unsigned char* q = aData->mBuffer[0].data + mInfo.mPicture.x +
                      aData->mBuffer[0].stride * mInfo.mPicture.y;
-  for(unsigned i=0; i < mInfo.mPicture.height; ++i) {
+  for(PRInt32 i=0; i < mInfo.mPicture.height; ++i) {
     NS_ASSERTION(q + mInfo.mPicture.width <
                  aData->mBuffer[0].data + aData->mBuffer[0].stride * aData->mBuffer[0].height,
                  "Y read must be in bounds");
