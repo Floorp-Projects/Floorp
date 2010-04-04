@@ -199,11 +199,6 @@ public:
                              PRBool          aIsOddLevel);
 
   /**
-   * Return our nsBidi object (bidi reordering engine)
-   */
-  nsresult GetBidiEngine(nsBidi** aBidiEngine);
-
-  /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
    * a rendering context for rendering.
    *

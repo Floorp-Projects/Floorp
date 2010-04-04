@@ -238,12 +238,18 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          PRUint32 state = aData->ContentState();
+          PRUint32 state = aData->GetContentStateForVisitedHandling(
+                                    ruleWalker->VisitedHandling(),
+                                    // If the node being matched is a link,
+                                    // it's the relevant link.
+                                    aData->IsLink());
           if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
             ruleWalker->Forward(mLinkRule);
+            ruleWalker->SetHaveRelevantLink();
           }
           else if (mVisitedRule && (state & NS_EVENT_STATE_VISITED)) {
             ruleWalker->Forward(mVisitedRule);
+            ruleWalker->SetHaveRelevantLink();
           }
 
           // No need to add to the active rule if it's not a link
@@ -488,42 +494,6 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsHTMLStyleSheet::GetLinkColor(nscolor& aColor)
-{
-  if (!mLinkRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mLinkRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetActiveLinkColor(nscolor& aColor)
-{
-  if (!mActiveRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mActiveRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetVisitedLinkColor(nscolor& aColor)
-{
-  if (!mVisitedRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mVisitedRule->mColor;
-    return NS_OK;
-  }
 }
 
 nsresult

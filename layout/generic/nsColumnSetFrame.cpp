@@ -279,10 +279,10 @@ nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
                    contentRect.y);
 
     nsRect lineRect(linePt, ruleSize);
-    nsCSSRendering::PaintBorder(presContext, *aCtx, this, aDirtyRect,
-                                lineRect, border, GetStyleContext(),
-                                // Remember, we only have the "left" "border". Skip everything else
-                                (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
+    nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
+        aDirtyRect, lineRect, border, GetStyleContext(),
+        // Remember, we only have the "left" "border". Skip everything else
+        (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
 
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();

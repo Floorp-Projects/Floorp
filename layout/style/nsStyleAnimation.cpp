@@ -927,7 +927,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 already_AddRefed<nsICSSStyleRule>
 BuildStyleRule(nsCSSProperty aProperty,
                nsIContent* aTargetElement,
-               const nsAString& aSpecifiedValue)
+               const nsAString& aSpecifiedValue,
+               PRBool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
   nsCSSDeclaration* declaration = new nsCSSDeclaration();
@@ -941,6 +942,10 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCOMPtr<nsIURI> baseURI = aTargetElement->GetBaseURI();
   nsCOMPtr<nsICSSStyleRule> styleRule;
   nsCSSParser parser(doc->CSSLoader());
+
+  if (aUseSVGMode) {
+    parser.SetSVGMode(PR_TRUE);
+  }
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
     nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;
@@ -989,24 +994,21 @@ LookupStyleContext(nsIContent* aElement)
  * If we fail to parse |aSpecifiedValue| for |aProperty|, this method will
  * return nsnull.
  *
- * NOTE: This method uses GetPrimaryShell() to access the style system,
- * so it should only be used for style that applies to all presentations,
- * rather than for style that only applies to a particular presentation.
- * XXX Once we get rid of multiple presentations, we can remove the above
- * note.
- *
  * @param aProperty       The property whose value we're customizing in the
  *                        custom style context.
  * @param aTargetElement  The element whose style context we'll use as a
  *                        sibling for our custom style context.
  * @param aSpecifiedValue The value for |aProperty| in our custom style
  *                        context.
+ * @param aUseSVGMode     A flag to indicate whether we should parse
+ *                        |aSpecifiedValue| in SVG mode.
  * @return The generated custom nsStyleContext, or nsnull on failure.
  */
 already_AddRefed<nsStyleContext>
 StyleWithDeclarationAdded(nsCSSProperty aProperty,
                           nsIContent* aTargetElement,
-                          const nsAString& aSpecifiedValue)
+                          const nsAString& aSpecifiedValue,
+                          PRBool aUseSVGMode)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
@@ -1021,7 +1023,7 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
 
   // Parse specified value into a temporary nsICSSStyleRule
   nsCOMPtr<nsICSSStyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue);
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
   if (!styleRule) {
     return nsnull;
   }
@@ -1032,17 +1034,14 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
   nsCOMArray<nsIStyleRule> ruleArray;
   ruleArray.AppendObject(styleRule);
   nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
-  return styleSet->ResolveStyleForRules(styleContext->GetParent(),
-                                        styleContext->GetPseudo(),
-                                        styleContext->GetPseudoType(),
-                                        styleContext->GetRuleNode(),
-                                        ruleArray);
+  return styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
 }
 
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                nsIContent* aTargetElement,
                                const nsAString& aSpecifiedValue,
+                               PRBool aUseSVGMode,
                                Value& aComputedValue)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
@@ -1051,7 +1050,8 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                     "are in a document");
 
   nsRefPtr<nsStyleContext> tmpStyleContext =
-    StyleWithDeclarationAdded(aProperty, aTargetElement, aSpecifiedValue);
+    StyleWithDeclarationAdded(aProperty, aTargetElement,
+                              aSpecifiedValue, aUseSVGMode);
   if (!tmpStyleContext) {
     return PR_FALSE;
   }
@@ -1361,6 +1361,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             static_cast<const nsStyleOutline*>(styleStruct);
           nscolor color;
         #ifdef GFX_HAS_INVERT
+          // This isn't right.  And note that outline drawing itself
+          // goes through this codepath via GetVisitedDependentColor.
           styleOutline->GetOutlineColor(color);
         #else
           if (!styleOutline->GetOutlineColor(color))

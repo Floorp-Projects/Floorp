@@ -1092,11 +1092,6 @@ protected:
   public:
     virtual ~nsDelayedEvent() {};
     virtual void Dispatch(PresShell* aShell) {}
-    // This is needed only by nsDelayedFocusBlur.
-    virtual PRBool Equals(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
-    {
-      return PR_FALSE;
-    }
   };
 
   class nsDelayedInputEvent : public nsDelayedEvent
@@ -1429,16 +1424,6 @@ void
 nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 {
   gVerifyReflowEnabled = aEnabled;
-}
-
-PRInt32
-nsIPresShell::GetVerifyReflowFlags()
-{
-#ifdef NS_DEBUG
-  return gVerifyReflowFlags;
-#else
-  return 0;
-#endif
 }
 
 /* virtual */ void
@@ -5584,14 +5569,14 @@ void PresShell::UpdateCanvasBackground()
   // cache of that color.
   nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
   if (rootFrame) {
-    const nsStyleBackground* bgStyle =
+    nsStyleContext* bgStyle =
       nsCSSRendering::FindRootFrameBackground(rootFrame);
     // XXX We should really be passing the canvasframe, not the root element
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
     mCanvasBackgroundColor =
-      nsCSSRendering::DetermineBackgroundColor(GetPresContext(), *bgStyle,
+      nsCSSRendering::DetermineBackgroundColor(GetPresContext(), bgStyle,
                                                rootFrame);
   }
 

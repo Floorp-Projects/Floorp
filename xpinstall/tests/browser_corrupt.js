@@ -10,8 +10,7 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
+  var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
@@ -26,9 +25,7 @@ function check_xpi_install(addon, status) {
 }
 
 function finish_test() {
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
-  pm.remove("example.com", "install");
+  Services.perms.remove("example.com", "install");
 
   var doc = gBrowser.contentDocument;
   is(doc.getElementById("status").textContent, "-207", "Callback should have seen the failure");
@@ -36,4 +33,3 @@ function finish_test() {
   gBrowser.removeCurrentTab();
   Harness.finish();
 }
-// ----------------------------------------------------------------------------

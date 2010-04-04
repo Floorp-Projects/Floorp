@@ -732,6 +732,11 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.lo = 1;
     number_constants[NC_MIN_VALUE].dval = u.d;
 
+#ifndef HAVE_LOCALECONV
+    rt->thousandsSeparator = JS_strdup(cx, "'");
+    rt->decimalSeparator = JS_strdup(cx, ".");
+    rt->numGrouping = JS_strdup(cx, "\3\0");
+#else
     struct lconv *locale = localeconv();
     rt->thousandsSeparator =
         JS_strdup(cx, locale->thousands_sep ? locale->thousands_sep : "'");
@@ -739,6 +744,7 @@ js_InitRuntimeNumberState(JSContext *cx)
         JS_strdup(cx, locale->decimal_point ? locale->decimal_point : ".");
     rt->numGrouping =
         JS_strdup(cx, locale->grouping ? locale->grouping : "\3\0");
+#endif
 
     return rt->thousandsSeparator && rt->decimalSeparator && rt->numGrouping;
 }

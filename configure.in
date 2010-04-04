@@ -759,6 +759,9 @@ EOF
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WS03, 0x05020000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_LONGHORN, 0x06000000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
+
+    STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
+    WRAP_STL_INCLUDES=1
     ;;
 esac
 
@@ -806,6 +809,9 @@ AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 AC_SUBST(INTEL_CC)
 AC_SUBST(INTEL_CXX)
+
+AC_SUBST(STL_FLAGS)
+AC_SUBST(WRAP_STL_INCLUDES)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -3126,6 +3132,8 @@ EOF
                 "$ac_cv_have_visibility_class_bug" = "no"; then
           VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
+          STL_FLAGS='-I$(DIST)/stl_wrappers'
+          WRAP_STL_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
         fi # have visibility pragma bug
@@ -4976,6 +4984,8 @@ cairo-qt)
     MOZ_WIDGET_TOOLKIT=qt
     MOZ_ENABLE_QT=1
     MOZ_ENABLE_XREMOTE=1
+    MOZ_WEBGL=1
+    MOZ_WEBGL_GLX=1
     USE_ELF_DYNSTR_GC=
     NS_PRINTING=
 
@@ -5084,10 +5094,10 @@ then
     [ QTDIR=$withval])
 
     if test -z "$QTDIR"; then
-        PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore)
+        PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
         AC_CHECK_PROGS(HOST_MOC, moc, "")
     else
-        MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtDBus -lQtXml"
+        MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtDBus -lQtXml -lQtOpenGL"
 
         MOZ_QT_CFLAGS="-DQT_SHARED"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include"
@@ -5473,9 +5483,6 @@ dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
 powerpc-apple-darwin*)
-    MOZ_IPC=
-    ;;
-i386-apple-darwin*)
     MOZ_IPC=
     ;;
 *-wince*)

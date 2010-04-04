@@ -108,7 +108,6 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsAutoPtr.h"
-#include "nsStyleSet.h"
 
 #include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
@@ -3006,7 +3005,7 @@ nsTextPaintStyle::EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackCo
 nscolor
 nsTextPaintStyle::GetTextColor()
 {
-  nscolor color = mFrame->GetStyleColor()->mColor;
+  nscolor color = mFrame->GetVisitedDependentColor(eCSSProperty_color);
   if (ShouldDarkenColors(mPresContext)) {
     color = DarkenColor(color);
   }
@@ -3093,11 +3092,11 @@ nsTextPaintStyle::InitCommonColors()
   nsStyleContext* bgContext =
     nsCSSRendering::FindNonTransparentBackground(sc);
   NS_ASSERTION(bgContext, "Cannot find NonTransparentBackground.");
-  const nsStyleBackground* bg = bgContext->GetStyleBackground();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
-  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
-                                           bg->mBackgroundColor);
+  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   if (bgContext->GetStyleDisplay()->mAppearance) {
     // Assume a native widget has sufficient contrast always
@@ -3167,9 +3166,9 @@ nsTextPaintStyle::InitSelectionColors()
                               mFrame->GetStyleContext());
     // Use -moz-selection pseudo class.
     if (sc) {
-      const nsStyleBackground* bg = sc->GetStyleBackground();
-      mSelectionBGColor = bg->mBackgroundColor;
-      mSelectionTextColor = sc->GetStyleColor()->mColor;
+      mSelectionBGColor =
+        sc->GetVisitedDependentColor(eCSSProperty_background_color);
+      mSelectionTextColor = sc->GetVisitedDependentColor(eCSSProperty_color);
       return PR_TRUE;
     }
   }
@@ -3199,8 +3198,8 @@ nsTextPaintStyle::InitSelectionColors()
 
   // On MacOS X, we don't exchange text color and BG color.
   if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
-    mSelectionTextColor = EnsureDifferentColors(mFrame->GetStyleColor()->mColor,
-                                                mSelectionBGColor);
+    nscoord frameColor = mFrame->GetVisitedDependentColor(eCSSProperty_color);
+    mSelectionTextColor = EnsureDifferentColors(frameColor, mSelectionBGColor);
   } else {
     EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
   }
@@ -4004,13 +4003,13 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
       // This handles the <a href="blah.html"><font color="green">La 
       // la la</font></a> case. The link underline should be green.
       useOverride = PR_TRUE;
-      overrideColor = context->GetStyleColor()->mColor;
+      overrideColor = context->GetVisitedDependentColor(eCSSProperty_color);
     }
 
     PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
     if (useDecorations) {// a decoration defined here
-      nscolor color = context->GetStyleColor()->mColor;
-  
+      nscolor color = context->GetVisitedDependentColor(eCSSProperty_color);
+
       if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
         decorations.mUnderColor = useOverride ? overrideColor : color;
         decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;

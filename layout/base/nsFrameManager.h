@@ -91,12 +91,6 @@ public:
    */
   NS_HIDDEN_(void) Destroy();
 
-  /*
-   * Get the canvas frame, searching from the root frame down.
-   * The canvas frame may or may not exist, so this may return null.
-   */
-  NS_HIDDEN_(nsIFrame*) GetCanvasFrame();
-
   // Placeholder frame functions
   NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame);
   NS_HIDDEN_(nsresult)
@@ -116,7 +110,6 @@ public:
   NS_HIDDEN_(void) ClearUndisplayedContentIn(nsIContent* aContent,
                                              nsIContent* aParentContent);
   NS_HIDDEN_(void) ClearAllUndisplayedContentIn(nsIContent* aParentContent);
-  NS_HIDDEN_(void) ClearUndisplayedContentMap();
 
   // Functions for manipulating the frame model
   NS_HIDDEN_(nsresult) AppendFrames(nsIFrame*       aParentFrame,

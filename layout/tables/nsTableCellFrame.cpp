@@ -1181,6 +1181,6 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   // of frame cannot be used for the root element
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
-                                        *GetStyleBackground(), myBorder,
+                                        GetStyleContext(), myBorder,
                                         aFlags, nsnull);
 }

@@ -2622,13 +2622,13 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 }
 
 NS_IMETHODIMP
-nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
+nsDocument::ElementFromPoint(float aX, float aY, nsIDOMElement** aReturn)
 {
   return ElementFromPointHelper(aX, aY, PR_FALSE, PR_TRUE, aReturn);
 }
 
 nsresult
-nsDocument::ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+nsDocument::ElementFromPointHelper(float aX, float aY,
                                    PRBool aIgnoreRootScrollFrame,
                                    PRBool aFlushLayout,
                                    nsIDOMElement** aReturn)

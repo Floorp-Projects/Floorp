@@ -273,7 +273,9 @@ nsGeolocationRequest::Allow()
     }
   }
 
-  if (lastPosition && maximumAge > 0 && ( (PR_Now() / PR_USEC_PER_MSEC ) - maximumAge <= cachedPositionTime) ) {
+  if (lastPosition && maximumAge > 0 &&
+      ( (PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
+        PRTime(cachedPositionTime) )) {
     // okay, we can return a cached position
     mAllowed = PR_TRUE;
     
@@ -922,7 +924,7 @@ NS_IMETHODIMP
 nsGeolocation::ClearWatch(PRInt32 aWatchId)
 {
   PRUint32 count = mWatchingCallbacks.Length();
-  if (aWatchId < 0 || count == 0 || aWatchId > count)
+  if (aWatchId < 0 || count == 0 || PRUint32(aWatchId) > count)
     return NS_OK;
 
   mWatchingCallbacks[aWatchId]->MarkCleared();
