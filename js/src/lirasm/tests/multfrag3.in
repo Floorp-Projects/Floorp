@@ -1,16 +1,16 @@
 ; See bug 541232 for why the params are commented out.
 .begin avg
-oneh = int 100          ; should be: p1 = param 0 0
-twoh = int 200          ; should be: p2 = param 1 0
-sum = add oneh twoh     ; should be: sum = add p1 p2
-one = int 1
-avg = rsh sum one
-ret avg
+oneh = imml 100         ; should be: p1 = paramp 0 0
+twoh = imml 200         ; should be: p2 = paramp 1 0
+sum = addl oneh twoh    ; should be: sum = addp p1 p2
+one = imml 1
+avg = rshl sum one
+retl avg
 .end
 
 .begin main
-oneh = int 100
-twoh = int 200
-res = icall avg fastcall twoh oneh
-ret res
+oneh = imml 100
+twoh = imml 200
+res = calll avg fastcall twoh oneh
+retl res
 .end

@@ -94,7 +94,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     uint32 length, lineno, nslots, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, i;
     uint32 prologLength, version;
-    JSTempValueRooter tvr;
     JSPrincipals *principals;
     uint32 encodeable;
     JSBool filenameWasSaved;
@@ -212,6 +211,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
 
+    AutoScriptRooter tvr(cx, NULL);
+
     if (xdr->mode == JSXDR_DECODE) {
         script = js_NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
                               nregexps, ntrynotes);
@@ -225,7 +226,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = script->notes();
         *scriptp = script;
-        JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
+        tvr.setScript(script);
     }
 
     /*
@@ -311,7 +312,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         JSObject **objp = &script->objects()->vector[i];
         uint32 isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
-            JSClass *clasp = STOBJ_GET_CLASS(*objp);
+            JSClass *clasp = (*objp)->getClass();
             JS_ASSERT(clasp == &js_FunctionClass ||
                       clasp == &js_BlockClass);
             isBlock = (clasp == &js_BlockClass) ? 1 : 0;
@@ -368,13 +369,10 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     }
 
     xdr->script = oldscript;
-    if (xdr->mode == JSXDR_DECODE)
-        JS_POP_TEMP_ROOT(cx, &tvr);
     return JS_TRUE;
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
-        JS_POP_TEMP_ROOT(cx, &tvr);
         if (script->filename && !filenameWasSaved) {
             cx->free((void *) script->filename);
             script->filename = NULL;
@@ -831,7 +829,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     script = (JSScript *) cx->malloc(size);
     if (!script)
         return NULL;
-    memset(script, 0, sizeof(JSScript));
+    PodZero(script);
     script->length = length;
     script->version = cx->version;
 
@@ -1006,7 +1004,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
 
-    filename = cg->compiler->tokenStream.filename;
+    filename = cg->compiler->tokenStream.getFilename();
     if (filename) {
         script->filename = js_SaveScriptFilename(cx, filename);
         if (!script->filename)
@@ -1014,8 +1012,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     }
     script->lineno = cg->firstLine;
     if (script->nfixed + cg->maxStackDepth >= JS_BIT(16)) {
-        js_ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR,
-                                    JSMSG_NEED_DIET, "script");
+        ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_NEED_DIET, "script");
         goto bad;
     }
     script->nslots = script->nfixed + cg->maxStackDepth;
@@ -1139,10 +1136,10 @@ js_DestroyScript(JSContext *cx, JSScript *script)
      * regenerating shapes, so we don't have to purge fragments if the GC is
      * currently running.
      *
-     * JS_THREADSAFE note: js_PurgePropertyCacheForScript purges only the
-     * current thread's property cache, so a script not owned by a function
-     * or object, which hands off lifetime management for that script to the
-     * GC, must be used by only one thread over its lifetime.
+     * JS_THREADSAFE note: The code below purges only the current thread's
+     * property cache, so a script not owned by a function or object, which
+     * hands off lifetime management for that script to the GC, must be used by
+     * only one thread over its lifetime.
      *
      * This should be an API-compatible change, since a script is never safe
      * against premature GC if shared among threads without a rooted object
@@ -1158,7 +1155,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
         if (!(fp && (fp->flags & JSFRAME_EVAL))) {
-            js_PurgePropertyCacheForScript(cx, script);
+            JS_PROPERTY_CACHE(cx).purgeForScript(script);
 
 #ifdef CHECK_SCRIPT_OWNER
             JS_ASSERT(script->owner == cx->thread);

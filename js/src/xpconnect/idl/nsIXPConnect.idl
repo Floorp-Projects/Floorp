@@ -65,6 +65,7 @@
 [ptr] native JSClassPtr(JSClass);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(jsval);
+      native JSPropertyOp(JSPropertyOp);
       native JSEqualityOp(JSEqualityOp);
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
@@ -396,7 +397,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(96540596-c21e-4183-bb47-f6a5c1ad2dba)]
+[uuid(0332b12a-8103-4601-aed3-b9933a0d9441)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -868,5 +869,5 @@ interface nsIXPConnect : nsISupports
 #endif
 %}
 
-    [notxpcom] JSClassPtr getNativeWrapperClass();
+    [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
 };

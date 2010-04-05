@@ -1,7 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
+/* vim: set ts=40 sw=4 et tw=99: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,16 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is the Mozilla SpiderMonkey property tree implementation
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ *   Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2002-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Igor Bukanov <igor@mir2.org>
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,18 +37,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsinterpinlines_h___
-#define jsinterpinlines_h___
+#ifndef jspropertytree_h___
+#define jspropertytree_h___
 
-#include "jsinterp.h"
-#include "jslock.h"
-#include "jsscope.h"
+#include "jsarena.h"
+#include "jsdhash.h"
+#include "jsprvtd.h"
 
-inline bool
-js_MatchPropertyCacheShape(JSContext *cx, JSObject *obj, uint32 shape)
+struct JSScope;
+
+namespace js {
+
+JSDHashOperator RemoveNodeIfDead(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                 uint32 number, void *arg);
+
+void SweepScopeProperties(JSContext *cx);
+
+class PropertyTree
 {
-    return CX_OWNS_OBJECT_TITLE(cx, obj) && OBJ_SHAPE(obj) == shape;
-}
+    friend struct ::JSScope;
+    friend void js::SweepScopeProperties(JSContext *cx);
 
+    JSDHashTable        hash;
+    JSScopeProperty     *freeList;
+    JSArenaPool         arenaPool;
+    uint32              emptyShapeChanges;
 
-#endif /* jsinterpinlines_h___ */
+    bool insertChild(JSContext *cx, JSScopeProperty *parent, JSScopeProperty *child);
+    void removeChild(JSContext *cx, JSScopeProperty *child);
+    void emptyShapeChange(uint32 oldEmptyShape, uint32 newEmptyShape);
+
+  public:
+    bool init();
+    void finish();
+
+    JSScopeProperty *newScopeProperty(JSContext *cx, bool gcLocked = false);
+
+    JSScopeProperty *getChild(JSContext *cx, JSScopeProperty *parent, uint32 shape,
+                              const JSScopeProperty &child);
+};
+
+} /* namespace js */
+
+#endif /* jspropertytree_h___ */

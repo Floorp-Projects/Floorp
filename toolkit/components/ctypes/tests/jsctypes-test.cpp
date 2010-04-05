@@ -113,7 +113,7 @@ get_##name##_stats(size_t* align, size_t* size, size_t* nalign, size_t* nsize, \
   offsets[2] = offsetof(nested_##name, c);                                     \
 }
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 #if defined(_WIN32) && !defined(__WIN64)
 
@@ -156,7 +156,7 @@ sum_many_##name##_stdcall(                                                     \
   return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r;\
 }
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 void NS_STDCALL
 test_void_t_stdcall()

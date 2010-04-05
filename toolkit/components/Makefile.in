@@ -69,6 +69,12 @@ PARALLEL_DIRS += \
   viewconfig \
   $(NULL)
 
+ifdef BUILD_CTYPES
+PARALLEL_DIRS += \
+  ctypes \
+  $(NULL)
+endif
+
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 TOOL_DIRS += alerts
 else

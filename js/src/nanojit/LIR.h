@@ -60,18 +60,228 @@ namespace nanojit
 #  define PTR_SIZE(a,b)  a
 #endif
 
-        // pointer op aliases
-        LIR_ldp     = PTR_SIZE(LIR_ld,     LIR_ldq),
+        // Pointer-sized synonyms.
+
+        LIR_paramp  = PTR_SIZE(LIR_paraml, LIR_paramq),
+
+        LIR_allocp  = PTR_SIZE(LIR_allocl, LIR_allocq),
+
+        LIR_retp    = PTR_SIZE(LIR_retl,   LIR_retq),
+
+        LIR_livep   = PTR_SIZE(LIR_livel,  LIR_liveq),
+
+        LIR_ldp     = PTR_SIZE(LIR_ldl,    LIR_ldq),
+
+        LIR_stp     = PTR_SIZE(LIR_stl,    LIR_stq),
+
+        LIR_callp   = PTR_SIZE(LIR_calll,  LIR_callq),
+
+        LIR_eqp     = PTR_SIZE(LIR_eql,    LIR_eqq),
+        LIR_ltp     = PTR_SIZE(LIR_ltl,    LIR_ltq),
+        LIR_gtp     = PTR_SIZE(LIR_gtl,    LIR_gtq),
+        LIR_lep     = PTR_SIZE(LIR_lel,    LIR_leq),
+        LIR_gep     = PTR_SIZE(LIR_gel,    LIR_geq),
+        LIR_ltup    = PTR_SIZE(LIR_ltul,   LIR_ltuq),
+        LIR_gtup    = PTR_SIZE(LIR_gtul,   LIR_gtuq),
+        LIR_leup    = PTR_SIZE(LIR_leul,   LIR_leuq),
+        LIR_geup    = PTR_SIZE(LIR_geul,   LIR_geuq),
+
+        LIR_addp    = PTR_SIZE(LIR_addl,   LIR_addq),
+
+        LIR_andp    = PTR_SIZE(LIR_andl,   LIR_andq),
+        LIR_orp     = PTR_SIZE(LIR_orl,    LIR_orq),
+        LIR_xorp    = PTR_SIZE(LIR_xorl,   LIR_xorq),
+
+        LIR_lshp    = PTR_SIZE(LIR_lshl,   LIR_lshq),
+        LIR_rshp    = PTR_SIZE(LIR_rshl,   LIR_rshq),
+        LIR_rshup   = PTR_SIZE(LIR_rshul,  LIR_rshuq),
+
+        LIR_cmovp   = PTR_SIZE(LIR_cmovl,  LIR_cmovq),
+
+        // XXX: temporary synonyms for old opcode names and old pointer-sized
+        // synonyms, for the Great Opcode Renaming transition period (bug
+        // 504506).  Those in comments have not changed and so don't need a
+        // temporary synonym.
+
+        // LIR_start
+
+        // LIR_regfence
+
+        // LIR_skip
+
+#ifndef NANOJIT_64BIT
+        LIR_iparam  = LIR_paraml,
+#else
+        LIR_qparam  = LIR_paramq,
+#endif
+
+#ifndef NANOJIT_64BIT
+        LIR_ialloc  = LIR_allocl,
+#else
+        LIR_qalloc  = LIR_allocq,
+#endif
+
+        LIR_ret     = LIR_retl,
+#ifdef NANOJIT_64BIT
+        LIR_qret    = LIR_retq,
+#endif
+        LIR_fret    = LIR_retd,
+
+        LIR_live    = LIR_livel,
+#ifdef NANOJIT_64BIT
+        LIR_qlive   = LIR_liveq,
+#endif
+        LIR_flive   = LIR_lived,
+
+        // file
+        // line
+
+        LIR_ldsb    = LIR_ldb2l,
+        LIR_ldss    = LIR_ldw2l,
+        LIR_ldzb    = LIR_ldub2ul,
+        LIR_ldzs    = LIR_lduw2ul,
+        LIR_ld      = LIR_ldl,
+        // LIR_ldq
+        LIR_ldf     = LIR_ldd,
+        LIR_ld32f   = LIR_lds2d,
+
+        // LIR_stb
+        LIR_sts     = LIR_stw,
+        LIR_sti     = LIR_stl,
+#ifdef NANOJIT_64BIT
+        LIR_stqi    = LIR_stq,
+#endif
+        LIR_stfi    = LIR_std,
+        LIR_st32f   = LIR_std2s,
+
+        LIR_icall   = LIR_calll,
+#ifdef NANOJIT_64BIT
+        LIR_qcall   = LIR_callq,
+#endif
+        LIR_fcall   = LIR_calld,
+
+        // LIR_j
+        // LIR_jt
+        // LIR_jf
+        // LIR_jtbl
+
+        // LIR_label   = LIR_label
+
+        // LIR_x
+        // LIR_xt
+        // LIR_xf
+        // LIR_xtbl
+        // LIR_xbarrier
+
+        LIR_int     = LIR_imml,
+#ifdef NANOJIT_64BIT
+        LIR_quad    = LIR_immq,
+#endif
+        LIR_float   = LIR_immd,
+
+        LIR_eq      = LIR_eql,
+        LIR_lt      = LIR_ltl,
+        LIR_gt      = LIR_gtl,
+        LIR_le      = LIR_lel,
+        LIR_ge      = LIR_gel,
+        LIR_ult     = LIR_ltul,
+        LIR_ugt     = LIR_gtul,
+        LIR_ule     = LIR_leul,
+        LIR_uge     = LIR_geul,
+
+#ifdef NANOJIT_64BIT
+        LIR_qeq     = LIR_eqq,
+        LIR_qlt     = LIR_ltq,
+        LIR_qgt     = LIR_gtq,
+        LIR_qle     = LIR_leq,
+        LIR_qge     = LIR_geq,
+        LIR_qult    = LIR_ltuq,
+        LIR_qugt    = LIR_gtuq,
+        LIR_qule    = LIR_leuq,
+        LIR_quge    = LIR_geuq,
+#endif
+
+        LIR_feq     = LIR_eqd,
+        LIR_flt     = LIR_ltd,
+        LIR_fgt     = LIR_gtd,
+        LIR_fle     = LIR_led,
+        LIR_fge     = LIR_ged,
+
+        LIR_neg     = LIR_negl,
+        LIR_add     = LIR_addl,
+        LIR_sub     = LIR_subl,
+        LIR_mul     = LIR_mull,
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+        LIR_div     = LIR_divl,
+        LIR_mod     = LIR_modl,
+#endif
+
+        LIR_not     = LIR_notl,
+        LIR_and     = LIR_andl,
+        LIR_or      = LIR_orl,
+        LIR_xor     = LIR_xorl,
+
+        LIR_lsh     = LIR_lshl,
+        LIR_rsh     = LIR_rshl,
+        LIR_ush     = LIR_rshul,
+
+#ifdef NANOJIT_64BIT
+        LIR_qiadd   = LIR_addq,
+
+        LIR_qiand   = LIR_andq,
+        LIR_qior    = LIR_orq,
+        LIR_qxor    = LIR_xorq,
+
+        LIR_qilsh   = LIR_lshq,
+        LIR_qirsh   = LIR_rshq,
+        LIR_qursh   = LIR_rshuq,
+#endif
+
+        LIR_fneg    = LIR_negd,
+        LIR_fadd    = LIR_addd,
+        LIR_fsub    = LIR_subd,
+        LIR_fmul    = LIR_muld,
+        LIR_fdiv    = LIR_divd,
+        LIR_fmod    = LIR_modd,
+
+        LIR_cmov    = LIR_cmovl,
+#ifdef NANOJIT_64BIT
+        LIR_qcmov   = LIR_cmovq,
+#endif
+
+#ifdef NANOJIT_64BIT
+        LIR_i2q     = LIR_l2q,
+        LIR_u2q     = LIR_ul2uq,
+        LIR_q2i     = LIR_q2l,
+#endif
+
+        LIR_i2f     = LIR_l2d,
+        LIR_u2f     = LIR_ul2d,
+        LIR_f2i     = LIR_d2l,
+
+        LIR_addxov  = LIR_addxovl,
+        LIR_subxov  = LIR_subxovl,
+        LIR_mulxov  = LIR_mulxovl,
+
+#if NJ_SOFTFLOAT_SUPPORTED
+        LIR_qlo     = LIR_dlo2l,
+        LIR_qhi     = LIR_dhi2l,
+        LIR_qjoin   = LIR_ll2d,
+        LIR_callh   = LIR_hcalll,
+#endif
+
+        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
+
+        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
+
+        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret),
+
+        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
+
         LIR_stpi    = PTR_SIZE(LIR_sti,    LIR_stqi),
-        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
-        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
-        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
-        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
-        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
-        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov),
-        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
-        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
-        LIR_addp    = PTR_SIZE(LIR_iaddp,  LIR_qaddp),
+
+        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
+
         LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
         LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
         LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
@@ -81,11 +291,17 @@ namespace nanojit
         LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
         LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
         LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
-        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
-        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
-        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
-        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret)
+        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
+
+        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
+        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
+        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
+
+        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
+        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
+        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
+
+        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov)
     };
 
     // 32-bit integer comparisons must be contiguous, as must 64-bit integer
@@ -124,14 +340,14 @@ namespace nanojit
     NanoStaticAssert((LIR_le^1)  == LIR_ge  && (LIR_ge^1)  == LIR_le);
     NanoStaticAssert((LIR_ult^1) == LIR_ugt && (LIR_ugt^1) == LIR_ult);
     NanoStaticAssert((LIR_ule^1) == LIR_uge && (LIR_uge^1) == LIR_ule);
-    
+
 #ifdef NANOJIT_64BIT
     NanoStaticAssert((LIR_qlt^1)  == LIR_qgt  && (LIR_qgt^1)  == LIR_qlt);
     NanoStaticAssert((LIR_qle^1)  == LIR_qge  && (LIR_qge^1)  == LIR_qle);
     NanoStaticAssert((LIR_qult^1) == LIR_qugt && (LIR_qugt^1) == LIR_qult);
     NanoStaticAssert((LIR_qule^1) == LIR_quge && (LIR_quge^1) == LIR_qule);
 #endif
-    
+
     NanoStaticAssert((LIR_flt^1) == LIR_fgt && (LIR_fgt^1) == LIR_flt);
     NanoStaticAssert((LIR_fle^1) == LIR_fge && (LIR_fge^1) == LIR_fle);
 
@@ -146,24 +362,25 @@ namespace nanojit
         ABI_CDECL
     };
 
-    enum ArgSize {
-        ARGSIZE_NONE = 0,
-        ARGSIZE_F = 1,      // double (64bit)
-        ARGSIZE_I = 2,      // int32_t
+    // All values must fit into three bits.  See CallInfo for details.
+    enum ArgType {
+        ARGTYPE_V = 0,      // void
+        ARGTYPE_F = 1,      // double (64bit)
+        ARGTYPE_I = 2,      // int32_t
+        ARGTYPE_U = 3,      // uint32_t
 #ifdef NANOJIT_64BIT
-        ARGSIZE_Q = 3,      // uint64_t
+        ARGTYPE_Q = 4,      // uint64_t
 #endif
-        ARGSIZE_U = 6,      // uint32_t
-        ARGSIZE_MASK_ANY = 7,
-        ARGSIZE_MASK_INT = 2,
-        ARGSIZE_SHIFT = 3,
 
         // aliases
-        ARGSIZE_P = PTR_SIZE(ARGSIZE_I, ARGSIZE_Q), // pointer
-        ARGSIZE_LO = ARGSIZE_I, // int32_t
-        ARGSIZE_B = ARGSIZE_I, // bool
-        ARGSIZE_V = ARGSIZE_NONE  // void
+        ARGTYPE_P = PTR_SIZE(ARGTYPE_I, ARGTYPE_Q), // pointer
+        ARGTYPE_LO = ARGTYPE_I, // int32_t
+        ARGTYPE_B = ARGTYPE_I   // bool
     };
+
+    // In _typesig, each entry is three bits.
+    static const int ARGTYPE_SHIFT = 3;
+    static const int ARGTYPE_MASK = 0x7;
 
     enum IndirectCall {
         CALL_INDIRECT = 0
@@ -209,7 +426,10 @@ namespace nanojit
     //   A load from a READONLY region will never alias with any stores.
     //
     // - STACK: the stack.  Stack loads/stores can usually be easily
-    //   identified because they use SP as the stack pointer.
+    //   identified because they use SP as the base pointer.
+    //
+    // - RSTACK: the return stack.  Return stack loads/stores can usually be
+    //   easily identified because they use RP as the base pointer.
     //
     // - OTHER: all other regions of memory.
     //
@@ -228,7 +448,7 @@ namespace nanojit
     // -------------------------------------------
     // The LIR generator must mark each load/store with an "access region
     // set", which is a set of one or more access regions.  This indicates
-    // which parts of LIR-accessible memory the load/store may touch.  
+    // which parts of LIR-accessible memory the load/store may touch.
     //
     // The LIR generator must also mark each function called from LIR with an
     // access region set for memory stored to by the function.  (We could also
@@ -258,6 +478,14 @@ namespace nanojit
     //   true for the store set of a function.)
     //
     // Such imprecision is safe but may reduce optimisation opportunities.
+    //
+    // Optimisations that use access region info
+    // -----------------------------------------
+    // Currently only CseFilter uses this, and only for determining whether
+    // loads can be CSE'd.  Note that CseFilter treats loads that are marked
+    // with a single access region precisely, but all loads marked with
+    // multiple access regions get lumped together.  So if you can't mark a
+    // load with a single access region, you might as well use ACC_LOAD_ANY.
     //-----------------------------------------------------------------------
 
     // An access region set is represented as a bitset.  Nb: this restricts us
@@ -266,11 +494,13 @@ namespace nanojit
 
     // The access regions.  Note that because of the bitset representation
     // these constants are also valid (singleton) AccSet values.  If you add
-    // new ones please update ACC_ALL_WRITABLE and LirNameMap::formatAccSet().
+    // new ones please update ACC_ALL_STORABLE and formatAccSet() and
+    // CseFilter.
     //
     static const AccSet ACC_READONLY = 1 << 0;      // 0000_0001b
     static const AccSet ACC_STACK    = 1 << 1;      // 0000_0010b
-    static const AccSet ACC_OTHER    = 1 << 2;      // 0000_0100b
+    static const AccSet ACC_RSTACK   = 1 << 2;      // 0000_0100b
+    static const AccSet ACC_OTHER    = 1 << 3;      // 0000_1000b
 
     // Some common (non-singleton) access region sets.  ACC_NONE does not make
     // sense for loads or stores (which must access at least one region), it
@@ -278,50 +508,39 @@ namespace nanojit
     //
     // A convention that's worth using:  use ACC_LOAD_ANY/ACC_STORE_ANY for
     // cases that you're unsure about or haven't considered carefully.  Use
-    // ACC_ALL/ACC_ALL_WRITABLE for cases that you have considered carefully.
+    // ACC_ALL/ACC_ALL_STORABLE for cases that you have considered carefully.
     // That way it's easy to tell which ones have been considered and which
     // haven't.
     static const AccSet ACC_NONE         = 0x0;
-    static const AccSet ACC_ALL_WRITABLE = ACC_STACK | ACC_OTHER;
-    static const AccSet ACC_ALL          = ACC_READONLY | ACC_ALL_WRITABLE;
+    static const AccSet ACC_ALL_STORABLE = ACC_STACK | ACC_RSTACK | ACC_OTHER;
+    static const AccSet ACC_ALL          = ACC_READONLY | ACC_ALL_STORABLE;
     static const AccSet ACC_LOAD_ANY     = ACC_ALL;            // synonym
-    static const AccSet ACC_STORE_ANY    = ACC_ALL_WRITABLE;   // synonym
-
+    static const AccSet ACC_STORE_ANY    = ACC_ALL_STORABLE;   // synonym
 
     struct CallInfo
     {
+    private:
+
+    public:
         uintptr_t   _address;
-        uint32_t    _argtypes:27;    // 9 3-bit fields indicating arg type, by ARGSIZE above (including ret type): a1 a2 a3 a4 a5 ret
+        uint32_t    _typesig:27;     // 9 3-bit fields indicating arg type, by ARGTYPE above (including ret type): a1 a2 a3 a4 a5 ret
         AbiKind     _abi:3;
         uint8_t     _isPure:1;      // _isPure=1 means no side-effects, result only depends on args
         AccSet      _storeAccSet;   // access regions stored by the function
         verbose_only ( const char* _name; )
 
-        uint32_t _count_args(uint32_t mask) const;
+        uint32_t count_args() const;
+        uint32_t count_int32_args() const;
         // Nb: uses right-to-left order, eg. sizes[0] is the size of the right-most arg.
-        uint32_t get_sizes(ArgSize* sizes) const;
+        uint32_t getArgTypes(ArgType* types) const;
 
-        inline ArgSize returnType() const {
-            return ArgSize(_argtypes & ARGSIZE_MASK_ANY);
-        }
-
-        // Note that this indexes arguments *backwards*, that is to
-        // get the Nth arg, you have to ask for index (numargs - N).
-        // See mozilla bug 525815 for fixing this.
-        inline ArgSize argType(uint32_t arg) const {
-            return ArgSize((_argtypes >> (ARGSIZE_SHIFT * (arg+1))) & ARGSIZE_MASK_ANY);
+        inline ArgType returnType() const {
+            return ArgType(_typesig & ARGTYPE_MASK);
         }
 
         inline bool isIndirect() const {
             return _address < 256;
         }
-        inline uint32_t count_args() const {
-            return _count_args(ARGSIZE_MASK_ANY);
-        }
-        inline uint32_t count_iargs() const {
-            return _count_args(ARGSIZE_MASK_INT);
-        }
-        // fargs = args - iargs
     };
 
     /*
@@ -345,14 +564,14 @@ namespace nanojit
         return isCses[op] == 1;
     }
     inline bool isRetOpcode(LOpcode op) {
-        return 
+        return
 #if defined NANOJIT_64BIT
             op == LIR_qret ||
 #endif
             op == LIR_ret || op == LIR_fret;
     }
     inline bool isCmovOpcode(LOpcode op) {
-        return 
+        return
 #if defined NANOJIT_64BIT
             op == LIR_qcmov ||
 #endif
@@ -408,14 +627,14 @@ namespace nanojit
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_pcall;
         switch (ci->returnType()) {
-        case ARGSIZE_NONE:  op = LIR_pcall; break;
-        case ARGSIZE_I:
-        case ARGSIZE_U:     op = LIR_icall; break;
-        case ARGSIZE_F:     op = LIR_fcall; break;
+        case ARGTYPE_V: op = LIR_pcall; break;
+        case ARGTYPE_I:
+        case ARGTYPE_U: op = LIR_icall; break;
+        case ARGTYPE_F: op = LIR_fcall; break;
 #ifdef NANOJIT_64BIT
-        case ARGSIZE_Q:     op = LIR_qcall; break;
+        case ARGTYPE_Q: op = LIR_qcall; break;
 #endif
-        default:            NanoAssert(0);  break;
+        default:        NanoAssert(0);  break;
         }
         return op;
     }
@@ -424,6 +643,8 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
     LOpcode i32cmp_to_i64cmp(LOpcode op);
 #endif
+    LOpcode f64cmp_to_i32cmp(LOpcode op);
+    LOpcode f64cmp_to_u32cmp(LOpcode op);
 
     // Array holding the 'repKind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];
@@ -683,7 +904,7 @@ namespace nanojit
 
         // For loads/stores.
         inline int32_t  disp() const;
-        inline int32_t  accSet() const;
+        inline AccSet   accSet() const;
 
         // For LInsSk.
         inline LIns*    prevLIns() const;
@@ -814,24 +1035,22 @@ namespace nanojit
                    isop(LIR_xbarrier) || isop(LIR_xtbl) ||
                    isop(LIR_addxov) || isop(LIR_subxov) || isop(LIR_mulxov);
         }
-        // True if the instruction is a 32-bit or smaller constant integer.
+        // True if the instruction is a 32-bit integer immediate.
         bool isconst() const {
             return isop(LIR_int);
         }
-        // True if the instruction is a 32-bit or smaller constant integer and
-        // has the value val when treated as a 32-bit signed integer.
+        // True if the instruction is a 32-bit integer immediate and
+        // has the value 'val' when treated as a 32-bit signed integer.
         bool isconstval(int32_t val) const {
             return isconst() && imm32()==val;
         }
-        // True if the instruction is a constant quad value.
-        bool isconstq() const {
-            return
 #ifdef NANOJIT_64BIT
-                isop(LIR_quad) || 
-#endif
-                isop(LIR_float);
+        // True if the instruction is a 64-bit integer immediate.
+        bool isconstq() const {
+            return isop(LIR_quad);
         }
-        // True if the instruction is a constant pointer value.
+#endif
+        // True if the instruction is a pointer-sized integer immediate.
         bool isconstp() const
         {
 #ifdef NANOJIT_64BIT
@@ -840,9 +1059,21 @@ namespace nanojit
             return isconst();
 #endif
         }
-        // True if the instruction is a constant float value.
+        // True if the instruction is a 64-bit float immediate.
         bool isconstf() const {
             return isop(LIR_float);
+        }
+        // True if the instruction is a 64-bit integer or float immediate.
+        bool isconstqf() const {
+            return
+#ifdef NANOJIT_64BIT
+                isconstq() ||
+#endif
+                isconstf();
+        }
+        // True if the instruction an any type of immediate.
+        bool isImmAny() const {
+            return isconst() || isconstqf();
         }
 
         bool isBranch() const {
@@ -867,9 +1098,9 @@ namespace nanojit
             return retType() == LTy_F64;
         }
         bool isN64() const {
-            return 
+            return
 #ifdef NANOJIT_64BIT
-                isI64() ||       
+                isI64() ||
 #endif
                 isF64();
         }
@@ -888,7 +1119,7 @@ namespace nanojit
         // Note, this assumes that loads will never fault and hence cannot
         // affect the control flow.
         bool isStmt() {
-            NanoAssert(!isop(LIR_start) && !isop(LIR_skip));
+            NanoAssert(!isop(LIR_skip));
             // All instructions with Void retType are statements, as are calls
             // to impure functions.
             if (isCall())
@@ -1163,7 +1394,8 @@ namespace nanojit
         clearArIndex();
         lastWord.opcode = opcode;
         toLInsLd()->oprnd_1 = val;
-        toLInsLd()->disp = d;
+        NanoAssert(d == int16_t(d));
+        toLInsLd()->disp = int16_t(d);
         toLInsLd()->accSet = accSet;
         NanoAssert(isLInsLd());
     }
@@ -1173,7 +1405,8 @@ namespace nanojit
         lastWord.opcode = opcode;
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
-        toLInsSti()->disp = d;
+        NanoAssert(d == int16_t(d));
+        toLInsSti()->disp = int16_t(d);
         toLInsSti()->accSet = accSet;
         NanoAssert(isLInsSti());
     }
@@ -1293,7 +1526,7 @@ namespace nanojit
         }
     }
 
-    int32_t LIns::accSet() const {
+    AccSet LIns::accSet() const {
         if (isLInsSti()) {
             return toLInsSti()->accSet;
         } else {
@@ -1312,13 +1545,14 @@ namespace nanojit
 
     inline int32_t LIns::imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
 
-    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstq()); return toLInsN64()->imm64_0; }
-    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstq()); return toLInsN64()->imm64_1; }
+    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_0; }
+    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_1; }
     uint64_t       LIns::imm64()     const {
-        NanoAssert(isconstq());
+        NanoAssert(isconstqf());
         return (uint64_t(toLInsN64()->imm64_1) << 32) | uint32_t(toLInsN64()->imm64_0);
     }
     double         LIns::imm64f()    const {
+        NanoAssert(isconstf());
         union {
             double f;
             uint64_t q;
@@ -1439,71 +1673,91 @@ namespace nanojit
         LIns* ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
 
         // Inserts an integer comparison to 0
-        LIns* ins_eq0(LIns* oprnd1);
+        LIns* ins_eq0(LIns* oprnd1) {
+            return ins2i(LIR_eq, oprnd1, 0);
+        }
 
         // Inserts a pointer comparison to 0
-        LIns* ins_peq0(LIns* oprnd1);
+        LIns* ins_peq0(LIns* oprnd1) {
+            return ins2(LIR_peq, oprnd1, insImmWord(0));
+        }
 
         // Inserts a binary operation where the second operand is an
         // integer immediate.
-        LIns* ins2i(LOpcode op, LIns *oprnd1, int32_t);
+        LIns* ins2i(LOpcode v, LIns* oprnd1, int32_t imm) {
+            return ins2(v, oprnd1, insImm(imm));
+        }
 
 #if NJ_SOFTFLOAT_SUPPORTED
-        LIns* qjoin(LInsp lo, LInsp hi);
+        LIns* qjoin(LInsp lo, LInsp hi) {
+            return ins2(LIR_qjoin, lo, hi);
+        }
 #endif
-        LIns* insImmPtr(const void *ptr);
-        LIns* insImmWord(intptr_t ptr);
+        LIns* insImmPtr(const void *ptr) {
+#ifdef NANOJIT_64BIT
+            return insImmq((uint64_t)ptr);
+#else
+            return insImm((int32_t)ptr);
+#endif
+        }
 
-        // Sign or zero extend integers to native integers. On 32-bit this is a no-op.
-        LIns* ins_i2p(LIns* intIns);
-        LIns* ins_u2p(LIns* uintIns);
+        LIns* insImmWord(intptr_t value) {
+#ifdef NANOJIT_64BIT
+            return insImmq(value);
+#else
+            return insImm(value);
+#endif
+        }
+
+        // Sign-extend integers to native integers. On 32-bit this is a no-op.
+        LIns* ins_i2p(LIns* intIns) {
+#ifdef NANOJIT_64BIT
+            return ins1(LIR_i2q, intIns);
+#else
+            return intIns;
+#endif
+        }
+
+        // Zero-extend integers to native integers. On 32-bit this is a no-op.
+        LIns* ins_u2p(LIns* uintIns) {
+    #ifdef NANOJIT_64BIT
+            return ins1(LIR_u2q, uintIns);
+    #else
+            return uintIns;
+    #endif
+        }
 
         // Chooses LIR_sti or LIR_stqi based on size of value.
         LIns* insStorei(LIns* value, LIns* base, int32_t d, AccSet accSet);
-
-        // Insert a load/store with the most pessimistic region access info, which is always safe.
-        LIns* insLoad(LOpcode op, LIns* base, int32_t d) {
-            return insLoad(op, base, d, ACC_LOAD_ANY);
-        }
-        LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d) {
-            return insStore(op, value, base, d, ACC_STORE_ANY);
-        }
-        LIns* insStorei(LIns* value, LIns* base, int32_t d) {
-            return insStorei(value, base, d, ACC_STORE_ANY);
-        }
     };
 
 
 #ifdef NJ_VERBOSE
     extern const char* lirNames[];
 
-    /**
-     * map address ranges to meaningful names.
-     */
-    class LabelMap
+    // Maps address ranges to meaningful names.
+    class AddrNameMap
     {
         Allocator& allocator;
         class Entry
         {
         public:
             Entry(int) : name(0), size(0), align(0) {}
-            Entry(char *n, size_t s, size_t a) : name(n),size(s),align(a) {}
+            Entry(char *n, size_t s, size_t a) : name(n), size(s), align(a) {}
             char* name;
             size_t size:29, align:3;
         };
-        TreeMap<const void*, Entry*> names;
-        LogControl *logc;
-        char buf[5000], *end;
-        void formatAddr(const void *p, char *buf);
+        TreeMap<const void*, Entry*> names;     // maps code regions to names
     public:
-        LabelMap(Allocator& allocator, LogControl* logc);
-        void add(const void *p, size_t size, size_t align, const char *name);
-        const char *dup(const char *);
-        const char *format(const void *p);
+        AddrNameMap(Allocator& allocator);
+        void addAddrRange(const void *p, size_t size, size_t align, const char *name);
+        void lookupAddr(void *p, char*& name, int32_t& offset);
     };
 
+    // Maps LIR instructions to meaningful names.
     class LirNameMap
     {
+    private:
         Allocator& alloc;
 
         template <class Key>
@@ -1519,8 +1773,12 @@ namespace nanojit
                 return c;
             }
         };
+
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
+        CountMap<const char *> namecounts;
+
+        void addNameWithSuffix(LInsp i, const char *s, int suffix, bool ignoreOneSuffix);
 
         class Entry
         {
@@ -1529,41 +1787,77 @@ namespace nanojit
             Entry(char* n) : name(n) {}
             char* name;
         };
+
         HashMap<LInsp, Entry*> names;
-        void formatImm(int32_t c, char *buf);
-        void formatImmq(uint64_t c, char *buf);
 
     public:
-        LabelMap *labels;
-        LirNameMap(Allocator& alloc, LabelMap *lm)
+        LirNameMap(Allocator& alloc)
             : alloc(alloc),
             lircounts(alloc),
             funccounts(alloc),
-            names(alloc),
-            labels(lm)
+            namecounts(alloc),
+            names(alloc)
         {}
 
-        void addName(LInsp i, const char *s);
-        void copyName(LInsp i, const char *s, int suffix);
-        char* formatAccSet(LInsp ins, bool isLoad, char* buf);
-        const char *formatRef(LIns *ref);
-        const char *formatIns(LInsp i);
-        void formatGuard(LInsp i, char *buf);
-        void formatGuardXov(LInsp i, char *buf);
+        void        addName(LInsp ins, const char *s);  // gives 'ins' a special name
+        const char* createName(LInsp ins);              // gives 'ins' a generic name
+        const char* lookupName(LInsp ins);
+    };
+
+    // We use big buffers for cases where we need to fit a whole instruction,
+    // and smaller buffers for all the others.  These should easily be long
+    // enough, but for safety the formatXyz() functions check and won't exceed
+    // those limits.
+    class InsBuf {
+    public:
+        static const size_t len = 1000;
+        char buf[len];
+    };
+    class RefBuf {
+    public:
+        static const size_t len = 200;
+        char buf[len];
+    };
+
+    class LInsPrinter
+    {
+    private:
+        Allocator& alloc;
+
+        void formatImm(RefBuf* buf, int32_t c);
+        void formatImmq(RefBuf* buf, uint64_t c);
+        void formatGuard(InsBuf* buf, LInsp ins);
+        void formatGuardXov(InsBuf* buf, LInsp ins);
+
+    public:
+        LInsPrinter(Allocator& alloc)
+            : alloc(alloc)
+        {
+            addrNameMap = new (alloc) AddrNameMap(alloc);
+            lirNameMap = new (alloc) LirNameMap(alloc);
+        }
+
+        char *formatAddr(RefBuf* buf, void* p);
+        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatIns(InsBuf* buf, LInsp ins);
+        char *formatAccSet(RefBuf* buf, AccSet accSet);
+
+        AddrNameMap* addrNameMap;
+        LirNameMap* lirNameMap;
     };
 
 
     class VerboseWriter : public LirWriter
     {
         InsList code;
-        LirNameMap* names;
+        LInsPrinter* printer;
         LogControl* logc;
         const char* const prefix;
         bool const always_flush;
     public:
-        VerboseWriter(Allocator& alloc, LirWriter *out,
-                      LirNameMap* names, LogControl* logc, const char* prefix = "", bool always_flush = false)
-            : LirWriter(out), code(alloc), names(names), logc(logc), prefix(prefix), always_flush(always_flush)
+        VerboseWriter(Allocator& alloc, LirWriter *out, LInsPrinter* printer, LogControl* logc,
+                      const char* prefix = "", bool always_flush = false)
+            : LirWriter(out), code(alloc), printer(printer), logc(logc), prefix(prefix), always_flush(always_flush)
         {}
 
         LInsp add(LInsp i) {
@@ -1584,9 +1878,10 @@ namespace nanojit
         void flush()
         {
             if (!code.isEmpty()) {
+                InsBuf b;
                 int32_t count = 0;
                 for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail) {
-                    logc->printf("%s    %s\n",prefix,names->formatIns(p->head));
+                    logc->printf("%s    %s\n", prefix, printer->formatIns(&b, p->head));
                     count++;
                 }
                 code.clear();
@@ -1674,23 +1969,35 @@ namespace nanojit
         // We divide instruction kinds into groups for the use of LInsHashSet.
         // LIns0 isn't present because we don't need to record any 0-ary
         // instructions.
-        LInsImm   = 0,
-        LInsImmq  = 1,  // only occurs on 64-bit platforms
-        LInsImmf  = 2,
-        LIns1     = 3,
-        LIns2     = 4,
-        LIns3     = 5,
-        LInsLoad  = 6,
-        LInsCall  = 7,
+        LInsImm  = 0,
+        LInsImmq = 1,   // only occurs on 64-bit platforms
+        LInsImmf = 2,
+        LIns1    = 3,
+        LIns2    = 4,
+        LIns3    = 5,
+        LInsCall = 6,
+
+        // Loads are special.  We group them by access region:  one table for
+        // each region, and then a catch-all table for any loads marked with
+        // multiple regions.  This arrangement makes the removal of
+        // invalidated loads fast -- eg. we can invalidate all STACK loads by
+        // just clearing the LInsLoadStack table.  The disadvantage is that
+        // loads marked with multiple regions must be invalidated
+        // conservatively, eg. if any intervening stores occur.  But loads
+        // marked with multiple regions should be rare.
+        LInsLoadReadOnly = 7,
+        LInsLoadStack    = 8,
+        LInsLoadRStack   = 9,
+        LInsLoadOther    = 10,
+        LInsLoadMultiple = 11,
 
         LInsFirst = 0,
-        LInsLast = 7,
+        LInsLast = 11,
         // need a value after "last" to outsmart compilers that will insist last+1 is impossible
-        LInsInvalid = 8
+        LInsInvalid = 12
     };
     #define nextKind(kind)  LInsHashKind(kind+1)
 
-    // @todo, this could be replaced by a generic HashMap or HashSet, if we had one
     class LInsHashSet
     {
         // Must be a power of 2.
@@ -1707,14 +2014,15 @@ namespace nanojit
         uint32_t m_used[LInsLast + 1];
         typedef uint32_t (LInsHashSet::*find_t)(LInsp);
         find_t m_find[LInsLast + 1];
+
         Allocator& alloc;
 
         static uint32_t hashImm(int32_t);
-        static uint32_t hashImmq(uint64_t);     // not NANOJIT_64BIT only used by findImmf()
-        static uint32_t hash1(LOpcode v, LInsp);
-        static uint32_t hash2(LOpcode v, LInsp, LInsp);
-        static uint32_t hash3(LOpcode v, LInsp, LInsp, LInsp);
-        static uint32_t hashLoad(LOpcode v, LInsp, int32_t);
+        static uint32_t hashImmq(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmf()
+        static uint32_t hash1(LOpcode op, LInsp);
+        static uint32_t hash2(LOpcode op, LInsp, LInsp);
+        static uint32_t hash3(LOpcode op, LInsp, LInsp, LInsp);
+        static uint32_t hashLoad(LOpcode op, LInsp, int32_t, AccSet);
         static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
 
         // These private versions are used after an LIns has been created;
@@ -1727,8 +2035,12 @@ namespace nanojit
         uint32_t find1(LInsp ins);
         uint32_t find2(LInsp ins);
         uint32_t find3(LInsp ins);
-        uint32_t findLoad(LInsp ins);
         uint32_t findCall(LInsp ins);
+        uint32_t findLoadReadOnly(LInsp ins);
+        uint32_t findLoadStack(LInsp ins);
+        uint32_t findLoadRStack(LInsp ins);
+        uint32_t findLoadOther(LInsp ins);
+        uint32_t findLoadMultiple(LInsp ins);
 
         void grow(LInsHashKind kind);
 
@@ -1745,19 +2057,22 @@ namespace nanojit
         LInsp find1(LOpcode v, LInsp a, uint32_t &k);
         LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
         LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
+                       uint32_t &k);
         LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
 
         // 'k' is the index found by findXYZ().
-        LInsp add(LInsHashKind kind, LInsp ins, uint32_t k);
+        void add(LInsHashKind kind, LInsp ins, uint32_t k);
 
-        void clear();
+        void clear();               // clears all tables
+        void clear(LInsHashKind);   // clears one table
     };
 
     class CseFilter: public LirWriter
     {
     private:
         LInsHashSet* exprs;
+        AccSet       storesSinceLastLoad;   // regions stored to since the last load
 
     public:
         CseFilter(LirWriter *out, Allocator&);
@@ -1771,7 +2086,8 @@ namespace nanojit
         LIns* ins1(LOpcode v, LInsp);
         LIns* ins2(LOpcode v, LInsp, LInsp);
         LIns* ins3(LOpcode v, LInsp, LInsp, LInsp);
-        LIns* insLoad(LOpcode op, LInsp cond, int32_t d, AccSet accSet);
+        LIns* insLoad(LOpcode op, LInsp base, int32_t d, AccSet accSet);
+        LIns* insStore(LOpcode op, LInsp value, LInsp base, int32_t d, AccSet accSet);
         LIns* insCall(const CallInfo *call, LInsp args[]);
         LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
         LIns* insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
@@ -1785,7 +2101,7 @@ namespace nanojit
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
 
             debug_only (void validate() const;)
-            verbose_only(LirNameMap* names;)
+            verbose_only(LInsPrinter* printer;)
 
             int32_t insCount();
             size_t  byteCount();
@@ -1856,21 +2172,25 @@ namespace nanojit
         LirFilter(LirFilter *in) : in(in) {}
         virtual ~LirFilter(){}
 
+        // It's crucial that once this reaches the LIR_start at the beginning
+        // of the buffer, that it just keeps returning that LIR_start LIns on
+        // any subsequent calls.
         virtual LInsp read() {
             return in->read();
         }
-        virtual LInsp pos() {
-            return in->pos();
+        virtual LInsp finalIns() {
+            return in->finalIns();
         }
     };
 
     // concrete
     class LirReader : public LirFilter
     {
-        LInsp _i; // next instruction to be read;  invariant: is never a skip
+        LInsp _ins;         // next instruction to be read;  invariant: is never a skip
+        LInsp _finalIns;    // final instruction in the stream;  ie. the first one to be read
 
     public:
-        LirReader(LInsp i) : LirFilter(0), _i(i)
+        LirReader(LInsp ins) : LirFilter(0), _ins(ins), _finalIns(ins)
         {
             // The last instruction for a fragment shouldn't be a skip.
             // (Actually, if the last *inserted* instruction exactly fills up
@@ -1879,7 +2199,7 @@ namespace nanojit
             // cross-chunk link.  But the last *inserted* instruction is what
             // is recorded and used to initialise each LirReader, and that is
             // what is seen here, and therefore this assertion holds.)
-            NanoAssert(i && !i->isop(LIR_skip));
+            NanoAssert(ins && !ins->isop(LIR_skip));
         }
         virtual ~LirReader() {}
 
@@ -1887,59 +2207,26 @@ namespace nanojit
         // Invariant: never returns a skip.
         LInsp read();
 
-        // Returns next instruction.  Invariant: never returns a skip.
-        LInsp pos() {
-            return _i;
+        LInsp finalIns() {
+            return _finalIns;
         }
     };
 
     verbose_only(void live(LirFilter* in, Allocator& alloc, Fragment* frag, LogControl*);)
 
+    // WARNING: StackFilter assumes that all stack entries are eight bytes.
+    // Some of its optimisations aren't valid if that isn't true.  See
+    // StackFilter::read() for more details.
     class StackFilter: public LirFilter
     {
         LInsp sp;
-        LInsp rp;
-        BitSet spStk;
-        BitSet rpStk;
-        int spTop;
-        int rpTop;
-        void getTops(LInsp br, int& spTop, int& rpTop);
+        BitSet stk;
+        int top;
+        int getTop(LInsp br);
 
     public:
-        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp, LInsp rp);
-        bool ignoreStore(LInsp ins, int top, BitSet* stk);
+        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp);
         LInsp read();
-    };
-
-    // eliminate redundant loads by watching for stores & mutator calls
-    class LoadFilter: public LirWriter
-    {
-    public:
-        LInsp sp, rp;
-        LInsHashSet* exprs;
-
-        void clear(LInsp p);
-
-    public:
-        LoadFilter(LirWriter *out, Allocator& alloc)
-            : LirWriter(out), sp(NULL), rp(NULL)
-        {
-            uint32_t kInitialCaps[LInsLast + 1];
-            kInitialCaps[LInsImm]   = 1;
-            kInitialCaps[LInsImmq]  = 1;
-            kInitialCaps[LInsImmf]  = 1;
-            kInitialCaps[LIns1]     = 1;
-            kInitialCaps[LIns2]     = 1;
-            kInitialCaps[LIns3]     = 1;
-            kInitialCaps[LInsLoad]  = 64;
-            kInitialCaps[LInsCall]  = 1;
-            exprs = new (alloc) LInsHashSet(alloc, kInitialCaps);
-        }
-
-        LInsp ins0(LOpcode);
-        LInsp insLoad(LOpcode op, LInsp base, int32_t disp, AccSet accSet);
-        LInsp insStore(LOpcode op, LInsp value, LInsp base, int32_t disp, AccSet accSet);
-        LInsp insCall(const CallInfo *call, LInsp args[]);
     };
 
     struct SoftFloatOps
@@ -1985,19 +2272,26 @@ namespace nanojit
     class ValidateWriter : public LirWriter
     {
     private:
-        const char* _whereInPipeline;
+        LInsPrinter* printer;
+        const char* whereInPipeline;
 
         const char* type2string(LTy type);
         void typeCheckArgs(LOpcode op, int nArgs, LTy formals[], LIns* args[]);
         void errorStructureShouldBe(LOpcode op, const char* argDesc, int argN, LIns* arg,
                                     const char* shouldBeDesc);
-        void errorAccSetShould(const char* what, AccSet accSet, const char* shouldDesc);
+        void errorAccSet(const char* what, AccSet accSet, const char* shouldDesc);
         void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
         void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
         void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
+        void checkAccSet(LOpcode op, LInsp base, AccSet accSet, AccSet maxAccSet);
+
+        LInsp sp, rp;
 
     public:
-        ValidateWriter(LirWriter* out, const char* stageName);
+        ValidateWriter(LirWriter* out, LInsPrinter* printer, const char* where);
+        void setSp(LInsp ins) { sp = ins; }
+        void setRp(LInsp ins) { rp = ins; }
+
         LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet);
         LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet);
         LIns* ins0(LOpcode v);
@@ -2036,19 +2330,21 @@ namespace nanojit
     class ReverseLister : public LirFilter
     {
         Allocator&   _alloc;
-        LirNameMap*  _names;
+        LInsPrinter* _printer;
         const char*  _title;
         StringList   _strs;
         LogControl*  _logc;
+        LIns*        _prevIns;
     public:
         ReverseLister(LirFilter* in, Allocator& alloc,
-                      LirNameMap* names, LogControl* logc, const char* title)
+                      LInsPrinter* printer, LogControl* logc, const char* title)
             : LirFilter(in)
             , _alloc(alloc)
-            , _names(names)
+            , _printer(printer)
             , _title(title)
             , _strs(alloc)
             , _logc(logc)
+            , _prevIns(NULL)
         { }
 
         void finish();

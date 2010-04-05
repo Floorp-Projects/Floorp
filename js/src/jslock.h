@@ -149,8 +149,8 @@ struct JSTitle {
 
 /*
  * NB: The JS_LOCK_OBJ and JS_UNLOCK_OBJ macros work *only* on native objects
- * (objects for which OBJ_IS_NATIVE returns true).  All uses of these macros in
- * the engine are predicated on OBJ_IS_NATIVE or equivalent checks.  These uses
+ * (objects for which obj->isNative() returns true).  All uses of these macros in
+ * the engine are predicated on obj->isNative or equivalent checks.  These uses
  * are for optimizations above the JSObjectOps layer, under which object locks
  * normally hide.
  */

@@ -132,7 +132,6 @@ const char *const js_common_atom_names[] = {
     js_caller_str,              /* callerAtom                   */
     js_class_prototype_str,     /* classPrototypeAtom           */
     js_constructor_str,         /* constructorAtom              */
-    js_count_str,               /* countAtom                    */
     js_each_str,                /* eachAtom                     */
     js_eval_str,                /* evalAtom                     */
     js_fileName_str,            /* fileNameAtom                 */
@@ -206,7 +205,6 @@ const char js_callee_str[]          = "callee";
 const char js_caller_str[]          = "caller";
 const char js_class_prototype_str[] = "prototype";
 const char js_constructor_str[]     = "constructor";
-const char js_count_str[]           = "__count__";
 const char js_each_str[]            = "each";
 const char js_eval_str[]            = "eval";
 const char js_fileName_str[]        = "fileName";
@@ -501,6 +499,7 @@ js_InitCommonAtoms(JSContext *cx)
     JS_ASSERT((uint8 *)atoms - (uint8 *)state == LAZY_ATOM_OFFSET_START);
     memset(atoms, 0, ATOM_OFFSET_LIMIT - LAZY_ATOM_OFFSET_START);
 
+    cx->runtime->emptyString = ATOM_TO_STRING(state->emptyAtom);
     return JS_TRUE;
 }
 
@@ -516,8 +515,8 @@ js_atom_unpinner(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 js_FinishCommonAtoms(JSContext *cx)
 {
+    cx->runtime->emptyString = NULL;
     JSAtomState *state = &cx->runtime->atomState;
-
     JS_DHashTableEnumerate(&state->stringAtoms, js_atom_unpinner, NULL);
 #ifdef DEBUG
     memset(COMMON_ATOMS_START(state), JS_FREE_PATTERN,

@@ -218,8 +218,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     }
 
     if (!scope->table) {
-        if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
-            JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->freeslot)));
+        if (slot < obj->numSlots() && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+            JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
             ++scope->freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot))
@@ -235,7 +235,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     } else {
         JSScopeProperty *sprop2 =
             scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(),
-                               SPROP_INVALID_SLOT, sprop->attrs, sprop->getFlags(),
+                               SPROP_INVALID_SLOT, sprop->attributes(), sprop->getFlags(),
                                sprop->shortid);
         if (sprop2 != sprop)
             goto exit_trace;
@@ -317,29 +317,19 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, ACC_NONE)
 
-jsdouble FASTCALL
-js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
-{
-    if (unboxed == JSVAL_TO_SPECIAL(JSVAL_VOID))
-        return js_NaN;
-    JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
-    return unboxed;
-}
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_BooleanOrUndefinedToNumber, CONTEXT, INT32, 1, ACC_NONE)
-
 JSString* FASTCALL
-js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
+js_BooleanIntToString(JSContext *cx, int32 unboxed)
 {
-    JS_ASSERT(uint32(unboxed) <= 2);
+    JS_ASSERT(uint32(unboxed) <= 1);
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
 }
-JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanIntToString, CONTEXT, INT32, 1, ACC_NONE)
 
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
 {
-    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
-    JS_ASSERT(HAS_FUNCTION_CLASS(proto));
+    JS_ASSERT(funobj->isFunction());
+    JS_ASSERT(proto->isFunction());
     JS_ASSERT(JS_ON_TRACE(cx));
 
     JSFunction *fun = (JSFunction*) funobj;

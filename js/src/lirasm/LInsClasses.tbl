@@ -124,7 +124,7 @@ CL_64(  LCALL_Q_Q2,     1)  // 95%  LIR_qcall
 CL_64(  LCALL_Q_Q7,     1)  // 96%  LIR_qcall
 CL___(  LCALL_F_F3,     1)  // 97%  LIR_fcall
 CL___(  LCALL_F_F8,     1)  // 98%  LIR_fcall
-CL_64(  LCALL_N_IQF,    1)  // 99%  LIR_icall or LIR_qcall
+CL_64(  LCALL_V_IQF,    1)  // 99%  LIR_icall or LIR_qcall
 
 CL___(  LLABEL,         1)  //100%  LIR_label
 

@@ -56,6 +56,8 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+using namespace js;
+
 #define ReadWord(W) (W)
 
 #if !defined(__GNUC__)
@@ -317,7 +319,7 @@ js_InitLock(JSThinLock *tl)
     tl->owner = 0;
     tl->fat = (JSFatLock*)JS_NEW_LOCK();
 #else
-    memset(tl, 0, sizeof(JSThinLock));
+    PodZero(tl);
 #endif
 }
 
@@ -485,7 +487,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
         uint32 nslots = scope->freeslot;
         JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
         for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
-            jsval v = STOBJ_GET_SLOT(obj, i);
+            jsval v = obj->getSlot(i);
             if (JSVAL_IS_STRING(v) &&
                 !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
                 /*
@@ -494,7 +496,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
                  * ignoring errors except out-of-memory, which should have been
                  * reported through JS_ReportOutOfMemory at this point.
                  */
-                STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+                obj->setSlot(i, JSVAL_VOID);
             }
         }
     }
@@ -705,7 +707,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        return STOBJ_GET_SLOT(obj, slot);
+        return obj->getSlot(slot);
     }
 
 #ifndef NSPR_LOCK
@@ -720,7 +722,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
          * lock release followed by fat lock acquisition.
          */
         if (scope == OBJ_SCOPE(obj)) {
-            v = STOBJ_GET_SLOT(obj, slot);
+            v = obj->getSlot(slot);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -734,12 +736,12 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
             js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        return STOBJ_GET_SLOT(obj, slot);
+        return obj->getSlot(slot);
     }
 #endif
 
     js_LockObj(cx, obj);
-    v = STOBJ_GET_SLOT(obj, slot);
+    v = obj->getSlot(slot);
 
     /*
      * Test whether cx took ownership of obj's scope during js_LockObj.
@@ -1311,7 +1313,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
     JSScope *scope;
     JSTitle *title;
 
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
 
     /*
      * We must test whether the GC is calling and return without mutating any
@@ -1343,7 +1345,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
 void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
     js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
 }
 
@@ -1352,7 +1354,7 @@ js_InitTitle(JSContext *cx, JSTitle *title)
 {
 #ifdef JS_THREADSAFE
     title->ownercx = cx;
-    memset(&title->lock, 0, sizeof title->lock);
+    PodZero(&title->lock);
 
     /*
      * Set u.link = NULL, not u.count = 0, in case the target architecture's
