@@ -2426,11 +2426,11 @@ class AutoValueVector : private AutoGCRooter
         return vector.reserve(newLength);
     }
 
-    jsval & operator[](size_t i) { return vector[i]; }
+    jsval &operator[](size_t i) { return vector[i]; }
     jsval operator[](size_t i) const { return vector[i]; }
 
-    const jsval * buffer() const { return vector.begin(); }
-    jsval * buffer() { return vector.begin(); }
+    const jsval *buffer() const { return vector.begin(); }
+    jsval *buffer() { return vector.begin(); }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 
