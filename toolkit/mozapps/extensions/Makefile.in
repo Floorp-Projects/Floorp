@@ -71,6 +71,7 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_PP_JS_MODULES = \
   AddonManager.jsm \
   XPIProvider.jsm \
+  PluginProvider.jsm \
   AddonUpdateChecker.jsm \
   $(NULL)
 
