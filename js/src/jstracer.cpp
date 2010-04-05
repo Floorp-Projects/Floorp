@@ -11245,9 +11245,8 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
-    JSScope* scope = OBJ_SCOPE(obj);
 
-    JS_ASSERT_IF(entry->directHit(), scope->hasProperty(sprop));
+    JS_ASSERT_IF(entry->directHit(), OBJ_SCOPE(obj)->hasProperty(sprop));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
@@ -11260,7 +11259,7 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
         obj2 = obj2->getParent();
     for (jsuword j = entry->protoIndex(); j; j--)
         obj2 = obj2->getProto();
-    scope = OBJ_SCOPE(obj2);
+    JSScope *scope = OBJ_SCOPE(obj2);
     JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
     // Guard before anything else.
