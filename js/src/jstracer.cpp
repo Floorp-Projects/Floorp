@@ -287,10 +287,18 @@ enum jitstat_ids {
     STAT_IDS_TOTAL
 };
 
+static JSBool
+jitstats_getOnTrace(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    *vp = BOOLEAN_TO_JSVAL(JS_ON_TRACE(cx));
+    return true;
+}
+
 static JSPropertySpec jitstats_props[] = {
 #define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT },
 #include "jitstats.tbl"
 #undef JITSTAT
+    { "onTrace", 0, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, jitstats_getOnTrace, NULL },
     { 0 }
 };
 
