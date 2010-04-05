@@ -331,7 +331,7 @@ static PRInt32 OSXVersion()
 #endif
 
 inline PRBool
-OOPPluginsEnabled(const char* aFilePath)
+OOPPluginsEnabled(const char* aFilePath, const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
@@ -342,6 +342,24 @@ OOPPluginsEnabled(const char* aFilePath)
   if (OSXVersion() < 0x00001060) {
     return PR_FALSE;
   }
+  // Blacklist Flash 10.0 or lower since it may try to negotiate Carbon/Quickdraw
+  // which are not supported out of process.
+  if (aPluginTag && 
+      aPluginTag->mFileName.EqualsIgnoreCase("flash player.plugin")) {
+    // If the first '.' is before position 2 or the version 
+    // starts with 10.0 then we are dealing with Flash 10 or less.
+    if (aPluginTag->mVersion.FindChar('.') < 2) {
+      return PR_FALSE;
+    }
+    if (aPluginTag->mVersion.Length() >= 4) {
+      nsCString versionPrefix;
+      aPluginTag->mVersion.Left(versionPrefix, 4);
+      if (versionPrefix.EqualsASCII("10.0")) {
+        return PR_FALSE;
+      }
+    }
+  }
+
 #endif
 
 #ifdef XP_WIN
@@ -388,8 +406,12 @@ GetNewPluginLibrary(const char* aFilePath,
                     PRLibrary* aLibrary)
 {
 #ifdef MOZ_IPC
-  if (aFilePath && OOPPluginsEnabled(aFilePath)) {
-    return PluginModuleParent::LoadModule(aFilePath);
+  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+  nsPluginTag* tag = host->FindTagForLibrary(aLibrary);
+  if (tag) {
+    if (aFilePath && OOPPluginsEnabled(aFilePath, tag)) {
+      return PluginModuleParent::LoadModule(aFilePath);
+    }   
   }
 #endif
   return new PluginPRLibrary(aFilePath, aLibrary);
