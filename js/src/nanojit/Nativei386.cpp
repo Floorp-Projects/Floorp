@@ -1230,18 +1230,21 @@ namespace nanojit
             // ordinary param
             AbiKind abi = _thisfrag->lirbuf->abi;
             uint32_t abi_regcount = max_abi_regs[abi];
+            // argRegs must have as many elements as the largest argument register
+            // requirement of an abi.  Currently, this is 2, for ABI_FASTCALL.  See
+            // the definition of max_abi_regs earlier in this file.  The following
+            // assertion reflects this invariant:
+            NanoAssert(abi_regcount <= sizeof(argRegs)/sizeof(argRegs[0]));
             if (arg < abi_regcount) {
                 // Incoming arg in register.
                 prepareResultReg(ins, rmask(argRegs[arg]));
                 // No code to generate.
-
             } else {
                 // Incoming arg is on stack, and EBP points nearby (see genPrologue()).
                 Register r = prepareResultReg(ins, GpRegs);
                 int d = (arg - abi_regcount) * sizeof(intptr_t) + 8;
                 LD(r, d, FP);
             }
-
         } else {
             // Saved param.
             prepareResultReg(ins, rmask(savedRegs[arg]));
