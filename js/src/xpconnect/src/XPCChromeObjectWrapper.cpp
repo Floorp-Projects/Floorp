@@ -40,7 +40,7 @@
 #include "xpcprivate.h"
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
-#include "jscntxt.h"  // For JSAutoTempValueRooter.
+#include "jscntxt.h"  // For js::AutoValueRooter.
 #include "jsobj.h"
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
@@ -290,17 +290,16 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
 
   *vp = OBJECT_TO_JSVAL(wrapperObj);
 
-  jsval exposedProps = JSVAL_VOID;
-  JSAutoTempValueRooter tvr(cx, 1, &exposedProps);
+  js::AutoValueRooter exposedProps(cx, JSVAL_VOID);
 
-  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), &exposedProps)) {
+  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), exposedProps.addr())) {
     return JS_FALSE;
   }
 
   if (!JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sWrappedObjSlot, v) ||
-      !JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sFlagsSlot,
-                          JSVAL_ZERO) ||
-      !JS_SetReservedSlot(cx, wrapperObj, sExposedPropsSlot, exposedProps)) {
+      !JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sFlagsSlot, JSVAL_ZERO) ||
+      !JS_SetReservedSlot(cx, wrapperObj, sExposedPropsSlot,
+                          exposedProps.value())) {
     return JS_FALSE;
   }
 
@@ -324,7 +323,7 @@ ThrowException(nsresult rv, JSContext *cx)
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(obj);
+  JSClass *clasp = obj->getClass();
   if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
     return obj;
   }
@@ -348,7 +347,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (STOBJ_GET_CLASS(obj) != &COWClass.base) {
+  while (obj->getClass() != &COWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -710,7 +709,7 @@ XPC_COW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
-  if (!STOBJ_GET_CLASS(wrappedObj)->convert(cx, wrappedObj, type, vp)) {
+  if (!wrappedObj->getClass()->convert(cx, wrappedObj, type, vp)) {
     return JS_FALSE;
   }
 
@@ -755,7 +754,7 @@ XPC_COW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   XPCWrappedNative *me = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
-  return ((JSExtendedClass *)STOBJ_GET_CLASS(obj))->
+  return ((JSExtendedClass *)obj->getClass())->
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
 }
 

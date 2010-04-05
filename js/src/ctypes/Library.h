@@ -40,9 +40,11 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+#include "jsapi.h"
+
 struct PRLibrary;
 
-namespace mozilla {
+namespace js {
 namespace ctypes {
 
 enum LibrarySlot {

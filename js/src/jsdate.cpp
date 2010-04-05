@@ -2175,7 +2175,7 @@ date_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (!GetUTCTime(cx, JS_THIS_OBJECT(cx, vp), vp, &utctime))
         return JS_FALSE;
 
-    numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
+    numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;

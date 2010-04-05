@@ -3221,7 +3221,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
                                                    nsnull, nsnull);
     if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
-    JSAutoTempValueRooter tvr(cx, sandbox);
+    js::AutoValueRooter tvr(cx, sandbox);
 
     nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(prinOrSop));
 
@@ -3548,7 +3548,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   JSVersion jsVersion, PRBool returnStringOnly, jsval *rval)
 {
-    if (STOBJ_GET_CLASS(sandbox) != &SandboxClass)
+    if (sandbox->getClass() != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
     nsIScriptObjectPrincipal *sop =
@@ -3594,7 +3594,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     nsresult rv = NS_OK;
 
     {
-        AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+        JSAutoRequest req(sandcx->GetJSContext());
         JSString *str = nsnull;
         if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                               jsPrincipals,
@@ -3610,9 +3610,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 // Stash the exception in |cx| so we can execute code on
                 // sandcx without a pending exception.
                 {
-                    AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-                    AutoJSRequestWithNoCallContext cxreq(cx);
-
+                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
                     JS_SetPendingException(cx, exn);
                 }
 
@@ -3622,8 +3620,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     // exception into a string.
                     str = JS_ValueToString(sandcx->GetJSContext(), exn);
 
-                    AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-                    AutoJSRequestWithNoCallContext cxreq(cx);
+                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.

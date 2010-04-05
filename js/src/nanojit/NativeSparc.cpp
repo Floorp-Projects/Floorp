@@ -161,21 +161,21 @@ namespace nanojit
 
         evictScratchRegsExcept(0);
 
-        const CallInfo* call = ins->callInfo();
+        const CallInfo* ci = ins->callInfo();
 
         underrunProtect(8);
         NOP();
 
-        ArgSize sizes[MAXARGS];
-        uint32_t argc = call->get_sizes(sizes);
+        ArgType argTypes[MAXARGS];
+        uint32_t argc = ci->getArgTypes(argTypes);
 
         NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
-        bool indirect = call->isIndirect();
+        bool indirect = ci->isIndirect();
         if (!indirect) {
-            CALL(call);
+            CALL(ci);
         }
         else {
             argc--;
@@ -189,8 +189,8 @@ namespace nanojit
         for(int i=0; i<argc; i++)
             {
                 uint32_t j = argc-i-1;
-                ArgSize sz = sizes[j];
-                if (sz == ARGSIZE_F) {
+                ArgType ty = argTypes[j];
+                if (ty == ARGTYPE_F) {
                     Register r = findRegFor(ins->arg(j), FpRegs);
                     GPRIndex += 2;
                     offset += 8;
@@ -317,12 +317,11 @@ namespace nanojit
     {
         underrunProtect(24);
         (void)quad;
-        if (d) {
-            if (rmask(rr) & FpRegs) {
-                STDF32(rr, d, FP);
-            } else {
-                STW32(rr, d, FP);
-            }
+        NanoAssert(d);
+        if (rmask(rr) & FpRegs) {
+            STDF32(rr, d, FP);
+        } else {
+            STW32(rr, d, FP);
         }
     }
 
@@ -359,7 +358,7 @@ namespace nanojit
         if (dr)
             asm_mmq(FP, dr, rb, db);
 
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
         if (rr != deprecated_UnknownReg)
             {
@@ -384,7 +383,7 @@ namespace nanojit
         }
 
         underrunProtect(48);
-        if (value->isconstq())
+        if (value->isconstf())
             {
                 // if a constant 64-bit value just store it now rather than
                 // generating a pointless store/load/store sequence
@@ -634,7 +633,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_iaddp||op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+        else if ((op == LIR_add || op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
@@ -654,7 +653,7 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov)
+                if (op == LIR_add || op == LIR_addxov)
                     ADDCC(rr, rb, rr);
                 else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, rb, rr);
@@ -678,11 +677,11 @@ namespace nanojit
         else
             {
                 int c = rhs->imm32();
-                if (op == LIR_add || op == LIR_iaddp || op == LIR_addxov) {
+                if (op == LIR_add || op == LIR_addxov)
                     ADDCC(rr, L2, rr);
-                } else if (op == LIR_sub || op == LIR_subxov)
+                else if (op == LIR_sub || op == LIR_subxov)
                     SUBCC(rr, L2, rr);
-                } else if (op == LIR_and)
+                else if (op == LIR_and)
                     AND(rr, L2, rr);
                 else if (op == LIR_or)
                     OR(rr, L2, rr);
@@ -783,8 +782,6 @@ namespace nanojit
             case LIR_uge: MOVCS (iffalsereg, 1, 0, 0, rr); break;
                 debug_only( default: NanoAssert(0); break; )
                     }
-        } else if (op == LIR_qcmov) {
-            NanoAssert(0);
         }
         /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
         asm_cmp(condval);
@@ -797,7 +794,7 @@ namespace nanojit
         deprecated_prepResultReg(ins, rmask(argRegs[a]));
     }
 
-    void Assembler::asm_int(LInsp ins)
+    void Assembler::asm_immi(LInsp ins)
     {
         underrunProtect(8);
         Register rr = deprecated_prepResultReg(ins, GpRegs);
@@ -808,7 +805,7 @@ namespace nanojit
             SET32(val, rr);
     }
 
-    void Assembler::asm_quad(LInsp ins)
+    void Assembler::asm_immf(LInsp ins)
     {
         underrunProtect(64);
         Register rr = ins->deprecated_getReg();
@@ -825,7 +822,7 @@ namespace nanojit
 
         // @todo, if we used xor, ldsd, fldz, etc above, we don't need mem here
         int d = deprecated_disp(ins);
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
         if (d)
             {
                 STW32(L2, d+4, FP);

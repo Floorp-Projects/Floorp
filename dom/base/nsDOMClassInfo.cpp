@@ -41,6 +41,7 @@
 #include "jsapi.h"
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
+#include "jsobj.h"
 #include "jsdbgapi.h"
 
 #include "nscore.h"
@@ -1469,7 +1470,7 @@ jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
 
 static const JSClass *sObjectClass = nsnull;
-const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
+JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class

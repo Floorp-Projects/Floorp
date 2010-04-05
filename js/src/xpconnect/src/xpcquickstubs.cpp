@@ -173,7 +173,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsval idval, uintN argc,
 
     JSObject *funobj = JS_GetFunctionObject(fun);
 
-    JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(funobj));
+    js::AutoObjectRooter tvr(cx, funobj);
 
     // Unfortunately, we cannot guarantee that JSPropertyOp is aligned. Use a
     // second object to work around this.
@@ -198,7 +198,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
 {
     // Generate both getter and setter and stash them in the prototype.
     jsval roots[2] = { JSVAL_NULL, JSVAL_NULL };
-    JSAutoTempValueRooter tvr(cx, 2, roots);
+    js::AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     uintN attrs = JSPROP_SHARED;
     JSObject *getterobj;
@@ -293,10 +293,10 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
                        ? JS_GetStringBytes(JSVAL_TO_STRING(idval))
                        : nsnull;
     if(!name ||
-       !IS_PROTO_CLASS(STOBJ_GET_CLASS(desc.obj)) ||
+       !IS_PROTO_CLASS(desc.obj->getClass()) ||
        (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(desc.getter || desc.setter) ||
-       desc.setter == STOBJ_GET_CLASS(desc.obj)->setProperty)
+       desc.setter == desc.obj->getClass()->setProperty)
     {
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
@@ -363,7 +363,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     if(!obj2 ||
        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(getter || setter) ||
-       !IS_PROTO_CLASS(STOBJ_GET_CLASS(obj2)))
+       !IS_PROTO_CLASS(obj2->getClass()))
         return forward(cx, argc, vp);
 
     // Reify the getter and setter...
@@ -504,8 +504,8 @@ GetMemberInfo(JSObject *obj,
     // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) ||
-                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass,
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()) ||
+                 obj->getClass() == &XPC_WN_Tearoff_JSClass,
                  "obj must be a wrapper");
     XPCWrappedNativeProto *proto;
     if(IS_SLIM_WRAPPER(obj))
@@ -1093,7 +1093,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
 #ifdef DEBUG
     JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
     if(jsobj && !jsobj->getParent())
-        NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
+        NS_ASSERTION(jsobj->getClass()->flags & JSCLASS_IS_GLOBAL,
                      "Why did we recreate this wrapper?");
 #endif
 

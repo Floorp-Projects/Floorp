@@ -52,12 +52,12 @@ namespace nanojit
      * A struct used to configure the assumptions that Assembler can make when
      * generating code. The ctor will fill in all fields with the most reasonable
      * values it can derive from compiler flags and/or runtime detection, but
-     * the embedder is free to override any or all of them as it sees fit. 
+     * the embedder is free to override any or all of them as it sees fit.
      * Using the ctor-provided default setup is guaranteed to provide a safe
      * runtime environment (though perhaps suboptimal in some cases), so an embedder
      * should replace these values with great care.
      *
-     * Note that although many fields are used on only specific architecture(s), 
+     * Note that although many fields are used on only specific architecture(s),
      * this struct is deliberately declared without ifdef's for them, so (say) ARM-specific
      * fields are declared everywhere. This reduces build dependencies (so that this
      * files does not require nanojit.h to be included beforehand) and also reduces
@@ -69,29 +69,29 @@ namespace nanojit
     public:
         // fills in reasonable default values for all fields.
         Config();
-        
+
         // ARM architecture to assume when generate instructions for (currently, 5 <= arm_arch <= 7)
         uint8_t arm_arch;
 
         // If true, use CSE.
         uint32_t cseopt:1;
-        
+
         // Can we use SSE2 instructions? (x86-only)
         uint32_t i386_sse2:1;
-        
+
         // Can we use cmov instructions? (x86-only)
         uint32_t i386_use_cmov:1;
-        
+
         // Should we use a virtual stack pointer? (x86-only)
         uint32_t i386_fixed_esp:1;
 
         // Whether or not to generate VFP instructions. (ARM only)
         uint32_t arm_vfp:1;
-        
+
         // @todo, document me
         uint32_t arm_show_stats:1;
 
-        // If true, use softfloat for all floating point operations, 
+        // If true, use softfloat for all floating point operations,
         // whether or not an FPU is present. (ARM only for now, but might also includes MIPS in the future)
         uint32_t soft_float:1;
     };

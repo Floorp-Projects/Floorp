@@ -1,5 +1,5 @@
-two = int 7
-three = int 3
-targ = add two three
-res =   sub targ three
-ret res
+two = imml 7
+three = imml 3
+targ = addl two three
+res = subl targ three
+retl res

@@ -673,35 +673,35 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
     }
   }
 
-  JSTempValueRooter tvr;
-  JS_PUSH_TEMP_ROOT(cx, 0, jsargs, &tvr);
-
-  // Convert args
-  for (PRUint32 i = 0; i < argCount; ++i) {
-    jsargs[i] = NPVariantToJSVal(npp, cx, args + i);
-    ++tvr.count;
-  }
-
   jsval v;
   JSBool ok;
 
-  if (ctorCall) {
-    JSObject *global = ::JS_GetGlobalForObject(cx, npjsobj->mJSObj);
-    JSObject *newObj =
-      ::JS_ConstructObjectWithArguments(cx, JS_GET_CLASS(cx, npjsobj->mJSObj),
-                                        nsnull, global, argCount, jsargs);
+  {
+    js::AutoArrayRooter tvr(cx, 0, jsargs);
 
-    if (newObj) {
-      v = OBJECT_TO_JSVAL(newObj);
-      ok = JS_TRUE;
-    } else {
-      ok = JS_FALSE;
+    // Convert args
+    for (PRUint32 i = 0; i < argCount; ++i) {
+      jsargs[i] = NPVariantToJSVal(npp, cx, args + i);
+      tvr.changeLength(i + 1);
     }
-  } else {
-    ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, argCount, jsargs, &v);
-  }
 
-  JS_POP_TEMP_ROOT(cx, &tvr);
+    if (ctorCall) {
+      JSObject *global = ::JS_GetGlobalForObject(cx, npjsobj->mJSObj);
+      JSObject *newObj =
+        ::JS_ConstructObjectWithArguments(cx, JS_GET_CLASS(cx, npjsobj->mJSObj),
+                                          nsnull, global, argCount, jsargs);
+
+      if (newObj) {
+        v = OBJECT_TO_JSVAL(newObj);
+        ok = JS_TRUE;
+      } else {
+        ok = JS_FALSE;
+      }
+    } else {
+      ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, argCount, jsargs, &v);
+    }
+
+  }
 
   if (jsargs != jsargs_buf)
     PR_Free(jsargs);
@@ -837,7 +837,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   AutoJSExceptionReporter reporter(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
-  JSAutoTempValueRooter tvr(cx, v);
+  js::AutoValueRooter tvr(cx, v);
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
