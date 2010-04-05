@@ -54,14 +54,15 @@ namespace nanojit
 #else
     static const int pagesPerAlloc = 16;
 #endif
-    static const int bytesPerPage = 4096;
-    static const int bytesPerAlloc = pagesPerAlloc * bytesPerPage;
 
     CodeAlloc::CodeAlloc()
         : heapblocks(0)
         , availblocks(0)
         , totalAllocated(0)
-    {}
+        , bytesPerPage(VMPI_getVMPageSize())
+        , bytesPerAlloc(pagesPerAlloc * bytesPerPage)
+    {
+    }
 
     CodeAlloc::~CodeAlloc() {
         reset();
