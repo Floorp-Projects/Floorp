@@ -1451,7 +1451,7 @@ js_CreateTypedArray(JSContext *cx, jsint atype, jsuint nelements)
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
 
-    jsval vals[2];
+    jsval vals[2] = { JSVAL_NULL, JSVAL_NULL };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
 
     if (!js_NewNumberInRootedValue(cx, jsdouble(nelements), &vals[0]))
@@ -1468,7 +1468,7 @@ js_CreateTypedArrayWithArray(JSContext *cx, jsint atype, JSObject *arrayArg)
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
 
-    jsval vals[2];
+    jsval vals[2] = { JSVAL_NULL, JSVAL_NULL };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
 
     vals[0] = OBJECT_TO_JSVAL(arrayArg);
@@ -1487,7 +1487,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
     JS_ASSERT(bufArg && ArrayBuffer::fromJSObject(bufArg));
     JS_ASSERT_IF(byteoffset < 0, length < 0);
 
-    jsval vals[4];
+    jsval vals[4] = { JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
 
     int argc = 1;
