@@ -694,6 +694,7 @@ pageaction .pageaction-desc[value=""] {
   -moz-border-radius-bottomleft: 0;
   padding: 0.75mm 0.25mm 0.75mm 0.25mm;
   border-bottom: 0;
+  -moz-box-flex: 1;
 }
 
 #form-helper-container > #select-container > #select-container-inner,
@@ -778,6 +779,7 @@ pageaction .pageaction-desc[value=""] {
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
   min-height: 7.2mm; /* row size */
+  max-height: 7.2mm; /* row size */
   -moz-box-align: center;
 }
 
