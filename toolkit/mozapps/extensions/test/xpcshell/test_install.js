@@ -64,15 +64,24 @@ function run_test_1() {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
-      prepare_test({
-        "addon1@tests.mozilla.org": [
-          "onInstalling"
-        ]
-      }, [
-        "onInstallStarted",
-        "onInstallEnded",
-      ], check_test_1);
-      install.install();
+      AddonManager.getInstalls(["foo"], function(fooInstalls) {
+        do_check_eq(fooInstalls.length, 0);
+
+        AddonManager.getInstalls(["extension"], function(extensionInstalls) {
+          do_check_eq(extensionInstalls.length, 1);
+          do_check_eq(extensionInstalls[0], install);
+
+          prepare_test({
+            "addon1@tests.mozilla.org": [
+              "onInstalling"
+            ]
+          }, [
+            "onInstallStarted",
+            "onInstallEnded",
+          ], check_test_1);
+          install.install();
+        });
+      });
     });
   });
 }
