@@ -1763,7 +1763,7 @@ ContentCustomClicker.prototype = {
 
     /** Returns a node if selecting this node causes a focus. */
     _getFocusable: function _getFocusable(node) {
-      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,button,input,option,select,textarea"))
+      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea"))
         return node;
       return null;
     },
