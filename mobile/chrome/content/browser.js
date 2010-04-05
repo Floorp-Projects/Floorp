@@ -474,15 +474,8 @@ var Browser = {
 
     // Command line arguments/initial homepage
     let whereURI = this.getHomePage();
-    switch (needOverride) {
-      case "new profile":
+    if (needOverride == "new profile")
         whereURI = "about:firstrun";
-        break;
-      case "new version":
-      case "none":
-        whereURI = this.getHomePage();
-        break;
-    }
 
     // If this is an intial window launch (was a nsICommandLine passed via window params)
     // we execute some logic to load the initial launch page
