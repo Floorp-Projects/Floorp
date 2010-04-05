@@ -1800,7 +1800,9 @@ var XPIProvider = {
     bootstrap.append("bootstrap.js");
     if (bootstrap.exists()) {
       let uri = Services.io.newFileURI(bootstrap);
-      let scope = new Components.utils.Sandbox("chrome://mozapps/content/extensions");
+      let principal = Cc["@mozilla.org/systemprincipal;1"].
+                      createInstance(Ci.nsIPrincipal);
+      let scope = new Components.utils.Sandbox(principal);
       let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                    createInstance(Ci.mozIJSSubScriptLoader);
 
