@@ -125,6 +125,10 @@ html {
   color: gray;
 }
 
+.section-box .inner {
+  pointer-events: none;
+}
+
 .section-box .favicon {
   border: none;
   top: 8px;
@@ -132,11 +136,11 @@ html {
   width: 32px;
   height: 32px;
   position: absolute;
+  pointer-events: none;
 }
 
-#newAddons > div {
-  background: url("images/arrowright-16.png") right center no-repeat;
-  margin-right: 8px;
+#newAddons > div:not(.loading) {
+  background: url("images/arrowright-16.png") 99% center no-repeat;
 }
 
 .section-row {
@@ -155,6 +159,7 @@ html {
 
 .section-row > div {
   position: relative;
+  pointer-events: none;
 }
 
 .section-row .favicon {
@@ -166,8 +171,13 @@ html {
   position: absolute;
 }
 
+.loading > img {
+  display: block;
+  margin: 0 auto;
+}
+
 #about {
-  font-size: 12px;
+  font-size: 18px;
   text-align: center;
   margin-top: 24px;
 }

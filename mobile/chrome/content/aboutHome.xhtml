@@ -135,12 +135,13 @@
         let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
 
         let outer = document.createElement("div");
+        outer.setAttribute("role", "button");
 
         let pageURL = url;
         outer.addEventListener("click", function() {
           openTabs(pageURL);
         }, false);
-        
+
         allPageURLs.push(pageURL);
 
         let img = document.createElement("img");
@@ -161,15 +162,20 @@
       }
       
       if (allPageURLs.length > 0) {
-        let outer = document.createElement("div");
-        outer.className = "openall";
-        outer.textContent = document.getElementById("text-openalltabs").textContent;
+        document.getElementById("loadingTabs").style.display = "none";
 
-        outer.addEventListener("click", function() {
-          openTabs(allPageURLs.join("|"));
-        }, false);
-
-        list.appendChild(outer);
+        if (allPageURLs.length > 1) {
+          let outer = document.createElement("div");
+          outer.className = "openall";
+          outer.textContent = document.getElementById("text-openalltabs").textContent;
+          outer.setAttribute("role", "button");
+  
+          outer.addEventListener("click", function() {
+            openTabs(allPageURLs.join("|"));
+          }, false);
+  
+          list.appendChild(outer);
+        }
       } else {
         list.style.display = "none";
       }
@@ -208,15 +214,18 @@
           return;
         }
 
+        document.getElementById("loadingAddons").style.display = "none";
+
         for (let i=0; i<aAddons.length; i++) {  
           let outer = document.createElement("div");
+          outer.setAttribute("role", "button");
           outer.setAttribute("addonID", aAddons[i].id);
   
           let addonName = aAddons[i].name;
           outer.addEventListener("click", function() {
             goToAddons(addonName);
           }, false)
-  
+
           let img = document.createElement("img");
           img.className = "favicon";
           img.setAttribute("src", aAddons[i].iconURL);
@@ -261,9 +270,12 @@
 
     <div id="recentTabs" class="section-box">
       <h1>&aboutHome.recentTabs;</h1>
+      <div id="loadingTabs" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
     </div>
 
-    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();">
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
       <div>
         <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
         <div>&aboutHome.remoteTabs;</div>
@@ -272,10 +284,13 @@
 
     <div id="newAddons" class="section-box">
       <h1>&aboutHome.recommendedAddons2;</h1>
+      <div id="loadingAddons" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
     </div>
 
     <div id="about">
-    	 <img src="http://mozilla.org/favicon.ico"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
+    	 <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
     </div>
   </div>
 
