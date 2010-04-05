@@ -1954,7 +1954,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(STOBJ_GET_CLASS(protoJSObject)))
+    if(!IS_PROTO_CLASS(protoJSObject->getClass()))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
@@ -2184,7 +2184,7 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     if(!list)
         return NS_OK; // No wrappers to update.
 
-    AutoJSRequestWithNoCallContext req(aJSContext);
+    JSAutoRequest req(aJSContext);
 
     Link* cur = list;
     if(cur->obj && !PerformOp(aJSContext, aWay, cur->obj))
@@ -2546,7 +2546,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
     JSBool sameOrigin;
     JSBool sameScope = xpc_SameScope(objectscope, xpcscope, &sameOrigin);
     JSBool forceXOW =
-        XPCCrossOriginWrapper::ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name);
+        XPCCrossOriginWrapper::ClassNeedsXOW(aObject->getClass()->name);
 
     // We can do nothing if:
     // - We're wrapping a system object
@@ -2752,7 +2752,7 @@ nsXPConnect::SetSafeJSContext(JSContext * aSafeJSContext)
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)),
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
                  "What kind of wrapper is this?");
 
     if(IS_WN_WRAPPER_OBJECT(obj))
@@ -2801,10 +2801,14 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
     return nsnull;
 }
 
-NS_IMETHODIMP_(JSClass *)
-nsXPConnect::GetNativeWrapperClass()
+NS_IMETHODIMP_(void)
+nsXPConnect::GetNativeWrapperGetPropertyOp(JSPropertyOp *getPropertyPtr)
 {
-    return XPCNativeWrapper::GetJSClass();
+    NS_ASSERTION(XPCNativeWrapper::GetJSClass(true)->getProperty ==
+                 XPCNativeWrapper::GetJSClass(false)->getProperty,
+                 "Call and NoCall XPCNativeWrapper Class must use the same "
+                 "getProperty hook.");
+    *getPropertyPtr = XPCNativeWrapper::GetJSClass(true)->getProperty;
 }
 
 /* These are here to be callable from a debugger */

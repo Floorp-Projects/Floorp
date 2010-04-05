@@ -213,10 +213,6 @@ MAKEFILES_jsdebugger="
   js/jsd/idl/Makefile
 "
 
-MAKEFILES_jsctypes="
-  js/ctypes/Makefile
-"
-
 MAKEFILES_content="
   content/Makefile
   content/base/Makefile
@@ -772,6 +768,11 @@ MAKEFILES_xulapp="
   toolkit/themes/winstripe/help/Makefile
   toolkit/themes/winstripe/mozapps/Makefile
   toolkit/xre/Makefile
+"
+
+MAKEFILES_ctypes="
+  toolkit/components/ctypes/Makefile
+  toolkit/components/ctypes/tests/Makefile
 "
 
 MAKEFILES_libpr0n="

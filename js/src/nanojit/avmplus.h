@@ -90,12 +90,11 @@
 void NanoAssertFail();
 #endif
 
-#define AvmAssert(x) assert(x)
-#define AvmAssertMsg(x, y)
-#define AvmDebugLog(x) printf x
-
 #if defined(AVMPLUS_IA32)
 #if defined(_MSC_VER)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 __declspec(naked) static inline __int64 rdtsc()
 {
     __asm
@@ -104,23 +103,34 @@ __declspec(naked) static inline __int64 rdtsc()
         ret;
     }
 }
+
 #elif defined(SOLARIS)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 static inline unsigned long long rdtsc(void)
 {
     unsigned long long int x;
     asm volatile (".byte 0x0f, 0x31" : "=A" (x));
     return x;
 }
+
 #elif defined(__i386__)
+
+# define AVMPLUS_HAS_RDTSC 1
+
 static __inline__ unsigned long long rdtsc(void)
 {
   unsigned long long int x;
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
+
 #endif /* compilers */
 
 #elif defined(__x86_64__)
+
+# define AVMPLUS_HAS_RDTSC 1
 
 static __inline__ uint64_t rdtsc(void)
 {
@@ -131,6 +141,8 @@ static __inline__ uint64_t rdtsc(void)
 
 #elif defined(_MSC_VER) && defined(_M_AMD64)
 
+# define AVMPLUS_HAS_RDTSC 1
+
 #include <intrin.h>
 #pragma intrinsic(__rdtsc)
 
@@ -140,6 +152,8 @@ static inline unsigned __int64 rdtsc(void)
 }
 
 #elif defined(__powerpc__)
+
+# define AVMPLUS_HAS_RDTSC 1
 
 typedef unsigned long long int unsigned long long;
 
@@ -164,6 +178,10 @@ static __inline__ unsigned long long rdtsc(void)
 }
 
 #endif /* architecture */
+
+#ifndef AVMPLUS_HAS_RDTSC
+# define AVMPLUS_HAS_RDTSC 0
+#endif
 
 struct JSContext;
 
@@ -250,10 +268,6 @@ namespace avmplus {
      * on a set of items or conditions. Class BitSet provides functions
      * to manipulate individual bits in the vector.
      *
-     * Since most vectors are rather small an array of longs is used by
-     * default to house the value of the bits.  If more bits are needed
-     * then an array is allocated dynamically outside of this object.
-     *
      * This object is not optimized for a fixed sized bit vector
      * it instead allows for dynamically growing the bit vector.
      */
@@ -266,23 +280,19 @@ namespace avmplus {
             BitSet()
             {
                 capacity = kDefaultCapacity;
+                ar = (long*)calloc(capacity, sizeof(long));
                 reset();
             }
 
             ~BitSet()
             {
-                if (capacity > kDefaultCapacity)
-                    free(bits.ptr);
+                free(ar);
             }
 
             void reset()
             {
-                if (capacity > kDefaultCapacity)
-                    for(int i=0; i<capacity; i++)
-                        bits.ptr[i] = 0;
-                else
-                    for(int i=0; i<capacity; i++)
-                        bits.ar[i] = 0;
+                for (int i = 0; i < capacity; i++)
+                    ar[i] = 0;
             }
 
             void set(int bitNbr)
@@ -292,10 +302,7 @@ namespace avmplus {
                 if (index >= capacity)
                     grow(index+1);
 
-                if (capacity > kDefaultCapacity)
-                    bits.ptr[index] |= (1<<bit);
-                else
-                    bits.ar[index] |= (1<<bit);
+                ar[index] |= (1<<bit);
             }
 
             void clear(int bitNbr)
@@ -303,12 +310,7 @@ namespace avmplus {
                 int index = bitNbr / kUnit;
                 int bit = bitNbr % kUnit;
                 if (index < capacity)
-                {
-                    if (capacity > kDefaultCapacity)
-                        bits.ptr[index] &= ~(1<<bit);
-                    else
-                        bits.ar[index] &= ~(1<<bit);
-                }
+                    ar[index] &= ~(1<<bit);
             }
 
             bool get(int bitNbr) const
@@ -317,12 +319,7 @@ namespace avmplus {
                 int bit = bitNbr % kUnit;
                 bool value = false;
                 if (index < capacity)
-                {
-                    if (capacity > kDefaultCapacity)
-                        value = ( bits.ptr[index] & (1<<bit) ) ? true : false;
-                    else
-                        value = ( bits.ar[index] & (1<<bit) ) ? true : false;
-                }
+                    value = ( ar[index] & (1<<bit) ) ? true : false;
                 return value;
             }
 
@@ -333,35 +330,21 @@ namespace avmplus {
                 // create vector that is 2x bigger than requested
                 newCapacity *= 2;
                 //MEMTAG("BitVector::Grow - long[]");
-                long* newBits = (long*)calloc(1, newCapacity * sizeof(long));
-                //memset(newBits, 0, newCapacity * sizeof(long));
+                long* newAr = (long*)calloc(newCapacity, sizeof(long));
 
                 // copy the old one
-                if (capacity > kDefaultCapacity)
-                    for(int i=0; i<capacity; i++)
-                        newBits[i] = bits.ptr[i];
-                else
-                    for(int i=0; i<capacity; i++)
-                        newBits[i] = bits.ar[i];
+                for (int i = 0; i < capacity; i++)
+                    newAr[i] = ar[i];
 
                 // in with the new out with the old
-                if (capacity > kDefaultCapacity)
-                    free(bits.ptr);
+                free(ar);
 
-                bits.ptr = newBits;
+                ar = newAr;
                 capacity = newCapacity;
             }
 
-            // by default we use the array, but if the vector
-            // size grows beyond kDefaultCapacity we allocate
-            // space dynamically.
             int capacity;
-            union
-            {
-                long ar[kDefaultCapacity];
-                long*  ptr;
-            }
-            bits;
+            long* ar;
     };
 }
 

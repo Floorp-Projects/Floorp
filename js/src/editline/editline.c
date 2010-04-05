@@ -169,7 +169,10 @@ STATIC void
 TTYflush()
 {
     if (ScreenCount) {
-	(void)write(1, Screen, ScreenCount);
+        /* Dummy assignment avoids GCC warning on
+         * "attribute warn_unused_result" */
+	ssize_t dummy = write(1, Screen, ScreenCount);
+        (void)dummy;
 	ScreenCount = 0;
     }
 }

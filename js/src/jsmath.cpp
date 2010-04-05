@@ -434,38 +434,46 @@ static const jsdouble RNG_DSCALE = jsdouble(1LL << 53);
  * Math.random() support, lifted from java.util.Random.java.
  */
 static inline void
-random_setSeed(JSThreadData *data, int64 seed)
+random_setSeed(JSContext *cx, int64 seed)
 {
-    data->rngSeed = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
+    cx->rngSeed = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
 }
 
 void
-js_InitRandom(JSThreadData *data)
+js_InitRandom(JSContext *cx)
 {
-    /* Finally, set the seed from current time. */
-    random_setSeed(data, PRMJ_Now() / 1000);
+    /*
+     * Set the seed from current time. Since we have a RNG per context and we often bring
+     * up several contexts at the same time, we xor in some additional values, namely
+     * the context and its successor. We don't just use the context because it might be
+     * possible to reverse engineer the context pointer if one guesses the time right.
+     */
+    random_setSeed(cx,
+                   (PRMJ_Now() / 1000) ^
+                   int64(cx) ^
+                   int64(cx->link.next));
 }
 
 static inline uint64
-random_next(JSThreadData *data, int bits)
+random_next(JSContext *cx, int bits)
 {
-    uint64 nextseed = data->rngSeed * RNG_MULTIPLIER;
+    uint64 nextseed = cx->rngSeed * RNG_MULTIPLIER;
     nextseed += RNG_ADDEND;
     nextseed &= RNG_MASK;
-    data->rngSeed = nextseed;
+    cx->rngSeed = nextseed;
     return nextseed >> (48 - bits);
 }
 
 static inline jsdouble
-random_nextDouble(JSThreadData *data)
+random_nextDouble(JSContext *cx)
 {
-    return jsdouble((random_next(data, 26) << 27) + random_next(data, 27)) / RNG_DSCALE;
+    return jsdouble((random_next(cx, 26) << 27) + random_next(cx, 27)) / RNG_DSCALE;
 }
 
 static JSBool
 math_random(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsdouble z = random_nextDouble(JS_THREAD_DATA(cx));
+    jsdouble z = random_nextDouble(cx);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -670,7 +678,7 @@ math_pow_tn(jsdouble d, jsdouble p)
 static jsdouble FASTCALL
 math_random_tn(JSContext *cx)
 {
-    return random_nextDouble(JS_THREAD_DATA(cx));
+    return random_nextDouble(cx);
 }
 
 static jsdouble FASTCALL

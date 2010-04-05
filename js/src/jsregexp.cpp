@@ -178,7 +178,7 @@ struct RENode {
 
 typedef struct CompilerState {
     JSContext       *context;
-    JSTokenStream   *tokenStream; /* For reporting errors */
+    TokenStream     *tokenStream; /* For reporting errors */
     const jschar    *cpbegin;
     const jschar    *cpend;
     const jschar    *cp;
@@ -441,9 +441,8 @@ ReportRegExpErrorHelper(CompilerState *state, uintN flags, uintN errorNumber,
                         const jschar *arg)
 {
     if (state->tokenStream) {
-        return js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                           NULL, JSREPORT_UC | flags,
-                                           errorNumber, arg);
+        return ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        NULL, JSREPORT_UC | flags, errorNumber, arg);
     }
     return JS_ReportErrorFlagsAndNumberUC(state->context, flags,
                                           js_GetErrorMessage, NULL,
@@ -1958,7 +1957,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
 }
 
 static JSBool
-CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
+CompileRegExpToAST(JSContext* cx, TokenStream* ts,
                    JSString* str, uintN flags, CompilerState& state)
 {
     uintN i;
@@ -2491,7 +2490,7 @@ class RegExpNativeCompiler {
                                        0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
+        LIns* text_word = lir->insLoad(LIR_ld, pos, 0, ACC_OTHER);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
@@ -2835,7 +2834,7 @@ class RegExpNativeCompiler {
          * memory (REGlobalData::stateStack, since it is unused).
          */
         lir->insStorei(branchEnd, state,
-                       offsetof(REGlobalData, stateStack));
+                       offsetof(REGlobalData, stateStack), ACC_OTHER);
         LIns *leftSuccess = lir->insBranch(LIR_j, NULL, NULL);
 
         /* Try right branch. */
@@ -2843,13 +2842,12 @@ class RegExpNativeCompiler {
         if (!(branchEnd = compileNode(rightRe, pos, atEnd, fails)))
             return NULL;
         lir->insStorei(branchEnd, state,
-                       offsetof(REGlobalData, stateStack));
+                       offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Land success on the left branch. */
         targetCurrentPoint(leftSuccess);
         return addName(fragment->lirbuf,
-                       lir->insLoad(LIR_ldp, state,
-                                    offsetof(REGlobalData, stateStack)),
+                       lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
                        "pos");
     }
 
@@ -2859,19 +2857,18 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Try ? body. */
         LInsList kidFails(cx);
         if (!(pos = compileNode(node, pos, atEnd, kidFails)))
             return NULL;
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Join success and failure and get new position. */
         targetCurrentPoint(kidFails);
         pos = addName(fragment->lirbuf,
-                      lir->insLoad(LIR_ldp, state,
-                                   offsetof(REGlobalData, stateStack)),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
                       "pos");
 
         return pos;
@@ -2926,13 +2923,13 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
 
         /* Begin iteration: load loop variables. */
         LIns *loopTop = lir->ins0(LIR_label);
         LIns *iterBegin = addName(fragment->lirbuf,
                                   lir->insLoad(LIR_ldp, state,
-                                               offsetof(REGlobalData, stateStack)),
+                                               offsetof(REGlobalData, stateStack), ACC_OTHER),
                                   "pos");
 
         /* Match quantifier body. */
@@ -2952,7 +2949,7 @@ class RegExpNativeCompiler {
         }
 
         /* End iteration: store loop variables, increment, jump */
-        lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
         lir->insBranch(LIR_j, NULL, loopTop);
 
         /*
@@ -3050,7 +3047,7 @@ class RegExpNativeCompiler {
             return false;
 
         /* Fall-through from compileNode means success. */
-        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->insStorei(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
         lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(1));
 
@@ -3089,7 +3086,7 @@ class RegExpNativeCompiler {
 
         /* Outer loop increment. */
         lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImmWord(2)), state,
-                       offsetof(REGlobalData, skipped));
+                       offsetof(REGlobalData, skipped), ACC_OTHER);
 
         return !outOfMemory();
     }
@@ -3098,7 +3095,7 @@ class RegExpNativeCompiler {
     addName(LirBuffer* lirbuf, LIns* ins, const char* name)
     {
 #ifdef NJ_VERBOSE
-        debug_only_stmt(lirbuf->names->addName(ins, name);)
+        debug_only_stmt(lirbuf->printer->lirNameMap->addName(ins, name);)
 #endif
         return ins;
     }
@@ -3145,8 +3142,7 @@ class RegExpNativeCompiler {
     {
         fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &LogController);
-        lirbuf->names = new (tempAlloc) LirNameMap(tempAlloc, labels);
+        lirbuf->printer = new (tempAlloc) LInsPrinter(tempAlloc);
 #endif
     }
 
@@ -3188,13 +3184,13 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (LogController.lcbits & LC_TMRegexp) {
-                lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->names,
+                lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->printer,
                                                          &LogController);
             }
         )
 #endif
 #ifdef DEBUG
-        lir = validate_writer = new ValidateWriter(lir, "regexp writer pipeline");
+        lir = validate_writer = new ValidateWriter(lir, lirbuf->printer, "regexp writer pipeline");
 #endif
 
         /*
@@ -3223,8 +3219,7 @@ class RegExpNativeCompiler {
         })
 
         start = addName(lirbuf,
-                      lir->insLoad(LIR_ldp, state,
-                                   offsetof(REGlobalData, skipped)),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, skipped), ACC_OTHER),
                       "start");
 
         if (cs->flags & JSREG_STICKY) {
@@ -3248,8 +3243,7 @@ class RegExpNativeCompiler {
          */
         JS_ASSERT(!lirbuf->sp && !lirbuf->rp);
 
-        assm->compile(fragment, tempAlloc, /*optimize*/true
-                      verbose_only(, lirbuf->names->labels));
+        assm->compile(fragment, tempAlloc, /*optimize*/true verbose_only(, lirbuf->printer));
         if (assm->error() != nanojit::None)
             goto fail;
 
@@ -3339,7 +3333,7 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
 #endif
 
 JSRegExp *
-js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+js_NewRegExp(JSContext *cx, TokenStream *ts,
              JSString *str, uintN flags, JSBool flat)
 {
     JSRegExp *re;
@@ -5232,10 +5226,11 @@ js_InitRegExpStatics(JSContext *cx)
 
 JS_FRIEND_API(void)
 js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             JSTempValueRooter *tvr)
+                             AutoValueRooter *tvr)
 {
     *statics = cx->regExpStatics;
-    JS_PUSH_TEMP_ROOT_STRING(cx, statics->input, tvr);
+    if (statics->input)
+        tvr->setString(statics->input);
     /*
      * Prevent JS_ClearRegExpStatics from freeing moreParens, since we've only
      * moved it elsewhere (into statics->moreParens).
@@ -5246,12 +5241,11 @@ js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
 
 JS_FRIEND_API(void)
 js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        JSTempValueRooter *tvr)
+                        AutoValueRooter *tvr)
 {
     /* Clear/free any new JSRegExpStatics data before clobbering. */
     JS_ClearRegExpStatics(cx);
     cx->regExpStatics = *statics;
-    JS_POP_TEMP_ROOT(cx, tvr);
 }
 
 void
@@ -5834,8 +5828,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
-                   jschar *chars, size_t length, uintN flags)
+js_NewRegExpObject(JSContext *cx, TokenStream *ts,
+                   const jschar *chars, size_t length, uintN flags)
 {
     JSString *str;
     JSObject *obj;
@@ -5844,7 +5838,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
-    JSAutoTempValueRooter tvr(cx, str);
+    AutoValueRooter tvr(cx, str);
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;

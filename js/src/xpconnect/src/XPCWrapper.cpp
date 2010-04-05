@@ -60,7 +60,7 @@ const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(wrapper);
+  JSClass *clasp = wrapper->getClass();
   if (clasp == &XPCCrossOriginWrapper::XOWClass.base) {
     return UnwrapXOW(cx, wrapper);
   }
@@ -322,7 +322,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(iterObj));
+  js::AutoObjectRooter tvr(cx, iterObj);
 
   // Do this sooner rather than later to avoid complications in
   // IteratorFinalize.
@@ -337,7 +337,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     // call enumerate, and then re-set the prototype. As we do this, we have
     // to protec the temporary wrapper from garbage collection.
 
-    JSAutoTempValueRooter tvr(cx, tempWrapper);
+    js::AutoValueRooter tvr(cx, tempWrapper);
     if (!JS_SetPrototype(cx, iterObj, wrapperObj) ||
         !XPCWrapper::Enumerate(cx, iterObj, wrapperObj) ||
         !JS_SetPrototype(cx, iterObj, tempWrapper)) {
@@ -386,7 +386,7 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, iterObj);
+  js::AutoValueRooter tvr(cx, iterObj);
   if (!propertyContainer) {
     if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(nsnull)) ||
         !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||

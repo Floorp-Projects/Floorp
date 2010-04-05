@@ -148,7 +148,7 @@ namespace nanojit
         MR(SP,FP);
 
         // return value is GuardRecord*
-        asm_int(EAX, int(lr), /*canClobberCCs*/true);
+        asm_immi(EAX, int(lr), /*canClobberCCs*/true);
     }
 
     NIns *Assembler::genEpilogue()
@@ -168,7 +168,7 @@ namespace nanojit
 
         const CallInfo* call = ins->callInfo();
         // must be signed, not unsigned
-        uint32_t iargs = call->count_iargs();
+        uint32_t iargs = call->count_int32_args();
         int32_t fargs = call->count_args() - iargs;
 
         bool indirect = call->isIndirect();
@@ -237,13 +237,13 @@ namespace nanojit
         // Pre-assign registers to the first N 4B args based on the calling convention.
         uint32_t n = 0;
 
-        ArgSize sizes[MAXARGS];
-        uint32_t argc = call->get_sizes(sizes);
+        ArgType argTypes[MAXARGS];
+        uint32_t argc = call->getArgTypes(argTypes);
         int32_t stkd = 0;
 
         if (indirect) {
             argc--;
-            asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
+            asm_arg(ARGTYPE_P, ins->arg(argc), EAX, stkd);
             if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
@@ -251,12 +251,12 @@ namespace nanojit
         for (uint32_t i = 0; i < argc; i++)
         {
             uint32_t j = argc-i-1;
-            ArgSize sz = sizes[j];
+            ArgType ty = argTypes[j];
             Register r = UnspecifiedReg;
-            if (n < max_regs && sz != ARGSIZE_F) {
+            if (n < max_regs && ty != ARGTYPE_F) {
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
-            asm_arg(sz, ins->arg(j), r, stkd);
+            asm_arg(ty, ins->arg(j), r, stkd);
             if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
@@ -281,7 +281,7 @@ namespace nanojit
             btr RegAlloc::free[ecx], eax    // free &= ~rmask(i)
             mov r, eax
         }
-	#elif defined __SUNPRO_CC
+    #elif defined __SUNPRO_CC
         // Workaround for Sun Studio bug on handler embeded asm code.
         // See bug 544447 for detail.
         // https://bugzilla.mozilla.org/show_bug.cgi?id=544447
@@ -369,11 +369,11 @@ namespace nanojit
             LEA(r, arDisp(ins), FP);
 
         } else if (ins->isconst()) {
-            asm_int(r, ins->imm32(), /*canClobberCCs*/false);
+            asm_immi(r, ins->imm32(), /*canClobberCCs*/false);
             ins->clearReg();
 
-        } else if (ins->isconstq()) {
-            asm_quad(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
+        } else if (ins->isconstf()) {
+            asm_immf(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
             ins->clearReg();
 
         } else if (ins->isop(LIR_param) && ins->paramKind() == 0 &&
@@ -465,21 +465,14 @@ namespace nanojit
     void Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
     {
         (void)quad;
-        if (d)
-        {
-            if (rmask(rr) & GpRegs) {
-                ST(FP, d, rr);
-            } else if (rmask(rr) & XmmRegs) {
-                SSE_STQ(d, FP, rr);
-            } else {
-                NanoAssert(rmask(rr) & x87Regs);
-                FSTQ((pop?1:0), d, FP);
-            }
-        }
-        else if (pop && (rmask(rr) & x87Regs))
-        {
-            // pop the fpu result since it isn't used
-            FSTP(FST0);
+        NanoAssert(d);
+        if (rmask(rr) & GpRegs) {
+            ST(FP, d, rr);
+        } else if (rmask(rr) & XmmRegs) {
+            SSE_STQ(d, FP, rr);
+        } else {
+            NanoAssert(rmask(rr) & x87Regs);
+            FSTQ((pop?1:0), d, FP);
         }
     }
 
@@ -501,7 +494,7 @@ namespace nanojit
         //
         if (ins->isInReg()) {
             Register rr = ins->getReg();
-            asm_spilli(ins, false);         // if also in memory in post-state, spill it now
+            asm_maybe_spill(ins, false);    // if also in memory in post-state, spill it now
             switch (ins->opcode()) {
             case LIR_ldf:
                 if (rmask(rr) & XmmRegs) {
@@ -576,7 +569,7 @@ namespace nanojit
                 FST32(pop?1:0, dr, rb);
             }
 
-        } else if (value->isconstq()) {
+        } else if (value->isconstf()) {
             STi(rb, dr+4, value->imm64_1());
             STi(rb, dr,   value->imm64_0());
 
@@ -749,11 +742,19 @@ namespace nanojit
             // disturb the CCs!
             Register r = findRegFor(lhs, GpRegs);
             if (c == 0 && cond->isop(LIR_eq)) {
-                TEST(r, r);
+                NanoAssert(N_LOOKAHEAD >= 3);
+                if ((lhs->isop(LIR_and) || lhs->isop(LIR_or)) &&
+                    cond == lookahead[1] && lhs == lookahead[2])
+                {
+                    // Do nothing.  At run-time, 'lhs' will have just computed
+                    // by an i386 instruction that sets ZF for us ('and' or
+                    // 'or'), so we don't have to do it ourselves.
+                } else {
+                    TEST(r, r);     // sets ZF according to the value of 'lhs'
+                }
             } else {
                 CMPi(r, c);
             }
-
         } else {
             Register ra, rb;
             findRegFor2(GpRegs, lhs, ra, GpRegs, rhs, rb);
@@ -848,9 +849,9 @@ namespace nanojit
         LInsp rhs = ins->oprnd2();
 
         // Second special case.
-        // XXX: bug 547125: don't need this once LEA is used for LIR_add/LIR_addp in all cases below
-        if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-            // LIR_add(LIR_alloc, LIR_int) or LIR_addp(LIR_alloc, LIR_int) -- use lea.
+        // XXX: bug 547125: don't need this once LEA is used for LIR_add in all cases below
+        if (op == LIR_add && lhs->isop(LIR_alloc) && rhs->isconst()) {
+            // LIR_add(LIR_alloc, LIR_int) -- use lea.
             Register rr = prepareResultReg(ins, GpRegs);
             int d = findMemFor(lhs) + rhs->imm32();
 
@@ -912,7 +913,6 @@ namespace nanojit
 
             switch (op) {
             case LIR_add:
-            case LIR_addp:
             case LIR_addxov:    ADD(rr, rb); break;     // XXX: bug 547125: could use LEA for LIR_add
             case LIR_sub:
             case LIR_subxov:    SUB(rr, rb); break;
@@ -934,7 +934,6 @@ namespace nanojit
         } else {
             int c = rhs->imm32();
             switch (op) {
-            case LIR_addp:
             case LIR_add:
                 // this doesn't set cc's, only use it when cc's not required.
                 LEA(rr, c, ra);
@@ -1251,16 +1250,16 @@ namespace nanojit
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_int(LInsp ins)
+    void Assembler::asm_immi(LInsp ins)
     {
         Register rr = prepareResultReg(ins, GpRegs);
 
-        asm_int(rr, ins->imm32(), /*canClobberCCs*/true);
+        asm_immi(rr, ins->imm32(), /*canClobberCCs*/true);
 
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_int(Register r, int32_t val, bool canClobberCCs)
+    void Assembler::asm_immi(Register r, int32_t val, bool canClobberCCs)
     {
         if (val == 0 && canClobberCCs)
             XOR(r, r);
@@ -1268,15 +1267,15 @@ namespace nanojit
             LDi(r, val);
     }
 
-    void Assembler::asm_quad(Register r, uint64_t q, double d, bool canClobberCCs)
+    void Assembler::asm_immf(Register r, uint64_t q, double d, bool canClobberCCs)
     {
-        // Quads require non-standard handling. There is no load-64-bit-immediate
+        // Floats require non-standard handling. There is no load-64-bit-immediate
         // instruction on i386, so in the general case, we must load it from memory.
         // This is unlike most other LIR operations which can be computed directly
         // in a register. We can special-case 0.0 and various other small ints
         // (1.0 on x87, any int32_t value on SSE2), but for all other values, we
         // allocate an 8-byte chunk via dataAlloc and load from there. Note that
-        // this implies that quads never require spill area, since they will always
+        // this implies that floats never require spill area, since they will always
         // be rematerialized from const data (or inline instructions in the special cases).
 
         if (rmask(r) & XmmRegs) {
@@ -1288,7 +1287,7 @@ namespace nanojit
                 Register tr = registerAllocTmp(GpRegs);
                 SSE_CVTSI2SD(r, tr);
                 SSE_XORPDr(r, r);   // zero r to ensure no dependency stalls
-                asm_int(tr, (int)d, canClobberCCs);
+                asm_immi(tr, (int)d, canClobberCCs);
             } else {
                 const uint64_t* p = findQuadConstant(q);
                 LDSDm(r, (const double*)p);
@@ -1307,13 +1306,13 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_quad(LInsp ins)
+    void Assembler::asm_immf(LInsp ins)
     {
         NanoAssert(ins->isconstf());
         if (ins->isInReg()) {
             Register rr = ins->getReg();
             NanoAssert(rmask(rr) & FpRegs);
-            asm_quad(rr, ins->imm64(), ins->imm64f(), /*canClobberCCs*/true);
+            asm_immf(rr, ins->imm64(), ins->imm64f(), /*canClobberCCs*/true);
         } else {
             // Do nothing, will be rematerialized when necessary.
         }
@@ -1384,16 +1383,16 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_arg(ArgSize sz, LInsp ins, Register r, int32_t& stkd)
+    void Assembler::asm_arg(ArgType ty, LInsp ins, Register r, int32_t& stkd)
     {
         // If 'r' is known, then that's the register we have to put 'ins'
         // into.
 
-        if (sz == ARGSIZE_I || sz == ARGSIZE_U) {
+        if (ty == ARGTYPE_I || ty == ARGTYPE_U) {
             if (r != UnspecifiedReg) {
                 if (ins->isconst()) {
                     // Rematerialize the constant.
-                    asm_int(r, ins->imm32(), /*canClobberCCs*/true);
+                    asm_immi(r, ins->imm32(), /*canClobberCCs*/true);
                 } else if (ins->isInReg()) {
                     if (r != ins->getReg())
                         MR(r, ins->getReg());
@@ -1420,7 +1419,7 @@ namespace nanojit
             }
 
         } else {
-            NanoAssert(sz == ARGSIZE_F);
+            NanoAssert(ty == ARGTYPE_F);
             asm_farg(ins, stkd);
         }
     }
@@ -1562,7 +1561,7 @@ namespace nanojit
             NanoAssert(FST0 == rr);
             NanoAssert(!lhs->isInReg() || FST0 == lhs->getReg());
 
-            if (rhs->isconstq()) {
+            if (rhs->isconstf()) {
                 const uint64_t* p = findQuadConstant(rhs->imm64());
 
                 switch (op) {
@@ -1889,7 +1888,7 @@ namespace nanojit
             } else {
                 TEST_AH(mask);
                 FNSTSW_AX();        // requires EAX to be free
-                if (rhs->isconstq())
+                if (rhs->isconstf())
                 {
                     const uint64_t* p = findQuadConstant(rhs->imm64());
                     FCOMdm((pop?1:0), (const double*)p);

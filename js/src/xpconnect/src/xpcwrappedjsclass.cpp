@@ -779,7 +779,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         PRBool isSystem;
         rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
         if((NS_FAILED(rv) || !isSystem) &&
-           !IS_WRAPPER_CLASS(STOBJ_GET_CLASS(selfObj)))
+           !IS_WRAPPER_CLASS(selfObj->getClass()))
         {
             // A content object.
             nsRefPtr<SameOriginCheckedComponent> checked =
