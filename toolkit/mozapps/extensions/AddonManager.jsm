@@ -213,7 +213,12 @@ var AddonManagerInternal = {
 
     // Ensure all default providers have had a chance to register themselves
     PROVIDERS.forEach(function(url) {
-      Components.utils.import(url, {});
+      try {
+        Components.utils.import(url, {});
+      }
+      catch (e) {
+        ERROR("Exception loading provider \"" + url + "\": " + e);
+      }
     });
 
     let needsRestart = false;
