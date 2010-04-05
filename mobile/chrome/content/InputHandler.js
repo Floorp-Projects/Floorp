@@ -641,10 +641,6 @@ MouseModule.prototype = {
       let dY = dragData.prevPanY - sY;
       this._kinetic.addData(-dX, -dY);
       this._kinetic.start();
-
-      // to avoid regressing performance (on device) by redrawing the
-      // indicators while kinetically scrolling just removed it
-      this._targetScrollInterface.element.removeAttribute("panning");
     } else {
       // now we're done, says our secret 3rd argument
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
@@ -766,12 +762,9 @@ MouseModule.prototype = {
       return sX.value > rect.width || sY.value > rect.height;
     },
 
-    dragStart: function dragStart(cx, cy, target, scroller) {
-      scroller.element.setAttribute("panning", "true");
-    },
+    dragStart: function dragStart(cx, cy, target, scroller) {},
 
     dragStop : function dragStop(dx, dy, scroller) {
-      scroller.element.removeAttribute("panning");
       return this.dragMove(dx, dy, scroller);
     },
 

@@ -223,8 +223,9 @@ BrowserView.Util = {
   },
 
   initContainer: function initContainer(container, visibleRect) {
-    container.style.width = visibleRect.width  + "px";
-    container.style.height = visibleRect.height + "px";
+    container.style.width = visibleRect.width  + 'px';
+    container.style.height = visibleRect.height + 'px';
+    container.style.overflow = '-moz-hidden-unscrollable';
   },
 
   resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
