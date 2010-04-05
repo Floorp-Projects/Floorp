@@ -1592,7 +1592,12 @@ var XPIProvider = {
    *          A callback to pass the array of AddonInstalls to
    */
   getInstalls: function XPI_getInstalls(types, callback) {
-    callback([i.wrapper for each (i in this.installs)]);
+    let results = [];
+    this.installs.forEach(function(install) {
+      if (!types || types.indexOf(install.type) >= 0)
+        results.push(install.wrapper);
+    });
+    callback(results);
   },
 
   /**
