@@ -431,6 +431,7 @@ function UpdateParser(id, type, updateKey, url, observer) {
                  createInstance(Ci.nsIXMLHttpRequest);
   this.request.open("GET", url, true);
   this.request.channel.notificationCallbacks = new BadCertHandler();
+  this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
   this.request.overrideMimeType("text/xml");
   var self = this;
   this.request.onload = function(event) { self.onLoad() };
