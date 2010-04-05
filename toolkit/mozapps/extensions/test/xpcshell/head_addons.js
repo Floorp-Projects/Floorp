@@ -316,12 +316,14 @@ const AddonListener = {
     if (expectedRestart)
       do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_ENABLE));
     do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
+    return check_test_completed(arguments);
   },
 
   onEnabled: function(addon) {
     let [event, expectedRestart] = getExpectedEvent(addon.id);
     do_check_eq("onEnabled", event);
     do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
+    return check_test_completed(arguments);
   },
 
   onDisabling: function(addon, requiresRestart) {
@@ -331,12 +333,14 @@ const AddonListener = {
     if (expectedRestart)
       do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_DISABLE));
     do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
+    return check_test_completed(arguments);
   },
 
   onDisabled: function(addon) {
     let [event, expectedRestart] = getExpectedEvent(addon.id);
     do_check_eq("onDisabled", event);
     do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
+    return check_test_completed(arguments);
   },
 
   onInstalling: function(addon, requiresRestart) {
@@ -345,11 +349,13 @@ const AddonListener = {
     do_check_eq(requiresRestart, expectedRestart);
     if (expectedRestart)
       do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_INSTALL));
+    return check_test_completed(arguments);
   },
 
   onInstalled: function(addon) {
     let [event, expectedRestart] = getExpectedEvent(addon.id);
     do_check_eq("onInstalled", event);
+    return check_test_completed(arguments);
   },
 
   onUninstalling: function(addon, requiresRestart) {
@@ -358,16 +364,19 @@ const AddonListener = {
     do_check_eq(requiresRestart, expectedRestart);
     if (expectedRestart)
       do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_UNINSTALL));
+    return check_test_completed(arguments);
   },
 
   onUninstalled: function(addon) {
     let [event, expectedRestart] = getExpectedEvent(addon.id);
     do_check_eq("onUninstalled", event);
+    return check_test_completed(arguments);
   },
 
   onOperationCancelled: function(addon) {
     let [event, expectedRestart] = getExpectedEvent(addon.id);
     do_check_eq("onOperationCancelled", event);
+    return check_test_completed(arguments);
   }
 };
 
@@ -377,48 +386,50 @@ const InstallListener = {
         install.state != AddonManager.STATE_AVAILABLE)
       do_throw("Bad install state " + install.state);
     do_check_eq("onNewInstall", gExpectedInstalls.shift());
+    return check_test_completed(arguments);
   },
 
   onDownloadStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADING);
     do_check_eq("onDownloadStarted", gExpectedInstalls.shift());
+    return check_test_completed(arguments);
   },
 
   onDownloadEnded: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_eq("onDownloadEnded", gExpectedInstalls.shift());
     // gNext should determine whether installation continues
-    return gNext(install);
+    return check_test_completed(arguments);
   },
 
   onDownloadFailed: function(install, status) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq("onDownloadFailed", gExpectedInstalls.shift());
-    gNext(install);
+    return check_test_completed(arguments);
   },
 
   onInstallStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLING);
     do_check_eq("onInstallStarted", gExpectedInstalls.shift());
+    return check_test_completed(arguments);
   },
 
   onInstallEnded: function(install, newAddon) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLED);
     do_check_eq("onInstallEnded", gExpectedInstalls.shift());
-    gNext(install);
+    return check_test_completed(arguments);
   },
 
   onInstallFailed: function(install, status) {
     do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
     do_check_eq("onInstallFailed", gExpectedInstalls.shift());
-    gNext(install);
+    return check_test_completed(arguments);
   },
 
   onExternalInstall: function(addon, existingAddon, requiresRestart) {
     do_check_eq("onExternalInstall", gExpectedInstalls.shift());
     do_check_false(requiresRestart);
-    if (existingAddon)
-      do_check_eq(existingAddon.pendingUpgrade, addon);
+    return check_test_completed(arguments);
   }
 };
 
@@ -434,6 +445,22 @@ function prepare_test(expectedEvents, expectedInstalls, next) {
   gExpectedInstalls = expectedInstalls;
   gExpectedEvents = expectedEvents;
   gNext = next;
+}
+
+// Checks if all expected events have been seen and if so calls the callback
+function check_test_completed(args) {
+  if (!gNext)
+    return;
+
+  if (gExpectedInstalls.length > 0)
+    return;
+
+  for (let id in gExpectedEvents) {
+    if (gExpectedEvents[id].length > 0)
+      return;
+  }
+
+  return gNext.apply(null, args);
 }
 
 // Verifies that all the expected events for all add-ons were seen
