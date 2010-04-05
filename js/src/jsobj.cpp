@@ -2161,10 +2161,8 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) &&
-            v != JSVAL_VOID) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_GETTER_OR_SETTER,
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) && v != JSVAL_VOID) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
         }
@@ -2177,10 +2175,8 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &hasProperty))
         return false;
     if (hasProperty) {
-        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) &&
-            v != JSVAL_VOID) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_GETTER_OR_SETTER,
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(v)) && v != JSVAL_VOID) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;
         }
