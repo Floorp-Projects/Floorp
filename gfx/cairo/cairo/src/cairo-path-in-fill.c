@@ -38,10 +38,10 @@
 
 typedef struct cairo_in_fill {
     double tolerance;
-    cairo_bool_t on_edge;
     int winding;
 
     cairo_fixed_t x, y;
+    cairo_bool_t on_edge;
 
     cairo_bool_t has_current_point;
     cairo_point_t current_point;
@@ -54,12 +54,12 @@ _cairo_in_fill_init (cairo_in_fill_t	*in_fill,
 		     double		 x,
 		     double		 y)
 {
-    in_fill->on_edge = FALSE;
     in_fill->winding = 0;
     in_fill->tolerance = tolerance;
 
     in_fill->x = _cairo_fixed_from_double (x);
     in_fill->y = _cairo_fixed_from_double (y);
+    in_fill->on_edge = FALSE;
 
     in_fill->has_current_point = FALSE;
     in_fill->current_point.x = 0;
@@ -142,7 +142,7 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 	return;
 
     if ((p1->x <= in_fill->x && p2->x <= in_fill->x) ||
-	edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) < 0)
+	edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) <= 0)
     {
 	in_fill->winding += dir;
     }
@@ -243,19 +243,16 @@ _cairo_in_fill_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_bool_t
-_cairo_path_fixed_in_fill (const cairo_path_fixed_t	*path,
+void
+_cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t	 fill_rule,
 			   double		 tolerance,
 			   double		 x,
-			   double		 y)
+			   double		 y,
+			   cairo_bool_t		*is_inside)
 {
     cairo_in_fill_t in_fill;
     cairo_status_t status;
-    cairo_bool_t is_inside;
-
-    if (path->is_empty_fill)
-	return FALSE;
 
     _cairo_in_fill_init (&in_fill, tolerance, x, y);
 
@@ -271,21 +268,19 @@ _cairo_path_fixed_in_fill (const cairo_path_fixed_t	*path,
     _cairo_in_fill_close_path (&in_fill);
 
     if (in_fill.on_edge) {
-	is_inside = TRUE;
+	*is_inside = TRUE;
     } else switch (fill_rule) {
     case CAIRO_FILL_RULE_EVEN_ODD:
-	is_inside = in_fill.winding & 1;
+	*is_inside = in_fill.winding & 1;
 	break;
     case CAIRO_FILL_RULE_WINDING:
-	is_inside = in_fill.winding != 0;
+	*is_inside = in_fill.winding != 0;
 	break;
     default:
 	ASSERT_NOT_REACHED;
-	is_inside = FALSE;
+	*is_inside = FALSE;
 	break;
     }
 
     _cairo_in_fill_fini (&in_fill);
-
-    return is_inside;
 }
