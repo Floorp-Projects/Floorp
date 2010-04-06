@@ -52,6 +52,11 @@ CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
+ifeq (Linux_1, $(OS_ARCH)_$(GNU_LD))
+OS_LDFLAGS += -Wl,-rpath='$$ORIGIN'
+NSDISTMODE = copy
+endif
+
 ifdef MOZ_ENABLE_LIBXUL
 APP_XPCOM_LIBS = $(XPCOM_GLUE_LDOPTS)
 else
@@ -66,13 +71,16 @@ LIBS += $(APP_XPCOM_LIBS) \
 ifdef BUILD_STATIC_LIBS
 LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 else
-ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
-LIBS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xul.$(LIB_SUFFIX)
-ifndef WINCE
-OS_LIBS += version.lib
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+LIBS += $(DIST)/bin/XUL
+else
+EXTRA_DSO_LIBS += xul
+LIBS += $(EXTRA_DSO_LIBS)
 endif
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
-endif
+endif # BUILD_STATIC_LIBS
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
@@ -133,7 +141,7 @@ endif
 APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
 APP_BINARY_FASTSTART = $(MOZ_APP_NAME)faststart$(BIN_SUFFIX)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
 APP_NAME = $(MOZ_APP_DISPLAYNAME)
 APP_VERSION = $(MOZ_APP_VERSION)
@@ -149,7 +157,11 @@ AB := $(firstword $(subst -, ,$(AB_CD)))
 clean clobber repackage::
 	rm -rf $(DIST)/$(APP_NAME).app
 
+ifdef LIBXUL_SDK
 APPFILES = Resources
+else
+APPFILES = MacOS
+endif
 
 libs repackage:: application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
@@ -160,14 +172,16 @@ libs repackage:: application.ini
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
+ifdef LIBXUL_SDK
 	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
 	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
-	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
-#	remove CVS dirs from packaged app
-	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
-
 else
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+endif
+	printf "APPLMOZB" > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
+else # MOZ_WIDGET_TOOLKIT != cocoa
 
 libs::
 ifdef LIBXUL_SDK
