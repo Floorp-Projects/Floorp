@@ -255,11 +255,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  rv = nsCSSRuleProcessor::Startup();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsCSSRuleProcessor");
-    return rv;
-  }
+  nsCSSRuleProcessor::Startup();
 
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
@@ -312,7 +308,7 @@ nsLayoutStatics::Shutdown()
   nsEventListenerManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();
-  nsCSSRuleProcessor::Shutdown();
+  nsCSSRuleProcessor::FreeSystemMetrics();
   nsTextFrameTextRunCache::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
