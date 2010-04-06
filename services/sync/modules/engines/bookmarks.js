@@ -108,9 +108,12 @@ BookmarksEngine.prototype = {
     }, this);
 
     Observers.add("bookmarks-restore-success", function() {
-      this._log.debug("Triggering fresh start on successful import");
-      this.resetLastSync();
+      this._log.debug("Tracking all items on successful import");
       this._tracker.ignoreAll = false;
+
+      // Mark all the items as changed so they get uploaded
+      for (let id in this._store.getAllIDs())
+        this._tracker.addChangedID(id);
     }, this);
 
     Observers.add("bookmarks-restore-failed", function() {
