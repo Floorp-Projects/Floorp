@@ -1648,6 +1648,10 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   if (!aElements.AppendElement(mValueDiv))
     return NS_ERROR_OUT_OF_MEMORY;
 
+  // Now create the placeholder anonymous content
+  rv = CreatePlaceholderDiv(aElements, doc->NodeInfoManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = UpdateValueDisplay(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1700,10 +1704,6 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-
-  // Now create the placeholder anonymous content
-  rv = CreatePlaceholderDiv(aElements, doc->NodeInfoManager());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -2433,6 +2433,15 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
+  // First, check for the placeholder attribute, because it doesn't
+  // depend on the editor being present.
+  if (nsGkAtoms::placeholder == aAttribute)
+  {
+    nsWeakFrame weakFrame(this);
+    UpdatePlaceholderText(PR_TRUE);
+    NS_ENSURE_STATE(weakFrame.IsAlive());
+  }
+
   if (!mEditor || !mSelCon) 
     return nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);;
 
@@ -2493,12 +2502,6 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
     }
     mEditor->SetFlags(flags);
-  }
-  else if (nsGkAtoms::placeholder == aAttribute)
-  {
-    nsWeakFrame weakFrame(this);
-    UpdatePlaceholderText(PR_TRUE);
-    NS_ENSURE_STATE(weakFrame.IsAlive());
   }
   else if (!mUseEditor && nsGkAtoms::value == aAttribute) {
     UpdateValueDisplay(PR_TRUE);
@@ -2923,6 +2926,7 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
                   "Do not call this after editor has been initialized");
   NS_ASSERTION(mValueDiv->GetChildCount() <= 1,
                "Cannot have more than one child node");
+  NS_ASSERTION(mPlaceholderDiv, "A placeholder div must exist");
 
   enum {
     NO_NODE,
@@ -2952,6 +2956,17 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
     value = *aValue;
   } else {
     GetValue(value, PR_TRUE);
+  }
+
+  // Update the display of the placeholder value if needed.
+  {
+    nsWeakFrame weakFrame(this);
+    if (value.IsEmpty()) {
+      ShowPlaceholder();
+    } else {
+      HidePlaceholder();
+    }
+    NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 
   if (aBeforeEditorInit && value.IsEmpty()) {
