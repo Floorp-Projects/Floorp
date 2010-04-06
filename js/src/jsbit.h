@@ -213,8 +213,8 @@ __BitScanReverse64(unsigned __int64 val)
 
 /*
  * Internal function.
- * Compute the log of the least power of 2 greater than or equal to n.
- * This is a version of JS_CeilingLog2 that operates on jsuword with
+ * Compute the log of the least power of 2 greater than or equal to n. This is
+ * a version of JS_CeilingLog2 that operates on unsigned integers with
  * CPU-dependant size.
  */
 #define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
@@ -222,7 +222,7 @@ __BitScanReverse64(unsigned __int64 val)
 /*
  * Internal function.
  * Compute the log of the greatest power of 2 less than or equal to n.
- * This is a version of JS_FloorLog2 that operates on jsuword with
+ * This is a version of JS_FloorLog2 that operates on unsigned integers with
  * CPU-dependant size and requires that n != 0.
  */
 #define JS_FLOOR_LOG2W(n) (JS_ASSERT((n) != 0), js_FloorLog2wImpl(n))
@@ -231,18 +231,18 @@ __BitScanReverse64(unsigned __int64 val)
 
 # ifdef JS_HAS_BUILTIN_BITSCAN32
 #  define js_FloorLog2wImpl(n)                                                \
-    ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
+    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
 # else
-#  define js_FloorLog2wImpl(n) ((JSUword)JS_FloorLog2(n))
+#  define js_FloorLog2wImpl(n) ((size_t)JS_FloorLog2(n))
 #endif
 
 #elif JS_BYTES_PER_WORD == 8
 
 # ifdef JS_HAS_BUILTIN_BITSCAN64
 #  define js_FloorLog2wImpl(n)                                                \
-    ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
+    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
 # else
-extern JSUword js_FloorLog2wImpl(JSUword n);
+extern size_t js_FloorLog2wImpl(size_t n);
 # endif
 
 #else

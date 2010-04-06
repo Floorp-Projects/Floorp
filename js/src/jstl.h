@@ -206,7 +206,7 @@ class ReentrancyGuard
 JS_ALWAYS_INLINE size_t
 RoundUpPow2(size_t x)
 {
-    typedef tl::StaticAssert<tl::IsSameType<size_t,JSUword>::result>::result _;
+    typedef tl::StaticAssert<tl::IsSameType<size_t,JSSize>::result>::result _;
     size_t log2 = JS_CEILING_LOG2W(x);
     JS_ASSERT(log2 < tl::BitSize<size_t>::result);
     size_t result = size_t(1) << log2;
