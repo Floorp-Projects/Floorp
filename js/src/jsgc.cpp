@@ -2488,6 +2488,11 @@ js_TriggerGC(JSContext *cx, JSBool gcLocked)
     if (rt->gcIsNeeded)
         return;
 
+    /*
+     * Trigger the GC when it is safe to call an operation callback on any
+     * thread.
+     */
+    rt->gcIsNeeded = JS_TRUE;
     js_TriggerAllOperationCallbacks(rt, gcLocked);
 }
 
