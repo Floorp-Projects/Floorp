@@ -372,8 +372,50 @@ function check_test_7() {
         a3.uninstall();
         restartManager(0);
 
-        end_test();
+        run_test_8();
       });
     });
+  });
+}
+
+function run_test_8() {
+  AddonManager.addInstallListener(InstallListener);
+  AddonManager.addAddonListener(AddonListener);
+
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  AddonManager.getInstallForFile(do_get_addon("test_install3"), function(install) {
+    do_check_true(install.addon.isCompatible);
+
+    prepare_test({
+      "addon3@tests.mozilla.org": [
+        "onInstalling"
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], check_test_8);
+    install.install();
+  });
+}
+
+function check_test_8() {
+  restartManager(1);
+
+  AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+    do_check_neq(a3, null);
+    do_check_eq(a3.type, "extension");
+    do_check_eq(a3.version, "1.0");
+    do_check_eq(a3.name, "Real Test 4");
+    do_check_true(a3.isActive);
+    do_check_false(a3.appDisabled);
+    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_true(do_get_addon("test_install3").exists());
+    a3.uninstall();
+    restartManager(0);
+
+    end_test();
   });
 }
