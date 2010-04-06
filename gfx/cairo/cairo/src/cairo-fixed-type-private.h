@@ -67,4 +67,9 @@ typedef int32_t cairo_fixed_t;
 /* An unsigned type of the same size as #cairo_fixed_t */
 typedef uint32_t cairo_fixed_unsigned_t;
 
+typedef struct _cairo_point {
+    cairo_fixed_t x;
+    cairo_fixed_t y;
+} cairo_point_t;
+
 #endif /* CAIRO_FIXED_TYPE_PRIVATE_H */

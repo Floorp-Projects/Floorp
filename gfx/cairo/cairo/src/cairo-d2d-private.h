@@ -45,6 +45,7 @@
 
 extern "C" {
 #include "cairoint.h"
+#include "cairo-surface-clipper-private.h"
 }
 
 struct _cairo_d2d_surface {
@@ -91,6 +92,8 @@ struct _cairo_d2d_surface {
     bool isDrawing;
     /** Indicates if text rendering is initialized */
     bool textRenderingInit;
+
+    cairo_surface_clipper_t clipper;
 };
 typedef struct _cairo_d2d_surface cairo_d2d_surface_t;
 
@@ -217,5 +220,8 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 				    unsigned int *runs_remaining,
 				    bool *pushed_clip,
 				    bool unique = false);
+void
+_cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf);
+
 #endif /* CAIRO_HAS_D2D_SURFACE */
 #endif /* CAIRO_D2D_PRIVATE_H */

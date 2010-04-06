@@ -1,0 +1,25 @@
+commit 82aab44a9005047743538d52e9fbc27fd6ce408a
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Fri Mar 19 17:23:20 2010 -0400
+
+    commit f07195860620959c27d43080a7b987e28222735a
+    
+        xlib: Handle a1 image uploads through converter
+    
+        Fixes test/large-source [xlib]
+
+diff --git a/src/cairo-xlib-surface.c b/src/cairo-xlib-surface.c
+index 1a053d0..8f773b0 100644
+--- a/src/cairo-xlib-surface.c
++++ b/src/cairo-xlib-surface.c
+@@ -1155,7 +1155,9 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
+ 		int dither_adjustment = dither_row[x_off];
+ 		int a, r, g, b;
+ 
+-		if (image_masks.bpp <= 8)
++		if (image_masks.bpp == 1)
++		    in_pixel = !! (((uint8_t*)row)[x/8] & (1 << (x & 7)));
++		else if (image_masks.bpp <= 8)
+ 		    in_pixel = ((uint8_t*)row)[x];
+ 		else if (image_masks.bpp <= 16)
+ 		    in_pixel = ((uint16_t*)row)[x];
