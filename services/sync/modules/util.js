@@ -323,8 +323,10 @@ let Utils = {
       delete dest[prop];
       let svc = null;
 
-      // Try creating a fake service if we can handle that
-      if (!Cc[cid]) {
+      // Use the platform's service if it exists
+      if (cid in Cc && iface in Ci)
+        svc = Cc[cid].getService(Ci[iface]);
+      else {
         svc = FakeSvc[cid];
 
         let log = Log4Moz.repository.getLogger("Service.Util");
@@ -333,19 +335,8 @@ let Utils = {
         else
           log.debug("Using a fake svc object for " + cid);
       }
-      else
-        svc = Cc[cid].getService(iface);
 
       return dest[prop] = svc;
-    };
-    dest.__defineGetter__(prop, getter);
-  },
-
-  lazyInstance: function Weave_lazyInstance(dest, prop, cid, iface) {
-    let getter = function() {
-      delete dest[prop];
-      dest[prop] = Cc[cid].createInstance(iface);
-      return dest[prop];
     };
     dest.__defineGetter__(prop, getter);
   },
@@ -880,7 +871,7 @@ Svc.Obs = Observers;
  ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
  ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
  ["Session", "@mozilla.org/browser/sessionstore;1", "nsISessionStore"],
-].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], Ci[lazy[2]]));
+].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], lazy[2]));
 
 let Str = {};
 ["engines", "errors", "sync"]
