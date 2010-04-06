@@ -145,6 +145,16 @@ public:
   PRBool RelevantLinkVisited() const
     { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
 
+  // Is this style context the GetStyleIfVisited() for some other style
+  // context?
+  PRBool IsStyleIfVisited() const
+    { return !!(mBits & NS_STYLE_IS_STYLE_IF_VISITED); }
+
+  // Tells this style context that it should return true from
+  // IsStyleIfVisited.
+  void SetIsStyleIfVisited()
+    { mBits |= NS_STYLE_IS_STYLE_IF_VISITED; }
+
   // Return the style context whose style data should be used for the R,
   // G, and B components of color, background-color, and border-*-color
   // if RelevantLinkIsVisited().
@@ -165,6 +175,11 @@ public:
   // To be called only from nsStyleSet.
   void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
   {
+    NS_ABORT_IF_FALSE(!IsStyleIfVisited(), "this context is not visited data");
+    NS_ABORT_IF_FALSE(aStyleIfVisited.get()->IsStyleIfVisited(),
+                      "other context is visited data");
+    NS_ABORT_IF_FALSE(!aStyleIfVisited.get()->GetStyleIfVisited(),
+                      "other context does not have visited data");
     NS_ASSERTION(!mStyleIfVisited, "should only be set once");
     mStyleIfVisited = aStyleIfVisited;
 
