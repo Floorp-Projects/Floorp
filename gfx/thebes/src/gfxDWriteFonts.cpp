@@ -124,26 +124,30 @@ gfxDWriteFont::ComputeMetrics()
     mMetrics.xHeight =
         ((gfxFloat)fontMetrics.xHeight /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.emAscent = 
-        ((gfxFloat)fontMetrics.ascent /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.emDescent = 
-        ((gfxFloat)fontMetrics.descent /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+
+    mMetrics.maxAscent = 
+        ceil(((gfxFloat)fontMetrics.ascent /
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics.maxDescent = 
+        ceil(((gfxFloat)fontMetrics.descent /
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+
     mMetrics.emHeight = mAdjustedSize;
-    mMetrics.maxAscent = mMetrics.emAscent;
-    mMetrics.maxDescent = mMetrics.emDescent;
-    mMetrics.maxHeight = mMetrics.emHeight;
+    mMetrics.emAscent = mMetrics.emHeight *
+        mMetrics.maxAscent / mMetrics.maxHeight;
+    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
+
     mMetrics.maxAdvance = mAdjustedSize;
+
     mMetrics.internalLeading = 
-        ((gfxFloat)(fontMetrics.ascent + 
+        ceil(((gfxFloat)(fontMetrics.ascent + 
                     fontMetrics.descent - 
                     fontMetrics.designUnitsPerEm) / 
-                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    
+                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
     mMetrics.externalLeading = 
-        ((gfxFloat)fontMetrics.lineGap /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+        ceil(((gfxFloat)fontMetrics.lineGap /
+                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
 
     UINT16 glyph = (PRUint16)GetSpaceGlyph();
     DWRITE_GLYPH_METRICS metrics;
