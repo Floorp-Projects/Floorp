@@ -787,15 +787,15 @@ namespace nanojit
 
     inline void Assembler::FFREE(R r)  { count_fpu(); FPU(0xddc0, r);  asm_output("ffree %s",gpn(r)); }
 
-    inline void Assembler::FST32(bool p, I32 d, R b){ count_stq(); FPUm(0xd902|p, d, b);   asm_output("fst%s32 %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
-    inline void Assembler::FSTQ(bool p, I32 d, R b) { count_stq(); FPUm(0xdd02|p, d, b);   asm_output("fst%sq %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
+    inline void Assembler::FST32(bool p, I32 d, R b){ count_stq(); FPUm(0xd902|(p?1:0), d, b);   asm_output("fst%s32 %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
+    inline void Assembler::FSTQ(bool p, I32 d, R b) { count_stq(); FPUm(0xdd02|(p?1:0), d, b);   asm_output("fst%sq %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
 
     inline void Assembler::FSTPQ(I32 d, R b) { FSTQ(1, d, b); }
 
-    inline void Assembler::FCOM(bool p, I32 d, R b) { count_fpuld(); FPUm(0xdc02|p, d, b); asm_output("fcom%s %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
+    inline void Assembler::FCOM(bool p, I32 d, R b) { count_fpuld(); FPUm(0xdc02|(p?1:0), d, b); asm_output("fcom%s %d(%s)",(p?"p":""),d,gpn(b)); if (p) fpu_pop(); }
     inline void Assembler::FCOMdm(bool p, const double* dm) {
         count_fpuld();
-        FPUdm(0xdc02|p, dm);
+        FPUdm(0xdc02|(p?1:0), dm);
         asm_output("fcom%s (%p)",(p?"p":""),(void*)dm);
         if (p) fpu_pop();
     }
@@ -806,7 +806,12 @@ namespace nanojit
     inline void Assembler::FILDQ(I32 d, R b)        { count_fpuld(); FPUm(0xdf05, d, b); asm_output("fildq %d(%s)",d,gpn(b)); fpu_push(); }
     inline void Assembler::FILD(I32 d, R b)         { count_fpuld(); FPUm(0xdb00, d, b); asm_output("fild %d(%s)",d,gpn(b)); fpu_push(); }
 
-    inline void Assembler::FIST(bool p, I32 d, R b) { count_fpu(); FPUm(0xdb02|p, d, b); asm_output("fist%s %d(%s)",(p?"p":""),d,gpn(b)); if(p) fpu_pop(); }
+    inline void Assembler::FIST(bool p, I32 d, R b) {
+        count_fpu();
+        FPUm(0xdb02|(p?1:0), d, b);
+        asm_output("fist%s %d(%s)",(p?"p":""),d,gpn(b));
+        if (p) fpu_pop();
+    }
 
     inline void Assembler::FADD( I32 d, R b) { count_fpu(); FPUm(0xdc00, d, b); asm_output("fadd %d(%s)", d,gpn(b)); }
     inline void Assembler::FSUB( I32 d, R b) { count_fpu(); FPUm(0xdc04, d, b); asm_output("fsub %d(%s)", d,gpn(b)); }
