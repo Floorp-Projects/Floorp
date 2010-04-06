@@ -3111,11 +3111,27 @@ function AddonInstall(callback, installLocation, url, hash, name, type, iconURL,
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(addon) {
       self.existingAddon = addon;
-      XPIProvider.installs.push(self);
-      AddonManagerPrivate.callInstallListeners("onNewInstall", self.listeners,
-                                               self.wrapper);
 
-      callback(self);
+      if (!self.addon.isCompatible) {
+        // TODO Should we send some event here?
+        this.state = AddonManager.STATE_CHECKING;
+        new UpdateChecker(self.addon, {
+          onUpdateFinished: function(addon, status) {
+            XPIProvider.installs.push(self);
+            AddonManagerPrivate.callInstallListeners("onNewInstall", self.listeners,
+                                                     self.wrapper);
+
+            callback(self);
+          }
+        }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
+      }
+      else {
+        XPIProvider.installs.push(self);
+        AddonManagerPrivate.callInstallListeners("onNewInstall", self.listeners,
+                                                 self.wrapper);
+
+        callback(self);
+      }
     });
   }
   else {
