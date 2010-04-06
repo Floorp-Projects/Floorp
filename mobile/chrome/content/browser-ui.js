@@ -403,7 +403,7 @@ var BrowserUI = {
     this._favicon.addEventListener("error", this, false);
 
     let urlbarEditArea = document.getElementById("urlbar-editarea");
-    urlbarEditArea.addEventListener("click", this, false);
+    urlbarEditArea.addEventListener("mouseup", this, false);
     urlbarEditArea.addEventListener("mousedown", this, false);
 
     document.getElementById("toolbar-main").ignoreDrag = true;
@@ -697,10 +697,7 @@ var BrowserUI = {
 
         break;
       }
-      // URL textbox events
-      case "click":
-        this.doCommand("cmd_openLocation");
-        break;
+      // Window events
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           let dialog = this.activeDialog;
@@ -708,13 +705,17 @@ var BrowserUI = {
             dialog.close();
         }
         break;
+      // URL textbox events
+      case "mouseup":
+        if (aEvent.detail < 2 && aEvent.button == 0)
+          this.doCommand("cmd_openLocation");
+        break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
           this._hidePopup();
 
-        if (aEvent.detail == 2 &&
-            aEvent.button == 0 &&
-            gPrefService.getBoolPref("browser.urlbar.doubleClickSelectsAll")) {
+        let selectAll = gPrefService.getBoolPref("browser.urlbar.doubleClickSelectsAll");
+        if (aEvent.detail == 2 && aEvent.button == 0 && selectAll && aEvent.target == this._edit) {
           this._edit.editor.selectAll();
           aEvent.preventDefault();
         }
