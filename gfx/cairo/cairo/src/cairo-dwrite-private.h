@@ -98,10 +98,10 @@ private:
 };
 
 cairo_int_status_t
-_cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
+cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 					cairo_operator_t	 op,
 					const cairo_pattern_t	*source,
 					cairo_glyph_t		*glyphs,
 					int			 num_glyphs,
 					cairo_scaled_font_t	*scaled_font,
-					cairo_clip_t		*clip);
+					cairo_rectangle_int_t	*extents);

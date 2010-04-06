@@ -242,6 +242,28 @@ _cairo_ddraw_check_ogl_error (const char *context)
 #endif /* CAIRO_DDRAW_USE_GL */
 
 static cairo_status_t
+_cairo_ddraw_surface_set_image_clip (cairo_ddraw_surface_t *surface)
+{
+    if (surface->image_clip_invalid) {
+	surface->image_clip_invalid = FALSE;
+	if (surface->has_clip_region) {
+	    unsigned int serial =
+		_cairo_surface_allocate_clip_serial (surface->image);
+	    surface->has_image_clip = TRUE;
+	    return _cairo_surface_set_clip_region (surface->image,
+						   &surface->clip_region,
+						   serial);
+	} else {
+	    surface->has_image_clip = FALSE;
+	    return _cairo_surface_set_clip_region (surface->image,
+						   NULL, 0);
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_ddraw_surface_set_clip_list (cairo_ddraw_surface_t * surface)
 {
     DWORD stack_data[CAIRO_STACK_BUFFER_SIZE / sizeof (DWORD)];
@@ -349,7 +371,10 @@ _cairo_ddraw_surface_lock (cairo_ddraw_surface_t *surface)
 	if (surface->image->status)
 	    return surface->image->status;
 
-	return CAIRO_STATUS_SUCCESS;
+	surface->has_image_clip = FALSE;
+	surface->image_clip_invalid = surface->has_clip_region;
+
+	return _cairo_ddraw_surface_set_image_clip (surface);
     }
 
     if (surface->locked)
@@ -383,7 +408,10 @@ _cairo_ddraw_surface_lock (cairo_ddraw_surface_t *surface)
     if (surface->image->status)
 	return surface->image->status;
 
-    return CAIRO_STATUS_SUCCESS;
+    surface->has_image_clip = FALSE;
+    surface->image_clip_invalid = surface->has_clip_region;
+
+    return _cairo_ddraw_surface_set_image_clip (surface);
 }
 
 static inline cairo_status_t
@@ -436,8 +464,6 @@ _cairo_ddraw_surface_reset_clipper (cairo_ddraw_surface_t *surface)
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-
 #ifdef CAIRO_DDRAW_USE_GL
 #define CAIRO_DDRAW_API_ENTRY_STATUS                                  \
     do {                                                              \
@@ -546,7 +572,7 @@ _cairo_ddraw_surface_flush (void *abstract_surface)
 cairo_status_t
 _cairo_ddraw_surface_reset (cairo_surface_t *surface)
 {
-    return _cairo_ddraw_surface_set_clip_region (surface, NULL);
+    return _cairo_surface_reset_clip (surface);
 }
 
 static cairo_surface_t *
@@ -2451,8 +2477,8 @@ _cairo_ddraw_surface_show_glyphs (void		         *abstract_dst,
 				  cairo_glyph_t	         *glyphs,
 				  int		         num_glyphs,
 				  cairo_scaled_font_t    *scaled_font,
-				  cairo_clip_t           *clip,
-				  int		         *remaining_glyphs)
+				  int		         *remaining_glyphs,
+				  cairo_rectangle_int_t  *extents)
 { 
     cairo_ddraw_surface_t * dst = (cairo_ddraw_surface_t *) abstract_dst;
     cairo_color_t * color;
@@ -2476,17 +2502,10 @@ _cairo_ddraw_surface_show_glyphs (void		         *abstract_dst,
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (clip != NULL) {
-	cairo_region_t *clip_region;
-	cairo_status_t status;
-
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	if (status)
-	    return status;
-
-	_cairo_ddraw_surface_set_clip_region (surface, clip_region);
-    }
+    if (dst->base.clip &&
+	(dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
+	 dst->base.clip->surface != NULL))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     color = &((cairo_solid_pattern_t *)pattern)->color;
 
@@ -2692,8 +2711,7 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 				int			dst_x,
 				int			dst_y,
 				unsigned int		width,
-				unsigned int		height,
-				cairo_regiont_t         *clip_region)
+				unsigned int		height)
 {
     cairo_ddraw_surface_t * dst = (cairo_ddraw_surface_t *) abstract_dst;
     cairo_ddraw_ogl_program_info_t * info = NULL;
@@ -2722,10 +2740,6 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_ddraw_surface_set_clip_region (dst, clip_region);
-    if (status)
-	return status;
 
     /* bail out for source copies that aren't ddraw surfaces) */
     if (src->type == CAIRO_PATTERN_TYPE_SURFACE &&
@@ -3122,6 +3136,9 @@ _cairo_ddraw_surface_acquire_dest_image (void                    *abstract_surfa
 	return status;
     END_TIMER(acquiredst);
 
+    if ((status = _cairo_ddraw_surface_set_image_clip (surface)))
+	return status;
+
     *image_out = (cairo_image_surface_t *) surface->image;
     *image_rect = surface->extents;
     *image_extra = NULL;
@@ -3150,6 +3167,7 @@ _cairo_ddraw_surface_set_clip_region (void *abstract_surface,
     if (region) {
 	cairo_region_t *tmp_region;
 	surface->has_clip_region = TRUE;
+	surface->image_clip_invalid = TRUE;
 	surface->clip_list_invalid = TRUE;
 
 	tmp_region = &surface->clip_region;
@@ -3162,6 +3180,7 @@ _cairo_ddraw_surface_set_clip_region (void *abstract_surface,
 				    -surface->extents.y);
     } else {
 	surface->has_clip_region = FALSE;
+	surface->image_clip_invalid = surface->has_image_clip;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -3265,6 +3284,8 @@ cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
     surface->dirty = FALSE;
 #endif
     surface->has_clip_region = FALSE;
+    surface->has_image_clip = FALSE;
+    surface->image_clip_invalid = FALSE;
     surface->clip_list_invalid = FALSE;
 
     surface->installed_clipper = NULL;
@@ -3340,6 +3361,8 @@ cairo_ddraw_surface_create_alias (cairo_surface_t *root_surface,
     surface->dirty = FALSE;
 #endif
     surface->has_clip_region = FALSE;
+    surface->has_image_clip = FALSE;
+    surface->image_clip_invalid = FALSE;
     surface->clip_list_invalid = FALSE;
 
     surface->format = root->format;
@@ -3542,10 +3565,6 @@ _cairo_ddraw_surface_fill_rectangles (void			*abstract_surface,
     sg = color->green_short * (1.0f / 65535.0f);
     sb = color->blue_short  * (1.0f / 65535.0f);
     sa = color->alpha_short * (1.0f / 65535.0f);
-
-    status = _cairo_ddraw_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
 
     /* convert to solid clears if we can (so we can use glClear) */
     if (op == CAIRO_OPERATOR_SOURCE ||
@@ -4091,6 +4110,8 @@ static const cairo_surface_backend_t _cairo_ddraw_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
+    _cairo_ddraw_surface_set_clip_region,
+    NULL, /* intersect_clip_path */
     _cairo_ddraw_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
