@@ -308,7 +308,7 @@ COMPONENT_LIBS += imgicon
 endif
 endif
 
-STATIC_LIBS += thebes layers ycbcr
+STATIC_LIBS += thebes layers
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
