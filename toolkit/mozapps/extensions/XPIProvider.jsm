@@ -3834,8 +3834,7 @@ function UpdateChecker(addon, listener, reason, appVersion, platformVersion) {
   const UPDATE_TYPE_COMPATIBILITY = 32;
   const UPDATE_TYPE_NEWVERSION = 64;
 
-  if ("onCompatibilityUpdated" in this.listener)
-    reason |= UPDATE_TYPE_COMPATIBILITY;
+  reason |= UPDATE_TYPE_COMPATIBILITY;
   if ("onUpdateAvailable" in this.listener)
     reason |= UPDATE_TYPE_NEWVERSION;
 
