@@ -276,7 +276,7 @@ var PreferencesView = {
         helper = options.appendItem(Elements.browserBundle.getString("homepage.custom2"), "custom");
 
       options.selectedItem = helper;
-    } else {
+    } else if (helper) {
       options.menupopup.removeChild(helper);
     }
 
