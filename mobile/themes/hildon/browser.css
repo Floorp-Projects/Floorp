@@ -73,7 +73,7 @@ toolbarbutton.urlbar-button {
 
 #tool-app-close {
   min-width: 64px !important;
-  visibility: hidden;
+  visibility: collapse;
   list-style-image: url("chrome://browser/skin/images/task-close-40.png");
 }
 

@@ -40,7 +40,7 @@
 
 /* main toolbar (URL bar) -------------------------------------------------- */
 #tool-app-close {
-  visibility: hidden;
+  visibility: collapse;
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -40px; /* keep pixels */
