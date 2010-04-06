@@ -88,6 +88,7 @@
 <!ENTITY recoverPassword.label        "Recover Password">
 <!ENTITY changePassphrase.label       "Change Secret Phrase">
 <!ENTITY resetSync.label              "Reset Sync">
+<!ENTITY cancelResetSync.label        "Cancel Reset Sync">
 <!ENTITY differentAccount.label       "Use a Different Account">
 <!ENTITY startOver.label              "Start Over">
 
