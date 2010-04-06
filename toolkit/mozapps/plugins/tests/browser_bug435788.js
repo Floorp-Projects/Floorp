@@ -3,6 +3,8 @@ const Ci = Components.interfaces;
 
 const TEST_ROOT = "http://example.com/browser/toolkit/mozapps/plugins/tests/";
 
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
 var gPrefs, gPFS, gDS, gSeenAvailable;
 
 function test() {
@@ -305,12 +307,14 @@ function test_5_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Installed", "Should have been a successful install");
 
-  var em = Cc["@mozilla.org/extensions/manager;1"].
-           getService(Ci.nsIExtensionManager);
-  ok(em.getItemForID("bug435788_1@tests.mozilla.org"), "Should have installed the extension");
-  em.cancelInstallItem("bug435788_1@tests.mozilla.org");
+  AddonManager.getInstalls(null, function(installs) {
+    is(installs.length, 1, "Should be just one install");
+    is(installs[0].state, AddonManager.STATE_INSTALLED, "Should be fully installed");
+    is(installs[0].addon.id, "bug435788_1@tests.mozilla.org", "Should have installed the extension");
+    installs[0].cancel();
 
-  gPFS.document.documentElement.getButton("finish").click();
+    gPFS.document.documentElement.getButton("finish").click();
+  });
 }
 
 // Test a broke xpi (no install.rdf)
@@ -412,10 +416,14 @@ function test_7_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have been a failed install");
 
-  var em = Cc["@mozilla.org/extensions/manager;1"].
-           getService(Ci.nsIExtensionManager);
-  ok(em.getItemForID("bug435788_1@tests.mozilla.org"), "Should have installed the extension");
-  em.cancelInstallItem("bug435788_1@tests.mozilla.org");
+  AddonManager.getInstalls(null, function(installs) {
+    is(installs.length, 4, "Should be just one install");
+    is(installs[3].state, AddonManager.STATE_DOWNLOAD_FAILED, "Should have failed to download");
+    is(installs[3].addon.id, "bug435788_1@tests.mozilla.org", "Should have installed the extension");
+    installs[3].cancel();
+
+    gPFS.document.documentElement.getButton("finish").click();
+  });
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -464,9 +472,11 @@ function test_8_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have not been a successful install");
 
-  var em = Cc["@mozilla.org/extensions/manager;1"].
-           getService(Ci.nsIExtensionManager);
-  ok(!em.getItemForID("bug435788_1@tests.mozilla.org"), "Should not have installed the extension");
+  AddonManager.getInstalls(null, function(installs) {
+    is(installs.length, 5, "Should not be any installs");
+
+    gPFS.document.documentElement.getButton("finish").click();
+  });
 
   gPFS.document.documentElement.getButton("finish").click();
 }
