@@ -366,11 +366,11 @@ namespace nanojit
 #define RL(r)       gpRegNames32[(r)]
 #define RQ(r)       gpn(r)
 
-#define R           Register
-#define I           int
-#define I32         int32_t
-#define U64         uint64_t
-#define S           size_t
+    typedef Register R;
+    typedef int      I;
+    typedef int32_t  I32;
+    typedef uint64_t U64;
+    typedef size_t   S;
 
     void Assembler::PUSHR(R r)  { emitr(X64_pushr,r); asm_output("push %s", RQ(r)); }
     void Assembler::POPR( R r)  { emitr(X64_popr, r); asm_output("pop %s",  RQ(r)); }
