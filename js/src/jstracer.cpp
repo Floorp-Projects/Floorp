@@ -1624,46 +1624,47 @@ foprnd2(LIns* i)
 }
 
 static LIns*
-demote(LirWriter *out, LIns* i)
+demote(LirWriter *out, LIns* ins)
 {
-    if (i->isCall())
-        return i->callArgN(0);
-    if (isfop(i, LIR_i2f) || isfop(i, LIR_u2f))
-        return foprnd1(i);
-    if (i->isconst())
-        return i;
-    JS_ASSERT(i->isconstf());
-    double cf = i->imm64f();
+    JS_ASSERT(ins->isF64());
+    if (ins->isCall())
+        return ins->callArgN(0);
+    if (isfop(ins, LIR_i2f) || isfop(ins, LIR_u2f))
+        return foprnd1(ins);
+    JS_ASSERT(ins->isconstf());
+    double cf = ins->imm64f();
     int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
     return out->insImm(ci);
 }
 
 static bool
-isPromoteInt(LIns* i)
+isPromoteInt(LIns* ins)
 {
-    if (isfop(i, LIR_i2f) || i->isconst())
+    if (isfop(ins, LIR_i2f))
         return true;
-    if (!i->isconstf())
-        return false;
-    jsdouble d = i->imm64f();
-    return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+    if (ins->isconstf()) {
+        jsdouble d = ins->imm64f();
+        return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+    }
+    return false;
 }
 
 static bool
-isPromoteUint(LIns* i)
+isPromoteUint(LIns* ins)
 {
-    if (isfop(i, LIR_u2f) || i->isconst())
+    if (isfop(ins, LIR_u2f))
         return true;
-    if (!i->isconstf())
-        return false;
-    jsdouble d = i->imm64f();
-    return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+    if (ins->isconstf()) {
+        jsdouble d = ins->imm64f();
+        return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+    }
+    return false;
 }
 
 static bool
-isPromote(LIns* i)
+isPromote(LIns* ins)
 {
-    return isPromoteInt(i) || isPromoteUint(i);
+    return isPromoteInt(ins) || isPromoteUint(ins);
 }
 
 /*
