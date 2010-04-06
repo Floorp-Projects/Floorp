@@ -753,6 +753,14 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
 /* static */ nscolor
 nsStyleContext::CombineVisitedColors(nscolor *aColors, PRBool aLinkIsVisited)
 {
+  if (NS_GET_A(aColors[1]) == 0) {
+    // If the style-if-visited is transparent, then just use the
+    // unvisited style rather than using the (meaningless) color
+    // components of the visited style along with a potentially
+    // non-transparent alpha value.
+    aLinkIsVisited = PR_FALSE;
+  }
+
   // NOTE: We want this code to have as little timing dependence as
   // possible on whether this->RelevantLinkVisited() is true.
   const ColorIndexSet &set =
