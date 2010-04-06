@@ -910,24 +910,34 @@ var PageActions = {
         description.push(Elements.browserBundle.getString("pageactions." + permission));
 
       let node = this.appendItem("preferences", title, description.join(", "));
-      node.onclick = function(event) {
-        PageActions.clearPagePermissions();
-        PageActions.removeItem(node);
-      }
+      node.addEventListener("click", function(event) {
+          PageActions.clearPagePermissions();
+          PageActions.removeItem(node);
+        },
+        false);
     }
 
-    // Show the password button if needed
-    let logins = lm.getAllLogins({});
-    for each(login in logins) {
+    let siteLogins = [];
+    let allLogins = lm.getAllLogins({});
+    for (let i = 0; i < allLogins.length; i++) {
+      let login = allLogins[i];
       if (login.hostname != host.prePath)
         continue;
 
+      siteLogins.push(login);
+    }
+
+    // Show only 1 password button for all the saved logins
+    if (siteLogins.length) {
       let title = Elements.browserBundle.getString("pageactions.password.forget");
       let node = this.appendItem("preferences", title, "");
-      node.onclick = function(event) {
-        lm.removeLogin(login);
-        PageActions.removeItem(node);
-      };
+      node.addEventListener("click", function(event) {
+          for (let i = 0; i < siteLogins.length; i++)
+            lm.removeLogin(siteLogins[i]);
+  
+          PageActions.removeItem(node);
+        },
+        false);
     }
   },
 
