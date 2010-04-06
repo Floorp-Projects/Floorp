@@ -35,54 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_WINDOWSDWRITEFONTS_H
-#define GFX_WINDOWSDWRITEFONTS_H
+#ifndef GFX_DWRITESHAPER_H
+#define GFX_DWRITESHAPER_H
 
-#include <dwrite.h>
-
-#include "gfxFont.h"
-#include "gfxUserFontSet.h"
-#include "cairo-win32.h"
+#include "gfxDWriteFonts.h"
 
 /**
- * \brief Class representing a font face for a font entry.
+ * \brief Class representing a DWrite font shaper.
  */
-class gfxDWriteFont : public gfxFont 
+class gfxDWriteShaper : public gfxFontShaper
 {
 public:
-    gfxDWriteFont(gfxFontEntry *aFontEntry,
-                  const gfxFontStyle *aFontStyle,
-                  PRBool aNeedsBold = PR_FALSE);
-    ~gfxDWriteFont();
+    gfxDWriteShaper(gfxDWriteFont *aFont)
+        : gfxFontShaper(aFont)
+    { }
 
-    virtual nsString GetUniqueName();
+    virtual ~gfxDWriteShaper() { }
 
-    virtual const gfxFont::Metrics& GetMetrics();
-
-    virtual PRUint32 GetSpaceGlyph();
-
-    virtual PRBool SetupCairoFont(gfxContext *aContext);
-
-    virtual PRBool IsValid() { return mFontFace != NULL; }
-
-    gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
-
-    IDWriteFontFace *GetFontFace() { return mFontFace.get(); }
-
-protected:
-    void ComputeMetrics();
-
-    cairo_font_face_t *CairoFontFace();
-
-    cairo_scaled_font_t *CairoScaledFont();
-
-    nsRefPtr<IDWriteFontFace> mFontFace;
-    cairo_font_face_t *mCairoFontFace;
-    cairo_scaled_font_t *mCairoScaledFont;
-
-    gfxFloat mAdjustedSize;
-    gfxFont::Metrics mMetrics;
-    PRBool mNeedsOblique;
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength);
 };
 
-#endif
+#endif /* GFX_DWRITESHAPER_H */
