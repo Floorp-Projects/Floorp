@@ -1339,6 +1339,15 @@ nsTextControlFrame::GetWrapCols()
 nsresult
 nsTextControlFrame::EnsureEditorInitialized()
 {
+  nsWeakFrame weakFrame(this);
+  nsresult rv = EnsureEditorInitializedInternal();
+  NS_ENSURE_STATE(weakFrame.IsAlive());
+  return rv;
+}
+
+nsresult
+nsTextControlFrame::EnsureEditorInitializedInternal()
+{
   // This method initializes our editor, if needed.
 
   // This code used to be called from CreateAnonymousContent(), but
