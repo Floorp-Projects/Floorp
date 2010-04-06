@@ -9,3 +9,4 @@ cp $1/media/base/yuv_row_linux.cc yuv_row_c.cpp
 patch -p3 <convert.patch
 patch -p3 <picture_region.patch
 patch -p3 <remove_scale.patch
+patch -p3 <yv24.patch
