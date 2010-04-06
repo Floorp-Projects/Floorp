@@ -184,10 +184,6 @@ _cairo_null_stream_create (void);
 cairo_private cairo_output_stream_t *
 _cairo_base85_stream_create (cairo_output_stream_t *output);
 
-/* cairo-base64-stream.c */
-cairo_private cairo_output_stream_t *
-_cairo_base64_stream_create (cairo_output_stream_t *output);
-
 /* cairo-deflate-stream.c */
 cairo_private cairo_output_stream_t *
 _cairo_deflate_stream_create (cairo_output_stream_t *output);

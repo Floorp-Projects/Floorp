@@ -116,7 +116,7 @@ _arc_segments_needed (double	      angle,
     major_axis = _cairo_matrix_transformed_circle_major_axis (ctm, radius);
     max_angle = _arc_max_angle_for_tolerance_normalized (tolerance / major_axis);
 
-    return ceil (fabs (angle) / max_angle);
+    return (int) ceil (angle / max_angle);
 }
 
 /* We want to draw a single spline approximating a circular arc radius
