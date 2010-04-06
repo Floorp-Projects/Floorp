@@ -71,6 +71,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
 else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
+	   gfxDWriteShaper.cpp \
 	   gfxDWriteTextAnalysis.cpp \
 	   gfxDWriteCommon.cpp \
 	   gfxD2DSurface.cpp \
