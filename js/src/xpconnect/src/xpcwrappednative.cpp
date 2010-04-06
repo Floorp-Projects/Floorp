@@ -3874,9 +3874,9 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
     }
 
     nsIClassInfo* classInfo = classInfoHelper;
+    PRUint32 interfacesBitmap = classInfoHelper->GetInterfacesBitmap();
     XPCNativeScriptableCreateInfo
-        sciProto(classInfoHelper.forget().get(), flags,
-                 classInfoHelper->GetInterfacesBitmap());
+        sciProto(classInfoHelper.forget().get(), flags, interfacesBitmap);
 
     AutoMarkingWrappedNativeProtoPtr xpcproto(ccx);
     JSBool isGlobal = JS_FALSE;
