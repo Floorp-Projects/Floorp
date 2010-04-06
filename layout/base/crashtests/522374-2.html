@@ -1,0 +1,21 @@
+<!DOCTYPE html><html class="reftest-wait"><head><script type="text/javascript">
+
+function boom()
+{
+  var area = document.getElementById("area");
+  var main = document.getElementById("main");
+
+  area.nextSibling.data += " a ";
+  document.documentElement.offsetHeight;
+  area.nextSibling.data = " b ";
+  main.previousSibling.data += " \u042A ";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+function boom0(ev)
+{
+  setTimeout(boom, 0);
+}
+
+</script></head><body onload="boom0();"> <div id="main" style="width: 1px;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mP4z8AAAAMBAQD3A0FDAAAAAElFTkSuQmCC" usemap="#Map"><map name="Map"><area id="area">        </map></div></body></html>
