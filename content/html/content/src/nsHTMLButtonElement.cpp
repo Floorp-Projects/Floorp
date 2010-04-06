@@ -225,6 +225,7 @@ nsHTMLButtonElement::Click()
         nsMouseEvent event(nsContentUtils::IsCallerChrome(),
                            NS_MOUSE_CLICK, nsnull,
                            nsMouseEvent::eReal);
+        event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
                                     &event, nsnull, &status);
@@ -378,6 +379,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                NS_MOUSE_CLICK, nsnull,
                                nsMouseEvent::eReal);
+            event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
             nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                         aVisitor.mPresContext, &event, nsnull,
                                         &status);
