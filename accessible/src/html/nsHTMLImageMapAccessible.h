@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,6 +41,62 @@
 #define _nsHTMLAreaAccessible_H_
 
 #include "nsHTMLLinkAccessible.h"
+#include "nsHTMLImageAccessibleWrap.h"
+
+#include "nsIDOMHTMLMapElement.h"
+
+/**
+ * Used for HTML image maps.
+ */
+class nsHTMLImageMapAccessible : public nsHTMLImageAccessibleWrap
+{
+public:
+  nsHTMLImageMapAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell,
+                           nsIDOMHTMLMapElement *aMapElm);
+
+  // nsISupports and cycle collector
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLImageMapAccessible,
+                                           nsAccessible)
+
+  // nsIAccessibleHyperLink
+  NS_IMETHOD GetAnchorCount(PRInt32 *aAnchorCount);
+  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
+  NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+
+protected:
+  // nsAccessNode
+  virtual nsresult Shutdown();
+
+  // nsAccessible
+  virtual void CacheChildren();
+
+  // nsHTMLImageAccessible
+  /**
+   * Return collection of HTML area elements associated with the image map.
+   */
+  already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
+
+  /**
+   * Return an accessible for HTML area element at the given index.
+   */
+  already_AddRefed<nsAccessible>
+    GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
+
+private:
+  // Reference on linked map element if any.
+  nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
+
+  // Cache of area accessibles. We do not use common cache because images can
+  // share area elements but we need to have separate area accessibles for
+  // each image accessible.
+  nsAccessibleHashtable mAreaAccCache;
+};
+
 
 /**
  * Accessible for image map areas - must be child of image.
