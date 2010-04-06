@@ -14,9 +14,8 @@ namespace gfx {
 // Type of YUV surface.
 // The value of these enums matter as they are used to shift vertical indices.
 enum YUVType {
-  YV12 = 0,           // YV12 is half width and half height chroma channels.
-  YV16 = 1,           // YV16 is half width and full height chroma channels.
-  YV24 = 2            // YV24 is full width and full height chroma channels.
+  YV16 = 0,           // YV16 is half width and full height chroma channels.
+  YV12 = 1            // YV12 is half width and half height chroma channels.
 };
 
 // Convert a frame of YUV to 32 bit ARGB.
