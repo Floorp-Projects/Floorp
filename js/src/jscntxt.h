@@ -2413,12 +2413,8 @@ class AutoValueVector : private AutoGCRooter
     void pop() { vector.popBack(); }
 
     bool resize(size_t newLength) {
-        size_t oldLength = vector.length();
         if (!vector.resize(newLength))
             return false;
-        JS_STATIC_ASSERT(JSVAL_NULL == 0);
-        if (newLength > oldLength)
-            PodZero(vector.begin(), newLength - oldLength);
         return true;
     }
 
