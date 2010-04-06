@@ -248,6 +248,12 @@ const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
  * records the number of available slots.
  */
 struct JSObject {
+    /*
+     * TraceRecorder must be a friend because it generates code that
+     * manipulates JSObjects, which requires peeking under any encapsulation.
+     */
+    friend class js::TraceRecorder;
+
     JSObjectMap *map;                       /* property map, see jsscope.h */
     jsuword     classword;                  /* JSClass ptr | bits, see above */
     jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
@@ -378,6 +384,33 @@ struct JSObject {
                : JSVAL_VOID;
     }
 
+    /*
+     * Array-specific getters and setters (for both dense and slow arrays).
+     */
+
+  private:
+    static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
+    static const uint32 JSSLOT_ARRAY_COUNT  = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_ARRAY_UNUSED = JSSLOT_PRIVATE + 2;
+
+    // This must remain true;  see comment in js_MakeArraySlow().
+    JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
+
+  public:
+    inline uint32 getArrayLength() const;
+    inline uint32 getArrayCount() const;
+
+    inline void setArrayLength(uint32 length);
+    inline void setArrayCount(uint32 count);
+    inline void voidDenseArrayCount();
+    inline void incArrayCountBy(uint32 posDelta);
+    inline void decArrayCountBy(uint32 negDelta);
+    inline void voidArrayUnused();
+
+    /*
+     * Back to generic stuff.
+     */
+
     bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
@@ -477,6 +510,7 @@ struct JSObject {
     inline bool isArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
+    inline bool isSlowArray() const;
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;

@@ -63,6 +63,8 @@
 #include "jsvector.h"
 #include "jstypedarray.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 /*
@@ -1014,7 +1016,7 @@ class TypedArrayTemplate
         NativeType *dest = static_cast<NativeType*>(data);
 
         if (ar->isDenseArray() && js_DenseArrayCapacity(ar) >= len) {
-            JS_ASSERT(ar->fslots[JSSLOT_ARRAY_LENGTH] == (jsval)len);
+            JS_ASSERT(ar->getArrayLength() == len);
 
             jsval *src = ar->dslots;
 
