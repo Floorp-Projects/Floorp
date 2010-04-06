@@ -216,7 +216,6 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (font->base.units_per_em == 0)
         font->base.units_per_em = 2048;
 
-    font->base.ps_name = NULL;
     font->base.font_name = NULL;
     status = _cairo_truetype_read_font_name (scaled_font_subset->scaled_font,
 					     &font->base.ps_name,

@@ -42,7 +42,6 @@
 
 #if CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-quartz.h"
-#include "cairo-surface-clipper-private.h"
 
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;
@@ -53,7 +52,6 @@ typedef struct cairo_quartz_surface {
     void *imageData;
     cairo_surface_t *imageSurfaceEquiv;
 
-    cairo_surface_clipper_t clipper;
     cairo_rectangle_int_t extents;
 
     /* These are stored while drawing operations are in place, set up

@@ -44,15 +44,13 @@
 cairo_private cairo_status_t
 _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 			       cairo_operator_t		 op,
-			       const cairo_pattern_t	*source,
-			       cairo_clip_t		*clip);
+			       const cairo_pattern_t	*source);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
 			      const cairo_pattern_t	*source,
-			      const cairo_pattern_t	*mask,
-			      cairo_clip_t		*clip);
+			      const cairo_pattern_t	*mask);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
@@ -63,8 +61,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_matrix_t		*ctm,
 				cairo_matrix_t		*ctm_inverse,
 				double			 tolerance,
-				cairo_antialias_t	 antialias,
-				cairo_clip_t		*clip);
+				cairo_antialias_t	 antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_fill (cairo_surface_t		*surface,
@@ -73,8 +70,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_path_fixed_t	*path,
 			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
-			      cairo_antialias_t		 antialias,
-			      cairo_clip_t		*clip);
+			      cairo_antialias_t		 antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
@@ -82,8 +78,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     const cairo_pattern_t	*source,
 				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
-				     cairo_scaled_font_t	*scaled_font,
-				     cairo_clip_t		*clip);
+				     cairo_scaled_font_t	*scaled_font);
 
 cairo_private cairo_surface_t *
 _cairo_surface_fallback_snapshot (cairo_surface_t *surface);
@@ -100,8 +95,7 @@ _cairo_surface_fallback_composite (cairo_operator_t		 op,
 				   int				 dst_x,
 				   int				 dst_y,
 				   unsigned int			 width,
-				   unsigned int			 height,
-				   cairo_region_t		*clip_region);
+				   unsigned int			 height);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
@@ -122,12 +116,12 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 					      unsigned int		width,
 					      unsigned int		height,
 					      cairo_trapezoid_t	       *traps,
-					      int			num_traps,
-					      cairo_region_t		*clip_region);
+					      int			num_traps);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_clone_similar (cairo_surface_t  *surface,
 				       cairo_surface_t  *src,
+				       cairo_content_t	 content,
 				       int               src_x,
 				       int               src_y,
 				       int               width,
