@@ -294,6 +294,8 @@ twin_font_face_create_properties (cairo_font_face_t *twin_face,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     props->stretch  = TWIN_STRETCH_NORMAL;
+    props->slant = CAIRO_FONT_SLANT_NORMAL;
+    props->weight = TWIN_WEIGHT_NORMAL;
     props->monospace = FALSE;
     props->smallcaps = FALSE;
 

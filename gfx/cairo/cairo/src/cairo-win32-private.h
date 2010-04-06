@@ -38,6 +38,7 @@
 
 #include "cairo-win32.h"
 #include "cairoint.h"
+#include "cairo-surface-clipper-private.h"
 
 #ifndef SHADEBLENDCAPS
 #define SHADEBLENDCAPS 120
@@ -81,6 +82,10 @@ typedef struct _cairo_win32_surface {
     cairo_rectangle_int_t clip_rect;
     HRGN initial_clip_rgn;
     cairo_bool_t had_simple_clip;
+    cairo_region_t *clip_region;
+
+    /* For path clipping to the printing-surface */
+    cairo_surface_clipper_t clipper;
 
     /* Surface DC flags */
     uint32_t flags;
@@ -91,6 +96,8 @@ typedef struct _cairo_win32_surface {
     cairo_bool_t path_empty;
     cairo_bool_t has_ctm;
     cairo_matrix_t ctm;
+    cairo_bool_t has_gdi_ctm;
+    cairo_matrix_t gdi_ctm;
     HBRUSH brush, old_brush;
     cairo_scaled_font_subsets_t *font_subsets;
 } cairo_win32_surface_t;
@@ -140,12 +147,16 @@ _cairo_surface_is_win32_printing (cairo_surface_t *surface);
 cairo_status_t
 _cairo_win32_surface_finish (void *abstract_surface);
 
-cairo_int_status_t
+cairo_bool_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
 				  cairo_rectangle_int_t   *rectangle);
 
 uint32_t
 _cairo_win32_flags_for_dc (HDC dc);
+
+cairo_status_t
+_cairo_win32_surface_set_clip_region (void           *abstract_surface,
+				      cairo_region_t *region);
 
 cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
@@ -154,8 +165,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  int			*remaining_glyphs,
-				  cairo_rectangle_int_t *extents);
+				  cairo_clip_t		*clip,
+				  int			*remaining_glyphs);
 
 cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
@@ -223,14 +234,14 @@ inline BOOL ModifyWorldTransform(HDC hdc, CONST XFORM * lpxf, DWORD mode) { retu
 #ifdef CAIRO_HAS_DWRITE_FONT
 CAIRO_BEGIN_DECLS
 
-cairo_public cairo_int_status_t
-cairo_dwrite_show_glyphs_on_surface(void			*surface,
-				    cairo_operator_t	 op,
-				    const cairo_pattern_t	*source,
-				    cairo_glyph_t		*glyphs,
-				    int			 num_glyphs,
-				    cairo_scaled_font_t	*scaled_font,
-				    cairo_rectangle_int_t	*extents);
+cairo_int_status_t
+_cairo_dwrite_show_glyphs_on_surface(void			*surface,
+				     cairo_operator_t		 op,
+				     const cairo_pattern_t	*source,
+				     cairo_glyph_t		*glyphs,
+				     int			 num_glyphs,
+				     cairo_scaled_font_t	*scaled_font,
+				     cairo_clip_t               *clip);
 
 
 CAIRO_END_DECLS
