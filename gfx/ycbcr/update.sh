@@ -10,4 +10,3 @@ patch -p3 <convert.patch
 patch -p3 <picture_region.patch
 patch -p3 <remove_scale.patch
 patch -p3 <yv24.patch
-patch -p3 <breakage.patch
