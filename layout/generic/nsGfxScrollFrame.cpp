@@ -2209,11 +2209,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // of the viewport (good!).
   PRBool canHaveHorizontal;
   PRBool canHaveVertical;
-  // Hack to try to avoid Tsspider regression: always call
-  // GetScrollbarStyles here, even if we plan to ignore the return
-  // value.
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   if (!mIsRoot) {
+    ScrollbarStyles styles = scrollable->GetScrollbarStyles();
     canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
     if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
