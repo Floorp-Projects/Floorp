@@ -68,6 +68,34 @@ premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
 
+remove-comma: remove a comma from enum
+
+d2d.patch: add d2d support
+
+fix-zero-len-graident.patch: fix zero length gradients
+
+fix-clip-copy.patch: fix clip copying
+
+fix-clip-region-simplification.patch: fixes a bug in clip region simplifications
+
+expand-in-stroke-limits.patch: expand the in-stroke limits to avoid a bug
+
+d2d-dwrite.patch: update the d2d/dwrite stuff
+
+add-a-stash-of-cairo_t-s.patch: use the stash to avoid malloc/freeing cairo_t's
+
+bgr.patch: fix image wrapping
+
+disable-server-graidents.patch: disable server-side gradients
+
+clip-invariant.patch: make rasterization closer to being clip invariant
+
+fix-unnecessary-fallback.patch: avoid unnecessary fallback
+
+handle-a1-upload.patch: handle a1 image uploads through converter
+
+surface-clipper.patch: remove an incorrect optimization
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

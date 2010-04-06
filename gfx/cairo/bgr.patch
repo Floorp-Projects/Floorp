@@ -1,0 +1,104 @@
+commit d2120bdb06c9aacc470bb346d6bc2071c2e0749d
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Fri Mar 12 15:32:09 2010 -0500
+
+    BGR
+
+diff --git a/src/cairo-surface.c b/src/cairo-surface.c
+index 332e3ab..4a1d6a0 100644
+--- a/src/cairo-surface.c
++++ b/src/cairo-surface.c
+@@ -1501,7 +1501,9 @@ static void
+ _wrap_release_source_image (void *data)
+ {
+     struct acquire_source_image_data *acquire_data = data;
+-    _cairo_surface_release_source_image (acquire_data->src, acquire_data->image, acquire_data->image_extra);
++    _cairo_surface_release_source_image (acquire_data->src,
++					 acquire_data->image,
++					 acquire_data->image_extra);
+     free(data);
+ }
+ 
+@@ -1515,42 +1517,47 @@ _wrap_image (cairo_surface_t *src,
+     cairo_image_surface_t *surface;
+     cairo_status_t status;
+ 
+-    struct acquire_source_image_data *data = malloc(sizeof(*data));
++    struct acquire_source_image_data *data = malloc (sizeof (*data));
++    if (unlikely (data == NULL))
++	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+     data->src = src;
+     data->image = image;
+     data->image_extra = image_extra;
+ 
+-    surface = (cairo_image_surface_t*)cairo_image_surface_create_for_data (image->data,
+-	    image->format,
+-	    image->width,
+-	    image->height,
+-	    image->stride);
++    surface = (cairo_image_surface_t*)
++	_cairo_image_surface_create_with_pixman_format (image->data,
++							image->pixman_format,
++							image->width,
++							image->height,
++							image->stride);
+     status = surface->base.status;
+-    if (status)
++    if (status) {
++	free (data);
+ 	return status;
++    }
+ 
+     status = _cairo_user_data_array_set_data (&surface->base.user_data,
+-	    &wrap_image_key,
+-	    data,
+-	    _wrap_release_source_image);
++					      &wrap_image_key,
++					      data,
++					      _wrap_release_source_image);
+     if (status) {
+ 	cairo_surface_destroy (&surface->base);
++	free (data);
+ 	return status;
+     }
+-/*
+-    pixman_image_set_component_alpha (surface->pixman_image,
+-            pixman_image_get_component_alpha (image->pixman_image));
+-*/
++
++    pixman_image_set_component_alpha (
++	surface->pixman_image,
++	pixman_image_get_component_alpha (image->pixman_image));
++
+     *out = surface;
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+-
+ /**
+  * _cairo_surface_clone_similar:
+  * @surface: a #cairo_surface_t
+  * @src: the source image
+- * @content: target content mask
+  * @src_x: extent for the rectangle in src we actually care about
+  * @src_y: extent for the rectangle in src we actually care about
+  * @width: extent for the rectangle in src we actually care about
+@@ -1627,12 +1634,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
+ 		    _cairo_surface_release_source_image (src, image, image_extra);
+ 		} else {
+ 		    status =
+-		    surface->backend->clone_similar (surface, &image->base,
+-						     src_x, src_y,
+-						     width, height,
+-						     clone_offset_x,
+-						     clone_offset_y,
+-						     clone_out);
++			surface->backend->clone_similar (surface, &image->base,
++							 src_x, src_y,
++							 width, height,
++							 clone_offset_x,
++							 clone_offset_y,
++							 clone_out);
+ 		    cairo_surface_destroy(&image->base);
+ 		}
+ 	    }

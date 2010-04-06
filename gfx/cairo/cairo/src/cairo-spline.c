@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-slope-private.h"
+
 cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
 		    cairo_spline_add_point_func_t add_point_func,
@@ -122,12 +124,10 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
     double bdx, bdy, berr;
     double cdx, cdy, cerr;
 
-    /* Intersection point (px):
-     *	    px = p1 + u(p2 - p1)
-     *	    (p - px) ∙ (p2 - p1) = 0
-     * Thus:
-     *	    u = ((p - p1) ∙ (p2 - p1)) / ∥p2 - p1∥²;
-     */
+    /* We are going to compute the distance (squared) between each of the the b
+     * and c control points and the segment a-b. The maximum of these two
+     * distances will be our approximation error. */
+
     bdx = _cairo_fixed_to_double (knots->b.x - knots->a.x);
     bdy = _cairo_fixed_to_double (knots->b.y - knots->a.y);
 
@@ -135,6 +135,13 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
     cdy = _cairo_fixed_to_double (knots->c.y - knots->a.y);
 
     if (knots->a.x != knots->d.x || knots->a.y != knots->d.y) {
+	/* Intersection point (px):
+	 *     px = p1 + u(p2 - p1)
+	 *     (p - px) ∙ (p2 - p1) = 0
+	 * Thus:
+	 *     u = ((p - p1) ∙ (p2 - p1)) / ∥p2 - p1∥²;
+	 */
+
 	double dx, dy, u, v;
 
 	dx = _cairo_fixed_to_double (knots->d.x - knots->a.x);
