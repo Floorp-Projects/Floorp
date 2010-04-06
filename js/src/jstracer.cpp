@@ -12789,6 +12789,16 @@ JS_DEFINE_CALLINFO_4(static, OBJECT_FAIL, MethodReadBarrier, CONTEXT, OBJECT, SC
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, jsval *outp)
 {
+    /*
+     * Insist that obj have js_SetProperty as its set object-op. This suffices
+     * to prevent a rogue obj from being used on-trace (loaded via obj_ins),
+     * because we will guard on shape (or else global object identity) and any
+     * object not having the same op must have a different class, and therefore
+     * must differ in its shape (or not be the global object).
+     */
+    if (!obj->isDenseArray() && obj->map->ops->getProperty != js_GetProperty)
+        RETURN_STOP_A("non-dense-array, non-native JSObjectOps::getProperty");
+
     JS_ASSERT((slotp && v_insp && !outp) || (!slotp && !v_insp && outp));
 
     /*
