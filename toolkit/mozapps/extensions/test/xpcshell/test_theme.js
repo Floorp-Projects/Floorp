@@ -211,6 +211,9 @@ function run_test_3() {
     do_check_eq(p1.screenshots[0], "http://localhost:4444/data/preview.png");
     do_check_false(p1.appDisabled);
     do_check_false(p1.userDisabled);
+    do_check_true(p1.isCompatible);
+    do_check_true(p1.providesUpdatesSecurely);
+    do_check_eq(p1.blocklistState, 0);
     do_check_true(p1.isActive);
     do_check_eq(p1.pendingOperations, 0);
     do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL);
