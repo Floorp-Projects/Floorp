@@ -628,7 +628,10 @@ void
 gfxContext::UpdateSurfaceClip()
 {
     NewPath();
-    Rectangle(gfxRect(0,0,0,0));
+    // we paint an empty rectangle to ensure the clip is propagated to
+    // the destination surface
+    SetDeviceColor(gfxRGBA(0,0,0,0));
+    Rectangle(gfxRect(0,1,1,0));
     Fill();
 }
 
