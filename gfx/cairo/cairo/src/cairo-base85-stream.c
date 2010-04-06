@@ -102,9 +102,6 @@ _cairo_base85_stream_close (cairo_output_stream_t *base)
 	_cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
     }
 
-    /* Mark end of base85 data */
-    _cairo_output_stream_printf (stream->output, "~>");
-
     return _cairo_output_stream_get_status (stream->output);
 }
 
