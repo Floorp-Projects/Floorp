@@ -36,7 +36,7 @@
 
 #include "cairoint.h"
 #include "cairo-user-font-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
 
 typedef struct _cairo_user_scaled_font_methods {
@@ -75,19 +75,19 @@ typedef struct _cairo_user_scaled_font {
 /* #cairo_user_scaled_font_t */
 
 static cairo_t *
-_cairo_user_scaled_font_create_recording_context (cairo_user_scaled_font_t *scaled_font)
+_cairo_user_scaled_font_create_meta_context (cairo_user_scaled_font_t *scaled_font)
 {
     cairo_content_t content;
-    cairo_surface_t *recording_surface;
+    cairo_surface_t *meta_surface;
     cairo_t *cr;
 
     content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
 						     CAIRO_CONTENT_COLOR_ALPHA :
 						     CAIRO_CONTENT_ALPHA;
 
-    recording_surface = cairo_recording_surface_create (content, NULL);
-    cr = cairo_create (recording_surface);
-    cairo_surface_destroy (recording_surface);
+    meta_surface = cairo_meta_surface_create (content, -1, -1);
+    cr = cairo_create (meta_surface);
+    cairo_surface_destroy (meta_surface);
 
     cairo_set_matrix (cr, &scaled_font->base.scale);
     cairo_set_font_size (cr, 1.0);
@@ -104,53 +104,64 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_user_scaled_font_t *scaled_font = abstract_font;
-    cairo_surface_t *recording_surface = scaled_glyph->recording_surface;
+    cairo_surface_t *meta_surface = scaled_glyph->meta_surface;
 
-    if (!scaled_glyph->recording_surface) {
+    if (!scaled_glyph->meta_surface) {
 	cairo_user_font_face_t *face =
 	    (cairo_user_font_face_t *) scaled_font->base.font_face;
 	cairo_text_extents_t extents = scaled_font->default_glyph_extents;
 	cairo_t *cr;
 
-	cr = _cairo_user_scaled_font_create_recording_context (scaled_font);
+	cr = _cairo_user_scaled_font_create_meta_context (scaled_font);
 
-	if (face->scaled_font_methods.render_glyph) {
+	if (face->scaled_font_methods.render_glyph)
 	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
 							     _cairo_scaled_glyph_index(scaled_glyph),
 							     cr, &extents);
-	} else
+	else
 	    status = CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED;
 
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = cairo_status (cr);
 
-	recording_surface = cairo_surface_reference (cairo_get_target (cr));
+	meta_surface = cairo_surface_reference (cairo_get_target (cr));
 
 	cairo_destroy (cr);
 
 	if (unlikely (status)) {
-	    cairo_surface_destroy (recording_surface);
+	    cairo_surface_destroy (meta_surface);
 	    return status;
 	}
 
-	_cairo_scaled_glyph_set_recording_surface (scaled_glyph,
-						   &scaled_font->base,
-						   recording_surface);
+	_cairo_scaled_glyph_set_meta_surface (scaled_glyph,
+					      &scaled_font->base,
+					      meta_surface);
 
 
 	/* set metrics */
 
 	if (extents.width == 0.) {
+	    /* Compute extents.x/y/width/height from meta_surface, in font space */
+
 	    cairo_box_t bbox;
 	    double x1, y1, x2, y2;
 	    double x_scale, y_scale;
+	    cairo_surface_t *null_surface;
+	    cairo_surface_t *analysis_surface;
 
-	    /* Compute extents.x/y/width/height from recording_surface,
-	     * in font space.
-	     */
-	    status = _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
-							&bbox,
-							&scaled_font->extent_scale);
+	    null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
+	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
+	    cairo_surface_destroy (null_surface);
+	    status = analysis_surface->status;
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_analysis_surface_set_ctm (analysis_surface,
+					     &scaled_font->extent_scale);
+	    status = cairo_meta_surface_replay (meta_surface, analysis_surface);
+	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
+	    cairo_surface_destroy (analysis_surface);
+
 	    if (unlikely (status))
 		return status;
 
@@ -202,7 +213,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_surface_set_device_offset (surface,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x),
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
-	status = _cairo_recording_surface_replay (recording_surface, surface);
+	status = cairo_meta_surface_replay (meta_surface, surface);
 
 	if (unlikely (status)) {
 	    cairo_surface_destroy(surface);
@@ -219,7 +230,8 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	if (!path)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	status = _cairo_recording_surface_get_path (recording_surface, path);
+	status = _cairo_meta_surface_get_path (meta_surface, path);
+
 	if (unlikely (status)) {
 	    _cairo_path_fixed_destroy (path);
 	    return status;
@@ -421,7 +433,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    cairo_t *cr;
 
-	    cr = _cairo_user_scaled_font_create_recording_context (user_scaled_font);
+	    cr = _cairo_user_scaled_font_create_meta_context (user_scaled_font);
 
 	    status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 							  cr,
