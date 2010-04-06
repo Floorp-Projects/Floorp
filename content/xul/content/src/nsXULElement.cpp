@@ -669,8 +669,9 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
               fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
           }
         }
-        if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist)
-            elm->Click();
+        if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist) {
+            ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD);
+        }
     }
     else {
         content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
@@ -2050,6 +2051,12 @@ nsXULElement::Blur()
 NS_IMETHODIMP
 nsXULElement::Click()
 {
+  return ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN);
+}
+
+nsresult
+nsXULElement::ClickWithInputSource(PRUint16 aInputSource)
+{
     if (BoolAttrIsTrue(nsGkAtoms::disabled))
         return NS_OK;
 
@@ -2068,6 +2075,8 @@ nsXULElement::Click()
                                  nsnull, nsMouseEvent::eReal);
             nsMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nsnull,
                                     nsMouseEvent::eReal);
+            eventDown.inputSource = eventUp.inputSource = eventClick.inputSource 
+                                  = aInputSource;
 
             // send mouse down
             nsEventStatus status = nsEventStatus_eIgnore;

@@ -1557,6 +1557,7 @@ nsHTMLInputElement::Click()
       // is called from chrome code.
       nsMouseEvent event(nsContentUtils::IsCallerChrome(),
                          NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+      event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
       nsEventStatus status = nsEventStatus_eIgnore;
 
       SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
@@ -1916,6 +1917,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               {
                 nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                    NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+                event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
                 nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
@@ -1951,6 +1953,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                       nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                          NS_MOUSE_CLICK, nsnull,
                                          nsMouseEvent::eReal);
+                      event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
                       rv = nsEventDispatcher::Dispatch(radioContent,
                                                        aVisitor.mPresContext,
                                                        &event, nsnull, &status);
