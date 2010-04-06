@@ -124,6 +124,7 @@ kSyncNotLoggedIn:                      "User is not logged in",
 kSyncNetworkOffline:                   "Network is offline",
 kSyncInPrivateBrowsing:                "Private browsing is enabled",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
+kFirstSyncChoiceNotMade:               "User has not selected an action for first sync",
 
 // Application IDs
 FIREFOX_ID:                            "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",

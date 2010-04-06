@@ -968,6 +968,8 @@ WeaveSvc.prototype = {
     else if (Svc.Private && Svc.Private.privateBrowsingEnabled)
       // Svc.Private doesn't exist on Fennec -- don't assume it's there.
       reason = kSyncInPrivateBrowsing;
+    else if (Svc.Prefs.get("firstSync") == "notReady")
+      reason = kFirstSyncChoiceNotMade;
     else if (Status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
 
@@ -1144,26 +1146,8 @@ WeaveSvc.prototype = {
    */
   sync: function sync()
     this._catch(this._lock(this._notify("sync", "", function() {
-      Status.resetSync();
-    if (Svc.Prefs.isSet("firstSync")) {
-      switch(Svc.Prefs.get("firstSync")) {
-        case "wipeClient":
-          this.wipeClient();
-          break;
-        case "wipeRemote":
-          this.wipeRemote(Engines.getAll().map(function(e) e.name));
-          break;
-        default:
-          this._scheduleNextSync();
-          return;
-      }
-    }
 
-    // if we don't have a node, get one.  if that fails, retry in 10 minutes
-    if (this.clusterURL == "" && !this._setCluster()) {
-      this._scheduleNextSync(10 * 60 * 1000);
-      return;
-    }
+    Status.resetSync();
 
     // Make sure we should sync or record why we shouldn't
     let reason = this._checkSync();
@@ -1172,6 +1156,23 @@ WeaveSvc.prototype = {
       // any status bits
       reason = "Can't sync: " + reason;
       throw reason;
+    }
+
+    // if we don't have a node, get one.  if that fails, retry in 10 minutes
+    if (this.clusterURL == "" && !this._setCluster()) {
+      this._scheduleNextSync(10 * 60 * 1000);
+      return;
+    }
+
+    if (Svc.Prefs.isSet("firstSync")) {
+      switch(Svc.Prefs.get("firstSync")) {
+        case "wipeClient":
+          this.wipeClient();
+          break;
+        case "wipeRemote":
+          this.wipeRemote(Engines.getAll().map(function(e) e.name));
+          break;
+      }
     }
 
     // Clear out any potentially pending syncs now that we're syncing
