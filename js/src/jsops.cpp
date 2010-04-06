@@ -1523,12 +1523,7 @@ BEGIN_CASE(JSOP_LENGTH)
     } else if (!JSVAL_IS_PRIMITIVE(lval)) {
         obj = JSVAL_TO_OBJECT(lval);
         if (obj->isArray()) {
-            /*
-             * We know that the array is created with its 'length' private data
-             * in a fixed slot at JSSLOT_ARRAY_LENGTH. See also JSOP_ARRAYPUSH,
-             * far below.
-             */
-            jsuint length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+            jsuint length = obj->getArrayLength();
 
             if (length <= JSVAL_INT_MAX)
                 regs.sp[-1] = INT_TO_JSVAL(length);
@@ -1876,7 +1871,7 @@ BEGIN_CASE(JSOP_GETELEM)
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(JSVAL_TO_INT(rval));
 
-            if (idx < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) &&
+            if (idx < obj->getArrayLength() &&
                 idx < js_DenseArrayCapacity(obj)) {
                 rval = obj->dslots[idx];
                 if (rval != JSVAL_HOLE)
@@ -1948,9 +1943,9 @@ BEGIN_CASE(JSOP_SETELEM)
                 if (obj->dslots[i] == JSVAL_HOLE) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
-                        obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
-                    obj->fslots[JSSLOT_ARRAY_COUNT]++;
+                    if ((jsuint)i >= obj->getArrayLength())
+                        obj->setArrayLength(i + 1);
+                    obj->incArrayCountBy(1);
                 }
                 obj->dslots[i] = rval;
                 goto end_setelem;

@@ -62,9 +62,15 @@ JSObject::isDenseArray() const
 }
 
 inline bool
+JSObject::isSlowArray() const
+{
+    return getClass() == &js_SlowArrayClass;
+}
+
+inline bool
 JSObject::isArray() const
 {
-    return isDenseArray() || getClass() == &js_SlowArrayClass;
+    return isDenseArray() || isSlowArray();
 }
 
 /*
@@ -114,10 +120,6 @@ js_NewSlowArrayObject(JSContext *cx);
 
 extern JSBool
 js_MakeArraySlow(JSContext *cx, JSObject *obj);
-
-#define JSSLOT_ARRAY_LENGTH            JSSLOT_PRIVATE
-#define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
-#define JSSLOT_ARRAY_UNUSED            (JSSLOT_ARRAY_COUNT + 1)
 
 static JS_INLINE uint32
 js_DenseArrayCapacity(JSObject *obj)

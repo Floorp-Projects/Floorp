@@ -45,7 +45,8 @@
 #include "jsscope.h"
 
 inline jsval
-JSObject::getSlotMT(JSContext *cx, uintN slot) {
+JSObject::getSlotMT(JSContext *cx, uintN slot)
+{
 #ifdef JS_THREADSAFE
     /*
      * If thread-safe, define a getSlotMT() that bypasses, for a native
@@ -66,7 +67,8 @@ JSObject::getSlotMT(JSContext *cx, uintN slot) {
 }
 
 inline void
-JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value) {
+JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value)
+{
 #ifdef JS_THREADSAFE
     /* Thread-safe way to set a slot. */
     OBJ_CHECK_SLOT(this, slot);
@@ -77,6 +79,62 @@ JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value) {
 #else
     LOCKED_OBJ_SET_SLOT(this, slot, value);
 #endif
+}
+
+inline uint32
+JSObject::getArrayLength() const
+{
+    JS_ASSERT(isArray());
+    return uint32(fslots[JSSLOT_ARRAY_LENGTH]);
+}
+
+inline uint32 
+JSObject::getArrayCount() const
+{
+    JS_ASSERT(isArray());
+    return uint32(fslots[JSSLOT_ARRAY_COUNT]);
+}
+
+inline void 
+JSObject::setArrayLength(uint32 length)
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_LENGTH] = length;
+}
+
+inline void 
+JSObject::setArrayCount(uint32 count)
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_COUNT] = count;
+}
+
+inline void 
+JSObject::voidDenseArrayCount()
+{
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
+}
+
+inline void 
+JSObject::incArrayCountBy(uint32 posDelta)
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_COUNT] += posDelta;
+}
+
+inline void 
+JSObject::decArrayCountBy(uint32 negDelta)
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_COUNT] -= negDelta;
+}
+
+inline void
+JSObject::voidArrayUnused()
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
 }
 
 inline void
