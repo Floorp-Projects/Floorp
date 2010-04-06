@@ -69,7 +69,7 @@ function SessionStore() { }
 
 SessionStore.prototype = {
   classDescription: "Browser Session Store",
-  contractID: "@mozilla.org/browser/sessionstore;1",
+  contractID: "@mozilla.org/mobile/sessionstore;1",
   classID: Components.ID("{90c3dfaf-4245-46d3-9bc1-1d8251ff8c01}"),
 
   _xpcom_categories: [{ category: "app-startup", service: true }],
