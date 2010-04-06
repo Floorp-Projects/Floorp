@@ -316,4 +316,19 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 JS_END_EXTERN_C
 
+#if defined JS_THREADSAFE && defined __cplusplus
+namespace js {
+
+class AutoLock {
+  private:
+    JSLock *lock;
+
+  public:
+    AutoLock(JSLock *lock) : lock(lock) { JS_ACQUIRE_LOCK(lock); }
+    ~AutoLock() { JS_RELEASE_LOCK(lock); }
+};
+
+}
+#endif
+
 #endif /* jslock_h___ */

@@ -66,11 +66,14 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 #define JS_NOT_REACHED(reason)                                                \
     JS_Assert(reason, __FILE__, __LINE__)
 
+#define JS_ALWAYS_TRUE(expr) JS_ASSERT(expr)
+
 #else
 
 #define JS_ASSERT(expr)         ((void) 0)
 #define JS_ASSERT_IF(cond,expr) ((void) 0)
 #define JS_NOT_REACHED(reason)
+#define JS_ALWAYS_TRUE(expr)    ((void) (expr))
 
 #endif /* defined(DEBUG) */
 
