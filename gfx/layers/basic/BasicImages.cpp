@@ -135,7 +135,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   gfx::YUVType type = gfx::YV12;
   if (aData.mYSize.width == aData.mCbCrSize.width &&
       aData.mYSize.height == aData.mCbCrSize.height) {
-    type = gfx::YV24;
+    NS_ERROR("YCbCr 4:4:4 format not supported");
   }
   else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
            aData.mYSize.height == aData.mCbCrSize.height) {
