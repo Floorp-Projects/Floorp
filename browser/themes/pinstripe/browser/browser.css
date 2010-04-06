@@ -1590,6 +1590,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar {
   -moz-appearance: none;
+}
+
+#navigator-toolbox:not([tabsontop="true"]) > #TabsToolbar {
   margin-top: -1px;
   border-bottom: 1px solid #404040;
 }

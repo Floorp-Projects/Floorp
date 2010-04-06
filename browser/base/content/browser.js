@@ -1363,6 +1363,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   if (Win7Features)
     Win7Features.onOpenWindow();
+
+  TabsOnTop.syncCommand();
 }
 
 function BrowserShutdown()
@@ -4585,6 +4587,29 @@ function onViewToolbarCommand(aEvent)
   toolbar.setAttribute(hidingAttribute,
                        aEvent.originalTarget.getAttribute("checked") != "true");
   document.persist(toolbar.id, hidingAttribute);
+}
+
+var TabsOnTop = {
+  toggle: function () {
+    this.enabled = !this.enabled;
+  },
+  syncCommand: function () {
+    document.getElementById("cmd_ToggleTabsOnTop")
+            .setAttribute("checked", this.enabled);
+  },
+  get enabled () {
+    return gNavToolbox.getAttribute("tabsontop") == "true";
+  },
+  set enabled (val) {
+    gNavToolbox.setAttribute("tabsontop", !!val);
+    this.syncCommand();
+
+    //XXX: Trigger reframe. This is a workaround for bug 555987 and needs to be
+    //     removed once that bug is fixed.
+    gNavToolbox.style.MozBoxOrdinalGroup = val ? 2 : 3;
+
+    return val;
+  }
 }
 
 function displaySecurityInfo()
