@@ -25,8 +25,7 @@ void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
                                 const uint8* u_buf,
                                 const uint8* v_buf,
                                 uint8* rgb_buf,
-                                int width,
-                                unsigned int x_shift);
+                                int width);
 
 
 }  // extern "C"
