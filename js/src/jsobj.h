@@ -393,8 +393,10 @@ struct JSObject {
     static const uint32 JSSLOT_ARRAY_COUNT  = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_ARRAY_UNUSED = JSSLOT_PRIVATE + 2;
 
-    // This must remain true;  see comment in js_MakeArraySlow().
-    JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
+    // This assertion must remain true;  see comment in js_MakeArraySlow().
+    // (Nb: This method is never called, it just contains a static assertion.
+    // The static assertion isn't inline because that doesn't work on Mac.)
+    inline void staticAssertArrayLengthIsInPrivateSlot();
 
   public:
     inline uint32 getArrayLength() const;
