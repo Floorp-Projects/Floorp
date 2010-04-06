@@ -86,6 +86,8 @@ class imgIContainer;
 #define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
 // See nsStyleContext::RelevantLinkIsVisited
 #define NS_STYLE_RELEVANT_LINK_VISITED    0x04000000
+// See nsStyleContext::IsStyleIfVisited
+#define NS_STYLE_IS_STYLE_IF_VISITED      0x08000000
 // See nsStyleContext::GetPseudoEnum
 #define NS_STYLE_CONTEXT_TYPE_MASK        0xf0000000
 #define NS_STYLE_CONTEXT_TYPE_SHIFT       28

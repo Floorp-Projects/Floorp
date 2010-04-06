@@ -185,6 +185,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
     do {
       if (child->mRuleNode == aRuleNode &&
           child->mPseudoTag == aPseudoTag &&
+          !child->IsStyleIfVisited() &&
           child->RelevantLinkVisited() == aRelevantLinkVisited) {
         PRBool match = PR_FALSE;
         if (aRulesIfVisited) {
