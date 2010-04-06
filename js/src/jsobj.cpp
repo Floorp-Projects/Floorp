@@ -2071,7 +2071,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JS_ASSERT(len <= UINT32_MAX);
-    aobj->fslots[JSSLOT_ARRAY_COUNT] = len;
+    aobj->setArrayCount(len);
 
     return JS_TRUE;
 }
@@ -2513,7 +2513,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
     if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
 
-    jsuint oldLen = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    jsuint oldLen = obj->getArrayLength();
 
     if (desc.id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         /*
@@ -2541,7 +2541,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            obj->fslots[JSSLOT_ARRAY_LENGTH] = index + 1;
+            obj->setArrayLength(index + 1);
         }
 
         *rval = true;
@@ -6937,8 +6937,7 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
     if (obj->isDenseArray()) {
-        slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
-                       js_DenseArrayCapacity(obj));
+        slots = JS_MIN(obj->getArrayLength(), js_DenseArrayCapacity(obj));
         fprintf(stderr, "elements\n");
         for (i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);

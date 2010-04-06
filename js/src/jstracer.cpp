@@ -10448,7 +10448,7 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
         }
 
         if (argc > 0)
-            stobj_set_fslot(arr_ins, JSSLOT_ARRAY_COUNT, INS_CONST(argc));
+            stobj_set_fslot(arr_ins, JSObject::JSSLOT_ARRAY_COUNT, INS_CONST(argc));
     }
 
     set(rval, arr_ins);
@@ -12584,10 +12584,10 @@ TraceRecorder::record_JSOP_APPLY()
          */
         if (aobj->isDenseArray()) {
             guardDenseArray(aobj, aobj_ins, MISMATCH_EXIT);
-            length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
+            length = aobj->getArrayLength();
             guard(true,
                   lir->ins2i(LIR_eq,
-                             p2i(stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH)),
+                             p2i(stobj_get_fslot(aobj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
                              length),
                   BRANCH_EXIT);
         } else if (aobj->isArguments()) {
@@ -12957,7 +12957,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     /* check that the index is within bounds */
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER);
     jsuint capacity = js_DenseArrayCapacity(obj);
-    bool within = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
+    bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
     if (!within) {
         /* If idx < 0, stay on trace (and read value as undefined, since this is a dense array). */
         LIns* br1 = NULL;
@@ -12973,7 +12973,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         LIns* br2 = lir->insBranch(LIR_jf,
                                    lir->ins2(LIR_pult,
                                              pidx_ins,
-                                             stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+                                             stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
                                    NULL);
 
         /* If dslots is NULL, stay on trace (and read value as undefined). */
@@ -13013,7 +13013,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     /* Guard array length */
     guard(true,
-          lir->ins2(LIR_pult, pidx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+          lir->ins2(LIR_pult, pidx_ins, stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
           exit);
 
     /* dslots must not be NULL */
@@ -15026,7 +15026,7 @@ TraceRecorder::record_JSOP_LENGTH()
             if (!guardClass(obj, obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), ACC_OTHER))
                 RETURN_STOP_A("can't trace length property access on non-array");
         }
-        v_ins = lir->ins1(LIR_i2f, p2i(stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)));
+        v_ins = lir->ins1(LIR_i2f, p2i(stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_OTHER);
@@ -15066,7 +15066,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
     }
 
     if (count > 0)
-        stobj_set_fslot(v_ins, JSSLOT_ARRAY_COUNT, INS_CONST(count));
+        stobj_set_fslot(v_ins, JSObject::JSSLOT_ARRAY_COUNT, INS_CONST(count));
 
     stack(-int(len), v_ins);
     return ARECORD_CONTINUE;
