@@ -17,4 +17,3 @@ picture_region.patch: Change Chromium code to allow a picture region.
 remove_scale.patch: Removes Chromium scaling code.
 
 yv24.patch: Adds YCbCr 4:4:4 support
-breakage.patch: Export public function to fix seamonkey breakage and fix fast calls on ARM & PPC
