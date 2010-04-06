@@ -9,9 +9,14 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
+const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
+               "%ITEM_STATUS%/%APP_ID%/%APP_VERSION%/%CURRENT_APP_VERSION%/" +
+               "%APP_OS%/%APP_ABI%/%APP_LOCALE%/%UPDATE_TYPE%";
+
 do_load_httpd_js();
 var testserver;
-var profileDir;
+const profileDir = gProfD.clone();
+profileDir.append("extensions");
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -21,9 +26,6 @@ function run_test() {
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
-
-  profileDir = gProfD.clone();
-  profileDir.append("extensions");
 
   var dest = profileDir.clone();
   dest.append("addon1@tests.mozilla.org");
@@ -301,6 +303,205 @@ function check_test_5() {
     do_check_eq(p1.version, "2");
     do_check_eq(p1.name, "Updated Theme");
 
-    end_test();
+    run_test_6();
+  });
+}
+
+// Verify the parameter escaping in update urls.
+function run_test_6() {
+  var dest = profileDir.clone();
+  dest.append("addon1@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon1@tests.mozilla.org",
+    version: "5.0",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "2"
+    }],
+    name: "Test Addon 1",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon2@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon2@tests.mozilla.org",
+    version: "67.0.5b1",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "toolkit@mozilla.org",
+      minVersion: "0",
+      maxVersion: "3"
+    }],
+    name: "Test Addon 2",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon3@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon3@tests.mozilla.org",
+    version: "1.3+",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0",
+      maxVersion: "0"
+    }, {
+      id: "toolkit@mozilla.org",
+      minVersion: "0",
+      maxVersion: "3"
+    }],
+    name: "Test Addon 3",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon4@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon4@tests.mozilla.org",
+    version: "0.5ab6",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "5"
+    }],
+    name: "Test Addon 4",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon5@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon5@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 5",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon6@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon6@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 6",
+  }, dest);
+
+  restartManager(1);
+
+  AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+    a2.userDisabled = true;
+    restartManager(0);
+
+    testserver.registerPathHandler("/data/param_test.rdf", function(request, response) {
+      do_check_neq(request.queryString, "");
+      let [req_version, item_id, item_version,
+           item_maxappversion, item_status,
+           app_id, app_version, current_app_version,
+           app_os, app_abi, app_locale, update_type] =
+           [decodeURIComponent(a) for each (a in request.queryString.split("/"))];
+
+      do_check_eq(req_version, "2");
+
+      switch(item_id) {
+      case "addon1@tests.mozilla.org":
+        do_check_eq(item_version, "5.0");
+        do_check_eq(item_maxappversion, "2");
+        do_check_eq(item_status, "userEnabled");
+        do_check_eq(app_version, "1");
+        do_check_eq(update_type, "97");
+        break;
+      case "addon2@tests.mozilla.org":
+        do_check_eq(item_version, "67.0.5b1");
+        do_check_eq(item_maxappversion, "3");
+        do_check_eq(item_status, "userDisabled");
+        do_check_eq(app_version, "1");
+        do_check_eq(update_type, "49");
+        break;
+      case "addon3@tests.mozilla.org":
+        do_check_eq(item_version, "1.3+");
+        do_check_eq(item_maxappversion, "0");
+        do_check_eq(item_status, "userEnabled,incompatible");
+        do_check_eq(app_version, "1");
+        do_check_eq(update_type, "112");
+        break;
+      case "addon4@tests.mozilla.org":
+        do_check_eq(item_version, "0.5ab6");
+        do_check_eq(item_maxappversion, "5");
+        do_check_eq(item_status, "userEnabled");
+        do_check_eq(app_version, "2");
+        do_check_eq(update_type, "98");
+        break;
+      case "addon5@tests.mozilla.org":
+        do_check_eq(item_version, "1.0");
+        do_check_eq(item_maxappversion, "1");
+        do_check_eq(item_status, "userEnabled");
+        do_check_eq(app_version, "1");
+        do_check_eq(update_type, "35");
+        break;
+      case "addon6@tests.mozilla.org":
+        do_check_eq(item_version, "1.0");
+        do_check_eq(item_maxappversion, "1");
+        do_check_eq(item_status, "userEnabled");
+        do_check_eq(app_version, "1");
+        do_check_eq(update_type, "99");
+        break;
+      default:
+        do_throw("Update request for unexpected add-on " + item_id);
+      }
+
+      do_check_eq(app_id, "xpcshell@tests.mozilla.org");
+      do_check_eq(current_app_version, "1");
+      do_check_eq(app_os, "XPCShell");
+      do_check_eq(app_abi, "noarch-spidermonkey");
+      do_check_eq(app_locale, "en-US");
+
+      request.setStatusLine(null, 500, "Server Error");
+    });
+
+    AddonManager.getAddons(["addon1@tests.mozilla.org",
+                            "addon2@tests.mozilla.org",
+                            "addon3@tests.mozilla.org",
+                            "addon4@tests.mozilla.org",
+                            "addon5@tests.mozilla.org",
+                            "addon6@tests.mozilla.org"],
+                            function([a1, a2, a3, a4, a5, a6]) {
+      let count = 6;
+
+      let compatListener = {
+        onUpdateFinished: function(addon, error) {
+          if (--count == 0)
+            end_test();
+        }
+      };
+
+      let updateListener = {
+        onUpdateAvailable: function(addon, update) {
+          // Dummy so the update checker knows we care about new versions
+        },
+
+        onUpdateFinished: function(addon, error) {
+          if (--count == 0)
+            end_test();
+        }
+      };
+
+      a1.findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+      a2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
+      a3.findUpdates(updateListener, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      a4.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "2");
+      a5.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+      a6.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+    });
   });
 }
