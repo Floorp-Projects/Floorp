@@ -625,6 +625,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
                 return true;
             }
         }
+        CGRect clearRect = ::CGRectMake(0, 0, mWindow.width, mWindow.height);
+        ::CGContextClearRect(mShContext, clearRect);
         evcopy.data.draw.context = mShContext; 
     } else {
         PLUGIN_LOG_DEBUG(("Invalid event type for AnswerNNP_HandleEvent_Shmem."));
