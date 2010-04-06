@@ -181,6 +181,7 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 				 unsigned int		 height,
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
+				 cairo_region_t		*clip_region,
 				 int			*remaining_glyphs);
 
 cairo_int_status_t
@@ -425,6 +426,7 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 				 unsigned int		 height,
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
+				 cairo_region_t		*clip_region,
 				 int			*remaining_glyphs)
 {
     cairo_win32_surface_t *surface = (cairo_win32_surface_t *)generic_surface;
@@ -437,7 +439,9 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 	surface->format == CAIRO_FORMAT_RGB24 &&
 	op == CAIRO_OPERATOR_OVER) {
 
-	status = (cairo_int_status_t)cairo_dwrite_show_glyphs_on_surface (surface, op, pattern,
+	    //XXX: we need to set the clip region here
+
+	status = (cairo_int_status_t)_cairo_dwrite_show_glyphs_on_surface (surface, op, pattern,
 									  glyphs, num_glyphs, 
 									  (cairo_scaled_font_t*)scaled_font, NULL);
 
@@ -547,7 +551,8 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 							       source_x, source_y,
 							       0, 0,
 							       dest_x, dest_y,
-							       width, height);
+							       width, height,
+							       clip_region);
 
 	_cairo_pattern_fini (&mask.base);
 
@@ -1022,29 +1027,20 @@ _dwrite_draw_glyphs_to_gdi_surface_d2d(cairo_win32_surface_t *surface,
 }
 
 /* Surface helper function */
-cairo_public cairo_int_status_t
-cairo_dwrite_show_glyphs_on_surface(void			*surface,
+cairo_int_status_t
+_cairo_dwrite_show_glyphs_on_surface(void			*surface,
 				    cairo_operator_t	 op,
 				    const cairo_pattern_t	*source,
 				    cairo_glyph_t		*glyphs,
 				    int			 num_glyphs,
 				    cairo_scaled_font_t	*scaled_font,
-				    cairo_rectangle_int_t	*extents)
+				    cairo_clip_t	*clip)
 {
     // TODO: Check font & surface for types.
     cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
     cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->font_face);
     cairo_win32_surface_t *dst = reinterpret_cast<cairo_win32_surface_t*>(surface);
     cairo_int_status_t status;
-
-    /* If we have a fallback mask clip set on the dst, we have
-     * to go through the fallback path, but only if we're not
-     * doing this for printing */
-    if (dst->base.clip  &&
-	(dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
-	 dst->base.clip->surface != NULL))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     /* We can only handle dwrite fonts */
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1059,6 +1055,21 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
 	(dst->format != CAIRO_FORMAT_RGB24))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* If we have a fallback mask clip set on the dst, we have
+     * to go through the fallback path */
+    if (clip != NULL) {
+	if ((dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) == 0) {
+	    cairo_region_t *clip_region;
+	    cairo_int_status_t status;
+
+	    status = _cairo_clip_get_region (clip, &clip_region);
+	    assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	    if (status)
+		return status;
+
+	    _cairo_win32_surface_set_clip_region (dst, clip_region);
+	}
+    }
 
     /* It is vital that dx values for dxy_buf are calculated from the delta of
      * _logical_ x coordinates (not user x coordinates) or else the sum of all
@@ -1212,21 +1223,25 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
 
 #if CAIRO_HAS_D2D_SURFACE
 /* Surface helper function */
+//XXX: this function should probably be in cairo-d2d-surface.cpp
 cairo_int_status_t
-cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
+_cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 					cairo_operator_t	 op,
 					const cairo_pattern_t	*source,
 					cairo_glyph_t		*glyphs,
 					int			 num_glyphs,
 					cairo_scaled_font_t	*scaled_font,
-					cairo_rectangle_int_t	*extents)
+					cairo_clip_t		*clip)
 {
+    cairo_int_status_t status;
+
     // TODO: Check font & surface for types.
     cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
     cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->font_face);
     cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
 
     /* We can only handle dwrite fonts */
+    //XXX: this is checked by at least one caller
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1236,6 +1251,11 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     if (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    status = (cairo_int_status_t)_cairo_surface_clipper_set_clip (&dst->clipper, clip);
+    if (unlikely (status))
+	return status;
+
+    _cairo_d2d_begin_draw_state(dst);
 
     D2D1_TEXT_ANTIALIAS_MODE cleartype = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
 
