@@ -380,11 +380,7 @@ class Vector : AllocPolicy
     /* Destroy elements in the range [begin() + incr, end()). */
     void shrinkBy(size_t incr);
 
-    /*
-     * Grow the vector by incr elements.  If T is a POD (as judged by
-     * tl::IsPodType), leave as uninitialized memory.  Otherwise, default
-     * construct each element.
-     */
+    /* Grow the vector by incr elements. */
     bool growBy(size_t incr);
 
     /* Call shrinkBy or growBy based on whether newSize > length(). */
@@ -573,8 +569,7 @@ Vector<T,N,AP>::growBy(size_t incr)
         size_t freespace = sInlineCapacity - inlineLength();
         if (incr <= freespace) {
             T *newend = inlineEnd() + incr;
-            if (!tl::IsPodType<T>::result)
-                Impl::initialize(inlineEnd(), newend);
+            Impl::initialize(inlineEnd(), newend);
             inlineLength() += incr;
             JS_ASSERT(usingInlineStorage());
             return true;
@@ -594,8 +589,7 @@ Vector<T,N,AP>::growBy(size_t incr)
     /* We are !usingInlineStorage(). Initialize new elements. */
     JS_ASSERT(heapCapacity() - heapLength() >= incr);
     T *newend = heapEnd() + incr;
-    if (!tl::IsPodType<T>::result)
-        Impl::initialize(heapEnd(), newend);
+    Impl::initialize(heapEnd(), newend);
     heapEnd() = newend;
     return true;
 }
