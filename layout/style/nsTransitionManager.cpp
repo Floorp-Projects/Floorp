@@ -144,8 +144,7 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  NS_HIDDEN_(void) CoverValue(nsCSSProperty aProperty,
-                              nsStyleAnimation::Value &aStartValue)
+  void CoverValue(nsCSSProperty aProperty, nsStyleAnimation::Value &aStartValue)
   {
     CoveredValue v = { aProperty, aStartValue };
     mCoveredValues.AppendElement(v);
