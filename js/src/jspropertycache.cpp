@@ -190,8 +190,12 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
             }
         }
 
-        /* If getting a value via a stub getter, we can cache the slot. */
-        if (!(cs->format & (JOF_SET | JOF_INCDEC | JOF_FOR)) &&
+        /*
+         * If getting a value via a stub getter, or doing an INCDEC op
+         * with stub getters and setters, we can cache the slot.
+         */
+        if (!(cs->format & (JOF_SET | JOF_FOR)) &&
+            (!(cs->format & JOF_INCDEC) || sprop->hasDefaultSetter()) &&
             sprop->hasDefaultGetter() &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
