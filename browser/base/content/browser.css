@@ -21,6 +21,18 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
+#navigator-toolbox > toolbar:not(#TabsToolbar) {
+  -moz-box-ordinal-group: 50;
+}
+
+#TabsToolbar {
+  -moz-box-ordinal-group: 100;
+}
+
+#navigator-toolbox[tabsontop="true"] > #TabsToolbar {
+  -moz-box-ordinal-group: 10;
+}
+
 toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
