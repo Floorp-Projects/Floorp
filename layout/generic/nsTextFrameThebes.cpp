@@ -3128,12 +3128,17 @@ nsTextPaintStyle::InitCommonColors()
 }
 
 static nsIContent*
-FindElementAncestor(nsINode* aNode)
+FindElementAncestorForMozSelection(nsIContent* aContent)
 {
-  while (aNode && !aNode->IsNodeOfType(nsINode::eELEMENT)) {
-    aNode = aNode->GetParent();
+  NS_ENSURE_TRUE(aContent, nsnull);
+  while (aContent && aContent->IsInNativeAnonymousSubtree()) {
+    aContent = aContent->GetBindingParent();
   }
-  return static_cast<nsIContent*>(aNode);
+  NS_ASSERTION(aContent, "aContent isn't in non-anonymous tree?");
+  while (aContent && !aContent->IsNodeOfType(nsINode::eELEMENT)) {
+    aContent = aContent->GetParent();
+  }
+  return aContent;
 }
 
 PRBool
@@ -3155,7 +3160,8 @@ nsTextPaintStyle::InitSelectionColors()
   mInitSelectionColors = PR_TRUE;
 
   nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(mFrame);
-  nsIContent* selectionContent = FindElementAncestor(nonGeneratedAncestor->GetContent());
+  nsIContent* selectionContent =
+    FindElementAncestorForMozSelection(nonGeneratedAncestor->GetContent());
 
   if (selectionContent &&
       selectionStatus == nsISelectionController::SELECTION_ON) {
