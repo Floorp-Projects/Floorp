@@ -94,8 +94,11 @@ function run_test() {
                               function([a1, a2, a3, a4, a5]) {
 
         do_check_eq(a1, null);
+        do_check_not_in_crash_annotation(addon1.id, addon1.version);
         do_check_eq(a2, null);
+        do_check_not_in_crash_annotation(addon2.id, addon2.version);
         do_check_eq(a3, null);
+        do_check_not_in_crash_annotation(addon3.id, addon3.version);
         do_check_eq(a4, null);
         do_check_eq(a5, null);
 
@@ -142,6 +145,7 @@ function run_test_1() {
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, addon1.version);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -150,6 +154,7 @@ function run_test_1() {
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, addon2.version);
 
     do_check_neq(a3, null);
     do_check_eq(a3.id, "addon3@tests.mozilla.org");
@@ -158,6 +163,7 @@ function run_test_1() {
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
     do_check_true(hasFlag(a3.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a3.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon3.id, addon3.version);
 
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
@@ -220,6 +226,7 @@ function run_test_2() {
     do_check_false(isExtensionInAddonsList(userDir, a1.id));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -229,9 +236,11 @@ function run_test_2() {
     do_check_false(isExtensionInAddonsList(globalDir, a2.id));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
+    do_check_not_in_crash_annotation(addon3.id, addon3.version);
 
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
@@ -271,6 +280,7 @@ function run_test_3() {
     do_check_true(isExtensionInAddonsList(userDir, a1.id));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -280,6 +290,7 @@ function run_test_3() {
     do_check_false(isExtensionInAddonsList(globalDir, a2.id));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -324,6 +335,7 @@ function run_test_4() {
     do_check_false(isExtensionInAddonsList(userDir, a1.id));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -333,6 +345,7 @@ function run_test_4() {
     do_check_true(isExtensionInAddonsList(globalDir, a2.id));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -487,6 +500,8 @@ function run_test_7() {
     do_check_false(isExtensionInAddonsList(globalDir, "addon3@tests.mozilla.org"));
     do_check_false(isExtensionInAddonsList(globalDir, "addon4@tests.mozilla.org"));
     do_check_false(isExtensionInAddonsList(globalDir, "addon5@tests.mozilla.org"));
+    do_check_not_in_crash_annotation(addon1.id, addon1.version);
+    do_check_not_in_crash_annotation(addon2.id, addon2.version);
 
     end_test();
   });
