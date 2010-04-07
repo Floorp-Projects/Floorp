@@ -1305,7 +1305,7 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return sXPConnect->ReparentScopeAwareWrappers(cx, oldScopeObj, newScopeObj);
+  return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
 }
 
 nsIDocShell *
@@ -5413,7 +5413,7 @@ public:
   jsval source;
   jsval clone;
   jsval temp;
-  JSAutoIdArray ids;
+  js::AutoIdArray ids;
   jsuint index;
 
 private:
@@ -5431,7 +5431,7 @@ private:
   }
 
   CloneStackFrame* prevFrame;
-  JSAutoTempValueRooter tvrVals;
+  js::AutoArrayRooter tvrVals;
 };
 
 class CloneStack
@@ -5697,7 +5697,7 @@ nsContentUtils::CreateStructuredClone(JSContext* cx,
   }
 
   jsval output = OBJECT_TO_JSVAL(obj);
-  JSAutoTempValueRooter tvr(cx, output);
+  js::AutoValueRooter tvr(cx, output);
 
   CloneStack stack(cx);
   if (!stack.Push(val, OBJECT_TO_JSVAL(obj),
@@ -5909,8 +5909,9 @@ nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
 }
 #endif
 
-mozAutoRemovableBlockerRemover::mozAutoRemovableBlockerRemover(nsIDocument* aDocument)
+mozAutoRemovableBlockerRemover::mozAutoRemovableBlockerRemover(nsIDocument* aDocument MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
+  MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
   mNestingLevel = nsContentUtils::GetRemovableScriptBlockerLevel();
   mDocument = aDocument;
   nsISupports* sink = aDocument ? aDocument->GetCurrentContentSink() : nsnull;

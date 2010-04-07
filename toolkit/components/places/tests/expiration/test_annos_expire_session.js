@@ -43,8 +43,6 @@
  * Session annotations should be expired when browsing session ends.
  */
 
-const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-
 let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 let hs = Cc["@mozilla.org/browser/nav-history-service;1"].

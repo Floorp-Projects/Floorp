@@ -73,6 +73,9 @@
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
+#include "nsCSSProps.h"
+
+using namespace mozilla;
 
 /********************************************************************************
  ** nsTableReflowState                                                         **
@@ -489,18 +492,6 @@ PRBool nsTableFrame::HasMoreThanOneCell(PRInt32 aRowIndex) const
 {
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
   return tableCellMap->HasMoreThanOneCell(aRowIndex);
-}
-
-PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
-{
-  NS_PRECONDITION (GetCellMap(), "null cellMap.");
-
-  PRInt32 result;
-  result = GetStyleTable()->mCols;
-  PRInt32 numCols = GetColCount();
-  if (result > numCols)
-    result = numCols;
-  return result;
 }
 
 void nsTableFrame::AdjustRowIndices(PRInt32         aRowIndex,
@@ -1117,10 +1108,10 @@ nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilde
 /* static */ void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
-  const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bgSC))
     return;
-  if (!bg->HasFixedBackground())
+  if (!bgSC->GetStyleBackground()->HasFixedBackground())
     return;
 
   mPartHasFixedBackground = PR_TRUE;
@@ -1364,13 +1355,11 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
   if (NS_FAILED(rv)) return;
 
   if (GetStyleVisibility()->IsVisible()) {
-    const nsStyleBorder* border = GetStyleBorder();
     if (!IsBorderCollapse()) {
       PRIntn skipSides = GetSkipSides();
       nsRect rect(aPt, mRect.Size());
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext,
-                                  skipSides);
+                                  aDirtyRect, rect, mStyleContext, skipSides);
     }
     else {
       // XXX we should probably get rid of this translation at some stage
@@ -2341,6 +2330,15 @@ nsTableFrame::GetUsedPadding() const
   return nsMargin(0,0,0,0);
 }
 
+// Destructor function for BCPropertyData properties
+static void
+DestroyBCProperty(void* aPropertyValue)
+{
+  delete static_cast<BCPropertyData*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(TableBCProperty, DestroyBCProperty)
+
 static void
 DivideBCBorderSize(BCPixelSize  aPixelSize,
                    BCPixelSize& aSmallHalf,
@@ -2358,8 +2356,8 @@ nsTableFrame::GetOuterBCBorder() const
 
   nsMargin border(0, 0, 0, 0);
   PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
-  BCPropertyData* propData = 
-    (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this, nsGkAtoms::tableBCProperty, PR_FALSE);
+  BCPropertyData* propData = static_cast<BCPropertyData*>
+    (Properties().Get(TableBCProperty()));
   if (propData) {
     border.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
     border.right  = BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
@@ -2377,10 +2375,8 @@ nsTableFrame::GetIncludedOuterBCBorder() const
 
   nsMargin border(0, 0, 0, 0);
   PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
-  BCPropertyData* propData =
-    (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this,
-                                                nsGkAtoms::tableBCProperty,
-                                                PR_FALSE);
+  BCPropertyData* propData = static_cast<BCPropertyData*>
+    (Properties().Get(TableBCProperty()));
   if (propData) {
     border.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
     border.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightCellBorderWidth);
@@ -3243,17 +3239,6 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   ResizeCells(*this);
 }
 
-PRBool 
-nsTableFrame::IsPctHeight(nsStyleContext* aStyleContext) 
-{
-  PRBool result = PR_FALSE;
-  if (aStyleContext) {
-    result = (eStyleUnit_Percent ==
-              aStyleContext->GetStylePosition()->mHeight.GetUnit());
-  }
-  return result;
-}
-
 PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
@@ -3270,25 +3255,6 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   }
 
   return result;
-}
-
-void nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
-{
-  nsTableFrame* firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(firstInFlow, "illegal state -- no first in flow");
-
-  if (this == firstInFlow) {
-    nsTableColFrame* colFrame = GetColFrame(aColIndex);
-    if (colFrame) {
-      colFrame->SetFinalWidth(aWidth);
-    }
-    else {
-      NS_ASSERTION(PR_FALSE, "null col frame");
-    }
-  }
-  else {
-    firstInFlow->SetColumnWidth(aColIndex, aWidth);
-  }
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
@@ -3353,21 +3319,6 @@ nsTableFrame::GetTableFrame(nsIFrame* aSourceFrame)
   }
   NS_NOTREACHED("unable to find table parent");
   return nsnull;
-}
-
-PRBool 
-nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
-{
-  const nsStyleCoord& width = GetStylePosition()->mWidth;
-
-  if (aIsPctWidth) {
-    // XXX The old code also made the return value true for 0%, but that
-    // seems silly.
-    *aIsPctWidth = width.GetUnit() == eStyleUnit_Percent &&
-                   width.GetPercentValue() > 0.0f;
-    // Should this handle -moz-available and -moz-fit-content?
-  }
-  return width.GetUnit() == eStyleUnit_Auto;
 }
 
 PRBool 
@@ -3813,13 +3764,17 @@ nsTableFrame::SetBCDamageArea(const nsRect& aValue)
     return;
   }
   SetNeedToCalcBCBorders(PR_TRUE);
-  // Get the property 
-  BCPropertyData* value = (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty, PR_TRUE);
-  if (value) {
-    // for now just construct a union of the new and old damage areas
-    value->mDamageArea.UnionRect(value->mDamageArea, newRect);
-    CheckFixDamageArea(GetRowCount(), GetColCount(), value->mDamageArea);
+  // Get the property
+  FrameProperties props = Properties();
+  BCPropertyData* value = static_cast<BCPropertyData*>
+    (props.Get(TableBCProperty()));
+  if (!value) {
+    value = new BCPropertyData();
+    props.Set(TableBCProperty(), value);
   }
+  // for now just construct a union of the new and old damage areas
+  value->mDamageArea.UnionRect(value->mDamageArea, newRect);
+  CheckFixDamageArea(GetRowCount(), GetColCount(), value->mDamageArea);
 }
 
 /* BCCellBorder represents a border segment which can be either a horizontal
@@ -3998,9 +3953,8 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
   }
   mNumTableRows = mTableFrame->GetRowCount();
   mNumTableCols = mTableFrame->GetColCount();
-  mTableBCData =
-    static_cast <BCPropertyData*>(nsTableFrame::GetProperty(mTableFrame,
-                 nsGkAtoms::tableBCProperty, PR_FALSE));
+  mTableBCData = static_cast<BCPropertyData*>
+    (mTableFrame->Properties().Get(TableBCProperty()));
                  
   ResetCellInfo();
 }
@@ -4469,11 +4423,8 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
     return;
   }
-  PRBool foreground;
-  styleData->GetBorderColor(aSide, aColor, foreground);
-  if (foreground) {
-    aColor = aFrame->GetStyleColor()->mColor;
-  }
+  aColor = aFrame->GetStyleContext()->GetVisitedDependentColor(
+             nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[aSide]);
 }
 
 /** coerce the paint style as required by CSS2.1
@@ -5475,9 +5426,8 @@ nsTableFrame::CalcBCBorders()
     return; // nothing to do
 
   // Get the property holding the table damage area and border widths
-  BCPropertyData* propData =
-    (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty,
-                                               PR_FALSE);
+  BCPropertyData* propData = static_cast<BCPropertyData*>
+    (Properties().Get(TableBCProperty()));
   if (!propData) ABORT0();
 
   
@@ -7190,92 +7140,6 @@ PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols)
     result = cellMap->RowIsSpannedInto(aRowIndex, aNumEffCols);
   }
   return result;
-}
-
-PRBool nsTableFrame::ColHasSpanningCells(PRInt32 aColIndex)
-{
-  PRBool result = PR_FALSE;
-  nsTableCellMap * cellMap = GetCellMap();
-  NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
-  if (cellMap) {
-    result = cellMap->ColHasSpanningCells(aColIndex);
-  }
-  return result;
-}
-
-PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
-{
-  PRBool result = PR_FALSE;
-  nsTableCellMap * cellMap = GetCellMap();
-  NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
-  if (cellMap) {
-    result = cellMap->ColIsSpannedInto(aColIndex);
-  }
-  return result;
-}
-
-// Destructor function for nscoord properties
-static void
-DestroyCoordFunc(void*           aFrame,
-                 nsIAtom*        aPropertyName,
-                 void*           aPropertyValue,
-                 void*           aDtorData)
-{
-  delete static_cast<nscoord*>(aPropertyValue);
-}
-
-// Destructor function point properties
-static void
-DestroyPointFunc(void*           aFrame,
-                 nsIAtom*        aPropertyName,
-                 void*           aPropertyValue,
-                 void*           aDtorData)
-{
-  delete static_cast<nsPoint*>(aPropertyValue);
-}
-
-// Destructor function for BCPropertyData properties
-static void
-DestroyBCPropertyDataFunc(void*           aFrame,
-                          nsIAtom*        aPropertyName,
-                          void*           aPropertyValue,
-                          void*           aDtorData)
-{
-  delete static_cast<BCPropertyData*>(aPropertyValue);
-}
-
-void*
-nsTableFrame::GetProperty(nsIFrame*            aFrame,
-                          nsIAtom*             aPropertyName,
-                          PRBool               aCreateIfNecessary)
-{
-  nsPropertyTable *propTable = aFrame->PresContext()->PropertyTable();
-  void *value = propTable->GetProperty(aFrame, aPropertyName);
-  if (value) {
-    return (nsPoint*)value;  // the property already exists
-  }
-  if (aCreateIfNecessary) {
-    // The property isn't set yet, so allocate a new value, set the property,
-    // and return the newly allocated value
-    NSPropertyDtorFunc dtorFunc = nsnull;
-    if (aPropertyName == nsGkAtoms::collapseOffsetProperty) {
-      value = new nsPoint(0, 0);
-      dtorFunc = DestroyPointFunc;
-    }
-    else if (aPropertyName == nsGkAtoms::rowUnpaginatedHeightProperty) {
-      value = new nscoord;
-      dtorFunc = DestroyCoordFunc;
-    }
-    else if (aPropertyName == nsGkAtoms::tableBCProperty) {
-      value = new BCPropertyData;
-      dtorFunc = DestroyBCPropertyDataFunc;
-    }
-    if (value) {
-      propTable->SetProperty(aFrame, aPropertyName, value, dtorFunc, nsnull);
-    }
-    return value;
-  }
-  return nsnull;
 }
 
 /* static */

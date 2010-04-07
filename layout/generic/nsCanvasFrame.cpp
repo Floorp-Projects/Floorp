@@ -112,10 +112,12 @@ nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
     PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
 
     if (!mAddedScrollPositionListener) {
-      mAddedScrollPositionListener = PR_TRUE;
       nsIScrollableFrame* sf =
         PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
-      sf->AddScrollPositionListener(this);
+      if (sf) {
+        sf->AddScrollPositionListener(this);
+        mAddedScrollPositionListener = PR_TRUE;
+      }
     }
   }
   return NS_OK;
@@ -584,8 +586,9 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     if (nsSize(aDesiredSize.width, aDesiredSize.height) != GetSize()) {
       nsIFrame* rootElementFrame =
         aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-      const nsStyleBackground* bg =
+      nsStyleContext* bgSC =
         nsCSSRendering::FindCanvasBackground(this, rootElementFrame);
+      const nsStyleBackground* bg = bgSC->GetStyleBackground();
       if (!bg->IsTransparent()) {
         NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
           const nsStyleBackground::Layer& layer = bg->mLayers[i];

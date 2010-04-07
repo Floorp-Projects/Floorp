@@ -2175,7 +2175,7 @@ date_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (!GetUTCTime(cx, JS_THIS_OBJECT(cx, vp), vp, &utctime))
         return JS_FALSE;
 
-    numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
+    numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -2253,7 +2253,7 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
 
 // Don't really need an argument here, but we don't support arg-less builtins
 JS_DEFINE_TRCINFO_1(date_now,
-    (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, 0)))
+    (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, nanojit::ACC_STORE_ANY)))
 
 static JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),
@@ -2263,7 +2263,7 @@ static JSFunctionSpec date_static_methods[] = {
 };
 
 JS_DEFINE_TRCINFO_1(date_valueOf,
-    (3, (static, JSVAL_RETRY, date_valueOf_tn, CONTEXT, THIS, STRING, 0, 0)))
+    (3, (static, JSVAL_RETRY, date_valueOf_tn, CONTEXT, THIS, STRING, 0, nanojit::ACC_STORE_ANY)))
 
 static JSFunctionSpec date_methods[] = {
     JS_FN("getTime",             date_getTime,            0,0),

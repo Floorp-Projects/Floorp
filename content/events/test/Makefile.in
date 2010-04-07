@@ -84,6 +84,8 @@ _TEST_FILES = \
 		test_bug517851.html \
 		test_bug534833.html \
 		test_bug545268.html \
+		test_bug547996-1.html \
+		test_bug547996-2.xhtml \
 		$(NULL)
 
 _CHROME_FILES = \

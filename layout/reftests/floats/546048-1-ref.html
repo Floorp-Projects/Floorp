@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testcase, bug 546048</title>
+<style type="text/css">
+
+body { font-size: 10px }
+dl { min-height: 35px; }
+dt { float: left; width: 50%; padding-left: 45px; }
+span { float: left; }
+
+</style>
+
+</head>
+
+<body>
+	<dl>
+		<dt>
+			<span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUENAAAIBKDT/p01hQ83KEDN5FQnAoFAIBAIBAKB4EewtloCPhS2RvMAAAAASUVORK5CYII="></span>					Heading<br />
+			This is the line that overlaps the float.
+	</dl>
+	<dl>
+		<dt>
+			<span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUENAAAIBKDT/p01hQ83KEDN5FQnAoFAIBAIBAKB4EewtloCPhS2RvMAAAAASUVORK5CYII="></span>					Heading<br />
+			Here's an equivalent line where we don't simulate the image loading after the page.
+	</dl>
+
+</body>
+</html>

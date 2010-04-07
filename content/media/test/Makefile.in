@@ -104,6 +104,7 @@ _TEST_FILES = \
 		test_playback_errors.html \
 		test_reactivate.html \
 		test_readyState.html \
+		test_seek.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
@@ -113,23 +114,17 @@ _TEST_FILES = \
 #		test_resume.html \
 #
 
-ifneq ($(OS_ARCH),WINNT)
-# These tests are disabled on windows until we
-# figure out the random failures. See bug 475369.
-_TEST_FILES += \
-		test_seek.html \
-		$(NULL)
-endif
-
 # Ogg sample files
 _TEST_FILES += \
 		320x240.ogv \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
 		448636.ogv \
+		audio-overhang.ogg \
 		beta-phrasebook.ogg \
 		bogus.ogv \
 		bug495129.ogv \
+		bug495794.ogg \
 		bug461281.ogg \
 		bug482461.ogv \
 		bug498380.ogv \
@@ -157,6 +152,7 @@ _TEST_FILES += \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
+		video-overhang.ogg \
 		$(NULL)
 
 # Wave sample files

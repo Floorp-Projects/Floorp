@@ -63,8 +63,7 @@ const PREF_IMPORT_BOOKMARKS_HTML = "browser.places.importBookmarksHTML";
 const PREF_RESTORE_DEFAULT_BOOKMARKS = "browser.bookmarks.restore_default_bookmarks";
 const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
 const PREF_AUTO_EXPORT_HTML = "browser.bookmarks.autoExportHTML";
-const TOPIC_PLACES_INIT_COMPLETE = "places-init-complete";
-const TOPIC_PLACES_DATABASE_LOCKED = "places-database-locked";
+
 let tests = [];
 //------------------------------------------------------------------------------
 

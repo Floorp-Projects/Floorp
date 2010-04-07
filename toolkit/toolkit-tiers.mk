@@ -107,19 +107,17 @@ endif
 
 ifdef MOZ_IPC
 tier_platform_dirs += ipc js/src/ipc
+else
+# Include fake mozilla-runtime so that unify has something to unify.
+ifeq ($(OS_ARCH)_$(TARGET_CPU),Darwin_powerpc)
+tier_platform_dirs += ipc/app/fake
+endif
 endif
 
 tier_platform_dirs += \
 		js/src/xpconnect \
-		js/ctypes \
 		intl/chardet \
 		$(NULL)
-
-ifdef BUILD_CTYPES
-tier_platform_staticdirs += \
-		js/ctypes/libffi \
-		$(NULL)
-endif
 
 ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11

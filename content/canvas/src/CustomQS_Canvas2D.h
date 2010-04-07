@@ -50,7 +50,7 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -179,14 +179,14 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 
     // create the fast typed array; it's initialized to 0 by default
     JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    JSAutoTempValueRooter rd(cx, darray);
+    js::AutoValueRooter rd(cx, darray);
     if (!darray)
         return JS_FALSE;
 
     // Do JS_NewObject after CreateTypedArray, so that gc will get
     // triggered here if necessary
     JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    JSAutoTempValueRooter rr(cx, result);
+    js::AutoValueRooter rr(cx, result);
     if (!result)
         return JS_FALSE;
 
@@ -212,7 +212,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -246,7 +246,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 
     // create the fast typed array
     JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    JSAutoTempValueRooter rd(cx, darray);
+    js::AutoValueRooter rd(cx, darray);
     if (!darray)
         return JS_FALSE;
 
@@ -260,7 +260,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
     // Do JS_NewObject after CreateTypedArray, so that gc will get
     // triggered here if necessary
     JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    JSAutoTempValueRooter rr(cx, result);
+    js::AutoValueRooter rr(cx, result);
     if (!result)
         return JS_FALSE;
 
@@ -286,7 +286,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
 
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -308,7 +308,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     JSObject *darray;
 
     // grab width, height, and the dense array from the dataObject
-    JSAutoTempValueRooter tv(cx);
+    js::AutoValueRooter tv(cx);
 
     if (!JS_GetProperty(cx, dataObject, "width", tv.addr()) ||
         !JS_ValueToECMAInt32(cx, tv.value(), &wi))
@@ -329,7 +329,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         return JS_FALSE;
     darray = JSVAL_TO_OBJECT(tv.value());
 
-    JSAutoTempValueRooter tsrc_tvr(cx);
+    js::AutoValueRooter tsrc_tvr(cx);
 
     js::TypedArray *tsrc = NULL;
     if (darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8] ||

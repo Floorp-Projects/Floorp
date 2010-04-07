@@ -44,34 +44,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef CROSS_COMPILE
+#if defined(CROSS_COMPILE) && !defined(FORCE_BIG_ENDIAN) && !defined(FORCE_LITTLE_ENDIAN)
 #include <prtypes.h>
 #endif
 
 /************************************************************************/
 
-#ifdef __GNUC__
-#define NS_NEVER_INLINE __attribute__((noinline))
-#else
-#define NS_NEVER_INLINE
-#endif
-
-#ifdef __SUNPRO_C
-static int StackGrowthDirection(int *dummy1addr);
-#pragma no_inline(StackGrowthDirection)
-#endif
-
-static int NS_NEVER_INLINE StackGrowthDirection(int *dummy1addr)
-{
-    int dummy2;
-
-    return (&dummy2 < dummy1addr) ? -1 : 1;
-}
-
 int main(int argc, char **argv)
 {
-    int dummy1;
-
     printf("#ifndef js_cpucfg___\n");
     printf("#define js_cpucfg___\n\n");
 
@@ -91,10 +71,10 @@ int main(int argc, char **argv)
     printf("#undef  IS_LITTLE_ENDIAN\n");
     printf("#define IS_BIG_ENDIAN 1\n");
     printf("#endif\n\n");
-#elif defined(IS_LITTLE_ENDIAN)
+#elif defined(IS_LITTLE_ENDIAN) || defined(FORCE_LITTLE_ENDIAN)
     printf("#define IS_LITTLE_ENDIAN 1\n");
     printf("#undef  IS_BIG_ENDIAN\n\n");
-#elif defined(IS_BIG_ENDIAN)
+#elif defined(IS_BIG_ENDIAN) || defined(FORCE_BIG_ENDIAN)
     printf("#undef  IS_LITTLE_ENDIAN\n");
     printf("#define IS_BIG_ENDIAN 1\n\n");
 #else
@@ -185,7 +165,15 @@ int main(int argc, char **argv)
 
 #endif /* CROSS_COMPILE */
 
-    printf("#define JS_STACK_GROWTH_DIRECTION (%d)\n", StackGrowthDirection(&dummy1));
+    // PA-RISC is the only platform we try to support on which the stack
+    // grows towards higher addresses. Trying to detect it here has
+    // historically led to portability problems, which aren't worth it
+    // given the near consensus on stack growth direction.
+    printf("#ifdef __hppa\n"
+           "# define JS_STACK_GROWTH_DIRECTION (1)\n"
+           "#else\n"
+           "# define JS_STACK_GROWTH_DIRECTION (-1)\n"
+           "#endif\n");
 
     printf("#endif /* js_cpucfg___ */\n");
 

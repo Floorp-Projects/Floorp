@@ -48,23 +48,30 @@
 
 JS_BEGIN_EXTERN_C
 
+struct DtoaState;
+
+DtoaState *
+js_NewDtoaState();
+
+void
+js_DestroyDtoaState(DtoaState *state);
+
 /*
- * JS_strtod() returns as a double-precision floating-point number
- * the  value represented by the character string pointed to by
- * s00.  The string is scanned up to  the  first  unrecognized
- * character.
- * If the value of se is not (char **)NULL,  a  pointer  to
- * the  character terminating the scan is returned in the location pointed
- * to by se.  If no number can be  formed, se is set to s00r, and
- * zero is returned.
+ * js_strtod_harder() returns as a double-precision floating-point number the
+ * value represented by the character string pointed to by s00. The string is
+ * scanned up to the first unrecognized character.
+ *
+ * If se is not NULL, *se receives a pointer to the character terminating the
+ * scan. If no number can be formed, *se receives a pointer to the first
+ * unparseable character in s00, and zero is returned.
  *
  * *err is set to zero on success; it's set to JS_DTOA_ERANGE on range
  * errors and JS_DTOA_ENOMEM on memory failure.
  */
 #define JS_DTOA_ERANGE 1
 #define JS_DTOA_ENOMEM 2
-JS_FRIEND_API(double)
-JS_strtod(const char *s00, char **se, int *err);
+double
+js_strtod_harder(DtoaState *state, const char *s00, char **se, int *err);
 
 /*
  * Modes for converting floating-point numbers to strings.
@@ -102,8 +109,9 @@ typedef enum JSDToStrMode {
  *
  * Return NULL if out of memory.
  */
-JS_FRIEND_API(char *)
-JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, double dval);
+char *
+js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, int precision,
+          double dval);
 
 /*
  * Convert d to a string in the given base.  The integral part of d will be printed exactly
@@ -116,15 +124,8 @@ JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, dou
  *
  * Return NULL if out of memory.  If the result is not NULL, it must be released via free().
  */
-JS_FRIEND_API(char *)
-JS_dtobasestr(int base, double d);
-
-/*
- * Clean up any persistent RAM allocated during the execution of DtoA
- * routines, and remove any locks that might have been created.
- */
-JS_FRIEND_API(JSBool) js_InitDtoa(void);
-JS_FRIEND_API(void) js_FinishDtoa(void);
+char *
+js_dtobasestr(DtoaState *state, int base, double d);
 
 JS_END_EXTERN_C
 

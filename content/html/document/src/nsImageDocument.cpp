@@ -299,6 +299,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
 NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
+DOMCI_DATA(ImageDocument, nsImageDocument)
+
 NS_INTERFACE_TABLE_HEAD(nsImageDocument)
   NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(nsImageDocument)
     NS_INTERFACE_TABLE_ENTRY(nsImageDocument, nsIImageDocument)

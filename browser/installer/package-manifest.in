@@ -48,11 +48,12 @@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
+@BINPATH@/mozilla-runtime@BIN_SUFFIX@
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
-#endif
 #ifdef MOZ_IPC
 @BINPATH@/mozilla-runtime@BIN_SUFFIX@
+#endif
 #endif
 #ifdef WINCE
 @BINPATH@/mozce_shunt.dll
@@ -95,7 +96,6 @@
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
 @BINPATH@/README.txt
-@BINPATH@/LICENSE
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
 @BINPATH@/run-mozilla.sh
@@ -196,7 +196,6 @@
 #endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
-@BINPATH@/components/microsummaries.xpt
 #ifndef WINCE
 @BINPATH@/components/migration.xpt
 #endif

@@ -26,7 +26,8 @@
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
-<textarea id="textarea" cols="20" rows="4"></textarea>
+<div style="margin: 0; padding: 0; font-size: 24px;">Here is a text frame.</div>
+<textarea style="margin: 0;" id="textarea" cols="20" rows="4"></textarea><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe>
 </p>
@@ -78,7 +79,7 @@ const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
-function checkQueryContentResult(aResult, aMessage, aID)
+function checkQueryContentResult(aResult, aMessage)
 {
   ok(aResult, aMessage + ": the result is null");
   if (!aResult) {
@@ -741,7 +742,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
   for (var i = 0; i < kTestingOffset.length; i++) {
     var textRect = synthesizeQueryTextRect(kTestingOffset[i], 1);
     if (!checkQueryContentResult(textRect,
-          "runCharAtPointTest (" + aTargetName + "): textRect", "i=" + i)) {
+          "runCharAtPointTest (" + aTargetName + "): textRect: i=" + i)) {
       continue;
     }
 
@@ -753,7 +754,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     var charAtPt1 = synthesizeCharAtPoint(textRect.left + 1,
                                           textRect.top + 1);
     if (checkQueryContentResult(charAtPt1,
-          "runCharAtPointTest (" + aTargetName + "): charAtPt1", "i=" + i)) {
+          "runCharAtPointTest (" + aTargetName + "): charAtPt1: i=" + i)) {
       ok(!charAtPt1.notFound,
          "runCharAtPointTest (" + aTargetName + "): charAtPt1 isn't found: i=" + i);
       if (!charAtPt1.notFound) {
@@ -768,7 +769,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     var charAtPt2 = synthesizeCharAtPoint(textRect.left + textRect.width - 2,
                                           textRect.top + textRect.height - 2);
     if (checkQueryContentResult(charAtPt2,
-          "runCharAtPointTest (" + aTargetName + "): charAtPt2", "i=" + i)) {
+          "runCharAtPointTest (" + aTargetName + "): charAtPt2: i=" + i)) {
       ok(!charAtPt2.notFound,
          "runCharAtPointTest (" + aTargetName + "): charAtPt2 isn't found: i=" + i);
       if (!charAtPt2.notFound) {
@@ -783,7 +784,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     var charAtPt3 = synthesizeCharAtPoint(textRect.left - 2,
                                           textRect.top + 1);
     if (checkQueryContentResult(charAtPt3,
-          "runCharAtPointTest (" + aTargetName + "): charAtPt3", "i=" + i)) {
+          "runCharAtPointTest (" + aTargetName + "): charAtPt3: i=" + i)) {
       is(charAtPt3.notFound, kLeftSideOffset[i] == kNone,
          kLeftSideOffset[i] == kNone ?
            "runCharAtPointTest (" + aTargetName + "): charAtPt3 is found: i=" + i :
@@ -798,7 +799,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     var charAtPt4 = synthesizeCharAtPoint(textRect.left + textRect.width + 1,
                                           textRect.top + textRect.height - 2);
     if (checkQueryContentResult(charAtPt4,
-          "runCharAtPointTest (" + aTargetName + "): charAtPt4", "i=" + i)) {
+          "runCharAtPointTest (" + aTargetName + "): charAtPt4: i=" + i)) {
       is(charAtPt4.notFound, kRightSideOffset[i] == kNone,
          kRightSideOffset[i] == kNone ?
            "runCharAtPointTest (" + aTargetName + "): charAtPt4 is found: i=" + i :
@@ -808,6 +809,25 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
            "runCharAtPointTest (" + aTargetName + "): charAtPt4 offset is wrong: i=" + i);
       }
     }
+  }
+}
+
+function runCharAtPointAtOutsideTest()
+{
+  textarea.focus();
+  textarea.value = "some text";
+  var editorRect = synthesizeQueryEditorRect();
+  if (!checkQueryContentResult(editorRect,
+        "runCharAtPointAtOutsideTest: editorRect")) {
+    return;
+  }
+  // Check on a text node which is at the outside of editor.
+  var charAtPt = synthesizeCharAtPoint(editorRect.left + 20,
+                                       editorRect.top - 10);
+  if (checkQueryContentResult(charAtPt,
+        "runCharAtPointAtOutsideTest: charAtPt")) {
+    ok(charAtPt.notFound,
+       "runCharAtPointAtOutsideTest: charAtPt is found on outside of editor");
   }
 }
 
@@ -976,6 +996,7 @@ function runTest()
 {
   runCompositionTest();
   runCharAtPointTest(textarea, "textarea in the document");
+  runCharAtPointAtOutsideTest();
   runFrameTest();
   runPanelTest();
 }

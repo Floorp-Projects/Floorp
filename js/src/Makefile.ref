@@ -91,12 +91,18 @@ OTHER_LIBS += -L$(DIST)/lib -lnspr$(NSPR_LIBSUFFIX)
 endif
 endif
 
-ifdef JS_NO_THIN_LOCKS
-DEFINES += -DJS_USE_ONLY_NSPR_LOCKS
+ifdef JS_HAS_CTYPES
+DEFINES += -DJS_HAS_CTYPES
+INCLUDES += -I$(DIST)/include/nspr
+ifdef USE_MSVC
+OTHER_LIBS += $(DIST)/lib/libnspr$(NSPR_LIBSUFFIX).lib
+else
+OTHER_LIBS += -L$(DIST)/lib -lnspr$(NSPR_LIBSUFFIX)
+endif
 endif
 
-ifdef JS_HAS_FILE_OBJECT
-DEFINES += -DJS_HAS_FILE_OBJECT
+ifdef JS_NO_THIN_LOCKS
+DEFINES += -DJS_USE_ONLY_NSPR_LOCKS
 endif
 
 ifdef JS_GC_ZEAL
@@ -318,11 +324,6 @@ ifndef BUILD_OPT
 #        $(NULL)
 endif
 
-ifdef JS_HAS_FILE_OBJECT
-JS_CPPFILES += jsfile.cpp
-JS_HFILES += jsfile.h
-endif
-
 LIB_CPPFILES  = $(JS_CPPFILES)
 LIB_ASFILES := $(wildcard *_$(OS_ARCH).s)
 PROG_CPPFILES = js.cpp
@@ -401,6 +402,7 @@ js-config-switch=$(if $(value $($1)),-e 's/\#undef $1/\#define $1/')
 $(OBJDIR)/js-config.h.stamp: js-config.h.in Makefile.ref
 	sed < $< > $(@:.stamp=.tmp)			\
 	    $(call js-config-switch,JS_THREADSAFE)	\
+	    $(call js-config-switch,JS_HAS_CTYPES)		\
 	    $(call js-config-switch,JS_GC_ZEAL)		\
 	    -e :dummy
 	if ! [ -f $(@:.stamp=) ] || ! cmp $(@:.stamp=.tmp) $(@:.stamp=); then \

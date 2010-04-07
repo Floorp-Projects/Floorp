@@ -86,10 +86,9 @@ function testHtmlSerializer_1 () {
 
 
   //------------ OutputWrap
-  // by default, this flag is set, so we should have the same result as
-  // when there are no flags.
   encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputWrap);
   out = encoder.encodeToString();
+  expected = loadFileContent("file_xhtmlserializer_1_wrap.xhtml");
   is(out, expected, "test OutputWrap");
 
   //------------ OutputFormatted

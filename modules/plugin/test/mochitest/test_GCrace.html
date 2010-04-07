@@ -7,13 +7,27 @@
 	  src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css"
 	href="/tests/SimpleTest/test.css" />
-<body onload="setTimeout(checkGCRace, 1000)">
+<body onload="start()">
   <p id="display"></p>
 
   <embed id="p" type="application/x-test" wmode="window"></embed>
 
   <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
+
+    function start() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var prefs = Components.classes['@mozilla.org/preferences-service;1']
+        .getService(Components.interfaces.nsIPrefBranch);
+      if (!prefs.getBoolPref('dom.ipc.plugins.enabled')) {
+        ok(true, "Skipping this test when IPC plugins are not enabled.");
+        SimpleTest.finish();
+        return;
+      }
+      else {
+        setTimeout(checkGCRace, 1000);
+      }
+    }
 
     var nested = false;
 

@@ -4,7 +4,7 @@
 
 #include "tests.h"
 
-const int N = 1000;
+const size_t N = 1000;
 static jsval argv[N];
 
 static JSBool
@@ -68,7 +68,7 @@ BEGIN_TEST(testNewObject_1)
 
     // With N arguments.
     JS_ASSERT(INT_FITS_IN_JSVAL(N));
-    for (int i = 0; i < N; i++)
+    for (size_t i = 0; i < N; i++)
         argv[i] = INT_TO_JSVAL(i);
     obj = JS_New(cx, Array, N, argv);
     CHECK(obj);
@@ -97,5 +97,6 @@ BEGIN_TEST(testNewObject_1)
     CHECK_SAME(v, JSVAL_ZERO);
     CHECK_SAME(argv[0], JSVAL_ZERO);  // original argv should not have been trashed
     CHECK_SAME(argv[1], JSVAL_ONE);
+    return true;
 }
 END_TEST(testNewObject_1)

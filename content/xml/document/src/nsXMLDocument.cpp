@@ -233,6 +233,8 @@ nsXMLDocument::~nsXMLDocument()
   mLoopingForSyncLoad = PR_FALSE;
 }
 
+DOMCI_DATA(XMLDocument, nsXMLDocument)
+
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_TABLE_HEAD(nsXMLDocument)
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsXMLDocument)

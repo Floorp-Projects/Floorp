@@ -12,6 +12,7 @@
     src=
   "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
   </script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <script type="application/javascript"><![CDATA[
     const Ci = Components.interfaces;
@@ -74,9 +75,22 @@
       yield;
 
       // Now that we've been notified, we can check our link color.
-      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color,
-        "rgb(0, 0, 128)",
-        "link not initially blue");
+      // Since we can't use getComputedStyle() for this because
+      // getComputedStyle lies about styles that result from :visited,
+      // we have to take snapshots.
+      // First, take two reference snapshots.
+      var link1 = $("link1");
+      link1.className = "forcelink";
+      var refLink = snapshotWindow(TestWindow.getWindow());
+      link1.className = "forcevisited";
+      var refVisited = snapshotWindow(TestWindow.getWindow());
+      link1.className = "";
+      function snapshotsEqual(snap1, snap2) {
+        return compareSnapshots(snap1, snap2, true)[0];
+      }
+      ok(!snapshotsEqual(refLink, refVisited), "references should not match");
+      ok(snapshotsEqual(refLink, snapshotWindow(TestWindow.getWindow())),
+         "link should initially be blue");
 
       // Load the page that the link on the previous page points to.
       doPageNavigation({
@@ -109,9 +123,8 @@
       yield;
 
       // Now we can test the link color.
-      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color,
-        "rgb(128, 0, 128)",
-        ":visited link wrong color");
+      ok(snapshotsEqual(refVisited, snapshotWindow(TestWindow.getWindow())),
+         "visited link should be purple");
 
       // Tell the framework the test is finished.  Include the final 'yield'
       // statement to prevent a StopIteration exception from being thrown.

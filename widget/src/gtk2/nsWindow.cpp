@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_PLATFORM_MAEMO
+// needed to include hildon parts in gtk.h
 #define MAEMO_CHANGES
 #endif
 
@@ -62,7 +63,14 @@
 #include <gtk/gtk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#include <X11/Xatom.h>
+
+#ifdef AIX
+#include <X11/keysym.h>
+#else
 #include <X11/XF86keysym.h>
+#endif
+
 #include "gtk2xtbin.h"
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
@@ -83,6 +91,7 @@
 #include "nsIObserverService.h"
 
 #include "nsIdleService.h"
+#include "nsIPropertyBag2.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -3306,6 +3315,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     }
 
 #ifdef MOZ_X11
+#if ! defined AIX // no XFree86 on AIX 5L
     // Look for specialized app-command keys
     switch (aEvent->keyval) {
         case XF86XK_Back:
@@ -3323,6 +3333,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         case XF86XK_HomePage:
             return DispatchCommandEvent(nsWidgetAtoms::Home);
     }
+#endif /* ! AIX */
 #endif /* MOZ_X11 */
 
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
@@ -4250,6 +4261,25 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect_after(default_settings,
                                "notify::gtk-font-name",
                                G_CALLBACK(theme_changed_cb), this);
+
+#ifdef MOZ_PLATFORM_MAEMO
+        if (mWindowType == eWindowType_toplevel) {
+            GdkWindow *gdkwin = mShell->window;
+
+            // Tell the Hildon desktop that we support being rotated
+            gulong portrait_set = 1;
+            GdkAtom support = gdk_atom_intern("_HILDON_PORTRAIT_MODE_SUPPORT", FALSE);
+            gdk_property_change(gdkwin, support, gdk_x11_xatom_to_atom(XA_CARDINAL),
+                                32, GDK_PROP_MODE_REPLACE,
+                                (const guchar *) &portrait_set, 1);
+
+            // Tell maemo-status-volume daemon to ungrab keys
+            gulong volume_set = 1;
+            GdkAtom keys = gdk_atom_intern("_HILDON_ZOOM_KEY_ATOM", FALSE);
+            gdk_property_change(gdkwin, keys, gdk_x11_xatom_to_atom(XA_INTEGER),
+                                32, GDK_PROP_MODE_REPLACE, (const guchar *) &volume_set, 1);
+        }
+#endif
     }
 
     if (mContainer) {

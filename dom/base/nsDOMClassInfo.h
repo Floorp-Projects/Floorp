@@ -43,7 +43,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
-#include "jsobj.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
@@ -81,6 +80,7 @@ struct nsDOMClassInfoData
   const nsIID **mInterfaces;
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
+  PRUint32 mInterfacesBitmap;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -102,16 +102,9 @@ typedef PRUptrdiff PtrBits;
 #define IS_EXTERNAL(_ptr) (PtrBits(_ptr) & 0x1)
 
 
-#define NS_DOMCLASSINFO_IID   \
-{ 0x7da6858c, 0x5c12, 0x4588, \
- { 0x82, 0xbe, 0x01, 0xa2, 0x45, 0xc5, 0xc0, 0xb0 } }
-
-class nsDOMClassInfo : public nsIXPCScriptable,
-                       public nsIClassInfo
+class nsDOMClassInfo : public nsXPCClassInfo
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMCLASSINFO_IID)
-
   nsDOMClassInfo(nsDOMClassInfoData* aData);
   virtual ~nsDOMClassInfo();
 
@@ -175,17 +168,17 @@ public:
   /**
    * Get our JSClass pointer for the XPCNativeWrapper class
    */
-  static const JSClass* GetXPCNativeWrapperClass() {
-    return sXPCNativeWrapperClass;
+  static JSPropertyOp GetXPCNativeWrapperGetPropertyOp() {
+    return sXPCNativeWrapperGetPropertyOp;
   }
 
   /**
    * Set our JSClass pointer for the XPCNativeWrapper class
    */
-  static void SetXPCNativeWrapperClass(JSClass* aClass) {
-    NS_ASSERTION(!sXPCNativeWrapperClass,
-                 "Double set of sXPCNativeWrapperClass");
-    sXPCNativeWrapperClass = aClass;
+  static void SetXPCNativeWrapperGetPropertyOp(JSPropertyOp getPropertyOp) {
+    NS_ASSERTION(!sXPCNativeWrapperGetPropertyOp,
+                 "Double set of sXPCNativeWrapperGetPropertyOp");
+    sXPCNativeWrapperGetPropertyOp = getPropertyOp;
   }
 
   static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
@@ -195,23 +188,16 @@ public:
       nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
 
       NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
-                      sXPCNativeWrapperClass,
-                      "Must know what the XPCNativeWrapper class is!");
+                      sXPCNativeWrapperGetPropertyOp,
+                      "Must know what the XPCNativeWrapper class GetProperty op is!");
     }
 #endif
 
-    return sXPCNativeWrapperClass &&
-      ::JS_GET_CLASS(cx, obj) == sXPCNativeWrapperClass;
+    return sXPCNativeWrapperGetPropertyOp &&
+      ::JS_GET_CLASS(cx, obj)->getProperty == sXPCNativeWrapperGetPropertyOp;
   }
 
-  static void PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
-
-  static inline nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper,
-                                       JSObject *obj)
-  {
-    return wrapper ? wrapper->Native() :
-                     static_cast<nsISupports*>(obj->getPrivate());
-  }
+  static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
 
   static nsIXPConnect *XPConnect()
   {
@@ -225,6 +211,11 @@ protected:
 
   virtual void PreserveWrapper(nsISupports *aNative)
   {
+  }
+
+  virtual PRUint32 GetInterfacesBitmap()
+  {
+    return mData->mInterfacesBitmap;
   }
 
   static nsresult Init();
@@ -371,7 +362,7 @@ protected:
   static jsval sJava_id;
   static jsval sPackages_id;
 
-  static const JSClass *sXPCNativeWrapperClass;
+  static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
 };
 
 

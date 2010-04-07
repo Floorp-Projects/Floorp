@@ -247,10 +247,8 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     }
   }
 
-  const nsStyleColor* myColor = GetStyleColor();
-
   nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.SetColor(myColor->mColor);
+  aRenderingContext.SetColor(GetVisitedDependentColor(eCSSProperty_color));
 
   mTextIsRTL = PR_FALSE;
 

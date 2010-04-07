@@ -163,6 +163,7 @@ public:
                                               PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
+  virtual LayerManager*   GetLayerManager();
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
@@ -205,7 +206,8 @@ public:
   virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
                                              LPARAM lParam,
                                              PRBool aIsContextMenuKey = PR_FALSE,
-                                             PRInt16 aButton = nsMouseEvent::eLeftButton);
+                                             PRInt16 aButton = nsMouseEvent::eLeftButton,
+                                             PRUint16 aInputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE);
   virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
   virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
@@ -411,6 +413,7 @@ protected:
                                            PAINTSTRUCT ps, HDC aDC);
 #if !defined(WINCE)
   static void             ActivateOtherWindowHelper(HWND aWnd);
+  static PRUint16         GetMouseInputSource();
 #endif
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
@@ -536,7 +539,8 @@ public:
   ChildWindow() {}
   PRBool DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam,
                             PRBool aIsContextMenuKey = PR_FALSE,
-                            PRInt16 aButton = nsMouseEvent::eLeftButton);
+                            PRInt16 aButton = nsMouseEvent::eLeftButton,
+                            PRUint16 aInputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE);
 
 protected:
   virtual DWORD WindowStyle();

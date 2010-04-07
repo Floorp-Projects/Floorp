@@ -35,12 +35,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-const NS_APP_HISTORY_50_FILE = "UHist";
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+// Import common head.
+let (commonFile = do_get_file("../head_common.js", false)) {
+  let uri = Services.io.newFileURI(commonFile);
+  Services.scriptloader.loadSubScript(uri.spec, this);
+}
+
+// Put any other stuff relative to this test folder below.
+
 
 // Some Useful Date constants - PRTime uses microseconds, so convert
 const DAY_MICROSEC = 86400000000;
@@ -52,100 +62,6 @@ const tomorrow = today + DAY_MICROSEC;
 const old = today - (DAY_MICROSEC * 3);
 const futureday = today + (DAY_MICROSEC * 3);
 
-function LOG(aMsg) {
- aMsg = ("*** PLACES TESTS: " + aMsg);
- print(aMsg);
-}
-
-// If there's no location registered for the profile directory, register one now.
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-var profileDir = do_get_profile();
-
-var provider = {
-  getFile: function(prop, persistent) {
-    persistent.value = true;
-    if (prop == NS_APP_HISTORY_50_FILE) {
-      var histFile = profileDir.clone();
-      histFile.append("history.dat");
-      return histFile;
-    }
-    throw Cr.NS_ERROR_FAILURE;
-  },
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-
-var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-function uri(spec) {
- return iosvc.newURI(spec, null, null);
-}
-
-// Delete a previously created sqlite file
-function clearDB() {
- try {
-   var file = dirSvc.get('ProfD', Ci.nsIFile);
-   file.append("places.sqlite");
-   if (file.exists())
-     file.remove(false);
- } catch(ex) { dump("Exception: " + ex); }
-}
-clearDB();
-
-// Get our interfaces 
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-}
-
-try {
-  var bhistsvc = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get browser history service\n");
-}
-
-try {
-  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-                getService(Ci.nsIAnnotationService);
-} catch(ex) {
-  do_throw("Could not get annotation service\n");
-}
-
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch (ex) {
-  do_throw("Could not get bookmark service\n");
-}
-
-try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
-} catch(ex) {
-  do_throw("Could not get tagging service\n");
-}
-
-try {
-  var faviconsvc = Cc["@mozilla.org/browser/favicon-service;1"].
-                   getService(Ci.nsIFaviconService);
-} catch(ex) {
-  do_throw("Could not get favicon service\n");
-}
-
-try {
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
-              getService(Ci.nsILivemarkService);
-} catch(ex) {
-  do_throw("Could not get livemark service\n");
-}
 
 /**
  * Generalized function to pull in an array of objects of data and push it into
@@ -154,6 +70,7 @@ try {
  */
 function populateDB(aArray) {
   aArray.forEach(function(data) {
+    dump_table("moz_bookmarks");
     try {
       // make the data object into a query data object in order to create proper
       // default values for anything left unspecified
@@ -161,23 +78,21 @@ function populateDB(aArray) {
       if (qdata.isVisit) {
         // Then we should add a visit for this node
         var referrer = qdata.referrer ? uri(qdata.referrer) : null;
-        var visitId = histsvc.addVisit(uri(qdata.uri), qdata.lastVisit,
-                                       referrer, qdata.transType,
-                                       qdata.isRedirect, qdata.sessionID);
+        var visitId = PlacesUtils.history.addVisit(uri(qdata.uri), qdata.lastVisit,
+                                                   referrer, qdata.transType,
+                                                   qdata.isRedirect, qdata.sessionID);
         do_check_true(visitId > 0);
         if (qdata.title && !qdata.isDetails) {
           // Set the page title synchronously, otherwise setPageTitle is LAZY.
-          let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-                   getService(Ci.nsPIPlacesDatabase).
-                   DBConnection;
-          let stmt = db.createStatement("UPDATE moz_places_view " +
-                                        "SET title = :title WHERE url = :url");
+          let stmt = DBConn().createStatement(
+            "UPDATE moz_places_view SET title = :title WHERE url = :url"
+          );
           stmt.params.title = qdata.title;
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
             // Force a notification so results are updated.
-            histsvc.runInBatchMode({runBatched: function(){}}, null);
+            PlacesUtils.history.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();
@@ -186,17 +101,14 @@ function populateDB(aArray) {
         if (qdata.visitCount && !qdata.isDetails) {
           // Set a fake visit_count, this is not a real count but can be used
           // to test sorting by visit_count.
-          let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-                   getService(Ci.nsPIPlacesDatabase).
-                   DBConnection;
-          let stmt = db.createStatement("UPDATE moz_places_view " +
-                                        "SET visit_count = :vc WHERE url = :url");
+          let stmt = DBConn().createStatement(
+            "UPDATE moz_places_view SET visit_count = :vc WHERE url = :url");
           stmt.params.vc = qdata.visitCount;
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
             // Force a notification so results are updated.
-            histsvc.runInBatchMode({runBatched: function(){}}, null);
+            PlacesUtils.history.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();
@@ -206,57 +118,71 @@ function populateDB(aArray) {
 
       if (qdata.isDetails) {
         // Then we add extraneous page details for testing
-        bhistsvc.addPageWithDetails(uri(qdata.uri), qdata.title, qdata.lastVisit);
+        PlacesUtils.history.addPageWithDetails(uri(qdata.uri),
+                                               qdata.title, qdata.lastVisit);
       }
 
       if (qdata.markPageAsTyped){
-        bhistsvc.markPageAsTyped(uri(qdata.uri));
+        PlacesUtils.bhistory.markPageAsTyped(uri(qdata.uri));
       }
 
       if (qdata.hidePage){
-        bhistsvc.hidePage(uri(qdata.uri));
+        PlacesUtils.bhistory.hidePage(uri(qdata.uri));
       }
 
       if (qdata.isPageAnnotation) {
         if (qdata.removeAnnotation) 
-          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+          PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
+                                                       qdata.annoName);
         else {
-          annosvc.setPageAnnotation(uri(qdata.uri),
-                                    qdata.annoName, qdata.annoVal,
-                                    qdata.annoFlags, qdata.annoExpiration);
+          PlacesUtils.annotations.setPageAnnotation(uri(qdata.uri),
+                                                    qdata.annoName,
+                                                    qdata.annoVal,
+                                                    qdata.annoFlags,
+                                                    qdata.annoExpiration);
         }
       }
 
       if (qdata.isItemAnnotation) {
         if (qdata.removeAnnotation)
-          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+          PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
+                                                       qdata.annoName);
         else {
-          annosvc.setItemAnnotation(qdata.itemId, qdata.annoName, qdata.annoVal,
-                                    qdata.annoFlags, qdata.annoExpiration);
+          PlacesUtils.annotations.setItemAnnotation(qdata.itemId,
+                                                    qdata.annoName,
+                                                    qdata.annoVal,
+                                                    qdata.annoFlags,
+                                                    qdata.annoExpiration);
         }
       }
 
       if (qdata.isPageBinaryAnnotation) {
         if (qdata.removeAnnotation)
-          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+          PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
+                                                       qdata.annoName);
         else {
-          annosvc.setPageAnnotationBinary(uri(qdata.uri), qdata.annoName,
-                                          qdata.binarydata,
-                                          qdata.binaryDataLength,
-                                          qdata.annoMimeType, qdata.annoFlags,
-                                          qdata.annoExpiration);
+          PlacesUtils.annotations.setPageAnnotationBinary(uri(qdata.uri),
+                                                          qdata.annoName,
+                                                          qdata.binarydata,
+                                                          qdata.binaryDataLength,
+                                                          qdata.annoMimeType,
+                                                          qdata.annoFlags,
+                                                          qdata.annoExpiration);
         }
       }
 
       if (qdata.isItemBinaryAnnotation) {
         if (qdata.removeAnnotation)
-          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+          PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
+                                                       qdata.annoName);
         else {
-          annosvc.setItemAnnotationBinary(qdata.itemId, qdata.annoName,
-                                          qdata.binaryData,
-                                          qdata.binaryDataLength,
-                                          qdata.annoMimeType, qdata.annoFlags,
-                                          qdata.annoExpiration);
+          PlacesUtils.annotations.setItemAnnotationBinary(qdata.itemId,
+                                                          qdata.annoName,
+                                                          qdata.binaryData,
+                                                          qdata.binaryDataLength,
+                                                          qdata.annoMimeType,
+                                                          qdata.annoFlags,
+                                                          qdata.annoExpiration);
         }
       }
 
@@ -264,42 +190,54 @@ function populateDB(aArray) {
         // Not planning on doing deep testing of favIcon service so these two
         // calls should be sufficient to get favicons into the database
         try {
-          faviconsvc.setFaviconData(uri(qdata.faviconURI), qdata.favicon,
-                                    qdata.faviconLen, qdata.faviconMimeType,
-                                    qdata.faviconExpiration);
+          PlacesUtils.favicons.setFaviconData(uri(qdata.faviconURI),
+                                              qdata.favicon,
+                                              qdata.faviconLen,
+                                              qdata.faviconMimeType,
+                                              qdata.faviconExpiration);
         } catch (ex) {}
-        faviconsvc.setFaviconUrlForPage(uri(qdata.uri), uri(qdata.faviconURI));
+        PlacesUtils.favicons.setFaviconUrlForPage(uri(qdata.uri),
+                                                  uri(qdata.faviconURI));
       }
 
       if (qdata.isFolder) {
-        let folderId = bmsvc.createFolder(qdata.parentFolder, qdata.title, qdata.index);
+        let folderId = PlacesUtils.bookmarks.createFolder(qdata.parentFolder,
+                                                          qdata.title,
+                                                          qdata.index);
         if (qdata.readOnly)
-          bmsvc.setFolderReadonly(folderId, true);
+          PlacesUtils.bookmarks.setFolderReadonly(folderId, true);
       }
 
       if (qdata.isLivemark) {
-        lmsvc.createLivemark(qdata.parentFolder, qdata.title, uri(qdata.uri),
-                       uri(qdata.feedURI), qdata.index);
+        PlacesUtils.livemarks.createLivemark(qdata.parentFolder,
+                                             qdata.title,
+                                             uri(qdata.uri),
+                                             uri(qdata.feedURI),
+                                             qdata.index);
       }
 
       if (qdata.isBookmark) {
-        let itemId = bmsvc.insertBookmark(qdata.parentFolder, uri(qdata.uri),
-                                          qdata.index, qdata.title);
+        let itemId = PlacesUtils.bookmarks.insertBookmark(qdata.parentFolder,
+                                                          uri(qdata.uri),
+                                                          qdata.index,
+                                                          qdata.title);
         if (qdata.keyword)
-          bmsvc.setKeywordForBookmark(itemId, qdata.keyword);
+          PlacesUtils.bookmarks.setKeywordForBookmark(itemId, qdata.keyword);
         if (qdata.dateAdded)
-          bmsvc.setItemDateAdded(itemId, qdata.dateAdded);
+          PlacesUtils.bookmarks.setItemDateAdded(itemId, qdata.dateAdded);
         if (qdata.lastModified)
-          bmsvc.setItemLastModified(itemId, qdata.lastModified);
+          PlacesUtils.bookmarks.setItemLastModified(itemId, qdata.lastModified);
       }
 
       if (qdata.isTag) {
-        tagssvc.tagURI(uri(qdata.uri), qdata.tagArray);
+        PlacesUtils.tagging.tagURI(uri(qdata.uri), qdata.tagArray);
       }
 
       if (qdata.isDynContainer) {
-        bmsvc.createDynamicContainer(qdata.parentFolder, qdata.title,
-                                       qdata.contractId, qdata.index);
+        PlacesUtils.bookmarks.createDynamicContainer(qdata.parentFolder,
+                                                     qdata.title,
+                                                     qdata.contractId,
+                                                     qdata.index);
       }
     } catch (ex) {
       // use the data object here in case instantiation of qdata failed
@@ -308,6 +246,7 @@ function populateDB(aArray) {
     }
   }); // End of function and array
 }
+
 
 /**
  * The Query Data Object - this object encapsulates data for our queries and is
@@ -326,7 +265,7 @@ function queryData(obj) {
   this.uri = obj.uri ? obj.uri : "";
   this.lastVisit = obj.lastVisit ? obj.lastVisit : today;
   this.referrer = obj.referrer ? obj.referrer : null;
-  this.transType = obj.transType ? obj.transType : histsvc.TRANSITION_TYPED;
+  this.transType = obj.transType ? obj.transType : Ci.nsINavHistoryService.TRANSITION_TYPED;
   this.isRedirect = obj.isRedirect ? obj.isRedirect : false;
   this.sessionID = obj.sessionID ? obj.sessionID : 0;
   this.isDetails = obj.isDetails ? obj.isDetails : false;
@@ -357,9 +296,10 @@ function queryData(obj) {
   this.faviconExpiration = obj.faviconExpiration ?
                            obj.faviconExpiration : futureday;
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
-  this.parentFolder = obj.parentFolder ? obj.parentFolder : bmsvc.placesRoot;
+  this.parentFolder = obj.parentFolder ? obj.parentFolder
+                                       : PlacesUtils.placesRootId;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
-  this.index = obj.index ? obj.index : bmsvc.DEFAULT_INDEX;
+  this.index = obj.index ? obj.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;
   this.contractId = obj.contractId ? obj.contractId : "";
   this.lastModified = obj.lastModified ? obj.lastModified : today;
@@ -375,6 +315,7 @@ function queryData(obj) {
 
 // All attributes are set in the constructor above
 queryData.prototype = { }
+
 
 /**
  * Helper function to compare an array of query objects with a result set.
@@ -409,7 +350,7 @@ function compareArrayToResult(aArray, aRoot) {
           aArray[i].lastVisit != child.time)
         do_throw("Expected " + aArray[i].lastVisit + " found " + child.time);
       if (aArray[i].hasOwnProperty("index") &&
-          aArray[i].index != bmsvc.DEFAULT_INDEX &&
+          aArray[i].index != PlacesUtils.bookmarks.DEFAULT_INDEX &&
           aArray[i].index != child.bookmarkIndex)
         do_throw("Expected " + aArray[i].index + " found " + child.bookmarkIndex);
 
@@ -421,6 +362,7 @@ function compareArrayToResult(aArray, aRoot) {
     aRoot.containerOpen = false;
   LOG("Comparing Array to Results passes");
 }
+
 
 /**
  * Helper function to check to see if one object either is or is not in the
@@ -454,6 +396,7 @@ function isInResult(aQueryData, aRoot) {
   return rv;
 }
 
+
 /**
  * A nice helper function for debugging things. It LOGs the contents of a
  * result set.
@@ -473,108 +416,4 @@ function displayResultSet(aRoot) {
     LOG("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
         aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }
-}
-
-/*
- * Removes all bookmarks and checks for correct cleanup
- */
-function remove_all_bookmarks() {
-  // Clear all bookmarks
-  bmsvc.removeFolderChildren(bmsvc.bookmarksMenuFolder);
-  bmsvc.removeFolderChildren(bmsvc.toolbarFolder);
-  bmsvc.removeFolderChildren(bmsvc.unfiledBookmarksFolder);
-  // Check for correct cleanup
-  check_no_bookmarks()
-}
-
-/*
- * Checks that we don't have any bookmark
- */
-function check_no_bookmarks() {
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.toolbarFolder, bmsvc.bookmarksMenuFolder, bmsvc.unfiledBookmarksFolder], 3);
-  var options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 0);
-  root.containerOpen = false;
-}
-
-/**
- * Dumps the rows of a table out to the console.
- *
- * @param aName
- *        The name of the table or view to output.
- */
-function dump_table(aName)
-{
-  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsPIPlacesDatabase).
-           DBConnection;
-  let stmt = db.createStatement("SELECT * FROM " + aName);
-
-  dump("\n*** Printing data from " + aName + ":\n");
-  let count = 0;
-  while (stmt.executeStep()) {
-    let columns = stmt.numEntries;
-
-    if (count == 0) {
-      // print the column names
-      for (let i = 0; i < columns; i++)
-        dump(stmt.getColumnName(i) + "\t");
-      dump("\n");
-    }
-
-    // print the row
-    for (let i = 0; i < columns; i++) {
-      switch (stmt.getTypeOfIndex(i)) {
-        case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
-          dump("NULL\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
-          dump(stmt.getInt64(i) + "\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
-          dump(stmt.getDouble(i) + "\t");
-          break;
-        case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
-          dump(stmt.getString(i) + "\t");
-          break;
-      }
-    }
-    dump("\n");
-
-    count++;
-  }
-  dump("*** There were a total of " + count + " rows of data.\n\n");
-
-  stmt.reset();
-  stmt.finalize();
-  stmt = null;
-}
-
-/**
- * Flushes any events in the event loop of the main thread.
- */
-function flush_main_thread_events()
-{
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  while (tm.mainThread.hasPendingEvents())
-    tm.mainThread.processNextEvent(false);
-}
-
-// These tests are known to randomly fail due to bug 507790 when database
-// flushes are active, so we turn off syncing for them.
-let randomFailingSyncTests = [
-  "test_results-as-visit.js",
-  "test_sorting.js",
-  "test_redirectsMode.js",
-];
-let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
-if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
-  print("Test " + currentTestFilename + " is known random due to bug 507790, disabling PlacesDBFlush component.");
-  let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
-  sync.observe(null, "places-debug-stop-sync", null);
 }

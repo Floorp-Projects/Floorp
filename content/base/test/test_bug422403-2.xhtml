@@ -92,20 +92,20 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of\n text.';
+  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of text.';
   is(out, expected, "test selection");
 
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(null);
   encoder.setContainerNode(node);
   out = encoder.encodeToString();
-  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of\n text.';
+  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of text.';
   is(out, expected, "test container node");
 
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = "<div xmlns=\"http://www.w3.org/1999/xhtml\" id=\"draggable\" \nondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> \nbit of text.</div>";
+  expected = "<div xmlns=\"http://www.w3.org/1999/xhtml\" id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>";
   is(out, expected, "test node");
 
   node = document.getElementById('aList');
@@ -116,20 +116,20 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong>\n </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra \nlacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. \nClass</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
+  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
   is(out, expected, "test list selection");
 
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(null);
   encoder.setContainerNode(node);
   out = encoder.encodeToString();
-  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong>\n </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra \nlacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. \nClass</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
+  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
   is(out, expected, "test list container node");
 
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = "<ol xmlns=\"http://www.w3.org/1999/xhtml\" id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
+  expected = "<ol xmlns=\"http://www.w3.org/1999/xhtml\" id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
   is(out, expected, "test list node");
 
   var liList = node.getElementsByTagName("li");
@@ -143,7 +143,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>Lorem ipsum \ndolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the first child of the ol, and end after the element ol");
 
   // selection start at the third child of the ol, and end after the element ol
@@ -152,7 +152,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>sit amet, <strong>consectetuer</strong>\n </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol");
 
 
@@ -163,7 +163,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList" start="5"><li>sit \namet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList" start="5"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol + ol start at the value 5");
 
 
@@ -174,7 +174,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong>\n </li>\n  ';
+  expected = '<li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  ';
   is(out, expected, "test list selection with range: selection contains only some child of the ol");
 
 

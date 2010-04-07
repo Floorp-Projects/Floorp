@@ -221,15 +221,17 @@ nsCARenderer::~nsCARenderer() {
   Destroy();
 }
 
-CGColorSpaceRef CreateSystemColorSpace () {
+CGColorSpaceRef CreateSystemColorSpace() {
     CMProfileRef system_profile = NULL;
     CGColorSpaceRef cspace = NULL;
 
     if (::CMGetSystemProfile(&system_profile) == noErr) {
       // Create a colorspace with the systems profile
       cspace = ::CGColorSpaceCreateWithPlatformColorSpace(system_profile);
-
       ::CMCloseProfile(system_profile);
+    } else {
+      // Default to generic
+      cspace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     }
 
     return cspace;
@@ -244,6 +246,10 @@ void cgdata_release_callback(void *aCGData, const void *data, size_t size) {
 void nsCARenderer::Destroy() {
   if (mCARenderer) {
     CARenderer* caRenderer = (CARenderer*)mCARenderer;
+    // Bug 556453:
+    // Explicitly remove the layer from the renderer
+    // otherwise it does not always happen right away.
+    caRenderer.layer = NULL;
     [caRenderer release];
   }
   if (mPixelBuffer) {

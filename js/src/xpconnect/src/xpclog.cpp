@@ -157,7 +157,7 @@ LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
            className ? " for " : "", className ? className : "", reason, obj);
     if(className)
         PR_Free(className);
-    AutoJSRequestWithNoCallContext autoRequest(cx);
+    JSAutoRequest autoRequest(cx);
     xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
 }
 #endif

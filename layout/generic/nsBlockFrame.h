@@ -92,7 +92,7 @@ class nsIntervalSet;
  * flow frames whose placeholders are in the overflow list.
  * -- A given piece of content has at most one placeholder
  * frame in a block's normal child list.
- * -- While a block is being reflowed, it may have a floatContinuationProperty
+ * -- While a block is being reflowed, it may have a FloatContinuationProperty
  * frame property that points to an nsFrameList in its
  * nsBlockReflowState. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
@@ -155,6 +155,8 @@ public:
   const_reverse_line_iterator rend_lines() const { return mLines.rend(); }
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+
+  NS_DECLARE_FRAME_PROPERTY(FloatContinuationProperty, nsnull)
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -268,12 +270,6 @@ public:
    * case we must avoid collapsing that margin with our bottom margin)
    */
   PRBool CheckForCollapsedBottomMarginFromClearanceLine();
-
-  /** return the topmost block child based on y-index.
-    * almost always the first or second line, if there is one.
-    * accounts for lines that hold only compressed white space, etc.
-    */
-  nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
 
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 

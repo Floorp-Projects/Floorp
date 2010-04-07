@@ -114,6 +114,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLOptGroupElement, nsHTMLOptGroupElement)
+
 // QueryInterface implementation for nsHTMLOptGroupElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLOptGroupElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLOptGroupElement,

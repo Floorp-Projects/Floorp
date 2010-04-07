@@ -41,8 +41,8 @@
 #include "jsapi.h"
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
+#include "jsobj.h"
 #include "jsdbgapi.h"
-#include "jsnum.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -541,6 +541,16 @@ static const char kDOMStringBundleURL[] =
   // nothing
 #endif
 
+DOMCI_DATA(Crypto, void)
+DOMCI_DATA(CRMFObject, void)
+DOMCI_DATA(SmartCardEvent, void)
+
+DOMCI_DATA(DOMPrototype, void)
+DOMCI_DATA(DOMConstructor, void)
+
+DOMCI_DATA(Worker, void)
+
+DOMCI_DATA(Notation, void)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -552,6 +562,7 @@ static const char kDOMStringBundleURL[] =
     nsnull,                                                                   \
     _flags,                                                                   \
     PR_TRUE,                                                                  \
+    0,                                                                        \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -1473,7 +1484,7 @@ jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
 
 static const JSClass *sObjectClass = nsnull;
-const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
+JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class
@@ -1486,10 +1497,10 @@ FindObjectClass(JSObject* aGlobalObject)
   JSObject *obj, *proto = aGlobalObject;
   do {
     obj = proto;
-    proto = STOBJ_GET_PROTO(obj);
+    proto = obj->getProto();
   } while (proto);
 
-  sObjectClass = STOBJ_GET_CLASS(obj);
+  sObjectClass = obj->getClass();
 }
 
 static void
@@ -1570,6 +1581,13 @@ GetInternedJSVal(JSContext *cx, const char *str)
 }
 
 // static
+
+nsISupports *
+nsDOMClassInfo::GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
+{
+  return wrapper ? wrapper->Native() : static_cast<nsISupports*>(obj->getPrivate());
+}
+
 nsresult
 nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 {
@@ -1739,20 +1757,17 @@ nsDOMClassInfo::~nsDOMClassInfo()
   }
 }
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMClassInfo, NS_DOMCLASSINFO_IID)
-
 NS_IMPL_ADDREF(nsDOMClassInfo)
 NS_IMPL_RELEASE(nsDOMClassInfo)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMClassInfo)
+  if (aIID.Equals(NS_GET_IID(nsXPCClassInfo)))
+    foundInterface = static_cast<nsIClassInfo*>(
+                                    static_cast<nsXPCClassInfo*>(this));
+  else
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-  if (aIID.Equals(NS_GET_IID(nsDOMClassInfo))) {
-    *aInstancePtr = static_cast<nsIXPCScriptable*>(this);
-    return NS_OK;
-  }
-  else
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClassInfo)
 NS_INTERFACE_MAP_END
 
 
@@ -1936,6 +1951,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
     d.mProtoChainInterface = _ifptr;                                          \
     d.mHasClassInterface = _has_class_if;                                     \
+    d.mInterfacesBitmap = kDOMClassInfo_##_class##_interfaces;                \
     static const nsIID *interface_list[] = {
 
 #define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \
@@ -3834,7 +3850,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
 
   jsint i = -1;
 
-  if (!JSDOUBLE_IS_INT(array_index, i)) {
+  if (!::JS_DoubleIsInt32(array_index, &i)) {
     return -1;
   }
 
@@ -4426,20 +4442,6 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
   }
 
   return GET_CLEAN_CI_PTR(aData->mCachedClassInfo);
-}
-
-// static
-void
-nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
-{
-  nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(aWrapper->Native());
-  if (ci) {
-    nsDOMClassInfo* domci = nsnull;
-    CallQueryInterface(ci, &domci);
-    if (domci) {
-      domci->PreserveWrapper(aWrapper->Native());
-    }
-  }
 }
 
 
@@ -6422,7 +6424,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #ifdef DEBUG
         if (!win->IsChromeWindow()) {
           NS_ASSERTION(JSVAL_IS_OBJECT(v) &&
-                       !strcmp(STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name,
+                       !strcmp(JSVAL_TO_OBJECT(v)->getClass()->name,
                                "XPCCrossOriginWrapper"),
                        "Didn't wrap a window!");
         }
@@ -6535,7 +6537,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #ifdef DEBUG
     if (!win->IsChromeWindow()) {
           NS_ASSERTION(JSVAL_IS_OBJECT(v) &&
-                       !strcmp(STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name,
+                       !strcmp(JSVAL_TO_OBJECT(v)->getClass()->name,
                                "XPCCrossOriginWrapper"),
                        "Didn't wrap a location object!");
     }
@@ -6743,7 +6745,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetJSObject(&realObj);
 
     if (obj == realObj) {
-      JSObject *proto = STOBJ_GET_PROTO(obj);
+      JSObject *proto = obj->getProto();
       if (proto) {
         jsid interned_id;
         JSObject *pobj = NULL;
@@ -8486,8 +8488,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  while (STOBJ_GET_CLASS(obj) != &sHTMLDocumentAllClass) {
-    obj = STOBJ_GET_PROTO(obj);
+  while (obj->getClass() != &sHTMLDocumentAllClass) {
+    obj = obj->getProto();
 
     if (!obj) {
       NS_ERROR("The JS engine lies!");
@@ -10375,8 +10377,7 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   nsCOMPtr<nsIDOMEventTarget> target;
   event->GetCurrentTarget(getter_AddRefs(target));
 
-  *_retval = target;
-  NS_IF_ADDREF(*_retval);
+  *_retval = target.forget().get();
 
   return NS_OK;
 }

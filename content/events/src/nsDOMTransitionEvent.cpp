@@ -62,6 +62,8 @@ nsDOMTransitionEvent::~nsDOMTransitionEvent()
   }
 }
 
+DOMCI_DATA(TransitionEvent, nsDOMTransitionEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMTransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TransitionEvent)

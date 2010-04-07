@@ -1,12 +1,12 @@
-ptr = alloc 8
-a = int 65
-sti a ptr 0
-b = int 66
-sti b ptr 1
-c = int 67
-sti c ptr 2
-zero = int 0
-sti zero ptr 3
-ss = icall puts cdecl ptr
-nn = ge ss zero
-ret nn
+ptr = allocp 8
+a = imml 65
+stl a ptr 0
+b = imml 66
+stl b ptr 1
+c = imml 67
+stl c ptr 2
+zero = imml 0
+stl zero ptr 3
+ss = calll puts cdecl ptr
+nn = gel ss zero
+retl nn

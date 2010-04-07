@@ -380,6 +380,8 @@ NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
 
+DOMCI_DATA(XULDocument, nsXULDocument)
+
 // QueryInterface implementation for nsXULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
     NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsXULDocument)
@@ -4164,8 +4166,6 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
         // Tell the world we failed
-        nsresult rv;
-
         nsIAtom *tag = mObservesElement->Tag();
 
         nsAutoString broadcasterID;

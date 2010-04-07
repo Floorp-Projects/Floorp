@@ -72,6 +72,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_transition.js \
 		browser_privatebrowsing_ui.js \
 		browser_privatebrowsing_urlbarfocus.js \
+		browser_privatebrowsing_urlbarundo.js \
 		browser_privatebrowsing_viewsource.js \
 		browser_privatebrowsing_windowtitle.js \
 		browser_privatebrowsing_windowtitle_page.html \

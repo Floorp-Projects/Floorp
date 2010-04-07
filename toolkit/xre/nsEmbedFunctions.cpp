@@ -201,10 +201,11 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
   if (NS_FAILED(rv))
     return rv;
 
-  // We do not need to autoregister components here. The CheckUpdateFile()
-  // bits in NS_InitXPCOM3 check for an .autoreg file. If the app wants
-  // to autoregister every time (for instance, if it's debug), it can do
-  // so after we return from this function.
+  // We do not need to autoregister components here. The CheckCompatibility()
+  // bits in nsAppRunner.cpp check for an invalidation flag in
+  // compatibility.ini.
+  // If the app wants to autoregister every time (for instance, if it's debug),
+  // it can do so after we return from this function.
 
   nsCOMPtr<nsIObserver> startupNotifier
     (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID));
@@ -277,6 +278,7 @@ XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsILocalFile** aDump)
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
+#if !defined(XP_MACOSX)
 PRBool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
@@ -288,6 +290,7 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #  error "OOP crash reporter unsupported on this platform"
 #endif
 }
+#endif // !XP_MACOSX
 #endif // if defined(MOZ_CRASHREPORTER)
 
 nsresult

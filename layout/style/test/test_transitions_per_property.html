@@ -57,7 +57,8 @@ var supported_properties = {
     "-moz-box-shadow": [ test_shadow_transition ],
     "-moz-column-count": [ test_pos_integer_or_auto_transition ],
     "-moz-column-gap": [ test_length_transition ],
-    "-moz-column-rule-color": [ test_color_transition ],
+    "-moz-column-rule-color": [ test_color_transition,
+                                test_border_color_transition ],
     "-moz-column-rule-width": [ test_length_transition ],
     "-moz-column-width": [ test_length_transition ],
     "-moz-image-region": [ test_rect_transition ],
@@ -69,14 +70,18 @@ var supported_properties = {
                                test_length_percent_pair_transition ],
     "background-color": [ test_color_transition ],
     "background-position": [ test_background_position_transition ],
-    "border-bottom-color": [ test_color_transition ],
+    "border-bottom-color": [ test_color_transition,
+                             test_border_color_transition ],
     "border-bottom-width": [ test_length_transition ],
-    "border-left-color": [ test_color_transition ],
+    "border-left-color": [ test_color_transition,
+                           test_border_color_transition ],
     "border-left-width": [ test_length_transition ],
-    "border-right-color": [ test_color_transition ],
+    "border-right-color": [ test_color_transition,
+                            test_border_color_transition ],
     "border-right-width": [ test_length_transition ],
     "border-spacing": [ test_length_pair_transition ],
-    "border-top-color": [ test_color_transition ],
+    "border-top-color": [ test_color_transition,
+                          test_border_color_transition ],
     "border-top-width": [ test_length_transition ],
     "bottom": [ test_length_transition, test_percent_transition ],
     "clip": [ test_rect_transition ],
@@ -299,6 +304,31 @@ function test_color_transition(prop) {
   div.style.setProperty(prop, "rgb(77, 84, 128)", "");
   is(cs.getPropertyValue(prop), "rgb(166, 56, 64)",
      "color-valued property " + prop + ": interpolation of colors");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "rgb(128, 64, 0)", "");
+  (prop == "color" ? div.parentNode : div).style.
+    setProperty("color", "rgb(0, 0, 128)", "");
+  is(cs.getPropertyValue(prop), "rgb(128, 64, 0)",
+     "color-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "currentColor", "");
+  is(cs.getPropertyValue(prop), "rgb(64, 32, 64)",
+     "color-valued property " + prop + ": interpolation of currentColor");
+  (prop == "color" ? div.parentNode : div).style.removeProperty("color");
+}
+
+function test_border_color_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "rgb(128, 64, 0)", "");
+  div.style.setProperty("color", "rgb(0, 0, 128)", "");
+  is(cs.getPropertyValue(prop), "rgb(128, 64, 0)",
+     "color-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.removeProperty(prop);
+  is(cs.getPropertyValue(prop), "rgb(64, 32, 64)",
+     "color-valued property " + prop + ": interpolation of initial value");
+  div.style.removeProperty("color");
 }
 
 function test_shadow_transition(prop) {

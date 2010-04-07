@@ -64,6 +64,7 @@
 #include "jsstr.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 #include "jsautooplen.h"
@@ -473,10 +474,10 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
          */
         JSScopeProperty *wprop = scope->lookup(sprop->id);
         if (wprop &&
-            ((wprop->attrs ^ sprop->attrs) & JSPROP_SETTER) == 0 &&
+            wprop->hasSetterValue() == sprop->hasSetterValue() &&
             IsWatchedProperty(cx, wprop)) {
-            sprop = scope->changeProperty(cx, wprop, 0, wprop->attrs,
-                                          wprop->getter, wp->setter);
+            sprop = scope->changeProperty(cx, wprop, 0, wprop->attributes(),
+                                          wprop->getter(), wp->setter);
             if (!sprop)
                 ok = JS_FALSE;
         }
@@ -505,7 +506,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
             wp->sprop->trace(trc);
-            if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
+            if (wp->sprop->hasSetterValue() && wp->setter) {
                 JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
                                       "wp->setter");
             }
@@ -630,7 +631,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             /* NB: wp is held, so we can safely dereference it still. */
             ok = wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
-                             ? OBJ_GET_SLOT(cx, obj, sprop->slot)
+                             ? obj->getSlotMT(cx, sprop->slot)
                              : JSVAL_VOID,
                              vp, wp->closure);
             if (ok) {
@@ -697,15 +698,15 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                     argv[0] = OBJECT_TO_JSVAL(closure);
                     argv[1] = JSVAL_NULL;
-                    memset(argv + 2, 0, (nslots - 2) * sizeof(jsval));
+                    PodZero(argv + 2, nslots - 2);
 
-                    memset(&frame, 0, sizeof(frame));
+                    PodZero(&frame);
                     frame.script = script;
                     frame.regs = NULL;
                     frame.fun = fun;
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
-                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
+                    frame.scopeChain = closure->getParent();
                     if (script && script->nslots)
                         frame.slots = argv + slotsStart;
                     if (script) {
@@ -732,7 +733,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     argv = NULL;    /* suppress bogus gcc warnings */
 #endif
                 ok = !wp->setter ||
-                     ((sprop->attrs & JSPROP_SETTER)
+                     (sprop->hasSetterValue()
                       ? js_InternalCall(cx, obj,
                                         js_CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
@@ -771,13 +772,15 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static bool
 IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
-    if (sprop->attrs & JSPROP_SETTER) {
-        JSObject *funobj = js_CastAsObject(sprop->setter);
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    if (sprop->hasSetterValue()) {
+        JSObject *funobj = sprop->setterObject();
+        if (!funobj->isFunction())
+            return false;
 
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         return FUN_NATIVE(fun) == js_watch_set_wrapper;
     }
-    return sprop->setter == js_watch_set;
+    return sprop->setterOp() == js_watch_set;
 }
 
 JSPropertyOp
@@ -799,7 +802,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
         atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, js_CastAsObject(setter)),
+                             js_CastAsObject(setter)->getParent(),
                              atom);
     if (!wrapper)
         return NULL;
@@ -843,7 +846,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     if (origobj != obj && !obj->checkAccess(cx, propid, JSACC_WATCH, &v, &attrs))
         return JS_FALSE;
 
-    if (!OBJ_IS_NATIVE(obj)) {
+    if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
                              OBJ_GET_CLASS(cx, obj)->name);
         return JS_FALSE;
@@ -871,13 +874,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         uintN attrs, flags;
         intN shortid;
 
-        if (OBJ_IS_NATIVE(pobj)) {
+        if (pobj->isNative()) {
             value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))
                     ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
                     : JSVAL_VOID;
-            getter = sprop->getter;
-            setter = sprop->setter;
-            attrs = sprop->attrs;
+            getter = sprop->getter();
+            setter = sprop->setter();
+            attrs = sprop->attributes();
             flags = sprop->getFlags();
             shortid = sprop->shortid;
         } else {
@@ -909,7 +912,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
         DBG_UNLOCK(rt);
-        watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter);
+        watcher = js_WrapWatchedSetter(cx, propid, sprop->attributes(), sprop->setter());
         if (!watcher) {
             ok = JS_FALSE;
             goto out;
@@ -923,13 +926,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
-        JS_ASSERT(sprop->setter != js_watch_set || pobj != obj);
-        wp->setter = sprop->setter;
+        JS_ASSERT(sprop->setter() != js_watch_set || pobj != obj);
+        wp->setter = sprop->setter();
         wp->flags = JSWP_LIVE;
 
         /* XXXbe nest in obj lock here */
-        sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
-                                             sprop->getter, watcher);
+        sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attributes(),
+                                             sprop->getter(), watcher);
         if (!sprop) {
             /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
             JS_INIT_CLIST(&wp->links);
@@ -1224,30 +1227,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->flags & JSFRAME_COMPUTED_THIS)
-        return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
-
-    /* js_ComputeThis gets confused if fp != cx->fp, so set it aside. */
-    JSStackFrame *afp = js_GetTopStackFrame(cx);
-    JSGCReachableFrame reachable;
-    if (afp != fp) {
-        if (afp) {
-            cx->fp = fp;
-            cx->pushGCReachableFrame(reachable, afp);
-        }
-    } else {
-        afp = NULL;
-    }
-
-    if (fp->argv)
-        fp->thisv = OBJECT_TO_JSVAL(js_ComputeThis(cx, JS_TRUE, fp->argv));
-
-    if (afp) {
-        cx->fp = afp;
-        cx->popGCReachableFrame();
-    }
-
-    return JSVAL_TO_OBJECT(fp->thisv);
+    return fp->getThisObject(cx);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -1262,7 +1242,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
     if (!fp->fun)
         return NULL;
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee()));
+    JS_ASSERT(fp->callee()->isFunction());
     JS_ASSERT(fp->callee()->getPrivate() == fp->fun);
     return fp->callee();
 }
@@ -1463,8 +1443,8 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 {
     pd->id = ID_TO_VALUE(sprop->id);
 
-    bool wasThrowing = cx->throwing;
-    JSAutoTempValueRooter lastException(cx, cx->exception);
+    JSBool wasThrowing = cx->throwing;
+    AutoValueRooter lastException(cx, cx->exception);
     cx->throwing = JS_FALSE;
 
     if (!js_GetProperty(cx, obj, sprop->id, &pd->value)) {
@@ -1483,14 +1463,14 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     if (wasThrowing)
         cx->exception = lastException.value();
 
-    pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
-              | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
-              | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0);
+    pd->flags |= (sprop->enumerable() ? JSPD_ENUMERATE : 0)
+              |  (!sprop->writable()  ? JSPD_READONLY  : 0)
+              |  (!sprop->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (sprop->getter == js_GetCallArg) {
+    if (sprop->getter() == js_GetCallArg) {
         pd->slot = sprop->shortid;
         pd->flags |= JSPD_ARGUMENT;
-    } else if (sprop->getter == js_GetCallVar) {
+    } else if (sprop->getter() == js_GetCallVar) {
         pd->slot = sprop->shortid;
         pd->flags |= JSPD_VARIABLE;
     } else {
@@ -1521,7 +1501,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     JSScopeProperty *sprop;
 
     clasp = OBJ_GET_CLASS(cx, obj);
-    if (!OBJ_IS_NATIVE(obj) || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
+    if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
         return JS_FALSE;
@@ -1672,7 +1652,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
         nbytes += ((uint32)obj->dslots[-1] - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }
-    if (OBJ_IS_NATIVE(obj)) {
+    if (obj->isNative()) {
         scope = OBJ_SCOPE(obj);
         if (!scope->isSharedEmpty()) {
             nbytes += sizeof *scope;

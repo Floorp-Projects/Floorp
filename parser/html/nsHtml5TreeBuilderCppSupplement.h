@@ -518,8 +518,16 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 void
 nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, PRInt32 aStart, PRInt32 aLength)
 {
+  PRInt32 newFillLen = charBufferLen + aLength;
+  if (newFillLen > charBuffer.length) {
+    PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
+    jArray<PRUnichar,PRInt32> newBuf(newAllocLength);
+    memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
+    charBuffer.release();
+    charBuffer = newBuf;
+  }
   memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(PRUnichar) * aLength);
-  charBufferLen += aLength;
+  charBufferLen = newFillLen;
 }
 
 nsIContent**

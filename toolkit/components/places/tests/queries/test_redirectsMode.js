@@ -109,8 +109,8 @@ function check_results_callback(aSequence) {
   }
 
   // Create a new query with required options.
-  let query = histsvc.getNewQuery();
-  let options = histsvc.getNewQueryOptions();
+  let query = PlacesUtils.history.getNewQuery();
+  let options = PlacesUtils.history.getNewQueryOptions();
   options.includeHidden = includeHidden;
   options.redirectsMode = redirectsMode;
   options.sortingMode = sortingMode;
@@ -118,7 +118,7 @@ function check_results_callback(aSequence) {
     options.maxResults = maxResults;
 
   // Compare resultset with expectedData.
-  let result = histsvc.executeQuery(query, options);
+  let result = PlacesUtils.history.executeQuery(query, options);
   let root = result.root;
   root.containerOpen = true;
   compareArrayToResult(expectedData, root);
@@ -212,7 +212,7 @@ function cartProd(aSequences, aCallback)
  */
 function add_visits_to_database() {
   // Clean up the database.
-  bhistsvc.removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
 
   // We don't really bother on this, but we need a time to add visits.
@@ -271,8 +271,8 @@ function add_visits_to_database() {
   // Add an unvisited bookmark in the database, it should never appear.
   visits.push({ isBookmark: true,
     uri: "http://unvisited.bookmark.com/",
-    parentFolder: bmsvc.bookmarksMenuFolder,
-    index: bmsvc.DEFAULT_INDEX,
+    parentFolder: PlacesUtils.bookmarksMenuFolderId,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     title: "Unvisited Bookmark",
     isInQuery: false });
 
@@ -302,6 +302,6 @@ function run_test() {
            check_results_callback);
 
   // Clean up so we can't pollute next tests.
-  bhistsvc.removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
 }

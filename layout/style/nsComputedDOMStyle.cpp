@@ -132,7 +132,8 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 
 nsComputedDOMStyle::nsComputedDOMStyle()
   : mDocumentWeak(nsnull), mOuterFrame(nsnull),
-    mInnerFrame(nsnull), mPresShell(nsnull), mAppUnitsPerInch(0)
+    mInnerFrame(nsnull), mPresShell(nsnull), mAppUnitsPerInch(0),
+    mExposeVisitedStyle(PR_FALSE)
 {
 }
 
@@ -154,6 +155,8 @@ nsComputedDOMStyle::Shutdown()
 
 
 NS_IMPL_CYCLE_COLLECTION_1(nsComputedDOMStyle, mContent)
+
+DOMCI_DATA(ComputedCSSStyleDeclaration, nsComputedDOMStyle)
 
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
@@ -498,6 +501,19 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
     NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
                  "should not have pseudo-element data");
+  }
+
+  // mExposeVisitedStyle is set to true only by testing APIs that
+  // require UniversalXPConnect.
+  NS_ABORT_IF_FALSE(!mExposeVisitedStyle ||
+                    nsContentUtils::IsCallerTrustedForCapability(
+                                      "UniversalXPConnect"),
+                    "mExposeVisitedStyle set incorrectly");
+  if (mExposeVisitedStyle && mStyleContextHolder->RelevantLinkVisited()) {
+    nsStyleContext *styleIfVisited = mStyleContextHolder->GetStyleIfVisited();
+    if (styleIfVisited) {
+      mStyleContextHolder = styleIfVisited;
+    }
   }
 
   // Call our pointer-to-member-function.

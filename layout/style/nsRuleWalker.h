@@ -41,7 +41,11 @@
  * rules are matched
  */
 
+#ifndef nsRuleWalker_h_
+#define nsRuleWalker_h_
+
 #include "nsRuleNode.h"
+#include "nsIStyleRule.h"
 
 class nsRuleWalker {
 public:
@@ -75,6 +79,28 @@ public:
   PRBool GetImportance() const { return mImportance; }
   PRBool GetCheckForImportantRules() const { return mCheckForImportantRules; }
 
+  // We define the visited-relevant link to be the link that is the
+  // nearest self-or-ancestor to the node being matched.
+  enum VisitedHandlingType {
+    // Do rule matching as though all links are unvisited.
+    eRelevantLinkUnvisited,
+    // Do rule matching as though the relevant link is visited and all
+    // other links are unvisited.
+    eRelevantLinkVisited,
+    // Do rule matching as though a rule should match if it would match
+    // given any set of visitedness states.  (used by users other than
+    // nsRuleWalker)
+    eLinksVisitedOrUnvisited
+  };
+
+  void ResetForVisitedMatching() {
+    Reset();
+    mVisitedHandling = eRelevantLinkVisited;
+  }
+  VisitedHandlingType VisitedHandling() const { return mVisitedHandling; }
+  void SetHaveRelevantLink() { mHaveRelevantLink = PR_TRUE; }
+  PRBool HaveRelevantLink() const { return mHaveRelevantLink; }
+
 private:
   nsRuleNode* mCurrent; // Our current position.  Never null.
   nsRuleNode* mRoot; // The root of the tree we're walking.
@@ -84,10 +110,28 @@ private:
                                         // we walk and set to false if we find
                                         // one.
 
+  // When mVisitedHandling is eRelevantLinkUnvisited, this is set to
+  // true on the RuleProcessorData *for the node being matched* if a
+  // relevant link (see explanation in definition of VisitedHandling
+  // enum) was encountered during the matching process, which means that
+  // matching needs to be rerun with eRelevantLinkVisited.  Otherwise,
+  // its behavior is undefined (it might get set appropriately, or might
+  // not).
+  PRBool mHaveRelevantLink;
+
+  VisitedHandlingType mVisitedHandling;
+
 public:
-  nsRuleWalker(nsRuleNode* aRoot) :mCurrent(aRoot), mRoot(aRoot) {
+  nsRuleWalker(nsRuleNode* aRoot)
+    : mCurrent(aRoot)
+    , mRoot(aRoot)
+    , mHaveRelevantLink(PR_FALSE)
+    , mVisitedHandling(eRelevantLinkUnvisited)
+  {
     NS_ASSERTION(mCurrent, "Caller screwed up and gave us null node");
     MOZ_COUNT_CTOR(nsRuleWalker);
   }
   ~nsRuleWalker() { MOZ_COUNT_DTOR(nsRuleWalker); }
 };
+
+#endif /* !defined(nsRuleWalker_h_) */

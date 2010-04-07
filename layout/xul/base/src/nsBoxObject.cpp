@@ -70,6 +70,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsBoxObject)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBoxObject)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBoxObject)
 
+DOMCI_DATA(BoxObject, nsBoxObject)
+
 // QueryInterface implementation for nsBoxObject
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsIBoxObject)

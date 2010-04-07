@@ -100,10 +100,6 @@ function nsContextMenu(aXulMenu, aBrowser) {
 
 // Prototype for nsContextMenu "class."
 nsContextMenu.prototype = {
-  // onDestroy is a no-op at this point.
-  onDestroy: function () {
-  },
-
   // Initialize context menu.
   initMenu: function CM_initMenu(aPopup, aBrowser) {
     this.menu = aPopup;

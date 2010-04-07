@@ -108,15 +108,6 @@ public:
    */
   virtual PRInt32 FindLineContaining(nsIFrame* aFrame) = 0;
 
-  /**
-   * Given a Y coordinate relative to the block that provided this
-   * line iterator, return the line that contains the Y
-   * coordinate. Returns -1 in aLineNumberResult if the Y coordinate
-   * is above the first line. Returns N (where N is the number of
-   * lines) if the Y coordinate is below the last line.
-   */
-  virtual PRInt32 FindLineAt(nscoord aY) = 0;
-
   // Given a line number and an X coordinate, find the frame on the
   // line that is nearest to the X coordinate. The
   // aXIsBeforeFirstFrame and aXIsAfterLastFrame flags are updated

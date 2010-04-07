@@ -732,7 +732,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
             XPCWrappedNative *wrapper =
-                (XPCWrappedNative*)xpc_GetJSPrivate(STOBJ_GET_PARENT(obj));
+                (XPCWrappedNative*)xpc_GetJSPrivate(obj->getParent());
             dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
         }
         else if(IS_WRAPPER_CLASS(clazz) && IS_WN_WRAPPER_OBJECT(obj))
@@ -1581,11 +1581,11 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
-/* void reparentScopeAwareWrappers(in JSContextPtr aJSContext, in JSObjectPtr  aOldScope, in JSObjectPtr  aNewScope); */
+/* void moveWrappers(in JSContextPtr aJSContext, in JSObjectPtr  aOldScope, in JSObjectPtr  aNewScope); */
 NS_IMETHODIMP
-nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
-                                        JSObject *aOldScope,
-                                        JSObject *aNewScope)
+nsXPConnect::MoveWrappers(JSContext *aJSContext,
+                          JSObject *aOldScope,
+                          JSObject *aNewScope)
 {
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
@@ -1632,15 +1632,10 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
             continue;
 
         XPCNativeScriptableCreateInfo sciProto;
-        XPCNativeScriptableCreateInfo sciWrapper;
-
-        nsresult rv =
-            XPCWrappedNative::GatherScriptableCreateInfo(identity,
-                                                         info.get(),
-                                                         &sciProto,
-                                                         &sciWrapper);
-        if(NS_FAILED(rv))
-            return NS_ERROR_FAILURE;
+        XPCNativeScriptableCreateInfo sci;
+        const XPCNativeScriptableCreateInfo& sciWrapper =
+            XPCWrappedNative::GatherScriptableCreateInfo(identity, info,
+                                                         sciProto, sci);
 
         // If the wrapper doesn't want precreate, then we don't need to
         // worry about reparenting it.
@@ -1648,29 +1643,35 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
             continue;
 
         JSObject *newParent = aOldScope;
-        rv = sciWrapper.GetCallback()->PreCreate(identity, ccx, aOldScope,
-                                                 &newParent);
+        nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
+                                                          aOldScope,
+                                                          &newParent);
         if(NS_FAILED(rv))
             return rv;
 
-        if(newParent != aOldScope)
+        if(newParent == aOldScope)
         {
-            // The wrapper returned a new parent. If the new parent is in
-            // a different scope, then we need to reparent it, otherwise,
-            // the old scope is fine.
-
-            XPCWrappedNativeScope *betterScope =
-                XPCWrappedNativeScope::FindInJSObjectScope(ccx, newParent);
-            if(betterScope == oldScope)
-                continue;
-
-            NS_ASSERTION(betterScope == newScope, "Weird scope returned");
-        }
-        else
-        {
-            // The old scope still works for this wrapper.
+            // The old scope still works for this wrapper. We have to assume
+            // that the wrapper will continue to return the old scope from
+            // PreCreate, so don't move it.
             continue;
         }
+
+        // The wrapper returned a new parent. If the new parent is in
+        // a different scope, then we need to reparent it, otherwise,
+        // the old scope is fine.
+
+        XPCWrappedNativeScope *betterScope =
+            XPCWrappedNativeScope::FindInJSObjectScope(ccx, newParent);
+        if(betterScope == oldScope)
+        {
+            // The wrapper asked for a different object, but that object
+            // was in the same scope. We assume here that the new parent
+            // simply hasn't been reparented yet.
+            newParent = nsnull;
+        }
+        else
+            NS_ASSERTION(betterScope == newScope, "Weird scope returned");
 
         // Now, reparent the wrapper, since we know that it wants to be
         // reparented.
@@ -1949,7 +1950,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(STOBJ_GET_CLASS(protoJSObject)))
+    if(!IS_PROTO_CLASS(protoJSObject->getClass()))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
@@ -2104,7 +2105,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCNativeScriptableCreateInfo sciProto;
-    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, &sciProto);
+    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, 
@@ -2179,7 +2180,7 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     if(!list)
         return NS_OK; // No wrappers to update.
 
-    AutoJSRequestWithNoCallContext req(aJSContext);
+    JSAutoRequest req(aJSContext);
 
     Link* cur = list;
     if(cur->obj && !PerformOp(aJSContext, aWay, cur->obj))
@@ -2541,7 +2542,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
     JSBool sameOrigin;
     JSBool sameScope = xpc_SameScope(objectscope, xpcscope, &sameOrigin);
     JSBool forceXOW =
-        XPCCrossOriginWrapper::ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name);
+        XPCCrossOriginWrapper::ClassNeedsXOW(aObject->getClass()->name);
 
     // We can do nothing if:
     // - We're wrapping a system object
@@ -2747,7 +2748,7 @@ nsXPConnect::SetSafeJSContext(JSContext * aSafeJSContext)
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)),
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
                  "What kind of wrapper is this?");
 
     if(IS_WN_WRAPPER_OBJECT(obj))
@@ -2796,10 +2797,14 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
     return nsnull;
 }
 
-NS_IMETHODIMP_(JSClass *)
-nsXPConnect::GetNativeWrapperClass()
+NS_IMETHODIMP_(void)
+nsXPConnect::GetNativeWrapperGetPropertyOp(JSPropertyOp *getPropertyPtr)
 {
-    return XPCNativeWrapper::GetJSClass();
+    NS_ASSERTION(XPCNativeWrapper::GetJSClass(true)->getProperty ==
+                 XPCNativeWrapper::GetJSClass(false)->getProperty,
+                 "Call and NoCall XPCNativeWrapper Class must use the same "
+                 "getProperty hook.");
+    *getPropertyPtr = XPCNativeWrapper::GetJSClass(true)->getProperty;
 }
 
 /* These are here to be callable from a debugger */

@@ -100,7 +100,7 @@ nsSVGPatternFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_XLink &&
       aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    DeleteProperty(nsGkAtoms::href);
+    Properties().Delete(nsSVGEffects::HrefProperty());
     mNoHRefURI = PR_FALSE;
     // And update whoever references us
     nsSVGEffects::InvalidateRenderingObservers(this);
@@ -421,8 +421,8 @@ nsSVGPatternFrame::GetReferencedPattern()
   if (mNoHRefURI)
     return nsnull;
 
-  nsSVGPaintingProperty *property =
-    static_cast<nsSVGPaintingProperty*>(GetProperty(nsGkAtoms::href));
+  nsSVGPaintingProperty *property = static_cast<nsSVGPaintingProperty*>
+    (Properties().Get(nsSVGEffects::HrefProperty()));
 
   if (!property) {
     // Fetch our pattern element's xlink:href attribute
@@ -440,7 +440,8 @@ nsSVGPatternFrame::GetReferencedPattern()
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               mContent->GetCurrentDoc(), base);
 
-    property = nsSVGEffects::GetPaintingProperty(targetURI, this, nsGkAtoms::href);
+    property =
+      nsSVGEffects::GetPaintingProperty(targetURI, this, nsSVGEffects::HrefProperty());
     if (!property)
       return nsnull;
   }

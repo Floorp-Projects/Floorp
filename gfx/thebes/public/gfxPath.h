@@ -38,6 +38,7 @@
 #define GFX_PATH_H
 
 #include "gfxTypes.h"
+#include "nsISupportsImpl.h"
 
 class gfxContext;
 struct gfxPoint;
@@ -48,7 +49,7 @@ typedef struct cairo_path cairo_path_t;
  * of a gfxContext.
  */
 class THEBES_API gfxPath {
-    THEBES_INLINE_DECL_REFCOUNTING(gfxPath)
+    NS_INLINE_DECL_REFCOUNTING(gfxPath)
 
     friend class gfxContext;
 

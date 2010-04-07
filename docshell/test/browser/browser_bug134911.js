@@ -1,6 +1,3 @@
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
 /* The test text decoded correctly as Shift_JIS */
 const rightText="\u30E6\u30CB\u30B3\u30FC\u30C9\u306F\u3001\u3059\u3079\u3066\u306E\u6587\u5B57\u306B\u56FA\u6709\u306E\u756A\u53F7\u3092\u4ED8\u4E0E\u3057\u307E\u3059";
 
@@ -42,6 +39,5 @@ function afterChangeCharset() {
 }
 
 function url(spec) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  return ios.newURI(spec, null, null);
+  return Services.io.newURI(spec, null, null);
 }

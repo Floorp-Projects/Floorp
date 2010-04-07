@@ -1,0 +1,26 @@
+%include downloads.css
+
+@media all and (-moz-windows-compositor) {
+  #downloadManager {
+    -moz-appearance: -moz-win-glass;
+    background: transparent;
+  }
+
+  #downloadView {
+    border: none;
+  }
+
+  windowdragbox {
+    -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+  }
+
+  #clearListButton {
+    -moz-margin-start: 0;
+    margin-bottom: 0;
+  }
+
+  #searchbox {
+    -moz-margin-end: 0;
+    margin-bottom: 0;
+  }
+}

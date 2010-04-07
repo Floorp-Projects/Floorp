@@ -82,9 +82,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
-  PRBool suppressed;
-  shell->IsPaintingSuppressed(&suppressed);
-  mIsBackgroundOnly = suppressed;
+  mIsBackgroundOnly = shell->IsPaintingSuppressed();
   if (pc->IsRenderingOnlySelection()) {
     nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
     if (selcon) {
@@ -96,16 +94,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   if (mIsBackgroundOnly) {
     mBuildCaret = PR_FALSE;
   }
-}
-
-// Destructor function for the dirty rect property
-static void
-DestroyRectFunc(void*    aFrame,
-                nsIAtom* aPropertyName,
-                void*    aPropertyValue,
-                void*    aDtorData)
-{
-  delete static_cast<nsRect*>(aPropertyValue);
 }
 
 static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
@@ -129,17 +117,18 @@ static void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame
   nsRect overflowRect = aFrame->GetOverflowRect();
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
-  // if "new nsRect" fails, this won't do anything, but that's okay
-  aFrame->SetProperty(nsGkAtoms::outOfFlowDirtyRectProperty,
-                      new nsRect(dirty), DestroyRectFunc);
+  aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDirtyRectProperty(),
+                           new nsRect(dirty));
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
-  aFrame->DeleteProperty(nsGkAtoms::outOfFlowDirtyRectProperty);
+  nsPresContext* presContext = aFrame->PresContext();
+  presContext->PropertyTable()->
+    Delete(aFrame, nsDisplayListBuilder::OutOfFlowDirtyRectProperty());
 
-  nsFrameManager* frameManager = aFrame->PresContext()->PresShell()->FrameManager();
+  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
 
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, f)) {
@@ -191,8 +180,7 @@ nsDisplayListBuilder::IsMovingFrame(nsIFrame* aFrame)
 
 nsCaret *
 nsDisplayListBuilder::GetCaret() {
-  nsRefPtr<nsCaret> caret;
-  CurrentPresShellState()->mPresShell->GetCaret(getter_AddRefs(caret));
+  nsRefPtr<nsCaret> caret = CurrentPresShellState()->mPresShell->GetCaret();
   return caret;
 }
 
@@ -211,8 +199,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   if (!mBuildCaret)
     return;
 
-  nsRefPtr<nsCaret> caret;
-  state->mPresShell->GetCaret(getter_AddRefs(caret));
+  nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();
   state->mCaretFrame = caret->GetCaretFrame();
 
   if (state->mCaretFrame) {
@@ -891,13 +878,6 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
   return item;
 }
 
-void nsDisplayList::DeleteBottom() {
-  nsDisplayItem* item = RemoveBottom();
-  if (item) {
-    item->~nsDisplayItem();
-  }
-}
-
 void nsDisplayList::DeleteAll() {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nsnull) {
@@ -987,12 +967,13 @@ static PRBool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
 static PRBool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                           void* aClosure) {
   // These GetUnderlyingFrame calls return non-null because we're only used
-  // in sorting
-  PRInt32 diff = nsLayoutUtils::GetZIndex(aItem1->GetUnderlyingFrame()) -
-    nsLayoutUtils::GetZIndex(aItem2->GetUnderlyingFrame());
-  if (diff == 0)
+  // in sorting.  Note that we can't just take the difference of the two
+  // z-indices here, because that might overflow a 32-bit int.
+  PRInt32 index1 = nsLayoutUtils::GetZIndex(aItem1->GetUnderlyingFrame());
+  PRInt32 index2 = nsLayoutUtils::GetZIndex(aItem2->GetUnderlyingFrame());
+  if (index1 == index2)
     return IsContentLEQ(aItem1, aItem2, aClosure);
-  return diff < 0;
+  return index1 < index2;
 }
 
 void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
@@ -1084,10 +1065,10 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  const nsStyleBackground* bg;
-
-  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg))
+  nsStyleContext *bgSC;
+  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
     return PR_FALSE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
 
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
 
@@ -1110,11 +1091,12 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  const nsStyleBackground* bg;
+  nsStyleContext *bgSC;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
   if (!hasBG)
     return PR_TRUE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (bg->BottomLayer().mImage.IsEmpty() &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
@@ -1130,11 +1112,12 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
               "IsVaryingRelativeToMovingFrame called on non-moving frame!");
 
   nsPresContext* presContext = mFrame->PresContext();
-  const nsStyleBackground* bg;
+  nsStyleContext *bgSC;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(presContext, mFrame, &bg);
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
   if (!hasBG)
     return PR_FALSE;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (!bg->HasFixedBackground())
     return PR_FALSE;
 
@@ -1185,8 +1168,6 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
                                nsRect(offset, mFrame->GetSize()),
-                               *mFrame->GetStyleBorder(),
-                               *mFrame->GetStyleOutline(),
                                mFrame->GetStyleContext());
 }
 
@@ -1263,7 +1244,6 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                               mVisibleRect,
                               nsRect(offset, mFrame->GetSize()),
-                              *mFrame->GetStyleBorder(),
                               mFrame->GetStyleContext(),
                               mFrame->GetSkipSides());
 }

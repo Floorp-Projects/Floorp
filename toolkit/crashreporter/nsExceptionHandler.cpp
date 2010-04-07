@@ -64,6 +64,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIINIParser.h"
 #if defined(MOZ_IPC)
+#  include "common/linux/linux_syscall_support.h"
 #  include "client/linux/crash_generation/client_info.h"
 #  include "client/linux/crash_generation/crash_generation_server.h"
 #endif
@@ -97,8 +98,10 @@
 #if defined(MOZ_IPC)
 #include "nsIUUIDGenerator.h"
 
+#if !defined(XP_MACOSX)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+#endif
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
@@ -171,8 +174,10 @@ static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
 #if defined(MOZ_IPC)
+#if !defined(XP_MACOSX)
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
+#endif
 
 #  if defined(XP_WIN)
 // If crash reporting is disabled, we hand out this "null" pipe to the
@@ -1397,6 +1402,7 @@ MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
     NS_SUCCEEDED(extraFile->MoveTo(pendingDir, EmptyString()));
 }
 
+#if !defined(XP_MACOSX)
 static void
 OnChildProcessDumpRequested(void* aContext,
                             const ClientInfo* aClientInfo,
@@ -1423,11 +1429,16 @@ OnChildProcessDumpRequested(void* aContext,
     pidToMinidump->Put(pid, minidump);
   }
 }
+#endif  // XP_MACOSX
 
 static bool
 OOPInitialized()
 {
+#if defined(XP_MACOSX)
+  return true;
+#else
   return crashServer != NULL;
+#endif
 }
 
 static void
@@ -1467,8 +1478,10 @@ OOPInit()
     &dumpPath);
 #endif
 
+#if !defined(XP_MACOSX)
   if (!crashServer->Start())
     NS_RUNTIMEABORT("can't start crash reporter server()");
+#endif
 
   pidToMinidump = new ChildMinidumpMap();
   pidToMinidump->Init();
@@ -1484,8 +1497,10 @@ OOPDeinit()
     return;
   }
 
+#if !defined(XP_MACOSX)
   delete crashServer;
   crashServer = NULL;
+#endif
 
   delete dumpMapLock;
   dumpMapLock = NULL;
@@ -1538,7 +1553,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 }
 
 //--------------------------------------------------
-#elif defined(XP_UNIX)
+#elif defined(XP_LINUX)
 
 // Parent-side API for children
 bool
@@ -1632,14 +1647,33 @@ PairedDumpCallback(const XP_CHAR* dump_path,
   return WriteExtraForMinidump(minidump, blacklist, getter_AddRefs(extra));
 }
 
+ThreadId
+CurrentThreadId()
+{
+#if defined(XP_WIN)
+  return ::GetCurrentThreadId();
+#elif defined(XP_LINUX)
+  return sys_gettid();
+#elif defined(XP_MACOSX)
+  return -1;
+#else
+#  error "Unsupported platform"
+#endif
+}
+
 bool
 CreatePairedMinidumps(ProcessHandle childPid,
+                      ThreadId childBlamedThread,
                       nsAString* pairGUID,
                       nsILocalFile** childDump,
                       nsILocalFile** parentDump)
 {
   if (!GetEnabled())
     return false;
+
+#if defined(XP_MACOSX)
+  return false;
+#else
 
   // create the UUID for the hang dump as a pair
   nsresult rv;
@@ -1668,6 +1702,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &childMinidump, &childExtra, childBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
          childPid,
+         childBlamedThread,
          gExceptionHandler->dump_path(),
          PairedDumpCallback,
          &childCtx))
@@ -1682,6 +1717,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &parentMinidump, &parentExtra, parentBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
          gExceptionHandler->dump_path(),
+         true,                  // write exception stream
          PairedDumpCallback,
          &parentCtx))
     return false;
@@ -1698,8 +1734,10 @@ CreatePairedMinidumps(ProcessHandle childPid,
   parentMinidump.swap(*parentDump);
 
   return true;
+#endif  // XP_MACOSX
 }
 
+#if !defined(XP_MACOSX)
 bool
 UnsetRemoteExceptionHandler()
 {
@@ -1707,6 +1745,7 @@ UnsetRemoteExceptionHandler()
   gExceptionHandler = NULL;
   return true;
 }
+#endif  // XP_MACOSX
 
 #endif  // MOZ_IPC
 

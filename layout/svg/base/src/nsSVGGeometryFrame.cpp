@@ -62,7 +62,7 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
 
 nsSVGPaintServerFrame *
 nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint,
-                                   nsIAtom *aType)
+                                   const FramePropertyDescriptor *aType)
 {
   if (aPaint->mType != eStyleSVGPaintType_Server)
     return nsnull;
@@ -191,6 +191,37 @@ SetupCairoColor(gfxContext *aContext, nscolor aRGB, float aOpacity)
                              NS_GET_A(aRGB)/255.0 * aOpacity));
 }
 
+static void
+SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
+                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                          float aOpacity)
+{
+  const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
+  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  PRBool isServer = paint.mType == eStyleSVGPaintType_Server;
+  nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
+  if (styleIfVisited) {
+    const nsStyleSVGPaint &paintIfVisited =
+      styleIfVisited->GetStyleSVG()->*aFillOrStroke;
+    // To prevent Web content from detecting if a user has visited a URL
+    // (via URL loading triggered by paint servers or performance
+    // differences between paint servers or between a paint server and a
+    // color), we do not allow whether links are visited to change which
+    // paint server is used or switch between paint servers and simple
+    // colors.  A :visited style may only override a simple color with
+    // another simple color.
+    if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
+        paint.mType == eStyleSVGPaintType_Color) {
+      nscolor colorIfVisited = paintIfVisited.mPaint.mColor;
+      nscolor colors[2] = { color, colorIfVisited };
+      color = nsStyleContext::CombineVisitedColors(colors,
+                                         aStyleContext->RelevantLinkVisited());
+    }
+  }
+
+  SetupCairoColor(aContext, color, aOpacity);
+}
+
 float
 nsSVGGeometryFrame::MaybeOptimizeOpacity(float aFillOrStrokeOpacity)
 {
@@ -216,21 +247,15 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
   float opacity = MaybeOptimizeOpacity(style->mFillOpacity);
 
   nsSVGPaintServerFrame *ps =
-    GetPaintServer(&style->mFill, nsGkAtoms::fill);
+    GetPaintServer(&style->mFill, nsSVGEffects::FillProperty());
   if (ps && ps->SetupPaintServer(aContext, this, opacity))
     return PR_TRUE;
 
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  if (style->mFill.mType == eStyleSVGPaintType_Server) {
-    SetupCairoColor(aContext,
-                    GetStyleSVG()->mFill.mFallbackColor,
-                    opacity);
-  } else
-    SetupCairoColor(aContext,
-                    GetStyleSVG()->mFill.mPaint.mColor,
-                    opacity);
+  SetupFallbackOrPaintColor(aContext, GetStyleContext(),
+                            &nsStyleSVG::mFill, opacity);
 
   return PR_TRUE;
 }
@@ -307,21 +332,15 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
   float opacity = MaybeOptimizeOpacity(style->mStrokeOpacity);
 
   nsSVGPaintServerFrame *ps =
-    GetPaintServer(&style->mStroke, nsGkAtoms::stroke);
+    GetPaintServer(&style->mStroke, nsSVGEffects::StrokeProperty());
   if (ps && ps->SetupPaintServer(aContext, this, opacity))
     return PR_TRUE;
 
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  if (style->mStroke.mType == eStyleSVGPaintType_Server) {
-    SetupCairoColor(aContext,
-                    GetStyleSVG()->mStroke.mFallbackColor,
-                    opacity);
-  } else
-    SetupCairoColor(aContext,
-                    GetStyleSVG()->mStroke.mPaint.mColor,
-                    opacity);
+  SetupFallbackOrPaintColor(aContext, GetStyleContext(),
+                            &nsStyleSVG::mStroke, opacity);
 
   return PR_TRUE;
 }

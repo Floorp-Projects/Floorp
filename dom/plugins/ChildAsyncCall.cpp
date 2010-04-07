@@ -64,9 +64,11 @@ void
 ChildAsyncCall::Run()
 {
   if (mFunc) {
+    MutexAutoLock lock(mInstance->mAsyncCallMutex);
     mInstance->mPendingAsyncCalls.RemoveElement(this);
-    mFunc(mData);
   }
+  if (mFunc)
+    mFunc(mData);
 }
 
 } // namespace plugins

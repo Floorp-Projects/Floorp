@@ -37,9 +37,7 @@
 
 function browserWindowsCount() {
   let count = 0;
-  let e = Cc["@mozilla.org/appshell/window-mediator;1"]
-            .getService(Ci.nsIWindowMediator)
-            .getEnumerator("navigator:browser");
+  let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements()) {
     if (!e.getNext().closed)
       ++count;
@@ -53,10 +51,6 @@ function test() {
 
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
 
   waitForExplicitFinish();
 
@@ -98,7 +92,7 @@ function test() {
           break;
 
         case "domwindowclosed":
-          ww.unregisterNotification(windowObserver);
+          Services.ww.unregisterNotification(windowObserver);
           // Use executeSoon to ensure this happens after SS observer.
           executeSoon(function () {
             is(ss.getClosedWindowCount(),
@@ -110,12 +104,12 @@ function test() {
           break;
       }
     }
-    ww.registerNotification(windowObserver);
-    ww.openWindow(null,
-                  location,
-                  "_blank",
-                  "chrome,all,dialog=no",
-                  null);
+    Services.ww.registerNotification(windowObserver);
+    Services.ww.openWindow(null,
+                           location,
+                           "_blank",
+                           "chrome,all,dialog=no",
+                           null);
   }
 
   // Only windows with open tabs are restorable. Windows where a lone tab is

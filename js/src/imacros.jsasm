@@ -86,7 +86,8 @@
 
 .end equality
 
-.igroup binary JSOP_BITOR-JSOP_MOD
+# A single range, split up like so to test groups over multiple ranges of ops
+.igroup binary JSOP_BITOR-JSOP_BITAND,JSOP_EQ-JSOP_DIV,JSOP_MOD
 
     .imacro any_obj                     # any obj
         dup                             # any obj obj

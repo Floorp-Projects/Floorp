@@ -64,6 +64,8 @@ NS_IMPL_ADDREF(nsROCSSPrimitiveValue)
 NS_IMPL_RELEASE(nsROCSSPrimitiveValue)
 
 
+DOMCI_DATA(ROCSSPrimitiveValue, nsROCSSPrimitiveValue)
+
 // QueryInterface implementation for nsROCSSPrimitiveValue
 NS_INTERFACE_MAP_BEGIN(nsROCSSPrimitiveValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPrimitiveValue)

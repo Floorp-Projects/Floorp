@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none }
+:link { color: blue }
+:visited { color: purple }
+body .styled:link { color: olive; background: rgba(0, 255, 255, 0.5); }
+body .styled:visited { color: fuchsia; background: rgba(0, 0, 255, 0.5) }
+
+</style>
+</head>
+<body>
+
+<a class="styled" href="unvisited-page.html">unvisited (<a class="styled" href="unvisited-page.html">unvisited</a>)</a>
+<a class="styled" href="unvisited-page.html">unvisited (<a class="styled" href="visited-page.html">visited</a>)</a>
+<a class="styled" href="visited-page.html">visited (<a class="styled" href="unvisited-page.html">unvisited</a>)</a>
+<a class="styled" href="visited-page.html">visited (<a class="styled" href="visited-page.html">visited</a>)</a>
+
+<a href="unvisited-page.html">unvisited (<a class="styled" href="unvisited-page.html">unvisited</a>)</a>
+<a href="unvisited-page.html">unvisited (<a class="styled" href="visited-page.html">visited</a>)</a>
+<a href="visited-page.html">visited (<a class="styled" href="unvisited-page.html">unvisited</a>)</a>
+<a href="visited-page.html">visited (<a class="styled" href="visited-page.html">visited</a>)</a>
+
+<a class="styled" href="unvisited-page.html">unvisited (<a href="unvisited-page.html">unvisited</a>)</a>
+<a class="styled" href="unvisited-page.html">unvisited (<a href="visited-page.html">visited</a>)</a>
+<a class="styled" href="visited-page.html">visited (<a href="unvisited-page.html">unvisited</a>)</a>
+<a class="styled" href="visited-page.html">visited (<a href="visited-page.html">visited</a>)</a>
+
+</body>
+</html>

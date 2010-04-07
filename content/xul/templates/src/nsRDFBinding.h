@@ -40,6 +40,7 @@
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
 #include "nsIRDFResource.h"
+#include "nsISupportsImpl.h"
 
 class nsXULTemplateResultRDF;
 class nsBindingValues;
@@ -95,9 +96,6 @@ class RDFBindingSet
 {
 protected:
 
-    // results hold a reference to a binding set in their nsBindingValues fields
-    PRInt32 mRefCnt;
-
     // the number of bindings
     PRInt32 mCount;
 
@@ -107,8 +105,7 @@ protected:
 public:
 
     RDFBindingSet()
-        : mRefCnt(0),
-          mCount(0),
+        : mCount(0),
           mFirst(nsnull)
     {
         MOZ_COUNT_CTOR(RDFBindingSet);
@@ -116,19 +113,7 @@ public:
 
     ~RDFBindingSet();
 
-    PRInt32 AddRef() { 
-        mRefCnt++; 
-        NS_LOG_ADDREF(this, mRefCnt, "RDFBindingSet", sizeof(*this));
-        return mRefCnt;
-    }
-
-    PRInt32 Release()
-    {
-        PRInt32 refcnt = --mRefCnt;
-        NS_LOG_RELEASE(this, refcnt, "RDFBindingSet");
-        if (refcnt == 0) delete this;
-        return refcnt;
-    }
+    NS_INLINE_DECL_REFCOUNTING(RDFBindingSet)
 
     PRInt32 Count() const { return mCount; }
 

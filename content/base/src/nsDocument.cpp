@@ -477,6 +477,8 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
   }
 }
 
+DOMCI_DATA(StyleSheetList, nsDOMStyleSheetList)
+
 // XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
 // QueryInterface implementation for nsDOMStyleSheetList
 NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
@@ -1268,6 +1270,8 @@ nsDOMImplementation::nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
 nsDOMImplementation::~nsDOMImplementation()
 {
 }
+
+DOMCI_DATA(DOMImplementation, nsDOMImplementation)
 
 // QueryInterface implementation for nsDOMImplementation
 NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)
@@ -2622,13 +2626,13 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 }
 
 NS_IMETHODIMP
-nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
+nsDocument::ElementFromPoint(float aX, float aY, nsIDOMElement** aReturn)
 {
   return ElementFromPointHelper(aX, aY, PR_FALSE, PR_TRUE, aReturn);
 }
 
 nsresult
-nsDocument::ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+nsDocument::ElementFromPointHelper(float aX, float aY,
                                    PRBool aIgnoreRootScrollFrame,
                                    PRBool aFlushLayout,
                                    nsIDOMElement** aReturn)

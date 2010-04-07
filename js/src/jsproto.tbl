@@ -38,12 +38,6 @@
 
 #include "jsversion.h"
 
-#if JS_HAS_SCRIPT_OBJECT
-# define SCRIPT_INIT                    js_InitScriptClass
-#else
-# define SCRIPT_INIT                    js_InitNullClass
-#endif
-
 #if JS_HAS_XML_SUPPORT
 # define XML_INIT                       js_InitXMLClass
 # define NAMESPACE_INIT                 js_InitNamespaceClass
@@ -66,12 +60,6 @@
 # define GENERATOR_INIT                 js_InitNullClass
 #endif
 
-#if JS_HAS_FILE_OBJECT
-# define FILE_INIT                      js_InitFileClass
-#else
-# define FILE_INIT                      js_InitNullClass
-#endif
-
 /*
  * Enumerator codes in the second column must not change -- they are part of
  * the JS XDR API.  Client modules including jsproto.tbl should consider
@@ -88,41 +76,36 @@ JS_PROTO(Math,                   7,     js_InitMathClass)
 JS_PROTO(Number,                 8,     js_InitNumberClass)
 JS_PROTO(String,                 9,     js_InitStringClass)
 JS_PROTO(RegExp,                10,     js_InitRegExpClass)
-JS_PROTO(Script,                11,     SCRIPT_INIT)
-JS_PROTO(XML,                   12,     XML_INIT)
-JS_PROTO(Namespace,             13,     NAMESPACE_INIT)
-JS_PROTO(QName,                 14,     QNAME_INIT)
-JS_PROTO(AnyName,               15,     ANYNAME_INIT)
-JS_PROTO(AttributeName,         16,     ATTRIBUTE_INIT)
-JS_PROTO(Error,                 17,     js_InitExceptionClasses)
-JS_PROTO(InternalError,         18,     js_InitExceptionClasses)
-JS_PROTO(EvalError,             19,     js_InitExceptionClasses)
-JS_PROTO(RangeError,            20,     js_InitExceptionClasses)
-JS_PROTO(ReferenceError,        21,     js_InitExceptionClasses)
-JS_PROTO(SyntaxError,           22,     js_InitExceptionClasses)
-JS_PROTO(TypeError,             23,     js_InitExceptionClasses)
-JS_PROTO(URIError,              24,     js_InitExceptionClasses)
-JS_PROTO(Generator,             25,     GENERATOR_INIT)
-JS_PROTO(Iterator,              26,     js_InitIteratorClasses)
-JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)
-JS_PROTO(File,                  28,     FILE_INIT)
+JS_PROTO(XML,                   11,     XML_INIT)
+JS_PROTO(Namespace,             12,     NAMESPACE_INIT)
+JS_PROTO(QName,                 13,     QNAME_INIT)
+JS_PROTO(AnyName,               14,     ANYNAME_INIT)
+JS_PROTO(AttributeName,         15,     ATTRIBUTE_INIT)
+JS_PROTO(Error,                 16,     js_InitExceptionClasses)
+JS_PROTO(InternalError,         17,     js_InitExceptionClasses)
+JS_PROTO(EvalError,             18,     js_InitExceptionClasses)
+JS_PROTO(RangeError,            19,     js_InitExceptionClasses)
+JS_PROTO(ReferenceError,        20,     js_InitExceptionClasses)
+JS_PROTO(SyntaxError,           21,     js_InitExceptionClasses)
+JS_PROTO(TypeError,             22,     js_InitExceptionClasses)
+JS_PROTO(URIError,              23,     js_InitExceptionClasses)
+JS_PROTO(Generator,             24,     GENERATOR_INIT)
+JS_PROTO(Iterator,              25,     js_InitIteratorClasses)
+JS_PROTO(StopIteration,         26,     js_InitIteratorClasses)
+JS_PROTO(ArrayBuffer,           27,     js_InitTypedArrayClasses)
+JS_PROTO(Int8Array,             28,     js_InitTypedArrayClasses)
+JS_PROTO(Uint8Array,            29,     js_InitTypedArrayClasses)
+JS_PROTO(Int16Array,            30,     js_InitTypedArrayClasses)
+JS_PROTO(Uint16Array,           31,     js_InitTypedArrayClasses)
+JS_PROTO(Int32Array,            32,     js_InitTypedArrayClasses)
+JS_PROTO(Uint32Array,           33,     js_InitTypedArrayClasses)
+JS_PROTO(Float32Array,          34,     js_InitTypedArrayClasses)
+JS_PROTO(Float64Array,          35,     js_InitTypedArrayClasses)
+JS_PROTO(Uint8ClampedArray,     36,     js_InitTypedArrayClasses)
 
-JS_PROTO(ArrayBuffer,           29,     js_InitTypedArrayClasses)
-JS_PROTO(Int8Array,             30,     js_InitTypedArrayClasses)
-JS_PROTO(Uint8Array,            31,     js_InitTypedArrayClasses)
-JS_PROTO(Int16Array,            32,     js_InitTypedArrayClasses)
-JS_PROTO(Uint16Array,           33,     js_InitTypedArrayClasses)
-JS_PROTO(Int32Array,            34,     js_InitTypedArrayClasses)
-JS_PROTO(Uint32Array,           35,     js_InitTypedArrayClasses)
-JS_PROTO(Float32Array,          36,     js_InitTypedArrayClasses)
-JS_PROTO(Float64Array,          37,     js_InitTypedArrayClasses)
-JS_PROTO(Uint8ClampedArray,     38,     js_InitTypedArrayClasses)
-
-#undef SCRIPT_INIT
 #undef XML_INIT
 #undef NAMESPACE_INIT
 #undef QNAME_INIT
 #undef ANYNAME_INIT
 #undef ATTRIBUTE_INIT
 #undef GENERATOR_INIT
-#undef FILE_INIT

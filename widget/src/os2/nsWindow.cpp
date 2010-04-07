@@ -2083,97 +2083,130 @@ PRBool nsWindow::OnReposition(PSWP pSwp)
 
 PRBool nsWindow::OnPaint()
 {
-  PRBool rc = PR_FALSE;
+  HPS    hPS;
+  HPS    hpsDrag;
+  HRGN   hrgn;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_PAINT
   HRGN debugPaintFlashRegion = 0;
-  HPS debugPaintFlashPS = 0;
+  HPS  debugPaintFlashPS = 0;
 
   if (debug_WantPaintFlashing()) {
     debugPaintFlashPS = WinGetPS(mWnd);
     debugPaintFlashRegion = GpiCreateRegion(debugPaintFlashPS, 0, 0);
     WinQueryUpdateRegion(mWnd, debugPaintFlashRegion);
-  } // if paint flashing
+  }
 #endif
 
-  if (mContext && mEventCallback) {
-    // Get rect to redraw and validate window
-    RECTL rcl = { 0 };
+// Use a dummy do..while(0) loop to facilitate error handling & early-outs.
+do {
 
-    // get the current drag status;  if we're currently in a Moz-originated
-    // drag, get the special drag HPS then pass it to WinBeginPaint();
-    // if there is no hpsDrag, WinBeginPaint() will return a normal HPS
-    HPS hpsDrag = 0;
-    CheckDragStatus(ACTION_PAINT, &hpsDrag);
-    HPS hPS = WinBeginPaint(mWnd, hpsDrag, &rcl);
+  // Get the current drag status.  If we're in a Moz-originated drag,
+  // it will return a special drag HPS to pass to WinBeginPaint().
+  // Oherwise, get a cached micro PS.
+  CheckDragStatus(ACTION_PAINT, &hpsDrag);
+  hPS = hpsDrag ? hpsDrag : WinGetPS(mWnd);
 
-    // if the update rect is empty, suppress the paint event
-    if (!WinIsRectEmpty(0, &rcl)) {
-      // call the event callback
-      if (mEventCallback) {
-        nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-        InitEvent(event);
+  // If we can't get an HPS, validate the window so we don't
+  // keep getting the same WM_PAINT msg over & over again.
+  RECTL  rcl = { 0 };
+  if (!hPS) {
+    WinQueryWindowRect(mWnd, &rcl);
+    WinValidateRect(mWnd, &rcl, FALSE);
+    break;
+  }
 
-        // build XP rect from in-ex window rect
-        nsIntRect rect;
-        rect.x = rcl.xLeft;
-        rect.y = mBounds.height - rcl.yTop;
-        rect.width = rcl.xRight - rcl.xLeft;
-        rect.height = rcl.yTop - rcl.yBottom;
-        event.rect = &rect;
-        event.region = nsnull;
+  // Get the update region before WinBeginPaint() resets it.
+  hrgn = GpiCreateRegion(hPS, 0, 0);
+  WinQueryUpdateRegion(mWnd, hrgn);
+  WinBeginPaint(mWnd, hPS, &rcl);
 
-#ifdef NS_DEBUG
-        debug_DumpPaintEvent(stdout, this, &event, nsCAutoString("noname"),
-                             (PRInt32)mWnd);
+  // Exit if the update rect is empty or mThebesSurface is null.
+  if (WinIsRectEmpty(0, &rcl) || !GetThebesSurface()) {
+    break;
+  }
+
+  // Even if there is no callback to update the content (unlikely)
+  // we still want to update the screen with whatever's available.
+  if (!mEventCallback) {
+    mThebesSurface->Refresh(&rcl, hPS);
+    break;
+  }
+
+  // Create an event & a Thebes context.
+  nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  InitEvent(event);
+  nsRefPtr<gfxContext> thebesContext = new gfxContext(mThebesSurface);
+  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+
+  // See how many rects comprise the update region.  If there are 8
+  // or fewer, update them individually.  If there are more or the call
+  // failed, update the bounding rectangle returned by WinBeginPaint().
+  #define MAX_CLIPRECTS 8
+  RGNRECT rgnrect = { 1, MAX_CLIPRECTS, 0, RECTDIR_LFRT_TOPBOT };
+  RECTL   arect[MAX_CLIPRECTS];
+  RECTL*  pr = arect;
+
+  if (!GpiQueryRegionRects(hPS, hrgn, 0, &rgnrect, 0) ||
+      rgnrect.crcReturned > MAX_CLIPRECTS) {
+    rgnrect.crcReturned = 1;
+    arect[0] = rcl;
+  } else {
+    GpiQueryRegionRects(hPS, hrgn, 0, &rgnrect, arect);
+  }
+
+  // Create clipping regions for the event & the Thebes context.
+  thebesContext->NewPath();
+  for (PRUint32 i = 0; i < rgnrect.crcReturned; i++, pr++) {
+    event.region.Or(event.region, 
+                    nsIntRect(pr->xLeft,
+                              mBounds.height - pr->yTop,
+                              pr->xRight - pr->xLeft,
+                              pr->yTop - pr->yBottom));
+
+    thebesContext->Rectangle(gfxRect(pr->xLeft,
+                                     mBounds.height - pr->yTop,
+                                     pr->xRight - pr->xLeft,
+                                     pr->yTop - pr->yBottom));
+  }
+  thebesContext->Clip();
+
+#ifdef DEBUG_PAINT
+  debug_DumpPaintEvent(stdout, this, &event, nsCAutoString("noname"),
+                       (PRInt32)mWnd);
 #endif
 
-        nsRefPtr<gfxContext> thebesContext = new gfxContext(mThebesSurface);
+  // Init the Layers manager then dispatch the event.
+  // If it returns false there's nothing to paint, so exit.
+  AutoLayerManagerSetup setupLayerManager(this, thebesContext);
+  if (!DispatchWindowEvent(&event, eventStatus)) {
+    break;
+  }
 
-        nsCOMPtr<nsIRenderingContext> context;
-        nsresult rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(context));
-        if (NS_FAILED(rv)) {
-          NS_WARNING("CreateRenderingContextInstance failed");
-          return PR_FALSE;
-        }
+  // Paint the surface, then use Refresh() to blit each rect to the screen.
+  thebesContext->PopGroupToSource();
+  thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+  thebesContext->Paint();
+  pr = arect;
+  for (PRUint32 i = 0; i < rgnrect.crcReturned; i++, pr++) {
+    mThebesSurface->Refresh(pr, hPS);
+  }
 
-        rv = context->Init(mContext, thebesContext);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("context::Init failed");
-          return PR_FALSE;
-        }
+} while (0);
 
-        // Try to dispatch a few times, 10 should be more than enough.
-        // In tests we get something at the second try at the latest
-        event.renderingContext = context;
-        for (int i = 0; i < 10; i++) {
-          rc = DispatchWindowEvent(&event, eventStatus);
-          if (rc) {
-            // this was handled, so we can stop trying
-            break;
-          }
-        }
-        event.renderingContext = nsnull;
-
-        // Only update if DispatchWindowEvent returned TRUE; otherwise,
-        // nothing handled this, and we'll just end up painting with black.
-        if (rc) {
-          thebesContext->PopGroupToSource();
-          thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-          thebesContext->Paint();
-        }
-      } // if (mEventCallback)
-      mThebesSurface->Refresh(&rcl, hPS);
-    } // if (!WinIsRectEmpty(0, &rcl))
-
+  // Cleanup.
+  if (hPS) {
     WinEndPaint(hPS);
-    if (hpsDrag) {
-      ReleaseIfDragHPS(hpsDrag);
+    if (hrgn) {
+      GpiDestroyRegion(hPS, hrgn);
     }
-  } // if (mContext && mEventCallback)
+    if (!hpsDrag || !ReleaseIfDragHPS(hpsDrag)) {
+      WinReleasePS(hPS);
+    }
+  }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_PAINT
   if (debug_WantPaintFlashing()) {
     // Only flash paint events which have not ignored the paint message.
     // Those that ignore the paint message aren't painting anything so there
@@ -2188,13 +2221,13 @@ PRBool nsWindow::OnPaint()
       PR_Sleep(PR_MillisecondsToInterval(30));
 
       GpiSetMix(debugPaintFlashPS, CurMix);
-    } // if not eIgnore
+    }
     GpiDestroyRegion(debugPaintFlashPS, debugPaintFlashRegion);
     WinReleasePS(debugPaintFlashPS);
-  } // if paint flashing
+  }
 #endif
 
-  return rc;
+  return PR_TRUE;
 }
 
 //-----------------------------------------------------------------------------

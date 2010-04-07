@@ -64,7 +64,6 @@ public:
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState);
 
-  virtual void GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent);
   virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
   virtual void AddMargin(nsIBox* aChild, nsSize& aSize);
   virtual void AddMargin(nsSize& aSize, const nsMargin& aMargin);

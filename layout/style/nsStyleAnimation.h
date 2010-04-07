@@ -161,23 +161,20 @@ public:
    * specified value depends on inherited style or on the values of other
    * properties.
    * 
-   * NOTE: This method uses GetPrimaryShell() to access the style system,
-   * so it should only be used for style that applies to all presentations,
-   * rather than for style that only applies to a particular presentation.
-   * XXX Once we get rid of multiple presentations, we can remove the above
-   * note.
-   *
    * @param aProperty       The property whose value we're computing.
    * @param aTargetElement  The content node to which our computed value is
    *                        applicable.
    * @param aSpecifiedValue The specified value, from which we'll build our
    *                        computed value.
+   * @param aUseSVGMode     A flag to indicate whether we should parse
+   *                        |aSpecifiedValue| in SVG mode.
    * @param [out] aComputedValue The resulting computed value.
    * @return PR_TRUE on success, PR_FALSE on failure.
    */
   static PRBool ComputeValue(nsCSSProperty aProperty,
                              nsIContent* aElement,
                              const nsAString& aSpecifiedValue,
+                             PRBool aUseSVGMode,
                              Value& aComputedValue);
 
   /**

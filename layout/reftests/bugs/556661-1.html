@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><title>Dynamic manipulation of !important</title>
+<style>
+div { float: left; width: 50px; height: 50px; margin: 5px }
+div#control {
+  width: 230px;
+  background-color: green !important;
+  background-color: red;
+}
+div#a { background-color: green }
+div#b { background-color: orange }
+div.c { background-color: orange }
+div#d { background-color: orange }
+div#e { background-color: green }
+div#f { background-color: orange }
+div.g { background-color: orange }
+div#h { background-color: orange }
+p { clear: left }
+</style>
+<style>
+div.a { background-color: red !important }
+div.b { background-color: red !important }
+div#c { background-color: red }
+div.d { background-color: red }
+div.e { background-color: red !important }
+div.f { background-color: red !important }
+div#g { background-color: red }
+div.h { background-color: red }
+</style>
+<script>
+window.onload = function() {
+  var r = document.styleSheets[1].cssRules;
+  r[0].style.setProperty("background-color", "yellow", "");
+  r[1].style.setProperty("background-color", "green", "important");
+  r[2].style.setProperty("background-color", "green", "");
+  r[3].style.setProperty("background-color", "green", "important");
+
+  r[4].style.removeProperty("background-color");
+  r[4].style.setProperty("background-color", "yellow", "");
+  r[5].style.removeProperty("background-color");
+  r[5].style.setProperty("background-color", "green", "important");
+  r[6].style.removeProperty("background-color");
+  r[6].style.setProperty("background-color", "green", "");
+  r[7].style.removeProperty("background-color");
+  r[7].style.setProperty("background-color", "green", "important");
+}
+</script>
+<body>
+<div class="a" id="a"></div>
+<div class="b" id="b"></div>
+<div class="c" id="c"></div>
+<div class="d" id="d"></div>
+<p></p>
+<div class="e" id="e"></div>
+<div class="f" id="f"></div>
+<div class="g" id="g"></div>
+<div class="h" id="h"></div>
+<p></p>
+<div id="control"></div>
+<p>There should be two rows of four green squares and one solid green
+   bar above.</p>
+</body>
+</html>

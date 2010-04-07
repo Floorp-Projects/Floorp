@@ -291,10 +291,12 @@ GetScrollbarMetrics(nsBoxLayoutState& aState, nsIBox* aBox, nsSize* aMin,
   
   if (aMin) {
     *aMin = aBox->GetMinSize(aState);
+    nsBox::AddMargin(aBox, *aMin);
   }
  
   if (aPref) {
     *aPref = aBox->GetPrefSize(aState);
+    nsBox::AddMargin(aBox, *aPref);
   }
 }
 
@@ -469,14 +471,14 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
     availWidth = NS_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
 
+  nsPresContext* presContext = PresContext();
+
   // We're forcing the padding on our scrolled frame, so let it know what that
   // padding is.
-  mInner.mScrolledFrame->
-    SetProperty(nsGkAtoms::usedPaddingProperty,
-                new nsMargin(aState->mReflowState.mComputedPadding),
-                nsCSSOffsetState::DestroyMarginFunc);  
-  
-  nsPresContext* presContext = PresContext();
+  presContext->PropertyTable()->
+    Set(mInner.mScrolledFrame, UsedPaddingProperty(),
+        new nsMargin(aState->mReflowState.mComputedPadding));
+
   // Pass PR_FALSE for aInit so we can pass in the correct padding
   nsHTMLReflowState kidReflowState(presContext, aState->mReflowState,
                                    mInner.mScrolledFrame,
@@ -800,8 +802,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   // oldScrollPosition is a multiple of device pixels. This could have been
   // thrown out by a zoom change.
   nsIntPoint ptDevPx;
-  nsPoint oldScrollPosition =
-    mInner.ClampAndRestrictToDevPixels(mInner.GetScrollPosition(), &ptDevPx);
+  nsPoint oldScrollPosition = mInner.GetScrollPosition();
   
   state.mComputedBorder = aReflowState.mComputedBorderPadding -
     aReflowState.mComputedPadding;
@@ -809,7 +810,10 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   nsresult rv = ReflowContents(&state, aDesiredSize);
   if (NS_FAILED(rv))
     return rv;
-  
+
+  // Restore the old scroll position, for now, even if that's not valid anymore
+  // because we changed size. We'll fix it up in a post-reflow callback, because
+  // our current size may only be temporary (e.g. we're compute XUL desired sizes).
   PlaceScrollArea(state, oldScrollPosition);
   if (!mInner.mPostedReflowCallback) {
     // Make sure we'll try scrolling to restored position
@@ -937,6 +941,7 @@ nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aStat
 
   if (mVScrollbarBox) {
     nsSize size = mVScrollbarBox->GetPrefSize(*aState);
+    nsBox::AddMargin(mVScrollbarBox, size);
     if (IsScrollbarOnRight())
       result.left = size.width;
     else
@@ -945,6 +950,7 @@ nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aStat
 
   if (mHScrollbarBox) {
     nsSize size = mHScrollbarBox->GetPrefSize(*aState);
+    nsBox::AddMargin(mHScrollbarBox, size);
     // We don't currently support any scripts that would require a scrollbar
     // at the top. (Are there any?)
     result.bottom = size.height;
@@ -1084,12 +1090,14 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState)
   if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
     nsSize vSize = mInner.mVScrollbarBox->GetPrefSize(aState);
+    nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
     pref.width += vSize.width;
   }
    
   if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
     nsSize hSize = mInner.mHScrollbarBox->GetPrefSize(aState);
+    nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
     pref.height += hSize.height;
   }
 
@@ -1113,6 +1121,7 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState)
   if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
      nsSize vSize = mInner.mVScrollbarBox->GetMinSize(aState);
+     AddMargin(mInner.mVScrollbarBox, vSize);
      min.width += vSize.width;
      if (min.height < vSize.height)
         min.height = vSize.height;
@@ -1121,6 +1130,7 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState)
   if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
      nsSize hSize = mInner.mHScrollbarBox->GetMinSize(aState);
+     AddMargin(mInner.mHScrollbarBox, hSize);
      min.height += hSize.height;
      if (min.width < hSize.width)
         min.width = hSize.width;
@@ -1345,13 +1355,11 @@ nsGfxScrollFrameInner::AsyncScrollCallback(nsITimer *aTimer, void* anInstance)
     }
 
     self->ScrollToImpl(destination);
-    // 'self' may be a dangling pointer here since ScrollToImpl may have destroyed it
   } else {
     delete self->mAsyncScroll;
     self->mAsyncScroll = nsnull;
 
     self->ScrollToImpl(self->mDestination);
-    // 'self' may be a dangling pointer here since ScrollToImpl may have destroyed it
   }
 }
 
@@ -2201,11 +2209,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // of the viewport (good!).
   PRBool canHaveHorizontal;
   PRBool canHaveVertical;
-  // Hack to try to avoid Tsspider regression: always call
-  // GetScrollbarStyles here, even if we plan to ignore the return
-  // value.
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   if (!mIsRoot) {
+    ScrollbarStyles styles = scrollable->GetScrollbarStyles();
     canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
     if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
@@ -2498,6 +2503,7 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
        return PR_FALSE;
 
      nsSize hSize = mInner.mHScrollbarBox->GetPrefSize(aState);
+     nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
 
      mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, aAdd);
 
@@ -2516,6 +2522,7 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
        return PR_FALSE;
 
      nsSize vSize = mInner.mVScrollbarBox->GetPrefSize(aState);
+     nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
 
      mInner.SetScrollbarVisibility(mInner.mVScrollbarBox, aAdd);
 
@@ -2914,6 +2921,9 @@ nsGfxScrollFrameInner::ReflowFinished()
 
   ScrollToRestoredPosition();
 
+  // Clamp scroll position
+  ScrollToImpl(GetScrollPosition());
+
   if (NS_SUBTREE_DIRTY(mOuter) || !mUpdateScrollbarAttributes)
     return PR_FALSE;
 
@@ -3121,11 +3131,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect vRect(mScrollPort);
     vRect.width = aContentArea.width - mScrollPort.width;
     vRect.x = scrollbarOnLeft ? aContentArea.x : mScrollPort.XMost();
-#ifdef DEBUG
     nsMargin margin;
     mVScrollbarBox->GetMargin(margin);
-    NS_ASSERTION(margin == nsMargin(0,0,0,0), "Scrollbar margin not supported");
-#endif
+    vRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, PR_TRUE);
     LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
   }
@@ -3135,11 +3143,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect hRect(mScrollPort);
     hRect.height = aContentArea.height - mScrollPort.height;
     hRect.y = PR_TRUE ? mScrollPort.YMost() : aContentArea.y;
-#ifdef DEBUG
     nsMargin margin;
     mHScrollbarBox->GetMargin(margin);
-    NS_ASSERTION(margin == nsMargin(0,0,0,0), "Scrollbar margin not supported");
-#endif
+    hRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, PR_FALSE);
     LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
   }
@@ -3236,18 +3242,11 @@ nsGfxScrollFrameInner::GetScrolledRectInternal(const nsRect& aScrolledFrameOverf
 nsMargin
 nsGfxScrollFrameInner::GetActualScrollbarSizes() const
 {
-  nsMargin result(0, 0, 0, 0);
-  if (mVScrollbarBox) {
-    if (IsScrollbarOnRight()) {
-      result.right = mVScrollbarBox->GetRect().width;
-    } else {
-      result.left = mVScrollbarBox->GetRect().width;
-    }
-  }
-  if (mHScrollbarBox) {
-    result.bottom = mHScrollbarBox->GetRect().height;
-  }
-  return result;
+  nsRect r = mOuter->GetPaddingRect() - mOuter->GetPosition();
+
+  return nsMargin(mScrollPort.x - r.x, mScrollPort.y - r.y,
+                  r.XMost() - mScrollPort.XMost(),
+                  r.YMost() - mScrollPort.YMost());
 }
 
 void

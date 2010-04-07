@@ -85,7 +85,9 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   }
 
   // Use doubling algorithm when forced to increase available capacity.
-  capacity = PR_MAX(capacity, mHdr->mCapacity << 1);
+  // (Note that mCapacity is only 31 bits wide, so multiplication promotes its
+  // type. We use |2u| instead of |2| to make sure it's promoted to unsigned.)
+  capacity = PR_MAX(capacity, mHdr->mCapacity * 2u);
 
   Header *header;
   if (UsesAutoArrayBuffer()) {

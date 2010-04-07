@@ -53,6 +53,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
+#include "prlog.h" // for PR_STATIC_ASSERT
 
 // required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
 extern const char* const kCSSRawProperties[];
@@ -1629,8 +1630,13 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+PR_STATIC_ASSERT(NS_SIDE_TOP == 0);
+PR_STATIC_ASSERT(NS_SIDE_RIGHT == 1);
+PR_STATIC_ASSERT(NS_SIDE_BOTTOM == 2);
+PR_STATIC_ASSERT(NS_SIDE_LEFT == 3);
 static const nsCSSProperty gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
+  // Code relies on these matching the NS_SIDE_* constants.
   eCSSProperty_border_top_color,
   eCSSProperty_border_right_color_value,
   eCSSProperty_border_bottom_color,

@@ -61,6 +61,7 @@ UINT gOOPPStopNativeLoopEvent =
 #include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#include "nsPluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
 using namespace mozilla::plugins;
@@ -80,6 +81,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 #if defined(XP_MACOSX)
     , mShWidth(0)
     , mShHeight(0)
+    , mShColorSpace(NULL)
 #endif
 {
 }
@@ -92,6 +94,9 @@ PluginInstanceParent::~PluginInstanceParent()
 #if defined(OS_WIN)
     NS_ASSERTION(!(mPluginHWND || mPluginWndProc),
         "Subclass was not reset correctly before the dtor was reached!");
+#endif
+#if defined(OS_MACOSX)
+    ::CGColorSpaceRelease(mShColorSpace);
 #endif
 }
 
@@ -693,15 +698,16 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 
         char* shContextByte = mShSurface.get<char>();
 
-        CGColorSpaceRef cSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-        if (!cSpace) {
+        if (!mShColorSpace) {
+            mShColorSpace = CreateSystemColorSpace();
+        }
+        if (!mShColorSpace) {
             PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
             return true;
         } 
         CGContextRef shContext = ::CGBitmapContextCreate(shContextByte, 
-                                mShWidth, mShHeight, 8, mShWidth*4, cSpace, 
+                                mShWidth, mShHeight, 8, mShWidth*4, mShColorSpace, 
                                 kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        ::CGColorSpaceRelease(cSpace);
         if (!shContext) {
             PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
             return true;

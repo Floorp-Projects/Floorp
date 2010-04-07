@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div { position: absolute; top: 0; left: 0; width: 100px; height: 100px; }
+      div.offset { left: 100px; }
+      div.offset2 { left: 200px; }
+    </style>
+  </head>
+  <body>
+    <!-- Make sure the difference of the two z-index values overflows a 32-bit
+    signed int.  So set the positive one to 2^30 + 1 and the negative one to
+    -(2^30 + 1).  Then the difference is 2^31 + 2 which is negative when
+    treated as a 32-bit signed int.  -->
+    <div style="background: green; z-index: 1073741825"></div>
+    <div style="background: red; z-index: -1073741825"></div>
+    <!-- Test clamping on the high end by setting the high z-index to
+         2^32 + 1  -->
+    <div class="offset" style="background: green; z-index: 4294967297"></div>
+    <div class="offset" style="background: red; z-index: 2"></div>
+    <!-- Test clamping on the low end by setting the low z-index to
+         -(2^32 + 1)  -->
+    <div class="offset2" style="background: green; z-index: -2"></div>
+    <div class="offset2" style="background: red; z-index: -4294967297"></div>
+  </body>
+</html>

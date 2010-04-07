@@ -1624,7 +1624,7 @@ nsPresContext::EnsureVisible()
     // Make sure this is the content viewer we belong with
     nsCOMPtr<nsIDocumentViewer> docV(do_QueryInterface(cv));
     if (docV) {
-      nsCOMPtr<nsPresContext> currentPresContext;
+      nsRefPtr<nsPresContext> currentPresContext;
       docV->GetPresContext(getter_AddRefs(currentPresContext));
       if (currentPresContext == this) {
         // OK, this is us.  We want to call Show() on the content viewer.
@@ -1847,9 +1847,7 @@ nsPresContext::GetUserFontSetInternal()
 #ifdef DEBUG
     {
       PRBool inReflow;
-      NS_ASSERTION(!userFontSetGottenBefore ||
-                   (NS_SUCCEEDED(mShell->IsReflowLocked(&inReflow)) &&
-                    !inReflow),
+      NS_ASSERTION(!userFontSetGottenBefore || !mShell->IsReflowLocked(),
                    "FlushUserFontSet should have been called first");
     }
 #endif

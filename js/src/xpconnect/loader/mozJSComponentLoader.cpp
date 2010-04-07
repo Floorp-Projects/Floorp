@@ -192,7 +192,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     jschar *chars = JS_GetStringChars(str);
-    fputs(NS_ConvertUTF16toUTF8(chars).get(), stderr);
+    fputs(NS_ConvertUTF16toUTF8(reinterpret_cast<const PRUnichar*>(chars)).get(), stderr);
     return JS_TRUE;
 }
 

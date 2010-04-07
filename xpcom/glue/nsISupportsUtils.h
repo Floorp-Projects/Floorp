@@ -108,10 +108,12 @@ extern "C++" {
 // yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
 template <class T>
 inline
-nsrefcnt
+void
 ns_if_addref( T expr )
 {
-    return expr ? expr->AddRef() : 0;
+    if (expr) {
+        expr->AddRef();
+    }
 }
 
 } /* extern "C++" */

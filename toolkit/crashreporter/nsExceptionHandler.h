@@ -96,9 +96,19 @@ bool TakeMinidumpForChild(PRUint32 childPid,
 
 #ifdef XP_WIN
 typedef HANDLE ProcessHandle;
+typedef DWORD ThreadId;
 #else
 typedef int ProcessHandle;
+typedef int ThreadId;
 #endif
+
+// Return the current thread's ID.
+//
+// XXX: this is a somewhat out-of-place interface to expose through
+// crashreporter, but it takes significant work to call sys_gettid()
+// correctly on Linux and breakpad has already jumped through those
+// hoops for us.
+ThreadId CurrentThreadId();
 
 // Create new minidumps that are snapshots of the state of this parent
 // process and |childPid|.  Return true on success along with the
@@ -108,6 +118,7 @@ typedef int ProcessHandle;
 // up |childDump| and |parentDump|.  Either or both can be created and
 // returned non-null on failure.
 bool CreatePairedMinidumps(ProcessHandle childPid,
+                           ThreadId childBlamedThread,
                            nsAString* pairGUID NS_OUTPARAM,
                            nsILocalFile** childDump NS_OUTPARAM,
                            nsILocalFile** parentDump NS_OUTPARAM);

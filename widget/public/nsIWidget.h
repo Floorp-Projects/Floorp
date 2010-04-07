@@ -110,8 +110,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x42b34d98, 0x7371, 0x48e4, \
-  { 0xbf, 0x85, 0x2c, 0x02, 0x0c, 0x4a, 0x8d, 0x26 } }
+{ 0xf286438a, 0x6ec6, 0x4766, \
+  { 0xa4, 0x76, 0x4a, 0x44, 0x80, 0x95, 0xd3, 0x1f } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -1061,6 +1061,11 @@ class nsIWidget : public nsISupports {
      * Destruct and don't commit the IME composition string.
      */
     NS_IMETHOD CancelIMEComposition() = 0;
+
+    /**
+     * Set accelerated rendering to 'True' or 'False'
+     */
+    NS_IMETHOD SetAcceleratedRendering(PRBool aEnabled) = 0;
 
     /*
      * Get toggled key states.

@@ -67,9 +67,9 @@ public:
 
     gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
 
-protected:
-    friend class gfxDWriteFontGroup;
+    IDWriteFontFace *GetFontFace() { return mFontFace.get(); }
 
+protected:
     void ComputeMetrics();
 
     cairo_font_face_t *CairoFontFace();
@@ -83,34 +83,6 @@ protected:
     gfxFloat mAdjustedSize;
     gfxFont::Metrics mMetrics;
     PRBool mNeedsOblique;
-};
-
-/**
- * \brief Class representing a DWrite windows font group.
- */
-class gfxDWriteFontGroup : public gfxFontGroup 
-{
-public:
-    gfxDWriteFontGroup(const nsAString& aFamilies, 
-                              const gfxFontStyle *aStyle,
-                              gfxUserFontSet *aUserFontSet);
-    virtual ~gfxDWriteFontGroup();
-    
-    gfxFontGroup *Copy(const gfxFontStyle *aStyle);
-
-    /**
-     * Gets the font at a certain position in the font list, it will
-     * create this font if it hasn't actually been created yet.
-     *
-     * \param i Position in the font list
-     * \return Object representing the font
-     */
-    virtual gfxDWriteFont *GetFontAt(PRInt32 i);
-
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
-    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
 };
 
 #endif

@@ -1061,7 +1061,9 @@ _forceredraw(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     ENSURE_PLUGIN_THREAD_VOID();
-    NS_WARNING("Not yet implemented!");
+
+    // We ignore calls to NPN_ForceRedraw. Such calls should
+    // never be necessary.
 }
 
 const char* NP_CALLBACK
@@ -1323,9 +1325,7 @@ _pluginthreadasynccall(NPP aNPP,
     if (!aFunc)
         return;
 
-    PluginThreadChild::current()->message_loop()
-        ->PostTask(FROM_HERE, new ChildAsyncCall(InstCast(aNPP), aFunc,
-                                                 aUserData));
+    InstCast(aNPP)->AsyncCall(aFunc, aUserData);
 }
 
 NPError NP_CALLBACK
@@ -1475,10 +1475,16 @@ _convertpoint(NPP instance,
 //-----------------------------------------------------------------------------
 
 bool
-PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
+PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+
+#ifdef MOZ_CRASHREPORTER
+    *tid = CrashReporter::CurrentThreadId();
+#else
+    *tid = 0;
+#endif
 
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);

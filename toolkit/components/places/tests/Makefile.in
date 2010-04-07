@@ -56,16 +56,19 @@ XPCSHELL_TESTS = \
 	network \
 	$(NULL)
 
+# Files in the main "tests" folder.
+XPCSHELL_TESTS_COMMON = \
+  head_common.js \
+	$(NULL)
+
 # Simple MochiTests
 MOCHI_TESTS = \
 	mochitest/test_bug_411966.html \
-	mochitest/test_bug_461710.html \
 	$(NULL)
 
 DIRS = \
 	chrome \
 	mochitest/bug_411966 \
-	mochitest/bug_461710 \
 	browser \
 	$(NULL)
 
@@ -77,3 +80,6 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(MOCHI_TESTS)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(XPCSHELL_TESTS_COMMON)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(MODULE)

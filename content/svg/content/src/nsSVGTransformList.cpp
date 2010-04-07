@@ -152,6 +152,8 @@ nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGTransformList *transforms)
 NS_IMPL_ADDREF(nsSVGTransformList)
 NS_IMPL_RELEASE(nsSVGTransformList)
 
+DOMCI_DATA(SVGTransformList, nsSVGTransformList)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGTransformList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransformList)

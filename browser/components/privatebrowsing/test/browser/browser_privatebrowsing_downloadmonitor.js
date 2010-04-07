@@ -46,8 +46,6 @@ function test() {
            getService(Ci.nsIDownloadManager);
   if (!gDownloadMgr)
     gDownloadMgr = dm;
-  let iosvc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
   let panel = document.getElementById("download-monitor");
   waitForExplicitFinish();
 
@@ -159,10 +157,8 @@ function addDownload(dm, aParams)
   return dl;
 }
 
-function createURI(aObj)
-{
-  let ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
+function createURI(aObj) {
+  let ios = Services.io;
   return (aObj instanceof Ci.nsIFile) ? ios.newFileURI(aObj) :
                                         ios.newURI(aObj, null, null);
 }

@@ -412,7 +412,8 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
 
   // Handle bad keytimes (where first != 0 and/or last != 1)
   // See http://brian.sol1.net/svg/range-for-keytimes for more info.
-  if (HasAttr(nsGkAtoms::keyTimes)) {
+  if (HasAttr(nsGkAtoms::keyTimes) &&
+      GetCalcMode() != CALC_PACED) {
     double first = mKeyTimes[0];
     if (first > 0.0 && simpleProgress < first) {
       if (!IsToAnimation())
@@ -429,20 +430,22 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     }
   }
 
-  ScaleSimpleProgress(simpleProgress);
-
   if (GetCalcMode() != CALC_DISCRETE) {
     // Get the normalised progress between adjacent values
     const nsSMILValue* from = nsnull;
     const nsSMILValue* to = nsnull;
     double intervalProgress;
     if (IsToAnimation()) {
-      // Note: Don't need to do any special-casing for CALC_PACED here,
-      // because To-Animation doesn't use a values list, by definition.
       from = &aBaseValue;
       to = &aValues[0];
-      intervalProgress = simpleProgress;
-      ScaleIntervalProgress(intervalProgress, 0, 1);
+      if (GetCalcMode() == CALC_PACED) {
+        // Note: key[Times/Splines/Points] are ignored for calcMode="paced"
+        intervalProgress = simpleProgress;
+      } else {
+        ScaleSimpleProgress(simpleProgress);
+        intervalProgress = simpleProgress;
+        ScaleIntervalProgress(intervalProgress, 0, 1);
+      }
     } else {
       if (GetCalcMode() == CALC_PACED) {
         rv = ComputePacedPosition(aValues, simpleProgress,
@@ -452,6 +455,7 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
         // instead. (as the spec says we should, because our failure was
         // presumably due to the values being non-additive)
       } else { // GetCalcMode() == CALC_LINEAR or GetCalcMode() == CALC_SPLINE
+        ScaleSimpleProgress(simpleProgress);
         PRUint32 index = (PRUint32)floor(simpleProgress *
                                          (aValues.Length() - 1));
         from = &aValues[index];
@@ -522,6 +526,17 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
                "aSimpleProgress is out of bounds");
   NS_ASSERTION(GetCalcMode() == CALC_PACED,
                "Calling paced-specific function, but not in paced mode");
+  NS_ABORT_IF_FALSE(aValues.Length() >= 2, "Unexpected number of values");
+
+  // Trivial case: If we have just 2 values, then there's only one interval
+  // for us to traverse, and our progress across that interval is the exact
+  // same as our overall progress.
+  if (aValues.Length() == 2) {
+    aIntervalProgress = aSimpleProgress;
+    aFrom = &aValues[0];
+    aTo = &aValues[1];
+    return NS_OK;
+  }
 
   double totalDistance = ComputePacedTotalDistance(aValues);
   if (totalDistance == COMPUTE_DISTANCE_ERROR)
