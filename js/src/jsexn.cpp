@@ -685,7 +685,6 @@ StringToFilename(JSContext *cx, JSString *str)
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    uint32 lineno;
     JSString *message, *filename;
     JSStackFrame *fp;
 
@@ -745,9 +744,9 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Set the 'lineNumber' property. */
+    uint32_t lineno;
     if (argc > 2) {
-        lineno = js_ValueToECMAUint32(cx, &argv[2]);
-        if (JSVAL_IS_NULL(argv[2]))
+        if (!ValueToECMAUint32(cx, argv[2], &lineno))
             return JS_FALSE;
     } else {
         if (!fp)
@@ -826,7 +825,6 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     JSString *name, *message, *filename, *lineno_as_str, *result;
     jsval localroots[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
-    uint32 lineno;
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
@@ -858,8 +856,8 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
 
         if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]))
             return false;
-        lineno = js_ValueToECMAUint32 (cx, &localroots[2]);
-        if (JSVAL_IS_NULL(localroots[2]))
+        uint32_t lineno;
+        if (!ValueToECMAUint32(cx, localroots[2], &lineno))
             return false;
 
         if (lineno != 0) {
@@ -1243,7 +1241,6 @@ js_ReportUncaughtException(JSContext *cx)
 
     if (!reportp && exnObject && exnObject->getClass() == &js_ErrorClass) {
         const char *filename;
-        uint32 lineno;
 
         if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2]))
             return false;
@@ -1264,8 +1261,8 @@ js_ReportUncaughtException(JSContext *cx)
 
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
-        lineno = js_ValueToECMAUint32 (cx, &roots[4]);
-        if (JSVAL_IS_NULL(roots[4]))
+        uint32_t lineno;
+        if (!ValueToECMAUint32 (cx, roots[4], &lineno))
             return false;
 
         reportp = &report;

@@ -357,8 +357,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
     mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     if (argc > 1) {
-        d = js_ValueToNumber(cx, &argv[1]);
-        if (JSVAL_IS_NULL(argv[1]))
+        if (!ValueToNumber(cx, argv[1], &d))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(d) ||
             (mask = (jsint)d) != d ||
@@ -774,16 +773,14 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
     if (argc != 0) {
-        d = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &d))
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
         if (argc == 1) {
             end = length;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
         }
@@ -951,8 +948,7 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 0) {
             d = 0.0;
         } else {
-            d = js_ValueToNumber(cx, &vp[2]);
-            if (JSVAL_IS_NULL(vp[2]))
+            if (!ValueToNumber(cx, vp[2], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
         }
@@ -993,8 +989,7 @@ str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 0) {
             d = 0.0;
         } else {
-            d = js_ValueToNumber(cx, &vp[2]);
-            if (JSVAL_IS_NULL(vp[2]))
+            if (!ValueToNumber(cx, vp[2], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
         }
@@ -1250,8 +1245,8 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
                 textlen -= start;
             }
         } else {
-            jsdouble d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            jsdouble d;
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
             if (d <= 0) {
@@ -1310,8 +1305,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
             else if (j < i)
                 i = j;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             if (!JSDOUBLE_IS_NaN(d)) {
                 d = js_DoubleToInteger(d);
@@ -2187,8 +2181,8 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
     uint32 limit = 0; /* Avoid warning. */
     bool limited = (argc > 1) && !JSVAL_IS_VOID(vp[3]);
     if (limited) {
-        jsdouble d = js_ValueToNumber(cx, &vp[3]);
-        if (JSVAL_IS_NULL(vp[3]))
+        jsdouble d;
+        if (!ValueToNumber(cx, vp[3], &d))
             return false;
 
         /* Clamp limit between 0 and 1 + string length. */
@@ -2250,8 +2244,7 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
     if (argc != 0) {
-        d = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &d))
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
@@ -2266,8 +2259,7 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 1) {
             end = length;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
             if (end < 0)
@@ -2353,8 +2345,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
     if (argc != 0) {
         double begin, end, length;
 
-        begin = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &begin))
             return JS_FALSE;
         begin = js_DoubleToInteger(begin);
         length = str->length();
@@ -2369,8 +2360,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 1) {
             end = length;
         } else {
-            end = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &end))
                 return JS_FALSE;
             end = js_DoubleToInteger(end);
             if (end < 0) {
@@ -2988,26 +2978,30 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
     uintN i;
-    uint16 code;
     jschar *chars;
     JSString *str;
 
     argv = vp + 2;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    if (argc == 1 &&
-        (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
-        str = JSString::unitString(code);
-        if (!str)
+    if (argc == 1) {
+        uint16_t code;
+        if (!ValueToUint16(cx, argv[0], &code))
             return JS_FALSE;
-        *vp = STRING_TO_JSVAL(str);
-        return JS_TRUE;
+        if (code < UNIT_STRING_LIMIT) {
+            str = JSString::unitString(code);
+            if (!str)
+                return JS_FALSE;
+            *vp = STRING_TO_JSVAL(str);
+            return JS_TRUE;
+        }
+        argv[0] = INT_TO_JSVAL(code);
     }
     chars = (jschar *) cx->malloc((argc + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
     for (i = 0; i < argc; i++) {
-        code = js_ValueToUint16(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i])) {
+        uint16_t code;
+        if (!ValueToUint16(cx, argv[i], &code)) {
             cx->free(chars);
             return JS_FALSE;
         }

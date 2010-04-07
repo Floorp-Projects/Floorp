@@ -44,7 +44,7 @@
 #include "jsstdint.h"
 #include "jsdtoa.h"
 #include "jsprf.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsapi.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsbit.h"

@@ -196,7 +196,6 @@ static jsuint
 ValueIsLength(JSContext *cx, jsval* vp)
 {
     jsint i;
-    jsdouble d;
     jsuint length;
 
     if (JSVAL_IS_INT(*vp)) {
@@ -206,8 +205,8 @@ ValueIsLength(JSContext *cx, jsval* vp)
         return (jsuint) i;
     }
 
-    d = js_ValueToNumber(cx, vp);
-    if (JSVAL_IS_NULL(*vp))
+    jsdouble d;
+    if (!ValueToNumber(cx, *vp, &d))
         goto error;
 
     if (JSDOUBLE_IS_NaN(d))
@@ -246,8 +245,8 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
         return true;
     }
 
-    *lengthp = js_ValueToECMAUint32(cx, tvr.addr());
-    return !JSVAL_IS_NULL(tvr.value());
+    JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
+    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
 static JSBool
@@ -2014,7 +2013,6 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     CompareArgs *ca = (CompareArgs *) arg;
     JSContext *cx = ca->context;
     jsval *invokevp, *sp;
-    jsdouble cmp;
 
     /**
      * array_sort deals with holes and undefs on its own and they should not
@@ -2036,8 +2034,8 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!js_Invoke(cx, 2, invokevp, 0))
         return JS_FALSE;
 
-    cmp = js_ValueToNumber(cx, invokevp);
-    if (JSVAL_IS_NULL(*invokevp))
+    jsdouble cmp;
+    if (!ValueToNumber(cx, *invokevp, &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2610,7 +2608,6 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     JSObject *obj;
     jsuint length, begin, end, count, delta, last;
-    jsdouble d;
     JSBool hole;
     JSObject *obj2;
 
@@ -2634,8 +2631,8 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     /* Convert the first argument into a starting index. */
-    d = js_ValueToNumber(cx, argv);
-    if (JSVAL_IS_NULL(*argv))
+    jsdouble d;
+    if (!ValueToNumber(cx, *argv, &d))
         return JS_FALSE;
     d = js_DoubleToInteger(d);
     if (d < 0) {
@@ -2655,8 +2652,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         count = delta;
         end = length;
     } else {
-        d = js_ValueToNumber(cx, argv);
-        if (JSVAL_IS_NULL(*argv))
+        if (!ValueToNumber(cx, *argv, &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0)
@@ -2859,7 +2855,6 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     JSObject *nobj, *obj;
     jsuint length, begin, end, slot;
-    jsdouble d;
     JSBool hole;
 
     argv = JS_ARGV(cx, vp);
@@ -2871,8 +2866,8 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     end = length;
 
     if (argc > 0) {
-        d = js_ValueToNumber(cx, &argv[0]);
-        if (JSVAL_IS_NULL(argv[0]))
+        jsdouble d;
+        if (!ValueToNumber(cx, argv[0], &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0) {
@@ -2885,8 +2880,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
         begin = (jsuint)d;
 
         if (argc > 1) {
-            d = js_ValueToNumber(cx, &argv[1]);
-            if (JSVAL_IS_NULL(argv[1]))
+            if (!ValueToNumber(cx, argv[1], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
             if (d < 0) {
@@ -2956,8 +2950,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
         jsdouble start;
 
         tosearch = vp[2];
-        start = js_ValueToNumber(cx, &vp[3]);
-        if (JSVAL_IS_NULL(vp[3]))
+        if (!ValueToNumber(cx, vp[3], &start))
             return JS_FALSE;
         start = js_DoubleToInteger(start);
         if (start < 0) {

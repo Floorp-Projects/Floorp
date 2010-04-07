@@ -8860,11 +8860,10 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     }
     {
         AutoValueRooter tvr(cx, JSVAL_NULL);
-
         *tvr.addr() = l;
-        lnum = js_ValueToNumber(cx, tvr.addr());
+        ValueToNumber(cx, tvr.value(), &lnum);
         *tvr.addr() = r;
-        rnum = js_ValueToNumber(cx, tvr.addr());
+        ValueToNumber(cx, tvr.value(), &rnum);
     }
     cond = EvalCmp(op, lnum, rnum);
     fp = true;

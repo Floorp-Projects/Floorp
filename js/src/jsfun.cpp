@@ -1896,7 +1896,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
 };
 
 static JSBool
-fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
+fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, jsval *vp)
 {
     jsval fval;
     JSObject *obj;
@@ -1930,8 +1930,7 @@ fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
 
     obj = JSVAL_TO_OBJECT(fval);
     if (argc != 0) {
-        indent = js_ValueToECMAUint32(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToECMAUint32(cx, vp[2], &indent))
             return JS_FALSE;
     }
 
