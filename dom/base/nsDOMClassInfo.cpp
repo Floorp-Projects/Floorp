@@ -544,6 +544,7 @@ static const char kDOMStringBundleURL[] =
 DOMCI_DATA(Crypto, void)
 DOMCI_DATA(CRMFObject, void)
 DOMCI_DATA(SmartCardEvent, void)
+DOMCI_DATA(ContentFrameMessageManager, void)
 
 DOMCI_DATA(DOMPrototype, void)
 DOMCI_DATA(DOMConstructor, void)
