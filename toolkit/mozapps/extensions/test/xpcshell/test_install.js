@@ -441,6 +441,101 @@ function check_test_8() {
     a3.uninstall();
     restartManager(0);
 
+    run_test_9();
+  });
+}
+
+// Test that after cancelling a download it is removed from the active installs
+function run_test_9() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.version, "1.0");
+    do_check_eq(install.name, "Real Test 4");
+    do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+    AddonManager.getInstalls(null, function(activeInstalls) {
+      do_check_eq(activeInstalls.length, 1);
+      do_check_eq(activeInstalls[0], install);
+
+      prepare_test({}, [
+        "onDownloadStarted",
+        "onDownloadEnded",
+      ], check_test_9);
+      install.install();
+    });
+  }, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
+}
+
+function check_test_9(install) {
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  AddonManager.getInstalls(null, function(activeInstalls) {
+    do_check_eq(activeInstalls.length, 0);
+
+    run_test_10();
+  });
+}
+
+// Tests that after cancelling a pending install it is removed from the active
+// installs
+function run_test_10() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.version, "1.0");
+    do_check_eq(install.name, "Real Test 4");
+    do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+    AddonManager.getInstalls(null, function(activeInstalls) {
+      do_check_eq(activeInstalls.length, 1);
+      do_check_eq(activeInstalls[0], install);
+
+      prepare_test({
+        "addon3@tests.mozilla.org": [
+          "onInstalling"
+        ]
+      }, [
+        "onDownloadStarted",
+        "onDownloadEnded",
+        "onInstallStarted",
+        "onInstallEnded"
+      ], check_test_10);
+      install.install();
+    });
+  }, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
+}
+
+function check_test_10(install) {
+  prepare_test({}, [
+    "onInstallCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  AddonManager.getInstalls(null, function(activeInstalls) {
+    do_check_eq(activeInstalls.length, 0);
+
     end_test();
   });
 }
