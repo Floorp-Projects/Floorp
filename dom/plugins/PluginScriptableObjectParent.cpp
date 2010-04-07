@@ -321,46 +321,9 @@ PluginScriptableObjectParent::ScriptableGetProperty(NPObject* aObject,
                                                     NPIdentifier aName,
                                                     NPVariant* aResult)
 {
-  if (aObject->_class != GetClass()) {
-    NS_ERROR("Don't know what kind of object this is!");
-    return false;
-  }
-
-  ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
-    NS_WARNING("Calling method on an invalidated object!");
-    return false;
-  }
-
-  PPluginIdentifierParent* identifier = GetIdentifier(aObject, aName);
-  if (!identifier) {
-    return false;
-  }
-
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
-    return false;
-  }
-
-  NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
-
-  Variant result;
-  bool success;
-  if (!actor->CallGetProperty(identifier, &result, &success)) {
-    NS_WARNING("Failed to send message!");
-    return false;
-  }
-
-  if (!success) {
-    return false;
-  }
-
-  if (!ConvertToVariant(result, *aResult, actor->GetInstance())) {
-    NS_WARNING("Failed to convert result!");
-    return false;
-  }
-
-  return true;
+  // See GetPropertyHelper below.
+  NS_NOTREACHED("Shouldn't ever call this directly!");
+  return false;
 }
 
 // static
@@ -964,9 +927,10 @@ PluginScriptableObjectParent::AnswerHasProperty(PPluginIdentifierParent* aId,
 }
 
 bool
-PluginScriptableObjectParent::AnswerGetProperty(PPluginIdentifierParent* aId,
-                                                Variant* aResult,
-                                                bool* aSuccess)
+PluginScriptableObjectParent::AnswerGetParentProperty(
+                                                   PPluginIdentifierParent* aId,
+                                                   Variant* aResult,
+                                                   bool* aSuccess)
 {
   if (!mObject) {
     NS_WARNING("Calling AnswerGetProperty with an invalidated object!");
@@ -1286,4 +1250,44 @@ PluginScriptableObjectParent::AnswerNPN_Evaluate(const nsCString& aScript,
   *aSuccess = true;
   *aResult = convertedResult;
   return true;
+}
+
+JSBool
+PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
+                                                PRBool* aHasProperty,
+                                                PRBool* aHasMethod,
+                                                NPVariant* aResult)
+{
+  NS_ASSERTION(Type() == Proxy, "Bad type!");
+
+  ParentNPObject* object = static_cast<ParentNPObject*>(mObject);
+  if (object->invalidated) {
+    NS_WARNING("Calling method on an invalidated object!");
+    return JS_FALSE;
+  }
+
+  PPluginIdentifierParent* identifier = GetIdentifier(GetInstance(), aName);
+  if (!identifier) {
+    return JS_FALSE;
+  }
+
+  bool hasProperty, hasMethod, success;
+  Variant result;
+  if (!CallGetChildProperty(identifier, &hasProperty, &hasMethod, &result,
+                            &success)) {
+    return JS_FALSE;
+  }
+
+  if (!success) {
+    return JS_FALSE;
+  }
+
+  if (!ConvertToVariant(result, *aResult, GetInstance())) {
+    NS_WARNING("Failed to convert result!");
+    return JS_FALSE;
+  }
+
+  *aHasProperty = hasProperty;
+  *aHasMethod = hasMethod;
+  return JS_TRUE;
 }
