@@ -246,8 +246,8 @@ extern void InstallSignalHandlers(const char *ProgramName);
 int    gArgc;
 char **gArgv;
 
-static char gToolkitVersion[20];
-static char gToolkitBuildID[40];
+static const char gToolkitVersion[] = NS_STRINGIFY(GRE_MILESTONE);
+static const char gToolkitBuildID[] = NS_STRINGIFY(GRE_BUILDID);
 
 static int    gRestartArgc;
 static char **gRestartArgv;
@@ -2844,32 +2844,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = CallQueryInterface(greDir, &appData.xreDirectory);
     if (NS_FAILED(rv))
       return 2;
-  }
-
-  nsCOMPtr<nsIFile> iniFile;
-  rv = appData.xreDirectory->Clone(getter_AddRefs(iniFile));
-  if (NS_FAILED(rv))
-    return 2;
-
-  iniFile->AppendNative(NS_LITERAL_CSTRING("platform.ini"));
-
-  nsCOMPtr<nsILocalFile> localIniFile = do_QueryInterface(iniFile);
-  if (!localIniFile)
-    return 2;
-
-  nsINIParser parser;
-  rv = parser.Init(localIniFile);
-  if (NS_SUCCEEDED(rv)) {
-    rv = parser.GetString("Build", "Milestone",
-                          gToolkitVersion, sizeof(gToolkitVersion));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit version");
-
-    rv = parser.GetString("Build", "BuildID",
-                          gToolkitBuildID, sizeof(gToolkitBuildID));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit buildid");
-  }
-  else {
-    NS_ERROR("Couldn't parse platform.ini!");
   }
 
   if (appData.size > offsetof(nsXREAppData, minVersion)) {
