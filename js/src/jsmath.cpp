@@ -56,6 +56,8 @@
 #include "jslibmath.h"
 #include "jsobj.h"
 
+using namespace js;
+
 #ifndef M_E
 #define M_E             2.7182818284590452354
 #endif
@@ -110,8 +112,7 @@ math_abs(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fabs(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -126,8 +127,7 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
 #if defined(SOLARIS) && defined(__GNUC__)
     if (x < -1 || 1 < x) {
@@ -148,8 +148,7 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
 #if defined(SOLARIS) && defined(__GNUC__)
     if (x < -1 || 1 < x) {
@@ -170,8 +169,7 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = atan(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -216,11 +214,9 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    y = js_ValueToNumber(cx, &vp[3]);
-    if (JSVAL_IS_NULL(vp[3]))
+    if (!ValueToNumber(cx, vp[3], &y))
         return JS_FALSE;
     return js_NewNumberInRootedValue(cx, math_atan2_kernel (x, y), vp);
 }
@@ -244,8 +240,7 @@ js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = math_ceil_kernel(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -260,8 +255,7 @@ math_cos(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = cos(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -276,8 +270,7 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
 #ifdef _WIN32
     if (!JSDOUBLE_IS_NaN(x)) {
@@ -304,8 +297,7 @@ js_math_floor(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = floor(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -320,8 +312,7 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
 #if defined(SOLARIS) && defined(__GNUC__)
     if (x < 0) {
@@ -346,8 +337,7 @@ js_math_max(JSContext *cx, uintN argc, jsval *vp)
     }
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        x = js_ValueToNumber(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i]))
+        if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             *vp = cx->runtime->NaNValue;
@@ -376,8 +366,7 @@ js_math_min(JSContext *cx, uintN argc, jsval *vp)
     }
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        x = js_ValueToNumber(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i]))
+        if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             *vp = cx->runtime->NaNValue;
@@ -402,11 +391,9 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    y = js_ValueToNumber(cx, &vp[3]);
-    if (JSVAL_IS_NULL(vp[3]))
+    if (!ValueToNumber(cx, vp[3], &y))
         return JS_FALSE;
     /*
      * Because C99 and ECMA specify different behavior for pow(),
@@ -501,8 +488,7 @@ js_math_round(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_copysign(floor(x + 0.5), x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -517,8 +503,7 @@ math_sin(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = sin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -533,8 +518,7 @@ math_sqrt(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = sqrt(x);
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -549,8 +533,7 @@ math_tan(JSContext *cx, uintN argc, jsval *vp)
         *vp = cx->runtime->NaNValue;
         return JS_TRUE;
     }
-    x = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = tan(x);
     return js_NewNumberInRootedValue(cx, z, vp);

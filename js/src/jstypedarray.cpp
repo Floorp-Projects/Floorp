@@ -119,10 +119,9 @@ ArrayBuffer::class_constructor(JSContext *cx, JSObject *obj,
         return false;
     }
 
-    int32 nbytes = js_ValueToECMAInt32(cx, &argv[0]);
-    if (JSVAL_IS_NULL(argv[0]))
+    int32_t nbytes;
+    if (!ValueToECMAInt32(cx, argv[0], &nbytes))
         return false;
-
     if (nbytes < 0 || !INT_FITS_IN_JSVAL(nbytes)) {
         /*
          * We're just not going to support arrays that are bigger than what will fit
@@ -564,10 +563,8 @@ class TypedArrayTemplate
         } else if (JSVAL_IS_PRIMITIVE(*vp)) {
             JS_ASSERT(JSVAL_IS_STRING(*vp) || JSVAL_IS_SPECIAL(*vp));
             if (JSVAL_IS_STRING(*vp)) {
-                // note that ValueToNumber will always
-                // succeed with a string arg
-                d = js_ValueToNumber(cx, vp);
-                JS_ASSERT(*vp != JSVAL_NULL);
+                // note that ValueToNumber will always succeed with a string arg
+                ValueToNumber(cx, *vp, &d);
             } else if (*vp == JSVAL_VOID) {
                 d = js_NaN;
             } else {
@@ -720,14 +717,12 @@ class TypedArrayTemplate
                 return false;
             }
         } else if (JSVAL_IS_OBJECT(argv[0])) {
-            int32 byteOffset = -1;
-            int32 length = -1;
+            int32_t byteOffset = -1;
+            int32_t length = -1;
 
             if (argc > 1) {
-                byteOffset = js_ValueToInt32(cx, &argv[1]);
-                if (JSVAL_IS_NULL(argv[1]))
+                if (!ValueToInt32(cx, argv[1], &byteOffset))
                     return false;
-
                 if (byteOffset < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_TYPED_ARRAY_NEGATIVE_ARG, "1");
@@ -736,10 +731,8 @@ class TypedArrayTemplate
             }
 
             if (argc > 2) {
-                length = js_ValueToInt32(cx, &argv[2]);
-                if (JSVAL_IS_NULL(argv[2]))
+                if (!ValueToInt32(cx, argv[2], &length))
                     return false;
-
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_TYPED_ARRAY_NEGATIVE_ARG, "2");
@@ -789,12 +782,11 @@ class TypedArrayTemplate
             return true;
 
         // these are the default values
-        int32 begin = 0, end = tarray->length;
-        int32 length = int32(tarray->length);
+        int32_t begin = 0, end = tarray->length;
+        int32_t length = int32(tarray->length);
 
         if (argc > 0) {
-            begin = js_ValueToInt32(cx, &argv[0]);
-            if (JSVAL_IS_NULL(argv[0]))
+            if (!ValueToInt32(cx, argv[0], &begin))
                 return false;
             if (begin < 0) {
                 begin += length;
@@ -805,8 +797,7 @@ class TypedArrayTemplate
             }
 
             if (argc > 1) {
-                end = js_ValueToInt32(cx, &argv[1]);
-                if (JSVAL_IS_NULL(argv[1]))
+                if (!ValueToInt32(cx, argv[1], &end))
                     return false;
                 if (end < 0) {
                     end += length;
@@ -1001,8 +992,8 @@ class TypedArrayTemplate
             return NativeType(*JSVAL_TO_DOUBLE(v));
 
         if (JSVAL_IS_PRIMITIVE(v) && v != JSVAL_HOLE) {
-            jsdouble dval = js_ValueToNumber(cx, &v);
-            JS_ASSERT(v != JSVAL_NULL);
+            jsdouble dval;
+            ValueToNumber(cx, v, &dval);
             return NativeType(dval);
         }
 

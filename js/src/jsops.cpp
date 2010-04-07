@@ -766,8 +766,8 @@ END_CASE(JSOP_BITAND)
                 str2 = JSVAL_TO_STRING(rval);                                 \
                 cond = js_CompareStrings(str, str2) OP 0;                     \
             } else {                                                          \
-                VALUE_TO_NUMBER(cx, -2, lval, d);                             \
-                VALUE_TO_NUMBER(cx, -1, rval, d2);                            \
+                VALUE_TO_NUMBER(cx, lval, d);                                 \
+                VALUE_TO_NUMBER(cx, rval, d2);                                \
                 cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         }                                                                     \
@@ -851,8 +851,8 @@ END_CASE(JSOP_BITAND)
                     str2 = JSVAL_TO_STRING(rval);                             \
                     cond = js_EqualStrings(str, str2) OP JS_TRUE;             \
                 } else {                                                      \
-                    VALUE_TO_NUMBER(cx, -2, lval, d);                         \
-                    VALUE_TO_NUMBER(cx, -1, rval, d2);                        \
+                    VALUE_TO_NUMBER(cx, lval, d);                             \
+                    VALUE_TO_NUMBER(cx, rval, d2);                            \
                     cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                \
                 }                                                             \
             }                                                                 \
@@ -945,7 +945,7 @@ END_CASE(JSOP_RSH)
 
 BEGIN_CASE(JSOP_URSH)
 {
-    uint32 u;
+    uint32_t u;
 
     FETCH_UINT(cx, -2, u);
     FETCH_INT(cx, -1, j);
@@ -996,8 +996,8 @@ BEGIN_CASE(JSOP_ADD)
             regs.sp--;
             STORE_OPND(-1, STRING_TO_JSVAL(str));
         } else {
-            VALUE_TO_NUMBER(cx, -2, lval, d);
-            VALUE_TO_NUMBER(cx, -1, rval, d2);
+            VALUE_TO_NUMBER(cx, lval, d);
+            VALUE_TO_NUMBER(cx, rval, d2);
             d += d2;
             regs.sp--;
             STORE_NUMBER(cx, -1, d);
@@ -1111,15 +1111,8 @@ BEGIN_CASE(JSOP_NEG)
         JS_ASSERT(INT_FITS_IN_JSVAL(i));
         regs.sp[-1] = INT_TO_JSVAL(i);
     } else {
-        if (JSVAL_IS_DOUBLE(rval)) {
-            d = *JSVAL_TO_DOUBLE(rval);
-        } else {
-            d = js_ValueToNumber(cx, &regs.sp[-1]);
-            if (JSVAL_IS_NULL(regs.sp[-1]))
-                goto error;
-            JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[-1]) ||
-                      regs.sp[-1] == JSVAL_TRUE);
-        }
+        if (!ValueToNumber(cx, regs.sp[-1], &d))
+            goto error;
         d = -d;
         if (!js_NewNumberInRootedValue(cx, d, &regs.sp[-1]))
             goto error;
@@ -1127,19 +1120,12 @@ BEGIN_CASE(JSOP_NEG)
 END_CASE(JSOP_NEG)
 
 BEGIN_CASE(JSOP_POS)
+{
     rval = FETCH_OPND(-1);
-    if (!JSVAL_IS_NUMBER(rval)) {
-        d = js_ValueToNumber(cx, &regs.sp[-1]);
-        rval = regs.sp[-1];
-        if (JSVAL_IS_NULL(rval))
-            goto error;
-        if (rval == JSVAL_TRUE) {
-            if (!js_NewNumberInRootedValue(cx, d, &regs.sp[-1]))
-                goto error;
-        } else {
-            JS_ASSERT(JSVAL_IS_NUMBER(rval));
-        }
-    }
+    if (!ValueToNumberValue(cx, &regs.sp[-1]))
+        goto error;
+    rval = regs.sp[-1];
+}
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
