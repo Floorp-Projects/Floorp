@@ -484,7 +484,7 @@
               focusedElement.blur();
 
             let event = document.createEvent("Events");
-            event.initEvent("close", true, false);
+            event.initEvent("close", false, false);
             this.dispatchEvent(event);
           ]]>
         </body>
