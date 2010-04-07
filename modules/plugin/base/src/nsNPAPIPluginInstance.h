@@ -41,6 +41,7 @@
 #define nsNPAPIPluginInstance_h_
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
@@ -55,15 +56,6 @@
 
 class nsNPAPIPluginStreamListener;
 class nsPIDOMWindow;
-
-struct nsInstanceStream
-{
-  nsInstanceStream *mNext;
-  nsNPAPIPluginStreamListener *mPluginStreamListener;
-
-  nsInstanceStream();
-  ~nsInstanceStream();
-};
 
 class nsNPAPITimer
 {
@@ -180,7 +172,7 @@ public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
   PluginLibrary* mLibrary;
-  nsInstanceStream *mStreams;
+  nsTArray< nsRefPtr<nsNPAPIPluginStreamListener> > mStreams;
 
 private:
   nsTArray<PopupControlState> mPopupStates;
