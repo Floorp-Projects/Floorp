@@ -371,12 +371,12 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
 # Build libffi proper as part of the 'exports' target, so things get built
-# in the right order.
+# in the right order. Specify -j1 to make sure we don't get a parallel build.
 export::
-		$(call SUBMAKE,,ctypes/libffi)
+	$(MAKE) -j1 -C ctypes/libffi
 
 clean::
-		$(call SUBMAKE,clean,ctypes/libffi)
+	$(MAKE) -j1 -C ctypes/libffi clean
 endif
 
 ifdef MOZ_SYNC_BUILD_FILES
