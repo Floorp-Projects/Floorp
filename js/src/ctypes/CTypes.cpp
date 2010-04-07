@@ -39,6 +39,7 @@
 #include "CTypes.h"
 #include "Library.h"
 #include "jsdtoa.h"
+#include <limits>
 
 #include <math.h>
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -52,6 +53,8 @@
 #ifdef HAVE_SSIZE_T
 #include <sys/types.h>
 #endif
+
+using namespace std;
 
 namespace js {
 namespace ctypes {
@@ -435,7 +438,7 @@ static JSFunctionSpec sModuleFunctions[] = {
 
 static inline bool FloatIsFinite(jsdouble f) {
 #ifdef WIN32
-  return _finite(f);
+  return _finite(f) != 0;
 #else
   return finite(f);
 #endif
@@ -918,7 +921,7 @@ JS_END_EXTERN_C
 ** Type conversion functions
 *******************************************************************************/
 
-// Enforce some sanity checks on type widths.
+// Enforce some sanity checks on type widths and properties.
 // Where the architecture is 64-bit, make sure it's LP64 or LLP64. (ctypes.int
 // autoconverts to a primitive JS number; to support ILP64 architectures, it
 // would need to autoconvert to an Int64 object instead. Therefore we enforce
@@ -932,48 +935,134 @@ JS_STATIC_ASSERT(sizeof(long) == 4 || sizeof(long) == 8);
 JS_STATIC_ASSERT(sizeof(long long) == 8);
 JS_STATIC_ASSERT(sizeof(size_t) == sizeof(uintptr_t));
 JS_STATIC_ASSERT(sizeof(float) == 4);
+JS_STATIC_ASSERT(sizeof(PRFuncPtr) == sizeof(void*));
+JS_STATIC_ASSERT(numeric_limits<double>::is_signed);
 
-template<class IntegerType>
-static JS_ALWAYS_INLINE IntegerType
-Convert(jsdouble d)
-{
-  return IntegerType(d);
-}
+// Templated helper to convert FromType to TargetType, for the default case
+// where the trivial POD constructor will do.
+template<class TargetType, class FromType>
+struct ConvertImpl {
+  static JS_ALWAYS_INLINE TargetType Convert(FromType d) {
+    return TargetType(d);
+  }
+};
 
 #ifdef _MSC_VER
 // MSVC can't perform double to unsigned __int64 conversion when the
 // double is greater than 2^63 - 1. Help it along a little.
 template<>
-JS_ALWAYS_INLINE JSUint64
-Convert<JSUint64>(jsdouble d)
-{
-  return d > 0x7fffffffffffffffui64 ?
-         JSUint64(d - 0x8000000000000000ui64) + 0x8000000000000000ui64 :
-         JSUint64(d);
-}
+struct ConvertImpl<JSUint64, jsdouble> {
+  static JS_ALWAYS_INLINE JSUint64 Convert(jsdouble d) {
+    return d > 0x7fffffffffffffffui64 ?
+           JSUint64(d - 0x8000000000000000ui64) + 0x8000000000000000ui64 :
+           JSUint64(d);
+  }
+};
 #endif
 
-template<class Type> static JS_ALWAYS_INLINE bool IsUnsigned() { return (Type(0) - Type(1)) > Type(0); }
-
-template<class FloatType> static JS_ALWAYS_INLINE bool IsDoublePrecision();
-template<> JS_ALWAYS_INLINE bool IsDoublePrecision<float> () { return false; }
-template<> JS_ALWAYS_INLINE bool IsDoublePrecision<double>() { return true; }
-
-template<class IntegerType, class FromType>
-static JS_ALWAYS_INLINE bool IsWider()
+template<class TargetType, class FromType>
+static JS_ALWAYS_INLINE TargetType Convert(FromType d)
 {
-  if (IsUnsigned<FromType>() && IsUnsigned<IntegerType>() &&
-      sizeof(IntegerType) < sizeof(FromType))
+  return ConvertImpl<TargetType, FromType>::Convert(d);
+}
+
+template<class TargetType, class FromType>
+static JS_ALWAYS_INLINE bool IsAlwaysExact()
+{
+  // Return 'true' if TargetType can always exactly represent FromType.
+  // This means that:
+  // 1) TargetType must be the same or more bits wide as FromType. For integers
+  //    represented in 'n' bits, unsigned variants will have 'n' digits while
+  //    signed will have 'n - 1'. For floating point types, 'digits' is the
+  //    mantissa width.
+  // 2) If FromType is signed, TargetType must also be signed. (Floating point
+  //    types are always signed.)
+  // 3) If TargetType is an exact integral type, FromType must be also.
+  if (numeric_limits<TargetType>::digits < numeric_limits<FromType>::digits)
     return false;
-  if (!IsUnsigned<FromType>() && !IsUnsigned<IntegerType>() &&
-      sizeof(IntegerType) < sizeof(FromType))
+
+  if (numeric_limits<FromType>::is_signed &&
+      !numeric_limits<TargetType>::is_signed)
     return false;
-  if (IsUnsigned<FromType>() && !IsUnsigned<IntegerType>() &&
-      sizeof(IntegerType) <= sizeof(FromType))
+
+  if (!numeric_limits<FromType>::is_exact &&
+      numeric_limits<TargetType>::is_exact)
     return false;
-  if (!IsUnsigned<FromType>() && IsUnsigned<IntegerType>())
-    return false;
+
   return true;
+}
+
+// Templated helper to determine if FromType 'i' converts losslessly to
+// TargetType 'j'. Default case where both types are the same signedness.
+template<class TargetType, class FromType, bool TargetSigned, bool FromSigned>
+struct IsExactImpl {
+  static JS_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
+    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    return FromType(j) == i;
+  }
+};
+
+// Specialization where TargetType is unsigned, FromType is signed.
+template<class TargetType, class FromType>
+struct IsExactImpl<TargetType, FromType, false, true> {
+  static JS_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
+    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    return i >= 0 && FromType(j) == i;
+  }
+};
+
+// Specialization where TargetType is signed, FromType is unsigned.
+template<class TargetType, class FromType>
+struct IsExactImpl<TargetType, FromType, true, false> {
+  static JS_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
+    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    return TargetType(i) >= 0 && FromType(j) == i;
+  }
+};
+
+// Convert FromType 'i' to TargetType 'result', returning true iff 'result'
+// is an exact representation of 'i'.
+template<class TargetType, class FromType>
+static JS_ALWAYS_INLINE bool ConvertExact(FromType i, TargetType* result)
+{
+  // Require that TargetType is integral, to simplify conversion.
+  JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+
+  *result = Convert<TargetType>(i);
+
+  // See if we can avoid a dynamic check.
+  if (IsAlwaysExact<TargetType, FromType>())
+    return true;
+
+  // Return 'true' if 'i' is exactly representable in 'TargetType'.
+  return IsExactImpl<TargetType,
+                     FromType,
+                     numeric_limits<TargetType>::is_signed,
+                     numeric_limits<FromType>::is_signed>::Test(i, *result);
+}
+
+// Templated helper to determine if Type 'i' is negative. Default case
+// where IntegerType is unsigned.
+template<class Type, bool IsSigned>
+struct IsNegativeImpl {
+  static JS_ALWAYS_INLINE bool Test(Type i) {
+    return false;
+  }
+};
+
+// Specialization where Type is signed.
+template<class Type>
+struct IsNegativeImpl<Type, true> {
+  static JS_ALWAYS_INLINE bool Test(Type i) {
+    return i < 0;
+  }
+};
+
+// Determine whether Type 'i' is negative.
+template<class Type>
+static JS_ALWAYS_INLINE bool IsNegative(Type i)
+{
+  return IsNegativeImpl<Type, numeric_limits<Type>::is_signed>::Test(i);
 }
 
 // Implicitly convert val to bool, allowing JSBool, jsint, and jsdouble
@@ -1007,25 +1096,19 @@ template<class IntegerType>
 static bool
 jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
 {
-  if (JSVAL_IS_INT(val)) {
-    jsint i = JSVAL_TO_INT(val);
-    *result = IntegerType(i);
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
+  if (JSVAL_IS_INT(val)) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    if (IsUnsigned<IntegerType>() && i < 0)
-      return false;
-    return jsint(*result) == i;
+    jsint i = JSVAL_TO_INT(val);
+    return ConvertExact(i, result);
   }
   if (JSVAL_IS_DOUBLE(val)) {
-    jsdouble d = *JSVAL_TO_DOUBLE(val);
-    *result = Convert<IntegerType>(d);
-
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
-    if (IsUnsigned<IntegerType>() && d < 0)
-      return false;
-    return jsdouble(*result) == d;
+    jsdouble d = *JSVAL_TO_DOUBLE(val);
+    return ConvertExact(d, result);
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {
     JSObject* obj = JSVAL_TO_OBJECT(val);
@@ -1038,9 +1121,9 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
       switch (CType::GetTypeCode(cx, typeObj)) {
 #define DEFINE_INT_TYPE(name, fromType, ffiType)                               \
       case TYPE_##name:                                                        \
-        if (!IsWider<IntegerType, fromType>())                                 \
+        if (!IsAlwaysExact<IntegerType, fromType>())                           \
           return false;                                                        \
-        *result = *static_cast<fromType*>(data);                               \
+        *result = IntegerType(*static_cast<fromType*>(data));                  \
         return true;
 #define DEFINE_WRAPPED_INT_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
 #include "typedefs.h"
@@ -1064,23 +1147,15 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
     }
 
     if (Int64::IsInt64(cx, obj)) {
-      JSInt64 i = Int64Base::GetInt(cx, obj);
-      *result = IntegerType(i);
-
       // Make sure the integer fits in IntegerType.
-      if (IsUnsigned<IntegerType>() && i < 0)
-        return false;
-      return JSInt64(*result) == i;
+      JSInt64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
     }
 
     if (UInt64::IsUInt64(cx, obj)) {
-      JSUint64 i = Int64Base::GetInt(cx, obj);
-      *result = IntegerType(i);
-
       // Make sure the integer fits in IntegerType.
-      if (!IsUnsigned<IntegerType>() && *result < 0)
-        return false;
-      return JSUint64(*result) == i;
+      JSUint64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
     }
 
     return false; 
@@ -1102,6 +1177,8 @@ template<class FloatType>
 static bool
 jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
 {
+  JS_STATIC_ASSERT(!numeric_limits<FloatType>::is_exact);
+
   // The following casts may silently throw away some bits, but there's
   // no good way around it. Sternly requiring that the 64-bit double
   // argument be exactly representable as a 32-bit float is
@@ -1125,18 +1202,11 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
       switch (CType::GetTypeCode(cx, typeObj)) {
 #define DEFINE_FLOAT_TYPE(name, fromType, ffiType)                             \
       case TYPE_##name:                                                        \
-        if (!IsDoublePrecision<FloatType>() && IsDoublePrecision<fromType>())  \
+        if (!IsAlwaysExact<FloatType, fromType>())                             \
           return false;                                                        \
-        *result = *static_cast<fromType*>(data);                               \
+        *result = FloatType(*static_cast<fromType*>(data));                    \
         return true;
-#define DEFINE_INT_TYPE(name, fromType, ffiType)                               \
-      case TYPE_##name:                                                        \
-        if (sizeof(fromType) > 4)                                              \
-          return false;                                                        \
-        if (sizeof(fromType) == 4 && !IsDoublePrecision<FloatType>())          \
-          return false;                                                        \
-        *result = *static_cast<fromType*>(data);                               \
-        return true;
+#define DEFINE_INT_TYPE(x, y, z) DEFINE_FLOAT_TYPE(x, y, z)
 #define DEFINE_WRAPPED_INT_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
 #include "typedefs.h"
       case TYPE_void_t:
@@ -1169,25 +1239,19 @@ jsvalToBigInteger(JSContext* cx,
                   bool allowString,
                   IntegerType* result)
 {
-  if (JSVAL_IS_INT(val)) {
-    jsint i = JSVAL_TO_INT(val);
-    *result = IntegerType(i);
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
+  if (JSVAL_IS_INT(val)) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    if (IsUnsigned<IntegerType>() && i < 0)
-      return false;
-    return jsint(*result) == i;
+    jsint i = JSVAL_TO_INT(val);
+    return ConvertExact(i, result);
   }
   if (JSVAL_IS_DOUBLE(val)) {
-    jsdouble d = *JSVAL_TO_DOUBLE(val);
-    *result = Convert<IntegerType>(d);
-
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
-    if (IsUnsigned<IntegerType>() && d < 0)
-      return false;
-    return jsdouble(*result) == d;
+    jsdouble d = *JSVAL_TO_DOUBLE(val);
+    return ConvertExact(d, result);
   }
   if (allowString && JSVAL_IS_STRING(val)) {
     // Allow conversion from base-10 or base-16 strings, provided the result
@@ -1199,24 +1263,17 @@ jsvalToBigInteger(JSContext* cx,
   if (!JSVAL_IS_PRIMITIVE(val)) {
     // Allow conversion from an Int64 or UInt64 object directly.
     JSObject* obj = JSVAL_TO_OBJECT(val);
-    if (UInt64::IsUInt64(cx, obj)) {
-      JSUint64 i = Int64Base::GetInt(cx, obj);
-      *result = IntegerType(i);
 
+    if (UInt64::IsUInt64(cx, obj)) {
       // Make sure the integer fits in IntegerType.
-      if (!IsUnsigned<IntegerType>() && *result < 0)
-        return false;
-      return JSUint64(*result) == i;
+      JSUint64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
     }
 
     if (Int64::IsInt64(cx, obj)) {
-      JSInt64 i = Int64Base::GetInt(cx, obj);
-      *result = IntegerType(i);
-
       // Make sure the integer fits in IntegerType.
-      if (IsUnsigned<IntegerType>() && i < 0)
-        return false;
-      return JSInt64(*result) == i;
+      JSInt64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
     }
   }
   return false;
@@ -1252,6 +1309,8 @@ template<class IntegerType>
 static bool
 jsvalToIntegerExplicit(JSContext* cx, jsval val, IntegerType* result)
 {
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+
   if (JSVAL_IS_DOUBLE(val)) {
     // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
     jsdouble d = *JSVAL_TO_DOUBLE(val);
@@ -1331,6 +1390,8 @@ template<class IntegerType>
 void
 IntegerToString(IntegerType i, jsuint radix, AutoString& result)
 {
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+
   // The buffer must be big enough for all the bits of IntegerType to fit,
   // in base-2, including '-'.
   jschar buffer[sizeof(IntegerType) * 8 + 1];
@@ -1339,7 +1400,7 @@ IntegerToString(IntegerType i, jsuint radix, AutoString& result)
 
   // Build the string in reverse. We use multiplication and subtraction
   // instead of modulus because that's much faster.
-  bool isNegative = !IsUnsigned<IntegerType>() && i < 0;
+  const bool isNegative = IsNegative(i);
   size_t sign = isNegative ? -1 : 1;
   do {
     IntegerType ii = i / IntegerType(radix);
@@ -1359,6 +1420,8 @@ template<class IntegerType>
 static bool
 StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
 {
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+
   const jschar* cp = JS_GetStringChars(string);
   const jschar* end = cp + JS_GetStringLength(string);
   if (cp == end)
@@ -1366,7 +1429,7 @@ StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
 
   IntegerType sign = 1;
   if (cp[0] == '-') {
-    if (IsUnsigned<IntegerType>())
+    if (!numeric_limits<IntegerType>::is_signed)
       return false;
 
     sign = -1;
@@ -1462,7 +1525,7 @@ ConvertToJS(JSContext* cx,
     /* Return an Int64 or UInt64 object - do not convert to a JS number. */    \
     JSUint64 value;                                                            \
     JSObject* proto;                                                           \
-    if (IsUnsigned<type>()) {                                                  \
+    if (!numeric_limits<type>::is_signed) {                                    \
       value = *static_cast<type*>(data);                                       \
       /* Get ctypes.UInt64.prototype from ctypes.CType.prototype. */           \
       proto = CType::GetProtoFromType(cx, typeObj, SLOT_UINT64PROTO);          \
@@ -1472,7 +1535,8 @@ ConvertToJS(JSContext* cx,
       proto = CType::GetProtoFromType(cx, typeObj, SLOT_INT64PROTO);           \
     }                                                                          \
                                                                                \
-    JSObject* obj = Int64Base::Construct(cx, proto, value, IsUnsigned<type>());\
+    JSObject* obj = Int64Base::Construct(cx, proto, value,                     \
+      !numeric_limits<type>::is_signed);                                       \
     if (!obj)                                                                  \
       return false;                                                            \
     *result = OBJECT_TO_JSVAL(obj);                                            \
@@ -2216,7 +2280,7 @@ BuildDataSource(JSContext* cx,
 #define DEFINE_WRAPPED_INT_TYPE(name, type, ffiType)                           \
   case TYPE_##name:                                                            \
     /* Serialize as a wrapped decimal integer. */                              \
-    if (IsUnsigned<type>())                                                    \
+    if (!numeric_limits<type>::is_signed)                                      \
       AppendString(result, "ctypes.UInt64(\"");                                \
     else                                                                       \
       AppendString(result, "ctypes.Int64(\"");                                 \
@@ -2702,7 +2766,7 @@ CType::TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2)
   case TYPE_array: {
     // Compare length, then base types.
     // An undefined length array matches other undefined length arrays.
-    size_t s1, s2;
+    size_t s1 = 0, s2 = 0;
     bool d1 = ArrayType::GetSafeLength(cx, t1, &s1);
     bool d2 = ArrayType::GetSafeLength(cx, t2, &s2);
     if (d1 != d2 || (d1 && s1 != s2))
@@ -3312,12 +3376,14 @@ ArrayType::CreateInternal(JSContext* cx,
     return NULL;
   }
 
-  size_t size;
+  ffi_type* ffiType = NULL;
+  size_t align = CType::GetAlignment(cx, baseType);
+
   jsval sizeVal = JSVAL_VOID;
   jsval lengthVal = JSVAL_VOID;
   if (lengthDefined) {
     // Check for overflow, and convert to a jsint or jsdouble as required.
-    size = length * baseSize;
+    size_t size = length * baseSize;
     if (length > 0 && size / length != baseSize) {
       JS_ReportError(cx, "size overflow");
       return NULL;
@@ -3325,12 +3391,7 @@ ArrayType::CreateInternal(JSContext* cx,
     if (!SizeTojsval(cx, size, &sizeVal) ||
         !SizeTojsval(cx, length, &lengthVal))
       return NULL;
-  }
 
-  size_t align = CType::GetAlignment(cx, baseType);
-
-  ffi_type* ffiType = NULL;
-  if (lengthDefined) {
     // Create an ffi_type to represent the array. This is necessary for the case
     // where the array is part of a struct. Since libffi has no intrinsic
     // support for array types, we approximate it by creating a struct type
@@ -4900,7 +4961,9 @@ CClosure::Create(JSContext* cx,
   }
   cinfo.forget();
 
-  *fnptr = (PRFuncPtr) code;
+  // Casting between void* and a function pointer is forbidden in C and C++.
+  // Do it via an integral type.
+  *fnptr = reinterpret_cast<PRFuncPtr>(reinterpret_cast<uintptr_t>(code));
   return result;
 }
 
