@@ -145,7 +145,7 @@ BEGIN_CASE(JSOP_POPN)
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - StackBase(fp)));
     for (obj = fp->scopeChain; obj; obj = obj->getParent()) {
-        clasp = OBJ_GET_CLASS(cx, obj);
+        clasp = obj->getClass();
         if (clasp != &js_BlockClass && clasp != &js_WithClass)
             continue;
         if (obj->getPrivate() != fp)
@@ -799,7 +799,7 @@ END_CASE(JSOP_BITAND)
 #define EXTENDED_EQUALITY_OP(OP)                                              \
     if (ltmp == JSVAL_OBJECT &&                                               \
         (obj2 = JSVAL_TO_OBJECT(lval)) &&                                     \
-        ((clasp = OBJ_GET_CLASS(cx, obj2))->flags & JSCLASS_IS_EXTENDED)) {   \
+        ((clasp = obj2->getClass())->flags & JSCLASS_IS_EXTENDED)) {          \
         JSExtendedClass *xclasp;                                              \
                                                                               \
         xclasp = (JSExtendedClass *) clasp;                                   \
@@ -1765,7 +1765,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * slots that may vary with obj.
                  */
                 if (slot < obj->numSlots() &&
-                    !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+                    !obj->getClass()->reserveSlots) {
                     ++scope->freeslot;
                 } else {
                     if (!js_AllocSlot(cx, obj, &slot))
@@ -2980,7 +2980,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     JS_ASSERT_IF(doSet, fp->flags & JSFRAME_EVAL);
     if (prop) {
         if (parent == pobj &&
-            OBJ_GET_CLASS(cx, parent) == &js_CallClass &&
+            parent->getClass() == &js_CallClass &&
             (old = ((JSScopeProperty *) prop)->attributes(),
              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
@@ -3143,14 +3143,14 @@ BEGIN_CASE(JSOP_LAMBDA)
                     lval = FETCH_OPND(-1);
                     if (JSVAL_IS_OBJECT(lval) &&
                         (obj2 = JSVAL_TO_OBJECT(lval)) &&
-                        OBJ_GET_CLASS(cx, obj2) == &js_ObjectClass) {
+                        obj2->getClass() == &js_ObjectClass) {
                         break;
                     }
                 } else if (op == JSOP_INITMETHOD) {
                     lval = FETCH_OPND(-1);
                     JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
                     obj2 = JSVAL_TO_OBJECT(lval);
-                    JS_ASSERT(OBJ_GET_CLASS(cx, obj2) == &js_ObjectClass);
+                    JS_ASSERT(obj2->getClass() == &js_ObjectClass);
                     JS_ASSERT(OBJ_SCOPE(obj2)->object == obj2);
                     break;
                 }
@@ -3361,7 +3361,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     lval = FETCH_OPND(-2);
     obj = JSVAL_TO_OBJECT(lval);
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
+    JS_ASSERT(!obj->getClass()->reserveSlots);
     JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
 
     JSScope *scope = OBJ_SCOPE(obj);
@@ -3987,7 +3987,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 BEGIN_CASE(JSOP_LEAVEBLOCK)
 {
 #ifdef DEBUG
-    JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
+    JS_ASSERT(fp->blockChain->getClass() == &js_BlockClass);
     uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain);
 
     JS_ASSERT(blockDepth <= StackDepth(script));
@@ -3999,7 +3999,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      */
     obj = fp->scopeChain;
     if (obj->getProto() == fp->blockChain) {
-        JS_ASSERT (OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+        JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             goto error;
     }

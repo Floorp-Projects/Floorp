@@ -5108,7 +5108,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+    while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
         if (!obj)
             return JS_TRUE;
@@ -5154,7 +5154,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
         return ok;
-    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+    while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
         if (!obj)
             return JS_TRUE;
@@ -5569,7 +5569,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              * from the original RegExp also).
              */
             obj2 = JSVAL_TO_OBJECT(argv[0]);
-            if (obj2 && OBJ_GET_CLASS(cx, obj2) == &js_RegExpClass) {
+            if (obj2 && obj2->getClass() == &js_RegExpClass) {
                 if (argc >= 2 && !JSVAL_IS_VOID(argv[1])) { /* 'flags' passed */
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_NEWREGEXP_FLAGGED);
@@ -5780,7 +5780,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         if ((argc < 2 || JSVAL_IS_VOID(argv[1])) &&
             !JSVAL_IS_PRIMITIVE(argv[0]) &&
-            OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[0])) == &js_RegExpClass) {
+            JSVAL_TO_OBJECT(argv[0])->getClass() == &js_RegExpClass) {
             *rval = argv[0];
             return JS_TRUE;
         }

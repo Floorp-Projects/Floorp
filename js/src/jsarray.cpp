@@ -128,7 +128,7 @@ INDEX_TOO_BIG(jsuint index)
 JS_STATIC_ASSERT(sizeof(JSScopeProperty) > 4 * sizeof(jsval));
 
 #define ENSURE_SLOW_ARRAY(cx, obj)                                             \
-    (OBJ_GET_CLASS(cx, obj) == &js_SlowArrayClass || js_MakeArraySlow(cx, obj))
+    (obj->getClass() == &js_SlowArrayClass || js_MakeArraySlow(cx, obj))
 
 /*
  * Determine if the id represents an array index or an XML property index.
@@ -298,7 +298,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
      * in any case.
      */
     if (!createAtom &&
-        ((clasp = OBJ_GET_CLASS(cx, obj)) == &js_SlowArrayClass ||
+        ((clasp = obj->getClass()) == &js_SlowArrayClass ||
          clasp == &js_ArgumentsClass ||
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
@@ -1378,7 +1378,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj ||
-        (OBJ_GET_CLASS(cx, obj) != &js_SlowArrayClass &&
+        (obj->getClass() != &js_SlowArrayClass &&
          !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
         return false;
     }
@@ -1584,7 +1584,7 @@ array_toString(JSContext *cx, uintN argc, jsval *vp)
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj ||
-        (OBJ_GET_CLASS(cx, obj) != &js_SlowArrayClass &&
+        (obj->getClass() != &js_SlowArrayClass &&
          !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
         return JS_FALSE;
     }
@@ -1599,7 +1599,7 @@ array_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj ||
-        (OBJ_GET_CLASS(cx, obj) != &js_SlowArrayClass &&
+        (obj->getClass() != &js_SlowArrayClass &&
          !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
         return JS_FALSE;
     }

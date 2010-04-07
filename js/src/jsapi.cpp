@@ -1467,7 +1467,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
          */
         if (stdnm->clasp &&
             (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS) &&
-            (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL)) {
+            (obj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
             return JS_TRUE;
         }
 
@@ -2633,7 +2633,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     JSFunction *fun;
 
     CHECK_REQUEST(cx);
-    if (obj && OBJ_GET_CLASS(cx, obj) == clasp)
+    if (obj && obj->getClass() == clasp)
         return JS_TRUE;
     if (argv) {
         fun = js_ValueToFunction(cx, &argv[-2], 0);
@@ -2642,7 +2642,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
                                  JSMSG_INCOMPATIBLE_PROTO,
                                  clasp->name, JS_GetFunctionName(fun),
                                  obj
-                                 ? OBJ_GET_CLASS(cx, obj)->name
+                                 ? obj->getClass()->name
                                  : js_null_str);
         }
     }
@@ -2726,7 +2726,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     }
     if (!VALUE_IS_FUNCTION(cx, cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
-                             OBJ_GET_CLASS(cx, proto)->name);
+                             proto->getClass()->name);
         return NULL;
     }
     return JSVAL_TO_OBJECT(cval);
@@ -2773,7 +2773,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_SEAL_OBJECT,
-                             OBJ_GET_CLASS(cx, obj)->name);
+                             obj->getClass()->name);
         return JS_FALSE;
     }
 
@@ -3048,7 +3048,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     if (obj2 != obj || !obj->isNative()) {
         obj2->dropProperty(cx, prop);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
-                             alias, name, OBJ_GET_CLASS(cx, obj2)->name);
+                             alias, name, obj2->getClass()->name);
         return JS_FALSE;
     }
     atom = js_Atomize(cx, alias, strlen(alias), 0);
@@ -3732,7 +3732,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
         obj2->dropProperty(cx, prop);
         JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
-                             numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
+                             numBuf, name, obj2->getClass()->name);
         return JS_FALSE;
     }
     sprop = (JSScopeProperty *)prop;
@@ -3827,7 +3827,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         obj->map->ops->clear(cx, obj);
 
     /* Clear cached class objects on the global object. */
-    if (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
+    if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         int key;
 
         for (key = JSProto_Null; key < JSProto_LIMIT; key++)
@@ -4134,7 +4134,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         JS_ASSERT(parent);
     }
 
-    if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
+    if (funobj->getClass() != &js_FunctionClass) {
         /*
          * We cannot clone this object, so fail (we used to return funobj, bad
          * idea, but we changed incompatibly to teach any abusers a lesson!).
@@ -4238,7 +4238,7 @@ JS_GetFunctionArity(JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
-    return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
+    return obj->getClass() == &js_FunctionClass;
 }
 
 JS_BEGIN_EXTERN_C
