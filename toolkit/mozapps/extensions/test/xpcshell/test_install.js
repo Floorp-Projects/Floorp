@@ -108,6 +108,7 @@ function check_test_1() {
           do_check_eq(a1.name, "Test 1");
           do_check_true(isExtensionInAddonsList(profileDir, a1.id));
           do_check_true(do_get_addon("test_install1").exists());
+          do_check_in_crash_annotation(a1.id, a1.version);
 
           // Should have been installed sometime in the last two second.
           let difference = Date.now() - a1.installDate.getTime();
@@ -129,6 +130,7 @@ function check_test_1() {
 
           a1.uninstall();
           restartManager(0);
+          do_check_not_in_crash_annotation(a1.id, a1.version);
 
           run_test_2();
         });
@@ -209,6 +211,7 @@ function check_test_3() {
         do_check_eq(a2.name, "Real Test 2");
         do_check_true(isExtensionInAddonsList(profileDir, a2.id));
         do_check_true(do_get_addon("test_install2_1").exists());
+        do_check_in_crash_annotation(a2.id, a2.version);
 
         // Should have been installed sometime in the last two second.
         let difference = Date.now() - a2.installDate.getTime();
@@ -306,6 +309,7 @@ function check_test_5(install) {
           do_check_true(a2.isActive);
           do_check_true(isExtensionInAddonsList(profileDir, a2.id));
           do_check_true(do_get_addon("test_install2_2").exists());
+          do_check_in_crash_annotation(a2.id, a2.version);
 
           do_check_eq(a2.installDate.getTime(), gInstallDate);
           // Update date should be later (or the same if this test is too fast)
