@@ -644,4 +644,7 @@ const gProfD = do_get_profile().QueryInterface(AM_Ci.nsILocalFile);
 // Enable more extensive EM logging
 Services.prefs.setBoolPref("extensions.logging.enabled", true);
 
+// By default only load extensions from the profile install location
+Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_PROFILE);
+
 do_register_cleanup(shutdownManager);

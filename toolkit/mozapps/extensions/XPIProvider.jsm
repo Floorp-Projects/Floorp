@@ -63,6 +63,7 @@ const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
+const PREF_EM_ENABLED_SCOPES          = "extensions.enabledScopes";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
@@ -782,7 +783,7 @@ var XPIProvider = {
     this.installLocations = [];
     this.installLocationsByName = {};
 
-    function addDirectoryInstallLocation(name, key, paths, locked) {
+    function addDirectoryInstallLocation(name, key, paths, scope, locked) {
       try {
         var dir = FileUtils.getDir(key, paths);
       }
@@ -793,7 +794,7 @@ var XPIProvider = {
       }
 
       try {
-        var location = new DirectoryInstallLocation(name, dir, locked);
+        var location = new DirectoryInstallLocation(name, dir, scope, locked);
       }
       catch (e) {
         WARN("Failed to add directory install location " + name + " " + e);
@@ -804,9 +805,9 @@ var XPIProvider = {
       XPIProvider.installLocationsByName[location.name] = location;
     }
 
-    function addRegistryInstallLocation(name, rootkey) {
+    function addRegistryInstallLocation(name, rootkey, scope) {
       try {
-        var location = new WinRegInstallLocation(name, rootkey);
+        var location = new WinRegInstallLocation(name, rootkey, scope);
       }
       catch (e) {
         WARN("Failed to add registry install location " + name + " " + e);
@@ -819,16 +820,45 @@ var XPIProvider = {
 
     let hasRegistry = ("nsIWindowsRegKey" in Ci);
 
+    let enabledScopes = Prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
+                                         AddonManager.SCOPE_ALL);
+
     // These must be in order of priority for processFileChanges etc. to work
-    if (hasRegistry)
-      addRegistryInstallLocation("winreg-app-global", Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE);
-    addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD", [Services.appinfo.ID], true);
-    addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD", [Services.appinfo.ID], true);
-    addDirectoryInstallLocation(KEY_APP_GLOBAL,       KEY_APPDIR,     [DIR_EXTENSIONS], true);
-    if (hasRegistry)
-      addRegistryInstallLocation("winreg-app-user", Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER);
-    addDirectoryInstallLocation(KEY_APP_SYSTEM_USER,  "XREUSysExt",   [Services.appinfo.ID], true);
-    addDirectoryInstallLocation(KEY_APP_PROFILE,      KEY_PROFILEDIR, [DIR_EXTENSIONS], false);
+    if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
+      if (hasRegistry) {
+        addRegistryInstallLocation("winreg-app-global",
+                                   Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                   AddonManager.SCOPE_SYSTEM);
+      }
+      addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
+                                  [Services.appinfo.ID],
+                                  AddonManager.SCOPE_SYSTEM, true);
+      addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
+                                  [Services.appinfo.ID],
+                                  AddonManager.SCOPE_SYSTEM, true);
+    }
+
+    if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
+      addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_APPDIR,
+                                  [DIR_EXTENSIONS],
+                                  AddonManager.SCOPE_APPLICATION, true);
+    }
+
+    if (enabledScopes & AddonManager.SCOPE_USER) {
+      if (hasRegistry) {
+        addRegistryInstallLocation("winreg-app-user",
+                                   Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                   AddonManager.SCOPE_USER);
+      }
+      addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
+                                  [Services.appinfo.ID],
+                                  AddonManager.SCOPE_USER, true);
+    }
+
+    // The profile location is always enabled
+    addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
+                                [DIR_EXTENSIONS],
+                                AddonManager.SCOPE_PROFILE, false);
 
     this.defaultSkin = Prefs.getDefaultCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                                 "classic/1.0");
@@ -4247,6 +4277,13 @@ function AddonWrapper(addon) {
     return createWrapper(addon.pendingUpgrade);
   });
 
+  this.__defineGetter__("scope", function() {
+    if (addon._installLocation)
+      return addon._installLocation.scope;
+
+    return AddonManager.SCOPE_PROFILE;
+  });
+
   this.__defineGetter__("pendingOperations", function() {
     let pending = 0;
     if (!(addon instanceof DBAddonInternal))
@@ -4382,14 +4419,17 @@ AddonWrapper.prototype = {
  *          The string identifier for the install location
  * @param   directory
  *          The nsIFile directory for the install location
+ * @param   scope
+ *          The scope of add-ons installed in this location
  * @param   locked
  *          true if add-ons cannot be installed, uninstalled or upgraded in the
  *          install location
  */
-function DirectoryInstallLocation(name, directory, locked) {
+function DirectoryInstallLocation(name, directory, scope, locked) {
   this._name = name;
   this.locked = locked;
   this._directory = directory;
+  this._scope = scope
   this._IDToDirMap = {};
   this._DirToIDMap = {};
 
@@ -4494,6 +4534,13 @@ DirectoryInstallLocation.prototype = {
    */
   get name() {
     return this._name;
+  },
+
+  /**
+   * Gets the scope of this install location.
+   */
+  get scope() {
+    return this._scope;
   },
 
   /**
@@ -4602,12 +4649,14 @@ DirectoryInstallLocation.prototype = {
  *          The string identifier of this Install Location.
  * @param   rootKey
  *          The root key (one of the ROOT_KEY_ values from nsIWindowsRegKey).
- * @constructor
+ * @param   scope
+ *          The scope of add-ons installed in this location
  */
-function WinRegInstallLocation(name, rootKey) {
+function WinRegInstallLocation(name, rootKey, scope) {
   this.locked = true;
   this._name = name;
   this._rootKey = rootKey;
+  this._scope = scope;
   this._IDToDirMap = {};
   this._DirToIDMap = {};
 
@@ -4631,6 +4680,7 @@ function WinRegInstallLocation(name, rootKey) {
 WinRegInstallLocation.prototype = {
   _name       : "",
   _rootKey    : null,
+  _scope      : null,
   _IDToDirMap : null,  // mapping from ID to directory object
   _DirToIDMap : null,  // mapping from directory path to ID
 
@@ -4685,6 +4735,13 @@ WinRegInstallLocation.prototype = {
    */
   get name() {
     return this._name;
+  },
+
+  /**
+   * Gets the scope of this install location.
+   */
+  get scope() {
+    return this._scope;
   },
 
   /**

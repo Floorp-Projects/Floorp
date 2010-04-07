@@ -32,6 +32,7 @@ function run_test() {
       maxVersion: "2"
     }]
   }, dest);
+
   dest = profileDir.clone();
   dest.append("theme2@tests.mozilla.org");
   writeInstallRDFToDir({
@@ -39,6 +40,22 @@ function run_test() {
     version: "1.0",
     name: "Test 1",
     internalName: "theme2/1.0",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "2"
+    }]
+  }, dest);
+
+  // We need a default theme for some of these things to work but we have hidden
+  // the one in the application directory.
+  dest = profileDir.clone();
+  dest.append("default@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "default@tests.mozilla.org",
+    version: "1.0",
+    name: "Default",
+    internalName: "classic/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -179,7 +196,7 @@ function run_test_3() {
       ["onEnabling", false],
       "onEnabled"
     ],
-    "{972ce4c6-7e08-4474-a285-3208198ce6fd}": [
+    "default@tests.mozilla.org": [
       ["onDisabling", false],
       "onDisabled",
     ]
@@ -471,13 +488,12 @@ function run_test_7() {
 // Uninstalling a lightweight theme in use should not require a restart and it
 // should reactivate the default theme
 function run_test_8() {
-  // TODO stop this depending on the default theme being present
   prepare_test({
     "2@personas.mozilla.org": [
       ["onUninstalling", false],
       "onUninstalled"
     ],
-    "{972ce4c6-7e08-4474-a285-3208198ce6fd}": [
+    "default@tests.mozilla.org": [
       ["onEnabling", false],
       "onEnabled"
     ]
@@ -522,7 +538,7 @@ function run_test_10() {
       "theme2@tests.mozilla.org": [
         "onEnabling",
       ],
-      "{972ce4c6-7e08-4474-a285-3208198ce6fd}": [
+      "default@tests.mozilla.org": [
         "onDisabling"
       ]
     });
@@ -533,7 +549,7 @@ function run_test_10() {
 
     restartManager(0);
 
-    AddonManager.getAddons(["{972ce4c6-7e08-4474-a285-3208198ce6fd}",
+    AddonManager.getAddons(["default@tests.mozilla.org",
                             "theme2@tests.mozilla.org"], function([d, t2]) {
       do_check_true(t2.isActive);
       do_check_false(t2.userDisabled);
@@ -546,7 +562,7 @@ function run_test_10() {
         "theme2@tests.mozilla.org": [
           "onUninstalling",
         ],
-        "{972ce4c6-7e08-4474-a285-3208198ce6fd}": [
+        "default@tests.mozilla.org": [
           "onEnabling"
         ]
       });
@@ -641,7 +657,7 @@ function run_test_13() {
       "theme1@tests.mozilla.org": [
         "onEnabling",
       ],
-      "{972ce4c6-7e08-4474-a285-3208198ce6fd}": [
+      "default@tests.mozilla.org": [
         "onDisabling"
       ]
     });
