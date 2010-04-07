@@ -263,9 +263,17 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     mDocumentURI->GetOriginCharset(docCharset);
   }
 
+  nsCAutoString referrerSpec;
+  nsCAutoString referrerCharset;
+  if (mReferrer) {
+    mReferrer->GetSpec(referrerSpec);
+    mReferrer->GetOriginCharset(referrerCharset);
+  }
+
   if (!SendAsyncOpen(mSpec, charset, originalSpec, originalCharset, 
-                     docSpec, docCharset, mLoadFlags, mRequestHeaders,
-                     mRequestHead.Method(), mRedirectionLimit, mAllowPipelining,
+                     docSpec, docCharset, referrerSpec, referrerCharset,
+                     mLoadFlags, mRequestHeaders, mRequestHead.Method(), 
+                     mRedirectionLimit, mAllowPipelining,
                      mForceAllowThirdPartyCookie)) {
     // IPDL error: our destructor will be called automatically
     // -- TODO: verify that that's the case :)

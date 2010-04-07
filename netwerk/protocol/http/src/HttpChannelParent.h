@@ -71,6 +71,8 @@ protected:
                              const nsCString&           originalCharset,
                              const nsCString&           docUriSpec, 
                              const nsCString&           docCharset,
+                             const nsCString&           referrerSpec,
+                             const nsCString&           referrerCharset,
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
