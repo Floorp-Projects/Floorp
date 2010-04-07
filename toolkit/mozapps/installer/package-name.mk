@@ -168,7 +168,7 @@ endif # MOZ_PKG_PRETTYNAMES
 SYMBOL_ARCHIVE_BASENAME = $(PKG_BASENAME).crashreporter-symbols
 
 # Test package naming
-TEST_PACKAGE = $(PKG_BASENAME).tests.zip
+TEST_PACKAGE = $(PKG_BASENAME).tests.tar.bz2
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
