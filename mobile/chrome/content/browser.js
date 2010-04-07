@@ -2571,6 +2571,10 @@ ProgressController.prototype = {
 
   /** This method is called to indicate a change to the current location. */
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
+    // ignore notification that aren't about the main document (iframes, etc)
+    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
+      return;
+
     let location = aLocationURI ? aLocationURI.spec : "";
 
     this._hostChanged = true;
