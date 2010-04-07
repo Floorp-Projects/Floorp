@@ -55,6 +55,7 @@ function run_test_1() {
     do_check_eq(install.name, "Test 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_true(install.addon.hasResource("install.rdf"));
+    do_check_eq(install.addon.install, install);
 
     let file = do_get_addon("test_install1");
     let uri = Services.io.newFileURI(file).spec;
@@ -172,6 +173,7 @@ function check_test_2(install) {
   do_check_eq(install.version, "2.0");
   do_check_eq(install.name, "Real Test 2");
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+  do_check_eq(install.addon.install, install);
 
   // Pause the install here and start it again in run_test_3
   do_execute_soon(function() { run_test_3(install); });
@@ -261,6 +263,7 @@ function check_test_4(install) {
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
   do_check_neq(install.existingAddon);
   do_check_eq(install.existingAddon.id, "addon2@tests.mozilla.org");
+  do_check_eq(install.addon.install, install);
 
   run_test_5();
   // Installation will continue when there is nothing returned.
@@ -278,8 +281,11 @@ function run_test_5() {
   ], check_test_5);
 }
 
-function check_test_5() {
+function check_test_5(install) {
   ensure_test_completed();
+
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
   AddonManager.getAddon("addon2@tests.mozilla.org", function(olda2) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
