@@ -658,7 +658,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSFrameRegs regs;
 
                 closure = wp->closure;
-                clasp = OBJ_GET_CLASS(cx, closure);
+                clasp = closure->getClass();
                 if (clasp == &js_FunctionClass) {
                     fun = GET_FUNCTION_PRIVATE(cx, closure);
                     script = FUN_SCRIPT(fun);
@@ -848,7 +848,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
-                             OBJ_GET_CLASS(cx, obj)->name);
+                             obj->getClass()->name);
         return JS_FALSE;
     }
 
@@ -1500,7 +1500,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     JSPropertyDesc *pd;
     JSScopeProperty *sprop;
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_DESCRIBE_PROPS, clasp->name);

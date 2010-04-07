@@ -3120,7 +3120,7 @@ template<typename T>
 inline uint32
 GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* result)
 {
-    JS_ASSERT(OBJ_GET_CLASS(cx, call) == &js_CallClass);
+    JS_ASSERT(call->getClass() == &js_CallClass);
 
     InterpState* state = cx->interpState;
 
@@ -6435,7 +6435,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
     }
     JS_ASSERT(child == f->globalObj);
 
-    if (!(OBJ_GET_CLASS(cx, f->globalObj)->flags & JSCLASS_IS_GLOBAL)) {
+    if (!(f->globalObj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
         debug_only_print0(LC_TMTracer, "Blacklist: non-global at root of scope chain.\n");
         Blacklist((jsbytecode*) f->root->ip);
         return false;
@@ -7879,7 +7879,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
         return ARECORD_CONTINUE;
     }
 
-    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
+    if (obj == obj2 && obj->getClass() == &js_CallClass) {
         AbortableRecordingStatus status =
             InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
         obj->dropProperty(cx, prop);
@@ -8670,7 +8670,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             if (JSVAL_IS_NULL(l))
                 op = LIR_peq;
         } else if (JSVAL_IS_OBJECT(l)) {
-            JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
+            JSClass *clasp = JSVAL_TO_OBJECT(l)->getClass();
             if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
                 RETURN_STOP_A("Can't trace extended class equality operator");
             op = LIR_peq;
@@ -11097,7 +11097,7 @@ TraceRecorder::incName(jsint incr, bool pre)
         return ARECORD_CONTINUE;
     }
 
-    if (OBJ_GET_CLASS(cx, nr.obj) != &js_CallClass)
+    if (nr.obj->getClass() != &js_CallClass)
         RETURN_STOP_A("incName on unsupported object class");
 
     CHECK_STATUS_A(setCallProp(nr.obj, nr.obj_ins, nr.sprop, v_after, v));
@@ -11251,7 +11251,7 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
-    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass)
+    if (obj->getClass() == &js_CallClass)
         return setCallProp(obj, obj_ins, sprop, v_ins, v);
 
     // Find obj2. If entry->adding(), the TAG bits are all 0.
@@ -12825,11 +12825,11 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          * We could specialize to guard on just JSClass.getProperty, but a mere
          * class guard is simpler and slightly faster.
          */
-        if (OBJ_GET_CLASS(cx, obj)->getProperty != JS_PropertyStub) {
+        if (obj->getClass()->getProperty != JS_PropertyStub) {
             RETURN_STOP_A("can't trace through access to undefined property if "
                           "JSClass.getProperty hook isn't stubbed");
         }
-        guardClass(obj, obj_ins, OBJ_GET_CLASS(cx, obj), snapshot(MISMATCH_EXIT), ACC_OTHER);
+        guardClass(obj, obj_ins, obj->getClass(), snapshot(MISMATCH_EXIT), ACC_OTHER);
 
         /*
          * This trace will be valid as long as neither the object nor any object
@@ -13971,7 +13971,7 @@ TraceRecorder::record_JSOP_LAMBDA()
             jsval lval = stackval(-1);
 
             if (!JSVAL_IS_PRIMITIVE(lval) &&
-                OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(lval)) == &js_ObjectClass) {
+                JSVAL_TO_OBJECT(lval)->getClass() == &js_ObjectClass) {
                 stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
                 return ARECORD_CONTINUE;
             }

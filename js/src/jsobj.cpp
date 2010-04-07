@@ -182,7 +182,7 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     pobj = JSVAL_TO_OBJECT(*vp);
     if (pobj) {
-        clasp = OBJ_GET_CLASS(cx, pobj);
+        clasp = pobj->getClass();
         if (clasp == &js_CallClass || clasp == &js_BlockClass) {
             /* Censor activations and lexical scopes per ECMA-262. */
             *vp = JSVAL_NULL;
@@ -1021,7 +1021,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     obj = js_GetWrappedObject(cx, obj);
-    clazz = OBJ_GET_CLASS(cx, obj)->name;
+    clazz = obj->getClass()->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
     if (!chars)
@@ -1143,7 +1143,7 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
 
     /* XXX This is an awful gross hack. */
     while (scopeobj) {
-        clasp = OBJ_GET_CLASS(cx, scopeobj);
+        clasp = scopeobj->getClass();
         if (clasp->flags & JSCLASS_IS_EXTENDED) {
             xclasp = (JSExtendedClass*)clasp;
             if (xclasp->innerObject &&
@@ -2785,7 +2785,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
     JS_ASSERT(proto == obj->getProto());
 
     /* Share proto's emptyScope only if obj is similar to proto. */
-    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    JSClass *clasp = obj->getClass();
     JSScope *scope = NULL;
 
     if (proto && proto->isNative()) {
@@ -3379,7 +3379,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     fp = cx->fp;
     obj = fp->scopeChain;
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+    JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(obj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
@@ -3703,7 +3703,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * and (c) key is not the null key.
          */
         if ((clasp->flags & JSCLASS_IS_ANONYMOUS) &&
-            (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) &&
+            (obj->getClass()->flags & JSCLASS_IS_GLOBAL) &&
             key != JSProto_Null) {
             named = JS_FALSE;
         } else {
@@ -3755,7 +3755,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         }
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
-        if (OBJ_GET_CLASS(cx, ctor) == clasp)
+        if (ctor->getClass() == clasp)
             ctor->setProto(proto);
     }
 
@@ -3956,7 +3956,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 
     while ((tmp = obj->getParent()) != NULL)
         obj = tmp;
-    if (!(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL)) {
+    if (!(obj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
         *objp = NULL;
         return JS_TRUE;
     }
@@ -4001,7 +4001,7 @@ JSBool
 js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj)
 {
     JS_ASSERT(!obj->getParent());
-    if (!(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL))
+    if (!(obj->getClass()->flags & JSCLASS_IS_GLOBAL))
         return JS_TRUE;
 
     return JS_SetReservedSlot(cx, obj, key, OBJECT_TO_JSVAL(cobj));
@@ -4138,7 +4138,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
      * we should throw a type error.
      */
     obj = JSVAL_TO_OBJECT(rval);
-    if (OBJ_GET_CLASS(cx, obj) != clasp ||
+    if (obj->getClass() != clasp ||
         (!(~clasp->flags & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_CONSTRUCT_PROTOTYPE)) &&
          !obj->getPrivate())) {
@@ -4710,7 +4710,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * that is really just a memory-saving hack, safe because Blocks cannot
          * be on the prototype chain of other objects.
          */
-        JS_ASSERT_IF(OBJ_GET_CLASS(cx, obj) != &js_BlockClass,
+        JS_ASSERT_IF(obj->getClass() != &js_BlockClass,
                      OBJ_SCOPE(obj) != OBJ_SCOPE(proto));
 
         obj = proto;
@@ -4752,9 +4752,9 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
         if (prop) {
 #ifdef DEBUG
             if (parent) {
-                JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+                JSClass *clasp = obj->getClass();
                 JS_ASSERT(pobj->isNative());
-                JS_ASSERT(OBJ_GET_CLASS(cx, pobj) == clasp);
+                JS_ASSERT(pobj->getClass() == clasp);
                 if (clasp == &js_BlockClass) {
                     /*
                      * A block instance on the scope chain is immutable and
@@ -4854,7 +4854,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
         if (prop) {
             JS_ASSERT(pobj->isNative());
             JS_ASSERT(!obj->getParent() ||
-                      OBJ_GET_CLASS(cx, pobj) == OBJ_GET_CLASS(cx, obj));
+                      pobj->getClass() == obj->getClass());
 #ifdef DEBUG
             PropertyCacheEntry *entry =
 #endif
@@ -5028,7 +5028,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
     if (!prop) {
         *vp = JSVAL_VOID;
 
-        if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, ID_TO_VALUE(id), vp))
+        if (!obj->getClass()->getProperty(cx, obj, ID_TO_VALUE(id), vp))
             return JS_FALSE;
 
         PCMETER(getHow & JSGET_CACHE_RESULT && JS_PROPERTY_CACHE(cx).nofills++);
@@ -5206,7 +5206,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         }
     } else {
         /* We should never add properties to lexical blocks.  */
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
+        JS_ASSERT(obj->getClass() != &js_BlockClass);
 
         if (!obj->getParent() && !js_CheckUndeclaredVarAssignment(cx))
             return JS_FALSE;
@@ -5224,7 +5224,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     attrs = JSPROP_ENUMERATE;
     flags = 0;
     shortid = 0;
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     getter = clasp->getProperty;
     setter = clasp->setProperty;
 
@@ -5501,8 +5501,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
          * a prototype, call the class's delProperty hook, passing rval as the
          * result parameter.
          */
-        return OBJ_GET_CLASS(cx, obj)->delProperty(cx, obj, ID_TO_VALUE(id),
-                                                   rval);
+        return obj->getClass()->delProperty(cx, obj, ID_TO_VALUE(id), rval);
     }
 
     sprop = (JSScopeProperty *)prop;
@@ -5541,7 +5540,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
          * new String(...) instances whether mutated to have their own scope or
          * not, as well as direct String.prototype references.
          */
-        if (OBJ_GET_CLASS(cx, obj) == &js_StringClass) {
+        if (obj->getClass() == &js_StringClass) {
             jsid toStringId = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
 
             JS_LOCK_OBJ(cx, obj);
@@ -5552,7 +5551,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
             if (!sprop) {
                 pobj = obj->getProto();
 
-                if (pobj && OBJ_GET_CLASS(cx, pobj) == &js_StringClass) {
+                if (pobj && pobj->getClass() == &js_StringClass) {
                     JS_UNLOCK_SCOPE(cx, scope);
                     JS_LOCK_OBJ(cx, pobj);
                     scope = OBJ_SCOPE(pobj);
@@ -5587,13 +5586,13 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
         }
 
         if (!JSVAL_IS_PRIMITIVE(v)) {
-            if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, hint, &v))
+            if (!obj->getClass()->convert(cx, obj, hint, &v))
                 return JS_FALSE;
         }
         break;
 
       default:
-        if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, hint, &v))
+        if (!obj->getClass()->convert(cx, obj, hint, &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             JSType type = JS_TypeOfValue(cx, v);
@@ -5611,7 +5610,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
     if (!JSVAL_IS_PRIMITIVE(v)) {
         /* Avoid recursive death when decompiling in js_ReportValueError. */
         if (hint == JSTYPE_STRING) {
-            str = JS_InternString(cx, OBJ_GET_CLASS(cx, obj)->name);
+            str = JS_InternString(cx, obj->getClass()->name);
             if (!str)
                 return JS_FALSE;
         } else {
@@ -5962,7 +5961,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      * checkObjectAccess hook.  This covers precompilation-based sharing and
      * (possibly unintended) runtime sharing across trust boundaries.
      */
-    clasp = OBJ_GET_CLASS(cx, pobj);
+    clasp = pobj->getClass();
     check = clasp->checkAccess;
     if (!check) {
         callbacks = JS_GetSecurityCallbacks(cx);
@@ -6043,7 +6042,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
+    clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
     if (!clasp->call) {
 #ifdef NARCISSUS
         JSObject *callee, *args;
@@ -6082,7 +6081,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
+    clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
     if (!clasp->construct) {
 #ifdef NARCISSUS
         JSObject *callee, *args;
@@ -6121,7 +6120,7 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, v, bp);
 #ifdef NARCISSUS
@@ -6409,7 +6408,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     cx = xdr->cx;
     atom = NULL;
     if (xdr->mode == JSXDR_ENCODE) {
-        clasp = OBJ_GET_CLASS(cx, *objp);
+        clasp = (*objp)->getClass();
         classId = JS_XDRFindClassIdByName(xdr, clasp->name);
         classDef = !classId;
         if (classDef) {
@@ -6451,7 +6450,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
             protoKey = (JSProtoKey) (classDef >> 1);
             if (!js_GetClassPrototype(cx, NULL, protoKey, &proto, clasp))
                 return JS_FALSE;
-            clasp = OBJ_GET_CLASS(cx, proto);
+            clasp = proto->getClass();
             if (!JS_XDRRegisterClass(xdr, clasp, &classId))
                 return JS_FALSE;
         } else {
@@ -6693,7 +6692,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     if (!obj->isNative())
         return true;
 
-    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    JSClass *clasp = obj->getClass();
     uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
 
     JS_LOCK_OBJ(cx, obj);
@@ -6740,7 +6739,7 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
         JSExtendedClass *xclasp;
         JSObject *obj2;

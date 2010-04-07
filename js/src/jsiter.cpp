@@ -327,7 +327,7 @@ static JSFunctionSpec iterator_methods[] = {
 uintN
 js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
 {
-    if (OBJ_GET_CLASS(cx, iterobj) != &js_IteratorClass)
+    if (iterobj->getClass() != &js_IteratorClass)
         return 0;
     return JSVAL_TO_INT(iterobj->getSlot(JSSLOT_ITER_FLAGS));
 }
@@ -377,7 +377,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 
     tvr.setObject(obj);
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
         (xclasp = (JSExtendedClass *) clasp)->iteratorObject) {
         iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
@@ -430,7 +430,7 @@ js_CloseIterator(JSContext *cx, jsval v)
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
 
     if (clasp == &js_IteratorClass) {
         js_CloseNativeIterator(cx, obj);
@@ -539,7 +539,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
          */
         if (obj != obj2) {
             cond = JS_FALSE;
-            clasp = OBJ_GET_CLASS(cx, obj2);
+            clasp = obj2->getClass();
             if (clasp->flags & JSCLASS_IS_EXTENDED) {
                 xclasp = (JSExtendedClass *) clasp;
                 cond = xclasp->outerObject &&
@@ -582,7 +582,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
     uintN flags;
 
     /* Fast path for native iterators */
-    if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass) {
+    if (iterobj->getClass() == &js_IteratorClass) {
         flags = JSVAL_TO_INT(iterobj->getSlot(JSSLOT_ITER_FLAGS));
         if (flags & JSITER_ENUMERATE)
             return CallEnumeratorNext(cx, iterobj, flags, rval);

@@ -449,7 +449,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 
     // catches string and number objects with no toJSON
     if (!JSVAL_IS_PRIMITIVE(*vp)) {
-        JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(*vp));
+        JSClass *clasp = JSVAL_TO_OBJECT(*vp)->getClass();
         if (clasp == &js_StringClass || clasp == &js_NumberClass)
             *vp = JSVAL_TO_OBJECT(*vp)->fslots[JSSLOT_PRIMITIVE_THIS];
     }
@@ -515,7 +515,7 @@ InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
 
     if (!JSVAL_IS_PRIMITIVE(space)) {
         JSObject *obj = JSVAL_TO_OBJECT(space);
-        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        JSClass *clasp = obj->getClass();
         if (clasp == &js_NumberClass || clasp == &js_StringClass)
             *gap.addr() = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     }

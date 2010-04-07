@@ -809,7 +809,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 
 #ifdef DEBUG
     /* A call object should be a frame's outermost scope chain element.  */
-    JSClass *classp = OBJ_GET_CLASS(cx, fp->scopeChain);
+    JSClass *classp = fp->scopeChain->getClass();
     if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
         JS_ASSERT(fp->scopeChain->getPrivate() != fp);
 #endif
@@ -1914,8 +1914,7 @@ fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
          */
         if (!JSVAL_IS_PRIMITIVE(fval)) {
             obj = JSVAL_TO_OBJECT(fval);
-            if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, JSTYPE_FUNCTION,
-                                                 &fval)) {
+            if (!obj->getClass()->convert(cx, obj, JSTYPE_FUNCTION, &fval)) {
                 return JS_FALSE;
             }
             vp[1] = fval;
@@ -2639,7 +2638,7 @@ js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags)
     obj = NULL;
     if (JSVAL_IS_OBJECT(v)) {
         obj = JSVAL_TO_OBJECT(v);
-        if (obj && OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
+        if (obj && obj->getClass() != &js_FunctionClass) {
             if (!obj->defaultValue(cx, JSTYPE_FUNCTION, &v))
                 return NULL;
             obj = VALUE_IS_FUNCTION(cx, v) ? JSVAL_TO_OBJECT(v) : NULL;

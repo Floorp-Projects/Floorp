@@ -727,7 +727,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(traceKind == JSTRACE_OBJECT)
     {
         obj = static_cast<JSObject*>(p);
-        clazz = OBJ_GET_CLASS(cx, obj);
+        clazz = obj->getClass();
 
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
@@ -777,7 +777,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(traceKind == JSTRACE_OBJECT)
         {
             JSObject *obj = static_cast<JSObject*>(p);
-            JSClass *clazz = OBJ_GET_CLASS(cx, obj);
+            JSClass *clazz = obj->getClass();
             if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
             {
                 XPCWrappedNative* wn;
