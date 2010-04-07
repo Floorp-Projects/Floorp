@@ -92,9 +92,8 @@ function run_test_1() {
         install.install();
       },
 
-      onUpdateFinished: function(addon, status) {
-        do_check_eq(addon, a1);
-        do_check_eq(status, 0);
+      onNoUpdateAvailable: function(addon) {
+        do_throw("Should have seen an update");
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   });
@@ -157,9 +156,8 @@ function run_test_3() {
         do_throw("Should not have seen an available update");
       },
 
-      onUpdateFinished: function(addon, status) {
+      onNoUpdateAvailable: function(addon) {
         do_check_eq(addon, a2);
-        do_check_eq(status, 0);
         restartManager(0);
         check_test_3();
       }
