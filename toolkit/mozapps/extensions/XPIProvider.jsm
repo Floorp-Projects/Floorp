@@ -3314,6 +3314,7 @@ AddonInstall.prototype = {
         uri = buildJarURI(this.file, FILE_INSTALL_MANIFEST);
         this.addon = loadManifestFromRDF(uri, bis);
         this.addon._sourceBundle = this.file;
+        this.addon._install = this;
       }
       finally {
         bis.close();
@@ -3597,11 +3598,16 @@ AddonInstall.prototype = {
                                  0);
           converter.init(stream, "UTF-8", 0, 0x0000);
 
-          // A little hacky but we can't (and shouldn't) cache the source bundle.
-          let bundle = this.addon._sourceBundle;
+          // A little hacky but we can't cache certain objects.
+          let objs = {
+            sourceBundle: this.addon._sourceBundle,
+            install: this.addon._install
+          };
           delete this.addon._sourceBundle;
+          delete this.addon._install;
           converter.writeString(json.encode(this.addon));
-          this.addon._sourceBundle = bundle;
+          this.addon._sourceBundle = objs.sourceBundle;
+          this.addon._install = objs.install;
         }
         finally {
           converter.close();
@@ -4070,6 +4076,12 @@ function AddonWrapper(addon) {
   this.__defineSetter__("updateAutomatically", function(val) {
     // TODO store this in the DB (bug 557849)
     addon.updateAutomatically = val;
+  });
+
+  this.__defineGetter__("install", function() {
+    if (!("_install" in addon) || !addon._install)
+      return null;
+    return addon._install.wrapper;
   });
 
   this.__defineGetter__("pendingUpgrade", function() {
