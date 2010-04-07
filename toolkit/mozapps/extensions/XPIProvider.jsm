@@ -3610,6 +3610,10 @@ AddonInstall.prototype = {
 
         LOG("Install of " + this.sourceURL.spec + " completed.");
         this.state = AddonManager.STATE_INSTALLED;
+        if (isUpgrade) {
+          delete this.existingAddon.pendingUpgrade;
+          this.existingAddon.pendingUpgrade = this.addon;
+        }
         AddonManagerPrivate.callInstallListeners("onInstallEnded",
                                                  this.listeners, this.wrapper,
                                                  createWrapper(this.addon));
@@ -3978,6 +3982,19 @@ function DBAddonInternal() {
     delete this.defaultLocale;
     return this.defaultLocale = XPIDatabase._getDefaultLocale(this);
   });
+
+  this.__defineGetter__("pendingUpgrade", function() {
+    delete this.pendingUpgrade;
+    for (let i = 0; i < XPIProvider.installs.length; i++) {
+      let install = XPIProvider.installs[i];
+      if (install.state == AddonManager.STATE_INSTALLED &&
+          !(install.addon instanceof DBAddonInternal) &&
+          install.addon.id == this.id &&
+          install.installLocation == this._installLocation) {
+        return this.pendingUpgrade = install.addon;
+      }
+    };
+  });
 }
 
 DBAddonInternal.prototype = {
@@ -4055,6 +4072,10 @@ function AddonWrapper(addon) {
     addon.updateAutomatically = val;
   });
 
+  this.__defineGetter__("pendingUpgrade", function() {
+    return createWrapper(addon.pendingUpgrade);
+  });
+
   this.__defineGetter__("pendingOperations", function() {
     let pending = 0;
     if (!(addon instanceof DBAddonInternal))
@@ -4066,6 +4087,9 @@ function AddonWrapper(addon) {
       pending |= AddonManager.PENDING_DISABLE;
     else if (!addon.active && (!addon.userDisabled && !addon.appDisabled))
       pending |= AddonManager.PENDING_ENABLE;
+
+    if (addon.pendingUpgrade)
+      pending |= AddonManager.PENDING_UPGRADE;
 
     return pending;
   });
