@@ -453,13 +453,18 @@ const InstallListener = {
   onDownloadEnded: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_eq("onDownloadEnded", gExpectedInstalls.shift());
-    // gNext should determine whether installation continues
     return check_test_completed(arguments);
   },
 
   onDownloadFailed: function(install, status) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq("onDownloadFailed", gExpectedInstalls.shift());
+    return check_test_completed(arguments);
+  },
+
+  onDownloadCancelled: function(install) {
+    do_check_eq(install.state, AddonManager.STATE_CANCELLED);
+    do_check_eq("onDownloadCancelled", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
@@ -478,6 +483,12 @@ const InstallListener = {
   onInstallFailed: function(install, status) {
     do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
     do_check_eq("onInstallFailed", gExpectedInstalls.shift());
+    return check_test_completed(arguments);
+  },
+
+  onInstallCancelled: function(install) {
+    do_check_eq(install.state, AddonManager.STATE_CANCELLED);
+    do_check_eq("onInstallCancelled", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
