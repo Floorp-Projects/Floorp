@@ -175,6 +175,10 @@ namespace nanojit
 
     #define DECLARE_PLATFORM_REGALLOC()
 
+    #define JCC32 0x0f
+    #define JMP8  0xeb
+    #define JMP32 0xe9
+
     #define DECLARE_PLATFORM_ASSEMBLER()    \
         const static Register argRegs[2], retRegs[2]; \
         int32_t max_stk_args;\
@@ -322,23 +326,16 @@ namespace nanojit
         void JMP(NIns* t) { \
             count_jmp(); \
             underrunProtect(5); \
-            intptr_t tt = (intptr_t)t - (intptr_t)_nIns; \
-            if (isS8(tt)) { \
-                verbose_only( NIns* next = _nIns; (void)next; ) \
+            intptr_t tt = t ? (intptr_t)t - (intptr_t)_nIns : 0; \
+            if (t && isS8(tt)) { \
                 _nIns -= 2; \
-                _nIns[0] = /*JMP8*/0xeb; \
+                _nIns[0] = JMP8; \
                 _nIns[1] = uint8_t(tt & 0xff); \
-                asm_output("jmp %p",next+tt); \
             } else { \
-                JMP_long_nochk_offset(tt); \
+                IMM32(tt); \
+                *(--_nIns) = JMP32; \
             } \
-        }; \
-        /* This should only be used when you can guarantee there is enough room on the page. */ \
-        void JMP_long_nochk_offset(int32_t o) { \
-            verbose_only( NIns* next = _nIns; (void)next; ) \
-            IMM32(o); \
-            *(--_nIns) = /*JMP32*/0xe9; \
-            asm_output("jmp %p",next+o); \
+            asm_output("jmp %p", t); \
         }; \
         void JMP_indirect(Register r); \
         void JMP_indexed(Register x, int32_t ss, NIns** addr); \

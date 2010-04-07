@@ -521,35 +521,32 @@ namespace nanojit
         asm_output("pop %s",gpn(r));
     }
 
-#define JCC32 0x0f
-#define JMP8  0xeb
-#define JMP32 0xe9
-
     inline void Assembler::JCC(I32 o, NIns* t, const char* n) {
         count_jcc();
         underrunProtect(6);
+        NanoAssert(t);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
         if (isS8(tt)) {
-            verbose_only( NIns* next = _nIns; (void)next; )
             _nIns -= 2;
             _nIns[0] = uint8_t( 0x70 | o );
             _nIns[1] = uint8_t(tt);
-            asm_output("%-5s %p",n,next+tt);
         } else {
-            verbose_only( NIns* next = _nIns; )
             IMM32(tt);
             _nIns -= 2;
             _nIns[0] = JCC32;
             _nIns[1] = (uint8_t) ( 0x80 | o );
-            asm_output("%-5s %p",n,next+tt);
         }
+        asm_output("%-5s %p", n, t);
     }
 
     inline void Assembler::JMP_long(NIns* t) {
         count_jmp();
         underrunProtect(5);
+        NanoAssert(t);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
-        JMP_long_nochk_offset(tt);
+        IMM32(tt); \
+        *(--_nIns) = JMP32; \
+        asm_output("jmp %p", t); \
         verbose_only( verbose_outputf("%010lx:", (unsigned long)_nIns); )
     }
 
