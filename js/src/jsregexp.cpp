@@ -3278,7 +3278,7 @@ class RegExpNativeCompiler {
 #endif
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (LogController.lcbits & LC_TMRegexp)
-                             delete lir; )
+                             delete verbose_filter; )
 #endif
         return JS_FALSE;
     }
