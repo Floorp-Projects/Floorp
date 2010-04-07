@@ -49,7 +49,17 @@
 #include "glwrap.h"
 
 #ifdef MOZ_X11
+#ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
+#define DISPLAY gdk_x11_get_default_xdisplay
+
+#elif defined(MOZ_WIDGET_QT)
+#ifdef CursorShape
+#undef CursorShape
+#endif
+#include <QX11Info>
+#define DISPLAY QX11Info::display
+#endif
 
 typedef Display* EGLNativeDisplayType;
 typedef Window EGLNativeWindowType;
@@ -232,7 +242,7 @@ nsGLPbufferEGL::Init(mozilla::WebGLContext *priv)
 
     LogMessage("Visual ID: %d\n", visid);
 
-    XVisualInfo *vf = XGetVisualInfo(gdk_x11_get_default_xdisplay(), VisualIDMask, &vinfo, &pad);
+    XVisualInfo *vf = XGetVisualInfo(DISPLAY(), VisualIDMask, &vinfo, &pad);
 
     if (!vf) {
         LogMessage("Null VisualInfo!");
@@ -349,7 +359,7 @@ nsGLPbufferEGL::Resize(PRInt32 width, PRInt32 height)
     }
 #else
 
-    mXlibSurface = new gfxXlibSurface(gdk_x11_get_default_xdisplay(),
+    mXlibSurface = new gfxXlibSurface(DISPLAY(),
                                         mVisual,
                                         gfxIntSize(width, height),
                                         32);
@@ -365,7 +375,7 @@ nsGLPbufferEGL::Resize(PRInt32 width, PRInt32 height)
     // we need to XSync to ensure that the Pixmap is created on the server side,
     // otherwise eglCreatePixmapSurface will fail (because it isn't part of the normal
     // X protocol).
-    XSync(gdk_x11_get_default_xdisplay(), 0);
+    XSync(DISPLAY(), 0);
 
     EGLint attrs[] = {
         EGL_NONE
