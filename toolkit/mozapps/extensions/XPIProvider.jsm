@@ -62,6 +62,7 @@ const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
+const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
@@ -4148,11 +4149,43 @@ function AddonWrapper(addon) {
   });
 
   PROP_LOCALE_SINGLE.forEach(function(prop) {
-    this.__defineGetter__(prop, function() addon.selectedLocale[prop]);
+    this.__defineGetter__(prop, function() {
+      if (addon.active) {
+        try {
+          let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." + prop;
+          let value = Services.prefs.getComplexValue(pref,
+                                                     Ci.nsIPrefLocalizedString);
+          if (value.data)
+            return value.data;
+        }
+        catch (e) {
+        }
+      }
+      return addon.selectedLocale[prop];
+    });
   }, this);
 
   PROP_LOCALE_MULTI.forEach(function(prop) {
-    this.__defineGetter__(prop, function() addon.selectedLocale[prop]);
+    this.__defineGetter__(prop, function() {
+      if (addon.active) {
+        let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." +
+                   prop.substring(0, prop.length - 1);
+        let list = Services.prefs.getChildList(pref, {});
+        if (list.length > 0) {
+          let results = [];
+          list.forEach(function(pref) {
+            let value = Services.prefs.getComplexValue(pref,
+                                                       Ci.nsIPrefLocalizedString);
+            if (value.data)
+              results.push(value.data);
+          });
+          return results;
+        }
+      }
+
+      return addon.selectedLocale[prop];
+
+    });
   }, this);
 
   this.__defineGetter__("screenshots", function() {
