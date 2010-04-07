@@ -65,7 +65,8 @@ function test01() {
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  var queryString = "?showBillboard=1&showLicense=1&remoteNoTypeAttr=1&showDetails=1";
+  var queryString = "?showBillboard=1&showLicense=1&remoteNoTypeAttr=1" +
+                    "&showDetails=1" + getVersionParams();
   setUpdateURLOverride(URL_UPDATE + queryString);
 
   gNextFunc = test02;

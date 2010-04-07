@@ -104,6 +104,18 @@ __defineGetter__("gWW", function() {
 });
 
 
+__defineGetter__("gApp", function() {
+  delete this.gApp;
+  return this.gApp = AUS_Cc["@mozilla.org/xre/app-info;1"].
+                     getService(AUS_Ci.nsIXULAppInfo).
+                     QueryInterface(AUS_Ci.nsIXULRuntime);
+});
+
+function getVersionParams() {
+  return "&appVersion=" + gApp.version +
+         "&platformVersion=" + gApp.platformVersion;
+}
+
 /**
  * Closes the update window in case a previous test failed to do so.
  */
