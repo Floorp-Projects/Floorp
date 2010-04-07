@@ -5,6 +5,11 @@
 // Tests that extensions installed through the registry work as expected
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
+// Enable loading extensions from the user and system scopes
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
+                          AddonManager.SCOPE_SYSTEM);
+
 var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
@@ -60,9 +65,12 @@ function run_test_1() {
     do_check_neq(a1, null);
     do_check_true(a1.isActive);
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_eq(a1.scope, AddonManager.SCOPE_SYSTEM);
+
     do_check_neq(a2, null);
     do_check_true(a2.isActive);
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
 
     run_test_2();
   });

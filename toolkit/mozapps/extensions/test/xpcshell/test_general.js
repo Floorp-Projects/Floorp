@@ -5,8 +5,8 @@
 // This just verifies that the EM can actually startup and shutdown a few times
 // without any errors
 
-// We have to look up how many add-ons are present in case apps like SeaMonkey
-// try to use this test with their built-in add-ons.
+// We have to look up how many add-ons are present since there will be plugins
+// etc. detected
 var gCount;
 
 function run_test() {
