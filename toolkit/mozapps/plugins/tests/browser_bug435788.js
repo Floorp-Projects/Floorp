@@ -417,10 +417,8 @@ function test_7_complete() {
   is(item.status, "Failed", "Should have been a failed install");
 
   AddonManager.getInstalls(null, function(installs) {
-    is(installs.length, 4, "Should be just one install");
-    is(installs[3].state, AddonManager.STATE_DOWNLOAD_FAILED, "Should have failed to download");
-    is(installs[3].addon.id, "bug435788_1@tests.mozilla.org", "Should have installed the extension");
-    installs[3].cancel();
+    is(installs.length, 1, "Should be one active installs");
+    installs[0].cancel();
 
     gPFS.document.documentElement.getButton("finish").click();
   });
@@ -473,7 +471,7 @@ function test_8_complete() {
   is(item.status, "Failed", "Should have not been a successful install");
 
   AddonManager.getInstalls(null, function(installs) {
-    is(installs.length, 5, "Should not be any installs");
+    is(installs.length, 0, "Should not be any installs");
 
     gPFS.document.documentElement.getButton("finish").click();
   });

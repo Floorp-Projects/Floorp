@@ -180,6 +180,7 @@ function run_test_1() {
 
     AddonManager.getAddonsByTypes(["extension"], function(extensionAddons) {
       do_check_eq(extensionAddons.length, 3);
+
       run_test_2();
     });
   });
