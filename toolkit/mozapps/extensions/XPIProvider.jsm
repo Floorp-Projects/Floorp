@@ -1644,6 +1644,10 @@ var XPIProvider = {
     }, file);
   },
 
+  removeActiveInstall: function XPI_removeActiveInstall(install) {
+    this.installs = this.installs.filter(function(i) i != install);
+  },
+
   /**
    * Called to get an Addon with a particular ID.
    *
@@ -3353,6 +3357,7 @@ AddonInstall.prototype = {
     case AddonManager.STATE_DOWNLOADED:
       LOG("Cancelling download of " + this.sourceURL.spec);
       this.state = AddonManager.STATE_CANCELLED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper);
       if (this.file && !(this.sourceURL instanceof Ci.nsIFileURL))
@@ -3369,6 +3374,7 @@ AddonInstall.prototype = {
       if (stagedJSON.exists())
         stagedJSON.remove(true);
       this.state = AddonManager.STATE_CANCELLED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallCancelled",
                                                this.listeners, this.wrapper);
       break;
@@ -3472,6 +3478,7 @@ AddonInstall.prototype = {
     if (!AddonManagerPrivate.callInstallListeners("onDownloadStarted",
                                                   this.listeners, this.wrapper)) {
       this.state = AddonManager.STATE_CANCELLED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper)
       return;
@@ -3488,6 +3495,7 @@ AddonInstall.prototype = {
       catch (e) {
         WARN("Unknown hash algorithm " + alg);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        XPIProvider.removeActiveInstall(this);
         AddonManagerPrivate.callInstallListeners("onDownloadFailed",
                                                  this.listeners, this.wrapper,
                                                  AddonManager.ERROR_INCORRECT_HASH);
@@ -3528,6 +3536,7 @@ AddonInstall.prototype = {
     catch (e) {
       WARN("Failed to start download: " + e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadFailed",
                                                this.listeners, this.wrapper,
                                                AddonManager.ERROR_NETWORK_FAILURE);
@@ -3664,6 +3673,7 @@ AddonInstall.prototype = {
   downloadFailed: function(reason, error) {
     WARN("Download failed: " + error + "\n");
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+    XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
                                              this.wrapper, reason);
     this.file.remove(true);
@@ -3695,6 +3705,7 @@ AddonInstall.prototype = {
     if (!AddonManagerPrivate.callInstallListeners("onInstallStarted",
                                                   this.listeners, this.wrapper)) {
       this.state = AddonManager.STATE_DOWNLOADED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallCancelled",
                                                this.listeners, this.wrapper)
       return;
@@ -3830,6 +3841,7 @@ AddonInstall.prototype = {
       if (stagedAddon.exists())
         stagedAddon.remove(true);
       this.state = AddonManager.STATE_INSTALL_FAILED;
+      XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallFailed",
                                                this.listeners,
                                                this.wrapper, e);
