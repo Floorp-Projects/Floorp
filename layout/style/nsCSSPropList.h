@@ -1257,8 +1257,8 @@ CSS_PROP_COLUMN(
     mColumnRuleColor,
     eCSSType_Value,
     nsnull,
-    offsetof(nsStyleColumn, mColumnRuleColor),
-    eStyleAnimType_Color)
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
     -moz-column-rule-style,
     _moz_column_rule_style,
