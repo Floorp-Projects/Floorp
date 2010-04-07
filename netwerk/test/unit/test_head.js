@@ -9,6 +9,7 @@ var httpserver = new nsHttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
 var channel;
+var ios;
 
 var dbg=0
 if (dbg) { print("============== START =========="); }
@@ -39,6 +40,17 @@ function setup_test() {
   setOK = channel.getRequestHeader("MergeMe");
   do_check_eq(setOK, "foo1, foo2, foo3");
 
+  var uri = ios.newURI("http://foo1.invalid:80", null, null);
+  channel.referrer = uri;
+  do_check_true(channel.referrer.equals(uri));
+  setOK = channel.getRequestHeader("Referer");
+  do_check_eq(setOK, "http://foo1.invalid/");
+
+  uri = ios.newURI("http://foo2.invalid:90/bar", null, null);
+  channel.referrer = uri;
+  setOK = channel.getRequestHeader("Referer");
+  do_check_eq(setOK, "http://foo2.invalid:90/bar");
+
   // ChannelListener defined in head_channels.js
   channel.asyncOpen(new ChannelListener(checkRequestResponse, channel), null);
 
@@ -46,8 +58,7 @@ function setup_test() {
 }
 
 function setupChannel(path) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
+  ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var chan = ios.newChannel("http://localhost:4444" + path, "", null);
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
@@ -61,6 +72,8 @@ function serverHandler(metadata, response) {
   do_check_eq(setOK, "replaced");
   setOK = metadata.getHeader("MergeMe");
   do_check_eq(setOK, "foo1, foo2, foo3");
+  setOK = metadata.getHeader("Referer");
+  do_check_eq(setOK, "http://foo2.invalid:90/bar");
 
   response.setHeader("Content-Type", "text/plain", false);
   response.setStatusLine("1.1", 200, "OK");
