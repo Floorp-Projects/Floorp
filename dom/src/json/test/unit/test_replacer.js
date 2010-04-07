@@ -45,4 +45,7 @@ function run_test() {
   foo = {bar:{bar:{}}}
   var x = JSON.stringify(foo, null, "  ");
   do_check_eq(x, '{\n  "bar":{\n    "bar":{}\n  }\n}');
+  
+  var x = JSON.stringify({x:1,arr:[1]}, function (k,v) { return typeof v === 'number' ? 3 : v; });
+  do_check_eq(x, '{"x":3,"arr":[3]}');
 }
