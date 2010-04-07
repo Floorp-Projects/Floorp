@@ -44,6 +44,7 @@ include "mozilla/net/PHttpChannelParams.h";
 
 using RequestHeaderTuples;
 using nsHttpResponseHead;
+using nsHttpAtom;
 
 namespace mozilla {
 namespace net {
@@ -67,7 +68,11 @@ parent:
             nsCString           docUriSpec, 
             nsCString           docCharset, 
             PRUint32            loadFlags,
-            RequestHeaderTuples requestHeaders);
+            RequestHeaderTuples requestHeaders,
+            nsHttpAtom          requestMethod,
+            PRUint8             redirectionLimit,
+            PRBool              allowPipelining,
+            PRBool              forceAllowThirdPartyCookie);
 
 child:
   OnStartRequest(nsHttpResponseHead responseHead);

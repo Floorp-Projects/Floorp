@@ -72,7 +72,11 @@ protected:
                              const nsCString&           docUriSpec, 
                              const nsCString&           docCharset,
                              const PRUint32&            loadFlags,
-                             const RequestHeaderTuples& requestHeaders);
+                             const RequestHeaderTuples& requestHeaders,
+                             const nsHttpAtom&          requestMethod,
+                             const PRUint8&             redirectionLimit,
+                             const PRBool&              allowPipelining,
+                             const PRBool&              forceAllowThirdPartyCookie);
 };
 
 } // namespace net

@@ -108,6 +108,7 @@ struct ParamTraits<nsHttpAtom>
       return false;
 
     *aResult = nsHttp::ResolveAtom(value.get());
+    NS_ASSERTION(aResult->get(), "atom table not initialized");
     return true;
   }
 };
