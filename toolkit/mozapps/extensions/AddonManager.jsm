@@ -811,6 +811,7 @@ var AddonManager = {
   PENDING_UNINSTALL: 4,
   // Indicates that the Addon will be installed after the application restarts.
   PENDING_INSTALL: 8,
+  PENDING_UPGRADE: 16,
 
   // Constants for permissions in Addon.permissions.
   // Indicates that the Addon can be uninstalled.
