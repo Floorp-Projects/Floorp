@@ -204,30 +204,10 @@ nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* 
     mResponseHeaderBuf(nsnull)
 {
   memset(&mNPStream, 0, sizeof(mNPStream));
-
-  NS_IF_ADDREF(mInst);
 }
 
-nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener(void)
+nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener()
 {
-  // remove itself from the instance stream list
-  nsNPAPIPluginInstance *inst = mInst;
-  if (inst) {
-    nsInstanceStream * prev = nsnull;
-    for (nsInstanceStream *is = inst->mStreams; is != nsnull; is = is->mNext) {
-      if (is->mPluginStreamListener == this) {
-        if (!prev)
-          inst->mStreams = is->mNext;
-        else
-          prev->mNext = is->mNext;
-
-        delete is;
-        break;
-      }
-      prev = is;
-    }
-  }
-
   // For those cases when NewStream is never called, we still may need
   // to fire a notification callback. Return network error as fallback
   // reason because for other cases, notify should have already been
@@ -239,8 +219,6 @@ nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener(void)
     PR_Free(mStreamBuffer);
     mStreamBuffer=nsnull;
   }
-
-  NS_IF_RELEASE(inst);
 
   if (mNotifyURL)
     PL_strfree(mNotifyURL);
@@ -265,7 +243,7 @@ nsresult nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   if (NP_SEEK == mStreamType)
     NS_RELEASE_THIS();
 
-  if (!mInst || !mInst->CanFireNotifications())
+  if (!mInst->CanFireNotifications())
     return rv;
 
   mStreamInfo = NULL;
@@ -306,7 +284,7 @@ nsresult nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
 
 void nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
 {
-  if (!mCallNotify || !mInst || !mInst->CanFireNotifications())
+  if (!mCallNotify || !mInst->CanFireNotifications())
     return;
 
   PluginDestructionGuard guard(mInst);
@@ -319,7 +297,6 @@ void nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
     return;
   
   if (callbacks->urlnotify) {
-
     NPP npp;
     mInst->GetNPP(&npp);
 
@@ -334,9 +311,6 @@ void nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
 NS_IMETHODIMP
 nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 {
-  if (!mInst)
-    return NS_ERROR_FAILURE;
-
   PluginDestructionGuard guard(mInst);
 
   NPP npp;
@@ -473,8 +447,8 @@ nsNPAPIPluginStreamListener::StopDataPump()
 PRBool
 nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
 {
-  for (nsInstanceStream *is = mInst->mStreams; is; is = is->mNext) {
-    if (is->mPluginStreamListener->mIsPluginInitJSStream) {
+  for (unsigned int i = 0; i < mInst->mStreams.Length(); i++) {
+    if (mInst->mStreams[i]->mIsPluginInitJSStream) {
       return PR_TRUE;
     }
   }
@@ -494,7 +468,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
-  if (!mInst || !mInst->CanFireNotifications())
+  if (!mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
 
   PluginDestructionGuard guard(mInst);
@@ -759,7 +733,7 @@ NS_IMETHODIMP
 nsNPAPIPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
                                              const char* fileName)
 {
-  if (!mInst || !mInst->CanFireNotifications())
+  if (!mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
 
   PluginDestructionGuard guard(mInst);
@@ -802,7 +776,7 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
     }
   }
 
-  if (!mInst || !mInst->CanFireNotifications())
+  if (!mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
 
   // check if the stream is of seekable type and later its destruction
@@ -873,16 +847,6 @@ nsNPAPIPluginStreamListener::NewResponseHeader(const char* headerName,
   return NS_OK;
 }
 
-nsInstanceStream::nsInstanceStream()
-{
-  mNext = nsnull;
-  mPluginStreamListener = nsnull;
-}
-
-nsInstanceStream::~nsInstanceStream()
-{
-}
-
 NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
@@ -918,16 +882,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance ctor: this=%p\n",this));
 }
 
-nsNPAPIPluginInstance::~nsNPAPIPluginInstance(void)
+nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
 {
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance dtor: this=%p\n",this));
-
-  // clean the stream list if any
-  for (nsInstanceStream *is = mStreams; is != nsnull;) {
-    nsInstanceStream * next = is->mNext;
-    delete is;
-    is = next;
-  }
 
   if (mMIMEType) {
     PR_Free((void *)mMIMEType);
@@ -1004,19 +961,10 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop()
   OnPluginDestroy(&mNPP);
 
   // clean up open streams
-  for (nsInstanceStream *is = mStreams; is != nsnull;) {
-    nsRefPtr<nsNPAPIPluginStreamListener> listener = is->mPluginStreamListener;
-
-    nsInstanceStream *next = is->mNext;
-    delete is;
-    is = next;
-    mStreams = is;
-
-    // Clean up our stream after removing it from the list because 
-    // it may be released and destroyed at this point.
-    if (listener)
-      listener->CleanUpStream(NPRES_USER_BREAK);
+  for (unsigned int i = 0; i < mStreams.Length(); i++) {
+    mStreams[i]->CleanUpStream(NPRES_USER_BREAK);
   }
+  mStreams.Clear();
 
   NPError error = NPERR_GENERIC_ERROR;
   if (mCallbacks->destroy) {
@@ -1296,23 +1244,11 @@ nsresult nsNPAPIPluginInstance::NewNotifyStream(nsIPluginStreamListener** listen
   nsNPAPIPluginStreamListener* stream = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
   NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
 
-  // add it to the list
-  nsInstanceStream * is = new nsInstanceStream();
-  NS_ENSURE_TRUE(is, NS_ERROR_OUT_OF_MEMORY);
+  mStreams.AppendElement(stream);
 
-  is->mNext = mStreams;
-  is->mPluginStreamListener = stream;
-  mStreams = is;
   stream->SetCallNotify(aCallNotify); // set flag in stream to call URLNotify
 
-  NS_ADDREF(stream); // Stabilize
-    
-  nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
-
-  // Destabilize and avoid leaks. Avoid calling delete <interface pointer>
-  NS_RELEASE(stream);
-
-  return res;
+  return stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
 }
 
 NS_IMETHODIMP nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
