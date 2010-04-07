@@ -46,10 +46,14 @@ MODULE		= necko
 LIBRARY_NAME = nkhttp_s
 LIBXUL_LIBRARY  = 1
 
-ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla/net
 
 EXPORTS_mozilla/net = \
+  HttpBaseChannel.h \
+  $(NULL)
+
+ifdef MOZ_IPC
+EXPORTS_mozilla/net += \
   HttpChannelParent.h \
   HttpChannelChild.h  \
   PHttpChannelParams.h \
@@ -79,6 +83,7 @@ CPPSRCS		= \
 		nsHttpNTLMAuth.cpp \
 		nsHttpTransaction.cpp \
 		nsHttpHandler.cpp \
+		HttpBaseChannel.cpp \
 		nsHttpChannel.cpp \
 		nsHttpPipeline.cpp \
 		nsHttpActivityDistributor.cpp \

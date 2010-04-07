@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHttp.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "nsHttpChannel.h"
+#include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -49,10 +49,15 @@ namespace net {
 // C++ file contents
 HttpChannelParent::HttpChannelParent()
 {
+  // Ensure gHttpHandler is initialized: we need the atom table up and running.
+  nsIHttpProtocolHandler* handler;
+  CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &handler);
+  NS_ASSERTION(handler, "no http handler");
 }
 
 HttpChannelParent::~HttpChannelParent()
 {
+  NS_RELEASE(gHttpHandler);
 }
 
 //-----------------------------------------------------------------------------
@@ -76,8 +81,15 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
                                  const nsCString&           docUriSpec, 
                                  const nsCString&           docCharset,
                                  const PRUint32&            loadFlags,
-                                 const RequestHeaderTuples& requestHeaders)
+                                 const RequestHeaderTuples& requestHeaders,
+                                 const nsHttpAtom&          requestMethod,
+                                 const PRUint8&             redirectionLimit,
+                                 const PRBool&              allowPipelining,
+                                 const PRBool&              forceAllowThirdPartyCookie)
 {
+  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s (%s)]\n", 
+       this, uriSpec.get(), charset.get()));
+
   nsresult rv;
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
@@ -89,15 +101,13 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
   if (NS_FAILED(rv))
     return false;       // TODO: send fail msg to child, return true
 
-  // Delay log to here, as gHttpLog may not exist in parent until we init
-  // gHttpHandler via above call to NS_NewURI.  Avoids segfault :)
-  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s (%s)]\n", 
-       this, uriSpec.get(), charset.get()));
-
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannel(getter_AddRefs(chan), uri, ios, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
     return false;       // TODO: send fail msg to child, return true
+
+  nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
+  nsCOMPtr<nsIHttpChannelInternal> httpChanInt(do_QueryInterface(chan));
 
   if (!originalUriSpec.IsEmpty()) {
     nsCOMPtr<nsIURI> originalUri;
@@ -111,15 +121,12 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
     rv = NS_NewURI(getter_AddRefs(docUri), docUriSpec, 
                    docCharset.get(), nsnull, ios);
     if (!NS_FAILED(rv)) {
-      nsCOMPtr<nsIHttpChannelInternal> iChan(do_QueryInterface(chan));
-      if (iChan) 
-        iChan->SetDocumentURI(docUri);
+      httpChanInt->SetDocumentURI(docUri);
     }
   }
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     chan->SetLoadFlags(loadFlags);
 
-  nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
   for (PRUint32 i = 0; i < requestHeaders.Length(); i++)
     httpChan->SetRequestHeader(requestHeaders[i].mHeader,
                                requestHeaders[i].mValue,
@@ -128,6 +135,11 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
   // TODO: implement needed interfaces, and either proxy calls back to child
   // process, or rig up appropriate hacks.
 //  chan->SetNotificationCallbacks(this);
+
+  httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
+  httpChan->SetRedirectionLimit(redirectionLimit);
+  httpChan->SetAllowPipelining(allowPipelining);
+  httpChanInt->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
 
   rv = chan->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))

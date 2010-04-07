@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Daniel Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,15 +42,10 @@
 #ifndef mozilla_net_HttpChannelChild_h
 #define mozilla_net_HttpChannelChild_h
 
+#include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/PHttpChannelChild.h"
-#include "mozilla/net/NeckoCommon.h"
 
-#include "nsHttpRequestHead.h"
-#include "nsHashPropertyBag.h"
-#include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIStreamListener.h"
-#include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -65,7 +61,6 @@
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
 
-
 namespace mozilla {
 namespace net {
 
@@ -80,9 +75,7 @@ enum HttpChannelChildState {
 
 // Header file contents
 class HttpChannelChild : public PHttpChannelChild
-                       , public nsIHttpChannel
-                       , public nsHashPropertyBag
-                       , public nsIHttpChannelInternal
+                       , public HttpBaseChannel
                        , public nsICachingChannel
                        , public nsIUploadChannel
                        , public nsIUploadChannel2
@@ -95,10 +88,6 @@ class HttpChannelChild : public PHttpChannelChild
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSICHANNEL
-  NS_DECL_NSIHTTPCHANNEL
-  NS_DECL_NSIHTTPCHANNELINTERNAL
   NS_DECL_NSICACHINGCHANNEL
   NS_DECL_NSIUPLOADCHANNEL
   NS_DECL_NSIUPLOADCHANNEL2
@@ -115,6 +104,24 @@ public:
 
   nsresult Init(nsIURI *uri);
 
+  // Methods HttpBaseChannel didn't implement for us or that we override.
+  //
+  // nsIRequest
+  NS_IMETHOD Cancel(nsresult status);
+  NS_IMETHOD Suspend();
+  NS_IMETHOD Resume();
+  // nsIChannel
+  NS_IMETHOD GetOwner(nsISupports **aOwner);
+  NS_IMETHOD SetOwner(nsISupports *aOwner);
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
+  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
+  // HttpBaseChannel::nsIHttpChannel
+  NS_IMETHOD SetRequestHeader(const nsACString& aHeader, 
+                              const nsACString& aValue, 
+                              PRBool aMerge);
+  // nsIHttpChannelInternal
+  NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+
 protected:
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead);
   bool RecvOnDataAvailable(const nsCString& data, 
@@ -123,53 +130,11 @@ protected:
   bool RecvOnStopRequest(const nsresult& statusCode);
 
 private:
-  nsresult BaseClassSetContentType_HACK(const nsACString &value);
-  nsresult BaseClassGetContentCharset_HACK(nsACString &value);
-  nsresult BaseClassSetContentCharset_HACK(const nsACString &value);
-  nsresult BaseClassSetRequestHeader_HACK(const nsACString &header,
-                                          const nsACString &value,
-                                          PRBool merge);
-  nsresult BaseClassGetRequestHeader_HACK(const nsACString &header,
-                                          nsACString &value);
-  nsresult BaseClassGetResponseHeader_HACK(const nsACString &header,
-                                           nsACString &value);
-  nsresult BaseClassSetResponseHeader_HACK(const nsACString &header,
-                                           const nsACString &value,
-                                           PRBool merge);
-
-  nsCOMPtr<nsIStreamListener>         mChildListener;
-  nsCOMPtr<nsISupports>               mChildListenerContext;
-
-  RequestHeaderTuples                 mRequestHeaders;
-
-  nsAutoPtr<nsHttpResponseHead>       mResponseHead;
+  RequestHeaderTuples mRequestHeaders;
 
   // FIXME: replace with IPDL states (bug 536319) 
   enum HttpChannelChildState mState;
-
-  /**
-   * fields copied from nsHttpChannel.h
-   */
-  nsCOMPtr<nsIURI>                  mOriginalURI;
-  nsCOMPtr<nsIURI>                  mURI;
-  nsCOMPtr<nsIURI>                  mDocumentURI;
-
-  nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
-  nsCOMPtr<nsIProgressEventSink>    mProgressSink;
-
-  nsHttpRequestHead                 mRequestHead;
-
-  nsCString                         mSpec; // ASCII encoded URL spec
-
-  PRUint32                          mLoadFlags;
-  PRUint32                          mStatus;
-
-  // state flags
-  PRUint32                          mIsPending                : 1;
-  PRUint32                          mWasOpened                : 1;
-
 };
-
 
 } // namespace net
 } // namespace mozilla
