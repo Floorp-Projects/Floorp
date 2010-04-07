@@ -12,15 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Bug 461710 test code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla.org.
+# Ehsan Akhgari.
 # Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,52 +36,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= toolkit/components/places/tests
+relativesrcdir = toolkit/components/places/tests/bug_461710
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= test_places
-
-XPCSHELL_TESTS = \
-	autocomplete \
-	expiration \
-	sync \
-	bookmarks \
-	queries \
-	unit \
-	network \
-	$(NULL)
-
-# Files in the main "tests" folder.
-XPCSHELL_TESTS_COMMON = \
-  head_common.js \
-	$(NULL)
-
-# Simple MochiTests
-MOCHI_TESTS = \
-	mochitest/test_bug_411966.html \
-	mochitest/test_bug_461710.html \
-	$(NULL)
-
-DIRS = \
-	chrome \
-	mochitest/bug_411966 \
-	mochitest/bug_461710 \
-	browser \
-	$(NULL)
-
-TOOL_DIRS = \
-  cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(MOCHI_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+_HTTP_FILES	= \
+		visited_page.html \
+		link_page.html \
+		link_page-2.html \
+		link_page-3.html \
+		$(NULL)
 
-libs:: $(XPCSHELL_TESTS_COMMON)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(MODULE)
+libs:: $(_HTTP_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
