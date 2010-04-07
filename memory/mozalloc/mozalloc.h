@@ -73,6 +73,13 @@
 #  define MOZALLOC_INLINE inline
 #endif
 
+/* Workaround build problem with Sun Studio 12 */
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#  undef NS_WARN_UNUSED_RESULT
+#  define NS_WARN_UNUSED_RESULT
+#  undef NS_ATTR_MALLOC
+#  define NS_ATTR_MALLOC
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -210,7 +217,7 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #  define MOZALLOC_EXPORT_NEW
 #endif
 
-#ifdef __MINGW32__
+#ifdef MOZ_CPP_EXCEPTIONS
 #define MOZALLOC_THROW_BAD_ALLOC throw(std::bad_alloc)
 #else
 #define MOZALLOC_THROW_BAD_ALLOC throw()
