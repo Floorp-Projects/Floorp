@@ -558,17 +558,11 @@ struct JSObject {
 
 #endif /* JS_THREADSAFE */
 
-/*
- * Class is invariant and comes from the fixed clasp member. Thus no locking
- * is necessary to read it. Same for the private slot.
- */
-#define OBJ_GET_CLASS(cx,obj)           (obj)->getClass()
-
 #ifdef __cplusplus
 inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    JSClass *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
         JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
         if (xclasp->innerObject)
@@ -583,7 +577,7 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    JSClass *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
         JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
         if (xclasp->outerObject)

@@ -275,7 +275,7 @@ ToDisassemblySource(JSContext *cx, jsval v)
 {
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        JSClass *clasp = obj->getClass();
 
         if (clasp == &js_BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
@@ -1315,7 +1315,7 @@ GetLocal(SprintStack *ss, jsint i)
         if (j == n)
             return GetStr(ss, i);
         obj = script->getObject(j);
-        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
+        if (obj->getClass() == &js_BlockClass) {
             depth = OBJ_BLOCK_DEPTH(cx, obj);
             count = OBJ_BLOCK_COUNT(cx, obj);
             if ((jsuint)(i - depth) < (jsuint)count)
@@ -4190,7 +4190,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_OBJECT:
                 LOAD_OBJECT(0);
-                LOCAL_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+                LOCAL_ASSERT(obj->getClass() == &js_RegExpClass);
                 goto do_regexp;
 
               case JSOP_REGEXP:

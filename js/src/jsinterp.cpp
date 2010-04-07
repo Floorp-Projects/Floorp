@@ -260,7 +260,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JSObject *limitBlock, *limitClone;
     if (fp->fun && !fp->callobj) {
-        JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
+        JS_ASSERT(fp->scopeChain->getClass() != &js_BlockClass ||
                   fp->scopeChain->getPrivate() != fp);
         if (!js_GetCallObject(cx, fp))
             return NULL;
@@ -275,7 +275,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          * to, but not including, that prototype.
          */
         limitClone = fp->scopeChain;
-        while (OBJ_GET_CLASS(cx, limitClone) == &js_WithClass)
+        while (limitClone->getClass() == &js_WithClass)
             limitClone = limitClone->getParent();
         JS_ASSERT(limitClone);
 
@@ -346,7 +346,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * found it in blockChain.
      */
     JS_ASSERT_IF(limitBlock &&
-                 OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass &&
+                 limitBlock->getClass() == &js_BlockClass &&
                  limitClone->getPrivate() == fp,
                  sharedBlock);
 
@@ -427,7 +427,7 @@ ComputeThis(JSContext *cx, jsval *argv)
     } 
 
     thisp = JSVAL_TO_OBJECT(argv[-1]);
-    if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass || OBJ_GET_CLASS(cx, thisp) == &js_BlockClass)
+    if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
         return js_ComputeGlobalThis(cx, argv);
 
     return CallThisObjectHook(cx, thisp, argv);
@@ -1312,7 +1312,7 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
     if (!JSVAL_IS_OBJECT(lval) ||
         (obj2 = JSVAL_TO_OBJECT(lval)) == NULL ||
         /* XXX clean up to avoid special cases above ObjectOps layer */
-        OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass ||
+        obj2->getClass() == &js_FunctionClass ||
         !obj2->map->ops->construct)
     {
         fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
@@ -1440,7 +1440,7 @@ js_LeaveWith(JSContext *cx)
     JSObject *withobj;
 
     withobj = cx->fp->scopeChain;
-    JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
+    JS_ASSERT(withobj->getClass() == &js_WithClass);
     JS_ASSERT(withobj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     cx->fp->scopeChain = withobj->getParent();
@@ -1452,7 +1452,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if ((clasp == &js_WithClass || clasp == &js_BlockClass) &&
         obj->getPrivate() == cx->fp &&
         OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
@@ -1476,7 +1476,7 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     JS_ASSERT(StackBase(fp) + stackDepth <= fp->regs->sp);
 
     for (obj = fp->blockChain; obj; obj = obj->getParent()) {
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+        JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
             break;
     }

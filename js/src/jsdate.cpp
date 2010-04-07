@@ -1216,7 +1216,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 static void
 SetDateToNaN(JSContext *cx, JSObject *obj, jsval *vp = NULL)
 {
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_DateClass);
+    JS_ASSERT(obj->getClass() == &js_DateClass);
 
     obj->fslots[JSSLOT_LOCAL_TIME] = cx->runtime->NaNValue;
     obj->fslots[JSSLOT_UTC_TIME] = cx->runtime->NaNValue;
@@ -1230,7 +1230,7 @@ SetDateToNaN(JSContext *cx, JSObject *obj, jsval *vp = NULL)
 static JSBool
 SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, jsval *vp = NULL)
 {
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_DateClass);
+    JS_ASSERT(obj->getClass() == &js_DateClass);
 
     obj->fslots[JSSLOT_LOCAL_TIME] = cx->runtime->NaNValue;
     if (!js_NewDoubleInRootedValue(cx, t, &obj->fslots[JSSLOT_UTC_TIME]))
