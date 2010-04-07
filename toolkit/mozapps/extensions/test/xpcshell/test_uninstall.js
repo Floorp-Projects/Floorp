@@ -18,8 +18,7 @@ var addon1 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-// Sets up the profile by installing a couple of add-ons. One is dependent on
-// the other.
+// Sets up the profile by installing an add-on.
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -41,6 +40,7 @@ function run_test() {
       do_check_false(a1.userDisabled);
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
       do_check_eq(a1.pendingOperations, 0);
+      do_check_in_crash_annotation(addon1.id, addon1.version);
 
       run_test_1();
     });
@@ -62,6 +62,7 @@ function run_test_1() {
     do_check_eq(a1.pendingOperations, 0);
     a1.uninstall();
     do_check_true(hasFlag(a1.pendingOperations, AddonManager.PENDING_UNINSTALL));
+    do_check_in_crash_annotation(addon1.id, addon1.version);
 
     ensure_test_completed();
 
@@ -80,6 +81,7 @@ function check_test_1() {
   AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
     do_check_eq(a1, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+    do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
     var dest = profileDir.clone();
     dest.append("addon1@tests.mozilla.org");
