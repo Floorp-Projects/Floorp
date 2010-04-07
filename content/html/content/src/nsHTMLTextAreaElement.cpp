@@ -435,9 +435,7 @@ nsHTMLTextAreaElement::TakeTextFrameValue(const nsAString& aValue)
   if (mValue) {
     nsMemory::Free(mValue);
   }
-  nsString value(aValue);
-  nsContentUtils::PlatformToDOMLineBreaks(value);
-  mValue = ToNewUTF8String(value);
+  mValue = ToNewUTF8String(aValue);
   return NS_OK;
 }
 
