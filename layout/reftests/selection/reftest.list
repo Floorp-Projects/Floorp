@@ -24,3 +24,4 @@
 == extend-3i.html extend-3-ref.html
 == extend-4a.html extend-4-ref.html
 == extend-4b.html extend-4-ref.html
+!= pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html
