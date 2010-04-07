@@ -282,28 +282,34 @@ function check_test_5() {
   ensure_test_completed();
   AddonManager.getAddon("addon2@tests.mozilla.org", function(olda2) {
     do_check_neq(olda2, null);
-    restartManager();
+    do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
 
     AddonManager.getInstalls(null, function(installs) {
-      do_check_eq(installs, 0);
+      do_check_eq(installs.length, 1);
+      do_check_eq(installs[0].addon, olda2.pendingUpgrade);
+      restartManager();
 
-      AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
-        do_check_neq(a2, null);
-        do_check_eq(a2.type, "extension");
-        do_check_eq(a2.version, "3.0");
-        do_check_eq(a2.name, "Real Test 3");
-        do_check_true(a2.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, a2.id));
-        do_check_true(do_get_addon("test_install2_2").exists());
+      AddonManager.getInstalls(null, function(installs) {
+        do_check_eq(installs.length, 0);
 
-        do_check_eq(a2.installDate.getTime(), gInstallDate);
-        // Update date should be later (or the same if this test is too fast)
-        do_check_true(a2.installDate <= a2.updateDate);
+        AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+          do_check_neq(a2, null);
+          do_check_eq(a2.type, "extension");
+          do_check_eq(a2.version, "3.0");
+          do_check_eq(a2.name, "Real Test 3");
+          do_check_true(a2.isActive);
+          do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+          do_check_true(do_get_addon("test_install2_2").exists());
 
-        a2.uninstall();
-        restartManager(0);
+          do_check_eq(a2.installDate.getTime(), gInstallDate);
+          // Update date should be later (or the same if this test is too fast)
+          do_check_true(a2.installDate <= a2.updateDate);
 
-        run_test_6();
+          a2.uninstall();
+          restartManager(0);
+
+          run_test_6();
+        });
       });
     });
   });
