@@ -210,6 +210,7 @@ function run_test_4() {
 function continue_test_4(install) {
   do_check_neq(install.existingAddon, null);
   do_check_eq(install.existingAddon.id, "addon1@tests.mozilla.org");
+
   prepare_test({
     "addon1@tests.mozilla.org": [
       "onInstalling"
@@ -220,7 +221,9 @@ function continue_test_4(install) {
   ], check_test_4);
 }
 
-function check_test_4() {
+function check_test_4(install) {
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
   restartManager(1);
   AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
