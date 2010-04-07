@@ -28,6 +28,7 @@ function run_test() {
 
   AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
     do_check_eq(a1, null);
+    do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
     var dest = profileDir.clone();
     dest.append("addon1@tests.mozilla.org");
@@ -43,6 +44,7 @@ function run_test() {
       do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
       do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
       do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+      do_check_in_crash_annotation(addon1.id, addon1.version);
 
       run_test_1();
     });
@@ -61,6 +63,7 @@ function run_test_1() {
     a1.userDisabled = true;
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_in_crash_annotation(addon1.id, addon1.version);
 
     ensure_test_completed();
 
@@ -78,6 +81,7 @@ function run_test_1() {
         do_check_false(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
         do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+        do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
         run_test_2();
       });
@@ -113,6 +117,7 @@ function run_test_2() {
         do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+        do_check_in_crash_annotation(addon1.id, addon1.version);
 
         run_test_3();
       });
