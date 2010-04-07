@@ -40,6 +40,7 @@ function run_test_1() {
     do_check_true(install.addon.hasResource("install.rdf"));
     do_check_true(install.addon.hasResource("bootstrap.js"));
     do_check_false(install.addon.hasResource("foo.bar"));
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     prepare_test({
       "bootstrap1@tests.mozilla.org": [
@@ -65,6 +66,7 @@ function check_test_1() {
     do_check_true(b1.hasResource("install.rdf"));
     do_check_true(b1.hasResource("bootstrap.js"));
     do_check_false(b1.hasResource("foo.bar"));
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     let dir = profileDir.clone();
     dir.append("bootstrap1@tests.mozilla.org");
@@ -99,6 +101,7 @@ function run_test_2() {
     do_check_true(b1.userDisabled);
     do_check_false(b1.isActive);
     do_check_eq(getActivatedVersion(), 0);
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_neq(newb1, null);
@@ -118,6 +121,7 @@ function run_test_3() {
   do_check_eq(getActivatedVersion(), 0);
   startupManager(0, false);
   do_check_eq(getActivatedVersion(), 0);
+  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
   AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
@@ -149,6 +153,7 @@ function run_test_4() {
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
     do_check_eq(getActivatedVersion(), 1);
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_neq(newb1, null);
@@ -166,8 +171,10 @@ function run_test_4() {
 function run_test_5() {
   shutdownManager();
   do_check_eq(getActivatedVersion(), 0);
+  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
   startupManager(0, false);
   do_check_eq(getActivatedVersion(), 1);
+  do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
   AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
@@ -217,6 +224,8 @@ function check_test_6() {
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
     do_check_eq(getActivatedVersion(), 2);
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
 
     run_test_7();
   });
@@ -241,6 +250,7 @@ function run_test_7() {
 function check_test_7() {
   ensure_test_completed();
   do_check_eq(getActivatedVersion(), 0);
+  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
 
   AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
@@ -282,6 +292,7 @@ function run_test_8() {
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
     do_check_eq(getActivatedVersion(), 1);
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     run_test_9();
   });
@@ -298,6 +309,7 @@ function run_test_9() {
 
   AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     do_test_finished();
   });

@@ -61,6 +61,7 @@ const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
+const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
@@ -768,6 +769,8 @@ var XPIProvider = {
   bootstrappedAddons: {},
   // A dictionary of JS scopes of loaded bootstrappable add-ons by ID
   bootstrapScopes: {},
+  // A string listing the enabled add-ons for annotating crash reports
+  enabledAddons: null,
 
   /**
    * Starts the XPI provider initializes the install locations and prefs.
@@ -821,6 +824,20 @@ var XPIProvider = {
                                                 true)
     this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                  true)
+    this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
+
+    if ("nsICrashReporter" in Ci &&
+        Services.appinfo instanceof Ci.nsICrashReporter) {
+      // Annotate the crash report with relevant add-on information.
+      try {
+        Services.appinfo.annotateCrashReport("Theme", this.selectedSkin);
+      } catch (e) { }
+      try {
+        Services.appinfo.annotateCrashReport("EMCheckCompatibility",
+                                             this.checkCompatibility);
+      } catch (e) { }
+      this.addAddonsToCrashReporter();
+    }
 
     Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
@@ -844,6 +861,24 @@ var XPIProvider = {
 
     this.installLocations = null;
     this.installLocationsByName = null;
+  },
+
+  /**
+   * Adds a list of currently active add-ons to the next crash report.
+   */
+  addAddonsToCrashReporter: function XPI_addAddonsToCrashReporter() {
+    if (!("nsICrashReporter" in Ci) ||
+        !(Services.appinfo instanceof Ci.nsICrashReporter))
+      return;
+
+    let data = this.enabledAddons;
+    for (let id in this.bootstrappedAddons)
+      data += (data ? "," : "") + id + ":" + this.bootstrappedAddons[id].version;
+
+    try {
+      Services.appinfo.annotateCrashReport("Add-ons", data);
+    }
+    catch (e) { }
   },
 
   /**
@@ -1124,7 +1159,10 @@ var XPIProvider = {
               !oldAddon.userDisabled) {
             oldAddon.active = true;
             XPIDatabase.updateAddonActive(oldAddon);
-            XPIProvider.bootstrappedAddons[oldAddon.id] = addonState.descriptor;
+            XPIProvider.bootstrappedAddons[oldAddon.id] = {
+              version: oldAddon.version,
+              descriptor: addonState.descriptor
+            };
           }
           else {
             // Otherwise a restart is necessary
@@ -1153,10 +1191,15 @@ var XPIProvider = {
               // appDisabled.
               oldAddon.active = !oldAddon.appDisabled;
               XPIDatabase.updateAddonActive(oldAddon);
-              if (oldAddon.active)
-                XPIProvider.bootstrappedAddons[oldAddon.id] = addonState.descriptor;
-              else
+              if (oldAddon.active) {
+                XPIProvider.bootstrappedAddons[oldAddon.id] = {
+                  version: oldAddon.version,
+                  descriptor: addonState.descriptor
+                };
+              }
+              else {
                 delete XPIProvider.bootstrappedAddons[oldAddon.id];
+              }
             }
             else {
               changed = true;
@@ -1261,7 +1304,10 @@ var XPIProvider = {
         if (newAddon.type != "bootstrapped")
           return true;
 
-        XPIProvider.bootstrappedAddons[newAddon.id] = addonState.descriptor;
+        XPIProvider.bootstrappedAddons[newAddon.id] = {
+          version: newAddon.version,
+          descriptor: addonState.descriptor
+        };
       }
 
       return false;
@@ -1417,8 +1463,8 @@ var XPIProvider = {
     this.bootstrappedAddons = {};
     for (let id in bootstrappedAddons) {
       let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      dir.persistentDescriptor = bootstrappedAddons[id];
-      this.activateAddon(id, dir, true, false);
+      dir.persistentDescriptor = bootstrappedAddons[id].descriptor;
+      this.activateAddon(id, bootstrappedAddons[id].version, dir, true, false);
     }
 
     // Let these shutdown a little earlier when they still have access to most
@@ -1788,6 +1834,8 @@ var XPIProvider = {
    *
    * @param   id
    *          The ID of the add-on being activated
+   * @param   version
+   *          The version of the add-on being activated
    * @param   dir
    *          The directory containing the add-on
    * @param   startup
@@ -1795,7 +1843,7 @@ var XPIProvider = {
    * @param   install
    *          true if the add-on is being activated during installation
    */
-  activateAddon: function XPI_activateAddon(id, dir, startup, install) {
+  activateAddon: function XPI_activateAddon(id, version, dir, startup, install) {
     let methods = ["enable"];
     if (startup)
       methods.unshift("startup");
@@ -1811,17 +1859,22 @@ var XPIProvider = {
       let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                    createInstance(Ci.mozIJSSubScriptLoader);
 
+      // Mark the add-on as active for the crash reporter before loading
+      this.bootstrappedAddons[id] = {
+        version: version,
+        descriptor: dir.persistentDescriptor
+      };
+      this.bootstrapScopes[id] = scope;
+      this.addAddonsToCrashReporter();
+
       try {
         loader.loadSubScript(uri.spec, scope);
       }
       catch (e) {
         WARN("Error loading bootstrap.js for " + id + ": " + e);
-        return;
       }
 
       this.callBootstrapMethod(id, scope, methods);
-      this.bootstrappedAddons[id] = dir.persistentDescriptor;
-      this.bootstrapScopes[id] = scope;
     }
     else {
       WARN("Bootstrap missing for " + id);
@@ -1855,6 +1908,8 @@ var XPIProvider = {
     if (uninstall)
       methods.unshift("uninstall");
     this.callBootstrapMethod(id, scope, methods);
+
+    this.addAddonsToCrashReporter();
   },
 
   /**
@@ -1938,7 +1993,7 @@ var XPIProvider = {
         else {
           if (addon.type == "bootstrapped") {
             let dir = addon._installLocation.getLocationForID(addon.id);
-            this.activateAddon(addon.id, dir, false, false);
+            this.activateAddon(addon.id, addon.version, dir, false, false);
           }
           AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
         }
@@ -3029,13 +3084,16 @@ var XPIDatabase = {
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
 
+    let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
 
     let stmt = this.getStatement("getActiveAddons");
 
-    for (let row in resultRows(stmt))
+    for (let row in resultRows(stmt)) {
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+      enabledAddons.push(row.id + ":" + row.version);
+    }
 
     // The selected skin may come from an inactive theme (the default theme
     // when a lightweight theme is applied for example)
@@ -3043,12 +3101,16 @@ var XPIDatabase = {
     stmt = this.getStatement("getActiveTheme");
     stmt.params.internalName = XPIProvider.selectedSkin;
     count = 0;
-    for (let row in resultRows(stmt))
+    for (let row in resultRows(stmt)) {
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+      enabledAddons.push(row.id + ":" + row.version);
+    }
 
     var fos = FileUtils.openSafeFileOutputStream(addonsList);
     fos.write(text, text.length);
     FileUtils.closeSafeFileOutputStream(fos);
+
+    Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
   }
 };
 
@@ -3683,7 +3745,7 @@ AddonInstall.prototype = {
                                        function(a) {
           self.addon = a;
           if (self.addon.active && self.addon.type == "bootstrapped")
-            XPIProvider.activateAddon(self.addon.id, dir, false, true);
+            XPIProvider.activateAddon(self.addon.id, self.addon.version, dir, false, true);
           AddonManagerPrivate.callAddonListeners("onInstalled",
                                                  createWrapper(self.addon));
 
