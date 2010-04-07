@@ -5,9 +5,10 @@
 // This verifies startup detection of added/removed/changed items and install
 // location priorities
 
-// We try to count the non-test extensions the add-on manager detects like the
-// built-in extensions in seamonkey.
-var additionalAddons, additionalExtensions;
+// Enable loading extensions from the user and system scopes
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
+                          AddonManager.SCOPE_SYSTEM);
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",
@@ -82,29 +83,23 @@ function run_test() {
   do_test_pending();
   startupManager(1);
 
-  AddonManager.getAddonsByTypes(null, function(allAddons) {
-    additionalAddons = allAddons.length;
-    AddonManager.getAddonsByTypes(["extension"], function(allExtensions) {
-      additionalExtensions = allExtensions.length;
-      AddonManager.getAddons(["addon1@tests.mozilla.org",
-                              "addon2@tests.mozilla.org",
-                              "addon3@tests.mozilla.org",
-                              "addon4@tests.mozilla.org",
-                              "addon5@tests.mozilla.org"],
-                              function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddons(["addon1@tests.mozilla.org",
+                          "addon2@tests.mozilla.org",
+                          "addon3@tests.mozilla.org",
+                          "addon4@tests.mozilla.org",
+                          "addon5@tests.mozilla.org"],
+                          function([a1, a2, a3, a4, a5]) {
 
-        do_check_eq(a1, null);
-        do_check_not_in_crash_annotation(addon1.id, addon1.version);
-        do_check_eq(a2, null);
-        do_check_not_in_crash_annotation(addon2.id, addon2.version);
-        do_check_eq(a3, null);
-        do_check_not_in_crash_annotation(addon3.id, addon3.version);
-        do_check_eq(a4, null);
-        do_check_eq(a5, null);
+    do_check_eq(a1, null);
+    do_check_not_in_crash_annotation(addon1.id, addon1.version);
+    do_check_eq(a2, null);
+    do_check_not_in_crash_annotation(addon2.id, addon2.version);
+    do_check_eq(a3, null);
+    do_check_not_in_crash_annotation(addon3.id, addon3.version);
+    do_check_eq(a4, null);
+    do_check_eq(a5, null);
 
-        run_test_1();
-      });
-    });
+    run_test_1();
   });
 }
 
@@ -149,6 +144,7 @@ function run_test_1() {
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon1.id, addon1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -158,6 +154,7 @@ function run_test_1() {
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon2.id, addon2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_neq(a3, null);
     do_check_eq(a3.id, "addon3@tests.mozilla.org");
@@ -167,6 +164,7 @@ function run_test_1() {
     do_check_true(hasFlag(a3.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a3.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon3.id, addon3.version);
+    do_check_eq(a3.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
@@ -180,12 +178,9 @@ function run_test_1() {
     dest.append("addon5@tests.mozilla.org");
     do_check_false(dest.exists());
 
-    AddonManager.getAddonsByTypes(null, function(addons) {
-      do_check_eq(addons.length, 3 + additionalAddons);
-      AddonManager.getAddonsByTypes(["extension"], function(extensionAddons) {
-        do_check_eq(extensionAddons.length, 3 + additionalExtensions);
-        run_test_2();
-      });
+    AddonManager.getAddonsByTypes(["extension"], function(extensionAddons) {
+      do_check_eq(extensionAddons.length, 3);
+      run_test_2();
     });
   });
 }
@@ -230,6 +225,7 @@ function run_test_2() {
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -240,6 +236,7 @@ function run_test_2() {
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -284,6 +281,7 @@ function run_test_3() {
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_USER);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -294,6 +292,7 @@ function run_test_3() {
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -312,8 +311,116 @@ function run_test_3() {
   });
 }
 
-// Check that items in the profile hide the others again.
+// Test that disabling an install location works
 function run_test_4() {
+  Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
+
+  restartManager(1);
+
+  AddonManager.getAddons(["addon1@tests.mozilla.org",
+                          "addon2@tests.mozilla.org",
+                          "addon3@tests.mozilla.org",
+                          "addon4@tests.mozilla.org",
+                          "addon5@tests.mozilla.org"],
+                          function([a1, a2, a3, a4, a5]) {
+
+    do_check_eq(a1, null);
+    do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+    do_check_false(isExtensionInAddonsList(userDir, "addon1@tests.mozilla.org"));
+
+    do_check_neq(a2, null);
+    do_check_eq(a2.id, "addon2@tests.mozilla.org");
+    do_check_eq(a2.version, "2.2");
+    do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_false(isExtensionInAddonsList(userDir, a2.id));
+    do_check_true(isExtensionInAddonsList(globalDir, a2.id));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_SYSTEM);
+
+    run_test_5();
+  });
+}
+
+// Switching disabled locations works
+function run_test_5() {
+  Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
+
+  restartManager(1);
+
+  AddonManager.getAddons(["addon1@tests.mozilla.org",
+                          "addon2@tests.mozilla.org",
+                          "addon3@tests.mozilla.org",
+                          "addon4@tests.mozilla.org",
+                          "addon5@tests.mozilla.org"],
+                          function([a1, a2, a3, a4, a5]) {
+
+    do_check_neq(a1, null);
+    do_check_eq(a1.id, "addon1@tests.mozilla.org");
+    do_check_eq(a1.version, "1.1");
+    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_true(isExtensionInAddonsList(userDir, a1.id));
+    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_USER);
+
+    do_check_neq(a2, null);
+    do_check_eq(a2.id, "addon2@tests.mozilla.org");
+    do_check_eq(a2.version, "2.3");
+    do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_true(isExtensionInAddonsList(userDir, a2.id));
+    do_check_false(isExtensionInAddonsList(globalDir, a2.id));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
+
+    run_test_6();
+  });
+}
+
+// Resetting the pref makes everything visible again
+function run_test_6() {
+  Services.prefs.clearUserPref("extensions.enabledScopes");
+
+  restartManager(1);
+
+  AddonManager.getAddons(["addon1@tests.mozilla.org",
+                          "addon2@tests.mozilla.org",
+                          "addon3@tests.mozilla.org",
+                          "addon4@tests.mozilla.org",
+                          "addon5@tests.mozilla.org"],
+                          function([a1, a2, a3, a4, a5]) {
+
+    do_check_neq(a1, null);
+    do_check_eq(a1.id, "addon1@tests.mozilla.org");
+    do_check_eq(a1.version, "1.1");
+    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_true(isExtensionInAddonsList(userDir, a1.id));
+    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_USER);
+
+    do_check_neq(a2, null);
+    do_check_eq(a2.id, "addon2@tests.mozilla.org");
+    do_check_eq(a2.version, "2.3");
+    do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_true(isExtensionInAddonsList(userDir, a2.id));
+    do_check_false(isExtensionInAddonsList(globalDir, a2.id));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
+
+    run_test_7();
+  });
+}
+
+// Check that items in the profile hide the others again.
+function run_test_7() {
   var dest = profileDir.clone();
   dest.append("addon1@tests.mozilla.org");
   addon1.version = "1.2";
@@ -339,6 +446,7 @@ function run_test_4() {
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -349,6 +457,7 @@ function run_test_4() {
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
     do_check_in_crash_annotation(addon2.id, a2.version);
+    do_check_eq(a2.scope, AddonManager.SCOPE_SYSTEM);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -359,12 +468,46 @@ function run_test_4() {
     do_check_eq(a5, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    run_test_5();
+    run_test_8();
+  });
+}
+
+// Disabling all locations still leaves the profile working
+function run_test_8() {
+  Services.prefs.setIntPref("extensions.enabledScopes", 0);
+
+  restartManager(1);
+
+  AddonManager.getAddons(["addon1@tests.mozilla.org",
+                          "addon2@tests.mozilla.org",
+                          "addon3@tests.mozilla.org",
+                          "addon4@tests.mozilla.org",
+                          "addon5@tests.mozilla.org"],
+                          function([a1, a2, a3, a4, a5]) {
+
+    do_check_neq(a1, null);
+    do_check_eq(a1.id, "addon1@tests.mozilla.org");
+    do_check_eq(a1.version, "1.2");
+    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_false(isExtensionInAddonsList(userDir, a1.id));
+    do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(addon1.id, a1.version);
+    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
+
+    do_check_eq(a2, null);
+    do_check_false(isExtensionInAddonsList(profileDir, "addon2@tests.mozilla.org"));
+    do_check_false(isExtensionInAddonsList(userDir, "addon2@tests.mozilla.org"));
+    do_check_false(isExtensionInAddonsList(globalDir, "addon2@tests.mozilla.org"));
+
+    run_test_9();
   });
 }
 
 // More hiding and revealing
-function run_test_5() {
+function run_test_9() {
+  Services.prefs.clearUserPref("extensions.enabledScopes", 0);
+
   var dest = userDir.clone();
   dest.append("addon1@tests.mozilla.org");
   dest.remove(true);
@@ -392,6 +535,7 @@ function run_test_5() {
     do_check_false(isExtensionInAddonsList(userDir, a1.id));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -401,6 +545,7 @@ function run_test_5() {
     do_check_false(isExtensionInAddonsList(globalDir, a2.id));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -411,13 +556,13 @@ function run_test_5() {
     do_check_eq(a5, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    run_test_6();
+    run_test_10();
   });
 }
 
 // Checks that a removal from one location and an addition in another location
 // for the same item is handled
-function run_test_6() {
+function run_test_10() {
   var dest = profileDir.clone();
   dest.append("addon1@tests.mozilla.org");
   dest.remove(true);
@@ -442,6 +587,7 @@ function run_test_6() {
     do_check_true(isExtensionInAddonsList(userDir, a1.id));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_eq(a1.scope, AddonManager.SCOPE_USER);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -451,6 +597,7 @@ function run_test_6() {
     do_check_false(isExtensionInAddonsList(globalDir, a2.id));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_true(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
 
     do_check_eq(a3, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon3@tests.mozilla.org"));
@@ -461,12 +608,12 @@ function run_test_6() {
     do_check_eq(a5, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    run_test_7();
+    run_test_11();
   });
 }
 
 // This should remove any remaining items
-function run_test_7() {
+function run_test_11() {
   var dest = userDir.clone();
   dest.append("addon1@tests.mozilla.org");
   dest.remove(true);
