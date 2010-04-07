@@ -218,9 +218,9 @@ public:
   PRPackedBool               mIsLoading : 1;
 
   // mIsCancelled is set to true when a sheet load is stopped by
-  // Stop() or StopLoadingSheet().  SheetLoadData::OnStreamComplete()
-  // checks this to avoid parsing sheets that have been cancelled and
-  // such.
+  // Stop() or StopLoadingSheet() (which was removed in Bug 556446).
+  // SheetLoadData::OnStreamComplete() checks this to avoid parsing 
+  // sheets that have been cancelled and such.
   PRPackedBool               mIsCancelled : 1;
 
   // mMustNotify is true if the load data is being loaded async and
@@ -538,14 +538,6 @@ Loader::SetPreferredSheet(const nsAString& aTitle)
 
   return NS_OK;
 }
-
-nsresult
-Loader::GetPreferredSheet(nsAString& aTitle)
-{
-  aTitle.Assign(mPreferredSheet);
-  return NS_OK;
-}
-
 
 static const char kCharsetSym[] = "@charset \"";
 
@@ -2338,89 +2330,6 @@ Loader::Stop()
     --mDatasToNotifyOn;
     SheetComplete(arr[i], NS_BINDING_ABORTED);
   }
-  return NS_OK;
-}
-
-struct StopLoadingSheetsByURIClosure {
-  StopLoadingSheetsByURIClosure(nsIURI* aURI,
-                                Loader::LoadDataArray& aArray) :
-    uri(aURI), array(aArray)
-  {}
-  
-  nsIURI* uri;
-  Loader::LoadDataArray& array;
-};
-
-static PLDHashOperator
-StopLoadingSheetByURICallback(URIAndPrincipalHashKey* aKey,
-                              SheetLoadData*& aData,
-                              void* aClosure)
-{
-  NS_PRECONDITION(aData, "Must have a data!");
-  NS_PRECONDITION(aClosure, "Must have a loader");
-
-  StopLoadingSheetsByURIClosure* closure =
-    static_cast<StopLoadingSheetsByURIClosure*>(aClosure);
-
-  PRBool equal;
-  if (NS_SUCCEEDED(aData->mURI->Equals(closure->uri, &equal)) &&
-      equal) {
-    aData->mIsLoading = PR_FALSE; // we will handle the removal right here
-    aData->mIsCancelled = PR_TRUE;
-
-    closure->array.AppendElement(aData);
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-nsresult
-Loader::StopLoadingSheet(nsIURI* aURL)
-{
-  NS_ENSURE_TRUE(aURL, NS_ERROR_NULL_POINTER);
-
-  PRUint32 pendingCount =
-    mPendingDatas.IsInitialized() ?  mPendingDatas.Count() : 0;
-  PRUint32 loadingCount =
-    mLoadingDatas.IsInitialized() ? mLoadingDatas.Count() : 0;
-  LoadDataArray arr(pendingCount + loadingCount + mPostedEvents.Length());
-
-  StopLoadingSheetsByURIClosure closure(aURL, arr);
-  if (pendingCount) {
-    mPendingDatas.Enumerate(StopLoadingSheetByURICallback, &closure);
-  }
-  if (loadingCount) {
-    mLoadingDatas.Enumerate(StopLoadingSheetByURICallback, &closure);
-  }
-
-  PRUint32 i;
-  for (i = 0; i < mPostedEvents.Length(); ++i) {
-    SheetLoadData* curData = mPostedEvents[i];
-    PRBool equal;
-    if (curData->mURI && NS_SUCCEEDED(curData->mURI->Equals(aURL, &equal)) &&
-        equal) {
-      curData->mIsCancelled = PR_TRUE;
-      if (arr.AppendElement(curData)) {
-        // SheetComplete() calls Release(), so give this an extra ref.
-        NS_ADDREF(curData);
-      }
-#ifdef DEBUG
-      else {
-        NS_NOTREACHED("We preallocated this memory... shouldn't really fail, "
-                      "except we never check that preallocation succeeds.");
-      }
-#endif
-    }
-  }
-  mPostedEvents.Clear();
-
-  mDatasToNotifyOn += arr.Length();
-  for (i = 0; i < arr.Length(); ++i) {
-    --mDatasToNotifyOn;
-    SheetComplete(arr[i], NS_BINDING_ABORTED);
-  }
-
   return NS_OK;
 }
 

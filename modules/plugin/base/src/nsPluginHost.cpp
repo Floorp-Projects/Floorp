@@ -2398,6 +2398,18 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
 }
 
 nsPluginTag*
+nsPluginHost::FindTagForLibrary(PRLibrary* aLibrary)
+{
+  nsPluginTag* pluginTag;
+  for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
+    if (pluginTag->mLibrary == aLibrary) {
+      return pluginTag;
+    }
+  }
+  return nsnull;
+}
+
+nsPluginTag*
 nsPluginHost::FindTagForPlugin(nsIPlugin* aPlugin)
 {
   nsPluginTag* pluginTag;

@@ -120,8 +120,10 @@ WindowHook::LookupOrCreate(UINT nMsg) {
 
 void
 WindowHook::DeleteIfEmpty(MessageData *data) {
-  if (data->hook || data->monitors.IsEmpty())
+  // Never remove a MessageData that has still a hook or monitor entries.
+  if (data->hook || !data->monitors.IsEmpty())
     return;
+
   MessageDataArray::index_type idx;
   idx = data - mMessageData.Elements();
   NS_ASSERTION(idx >= 0 && idx < mMessageData.Length(), "Attempted to delete MessageData that doesn't belong to this array!");

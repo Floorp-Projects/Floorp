@@ -143,8 +143,8 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // (4) Populate our nsSMILValue from the computed style
   if (didGetComputedVal) {
-    nsSMILCSSValueType::ValueFromString(mPropID, mElement,
-                                        computedStyleVal, baseValue);
+    nsSMILCSSValueType::ValueFromString(mPropID, mElement, computedStyleVal,
+                                        PR_FALSE, baseValue);
   }
   return baseValue;
 }
@@ -157,7 +157,8 @@ nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
+  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr,
+                                      PR_FALSE, aValue);
   if (aValue.IsNull()) {
     return NS_ERROR_FAILURE;
   }

@@ -121,7 +121,7 @@ typedef enum {
 
     FirstReg = R0,
     LastReg = D6,
-    deprecated_UnknownReg = 32,
+    deprecated_UnknownReg = 32,     // XXX: remove eventually, see bug 538924
 
     S14 = 24
 } Register;
@@ -219,15 +219,15 @@ verbose_only( extern const char* shiftNames[]; )
     void        underrunProtect(int bytes);                                     \
     void        nativePageReset();                                              \
     void        nativePageSetup();                                              \
-    void        asm_quad_nochk(Register, int32_t, int32_t);                     \
-    void        asm_regarg(ArgSize, LInsp, Register);                           \
+    void        asm_immf_nochk(Register, int32_t, int32_t);                     \
+    void        asm_regarg(ArgType, LInsp, Register);                           \
     void        asm_stkarg(LInsp p, int stkd);                                  \
     void        asm_cmpi(Register, int32_t imm);                                \
     void        asm_ldr_chk(Register d, Register b, int32_t off, bool chk);     \
     void        asm_cmp(LIns *cond);                                            \
     void        asm_fcmp(LIns *cond);                                           \
     void        asm_ld_imm(Register d, int32_t imm, bool chk = true);           \
-    void        asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);         \
+    void        asm_arg(ArgType ty, LInsp arg, Register& r, int& stkd);         \
     void        asm_arg_64(LInsp arg, Register& r, int& stkd);                  \
     void        asm_add_imm(Register rd, Register rn, int32_t imm, int stat = 0);   \
     void        asm_sub_imm(Register rd, Register rn, int32_t imm, int stat = 0);   \

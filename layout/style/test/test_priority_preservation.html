@@ -34,10 +34,10 @@ is(s.getPropertyValue("z-index"), "7",
 is(s.getPropertyPriority("z-index"), "important",
    "z-index priority stored");
 s.setProperty("z-index", "3", "");
-is(s.getPropertyValue("z-index"), "7",
-   "z-index not overridden by setting non-important");
-is(s.getPropertyPriority("z-index"), "important",
-   "z-index priority not overridden by setting non-important");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index overridden by setting non-important");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority overridden by setting non-important");
 is(s.getPropertyValue("text-decoration"), "underline",
    "text-decoration still stored");
 is(s.getPropertyPriority("text-decoration"), "",
@@ -47,21 +47,74 @@ is(s.getPropertyValue("text-decoration"), "overline",
    "text-decoration stored");
 is(s.getPropertyPriority("text-decoration"), "",
    "text-decoration priority stored");
-is(s.getPropertyValue("z-index"), "7",
+is(s.getPropertyValue("z-index"), "3",
    "z-index still stored");
-is(s.getPropertyPriority("z-index"), "important",
+is(s.getPropertyPriority("z-index"), "",
    "z-index priority still stored");
 s.setProperty("text-decoration", "line-through", "important");
 is(s.getPropertyValue("text-decoration"), "line-through",
    "text-decoration stored at new priority");
 is(s.getPropertyPriority("text-decoration"), "important",
    "text-decoration priority overridden");
-is(s.getPropertyValue("z-index"), "7",
+is(s.getPropertyValue("z-index"), "3",
    "z-index still stored");
-is(s.getPropertyPriority("z-index"), "important",
+is(s.getPropertyPriority("z-index"), "",
    "z-index priority still stored");
 
+  // also test setting a shorthand
+s.setProperty("font", "italic bold 12px/30px serif", "important");
+is(s.getPropertyValue("font-style"), "italic", "font-style stored");
+is(s.getPropertyPriority("font-style"), "important",
+   "font-style priority stored");
+is(s.getPropertyValue("font-weight"), "bold", "font-weight stored");
+is(s.getPropertyPriority("font-weight"), "important",
+   "font-weight priority stored");
+is(s.getPropertyValue("font-size"), "12px", "font-size stored");
+is(s.getPropertyPriority("font-size"), "important",
+   "font-size priority stored");
+is(s.getPropertyValue("line-height"), "30px", "line-height stored");
+is(s.getPropertyPriority("line-height"), "important",
+   "line-height priority stored");
+is(s.getPropertyValue("font-family"), "serif", "font-family stored");
+is(s.getPropertyPriority("font-family"), "important",
+   "font-family priority stored");
 
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority still stored");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
+
+  // and overriding one element of that shorthand with some longhand
+s.setProperty("font-style", "normal", "");
+
+is(s.getPropertyValue("font-style"), "normal", "font-style overridden");
+is(s.getPropertyPriority("font-style"), "", "font-style priority overridden");
+
+is(s.getPropertyValue("font-weight"), "bold", "font-weight unchanged");
+is(s.getPropertyPriority("font-weight"), "important",
+   "font-weight priority unchanged");
+is(s.getPropertyValue("font-size"), "12px", "font-size unchanged");
+is(s.getPropertyPriority("font-size"), "important",
+   "font-size priority unchanged");
+is(s.getPropertyValue("line-height"), "30px", "line-height unchanged");
+is(s.getPropertyPriority("line-height"), "important",
+   "line-height priority unchanged");
+is(s.getPropertyValue("font-family"), "serif", "font-family unchanged");
+is(s.getPropertyPriority("font-family"), "important",
+   "font-family priority unchanged");
+
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority still stored");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
 </script>
 </pre>
 </body>

@@ -47,6 +47,15 @@
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
 
+extern "C" {
+#include <mach-o/getsect.h>
+}
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>
+#include <mach/vm_map.h>
+#include <unistd.h>
+#include <dlfcn.h>
+
 #import <Cocoa/Cocoa.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <IOKit/IOMessage.h>
@@ -447,3 +456,377 @@ nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+#ifndef __LP64__
+
+void ScanImportedFunctions(const struct mach_header* mh, intptr_t vmaddr_slide);
+
+int gInWebInitForCarbonLevel = 0;
+
+void Hooked_WebInitForCarbon();
+OSStatus Hooked_InstallEventLoopIdleTimer(
+   EventLoopRef inEventLoop,
+   EventTimerInterval inDelay,
+   EventTimerInterval inInterval,
+   EventLoopIdleTimerUPP inTimerProc,
+   void *inTimerData,
+   EventLoopTimerRef *outTimer
+);
+
+void (*WebKit_WebInitForCarbon)() = NULL;
+OSStatus (*HIToolbox_InstallEventLoopIdleTimer)(
+   EventLoopRef inEventLoop,
+   EventTimerInterval inDelay,
+   EventTimerInterval inInterval,
+   EventLoopIdleTimerUPP inTimerProc,
+   void *inTimerData,
+   EventLoopTimerRef *outTimer
+) = NULL;
+
+typedef struct _nsHookedFunctionSpec {
+  const char *name;     // Includes leading underscore
+  void *newAddress;
+  void **oldAddressPtr;
+} nsHookedFunctionSpec;
+
+nsHookedFunctionSpec gHookedFunctions[] = {
+  {"_WebInitForCarbon", (void *) Hooked_WebInitForCarbon,
+    (void **) &WebKit_WebInitForCarbon},
+  {"_InstallEventLoopIdleTimer", (void *) Hooked_InstallEventLoopIdleTimer,
+    (void **) &HIToolbox_InstallEventLoopIdleTimer},
+  {NULL, NULL, NULL}
+};
+
+// Plugins may exist that use the WebKit framework.  Those that are
+// Carbon-based need to call WebKit's WebInitForCarbon() method.  There
+// currently appears to be only one Carbon WebKit plugin --
+// DivXBrowserPlugin (included with the DivX Web Player,
+// http://www.divx.com/en/downloads/divx/mac).  See bug 509130.
+//
+// The source-code for WebInitForCarbon() is in the WebKit source tree's
+// WebKit/mac/Carbon/CarbonUtils.mm file.  Among other things it installs
+// an idle timer on the main event loop, whose target is the PoolCleaner()
+// function (also in CarbonUtils.mm).  WebInitForCarbon() allocates an
+// NSAutoreleasePool object which it stores in the global sPool variable.
+// PoolCleaner() periodically releases/drains sPool and creates another
+// NSAutoreleasePool object to take its place.  The intention is to ensure
+// an autorelease pool is in place for whatever Objective-C code may be
+// called by WebKit code, and that it periodically gets "cleaned".  But we're
+// already doing this ourselves.  And PoolCleaner()'s periodic cleaning has a
+// very bad effect on us -- it causes objects to be deleted prematurely, so
+// that attempts to access them cause crashes.  This is probably because, when
+// WebInitForCarbon() is called from a plugin, one or more autorelease pools
+// are already in place.
+//
+// To get around this we hook/subclass WebInitForCarbon() and
+// InstallEventLoopIdleTimer() and make the latter return without doing
+// anything when called from the former.  This stops WebInitForCarbon()'s
+// (useless and harmful) idle timer from ever being installed.
+//
+// PoolCleaner() only "works" if the autorelease pool count (returned by
+// WKGetNSAutoreleasePoolCount(), stored in numPools) is the same as when
+// sPool was last set.  But WKGetNSAutoreleasePoolCount() only works on OS X
+// 10.5 and below.  So PoolCleaner() always fails 10.6 and above, and we
+// needn't do anything there.
+//
+// WKGetNSAutoreleasePoolCount() is a thin wrapper around the following code:
+//
+//   unsigned count = NSPushAutoreleasePool(0);
+//   NSPopAutoreleasePool(count);
+//   return count;
+//
+// NSPushAutoreleasePool() and NSPopAutoreleasePool() are undocumented
+// functions from the Foundation framework.  On OS X 10.5.X and below their
+// declarations are (as best I can tell) as follows.  ('capacity' is
+// presumably the initial capacity, in number of items, of the autorelease
+// pool to be created.)
+//
+//   unsigned NSPushAutoreleasePool(unsigned capacity);
+//   void NSPopAutoreleasePool(unsigned offset);
+//
+// But as of OS X 10.6 these functions appear to have changed as follows:
+//
+//   AutoreleasePool *NSPushAutoreleasePool(unsigned capacity);
+//   void NSPopAutoreleasePool(AutoreleasePool *aPool);
+
+void Hooked_WebInitForCarbon()
+{
+  ++gInWebInitForCarbonLevel;
+  WebKit_WebInitForCarbon();
+  --gInWebInitForCarbonLevel;
+}
+
+OSStatus Hooked_InstallEventLoopIdleTimer(
+   EventLoopRef inEventLoop,
+   EventTimerInterval inDelay,
+   EventTimerInterval inInterval,
+   EventLoopIdleTimerUPP inTimerProc,
+   void *inTimerData,
+   EventLoopTimerRef *outTimer
+)
+{
+  OSStatus rv = noErr;
+  if (gInWebInitForCarbonLevel <= 0) {
+    rv = HIToolbox_InstallEventLoopIdleTimer(inEventLoop, inDelay, inInterval,
+                                             inTimerProc, inTimerData, outTimer);
+  }
+  return rv;
+}
+
+// Try to hook (or "subclass") the dynamically bound functions specified in
+// gHookedFunctions.  We don't hook these functions at their "original"
+// addresses, so we can only "subclass" calls to them from modules other than
+// the one in which they're defined.  Of course, this only works for globally
+// accessible functions.
+void HookImportedFunctions()
+{
+  // We currently only need to do anything on Tiger or Leopard.
+  if (nsToolkit::OnSnowLeopardOrLater())
+    return;
+
+  // _dyld_register_func_for_add_image() makes the dynamic linker runtime call
+  // ScanImportedFunctions() "once for each of the images that are currently
+  // loaded into the program" (including the main image, i.e. firefox-bin).
+  // When a new image is added (e.g. a plugin), ScanImportedFunctions() is
+  // called again with data for that image.
+  //
+  // Calling HookImportedFunctions() from loadHandler's constructor (i.e. as
+  // the current module is being loaded) minimizes the likelihood that the
+  // imported functions in the already-loaded images will get called while
+  // we're resetting their pointers.
+  //
+  // _dyld_register_func_for_add_image()'s behavior when a new image is added
+  // allows us to reset its imported functions' pointers before they ever get
+  // called.
+  _dyld_register_func_for_add_image(ScanImportedFunctions);
+}
+
+struct segment_command *GetSegmentFromMachHeader(const struct mach_header* mh,
+                                                 const char *segname,
+                                                 uint32_t *numFollowingCommands)
+{
+  if (numFollowingCommands)
+    *numFollowingCommands = 0;
+  uint32_t numCommands = mh->ncmds;
+  struct segment_command *aCommand = (struct segment_command *)
+    ((uint32_t)mh + sizeof(struct mach_header));
+  for (uint32_t i = 1; i <= numCommands; ++i) {
+    if (aCommand->cmd != LC_SEGMENT)
+      return NULL;
+    if (strcmp(segname, aCommand->segname) == 0) {
+      if (numFollowingCommands)
+        *numFollowingCommands = numCommands-i;
+      return aCommand;
+    }
+    aCommand = (struct segment_command *)
+      ((uint32_t)aCommand + aCommand->cmdsize);
+  }
+  return NULL;
+}
+
+// Scan through parts of the "indirect symbol table" for imported functions
+// (functions dynamically bound from another module) whose names match those
+// we're trying to hook.  If we find one, change the corresponding pointer/
+// instruction in a "jump table" or "lazy pointer array" to point at the
+// function's replacement.  It appears we only need to look at "lazy bound"
+// symbols -- non-"lazy" symbols seem to always be for (imported) data.  (A
+// lazy bound symbol is one that's only resolved on first "use".)
+//
+// Most of what we do here is documented by Apple
+// (http://developer.apple.com/Mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html,
+// http://developer.apple.com/mac/library/documentation/DeveloperTools/Reference/MachOReference/Reference/reference.html).
+// When Apple doesn't explicitly document something (e.g. the format of the
+// __LINKEDIT segment or the indirect symbol table), you can often get "hints"
+// from the output of 'otool -l' or 'otool -I".  And sometimes mach-o header
+// files contain additional information -- for example the format of the
+// indirect symbol table is described in the comment above the definitions of
+// INDIRECT_SYMBOL_LOCAL and INDIRECT_SYMBOL_ABS in mach-o/loader.h.
+//
+// The "__jump_table" section of the "__IMPORT" segment is an array of
+// assembler JMP or CALL instructions.  It's only present in i386 binaries
+// (ppc and x86_64 binaries use arrays of pointers).  Each instruction is
+// 5 bytes long.  The format is a byte-length opcode (0xE9 for JMP, 0xE8 for
+// CALL) followed by a four-byte relative address (relative to the start of
+// the next instruction in the table).  All the CALL instructions point to the
+// same code -- a 'dyld_stub_binding_helper()' that somehow locates the lazy-
+// bound function and replaces the CALL instruction with a JMP instruction
+// to the appropriate function.  If we replace the CALL instruction ourselves,
+// dyld_stub_binding_helper() never gets called (and never needs to be).
+void ScanImportedFunctions(const struct mach_header* mh, intptr_t vmaddr_slide)
+{
+  // While we're looking through all our images/modules, also scan for the
+  // original addresses of the functions we plan to hook.  Though
+  // NSLookupSymbolInImage() is deprecated (along with the entire NSModule
+  // API), it's by far the best (and most efficient) way to do what we need
+  // to do here (scan for the original addresses of symbols that aren't all
+  // loaded at the same time).  It's still available to 64-bit apps on OS X
+  // 10.6.X.
+  for (uint32_t i = 0; gHookedFunctions[i].name; ++i) {
+    // Since a symbol might be defined more than once, we record only its
+    // "first" address.
+    if (*gHookedFunctions[i].oldAddressPtr)
+      continue;
+    NSSymbol symbol =
+      NSLookupSymbolInImage(mh, gHookedFunctions[i].name,
+                            NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
+    if (symbol)
+      *gHookedFunctions[i].oldAddressPtr = NSAddressOfSymbol(symbol);
+  }
+
+  uint32_t numFollowingCommands = 0;
+  struct segment_command *linkeditSegment =
+    GetSegmentFromMachHeader(mh, "__LINKEDIT", &numFollowingCommands);
+  if (!linkeditSegment)
+    return;
+  uint32_t fileoffIncrement = linkeditSegment->vmaddr - linkeditSegment->fileoff;
+
+  struct symtab_command *symtab =
+    (struct symtab_command *)((uint32_t)linkeditSegment + linkeditSegment->cmdsize);
+  for (uint32_t i = 1;; ++i) {
+    if (symtab->cmd == LC_SYMTAB)
+      break;
+    if (i == numFollowingCommands)
+      return;
+    symtab = (struct symtab_command *) ((uint32_t)symtab + symtab->cmdsize);
+  }
+  uint32_t symbolTableOffset = symtab->symoff + fileoffIncrement + vmaddr_slide;
+  uint32_t stringTableOffset = symtab->stroff + fileoffIncrement + vmaddr_slide;
+
+  struct dysymtab_command *dysymtab =
+    (struct dysymtab_command *)((uint32_t)symtab + symtab->cmdsize);
+  if (dysymtab->cmd != LC_DYSYMTAB)
+    return;
+  uint32_t indirectSymbolTableOffset =
+    dysymtab->indirectsymoff + fileoffIncrement + vmaddr_slide;
+
+  // Some i386 binaries on OS X 10.6.X use a __la_symbol_ptr section (in the
+  // __DATA segment) instead of a __jump_table section (in the __IMPORT
+  // segment).
+  const struct section *lazySymbols = NULL;
+#ifdef __i386__
+  struct segment_command *importSegment =
+    GetSegmentFromMachHeader(mh, "__IMPORT", nil);
+  const struct section *jumpTable =
+    getsectbynamefromheader(mh, "__IMPORT", "__jump_table");
+  if (!jumpTable)
+#endif
+  {
+    lazySymbols = getsectbynamefromheader(mh, "__DATA", "__la_symbol_ptr");
+    if (!lazySymbols)
+      return;
+  }
+  uint32_t numLazySymbols = 0;
+  uint32_t lazyBytes = 0;
+  unsigned char *lazy = NULL;
+#ifdef __i386__
+  uint32_t numJumpTableStubs = 0;
+  uint32_t stubsBytes = 0;
+  unsigned char *stubs = NULL;
+  vm_prot_t importSegProt = VM_PROT_NONE;
+  if (jumpTable) {
+    // Bail if we don't have an __IMPORT segment (which shouldn't be possible,
+    // but just in case).
+    if (!importSegment)
+      return;
+    importSegProt = importSegment->initprot;
+    // Bail if the size of each entry in the "jump table" isn't 5 bytes.
+    if (jumpTable->reserved2 != 5)
+      return;
+    numJumpTableStubs = jumpTable->size/5;
+    indirectSymbolTableOffset += jumpTable->reserved1*sizeof(uint32_t);
+    stubs = (unsigned char *)
+      (getsectdatafromheader(mh, "__IMPORT", "__jump_table", &stubsBytes) + vmaddr_slide);
+    // Bail if (for some reason) these figures don't agree.
+    if (stubsBytes != jumpTable->size)
+      return;
+  } else
+#endif
+  {
+    numLazySymbols = lazySymbols->size/4;
+    indirectSymbolTableOffset += lazySymbols->reserved1*sizeof(uint32_t);
+    lazy = (unsigned char *)
+      (getsectdatafromheader(mh, "__DATA", "__la_symbol_ptr", &lazyBytes) + vmaddr_slide);
+  }
+
+  uint32_t items = 0;
+#ifdef __i386__
+  if (jumpTable) {
+    items = numJumpTableStubs;
+    // If the __IMPORT segment is read-only, we'll need to make it writeable
+    // before trying to change entries in its jump table.  Below we restore
+    // its original level of protection.
+    if (!(importSegProt & VM_PROT_WRITE)) {
+      void *protAddr = (void *) (importSegment->vmaddr + vmaddr_slide);
+      size_t protSize = importSegment->vmsize;
+      vm_protect(mach_task_self(), (vm_address_t) protAddr, protSize, NO,
+                 importSegProt | VM_PROT_WRITE);
+    }
+  } else
+#endif
+  {
+    items = numLazySymbols;
+  }
+  uint32_t *indirectSymbolTableItem = (uint32_t *) indirectSymbolTableOffset;
+  for (uint32_t i = 0; i < items; ++i, ++indirectSymbolTableItem) {
+    // Skip indirect symbol table items that are 0x80000000 (for a local
+    // symbol) and/or 0x40000000 (for an absolute symbol).  See
+    // mach-o/loader.h.
+    if (0xF0000000 & *indirectSymbolTableItem)
+      continue;
+    struct nlist *symbolTableItem = (struct nlist *)
+      (symbolTableOffset + *indirectSymbolTableItem*sizeof(struct nlist));
+    char *stringTableItem = (char *) (stringTableOffset + symbolTableItem->n_un.n_strx);
+
+    for (uint32_t j = 0; gHookedFunctions[j].name; ++j) {
+      if (strcmp(stringTableItem, gHookedFunctions[j].name) != 0)
+        continue;
+#ifdef __i386__
+      if (jumpTable) {
+        unsigned char *opcodeAddr = stubs + (i * 5);
+        unsigned char oldOpcode = opcodeAddr[0];
+        int32_t *displacementAddr = (int32_t *) (opcodeAddr + 1);
+        int32_t eip = (int32_t) stubs + (i + 1) * 5;
+        int32_t displacement = (int32_t) (gHookedFunctions[j].newAddress) - eip;
+        displacementAddr[0] = displacement;
+        opcodeAddr[0] = 0xE9;
+      } else
+#endif
+      {
+        int32_t *lazySymbolAddr = (int32_t *) (lazy + (i * 4));
+        lazySymbolAddr[0] = (int32_t) (gHookedFunctions[j].newAddress);
+      }
+      break;
+    }
+  }
+
+#ifdef __i386__
+  // If we needed to make an __IMPORT segment writeable above, restore its
+  // original protection level here.
+  if (jumpTable && !(importSegProt & VM_PROT_WRITE)) {
+    void *protAddr = (void *) (importSegment->vmaddr + vmaddr_slide);
+    size_t protSize = importSegment->vmsize;
+    vm_protect(mach_task_self(), (vm_address_t) protAddr, protSize,
+               NO, importSegProt);
+  }
+#endif
+}
+
+class loadHandler
+{
+public:
+  loadHandler();
+  ~loadHandler() {}
+};
+
+loadHandler::loadHandler()
+{
+  // Calling HookImportedFunctions() from here (i.e. as the current module is
+  // being loaded) minimizes the likelihood that the imported functions in
+  // the already-loaded images will get called while we're resetting their
+  // pointers.
+  HookImportedFunctions();
+}
+
+loadHandler handler = loadHandler();
+
+#endif // __LP64__

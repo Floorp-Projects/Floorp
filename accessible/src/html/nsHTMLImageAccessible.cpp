@@ -41,11 +41,8 @@
 
 #include "nsHTMLImageAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsHTMLAreaAccessible.h"
 
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsILink.h"
 #include "nsIPresShell.h"
@@ -54,45 +51,21 @@
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 
-// --- image -----
-
-const PRUint32 kDefaultImageCacheSize = 256;
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLImageAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLImageAccessible::nsHTMLImageAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDOMNode, aShell), mAccessNodeCache(nsnull)
-{ 
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aDOMNode));
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  if (!shell)
-    return;
-
-  nsIDocument *doc = shell->GetDocument();
-  nsAutoString mapElementName;
-
-  if (doc && element) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-    element->GetAttribute(NS_LITERAL_STRING("usemap"),mapElementName);
-    if (htmlDoc && !mapElementName.IsEmpty()) {
-      if (mapElementName.CharAt(0) == '#')
-        mapElementName.Cut(0,1);
-      mMapElement = htmlDoc->GetImageMap(mapElementName);
-    }
-  }
-
-  if (mMapElement) {
-    mAccessNodeCache = new nsAccessNodeHashtable();
-    mAccessNodeCache->Init(kDefaultImageCacheSize);
-  }
+nsHTMLImageAccessible::
+  nsHTMLImageAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
+  nsLinkableAccessible(aDOMNode, aShell)
+{
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible,
                              nsIAccessibleImage)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
+// nsAccessible public
 
 nsresult
 nsHTMLImageAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
@@ -150,34 +123,12 @@ nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 nsresult
 nsHTMLImageAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *aRole = mMapElement ? nsIAccessibleRole::ROLE_IMAGE_MAP :
-                         nsIAccessibleRole::ROLE_GRAPHIC;
+  *aRole = nsIAccessibleRole::ROLE_GRAPHIC;
   return NS_OK;
 }
 
-void 
-nsHTMLImageAccessible::CacheChildren()
-{
-  nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
-  if (!mapAreas)
-    return;
-
-  PRUint32 areaCount = 0;
-  mapAreas->GetLength(&areaCount);
-
-  nsCOMPtr<nsIAccessible> areaAccessible;
-  nsRefPtr<nsAccessible> areaAcc;
-
-  for (PRUint32 areaIdx = 0; areaIdx < areaCount; areaIdx++) {
-    areaAccessible = GetAreaAccessible(mapAreas, areaIdx);
-    if (!areaAccessible)
-      return;
-
-    areaAcc = nsAccUtils::QueryObject<nsAccessible>(areaAccessible);
-    mChildren.AppendElement(areaAcc);
-    areaAcc->SetParent(this);
-  }
-}
+////////////////////////////////////////////////////////////////////////////////
+// nsIAccessible
 
 NS_IMETHODIMP
 nsHTMLImageAccessible::GetNumActions(PRUint8 *aNumActions)
@@ -240,66 +191,6 @@ nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleHyperLink
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetAnchorCount(PRInt32 *aAnchorCount)
-{
-  NS_ENSURE_ARG_POINTER(aAnchorCount);
-
-  if (!mMapElement)
-    return nsLinkableAccessible::GetAnchorCount(aAnchorCount);
-
-  return GetChildCount(aAnchorCount);
-}
-
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  *aURI = nsnull;
-
-  if (!mMapElement)
-    return nsLinkableAccessible::GetURI(aIndex, aURI);
-
-  nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
-  if (!mapAreas)
-    return NS_OK;
-  
-  nsCOMPtr<nsIDOMNode> domNode;
-  mapAreas->Item(aIndex, getter_AddRefs(domNode));
-  if (!domNode)
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIContent> link(do_QueryInterface(domNode));
-  if (link)
-    *aURI = link->GetHrefURI().get();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-
-  if (!mMapElement)
-    return nsLinkableAccessible::GetAnchor(aIndex, aAccessible);
-
-  nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
-  if (mapAreas) {
-    nsCOMPtr<nsIAccessible> accessible;
-    accessible = GetAreaAccessible(mapAreas, aIndex);
-    if (!accessible)
-      return NS_ERROR_INVALID_ARG;
-
-    NS_ADDREF(*aAccessible = accessible);
-  }
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleImage
 
 NS_IMETHODIMP
@@ -321,26 +212,7 @@ nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
   return GetBounds(&x, &y, aWidth, aHeight);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageAccessible. nsAccessNode
-
-nsresult
-nsHTMLImageAccessible::Shutdown()
-{
-  nsLinkableAccessible::Shutdown();
-
-  if (mAccessNodeCache) {
-    ClearCache(*mAccessNodeCache);
-    delete mAccessNodeCache;
-    mAccessNodeCache = nsnull;
-  }
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageAccessible
-
+// nsAccessible
 nsresult
 nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
@@ -358,51 +230,6 @@ nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
     nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::src, src);
 
   return NS_OK;
-}
-
-already_AddRefed<nsIDOMHTMLCollection>
-nsHTMLImageAccessible::GetAreaCollection()
-{
-  if (!mMapElement)
-    return nsnull;
-
-  nsIDOMHTMLCollection *mapAreas = nsnull;
-  nsresult rv = mMapElement->GetAreas(&mapAreas);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  return mapAreas;
-}
-
-already_AddRefed<nsIAccessible>
-nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
-                                         PRInt32 aAreaNum)
-{
-  if (!aAreaCollection)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMNode> domNode;
-  aAreaCollection->Item(aAreaNum,getter_AddRefs(domNode));
-  if (!domNode)
-    return nsnull;
-
-  void* key = reinterpret_cast<void*>(aAreaNum);
-  nsRefPtr<nsAccessNode> accessNode = mAccessNodeCache->GetWeak(key);
-
-  if (!accessNode) {
-    accessNode = new nsHTMLAreaAccessible(domNode, this, mWeakShell);
-    if (!accessNode)
-      return nsnull;
-
-    nsresult rv = accessNode->Init();
-    if (NS_FAILED(rv))
-      return nsnull;
-
-    mAccessNodeCache->Put(key, accessNode);
-  }
-
-  nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(accessNode);
-  return accessible.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

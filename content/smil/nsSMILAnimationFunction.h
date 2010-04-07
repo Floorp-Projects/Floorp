@@ -324,7 +324,6 @@ protected:
                      nsSMILValue& aResult, PRBool& aCanCacheSoFar) const;
   nsresult GetValues(const nsISMILAttr& aSMILAttr,
                      nsSMILValueArray& aResult);
-  void     UpdateValuesArray();
   void     CheckKeyTimes(PRUint32 aNumValues);
   void     CheckKeySplines(PRUint32 aNumValues);
 

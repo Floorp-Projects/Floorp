@@ -43,6 +43,7 @@
 #include "jsbit.h"
 
 #include <new>
+#include <string.h>
 
 namespace js {
 
@@ -171,6 +172,10 @@ template <class T, size_t N> inline T *ArrayEnd(T (&arr)[N]) { return arr + N; }
 /* Useful for implementing containers that assert non-reentrancy */
 class ReentrancyGuard
 {
+    /* ReentrancyGuard is not copyable. */
+    ReentrancyGuard(const ReentrancyGuard &);
+    void operator=(const ReentrancyGuard &);
+
 #ifdef DEBUG
     bool &entered;
 #endif
@@ -254,43 +259,78 @@ class SystemAllocPolicy
 template <class T>
 class LazilyConstructed
 {
-    char bytes[sizeof(T)];
-    bool constructed;
+    union {
+        uint64 align;
+        char bytes[sizeof(T) + 1];
+    };
+
     T &asT() { return *reinterpret_cast<T *>(bytes); }
+    char & constructed() { return bytes[sizeof(T)]; }
 
   public:
-    LazilyConstructed() : constructed(false) {}
-    ~LazilyConstructed() { if (constructed) asT().~T(); }
+    LazilyConstructed() { constructed() = false; }
+    ~LazilyConstructed() { if (constructed()) asT().~T(); }
 
-    bool empty() const { return !constructed; }
+    bool empty() const { return !constructed(); }
 
     void construct() {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T();
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1>
     void construct(const T1 &t1) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1);
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1, class T2>
     void construct(const T1 &t1, const T2 &t2) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1, t2);
-        constructed = true;
+        constructed() = true;
     }
 
     template <class T1, class T2, class T3>
     void construct(const T1 &t1, const T2 &t2, const T3 &t3) {
-        JS_ASSERT(!constructed);
+        JS_ASSERT(!constructed());
         new(bytes) T(t1, t2, t3);
-        constructed = true;
+        constructed() = true;
     }
 };
+
+template <class T>
+JS_ALWAYS_INLINE static void
+PodZero(T *t)
+{
+    memset(t, 0, sizeof(T));
+}
+
+template <class T>
+JS_ALWAYS_INLINE static void
+PodZero(T *t, size_t nelem)
+{
+    memset(t, 0, nelem * sizeof(T));
+}
+
+/*
+ * Arrays implicitly convert to pointers to their first element, which is
+ * dangerous when combined with the above PodZero definitions. Adding an
+ * overload for arrays is ambiguous, so we need another identifier. The
+ * ambiguous overload is left to catch mistaken uses of PodZero; if you get a
+ * compile error involving PodZero and array types, use PodArrayZero instead.
+ */
+template <class T, size_t N> static void PodZero(T (&)[N]);          /* undefined */
+template <class T, size_t N> static void PodZero(T (&)[N], size_t);  /* undefined */
+
+template <class T, size_t N>
+JS_ALWAYS_INLINE static void
+PodArrayZero(T (&t)[N])
+{
+    memset(t, 0, N * sizeof(T));
+}
 
 } /* namespace js */
 

@@ -150,6 +150,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLAnchorElement, nsHTMLAnchorElement)
+
 // QueryInterface implementation for nsHTMLAnchorElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLAnchorElement,

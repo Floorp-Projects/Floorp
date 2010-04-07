@@ -11,7 +11,7 @@
       document.documentElement.className = '';
     }
   </script>
-  <body onload="focusInput(); disableReftestWait();">
-    <input id='t1' type="text" readonly>
+  <body onload="focusInput();">
+    <input id='t1' type="text" readonly onfocus="disableReftestWait();">
   </body>
 </html>

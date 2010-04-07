@@ -1317,7 +1317,6 @@ nsStyleGradient::nsStyleGradient(void)
   : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
   , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
   , mRepeating(PR_FALSE)
-  , mRefCnt(0)
 {
 }
 
@@ -2317,26 +2316,6 @@ nsChangeHint nsStyleTextReset::MaxDifference()
   return NS_STYLE_HINT_REFLOW;
 }
 #endif
-
-// --------------------
-// nsCSSShadowArray
-// nsCSSShadowItem
-//
-
-nsrefcnt
-nsCSSShadowArray::Release()
-{
-  if (mRefCnt == PR_UINT32_MAX) {
-    NS_WARNING("refcount overflow, leaking object");
-    return mRefCnt;
-  }
-  mRefCnt--;
-  if (mRefCnt == 0) {
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
 
 // Allowed to return one of NS_STYLE_HINT_NONE, NS_STYLE_HINT_REFLOW
 // or NS_STYLE_HINT_VISUAL. Currently we just return NONE or REFLOW, though.

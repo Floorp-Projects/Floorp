@@ -228,8 +228,8 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
 static inline JSObject *
 FindSafeObject(JSObject *obj)
 {
-  while (STOBJ_GET_CLASS(obj) != &SJOWClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
+  while (obj->getClass() != &SJOWClass.base) {
+    obj = obj->getProto();
 
     if (!obj) {
       break;
@@ -285,7 +285,7 @@ WrapObject(JSContext *cx, JSObject *scope, jsval v, jsval *vp)
   // with XPCSafeJSObjectWrapper, and never let the eval function
   // object be directly wrapped.
 
-  if (STOBJ_GET_CLASS(objToWrap) == &js_ScriptClass ||
+  if (objToWrap->getClass() == &js_ScriptClass ||
       (JS_ObjectIsFunction(cx, objToWrap) &&
        JS_GetFunctionFastNative(cx, JS_ValueToFunction(cx, v)) ==
        XPCWrapper::sEvalNative)) {
@@ -398,7 +398,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
   if (JSVAL_IS_PRIMITIVE(val)) {
     *rval = val;
   } else {
-    if (!RewrapObject(cx, STOBJ_GET_PARENT(obj), JSVAL_TO_OBJECT(val), SJOW,
+    if (!RewrapObject(cx, obj->getParent(), JSVAL_TO_OBJECT(val), SJOW,
                       rval)) {
       return JS_FALSE;
     }
@@ -406,7 +406,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
     // parent we pass in here, the construct hook will ensure we get
     // the right parent for the wrapper.
     JSObject *safeObj = JSVAL_TO_OBJECT(*rval);
-    if (STOBJ_GET_CLASS(safeObj) == &SJOWClass.base &&
+    if (safeObj->getClass() == &SJOWClass.base &&
         JS_GetGlobalForObject(cx, obj) != JS_GetGlobalForObject(cx, safeObj)) {
       // Check to see if the new object we just wrapped is accessible
       // from the unsafe object we got the new object through. If not,
@@ -534,7 +534,7 @@ XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 NS_STACK_CLASS class SafeCallGuard {
 public:
   SafeCallGuard(JSContext *cx, nsIPrincipal *principal)
-    : cx(cx) {
+    : cx(cx), tvr(cx) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
       // Note: We pass null as the target frame pointer because we know that
@@ -573,7 +573,7 @@ public:
 private:
   JSContext *cx;
   JSRegExpStatics statics;
-  JSTempValueRooter tvr;
+  js::AutoValueRooter tvr;
   uint32 options;
   JSStackFrame *fp;
 };
@@ -752,7 +752,7 @@ XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
     return JS_FALSE;
   }
 
-  JSClass *clazz = STOBJ_GET_CLASS(unsafeObj);
+  JSClass *clazz = unsafeObj->getClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, unsafeObj, id, mode, vp);
 }
@@ -991,7 +991,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize the wrapper.
   return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, unsafeObj,

@@ -65,6 +65,8 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIReflowCallback.h"
 
+using namespace mozilla;
+
 //
 // nsMathMLContainerFrame implementation
 //
@@ -172,11 +174,12 @@ IsForeignChild(const nsIFrame* aFrame)
 }
 
 static void
-DeleteHTMLReflowMetrics(void *aObject, nsIAtom *aPropertyName,
-                        void *aPropertyValue, void *aData)
+DestroyHTMLReflowMetrics(void *aPropertyValue)
 {
   delete static_cast<nsHTMLReflowMetrics*>(aPropertyValue);
 }
+
+NS_DECLARE_FRAME_PROPERTY(HTMLReflowMetricsProperty, DestroyHTMLReflowMetrics)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
@@ -185,8 +188,7 @@ nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*               
 {
   nsHTMLReflowMetrics *metrics = new nsHTMLReflowMetrics(aReflowMetrics);
   metrics->mBoundingMetrics = aBoundingMetrics;
-  aFrame->SetProperty(nsGkAtoms::HTMLReflowMetricsProperty, metrics,
-                      DeleteHTMLReflowMetrics);
+  aFrame->Properties().Set(HTMLReflowMetricsProperty(), metrics);
 }
 
 // helper method to facilitate getting the reflow and bounding metrics
@@ -199,7 +201,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
   NS_PRECONDITION(aFrame, "null arg");
 
   nsHTMLReflowMetrics *metrics = static_cast<nsHTMLReflowMetrics*>
-    (aFrame->GetProperty(nsGkAtoms::HTMLReflowMetricsProperty));
+    (aFrame->Properties().Get(HTMLReflowMetricsProperty()));
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the
@@ -227,8 +229,9 @@ void
 nsMathMLContainerFrame::ClearSavedChildMetrics()
 {
   nsIFrame* childFrame = mFrames.FirstChild();
+  FramePropertyTable* props = PresContext()->PropertyTable();
   while (childFrame) {
-    childFrame->DeleteProperty(nsGkAtoms::HTMLReflowMetricsProperty);
+    props->Delete(childFrame, HTMLReflowMetricsProperty());
     childFrame = childFrame->GetNextSibling();
   }
 }

@@ -17,7 +17,7 @@
     }
   </script>
 
-  <body onload="focusPlaceholder(); setPlaceholder(); disableReftestWait();">
-    <input type="text" id="p1" value="" placeholder="my placeholder" readonly>
+  <body onload="focusPlaceholder();">
+    <input type="text" id="p1" value="" placeholder="my placeholder" readonly onfocus="setPlaceholder(); disableReftestWait();">
   </body>
 </html>

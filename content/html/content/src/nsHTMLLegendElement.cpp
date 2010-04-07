@@ -127,6 +127,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLLegendElement, nsHTMLLegendElement)
+
 // QueryInterface implementation for nsHTMLLegendElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)

@@ -64,11 +64,6 @@ public:
   NS_IMETHOD RemoveOption(PRInt32 index) = 0; 
 
   /**
-   * Sets the select state of the option at index
-   */
-  NS_IMETHOD GetOptionSelected(PRInt32 index, PRBool* value) = 0;
-
-  /**
    * Sets whether the parser is done adding children
    * @param aIsDone whether the parser is done adding children
    */

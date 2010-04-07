@@ -227,9 +227,6 @@ protected:
                               nsRect&                     aDamageArea);
 
 public:
-  PRBool ColIsSpannedInto(PRInt32 aColIndex) const;
-  PRBool ColHasSpanningCells(PRInt32 aColIndex) const;
-
   void ExpandZeroColSpans();
 
   void SetNotTopStart(PRUint8    aSide,
@@ -441,8 +438,6 @@ public:
   PRBool RowHasSpanningCells(PRInt32 aRowIndex,
                              PRInt32 aNumEffCols) const;
 
-  PRBool ColHasSpanningCells(PRInt32 aColIndex) const;
-
   void ExpandZeroColSpans(nsTableCellMap& aMap);
 
   /** indicate whether the row has more than one cell that either originates
@@ -578,9 +573,6 @@ protected:
   PRInt32 GetColSpanForNewCell(nsTableCellFrame& aCellFrameToAdd, 
                                PRBool&           aIsZeroColSpan) const;
  
-  PRBool IsZeroColSpan(PRInt32 aRowIndex,
-                       PRInt32 aColIndex) const;
-
   // Destroy a CellData struct.  This will handle the case of aData
   // actually being a BCCellData properly.
   void DestroyCellData(CellData* aData);

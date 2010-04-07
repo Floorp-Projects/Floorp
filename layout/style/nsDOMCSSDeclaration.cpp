@@ -59,6 +59,8 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 {
 }
 
+DOMCI_DATA(CSSStyleDeclaration, nsDOMCSSDeclaration)
+
 NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
   NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMCSSDeclaration)
     NS_INTERFACE_TABLE_ENTRY(nsDOMCSSDeclaration, nsICSSDeclaration)
@@ -103,7 +105,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
     return RemoveProperty(aPropID);
   }
 
-  return ParsePropertyValue(aPropID, aValue);
+  return ParsePropertyValue(aPropID, aValue, PR_FALSE);
 }
 
 
@@ -206,24 +208,24 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
   }
-  
+
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
     // property.
+    // XXX this ignores the priority string, should it?
     return RemoveProperty(propID);
   }
 
   if (aPriority.IsEmpty()) {
-    return ParsePropertyValue(propID, aValue);
+    return ParsePropertyValue(propID, aValue, PR_FALSE);
   }
 
-  // ParsePropertyValue does not handle priorities correctly -- it's
-  // optimized for speed.  And the priority is not part of the
-  // property value anyway.... So we have to use the full-blown
-  // ParseDeclaration()
-  return ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
-                          aValue + NS_LITERAL_STRING("!") + aPriority,
-                          PR_TRUE, PR_FALSE);
+  if (aPriority.EqualsLiteral("important")) {
+    return ParsePropertyValue(propID, aValue, PR_TRUE);
+  }
+
+  // XXX silent failure?
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -245,7 +247,8 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
 
 nsresult
 nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
-                                        const nsAString& aPropValue)
+                                        const nsAString& aPropValue,
+                                        PRBool aIsImportant)
 {
   nsCSSDeclaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
@@ -275,7 +278,8 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   nsCSSParser cssParser(cssLoader);
   PRBool changed;
   result = cssParser.ParseProperty(aPropID, aPropValue, sheetURI, baseURI,
-                                   sheetPrincipal, decl, &changed);
+                                   sheetPrincipal, decl, &changed,
+                                   aIsImportant);
   if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
   }

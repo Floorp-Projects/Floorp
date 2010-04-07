@@ -192,7 +192,6 @@ MaemoLocationProvider::MaemoLocationProvider() :
   mIgnoreMinorChanges(PR_FALSE),
   mPrevLat(0.0),
   mPrevLong(0.0),
-  mInterval(LOCATION_INTERVAL_5S),
   mIgnoreBigHErr(PR_TRUE),
   mMaxHErr(1000),
   mIgnoreBigVErr(PR_TRUE),
@@ -294,11 +293,6 @@ MaemoLocationProvider::StartControl()
   mGPSControl = location_gpsd_control_get_default();
   NS_ENSURE_TRUE(mGPSControl, NS_ERROR_FAILURE);
 
-  g_object_set(G_OBJECT(mGPSControl),
-               "preferred-interval", mInterval,
-               "preferred-method", LOCATION_METHOD_USER_SELECTED,
-                NULL);
-
   mControlError = g_signal_connect(mGPSControl, "error",
                                    G_CALLBACK(ControlError), this);
 
@@ -330,43 +324,9 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
 {
   nsresult rv(NS_OK);
 
-  PRInt32 freqVal = 5;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    rv = prefs->GetIntPref("geo.location_update_freq", &freqVal);
-    switch (freqVal) {
-      case 0:
-        mInterval = LOCATION_INTERVAL_DEFAULT;
-        break;
-      case 1:
-        mInterval = LOCATION_INTERVAL_1S;
-        break;
-      case 2:
-        mInterval = LOCATION_INTERVAL_2S;
-        break;
-      case 5:
-        mInterval = LOCATION_INTERVAL_5S;
-        break;
-      case 10:
-        mInterval = LOCATION_INTERVAL_10S;
-        break;
-      case 20:
-        mInterval = LOCATION_INTERVAL_20S;
-        break;
-      case 30:
-        mInterval = LOCATION_INTERVAL_30S;
-        break;
-      case 60:
-        mInterval = LOCATION_INTERVAL_60S;
-        break;
-      case 120:
-        mInterval = LOCATION_INTERVAL_120S;
-        break;
-      default:
-        mInterval = LOCATION_INTERVAL_DEFAULT;
-        break;
-    }
-  }
+  if (!prefs)
+    return NS_ERROR_FAILURE;
 
   rv = StartControl();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -374,14 +334,12 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
   rv = StartDevice();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (prefs)
-    prefs->GetBoolPref("geo.herror.ignore.big", &mIgnoreBigHErr);
+  prefs->GetBoolPref("geo.herror.ignore.big", &mIgnoreBigHErr);
 
   if (mIgnoreBigHErr)
     prefs->GetIntPref("geo.herror.max.value", &mMaxHErr);
 
-  if (prefs)
-    prefs->GetBoolPref("geo.verror.ignore.big", &mIgnoreBigVErr);
+  prefs->GetBoolPref("geo.verror.ignore.big", &mIgnoreBigVErr);
 
   if (mIgnoreBigVErr)
     prefs->GetIntPref("geo.verror.max.value", &mMaxVErr);
@@ -390,8 +348,7 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
     return NS_OK;
 
   PRInt32 update = 0; //0 second no timer created
-  if (prefs)
-    prefs->GetIntPref("geo.default.update", &update);
+  prefs->GetIntPref("geo.default.update", &update);
 
   if (!update)
     return NS_OK;

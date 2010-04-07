@@ -1,0 +1,419 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: ML 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Chris Double <chris.double@double.co.nz>
+ *  Chris Pearce <chris@pearce.org.nz>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+#if !defined(nsOggPlayStateMachine_h__)
+#define nsOggPlayStateMachine_h__
+
+#include "prmem.h"
+#include "nsThreadUtils.h"
+#include "nsOggReader.h"
+#include "nsOggDecoder.h"
+#include "nsHTMLMediaElement.h"
+#include "mozilla/Monitor.h"
+
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
+
+class nsOggDecoder;
+
+// Checks if we're on a specific thread or not. Used in assertions to
+// verify thread safety.
+static inline PRBool IsThread(nsIThread* aThread) {
+  return NS_GetCurrentThread() == aThread;
+}
+
+/*
+  The playback state machine class. This manages the decoding in the
+  nsOggReader on the decode thread, seeking and in-sync-playback on the
+  state machine thread, and controls the audio "push" thread.
+
+  All internal state is synchronised via the decoder monitor. NotifyAll
+  on the monitor is called when the state of the state machine is changed
+  by the main thread. The following changes to state cause a notify:
+
+    mState and data related to that state changed (mSeekTime, etc)
+    Ogg Metadata Loaded
+    First Frame Loaded
+    Frame decoded
+    data pushed or popped from the video and audio queues
+
+  See nsOggDecoder.h for more details.
+*/
+class nsOggPlayStateMachine : public nsRunnable
+{
+public:
+  // Enumeration for the valid states
+  enum State {
+    DECODER_STATE_DECODING_METADATA,
+    DECODER_STATE_DECODING,
+    DECODER_STATE_SEEKING,
+    DECODER_STATE_BUFFERING,
+    DECODER_STATE_COMPLETED,
+    DECODER_STATE_SHUTDOWN
+  };
+
+  nsOggPlayStateMachine(nsOggDecoder* aDecoder);
+  ~nsOggPlayStateMachine();
+
+  // Initializes the state machine, returns NS_OK on success, or
+  // NS_ERROR_FAILURE on failure.
+  nsresult Init();
+
+  // Cause state transitions. These methods obtain the decoder monitor
+  // to synchronise the change of state, and to notify other threads
+  // that the state has changed.
+  void Shutdown();
+  void Decode();
+
+  // Seeks to aTime seconds.
+  void Seek(float aTime);
+
+  // State machine thread run function. Polls the state, sends frames to be
+  // displayed at appropriate times, and generally manages the decode.
+  NS_IMETHOD Run();
+
+  // This is called on the state machine thread and audio thread.
+  // The decoder monitor must be obtained before calling this.
+  PRBool HasAudio() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mInfo.mHasAudio;
+  }
+
+  // This is called on the state machine thread and audio thread.
+  // The decoder monitor must be obtained before calling this.
+  PRBool HasVideo() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mInfo.mHasVideo;
+  }
+
+  // Returns the current playback position in seconds.
+  // Called from the main thread to get the current frame time. The decoder
+  // monitor must be obtained before calling this.
+  float GetCurrentTime();
+
+  // Called from the main thread to get the duration. The decoder monitor
+  // must be obtained before calling this. It is in units of milliseconds.
+  PRInt64 GetDuration();
+
+  // Called from the main thread to set the duration of the media resource
+  // if it is able to be obtained via HTTP headers. The decoder monitor
+  // must be obtained before calling this.
+  void SetDuration(PRInt64 aDuration);
+
+  // Called from the main thread to set whether the media resource can
+  // be seeked. The decoder monitor must be obtained before calling this.
+  void SetSeekable(PRBool aSeekable);
+
+  // Set the audio volume. The decoder monitor must be obtained before
+  // calling this.
+  void SetVolume(float aVolume);
+
+  // Clear the flag indicating that a playback position change event
+  // is currently queued. This is called from the main thread and must
+  // be called with the decode monitor held.
+  void ClearPositionChangeFlag();
+
+  // Should be called by main thread.
+  PRBool HaveNextFrameData() const {
+    PRUint32 audioQueueSize = mReader->mAudioQueue.GetSize();
+    return (mReader->mVideoQueue.GetSize() > 0 &&
+            (!HasAudio() || audioQueueSize > 0)) ||
+           audioQueueSize > 0;
+  }
+
+  // Must be called with the decode monitor held.
+  PRBool IsBuffering() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+
+    return mState == nsOggPlayStateMachine::DECODER_STATE_BUFFERING;
+  }
+
+  // Must be called with the decode monitor held.
+  PRBool IsSeeking() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+
+    return mState == nsOggPlayStateMachine::DECODER_STATE_SEEKING;
+  }
+
+  // Functions used by assertions to ensure we're calling things
+  // on the appropriate threads.
+  PRBool OnStateMachineThread() {
+    return IsThread(mDecoder->mStateMachineThread);
+  }
+
+  PRBool OnDecodeThread() {
+    return IsThread(mDecodeThread);
+  }
+
+  PRBool OnAudioThread() {
+    return IsThread(mAudioThread);
+  }
+
+  // Decode loop, called on the decode thread.
+  void DecodeLoop();
+
+  // The decoder object that created this state machine. The decoder
+  // always outlives us since it controls our lifetime. This is accessed
+  // read only on the AV, state machine, audio and main thread.
+  nsOggDecoder* mDecoder;
+
+  // Update the playback position. This can result in a timeupdate event
+  // and an invalidate of the frame being dispatched asynchronously if
+  // there is no such event currently queued.
+  // Only called on the decoder thread. Must be called with
+  // the decode monitor held.
+  void UpdatePlaybackPosition(PRInt64 aTime);
+
+  nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
+
+  // The decoder monitor must be obtained before modifying this state.
+  // NotifyAll on the monitor must be called when the state is changed by
+  // the main thread so the decoder thread can wake up.
+  // Accessed on state machine, audio, main, and AV thread. 
+  State mState;
+
+private:
+
+  // Waits on the decoder Monitor for aMs. If the decoder monitor is awoken
+  // by a Notify() call, we'll continue waiting, unless we've moved into
+  // shutdown state. This enables us to ensure that we wait for a specified
+  // time, and that the myriad of Notify()s we do an the decoder monitor
+  // don't cause the audio thread to be starved. The decoder monitor must
+  // be locked.
+  void Wait(PRUint32 aMs);
+
+  // Dispatches an asynchronous event to update the media element's ready state.
+  void UpdateReadyState();
+
+  // Resets playback timing data. Called when we seek, on the state machine
+  // thread.
+  void ResetPlayback();
+
+  // Returns the audio clock, if we have audio, or -1 if we don't.
+  // Called on the state machine thread.
+  PRInt64 GetAudioClock();
+
+  // Returns the presentation time of the first sample or frame in the media.
+  // If the media has video, it returns the first video frame. The decoder
+  // monitor must be held with exactly one lock count. Called on the state
+  // machine thread.
+  VideoData* FindStartTime();
+
+  // Finds the end time of the last page in the Ogg file, storing the value
+  // in mEndTime if successful. The decoder must be held with exactly one lock
+  // count. Called on the state machine thread.
+  void FindEndTime();
+
+  // Performs YCbCr to RGB conversion, and pushes the image down the
+  // rendering pipeline. Called on the state machine thread.
+  void RenderVideoFrame(VideoData* aData);
+
+  // If we have video, display a video frame if it's time for display has
+  // arrived, otherwise sleep until it's time for the next sample. Update
+  // the current frame time as appropriate, and trigger ready state update.
+  // The decoder monitor must be held with exactly one lock count. Called
+  // on the state machine thread.
+  void AdvanceFrame();
+
+  // Stops the decode threads. The decoder monitor must be held with exactly
+  // one lock count. Called on the state machine thread.
+  void StopDecodeThreads();
+
+  // Starts the decode threads. The decoder monitor must be held with exactly
+  // one lock count. Called on the state machine thread.
+  nsresult StartDecodeThreads();
+
+  // Reads the Ogg headers using the nsOggReader, and initializes playback.
+  // Called on the state machine thread. The decoder monitor must be held with
+  // exactly one lock count.
+  void LoadOggHeaders();
+
+  // The main loop for the audio thread. Sent to the thread as
+  // an NS_NEW_RUNNABLE_METHOD. This continually does blocking writes to
+  // to audio stream to play audio data.
+  void AudioLoop();
+
+  // Stop or pause playback of media. This has two modes, denoted by
+  // aMode being either AUDIO_PAUSE or AUDIO_SHUTDOWN.
+  //
+  // AUDIO_PAUSE: Suspends the audio stream to be resumed later.
+  // This does not close the OS based audio stream 
+  //
+  // AUDIO_SHUTDOWN: Closes and destroys the audio stream and
+  // releases any OS resources.
+  //
+  // The decoder monitor must be held with exactly one lock count. Called
+  // on the state machine thread.
+  enum eStopMode {AUDIO_PAUSE, AUDIO_SHUTDOWN};
+  void StopPlayback(eStopMode aMode);
+
+  // Resume playback of media. Must be called with the decode monitor held.
+  // This resumes a paused audio stream. The decoder monitor must be held with
+  // exactly one lock count. Called on the state machine thread.
+  void StartPlayback();
+
+  // Returns PR_TRUE if we're currently playing. The decoder monitor must
+  // be held.
+  PRBool IsPlaying();
+
+  // Stores presentation info about required for playback of the media.
+  nsOggInfo mInfo;
+
+  // Monitor on mAudioStream. This monitor must be held in order to delete
+  // or use the audio stream. This stops us destroying the audio stream
+  // while it's being used on another thread (typically when it's being
+  // written to on the audio thread).
+  Monitor mAudioMonitor;
+
+  // The reader, don't call its methods with the decoder monitor held.
+  // This is created in the play state machine's constructor, and destroyed
+  // in the play state machine's destructor.
+  nsAutoPtr<nsOggReader> mReader;
+
+  // The size of the decoded YCbCr frame.
+  // Accessed on state machine thread.
+  PRUint32 mCbCrSize;
+
+  // Accessed on state machine thread.
+  nsAutoArrayPtr<unsigned char> mCbCrBuffer;
+
+  // Thread for pushing audio onto the audio hardware.
+  // The "audio push thread".
+  nsCOMPtr<nsIThread> mAudioThread;
+
+  // Thread for decoding video in background. The "decode thread".
+  nsCOMPtr<nsIThread> mDecodeThread;
+
+  // The time that playback started from the system clock. This is used
+  // for timing the display of audio frames when there's no audio.
+  // Accessed only via the state machine thread.
+  TimeStamp mPlayStartTime;
+
+  // The amount of time we've spent playing already the media. The current
+  // playback position is therefore (mPlayDuration + (now - mPlayStartTime)).
+  // Accessed only via the state machine thread.
+  TimeDuration mPlayDuration;
+
+  // Time that buffering started. Used for buffering timeout and only
+  // accessed on the state machine thread.
+  TimeStamp mBufferingStart;
+
+  // Download position where we should stop buffering. Only
+  // accessed on the state machine thread.
+  PRInt64 mBufferingEndOffset;
+
+  // Start time of the media, in milliseconds. This is the presentation
+  // time of the first sample decoded from the media, and is used to calculate
+  // duration and as a bounds for seeking. Accessed on state machine and
+  // main thread. Access controlled by decoder monitor.
+  PRInt64 mStartTime;
+
+  // Time of the last page in the media, in milliseconds. This is the
+  // end time of the last sample in the media. Accessed on state
+  // machine and main thread. Access controlled by decoder monitor.
+  PRInt64 mEndTime;
+
+  // Position to seek to in milliseconds when the seek state transition occurs.
+  // The decoder monitor lock must be obtained before reading or writing
+  // this value. Accessed on main and state machine thread.
+  PRInt64 mSeekTime;
+
+  // The audio stream resource. Used on the state machine, audio, and main
+  // threads. You must hold the mAudioMonitor, and must NOT hold the decoder
+  // monitor when using the audio stream!
+  nsAutoPtr<nsAudioStream> mAudioStream;
+
+  // The time of the current frame in milliseconds. This is referenced from
+  // 0 which is the initial playback position. Set by the state machine
+  // thread, and read-only from the main thread to get the current
+  // time value. Synchronised via decoder monitor.
+  PRInt64 mCurrentFrameTime;
+
+  // The presentation time of the first audio sample that was played. We can
+  // add this to the audio stream position to determine the current audio time.
+  // Accessed on audio and state machine thread. Synchronized by decoder monitor.
+  PRInt64 mAudioStartTime;
+
+  // The end time of the last audio sample that's been pushed onto the audio
+  // hardware. This will approximately be the end time of the audio stream,
+  // unless another sample is pushed to the hardware.
+  PRInt64 mAudioEndTime;
+
+  // The presentation time of the last video frame which has been displayed.
+  // Accessed from the state machine thread.
+  PRInt64 mVideoFrameTime;
+  
+  // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
+  // from the state machine and main threads. Synchronised via decoder
+  // monitor.
+  float mVolume;
+
+  // PR_TRUE if the media resource can be seeked. Accessed from the state
+  // machine and main threads. Synchronised via decoder monitor.
+  PRPackedBool mSeekable;
+
+  // PR_TRUE if an event to notify about a change in the playback
+  // position has been queued, but not yet run. It is set to PR_FALSE when
+  // the event is run. This allows coalescing of these events as they can be
+  // produced many times per second. Synchronised via decoder monitor.
+  // Accessed on main and state machine threads.
+  PRPackedBool mPositionChangeQueued;
+
+  // PR_TRUE if the audio playback thread has finished. It is finished
+  // when either all the audio samples in the Vorbis bitstream have completed
+  // playing, or we've moved into shutdown state, and the threads are to be
+  // destroyed. Written by the audio playback thread and read and written by
+  // the state machine thread. Synchronised via decoder monitor.
+  PRPackedBool mAudioCompleted;
+
+  // PR_TRUE if the decode thread has indicated that we need to buffer.
+  // Accessed by the decode thread and the state machine thread.
+  // Synchronised via the decoder monitor.
+  PRPackedBool mBufferExhausted;
+
+  // PR_TRUE if mDuration has a value obtained from an HTTP header.
+  // Accessed on the state machine thread.
+  PRPackedBool mGotDurationFromHeader;
+    
+  // PR_FALSE while decode threads should be running. Accessed on audio, 
+  // state machine and decode threads. Syncrhonised by decoder monitor.
+  PRPackedBool mStopDecodeThreads;
+};
+
+
+#endif

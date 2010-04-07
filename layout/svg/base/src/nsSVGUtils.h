@@ -116,6 +116,9 @@ class nsSVGDisplayContainerFrame;
 // In fact Macs can't even manage that
 #define NS_SVG_OFFSCREEN_MAX_DIMENSION 4096
 
+#define SVG_WSP_DELIM       "\x20\x9\xD\xA"
+#define SVG_COMMA_WSP_DELIM "," SVG_WSP_DELIM
+
 /*
  * Checks the svg enable preference and if a renderer could
  * successfully be created.  Declared as a function instead of a

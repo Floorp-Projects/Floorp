@@ -1981,10 +1981,9 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsRefPtr<nsCaret> caretP; 
-  result = ps->GetCaret(getter_AddRefs(caretP));
-  
-  if (NS_SUCCEEDED(result) && caretP) {
+  nsRefPtr<nsCaret> caretP = ps->GetCaret();
+
+  if (caretP) {
     if (aReply) {
       caretP->SetCaretDOMSelection(selection);
 
@@ -4363,10 +4362,10 @@ nsresult nsEditor::EndUpdateViewBatch()
     GetPresShell(getter_AddRefs(presShell));
 
     if (presShell)
-      presShell->GetCaret(getter_AddRefs(caret));
+      caret = presShell->GetCaret();
 
     StCaretHider caretHider(caret);
-        
+
     PRUint32 flags = 0;
 
     GetFlags(&flags);

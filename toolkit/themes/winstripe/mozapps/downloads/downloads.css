@@ -3,11 +3,13 @@
 }
 
 /* Download View */
-#downloadView:not(:-moz-system-metric(windows-classic)) {
-  -moz-appearance: none !important;
-  margin: 0;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+@media not all and (-moz-windows-classic) {
+  #downloadView {
+    -moz-appearance: none;
+    margin: 0;
+    border-bottom: 2px solid;
+    -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  }
 }
 
 /* Download View Items */

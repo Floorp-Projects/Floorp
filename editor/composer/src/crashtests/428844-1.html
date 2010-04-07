@@ -4,10 +4,11 @@
 function boom() {
   var iframe = document.getElementById('inner');
   iframe.src = iframe.src;
+  dump("Outer onload\n");
 }
 </script>
 </head>
 <body onload="boom()">
-<iframe src="428844-1-inner.xhtml" id="inner">
+<iframe src="428844-1-inner.xhtml" id="inner"></iframe>
 </body>
 </html>

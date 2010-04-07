@@ -1899,8 +1899,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   // When browsing with caret, make sure caret is visible after new focus
   // Return early if there is no caret. This can happen for the testcase
   // for bug 308025 where a window is closed in a blur handler.
-  nsRefPtr<nsCaret> caret;
-  aPresShell->GetCaret(getter_AddRefs(caret));
+  nsRefPtr<nsCaret> caret = aPresShell->GetCaret();
   if (!caret)
     return NS_OK;
 
@@ -2054,8 +2053,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
           if (newCaretFrame && newCaretContent) {
             // If the caret is exactly at the same position of the new frame,
             // then we can use the newCaretFrame and newCaretContent for our position
-            nsRefPtr<nsCaret> caret;
-            aPresShell->GetCaret(getter_AddRefs(caret));
+            nsRefPtr<nsCaret> caret = aPresShell->GetCaret();
             nsRect caretRect;
             nsIFrame *frame = caret->GetGeometry(domSelection, &caretRect);
             if (frame) {

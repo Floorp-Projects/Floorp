@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script>
+    function go() {
+      // setCurrentTime to force a sample
+      document.documentElement.setCurrentTime(1);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <rect id="myRect" fill="blue" height="40" width="40">
+    <!-- The "keyTimes" values below are invalid, but they should be ignored
+         (and definitely shouldn't trigger any assertion failures) since we're
+         in paced calcMode. -->
+    <animate attributeName="x" by="50" calcMode="paced" dur="2s"
+             keyTimes="0; -1"/>
+    <animate attributeName="x" by="50" calcMode="paced" dur="2s"
+             keyTimes=""/>
+    <animate attributeName="x" by="50" calcMode="paced" dur="2s"
+             keyTimes="abc"/>
+    <animate attributeName="x" by="50" calcMode="paced" dur="2s"
+             keyTimes="5"/>
+  </rect>
+</svg>

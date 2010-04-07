@@ -65,7 +65,7 @@ function testCopyPaste () {
 
   transferable.getTransferData ("text/html", data, {} ) ;
   is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
-      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em>\n bit of text.</div>",
+      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em> bit of text.</div>",
       "text/html value in the clipboard");
   
   // let's paste now in the textarea and verify its content

@@ -103,6 +103,7 @@ private:
   nsresult ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
   nsresult ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
 
+public:
   struct DOMBaseVal : public nsIDOMSVGAngle
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

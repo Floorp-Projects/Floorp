@@ -45,6 +45,7 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsversion.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -129,7 +130,7 @@ static inline bool
 js_ValueIsStopIteration(jsval v)
 {
     return !JSVAL_IS_PRIMITIVE(v) &&
-           STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v)) == &js_StopIterationClass;
+           JSVAL_TO_OBJECT(v)->getClass() == &js_StopIterationClass;
 }
 
 extern JSObject *

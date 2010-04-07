@@ -238,12 +238,18 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          PRUint32 state = aData->ContentState();
+          PRUint32 state = aData->GetContentStateForVisitedHandling(
+                                    ruleWalker->VisitedHandling(),
+                                    // If the node being matched is a link,
+                                    // it's the relevant link.
+                                    aData->IsLink());
           if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
             ruleWalker->Forward(mLinkRule);
+            ruleWalker->SetHaveRelevantLink();
           }
           else if (mVisitedRule && (state & NS_EVENT_STATE_VISITED)) {
             ruleWalker->Forward(mVisitedRule);
+            ruleWalker->SetHaveRelevantLink();
           }
 
           // No need to add to the active rule if it's not a link
@@ -286,7 +292,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 // Test if style is dependent on content state
-nsReStyleHint
+nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   if (aData->mIsHTMLContent &&
@@ -295,10 +301,10 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
   
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 PRBool
@@ -307,12 +313,12 @@ nsHTMLStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
   return PR_FALSE;
 }
 
-nsReStyleHint
+nsRestyleHint
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Do nothing on before-change checks
   if (!aData->mAttrHasChanged) {
-    return nsReStyleHint(0);
+    return nsRestyleHint(0);
   }
 
   // Note: no need to worry about whether some states changed with this
@@ -326,7 +332,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
       content &&
       content->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
 
   // Don't worry about the mDocumentColorRule since it only applies
@@ -334,10 +340,10 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 
   // Handle the content style rules.
   if (content && content->IsAttributeMapped(aData->mAttribute)) {
-    return eReStyle_Self;
+    return eRestyle_Self;
   }
 
-  return nsReStyleHint(0);
+  return nsRestyleHint(0);
 }
 
 NS_IMETHODIMP
@@ -488,42 +494,6 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsHTMLStyleSheet::GetLinkColor(nscolor& aColor)
-{
-  if (!mLinkRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mLinkRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetActiveLinkColor(nscolor& aColor)
-{
-  if (!mActiveRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mActiveRule->mColor;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsHTMLStyleSheet::GetVisitedLinkColor(nscolor& aColor)
-{
-  if (!mVisitedRule) {
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mVisitedRule->mColor;
-    return NS_OK;
-  }
 }
 
 nsresult

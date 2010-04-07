@@ -73,7 +73,7 @@ function run_test() {
   //var bookmarksFileOld = do_get_file("bookmarks.large.html");
   var bookmarksFileOld = do_get_file("bookmarks.preplaces.html");
   // file pointer to a new places-exported json file
-  var jsonFile = dirSvc.get("ProfD", Ci.nsILocalFile);
+  var jsonFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   jsonFile.append("bookmarks.exported.json");
 
   // create bookmarks.exported.json

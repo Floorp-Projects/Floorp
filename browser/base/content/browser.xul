@@ -110,6 +110,44 @@
 #include browser-sets.inc
 
   <popupset id="mainPopupSet">
+    <menupopup id="tabContextMenu"
+               onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
+               onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
+      <menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
+                command="cmd_newNavigatorTab"/>
+      <menuseparator/>
+      <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
+                oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
+      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.reloadAllTabs();"/>
+      <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+      <menuseparator/>
+      <menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
+                accesskey="&openTabInNewWindow.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
+      <menuseparator/>
+      <menuitem id="context_bookmarkTab"
+                label="&bookmarkThisTab.label;"
+                accesskey="&bookmarkThisTab.accesskey;"
+                oncommand="BookmarkThisTab(TabContextMenu.contextTab);"/>
+      <menuitem id="context_bookmarkAllTabs"
+                label="&bookmarkAllTabs.label;"
+                accesskey="&bookmarkAllTabs.accesskey;"
+                command="Browser:BookmarkAllTabs"/>
+      <menuitem id="context_undoCloseTab"
+                label="&undoCloseTab.label;"
+                accesskey="&undoCloseTab.accesskey;"
+                command="History:UndoCloseTab"/>
+      <menuseparator/>
+      <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
+    </menupopup>
+
     <menupopup id="backForwardMenu"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event);"
@@ -182,6 +220,11 @@
 
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">
+      <menuseparator/>
+      <menuitem command="cmd_ToggleTabsOnTop"
+                type="checkbox"
+                label="&viewTabsOnTop.label;"
+                accesskey="&viewTabsOnTop.accesskey;"/>
       <menuseparator/>
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
@@ -316,7 +359,8 @@
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
 #endif
-           defaultmode="icons">
+           defaultmode="icons"
+           persist="tabsontop">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
@@ -404,6 +448,7 @@
                  noneplaceholder="&urlbar.none.emptyText;"
                  type="autocomplete"
                  autocompletesearch="history"
+                 autocompletesearchparam="enable-actions"
                  autocompletepopup="PopupAutoCompleteRichResult"
                  completeselectedindex="true"
                  tabscrolling="true"
@@ -442,6 +487,7 @@
               </hbox>
             </hbox>
           </box>
+          <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
           <hbox id="urlbar-icons">
             <button type="menu"
                     style="-moz-user-focus: none"
@@ -517,9 +563,10 @@
 
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
-             ordinal="100"
              collapsed="true">
-      <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+      <tabs id="tabbrowser-tabs"
+            class="tabbrowser-tabs"
+            context="tabContextMenu"
             tabbrowser="content"
             flex="1"
             setfocus="false"

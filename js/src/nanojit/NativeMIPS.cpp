@@ -361,7 +361,7 @@ namespace nanojit
 
     void Assembler::asm_store_imm64(LIns *value, int dr, Register rbase)
     {
-        NanoAssert(value->isconstq());
+        NanoAssert(value->isconstf());
         int32_t msw = value->imm64_1();
         int32_t lsw = value->imm64_0();
 
@@ -389,10 +389,10 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
     {
-        NanoAssert(isKnownReg(r));
-        if (sz & ARGSIZE_MASK_INT) {
+        NanoAssert(deprecated_isKnownReg(r));
+        if (ty == ARGTYPE_I || ty == ARGTYPE_U) {
             // arg goes in specific register
             if (p->isconst())
                 asm_li(r, p->imm32());
@@ -427,7 +427,7 @@ namespace nanojit
     {
         bool isF64 = arg->isF64();
         Register rr;
-        if (arg->isUsed() && (rr = arg->deprecated_getReg(), isKnownReg(rr))) {
+        if (arg->isUsed() && (rr = arg->deprecated_getReg(), deprecated_isKnownReg(rr))) {
             // The argument resides somewhere in registers, so we simply need to
             // push it onto the stack.
             if (!cpu_has_fpu || !isF64) {
@@ -464,7 +464,7 @@ namespace nanojit
 
     // Encode a 64-bit floating-point argument using the appropriate ABI.
     // This function operates in the same way as asm_arg, except that it will only
-    // handle arguments where (ArgSize)sz == ARGSIZE_F.
+    // handle arguments where (ArgType)ty == ARGTYPE_F.
     void
     Assembler::asm_arg_64(LInsp arg, Register& r, Register& fr, int& stkd)
     {
@@ -530,7 +530,7 @@ namespace nanojit
         default:
             BADOPCODE(op);
         }
-        
+
         TAG("asm_store32(value=%p{%s}, dr=%d, base=%p{%s})",
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
@@ -542,7 +542,7 @@ namespace nanojit
         Register ft = registerAllocTmp(FpRegs & ~(rmask(fr)));    // allocate temporary register for constant
 
         // todo: support int value in memory, as per x86
-        NanoAssert(isKnownReg(v));
+        NanoAssert(deprecated_isKnownReg(v));
 
         // mtc1       $v,$ft
         // bgez       $v,1f
@@ -590,7 +590,7 @@ namespace nanojit
         SW(r, d+mswoff(), FP);
         r = findRegFor(lo, GpRegs);             // okay if r gets recycled.
         SW(r, d+lswoff(), FP);
-        deprecated_freeRsrcOf(ins, false);      // if we had a reg in use, flush it to mem
+        deprecated_freeRsrcOf(ins);             // if we had a reg in use, flush it to mem
 
         TAG("asm_qjoin(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
@@ -602,8 +602,6 @@ namespace nanojit
             LInsp lhs = ins->oprnd1();
             LInsp rhs = ins->oprnd2();
             LOpcode op = ins->opcode();
-
-            NanoAssert(op >= LIR_fadd && op <= LIR_fdiv);
 
             // rr = ra OP rb
 
@@ -637,22 +635,23 @@ namespace nanojit
         TAG("asm_fneg(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_quad(LIns *ins)
+    void Assembler::asm_immf(LIns *ins)
     {
         int d = deprecated_disp(ins);
         Register rr = ins->deprecated_getReg();
 
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
-        if (cpu_has_fpu && isKnownReg(rr)) {
-            asm_spill(rr, d, false, true);
+        if (cpu_has_fpu && deprecated_isKnownReg(rr)) {
+            if (d)
+                asm_spill(rr, d, false, true);
             asm_li_d(rr, ins->imm64_1(), ins->imm64_0());
         }
         else {
             NanoAssert(d);
             asm_store_imm64(ins, d, FP);
         }
-        TAG("asm_quad(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_immf(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void
@@ -670,8 +669,6 @@ namespace nanojit
 
     void Assembler::asm_load64(LIns *ins)
     {
-        NanoAssert(!ins->isop(LIR_ldq) && !ins->isop(LIR_ldqc));
-
         NanoAssert(ins->isF64());
 
         LIns* base = ins->oprnd1();
@@ -682,9 +679,9 @@ namespace nanojit
 
         Register rbase = findRegFor(base, GpRegs);
         NanoAssert(IsGpReg(rbase));
-        deprecated_freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins);
 
-        if (cpu_has_fpu && isKnownReg(rd)) {
+        if (cpu_has_fpu && deprecated_isKnownReg(rd)) {
             NanoAssert(IsFpReg(rd));
             asm_ldst64 (false, rd, dr, rbase);
         }
@@ -692,7 +689,7 @@ namespace nanojit
             // Either FPU is not available or the result needs to go into memory;
             // in either case, FPU instructions are not required. Note that the
             // result will never be loaded into registers if FPU is not available.
-            NanoAssert(!isKnownReg(rd));
+            NanoAssert(!deprecated_isKnownReg(rd));
             NanoAssert(ds != 0);
 
             NanoAssert(isS16(dr) && isS16(dr+4));
@@ -768,11 +765,11 @@ namespace nanojit
         TAG("asm_neg_not(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_int(LIns *ins)
+    void Assembler::asm_immi(LIns *ins)
     {
         Register rr = deprecated_prepResultReg(ins, GpRegs);
         asm_li(rr, ins->imm32());
-        TAG("asm_int(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_immi(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void Assembler::asm_cmov(LIns *ins)
@@ -881,24 +878,19 @@ namespace nanojit
         Register rbase = getBaseReg(base, d, GpRegs);
 
         switch (op) {
-        case LIR_ldcb:
         case LIR_ldzb:          // 8-bit integer load, zero-extend to 32-bit
             asm_ldst(OP_LBU, rres, d, rbase);
             break;
-        case LIR_ldcs:
-        case LIR_ldzs:          // 16-bit integer load, zero-extend to 32-bit 
+        case LIR_ldzs:          // 16-bit integer load, zero-extend to 32-bit
             asm_ldst(OP_LHU, rres, d, rbase);
             break;
-        case LIR_ldcsb:
         case LIR_ldsb:          // 8-bit integer load, sign-extend to 32-bit
             asm_ldst(OP_LB, rres, d, rbase);
             break;
-        case LIR_ldcss:
         case LIR_ldss:          // 16-bit integer load, sign-extend to 32-bit
             asm_ldst(OP_LH, rres, d, rbase);
             break;
-        case LIR_ldc:
-        case LIR_ld:            // 32-bit integer load 
+        case LIR_ld:            // 32-bit integer load
             asm_ldst(OP_LW, rres, d, rbase);
             break;
         default:
@@ -951,8 +943,8 @@ namespace nanojit
         Register rb;
 
         // Don't re-use the registers we've already allocated.
-        NanoAssert(isKnownReg(rr));
-        NanoAssert(isKnownReg(ra));
+        NanoAssert(deprecated_isKnownReg(rr));
+        NanoAssert(deprecated_isKnownReg(ra));
         allow &= ~rmask(rr);
         allow &= ~rmask(ra);
 
@@ -962,7 +954,6 @@ namespace nanojit
                 // MIPS arith immediate ops sign-extend the imm16 value
                 switch (op) {
                 case LIR_add:
-                case LIR_iaddp:
                     if (ovreg != deprecated_UnknownReg)
                         SLT(ovreg, rr, ra);
                     ADDIU(rr, ra, rhsc);
@@ -1020,11 +1011,10 @@ namespace nanojit
 
         // general case, put rhs in register
         rb = (rhs == lhs) ? ra : findRegFor(rhs, allow);
-        NanoAssert(isKnownReg(rb));
+        NanoAssert(deprecated_isKnownReg(rb));
 
         switch (op) {
             case LIR_add:
-            case LIR_iaddp:
                 if (ovreg != deprecated_UnknownReg)
                     SLT(ovreg,rr,ra);
                 ADDU(rr, ra, rb);
@@ -1112,10 +1102,9 @@ namespace nanojit
             else
                 rbase = findRegFor(base, GpRegs);
 
-            if (value->isconstq())
+            if (value->isconstf())
                 asm_store_imm64(value, dr, rbase);
-            else if (!cpu_has_fpu ||
-                     value->isop(LIR_ldq) || value->isop(LIR_ldqc)) {
+            else if (!cpu_has_fpu || value->isop(LIR_ldq)) {
 
                 int ds = findMemFor(value);
 
@@ -1139,7 +1128,7 @@ namespace nanojit
         }
         else
             BADOPCODE(op);
-            
+
         TAG("asm_store64(value=%p{%s}, dr=%d, base=%p{%s})",
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
@@ -1175,7 +1164,7 @@ namespace nanojit
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, Register cr)
     {
-        RegisterMask allow = condop >= LIR_feq && condop <= LIR_fge ? FpRegs : GpRegs;
+        RegisterMask allow = isFCmpOpcode(condop) ? FpRegs : GpRegs;
         Register ra = findRegFor(a, allow);
         Register rb = (b==a) ? ra : findRegFor(b, allow & ~rmask(ra));
 
@@ -1244,7 +1233,7 @@ namespace nanojit
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCond());
         bool inrange;
-        RegisterMask allow = condop >= LIR_feq && condop <= LIR_fge ? FpRegs : GpRegs;
+        RegisterMask allow = isFCmpOpcode(condop) ? FpRegs : GpRegs;
         LIns *a = cond->oprnd1();
         LIns *b = cond->oprnd2();
         Register ra = findRegFor(a, allow);
@@ -1319,7 +1308,7 @@ namespace nanojit
         }
 
         NIns *patch = NULL;
-        if (cpu_has_fpu && (condop >= LIR_feq && condop <= LIR_fge)) {
+        if (cpu_has_fpu && isFCmpOpcode(condop)) {
             // c.xx.d $ra,$rb
             // bc1x   btarg
             switch (condop) {
@@ -1481,15 +1470,14 @@ namespace nanojit
     {
         USE(pop);
         USE(quad);
-        if (d) {
-            if (IsFpReg(rr)) {
-                NanoAssert(quad);
-                asm_ldst64(true, rr, d, FP);
-            }
-            else {
-                NanoAssert(!quad);
-                asm_ldst(OP_SW, rr, d, FP);
-            }
+        NanoAssert(d);
+        if (IsFpReg(rr)) {
+            NanoAssert(quad);
+            asm_ldst64(true, rr, d, FP);
+        }
+        else {
+            NanoAssert(!quad);
+            asm_ldst(OP_SW, rr, d, FP);
         }
         TAG("asm_spill(rr=%d, d=%d, pop=%d, quad=%d)", rr, d, pop, quad);
     }
@@ -1514,19 +1502,19 @@ namespace nanojit
      * - 32-bit arguments are placed in registers and 32-bit aligned
      *   on the stack.
      */
-    void 
-    Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, Register& fr, int& stkd)
+    void
+    Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd)
     {
         // The stack offset must always be at least aligned to 4 bytes.
         NanoAssert((stkd & 3) == 0);
 
-        if (sz == ARGSIZE_F) {
+        if (ty == ARGTYPE_F) {
             // This task is fairly complex and so is delegated to asm_arg_64.
             asm_arg_64(arg, r, fr, stkd);
-        }
-        else if (sz & ARGSIZE_MASK_INT) {
+        } else {
+            NanoAssert(ty == ARGTYPE_I || ty == ARGTYPE_U);
             if (stkd < 16) {
-                asm_regarg(sz, arg, r);
+                asm_regarg(ty, arg, r);
                 fr = nextreg(fr);
                 r = nextreg(r);
             }
@@ -1537,16 +1525,11 @@ namespace nanojit
             fr = r;
             stkd += 4;
         }
-        else {
-            NanoAssert(sz == ARGSIZE_Q);
-            // shouldn't have 64 bit int params
-            NanoAssert(false);
-        }
     }
 
     void
     Assembler::asm_call(LInsp ins)
-    { 
+    {
         Register rr;
         LOpcode op = ins->opcode();
 
@@ -1568,12 +1551,12 @@ namespace nanojit
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
 
-        evictScratchRegs();
+        evictScratchRegsExcept(0);
 
-        const CallInfo* call = ins->callInfo();
-        ArgSize sizes[MAXARGS];
-        uint32_t argc = call->get_sizes(sizes);
-        bool indirect = call->isIndirect();
+        const CallInfo* ci = ins->callInfo();
+        ArgType argTypes[MAXARGS];
+        uint32_t argc = ci->getArgTypes(argTypes);
+        bool indirect = ci->isIndirect();
 
         // FIXME: Put one of the argument moves into the BDS slot
 
@@ -1584,11 +1567,11 @@ namespace nanojit
         if (!indirect)
             // FIXME: If we can tell that we are calling non-PIC
             // (ie JIT) code, we could call direct instead of using t9
-            asm_li(T9, call->_address);
+            asm_li(T9, ci->_address);
         else
             // Indirect call: we assign the address arg to t9
             // which matches the o32 ABI for calling functions
-            asm_regarg(ARGSIZE_P, ins->arg(--argc), T9);
+            asm_regarg(ARGTYPE_P, ins->arg(--argc), T9);
 
         // Encode the arguments, starting at A0 and with an empty argument stack.
         Register    r = A0, fr = FA0;
@@ -1599,7 +1582,7 @@ namespace nanojit
         // Note that we loop through the arguments backwards as LIR specifies them
         // in reverse order.
         while(argc--)
-            asm_arg(sizes[argc], ins->arg(argc), r, fr, stkd);
+            asm_arg(argTypes[argc], ins->arg(argc), r, fr, stkd);
 
         if (stkd > max_out_args)
             max_out_args = stkd;

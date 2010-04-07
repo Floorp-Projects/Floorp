@@ -136,6 +136,7 @@ namespace nanojit
         {
         private:
             const AR& _ar;
+            // '_i' points to the start of the entries for an LIns, or to the first NULL entry.
             uint32_t _i;
         public:
             inline Iter(const AR& ar) : _ar(ar), _i(1) { }
@@ -296,7 +297,7 @@ namespace nanojit
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
 
             void        compile(Fragment *frag, Allocator& alloc, bool optimize
-                                verbose_only(, LabelMap*));
+                                verbose_only(, LInsPrinter*));
 
             void        endAssembly(Fragment* frag);
             void        assemble(Fragment* frag, LirFilter* reader);
@@ -337,28 +338,28 @@ namespace nanojit
             void        registerResetAll();
             void        evictAllActiveRegs();
             void        evictSomeActiveRegs(RegisterMask regs);
-            void        evictScratchRegs();
+            void        evictScratchRegsExcept(RegisterMask ignore);
             void        intersectRegisterState(RegAlloc& saved);
             void        unionRegisterState(RegAlloc& saved);
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
             LInsp       findVictim(RegisterMask allow);
 
-            Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
+            Register    getBaseReg(LIns *ins, int &d, RegisterMask allow);
             void        getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
                                     RegisterMask allowBase, LIns* base, Register& rb, int &d);
 #if NJ_USES_QUAD_CONSTANTS
             const uint64_t*
                         findQuadConstant(uint64_t q);
 #endif
-            int         findMemFor(LIns* i);
-            Register    findRegFor(LIns* i, RegisterMask allow);
+            int         findMemFor(LIns* ins);
+            Register    findRegFor(LIns* ins, RegisterMask allow);
             void        findRegFor2(RegisterMask allowa, LIns* ia, Register &ra,
                                     RegisterMask allowb, LIns *ib, Register &rb);
-            Register    findSpecificRegFor(LIns* i, Register r);
-            Register    findSpecificRegForUnallocated(LIns* i, Register r);
-            Register    deprecated_prepResultReg(LIns *i, RegisterMask allow);
-            Register    prepareResultReg(LIns *i, RegisterMask allow);
-            void        deprecated_freeRsrcOf(LIns *i, bool pop);
+            Register    findSpecificRegFor(LIns* ins, Register r);
+            Register    findSpecificRegForUnallocated(LIns* ins, Register r);
+            Register    deprecated_prepResultReg(LIns *ins, RegisterMask allow);
+            Register    prepareResultReg(LIns *ins, RegisterMask allow);
+            void        deprecated_freeRsrcOf(LIns *ins);
             void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
             void        evict(LIns* vic);
@@ -368,7 +369,7 @@ namespace nanojit
                                   verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
-            bool isKnownReg(Register r) {
+            bool deprecated_isKnownReg(Register r) {
                 return r != deprecated_UnknownReg;
             }
 
@@ -412,6 +413,13 @@ namespace nanojit
             NIns*       pedanticTop;
         #endif
 
+
+            // Instruction lookahead in gen().  lookahead[0] is the current
+            // instruction.  Nb: lookahead[1..N_LOOKAHEAD] may include dead
+            // instructions, but we won't know that they're dead yet.
+            static const int N_LOOKAHEAD = 3;
+            LInsp       lookahead[N_LOOKAHEAD];
+
             AR          _activation;
             RegAlloc    _allocator;
 
@@ -422,22 +430,25 @@ namespace nanojit
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_store64(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_restore(LInsp, Register);
-            void        asm_spilli(LInsp i, bool pop);
+            void        asm_maybe_spill(LInsp ins, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
-            void        asm_load64(LInsp i);
-            void        asm_ret(LInsp p);
-            void        asm_quad(LInsp i);
-            void        asm_fcond(LInsp i);
-            void        asm_cond(LInsp i);
-            void        asm_arith(LInsp i);
-            void        asm_neg_not(LInsp i);
-            void        asm_load32(LInsp i);
-            void        asm_cmov(LInsp i);
-            void        asm_param(LInsp i);
-            void        asm_int(LInsp i);
+            void        asm_load64(LInsp ins);
+            void        asm_ret(LInsp ins);
+#ifdef NANOJIT_64BIT
+            void        asm_immq(LInsp ins);
+#endif
+            void        asm_immf(LInsp ins);
+            void        asm_fcond(LInsp ins);
+            void        asm_cond(LInsp ins);
+            void        asm_arith(LInsp ins);
+            void        asm_neg_not(LInsp ins);
+            void        asm_load32(LInsp ins);
+            void        asm_cmov(LInsp ins);
+            void        asm_param(LInsp ins);
+            void        asm_immi(LInsp ins);
 #if NJ_SOFTFLOAT_SUPPORTED
-            void        asm_qlo(LInsp i);
-            void        asm_qhi(LInsp i);
+            void        asm_qlo(LInsp ins);
+            void        asm_qhi(LInsp ins);
             void        asm_qjoin(LIns *ins);
 #endif
             void        asm_fneg(LInsp ins);

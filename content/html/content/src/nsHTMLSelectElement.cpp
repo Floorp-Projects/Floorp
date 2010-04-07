@@ -173,6 +173,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLSelectElement, nsHTMLSelectElement)
+
 // QueryInterface implementation for nsHTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
   NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLSelectElement,
@@ -1807,6 +1809,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHTMLOptionCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsISupports
+
+DOMCI_DATA(HTMLOptionsCollection, nsHTMLOptionCollection)
 
 // QueryInterface implementation for nsHTMLOptionCollection
 NS_INTERFACE_TABLE_HEAD(nsHTMLOptionCollection)

@@ -562,7 +562,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
         // Prepare an array of arguments for JS_ConvertArguments
         jsval argv[5];
-        JSAutoTempValueRooter tvr(jscontext, 5, argv);
+        js::AutoArrayRooter tvr(jscontext, JS_ARRAY_LENGTH(argv), argv);
 
         if (!PushArguments(jscontext, 5, argv,
                            "s %ip %iv %is s",

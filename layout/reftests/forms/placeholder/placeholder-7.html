@@ -13,7 +13,7 @@
     }
   </script>
 
-  <body onload="focusPlaceholder(); disableReftestWait();">
-    <input type="text" id="p1" value="" placeholder="my placeholder" readonly>
+  <body onload="focusPlaceholder();">
+    <input type="text" id="p1" value="" placeholder="my placeholder" readonly onfocus="disableReftestWait();">
   </body>
 </html>

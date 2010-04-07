@@ -4,6 +4,9 @@
 #include "prtypes.h"
 #include "jArray.h"
 #include "nscore.h"
+#include "nsDebug.h"
+#include "prlog.h"
+#include "nsMemory.h"
 
 class nsHtml5NamedCharacters
 {

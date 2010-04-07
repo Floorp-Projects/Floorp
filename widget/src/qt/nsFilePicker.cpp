@@ -218,6 +218,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
         break;
     case nsIFilePicker::modeSave:
         mDialog->setFileMode(QFileDialog::AnyFile);
+        mDialog->setAcceptMode(QFileDialog::AcceptSave);
         break;
     case nsIFilePicker::modeGetFolder:
         mDialog->setFileMode(QFileDialog::DirectoryOnly);

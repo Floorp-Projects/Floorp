@@ -63,6 +63,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
     mEventIsInternal = PR_TRUE;
     mEvent->time = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
+    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 
   switch (mEvent->eventStructType)
@@ -93,6 +94,8 @@ nsDOMMouseEvent::~nsDOMMouseEvent()
 
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
+
+DOMCI_DATA(MouseEvent, nsDOMMouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
@@ -148,7 +151,7 @@ nsDOMMouseEvent::InitNSMouseEvent(const nsAString & aType, PRBool aCanBubble, PR
                                   PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY,
                                   PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
                                   PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
-                                  float aPressure)
+                                  float aPressure, PRUint16 aInputSource)
 {
   nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
                                                 aView, aDetail, aScreenX, aScreenY,
@@ -157,6 +160,7 @@ nsDOMMouseEvent::InitNSMouseEvent(const nsAString & aType, PRBool aCanBubble, PR
   NS_ENSURE_SUCCESS(rv, rv);
 
   static_cast<nsMouseEvent_base*>(mEvent)->pressure = aPressure;
+  static_cast<nsMouseEvent_base*>(mEvent)->inputSource = aInputSource;
   return NS_OK;
 }
 
@@ -291,6 +295,14 @@ nsDOMMouseEvent::GetMozPressure(float* aPressure)
 {
   NS_ENSURE_ARG_POINTER(aPressure);
   *aPressure = static_cast<nsMouseEvent_base*>(mEvent)->pressure;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMMouseEvent::GetMozInputSource(PRUint16* aInputSource)
+{
+  NS_ENSURE_ARG_POINTER(aInputSource);
+  *aInputSource = static_cast<nsMouseEvent_base*>(mEvent)->inputSource;
   return NS_OK;
 }
 

@@ -106,6 +106,8 @@ nsXMLCDATASection::~nsXMLCDATASection()
 }
 
 
+DOMCI_DATA(CDATASection, nsXMLCDATASection)
+
 // QueryInterface implementation for nsXMLCDATASection
 NS_INTERFACE_TABLE_HEAD(nsXMLCDATASection)
   NS_NODE_INTERFACE_TABLE4(nsXMLCDATASection, nsIDOMNode, nsIDOMCharacterData,

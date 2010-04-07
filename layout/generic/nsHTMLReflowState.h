@@ -173,12 +173,6 @@ public:
     InitOffsets(aContainingBlockWidth);
   }
 
-  // Destructor for usedPaddingProperty
-  static void DestroyMarginFunc(void*    aFrame,
-                                nsIAtom* aPropertyName,
-                                void*    aPropertyValue,
-                                void*    aDtorData);
-
 private:
   // Computes margin values from the specified margin style information, and
   // fills in the mComputedMargin member

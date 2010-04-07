@@ -206,7 +206,6 @@ struct nsCSSCornerSizes {
     return PR_FALSE;
   }
 
-  void SetAllCornersTo(const nsCSSValue& aValue);
   void Reset();
 
   nsCSSValuePair mTopLeft;

@@ -72,10 +72,10 @@ var testData = [
 
 function getIdForTag(aTagName) {
   var id = -1;
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.tagsFolder], 1);
-  var options = histsvc.getNewQueryOptions();
-  var root = histsvc.executeQuery(query, options).root;
+  var query = PlacesUtils.history.getNewQuery();
+  query.setFolders([PlacesUtils.tagsFolderId], 1);
+  var options = PlacesUtils.history.getNewQueryOptions();
+  var root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;  
   var cc = root.childCount;
   do_check_eq(root.childCount, 2);
@@ -100,12 +100,12 @@ function run_test() {
   let tagId = getIdForTag("bugzilla");
   do_check_true(tagId > 0);
 
-  var options = histsvc.getNewQueryOptions();
+  var options = PlacesUtils.history.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_TAG_CONTENTS;
-  var query = histsvc.getNewQuery();
+  var query = PlacesUtils.history.getNewQuery();
   query.setFolders([tagId], 1);
 
-  var root = histsvc.executeQuery(query, options).root;
+  var root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
 
   displayResultSet(root);
@@ -148,13 +148,13 @@ function run_test() {
       populateDB(batchchange);
     }
   };
-  histsvc.runInBatchMode(updateBatch, null);
+  PlacesUtils.history.runInBatchMode(updateBatch, null);
   do_check_false(isInResult({uri: "http://fooz.com/"}, root));
   do_check_true(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   // Test removing a tag updates us.
   LOG("Delete item outside of batch");
-  tagssvc.untagURI(uri("http://foo.com/changeme2.html"), ["bugzilla"]);
+  PlacesUtils.tagging.untagURI(uri("http://foo.com/changeme2.html"), ["bugzilla"]);
   do_check_false(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   root.containerOpen = false;

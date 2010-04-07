@@ -11,6 +11,26 @@
                                                                 inside the private browsing mode -->
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
 
+<!-- Tab context menu -->
+<!ENTITY  newTab.label                       "New Tab">
+<!ENTITY  newTab.accesskey                   "N">
+<!ENTITY  reloadTab.label                    "Reload Tab">
+<!ENTITY  reloadTab.accesskey                "R">
+<!ENTITY  reloadAllTabs.label                "Reload All Tabs">
+<!ENTITY  reloadAllTabs.accesskey            "A">
+<!ENTITY  closeOtherTabs.label               "Close Other Tabs">
+<!ENTITY  closeOtherTabs.accesskey           "o">
+<!ENTITY  openTabInNewWindow.label           "Open in a New Window">
+<!ENTITY  openTabInNewWindow.accesskey       "W">
+<!ENTITY  bookmarkThisTab.label              "Bookmark This Tab">
+<!ENTITY  bookmarkThisTab.accesskey          "B">
+<!ENTITY  bookmarkAllTabs.label              "Bookmark All Tabs…">
+<!ENTITY  bookmarkAllTabs.accesskey          "T">
+<!ENTITY  undoCloseTab.label                 "Undo Close Tab">
+<!ENTITY  undoCloseTab.accesskey             "U">
+<!ENTITY  closeTab.label                     "Close Tab">
+<!ENTITY  closeTab.accesskey                 "c">
+
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
@@ -190,6 +210,8 @@
 <!ENTITY viewSidebarMenu.accesskey "e">
 <!ENTITY viewCustomizeToolbar.label       "Customize…"> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C">
+<!ENTITY viewTabsOnTop.label            "Tabs on top">
+<!ENTITY viewTabsOnTop.accesskey        "T">
 
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "s">
@@ -207,6 +229,7 @@
 <!ENTITY urlbar.history.emptyText     "Search History">
 <!ENTITY urlbar.none.emptyText        "Type a Web address">
 <!ENTITY urlbar.accesskey             "d">
+<!ENTITY urlbar.switchToTab.label     "Switch to tab:">
 
 <!-- 
   Comment duplicated from browser-sets.inc:

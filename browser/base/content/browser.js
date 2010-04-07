@@ -1307,7 +1307,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
-  tabPreviews.init();
   ctrlTab.readPref();
   gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
   gPrefService.addObserver(allTabs.prefName, allTabs, false);
@@ -1364,6 +1363,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   if (Win7Features)
     Win7Features.onOpenWindow();
+
+  TabsOnTop.syncCommand();
 }
 
 function BrowserShutdown()
@@ -1373,7 +1374,6 @@ function BrowserShutdown()
 
   gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
   gPrefService.removeObserver(allTabs.prefName, allTabs);
-  tabPreviews.uninit();
   ctrlTab.uninit();
   allTabs.uninit();
 
@@ -3805,7 +3805,6 @@ var XULBrowserWindow = {
   overLink: "",
   startTime: 0,
   statusText: "",
-  lastURI: null,
   isBusy: false,
 
   _progressCollapseTimer: 0,
@@ -3869,7 +3868,6 @@ var XULBrowserWindow = {
     delete this.statusTextField;
     delete this.securityButton;
     delete this.statusText;
-    delete this.lastURI;
   },
 
   setJSStatus: function (status) {
@@ -4084,7 +4082,6 @@ var XULBrowserWindow = {
         nBox.removeTransientNotifications();
       }
     }
-    selectedBrowser.lastURI = aLocationURI;
 
     // Disable menu entries for images, enable otherwise
     if (content.document && mimeTypeIsTextBased(content.document.contentType))
@@ -4590,6 +4587,29 @@ function onViewToolbarCommand(aEvent)
   toolbar.setAttribute(hidingAttribute,
                        aEvent.originalTarget.getAttribute("checked") != "true");
   document.persist(toolbar.id, hidingAttribute);
+}
+
+var TabsOnTop = {
+  toggle: function () {
+    this.enabled = !this.enabled;
+  },
+  syncCommand: function () {
+    document.getElementById("cmd_ToggleTabsOnTop")
+            .setAttribute("checked", this.enabled);
+  },
+  get enabled () {
+    return gNavToolbox.getAttribute("tabsontop") == "true";
+  },
+  set enabled (val) {
+    gNavToolbox.setAttribute("tabsontop", !!val);
+    this.syncCommand();
+
+    //XXX: Trigger reframe. This is a workaround for bug 555987 and needs to be
+    //     removed once that bug is fixed.
+    gNavToolbox.style.MozBoxOrdinalGroup = val ? 2 : 3;
+
+    return val;
+  }
 }
 
 function displaySecurityInfo()
@@ -7344,6 +7364,10 @@ let gPrivateBrowsingUI = {
       }
     }
 
+    if (gURLBar) {
+      gURLBar.editor.transactionManager.clear();
+    }
+
     document.getElementById("menu_import").removeAttribute("disabled");
 
     // Re-enable the Clear Recent History... menu item on exit of PB mode
@@ -7587,5 +7611,64 @@ var LightWeightThemeWebInstaller = {
   _getThemeFromNode: function (node) {
     return this._manager.parseTheme(node.getAttribute("data-browsertheme"),
                                     node.baseURI);
+  }
+}
+
+function switchToTabHavingURI(aURI) {
+  function switchIfURIInWindow(aWindow) {
+    if (!("gBrowser" in aWindow))
+      return false;
+    let browsers = aWindow.gBrowser.browsers;
+    for (let i = 0; i < browsers.length; i++) {
+      let browser = browsers[i];
+      if (browser.currentURI.equals(aURI)) {
+        gURLBar.handleRevert();
+        aWindow.focus();
+        aWindow.gBrowser.tabContainer.selectedIndex = i;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // This can be passed either nsIURI or a string.
+  if (!(aURI instanceof Ci.nsIURI))
+    aURI = makeURI(aURI);
+
+  // Prioritise this window.
+  if (switchIfURIInWindow(window))
+    return true;
+
+  let winEnum = Services.wm.getEnumerator("navigator:browser");
+  while (winEnum.hasMoreElements()) {
+    let browserWin = winEnum.getNext();
+    // Skip closed (but not yet destroyed) windows,
+    // and the current window (which was checked earlier).
+    if (browserWin.closed || browserWin == window)
+      continue;
+    if (switchIfURIInWindow(browserWin))
+      return true;
+  }
+  // No opened tab has that url.
+  return false;
+}
+
+var TabContextMenu = {
+  contextTab: null,
+  updateContextMenu: function updateContextMenu(aPopupMenu) {
+    this.contextTab = document.popupNode.localName == "tab" ?
+                      document.popupNode : gBrowser.selectedTab;
+    var disabled = gBrowser.tabs.length == 1;
+    var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
+    for (var i = 0; i < menuItems.length; i++)
+      menuItems[i].disabled = disabled;
+
+    // Session store
+    // XXXzeniko should't we just disable this item as we disable
+    // the tabbrowser-multiple items above - for consistency?
+    document.getElementById("context_undoCloseTab").hidden =
+      Cc["@mozilla.org/browser/sessionstore;1"].
+      getService(Ci.nsISessionStore).
+      getClosedTabCount(window) == 0;
   }
 }

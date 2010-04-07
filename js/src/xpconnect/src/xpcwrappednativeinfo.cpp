@@ -203,19 +203,11 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
 
     const char *memberName = iface->GetMemberName(ccx, this);
 
-    jsrefcount suspendDepth = 0;
-    if(cx != ccx) {
-        // Switching contexts, suspend the old and enter the new request.
-        suspendDepth = JS_SuspendRequest(ccx);
-        JS_BeginRequest(cx);
-    }
-
-    JSFunction *fun = JS_NewFunction(cx, callback, argc, flags, nsnull,
-                                     memberName);
-
-    if(suspendDepth) {
-        JS_EndRequest(cx);
-        JS_ResumeRequest(ccx, suspendDepth);
+    JSFunction *fun;
+    // Switching contexts, suspend the old and enter the new request.
+    {
+        JSAutoTransferRequest transfer(ccx, cx);
+        fun = JS_NewFunction(cx, callback, argc, flags, nsnull, memberName);
     }
 
     if(!fun)
@@ -227,8 +219,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
 
     AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
-    STOBJ_CLEAR_PARENT(funobj);
-    STOBJ_CLEAR_PROTO(funobj);
+    funobj->clearParent();
+    funobj->clearProto();
 
     if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(iface))||
        !JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(this)))

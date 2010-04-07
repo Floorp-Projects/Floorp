@@ -108,10 +108,8 @@ class LinuxDumper {
   // Parse the data for |threads| and |mappings|.
   bool Init();
 
-  // Attach/detach all threads in the given process.  No attempt is
-  // made to attach |except|, if it identifies a thread in the given
-  // process: it is assumed to already be attached.
-  bool ThreadsAttach(pid_t except=0);
+  // Attach/detach all threads in the given process.
+  bool ThreadsAttach();
   bool ThreadsDetach();
 
   // Read information about the given thread. Returns true on success. One must

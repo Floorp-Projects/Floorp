@@ -73,6 +73,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
 NS_IMPL_ADDREF_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 
+DOMCI_DATA(SVGMetadataElement, nsSVGMetadataElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGMetadataElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGMetadataElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGMetadataElement)

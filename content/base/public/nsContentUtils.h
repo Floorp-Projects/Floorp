@@ -42,15 +42,22 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#include "jsprvtd.h"
-#include "jsnum.h"
+#include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
+
+#if defined(SOLARIS)
+#include <ieeefp.h>
+#endif
+
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 #include "nsIDOM3Node.h"
 #include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"
@@ -60,6 +67,9 @@
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
 #include "nsIPrefBranch2.h"
+#include "mozilla/AutoRestore.h"
+
+#include "jsapi.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1486,10 +1496,12 @@ public:
    * origin is set to 'null'.
    *
    * The ASCII versions return a ASCII strings that are puny-code encoded,
-   * suitable for for example header values. The UTF versions return strings
+   * suitable for, for example, header values. The UTF versions return strings
    * containing international characters.
    *
-   * aPrincipal/aOrigin must not be null.
+   * @pre aPrincipal/aOrigin must not be null.
+   *
+   * @note this should be used for HTML5 origin determination.
    */
   static nsresult GetASCIIOrigin(nsIPrincipal* aPrincipal,
                                  nsCString& aOrigin);
@@ -1689,26 +1701,32 @@ private:
 #endif
 };
 
-class nsAutoGCRoot {
+class NS_STACK_CLASS nsAutoGCRoot {
 public:
   // aPtr should be the pointer to the jsval we want to protect
-  nsAutoGCRoot(jsval* aPtr, nsresult* aResult) :
+  nsAutoGCRoot(jsval* aPtr, nsresult* aResult
+               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
     mPtr(aPtr)
   {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
   // aPtr should be the pointer to the JSObject* we want to protect
-  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult) :
+  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult
+               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
     mPtr(aPtr)
   {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
   // aPtr should be the pointer to the thing we want to protect
-  nsAutoGCRoot(void* aPtr, nsresult* aResult) :
+  nsAutoGCRoot(void* aPtr, nsresult* aResult
+               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
     mPtr(aPtr)
   {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
@@ -1729,28 +1747,34 @@ private:
 
   void* mPtr;
   nsresult mResult;
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class nsAutoScriptBlocker {
+class NS_STACK_CLASS nsAutoScriptBlocker {
 public:
-  nsAutoScriptBlocker() {
+  nsAutoScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     nsContentUtils::AddScriptBlocker();
   }
   ~nsAutoScriptBlocker() {
     nsContentUtils::RemoveScriptBlocker();
   }
+private:
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class mozAutoRemovableBlockerRemover
+class NS_STACK_CLASS mozAutoRemovableBlockerRemover
 {
 public:
-  mozAutoRemovableBlockerRemover(nsIDocument* aDocument);
+  mozAutoRemovableBlockerRemover(nsIDocument* aDocument
+                                 MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM);
   ~mozAutoRemovableBlockerRemover();
 
 private:
   PRUint32 mNestingLevel;
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIDocumentObserver> mObserver;
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line
@@ -1771,20 +1795,14 @@ private:
 
 /*
  * Check whether a floating point number is finite (not +/-infinity and not a
- * NaN value). We wrap JSDOUBLE_IS_FINITE in a function because it expects to
- * take the address of its argument, and because the argument must be of type
- * jsdouble to have the right size and layout of bits.
- *
- * Note: we could try to exploit the fact that |infinity - infinity == NaN|
- * instead of using JSDOUBLE_IS_FINITE. This would produce more compact code
- * and perform better by avoiding type conversions and bit twiddling.
- * Unfortunately, some architectures don't guarantee that |f == f| evaluates
- * to true (where f is any *finite* floating point number). See
- * https://bugzilla.mozilla.org/show_bug.cgi?id=369418#c63 . To play it safe
- * for gecko 1.9, we just reuse JSDOUBLE_IS_FINITE.
+ * NaN value).
  */
 inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
-  return JSDOUBLE_IS_FINITE(f);
+#ifdef WIN32
+  return _finite(f);
+#else
+  return finite(f);
+#endif
 }
 
 /*

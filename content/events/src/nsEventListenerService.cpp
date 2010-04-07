@@ -57,6 +57,8 @@
 
 NS_IMPL_CYCLE_COLLECTION_1(nsEventListenerInfo, mListener)
 
+DOMCI_DATA(EventListenerInfo, nsEventListenerInfo)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerInfo)
   NS_INTERFACE_MAP_ENTRY(nsIEventListenerInfo)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

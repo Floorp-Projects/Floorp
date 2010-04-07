@@ -108,6 +108,11 @@ PR_EXTERN(void *) PL_ArenaGrow(
 
 PR_EXTERN(void) PL_ArenaRelease(PLArenaPool *pool, char *mark);
 
+/*
+** memset contents of all arenas in pool to pattern
+*/
+PR_EXTERN(void) PL_ClearArenaPool(PLArenaPool *pool, PRInt32 pattern);
+
 PR_END_EXTERN_C
 
 #endif /* defined(PLARENAS_H) */

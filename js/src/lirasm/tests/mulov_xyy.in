@@ -1,11 +1,11 @@
 ; 46341 * 46341 >= 2^31, and will overflow.
-big = int 46341
+big = imml 46341
 
-res = mulxov big big    ; overflow, so we exit here
+res = mulxovl big big    ; overflow, so we exit here
 
 ; Ensure that 'big' gets its own register and isn't shared with 'res'.
 ; Also store 'res' so it isn't dead.
-m = alloc 8
-sti big m 0
-sti res m 4
+m = allocp 8
+stl big m 0
+stl res m 4
 x                       ; we don't exit here

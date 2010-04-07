@@ -57,9 +57,7 @@ function test() {
       dialogWin.document.documentElement.getButton("cancel").click();
   }
 
-  Cc["@mozilla.org/observer-service;1"]
-    .getService(Ci.nsIObserverService)
-    .addObserver(promptObserver, "common-dialog-loaded", false);
+  Services.obs.addObserver(promptObserver, "common-dialog-loaded", false);
 
   waitForExplicitFinish();
   let browser1 = gBrowser.getBrowserForTab(gBrowser.addTab());
@@ -150,9 +148,7 @@ function test() {
               gBrowser.removeTab(gBrowser.tabContainer.lastChild);
               gBrowser.removeTab(gBrowser.tabContainer.lastChild);
 
-              Cc["@mozilla.org/observer-service;1"]
-                .getService(Ci.nsIObserverService)
-                .removeObserver(promptObserver, "common-dialog-loaded", false);
+              Services.obs.removeObserver(promptObserver, "common-dialog-loaded", false);
               finish();
             }
             for (let i = 0; i < gBrowser.browsers.length; ++i)

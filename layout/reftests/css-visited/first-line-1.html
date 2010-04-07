@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<title>:visited and ::first-line</title>
+	<style type="text/css">
+	
+	:link, :visited { display: block; text-decoration: none; }
+
+	:link { color: blue }
+	:link::first-line { color: fuchsia; }
+	:visited { color: purple }
+	:visited::first-line { color: maroon; }
+
+	</style>
+</head>
+<body>
+
+<a href="unvisited-page.html">unvisited<br>link</a>
+<a href="visited-page.html">visited<br>link</a>
+
+</body>
+</html>

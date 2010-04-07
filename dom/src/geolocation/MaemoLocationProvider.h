@@ -112,7 +112,6 @@ class MaemoLocationProvider : public nsIGeolocationProvider,
   double mPrevLat;
   double mPrevLong;
 
-  LocationGPSDControlInterval mInterval;
   PRBool mIgnoreBigHErr;
   PRInt32 mMaxHErr;
   PRBool mIgnoreBigVErr;

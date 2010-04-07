@@ -366,6 +366,8 @@ WebGLContext::GetThebesSurface(gfxASurface **surface)
 NS_IMPL_ADDREF(WebGLContext)
 NS_IMPL_RELEASE(WebGLContext)
 
+DOMCI_DATA(CanvasRenderingContextWebGL, WebGLContext)
+
 NS_INTERFACE_MAP_BEGIN(WebGLContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextWebGL)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
@@ -377,6 +379,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(WebGLBuffer)
 NS_IMPL_RELEASE(WebGLBuffer)
 
+DOMCI_DATA(WebGLBuffer, WebGLBuffer)
+
 NS_INTERFACE_MAP_BEGIN(WebGLBuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLBuffer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -385,6 +389,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLTexture)
 NS_IMPL_RELEASE(WebGLTexture)
+
+DOMCI_DATA(WebGLTexture, WebGLTexture)
 
 NS_INTERFACE_MAP_BEGIN(WebGLTexture)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLTexture)
@@ -395,6 +401,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(WebGLProgram)
 NS_IMPL_RELEASE(WebGLProgram)
 
+DOMCI_DATA(WebGLProgram, WebGLProgram)
+
 NS_INTERFACE_MAP_BEGIN(WebGLProgram)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLProgram)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -403,6 +411,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLShader)
 NS_IMPL_RELEASE(WebGLShader)
+
+DOMCI_DATA(WebGLShader, WebGLShader)
 
 NS_INTERFACE_MAP_BEGIN(WebGLShader)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLShader)
@@ -413,6 +423,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(WebGLFramebuffer)
 NS_IMPL_RELEASE(WebGLFramebuffer)
 
+DOMCI_DATA(WebGLFramebuffer, WebGLFramebuffer)
+
 NS_INTERFACE_MAP_BEGIN(WebGLFramebuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLFramebuffer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -421,6 +433,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLRenderbuffer)
 NS_IMPL_RELEASE(WebGLRenderbuffer)
+
+DOMCI_DATA(WebGLRenderbuffer, WebGLRenderbuffer)
 
 NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLRenderbuffer)

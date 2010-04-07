@@ -45,8 +45,8 @@
 
 // FIX ME: block size and block should be determined based on the OggPlay offset 
 // for audio track
-#define BLOCK_SIZE  1024
-#define BLOCK_COUNT 32
+#define BLOCK_SIZE  16384
+#define BLOCK_COUNT 10
 #define DEFAULT_DEVICE_NAME "Default WAVE Device"
 #define DEFAULT_DEVICE WAVE_MAPPER
 

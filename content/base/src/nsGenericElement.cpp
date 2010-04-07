@@ -2918,15 +2918,17 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
-  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
-  if (ownerDoc) {
-    nsIContent* insertionParent = ownerDoc->BindingManager()->
-      GetInsertionParent(aContent);
-    NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
-                   aVisitor.mEventTargetAtParent != insertionParent),
-                 "Retargeting and having insertion parent!");
-    if (insertionParent) {
-      parent = insertionParent;
+  if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIDocument* ownerDoc = aContent->GetOwnerDoc();
+    if (ownerDoc) {
+      nsIContent* insertionParent = ownerDoc->BindingManager()->
+        GetInsertionParent(aContent);
+      NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
+                     aVisitor.mEventTargetAtParent != insertionParent),
+                   "Retargeting and having insertion parent!");
+      if (insertionParent) {
+        parent = insertionParent;
+      }
     }
   }
 
@@ -3487,12 +3489,17 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;
   float pressure = 0;
+  PRUint16 inputSource = 0;
   if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
     clickCount = static_cast<nsMouseEvent*>(aSourceEvent)->clickCount;
     pressure = static_cast<nsMouseEvent*>(aSourceEvent)->pressure;
+    inputSource = static_cast<nsMouseEvent*>(aSourceEvent)->inputSource;
+  } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
+    inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.clickCount = clickCount;
+  event.inputSource = inputSource;
   event.isShift = aSourceEvent->isShift;
   event.isControl = aSourceEvent->isControl;
   event.isAlt = aSourceEvent->isAlt;

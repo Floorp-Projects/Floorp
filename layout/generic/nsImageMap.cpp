@@ -83,8 +83,6 @@ public:
 
   void HasFocus(PRBool aHasFocus);
 
-  void GetHREF(nsAString& aHref) const;
-
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
   PRInt32 mNumCoords;
@@ -105,15 +103,6 @@ Area::~Area()
 {
   MOZ_COUNT_DTOR(Area);
   delete [] mCoords;
-}
-
-void
-Area::GetHREF(nsAString& aHref) const
-{
-  aHref.Truncate();
-  if (mArea) {
-    mArea->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aHref);
-  }
 }
 
 #include <stdlib.h>

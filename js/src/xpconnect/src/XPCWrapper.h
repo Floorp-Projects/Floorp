@@ -276,25 +276,22 @@ GetSecurityManager()
  * Used to ensure that an XPCWrappedNative stays alive when its scriptable
  * helper defines an "expando" property on it.
  */
-inline JSBool
+inline void
 MaybePreserveWrapper(JSContext *cx, XPCWrappedNative *wn, uintN flags)
 {
-  if ((flags & JSRESOLVE_ASSIGNING) &&
-      (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
-    nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-      do_QueryInterface(static_cast<nsISupports*>
-                                   (JS_GetContextPrivate(cx)));
-    if (scriptNotify) {
-      return NS_SUCCEEDED(scriptNotify->PreserveWrapper(wn));
+  if ((flags & JSRESOLVE_ASSIGNING)) {
+    nsRefPtr<nsXPCClassInfo> ci;
+    CallQueryInterface(wn->Native(), getter_AddRefs(ci));
+    if (ci) {
+      ci->PreserveWrapper(wn->Native());
     }
   }
-  return JS_TRUE;
 }
 
 inline JSBool
 IsSecurityWrapper(JSObject *wrapper)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(wrapper);
+  JSClass *clasp = wrapper->getClass();
   return (clasp->flags & JSCLASS_IS_EXTENDED) &&
     ((JSExtendedClass*)clasp)->wrappedObject;
 }
@@ -318,7 +315,7 @@ Unwrap(JSContext *cx, JSObject *wrapper);
 inline JSObject *
 UnwrapGeneric(JSContext *cx, const JSExtendedClass *xclasp, JSObject *wrapper)
 {
-  if (STOBJ_GET_CLASS(wrapper) != &xclasp->base) {
+  if (wrapper->getClass() != &xclasp->base) {
     return nsnull;
   }
 
