@@ -52,6 +52,7 @@
 #include "nsIJSContextStack.h"
 
 using namespace mozilla::jsipc;
+using namespace js;
 
 namespace {
 
@@ -444,13 +445,13 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
     JSObject* state = JS_NewObjectWithGivenProto(cx, clasp, NULL, NULL);
     if (!state)
         return false;
-    JSAutoTempValueRooter tvr(cx, state);
-    
+    AutoValueRooter tvr(cx, state);
+
     for (JSObject* proto = mObj;
          proto;
          proto = JS_GetPrototype(cx, proto))
     {
-        JSAutoIdArray ids(cx, JS_Enumerate(cx, proto));
+        AutoIdArray ids(cx, JS_Enumerate(cx, proto));
         for (uint i = 0; i < ids.length(); ++i)
             JS_DefinePropertyById(cx, state, ids[i], JSVAL_VOID,
                                   NULL, NULL, JSPROP_ENUMERATE | JSPROP_SHARED);
@@ -458,7 +459,7 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
 
     nsTArray<nsString>* strIds;
     {
-        JSAutoIdArray ids(cx, JS_Enumerate(cx, state));
+        AutoIdArray ids(cx, JS_Enumerate(cx, state));
         if (!ids)
             return false;
         strIds = new nsTArray<nsString>(ids.length());
@@ -596,7 +597,7 @@ ObjectWrapperChild::AnswerCall(PObjectWrapperChild* receiver, const nsTArray<JSV
     jsval *jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
-    JSAutoTempValueRooter tvr(cx, argc, jsargs);
+    AutoArrayRooter tvr(cx, argc, jsargs);
 
     for (PRUint32 i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))
@@ -622,7 +623,7 @@ ObjectWrapperChild::AnswerConstruct(const nsTArray<JSVariant>& argv,
     jsval* jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
-    JSAutoTempValueRooter tvr(cx, argc, jsargs);
+    AutoArrayRooter tvr(cx, argc, jsargs);
 
     for (PRUint32 i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))

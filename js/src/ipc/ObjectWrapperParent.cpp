@@ -230,7 +230,7 @@ ObjectWrapperParent::GetJSObject(JSContext* cx) const
 static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
-    while (STOBJ_GET_CLASS(obj) != &ObjectWrapperParent::sCPOW_JSClass.base)
+    while (obj->getClass() != &ObjectWrapperParent::sCPOW_JSClass.base)
         if (!(obj = obj->getProto()))
             return NULL;
     
