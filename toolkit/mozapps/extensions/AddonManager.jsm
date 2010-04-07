@@ -827,6 +827,18 @@ var AddonManager = {
   // Indicates that the Addon can be upgraded.
   PERM_CAN_UPGRADE: 8,
 
+  // General descriptions of where items are installed.
+  // Installed in this profile.
+  SCOPE_PROFILE: 1,
+  // Installed for all of this user's profiles.
+  SCOPE_USER: 2,
+  // Installed and owned by the application.
+  SCOPE_APPLICATION: 4,
+  // Installed for all users of the computer.
+  SCOPE_SYSTEM: 8,
+  // The combination of all scopes.
+  SCOPE_ALL: 15,
+
   getInstallForURL: function AM_getInstallForURL(url, callback, mimetype, hash,
                                                  name, iconURL, version,
                                                  loadGroup) {
