@@ -107,7 +107,11 @@ function popstateExpected(msg) {
 }
 
 function getColor(elem) {
-  return document.defaultView.getComputedStyle(elem, "").color;
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = document.defaultView.
+                QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.getVisitedDependentComputedStyle(elem, "", "color");
 }
 
 function getSHistory(theWindow)

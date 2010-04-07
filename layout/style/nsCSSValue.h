@@ -51,6 +51,7 @@
 #include "nsCRTGlue.h"
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
+#include "nsISupportsImpl.h"
 
 class imgIRequest;
 class nsIDocument;
@@ -180,18 +181,18 @@ public:
     NS_ASSERTION(aUnit <= eCSSUnit_RectIsAuto, "not a valueless unit");
   }
 
-  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  nsCSSValue(const nsString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  nsCSSValue(Array* aArray, nsCSSUnit aUnit) NS_HIDDEN;
-  explicit nsCSSValue(URL* aValue) NS_HIDDEN;
-  explicit nsCSSValue(Image* aValue) NS_HIDDEN;
-  explicit nsCSSValue(nsCSSValueGradient* aValue) NS_HIDDEN;
-  nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
+  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
+  nsCSSValue(float aValue, nsCSSUnit aUnit);
+  nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
+  nsCSSValue(Array* aArray, nsCSSUnit aUnit);
+  explicit nsCSSValue(URL* aValue);
+  explicit nsCSSValue(Image* aValue);
+  explicit nsCSSValue(nsCSSValueGradient* aValue);
+  nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue() { Reset(); }
 
-  NS_HIDDEN_(nsCSSValue&)  operator=(const nsCSSValue& aCopy);
-  NS_HIDDEN_(PRBool)      operator==(const nsCSSValue& aOther) const;
+  nsCSSValue&  operator=(const nsCSSValue& aCopy);
+  PRBool      operator==(const nsCSSValue& aOther) const;
 
   PRBool operator!=(const nsCSSValue& aOther) const
   {
@@ -309,45 +310,43 @@ public:
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
-  NS_HIDDEN_(imgIRequest*) GetImageValue() const;
+  imgIRequest* GetImageValue() const;
 
-  NS_HIDDEN_(nscoord)   GetLengthTwips() const;
+  nscoord GetLengthTwips() const;
 
-  NS_HIDDEN_(void)  Reset()  // sets to null
+  void Reset()  // sets to null
   {
     if (mUnit != eCSSUnit_Null)
       DoReset();
   }
 private:
-  NS_HIDDEN_(void)  DoReset();
+  void DoReset();
 
 public:
-  NS_HIDDEN_(void)  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
-  NS_HIDDEN_(void)  SetPercentValue(float aValue);
-  NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
-  NS_HIDDEN_(void)  SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
-  NS_HIDDEN_(void)  SetColorValue(nscolor aValue);
-  NS_HIDDEN_(void)  SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
-  NS_HIDDEN_(void)  SetURLValue(nsCSSValue::URL* aURI);
-  NS_HIDDEN_(void)  SetImageValue(nsCSSValue::Image* aImage);
-  NS_HIDDEN_(void)  SetGradientValue(nsCSSValueGradient* aGradient);
-  NS_HIDDEN_(void)  SetAutoValue();
-  NS_HIDDEN_(void)  SetInheritValue();
-  NS_HIDDEN_(void)  SetInitialValue();
-  NS_HIDDEN_(void)  SetNoneValue();
-  NS_HIDDEN_(void)  SetAllValue();
-  NS_HIDDEN_(void)  SetNormalValue();
-  NS_HIDDEN_(void)  SetSystemFontValue();
-  NS_HIDDEN_(void)  SetDummyValue();
-  NS_HIDDEN_(void)  SetDummyInheritValue();
-  NS_HIDDEN_(void)  SetRectIsAutoValue();
-  NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
-                                   const;  // Not really const, but pretending
+  void SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
+  void SetPercentValue(float aValue);
+  void SetFloatValue(float aValue, nsCSSUnit aUnit);
+  void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
+  void SetColorValue(nscolor aValue);
+  void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
+  void SetURLValue(nsCSSValue::URL* aURI);
+  void SetImageValue(nsCSSValue::Image* aImage);
+  void SetGradientValue(nsCSSValueGradient* aGradient);
+  void SetAutoValue();
+  void SetInheritValue();
+  void SetInitialValue();
+  void SetNoneValue();
+  void SetAllValue();
+  void SetNormalValue();
+  void SetSystemFontValue();
+  void SetDummyValue();
+  void SetDummyInheritValue();
+  void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
   // Initializes as a function value with the specified function id.
-  NS_HIDDEN_(Array*) InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs);
+  Array* InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs);
   // Checks if this is a function value with the specified function id.
-  NS_HIDDEN_(PRBool) EqualsFunction(nsCSSKeyword aFunctionId) const;
+  PRBool EqualsFunction(nsCSSKeyword aFunctionId) const;
 
   // Returns an already addrefed buffer.  Can return null on allocation
   // failure.
@@ -361,17 +360,17 @@ public:
     // aString must not be null.
     // aOriginPrincipal must not be null.
     URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-        nsIPrincipal* aOriginPrincipal) NS_HIDDEN;
+        nsIPrincipal* aOriginPrincipal);
 
-    ~URL() NS_HIDDEN;
+    ~URL();
 
-    NS_HIDDEN_(PRBool) operator==(const URL& aOther) const;
+    PRBool operator==(const URL& aOther) const;
 
     // URIEquals only compares URIs and principals (unlike operator==, which
     // also compares the original strings).  URIEquals also assumes that the
     // mURI member of both URL objects is non-null.  Do NOT call this method
     // unless you're sure this is the case.
-    NS_HIDDEN_(PRBool) URIEquals(const URL& aOther) const;
+    PRBool URIEquals(const URL& aOther) const;
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
     nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
@@ -379,26 +378,9 @@ public:
     nsCOMPtr<nsIURI> mReferrer;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
-    void AddRef() {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
-        return;
-      }
-      ++mRefCnt;
-      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::URL", sizeof(*this));
-    }
-    void Release() {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
-        return;
-      }
-      --mRefCnt;
-      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::URL");
-      if (mRefCnt == 0)
-        delete this;
-    }
+    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::URL)
+
   protected:
-    nsrefcnt mRefCnt;
 
     // not to be implemented
     URL(const URL& aOther);
@@ -411,8 +393,8 @@ public:
     // this header is included all over.
     // aString must not be null.
     Image(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-          nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument) NS_HIDDEN;
-    ~Image() NS_HIDDEN;
+          nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument);
+    ~Image();
 
     // Inherit operator== from nsCSSValue::URL
 
@@ -420,25 +402,7 @@ public:
 
     // Override AddRef and Release to not only log ourselves correctly, but
     // also so that we delete correctly without a virtual destructor
-    void AddRef() {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
-        return;
-      }
-      ++mRefCnt;
-      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Image", sizeof(*this));
-    }
-
-    void Release() {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
-        return;
-      }
-      --mRefCnt;
-      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Image");
-      if (mRefCnt == 0)
-        delete this;
-    }
+    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::Image)
   };
 
 private:
@@ -464,10 +428,10 @@ protected:
 
 struct nsCSSValueGradientStop {
 public:
-  nsCSSValueGradientStop() NS_HIDDEN;
+  nsCSSValueGradientStop();
   // needed to keep bloat logs happy when we use the nsTArray in nsCSSValueGradient
-  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther) NS_HIDDEN;
-  ~nsCSSValueGradientStop() NS_HIDDEN;
+  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther);
+  ~nsCSSValueGradientStop();
 
   nsCSSValue mLocation;
   nsCSSValue mColor;
@@ -485,8 +449,7 @@ public:
 };
 
 struct nsCSSValueGradient {
-  nsCSSValueGradient(PRBool aIsRadial,
-                     PRBool aIsRepeating) NS_HIDDEN;
+  nsCSSValueGradient(PRBool aIsRadial, PRBool aIsRepeating);
 
   // true if gradient is radial, false if it is linear
   PRPackedBool mIsRadial;
@@ -529,28 +492,9 @@ struct nsCSSValueGradient {
     return !(*this == aOther);
   }
 
-  void AddRef() {
-    if (mRefCnt == PR_UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
-      return;
-    }
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Gradient", sizeof(*this));
-  }
-  void Release() {
-    if (mRefCnt == PR_UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
-      return;
-    }
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Gradient");
-    if (mRefCnt == 0)
-      delete this;
-  }
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
 
 private:
-  nsrefcnt mRefCnt;
-
   // not to be implemented
   nsCSSValueGradient(const nsCSSValueGradient& aOther);
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther);
@@ -588,6 +532,8 @@ struct nsCSSValue::Array {
     return PR_TRUE;
   }
 
+  // XXXdholbert This uses a 16-bit ref count to save space. Should we use
+  // a variant of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
   void AddRef() {
     if (mRefCnt == PR_UINT16_MAX) {
       NS_WARNING("refcount overflow, leaking nsCSSValue::Array");

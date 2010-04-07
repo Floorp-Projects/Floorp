@@ -205,7 +205,6 @@ MapPaperSizeToNativeEnum(LPDEVMODEW aDevMode,
 #endif
 
   const double kThreshold = 0.05;
-  PRBool foundEnum = PR_FALSE;
   for (PRInt32 i=0;i<kNumPaperSizes;i++) {
     double width  = kPaperSizes[i].mWidth;
     double height = kPaperSizes[i].mHeight;
@@ -456,7 +455,7 @@ static void SetRadioOfGroup(HWND aDlg, int aRadId)
 
 //--------------------------------------------------------
 typedef struct {
-  char * mKeyStr;
+  const char * mKeyStr;
   long   mKeyId;
 } PropKeyInfo;
 
@@ -754,7 +753,6 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPCWSTR aPrintName, nsIPrintSettings* 
 {
   HGLOBAL hGlobalDevMode = NULL;
 
-  nsresult rv = NS_ERROR_FAILURE;
   HANDLE hPrinter = NULL;
   // const cast kludge for silly Win32 api's
   LPWSTR printName = const_cast<wchar_t*>(aPrintName);
@@ -863,7 +861,6 @@ ShowNativePrintDialog(HWND              aHWnd,
   //NS_ENSURE_ARG_POINTER(aHWnd);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
-  nsresult  rv = NS_ERROR_FAILURE;
   gDialogWasExtended  = PR_FALSE;
 
   HGLOBAL hGlobalDevMode = NULL;
@@ -895,13 +892,12 @@ ShowNativePrintDialog(HWND              aHWnd,
   hDevNames = (HGLOBAL)::GlobalAlloc(GHND, sizeof(wchar_t) * (len + 1) + 
                                      sizeof(DEVNAMES));
   DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
-  pDevNames->wDriverOffset = sizeof(DEVNAMES);
-  pDevNames->wDeviceOffset = sizeof(DEVNAMES);
-  pDevNames->wOutputOffset = sizeof(DEVNAMES)+len+1;
+  pDevNames->wDriverOffset = sizeof(DEVNAMES)/sizeof(wchar_t);
+  pDevNames->wDeviceOffset = sizeof(DEVNAMES)/sizeof(wchar_t);
+  pDevNames->wOutputOffset = sizeof(DEVNAMES)/sizeof(wchar_t)+len;
   pDevNames->wDefault      = 0;
 
-  wchar_t* device = &(((wchar_t*)pDevNames)[pDevNames->wDeviceOffset]);
-  wcscpy(device, printerName);
+  memcpy(pDevNames+1, printerName, (len + 1) * sizeof(wchar_t));
   ::GlobalUnlock(hDevNames);
 
   // Create a Moveable Memory Object that holds a new DevMode

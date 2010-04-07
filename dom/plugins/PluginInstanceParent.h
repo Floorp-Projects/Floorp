@@ -285,6 +285,7 @@ private:
     Shmem mShSurface; 
     size_t mShWidth;
     size_t mShHeight;
+    CGColorSpaceRef mShColorSpace;
 #endif // definied(OS_MACOSX)
 };
 

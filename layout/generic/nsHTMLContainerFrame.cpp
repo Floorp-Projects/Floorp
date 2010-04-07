@@ -450,7 +450,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
     aDecorations = this->GetStyleTextReset()->mTextDecoration &
                    NS_STYLE_TEXT_DECORATION_LINES_MASK;
     if (aDecorations) {
-      nscolor color = this->GetStyleColor()->mColor;
+      nscolor color = this->GetVisitedDependentColor(eCSSProperty_color);
       aUnderColor = color;
       aOverColor = color;
       aStrikeColor = color;
@@ -470,7 +470,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
       PRUint8 decors = frame->GetStyleTextReset()->mTextDecoration & decorMask;
       if (decors) {
         // A *new* text-decoration is found.
-        nscolor color = frame->GetStyleColor()->mColor;
+        nscolor color = frame->GetVisitedDependentColor(eCSSProperty_color);
 
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decors) {
           aUnderColor = color;

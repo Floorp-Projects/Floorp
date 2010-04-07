@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>ARIA state change event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    function expandNode(aNodeOrID, bExpand)
+    {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function expand_invoke() {
+        // Note: this should fire an EVENT_STATE_CHANGE
+        this.DOMNode.setAttribute("aria-expanded", bExpand);
+      };
+
+      this.check = function expand_check() {
+        testStates(aNodeOrID,
+                   bExpand ? STATE_EXPANDED : STATE_COLLAPSED,
+                   EXT_STATE_EXPANDABLE);
+      };
+
+      this.getID = function changeValue_getID() {
+        return prettyName(aNodeOrID) + " aria-expanded changed";
+      };
+    }
+
+    function doTests()
+    {
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
+
+      gQueue.push(new expandNode("section", true));
+      gQueue.push(new expandNode("section", false));
+      gQueue.push(new expandNode("div", true));
+      gQueue.push(new expandNode("div", false));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=551684"
+     title="No statechange event for aria-expanded on native HTML elements, is fired on ARIA widgets">
+    Mozilla Bug 551684
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <!-- aria-expanded -->
+  <div id="section" role="section" aria-expanded="false">expandable section</div>
+  <div id="div" aria-expanded="false">expandable native div</div>
+
+</body>
+</html>

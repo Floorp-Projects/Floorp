@@ -215,14 +215,6 @@ public:
    */
   nsFrameList ExtractTail(FrameLinkEnumerator& aLink);
 
-  /**
-   * Sort the frames according to content order so that the first
-   * frame in the list is the first in content order. Frames for
-   * the same content will be ordered so that a prev in flow
-   * comes before its next in flow.
-   */
-  void SortByContentOrder();
-
   nsIFrame* FirstChild() const {
     return mFirstChild;
   }
@@ -243,7 +235,6 @@ public:
   }
 
   PRBool ContainsFrame(const nsIFrame* aFrame) const;
-  PRBool ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const;
 
   PRInt32 GetLength() const;
 

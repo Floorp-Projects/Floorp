@@ -329,7 +329,7 @@ pref("extensions.spellcheck.inline.max-misspellings", 500);
 // belong in comm-central/editor/ui/composer.js
 
 pref("editor.use_custom_colors", false);
-pref("editor.singleLine.pasteNewlines",     1);
+pref("editor.singleLine.pasteNewlines",      2);
 pref("editor.quotesPreformatted",            false);
 pref("editor.use_css",                       true);
 pref("editor.css.default_length_unit",       "px");
@@ -2414,7 +2414,6 @@ pref("network.hosts.smtp_server", "localhost");
 pref("network.hosts.pop_server", "pop");
 pref("network.protocol-handler.warn-external.file", false);
 pref("browser.drag_out_of_frame_style", 1);
-pref("editor.singleLine.pasteNewlines", 0);
 
 // Middle-mouse handling
 pref("middlemouse.paste", true);

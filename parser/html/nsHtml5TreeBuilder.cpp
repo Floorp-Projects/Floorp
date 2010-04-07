@@ -194,18 +194,6 @@ nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 }
 
 void 
-nsHtml5TreeBuilder::ensureBufferSpace(PRInt32 addedLength)
-{
-  PRInt32 newCharBufferCapacity = charBufferLen + addedLength;
-  if (newCharBufferCapacity > charBuffer.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newCharBufferCapacity);
-    nsHtml5ArrayCopy::arraycopy(charBuffer, newBuf, charBufferLen);
-    charBuffer.release();
-    charBuffer = newBuf;
-  }
-}
-
-void 
 nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   if (needToDropLF) {
@@ -3741,6 +3729,20 @@ nsHtml5TreeBuilder::appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes)
   appendElement(elt, current->node);
   elementPushed(kNameSpaceID_XHTML, nsHtml5Atoms::form, elt);
   elementPopped(kNameSpaceID_XHTML, nsHtml5Atoms::form, elt);
+}
+
+void 
+nsHtml5TreeBuilder::accumulateCharacter(PRUnichar c)
+{
+  PRInt32 newLen = charBufferLen + 1;
+  if (newLen > charBuffer.length) {
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newLen);
+    nsHtml5ArrayCopy::arraycopy(charBuffer, newBuf, charBufferLen);
+    charBuffer.release();
+    charBuffer = newBuf;
+  }
+  charBuffer[charBufferLen] = c;
+  charBufferLen = newLen;
 }
 
 void 

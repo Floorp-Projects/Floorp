@@ -52,16 +52,16 @@ var testData = [
   // Add a bookmark that should be in the results
   { isBookmark: true,
     uri: "http://bookmarked.com/",
-    parentFolder: bmsvc.toolbarFolder,
-    index: bmsvc.DEFAULT_INDEX,
+    parentFolder: PlacesUtils.toolbarFolderId,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     title: "",
     isInQuery: true },
 
   // Add a bookmark that should not be in the results
   { isBookmark: true,
     uri: "http://bookmarked-elsewhere.com/",
-    parentFolder: bmsvc.bookmarksMenuFolder,
-    index: bmsvc.DEFAULT_INDEX,
+    parentFolder: PlacesUtils.bookmarksMenuFolderId,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     title: "",
     isInQuery: false },
 
@@ -83,16 +83,16 @@ function run_test() {
   populateDB(testData);
 
   // Query
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.toolbarFolder], 1);
+  var query = PlacesUtils.history.getNewQuery();
+  query.setFolders([PlacesUtils.toolbarFolderId], 1);
   query.onlyBookmarked = true;
   
   // query options
-  var options = histsvc.getNewQueryOptions();
+  var options = PlacesUtils.history.getNewQueryOptions();
   options.queryType = options.QUERY_TYPE_HISTORY;
 
   // Results - this gets the result set and opens it for reading and modification.
-  var result = histsvc.executeQuery(query, options);
+  var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
   
@@ -111,16 +111,16 @@ function run_test() {
     //Add a bookmark that should show up
     { isBookmark: true,
       uri: "http://bookmarked2.com/",
-      parentFolder: bmsvc.toolbarFolder,
-      index: bmsvc.DEFAULT_INDEX,
+      parentFolder: PlacesUtils.toolbarFolderId,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       title: "",
       isInQuery: true },
 
     //Add a bookmark that should not show up
     { isBookmark: true,
       uri: "http://bookmarked-elsewhere2.com/",
-      parentFolder: bmsvc.bookmarksMenuFolder,
-      index: bmsvc.DEFAULT_INDEX,
+      parentFolder: PlacesUtils.bookmarksMenuFolderId,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       title: "",
       isInQuery: false }
   ];
@@ -150,7 +150,7 @@ function run_test() {
     }
   };
 
-  histsvc.runInBatchMode(updateBatch, null);
+  PlacesUtils.history.runInBatchMode(updateBatch, null);
 
   // re-query and test
   LOG("begin batched test");

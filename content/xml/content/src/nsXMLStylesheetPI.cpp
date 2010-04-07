@@ -89,6 +89,8 @@ protected:
 
 // nsISupports implementation
 
+DOMCI_DATA(XMLStylesheetProcessingInstruction, nsXMLStylesheetPI)
+
 NS_INTERFACE_TABLE_HEAD(nsXMLStylesheetPI)
   NS_NODE_INTERFACE_TABLE4(nsXMLStylesheetPI, nsIDOMNode,
                            nsIDOMProcessingInstruction, nsIDOMLinkStyle,

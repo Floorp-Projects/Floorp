@@ -689,9 +689,8 @@ nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
   nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
   if (shell)
   {
-    nsRefPtr<nsCaret> caret;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))))
-    {
+    nsRefPtr<nsCaret> caret = shell->GetCaret();
+    if (caret) {
       nsISelection* domSel = mFrameSelection->
         GetSelection(nsISelectionController::SELECTION_NORMAL);
       if (domSel)
@@ -716,9 +715,8 @@ nsTextInputSelectionImpl::GetCaretVisible(PRBool *_retval)
   nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
   if (shell)
   {
-    nsRefPtr<nsCaret> caret;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))))
-    {
+    nsRefPtr<nsCaret> caret = shell->GetCaret();
+    if (caret) {
       nsISelection* domSel = mFrameSelection->
         GetSelection(nsISelectionController::SELECTION_NORMAL);
       if (domSel)
@@ -736,9 +734,8 @@ nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(PRBool aVisibility)
   nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
   if (shell)
   {
-    nsRefPtr<nsCaret> caret;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))))
-    {
+    nsRefPtr<nsCaret> caret = shell->GetCaret();
+    if (caret) {
       nsISelection* domSel = mFrameSelection->
         GetSelection(nsISelectionController::SELECTION_NORMAL);
       if (domSel)
@@ -1649,9 +1646,9 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                          getter_AddRefs(domSelection))) &&
       domSelection) {
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
-    nsRefPtr<nsCaret> caret;
+    nsRefPtr<nsCaret> caret = shell->GetCaret();
     nsCOMPtr<nsISelectionListener> listener;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret) {
+    if (caret) {
       listener = do_QueryInterface(caret);
       if (listener) {
         selPriv->AddSelectionListener(listener);
@@ -1883,8 +1880,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   if (!ourSel) return;
 
   nsIPresShell* presShell = PresContext()->GetPresShell();
-  nsRefPtr<nsCaret> caret;
-  presShell->GetCaret(getter_AddRefs(caret));
+  nsRefPtr<nsCaret> caret = presShell->GetCaret();
   if (!caret) return;
   caret->SetCaretDOMSelection(ourSel);
 

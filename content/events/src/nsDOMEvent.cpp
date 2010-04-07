@@ -167,6 +167,8 @@ nsDOMEvent::~nsDOMEvent()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEvent)
 
+DOMCI_DATA(Event, nsDOMEvent)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
@@ -263,12 +265,11 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 }
 
 static nsresult
-GetDOMEventTarget(nsISupports* aTarget,
+GetDOMEventTarget(nsPIDOMEventTarget* aTarget,
                   nsIDOMEventTarget** aDOMTarget)
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(aTarget);
-  nsISupports* realTarget =
-    piTarget ? piTarget->GetTargetForDOMEvent() : aTarget;
+  nsPIDOMEventTarget* realTarget =
+    aTarget ? aTarget->GetTargetForDOMEvent() : aTarget;
   if (realTarget) {
     return CallQueryInterface(realTarget, aDOMTarget);
   }
@@ -853,6 +854,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       mouseEvent->button = oldMouseEvent->button;
       mouseEvent->pressure = oldMouseEvent->pressure;
+      mouseEvent->inputSource = oldMouseEvent->inputSource;
       newEvent = mouseEvent;
       break;
     }
@@ -868,6 +870,8 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       dragEvent->acceptActivation = oldDragEvent->acceptActivation;
       dragEvent->relatedTarget = oldDragEvent->relatedTarget;
       dragEvent->button = oldDragEvent->button;
+      static_cast<nsMouseEvent*>(dragEvent)->inputSource =
+        static_cast<nsMouseEvent*>(oldDragEvent)->inputSource;
       newEvent = dragEvent;
       break;
     }
@@ -911,6 +915,8 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseScrollEvent->delta = oldMouseScrollEvent->delta;
       mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
       mouseScrollEvent->button = oldMouseScrollEvent->button;
+      static_cast<nsMouseEvent_base*>(mouseScrollEvent)->inputSource =
+        static_cast<nsMouseEvent_base*>(oldMouseScrollEvent)->inputSource;
       newEvent = mouseScrollEvent;
       break;
     }
@@ -1070,7 +1076,7 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
   }
 #endif
 
-  mEvent->target = aTarget;
+  mEvent->target = do_QueryInterface(aTarget);
   return NS_OK;
 }
 

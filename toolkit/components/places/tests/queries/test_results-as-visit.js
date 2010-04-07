@@ -66,17 +66,17 @@ function createTestData() {
  function run_test() {
    createTestData();
    populateDB(testData);
-   var query = histsvc.getNewQuery();
+   var query = PlacesUtils.history.getNewQuery();
    query.searchTerms = "moz";
    query.minVisits = 2;
 
    // Options
-   var options = histsvc.getNewQueryOptions();
+   var options = PlacesUtils.history.getNewQueryOptions();
    options.sortingMode = options.SORT_BY_VISITCOUNT_ASCENDING;
    options.resultType = options.RESULTS_AS_VISIT;
 
    // Results
-   var result = histsvc.executeQuery(query, options);
+   var result = PlacesUtils.history.executeQuery(query, options);
    var root = result.root;
    root.containerOpen = true;
 
@@ -127,7 +127,7 @@ function createTestData() {
        populateDB(batchchange);
      }
    };
-   histsvc.runInBatchMode(updateBatch, null);
+   PlacesUtils.history.runInBatchMode(updateBatch, null);
    do_check_false(isInResult({uri: "http://foo.mail.com/changeme1.html"}, root));
    do_check_true(isInResult({uri: "http://foo.mail.com/changeme3.html"}, root));
 

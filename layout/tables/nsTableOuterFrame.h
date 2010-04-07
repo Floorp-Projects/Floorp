@@ -220,12 +220,6 @@ protected:
                       nscoord&        aWidth,
                       nscoord&        aHeight);
 
-  void BalanceLeftRightCaption(PRUint8         aCaptionSide,
-                               const nsMargin& aInnerMargin, 
-                               const nsMargin& aCaptionMargin,
-                               nscoord&        aInnerWidth,
-                               nscoord&        aCaptionWidth);
-
   nsresult   GetCaptionOrigin(PRUint32         aCaptionSide,
                               const nsSize&    aContainBlockSize,
                               const nsSize&    aInnerSize, 

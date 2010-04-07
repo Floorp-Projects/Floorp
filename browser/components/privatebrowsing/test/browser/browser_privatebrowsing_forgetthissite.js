@@ -42,8 +42,6 @@ function test() {
   // initialization
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
   waitForExplicitFinish();
 
   // Add a history entry.
@@ -59,7 +57,7 @@ function test() {
       if (aTopic != "domwindowopened")
         return;
 
-      ww.unregisterNotification(observer);
+      Services.ww.unregisterNotification(observer);
       let organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
       organizer.addEventListener("load", function onLoad(event) {
         organizer.removeEventListener("load", onLoad, false);
@@ -103,12 +101,12 @@ function test() {
       }, false);
     }
 
-    ww.registerNotification(observer);
-    ww.openWindow(null,
-                  "chrome://browser/content/places/places.xul",
-                  "",
-                  "chrome,toolbar=yes,dialog=no,resizable",
-                  null);
+    Services.ww.registerNotification(observer);
+    Services.ww.openWindow(null,
+                           "chrome://browser/content/places/places.xul",
+                           "",
+                           "chrome,toolbar=yes,dialog=no,resizable",
+                           null);
   }
 
   testForgetThisSiteVisibility(true, function() {

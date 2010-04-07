@@ -42,6 +42,7 @@
 #include "BrowserStreamChild.h"
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
+#include "PluginThreadChild.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 
@@ -79,6 +80,7 @@ using mozilla::gfx::SharedDIB;
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#include "nsPluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
@@ -97,9 +99,15 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mCachedWinlessPluginHWND(0)
     , mWinlessPopupSurrogateHWND(0)
 #endif // OS_WIN
+    , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
+#if defined(OS_MACOSX)  
+    , mShColorSpace(NULL)
+    , mShContext(NULL)
+#endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
     mData.ndata = (void*) this;
+    mData.pdata = nsnull;
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
@@ -123,6 +131,14 @@ PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
+#endif
+#if defined(OS_MACOSX)
+    if (mShColorSpace) {
+        ::CGColorSpaceRelease(mShColorSpace);
+    }
+    if (mShContext) {
+        ::CGContextRelease(mShContext);
+    }
 #endif
 }
 
@@ -544,6 +560,18 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     else
         *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
+#ifdef XP_MACOSX
+    // Release any reference counted objects created in the child process.
+    if (evcopy.type == NPCocoaEventKeyDown ||
+        evcopy.type == NPCocoaEventKeyUp) {
+      ::CFRelease((CFStringRef)evcopy.data.key.characters);
+      ::CFRelease((CFStringRef)evcopy.data.key.charactersIgnoringModifiers);
+    }
+    else if (evcopy.type == NPCocoaEventTextInput) {
+      ::CFRelease((CFStringRef)evcopy.data.text.text);
+    }
+#endif
+
 #ifdef MOZ_X11
     if (GraphicsExpose == event.event.type) {
         // Make sure the X server completes the drawing before the parent
@@ -570,28 +598,36 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-    // We return access to the shared memory buffer after returning.
-
     NPCocoaEvent evcopy = event.event;
 
     if (evcopy.type == NPCocoaEventDrawRect) {
-        CGColorSpaceRef cSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-        if (!cSpace) {
-            PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
-            *handled = false;
-            *rtnmem = mem;
-            return true;
-        } 
-        void* cgContextByte = mem.get<char>();
-        CGContextRef ctxt = ::CGBitmapContextCreate(cgContextByte, mWindow.width, mWindow.height, 8, mWindow.width * 4, cSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        ::CGColorSpaceRelease(cSpace);
-        if (!ctxt) {
-            PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
-            *handled = false;
-            *rtnmem = mem;
-            return true;
+        if (!mShColorSpace) {
+            mShColorSpace = CreateSystemColorSpace();
+            if (!mShColorSpace) {
+                PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
+                *handled = false;
+                *rtnmem = mem;
+                return true;
+            } 
         }
-        evcopy.data.draw.context = ctxt; 
+        if (!mShContext) {
+            void* cgContextByte = mem.get<char>();
+            mShContext = ::CGBitmapContextCreate(cgContextByte, 
+                              mWindow.width, mWindow.height, 8, 
+                              mWindow.width * 4, mShColorSpace, 
+                              kCGImageAlphaPremultipliedFirst |
+                              kCGBitmapByteOrder32Host);
+    
+            if (!mShContext) {
+                PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
+                *handled = false;
+                *rtnmem = mem;
+                return true;
+            }
+        }
+        CGRect clearRect = ::CGRectMake(0, 0, mWindow.width, mWindow.height);
+        ::CGContextClearRect(mShContext, clearRect);
+        evcopy.data.draw.context = mShContext; 
     } else {
         PLUGIN_LOG_DEBUG(("Invalid event type for AnswerNNP_HandleEvent_Shmem."));
         *handled = false;
@@ -603,11 +639,6 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
         *handled = false;
     } else {
         *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
-    }
-
-    // Some events need cleaning up.
-    if (evcopy.type == NPCocoaEventDrawRect) {
-        ::CGContextRelease(evcopy.data.draw.context);
     }
 
     *rtnmem = mem;
@@ -763,6 +794,13 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     mWindow.height = aWindow.height;
     mWindow.clipRect = aWindow.clipRect;
     mWindow.type = aWindow.type;
+
+    if (mShContext) {
+        // Release the shared context so that it is reallocated
+        // with the new size. 
+        ::CGContextRelease(mShContext);
+        mShContext = NULL;
+    }
 
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
@@ -1386,8 +1424,8 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
               }
 
               // See gfxWindowsNativeDrawing, color order doesn't have to match.
-              ::FillRect(mSharedSurfaceDib.GetHDC(), pRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
               UpdatePaintClipRect(pRect);
+              ::FillRect(mSharedSurfaceDib.GetHDC(), pRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
               evcopy.wParam = WPARAM(mSharedSurfaceDib.GetHDC());
               if (!mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy))) {
                   mAlphaExtract.doublePass = RENDER_NATIVE;
@@ -1416,6 +1454,7 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
         break;
         case RENDER_BACK_TWO:
               // copy our cached surface back
+              UpdatePaintClipRect(pRect);
               ::BitBlt(mSharedSurfaceDib.GetHDC(),
                        pRect->left,
                        pRect->top,
@@ -1457,8 +1496,13 @@ PluginInstanceChild::AnswerUpdateWindow()
     PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
 
 #if defined(OS_WIN)
-    if (mPluginWindowHWND)
-      UpdateWindow(mPluginWindowHWND);
+    if (mPluginWindowHWND) {
+        RECT rect;
+        if (GetUpdateRect(GetParent(mPluginWindowHWND), &rect, FALSE)) {
+            ::InvalidateRect(mPluginWindowHWND, &rect, FALSE); 
+        }
+        UpdateWindow(mPluginWindowHWND);
+    }
     return true;
 #else
     NS_NOTREACHED("PluginInstanceChild::AnswerUpdateWindow not implemented!");
@@ -1723,6 +1767,18 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
     mTimers.RemoveElement(id, ChildTimer::IDComparator());
 }
 
+void
+PluginInstanceChild::AsyncCall(PluginThreadCallback aFunc, void* aUserData)
+{
+    ChildAsyncCall* task = new ChildAsyncCall(this, aFunc, aUserData);
+
+    {
+        MutexAutoLock lock(mAsyncCallMutex);
+        mPendingAsyncCalls.AppendElement(task);
+    }
+    PluginThreadChild::current()->message_loop()->PostTask(FROM_HERE, task);
+}
+
 static PLDHashOperator
 InvalidateObject(DeletingObjectEntry* e, void* userArg)
 {
@@ -1775,9 +1831,12 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     for (PRUint32 i = 0; i < streams.Length(); ++i)
         static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
-    for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
-        mPendingAsyncCalls[i]->Cancel();
-    mPendingAsyncCalls.TruncateLength(0);
+    {
+        MutexAutoLock lock(mAsyncCallMutex);
+        for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
+            mPendingAsyncCalls[i]->Cancel();
+        mPendingAsyncCalls.TruncateLength(0);
+    }
 
     mTimers.Clear();
 

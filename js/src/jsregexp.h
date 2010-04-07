@@ -65,13 +65,15 @@ struct JSRegExpStatics {
     JSSubString rightContext;   /* input to right of last match (perl $') */
 };
 
+namespace js { class AutoValueRooter; }
+
 extern JS_FRIEND_API(void)
 js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             JSTempValueRooter *tvr);
+                             js::AutoValueRooter *tvr);
 
 extern JS_FRIEND_API(void)
 js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        JSTempValueRooter *tvr);
+                        js::AutoValueRooter *tvr);
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
@@ -118,7 +120,7 @@ struct JSRegExp {
 };
 
 extern JSRegExp *
-js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+js_NewRegExp(JSContext *cx, js::TokenStream *ts,
              JSString *str, uintN flags, JSBool flat);
 
 extern JSRegExp *
@@ -184,8 +186,8 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp);
  * Create, serialize/deserialize, or clone a RegExp object.
  */
 extern JSObject *
-js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
-                   jschar *chars, size_t length, uintN flags);
+js_NewRegExpObject(JSContext *cx, js::TokenStream *ts,
+                   const jschar *chars, size_t length, uintN flags);
 
 extern JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);

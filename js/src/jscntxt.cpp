@@ -100,7 +100,7 @@ CallStack::contains(JSStackFrame *fp)
 }
 #endif
 
-void
+bool
 JSThreadData::init()
 {
 #ifdef DEBUG
@@ -111,7 +111,12 @@ JSThreadData::init()
 #ifdef JS_TRACER
     InitJIT(&traceMonitor);
 #endif
-    js_InitRandom(this);
+    dtoaState = js_NewDtoaState();
+    if (!dtoaState) {
+        finish();
+        return false;
+    }
+    return true;
 }
 
 void
@@ -127,8 +132,11 @@ JSThreadData::finish()
     JS_ASSERT(!localRootStack);
 #endif
 
+    if (dtoaState)
+        js_DestroyDtoaState(dtoaState);
+
     js_FinishGSNCache(&gsnCache);
-    js_FinishPropertyCache(&propertyCache);
+    propertyCache.~PropertyCache();
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
 #endif
@@ -152,7 +160,7 @@ JSThreadData::purge(JSContext *cx)
     js_PurgeGSNCache(&gsnCache);
 
     /* FIXME: bug 506341. */
-    js_PurgePropertyCache(cx, &propertyCache);
+    propertyCache.purge(cx);
 
 #ifdef JS_TRACER
     /*
@@ -191,7 +199,10 @@ NewThread(jsword id)
         return NULL;
     JS_INIT_CLIST(&thread->contextList);
     thread->id = id;
-    thread->data.init();
+    if (!thread->data.init()) {
+        js_free(thread);
+        return NULL;
+    }
     return thread;
 }
 
@@ -522,6 +533,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_APPEND_LINK(&cx->link, &rt->contextList);
     JS_UNLOCK_GC(rt);
 
+    js_InitRandom(cx);
+
     /*
      * If cx is the first context on this runtime, initialize well-known atoms,
      * keywords, numbers, and strings.  If one of these steps should fail, the
@@ -545,8 +558,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeScriptState(rt);
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
-        if (ok)
-            ok = js_InitRuntimeStringState(cx);
         if (ok)
             ok = JSScope::initRuntimeState(cx);
 
@@ -778,7 +789,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 
             JSScope::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
-            js_FinishRuntimeStringState(cx);
 
             /* Unpin all common atoms before final GC. */
             js_FinishCommonAtoms(cx);
@@ -956,7 +966,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return ((JSDHashNumber)JS_PTR_TO_UINT32(key->obj) >> JSVAL_TAGBITS) ^ key->id;
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JSVAL_TAGBITS) ^ key->id;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1364,7 +1374,7 @@ js_ReportOutOfMemory(JSContext *cx)
     const char *msg = efs ? efs->format : "Out of memory";
 
     /* Fill out the report, but don't do anything that requires allocation. */
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = JSREPORT_ERROR;
     report.errorNumber = JSMSG_OUT_OF_MEMORY;
     PopulateReportBlame(cx, &report);
@@ -1459,7 +1469,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
         return JS_FALSE;
     messagelen = strlen(message);
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
     report.ucmessage = ucmessage = js_InflateString(cx, message, &messagelen);
@@ -1651,13 +1661,13 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
         return JS_TRUE;
     warning = JSREPORT_IS_WARNING(flags);
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    PodZero(&report);
     report.flags = flags;
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                                 &message, &report, charArgs, ap)) {
+                                 &message, &report, !!charArgs, ap)) {
         return JS_FALSE;
     }
 
@@ -1923,6 +1933,39 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #else
     return false;
 #endif
+}
+
+CallStack *
+JSContext::containingCallStack(JSStackFrame *target)
+{
+    /* The context may have nothing running. */
+    CallStack *cs = currentCallStack;
+    if (!cs)
+        return NULL;
+
+    /* The active callstack's top frame is cx->fp. */
+    if (fp) {
+        JS_ASSERT(activeCallStack() == cs);
+        JSStackFrame *f = fp;
+        JSStackFrame *stop = cs->getInitialFrame()->down;
+        for (; f != stop; f = f->down) {
+            if (f == target)
+                return cs;
+        }
+        cs = cs->getPrevious();
+    }
+
+    /* A suspended callstack's top frame is its suspended frame. */
+    for (; cs; cs = cs->getPrevious()) {
+        JSStackFrame *f = cs->getSuspendedFrame();
+        JSStackFrame *stop = cs->getInitialFrame()->down;
+        for (; f != stop; f = f->down) {
+            if (f == target)
+                return cs;
+        }
+    }
+
+    return NULL;
 }
 
 void

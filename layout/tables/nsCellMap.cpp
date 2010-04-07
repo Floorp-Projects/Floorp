@@ -912,30 +912,6 @@ PRBool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
   return PR_FALSE;
 }
 
-PRBool nsTableCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
-{
-  PRBool result = PR_FALSE;
-
-  PRInt32 colCount = mCols.Length();
-  if ((aColIndex >= 0) && (aColIndex < colCount)) {
-    result = mCols.ElementAt(aColIndex).mNumCellsSpan != 0;
-  }
-  return result;
-}
-
-PRBool nsTableCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
-{
-  NS_PRECONDITION (aColIndex < GetColCount(), "bad col index arg");
-  nsCellMap* cellMap = mFirstMap;
-  while (cellMap) {
-    if (cellMap->ColHasSpanningCells(aColIndex)) {
-      return PR_TRUE;
-    }
-    cellMap = cellMap->GetNextSibling();
-  }
-  return PR_FALSE;
-}
-
 void nsTableCellMap::ExpandZeroColSpans()
 {
   mTableFrame.SetNeedColSpanExpansion(PR_FALSE); // mark the work done
@@ -2645,15 +2621,6 @@ void nsCellMap::Dump(PRBool aIsBorderCollapse) const
 }
 #endif
 
-PRBool 
-nsCellMap::IsZeroColSpan(PRInt32 aRowIndex,
-                         PRInt32 aColIndex) const
-{
-  CellData* data =
-    mRows.SafeElementAt(aRowIndex, *sEmptyRow).SafeElementAt(aColIndex);
-  return data && data->IsZeroColSpan();
-}
-
 CellData* 
 nsCellMap::GetDataAt(PRInt32         aMapRowIndex,
                      PRInt32         aColIndex) const
@@ -2772,22 +2739,6 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
           if (cd->GetCellFrame() == GetCellFrame(aRowIndex + 1, colIndex, *cd2, PR_TRUE)) {
             return PR_TRUE;
           }
-        }
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
-{
-  for (PRInt32 rowIndex = 0; rowIndex < mContentRowCount; rowIndex++) {
-    CellData* cd = GetDataAt(rowIndex, aColIndex);
-    if (cd && (cd->IsOrig())) { // cell originates 
-      CellData* cd2 = GetDataAt(rowIndex, aColIndex +1);
-      if (cd2 && cd2->IsColSpan()) { // cd2 is spanned by a col
-        if (cd->GetCellFrame() == GetCellFrame(rowIndex , aColIndex + 1, *cd2, PR_FALSE)) {
-          return PR_TRUE;
         }
       }
     }

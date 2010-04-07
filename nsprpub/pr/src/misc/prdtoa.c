@@ -46,6 +46,7 @@
 #endif
 
 #include "primpl.h"
+#include "prbit.h"
 
 #define MULTIPLE_THREADS
 #define ACQUIRE_DTOA_LOCK(n)	PR_Lock(dtoa_lock[n])
@@ -742,6 +743,9 @@ hi0bits
 	(register ULong x)
 #endif
 {
+#ifdef PR_HAVE_BUILTIN_BITSCAN32
+	return( (!x) ? 32 : pr_bitscan_clz32(x) );
+#else
 	register int k = 0;
 
 	if (!(x & 0xffff0000)) {
@@ -766,6 +770,7 @@ hi0bits
 			return 32;
 		}
 	return k;
+#endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 	}
 
  static int
@@ -776,6 +781,15 @@ lo0bits
 	(ULong *y)
 #endif
 {
+#ifdef PR_HAVE_BUILTIN_BITSCAN32
+	int k;
+	ULong x = *y;
+
+	if (x>1)
+		*y = ( x >> (k = pr_bitscan_ctz32(x)) );
+	else
+		k = ((x ^ 1) << 5);
+#else
 	register int k;
 	register ULong x = *y;
 
@@ -813,6 +827,7 @@ lo0bits
 			return 32;
 		}
 	*y = x;
+#endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 	return k;
 	}
 

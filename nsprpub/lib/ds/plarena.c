@@ -256,6 +256,21 @@ PR_IMPLEMENT(void *) PL_ArenaGrow(
     return newp;
 }
 
+static void ClearArenaList(PLArena *a, PRInt32 pattern)
+{
+
+    for (; a; a = a->next) {
+        PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+        a->avail = a->base;
+	PL_CLEAR_UNUSED_PATTERN(a, pattern);
+    }
+}
+
+PR_IMPLEMENT(void) PL_ClearArenaPool(PLArenaPool *pool, PRInt32 pattern)
+{
+    ClearArenaList(pool->first.next, pattern);
+}
+
 /*
  * Free tail arenas linked after head, which may not be the true list head.
  * Reset pool->current to point to head in case it pointed at a tail arena.
@@ -270,12 +285,7 @@ static void FreeArenaList(PLArenaPool *pool, PLArena *head, PRBool reallyFree)
         return;
 
 #ifdef DEBUG
-    do {
-        PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
-        a->avail = a->base;
-        PL_CLEAR_UNUSED(a);
-    } while ((a = a->next) != 0);
-    a = *ap;
+    ClearArenaList(a, PL_FREE_PATTERN);
 #endif
 
     if (reallyFree) {

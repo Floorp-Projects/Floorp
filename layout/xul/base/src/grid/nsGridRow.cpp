@@ -81,22 +81,6 @@ nsGridRow::~nsGridRow()
    MOZ_COUNT_DTOR(nsGridRow);
 }
 
-void 
-nsGridRow::MarkDirty(nsBoxLayoutState& aState) 
-{ 
-  mPref = -1;
-  mMin = -1;
-  mMax = -1;
-  mFlex = -1;
-  mTop = -1;
-  mBottom = -1;
-
-  if (mBox) {
-    aState.PresShell()->FrameNeedsReflow(mBox, nsIPresShell::eTreeChange,
-                                         NS_FRAME_IS_DIRTY);
-  }
-}
-
 PRBool 
 nsGridRow::IsCollapsed(nsBoxLayoutState& aState)
 {

@@ -77,14 +77,19 @@ function link123HrefIs(href, testNum) {
 
 var gGen;
 
+function visitedDependentComputedStyle(win, elem, property) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.getVisitedDependentComputedStyle(elem, "", property);
+}
+
 function getColor(elem) {
-  return document.defaultView.getComputedStyle(elem, "").color;
+  return visitedDependentComputedStyle(document.defaultView, elem, "color");
 }
 
 function getFill(elem) {
-  return document.defaultView
-          .getComputedStyle(elem, "")
-          .getPropertyValue("fill");
+  return visitedDependentComputedStyle(document.defaultView, elem, "fill");
 }
 
 function setXlinkHref(elem, href) {

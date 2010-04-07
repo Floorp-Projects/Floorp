@@ -207,6 +207,72 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT= )
 
 dnl ========================================================
+dnl = Android uses a very custom (hacky) toolchain; we need to do this
+dnl = here, so that the compiler checks can succeed
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(android-ndk,
+[  --with-android-ndk=DIR
+                           location where the Android NDK can be found],
+    android_ndk=$withval)
+
+MOZ_ARG_WITH_STRING(android-toolchain,
+[  --with-android-toolchain=DIR
+                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+    android_toolchain=$withval)
+
+MOZ_ARG_WITH_STRING(android-platform,
+[  --with-android-platform=DIR
+                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+    android_platform=$withval)
+
+if test "$target" = "arm-android-eabi" ; then
+    if test -z "$android_ndk" ; then
+        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
+    fi
+
+    if test -z "$android_toolchain" ; then
+        android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+    fi
+
+    if test -z "$android_platform" ; then
+        android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+    fi
+
+    dnl set up compilers
+    AS="$android_toolchain"/bin/arm-eabi-as
+    CC="$android_toolchain"/bin/arm-eabi-gcc
+    CXX="$android_toolchain"/bin/arm-eabi-g++
+    CPP="$android_toolchain"/bin/arm-eabi-cpp
+    LD="$android_toolchain"/bin/arm-eabi-ld
+    AR="$android_toolchain"/bin/arm-eabi-ar
+    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
+    STRIP="$android_toolchain"/bin/arm-eabi-strip
+
+    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
+    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+    AC_DEFINE(FORCE_LITTLE_ENDIAN)
+fi
+
+dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 
@@ -447,6 +513,8 @@ case "$target" in
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
+        # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
+        CXXFLAGS="$CXXFLAGS -wd4345"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
@@ -1204,9 +1272,7 @@ x86_64 | ia64)
     ;;
 
 arm)
-    if test "$OS_ARCH" = "WINCE"; then
-        CPU_ARCH="$OS_TEST"
-    fi
+    CPU_ARCH=arm
     ;;
 esac
 
@@ -1248,8 +1314,8 @@ if test "$GNU_CC"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, or arm since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
@@ -1311,8 +1377,8 @@ if test "$GNU_CXX"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, or arm since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
@@ -2529,24 +2595,24 @@ sparc-*)
     ;;
 esac
 
-case "$target_os" in
-linux*)
+case "$target" in
+*-linux*|*-android-eabi)
     AC_DEFINE(AVMPLUS_UNIX)
     AC_DEFINE(AVMPLUS_LINUX)
     ;;
-darwin*)
+*-darwin*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-solaris*)
+*-solaris*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-freebsd*|kfreebsd*)
+*-freebsd*|*-kfreebsd*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-*cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
+*-cygwin*|*-mingw*|*-mks*|*-msvc*|*-wince|*-winmo)
     AC_DEFINE(AVMPLUS_WIN32)
     ;;
-*os2*)
+*-os2*)
     AC_DEFINE(AVMPLUS_OS2)
     ;;
 *)
@@ -3476,8 +3542,29 @@ dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
 
+ARM_ABI_PREFIX=
 HAVE_GCC3_ABI=
 if test "$GNU_CC"; then
+  if test "$CPU_ARCH" = "arm" ; then
+    AC_CACHE_CHECK(for ARM EABI,
+        ac_cv_gcc_arm_eabi,
+        [AC_TRY_COMPILE([],
+                        [
+#if defined(__ARM_EABI__)
+  return 0;
+#else
+#error Not ARM EABI.
+#endif
+                        ],
+                        ac_cv_gcc_arm_eabi="yes",
+                        ac_cv_gcc_arm_eabi="no")])
+    if test "$ac_cv_gcc_arm_eabi" = "yes"; then
+        ARM_ABI_PREFIX=eabi-
+    else
+        ARM_ABI_PREFIX=oabi-
+    fi
+  fi
+
   AC_CACHE_CHECK(for gcc 3.0 ABI,
       ac_cv_gcc_three_abi,
       [AC_TRY_COMPILE([],
@@ -3491,10 +3578,10 @@ if test "$GNU_CC"; then
                       ac_cv_gcc_three_abi="yes",
                       ac_cv_gcc_three_abi="no")])
   if test "$ac_cv_gcc_three_abi" = "yes"; then
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc3}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
       HAVE_GCC3_ABI=1
   else
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc2}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc2}"
   fi
 fi
 AC_SUBST(HAVE_GCC3_ABI)
@@ -4219,6 +4306,22 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_MALLOC_LIB=$withval)
 
 dnl ========================================================
+dnl = Build jsctypes if it's enabled
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ctypes,
+[  --enable-ctypes         Enable js-ctypes (default=no)],
+    JS_HAS_CTYPES=1,
+    JS_HAS_CTYPES= )
+AC_SUBST(JS_HAS_CTYPES)
+if test "$JS_HAS_CTYPES"; then
+  if test "$_MSC_VER" && test -z $AS; then
+    # Error out if we're on MSVC and MASM is unavailable.
+    AC_MSG_ERROR([No suitable assembler found. An assembler is required to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK.])
+  fi
+  AC_DEFINE(JS_HAS_CTYPES)
+fi
+
+dnl ========================================================
 dnl = Use TraceVis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(tracevis,
@@ -4232,6 +4335,16 @@ if test -n "$MOZ_TRACEVIS"; then
     fi
 fi
 
+dnl ========================================================
+dnl = Use GCTimer
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gctimer,
+[  --enable-gctimer       Enable GC timer (default=no)],
+    MOZ_GCTIMER=1,
+    MOZ_GCTIMER= )
+if test -n "$MOZ_GCTIMER"; then
+    AC_DEFINE(MOZ_GCTIMER)
+fi
 
 dnl ========================================================
 dnl = Use Valgrind
@@ -4355,27 +4468,6 @@ MOZ_ARG_ENABLE_BOOL(timeline,
 if test -n "$MOZ_TIMELINE"; then
     AC_DEFINE(MOZ_TIMELINE)
 fi
-
-MOZ_ARG_ENABLE_BOOL(insure,
-[  --enable-insure         Enable insure++ instrumentation (linux only)],
-    _ENABLE_INSURE=1,
-    _ENABLE_INSURE= )
-if test -n "$_ENABLE_INSURE"; then
-    MOZ_INSURE="insure"
-    MOZ_INSURIFYING=1
-    MOZ_INSURE_DIRS="."
-    MOZ_INSURE_EXCLUDE_DIRS="config"
-fi
-
-MOZ_ARG_WITH_STRING(insure-dirs,
-[  --with-insure-dirs=DIRS
-                          Dirs to instrument with insure ],
-    MOZ_INSURE_DIRS=$withval )
-
-MOZ_ARG_WITH_STRING(insure-exclude-dirs,
-[  --with-insure-exclude-dirs=DIRS
-                          Dirs to not instrument with insure ],
-    MOZ_INSURE_EXCLUDE_DIRS="config $withval" )
 
 dnl ========================================================
 dnl = Support for Quantify (Windows)
@@ -4886,11 +4978,7 @@ AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
-AC_SUBST(MOZ_INSURE)
-AC_SUBST(MOZ_INSURE_DIRS)
-AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_QUANTIFY)
-AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(LIBICONV)
 
 AC_SUBST(BUILD_STATIC_LIBS)
@@ -5096,6 +5184,7 @@ dnl JavaScript shell
 dnl ========================================================
 
 AC_HAVE_FUNCS(setlocale)
+AC_HAVE_FUNCS(localeconv)
 
 dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
@@ -5184,6 +5273,8 @@ MAKEFILES="
   Makefile
   shell/Makefile
   lirasm/Makefile
+  ctypes/Makefile
+  ctypes/tests/Makefile
   jsapi-tests/Makefile
   tests/Makefile
   config/Makefile
@@ -5234,3 +5325,55 @@ fi
 # 'js-config' in Makefile.in.
 AC_MSG_RESULT(invoking make to create js-config script)
 $MAKE js-config
+
+# Build jsctypes if it's enabled.
+if test "$JS_HAS_CTYPES"; then
+  # Run the libffi 'configure' script.
+  ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+  if test "$MOZ_DEBUG"; then
+    ac_configure_args="$ac_configure_args --enable-debug"
+  fi
+  if test "$DSO_PIC_CFLAGS"; then
+    ac_configure_args="$ac_configure_args --with-pic"
+  fi
+  if test "$CROSS_COMPILE"; then
+    case "$target" in
+    *-mingw*)
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    esac
+  fi
+  if test "$_MSC_VER"; then
+    # Use a wrapper script for cl and ml that looks more like gcc.
+    # autotools can't quite handle an MSVC build environment yet.
+    ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
+    case "${target_cpu}" in
+    x86_64)
+      # Need target since MSYS tools into mozilla-build may be 32bit
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
+      ;;
+    *)
+      ac_configure_args="$ac_configure_args CC=$_topsrcdir/ctypes/libffi/msvcc.sh"
+      ;;
+    esac
+  fi
+  if test "$SOLARIS_SUNPRO_CC"; then
+    # Always use gcc for libffi on Solaris
+    ac_configure_args="$ac_configure_args CC=gcc"
+  fi
+
+  # Use a separate cache file for libffi, since it does things differently
+  # from our configure.
+  old_cache_file=$cache_file
+  cache_file=ctypes/libffi/config.cache
+  old_config_files=$CONFIG_FILES
+  unset CONFIG_FILES
+  AC_OUTPUT_SUBDIRS(ctypes/libffi)
+  cache_file=$old_cache_file
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  CONFIG_FILES=$old_config_files
+fi
+

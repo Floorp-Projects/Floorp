@@ -307,6 +307,8 @@ public:
                                      SelectionDetails* aDetails,
                                      SelectionType aSelectionType);
 
+  virtual nscolor GetCaretColorAt(PRInt32 aOffset);
+
   PRInt16 GetSelectionStatus(PRInt16* aSelectionFlags);
 
 #ifdef DEBUG

@@ -42,6 +42,8 @@
 #include "nsRegion.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsISupportsImpl.h"
+#include "nsAutoPtr.h"
 #include "gfx3DMatrix.h"
 
 class gfxContext;
@@ -106,9 +108,14 @@ class ImageContainer;
  * root layer, and each container layer holds a reference to its children.
  */
 class THEBES_API LayerManager {
-  THEBES_INLINE_DECL_REFCOUNTING(LayerManager)  
+  NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
+  enum LayersBackend {
+    LAYERS_BASIC = 0,
+    LAYERS_OPENGL
+  };
+
   virtual ~LayerManager() {}
 
   /**
@@ -162,6 +169,13 @@ public:
    * Can be called anytime
    */
   virtual already_AddRefed<ImageContainer> CreateImageContainer() = 0;
+
+  /**
+   * Type of layer manager his is. This is to be used sparsely in order to
+   * avoid a lot of Layers backend specific code. It should be used only when
+   * Layers backend specific functionality is necessary.
+   */
+  virtual LayersBackend GetBackendType() = 0;
 };
 
 /**
@@ -169,7 +183,7 @@ public:
  * surface.
  */
 class THEBES_API Layer {
-  THEBES_INLINE_DECL_REFCOUNTING(Layer)  
+  NS_INLINE_DECL_REFCOUNTING(Layer)  
 
 public:
   virtual ~Layer() {}

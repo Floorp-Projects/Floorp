@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -147,6 +148,40 @@ function needHomepageOverride(prefb) {
   }
 
   return OVERRIDE_NONE;
+}
+
+/**
+ * Gets the override page for the first run after the application has been
+ * updated.
+ * @param  defaultOverridePage
+ *         The default override page.
+ * @return The override page.
+ */
+function getPostUpdateOverridePage(defaultOverridePage) {
+  var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                     .getService(Components.interfaces.nsIUpdateManager);
+  try {
+    // If the updates.xml file is deleted then getUpdateAt will throw.
+    var update = um.getUpdateAt(0)
+                   .QueryInterface(Components.interfaces.nsIPropertyBag);
+  } catch (e) {
+    // This should never happen.
+    Components.utils.reportError("Unable to find update: " + e);
+    return defaultOverridePage;
+  }
+
+  let actions = update.getProperty("actions");
+  // When the update doesn't specify actions fallback to the original behavior
+  // of displaying the default override page.
+  if (!actions)
+    return defaultOverridePage;
+
+  // The existence of silent or the non-existence of showURL in the actions both
+  // mean that an override page should not be displayed.
+  if (actions.indexOf("silent") != -1 || actions.indexOf("showURL") == -1)
+    return "";
+
+  return update.getProperty("openURL") || defaultOverridePage;
 }
 
 // Copies a pref override file into the user's profile pref-override folder,
@@ -536,8 +571,10 @@ var nsBrowserContentHandler = {
                              .getService(Components.interfaces.nsISessionStartup);
           haveUpdateSession = ss.doRestore();
           overridePage = formatter.formatURLPref("startup.homepage_override_url");
+          if (prefb.prefHasUserValue("app.update.postupdate"))
+            overridePage = getPostUpdateOverridePage(overridePage);
           break;
-    }
+      }
     } catch (ex) {}
 
     // formatURLPref might return "about:blank" if getting the pref fails

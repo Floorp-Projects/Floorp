@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+body { color: black }
+span.l { color: olive; background: rgba(0, 255, 255, 0.5); }
+span.v { color: fuchsia; background: rgba(0, 0, 255, 0.5) }
+
+</style>
+</head>
+<body>
+
+<span class="l">unvisited</span> (<span class="l">unvisited</span>)
+<span class="l">unvisited</span> (<span class="v">visited</span>)
+<span class="v">visited</span> (<span class="l">unvisited</span>)
+<span class="v">visited</span> (<span class="v">visited</span>)
+
+<span class="u">unvisited</span> (<span class="l">unvisited</span>)
+<span class="u">unvisited</span> (<span class="v">visited</span>)
+<span class="u">visited</span> (<span class="l">unvisited</span>)
+<span class="u">visited</span> (<span class="v">visited</span>)
+
+<span class="l">unvisited</span> (<span class="l">unvisited</span>)
+<span class="l">unvisited</span> (<span class="l">visited</span>)
+<span class="v">visited</span> (<span class="l">unvisited</span>)
+<span class="v">visited</span> (<span class="l">visited</span>)
+
+<span class="u">unvisited</span> (<span class="u">unvisited</span>)
+<span class="u">unvisited</span> (<span class="u">visited</span>)
+<span class="u">visited</span> (<span class="u">unvisited</span>)
+<span class="u">visited</span> (<span class="u">visited</span>)
+
+</body>
+</html>

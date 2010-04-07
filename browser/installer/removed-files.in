@@ -1,3 +1,4 @@
+.autoreg
 chrome/classic.jar
 chrome/classic.manifest
 chrome/comm.jar
@@ -618,7 +619,6 @@ components/nsScriptableIO.js
 chrome/chromelist.txt
 modules/JSON.jsm
 #ifdef XP_MACOSX
-LICENSE
 extensions/inspector@mozilla.org/chrome/chromelist.txt
 components/accessibility.xpt
 components/content.xpt
@@ -731,7 +731,6 @@ components/layout_xul_tree.xpt
 components/locale.xpt
 components/loginmgr.xpt
 components/lwbrk.xpt
-components/microsummaries.xpt
 components/migration.xpt
 components/mimetype.xpt
 components/mozbrwsr.xpt
@@ -842,3 +841,5 @@ components/nsUpdateServiceStub.js
 #endif
 @DLL_PREFIX@sqlite3@DLL_SUFFIX@
 old-homepage-default.properties
+components/microsummaries.xpt
+LICENSE

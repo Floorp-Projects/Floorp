@@ -49,11 +49,14 @@
 #include "jsclist.h"
 #include "jslong.h"
 #include "jsatom.h"
-#include "jsversion.h"
 #include "jsdhash.h"
+#include "jsdtoa.h"
 #include "jsgc.h"
+#include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
+#include "jspropertycache.h"
+#include "jspropertytree.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsregexp.h"
@@ -61,7 +64,13 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
-#include "jshashtable.h"
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
+#pragma warning(push)
+#pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
+#endif
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -125,7 +134,7 @@ struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
-struct TypeMap;
+class TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
@@ -283,7 +292,7 @@ class CallStack
         return suspendedFrame;
     }
 
-    bool isSuspended() const { return suspendedFrame; }
+    bool isSuspended() const { return !!suspendedFrame; }
 
     void setPrevious(CallStack *cs) { previous = cs; }
     CallStack *getPrevious() const  { return previous; }
@@ -406,20 +415,13 @@ struct TraceMonitor {
     JSBool                  needFlush;
 
     /*
-     * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
-     * The JIT uses this to ensure that leaving a trace tree can't fail.
-     */
-    JSBool                  useReservedObjects;
-    JSObject                *reservedObjects;
-
-    /*
      * Fragment map for the regular expression compiler.
      */
     REHashMap*              reFragments;
 
-    // Cached temporary typemap to avoid realloc'ing every time we create one. 
+    // Cached temporary typemap to avoid realloc'ing every time we create one.
     // This must be used in only one place at a given time. It must be cleared
-    // before use. 
+    // before use.
     TypeMap*                cachedTempTypeMap;
 
 #ifdef DEBUG
@@ -531,10 +533,7 @@ struct JSThreadData {
     JSGSNCache          gsnCache;
 
     /* Property cache for faster call/get/set invocation. */
-    JSPropertyCache     propertyCache;
-
-    /* Random number generator state, used by jsmath.cpp. */
-    int64               rngSeed;
+    js::PropertyCache   propertyCache;
 
     /* Optional stack of heap-allocated scoped local GC roots. */
     JSLocalRootStack    *localRootStack;
@@ -551,6 +550,9 @@ struct JSThreadData {
     JSEvalCacheMeter    evalCacheMeter;
 #endif
 
+    /* State used by dtoa.c. */
+    DtoaState           *dtoaState;
+
     /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
@@ -565,7 +567,7 @@ struct JSThreadData {
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
-    void init();
+    bool init();
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
@@ -682,7 +684,7 @@ struct JSSetSlotRequest {
 
 /* Caching Class.prototype lookups for the standard classes. */
 struct JSClassProtoCache {
-    void purge() { memset(entries, 0, sizeof(entries)); }
+    void purge() { js::PodArrayZero(entries); }
 
 #ifdef JS_PROTO_CACHE_METERING
     struct Stats {
@@ -702,9 +704,15 @@ struct JSClassProtoCache {
 
     GlobalAndProto  entries[JSProto_LIMIT - JSProto_Object];
 
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
     friend JSBool js_GetClassPrototype(JSContext *cx, JSObject *scope,
                                        JSProtoKey protoKey, JSObject **protop,
                                        JSClass *clasp);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 };
 
 struct JSRuntime {
@@ -813,13 +821,7 @@ struct JSRuntime {
     jsval               negativeInfinityValue;
     jsval               positiveInfinityValue;
 
-#ifdef JS_THREADSAFE
-    JSLock              *deflatedStringCacheLock;
-#endif
-    JSHashTable         *deflatedStringCache;
-#ifdef DEBUG
-    uint32              deflatedStringCacheBytes;
-#endif
+    js::DeflatedStringCache *deflatedStringCache;
 
     JSString            *emptyString;
 
@@ -912,13 +914,18 @@ struct JSRuntime {
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
+     * This really should be free of all locking overhead and allocated in
+     * thread-local storage, hence the JS_PROPERTY_TREE(cx) macro.
+     */
+    js::PropertyTree    propertyTree;
+
+#define JS_PROPERTY_TREE(cx) ((cx)->runtime->propertyTree)
+
+    /*
      * The propertyRemovals counter is incremented for every JSScope::clear,
      * and for each JSScope::remove method call that frees a slot in an object.
-     * See js_NativeGet and js_NativeSet in jsobj.c.
+     * See js_NativeGet and js_NativeSet in jsobj.cpp.
      */
-    JSDHashTable        propertyTreeHash;
-    JSScopeProperty     *propertyFreeList;
-    JSArenaPool         propertyArenaPool;
     int32               propertyRemovals;
 
     /* Script filename table. */
@@ -971,6 +978,7 @@ struct JSRuntime {
     JSBackgroundThread    *deallocatorThread;
 #endif
 
+    JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
 
     /*
@@ -1154,109 +1162,13 @@ typedef struct JSResolvingEntry {
 
 #define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
 #define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
-
-/*
- * Macros to push/pop JSTempValueRooter instances to context-linked stack of
- * temporary GC roots. If you need to protect a result value that flows out of
- * a C function across several layers of other functions, use the
- * js_LeaveLocalRootScopeWithResult internal API (see further below) instead.
- *
- * The macros also provide a simple way to get a single rooted pointer via
- * JS_PUSH_TEMP_ROOT_<KIND>(cx, NULL, &tvr). Then &tvr.u.<kind> gives the
- * necessary pointer.
- *
- * JSTempValueRooter.count defines the type of the rooted value referenced by
- * JSTempValueRooter.u union of type JSTempValueUnion. When count is positive
- * or zero, u.array points to a vector of jsvals. Otherwise it must be one of
- * the following constants:
- */
-#define JSTVU_SINGLE        (-1)    /* u.value or u.<gcthing> is single jsval
-                                       or non-JSString GC-thing pointer */
-#define JSTVU_TRACE         (-2)    /* u.trace is a hook to trace a custom
-                                     * structure */
-#define JSTVU_SPROP         (-3)    /* u.sprop roots property tree node */
-#define JSTVU_WEAK_ROOTS    (-4)    /* u.weakRoots points to saved weak roots */
-#define JSTVU_COMPILER      (-5)    /* u.compiler roots JSCompiler* */
-#define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
-#define JSTVU_ENUMERATOR    (-7)    /* a pointer to JSTempValueRooter points
-                                       to an instance of JSAutoEnumStateRooter
-                                       with u.object storing the enumeration
-                                       object */
-
-/*
- * Here single JSTVU_SINGLE covers both jsval and pointers to almost (see note
- * below) any GC-thing via reinterpreting the thing as JSVAL_OBJECT. This works
- * because the GC-thing is aligned on a 0 mod 8 boundary, and object has the 0
- * jsval tag. So any GC-heap-allocated thing pointer may be tagged as if it
- * were an object and untagged, if it's then used only as an opaque pointer
- * until discriminated by other means than tag bits. This is how, for example,
- * js_GetGCThingTraceKind uses its |thing| parameter -- it consults GC-thing
- * flags stored separately from the thing to decide the kind of thing.
- *
- * Note well that JSStrings may be statically allocated (see the intStringTable
- * and unitStringTable static arrays), so this hack does not work for arbitrary
- * GC-thing pointers.
- */
-#define JS_PUSH_TEMP_ROOT_COMMON(cx,x,tvr,cnt,kind)                           \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((cx)->tempValueRooters != (tvr));                           \
-        (tvr)->count = (cnt);                                                 \
-        (tvr)->u.kind = (x);                                                  \
-        (tvr)->down = (cx)->tempValueRooters;                                 \
-        (cx)->tempValueRooters = (tvr);                                       \
-    JS_END_MACRO
-
-#define JS_POP_TEMP_ROOT(cx,tvr)                                              \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((cx)->tempValueRooters == (tvr));                           \
-        (cx)->tempValueRooters = (tvr)->down;                                 \
-    JS_END_MACRO
-
-#define JS_PUSH_TEMP_ROOT(cx,cnt,arr,tvr)                                     \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((int)(cnt) >= 0);                                           \
-        JS_PUSH_TEMP_ROOT_COMMON(cx, arr, tvr, (ptrdiff_t) (cnt), array);     \
-    JS_END_MACRO
-
-#define JS_PUSH_SINGLE_TEMP_ROOT(cx,val,tvr)                                  \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, val, tvr, JSTVU_SINGLE, value)
-
-#define JS_PUSH_TEMP_ROOT_OBJECT(cx,obj,tvr)                                  \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, obj, tvr, JSTVU_SINGLE, object)
-
-#define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, str ? STRING_TO_JSVAL(str) : JSVAL_NULL, tvr)
-
-#define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
-
-#define JS_PUSH_TEMP_ROOT_TRACE(cx,trace_,tvr)                                \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, trace_, tvr, JSTVU_TRACE, trace)
-
-#define JS_PUSH_TEMP_ROOT_SPROP(cx,sprop_,tvr)                                \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, sprop_, tvr, JSTVU_SPROP, sprop)
-
-#define JS_PUSH_TEMP_ROOT_WEAK_COPY(cx,weakRoots_,tvr)                        \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, weakRoots_, tvr, JSTVU_WEAK_ROOTS, weakRoots)
-
-#define JS_PUSH_TEMP_ROOT_COMPILER(cx,pc,tvr)                                 \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, pc, tvr, JSTVU_COMPILER, compiler)
-
-#define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, script_, tvr, JSTVU_SCRIPT, script)
-
 #define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
 
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
-/*
- * Wraps a stack frame which has been temporarily popped from its call stack
- * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
- */
-struct JSGCReachableFrame {
-    JSGCReachableFrame  *next;
-    JSStackFrame        *frame;
-};
+namespace js {
+class AutoGCRooter;
+}
 
 struct JSContext
 {
@@ -1376,19 +1288,6 @@ struct JSContext
     void                *data;
     void                *data2;
 
-    /* Linked list of frames temporarily popped from their chain. */
-    JSGCReachableFrame  *reachableFrames;
-
-    void pushGCReachableFrame(JSGCReachableFrame &gcrf, JSStackFrame *f) {
-        gcrf.next = reachableFrames;
-        gcrf.frame = f;
-        reachableFrames = &gcrf;
-    }
-
-    void popGCReachableFrame() {
-        reachableFrames = reachableFrames->next;
-    }
-
   private:
 #ifdef __GNUC__
 # pragma GCC visibility push(default)
@@ -1443,6 +1342,12 @@ struct JSContext
         currentCallStack->restore();
     }
 
+    /*
+     * Perform a linear search of all frames in all callstacks in the given context
+     * for the given frame, returning the callstack, if found, and null otherwise.
+     */
+    js::CallStack *containingCallStack(JSStackFrame *target);
+
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;
@@ -1459,8 +1364,8 @@ struct JSContext
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
 
-    /* Stack of thread-stack-allocated temporary GC roots. */
-    JSTempValueRooter   *tempValueRooters;
+    /* Stack of thread-stack-allocated GC roots. */
+    js::AutoGCRooter   *autoGCRooters;
 
     /* Debug hooks associated with the current context. */
     const JSDebugHooks  *debugHooks;
@@ -1473,6 +1378,9 @@ struct JSContext
 
     /* Stored here to avoid passing it around as a parameter. */
     uintN               resolveFlags;
+
+    /* Random number generator state, used by jsmath.cpp. */
+    int64               rngSeed;
 
 #ifdef JS_TRACER
     /*
@@ -1697,93 +1605,265 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
            : fp->script->atomMap.vector;
 }
 
-/* FIXME(bug 332648): Move this into a public header. */
-class JSAutoTempValueRooter
-{
+namespace js {
+
+class AutoGCRooter {
   public:
-    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_TEMP_ROOT(mContext, len, vec, &mTvr);
-    }
-    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL
-                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_SINGLE_TEMP_ROOT(mContext, v, &mTvr);
-    }
-    JSAutoTempValueRooter(JSContext *cx, JSString *str
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_TEMP_ROOT_STRING(mContext, str, &mTvr);
-    }
-    JSAutoTempValueRooter(JSContext *cx, JSObject *obj
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
-    }
-    JSAutoTempValueRooter(JSContext *cx, JSScopeProperty *sprop
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_TEMP_ROOT_SPROP(mContext, sprop, &mTvr);
+    AutoGCRooter(JSContext *cx, ptrdiff_t tag)
+      : down(cx->autoGCRooters), tag(tag), context(cx)
+    {
+        JS_ASSERT(this != cx->autoGCRooters);
+        cx->autoGCRooters = this;
     }
 
-    ~JSAutoTempValueRooter() {
-        JS_POP_TEMP_ROOT(mContext, &mTvr);
+    ~AutoGCRooter() {
+        JS_ASSERT(this == context->autoGCRooters);
+        context->autoGCRooters = down;
     }
 
-    jsval value() { return mTvr.u.value; }
-    jsval *addr() { return &mTvr.u.value; }
+    inline void trace(JSTracer *trc);
+
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
+    friend void ::js_TraceContext(JSTracer *trc, JSContext *acx);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 
   protected:
-    JSContext *mContext;
+    AutoGCRooter * const down;
 
-  private:
-    JSTempValueRooter mTvr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    /*
+     * Discriminates actual subclass of this being used.  If non-negative, the
+     * subclass roots an array of jsvals of the length stored in this field.
+     * If negative, meaning is indicated by the corresponding value in the enum
+     * below.  Any other negative value indicates some deeper problem such as
+     * memory corruption.
+     */
+    ptrdiff_t tag;
+
+    JSContext * const context;
+
+    enum {
+        JSVAL =        -1, /* js::AutoValueRooter */
+        SPROP =        -2, /* js::AutoScopePropertyRooter */
+        WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
+        COMPILER =     -4, /* JSCompiler */
+        SCRIPT =       -5, /* js::AutoScriptRooter */
+        ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
+        IDARRAY =      -7, /* js::AutoIdArray */
+        DESCRIPTORS =  -8, /* js::AutoDescriptorArray */
+        NAMESPACES =   -9, /* js::AutoNamespaceArray */
+        XML =         -10, /* js::AutoXMLRooter */
+        OBJECT =      -11, /* js::AutoObjectRooter */
+        ID =          -12, /* js::AutoIdRooter */
+        VECTOR =      -13  /* js::AutoValueVector */
+    };
 };
 
-class JSAutoTempIdRooter
+class AutoSaveWeakRoots : private AutoGCRooter
 {
   public:
-    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
-                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
+    explicit AutoSaveWeakRoots(JSContext *cx
+                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, WEAKROOTS), savedRoots(cx->weakRoots)
+    {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
     }
 
-    ~JSAutoTempIdRooter() {
-        JS_POP_TEMP_ROOT(mContext, &mTvr);
-    }
-
-    jsid id() { return (jsid) mTvr.u.value; }
-    jsid * addr() { return (jsid *) &mTvr.u.value; }
+    friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    JSContext *mContext;
-    JSTempValueRooter mTvr;
+    JSWeakRoots savedRoots;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class JSAutoIdArray {
+/* FIXME(bug 332648): Move this into a public header. */
+class AutoValueRooter : private AutoGCRooter
+{
   public:
-    JSAutoIdArray(JSContext *cx, JSIdArray *ida
-                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : cx(cx), idArray(ida) {
+    explicit AutoValueRooter(JSContext *cx, jsval v = JSVAL_NULL
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(v)
+    {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        if (ida)
-            JS_PUSH_TEMP_ROOT(cx, ida->length, ida->vector, &tvr);
     }
-    ~JSAutoIdArray() {
-        if (idArray) {
-            JS_POP_TEMP_ROOT(cx, &tvr);
-            JS_DestroyIdArray(cx, idArray);
-        }
+    AutoValueRooter(JSContext *cx, JSString *str
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(STRING_TO_JSVAL(str))
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    AutoValueRooter(JSContext *cx, JSObject *obj
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(OBJECT_TO_JSVAL(obj))
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setObject(JSObject *obj) {
+        JS_ASSERT(tag == JSVAL);
+        val = OBJECT_TO_JSVAL(obj);
+    }
+
+    void setString(JSString *str) {
+        JS_ASSERT(tag == JSVAL);
+        JS_ASSERT(str);
+        val = STRING_TO_JSVAL(str);
+    }
+
+    void setDouble(jsdouble *dp) {
+        JS_ASSERT(tag == JSVAL);
+        JS_ASSERT(dp);
+        val = DOUBLE_TO_JSVAL(dp);
+    }
+
+    jsval value() const {
+        JS_ASSERT(tag == JSVAL);
+        return val;
+    }
+
+    jsval *addr() {
+        JS_ASSERT(tag == JSVAL);
+        return &val;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    jsval val;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoObjectRooter : private AutoGCRooter {
+  public:
+    AutoObjectRooter(JSContext *cx, JSObject *obj = NULL
+                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, OBJECT), obj(obj)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setObject(JSObject *obj) {
+        this->obj = obj;
+    }
+
+    JSObject * object() const {
+        return obj;
+    }
+
+    JSObject ** addr() {
+        return &obj;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JSObject *obj;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoArrayRooter : private AutoGCRooter {
+  public:
+    AutoArrayRooter(JSContext *cx, size_t len, jsval *vec
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, len), array(vec)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeLength(size_t newLength) {
+        tag = ptrdiff_t(newLength);
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeArray(jsval *newArray, size_t newLength) {
+        changeLength(newLength);
+        array = newArray;
+    }
+
+    jsval *array;
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoScopePropertyRooter : private AutoGCRooter {
+  public:
+    AutoScopePropertyRooter(JSContext *cx, JSScopeProperty *sprop
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, SPROP), sprop(sprop)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JSScopeProperty * const sprop;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoScriptRooter : private AutoGCRooter {
+  public:
+    AutoScriptRooter(JSContext *cx, JSScript *script
+                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, SCRIPT), script(script)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setScript(JSScript *script) {
+        this->script = script;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JSScript *script;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ID), idval(id)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    jsid id() {
+        return idval;
+    }
+
+    jsid * addr() {
+        return &idval;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    jsid idval;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdArray : private AutoGCRooter {
+  public:
+    AutoIdArray(JSContext *cx, JSIdArray *ida
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ida ? ida->length : 0), idArray(ida)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoIdArray() {
+        if (idArray)
+            JS_DestroyIdArray(context, idArray);
     }
     bool operator!() {
         return idArray == NULL;
@@ -1796,48 +1876,86 @@ class JSAutoIdArray {
     size_t length() const {
          return idArray->length;
     }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  protected:
+    inline void trace(JSTracer *trc);
+
   private:
-    JSContext * const cx;
     JSIdArray * const idArray;
-    JSTempValueRooter tvr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    AutoIdArray(AutoIdArray &ida);
+    void operator=(AutoIdArray &ida);
 };
 
 /* The auto-root for enumeration object and its state. */
-class JSAutoEnumStateRooter : public JSTempValueRooter
+class AutoEnumStateRooter : private AutoGCRooter
 {
   public:
-    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx), mStatep(statep)
+    AutoEnumStateRooter(JSContext *cx, JSObject *obj
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue(JSVAL_NULL)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
-        JS_ASSERT(statep);
-        JS_PUSH_TEMP_ROOT_COMMON(cx, obj, this, JSTVU_ENUMERATOR, object);
     }
 
-    ~JSAutoEnumStateRooter() {
-        JS_POP_TEMP_ROOT(mContext, this);
+    ~AutoEnumStateRooter() {
+        if (!JSVAL_IS_NULL(stateValue)) {
+#ifdef DEBUG
+            JSBool ok =
+#endif
+            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
+            JS_ASSERT(ok);
+        }
     }
 
-    void mark(JSTracer *trc) {
-        JS_CALL_OBJECT_TRACER(trc, u.object, "enumerator_obj");
-        js_MarkEnumeratorState(trc, u.object, *mStatep);
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+    jsval state() const { return stateValue; }
+    jsval * addr() { return &stateValue; }
+
+  protected:
+    void trace(JSTracer *trc) {
+        JS_CALL_OBJECT_TRACER(trc, obj, "js::AutoEnumStateRooter.obj");
+        js_MarkEnumeratorState(trc, obj, stateValue);
     }
+
+    JSObject * const obj;
 
   private:
-    JSContext   *mContext;
-    jsval       *mStatep;
+    jsval stateValue;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+#ifdef JS_HAS_XML_SUPPORT
+class AutoXMLRooter : private AutoGCRooter {
+  public:
+    AutoXMLRooter(JSContext *cx, JSXML *xml)
+      : AutoGCRooter(cx, XML), xml(xml)
+    {
+        JS_ASSERT(xml);
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JSXML * const xml;
+};
+#endif /* JS_HAS_XML_SUPPORT */
+
+} /* namespace js */
 
 class JSAutoResolveFlags
 {
   public:
     JSAutoResolveFlags(JSContext *cx, uintN flags
                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx), mSaved(cx->resolveFlags) {
+      : mContext(cx), mSaved(cx->resolveFlags)
+    {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->resolveFlags = flags;
     }
@@ -2129,11 +2247,8 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 /*
- * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack grows
- * in the expected direction.  On Unix-y systems, JS_STACK_GROWTH_DIRECTION is
- * computed on the build host by jscpucfg.c and written into jsautocfg.h.  The
- * macro is hardcoded in jscpucfg.h on Windows and Mac systems (for historical
- * reasons pre-dating autoconf usage).
+ * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack
+ * grows in the expected direction.
  */
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) < (cx)->stackLimit)
@@ -2232,7 +2347,7 @@ js_GetTopStackFrame(JSContext *cx)
 static JS_INLINE JSBool
 js_IsPropertyCacheDisabled(JSContext *cx)
 {
-    return cx->runtime->shapeGen >= SHAPE_OVERFLOW_BIT;
+    return cx->runtime->shapeGen >= js::SHAPE_OVERFLOW_BIT;
 }
 
 static JS_INLINE uint32
@@ -2247,7 +2362,7 @@ js_RegenerateShapeForGC(JSContext *cx)
      * the shape stays such.
      */
     uint32 shape = cx->runtime->shapeGen;
-    shape = (shape + 1) | (shape & SHAPE_OVERFLOW_BIT);
+    shape = (shape + 1) | (shape & js::SHAPE_OVERFLOW_BIT);
     cx->runtime->shapeGen = shape;
     return shape;
 }
@@ -2278,6 +2393,57 @@ ContextAllocPolicy::reportAllocOverflow() const
     js_ReportAllocationOverflow(cx);
 }
 
+class AutoValueVector : private AutoGCRooter
+{
+  public:
+    explicit AutoValueVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, VECTOR), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool push(jsval v) { return vector.append(v); }
+    bool push(JSString *str) { return push(STRING_TO_JSVAL(str)); }
+    bool push(JSObject *obj) { return push(OBJECT_TO_JSVAL(obj)); }
+    bool push(jsdouble *dp) { return push(DOUBLE_TO_JSVAL(dp)); }
+
+    void pop() { vector.popBack(); }
+
+    bool resize(size_t newLength) {
+        size_t oldLength = vector.length();
+        if (!vector.resize(newLength))
+            return false;
+        JS_STATIC_ASSERT(JSVAL_NULL == 0);
+        if (newLength > oldLength)
+            PodZero(vector.begin(), newLength - oldLength);
+        return true;
+    }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    jsval & operator[](size_t i) { return vector[i]; }
+    jsval operator[](size_t i) const { return vector[i]; }
+
+    const jsval * buffer() const { return vector.begin(); }
+    jsval * buffer() { return vector.begin(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    Vector<jsval, 8> vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#pragma warning(pop)
+#endif
 
 #endif /* jscntxt_h___ */

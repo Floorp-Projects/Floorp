@@ -84,26 +84,32 @@ nsSVGTextPathFrame::GetType() const
 }
 
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextPathFrame::GetX()
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextPathFrame::GetY()
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextPathFrame::GetDx()
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+already_AddRefed<nsIDOMSVGLengthList>
 nsSVGTextPathFrame::GetDy()
+{
+  return nsnull;
+}
+
+already_AddRefed<nsIDOMSVGNumberList>
+nsSVGTextPathFrame::GetRotate()
 {
   return nsnull;
 }
@@ -114,8 +120,8 @@ nsSVGTextPathFrame::GetDy()
 nsIFrame *
 nsSVGTextPathFrame::GetPathFrame()
 {
-  nsSVGTextPathProperty *property =
-    static_cast<nsSVGTextPathProperty*>(GetProperty(nsGkAtoms::href));
+  nsSVGTextPathProperty *property = static_cast<nsSVGTextPathProperty*>
+    (Properties().Get(nsSVGEffects::HrefProperty()));
 
   if (!property) {
     nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
@@ -130,8 +136,8 @@ nsSVGTextPathFrame::GetPathFrame()
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               mContent->GetCurrentDoc(), base);
 
-    property = nsSVGEffects::GetTextPathProperty(
-                               targetURI, this, nsGkAtoms::href);
+    property =
+      nsSVGEffects::GetTextPathProperty(targetURI, this, nsSVGEffects::HrefProperty());
     if (!property)
       return nsnull;
   }
@@ -206,7 +212,7 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    DeleteProperty(nsGkAtoms::href);
+    Properties().Delete(nsSVGEffects::HrefProperty());
     NotifyGlyphMetricsChange();
   }
 

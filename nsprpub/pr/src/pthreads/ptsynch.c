@@ -196,7 +196,7 @@ PR_IMPLEMENT(void) PR_DestroyLock(PRLock *lock)
     memset(lock, 0xaf, sizeof(PRLock));
     pt_debug.locks_destroyed += 1;
 #endif
-    PR_DELETE(lock);
+    PR_Free(lock);
 }  /* PR_DestroyLock */
 
 PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
@@ -374,7 +374,7 @@ PR_IMPLEMENT(void) PR_DestroyCondVar(PRCondVar *cvar)
         memset(cvar, 0xaf, sizeof(PRCondVar));
         pt_debug.cvars_destroyed += 1;
 #endif
-        PR_DELETE(cvar);
+        PR_Free(cvar);
     }
 }  /* PR_DestroyCondVar */
 
@@ -463,6 +463,7 @@ PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
 {
     PRMonitor *mon;
     PRCondVar *cvar;
+    int rv;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -473,25 +474,37 @@ PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
         return NULL;
     }
     mon = PR_NEWZAP(PRMonitor);
-    if (mon != NULL)
+    if (mon == NULL)
     {
-        int rv;
-        rv = _PT_PTHREAD_MUTEX_INIT(mon->lock.mutex, _pt_mattr); 
-        PR_ASSERT(0 == rv);
+        PR_Free(cvar);
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
 
-        _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
+    rv = _PT_PTHREAD_MUTEX_INIT(mon->lock.mutex, _pt_mattr); 
+    PR_ASSERT(0 == rv);
+    if (0 != rv)
+    {
+        PR_Free(mon);
+        PR_Free(cvar);
+        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+        return NULL;
+    }
 
-        mon->cvar = cvar;
-        rv = _PT_PTHREAD_COND_INIT(mon->cvar->cv, _pt_cvar_attr); 
-        PR_ASSERT(0 == rv);
-        mon->entryCount = 0;
-        mon->cvar->lock = &mon->lock;
-        if (0 != rv)
-        {
-            PR_DELETE(mon);
-            PR_DELETE(cvar);
-            mon = NULL;
-        }
+    _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
+
+    mon->cvar = cvar;
+    rv = _PT_PTHREAD_COND_INIT(mon->cvar->cv, _pt_cvar_attr); 
+    PR_ASSERT(0 == rv);
+    mon->entryCount = 0;
+    mon->cvar->lock = &mon->lock;
+    if (0 != rv)
+    {
+        pthread_mutex_destroy(&mon->lock.mutex);
+        PR_Free(mon);
+        PR_Free(cvar);
+        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+        return NULL;
     }
     return mon;
 }  /* PR_NewMonitor */
@@ -513,7 +526,7 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
 #if defined(DEBUG)
         memset(mon, 0xaf, sizeof(PRMonitor));
 #endif
-    PR_DELETE(mon);    
+    PR_Free(mon);    
 }  /* PR_DestroyMonitor */
 
 
@@ -674,7 +687,7 @@ PR_IMPLEMENT(void) PR_DestroySem(PRSemaphore *semaphore)
         "PR_DestroySem", "locks & condition variables");
     PR_DestroyLock(semaphore->cvar->lock);
     PR_DestroyCondVar(semaphore->cvar);
-    PR_DELETE(semaphore);
+    PR_Free(semaphore);
 }  /* PR_DestroySem */
 
 PR_IMPLEMENT(PRSemaphore*) PR_NewSem(PRUintn value)
@@ -700,7 +713,7 @@ PR_IMPLEMENT(PRSemaphore*) PR_NewSem(PRUintn value)
             }
             PR_DestroyLock(lock);
         }
-        PR_DELETE(semaphore);
+        PR_Free(semaphore);
     }
     return NULL;
 }
@@ -757,7 +770,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
     if ((sem_t *) -1 == sem->sem)
     {
         _PR_MD_MAP_DEFAULT_ERROR(errno);
-        PR_DELETE(sem);
+        PR_Free(sem);
         return NULL;
     }
     return sem;
@@ -796,7 +809,7 @@ PR_IMPLEMENT(PRStatus) PR_CloseSemaphore(PRSem *sem)
         _PR_MD_MAP_DEFAULT_ERROR(errno);
         return PR_FAILURE;
     }
-    PR_DELETE(sem);
+    PR_Free(sem);
     return PR_SUCCESS;
 }
 
@@ -907,7 +920,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
             if (semctl(sem->semid, 0, SETVAL, arg) == -1)
             {
                 _PR_MD_MAP_DEFAULT_ERROR(errno);
-                PR_DELETE(sem);
+                PR_Free(sem);
                 return NULL;
             }
             /* call semop to set sem_otime to nonzero */
@@ -917,7 +930,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
             if (semop(sem->semid, &sop, 1) == -1)
             {
                 _PR_MD_MAP_DEFAULT_ERROR(errno);
-                PR_DELETE(sem);
+                PR_Free(sem);
                 return NULL;
             }
             return sem;
@@ -926,7 +939,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
         if (errno != EEXIST || flags & PR_SEM_EXCL)
         {
             _PR_MD_MAP_DEFAULT_ERROR(errno);
-            PR_DELETE(sem);
+            PR_Free(sem);
             return NULL;
         }
     }
@@ -935,7 +948,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
     if (sem->semid == -1)
     {
         _PR_MD_MAP_DEFAULT_ERROR(errno);
-        PR_DELETE(sem);
+        PR_Free(sem);
         return NULL;
     }
     for (i = 0; i < MAX_TRIES; i++)
@@ -948,7 +961,7 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
     if (i == MAX_TRIES)
     {
         PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-        PR_DELETE(sem);
+        PR_Free(sem);
         return NULL;
     }
     return sem;
@@ -986,7 +999,7 @@ PR_IMPLEMENT(PRStatus) PR_PostSemaphore(PRSem *sem)
 
 PR_IMPLEMENT(PRStatus) PR_CloseSemaphore(PRSem *sem)
 {
-    PR_DELETE(sem);
+    PR_Free(sem);
     return PR_SUCCESS;
 }
 
@@ -1112,7 +1125,7 @@ PR_IMPLEMENT(void) PRP_DestroyNakedCondVar(PRCondVar *cvar)
 #if defined(DEBUG)
         memset(cvar, 0xaf, sizeof(PRCondVar));
 #endif
-    PR_DELETE(cvar);
+    PR_Free(cvar);
 }  /* PRP_DestroyNakedCondVar */
 
 PR_IMPLEMENT(PRStatus) PRP_NakedWait(

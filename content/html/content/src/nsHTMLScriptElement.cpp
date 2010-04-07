@@ -377,6 +377,8 @@ nsHTMLScriptElement::~nsHTMLScriptElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLScriptElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLScriptElement, nsGenericElement)
 
+DOMCI_DATA(HTMLScriptElement, nsHTMLScriptElement)
+
 // QueryInterface implementation for nsHTMLScriptElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLScriptElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLScriptElement,

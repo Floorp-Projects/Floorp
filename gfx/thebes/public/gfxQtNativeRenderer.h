@@ -39,9 +39,8 @@
 #define GFXQTNATIVERENDER_H_
 
 #include "gfxColor.h"
-
-class gfxASurface;
-class gfxContext;
+#include "gfxASurface.h"
+#include "gfxContext.h"
 
 class QWidget;
 class QRect;

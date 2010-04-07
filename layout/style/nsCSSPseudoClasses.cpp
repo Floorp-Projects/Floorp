@@ -67,12 +67,6 @@ void nsCSSPseudoClasses::AddRefAtoms()
                          NS_ARRAY_LENGTH(CSSPseudoClasses_info));
 }
 
-PRBool nsCSSPseudoClasses::IsPseudoClass(nsIAtom *aAtom)
-{
-  return nsAtomListUtils::IsMember(aAtom,CSSPseudoClasses_info,
-                                   NS_ARRAY_LENGTH(CSSPseudoClasses_info));
-}
-
 PRBool
 nsCSSPseudoClasses::HasStringArg(nsIAtom* aAtom)
 {

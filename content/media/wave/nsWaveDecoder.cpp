@@ -648,7 +648,7 @@ nsWaveStateMachine::Run()
           PRUint32 lengthInSamples = got / sampleSize;
 
           monitor.Exit();
-          mAudioStream->Write(buf.get(), lengthInSamples);
+          mAudioStream->Write(buf.get(), lengthInSamples, PR_FALSE);
           monitor.Enter();
 
           FirePositionChanged(PR_FALSE);

@@ -730,20 +730,6 @@ public:
                                              nsIFrame* aFrame);
 
   /**
-   * Find the closest common ancestor of aFrame1 and aFrame2, following
-   * out of flow frames to their placeholders instead of their parents. Returns
-   * nsnull if the frames are in different frame trees.
-   * 
-   * @param aKnownCommonAncestorHint a frame that is believed to be on the
-   * ancestor chain of both aFrame1 and aFrame2. If null, or a frame that is
-   * not in fact on both ancestor chains, then this function will still return
-   * the correct result, but it will be slower.
-   */
-  static nsIFrame*
-  GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1, nsIFrame* aFrame2,
-                                          nsIFrame* aKnownCommonAncestorHint);
-
-  /**
    * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
    */
   static nsIFrame*
@@ -1101,7 +1087,7 @@ public:
   static PRBool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
   }
 
   /**
@@ -1111,7 +1097,7 @@ public:
   static PRBool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
-        GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+        Properties().Get(nsIFrame::IBSplitSpecialSibling());
   }
 
   /**

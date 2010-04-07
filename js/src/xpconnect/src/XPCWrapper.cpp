@@ -60,7 +60,7 @@ const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
-  JSClass *clasp = STOBJ_GET_CLASS(wrapper);
+  JSClass *clasp = wrapper->getClass();
   if (clasp == &XPCCrossOriginWrapper::XOWClass.base) {
     return UnwrapXOW(cx, wrapper);
   }
@@ -145,7 +145,7 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
   } else {
     // We need to return an [id, value] pair.
-    if (!JS_GetPropertyById(cx, STOBJ_GET_PARENT(obj), id, vp)) {
+    if (!JS_GetPropertyById(cx, obj->getParent(), id, vp)) {
       return JS_FALSE;
     }
   }
@@ -322,7 +322,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(iterObj));
+  js::AutoObjectRooter tvr(cx, iterObj);
 
   // Do this sooner rather than later to avoid complications in
   // IteratorFinalize.
@@ -337,7 +337,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     // call enumerate, and then re-set the prototype. As we do this, we have
     // to protec the temporary wrapper from garbage collection.
 
-    JSAutoTempValueRooter tvr(cx, tempWrapper);
+    js::AutoValueRooter tvr(cx, tempWrapper);
     if (!JS_SetPrototype(cx, iterObj, wrapperObj) ||
         !XPCWrapper::Enumerate(cx, iterObj, wrapperObj) ||
         !JS_SetPrototype(cx, iterObj, tempWrapper)) {
@@ -350,7 +350,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
       return nsnull;
     }
-  } while ((innerObj = STOBJ_GET_PROTO(innerObj)) != nsnull);
+  } while ((innerObj = innerObj->getProto()) != nsnull);
 
   return FinishCreatingIterator(cx, iterObj, keysonly);
 }
@@ -386,7 +386,7 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, iterObj);
+  js::AutoValueRooter tvr(cx, iterObj);
   if (!propertyContainer) {
     if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(nsnull)) ||
         !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
@@ -406,7 +406,7 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
     if (!SimpleEnumerate(cx, iterObj, propertyContainer)) {
       return nsnull;
     }
-  } while ((propertyContainer = STOBJ_GET_PROTO(propertyContainer)));
+  } while ((propertyContainer = propertyContainer->getProto()));
 
   return FinishCreatingIterator(cx, iterObj, keysonly);
 }
@@ -618,7 +618,9 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
     // A non-string id is being resolved. Won't be found here, return
     // early.
 
-    return MaybePreserveWrapper(cx, wn, flags);
+    MaybePreserveWrapper(cx, wn, flags);
+
+    return JS_TRUE;
   }
 
   // Verify that our jsobject really is a wrapped native.
@@ -634,7 +636,9 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
   if (!iface) {
     // No interface, nothing to resolve.
 
-    return MaybePreserveWrapper(cx, wn, flags);
+    MaybePreserveWrapper(cx, wn, flags);
+
+    return JS_TRUE;
   }
 
   // did we find a method/attribute by that name?
@@ -642,7 +646,9 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
   if (!member) {
     // No member, nothing to resolve.
 
-    return MaybePreserveWrapper(cx, wn, flags);
+    MaybePreserveWrapper(cx, wn, flags);
+
+    return JS_TRUE;
   }
 
   JSString *str = JSVAL_TO_STRING(id);

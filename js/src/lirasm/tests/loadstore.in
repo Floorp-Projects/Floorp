@@ -1,9 +1,9 @@
-ptr= alloc 8
-five = int 5
-sti five ptr 0
-three= int 3
-sti three ptr 4
-v= ld ptr 0
-u= ld ptr 4
-res= add u v
-ret res
+ptr = allocp 8
+five = imml 5
+stl five ptr 0
+three = imml 3
+stl three ptr 4
+v = ldl ptr 0
+u = ldl ptr 4
+res = addl u v
+retl res

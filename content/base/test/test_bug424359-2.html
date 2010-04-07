@@ -111,7 +111,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em>\n bit of text.</div>";
+  expected = "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>";
   is(out, expected, "test node");
 
   node = document.getElementById('aList');
@@ -122,20 +122,20 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n';
+  expected = '\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n';
   is(out, expected, "test list selection");
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(null);
   encoder.setContainerNode(node);
   out = encoder.encodeToString();
-  expected = '\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n';
+  expected = '\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n';
   is(out, expected, "test list container node");
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = "<ol id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
+  expected = "<ol id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
   is(out, expected, "test list node");
 
   var liList = node.getElementsByTagName("li");
@@ -149,7 +149,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol id="aList"><li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol id="aList"><li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the first child of the ol, and end after the element ol");
 
   // selection start at the third child of the ol, and end after the element ol
@@ -158,7 +158,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol");
 
 
@@ -169,7 +169,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol start="5" id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol start="5" id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol + ol start at the value 5");
 
 

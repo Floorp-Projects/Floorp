@@ -52,7 +52,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(00ca8d4f-61f1-4d9c-a7c1-82651b0cf02b)]
+[scriptable, uuid(25ada920-d727-45b6-ac70-847a3aa9c7cf)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -298,8 +298,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *        null for coordinates outside of the viewport.
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    */
-  nsIDOMElement elementFromPoint(in long aX,
-                                 in long aY,
+  nsIDOMElement elementFromPoint(in float aX,
+                                 in float aY,
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
 
@@ -613,4 +613,22 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean sendSelectionSetEvent(in unsigned long aOffset,
                                 in unsigned long aLength,
                                 in boolean aReverse);
+
+  /**
+   * Perform the equivalent of:
+   *   window.getComputedStyle(aElement, aPseudoElement).
+   *     getPropertyValue(aPropertyName)
+   * except that, when the link whose presence in history is allowed to
+   * influence aElement's style is visited, get the value the property
+   * would have if allowed all properties to change as a result of
+   * :visited selectors (except for cases where getComputedStyle uses
+   * data from the frame).
+   *
+   * This is easier to implement than adding our property restrictions
+   * to this API, and is sufficient for the present testing
+   * requirements (which are essentially testing 'color').
+   */
+  AString getVisitedDependentComputedStyle(in nsIDOMElement aElement,
+                                           in AString aPseudoElement,
+                                           in AString aPropertyName);
 };

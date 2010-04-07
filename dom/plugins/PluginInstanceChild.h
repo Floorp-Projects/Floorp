@@ -194,6 +194,8 @@ public:
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
+    void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
+
 private:
     friend class PluginModuleChild;
 
@@ -282,6 +284,8 @@ private:
 #endif
 
     friend class ChildAsyncCall;
+
+    Mutex mAsyncCallMutex;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
@@ -316,6 +320,11 @@ private:
       HBITMAP         bmp;
     } mAlphaExtract;
 #endif // defined(OS_WIN)
+#if defined(OS_MACOSX)
+private:
+    CGColorSpaceRef mShColorSpace;
+    CGContextRef mShContext;
+#endif
 };
 
 } // namespace plugins

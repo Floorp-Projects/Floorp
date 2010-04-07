@@ -180,6 +180,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLOptionElement, nsHTMLOptionElement)
+
 // QueryInterface implementation for nsHTMLOptionElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLOptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLOptionElement,

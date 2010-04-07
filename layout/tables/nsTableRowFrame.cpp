@@ -52,6 +52,8 @@
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
 
+using namespace mozilla;
+
 struct nsTableCellReflowState : public nsHTMLReflowState
 {
   nsTableCellReflowState(nsPresContext*           aPresContext,
@@ -550,7 +552,6 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
        kidFrame = kidFrame->GetNextSibling()) {
     nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
     if (cellFrame) {
-      nscoord availWidth = cellFrame->GetPriorAvailWidth();
       nsSize desSize = cellFrame->GetDesiredSize();
       if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !GetPrevInFlow()) {
         CalculateCellActualHeight(cellFrame, desSize.height);
@@ -1350,27 +1351,23 @@ nsTableRowFrame::GetNextRow() const
   return nsnull;
 }
 
+NS_DECLARE_FRAME_PROPERTY(RowUnpaginatedHeightProperty, nsnull)
+
 void 
 nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
                                       nscoord        aValue)
 {
   NS_ASSERTION(!GetPrevInFlow(), "program error");
-  // Get the property 
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(this, nsGkAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
-  if (value) {
-    *value = aValue;
-  }
+  // Get the property
+  aPresContext->PropertyTable()->
+    Set(this, RowUnpaginatedHeightProperty(), NS_INT32_TO_PTR(aValue));
 }
 
 nscoord
 nsTableRowFrame::GetUnpaginatedHeight(nsPresContext* aPresContext)
 {
-  // See if the property is set
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(GetFirstInFlow(), nsGkAtoms::rowUnpaginatedHeightProperty);
-  if (value) 
-    return *value;
-  else 
-    return 0;
+  FrameProperties props = GetFirstInFlow()->Properties();
+  return NS_PTR_TO_INT32(props.Get(RowUnpaginatedHeightProperty()));
 }
 
 void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,

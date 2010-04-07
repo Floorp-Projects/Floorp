@@ -314,12 +314,53 @@ namespace {
 
 #ifdef MOZ_IPC
 
+#ifdef XP_MACOSX
+static PRInt32 OSXVersion()
+{
+  static PRInt32 gOSXVersion = 0x0;
+  if (gOSXVersion == 0x0) {
+    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
+    if (err != noErr) {
+      // This should probably be changed when our minimum version changes
+      NS_ERROR("Couldn't determine OS X version, assuming 10.5");
+      gOSXVersion = 0x00001050;
+    }
+  }
+  return gOSXVersion;
+}
+#endif
+
 inline PRBool
-OOPPluginsEnabled(const char* aFilePath)
+OOPPluginsEnabled(const char* aFilePath, const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
   }
+
+#ifdef XP_MACOSX
+  // Only allow on Mac OS X 10.6 or higher.
+  if (OSXVersion() < 0x00001060) {
+    return PR_FALSE;
+  }
+  // Blacklist Flash 10.0 or lower since it may try to negotiate Carbon/Quickdraw
+  // which are not supported out of process.
+  if (aPluginTag && 
+      aPluginTag->mFileName.EqualsIgnoreCase("flash player.plugin")) {
+    // If the first '.' is before position 2 or the version 
+    // starts with 10.0 then we are dealing with Flash 10 or less.
+    if (aPluginTag->mVersion.FindChar('.') < 2) {
+      return PR_FALSE;
+    }
+    if (aPluginTag->mVersion.Length() >= 4) {
+      nsCString versionPrefix;
+      aPluginTag->mVersion.Left(versionPrefix, 4);
+      if (versionPrefix.EqualsASCII("10.0")) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+#endif
 
 #ifdef XP_WIN
   OSVERSIONINFO osVerInfo = {0};
@@ -365,8 +406,12 @@ GetNewPluginLibrary(const char* aFilePath,
                     PRLibrary* aLibrary)
 {
 #ifdef MOZ_IPC
-  if (aFilePath && OOPPluginsEnabled(aFilePath)) {
-    return PluginModuleParent::LoadModule(aFilePath);
+  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+  nsPluginTag* tag = host->FindTagForLibrary(aLibrary);
+  if (tag) {
+    if (aFilePath && OOPPluginsEnabled(aFilePath, tag)) {
+      return PluginModuleParent::LoadModule(aFilePath);
+    }   
   }
 #endif
   return new PluginPRLibrary(aFilePath, aLibrary);
@@ -1700,7 +1745,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   // Root obj and the rval (below).
   jsval vec[] = { OBJECT_TO_JSVAL(obj), JSVAL_NULL };
-  JSAutoTempValueRooter tvr(cx, NS_ARRAY_LENGTH(vec), vec);
+  js::AutoArrayRooter tvr(cx, NS_ARRAY_LENGTH(vec), vec);
   jsval *rval = &vec[1];
 
   if (result) {

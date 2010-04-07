@@ -65,7 +65,7 @@ function test01() {
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  var queryString = "?showDetails=1";
+  var queryString = "?showDetails=1" + getVersionParams();
   setUpdateURLOverride(URL_UPDATE + queryString);
 
   gNextFunc = test02;

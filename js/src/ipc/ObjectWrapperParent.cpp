@@ -231,7 +231,7 @@ static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
     while (STOBJ_GET_CLASS(obj) != &ObjectWrapperParent::sCPOW_JSClass.base)
-        if (!(obj = STOBJ_GET_PROTO(obj)))
+        if (!(obj = obj->getProto()))
             return NULL;
     
     ObjectWrapperParent* self =

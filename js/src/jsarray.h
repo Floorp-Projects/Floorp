@@ -67,12 +67,9 @@ JSObject::isArray() const
     return isDenseArray() || getClass() == &js_SlowArrayClass;
 }
 
-#define OBJ_IS_DENSE_ARRAY(cx,obj)  (obj)->isDenseArray()
-#define OBJ_IS_ARRAY(cx,obj)        (obj)->isArray()
-
 /*
- * Dense arrays are not native (OBJ_IS_NATIVE(cx, aobj) for a dense array aobj
- * results in false, meaning aobj->map does not point to a JSScope).
+ * Dense arrays are not native -- aobj->isNative() for a dense array aobj
+ * results in false, meaning aobj->map does not point to a JSScope.
  *
  * But Array methods are called via aobj.sort(), e.g., and the interpreter and
  * the trace recorder must consult the property cache in order to perform well.
@@ -90,9 +87,9 @@ JSObject::isArray() const
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
  */
 static JS_INLINE JSObject *
-js_GetProtoIfDenseArray(JSContext *cx, JSObject *obj)
+js_GetProtoIfDenseArray(JSObject *obj)
 {
-    return OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+    return obj->isDenseArray() ? obj->getProto() : obj;
 }
 
 extern JSObject *
@@ -109,8 +106,7 @@ extern JSObject * JS_FASTCALL
 js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
-                  JSBool holey = JS_FALSE);
+js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey = false);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *

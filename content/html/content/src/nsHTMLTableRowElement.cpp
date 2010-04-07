@@ -108,6 +108,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLTableRowElement, nsHTMLTableRowElement)
+
 // QueryInterface implementation for nsHTMLTableRowElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableRowElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableRowElement,

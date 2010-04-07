@@ -71,14 +71,14 @@ var gTests = [
     desc: "Invalid calls to tags setter should fail",
     run:   function () {
       try {
-        var query = histsvc.getNewQuery();
+        var query = PlacesUtils.history.getNewQuery();
         query.tags = null;
         do_throw("  Passing null to SetTags should fail");
       }
       catch (exc) {}
 
       try {
-        query = histsvc.getNewQuery();
+        query = PlacesUtils.history.getNewQuery();
         query.tags = "this should not work";
         do_throw("  Passing a string to SetTags should fail");
       }
@@ -126,7 +126,7 @@ var gTests = [
         var str = Cc["@mozilla.org/supports-string;1"].
                   createInstance(Ci.nsISupportsString);
         str.data = "foo";
-        query = histsvc.getNewQuery();
+        query = PlacesUtils.history.getNewQuery();
         query.tags = str;
         do_throw("  Passing nsISupportsString to SetTags should fail");
       }
@@ -377,32 +377,32 @@ var gTests = [
         let nsiuri = uri(pURI);
         addVisit(nsiuri);
         if (tags)
-          tagssvc.tagURI(nsiuri, tags);
+          PlacesUtils.tagging.tagURI(nsiuri, tags);
       }
 
       print('  Querying for "foo" should match only /2 and /3');
       var [query, opts] = makeQuery(["foo"], true);
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "bar" should match only /2 and /3');
       [query, opts] = makeQuery(["foo", "bar"], true);
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "bogus" should match only /2 and /3');
       [query, opts] = makeQuery(["foo", "bogus"], true);
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "baz" should match only /3');
       [query, opts] = makeQuery(["foo", "baz"], true);
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/3"]);
 
       print('  Querying for "bogus" should match all');
       [query, opts] = makeQuery(["bogus"], true);
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/1",
                        "http://example.com/2",
                        "http://example.com/3"]);
@@ -411,7 +411,7 @@ var gTests = [
       for (let [pURI, tags] in Iterator(urisAndTags)) {
         let nsiuri = uri(pURI);
         if (tags)
-          tagssvc.untagURI(nsiuri, tags);
+          PlacesUtils.tagging.untagURI(nsiuri, tags);
       }
       cleanDatabase();
     }
@@ -431,37 +431,37 @@ var gTests = [
         let nsiuri = uri(pURI);
         addBookmark(nsiuri);
         if (tags)
-          tagssvc.tagURI(nsiuri, tags);
+          PlacesUtils.tagging.tagURI(nsiuri, tags);
       }
 
       print('  Querying for "foo" should match only /2 and /3');
       var [query, opts] = makeQuery(["foo"], true);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "bar" should match only /2 and /3');
       [query, opts] = makeQuery(["foo", "bar"], true);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "bogus" should match only /2 and /3');
       [query, opts] = makeQuery(["foo", "bogus"], true);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/2", "http://example.com/3"]);
 
       print('  Querying for "foo" and "baz" should match only /3');
       [query, opts] = makeQuery(["foo", "baz"], true);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/3"]);
 
       print('  Querying for "bogus" should match all');
       [query, opts] = makeQuery(["bogus"], true);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root,
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                       ["http://example.com/1",
                        "http://example.com/2",
                        "http://example.com/3"]);
@@ -470,7 +470,7 @@ var gTests = [
       for (let [pURI, tags] in Iterator(urisAndTags)) {
         let nsiuri = uri(pURI);
         if (tags)
-          tagssvc.untagURI(nsiuri, tags);
+          PlacesUtils.tagging.untagURI(nsiuri, tags);
       }
       cleanDatabase();
     }
@@ -484,26 +484,26 @@ var gTests = [
 
       print("  Add bookmark and tag it normally");
       addBookmark(TEST_URI);
-      tagssvc.tagURI(TEST_URI, [tagName]);
+      PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
       print("  Manually create tag folder with same name as tag and insert " +
             "bookmark");
-      var dupTagId = bmsvc.createFolder(bmsvc.tagsFolder,
-                                        tagName,
-                                        bmsvc.DEFAULT_INDEX);
+      var dupTagId = PlacesUtils.bookmarks.createFolder(PlacesUtils.tagsFolderId,
+                                                        tagName,
+                                                        Ci.nsINavBookmarksService.DEFAULT_INDEX);
       do_check_true(dupTagId > 0);
-      var bmId = bmsvc.insertBookmark(dupTagId,
-                                      TEST_URI,
-                                      bmsvc.DEFAULT_INDEX,
-                                      "title");
+      var bmId = PlacesUtils.bookmarks.insertBookmark(dupTagId,
+                                                      TEST_URI,
+                                                      Ci.nsINavBookmarksService.DEFAULT_INDEX,
+                                                      "title");
       do_check_true(bmId > 0);
 
       print("  Querying for tag should match URI");
       var [query, opts] = makeQuery([tagName]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root, [TEST_URI.spec]);
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
-      tagssvc.untagURI(TEST_URI, [tagName]);
+      PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
       cleanDatabase();
     }
   },
@@ -516,20 +516,20 @@ var gTests = [
 
       print("  Add bookmark and tag it");
       addBookmark(TEST_URI);
-      tagssvc.tagURI(TEST_URI, [tagName]);
+      PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
       print("  Create folder with same name as tag");
-      var folderId = bmsvc.createFolder(bmsvc.unfiledBookmarksFolder,
-                                        tagName,
-                                        bmsvc.DEFAULT_INDEX);
+      var folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
+                                                        tagName,
+                                                        Ci.nsINavBookmarksService.DEFAULT_INDEX);
       do_check_true(folderId > 0);
 
       print("  Querying for tag should match URI");
       var [query, opts] = makeQuery([tagName]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
-      queryResultsAre(histsvc.executeQuery(query, opts).root, [TEST_URI.spec]);
+      queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
-      tagssvc.untagURI(TEST_URI, [tagName]);
+      PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
       cleanDatabase();
     }
   },
@@ -554,53 +554,53 @@ var gTests = [
         let nsiuri = uri(pURI);
         addVisit(nsiuri);
         if (tags)
-          tagssvc.tagURI(nsiuri, tags);
+          PlacesUtils.tagging.tagURI(nsiuri, tags);
       }
 
       print("  Query for /1 OR query for /2 should match both /1 and /2");
       var [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
       var [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"]);
-      var root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      var root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
       print("  Query for /1 OR query on bogus tag should match only /1");
       [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
       [query2, dummy] = makeQuery(["bogus"]);
-      root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1"]);
 
       print("  Query for /1 OR query for /1 should match only /1");
       [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
       [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"]);
-      root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1"]);
 
       print("  Query for /1 with tagsAreNot OR query for /2 with tagsAreNot " +
             "should match both /1 and /2");
       [query1, opts] = makeQuery(urisAndTags["http://example.com/1"], true);
       [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
-      root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
       print("  Query for /1 OR query for /2 with tagsAreNot should match " +
             "only /1");
       [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
       [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
-      root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1"]);
 
       print("  Query for /1 OR query for /1 with tagsAreNot should match " +
             "both URIs");
       [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
       [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"], true);
-      root = histsvc.executeQueries([query1, query2], 2, opts).root;
+      root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
       queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
       // Clean up.
       for (let [pURI, tags] in Iterator(urisAndTags)) {
         let nsiuri = uri(pURI);
         if (tags)
-          tagssvc.untagURI(nsiuri, tags);
+          PlacesUtils.tagging.untagURI(nsiuri, tags);
       }
       cleanDatabase();
     }
@@ -623,10 +623,10 @@ const TEST_URI = uri("http://example.com/");
  *        URI of the page (an nsIURI)
  */
 function addBookmark(aURI) {
-  var bmId = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                                  aURI,
-                                  bmsvc.DEFAULT_INDEX,
-                                  aURI.spec);
+  var bmId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                                  aURI,
+                                                  Ci.nsINavBookmarksService.DEFAULT_INDEX,
+                                                  aURI.spec);
   print("  Sanity check: insertBookmark should not fail");
   do_check_true(bmId > 0);
 }
@@ -638,12 +638,12 @@ function addBookmark(aURI) {
  *        URI of the page (an nsIURI)
  */
 function addVisit(aURI) {
-  var visitId = histsvc.addVisit(aURI,
-                                 Date.now() * 1000,
-                                 null,
-                                 histsvc.TRANSITION_LINK,
-                                 false,
-                                 0);
+  var visitId = PlacesUtils.history.addVisit(aURI,
+                                             Date.now() * 1000,
+                                             null,
+                                             Ci.nsINavHistoryService.TRANSITION_LINK,
+                                             false,
+                                             0);
   print("  Sanity check: addVisit should not fail");
   do_check_true(visitId > 0);
 }
@@ -652,7 +652,7 @@ function addVisit(aURI) {
  * Removes all pages from history and bookmarks.
  */
 function cleanDatabase() {
-  bhistsvc.removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
 }
 
@@ -688,9 +688,9 @@ function checkQueryURI(aTags, aTagsAreNot) {
  */
 function doWithBookmark(aTags, aCallback) {
   addBookmark(TEST_URI);
-  tagssvc.tagURI(TEST_URI, aTags);
+  PlacesUtils.tagging.tagURI(TEST_URI, aTags);
   aCallback(TEST_URI);
-  tagssvc.untagURI(TEST_URI, aTags);
+  PlacesUtils.tagging.untagURI(TEST_URI, aTags);
   cleanDatabase();
 }
 
@@ -706,9 +706,9 @@ function doWithBookmark(aTags, aCallback) {
  */
 function doWithVisit(aTags, aCallback) {
   addVisit(TEST_URI);
-  tagssvc.tagURI(TEST_URI, aTags);
+  PlacesUtils.tagging.tagURI(TEST_URI, aTags);
   aCallback(TEST_URI);
-  tagssvc.untagURI(TEST_URI, aTags);
+  PlacesUtils.tagging.untagURI(TEST_URI, aTags);
   cleanDatabase();
 }
 
@@ -740,7 +740,7 @@ function encodeTag(aTag) {
  *        Array of URIs (as strings) that aResultRoot should contain
  */
 function executeAndCheckQueryResults(aQuery, aQueryOpts, aExpectedURIs) {
-  var root = histsvc.executeQuery(aQuery, aQueryOpts).root;
+  var root = PlacesUtils.history.executeQuery(aQuery, aQueryOpts).root;
   root.containerOpen = true;
   queryResultsAre(root, aExpectedURIs);
   root.containerOpen = false;
@@ -765,7 +765,7 @@ function makeQuery(aTags, aTagsAreNot) {
          "without calling setTags() at all") +
         " and with tagsAreNot=" +
         aTagsAreNot);
-  var query = histsvc.getNewQuery();
+  var query = PlacesUtils.history.getNewQuery();
   query.tagsAreNot = aTagsAreNot;
   if (aTags) {
     query.tags = aTags;
@@ -784,7 +784,7 @@ function makeQuery(aTags, aTagsAreNot) {
   do_check_eq(query.tags.length, expCount);
   do_check_eq(query.tagsAreNot, aTagsAreNot);
 
-  return [query, histsvc.getNewQueryOptions()];
+  return [query, PlacesUtils.history.getNewQueryOptions()];
 }
 
 /**
@@ -818,7 +818,7 @@ function queryResultsAre(aResultRoot, aExpectedURIs) {
  * @return The query's URI
  */
 function queryURI(aQuery, aQueryOpts) {
-  return histsvc.queriesToQueryString([aQuery], 1, aQueryOpts);
+  return PlacesUtils.history.queriesToQueryString([aQuery], 1, aQueryOpts);
 }
 
 /**

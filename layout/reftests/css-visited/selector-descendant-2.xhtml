@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none; color: black }
+.styled:link span { color: olive; background: rgba(0, 255, 255, 0.5); }
+.styled:visited span { color: fuchsia; background: rgba(0, 0, 255, 0.5) }
+
+</style>
+</head>
+<body>
+
+<a class="styled" href="unvisited-page.html"><span>unvisited</span> (<a class="styled" href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a class="styled" href="unvisited-page.html"><span>unvisited</span> (<a class="styled" href="visited-page.html"><span>visited</span></a>)</a>
+<a class="styled" href="visited-page.html"><span>visited</span> (<a class="styled" href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a class="styled" href="visited-page.html"><span>visited</span> (<a class="styled" href="visited-page.html"><span>visited</span></a>)</a>
+
+<a href="unvisited-page.html"><span>unvisited</span> (<a class="styled" href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a href="unvisited-page.html"><span>unvisited</span> (<a class="styled" href="visited-page.html"><span>visited</span></a>)</a>
+<a href="visited-page.html"><span>visited</span> (<a class="styled" href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a href="visited-page.html"><span>visited</span> (<a class="styled" href="visited-page.html"><span>visited</span></a>)</a>
+
+<a class="styled" href="unvisited-page.html"><span>unvisited</span> (<a href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a class="styled" href="unvisited-page.html"><span>unvisited</span> (<a href="visited-page.html"><span>visited</span></a>)</a>
+<a class="styled" href="visited-page.html"><span>visited</span> (<a href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a class="styled" href="visited-page.html"><span>visited</span> (<a href="visited-page.html"><span>visited</span></a>)</a>
+
+<a href="unvisited-page.html"><span>unvisited</span> (<a href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a href="unvisited-page.html"><span>unvisited</span> (<a href="visited-page.html"><span>visited</span></a>)</a>
+<a href="visited-page.html"><span>visited</span> (<a href="unvisited-page.html"><span>unvisited</span></a>)</a>
+<a href="visited-page.html"><span>visited</span> (<a href="visited-page.html"><span>visited</span></a>)</a>
+
+</body>
+</html>

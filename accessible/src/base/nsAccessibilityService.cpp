@@ -47,7 +47,7 @@
 #include "nsIContentViewer.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
-#include "nsHTMLImageAccessibleWrap.h"
+#include "nsHTMLImageMapAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
@@ -55,6 +55,7 @@
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLegendElement.h"
@@ -63,6 +64,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULElement.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -636,24 +638,46 @@ nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsIWe
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLImageAccessible(nsIFrame *aFrame, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLImageAccessible(nsIFrame *aFrame,
+                                                  nsIAccessible **aAccessible)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
   nsresult rv = GetInfo(aFrame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = nsnull;
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(node));
-  if (domElement) {
-      *_retval = new nsHTMLImageAccessibleWrap(node, weakShell);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  NS_ENSURE_STATE(content);
+
+  nsCOMPtr<nsIHTMLDocument> htmlDoc =
+    do_QueryInterface(content->GetCurrentDoc());
+
+  nsCOMPtr<nsIDOMHTMLMapElement> mapElm;
+  if (htmlDoc) {
+    nsAutoString mapElmName;
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::usemap,
+                     mapElmName);
+
+    if (!mapElmName.IsEmpty()) {
+      if (mapElmName.CharAt(0) == '#')
+        mapElmName.Cut(0,1);
+      mapElm = htmlDoc->GetImageMap(mapElmName);
+    }
   }
 
-  if (! *_retval) 
+  if (mapElm)
+    *aAccessible = new nsHTMLImageMapAccessible(node, weakShell, mapElm);
+  else
+    *aAccessible = new nsHTMLImageAccessibleWrap(node, weakShell);
+
+  if (!*aAccessible)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(*_retval);
+  NS_ADDREF(*aAccessible);
   return NS_OK;
 }
 

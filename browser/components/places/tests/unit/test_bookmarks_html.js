@@ -104,7 +104,7 @@ function run_test() {
   // file pointer to legacy bookmarks file
   var bookmarksFileOld = do_get_file("bookmarks.preplaces.html");
   // file pointer to a new places-exported bookmarks file
-  var bookmarksFileNew = dirSvc.get("ProfD", Ci.nsILocalFile);
+  var bookmarksFileNew = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   bookmarksFileNew.append("bookmarks.exported.html");
 
   // create bookmarks.exported.html

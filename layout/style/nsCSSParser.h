@@ -65,9 +65,9 @@ namespace css {
 
 class NS_STACK_CLASS nsCSSParser {
 public:
-  NS_HIDDEN nsCSSParser(mozilla::css::Loader* aLoader = nsnull,
-                        nsICSSStyleSheet* aSheet = nsnull);
-  NS_HIDDEN ~nsCSSParser();
+  nsCSSParser(mozilla::css::Loader* aLoader = nsnull,
+              nsICSSStyleSheet* aSheet = nsnull);
+  ~nsCSSParser();
 
   static void Shutdown();
 
@@ -79,24 +79,24 @@ private:
 public:
   // If this is false, memory allocation failed in the constructor
   // and all other methods will crash.
-  NS_HIDDEN operator bool() const
+  operator bool() const
   { return !!mImpl; }
 
   // Set a style sheet for the parser to fill in. The style sheet must
   // implement the nsICSSStyleSheet interface.  Null can be passed in to clear
   // out an existing stylesheet reference.
-  NS_HIDDEN_(nsresult) SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
 
   // Set whether or not to emulate Nav quirks
-  NS_HIDDEN_(nsresult) SetQuirkMode(PRBool aQuirkMode);
+  nsresult SetQuirkMode(PRBool aQuirkMode);
 
 #ifdef  MOZ_SVG
   // Set whether or not we are in an SVG element
-  NS_HIDDEN_(nsresult) SetSVGMode(PRBool aSVGMode);
+  nsresult SetSVGMode(PRBool aSVGMode);
 #endif
 
   // Set loader to use for child sheets
-  NS_HIDDEN_(nsresult) SetChildLoader(mozilla::css::Loader* aChildLoader);
+  nsresult SetChildLoader(mozilla::css::Loader* aChildLoader);
 
   /**
    * Parse aInput into the stylesheet that was previously set by calling
@@ -114,44 +114,45 @@ public:
    * @param aAllowUnsafeRules see aEnableUnsafeRules in
    *                          mozilla::css::Loader::LoadSheetSync
    */
-  NS_HIDDEN_(nsresult) Parse(nsIUnicharInputStream* aInput,
-                             nsIURI*                aSheetURL,
-                             nsIURI*                aBaseURI,
-                             nsIPrincipal*          aSheetPrincipal,
-                             PRUint32               aLineNumber,
-                             PRBool                 aAllowUnsafeRules);
+  nsresult Parse(nsIUnicharInputStream* aInput,
+                 nsIURI*                aSheetURL,
+                 nsIURI*                aBaseURI,
+                 nsIPrincipal*          aSheetPrincipal,
+                 PRUint32               aLineNumber,
+                 PRBool                 aAllowUnsafeRules);
 
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in
   // the declaration.
-  NS_HIDDEN_(nsresult) ParseStyleAttribute(const nsAString&  aAttributeValue,
-                                           nsIURI*           aDocURL,
-                                           nsIURI*           aBaseURL,
-                                           nsIPrincipal*     aNodePrincipal,
-                                           nsICSSStyleRule** aResult);
+  nsresult ParseStyleAttribute(const nsAString&  aAttributeValue,
+                               nsIURI*           aDocURL,
+                               nsIURI*           aBaseURL,
+                               nsIPrincipal*     aNodePrincipal,
+                               nsICSSStyleRule** aResult);
 
-  NS_HIDDEN_(nsresult) ParseAndAppendDeclaration(const nsAString& aBuffer,
-                                                 nsIURI* aSheetURL,
-                                                 nsIURI* aBaseURL,
-                                                 nsIPrincipal* aSheetPrincipal,
-                                                 nsCSSDeclaration* aDeclaration,
-                                                 PRBool  aParseOnlyOneDecl,
-                                                 PRBool* aChanged,
-                                                 PRBool  aClearOldDecl);
+  nsresult ParseAndAppendDeclaration(const nsAString&  aBuffer,
+                                     nsIURI*           aSheetURL,
+                                     nsIURI*           aBaseURL,
+                                     nsIPrincipal*     aSheetPrincipal,
+                                     nsCSSDeclaration* aDeclaration,
+                                     PRBool            aParseOnlyOneDecl,
+                                     PRBool*           aChanged,
+                                     PRBool            aClearOldDecl);
 
-  NS_HIDDEN_(nsresult) ParseRule(const nsAString&        aRule,
-                                 nsIURI*                 aSheetURL,
-                                 nsIURI*                 aBaseURL,
-                                 nsIPrincipal*           aSheetPrincipal,
-                                 nsCOMArray<nsICSSRule>& aResult);
+  nsresult ParseRule(const nsAString&        aRule,
+                     nsIURI*                 aSheetURL,
+                     nsIURI*                 aBaseURL,
+                     nsIPrincipal*           aSheetPrincipal,
+                     nsCOMArray<nsICSSRule>& aResult);
 
-  NS_HIDDEN_(nsresult) ParseProperty(const nsCSSProperty aPropID,
-                                     const nsAString&    aPropValue,
-                                     nsIURI*             aSheetURL,
-                                     nsIURI*             aBaseURL,
-                                     nsIPrincipal*       aSheetPrincipal,
-                                     nsCSSDeclaration*   aDeclaration,
-                                     PRBool*             aChanged);
+  nsresult ParseProperty(const nsCSSProperty aPropID,
+                         const nsAString&    aPropValue,
+                         nsIURI*             aSheetURL,
+                         nsIURI*             aBaseURL,
+                         nsIPrincipal*       aSheetPrincipal,
+                         nsCSSDeclaration*   aDeclaration,
+                         PRBool*             aChanged,
+                         PRBool              aIsImportant);
 
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be
@@ -161,11 +162,11 @@ public:
    * parentheses and strings more important than commas.  |aURL| and
    * |aLineNumber| are used for error reporting.
    */
-  NS_HIDDEN_(nsresult) ParseMediaList(const nsSubstring& aBuffer,
-                                      nsIURI*            aURL,
-                                      PRUint32           aLineNumber,
-                                      nsMediaList*       aMediaList,
-                                      PRBool             aHTMLMode);
+  nsresult ParseMediaList(const nsSubstring& aBuffer,
+                          nsIURI*            aURL,
+                          PRUint32           aLineNumber,
+                          nsMediaList*       aMediaList,
+                          PRBool             aHTMLMode);
 
   /**
    * Parse aBuffer into a nscolor |aColor|.  The alpha component of the
@@ -176,19 +177,19 @@ public:
    * self-contained (i.e.  doesn't reference any external style state,
    * such as "initial" or "inherit").
    */
-  NS_HIDDEN_(nsresult) ParseColorString(const nsSubstring& aBuffer,
-                                        nsIURI*            aURL,
-                                        PRUint32           aLineNumber,
-                                        nscolor*           aColor);
+  nsresult ParseColorString(const nsSubstring& aBuffer,
+                            nsIURI*            aURL,
+                            PRUint32           aLineNumber,
+                            nscolor*           aColor);
 
   /**
    * Parse aBuffer into a selector list.  On success, caller must
    * delete *aSelectorList when done with it.
    */
-  NS_HIDDEN_(nsresult) ParseSelectorString(const nsSubstring&  aSelectorString,
-                                           nsIURI*             aURL,
-                                           PRUint32            aLineNumber,
-                                           nsCSSSelectorList** aSelectorList);
+  nsresult ParseSelectorString(const nsSubstring&  aSelectorString,
+                               nsIURI*             aURL,
+                               PRUint32            aLineNumber,
+                               nsCSSSelectorList** aSelectorList);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

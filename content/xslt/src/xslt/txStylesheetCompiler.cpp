@@ -69,27 +69,6 @@ txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
     mStatus = init(aStylesheetURI, aStylesheet, aInsertPosition);
 }
 
-nsrefcnt
-txStylesheetCompiler::AddRef()
-{
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "txStylesheetCompiler", sizeof(*this));
-    return mRefCnt;
-}
-
-nsrefcnt
-txStylesheetCompiler::Release()
-{
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "txStylesheetCompiler");
-    if (mRefCnt == 0) {
-        mRefCnt = 1; //stabilize
-        delete this;
-        return 0;
-    }
-    return mRefCnt;
-}
-
 void
 txStylesheetCompiler::setBaseURI(const nsString& aBaseURI)
 {

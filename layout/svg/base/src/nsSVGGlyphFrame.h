@@ -145,15 +145,12 @@ public:
    */
   NS_IMETHOD_(float) GetAdvance(PRBool aForceGlobalTransform);
 
-  NS_IMETHOD_(void) SetGlyphPosition(float x, float y, PRBool aForceGlobalTransform);
+  NS_IMETHOD_(void) SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransform);
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent();
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
-  NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
 
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
   NS_IMETHOD_(PRUint16) GetTextAnchor();
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
 
@@ -206,8 +203,13 @@ protected:
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
-  float GetSubStringAdvance(PRUint32 charnum, PRUint32 fragmentChars);
-  gfxFloat GetBaselineOffset(PRBool aForceGlobalTransform);
+  float GetSubStringAdvance(PRUint32 charnum, PRUint32 fragmentChars,
+                            float aMetricsScale);
+  gfxFloat GetBaselineOffset(float aMetricsScale);
+
+  already_AddRefed<nsIDOMSVGLengthList> GetDx();
+  already_AddRefed<nsIDOMSVGLengthList> GetDy();
+  already_AddRefed<nsIDOMSVGNumberList> GetRotate();
 
   // Used to support GetBBoxContribution by making GetConvasTM use this as the
   // parent transform instead of the real CanvasTM.

@@ -193,7 +193,7 @@ private:
   // This function does not call ProcessAttachedQueue() on the binding manager.
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
-  void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
+  void ProcessOneRestyle(nsIContent* aContent, nsRestyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
 
   void ProcessPendingRestyleTable(
@@ -229,7 +229,7 @@ public:
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
   // See PostRestyleEventCommon below.
-  void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
+  void PostRestyleEvent(nsIContent* aContent, nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint)
   {
     nsPresContext *presContext = mPresShell->GetPresContext();
@@ -241,7 +241,7 @@ public:
 
   // See PostRestyleEventCommon below.
   void PostAnimationRestyleEvent(nsIContent* aContent,
-                                 nsReStyleHint aRestyleHint,
+                                 nsRestyleHint aRestyleHint,
                                  nsChangeHint aMinChangeHint)
   {
     PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
@@ -265,7 +265,7 @@ private:
    *                       IsProcessingAnimationStyleChange() value
    *                       (which is the default value).
    */
-  void PostRestyleEventCommon(nsIContent* aContent, nsReStyleHint aRestyleHint,
+  void PostRestyleEventCommon(nsIContent* aContent, nsRestyleHint aRestyleHint,
                               nsChangeHint aMinChangeHint,
                               PRBool aForAnimation);
   void PostRestyleEventInternal();
@@ -1698,7 +1698,7 @@ private:
 public:
 
   struct RestyleData {
-    nsReStyleHint mRestyleHint;  // What we want to restyle
+    nsRestyleHint mRestyleHint;  // What we want to restyle
     nsChangeHint  mChangeHint;   // The minimal change hint for "self"
   };
 

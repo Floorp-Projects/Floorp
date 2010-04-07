@@ -50,24 +50,24 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/b",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y",
         keyword: "b",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "z",
         keyword: "a",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "x",
         keyword: "c",
         isInQuery: true },
@@ -81,16 +81,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -113,30 +113,30 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/b1",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "z",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "x",
         isInQuery: true },
 
       // if titles are equal, should fall back to URI
       { isBookmark: true,
         uri: "http://example.com/b2",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y",
         isInQuery: true },
     ];
@@ -154,16 +154,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -190,7 +190,7 @@ tests.push({
       { isVisit: true,
         isDetails: true,
         isBookmark: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         uri: "http://example.com/c1",
         lastVisit: timeInMicroseconds - 2,
@@ -200,7 +200,7 @@ tests.push({
       { isVisit: true,
         isDetails: true,
         isBookmark: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         uri: "http://example.com/a",
         lastVisit: timeInMicroseconds - 1,
@@ -210,7 +210,7 @@ tests.push({
       { isVisit: true,
         isDetails: true,
         isBookmark: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         uri: "http://example.com/b",
         lastVisit: timeInMicroseconds - 3,
@@ -221,7 +221,7 @@ tests.push({
       { isVisit: true,
         isDetails: true,
         isBookmark: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         uri: "http://example.com/c2",
         lastVisit: timeInMicroseconds - 2,
@@ -232,7 +232,7 @@ tests.push({
       { isVisit: true,
         isDetails: true,
         isBookmark: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         uri: "http://example.com/c2",
         lastVisit: timeInMicroseconds - 2,
@@ -254,16 +254,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -291,21 +291,21 @@ tests.push({
         isDetails: true,
         lastVisit: timeInMicroseconds,
         uri: "http://example.com/b",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         title: "y",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         title: "x",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         title: "z",
         isInQuery: true },
@@ -315,14 +315,14 @@ tests.push({
         isDetails: true,
         lastVisit: timeInMicroseconds + 1,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         title: "x",
         isInQuery: true },
 
       // if no URI (e.g., node is a folder), should fall back to title
       { isFolder: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         title: "a",
         isInQuery: true },
@@ -332,14 +332,14 @@ tests.push({
         isDetails: true,
         lastVisit: timeInMicroseconds + 1,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 5,
         title: "x",
         isInQuery: true },
 
       // if no URI and titles are equal, should fall back to bookmark index
       { isFolder: true,
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 6,
         title: "a",
         isInQuery: true },
@@ -361,15 +361,15 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -397,7 +397,7 @@ tests.push({
         uri: "http://example.com/a",
         lastVisit: timeInMicroseconds,
         title: "z",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         isInQuery: true },
 
@@ -405,7 +405,7 @@ tests.push({
         uri: "http://example.com/c",
         lastVisit: timeInMicroseconds,
         title: "x",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         isInQuery: true },
 
@@ -413,7 +413,7 @@ tests.push({
         uri: "http://example.com/b1",
         lastVisit: timeInMicroseconds,
         title: "y1",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         isInQuery: true },
 
@@ -422,7 +422,7 @@ tests.push({
         uri: "http://example.com/b2",
         lastVisit: timeInMicroseconds + 1,
         title: "y2a",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         isInQuery: true },
 
@@ -431,7 +431,7 @@ tests.push({
         uri: "http://example.com/b2",
         lastVisit: timeInMicroseconds + 1,
         title: "y2b",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         isInQuery: true },
     ];
@@ -447,36 +447,36 @@ tests.push({
     // This function in head_queries.js creates our database with the above data
     populateDB(this._unsortedData);
     // add visits to increase visit count
-    histsvc.addVisit(uri("http://example.com/a"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/b1"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/b1"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/b2"), timeInMicroseconds + 1, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/b2"), timeInMicroseconds + 1, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
-    histsvc.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
-                     histsvc.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/a"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/b1"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/b1"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/b2"), timeInMicroseconds + 1, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/b2"), timeInMicroseconds + 1, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+    PlacesUtils.history.addVisit(uri("http://example.com/c"), timeInMicroseconds, null,
+                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
   },
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -501,24 +501,24 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "z",
         keyword: "a",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "x",
         keyword: "c",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://example.com/b1",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y9",
         keyword: "b",
         isInQuery: true },
@@ -526,8 +526,8 @@ tests.push({
       // without a keyword, should fall back to title
       { isBookmark: true,
         uri: "http://example.com/null2",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "null8",
         keyword: null,
         isInQuery: true },
@@ -535,8 +535,8 @@ tests.push({
       // without a keyword, should fall back to title
       { isBookmark: true,
         uri: "http://example.com/null1",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "null9",
         keyword: null,
         isInQuery: true },
@@ -544,8 +544,8 @@ tests.push({
       // if keywords are equal, should fall back to title
       { isBookmark: true,
         uri: "http://example.com/b2",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y8",
         keyword: "b",
         isInQuery: true },
@@ -566,16 +566,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -601,7 +601,7 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/b1",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         title: "y1",
         dateAdded: timeInMicroseconds -1,
@@ -609,7 +609,7 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         title: "z",
         dateAdded: timeInMicroseconds - 2,
@@ -617,7 +617,7 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         title: "x",
         dateAdded: timeInMicroseconds,
@@ -626,7 +626,7 @@ tests.push({
       // if dateAddeds are equal, should fall back to title
       { isBookmark: true,
         uri: "http://example.com/b2",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         title: "y2",
         dateAdded: timeInMicroseconds - 1,
@@ -635,7 +635,7 @@ tests.push({
       // if dateAddeds and titles are equal, should fall back to bookmark index
       { isBookmark: true,
         uri: "http://example.com/b3",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         title: "y3",
         dateAdded: timeInMicroseconds - 1,
@@ -656,16 +656,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -691,7 +691,7 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/b1",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         title: "y1",
         lastModified: timeInMicroseconds -1,
@@ -699,7 +699,7 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://example.com/a",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         title: "z",
         lastModified: timeInMicroseconds - 2,
@@ -707,7 +707,7 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://example.com/c",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         title: "x",
         lastModified: timeInMicroseconds,
@@ -716,7 +716,7 @@ tests.push({
       // if lastModifieds are equal, should fall back to title
       { isBookmark: true,
         uri: "http://example.com/b2",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         title: "y2",
         lastModified: timeInMicroseconds - 1,
@@ -726,7 +726,7 @@ tests.push({
       // index
       { isBookmark: true,
         uri: "http://example.com/b3",
-        parentFolder: bmsvc.toolbarFolder,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         title: "y3",
         lastModified: timeInMicroseconds - 1,
@@ -747,16 +747,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -781,8 +781,8 @@ tests.push({
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://url2.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title x",
         isTag: true,
         tagArray: ["x", "y", "z"],
@@ -790,8 +790,8 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://url1a.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title y1",
         isTag: true,
         tagArray: ["a", "b"],
@@ -799,15 +799,15 @@ tests.push({
 
       { isBookmark: true,
         uri: "http://url3a.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title w1",
         isInQuery: true },
 
       { isBookmark: true,
         uri: "http://url0.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title z",
         isTag: true,
         tagArray: ["a", "y", "z"],
@@ -816,8 +816,8 @@ tests.push({
       // if tags are equal, should fall back to title
       { isBookmark: true,
         uri: "http://url1b.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title y2",
         isTag: true,
         tagArray: ["b", "a"],
@@ -826,8 +826,8 @@ tests.push({
       // if tags are equal, should fall back to title
       { isBookmark: true,
         uri: "http://url3b.com/",
-        parentFolder: bmsvc.toolbarFolder,
-        index: bmsvc.DEFAULT_INDEX,
+        parentFolder: PlacesUtils.bookmarks.toolbarFolder,
+        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "title w2",
         isInQuery: true },
     ];
@@ -847,16 +847,16 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.toolbarFolder], 1);
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
     
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -944,15 +944,15 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
+    var query = PlacesUtils.history.getNewQuery();
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingAnnotation = "sorting";
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -1026,15 +1026,15 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
+    var query = PlacesUtils.history.getNewQuery();
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingAnnotation = "sorting";
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -1108,15 +1108,15 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
+    var query = PlacesUtils.history.getNewQuery();
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingAnnotation = "sorting";
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -1190,15 +1190,15 @@ tests.push({
 
   check: function() {
     // Query
-    var query = histsvc.getNewQuery();
+    var query = PlacesUtils.history.getNewQuery();
 
     // query options
-    var options = histsvc.getNewQueryOptions();
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingAnnotation = "sorting";
     options.sortingMode = this._sortingMode;
 
     // Results - this gets the result set and opens it for reading and modification.
-    var result = histsvc.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     var root = result.root;
     root.containerOpen = true;
     compareArrayToResult(this._sortedData, root);
@@ -1216,7 +1216,7 @@ tests.push({
 
 function prepare_for_next_test() {
   // Execute cleanup tasks
-  bhistsvc.removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
 }
 

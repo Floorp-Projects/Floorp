@@ -1275,12 +1275,12 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
     // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
     // If the values are not suitable, we should use x-height instead of them.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
-    if (aMetrics->superscriptOffset == 0 ||
+    if (aMetrics->superscriptOffset <= 0 ||
         aMetrics->superscriptOffset >= aMetrics->maxAscent) {
         aMetrics->superscriptOffset = aMetrics->xHeight;
     }
     // And also checking the case of sub script offset. The old gfx for win has checked this too.
-    if (aMetrics->subscriptOffset == 0 ||
+    if (aMetrics->subscriptOffset <= 0 ||
         aMetrics->subscriptOffset >= aMetrics->maxAscent) {
         aMetrics->subscriptOffset = aMetrics->xHeight;
     }

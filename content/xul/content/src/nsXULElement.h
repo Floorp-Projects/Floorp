@@ -523,6 +523,7 @@ public:
 
     virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                   PRBool aIsTrustedEvent);
+    nsresult ClickWithInputSource(PRUint16 aInputSource);
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;

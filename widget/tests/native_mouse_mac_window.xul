@@ -384,7 +384,7 @@
         // widget, even though the mouse is not over the tooltip, because that's what
         // Mac OS X does.
         [411, 180, NSMouseMoved, tooltip, right, [
-          { type: "mousemove", target: rightElem },
+          { type: "mousemove", target: rightElem, todoShouldHaveFired: !!navigator.oscpu.match(/Mac OS X 10\.6$/) },
         ]],
         // Move another pixel. This time send the event to the right widget.
         // However, that must not make a difference.

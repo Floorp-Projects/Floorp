@@ -44,6 +44,41 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
+inline jsval
+JSObject::getSlotMT(JSContext *cx, uintN slot) {
+#ifdef JS_THREADSAFE
+    /*
+     * If thread-safe, define a getSlotMT() that bypasses, for a native
+     * object, the lock-free "fast path" test of
+     * (OBJ_SCOPE(obj)->ownercx == cx), to avoid needlessly switching from
+     * lock-free to lock-full scope when doing GC on a different context
+     * from the last one to own the scope.  The caller in this case is
+     * probably a JSClass.mark function, e.g., fun_mark, or maybe a
+     * finalizer.
+     */
+    OBJ_CHECK_SLOT(this, slot);
+    return (OBJ_SCOPE(this)->title.ownercx == cx)
+           ? LOCKED_OBJ_GET_SLOT(this, slot)
+           : js_GetSlotThreadSafe(cx, this, slot);
+#else
+    return LOCKED_OBJ_GET_SLOT(this, slot);
+#endif
+}
+
+inline void
+JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value) {
+#ifdef JS_THREADSAFE
+    /* Thread-safe way to set a slot. */
+    OBJ_CHECK_SLOT(this, slot);
+    if (OBJ_SCOPE(this)->title.ownercx == cx)
+        LOCKED_OBJ_SET_SLOT(this, slot, value);
+    else
+        js_SetSlotThreadSafe(cx, this, slot, value);
+#else
+    LOCKED_OBJ_SET_SLOT(this, slot, value);
+#endif
+}
+
 inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)
@@ -67,7 +102,7 @@ JSObject::freeSlotsArray(JSContext *cx)
 inline bool
 JSObject::unbrand(JSContext *cx)
 {
-    if (OBJ_IS_NATIVE(this)) {
+    if (this->isNative()) {
         JS_LOCK_OBJ(cx, this);
         JSScope *scope = OBJ_SCOPE(this);
         if (scope->isSharedEmpty()) {
@@ -81,6 +116,36 @@ JSObject::unbrand(JSContext *cx)
         JS_UNLOCK_SCOPE(cx, scope);
     }
     return true;
+}
+
+namespace js {
+
+typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+
+class AutoDescriptorArray : private AutoGCRooter
+{
+  public:
+    AutoDescriptorArray(JSContext *cx)
+      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
+    { }
+
+    PropertyDescriptor *append() {
+        if (!descriptors.append(PropertyDescriptor()))
+            return NULL;
+        return &descriptors.back();
+    }
+
+    PropertyDescriptor& operator[](size_t i) {
+        JS_ASSERT(i < descriptors.length());
+        return descriptors[i];
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    PropertyDescriptorArray descriptors;
+};
+
 }
 
 #endif /* jsobjinlines_h___ */

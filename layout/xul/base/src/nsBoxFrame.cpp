@@ -1916,30 +1916,6 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
   return rv;
 }
 
-void
-nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aContent)
-{
-  // XXX This will be deprecated, because it is not good to fire synchronous DOM events
-  // from layout. It's better to use nsFrame::FireDOMEvent() which is asynchronous.
-  nsPresContext *presContext = PresContext();
-  nsIContent *content = aContent ? aContent : mContent;
-  if (content && presContext) {
-    // Fire a DOM event
-    nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(presContext, nsnull,
-                                                    NS_LITERAL_STRING("Events"),
-                                                    getter_AddRefs(event)))) {
-      event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(PR_TRUE);
-
-      nsEventDispatcher::DispatchDOMEvent(content, nsnull, event,
-                                          presContext, nsnull);
-    }
-  }
-}
-
 PRBool
 nsBoxFrame::SupportsOrdinalsInChildren()
 {

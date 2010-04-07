@@ -195,7 +195,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     // Scope the lock
     {
         // avoid deadlock in case the native method blocks somehow
-        AutoJSSuspendRequest req(ccx);  // scoped suspend of request
+        JSAutoSuspendRequest req(ccx);  // scoped suspend of request
         // call IDispatch's invoke
         invokeResult= disp->Invoke(
             dispID,                  // IDispatch ID

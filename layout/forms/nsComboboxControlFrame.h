@@ -188,7 +188,6 @@ public:
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
   NS_IMETHOD RemoveOption(PRInt32 index);
-  NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
   NS_IMETHOD OnOptionSelected(PRInt32 aIndex, PRBool aSelected);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);

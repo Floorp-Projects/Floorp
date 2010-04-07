@@ -90,7 +90,7 @@ function run_test() {
   stmt.finalize();
 
   // Export bookmarks
-  var bookmarksFile = dirSvc.get("ProfD", Ci.nsILocalFile);
+  var bookmarksFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   bookmarksFile.append("bookmarks.exported.html");
   if (bookmarksFile.exists())
     bookmarksFile.remove(false);

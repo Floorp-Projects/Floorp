@@ -46,6 +46,7 @@ LIBRARY_NAME	= crash_report_sender_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 DEFINES += -DUNICODE -D_UNICODE
+STL_FLAGS 	=
 
 CPPSRCS		= \
 		crash_report_sender.cc \

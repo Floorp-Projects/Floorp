@@ -81,3 +81,8 @@ libVersionPoint;
 PL_HashTableLookupConst;
 PL_HashTableRawLookupConst;
 ;+} NSPR_4.0;
+;+
+;+NSPR_4.8.5 {
+;+    global:
+PL_ClearArenaPool;
+;+} NSPR_4.1;

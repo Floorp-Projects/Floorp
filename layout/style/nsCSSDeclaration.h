@@ -73,7 +73,6 @@ public:
    */
   nsresult ValueAppended(nsCSSProperty aProperty);
 
-  nsresult AppendComment(const nsAString& aComment);
   nsresult RemoveProperty(nsCSSProperty aProperty);
 
   nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue) const;

@@ -29,10 +29,8 @@ function timeUpdated() {
 
   var v = document.getElementById('v');
   ok(v.currentTime > lastTime,
-     "Check currentTime of " +
-     v.currentTime +
-     " is greater than last time of " +
-     lastTime);
+     "currentTime (" + v.currentTime +
+     ") should be greater than last time (" + lastTime + ")");
   lastTime = v.currentTime;
   return false;
 }

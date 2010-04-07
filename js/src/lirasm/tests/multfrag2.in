@@ -1,14 +1,14 @@
 .begin sinpibytwo
-pi = float 3.14
-half = float 0.5
-halfpi = fmul pi half
-res = fcall sin cdecl halfpi
-fret res
+pi = immd 3.14
+half = immd 0.5
+halfpi = muld pi half
+res = calld sin cdecl halfpi
+retd res
 .end
 
 .begin main
-aa = fcall sinpibytwo fastcall
-bb = float 5.53
-res = fadd aa bb
-fret res
+aa = calld sinpibytwo fastcall
+bb = immd 5.53
+res = addd aa bb
+retd res
 .end

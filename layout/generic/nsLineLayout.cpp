@@ -907,22 +907,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         if (frag) {
           pfd->SetFlag(PFD_ISNONWHITESPACETEXTFRAME,
                        !content->TextIsOnlyWhitespace());
-// fix for bug 40882
-#ifdef IBMBIDI
-          if (mPresContext->BidiEnabled()) {
-            if (frag->Is2b()) {
-              //PRBool isVisual;
-              //mPresContext->IsVisualMode(isVisual);
-              PRUnichar ch = /*(isVisual) ?
-                              *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
-              if (IS_BIDI_DIACRITIC(ch)) {
-                mPresContext->PropertyTable()->SetProperty(aFrame,
-                           nsGkAtoms::endsInDiacritic, NS_INT32_TO_PTR(ch),
-                                                           nsnull, nsnull);
-              }
-            }
-          }
-#endif // IBMBIDI
         }
       }
     }

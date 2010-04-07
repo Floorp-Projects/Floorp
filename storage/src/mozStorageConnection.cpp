@@ -283,6 +283,18 @@ public:
     if (mCallbackEvent)
       (void)mCallingThread->Dispatch(mCallbackEvent, NS_DISPATCH_NORMAL);
 
+    // Because we have no guarantee that the invocation of this method on the
+    // asynchronous thread has fully completed (including the Release of the
+    // reference to this object held by that event loop), we need to explicitly
+    // null out our pointers here.  It is possible this object will be destroyed
+    // on the asynchronous thread and if the references are still alive we will
+    // release them on that thread. We definitely do not want that for
+    // mConnection and it's nice to avoid for mCallbackEvent too.  We do not
+    // null out mCallingThread because it is conceivable the async thread might
+    // still be 'in' the object.
+    mConnection = nsnull;
+    mCallbackEvent = nsnull;
+
     return NS_OK;
   }
 private:

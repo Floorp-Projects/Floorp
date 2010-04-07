@@ -61,6 +61,8 @@ nsMimeTypeArray::~nsMimeTypeArray()
 }
 
 
+DOMCI_DATA(MimeTypeArray, nsMimeTypeArray)
+
 // QueryInterface implementation for nsMimeTypeArray
 NS_INTERFACE_MAP_BEGIN(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -282,6 +284,8 @@ nsMimeType::~nsMimeType()
 {
 }
 
+
+DOMCI_DATA(MimeType, nsMimeType)
 
 // QueryInterface implementation for nsMimeType
 NS_INTERFACE_MAP_BEGIN(nsMimeType)

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+a { text-decoration: none }
+body > :link { color: olive; }
+body > :visited { color: fuchsia; }
+a > a { color: inherit; }
+
+</style>
+</head>
+<body>
+<a href="unvisited-page.html"><a href="unvisited-page.html">unvisited / unvisited</a></a>
+<a href="unvisited-page.html"><a href="visited-page.html">unvisited / visited</a></a>
+<a href="visited-page.html"><a href="unvisited-page.html">visited / unvisited</a></a>
+<a href="visited-page.html"><a href="visited-page.html">visited / visited</a></a>
+</body>
+</html>

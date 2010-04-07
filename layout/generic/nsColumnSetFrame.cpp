@@ -245,11 +245,8 @@ nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
   if (!ruleWidth)
     return;
 
-  nscolor ruleColor;
-  if (colStyle->mColumnRuleColorIsForeground)
-    ruleColor = GetStyleColor()->mColor;
-  else
-    ruleColor = colStyle->mColumnRuleColor;
+  nscolor ruleColor =
+    GetVisitedDependentColor(eCSSProperty__moz_column_rule_color);
 
   // In order to re-use a large amount of code, we treat the column rule as a border.
   // We create a new border style object and fill in all the details of the column rule as
@@ -279,10 +276,10 @@ nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
                    contentRect.y);
 
     nsRect lineRect(linePt, ruleSize);
-    nsCSSRendering::PaintBorder(presContext, *aCtx, this, aDirtyRect,
-                                lineRect, border, GetStyleContext(),
-                                // Remember, we only have the "left" "border". Skip everything else
-                                (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
+    nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
+        aDirtyRect, lineRect, border, GetStyleContext(),
+        // Remember, we only have the "left" "border". Skip everything else
+        (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
 
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();

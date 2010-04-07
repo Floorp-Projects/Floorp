@@ -46,6 +46,7 @@
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupportsImpl.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -77,24 +78,7 @@ public:
    *    which are queued to fire their constructors.
    */
 
-  nsrefcnt AddRef()
-  {
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXBLBinding", sizeof(nsXBLBinding));
-    return mRefCnt;
-  }
-
-  nsrefcnt Release()
-  {
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsXBLBinding");
-    if (mRefCnt == 0) {
-      mRefCnt = 1;
-      delete this;
-      return 0;
-    }
-    return mRefCnt;
-  }
+  NS_INLINE_DECL_REFCOUNTING(nsXBLBinding)
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 
@@ -172,7 +156,6 @@ public:
 // MEMBER VARIABLES
 protected:
 
-  nsAutoRefCnt mRefCnt;
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.

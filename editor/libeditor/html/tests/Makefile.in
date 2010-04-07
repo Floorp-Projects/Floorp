@@ -53,6 +53,7 @@ _TEST_FILES = \
 		test_bug480972.html \
 		test_bug487524.html \
 		test_bug525389.html \
+		test_bug537046.html \
 		test_select_all_without_body.html \
 		file_select_all_without_body.html \
 		$(NULL)

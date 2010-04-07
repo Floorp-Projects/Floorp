@@ -443,41 +443,6 @@ public:
    */
   nsBidi();
 
-  /** @brief Preallocating constructor
-   * Allocate an <code>nsBidi</code>
-   * object with preallocated memory for internal structures.   This
-   * constructor provides an <code>nsBidi</code> object like
-   * the default constructor, but it also
-   * preallocates memory for internal structures according to the sizings
-   * supplied by the caller.<p> Subsequent functions will not allocate
-   * any more memory, and are thus guaranteed not to fail because of lack
-   * of memory.<p> The preallocation can be limited to some of the
-   * internal memory by setting some values to 0 here. That means that
-   * if, e.g., <code>aMaxRunCount</code> cannot be reasonably
-   * predetermined and should not be set to <code>aMaxLength</code> (the
-   * only failproof value) to avoid wasting memory, then
-   * <code>aMaxRunCount</code> could be set to 0 here and the internal
-   * structures that are associated with it will be allocated on demand,
-   * just like with the default constructor.
-   *
-   * If sufficient memory could not be allocated, no exception is thrown.
-   * Test whether mDirPropsSize == aMaxLength and/or mRunsSize == aMaxRunCount.
-   *
-   * @param aMaxLength is the maximum paragraph or line length that internal memory
-   *      will be preallocated for. An attempt to associate this object with a
-   *      longer text will fail, unless this value is 0, which leaves the allocation
-   *      up to the implementation.
-   *
-   * @param aMaxRunCount is the maximum anticipated number of same-level runs
-   *      that internal memory will be preallocated for. An attempt to access
-   *      visual runs on an object that was not preallocated for as many runs
-   *      as the text was actually resolved to will fail,
-   *      unless this value is 0, which leaves the allocation up to the implementation.<p>
-   *      The number of runs depends on the actual text and maybe anywhere between
-   *      1 and <code>aMaxLength</code>. It is typically small.<p>
-   */
-  nsBidi(PRUint32 aMaxLength, PRUint32 aMaxRunCount);
-
   /** @brief Destructor. */
   virtual ~nsBidi();
 

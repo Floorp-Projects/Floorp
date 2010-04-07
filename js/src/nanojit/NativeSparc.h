@@ -166,7 +166,7 @@ namespace nanojit
 
             FirstReg = 0,
             LastReg = 29,
-            deprecated_UnknownReg = 30
+            deprecated_UnknownReg = 30      // XXX: remove eventually, see bug 538924
         }
     Register;
 

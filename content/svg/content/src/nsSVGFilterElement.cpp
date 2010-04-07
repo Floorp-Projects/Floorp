@@ -78,6 +78,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
 NS_IMPL_ADDREF_INHERITED(nsSVGFilterElement,nsSVGFilterElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFilterElement,nsSVGFilterElementBase)
 
+DOMCI_DATA(SVGFilterElement, nsSVGFilterElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFilterElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFilterElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGFilterElement,
