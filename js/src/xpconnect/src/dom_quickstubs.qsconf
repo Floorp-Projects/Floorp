@@ -391,7 +391,7 @@ members = [
     # dom/interfaces/offline - None.
 
     # dom/interfaces/range
-    'nsIDOMRange.collapsed',
+    'nsIDOMRange.*',
 
     # dom/interfaces/sidebar - None.
 
