@@ -67,6 +67,8 @@ parent:
             nsCString           originalCharset, 
             nsCString           docUriSpec, 
             nsCString           docCharset, 
+            nsCString           referrerSpec,
+            nsCString           referrerCharset,
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
