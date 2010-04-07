@@ -3040,9 +3040,28 @@ static nsresult CreateNPAPIPlugin(const nsPluginTag *aPluginTag,
     fullPath = aPluginTag->mFullPath;
   }
 
-  return nsNPAPIPlugin::CreatePlugin(fullPath.get(),
-                                     aPluginTag->mLibrary,
-                                     aOutNPAPIPlugin);
+#if defined(XP_MACOSX) && !defined(__LP64__)
+  short appRefNum = ::CurResFile();
+  nsCOMPtr<nsILocalFile> pluginPath;
+  NS_NewNativeLocalFile(nsDependentCString(fullPath.get()), PR_TRUE,
+                        getter_AddRefs(pluginPath));
+  nsPluginFile pluginFile(pluginPath);
+  short pluginRefNum = pluginFile.OpenPluginResource();
+#endif
+
+  rv = nsNPAPIPlugin::CreatePlugin(fullPath.get(),
+                                   aPluginTag->mLibrary,
+                                   aOutNPAPIPlugin);
+
+#if defined(XP_MACOSX) && !defined(__LP64__)
+  if (NS_SUCCEEDED(rv))
+    static_cast<nsNPAPIPlugin*>(*aOutNPAPIPlugin)->SetPluginRefNum(pluginRefNum);
+  else if (pluginRefNum > 0)
+    ::CloseResFile(pluginRefNum);
+  ::UseResFile(appRefNum);
+#endif
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin)
