@@ -47,7 +47,7 @@
 
 interface nsIPluginInstance;
 
-[uuid(15246FD3-29FB-4354-8811-AD8B53661B71)]
+[uuid(843D6092-2BB0-4A21-8827-0510A52CA795)]
 interface nsIPlugin : nsISupports
 {
   /**
@@ -56,17 +56,6 @@ interface nsIPlugin : nsISupports
    * the specified MIME type.
    */
   void createPluginInstance(out nsIPluginInstance aResult);
-
-  /**
-   * Initializes the plugin and will be called before any new instances are
-   * created. It is passed browserInterfaces on which QueryInterface
-   * may be used to obtain an nsIPluginManager, and other interfaces.
-   *
-   * @param browserInterfaces - an object that allows access to other browser
-   * interfaces via QueryInterface
-   * @result - NS_OK if this operation was successful
-   */
-  void initialize();
 
   /**
    * Called when the browser is done with the plugin factory, or when
