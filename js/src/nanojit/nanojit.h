@@ -260,7 +260,7 @@ namespace nanojit {
     public:
         // All Nanojit and jstracer printing should be routed through
         // this function.
-        void printf( const char* format, ... ) PRINTF_CHECK(2,3);
+        virtual void printf( const char* format, ... ) PRINTF_CHECK(2,3);
 
         // An OR of LC_Bits values, indicating what should be output
         uint32_t lcbits;
