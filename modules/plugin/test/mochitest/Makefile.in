@@ -85,7 +85,6 @@ _MOCHITEST_FILES = \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
-  test_propertyAndMethod.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s

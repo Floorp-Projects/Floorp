@@ -107,11 +107,9 @@ public:
                     bool* aHasProperty);
 
   virtual bool
-  AnswerGetChildProperty(PPluginIdentifierChild* aId,
-                         bool* aHasProperty,
-                         bool* aHasMethod,
-                         Variant* aResult,
-                         bool* aSuccess);
+  AnswerGetProperty(PPluginIdentifierChild* aId,
+                    Variant* aResult,
+                    bool* aSuccess);
 
   virtual bool
   AnswerSetProperty(PPluginIdentifierChild* aId,
