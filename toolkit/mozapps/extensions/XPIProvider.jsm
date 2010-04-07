@@ -3123,9 +3123,10 @@ function AddonInstall(callback, installLocation, url, hash, name, type, iconURL,
         // TODO Should we send some event here?
         this.state = AddonManager.STATE_CHECKING;
         new UpdateChecker(self.addon, {
-          onUpdateFinished: function(addon, status) {
+          onUpdateFinished: function(addon) {
             XPIProvider.installs.push(self);
-            AddonManagerPrivate.callInstallListeners("onNewInstall", self.listeners,
+            AddonManagerPrivate.callInstallListeners("onNewInstall",
+                                                     self.listeners,
                                                      self.wrapper);
 
             callback(self);
@@ -3484,7 +3485,7 @@ AddonInstall.prototype = {
             this.state = AddonManager.STATE_CHECKING;
             let self = this;
             new UpdateChecker(this.addon, {
-              onUpdateFinished: function(addon, status) {
+              onUpdateFinished: function(addon) {
                 self.downloadCompleted();
               }
             }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
@@ -3863,19 +3864,30 @@ UpdateChecker.prototype = {
       if ("onCompatibilityUpdated" in this.listener)
         this.listener.onCompatibilityUpdated(createWrapper(this.addon));
     }
-    if ("onUpdateAvailable" in this.listener) {
-      let update = AUC.getNewestCompatibleUpdate(updates, this.appVersion,
-                                                 this.platformVersion);
-      if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
+
+    let update = AUC.getNewestCompatibleUpdate(updates,
+                                               this.appVersion,
+                                               this.platformVersion);
+    if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
+      if ("onUpdateAvailable" in this.listener) {
         let self = this;
         AddonInstall.createUpdate(function(install) {
           self.listener.onUpdateAvailable(createWrapper(self.addon),
                                           install.wrapper);
+          if ("onUpdateFinished" in self.listener)
+            self.listener.onUpdateFinished(createWrapper(self.addon));
         }, this.addon, update);
       }
+      else if ("onUpdateFinished" in this.listener) {
+        this.listener.onUpdateFinished(createWrapper(this.addon));
+      }
     }
-    if ("onUpdateFinished" in this.listener)
-      this.listener.onUpdateFinished(createWrapper(this.addon), 0);
+    else {
+      if ("onNoUpdateAvailable" in this.listener)
+        this.listener.onNoUpdateAvailable(createWrapper(this.addon));
+      if ("onUpdateFinished" in this.listener)
+        this.listener.onUpdateFinished(createWrapper(this.addon));
+    }
   },
 
   /**
@@ -3885,8 +3897,10 @@ UpdateChecker.prototype = {
    *          An error status
    */
   onUpdateCheckError: function UC_onUpdateCheckError(error) {
+    if ("onNoUpdateAvailable" in this.listener)
+      this.listener.onNoUpdateAvailable(createWrapper(this.addon), error);
     if ("onUpdateFinished" in this.listener)
-      this.listener.onUpdateFinished(createWrapper(this.addon), error);
+      this.listener.onUpdateFinished(createWrapper(this.addon));
   }
 };
 
