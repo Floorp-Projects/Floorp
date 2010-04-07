@@ -1502,34 +1502,21 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
 JS_STATIC_INTERPRET JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 {
-    jsval v;
-    jsdouble d;
-
-    v = *vp;
-    if (JSVAL_IS_DOUBLE(v)) {
-        d = *JSVAL_TO_DOUBLE(v);
-    } else if (JSVAL_IS_INT(v)) {
-        d = JSVAL_TO_INT(v);
-    } else {
-        d = js_ValueToNumber(cx, vp);
-        if (JSVAL_IS_NULL(*vp))
+    if (cs->format & JOF_POST) {
+        double d;
+        if (!ValueToNumberValue(cx, vp, &d))
             return JS_FALSE;
-        JS_ASSERT(JSVAL_IS_NUMBER(*vp) || *vp == JSVAL_TRUE);
-
-        /* Store the result of v conversion back in vp for post increments. */
-        if ((cs->format & JOF_POST) &&
-            *vp == JSVAL_TRUE
-            && !js_NewNumberInRootedValue(cx, d, vp)) {
-            return JS_FALSE;
-        }
+        (cs->format & JOF_INC) ? ++d : --d;
+        return js_NewNumberInRootedValue(cx, d, vp2);
     }
 
-    (cs->format & JOF_INC) ? d++ : d--;
+    double d;
+    if (!ValueToNumber(cx, *vp, &d))
+        return JS_FALSE;
+    (cs->format & JOF_INC) ? ++d : --d;
     if (!js_NewNumberInRootedValue(cx, d, vp2))
         return JS_FALSE;
-
-    if (!(cs->format & JOF_POST))
-        *vp = *vp2;
+    *vp = *vp2;
     return JS_TRUE;
 }
 
@@ -1994,55 +1981,25 @@ namespace reprmeter {
         jsval v_;                                                             \
                                                                               \
         v_ = FETCH_OPND(n);                                                   \
-        VALUE_TO_NUMBER(cx, n, v_, d);                                        \
+        VALUE_TO_NUMBER(cx, v_, d);                                           \
     JS_END_MACRO
 
 #define FETCH_INT(cx, n, i)                                                   \
     JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        v_= FETCH_OPND(n);                                                    \
-        if (JSVAL_IS_INT(v_)) {                                               \
-            i = JSVAL_TO_INT(v_);                                             \
-        } else {                                                              \
-            i = js_ValueToECMAInt32(cx, &regs.sp[n]);                         \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-        }                                                                     \
+        if (!ValueToECMAInt32(cx, regs.sp[n], &i))                            \
+            goto error;                                                       \
     JS_END_MACRO
 
 #define FETCH_UINT(cx, n, ui)                                                 \
     JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        v_= FETCH_OPND(n);                                                    \
-        if (JSVAL_IS_INT(v_)) {                                               \
-            ui = (uint32) JSVAL_TO_INT(v_);                                   \
-        } else {                                                              \
-            ui = js_ValueToECMAUint32(cx, &regs.sp[n]);                       \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-        }                                                                     \
+        if (!ValueToECMAUint32(cx, regs.sp[n], &ui))                          \
+            goto error;                                                       \
     JS_END_MACRO
 
-/*
- * Optimized conversion macros that test for the desired type in v before
- * homing sp and calling a conversion function.
- */
-#define VALUE_TO_NUMBER(cx, n, v, d)                                          \
+#define VALUE_TO_NUMBER(cx, v, d)                                             \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (JSVAL_IS_INT(v)) {                                                \
-            d = (jsdouble)JSVAL_TO_INT(v);                                    \
-        } else if (JSVAL_IS_DOUBLE(v)) {                                      \
-            d = *JSVAL_TO_DOUBLE(v);                                          \
-        } else {                                                              \
-            d = js_ValueToNumber(cx, &regs.sp[n]);                            \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-            JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) ||                          \
-                      regs.sp[n] == JSVAL_TRUE);                              \
-        }                                                                     \
+        if (!ValueToNumber(cx, v, &d))                                        \
+            goto error;                                                       \
     JS_END_MACRO
 
 #define POP_BOOLEAN(cx, v, b)                                                 \
@@ -2316,7 +2273,7 @@ js_Interpret(JSContext *cx)
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
-    jsint i, j;
+    int32_t i, j;
     jsdouble d, d2;
     JSClass *clasp;
     JSFunction *fun;

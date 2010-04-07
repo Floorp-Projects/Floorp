@@ -71,6 +71,8 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+using namespace js;
+
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.
  * Here is an script:
@@ -585,13 +587,12 @@ date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
 {
     uintN loop;
     jsdouble array[MAXARGS];
-    jsdouble d;
     jsdouble msec_time;
 
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < argc) {
-            d = js_ValueToNumber(cx, &argv[loop]);
-            if (JSVAL_IS_NULL(argv[loop]))
+            jsdouble d;
+            if (!ValueToNumber(cx, argv[loop], &d))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
@@ -1529,8 +1530,8 @@ date_setTime(JSContext *cx, uintN argc, jsval *vp)
         return true;
     }
 
-    jsdouble result = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    jsdouble result;
+    if (!ValueToNumber(cx, vp[2], &result))
         return false;
 
     return SetUTCTime(cx, obj, TIMECLIP(result), vp);
@@ -1576,8 +1577,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        args[i] = js_ValueToNumber(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i]))
+        if (!ValueToNumber(cx, argv[i], &args[i]))
             return false;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1700,8 +1700,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        args[i] = js_ValueToNumber(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i]))
+        if (!ValueToNumber(cx, argv[i], &args[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1797,8 +1796,8 @@ date_setYear(JSContext *cx, uintN argc, jsval *vp)
         return true;
     }
 
-    jsdouble year = js_ValueToNumber(cx, &vp[2]);
-    if (JSVAL_IS_NULL(vp[2]))
+    jsdouble year;
+    if (!ValueToNumber(cx, vp[2], &year))
         return false;
     if (!JSDOUBLE_IS_FINITE(year)) {
         SetDateToNaN(cx, obj, vp);
@@ -2333,8 +2332,7 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else if (argc == 1) {
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
-            d = js_ValueToNumber(cx, &argv[0]);
-            if (JSVAL_IS_NULL(argv[0]))
+            if (!ValueToNumber(cx, argv[0], &d))
                 return JS_FALSE;
             d = TIMECLIP(d);
         } else {
