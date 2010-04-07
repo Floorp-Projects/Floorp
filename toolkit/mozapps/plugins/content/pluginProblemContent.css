@@ -31,6 +31,12 @@ html|applet:not([height]), html|applet[height=""] {
   width: inherit;
   height: inherit;
   overflow: hidden;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.mainBox[chromedir="rtl"] {
+  direction: rtl;
 }
 
 .msg {
@@ -61,9 +67,4 @@ html|applet:not([height]), html|applet[height=""] {
 
 .helpIcon {
   cursor: pointer;
-}
-
-.mainBox[chromedir="rtl"] {
-  direction: rtl;
-  unicode-bidi: embed;
 }
