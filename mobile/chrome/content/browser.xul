@@ -451,11 +451,13 @@
     <!-- titlebar autocomplete results -->
     <vbox id="popup_autocomplete" class="panel-dark" hidden="true">
       <arrowscrollbox id="autocomplete_navbuttons"
+                      style="-moz-user-focus: ignore;"
                       align="center"
                       flex="1"
                       orient="horizontal">
         <image class="tool-search"/>
-        <radiogroup id="search-buttons" class="toggle-dark" onclick="BrowserUI.doButtonSearch(event.target);">
+        <radiogroup id="search-buttons" class="toggle-dark" style="-moz-user-focus: ignore;"
+                    onclick="BrowserUI.doButtonSearch(event.target);">
         </radiogroup>
       </arrowscrollbox>
     </vbox>
