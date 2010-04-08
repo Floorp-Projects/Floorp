@@ -1471,7 +1471,7 @@ static JSBool
 AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom)
 {
     JS_LOCK_OBJ(cx, obj);
-    JSScope *scope = OBJ_SCOPE(obj);
+    JSScope *scope = obj->scope();
     bool found = scope->hasProperty(ATOM_TO_JSID(atom));
     JS_UNLOCK_SCOPE(cx, scope);
     return found;
@@ -2766,13 +2766,13 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return JS_FALSE;
     }
 
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
 
 #if defined JS_THREADSAFE && defined DEBUG
     /* Insist on scope being used exclusively by cx's thread. */
     if (scope->title.ownercx != cx) {
         JS_LOCK_OBJ(cx, obj);
-        JS_ASSERT(OBJ_SCOPE(obj) == scope);
+        JS_ASSERT(obj->scope() == scope);
         JS_ASSERT(scope->title.ownercx == cx);
         JS_UNLOCK_SCOPE(cx, scope);
     }
@@ -3073,12 +3073,12 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
             AutoScopePropertyRooter root(cx, sprop);
             JS_UNLOCK_OBJ(cx, obj2);
             *vp = sprop->methodValue();
-            return OBJ_SCOPE(obj2)->methodReadBarrier(cx, sprop, vp);
+            return obj2->scope()->methodReadBarrier(cx, sprop, vp);
         }
 
         /* Peek at the native property's slot value, without doing a Get. */
-        *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
-               ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
+        *vp = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
+               ? obj2->lockedGetSlot(sprop->slot)
                : JSVAL_TRUE;
     } else if (obj2->isDenseArray()) {
         ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
@@ -3121,8 +3121,8 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             desc->getter = sprop->getter();
             desc->setter = sprop->setter();
-            desc->value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
-                          ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
+            desc->value = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
+                          ? obj2->lockedGetSlot(sprop->slot)
                           : JSVAL_VOID;
         } else {
             desc->getter = NULL;
@@ -3262,7 +3262,7 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
     }
 
     JS_LOCK_OBJ(cx, obj);
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
     *foundp = scope->hasProperty(id);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
@@ -3950,7 +3950,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     if (obj->isNative()) {
         /* Native case: start with the last property in obj's own scope. */
-        scope = OBJ_SCOPE(obj);
+        scope = obj->scope();
         pdata = scope->lastProperty();
         index = -1;
     } else {
@@ -3989,7 +3989,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         /* Native case: private data is a property tree node pointer. */
         obj = iterobj->getParent();
         JS_ASSERT(obj->isNative());
-        scope = OBJ_SCOPE(obj);
+        scope = obj->scope();
         sprop = (JSScopeProperty *) iterobj->getPrivate();
 
         /*

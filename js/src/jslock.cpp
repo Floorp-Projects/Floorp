@@ -690,7 +690,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * Native object locking is inlined here to optimize the single-threaded
      * and contention-free multi-threaded cases.
      */
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
     title = &scope->title;
     JS_ASSERT(title->ownercx != cx);
     JS_ASSERT(slot < scope->freeslot);
@@ -718,7 +718,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
          * require either a restart from the top of this routine, or a thin
          * lock release followed by fat lock acquisition.
          */
-        if (scope == OBJ_SCOPE(obj)) {
+        if (scope == obj->scope()) {
             v = obj->getSlot(slot);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
@@ -749,7 +749,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * object's scope (whose lock was not flyweight, else we wouldn't be here
      * in the first place!).
      */
-    title = &OBJ_SCOPE(obj)->title;
+    title = &obj->scope()->title;
     if (title->ownercx != cx)
         js_UnlockTitle(cx, title);
     return v;
@@ -778,7 +778,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      * Native object locking is inlined here to optimize the single-threaded
      * and contention-free multi-threaded cases.
      */
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
     title = &scope->title;
     JS_ASSERT(title->ownercx != cx);
     JS_ASSERT(slot < scope->freeslot);
@@ -792,7 +792,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        LOCKED_OBJ_SET_SLOT(obj, slot, v);
+        obj->lockedSetSlot(slot, v);
         return;
     }
 
@@ -801,8 +801,8 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     me = CX_THINLOCK_ID(cx);
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me)) {
-        if (scope == OBJ_SCOPE(obj)) {
-            LOCKED_OBJ_SET_SLOT(obj, slot, v);
+        if (scope == obj->scope()) {
+            obj->lockedSetSlot(slot, v);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -815,18 +815,18 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         if (!NativeCompareAndSwap(&tl->owner, me, 0))
             js_Dequeue(tl);
     } else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        LOCKED_OBJ_SET_SLOT(obj, slot, v);
+        obj->lockedSetSlot(slot, v);
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    LOCKED_OBJ_SET_SLOT(obj, slot, v);
+    obj->lockedSetSlot(slot, v);
 
     /*
      * Same drill as above, in js_GetSlotThreadSafe.
      */
-    title = &OBJ_SCOPE(obj)->title;
+    title = &obj->scope()->title;
     if (title->ownercx != cx)
         js_UnlockTitle(cx, title);
 }
@@ -1321,7 +1321,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
         return;
 
     for (;;) {
-        scope = OBJ_SCOPE(obj);
+        scope = obj->scope();
         title = &scope->title;
         if (scope->sealed() && !cx->lockedSealedTitle) {
             cx->lockedSealedTitle = title;
@@ -1331,7 +1331,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
         js_LockTitle(cx, title);
 
         /* If obj still has this scope, we're done. */
-        if (scope == OBJ_SCOPE(obj))
+        if (scope == obj->scope())
             return;
 
         /* Lost a race with a mutator; retry with obj's new scope. */
@@ -1343,7 +1343,7 @@ void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
-    js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
+    js_UnlockTitle(cx, &obj->scope()->title);
 }
 
 void
@@ -1392,7 +1392,7 @@ js_IsRuntimeLocked(JSRuntime *rt)
 JSBool
 js_IsObjLocked(JSContext *cx, JSObject *obj)
 {
-    return js_IsTitleLocked(cx, &OBJ_SCOPE(obj)->title);
+    return js_IsTitleLocked(cx, &obj->scope()->title);
 }
 
 JSBool

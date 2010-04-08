@@ -541,17 +541,31 @@ JS_IS_SCOPE_LOCKED(JSContext *cx, JSScope *scope)
 }
 
 inline JSScope *
-OBJ_SCOPE(JSObject *obj)
+JSObject::scope() const
 {
-    JS_ASSERT(obj->isNative());
-    return (JSScope *) obj->map;
+    JS_ASSERT(isNative());
+    return (JSScope *) map;
 }
 
 inline uint32
-OBJ_SHAPE(JSObject *obj)
+JSObject::shape() const
 {
-    JS_ASSERT(obj->map->shape != JSObjectMap::SHAPELESS);
-    return obj->map->shape;
+    JS_ASSERT(map->shape != JSObjectMap::SHAPELESS);
+    return map->shape;
+}
+
+inline jsval
+JSObject::lockedGetSlot(uintN slot) const
+{
+    OBJ_CHECK_SLOT(this, slot);
+    return this->getSlot(slot);
+}
+
+inline void
+JSObject::lockedSetSlot(uintN slot, jsval value)
+{
+    OBJ_CHECK_SLOT(this, slot);
+    this->setSlot(slot, value);
 }
 
 /*
@@ -973,7 +987,7 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
     if (isMethod()) {
         *vp = methodValue();
 
-        JSScope *scope = OBJ_SCOPE(pobj);
+        JSScope *scope = pobj->scope();
         JS_ASSERT(scope->object == pobj);
         return scope->methodReadBarrier(cx, this, vp);
     }

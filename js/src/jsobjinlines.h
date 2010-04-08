@@ -51,18 +51,18 @@ JSObject::getSlotMT(JSContext *cx, uintN slot)
     /*
      * If thread-safe, define a getSlotMT() that bypasses, for a native
      * object, the lock-free "fast path" test of
-     * (OBJ_SCOPE(obj)->ownercx == cx), to avoid needlessly switching from
+     * (obj->scope()->ownercx == cx), to avoid needlessly switching from
      * lock-free to lock-full scope when doing GC on a different context
      * from the last one to own the scope.  The caller in this case is
      * probably a JSClass.mark function, e.g., fun_mark, or maybe a
      * finalizer.
      */
     OBJ_CHECK_SLOT(this, slot);
-    return (OBJ_SCOPE(this)->title.ownercx == cx)
-           ? LOCKED_OBJ_GET_SLOT(this, slot)
+    return (scope()->title.ownercx == cx)
+           ? this->lockedGetSlot(slot)
            : js_GetSlotThreadSafe(cx, this, slot);
 #else
-    return LOCKED_OBJ_GET_SLOT(this, slot);
+    return this->lockedGetSlot(slot);
 #endif
 }
 
@@ -72,12 +72,12 @@ JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value)
 #ifdef JS_THREADSAFE
     /* Thread-safe way to set a slot. */
     OBJ_CHECK_SLOT(this, slot);
-    if (OBJ_SCOPE(this)->title.ownercx == cx)
-        LOCKED_OBJ_SET_SLOT(this, slot, value);
+    if (scope()->title.ownercx == cx)
+        this->lockedSetSlot(slot, value);
     else
         js_SetSlotThreadSafe(cx, this, slot, value);
 #else
-    LOCKED_OBJ_SET_SLOT(this, slot, value);
+    this->lockedSetSlot(slot, value);
 #endif
 }
 
@@ -148,7 +148,7 @@ JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *paren
 {
     init(clasp, proto, parent, privateSlotValue);
 
-    JSEmptyScope *emptyScope = OBJ_SCOPE(proto)->emptyScope;
+    JSEmptyScope *emptyScope = proto->scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
     emptyScope->hold();
     map = emptyScope;
@@ -167,7 +167,7 @@ JSObject::unbrand(JSContext *cx)
 {
     if (this->isNative()) {
         JS_LOCK_OBJ(cx, this);
-        JSScope *scope = OBJ_SCOPE(this);
+        JSScope *scope = this->scope();
         if (scope->isSharedEmpty()) {
             scope = js_GetMutableScope(cx, this);
             if (!scope) {

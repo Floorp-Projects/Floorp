@@ -204,7 +204,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JS_LOCK_OBJ(cx, obj);
 
     uint32 slot = sprop->slot;
-    JSScope* scope = OBJ_SCOPE(obj);
+    JSScope* scope = obj->scope();
     if (slot != scope->freeslot)
         goto exit_trace;
     JS_ASSERT(sprop->parent == scope->lastProperty());

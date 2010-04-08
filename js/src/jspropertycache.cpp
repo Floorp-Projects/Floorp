@@ -71,7 +71,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * Check for fill from js_SetPropertyHelper where the setter removed sprop
      * from pobj's scope (via unwatch or delete, e.g.).
      */
-    scope = OBJ_SCOPE(pobj);
+    scope = pobj->scope();
     if (!scope->hasProperty(sprop)) {
         PCMETER(oddfills++);
         return JS_NO_PROP_CACHE_FILL;
@@ -149,7 +149,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 JS_ASSERT(scope->hasMethodBarrier());
                 v = sprop->methodValue();
                 JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
-                JS_ASSERT(v == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
+                JS_ASSERT(v == pobj->lockedGetSlot(sprop->slot));
                 vword.setObject(JSVAL_TO_OBJECT(v));
                 break;
             }
@@ -157,7 +157,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
             if (!scope->generic() &&
                 sprop->hasDefaultGetter() &&
                 SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+                v = pobj->lockedGetSlot(sprop->slot);
                 if (VALUE_IS_FUNCTION(cx, v)) {
                     /*
                      * Great, we have a function-valued prototype property
@@ -179,7 +179,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                                 pobj, pobj->getClass()->name,
                                 JSVAL_TO_OBJECT(v),
                                 JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
-                                OBJ_SHAPE(obj));
+                                obj->shape());
 #endif
                         if (!scope->brand(cx, sprop->slot, v))
                             return JS_NO_PROP_CACHE_FILL;
@@ -246,7 +246,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                     JSObject *proto = obj->getProto();
                     if (!proto || !proto->isNative())
                         return JS_NO_PROP_CACHE_FILL;
-                    JSScope *protoscope = OBJ_SCOPE(proto);
+                    JSScope *protoscope = proto->scope();
                     if (!protoscope->emptyScope ||
                         protoscope->emptyScope->clasp != obj->getClass()) {
                         return JS_NO_PROP_CACHE_FILL;
@@ -264,7 +264,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     } while (0);
 
     if (kshape == 0) {
-        kshape = OBJ_SHAPE(obj);
+        kshape = obj->shape();
         vshape = scope->shape;
     }
     JS_ASSERT(kshape < SHAPE_OVERFLOW_BIT);
@@ -354,7 +354,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
                 pc - cx->fp->script->code,
                 entry->kpc - cx->fp->script->code,
                 entry->kshape,
-                OBJ_SHAPE(obj));
+                obj->shape());
                 js_Disassemble1(cx, cx->fp->script, pc,
                                 pc - cx->fp->script->code,
                                 JS_FALSE, stderr);
@@ -401,8 +401,8 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         jsid id = ATOM_TO_JSID(atom);
 
         id = js_CheckForStringIndex(id);
-        JS_ASSERT(OBJ_SCOPE(pobj)->lookup(id));
-        JS_ASSERT_IF(OBJ_SCOPE(pobj)->object, OBJ_SCOPE(pobj)->object == pobj);
+        JS_ASSERT(pobj->scope()->lookup(id));
+        JS_ASSERT_IF(pobj->scope()->object, pobj->scope()->object == pobj);
 #endif
         *pobjp = pobj;
         return NULL;

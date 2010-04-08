@@ -1120,7 +1120,7 @@ GlobalSlotHash(JSContext* cx, unsigned slot)
         fp = fp->down;
 
     HashAccum(h, uintptr_t(fp->script), ORACLE_MASK);
-    HashAccum(h, uintptr_t(OBJ_SHAPE(fp->scopeChain->getGlobal())), ORACLE_MASK);
+    HashAccum(h, uintptr_t(fp->scopeChain->getGlobal()->shape()), ORACLE_MASK);
     HashAccum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
@@ -1539,7 +1539,7 @@ AttemptCompilation(JSContext *cx, JSObject* globalObj, jsbytecode* pc, uint32 ar
     ResetRecordingAttempts(cx, pc);
 
     /* Breathe new life into all peer fragments at the designated loop header. */
-    TreeFragment* f = LookupLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj), argc);
+    TreeFragment* f = LookupLoop(tm, pc, globalObj, globalObj->shape(), argc);
     if (!f) {
         /*
          * If the global object's shape changed, we can't easily find the
@@ -2212,7 +2212,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
                       fragment->profFragID);
 
     debug_only_printf(LC_TMTracer, "globalObj=%p, shape=%d\n",
-                      (void*)this->globalObj, OBJ_SHAPE(this->globalObj));
+                      (void*)this->globalObj, this->globalObj->shape());
     debug_only_printf(LC_TMTreeVis, "TREEVIS RECORD FRAG=%p ANCHOR=%p\n", (void*)fragment,
                       (void*)anchor);
 #endif
@@ -5255,11 +5255,11 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
         // it's there now, if found in a non-native object.
         status = RECORD_STOP;
     } else {
-        JSScope* scope = OBJ_SCOPE(pobj);
+        JSScope* scope = pobj->scope();
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
         if (sprop->hasDefaultGetterOrIsMethod() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
-            jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+            jsval v = pobj->lockedGetSlot(sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
                 if (!scope->generic() && !scope->branded() && !scope->brand(cx, sprop->slot, v))
@@ -5300,7 +5300,7 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
         return false;
     }
 
-    uint32 globalShape = OBJ_SHAPE(globalObj);
+    uint32 globalShape = globalObj->shape();
 
     if (tm->recorder) {
         TreeFragment* root = tm->recorder->getFragment()->root;
@@ -5915,7 +5915,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (OBJ_SCOPE(cx->fp->scopeChain->getGlobal())->title.ownercx != cx) {
+    if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return false; /* we stay away from shared global objects */
     }
@@ -6445,7 +6445,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
     JS_ASSERT(f->globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
     JS_ASSERT(f->nGlobalTypes() == f->globalSlots->length());
     JS_ASSERT_IF(f->globalSlots->length() != 0,
-                 OBJ_SHAPE(f->globalObj) == f->globalShape);
+                 f->globalObj->shape() == f->globalShape);
     return true;
 }
 
@@ -7864,7 +7864,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
             obj2->dropProperty(cx, prop);
             RETURN_STOP_A("prototype property");
         }
-        if (!isValidSlot(OBJ_SCOPE(obj), sprop)) {
+        if (!isValidSlot(obj->scope(), sprop)) {
             obj2->dropProperty(cx, prop);
             return ARECORD_STOP;
         }
@@ -9012,7 +9012,7 @@ static FILE* shapefp = NULL;
 static void
 DumpShape(JSObject* obj, const char* prefix)
 {
-    JSScope* scope = OBJ_SCOPE(obj);
+    JSScope* scope = obj->scope();
 
     if (!shapefp) {
         shapefp = fopen("/tmp/shapes.dump", "w");
@@ -9265,7 +9265,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
     // For any hit that goes up the scope and/or proto chains, we will need to
     // guard on the shape of the object containing the property.
     if (entry->vcapTag() >= 1) {
-        JS_ASSERT(OBJ_SHAPE(obj2) == vshape);
+        JS_ASSERT(obj2->shape() == vshape);
         if (obj2 == globalObj)
             RETURN_STOP("hitting the global object via a prototype chain");
 
@@ -9567,7 +9567,7 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
         return RECORD_STOP;
 
     while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit))
-        CHECK_STATUS(guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)", exit));
+        CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard(shape)", exit));
     return RECORD_CONTINUE;
 }
 
@@ -10359,7 +10359,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     // that pval is usable.
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(pval));
     JSObject *proto = JSVAL_TO_OBJECT(pval);
-    JS_ASSERT_IF(clasp != &js_ArrayClass, OBJ_SCOPE(proto)->emptyScope->clasp == clasp);
+    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->scope()->emptyScope->clasp == clasp);
 
     proto_ins = INS_CONSTOBJ(proto);
     return RECORD_CONTINUE;
@@ -10383,7 +10383,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
     /* Double-check that a native proto has a matching emptyScope. */
     if (key != JSProto_Array) {
         JS_ASSERT(proto->isNative());
-        JSEmptyScope *emptyScope = OBJ_SCOPE(proto)->emptyScope;
+        JSEmptyScope *emptyScope = proto->scope()->emptyScope;
         JS_ASSERT(emptyScope);
         JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(emptyScope->clasp) == key);
     }
@@ -11165,7 +11165,7 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
                          jsval v, LIns* v_ins)
 {
-    JSScope* scope = OBJ_SCOPE(obj);
+    JSScope* scope = obj->scope();
     uint32 slot = sprop->slot;
 
     /*
@@ -11219,7 +11219,7 @@ MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObjec
 {
     AutoValueRooter tvr(cx, funobj);
 
-    return OBJ_SCOPE(obj)->methodWriteBarrier(cx, sprop, tvr.value());
+    return obj->scope()->methodWriteBarrier(cx, sprop, tvr.value());
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
                      0, ACC_STORE_ANY)
@@ -11246,7 +11246,7 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    JS_ASSERT_IF(entry->directHit(), OBJ_SCOPE(obj)->hasProperty(sprop));
+    JS_ASSERT_IF(entry->directHit(), obj->scope()->hasProperty(sprop));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
@@ -11259,7 +11259,7 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
         obj2 = obj2->getParent();
     for (jsuword j = entry->protoIndex(); j; j--)
         obj2 = obj2->getProto();
-    JSScope *scope = OBJ_SCOPE(obj2);
+    JSScope *scope = obj2->scope();
     JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
     // Guard before anything else.
@@ -12747,7 +12747,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
     if (pcval.isSprop()) {
         JSScopeProperty* sprop = pcval.toSprop();
-        if (!isValidSlot(OBJ_SCOPE(obj), sprop))
+        if (!isValidSlot(obj->scope(), sprop))
             RETURN_STOP_A("name() not accessing a valid slot");
         slot = sprop->slot;
     } else {
@@ -12770,7 +12770,7 @@ MethodReadBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject
 {
     AutoValueRooter tvr(cx, funobj);
 
-    if (!OBJ_SCOPE(obj)->methodReadBarrier(cx, sprop, tvr.addr()))
+    if (!obj->scope()->methodReadBarrier(cx, sprop, tvr.addr()))
         return NULL;
     JS_ASSERT(VALUE_IS_FUNCTION(cx, tvr.value()));
     return JSVAL_TO_OBJECT(tvr.value());
@@ -12840,7 +12840,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
             if (obj->isNative()) {
-                CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, OBJ_SHAPE(obj),
+                CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, obj->shape(),
                                                        "guard(shape)", exit)));
             } else if (!guardDenseArray(obj, obj_ins, exit)) {
                 RETURN_STOP_A("non-native object involved in undefined property access");
@@ -12868,7 +12868,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
 
     if (pcval.isSprop()) {
         sprop = pcval.toSprop();
-        JS_ASSERT(OBJ_SCOPE(obj2)->hasProperty(sprop));
+        JS_ASSERT(obj2->scope()->hasProperty(sprop));
 
         if (setflags && !sprop->hasDefaultSetter())
             RETURN_STOP_A("non-stub setter");
@@ -12883,11 +12883,11 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
                 return InjectStatus(getPropertyWithNativeGetter(obj_ins, sprop, outp));
             return InjectStatus(getPropertyById(obj_ins, outp));
         }
-        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
+        if (!SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
             RETURN_STOP_A("no valid slot");
         slot = sprop->slot;
         isMethod = sprop->isMethod();
-        JS_ASSERT_IF(isMethod, OBJ_SCOPE(obj2)->hasMethodBarrier());
+        JS_ASSERT_IF(isMethod, obj2->scope()->hasMethodBarrier());
     } else {
         if (!pcval.isSlot())
             RETURN_STOP_A("PCE is not a slot");
@@ -13634,7 +13634,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
                 if (!exit)
                     exit = snapshot(BRANCH_EXIT);
                 guard(true,
-                      addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard_shape"),
+                      addName(lir->ins2i(LIR_eq, shape_ins, obj->shape()), "guard_shape"),
                       exit);
             }
         }
