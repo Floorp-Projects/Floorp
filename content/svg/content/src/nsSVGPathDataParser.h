@@ -49,7 +49,7 @@ class nsSVGPathList;
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathDataParser: a simple recursive descent parser that builds
-// nsIDOMPathSegs from path data strings. The grammar for path data
+// nsIDOMSVGPathSegs from path data strings. The grammar for path data
 // can be found in SVG CR 20001102, chapter 8.
 
 class nsSVGPathDataParser : public nsSVGDataParser
