@@ -2630,8 +2630,14 @@ ProgressController.prototype = {
   _networkStart: function _networkStart() {
     this._tab.startLoading();
 
-    if (this._tab == Browser.selectedTab)
+    if (this._tab == Browser.selectedTab) {
       BrowserUI.update(TOOLBARSTATE_LOADING);
+
+      // We should at least show something in the URLBar until
+      // the load has progressed further along
+      if (this._tab.browser.currentURI.spec == "about:blank")
+        BrowserUI.updateURI();
+    }
 
     // broadcast a URLChanged message for consumption by InputHandler
     let event = document.createEvent("Events");
