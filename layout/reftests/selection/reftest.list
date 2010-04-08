@@ -25,3 +25,6 @@
 == extend-4a.html extend-4-ref.html
 == extend-4b.html extend-4-ref.html
 != pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html
+# These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == non-themed-widget.html non-themed-widget-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == themed-widget.html themed-widget-ref.html

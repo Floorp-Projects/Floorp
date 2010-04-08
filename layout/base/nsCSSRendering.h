@@ -204,17 +204,17 @@ struct nsCSSRendering {
   }
 
   /**
-   * Find a style context containing a non-transparent background,
+   * Find a frame which draws a non-transparent background,
    * for various table-related and HR-related backwards-compatibility hacks.
-   * This function will also stop if it finds a -moz-appearance value, as
-   * the theme may draw a widget as a background.
+   * This function will also stop if it finds themed frame which might draw
+   * background.
    *
    * Be very hesitant if you're considering calling this function -- it's
    * usually not what you want.
    */
-  static nsStyleContext*
-  FindNonTransparentBackground(nsStyleContext* aContext,
-                               PRBool aStartAtParent = PR_FALSE);
+  static nsIFrame*
+  FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
+                                    PRBool aStartAtParent = PR_FALSE);
 
   /**
    * Determine the background color to draw taking into account print settings.

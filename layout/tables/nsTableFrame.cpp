@@ -6114,9 +6114,9 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
                    NS_STYLE_DIRECTION_LTR;
   mColInc = (mTableIsLTR) ? 1 : -1;
 
-  nsStyleContext* bgContext =
-    nsCSSRendering::FindNonTransparentBackground(mTable->GetStyleContext());
-  mTableBgColor = bgContext->GetStyleBackground();
+  nsIFrame* bgFrame =
+    nsCSSRendering::FindNonTransparentBackgroundFrame(aTable);
+  mTableBgColor = bgFrame->GetStyleBackground();
 }
 
 /**
