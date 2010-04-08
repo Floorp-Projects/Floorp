@@ -436,6 +436,22 @@ public:
                                     PRBool aIgnoreRootScrollFrame = PR_FALSE);
 
   /**
+   * Given aFrame, the root frame of a stacking context, find all descendant
+   * frames under the area of a rectangle that receives a mouse event,
+   * or nsnull if there is no such frame.
+   * @param aRect the rect, relative to the frame origin
+   * @param aOutFrames an array to add all the frames found
+   * @param aShouldIgnoreSuppression a boolean to control if the display
+   * list builder should ignore paint suppression or not
+   * @param aIgnoreRootScrollFrame whether or not the display list builder
+   * should ignore the root scroll frame.
+   */
+  static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
+                                   nsTArray<nsIFrame*> &aOutFrames,
+                                   PRBool aShouldIgnoreSuppression = PR_FALSE,
+                                   PRBool aIgnoreRootScrollFrame = PR_FALSE);
+
+  /**
    * Given a point in the global coordinate space, returns that point expressed
    * in the coordinate system of aFrame.  This effectively inverts all transforms
    * between this point and the root frame.
