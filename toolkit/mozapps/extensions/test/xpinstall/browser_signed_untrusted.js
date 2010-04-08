@@ -3,7 +3,7 @@
 // InstallTrigger call in web content.
 function test() {
   Harness.installConfirmCallback = confirm_install;
-  Harness.installEndedCallback = download_failed;
+  Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
@@ -18,15 +18,21 @@ function test() {
 }
 
 function confirm_install(window) {
-  ok(false, "Should not offer to install");
+  items = window.document.getElementById("itemList").childNodes;
+  is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
+  is(items[0].name, "Signed XPI Test", "Should have had the filename for the item name");
+  is(items[0].url, TESTROOT + "signed-untrusted.xpi", "Should have listed the correct url for the item");
+  is(items[0].icon, "", "Should have listed no icon for the item");
+  is(items[0].signed, "false", "Should have listed the item as unsigned");
+  return true;
 }
 
-function download_failed(install, status) {
-  is(status, AddonManager.ERROR_CORRUPTFILE, "Should have seen a corrupt file");
+function install_ended(install, addon) {
+  install.cancel();
 }
 
 function finish_test(count) {
-  is(count, 0, "No add-ons should have been installed");
+  is(count, 1, "1 Add-on should have been successfully installed");
   Services.perms.remove("example.com", "install");
 
   gBrowser.removeCurrentTab();
