@@ -924,11 +924,15 @@ struct JSCompiler : private js::AutoGCRooter {
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
     JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
 
+    /* Root atoms and objects allocated for the parsed tree. */
+    js::AutoKeepAtoms   keepAtoms;
+
     JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
       : js::AutoGCRooter(cx, COMPILER), context(cx),
         aleFreeList(NULL), tokenStream(cx), principals(NULL), callerFrame(cfp),
         callerVarObj(cfp ? cfp->varobj(cx->containingCallStack(cfp)) : NULL),
-        nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL)
+        nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL),
+        keepAtoms(cx->runtime)
     {
         js::PodArrayZero(tempFreeList);
         setPrincipals(prin);

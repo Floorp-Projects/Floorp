@@ -558,7 +558,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
                  cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
-    JS_LOCK_GC(rt);
+    AutoLockGC lock(rt);
 
     /* Reload in case ownercx went away while we blocked on the lock. */
     while (JSContext *ownercx = title->ownercx) {
@@ -595,7 +595,6 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         }
         if (canClaim) {
             title->ownercx = cx;
-            JS_UNLOCK_GC(rt);
             JS_RUNTIME_METER(rt, claimedTitles);
             return JS_TRUE;
         }
@@ -646,8 +645,6 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         JS_ASSERT(stat != PR_FAILURE);
         cx->thread->titleToShare = NULL;
     }
-
-    JS_UNLOCK_GC(rt);
     return JS_FALSE;
 }
 

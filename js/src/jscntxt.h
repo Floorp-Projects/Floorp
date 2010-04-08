@@ -1947,6 +1947,29 @@ class AutoXMLRooter : private AutoGCRooter {
 };
 #endif /* JS_HAS_XML_SUPPORT */
 
+class AutoLockGC {
+private:
+    JSRuntime *rt;
+public:
+    explicit AutoLockGC(JSRuntime *rt) : rt(rt) { JS_LOCK_GC(rt); }
+    ~AutoLockGC() { JS_UNLOCK_GC(rt); }
+};
+
+class AutoUnlockGC {
+private:
+    JSRuntime *rt;
+public:
+    explicit AutoUnlockGC(JSRuntime *rt) : rt(rt) { JS_UNLOCK_GC(rt); }
+    ~AutoUnlockGC() { JS_LOCK_GC(rt); }
+};
+
+class AutoKeepAtoms {
+    JSRuntime *rt;
+  public:
+    explicit AutoKeepAtoms(JSRuntime *rt) : rt(rt) { JS_KEEP_ATOMS(rt); }
+    ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
+};
+
 } /* namespace js */
 
 class JSAutoResolveFlags

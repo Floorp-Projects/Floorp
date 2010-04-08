@@ -1087,10 +1087,9 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 
     hook = cx->debugHooks->newScriptHook;
     if (hook) {
-        JS_KEEP_ATOMS(cx->runtime);
+        AutoKeepAtoms keep(cx->runtime);
         hook(cx, script->filename, script->lineno, script, fun,
              cx->debugHooks->newScriptHookData);
-        JS_UNKEEP_ATOMS(cx->runtime);
     }
 }
 

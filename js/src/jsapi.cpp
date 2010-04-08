@@ -774,7 +774,7 @@ JS_BeginRequest(JSContext *cx)
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     if (!cx->requestDepth) {
         JSRuntime *rt = cx->runtime;
-        JS_LOCK_GC(rt);
+        AutoLockGC lock(rt);
 
         /* Wait until the GC is finished. */
         if (rt->gcThread != cx->thread) {
@@ -786,7 +786,6 @@ JS_BeginRequest(JSContext *cx)
         rt->requestCount++;
         cx->requestDepth = 1;
         cx->outstandingRequests++;
-        JS_UNLOCK_GC(rt);
         return;
     }
     cx->requestDepth++;
@@ -809,7 +808,7 @@ JS_EndRequest(JSContext *cx)
 
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
         rt = cx->runtime;
-        JS_LOCK_GC(rt);
+        AutoLockGC lock(rt);
         cx->requestDepth = 0;
         cx->outstandingRequests--;
 
@@ -820,8 +819,6 @@ JS_EndRequest(JSContext *cx)
         rt->requestCount--;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
-
-        JS_UNLOCK_GC(rt);
         return;
     }
 
@@ -882,10 +879,9 @@ JS_TransferRequest(JSContext *cx, JSContext *another)
     JS_ASSERT(another->requestDepth == 0);
 
     /* Serialize access to JSContext::requestDepth from other threads. */
-    JS_LOCK_GC(cx->runtime);
+    AutoLockGC lock(cx->runtime);
     another->requestDepth = cx->requestDepth;
     cx->requestDepth = 0;
-    JS_UNLOCK_GC(cx->runtime);
 #endif
 }
 
@@ -1036,24 +1032,22 @@ JS_GetOptions(JSContext *cx)
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
-    JS_LOCK_GC(cx->runtime);
+    AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
     js_SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
-    JS_UNLOCK_GC(cx->runtime);
     return oldopts;
 }
 
 JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
-    JS_LOCK_GC(cx->runtime);
+    AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options ^= options;
     js_SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
-    JS_UNLOCK_GC(cx->runtime);
     return oldopts;
 }
 
@@ -5749,10 +5743,9 @@ JS_ClearContextThread(JSContext *cx)
      * see bug 476934.
      */
     JSRuntime *rt = cx->runtime;
-    JS_LOCK_GC(rt);
+    AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    JS_UNLOCK_GC(rt);
     return old;
 #else
     return 0;
