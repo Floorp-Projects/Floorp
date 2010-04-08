@@ -70,9 +70,10 @@ var gPlayTests = [
   { name:"bug523816.ogv", type:"video/ogg", duration:0.533 },
   { name:"bug495129.ogv", type:"video/ogg", duration:2.41 },
   { name:"bug498380.ogv", type:"video/ogg" },
-  { name:"bug495794.ogg", type:"audio/ogg", duration:0.3},
-  { name:"audio-overhang.ogg", type:"audio/ogg", duration:2.3},
-  { name:"video-overhang.ogg", type:"audio/ogg", duration:3.966},
+  { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
+  { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
+  { name:"audio-overhang.ogg", type:"audio/ogg", duration:2.3 },
+  { name:"video-overhang.ogg", type:"audio/ogg", duration:3.966 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
