@@ -58,6 +58,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsIPrefService.h"
 
 #include <stdlib.h>
 #include <glib.h>
@@ -219,6 +220,15 @@ WidgetForDOMWindow(nsISupports *aWindow)
 static void
 OssoSetWindowOrientation(PRBool aPortrait)
 {
+  // If we locked the screen, ignore any orientation changes
+  PRBool lockScreen = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+    prefs->GetBoolPref("toolkit.screen.lock", &lockScreen);
+
+  if (lockScreen)
+    return;
+
   // Tell Hildon desktop to force our window to be either portrait or landscape,
   // depending on the current rotation
   // NOTE: We only update the most recent top-level window so this is only
