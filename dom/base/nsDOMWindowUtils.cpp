@@ -621,6 +621,21 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
                                      aReturn);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::NodesFromRect(float aX, float aY,
+                                float aTopSize, float aRightSize,
+                                float aBottomSize, float aLeftSize,
+                                PRBool aIgnoreRootScrollFrame,
+                                PRBool aFlushLayout,
+                                nsIDOMNodeList** aReturn)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize, 
+                                  aIgnoreRootScrollFrame, aFlushLayout, aReturn);
+}
+
 static already_AddRefed<gfxImageSurface>
 CanvasToImageSurface(nsIDOMHTMLCanvasElement *canvas)
 {

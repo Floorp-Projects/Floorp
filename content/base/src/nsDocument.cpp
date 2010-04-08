@@ -2690,6 +2690,94 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   return NS_OK;
 }
 
+nsresult
+nsDocument::NodesFromRectHelper(float aX, float aY,
+                                float aTopSize, float aRightSize,
+                                float aBottomSize, float aLeftSize,
+                                PRBool aIgnoreRootScrollFrame,
+                                PRBool aFlushLayout,
+                                nsIDOMNodeList** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  
+  nsBaseContentList* elements = new nsBaseContentList();
+  NS_ADDREF(elements);
+  *aReturn = elements;
+
+  // Following the same behavior of elementFromPoint,
+  // we don't return anything if either coord is negative
+  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0))
+    return NS_OK;
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX - aLeftSize);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY - aTopSize);
+  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
+  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
+
+  nsRect rect(x, y, w, h);
+
+  // Make sure the layout information we get is up-to-date, and
+  // ensure we get a root frame (for everything but XUL)
+  if (aFlushLayout) {
+    FlushPendingNotifications(Flush_Layout);
+  }
+
+  nsIPresShell *ps = GetPrimaryShell();
+  NS_ENSURE_STATE(ps);
+  nsIFrame *rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame)
+    return NS_OK; // return nothing to premature XUL callers as a reminder to wait
+
+  nsTArray<nsIFrame*> outFrames;
+  nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
+                                  PR_TRUE, aIgnoreRootScrollFrame);
+
+  PRInt32 length = outFrames.Length();
+  if (!length)
+    return NS_OK;
+
+  // Used to filter out repeated elements in sequence.
+  nsIContent* lastAdded = nsnull;
+
+  for (PRInt32 i = 0; i < length; i++) {
+
+    nsIContent* ptContent = outFrames.ElementAt(i)->GetContent();
+    NS_ENSURE_STATE(ptContent);
+
+    // If the content is in a subdocument, try to get the element from |this| doc
+    nsIDocument *currentDoc = ptContent->GetCurrentDoc();
+    if (currentDoc && (currentDoc != this)) {
+      // XXX felipe: I can't get this type right without the intermediate vars
+      nsCOMPtr<nsIDOMElement> x = CheckAncestryAndGetFrame(currentDoc);
+      nsCOMPtr<nsIContent> elementDoc = do_QueryInterface(x);
+      if (elementDoc != lastAdded) {
+        elements->AppendElement(elementDoc);
+        lastAdded = elementDoc;
+      }
+      continue;
+    }
+
+    // If we have an anonymous element (such as an internal div from a textbox),
+    // or a node that isn't an element or a text node,
+    // replace it with the first non-anonymous parent node.
+    while (ptContent &&
+           (!(ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+              ptContent->IsNodeOfType(nsINode::eTEXT)) ||
+            ptContent->IsInAnonymousSubtree())) {
+      // XXXldb: Faster to jump to GetBindingParent if non-null?
+      ptContent = ptContent->GetParent();
+    }
+   
+    if (ptContent && ptContent != lastAdded) {
+      elements->AppendElement(ptContent);
+      lastAdded = ptContent;
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::GetElementsByClassName(const nsAString& aClasses,
                                    nsIDOMNodeList** aReturn)
