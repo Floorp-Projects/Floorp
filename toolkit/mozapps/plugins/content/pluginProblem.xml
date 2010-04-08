@@ -61,9 +61,7 @@
             <html:div class="msg msgDisabled">&disabledPlugin.label;</html:div>
             <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
             <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
-            <html:div class="msg msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
-            <xul:spacer flex="1"/>
-            <html:div class="msg msgBottomLinks">
+            <html:div class="submitStatus">
                 <!-- link href set at runtime -->
                 <html:div class="msg msgPleaseSubmit"><html:a class="pleaseSubmitLink" href="">&report.please;</html:a></html:div>
                 <html:div class="msg msgSubmitting">&report.submitting;<html:span class="throbber"> </html:span></html:div>
@@ -72,6 +70,10 @@
                 <html:div class="msg msgSubmitFailed">&report.failed;</html:div>
                 <html:div class="msg msgNoCrashReport">&report.unavailable;</html:div>
                 <!-- link href set at runtime -->
+                <html:div class="msg msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
+            </html:div>
+            <xul:spacer flex="1"/>
+            <html:div class="msg msgBottomLinks">
                 <html:span class="helpIcon" role="link"/>
             </html:div>
         </xul:vbox>
