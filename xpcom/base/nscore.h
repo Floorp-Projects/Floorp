@@ -50,7 +50,10 @@
 #  if defined(__cplusplus)
 #    include NEW_H              /* to give mozalloc std::bad_alloc */
 #  endif
-#  include <stdlib.h>         /* to give mozalloc malloc/free decls */
+/* include these to avoid the macro wrappers causing these headers to
+ * declare system functions with moz_ prefixes */
+#  include <stdlib.h>
+#  include <string.h>
 #  include "mozilla/mozalloc.h"
 #  include "mozilla/mozalloc_macro_wrappers.h"
 #endif
