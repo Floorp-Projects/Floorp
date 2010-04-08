@@ -89,6 +89,28 @@ ImageContainerOGL::GetCurrentAsSurface(gfxIntSize *aSize)
   return nsnull;
 }
 
+gfxIntSize
+ImageContainerOGL::GetCurrentSize()
+{
+  MutexAutoLock lock(mActiveImageLock);
+  if (!mActiveImage) {
+    return gfxIntSize(0,0);
+  }
+  if (mActiveImage->GetFormat() == Image::PLANAR_YCBCR) {
+    PlanarYCbCrImageOGL *yuvImage =
+      static_cast<PlanarYCbCrImageOGL*>(mActiveImage.get());
+    if (!yuvImage->HasData()) {
+      return gfxIntSize(0,0);
+    }
+    return yuvImage->mSize;
+  } else if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
+    CairoImageOGL *cairoImage =
+      static_cast<CairoImageOGL*>(mActiveImage.get());
+    return cairoImage->mSize;
+  }
+  return gfxIntSize(0,0);
+}
+
 LayerOGL::LayerType
 ImageLayerOGL::GetType()
 {
