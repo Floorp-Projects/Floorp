@@ -3135,6 +3135,81 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 }
 
 /*
+ * Call the GC callback, if any, to signal that GC is starting. Return false if
+ * the callback vetoes GC.
+ */
+static bool
+FireGCBegin(JSContext *cx, JSGCInvocationKind gckind)
+{
+    JSRuntime *rt = cx->runtime;
+    JSGCCallback callback = rt->gcCallback;
+
+    /*
+     * Let the API user decide to defer a GC if it wants to (unless this
+     * is the last context).  Invoke the callback regardless. Sample the
+     * callback in case we are freely racing with a JS_SetGCCallback{,RT} on
+     * another thread.
+     */
+    if (gckind != GC_SET_SLOT_REQUEST && callback) {
+        JSBool ok;
+
+        if (gckind & GC_LOCK_HELD)
+            JS_UNLOCK_GC(rt);
+        ok = callback(cx, JSGC_BEGIN);
+        if (gckind & GC_LOCK_HELD)
+            JS_LOCK_GC(rt);
+        if (!ok && gckind != GC_LAST_CONTEXT)
+            return false;
+    }
+    return true;
+}
+
+/*
+ * Call the GC callback, if any, to signal that GC is finished. If the callback
+ * creates garbage and we should GC again, return false; otherwise return true.
+ */
+static bool
+FireGCEnd(JSContext *cx, JSGCInvocationKind gckind)
+{
+    JSRuntime *rt = cx->runtime;
+    JSGCCallback callback = rt->gcCallback;
+
+    /*
+     * Execute JSGC_END callback outside the lock. Again, sample the callback
+     * pointer in case it changes, since we are outside of the GC vs. requests
+     * interlock mechanism here.
+     */
+    if (gckind != GC_SET_SLOT_REQUEST && callback) {
+        if (!(gckind & GC_KEEP_ATOMS)) {
+            (void) callback(cx, JSGC_END);
+
+            /*
+             * On shutdown, iterate until the JSGC_END callback stops creating
+             * garbage.
+             */
+            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
+                return false;
+        } else {
+            /*
+             * We allow JSGC_END implementation to force a full GC or allocate
+             * new GC things. Thus we must protect the weak roots from garbage
+             * collection and overwrites.
+             */
+            AutoSaveWeakRoots save(cx);
+
+            JS_KEEP_ATOMS(rt);
+            JS_UNLOCK_GC(rt);
+
+            (void) callback(cx, JSGC_END);
+
+            JS_LOCK_GC(rt);
+            JS_UNKEEP_ATOMS(rt);
+        }
+    }
+    return true;
+}
+
+/*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
  * rt->gcLock already held, so the lock should be kept on return.
  */
@@ -3142,7 +3217,6 @@ void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
-    JSGCCallback callback;
 #ifdef JS_THREADSAFE
     size_t requestDebit;
 #endif
@@ -3178,30 +3252,15 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     TIMESTAMP(gcTimer.enter);
 
   restart_at_beginning:
-    /*
-     * Let the API user decide to defer a GC if it wants to (unless this
-     * is the last context).  Invoke the callback regardless. Sample the
-     * callback in case we are freely racing with a JS_SetGCCallback{,RT} on
-     * another thread.
-     */
-    if (gckind != GC_SET_SLOT_REQUEST && (callback = rt->gcCallback)) {
-        JSBool ok;
-
-        if (gckind & GC_LOCK_HELD)
-            JS_UNLOCK_GC(rt);
-        ok = callback(cx, JSGC_BEGIN);
-        if (gckind & GC_LOCK_HELD)
-            JS_LOCK_GC(rt);
-        if (!ok && gckind != GC_LAST_CONTEXT) {
-            /*
-             * It's possible that we've looped back to this code from the 'goto
-             * restart_at_beginning' below in the GC_SET_SLOT_REQUEST code and
-             * that rt->gcLevel is now 0. Don't return without notifying!
-             */
-            if (rt->gcLevel == 0 && (gckind & GC_LOCK_HELD))
-                JS_NOTIFY_GC_DONE(rt);
-            return;
-        }
+    if (!FireGCBegin(cx, gckind)) {
+        /*
+         * It's possible that we've looped back to this code from the 'goto
+         * restart_at_beginning' below in the GC_SET_SLOT_REQUEST code and
+         * that rt->gcLevel is now 0. Don't return without notifying!
+         */
+        if (rt->gcLevel == 0 && (gckind & GC_LOCK_HELD))
+            JS_NOTIFY_GC_DONE(rt);
+        return;
     }
 
     /* Lock out other GC allocator and collector invocations. */
@@ -3420,38 +3479,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JS_UNLOCK_GC(rt);
 #endif
 
-    /*
-     * Execute JSGC_END callback outside the lock. Again, sample the callback
-     * pointer in case it changes, since we are outside of the GC vs. requests
-     * interlock mechanism here.
-     */
-    if (gckind != GC_SET_SLOT_REQUEST && (callback = rt->gcCallback)) {
-        if (!(gckind & GC_KEEP_ATOMS)) {
-            (void) callback(cx, JSGC_END);
+    if (!FireGCEnd(cx, gckind))
+        goto restart_at_beginning;
 
-            /*
-             * On shutdown iterate until JSGC_END callback stops creating
-             * garbage.
-             */
-            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
-                goto restart_at_beginning;
-        } else {
-            /*
-             * We allow JSGC_END implementation to force a full GC or allocate
-             * new GC things. Thus we must protect the weak roots from garbage
-             * collection and overwrites.
-             */
-            AutoSaveWeakRoots save(cx);
-
-            JS_KEEP_ATOMS(rt);
-            JS_UNLOCK_GC(rt);
-
-            (void) callback(cx, JSGC_END);
-
-            JS_LOCK_GC(rt);
-            JS_UNKEEP_ATOMS(rt);
-        }
-    }
     TIMESTAMP(gcTimer.end);
 
 #ifdef MOZ_GCTIMER
