@@ -32,6 +32,8 @@ var Harness = {
   downloadProgressCallback: null,
   // If set will be called when an xpi fails to download.
   downloadFailedCallback: null,
+  // If set will be called when an xpi download is cancelled.
+  downloadCancelledCallback: null,
   // If set will be called when downloading of an item has ended.
   downloadEndedCallback: null,
   // If set will be called when installation by the extension manager of an xpi
@@ -96,8 +98,11 @@ var Harness = {
     this.installConfirmCallback = null;
     this.downloadStartedCallback = null;
     this.downloadProgressCallback = null;
+    this.downloadCancelledCallback = null;
+    this.downloadFailedCallback = null;
     this.downloadEndedCallback = null;
     this.installStartedCallback = null;
+    this.installFailedCallback = null;
     this.installEndedCallback = null;
     this.installsCompletedCallback = null;
   },
@@ -201,6 +206,12 @@ var Harness = {
   onDownloadEnded: function(install) {
     if (this.downloadEndedCallback)
       this.downloadEndedCallback(install);
+  },
+
+  onDownloadCancelled: function(install) {
+    if (this.downloadCancelledCallback)
+      this.downloadCancelledCallback(install);
+    this.checkTestEnded();
   },
 
   onDownloadFailed: function(install, status) {
