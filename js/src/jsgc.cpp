@@ -2853,6 +2853,67 @@ void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
 #endif
 
 /*
+ * Common cache invalidation and so forth that must be done before GC. Even if
+ * js_GC calls GC several times, this work only needs to be done once.
+ */
+static void
+PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
+{
+    JSRuntime *rt = cx->runtime;
+
+    /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
+    rt->gcIsNeeded = JS_FALSE;
+
+    /* Reset malloc counter. */
+    rt->resetGCMallocBytes();
+
+#ifdef JS_DUMP_SCOPE_METERS
+    {
+        extern void js_DumpScopeMeters(JSRuntime *rt);
+        js_DumpScopeMeters(rt);
+    }
+#endif
+
+#ifdef JS_TRACER
+    PurgeJITOracle();
+#endif
+
+    /*
+     * Reset the property cache's type id generator so we can compress ids.
+     * Same for the protoHazardShape proxy-shape standing in for all object
+     * prototypes having readonly or setter properties.
+     */
+    if (rt->shapeGen & SHAPE_OVERFLOW_BIT
+#ifdef JS_GC_ZEAL
+        || rt->gcZeal >= 1
+#endif
+        ) {
+        rt->gcRegenShapes = true;
+        rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
+        rt->shapeGen = 0;
+        rt->protoHazardShape = 0;
+    }
+
+    js_PurgeThreads(cx);
+    {
+        JSContext *iter = NULL;
+        while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
+            acx->purge();
+    }
+
+#ifdef JS_TRACER
+    if (gckind == GC_LAST_CONTEXT) {
+        /* Clear builtin functions, which are recreated on demand. */
+        PodArrayZero(rt->builtinFunctions);
+    }
+#endif
+
+    /* The last ditch GC preserves weak roots. */
+    if (!(gckind & GC_KEEP_ATOMS))
+        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
+}
+
+/*
  * Perform mark-and-sweep GC.
  *
  * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
@@ -3316,69 +3377,19 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JS_UNLOCK_GC(rt);
 
 #ifdef JS_TRACER
-    if (JS_ON_TRACE(cx))
-        goto out;
+    if (!JS_ON_TRACE(cx))
 #endif
-    VOUCH_HAVE_STACK();
-
-    /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
-    rt->gcIsNeeded = JS_FALSE;
-
-    /* Reset malloc counter. */
-    rt->resetGCMallocBytes();
-
-#ifdef JS_DUMP_SCOPE_METERS
-  { extern void js_DumpScopeMeters(JSRuntime *rt);
-    js_DumpScopeMeters(rt);
-  }
-#endif
-
-#ifdef JS_TRACER
-    PurgeJITOracle();
-#endif
-
-    /*
-     * Reset the property cache's type id generator so we can compress ids.
-     * Same for the protoHazardShape proxy-shape standing in for all object
-     * prototypes having readonly or setter properties.
-     */
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT
-#ifdef JS_GC_ZEAL
-        || rt->gcZeal >= 1
-#endif
-        ) {
-        rt->gcRegenShapes = true;
-        rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
-        rt->shapeGen = 0;
-        rt->protoHazardShape = 0;
-    }
-
-    js_PurgeThreads(cx);
     {
-        JSContext *iter = NULL, *acx;
-        while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
-            acx->purge();
+        VOUCH_HAVE_STACK();
+
+        PreGCCleanup(cx, gckind);
+
+        TIMESTAMP(gcTimer.startMark);
+
+      restart:
+        GC(cx, gckind  GCTIMER_ARG);
     }
 
-#ifdef JS_TRACER
-    if (gckind == GC_LAST_CONTEXT) {
-        /* Clear builtin functions, which are recreated on demand. */
-        PodArrayZero(rt->builtinFunctions);
-    }
-#endif
-
-    /* The last ditch GC preserves weak roots. */
-    if (!(gckind & GC_KEEP_ATOMS))
-        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
-
-    TIMESTAMP(gcTimer.startMark);
-
-  restart:
-    GC(cx, gckind  GCTIMER_ARG);
-
-#ifdef JS_TRACER
-  out:
-#endif
     JS_LOCK_GC(rt);
 
     /*
