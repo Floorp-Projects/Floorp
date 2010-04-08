@@ -485,9 +485,10 @@ var BrowserUI = {
   },
 
   getDisplayURI : function(browser) {
-    if (Browser.selectedTab.isLoading() && browser.lastSpec == browser.currentURI.spec) {
-      // onLocationChange has probably not fired yet (bug 521828)
-      return this._edit.value;
+    let loadGroup = browser.webNavigation.QueryInterface(Ci.nsIDocumentLoader).loadGroup;
+    if (loadGroup.activeCount && loadGroup.defaultLoadRequest) {
+      // browser.currentURI may not be valid if the request is still active
+      return loadGroup.defaultLoadRequest.name;
     }
 
     if (!this._URIFixup)
