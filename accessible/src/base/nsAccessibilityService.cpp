@@ -87,6 +87,8 @@
 #include "nsNetError.h"
 #include "nsDocShellLoadTypes.h"
 
+#include "nsImageMapUtils.h"
+
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
 #include "nsXULColorPickerAccessible.h"
@@ -653,21 +655,12 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsIFrame *aFrame,
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   NS_ENSURE_STATE(content);
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc =
-    do_QueryInterface(content->GetCurrentDoc());
-
-  nsCOMPtr<nsIDOMHTMLMapElement> mapElm;
-  if (htmlDoc) {
-    nsAutoString mapElmName;
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::usemap,
-                     mapElmName);
-
-    if (!mapElmName.IsEmpty()) {
-      if (mapElmName.CharAt(0) == '#')
-        mapElmName.Cut(0,1);
-      mapElm = htmlDoc->GetImageMap(mapElmName);
-    }
-  }
+  nsAutoString mapElmName;
+  content->GetAttr(kNameSpaceID_None,
+                   nsAccessibilityAtoms::usemap,
+                   mapElmName);
+  nsCOMPtr<nsIDOMHTMLMapElement> mapElm =
+    nsImageMapUtils::FindImageMap(content->GetCurrentDoc(), mapElmName);
 
   if (mapElm)
     *aAccessible = new nsHTMLImageMapAccessible(node, weakShell, mapElm);
