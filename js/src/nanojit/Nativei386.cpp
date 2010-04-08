@@ -239,9 +239,27 @@ namespace nanojit
     inline void Assembler::DIV(R r)      { count_alu(); ALU(0xf7, (Register)7,(r));   asm_output("idiv  edx:eax, %s",gpn(r)); }
     inline void Assembler::NOT(R r)      { count_alu(); ALU(0xf7, (Register)2,(r));   asm_output("not %s",gpn(r)); }
     inline void Assembler::NEG(R r)      { count_alu(); ALU(0xf7, (Register)3,(r));   asm_output("neg %s",gpn(r)); }
-    inline void Assembler::SHR(R r, R s) { count_alu(); ALU(0xd3, (Register)5,(r));   asm_output("shr %s,%s",gpn(r),gpn(s)); }
-    inline void Assembler::SAR(R r, R s) { count_alu(); ALU(0xd3, (Register)7,(r));   asm_output("sar %s,%s",gpn(r),gpn(s)); }
-    inline void Assembler::SHL(R r, R s) { count_alu(); ALU(0xd3, (Register)4,(r));   asm_output("shl %s,%s",gpn(r),gpn(s)); }
+
+    inline void Assembler::SHR(R r, R s) {
+        count_alu();
+        NanoAssert(s == ECX); (void)s;
+        ALU(0xd3, (Register)5,(r));
+        asm_output("shr %s,%s",gpn(r),gpn(s));
+    }
+
+    inline void Assembler::SAR(R r, R s) {
+        count_alu();
+        NanoAssert(s == ECX); (void)s;
+        ALU(0xd3, (Register)7,(r));
+        asm_output("sar %s,%s",gpn(r),gpn(s));
+    }
+
+    inline void Assembler::SHL(R r, R s) {
+        count_alu();
+        NanoAssert(s == ECX); (void)s;
+        ALU(0xd3, (Register)4,(r));
+        asm_output("shl %s,%s",gpn(r),gpn(s));
+    }
 
     inline void Assembler::SHIFT(I32 c, R r, I32 i) {
         underrunProtect(3);
@@ -536,7 +554,7 @@ namespace nanojit
             _nIns[0] = JCC32;
             _nIns[1] = (uint8_t) ( 0x80 | o );
         }
-        asm_output("%-5s %p", n, t);
+        asm_output("%-5s %p", n, t); (void) n;
     }
 
     inline void Assembler::JMP_long(NIns* t) {
@@ -846,7 +864,7 @@ namespace nanojit
         underrunProtect(2);
         ALU(0xff, 2, (r));
         verbose_only(asm_output("call %s",gpn(r));)
-        debug_only(if (ci->returnType()==ARGTYPE_F) fpu_push();)
+        debug_only(if (ci->returnType()==ARGTYPE_F) fpu_push();) (void)ci;
     }
 
     void Assembler::nInit(AvmCore*)
