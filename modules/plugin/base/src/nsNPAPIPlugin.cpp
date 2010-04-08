@@ -238,7 +238,7 @@ nsNPAPIPlugin::~nsNPAPIPlugin()
   mLibrary = nsnull;
 }
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && !defined(__LP64__)
 void
 nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 {
@@ -466,7 +466,7 @@ nsNPAPIPlugin::Shutdown()
 
   NPError shutdownError;
   mLibrary->NP_Shutdown(&shutdownError);
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && !defined(__LP64__)
   if (shutdownError == NS_OK && mPluginRefNum > 0)
     ::CloseResFile(mPluginRefNum);
 #endif
