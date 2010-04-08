@@ -345,8 +345,10 @@ static cairo_quartz_font_face_t *
 _cairo_quartz_scaled_to_face (void *abstract_font)
 {
     cairo_quartz_scaled_font_t *sfont = (cairo_quartz_scaled_font_t*) abstract_font;
-    cairo_font_face_t *font_face = sfont->base.font_face;
-    assert (font_face->backend->type == CAIRO_FONT_TYPE_QUARTZ);
+    cairo_font_face_t *font_face = cairo_scaled_font_get_font_face (&sfont->base);
+    if (!font_face || font_face->backend->type != CAIRO_FONT_TYPE_QUARTZ)
+	return NULL;
+
     return (cairo_quartz_font_face_t*) font_face;
 }
 
