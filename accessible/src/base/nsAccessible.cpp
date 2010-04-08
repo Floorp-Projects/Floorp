@@ -3012,6 +3012,7 @@ nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 #endif
 }
 
+// nsAccessible public
 PRBool
 nsAccessible::EnsureChildren()
 {
