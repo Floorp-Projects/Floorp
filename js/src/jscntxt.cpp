@@ -155,8 +155,6 @@ JSThreadData::mark(JSTracer *trc)
 void
 JSThreadData::purge(JSContext *cx)
 {
-    cachedIteratorObject = NULL;
-
     purgeGCFreeLists();
 
     js_PurgeGSNCache(&gsnCache);
