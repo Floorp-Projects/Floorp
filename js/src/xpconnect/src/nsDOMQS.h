@@ -79,7 +79,7 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
 #define DOMCI_CASTABLE_INTERFACE(_interface, _bit, _extra)                    \
   DEFINE_UNWRAP_CAST(_interface, _bit)
 
-DOMCI_CASTABLE_INTERFACES()
+DOMCI_CASTABLE_INTERFACES(unused)
 
 #undef DOMCI_CASTABLE_INTERFACE
 
