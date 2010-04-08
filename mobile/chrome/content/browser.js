@@ -1022,9 +1022,12 @@ var Browser = {
   zoom: function zoom(aDirection) {
     let bv = this._browserView;
     let zoomLevel = bv.getZoomLevel() + (aDirection > 0 ? -1 : 1) * kBrowserViewZoomLevelIncrement;
-    let adjusted = BrowserView.Util.adjustZoomLevel(zoomLevel, kBrowserViewZoomLevelIncrement / 2);
+
+    zoomLevel = BrowserView.Util.adjustZoomLevel(zoomLevel, kBrowserViewZoomLevelIncrement / 2);
+    zoomLevel = Math.max(zoomLevel, bv.getPageZoomLevel());
+
     let center = this.getVisibleRect().center().map(bv.viewportToBrowser);
-    this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, adjusted));
+    this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
   /**
@@ -1139,9 +1142,8 @@ var Browser = {
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
     let bv = this._browserView;
-
-    let zoomLevel = bv.getZoomForPage();
     if (!bv.isDefaultZoom()) {
+      let zoomLevel = bv.getDefaultZoomLevel();
       let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
       let zoomRect = this._getZoomRectForPoint(elementX, elementY, zoomLevel);
       this.setVisibleRect(zoomRect);

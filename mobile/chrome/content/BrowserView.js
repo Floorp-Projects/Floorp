@@ -168,8 +168,7 @@ BrowserView.Util = {
   },
 
   pageZoomLevel: function pageZoomLevel(visibleRect, browserW, browserH) {
-    let zl = BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
-    return BrowserView.Util.adjustZoomLevel(zl, kBrowserViewZoomLevelPageFitAdjust);
+    return BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
   },
 
   createBrowserViewportState: function createBrowserViewportState() {
@@ -582,14 +581,14 @@ BrowserView.prototype = {
     }
   },
 
-  /** Call when default zoomToPage value may change. */
+  /** Call when default zoom level may change. */
   updateDefaultZoom: function updateDefaultZoom() {
     let bvs = this._browserViewportState;
     if (!bvs)
       return false;
 
     let isDefault = (bvs.zoomLevel == bvs.defaultZoomLevel);
-    bvs.defaultZoomLevel = this.getZoomForPage();
+    bvs.defaultZoomLevel = this.getDefaultZoomLevel();
     if (isDefault)
       this.setZoomLevel(bvs.defaultZoomLevel);
     return isDefault;
@@ -602,15 +601,7 @@ BrowserView.prototype = {
     return bvs.zoomLevel == bvs.defaultZoomLevel;
   },
 
-  zoomToPage: function zoomToPage() {
-    let bvs = this._browserViewportState;
-    if (bvs) {
-      this.setZoomLevel(this.getZoomForPage());
-      bvs.defaultZoomLevel = bvs.zoomLevel;  // make sure default zl is up to date
-    }
-  },
-
-  getZoomForPage: function getZoomForPage() {
+  getDefaultZoomLevel: function getDefaultZoomLevel() {
     let browser = this._browser;
     if (!browser)
       return 0;
@@ -621,6 +612,11 @@ BrowserView.prototype = {
     else if (metaData.reason == "viewport" && metaData.scale > 0)
       return metaData.scale;
 
+    let zl = this.getPageZoomLevel();
+    return BrowserView.Util.adjustZoomLevel(zl, kBrowserViewZoomLevelPageFitAdjust);
+  },
+
+  getPageZoomLevel: function getPageZoomLevel() {
     let bvs = this._browserViewportState;  // browser exists, so bvs must as well
     let w = this.viewportToBrowser(bvs.viewportRect.right);
     let h = this.viewportToBrowser(bvs.viewportRect.bottom);
@@ -649,7 +645,7 @@ BrowserView.prototype = {
   // for details on what the event *does* guarantee).  This is only an
   // issue when the same current <browser> is used to navigate to a
   // new page.  Unless a zoom was issued during the page transition
-  // (e.g. a call to zoomToPage() or something of that nature), we
+  // (e.g. a call to setZoomLevel() or something of that nature), we
   // aren't guaranteed that we've actually invalidated the entire
   // page.  We don't want to leave bits of the previous page in the
   // view of the new one, so this method exists as a way for Browser
@@ -663,13 +659,13 @@ BrowserView.prototype = {
   // of the following two conditions is satisfied.  Either
   //
   //   (1) Pages have different widths so the Browser calls a
-  //       zoomToPage() which forces a dirtyAll, or
+  //       updateDefaultZoom() which forces a dirtyAll, or
   //   (2) MozAfterPaint does indeed inform us of dirtyRects covering
   //       the entire page (everything that could possibly become
   //       visible).
   /**
    * Invalidates the entire page by throwing away any cached graphical
-   * portions of the view and refusing to allow a zoomToPage() until
+   * portions of the view and refusing to allow a updateDefaultZoom() until
    * the next explicit update of the viewport dimensions.
    *
    * This method should be called when the <browser> last set by
