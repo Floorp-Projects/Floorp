@@ -85,7 +85,7 @@
 <!ENTITY manageAccount.accesskey      "A">
 
 <!ENTITY changePassword.label         "Change Password">
-<!ENTITY recoverPassword.label        "Recover Password">
+<!ENTITY resetPassword.label          "Reset Password">
 <!ENTITY changePassphrase.label       "Change Secret Phrase">
 <!ENTITY resetSync.label              "Reset Sync">
 <!ENTITY cancelResetSync.label        "Cancel Reset Sync">

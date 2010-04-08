@@ -165,6 +165,10 @@ WeaveSvc.prototype = {
     return user + "1.0/";
   },
 
+  get pwResetURL() {
+    return this.serverURL + "weave-password-reset";
+  },
+
   get syncID() {
     // Generate a random syncID id we don't have one
     let syncID = Svc.Prefs.get("client.syncID", "");
@@ -603,16 +607,6 @@ WeaveSvc.prototype = {
       this.sync(true);
       return true;
     }))(),
-
-  requestPasswordReset: function WeaveSvc_requestPasswordReset(username) {
-    let res = new Resource(Svc.Prefs.get("pwChangeURL"));
-    res.authenticator = new NoOpAuthenticator();
-    res.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    let ret = res.post('uid=' + username);
-    if (ret.indexOf("Further instructions have been sent") >= 0)
-      return true;
-    return false;
-  },
 
   startOver: function() {
     // Set a username error so the status message shows "set up..."
