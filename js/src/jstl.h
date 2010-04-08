@@ -300,6 +300,18 @@ class LazilyConstructed
     }
 };
 
+
+template <class T>
+class Conditionally {
+    LazilyConstructed<T> t;
+
+  public:
+    Conditionally(bool b) { if (b) t.construct(); }
+
+    template <class T1>
+    Conditionally(bool b, const T1 &t1) { if (b) t.construct(t1); }
+};
+
 template <class T>
 JS_ALWAYS_INLINE static void
 PodZero(T *t)

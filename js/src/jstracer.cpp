@@ -14945,12 +14945,11 @@ GetBuiltinFunction(JSContext *cx, uintN index)
             funobj->clearProto();
             funobj->clearParent();
 
-            JS_LOCK_GC(rt);
+            AutoLockGC lock(rt);
             if (!rt->builtinFunctions[index]) /* retest now that the lock is held */
                 rt->builtinFunctions[index] = funobj;
             else
                 funobj = rt->builtinFunctions[index];
-            JS_UNLOCK_GC(rt);
         }
     }
     return funobj;
