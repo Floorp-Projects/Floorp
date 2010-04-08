@@ -2613,9 +2613,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     } else {
         gsop = NULL;
     }
-    fun = js_NewFunction(cx, NULL, native, nargs, attrs,
-                         (attrs & JSFUN_BOUND_METHOD) ? obj : obj->getGlobal(),
-                         atom);
+    fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
