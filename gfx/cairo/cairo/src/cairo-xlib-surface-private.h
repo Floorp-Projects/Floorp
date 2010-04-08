@@ -46,10 +46,12 @@ struct _cairo_xlib_surface {
 
     Display *dpy;
     cairo_xlib_display_t *display;
-    cairo_xlib_screen_t *screen;
+    cairo_xlib_screen_info_t *screen_info;
     cairo_xlib_hook_t close_display_hook;
 
+    GC gc;
     Drawable drawable;
+    Screen *screen;
     cairo_bool_t owns_pixmap;
     Visual *visual;
 
@@ -73,12 +75,8 @@ struct _cairo_xlib_surface {
      * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
      * we can reuse the test for now.
      */
-    unsigned int buggy_gradients : 1;
-    unsigned int buggy_pad_reflect : 1;
-    unsigned int buggy_repeat : 1;
-#define CAIRO_XLIB_SURFACE_HAS_BUGGY_GRADIENTS 1
-#define CAIRO_XLIB_SURFACE_HAS_BUGGY_PAD_REFLECT 1
-#define CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT 1
+    cairo_bool_t buggy_repeat;
+    cairo_bool_t buggy_pad_reflect;
 
     int width;
     int height;
@@ -87,15 +85,15 @@ struct _cairo_xlib_surface {
     Picture dst_picture, src_picture;
 
     unsigned int clip_dirty;
+    cairo_bool_t have_clip_rects;
+    cairo_bool_t gc_has_clip_rects;
     XRectangle embedded_clip_rects[8];
     XRectangle *clip_rects;
     int num_clip_rects;
-    cairo_region_t *clip_region;
 
     XRenderPictFormat *xrender_format;
     cairo_filter_t filter;
-    cairo_extend_t extend;
-    cairo_bool_t has_component_alpha;
+    int repeat;
     XTransform xtransform;
 
     uint32_t a_mask;
