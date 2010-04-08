@@ -392,15 +392,29 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
           default_iter:
             /*
              * Fail over to the default enumerating native iterator.
-             *
-             * Create iterobj with a NULL parent to ensure that we use the
-             * correct scope chain to lookup the iterator's constructor. Since
-             * we use the parent slot to keep track of the iterable, we must
-             * fix it up after.
              */
-            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
-            if (!iterobj)
-                return false;
+            if (flags & JSITER_ENUMERATE) {
+                /*
+                 * The iterator object for JSITER_ENUMERATE never escapes, so we
+                 * don't care for the proper parent/proto to be set. This also
+                 * allows us to re-use a previous iterator object that was freed
+                 * by JSOP_ENDITER.
+                 */
+                if ((iterobj = JS_THREAD_DATA(cx)->cachedIteratorObject) != NULL) {
+                    JS_THREAD_DATA(cx)->cachedIteratorObject = NULL;
+                } else {
+                    if (!(iterobj = js_NewObjectWithGivenProto(cx, &js_IteratorClass, NULL, NULL)))
+                        return false;
+                }
+            } else {
+                /*
+                 * These objects don't escape either, but we construct a
+                 * StopIteration exception based on the parent of the iterator
+                 * object, so we need the correct parent here.
+                 */
+                if (!(iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL)))
+                    return false;
+            }
 
             /* Store in *vp to protect it from GC (callers must root vp). */
             *vp = OBJECT_TO_JSVAL(iterobj);
@@ -434,6 +448,13 @@ js_CloseIterator(JSContext *cx, jsval v)
 
     if (clasp == &js_IteratorClass) {
         js_CloseNativeIterator(cx, obj);
+
+        /*
+         * Note that we don't care what kind of iterator we close here. Even if it
+         * is not JSITER_ENUMERATE, it is safe to re-use the object later on for a
+         * JSITER_ENUMERATE iteration.
+         */
+        JS_THREAD_DATA(cx)->cachedIteratorObject = obj;
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
