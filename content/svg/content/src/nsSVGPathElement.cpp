@@ -472,6 +472,19 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 NS_IMETHODIMP
+nsSVGPathElement::WillModifySVGObservable(nsISVGValue* observable,
+                                          nsISVGValue::modificationType aModType)
+{
+  nsCOMPtr<nsIDOMSVGPathSegList> list = do_QueryInterface(observable);
+
+  if (list && mSegments == list) {
+    return NS_OK;
+  }
+
+  return nsSVGPathElementBase::WillModifySVGObservable(observable, aModType);
+}
+
+NS_IMETHODIMP
 nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
                                          nsISVGValue::modificationType aModType)
 {
