@@ -57,7 +57,7 @@ _TEST_FILES = \
 		test_offsets.xul \
 		test_windowProperties.html \
 		test_clipboard_events.html \
-		test_nodesFromRect.html \
+		$(warning test_nodesFromRect.html temporarily disabled) \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
