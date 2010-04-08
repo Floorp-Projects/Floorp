@@ -50,6 +50,7 @@
 #   Rob Arnold <robarnold@cmu.edu>
 #   Dietrich Ayala <dietrich@mozilla.com>
 #   Gavin Sharp <gavin@gavinsharp.com>
+#   Justin Dolske <dolske@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -5936,6 +5937,17 @@ var gMissingPluginInstaller = {
     return this.crashReportHelpURL;
   },
 
+  // Map the plugin's name to a filtered version more suitable for user UI.
+  makeNicePluginName : function (aName, aFilename) {
+    if (aName == "Shockwave Flash")
+      return "Adobe Flash";
+
+    // Clean up the plugin name by stripping off any trailing version numbers
+    // or "plugin". EG, "Foo Bar Plugin 1.23_02" --> "Foo Bar"
+    let newName = aName.replace(/\bplug-?in\b/i, "").replace(/[\s\d\.\-\_\(\)]+$/, "");
+    return newName;
+  },
+
   addLinkClickCallback: function (linkNode, callbackName /*callbackArgs...*/) {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
@@ -6175,20 +6187,22 @@ var gMissingPluginInstaller = {
     if (!aEvent.isTrusted)
       return;
 
-    if (!(aEvent instanceof Ci.nsIDOMDataContainerEvent))
+    // Ensure the plugin and event are of the right type.
+    let plugin = aEvent.target;
+    if (!(aEvent instanceof Ci.nsIDOMDataContainerEvent) ||
+        !(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
 
     let submittedReport = aEvent.getData("submittedCrashReport");
     let doPrompt        = true; // XXX followup for .getData("doPrompt");
     let submitReports   = true; // XXX followup for .getData("submitReports");
     let pluginName      = aEvent.getData("pluginName");
+    let pluginFilename  = aEvent.getData("pluginFilename");
     let pluginDumpID    = aEvent.getData("pluginDumpID");
     let browserDumpID   = aEvent.getData("browserDumpID");
 
-    // We're expecting this to be a plugin.
-    let plugin = aEvent.target;
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      return;
+    // Remap the plugin name to a more user-presentable form.
+    pluginName = self.makeNicePluginName(pluginName, pluginFilename);
 
     // Force a style flush, so that we ensure our binding is attached.
     plugin.clientTop;
