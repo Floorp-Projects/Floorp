@@ -49,7 +49,7 @@ function createAppInfo(id, name, version, platformVersion) {
                                            AM_Ci.nsICrashReporter,
                                            AM_Ci.nsISupports])
   };
-  
+
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer != null)
@@ -528,6 +528,116 @@ function ensure_test_completed() {
   if (gExpectedInstalls)
     do_check_eq(gExpectedInstalls.length, 0);
 }
+
+if ("nsIWindowsRegKey" in AM_Ci) {
+  var MockRegistry = {
+    LOCAL_MACHINE: {},
+    CURRENT_USER: {},
+
+    setValue: function(root, path, name, value) {
+      switch (root) {
+      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE:
+        var rootKey = MockRegistry.LOCAL_MACHINE;
+        break
+      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER:
+        rootKey = MockRegistry.CURRENT_USER;
+        break
+      }
+
+      if (!(path in rootKey)) {
+        rootKey[path] = [];
+      }
+      else {
+        for (let i = 0; i < rootKey[path].length; i++) {
+          if (rootKey[path][i].name == name) {
+            if (value === null)
+              rootKey[path].splice(i, 1);
+            else
+              rootKey[path][i].value = value;
+            return;
+          }
+        }
+      }
+
+      if (value === null)
+        return;
+
+      rootKey[path].push({
+        name: name,
+        value: value
+      });
+    }
+  };
+
+  /**
+   * This is a mock nsIWindowsRegistry implementation. It only implements the
+   * methods that the extension manager requires.
+   */
+  function MockWindowsRegKey() {
+  }
+
+  MockWindowsRegKey.prototype = {
+    values: null,
+
+    // --- Overridden nsISupports interface functions ---
+    QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIWindowsRegKey]),
+
+    // --- Overridden nsIWindowsRegKey interface functions ---
+    open: function(aRootKey, aRelPath, aMode) {
+      switch (aRootKey) {
+      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE:
+        var rootKey = MockRegistry.LOCAL_MACHINE;
+        break
+      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER:
+        rootKey = MockRegistry.CURRENT_USER;
+        break
+      }
+
+      if (!(aRelPath in rootKey))
+        rootKey[aRelPath] = [];
+      this.values = rootKey[aRelPath];
+    },
+
+    close: function() {
+      this.values = null;
+    },
+
+    get valueCount() {
+      if (!this.values)
+        throw Components.results.NS_ERROR_FAILURE;
+      return this.values.length;
+    },
+
+    getValueName: function(aIndex) {
+      if (!this.values || aIndex >= this.values.length)
+        throw Components.results.NS_ERROR_FAILURE;
+      return this.values[aIndex].name;
+    },
+
+    readStringValue: function(aName) {
+      for (let i = 0; i < this.values.length; i++) {
+        if (this.values[i].name == aName)
+          return this.values[i].value;
+      }
+    }
+  };
+
+  var WinRegFactory = {
+    createInstance: function(aOuter, aIid) {
+      if (aOuter != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+      var key = new MockWindowsRegKey();
+      return key.QueryInterface(aIid);
+    }
+  };
+
+  var registrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
+  registrar.registerFactory(Components.ID("{0478de5b-0f38-4edb-851d-4c99f1ed8eba}"),
+                            "Mock Windows Registry Implementation",
+                            "@mozilla.org/windows-registry-key;1", WinRegFactory);
+}
+
 // Get the profile directory for tests to use.
 const gProfD = do_get_profile().QueryInterface(AM_Ci.nsILocalFile);
 

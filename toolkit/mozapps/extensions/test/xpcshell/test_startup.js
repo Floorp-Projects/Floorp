@@ -120,6 +120,9 @@ function run_test_1() {
   dest = profileDir.clone();
   dest.append("addon2@tests.mozilla.org");
   writeInstallRDFToDir(addon2, dest);
+  // Attempt to make this look like it was added some time in the past so
+  // the change in run_test_2 makes the last modified time change.
+  dest.lastModifiedTime -= 5000;
   dest = profileDir.clone();
   dest.append("addon3@tests.mozilla.org");
   writeInstallRDFToDir(addon3, dest);
