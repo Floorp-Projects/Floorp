@@ -295,7 +295,7 @@ ctypes/libffi/.libs/libffi.$(LIB_SUFFIX): ctypes/libffi/.libs/libffi.a
 	emxomf $<
 endif
 
-SHARED_LIBRARY_LIBS = \
+SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
 endif # JS_HAS_CTYPES
@@ -371,12 +371,12 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
 # Build libffi proper as part of the 'exports' target, so things get built
-# in the right order. Specify -j1 to make sure we don't get a parallel build.
+# in the right order.
 export::
-	$(MAKE) -j1 -C ctypes/libffi
+		$(call SUBMAKE,,ctypes/libffi)
 
 clean::
-	$(MAKE) -j1 -C ctypes/libffi clean
+		$(call SUBMAKE,clean,ctypes/libffi)
 endif
 
 ifdef MOZ_SYNC_BUILD_FILES
