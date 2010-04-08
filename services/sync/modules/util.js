@@ -769,6 +769,23 @@ let Utils = {
     return function innerBind() { return method.apply(object, arguments); };
   },
 
+  mpLocked: function mpLocked() {
+    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                  getService(Ci.nsIPKCS11ModuleDB);
+    let sdrSlot = modules.findSlotByName("");
+    let status  = sdrSlot.status;
+    let slots = Ci.nsIPKCS11Slot;
+
+    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN)
+      return false;
+
+    if (status == slots.SLOT_NOT_LOGGED_IN)
+      return true;
+    
+    // something wacky happened, pretend MP is locked
+    return true;
+  },
+
   __prefs: null,
   get prefs() {
     if (!this.__prefs) {
