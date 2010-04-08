@@ -75,12 +75,6 @@ cairo_debug_reset_static_data (void)
 
     _cairo_pattern_reset_static_data ();
 
-    _cairo_clip_reset_static_data ();
-
-#if CAIRO_HAS_DRM_SURFACE
-    _cairo_drm_device_reset_static_data ();
-#endif
-
     CAIRO_MUTEX_FINALIZE ();
 }
 
@@ -165,70 +159,3 @@ _cairo_image_surface_write_to_ppm (cairo_image_surface_t *isurf, const char *fn)
     fprintf (stderr, "Wrote %s\n", fn);
 }
 #endif
-
-static cairo_status_t
-_print_move_to (void *closure,
-		const cairo_point_t *point)
-{
-    fprintf (closure,
-	     " %f %f m",
-	     _cairo_fixed_to_double (point->x),
-	     _cairo_fixed_to_double (point->y));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_print_line_to (void *closure,
-		const cairo_point_t *point)
-{
-    fprintf (closure,
-	     " %f %f l",
-	     _cairo_fixed_to_double (point->x),
-	     _cairo_fixed_to_double (point->y));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_print_curve_to (void *closure,
-		 const cairo_point_t *p1,
-		 const cairo_point_t *p2,
-		 const cairo_point_t *p3)
-{
-    fprintf (closure,
-	     " %f %f %f %f %f %f c",
-	     _cairo_fixed_to_double (p1->x),
-	     _cairo_fixed_to_double (p1->y),
-	     _cairo_fixed_to_double (p2->x),
-	     _cairo_fixed_to_double (p2->y),
-	     _cairo_fixed_to_double (p3->x),
-	     _cairo_fixed_to_double (p3->y));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_print_close (void *closure)
-{
-    fprintf (closure, " h");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
-{
-    cairo_status_t status;
-
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _print_move_to,
-					  _print_line_to,
-					  _print_curve_to,
-					  _print_close,
-					  stream);
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    printf ("\n");
-}

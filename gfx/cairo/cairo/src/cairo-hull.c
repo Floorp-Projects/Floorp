@@ -36,8 +36,6 @@
 
 #include "cairoint.h"
 
-#include "cairo-slope-private.h"
-
 typedef struct cairo_hull {
     cairo_point_t point;
     cairo_slope_t slope;
