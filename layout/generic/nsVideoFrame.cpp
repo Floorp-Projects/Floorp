@@ -222,14 +222,6 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     container = tmpContainer.forget();
   }
 
-  // Retrieve the size of the decoded video frame, before being scaled
-  // by pixel aspect ratio.
-  gfxIntSize frameSize = container->GetCurrentSize();
-  if (frameSize.width == 0 || frameSize.height == 0) {
-    // No image, or zero-sized image. No point creating a layer.
-    return nsnull;
-  }
-
   // Compute the rectangle in which to paint the video. We need to use
   // the largest rectangle that fills our content-box and has the
   // correct aspect ratio.
@@ -249,7 +241,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   // Set a transform on the layer to draw the video in the right place
   gfxMatrix transform;
   transform.Translate(r.pos);
-  transform.Scale(r.Width()/frameSize.width, r.Height()/frameSize.height);
+  transform.Scale(r.Width()/videoSize.width, r.Height()/videoSize.height);
   layer->SetTransform(gfx3DMatrix::From2D(transform));
   nsRefPtr<Layer> result = layer.forget();
   return result.forget();
