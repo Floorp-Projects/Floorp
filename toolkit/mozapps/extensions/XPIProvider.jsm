@@ -3286,7 +3286,7 @@ AddonInstall.prototype = {
     try {
       let principal = zipreader.getCertificatePrincipal(null);
       if (principal && principal.hasCertificate) {
-        LOG("Verifying XPI signiture");
+        LOG("Verifying XPI signature");
         if (verifyZipSigning(zipreader, principal)) {
           let x509 = principal.certificate;
           if (x509 instanceof Ci.nsIX509Cert)
