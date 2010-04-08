@@ -624,7 +624,7 @@ WeaveSvc.prototype = {
 
   _autoConnect: let (attempts = 0) function _autoConnect() {
     let reason = "";
-    if (this._mpLocked())
+    if (Utils.mpLocked())
       reason = "master password still locked";
 
     // Can't autoconnect if we're missing these values
@@ -644,31 +644,14 @@ WeaveSvc.prototype = {
     Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
   },
 
-  _mpLocked: function _mpLocked() {
-    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                  getService(Ci.nsIPKCS11ModuleDB);
-    let sdrSlot = modules.findSlotByName("");
-    let status  = sdrSlot.status;
-    let slots = Ci.nsIPKCS11Slot;
-
-    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN)
-      return false;
-
-    if (status == slots.SLOT_NOT_LOGGED_IN)
-      return true;
-
-    this._log.debug("something wacky happened, pretending MP is locked");
-    return true;
-  },
-
   _setBasicLoginStatus: function _setBasicLoginStatus() {
     // Some funky logic to make sure if there's a MP, we don't give the error
     // until we actually try to login.
     if (!this.username)
       Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
-    else if (!(this._mpLocked() || this.password))
+    else if (!(Utils.mpLocked() || this.password))
       Status.login = Weave.LOGIN_FAILED_NO_PASSWORD;
-    else if (!(this._mpLocked() || this.passphrase))
+    else if (!(Utils.mpLocked() || this.passphrase))
       Status.login = Weave.LOGIN_FAILED_NO_PASSPHRASE;
   },
 
