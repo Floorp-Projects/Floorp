@@ -1351,22 +1351,23 @@ WeaveSvc.prototype = {
   },
 
   /**
-   * Wipe all user data from the server.
+   * Wipe user data from the server.
    *
-   * @param engines [optional]
-   *        Array of engine names to wipe. If not given, all engines are used.
+   * @param collections [optional]
+   *        Array of collections to wipe. If not given, all collections are wiped.
    */
-  wipeServer: function WeaveSvc_wipeServer(engines)
+  wipeServer: function WeaveSvc_wipeServer(collections)
     this._catch(this._notify("wipe-server", "", function() {
-      // Grab all the collections for the user and delete each one
-      let info = new Resource(this.infoURL).get();
-      for (let name in info.obj) {
+      if (!collections) {
+        collections = [];
+        let info = new Resource(this.infoURL).get();
+        for (let name in info.obj)
+          collections.push(name);
+      }
+      for each (let name in collections) {
         try {
-          // If we have a list of engines, make sure it's one we want
-          if (engines && engines.indexOf(name) == -1)
-            continue;
-
           new Resource(this.storageURL + name).delete();
+          new Resource(this.storageURL + "crypto/" + name).delete();
         }
         catch(ex) {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));

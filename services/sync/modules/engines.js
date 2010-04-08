@@ -262,12 +262,6 @@ Engine.prototype = {
     }
   },
 
-  wipeServer: function Engine_wipeServer() {
-    if (!this._wipeServer)
-      throw "engine does not implement _wipeServer method";
-    this._notify("wipe-server", this.name, this._wipeServer)();
-  },
-
   /**
    * Get rid of any local meta-data
    */
@@ -735,11 +729,6 @@ SyncEngine.prototype = {
       this._log.warn("Sync failed");
       throw e;
     }
-  },
-
-  _wipeServer: function SyncEngine__wipeServer() {
-    new Resource(this.engineURL).delete();
-    new Resource(this.cryptoMetaURL).delete();
   },
 
   _testDecrypt: function _testDecrypt() {
