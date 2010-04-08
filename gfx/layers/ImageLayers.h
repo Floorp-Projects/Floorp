@@ -167,6 +167,11 @@ public:
     return mManager;
   }
 
+  /**
+   * Returns the size of the image in pixels.
+   */
+  virtual gfxIntSize GetCurrentSize() = 0;
+
 protected:
   LayerManager* mManager;
 
