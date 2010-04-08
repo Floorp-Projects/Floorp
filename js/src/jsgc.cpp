@@ -3124,36 +3124,27 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 static void
 GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 {
+    JS_ASSERT_NOT_ON_TRACE(cx);
     JSRuntime *rt = cx->runtime;
-    JS_UNLOCK_GC(rt);
+    bool firstRun = true;
 
-#ifdef JS_TRACER
-    if (!JS_ON_TRACE(cx))
-#endif
-    {
-        VOUCH_HAVE_STACK();
-
-        PreGCCleanup(cx, gckind);
-
-        TIMESTAMP(gcTimer.startMark);
-
-      restart:
-        GC(cx, gckind  GCTIMER_ARG);
-    }
-
-    JS_LOCK_GC(rt);
-
-    /*
-     * We want to restart GC if js_GC was called recursively or if any of the
-     * finalizers called js_RemoveRoot or js_UnlockGCThingRT.
-     */
-    if (!JS_ON_TRACE(cx) && (rt->gcLevel > 1 || rt->gcPoke)) {
-        VOUCH_HAVE_STACK();
+    do {
         rt->gcLevel = 1;
         rt->gcPoke = JS_FALSE;
-        JS_UNLOCK_GC(rt);
-        goto restart;
-    }
+
+        AutoUnlockGC unlock(rt);
+        if (firstRun) {
+            PreGCCleanup(cx, gckind);
+            TIMESTAMP(gcTimer.startMark);
+            firstRun = false;
+        }
+        GC(cx, gckind  GCTIMER_ARG);
+
+        // GC again if:
+        //   - another thread, not in a request, called js_GC
+        //   - js_GC was called recursively
+        //   - a finalizer called js_RemoveRoot or js_UnlockGCThingRT.
+    } while (rt->gcLevel > 1 || rt->gcPoke);
 }
 
 /*
@@ -3439,7 +3430,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         goto restart_at_beginning;
     }
 
-    GCUntilDone(cx, gckind  GCTIMER_ARG);
+    if (!JS_ON_TRACE(cx))
+        GCUntilDone(cx, gckind  GCTIMER_ARG);
     rt->setGCLastBytes(rt->gcBytes);
 
   done_running:
