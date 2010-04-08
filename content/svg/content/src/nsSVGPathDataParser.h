@@ -72,7 +72,7 @@ protected:
   virtual nsresult StoreEllipticalArc(PRBool absCoords, float x, float y,
                                       float r1, float r2, float angle,
                                       PRBool largeArcFlag, PRBool sweepFlag) = 0;
-  nsresult  Match();
+  virtual nsresult Match();
  
   nsresult MatchCoordPair(float* aX, float* aY);
   PRBool IsTokenCoordPairStarter();
@@ -144,7 +144,7 @@ class nsSVGPathDataParserToInternal : public nsSVGPathDataParser
 {
 public:
   nsSVGPathDataParserToInternal(nsSVGPathList *data) : mPathData(data) {}
-  virtual nsresult Parse(const nsAString &aValue);
+  nsresult Parse(const nsAString &aValue);
 
 protected:
   virtual nsresult StoreMoveTo(PRBool absCoords, float x, float y);
@@ -187,7 +187,7 @@ private:
   nsresult PathLineTo(float x, float y);
   nsresult PathCurveTo(float x1, float y1, float x2, float y2, float x3, float y3);
   nsresult PathClose();
-  nsresult PathFini();
+  void PathFini();
 };
 
 class nsSVGPathDataParserToDOM : public nsSVGPathDataParser
