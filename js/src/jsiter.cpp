@@ -391,16 +391,19 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:
             /*
-             * Fail over to the default enumerating native iterator.
-             *
-             * Create iterobj with a NULL parent to ensure that we use the
-             * correct scope chain to lookup the iterator's constructor. Since
-             * we use the parent slot to keep track of the iterable, we must
-             * fix it up after.
+             * Fail over to the default enumerating native iterator. These objects
+             * never escape, so we don't care for the proper parent or proto to
+             * be set. Furthermore we re-use the last cached iterator object, if
+             * possible.
              */
-            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
-            if (!iterobj)
-                return false;
+            iterobj = JS_THREAD_DATA(cx)->cachedIteratorObject;
+            if (iterobj) {
+                JS_THREAD_DATA(cx)->cachedIteratorObject = NULL;
+            } else {
+                iterobj = js_NewObjectWithGivenProto(cx, &js_IteratorClass, NULL, NULL);
+                if (!iterobj)
+                    return false;
+            }
 
             /* Store in *vp to protect it from GC (callers must root vp). */
             *vp = OBJECT_TO_JSVAL(iterobj);
@@ -434,6 +437,7 @@ js_CloseIterator(JSContext *cx, jsval v)
 
     if (clasp == &js_IteratorClass) {
         js_CloseNativeIterator(cx, obj);
+        JS_THREAD_DATA(cx)->cachedIteratorObject = obj;
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
