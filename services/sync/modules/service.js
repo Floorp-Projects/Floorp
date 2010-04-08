@@ -623,9 +623,9 @@ WeaveSvc.prototype = {
   },
 
   _autoConnect: let (attempts = 0) function _autoConnect() {
-    let reason = "";
-    if (Utils.mpLocked())
-      reason = "master password still locked";
+    let reason = 
+      Utils.mpLocked() ? "master password still locked"
+                       : this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
 
     // Can't autoconnect if we're missing these values
     if (!reason) {
@@ -931,24 +931,30 @@ WeaveSvc.prototype = {
 
   /**
    * Determine if a sync should run.
+   * 
+   * @param ignore [optional]
+   *        array of reasons to ignore when checking
    *
    * @return Reason for not syncing; not-truthy if sync should run
    */
-  _checkSync: function WeaveSvc__checkSync() {
+  _checkSync: function WeaveSvc__checkSync(ignore) {
     let reason = "";
     if (!this.enabled)
       reason = kSyncWeaveDisabled;
-    else if (!this._loggedIn)
-      reason = kSyncNotLoggedIn;
     else if (Svc.IO.offline)
       reason = kSyncNetworkOffline;
     else if (Svc.Private && Svc.Private.privateBrowsingEnabled)
       // Svc.Private doesn't exist on Fennec -- don't assume it's there.
       reason = kSyncInPrivateBrowsing;
-    else if (Svc.Prefs.get("firstSync") == "notReady")
-      reason = kFirstSyncChoiceNotMade;
     else if (Status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
+    else if (!this._loggedIn)
+      reason = kSyncNotLoggedIn;
+    else if (Svc.Prefs.get("firstSync") == "notReady")
+      reason = kFirstSyncChoiceNotMade;
+
+    if (ignore && ignore.indexOf(reason) != -1)
+      return "";
 
     return reason;
   },
@@ -977,8 +983,7 @@ WeaveSvc.prototype = {
   _checkSyncStatus: function WeaveSvc__checkSyncStatus() {
     // Should we be syncing now, if not, cancel any sync timers and return
     // if we're in backoff, we'll schedule the next sync
-    let reason = this._checkSync();
-    if (reason && reason != kSyncBackoffNotMet) {
+    if (this._checkSync([kSyncBackoffNotMet])) {
       this._clearSyncTriggers();
       Status.service = STATUS_DISABLED;
       return;
