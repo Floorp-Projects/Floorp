@@ -2842,7 +2842,239 @@ void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
     if (lastGC)
         fclose(gcFile);
 }
+
+# define GCTIMER_PARAM      , GCTimer &gcTimer
+# define GCTIMER_ARG        , gcTimer
+# define TIMESTAMP(x)       (x = rdtsc())
+#else
+# define GCTIMER_PARAM
+# define GCTIMER_ARG
+# define TIMESTAMP(x)       ((void) 0)
 #endif
+
+/*
+ * Perform mark-and-sweep GC.
+ *
+ * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
+ * other thread must be either outside all requests or blocked waiting for GC
+ * to finish. Note that the caller does not hold rt->gcLock.
+ */
+static void
+GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
+{
+    JSRuntime *rt = cx->runtime;
+    JSTracer trc;
+    JSGCArena *emptyArenas, *a, **ap;
+#ifdef JS_GCMETER
+    uint32 nlivearenas, nkilledarenas, nthings;
+#endif
+
+    rt->gcNumber++;
+    JS_ASSERT(!rt->gcUnmarkedArenaStackTop);
+    JS_ASSERT(rt->gcMarkLaterCount == 0);
+
+    /*
+     * Mark phase.
+     */
+    JS_TRACER_INIT(&trc, cx, NULL);
+    rt->gcMarkingTracer = &trc;
+    JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
+
+#ifdef DEBUG
+    for (a = rt->gcDoubleArenaList.head; a; a = a->info.prev)
+        JS_ASSERT(!a->info.hasMarkedDoubles);
+#endif
+
+    {
+        /*
+         * Query rt->gcKeepAtoms only when we know that all other threads are
+         * suspended, see bug 541790.
+         */
+        bool keepAtoms = (gckind & GC_KEEP_ATOMS) || rt->gcKeepAtoms != 0;
+        js_TraceRuntime(&trc, keepAtoms);
+        js_MarkScriptFilenames(rt, keepAtoms);
+    }
+
+    /*
+     * Mark children of things that caused too deep recursion during the above
+     * tracing.
+     */
+    MarkDelayedChildren(&trc);
+
+    JS_ASSERT(!cx->insideGCMarkCallback);
+    if (rt->gcCallback) {
+        cx->insideGCMarkCallback = JS_TRUE;
+        (void) rt->gcCallback(cx, JSGC_MARK_END);
+        JS_ASSERT(cx->insideGCMarkCallback);
+        cx->insideGCMarkCallback = JS_FALSE;
+    }
+    JS_ASSERT(rt->gcMarkLaterCount == 0);
+
+    rt->gcMarkingTracer = NULL;
+
+#ifdef JS_THREADSAFE
+    cx->createDeallocatorTask();
+#endif
+
+    /*
+     * Sweep phase.
+     *
+     * Finalize as we sweep, outside of rt->gcLock but with rt->gcRunning set
+     * so that any attempt to allocate a GC-thing from a finalizer will fail,
+     * rather than nest badly and leave the unmarked newborn to be swept.
+     *
+     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * JSString or jsdouble held in a hashtable to check if the hashtable
+     * entry can be freed. Note that even after the entry is freed, JSObject
+     * finalizers can continue to access the corresponding jsdouble* and
+     * JSString* assuming that they are unique. This works since the
+     * atomization API must not be called during GC.
+     */
+    TIMESTAMP(gcTimer.startSweep);
+    js_SweepAtomState(cx);
+
+    /* Finalize iterator states before the objects they iterate over. */
+    CloseNativeIterators(cx);
+
+    /* Finalize watch points associated with unreachable objects. */
+    js_SweepWatchPoints(cx);
+
+#ifdef DEBUG
+    /* Save the pre-sweep count of scope-mapped properties. */
+    rt->liveScopePropsPreSweep = rt->liveScopeProps;
+#endif
+
+    /*
+     * We finalize JSObject instances before JSString, double and other GC
+     * things to ensure that object's finalizer can access them even if they
+     * will be freed.
+     *
+     * To minimize the number of checks per each to be freed object and
+     * function we use separated list finalizers when a debug hook is
+     * installed.
+     */
+    emptyArenas = NULL;
+    if (!cx->debugHooks->objectHook) {
+        FinalizeArenaList<JSObject, FinalizeObject>
+            (cx, FINALIZE_OBJECT, &emptyArenas);
+        FinalizeArenaList<JSFunction, FinalizeFunction>
+            (cx, FINALIZE_FUNCTION, &emptyArenas);
+    } else {
+        FinalizeArenaList<JSObject, FinalizeHookedObject>
+            (cx, FINALIZE_OBJECT, &emptyArenas);
+        FinalizeArenaList<JSFunction, FinalizeHookedFunction>
+            (cx, FINALIZE_FUNCTION, &emptyArenas);
+    }
+#if JS_HAS_XML_SUPPORT
+    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &emptyArenas);
+#endif
+    TIMESTAMP(gcTimer.sweepObjectEnd);
+
+    /*
+     * We sweep the deflated cache before we finalize the strings so the
+     * cache can safely use js_IsAboutToBeFinalized..
+     */
+    rt->deflatedStringCache->sweep(cx);
+
+    FinalizeArenaList<JSString, FinalizeString>
+        (cx, FINALIZE_STRING, &emptyArenas);
+    for (unsigned i = FINALIZE_EXTERNAL_STRING0;
+         i <= FINALIZE_EXTERNAL_STRING_LAST;
+         ++i) {
+        FinalizeArenaList<JSString, FinalizeExternalString>
+            (cx, i, &emptyArenas);
+    }
+    TIMESTAMP(gcTimer.sweepStringEnd);
+
+    ap = &rt->gcDoubleArenaList.head;
+    METER((nlivearenas = 0, nkilledarenas = 0, nthings = 0));
+    while ((a = *ap) != NULL) {
+        if (!a->info.hasMarkedDoubles) {
+            /* No marked double values in the arena. */
+            *ap = a->info.prev;
+            a->info.prev = emptyArenas;
+            emptyArenas = a;
+            METER(nkilledarenas++);
+        } else {
+#ifdef JS_GCMETER
+            for (jsuword offset = 0;
+                 offset != DOUBLES_PER_ARENA * sizeof(jsdouble);
+                 offset += sizeof(jsdouble)) {
+                if (IsMarkedGCThing(a, offset))
+                    METER(nthings++);
+            }
+            METER(nlivearenas++);
+#endif
+            a->info.hasMarkedDoubles = false;
+            ap = &a->info.prev;
+        }
+    }
+    METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,
+                           nlivearenas, nkilledarenas, nthings));
+    rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
+    TIMESTAMP(gcTimer.sweepDoubleEnd);
+    /*
+     * Sweep the runtime's property tree after finalizing objects, in case any
+     * had watchpoints referencing tree nodes.
+     */
+    js::SweepScopeProperties(cx);
+
+    /*
+     * Sweep script filenames after sweeping functions in the generic loop
+     * above. In this way when a scripted function's finalizer destroys the
+     * script and calls rt->destroyScriptHook, the hook can still access the
+     * script's filename. See bug 323267.
+     */
+    js_SweepScriptFilenames(rt);
+
+    /*
+     * Destroy arenas after we finished the sweeping so finalizers can safely
+     * use js_IsAboutToBeFinalized().
+     */
+    DestroyGCArenas(rt, emptyArenas);
+    TIMESTAMP(gcTimer.sweepDestroyEnd);
+
+#ifdef JS_THREADSAFE
+    cx->submitDeallocatorTask();
+#endif
+
+    if (rt->gcCallback)
+        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+#ifdef DEBUG_srcnotesize
+  { extern void DumpSrcNoteSizeHist();
+    DumpSrcNoteSizeHist();
+    printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
+  }
+#endif
+
+#ifdef JS_SCOPE_DEPTH_METER
+  { static FILE *fp;
+    if (!fp)
+        fp = fopen("/tmp/scopedepth.stats", "w");
+
+    if (fp) {
+        JS_DumpBasicStats(&rt->protoLookupDepthStats, "proto-lookup depth", fp);
+        JS_DumpBasicStats(&rt->scopeSearchDepthStats, "scope-search depth", fp);
+        JS_DumpBasicStats(&rt->hostenvScopeDepthStats, "hostenv scope depth", fp);
+        JS_DumpBasicStats(&rt->lexicalScopeDepthStats, "lexical scope depth", fp);
+
+        putc('\n', fp);
+        fflush(fp);
+    }
+  }
+#endif /* JS_SCOPE_DEPTH_METER */
+
+#ifdef JS_DUMP_LOOP_STATS
+  { static FILE *lsfp;
+    if (!lsfp)
+        lsfp = fopen("/tmp/loopstats", "w");
+    if (lsfp) {
+        JS_DumpBasicStats(&rt->loopStats, "loops", lsfp);
+        fflush(lsfp);
+    }
+  }
+#endif /* JS_DUMP_LOOP_STATS */
+}
 
 /*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
@@ -2853,13 +3085,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
     JSGCCallback callback;
-    JSTracer trc;
-    JSGCArena *emptyArenas, *a, **ap;
 #ifdef JS_THREADSAFE
     size_t requestDebit;
-#endif
-#ifdef JS_GCMETER
-    uint32 nlivearenas, nkilledarenas, nthings;
 #endif
 
     JS_ASSERT_IF(gckind == GC_LAST_DITCH, !JS_ON_TRACE(cx));
@@ -2889,9 +3116,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     static uint64 firstEnter = rdtsc();
     GCTimer gcTimer;
     memset(&gcTimer, 0, sizeof(GCTimer));
-# define TIMESTAMP(x) (x = rdtsc())
-#else
-# define TIMESTAMP(x) ((void) 0)
 #endif
     TIMESTAMP(gcTimer.enter);
 
@@ -3153,214 +3377,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     TIMESTAMP(gcTimer.startMark);
 
   restart:
-    rt->gcNumber++;
-    JS_ASSERT(!rt->gcUnmarkedArenaStackTop);
-    JS_ASSERT(rt->gcMarkLaterCount == 0);
-
-    /*
-     * Mark phase.
-     */
-    JS_TRACER_INIT(&trc, cx, NULL);
-    rt->gcMarkingTracer = &trc;
-    JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
-
-#ifdef DEBUG
-    for (a = rt->gcDoubleArenaList.head; a; a = a->info.prev)
-        JS_ASSERT(!a->info.hasMarkedDoubles);
-#endif
-
-    {
-        /*
-         * Query rt->gcKeepAtoms only when we know that all other threads are
-         * suspended, see bug 541790.
-         */
-        bool keepAtoms = (gckind & GC_KEEP_ATOMS) || rt->gcKeepAtoms != 0;
-        js_TraceRuntime(&trc, keepAtoms);
-        js_MarkScriptFilenames(rt, keepAtoms);
-    }
-
-    /*
-     * Mark children of things that caused too deep recursion during the above
-     * tracing.
-     */
-    MarkDelayedChildren(&trc);
-
-    JS_ASSERT(!cx->insideGCMarkCallback);
-    if (rt->gcCallback) {
-        cx->insideGCMarkCallback = JS_TRUE;
-        (void) rt->gcCallback(cx, JSGC_MARK_END);
-        JS_ASSERT(cx->insideGCMarkCallback);
-        cx->insideGCMarkCallback = JS_FALSE;
-    }
-    JS_ASSERT(rt->gcMarkLaterCount == 0);
-
-    rt->gcMarkingTracer = NULL;
-
-#ifdef JS_THREADSAFE
-    cx->createDeallocatorTask();
-#endif
-
-    /*
-     * Sweep phase.
-     *
-     * Finalize as we sweep, outside of rt->gcLock but with rt->gcRunning set
-     * so that any attempt to allocate a GC-thing from a finalizer will fail,
-     * rather than nest badly and leave the unmarked newborn to be swept.
-     *
-     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
-     * JSString or jsdouble held in a hashtable to check if the hashtable
-     * entry can be freed. Note that even after the entry is freed, JSObject
-     * finalizers can continue to access the corresponding jsdouble* and
-     * JSString* assuming that they are unique. This works since the
-     * atomization API must not be called during GC.
-     */
-    TIMESTAMP(gcTimer.startSweep);
-    js_SweepAtomState(cx);
-
-    /* Finalize iterator states before the objects they iterate over. */
-    CloseNativeIterators(cx);
-
-    /* Finalize watch points associated with unreachable objects. */
-    js_SweepWatchPoints(cx);
-
-#ifdef DEBUG
-    /* Save the pre-sweep count of scope-mapped properties. */
-    rt->liveScopePropsPreSweep = rt->liveScopeProps;
-#endif
-
-    /*
-     * We finalize JSObject instances before JSString, double and other GC
-     * things to ensure that object's finalizer can access them even if they
-     * will be freed.
-     *
-     * To minimize the number of checks per each to be freed object and
-     * function we use separated list finalizers when a debug hook is
-     * installed.
-     */
-    emptyArenas = NULL;
-    if (!cx->debugHooks->objectHook) {
-        FinalizeArenaList<JSObject, FinalizeObject>
-            (cx, FINALIZE_OBJECT, &emptyArenas);
-        FinalizeArenaList<JSFunction, FinalizeFunction>
-            (cx, FINALIZE_FUNCTION, &emptyArenas);
-    } else {
-        FinalizeArenaList<JSObject, FinalizeHookedObject>
-            (cx, FINALIZE_OBJECT, &emptyArenas);
-        FinalizeArenaList<JSFunction, FinalizeHookedFunction>
-            (cx, FINALIZE_FUNCTION, &emptyArenas);
-    }
-#if JS_HAS_XML_SUPPORT
-    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &emptyArenas);
-#endif
-    TIMESTAMP(gcTimer.sweepObjectEnd);
-
-    /*
-     * We sweep the deflated cache before we finalize the strings so the
-     * cache can safely use js_IsAboutToBeFinalized..
-     */
-    rt->deflatedStringCache->sweep(cx);
-
-    FinalizeArenaList<JSString, FinalizeString>
-        (cx, FINALIZE_STRING, &emptyArenas);
-    for (unsigned i = FINALIZE_EXTERNAL_STRING0;
-         i <= FINALIZE_EXTERNAL_STRING_LAST;
-         ++i) {
-        FinalizeArenaList<JSString, FinalizeExternalString>
-            (cx, i, &emptyArenas);
-    }
-    TIMESTAMP(gcTimer.sweepStringEnd);
-
-    ap = &rt->gcDoubleArenaList.head;
-    METER((nlivearenas = 0, nkilledarenas = 0, nthings = 0));
-    while ((a = *ap) != NULL) {
-        if (!a->info.hasMarkedDoubles) {
-            /* No marked double values in the arena. */
-            *ap = a->info.prev;
-            a->info.prev = emptyArenas;
-            emptyArenas = a;
-            METER(nkilledarenas++);
-        } else {
-#ifdef JS_GCMETER
-            for (jsuword offset = 0;
-                 offset != DOUBLES_PER_ARENA * sizeof(jsdouble);
-                 offset += sizeof(jsdouble)) {
-                if (IsMarkedGCThing(a, offset))
-                    METER(nthings++);
-            }
-            METER(nlivearenas++);
-#endif
-            a->info.hasMarkedDoubles = false;
-            ap = &a->info.prev;
-        }
-    }
-    METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,
-                           nlivearenas, nkilledarenas, nthings));
-    rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
-    TIMESTAMP(gcTimer.sweepDoubleEnd);
-    /*
-     * Sweep the runtime's property tree after finalizing objects, in case any
-     * had watchpoints referencing tree nodes.
-     */
-    js::SweepScopeProperties(cx);
-
-    /*
-     * Sweep script filenames after sweeping functions in the generic loop
-     * above. In this way when a scripted function's finalizer destroys the
-     * script and calls rt->destroyScriptHook, the hook can still access the
-     * script's filename. See bug 323267.
-     */
-    js_SweepScriptFilenames(rt);
-
-    /*
-     * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use js_IsAboutToBeFinalized().
-     */
-    DestroyGCArenas(rt, emptyArenas);
-    TIMESTAMP(gcTimer.sweepDestroyEnd);
-
-#ifdef JS_THREADSAFE
-    cx->submitDeallocatorTask();
-#endif
-
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
-#ifdef DEBUG_srcnotesize
-  { extern void DumpSrcNoteSizeHist();
-    DumpSrcNoteSizeHist();
-    printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
-  }
-#endif
-
-#ifdef JS_SCOPE_DEPTH_METER
-  { static FILE *fp;
-    if (!fp)
-        fp = fopen("/tmp/scopedepth.stats", "w");
-
-    if (fp) {
-        JS_DumpBasicStats(&rt->protoLookupDepthStats, "proto-lookup depth", fp);
-        JS_DumpBasicStats(&rt->scopeSearchDepthStats, "scope-search depth", fp);
-        JS_DumpBasicStats(&rt->hostenvScopeDepthStats, "hostenv scope depth", fp);
-        JS_DumpBasicStats(&rt->lexicalScopeDepthStats, "lexical scope depth", fp);
-
-        putc('\n', fp);
-        fflush(fp);
-    }
-  }
-#endif /* JS_SCOPE_DEPTH_METER */
-
-#ifdef JS_DUMP_LOOP_STATS
-  { static FILE *lsfp;
-    if (!lsfp)
-        lsfp = fopen("/tmp/loopstats", "w");
-    if (lsfp) {
-        JS_DumpBasicStats(&rt->loopStats, "loops", lsfp);
-        fflush(lsfp);
-    }
-  }
-#endif /* JS_DUMP_LOOP_STATS */
+    GC(cx, gckind  GCTIMER_ARG);
 
 #ifdef JS_TRACER
-out:
+  out:
 #endif
     JS_LOCK_GC(rt);
 
