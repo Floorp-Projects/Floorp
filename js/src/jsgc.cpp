@@ -1149,7 +1149,6 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
-    rt->gcIteratorTable.clear();
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -1334,39 +1333,6 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
     rv = JS_DHashTableEnumerate(&rt->gcRootsHash, js_gcroot_mapper, &args);
     JS_UNLOCK_GC(rt);
     return rv;
-}
-
-JSBool
-js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
-{
-    JSRuntime *rt;
-    JSBool ok;
-
-    rt = cx->runtime;
-    JS_ASSERT(!rt->gcRunning);
-
-    JS_LOCK_GC(rt);
-    ok = rt->gcIteratorTable.append(obj);
-    JS_UNLOCK_GC(rt);
-    return ok;
-}
-
-static void
-CloseNativeIterators(JSContext *cx)
-{
-    JSRuntime *rt = cx->runtime;
-    size_t length = rt->gcIteratorTable.length();
-    JSObject **array = rt->gcIteratorTable.begin();
-
-    size_t newLength = 0;
-    for (size_t i = 0; i < length; ++i) {
-        JSObject *obj = array[i];
-        if (js_IsAboutToBeFinalized(obj))
-            js_CloseNativeIterator(cx, obj);
-        else
-            array[newLength++] = obj;
-    }
-    rt->gcIteratorTable.resize(newLength);
 }
 
 void
@@ -3216,9 +3182,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     TIMESTAMP(gcTimer.startSweep);
     js_SweepAtomState(cx);
-
-    /* Finalize iterator states before the objects they iterate over. */
-    CloseNativeIterators(cx);
 
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
