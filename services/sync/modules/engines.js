@@ -281,7 +281,9 @@ Engine.prototype = {
   _wipeClient: function Engine__wipeClient() {
     this.resetClient();
     this._log.debug("Deleting all local data");
+    this._tracker.ignoreAll = true;
     this._store.wipe();
+    this._tracker.ignoreAll = false;
   },
 
   wipeClient: function Engine_wipeClient() {
