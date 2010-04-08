@@ -4912,7 +4912,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
      */
-    if (OBJ_SCOPE(obj)->object == obj && !js_DeleteProperty(cx, obj, id, rval))
+    if (obj->scope()->object == obj && !js_DeleteProperty(cx, obj, id, rval))
         return JS_FALSE;
 
     *rval = JSVAL_TRUE;
@@ -7283,7 +7283,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     }
     JS_ASSERT(prop);
     sprop = (JSScopeProperty *) prop;
-    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
+    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
     cval = pobj->getSlotMT(cx, sprop->slot);
     pobj->dropProperty(cx, prop);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));

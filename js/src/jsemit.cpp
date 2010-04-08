@@ -1589,7 +1589,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 
         obj = stmt->blockObj;
         JS_ASSERT(obj->getClass() == &js_BlockClass);
-        scope = OBJ_SCOPE(obj);
+        scope = obj->scope();
         sprop = scope->lookup(ATOM_TO_JSID(atom));
         if (sprop) {
             JS_ASSERT(sprop->hasShortID());
@@ -1880,7 +1880,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 #endif
     }
 
-    OBJ_SCOPE(blockObj)->freeslot = JSSLOT_FREE(&js_BlockClass);
+    blockObj->scope()->freeslot = JSSLOT_FREE(&js_BlockClass);
     return js_GrowSlots(cx, blockObj, JSSLOT_FREE(&js_BlockClass));
 }
 

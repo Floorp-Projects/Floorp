@@ -97,7 +97,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     JSClass *clasp;
     uint32 freeslot;
 
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     if (!scope->isSharedEmpty())
         return scope;
@@ -120,8 +120,8 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     clasp = obj->getClass();
     if (clasp->reserveSlots) {
         /*
-         * FIXME: Here we change OBJ_SCOPE(obj)->freeslot without changing
-         * OBJ_SHAPE(obj). If we strengthen the shape guarantees to cover
+         * FIXME: Here we change obj->scope()->freeslot without changing
+         * obj->shape(). If we strengthen the shape guarantees to cover
          * freeslot, we can eliminate a check in JSOP_SETPROP and in
          * js_AddProperty. See bug 535416.
          */
@@ -1143,7 +1143,7 @@ JSScope::clear(JSContext *cx)
     uint32 newShape;
     if (proto &&
         proto->isNative() &&
-        (emptyScope = OBJ_SCOPE(proto)->emptyScope) &&
+        (emptyScope = proto->scope()->emptyScope) &&
         emptyScope->clasp == clasp) {
         newShape = emptyScope->shape;
     } else {
@@ -1167,7 +1167,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
     JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     if (sprop->isMethod()) {
 #ifdef DEBUG
-        jsval prev = LOCKED_OBJ_GET_SLOT(object, sprop->slot);
+        jsval prev = object->lockedGetSlot(sprop->slot);
         JS_ASSERT(sprop->methodValue() == prev);
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(object->getClass() == &js_ObjectClass);

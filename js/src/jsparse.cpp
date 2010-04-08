@@ -3211,7 +3211,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     /*
      * Define the let binding's property before storing pn in a reserved slot,
-     * since block_reserveSlots depends on OBJ_SCOPE(blockObj)->entryCount.
+     * since block_reserveSlots depends on blockObj->scope()->entryCount.
      */
     if (!js_DefineBlockVariable(cx, blockObj, ATOM_TO_JSID(atom), n))
         return JS_FALSE;
@@ -3227,7 +3227,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         !js_GrowSlots(cx, blockObj, slot + 1)) {
         return JS_FALSE;
     }
-    OBJ_SCOPE(blockObj)->freeslot = slot + 1;
+    blockObj->scope()->freeslot = slot + 1;
     blockObj->setSlot(slot, PRIVATE_TO_JSVAL(pn));
     return JS_TRUE;
 }
@@ -3239,7 +3239,7 @@ PopStatement(JSTreeContext *tc)
 
     if (stmt->flags & SIF_SCOPE) {
         JSObject *obj = stmt->blockObj;
-        JSScope *scope = OBJ_SCOPE(obj);
+        JSScope *scope = obj->scope();
         JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
 
         for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {

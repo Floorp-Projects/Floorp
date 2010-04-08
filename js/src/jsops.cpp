@@ -608,7 +608,7 @@ END_CASE(JSOP_PICK)
             JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
                       !sprop->hasDefaultSetter());                            \
             *vp = ((sprop)->slot != SPROP_INVALID_SLOT)                       \
-                  ? LOCKED_OBJ_GET_SLOT(pobj, (sprop)->slot)                  \
+                  ? (pobj)->lockedGetSlot((sprop)->slot)                      \
                   : JSVAL_VOID;                                               \
         } else {                                                              \
             if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
@@ -621,9 +621,9 @@ END_CASE(JSOP_PICK)
         TRACE_2(SetPropHit, entry, sprop);                                    \
         if (sprop->hasDefaultSetter() &&                                      \
             (sprop)->slot != SPROP_INVALID_SLOT &&                            \
-            !OBJ_SCOPE(obj)->brandedOrHasMethodBarrier()) {                   \
+            !(obj)->scope()->brandedOrHasMethodBarrier()) {                   \
             /* Fast path for, e.g., plain Object instance properties. */      \
-            LOCKED_OBJ_SET_SLOT(obj, (sprop)->slot, *vp);                     \
+            (obj)->lockedSetSlot((sprop)->slot, *vp);                         \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, sprop, false, vp))                     \
                 goto error;                                                   \
@@ -1208,14 +1208,14 @@ BEGIN_CASE(JSOP_NAMEDEC)
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
         if (obj == obj2 && entry->vword.isSlot()) {
             slot = entry->vword.toSlot();
-            JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot);
-            rval = LOCKED_OBJ_GET_SLOT(obj, slot);
+            JS_ASSERT(slot < obj->scope()->freeslot);
+            rval = obj->lockedGetSlot(slot);
             if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
                 rtmp = rval;
                 rval += (js_CodeSpec[op].format & JOF_INC) ? 2 : -2;
                 if (!(js_CodeSpec[op].format & JOF_POST))
                     rtmp = rval;
-                LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+                obj->lockedSetSlot(slot, rval);
                 PUSH_OPND(rtmp);
                 len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
@@ -1472,8 +1472,8 @@ BEGIN_CASE(JSOP_GETXPROP)
                 rval = entry->vword.toJsval();
             } else if (entry->vword.isSlot()) {
                 slot = entry->vword.toSlot();
-                JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-                rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+                JS_ASSERT(slot < obj2->scope()->freeslot);
+                rval = obj2->lockedGetSlot(slot);
             } else {
                 JS_ASSERT(entry->vword.isSprop());
                 sprop = entry->vword.toSprop();
@@ -1564,8 +1564,8 @@ BEGIN_CASE(JSOP_CALLPROP)
             rval = entry->vword.toJsval();
         } else if (entry->vword.isSlot()) {
             slot = entry->vword.toSlot();
-            JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-            rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+            JS_ASSERT(slot < obj2->scope()->freeslot);
+            rval = obj2->lockedGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isSprop());
             sprop = entry->vword.toSprop();
@@ -1682,7 +1682,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             JS_ASSERT(sprop->writable());
             JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
 
-            JSScope *scope = OBJ_SCOPE(obj);
+            JSScope *scope = obj->scope();
             JS_ASSERT(!scope->sealed());
 
             /*
@@ -1696,7 +1696,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 if (entry->vcapTag() == 0 ||
                     ((obj2 = obj->getProto()) &&
                      obj2->isNative() &&
-                     OBJ_SHAPE(obj2) == entry->vshape())) {
+                     obj2->shape() == entry->vshape())) {
                     goto fast_set_propcache_hit;
                 }
 
@@ -1790,7 +1790,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * branded scope.
                  */
                 TRACE_2(SetPropHit, entry, sprop);
-                LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+                obj->lockedSetSlot(slot, rval);
 
                 /*
                  * Purge the property cache of the id we may have just
@@ -1812,7 +1812,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             if (obj == obj2) {
                 sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
-                JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
+                JS_ASSERT(!obj2->scope()->sealed());
                 NATIVE_SET(cx, obj, sprop, entry, &rval);
             }
             if (sprop)
@@ -2284,8 +2284,8 @@ BEGIN_CASE(JSOP_CALLNAME)
 
         if (entry->vword.isSlot()) {
             slot = entry->vword.toSlot();
-            JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-            rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+            JS_ASSERT(slot < obj2->scope()->freeslot);
+            rval = obj2->lockedGetSlot(slot);
             goto do_push_rval;
         }
 
@@ -2708,8 +2708,8 @@ BEGIN_CASE(JSOP_CALLDSLOT)
 
     index = GET_UINT16(regs.pc);
     JS_ASSERT(JS_INITIAL_NSLOTS + index < jsatomid(obj->dslots[-1]));
-    JS_ASSERT_IF(OBJ_SCOPE(obj)->object == obj,
-                 JS_INITIAL_NSLOTS + index < OBJ_SCOPE(obj)->freeslot);
+    JS_ASSERT_IF(obj->scope()->object == obj,
+                 JS_INITIAL_NSLOTS + index < obj->scope()->freeslot);
 
     PUSH_OPND(obj->dslots[index]);
     if (op == JSOP_CALLDSLOT)
@@ -2760,12 +2760,12 @@ BEGIN_CASE(JSOP_SETGVAR)
     } else {
         slot = JSVAL_TO_INT(lval);
         JS_LOCK_OBJ(cx, obj);
-        JSScope *scope = OBJ_SCOPE(obj);
+        JSScope *scope = obj->scope();
         if (!scope->methodWriteBarrier(cx, slot, rval)) {
             JS_UNLOCK_SCOPE(cx, scope);
             goto error;
         }
-        LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+        obj->lockedSetSlot(slot, rval);
         JS_UNLOCK_SCOPE(cx, scope);
     }
 END_SET_CASE(JSOP_SETGVAR)
@@ -2825,7 +2825,7 @@ BEGIN_CASE(JSOP_DEFVAR)
         obj->isNative()) {
         sprop = (JSScopeProperty *) prop;
         if (!sprop->configurable() &&
-            SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
+            SPROP_HAS_VALID_SLOT(sprop, obj->scope()) &&
             sprop->hasDefaultGetterOrIsMethod() &&
             sprop->hasDefaultSetter()) {
             /*
@@ -3137,7 +3137,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
                     obj2 = JSVAL_TO_OBJECT(lval);
                     JS_ASSERT(obj2->getClass() == &js_ObjectClass);
-                    JS_ASSERT(OBJ_SCOPE(obj2)->object == obj2);
+                    JS_ASSERT(obj2->scope()->object == obj2);
                     break;
                 }
             }
@@ -3350,7 +3350,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JS_ASSERT(!obj->getClass()->reserveSlots);
     JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
 
-    JSScope *scope = OBJ_SCOPE(obj);
+    JSScope *scope = obj->scope();
     PropertyCacheEntry *entry;
 
     /*
@@ -3403,7 +3403,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * contain a method of a branded scope.
          */
         TRACE_2(SetPropHit, entry, sprop);
-        LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+        obj->lockedSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
 

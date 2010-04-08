@@ -2158,7 +2158,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (cx->runtime->gcNumber != sample || entry->vshape() != OBJ_SHAPE(pobj)) {
+    if (cx->runtime->gcNumber != sample || entry->vshape() != pobj->shape()) {
         pobj->dropProperty(cx, prop);
         return true;
     }
@@ -2172,15 +2172,15 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     } else if (entry->vword.isSprop()) {
         JS_ASSERT(entry->vword.toSprop() == sprop);
         JS_ASSERT_IF(sprop->isMethod(),
-                     sprop->methodValue() == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
+                     sprop->methodValue() == pobj->lockedGetSlot(sprop->slot));
     } else {
         jsval v;
         JS_ASSERT(entry->vword.isObject());
         JS_ASSERT(!entry->vword.isNull());
-        JS_ASSERT(OBJ_SCOPE(pobj)->brandedOrHasMethodBarrier());
+        JS_ASSERT(pobj->scope()->brandedOrHasMethodBarrier());
         JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
-        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
-        v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
+        v = pobj->lockedGetSlot(sprop->slot);
         JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
         JS_ASSERT(entry->vword.toObject() == JSVAL_TO_OBJECT(v));
 
