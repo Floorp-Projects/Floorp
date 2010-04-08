@@ -378,14 +378,15 @@ JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure)
 {
 #ifdef JS_TRACER
-    JS_LOCK_GC(rt);
-    bool wasInhibited = rt->debuggerInhibitsJIT();
+    {
+        AutoLockGC lock(rt);
+        bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
-    rt->globalDebugHooks.interruptHandler = handler;
-    rt->globalDebugHooks.interruptHandlerData = closure;
+        rt->globalDebugHooks.interruptHandler = handler;
+        rt->globalDebugHooks.interruptHandlerData = closure;
 #ifdef JS_TRACER
-    JITInhibitingHookChange(rt, wasInhibited);
-    JS_UNLOCK_GC(rt);
+        JITInhibitingHookChange(rt, wasInhibited);
+    }
     LeaveTraceRT(rt);
 #endif
     return JS_TRUE;
@@ -395,7 +396,7 @@ JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 {
 #ifdef JS_TRACER
-    JS_LOCK_GC(rt);
+    AutoLockGC lock(rt);
     bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
     if (handlerp)
@@ -406,7 +407,6 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
     rt->globalDebugHooks.interruptHandlerData = 0;
 #ifdef JS_TRACER
     JITInhibitingHookChange(rt, wasInhibited);
-    JS_UNLOCK_GC(rt);
 #endif
     return JS_TRUE;
 }
@@ -1591,14 +1591,15 @@ JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
 #ifdef JS_TRACER
-    JS_LOCK_GC(rt);
-    bool wasInhibited = rt->debuggerInhibitsJIT();
+    {
+        AutoLockGC lock(rt);
+        bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
-    rt->globalDebugHooks.callHook = hook;
-    rt->globalDebugHooks.callHookData = closure;
+        rt->globalDebugHooks.callHook = hook;
+        rt->globalDebugHooks.callHookData = closure;
 #ifdef JS_TRACER
-    JITInhibitingHookChange(rt, wasInhibited);
-    JS_UNLOCK_GC(rt);
+        JITInhibitingHookChange(rt, wasInhibited);
+    }
     if (hook)
         LeaveTraceRT(rt);
 #endif
@@ -1609,14 +1610,15 @@ JS_PUBLIC_API(JSBool)
 JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
 {
 #ifdef JS_TRACER
-    JS_LOCK_GC(rt);
-    bool wasInhibited = rt->debuggerInhibitsJIT();
+    {
+        AutoLockGC lock(rt);
+        bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
-    rt->globalDebugHooks.objectHook = hook;
-    rt->globalDebugHooks.objectHookData = closure;
+        rt->globalDebugHooks.objectHook = hook;
+        rt->globalDebugHooks.objectHookData = closure;
 #ifdef JS_TRACER
-    JITInhibitingHookChange(rt, wasInhibited);
-    JS_UNLOCK_GC(rt);
+        JITInhibitingHookChange(rt, wasInhibited);
+    }
     if (hook)
         LeaveTraceRT(rt);
 #endif
@@ -1820,13 +1822,12 @@ JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks)
         LeaveTrace(cx);
 
 #ifdef JS_TRACER
-    JS_LOCK_GC(cx->runtime);
+    AutoLockGC lock(cx->runtime);
 #endif
     JSDebugHooks *old = const_cast<JSDebugHooks *>(cx->debugHooks);
     cx->debugHooks = hooks;
 #ifdef JS_TRACER
     cx->updateJITEnabled();
-    JS_UNLOCK_GC(cx->runtime);
 #endif
     return old;
 }
