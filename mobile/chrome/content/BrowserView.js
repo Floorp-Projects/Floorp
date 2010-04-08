@@ -46,7 +46,6 @@ const kBrowserFormZoomLevelMin = 1.0;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 const kBrowserViewZoomLevelIncrement = 0.1;
-const kBrowserViewZoomLevelPageFitAdjust = 0.2;
 const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
 const kBrowserViewPrefetchBeginIdleWaitLoading = 10;    // seconds
 const kBrowserViewCacheSize = 6;
@@ -613,7 +612,8 @@ BrowserView.prototype = {
       return metaData.scale;
 
     let zl = this.getPageZoomLevel();
-    return BrowserView.Util.adjustZoomLevel(zl, kBrowserViewZoomLevelPageFitAdjust);
+    let granularity = gPrefService.getIntPref("browser.ui.zoom.pageFitGranularity");
+    return BrowserView.Util.adjustZoomLevel(zl, 1 / granularity);
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
