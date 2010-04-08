@@ -1714,18 +1714,18 @@ const BrowserSearch = {
   },
 
   updateSearchButtons: function() {
-    if (this._engines)
+    let container = document.getElementById("search-buttons");
+    if (this._engines && container.hasChildNodes())
       return;
 
     // Clean the previous search engines button
-    var container = document.getElementById("search-buttons");
     while (container.hasChildNodes())
       container.removeChild(container.lastChild);
 
     let engines = this.engines;
-    for (var e = 0; e < engines.length; e++) {
-      var button = document.createElement("radio");
-      var engine = engines[e];
+    for (let e = 0; e < engines.length; e++) {
+      let button = document.createElement("radio");
+      let engine = engines[e];
       button.id = engine.name;
       button.setAttribute("label", engine.name);
       button.className = "searchengine";
