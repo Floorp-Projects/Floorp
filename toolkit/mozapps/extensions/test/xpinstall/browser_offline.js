@@ -2,7 +2,6 @@
 // Tests that going offline cancels an in progress download.
 function test() {
   Harness.downloadProgressCallback = download_progress;
-  Harness.downloadFailedCallback = download_failed;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
@@ -23,10 +22,6 @@ function download_progress(addon, value, maxValue) {
     Services.io.offline = true;
   } catch (ex) {
   }
-}
-
-function download_failed(install, status) {
-  is(status, -210, "Install should be cancelled");
 }
 
 function finish_test(count) {
