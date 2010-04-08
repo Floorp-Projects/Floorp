@@ -74,6 +74,12 @@
 
 using namespace js;
 
+/*
+ * Native iterator object slots.
+ */
+const uint32 JSSLOT_ITER_STATE  = JSSLOT_PRIVATE;
+const uint32 JSSLOT_ITER_FLAGS  = JSSLOT_PRIVATE + 1;
+
 JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
 
 #if JS_HAS_GENERATORS
@@ -87,8 +93,8 @@ CloseGenerator(JSContext *cx, JSObject *genobj);
  * Shared code to close iterator's state either through an explicit call or
  * when GC detects that the iterator is no longer reachable.
  */
-void
-js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
+static void
+CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 {
     jsval state;
     JSObject *iterable;
@@ -116,6 +122,12 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 }
 
 static void
+iterator_finalize(JSContext *cx, JSObject *obj)
+{
+    CloseNativeIterator(cx, obj);
+}
+
+static void
 iterator_trace(JSTracer *trc, JSObject *obj)
 {
     /*
@@ -139,7 +151,7 @@ JSClass js_IteratorClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_MARK_IS_TRACE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   iterator_finalize,
     NULL,             NULL,            NULL,            NULL,
     NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL
 };
@@ -156,8 +168,6 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
     iterobj->setParent(obj);
     iterobj->setSlot(JSSLOT_ITER_STATE, JSVAL_NULL);
     iterobj->setSlot(JSSLOT_ITER_FLAGS, INT_TO_JSVAL(flags));
-    if (!js_RegisterCloseableIterator(cx, iterobj))
-        return JS_FALSE;
     if (!obj)
         return JS_TRUE;
 
@@ -433,7 +443,7 @@ js_CloseIterator(JSContext *cx, jsval v)
     clasp = obj->getClass();
 
     if (clasp == &js_IteratorClass) {
-        js_CloseNativeIterator(cx, obj);
+        CloseNativeIterator(cx, obj);
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
