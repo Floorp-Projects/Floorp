@@ -269,6 +269,9 @@ struct JSObject {
         return clasp == getClass();
     }
 
+    inline JSScope *scope() const;
+    inline uint32 shape() const;
+
     bool isDelegate() const {
         return (classword & jsuword(1)) != jsuword(0);
     }
@@ -316,6 +319,9 @@ struct JSObject {
             dslots[slot - JS_INITIAL_NSLOTS] = value;
         }
     }
+
+    inline jsval lockedGetSlot(uintN slot) const;
+    inline void lockedSetSlot(uintN slot, jsval value);
 
     /*
      * These ones are for multi-threaded ("MT") objects.  Use getSlot(),
@@ -536,12 +542,7 @@ struct JSObject {
 #define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(jsval) - 1)
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
-    (JS_ASSERT(obj->isNative()), JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot))
-
-#define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
-    (OBJ_CHECK_SLOT(obj, slot), obj->getSlot(slot))
-#define LOCKED_OBJ_SET_SLOT(obj,slot,value)                                   \
-    (OBJ_CHECK_SLOT(obj, slot), obj->setSlot(slot, value))
+    (JS_ASSERT((obj)->isNative()), JS_ASSERT(slot < (obj)->scope()->freeslot))
 
 #ifdef JS_THREADSAFE
 
@@ -617,7 +618,7 @@ extern JSBool
 js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    (OBJ_SCOPE(OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->entryCount)
+    ((OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->scope()->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
     JSVAL_TO_INT(obj->getSlot(JSSLOT_BLOCK_DEPTH))
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \

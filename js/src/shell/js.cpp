@@ -3106,7 +3106,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = INT_TO_JSVAL(-1);
         return JS_TRUE;
     }
-    return JS_NewNumberValue(cx, OBJ_SHAPE(obj), vp);
+    return JS_NewNumberValue(cx, obj->shape(), vp);
 }
 
 #ifdef JS_THREADSAFE

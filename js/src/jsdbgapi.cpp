@@ -465,7 +465,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
     DBG_UNLOCK(cx->runtime);
     if (!setter) {
         JS_LOCK_OBJ(cx, wp->object);
-        scope = OBJ_SCOPE(wp->object);
+        scope = wp->object->scope();
 
         /*
          * If the property wasn't found on wp->object, or it isn't still being
@@ -555,7 +555,7 @@ FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if (OBJ_SCOPE(wp->object) == scope && wp->sprop->id == id)
+        if (wp->object->scope() == scope && wp->sprop->id == id)
             return wp;
     }
     return NULL;
@@ -591,7 +591,7 @@ js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if ((!scope || OBJ_SCOPE(wp->object) == scope) && wp->sprop == sprop) {
+        if ((!scope || wp->object->scope() == scope) && wp->sprop == sprop) {
             setter = wp->setter;
             break;
         }
@@ -625,7 +625,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             JS_LOCK_OBJ(cx, obj);
             propid = ID_TO_VALUE(sprop->id);
             userid = SPROP_USERID(sprop);
-            scope = OBJ_SCOPE(obj);
+            scope = obj->scope();
             JS_UNLOCK_OBJ(cx, obj);
 
             /* NB: wp is held, so we can safely dereference it still. */
@@ -858,7 +858,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     rt = cx->runtime;
     if (!sprop) {
         /* Check for a deleted symbol watchpoint, which holds its property. */
-        sprop = js_FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
+        sprop = js_FindWatchPoint(rt, obj->scope(), propid);
         if (!sprop) {
             /* Make a new property in obj so we can watch for the first set. */
             if (!js_DefineNativeProperty(cx, obj, propid, JSVAL_VOID, NULL, NULL,
@@ -875,8 +875,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         intN shortid;
 
         if (pobj->isNative()) {
-            value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))
-                    ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+            value = SPROP_HAS_VALID_SLOT(sprop, pobj->scope())
+                    ? pobj->lockedGetSlot(sprop->slot)
                     : JSVAL_VOID;
             getter = sprop->getter();
             setter = sprop->setter();
@@ -909,7 +909,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
-    wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
+    wp = FindWatchPoint(rt, obj->scope(), propid);
     if (!wp) {
         DBG_UNLOCK(rt);
         watcher = js_WrapWatchedSetter(cx, propid, sprop->attributes(), sprop->setter());
@@ -949,7 +949,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
          * a watchpoint for (obj, propid).
          */
         DBG_LOCK(rt);
-        JS_ASSERT(!FindWatchPoint(rt, OBJ_SCOPE(obj), propid));
+        JS_ASSERT(!FindWatchPoint(rt, obj->scope(), propid));
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
         ++rt->debuggerMutations;
     }
@@ -1429,7 +1429,7 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
     JSScope *scope;
 
     sprop = *iteratorp;
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
 
     /* XXXbe minor(?) incompatibility: iterate in reverse definition order */
     sprop = sprop ? sprop->parent : scope->lastProperty();
@@ -1478,7 +1478,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     }
     pd->alias = JSVAL_VOID;
 
-    JSScope *scope = OBJ_SCOPE(obj);
+    JSScope *scope = obj->scope();
     if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
         JSScopeProperty *aprop;
         for (aprop = scope->lastProperty(); aprop; aprop = aprop->parent) {
@@ -1510,7 +1510,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         return JS_FALSE;
 
     /* have no props, or object's scope has not mutated from that of proto */
-    scope = OBJ_SCOPE(obj);
+    scope = obj->scope();
     if (scope->entryCount == 0) {
         pda->length = 0;
         pda->array = NULL;
@@ -1655,7 +1655,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
                   * sizeof obj->dslots[0];
     }
     if (obj->isNative()) {
-        scope = OBJ_SCOPE(obj);
+        scope = obj->scope();
         if (!scope->isSharedEmpty()) {
             nbytes += sizeof *scope;
             nbytes += SCOPE_CAPACITY(scope) * sizeof(JSScopeProperty *);

@@ -891,7 +891,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
          */
         if (!obj->isNative())
             return JS_TRUE;
-        if (OBJ_SCOPE(obj)->hadIndexedProperties())
+        if (obj->scope()->hadIndexedProperties())
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -1303,7 +1303,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     } else {
         /* arrayProto is Array.prototype. */
         JS_ASSERT(arrayProto->getClass() == &js_SlowArrayClass);
-        emptyShape = OBJ_SCOPE(arrayProto)->emptyScope->shape;
+        emptyShape = arrayProto->scope()->emptyScope->shape;
     }
     JSScope *scope = JSScope::create(cx, &js_SlowArrayObjectOps, &js_SlowArrayClass, obj,
                                      emptyShape);
