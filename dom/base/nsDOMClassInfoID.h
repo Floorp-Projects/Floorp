@@ -104,7 +104,7 @@ inline PRUint32 Implements_##_interface(_interface *foo)                      \
 inline PRUint32 Implements_##_interface(void *foo)                            \
   { return 0; }
 
-DOMCI_CASTABLE_INTERFACES()
+DOMCI_CASTABLE_INTERFACES(unused)
 
 #undef DOMCI_CASTABLE_INTERFACE
 
