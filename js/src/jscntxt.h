@@ -567,12 +567,6 @@ struct JSThreadData {
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
-    /*
-     * One-entry deep cache of iterator objects. We deposit here the last
-     * iterator that was freed in JSOP_ENDITER.
-     */
-    JSObject           *cachedIteratorObject;
-
     bool init();
     void finish();
     void mark(JSTracer *trc);
