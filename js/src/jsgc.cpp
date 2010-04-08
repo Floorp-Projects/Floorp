@@ -2863,12 +2863,6 @@ static void
 GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 {
     JSRuntime *rt = cx->runtime;
-    JSTracer trc;
-    JSGCArena *emptyArenas, *a, **ap;
-#ifdef JS_GCMETER
-    uint32 nlivearenas, nkilledarenas, nthings;
-#endif
-
     rt->gcNumber++;
     JS_ASSERT(!rt->gcUnmarkedArenaStackTop);
     JS_ASSERT(rt->gcMarkLaterCount == 0);
@@ -2876,12 +2870,13 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     /*
      * Mark phase.
      */
+    JSTracer trc;
     JS_TRACER_INIT(&trc, cx, NULL);
     rt->gcMarkingTracer = &trc;
     JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
 
 #ifdef DEBUG
-    for (a = rt->gcDoubleArenaList.head; a; a = a->info.prev)
+    for (JSGCArena *a = rt->gcDoubleArenaList.head; a; a = a->info.prev)
         JS_ASSERT(!a->info.hasMarkedDoubles);
 #endif
 
@@ -2953,7 +2948,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      * function we use separated list finalizers when a debug hook is
      * installed.
      */
-    emptyArenas = NULL;
+    JSGCArena *emptyArenas = NULL;
     if (!cx->debugHooks->objectHook) {
         FinalizeArenaList<JSObject, FinalizeObject>
             (cx, FINALIZE_OBJECT, &emptyArenas);
@@ -2986,9 +2981,11 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     }
     TIMESTAMP(gcTimer.sweepStringEnd);
 
-    ap = &rt->gcDoubleArenaList.head;
-    METER((nlivearenas = 0, nkilledarenas = 0, nthings = 0));
-    while ((a = *ap) != NULL) {
+    JSGCArena **ap = &rt->gcDoubleArenaList.head;
+#ifdef JS_GCMETER
+    uint32 nlivearenas = 0, nkilledarenas = 0, nthings = 0;
+#endif
+    while (JSGCArena *a = *ap) {
         if (!a->info.hasMarkedDoubles) {
             /* No marked double values in the arena. */
             *ap = a->info.prev;
