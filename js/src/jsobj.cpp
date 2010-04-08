@@ -160,14 +160,12 @@ ReportStrictSlot(JSContext *cx, uint32 slot)
 static JSBool
 obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    uint32 slot;
     jsid propid;
     JSAccessMode mode;
     uintN attrs;
     JSObject *pobj;
     JSClass *clasp;
 
-    slot = (uint32) JSVAL_TO_INT(id);
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
         propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
         mode = JSACC_PROTO;
