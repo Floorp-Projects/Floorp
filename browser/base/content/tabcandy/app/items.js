@@ -22,16 +22,39 @@
 // Its container must also have a jQuery data named 'item' that points to the item. 
 // This is set by Item in _init(). 
 
+
+// Class: Item
+// Superclass for all visible objects (tabs and groups).
 window.Item = function() {
+  // Variable: isAnItem
+  // Always true for Items
   this.isAnItem = true;
+  
+  // Variable: bounds
+  // The position and size of this Item, represented as a <Rect>. 
   this.bounds = null;
+  
+  // Variable: debug
+  // When set to true, displays a rectangle on the screen that corresponds with bounds.
+  // May be used for additional debugging features in the future.
   this.debug = false;
+  
+  // Variable: $debug
+  // If <debug> is true, this will be the jQuery object for the visible rectangle. 
   this.$debug = null;
+  
+  // Variable: container
+  // The outermost DOM element that describes this item on screen.
   this.container = null;
 };
 
 window.Item.prototype = { 
   // ----------  
+  // Function: _init
+  // Initializes the object. To be called from the subclass's intialization function. 
+  //
+  // Parameters: 
+  //   container - the outermost DOM element that describes this item onscreen. 
   _init: function(container) {
     this.container = container;
     
@@ -50,26 +73,48 @@ window.Item.prototype = {
   },
   
   // ----------
+  // Function: getBounds
+  // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function() {
     return new Rect(this.bounds);    
   },
   
   // ----------
+  // Function: setPosition
+  // Moves the Item to the specified location. 
+  // 
+  // Parameters: 
+  //   left - the new left coordinate relative to the window
+  //   top - the new top coordinate relative to the window
+  //   immediately - if false or omitted, animates to the new position;
+  //   otherwise goes there immediately
   setPosition: function(left, top, immediately) {
     this.setBounds(new Rect(left, top, this.bounds.width, this.bounds.height), immediately);
   },
 
   // ----------  
+  // Function: setSize
+  // Resizes the Item to the specified size. 
+  // 
+  // Parameters: 
+  //   width - the new width in pixels
+  //   height - the new height in pixels
+  //   immediately - if false or omitted, animates to the new size;
+  //   otherwise resizes immediately
   setSize: function(width, height, immediately) {
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
   // ----------
+  // Function: getZ
+  // Returns the zIndex of the Item.
   getZ: function() {
     return parseInt($(this.container).css('zIndex'));
   },
     
   // ----------  
+  // Function: pushAway
+  // Pushes all other items away so none overlap this Item.
   pushAway: function() {
     var buffer = 10;
     
@@ -135,6 +180,9 @@ window.Item.prototype = {
   },
   
   // ----------  
+  // Function: _updateDebugBounds
+  // Called by a subclass when its bounds change, to update the debugging rectangles on screen.
+  // This functionality is enabled only by the debug property.
   _updateDebugBounds: function() {
     if(this.$debug) {
       this.$debug.css({
@@ -148,13 +196,19 @@ window.Item.prototype = {
 };  
 
 // ##########
+// Class: Items
+// Keeps track of all Items. 
 window.Items = {
   // ----------  
+  // Function: item
+  // Given a DOM element representing an Item, returns the Item. 
   item: function(el) {
     return $(el).data('item');
   },
   
   // ----------  
+  // Function: getTopLevelItems
+  // Returns an array of all Items not grouped into groups. 
   getTopLevelItems: function() {
     var items = [];
     
