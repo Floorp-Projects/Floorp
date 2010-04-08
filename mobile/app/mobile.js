@@ -355,6 +355,9 @@ pref("browser.ui.kinetic.decelerationRate", 20);
 pref("browser.ui.kinetic.speedSensitivity", 80);
 pref("browser.ui.kinetic.swipeLength", 160);
 
+// zooming
+pref("browser.ui.zoom.pageFitGranularity", 10); // don't zoom to fit by less than 1/10.
+
 // Touch radius
 pref("browser.ui.touch.radius", 16);
 
