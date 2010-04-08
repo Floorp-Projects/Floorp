@@ -782,22 +782,53 @@ var XPIProvider = {
     this.installLocations = [];
     this.installLocationsByName = {};
 
-    // These must be in order of priority for processFileChanges etc. to work
-    [
-      [KEY_APP_GLOBAL,       KEY_APPDIR,     [DIR_EXTENSIONS], true],
-      [KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD", [Services.appinfo.ID], true],
-      [KEY_APP_SYSTEM_SHARE, "XRESysSExtPD", [Services.appinfo.ID], true],
-      [KEY_APP_SYSTEM_USER,  "XREUSysExt",   [Services.appinfo.ID], true],
-      [KEY_APP_PROFILE,      KEY_PROFILEDIR, [DIR_EXTENSIONS], false]
-    ].forEach(function([name, key, paths, locked]) {
+    function addDirectoryInstallLocation(name, key, paths, locked) {
       try {
-        let dir = FileUtils.getDir(key, paths);
-        let location = new DirectoryInstallLocation(name, dir, locked);
-        this.installLocations.push(location);
-        this.installLocationsByName[location.name] = location;
+        var dir = FileUtils.getDir(key, paths);
       }
-      catch (e) { }
-    }, this);
+      catch (e) {
+        // Some directories aren't defined on some platforms, ignore them
+        LOG("Skipping unavailable install location " + name);
+        return;
+      }
+
+      try {
+        var location = new DirectoryInstallLocation(name, dir, locked);
+      }
+      catch (e) {
+        WARN("Failed to add directory install location " + name + " " + e);
+        return;
+      }
+
+      XPIProvider.installLocations.push(location);
+      XPIProvider.installLocationsByName[location.name] = location;
+    }
+
+    function addRegistryInstallLocation(name, rootkey) {
+      try {
+        var location = new WinRegInstallLocation(name, rootkey);
+      }
+      catch (e) {
+        WARN("Failed to add registry install location " + name + " " + e);
+        return;
+      }
+
+      XPIProvider.installLocations.push(location);
+      XPIProvider.installLocationsByName[location.name] = location;
+    }
+
+    let hasRegistry = ("nsIWindowsRegKey" in Ci);
+
+    // These must be in order of priority for processFileChanges etc. to work
+    if (hasRegistry)
+      addRegistryInstallLocation("winreg-app-global", Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE);
+    addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD", [Services.appinfo.ID], true);
+    addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD", [Services.appinfo.ID], true);
+    addDirectoryInstallLocation(KEY_APP_GLOBAL,       KEY_APPDIR,     [DIR_EXTENSIONS], true);
+    if (hasRegistry)
+      addRegistryInstallLocation("winreg-app-user", Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER);
+    addDirectoryInstallLocation(KEY_APP_SYSTEM_USER,  "XREUSysExt",   [Services.appinfo.ID], true);
+    addDirectoryInstallLocation(KEY_APP_PROFILE,      KEY_PROFILEDIR, [DIR_EXTENSIONS], false);
 
     this.defaultSkin = Prefs.getDefaultCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                                 "classic/1.0");
@@ -1092,7 +1123,10 @@ var XPIProvider = {
       catch (e) {
         WARN("Add-on is invalid: " + e);
         XPIDatabase.removeAddonMetadata(oldAddon);
-        installLocation.uninstallAddon(oldAddon.id);
+        if (!installLocation.locked)
+          installLocation.uninstallAddon(oldAddon.id);
+        else
+          WARN("Could not uninstall invalid item from locked install location");
         // If this was an active add-on then we must force a restart
         if (oldAddon.active) {
           if (oldAddon.type == "bootstrapped")
@@ -1277,9 +1311,12 @@ var XPIProvider = {
       catch (e) {
         WARN("Add-on is invalid: " + e);
 
-        // Remove the invalid add-on from the install location, no restart will
-        // be necessary
-        installLocation.uninstallAddon(id);
+        // Remove the invalid add-on from the install location if the install
+        // location isn't locked, no restart will be necessary
+        if (!installLocation.locked)
+          installLocation.uninstallAddon(id);
+        else
+          WARN("Could not uninstall invalid item from locked install location");
         return false;
       }
 
@@ -4582,11 +4619,13 @@ function WinRegInstallLocation(name, rootKey) {
   // cases, we just leave ourselves in the empty state.
   try {
     key.open(this._rootKey, path, Ci.nsIWindowsRegKey.ACCESS_READ);
-    this._readAddons(key);
   }
-  catch (e) { }
-  if (key)
-    key.close();
+  catch (e) {
+    return;
+  }
+
+  this._readAddons(key);
+  key.close();
 }
 
 WinRegInstallLocation.prototype = {
@@ -4634,6 +4673,9 @@ WinRegInstallLocation.prototype = {
       if (dir.exists() && dir.isDirectory()) {
         this._IDToDirMap[id] = dir;
         this._DirToIDMap[dir.path] = id;
+      }
+      else {
+        WARN("Ignoring missing add-on in " + dir.path);
       }
     }
   },
