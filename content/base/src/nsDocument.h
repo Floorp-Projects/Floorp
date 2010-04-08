@@ -878,6 +878,13 @@ public:
                                                       PRBool aFlushLayout,
                                                       nsIDOMElement** aReturn);
 
+  virtual NS_HIDDEN_(nsresult) NodesFromRectHelper(float aX, float aY,
+                                                   float aTopSize, float aRightSize,
+                                                   float aBottomSize, float aLeftSize,
+                                                   PRBool aIgnoreRootScrollFrame,
+                                                   PRBool aFlushLayout,
+                                                   nsIDOMNodeList** aReturn);
+
   virtual NS_HIDDEN_(void) FlushSkinBindings();
 
   virtual NS_HIDDEN_(nsresult) InitializeFrameLoader(nsFrameLoader* aLoader);
