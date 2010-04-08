@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>NPObject with property and method with the same name</title>
+
+    <script type="text/javascript" src="/MochiKit/packed.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+
+  <body onload="run()">
+
+    <embed id="plugin" type="application/x-test" wmode="window"></embed>
+
+    <script class="testbody" type="application/javascript">
+      if (typeof Object.getPrototypeOf !== "function") {
+        if (typeof "test".__proto__ === "object") {
+          Object.getPrototypeOf = function(object) {
+            return object.__proto__;
+          };
+        } else {
+          Object.getPrototypeOf = function(object) {
+            // May break if the constructor has been tampered with
+            return object.constructor.prototype;
+          };
+        }
+      }
+
+      SimpleTest.waitForExplicitFinish();
+
+      function run() {
+        var plugin = document.getElementById("plugin");
+        var pluginProto = Object.getPrototypeOf(plugin);
+
+        delete pluginProto.propertyAndMethod;
+        ok(isNaN(plugin.propertyAndMethod + 0), "Shouldn't be set yet!");
+
+        plugin.propertyAndMethod = 5;
+        is(plugin.propertyAndMethod, 5, "Should be set to 5!");
+
+        delete pluginProto.propertyAndMethod;
+        ok(isNaN(plugin.propertyAndMethod + 0), "Shouldn't be set any more!");
+
+        var res = plugin.propertyAndMethod();
+        is(res, 5, "Method invocation should return 5!");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
+</html>
