@@ -48,6 +48,8 @@
 #include "cairo-output-stream-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 
+#include <ctype.h>
+
 static cairo_status_t
 _cairo_pdf_operators_end_text (cairo_pdf_operators_t    *pdf_operators);
 
@@ -178,7 +180,7 @@ _count_word_up_to (const unsigned char *s, int length)
     int word = 0;
 
     while (length--) {
-	if (! (_cairo_isspace (*s) || *s == '<')) {
+	if (! (isspace (*s) || *s == '<')) {
 	    s++;
 	    word++;
 	} else {
@@ -237,7 +239,7 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 	    length--;
 	    _cairo_output_stream_printf (stream->output, ">");
 	    stream->column++;
-	} else if (_cairo_isspace (*data)) {
+	} else if (isspace (*data)) {
 	    newline =  (*data == '\n' || *data == '\r');
 	    if (! newline && stream->column >= stream->max_column) {
 		_cairo_output_stream_printf (stream->output, "\n");
