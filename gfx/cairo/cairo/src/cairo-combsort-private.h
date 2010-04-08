@@ -56,7 +56,7 @@ NAME (TYPE *base, unsigned int nmemb) \
   int swapped; \
   do { \
       gap = _cairo_combsort_newgap (gap); \
-      swapped = gap > 1; \
+      swapped = 0; \
       for (i = 0; i < nmemb-gap ; i++) { \
 	  j = i + gap; \
 	  if (CMP (base[i], base[j]) > 0 ) { \
@@ -67,5 +67,5 @@ NAME (TYPE *base, unsigned int nmemb) \
 	      swapped = 1; \
 	  } \
       } \
-  } while (swapped); \
+  } while (gap > 1 || swapped); \
 }

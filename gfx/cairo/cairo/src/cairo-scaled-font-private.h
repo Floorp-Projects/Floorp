@@ -123,7 +123,4 @@ struct _cairo_scaled_font {
     const cairo_scaled_font_backend_t *backend;
 };
 
-cairo_private void
-_cairo_scaled_font_revoke_ownership (cairo_scaled_font_t *scaled_font);
-
 #endif /* CAIRO_SCALED_FONT_PRIVATE_H */
