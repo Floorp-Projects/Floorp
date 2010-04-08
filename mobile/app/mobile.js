@@ -355,6 +355,9 @@ pref("browser.ui.kinetic.decelerationRate", 20);
 pref("browser.ui.kinetic.speedSensitivity", 80);
 pref("browser.ui.kinetic.swipeLength", 160);
 
+// Touch radius
+pref("browser.ui.touch.radius", 16);
+
 // plugins
 pref("plugin.disable", true);
 pref("plugin.default_plugin_disabled", true);

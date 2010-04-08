@@ -1258,9 +1258,7 @@ var Browser = {
     cwu.getScrollXY(false, scrollX, scrollY);
     x = x - scrollX.value;
     y = y - scrollY.value;
-    let elem = cwu.elementFromPoint(x, y,
-                                    true,   /* ignore root scroll frame*/
-                                    false); /* don't flush layout */
+    let elem = ElementTouchHelper.getClosest(cwu, x, y);
 
     // step through layers of IFRAMEs and FRAMES to find innermost element
     while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
@@ -1268,7 +1266,8 @@ var Browser = {
       let rect = elem.getBoundingClientRect();
       x = x - rect.left;
       y = y - rect.top;
-      elem = elem.contentDocument.elementFromPoint(x, y);
+      let windowUtils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      elem = ElementTouchHelper.getClosest(windowUtils, x, y);
     }
 
     return elem;
@@ -1748,20 +1747,36 @@ function ContentCustomClicker(browserView) {
 
 ContentCustomClicker.prototype = {
     /** Dispatch a mouse event with chrome client coordinates. */
-    _dispatchMouseEvent: function _dispatchMouseEvent(name, cX, cY) {
+    _dispatchMouseEvent: function _dispatchMouseEvent(element, name, cX, cY) {
       let browser = this._browserView.getBrowser();
       if (browser) {
         let [x, y] = Browser.transformClientToBrowser(cX, cY);
         let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-        let scrollX = {}, scrollY = {};
-        cwu.getScrollXY(false, scrollX, scrollY);
-        cwu.sendMouseEvent(name, x - scrollX.value, y - scrollY.value, 0, 1, 0, true);
+
+        // the element can be out of the cX/cY point because of the touch radius
+        let rect = element.getBoundingClientRect();
+        if (cwu.nodesFromRect && (element.ownerDocument.defaultView.frameElement ||
+                                 (x < rect.left || (x > rect.left + rect.width) ||
+                                 (y < rect.top || y > rect.top + rect.height)))) {
+
+            let rect = Browser.getBoundingContentRect(element);
+            x = rect.left + (rect.width / 2);
+            y = rect.top + (rect.height / 2);
+        }
+        else {
+          let scrollX = {}, scrollY = {};
+          cwu.getScrollXY(false, scrollX, scrollY);
+          x = x - scrollX.value;
+          y = y - scrollY.value;
+        }
+
+        cwu.sendMouseEvent(name, x, y, 0, 1, 0, true);
       }
     },
 
     /** Returns a node if selecting this node causes a focus. */
     _getFocusable: function _getFocusable(node) {
-      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea"))
+      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label"))
         return node;
       return null;
     },
@@ -1861,8 +1876,8 @@ ContentCustomClicker.prototype = {
 
         let self = this;
         Util.executeSoon(function() {
-          self._dispatchMouseEvent("mousedown", cX, cY);
-          self._dispatchMouseEvent("mouseup", cX, cY);
+          self._dispatchMouseEvent(element, "mousedown", cX, cY);
+          self._dispatchMouseEvent(element, "mouseup", cX, cY);
         });
       }
       else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
@@ -1886,6 +1901,81 @@ ContentCustomClicker.prototype = {
     toString: function toString() {
       return "[ContentCustomClicker] { }";
     }
+};
+
+/** Watches for mouse click in content and redirect them to the best found target **/
+const ElementTouchHelper = {
+  /* Retrieve the closest element to a point by looking at borders position */
+  getClosest: function getClosest(aWindowUtils, aX, aY) {
+    let target = aWindowUtils.elementFromPoint(aX, aY,
+                                               true,   /* ignore root scroll frame*/
+                                               false); /* don't flush layout */
+
+    // return early if the click is just over a clickable element
+    if (!aWindowUtils.nodesFromRect || this._isElementClickable(target))
+      return target;
+
+    let touchRadius = gPrefService.getIntPref("browser.ui.touch.radius");
+    let tapRadius = Math.min(64.0, touchRadius / Math.pow(Browser._browserView.getZoomLevel(), 2));
+
+    const kTopShift = 0.75, kBottomShift = 0.25,
+          kLeftShift = 0.50, kRightShift = 0.50;
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, kTopShift * tapRadius,
+                                                   kRightShift * tapRadius,
+                                                   kBottomShift * tapRadius,
+                                                   kLeftShift * tapRadius, true, false);
+
+    let threshold = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < nodes.length; i++) {
+      let current = nodes[i];
+      if (!current.mozMatchesSelector || !this._isElementClickable(current))
+        continue;
+
+      let rect = current.getBoundingClientRect();
+      let distance = this._computeDistanceFromRect(aX, aY, rect);
+
+      // increase a little bit the weight for already visited items
+      if (current && current.mozMatchesSelector("*:visited"))
+        distance *= 1.2;
+
+      if (distance < threshold) {
+        target = current;
+        threshold = distance;
+      }
+    }
+
+    return target;
+  },
+
+  _isElementClickable: function _isElementClickable(aElement) {
+    return aElement && aElement.mozMatchesSelector("*:link,*:visited,button,input,select,label");
+  },
+
+  _computeDistanceFromRect: function _computeDistanceFromRect(aX, aY, aRect) {
+    let x = 0, y = 0;
+    let xmost = aRect.left + aRect.width;
+    let ymost = aRect.top + aRect.height;
+
+    // compute horizontal distance from left/right border depending if X is
+    // before/inside/after the element's rectangle
+    if (aRect.left < aX && aX < xmost)
+      x = Math.min(xmost - aX, aX - aRect.left);
+    else if (aX < aRect.left)
+      x = aRect.left - aX;
+    else if (aX > xmost)
+      x = aX - xmost;
+
+    // compute vertical distance from top/bottom border depending if Y is
+    // above/inside/below the element's rectangle
+    if (aRect.top < aY && aY < ymost)
+      y = Math.min(ymost - aY, aY - aRect.top);
+    else if (aY < aRect.top)
+      y = aRect.top - aY;
+    if (aY > ymost)
+      y = aY - ymost;
+
+    return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  }
 };
 
 /**
