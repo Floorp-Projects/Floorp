@@ -291,11 +291,8 @@ WeaveSvc.prototype = {
     // Send an event now that Weave service is ready
     Svc.Obs.notify("weave:service:ready");
 
-    // Do some preliminary Status setting, in case autoconnect is false.
-    this._setBasicLoginStatus();
-
     // Wait a little before checking how long to wait to autoconnect
-    if (Svc.Prefs.get("autoconnect")) {
+    if (this._checkSetup() == STATUS_OK && Svc.Prefs.get("autoconnect")) {
       Utils.delay(function() {
         // Figure out how many seconds to delay autoconnect based on the app
         let wait = 3;
@@ -315,6 +312,25 @@ WeaveSvc.prototype = {
         Utils.delay(this._autoConnect, wait * 1000, this, "_autoTimer");
       }, 2000, this, "_autoTimer");
     }
+  },
+
+  _checkSetup: function WeaveSvc__checkSetup() {
+    if (!this.username) {
+      this._log.debug("checkSetup: no username set");
+      Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
+    }
+    else if (!Utils.mpLocked() && !this.password) {
+      this._log.debug("checkSetup: no password set");
+      Status.login = Weave.LOGIN_FAILED_NO_PASSWORD;
+    }
+    else if (!Utils.mpLocked() && !this.passphrase) {
+      this._log.debug("checkSetup: no passphrase set");
+      Status.login = Weave.LOGIN_FAILED_NO_PASSPHRASE;
+    }
+    else
+      Status.service = STATUS_OK;
+    
+    return Status.service;
   },
 
   _initLogs: function WeaveSvc__initLogs() {
@@ -644,17 +660,6 @@ WeaveSvc.prototype = {
     Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
   },
 
-  _setBasicLoginStatus: function _setBasicLoginStatus() {
-    // Some funky logic to make sure if there's a MP, we don't give the error
-    // until we actually try to login.
-    if (!this.username)
-      Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
-    else if (!(Utils.mpLocked() || this.password))
-      Status.login = Weave.LOGIN_FAILED_NO_PASSWORD;
-    else if (!(Utils.mpLocked() || this.passphrase))
-      Status.login = Weave.LOGIN_FAILED_NO_PASSPHRASE;
-  },
-
   persistLogin: function persistLogin() {
     // Canceled master password prompt can prevent these from succeeding
     try {
@@ -677,16 +682,13 @@ WeaveSvc.prototype = {
       if (passphrase)
         this.passphrase = passphrase;
 
-      this._setBasicLoginStatus();
-      if (!this.username)
-        throw "No username set, login failed";
-      if (!this.password)
-        throw "No password given or found in password manager";
+      if (this._checkSetup() == CLIENT_NOT_CONFIGURED)
+        throw "aborting login, client not configured";
+
       this._log.info("Logging in user " + this.username);
 
       if (!this._verifyLogin()) {
-        // verifyLogin sets the failure states here. They might also be set by
-        // _setBasicLoginStatus for ERROR_FAILED_NO_*
+        // verifyLogin sets the failure states here.
         throw "Login failed: " + Status.login;
       }
 
