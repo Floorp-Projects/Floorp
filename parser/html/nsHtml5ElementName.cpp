@@ -360,7 +360,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_MERROR = new nsHtml5ElementName(nsHtml5Atoms::merror, nsHtml5Atoms::merror, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_MOMENT = new nsHtml5ElementName(nsHtml5Atoms::moment, nsHtml5Atoms::moment, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_MATRIX = new nsHtml5ElementName(nsHtml5Atoms::matrix, nsHtml5Atoms::matrix, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option, nsHtml5Atoms::option, NS_HTML5TREE_BUILDER_OPTION, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option, nsHtml5Atoms::option, NS_HTML5TREE_BUILDER_OPTION, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_OBJECT = new nsHtml5ElementName(nsHtml5Atoms::object, nsHtml5Atoms::object, NS_HTML5TREE_BUILDER_OBJECT, PR_FALSE, PR_TRUE, PR_FALSE);
   ELT_OUTPUT = new nsHtml5ElementName(nsHtml5Atoms::output, nsHtml5Atoms::output, NS_HTML5TREE_BUILDER_OUTPUT_OR_LABEL, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_PRIMES = new nsHtml5ElementName(nsHtml5Atoms::primes, nsHtml5Atoms::primes, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
