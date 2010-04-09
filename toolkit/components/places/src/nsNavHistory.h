@@ -267,7 +267,7 @@ public:
 
   // Take a row of kGetInfoIndex_* columns and construct a ResultNode.
   // The row must contain the full set of columns.
-  nsresult RowToResult(mozIStorageStatement* aRow,
+  nsresult RowToResult(mozIStorageValueArray* aRow,
                        nsNavHistoryQueryOptions* aOptions,
                        nsNavHistoryResultNode** aResult);
   nsresult QueryRowToResult(PRInt64 aItemId, const nsACString& aURI,
