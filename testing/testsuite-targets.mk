@@ -133,7 +133,7 @@ package-tests:
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
 	cd $(PKG_STAGE) && \
-	  zip -r9D "../$(PKG_PATH)$(TEST_PACKAGE)" *
+	  zip -r9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" *
 
 make-stage-dir:
 	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs
