@@ -24,6 +24,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
  *   Marco Bonardo <mak77@bonardo.net>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,7 +56,6 @@
 #include "prprf.h"
 
 #include "nsIDynamicContainer.h"
-#include "mozStorageHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIClassInfo.h"
 #include "nsIProgrammingLanguage.h"
@@ -391,16 +391,17 @@ nsNavHistoryResultNode::GetGeneratingOptions()
     return nsnull;
   }
 
+  // Look up the tree.  We want the options that were used to create this node,
+  // and since it has a parent, it's the options of an ancestor, not of the node
+  // itself.  So start at the parent.
   nsNavHistoryContainerResultNode* cur = mParent;
   while (cur) {
-    if (cur->IsFolder())
-      return cur->GetAsFolder()->mOptions;
-    else if (cur->IsQuery())
-      return cur->GetAsQuery()->mOptions;
+    if (cur->IsContainer())
+      return cur->GetAsContainer()->mOptions;
     cur = cur->mParent;
   }
 
-  // We should always find a folder or query node as an ancestor.
+  // We should always find a container node as an ancestor.
   NS_NOTREACHED("Can't find a generating node for this container, the tree seemes corrupted.");
   return nsnull;
 }
@@ -466,7 +467,8 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
   mExpanded(PR_FALSE),
   mChildrenReadOnly(aReadOnly),
   mOptions(aOptions),
-  mDynamicContainerType(aDynamicContainerType)
+  mDynamicContainerType(aDynamicContainerType),
+  mAsyncCanceledState(NOT_CANCELED)
 {
 }
 
@@ -482,7 +484,8 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
   mExpanded(PR_FALSE),
   mChildrenReadOnly(aReadOnly),
   mOptions(aOptions),
-  mDynamicContainerType(aDynamicContainerType)
+  mDynamicContainerType(aDynamicContainerType),
+  mAsyncCanceledState(NOT_CANCELED)
 {
 }
 
@@ -545,10 +548,68 @@ nsNavHistoryContainerResultNode::GetContainerOpen(PRBool *aContainerOpen)
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::SetContainerOpen(PRBool aContainerOpen)
 {
-  if (mExpanded && !aContainerOpen)
-    CloseContainer(PR_FALSE);
-  else if (!mExpanded && aContainerOpen)
-    OpenContainer();
+  if (aContainerOpen) {
+    if (!mExpanded) {
+      nsNavHistoryQueryOptions* options = GetGeneratingOptions();
+      if (options && options->AsyncEnabled())
+        OpenContainerAsync();
+      else
+        OpenContainer();
+    }
+  }
+  else {
+    if (mExpanded)
+      CloseContainer();
+    else if (mAsyncPendingStmt)
+      CancelAsyncOpen(PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+
+/**
+ * Notifies the result's observers of a change in the container's state.  The
+ * notification includes both the old and new states:  The old is aOldState, and
+ * the new is the container's current state.
+ *
+ * @param aOldState
+ *        The state being transitioned out of.
+ */
+nsresult
+nsNavHistoryContainerResultNode::NotifyOnStateChange(PRUint16 aOldState)
+{
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+
+  nsresult rv;
+  PRUint16 currState;
+  rv = GetState(&currState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify via the new ContainerStateChanged observer method.
+  NOTIFY_RESULT_OBSERVERS(result,
+                          ContainerStateChanged(this, aOldState, currState));
+
+  // Notify via the deprecated observer methods.
+  if (currState == STATE_OPENED)
+    NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(this));
+  else if (currState == STATE_CLOSED)
+    NOTIFY_RESULT_OBSERVERS(result, ContainerClosed(this));
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::GetState(PRUint16* _state)
+{
+  NS_ENSURE_ARG_POINTER(_state);
+
+  *_state = mExpanded ? STATE_OPENED :
+            mAsyncPendingStmt ? STATE_LOADING :
+            STATE_CLOSED;
+
   return NS_OK;
 }
 
@@ -560,12 +621,13 @@ nsNavHistoryContainerResultNode::SetContainerOpen(PRBool aContainerOpen)
 nsresult
 nsNavHistoryContainerResultNode::OpenContainer()
 {
-  NS_ASSERTION(!mExpanded, "Container must be expanded to close it");
+  NS_ASSERTION(!mExpanded, "Container must not be expanded to open it");
   mExpanded = PR_TRUE;
+
+  nsresult rv;
 
   if (IsDynamicContainer()) {
     // dynamic container API may want to fill us
-    nsresult rv;
     nsCOMPtr<nsIDynamicContainer> svc = do_GetService(mDynamicContainerType.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
       svc->OnContainerNodeOpening(this, GetGeneratingOptions());
@@ -579,8 +641,9 @@ nsNavHistoryContainerResultNode::OpenContainer()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsNavHistoryResult* result = GetResult();
-  NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(this));
+  rv = NotifyOnStateChange(STATE_CLOSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -594,33 +657,48 @@ nsNavHistoryContainerResultNode::OpenContainer()
 nsresult
 nsNavHistoryContainerResultNode::CloseContainer(PRBool aSuppressNotifications)
 {
-  NS_ASSERTION(mExpanded, "Container must be expanded to close it");
-
-  // Recursively close all child containers.
-  for (PRInt32 i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i]->IsContainer() &&
-        mChildren[i]->GetAsContainer()->mExpanded)
-      mChildren[i]->GetAsContainer()->CloseContainer(PR_TRUE);
-  }
-
-  mExpanded = PR_FALSE;
+  NS_ASSERTION((mExpanded && !mAsyncPendingStmt) ||
+               (!mExpanded && mAsyncPendingStmt),
+               "Container must be expanded or loading to close it");
 
   nsresult rv;
-  if (IsDynamicContainer()) {
-    // Notify dynamic containers that we are closing.
-    nsCOMPtr<nsIDynamicContainer> svc =
-      do_GetService(mDynamicContainerType.get(), &rv);
-    if (NS_SUCCEEDED(rv))
-      svc->OnContainerNodeClosed(this);
+  PRUint16 oldState;
+  rv = GetState(&oldState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mExpanded) {
+    // Recursively close all child containers.
+    for (PRInt32 i = 0; i < mChildren.Count(); ++i) {
+      if (mChildren[i]->IsContainer() &&
+          mChildren[i]->GetAsContainer()->mExpanded)
+        mChildren[i]->GetAsContainer()->CloseContainer(PR_TRUE);
+    }
+
+    mExpanded = PR_FALSE;
+
+    if (IsDynamicContainer()) {
+      // Notify dynamic containers that we are closing.
+      nsCOMPtr<nsIDynamicContainer> svc =
+        do_GetService(mDynamicContainerType.get());
+      if (svc)
+        svc->OnContainerNodeClosed(this);
+    }
   }
 
-  nsNavHistoryResult* result = GetResult();
-  if (!aSuppressNotifications)
-    NOTIFY_RESULT_OBSERVERS(result, ContainerClosed(TO_CONTAINER(this)));
+  // Be sure to set this to null before notifying observers.  It signifies that
+  // the container is no longer loading (if it was in the first place).
+  mAsyncPendingStmt = nsnull;
+
+  if (!aSuppressNotifications) {
+    rv = NotifyOnStateChange(oldState);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // If this is the root container of a result, we can tell the result to stop
   // observing changes, otherwise the result will stay in memory and updates
   // itself till it is cycle collected.
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
   if (result->mRootNode == this) {
     result->StopObserving();
     // When reopening this node its result will be out of sync.
@@ -633,6 +711,39 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aSuppressNotifications)
   }
 
   return NS_OK;
+}
+
+
+/**
+ * The async version of OpenContainer.
+ */
+nsresult
+nsNavHistoryContainerResultNode::OpenContainerAsync()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/**
+ * Cancels the pending asynchronous Storage execution triggered by
+ * FillChildrenAsync, if it exists.  This method doesn't do much, because after
+ * cancelation Storage will call this node's HandleCompletion callback, where
+ * the real work is done.
+ *
+ * @param aRestart
+ *        If true, async execution will be restarted by HandleCompletion.
+ */
+void
+nsNavHistoryContainerResultNode::CancelAsyncOpen(PRBool aRestart)
+{
+  NS_ASSERTION(mAsyncPendingStmt, "Async execution canceled but not pending");
+
+  mAsyncCanceledState = aRestart ? CANCELED_RESTART_NEEDED : CANCELED;
+
+  // Cancel will fail if the pending statement has already been canceled.
+  // That's OK since this method may be called multiple times, and multiple
+  // cancels don't harm anything.
+  (void)mAsyncPendingStmt->Cancel();
 }
 
 
@@ -2258,15 +2369,19 @@ nsNavHistoryQueryResultNode::OpenContainer()
 {
   NS_ASSERTION(!mExpanded, "Container must be closed to open it");
   mExpanded = PR_TRUE;
+
+  nsresult rv;
+
   if (!CanExpand())
     return NS_OK;
   if (!mContentsValid) {
-    nsresult rv = FillChildren();
+    rv = FillChildren();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsNavHistoryResult* result = GetResult();
-  NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(TO_CONTAINER(this)));
+  rv = NotifyOnStateChange(STATE_CLOSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -3172,8 +3287,33 @@ nsNavHistoryFolderResultNode::OpenContainer()
   }
   mExpanded = PR_TRUE;
 
-  nsNavHistoryResult* result = GetResult();
-  NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(TO_CONTAINER(this)));
+  rv = NotifyOnStateChange(STATE_CLOSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+/**
+ * The async version of OpenContainer.
+ */
+nsresult
+nsNavHistoryFolderResultNode::OpenContainerAsync()
+{
+  NS_ASSERTION(!mExpanded, "Container already expanded when opening it");
+
+  // If the children are valid, open the container synchronously.  This will be
+  // the case when the container has already been opened and any other time
+  // FillChildren or FillChildrenAsync has previously been called.
+  if (mContentsValid)
+    return OpenContainer();
+
+  nsresult rv = FillChildrenAsync();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NotifyOnStateChange(STATE_CLOSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -3328,8 +3468,19 @@ nsNavHistoryFolderResultNode::FillChildren()
   // this, we should wrap everything in a transaction here on the bookmark
   // service's connection.
 
-  // it is important to call FillStats to fill in the parents on all
-  // nodes and the result node pointers on the containers
+  return OnChildrenFilled();
+}
+
+
+/**
+ * Performs some tasks after all the children of the container have been added.
+ * The container's contents are not valid until this method has been called.
+ */
+nsresult
+nsNavHistoryFolderResultNode::OnChildrenFilled()
+{
+  // It is important to call FillStats to fill in the parents on all
+  // nodes and the result node pointers on the containers.
   FillStats();
 
   if (mResult->mNeedsToApplySortingMode) {
@@ -3357,12 +3508,146 @@ nsNavHistoryFolderResultNode::FillChildren()
   }
 
   // Register with the result for updates.
-  nsNavHistoryResult* result = GetResult();
-  NS_ENSURE_STATE(result);
-  result->AddBookmarkFolderObserver(this, mItemId);
-  mIsRegisteredFolderObserver = PR_TRUE;
+  EnsureRegisteredAsFolderObserver();
 
   mContentsValid = PR_TRUE;
+  return NS_OK;
+}
+
+
+/**
+ * Registers the node with its result as a folder observer if it is not already
+ * registered.
+ */
+void
+nsNavHistoryFolderResultNode::EnsureRegisteredAsFolderObserver()
+{
+  if (!mIsRegisteredFolderObserver && mResult) {
+    mResult->AddBookmarkFolderObserver(this, mItemId);
+    mIsRegisteredFolderObserver = PR_TRUE;
+  }
+}
+
+
+/**
+ * The async version of FillChildren.  This begins asynchronous execution by
+ * calling nsNavBookmarks::QueryFolderChildrenAsync.  During execution, this
+ * node's async Storage callbacks, HandleResult and HandleCompletion, will be
+ * called.
+ */
+nsresult
+nsNavHistoryFolderResultNode::FillChildrenAsync()
+{
+  NS_ASSERTION(!mContentsValid, "FillChildrenAsync when contents are valid");
+  NS_ASSERTION(mChildren.Count() == 0, "FillChildrenAsync when children exist");
+
+  // ProcessFolderNodeChild, called in HandleResult, increments this for every
+  // result row it processes.  Initialize it here as we begin async execution.
+  mAsyncBookmarkIndex = -1;
+
+  nsNavBookmarks* bmSvc = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bmSvc, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv =
+    bmSvc->QueryFolderChildrenAsync(this, mItemId,
+                                    getter_AddRefs(mAsyncPendingStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Register with the result for updates.  All updates during async execution
+  // will cause it to be restarted.
+  EnsureRegisteredAsFolderObserver();
+
+  return NS_OK;
+}
+
+
+/**
+ * A mozIStorageStatementCallback method.  Called during the async execution
+ * begun by FillChildrenAsync.
+ *
+ * @param aResultSet
+ *        The result set containing the data from the database.
+ */
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::HandleResult(mozIStorageResultSet* aResultSet)
+{
+  NS_ENSURE_ARG_POINTER(aResultSet);
+
+  nsNavBookmarks* bmSvc = nsNavBookmarks::GetBookmarksService();
+  if (!bmSvc) {
+    CancelAsyncOpen(PR_FALSE);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Consume all the currently available rows of the result set.
+  nsCOMPtr<mozIStorageRow> row;
+  while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
+    nsresult rv = bmSvc->ProcessFolderNodeRow(row, mOptions, &mChildren,
+                                              mAsyncBookmarkIndex);
+    if (NS_FAILED(rv)) {
+      CancelAsyncOpen(PR_FALSE);
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+
+/**
+ * A mozIStorageStatementCallback method.  Called during the async execution
+ * begun by FillChildrenAsync.
+ *
+ * @param aReason
+ *        Indicates the final state of execution.
+ */
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason == mozIStorageStatementCallback::REASON_FINISHED &&
+      mAsyncCanceledState == NOT_CANCELED) {
+    // Async execution successfully completed.  The container is ready to open.
+
+    nsresult rv = OnChildrenFilled();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (IsDynamicContainer()) {
+      // The dynamic container service may want to change the bookmarks of this
+      // folder.
+      nsCOMPtr<nsIDynamicContainer> svc =
+        do_GetService(mDynamicContainerType.get(), &rv);
+      if (NS_SUCCEEDED(rv)) {
+        svc->OnContainerNodeOpening(
+          static_cast<nsNavHistoryContainerResultNode*>(this), mOptions);
+      }
+      else {
+        NS_WARNING("Unable to get dynamic container for ");
+        NS_WARNING(mDynamicContainerType.get());
+      }
+    }
+
+    mExpanded = PR_TRUE;
+    mAsyncPendingStmt = nsnull;
+
+    // Notify observers only after mExpanded and mAsyncPendingStmt are set.
+    rv = NotifyOnStateChange(STATE_LOADING);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  else if (mAsyncCanceledState == CANCELED_RESTART_NEEDED) {
+    // Async execution was canceled and needs to be restarted.
+    mAsyncCanceledState = NOT_CANCELED;
+    ClearChildren(PR_FALSE);
+    FillChildrenAsync();
+  }
+
+  else {
+    // Async execution failed or was canceled without restart.  Remove all
+    // children and close the container, notifying observers.
+    mAsyncCanceledState = NOT_CANCELED;
+    ClearChildren(PR_TRUE);
+    CloseContainer();
+  }
+
   return NS_OK;
 }
 
@@ -3374,11 +3659,10 @@ nsNavHistoryFolderResultNode::ClearChildren(PRBool unregister)
     mChildren[i]->OnRemoving();
   mChildren.Clear();
 
-  if (unregister && mContentsValid) {
-    if (mResult) {
-      mResult->RemoveBookmarkFolderObserver(this, mItemId);
-      mIsRegisteredFolderObserver = PR_FALSE;
-    }
+  PRBool needsUnregister = unregister && (mContentsValid || mAsyncPendingStmt);
+  if (needsUnregister && mResult && mIsRegisteredFolderObserver) {
+    mResult->RemoveBookmarkFolderObserver(this, mItemId);
+    mIsRegisteredFolderObserver = PR_FALSE;
   }
   mContentsValid = PR_FALSE;
 }
@@ -3489,6 +3773,16 @@ nsNavHistoryFolderResultNode::FindChildById(PRInt64 aItemId,
 }
 
 
+// Used by nsNavHistoryFolderResultNode's nsINavBookmarkObserver methods below.
+// If the container is notified of a bookmark event while asynchronous execution
+// is pending, this restarts it and returns.
+#define RESTART_AND_RETURN_IF_ASYNC_PENDING() \
+  if (mAsyncPendingStmt) { \
+    CancelAsyncOpen(PR_TRUE); \
+    return NS_OK; \
+  }
+
+
 NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnBeginUpdateBatch()
 {
@@ -3528,6 +3822,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     }
     aIndex = mChildren.Count();
   }
+
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
 
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
@@ -3614,6 +3910,8 @@ nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
     return NS_OK;
 
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
+
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
 
   PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
                         (mParent && mParent->mOptions->ExcludeItems()) ||
@@ -3750,6 +4048,8 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
     }
   }
 
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
+
   return nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
                                                aIsAnnotationProperty,
                                                aNewValue,
@@ -3769,6 +4069,9 @@ nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
                         mOptions->ExcludeItems();
   if (excludeItems)
     return NS_OK; // don't update items when we aren't displaying them
+
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
+
   if (!StartIncrementalUpdate())
     return NS_OK;
 
@@ -3820,6 +4123,9 @@ nsNavHistoryFolderResultNode::OnItemMoved(PRInt64 aItemId, PRInt64 aOldParent,
 {
   NS_ASSERTION(aOldParent == mItemId || aNewParent == mItemId,
                "Got a bookmark message that doesn't belong to us");
+
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
+
   if (!StartIncrementalUpdate())
     return NS_OK; // entire container was refreshed for us
 
