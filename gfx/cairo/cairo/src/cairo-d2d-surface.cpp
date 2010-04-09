@@ -889,6 +889,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		    cairo_surface_t *nullSurf =
 			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
 		    cachebitmap->refs++;
+		    cachebitmap->dirty = false;
 		    cairo_surface_set_user_data(nullSurf,
 						&bitmap_key,
 						cachebitmap,
