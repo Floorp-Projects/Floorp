@@ -569,7 +569,7 @@ public final class ElementName
     public static final ElementName MERROR = new ElementName("merror", "merror", TreeBuilder.OTHER, false, false, false);
     public static final ElementName MOMENT = new ElementName("moment", "moment", TreeBuilder.OTHER, false, false, false);
     public static final ElementName MATRIX = new ElementName("matrix", "matrix", TreeBuilder.OTHER, false, false, false);
-    public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION, true, false, false);
+    public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION, false, false, false);
     public static final ElementName OBJECT = new ElementName("object", "object", TreeBuilder.OBJECT, false, true, false);
     public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT_OR_LABEL, false, false, false);
     public static final ElementName PRIMES = new ElementName("primes", "primes", TreeBuilder.OTHER, false, false, false);
