@@ -46,15 +46,13 @@ body {
 		width: 100%;
 }
 
-
 .thumbShadow {
 		position: absolute;
 		border-bottom: 5px solid rgba(0,0,0,0.05);
 		margin-right: -12px;
-		bottom: 8px;
+		bottom: 2px;
 		width: 94.5%;
 }
-
 
 .favicon {
 	position: absolute;
