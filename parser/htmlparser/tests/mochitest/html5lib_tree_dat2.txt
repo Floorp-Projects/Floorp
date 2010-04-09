@@ -461,6 +461,19 @@ Line: 1 Col: 51 Expected closing tag. Unexpected end of file.
 |       <optgroup>
 
 #data
+<!DOCTYPE html><datalist><option>foo</datalist>bar
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <datalist>
+|       <option>
+|         "foo"
+|     "bar"
+
+#data
 <!DOCTYPE html><font><input><input></font>
 #errors
 #document
