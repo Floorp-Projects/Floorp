@@ -109,7 +109,14 @@ function Mirror(tab, manager) {
   this.tab = tab;
   this.manager = manager;
   
-  var div = $("<div class='tab'><span class='name'>&nbsp;</span><img class='fav'/><canvas class='thumb'/></div>")
+  var html = "<div class='tab'>" +
+              "<div class='favicon'><img/></div>" +
+              "<div class='thumb'><div class='thumbShadow'></div><canvas/></div>" +
+              "<span class='tab-title'>&nbsp;</span>" +              
+             "</div>";
+             
+  
+  var div = $(html)
     .data("tab", this.tab)
     .appendTo("body");
     
@@ -121,9 +128,9 @@ function Mirror(tab, manager) {
   this.needsPaint = 0;
   this.canvasSizeForced = false;
   this.el = div.get(0);
-  this.favEl = $('.fav', div).get(0);
-  this.nameEl = $('.name', div).get(0);
-  this.canvasEl = $('.thumb', div).get(0);
+  this.favEl = $('.favicon>img', div).get(0);
+  this.nameEl = $('.tab-title', div).get(0);
+  this.canvasEl = $('.thumb canvas', div).get(0);
       
   var doc = this.tab.contentDocument;
   if( !_isIframe(doc) ) {
