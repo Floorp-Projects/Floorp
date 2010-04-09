@@ -183,7 +183,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // we split the logic here.
 
   FilePath exePath;
+#ifdef OS_LINUX
   base::environment_map newEnvVars;
+#endif
 
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsIFile> greDir;
