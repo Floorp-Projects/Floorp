@@ -57,16 +57,6 @@ window.Group = function(listOfEls, options) {
     .appendTo("body")
     .dequeue();    
     
-  this._init($container.get(0));
-
-  if(this.$debug) 
-    this.$debug.css({zIndex: -1000});
-  
-/*
-  var contentEl = $('<div class="group-content"/>')
-    .appendTo($container);
-*/
-  
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
     .css({
@@ -78,17 +68,14 @@ window.Group = function(listOfEls, options) {
     .hide();
 
   // ___ Titlebar
-    var titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
+    this.$titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
     .appendTo($container)
   
-  titlebar.css({
-      width: $container.width(),
-      position: "relative",
-      top: -(titlebar.height()+2),
-      left: -1,
+  this.$titlebar.css({
+      position: "absolute",
     });
     
-  $('.close', titlebar).click(function() {
+  $('.close', this.$titlebar).click(function() {
     self.close();
   });
 
@@ -99,16 +86,31 @@ window.Group = function(listOfEls, options) {
     setTimeout(function(){
       if( shouldShow == false ) return;
       $container.find("input").focus();
-      titlebar
+      self.$titlebar
         .css({width: $container.width()})
         .animate({ opacity: 1}).dequeue();        
     }, 500);
   }).mouseout(function(e){
     shouldShow = false;
     if( isEventOverElement(e, $container.get(0) )) return;
-    titlebar.animate({opacity:0}).dequeue();
+    self.$titlebar.animate({opacity:0}).dequeue();
   })
 
+  // ___ Content
+  this.$content = $('<div class="group-content"/>')
+    .css({
+      left: 0,
+      top: this.$titlebar.height(),
+      position: 'absolute'
+    })
+    .appendTo($container);
+  
+  // ___ Superclass initialization
+  this._init($container.get(0));
+
+  if(this.$debug) 
+    this.$debug.css({zIndex: -1000});
+  
   // ___ Children
   $.each(listOfEls, function(index, el) {  
     self.add(el, null, options);
@@ -146,8 +148,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------  
   getContentBounds: function() {
     var box = this.getBounds();
-    var $titlebar = $('.titlebar', this.container);
-    var titleHeight = $titlebar.height();
+    var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
     return box;
@@ -155,37 +156,39 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   
   // ----------  
   reloadBounds: function() {
-    var $titlebar = $('.titlebar', this.container);
     var bb = Utils.getBounds(this.container);
-    var titleHeight = $titlebar.height();
-    bb.top -= titleHeight;
-    bb.height += titleHeight;
     
-    if(this.bounds)
-      this.setBounds(bb, true);
-    else {
-      this.bounds = bb;
-      this._updateDebugBounds();
-    }
+    if(!this.bounds)
+      this.bounds = new Rect(0, 0, 0, 0);
+    
+    this.setBounds(bb, true);
   },
   
   // ----------  
   setBounds: function(rect, immediately) {
-    var $titlebar = $('.titlebar', this.container);
-    var titleHeight = $titlebar.height();
+    var titleHeight = this.$titlebar.height();
+    
+    // ___ Determine what has changed
     var css = {};
+    var titlebarCSS = {};
+    var contentCSS = {};
 
     if(rect.left != this.bounds.left)
       css.left = rect.left;
       
     if(rect.top != this.bounds.top) 
-      css.top = rect.top + titleHeight;
+      css.top = rect.top;
       
-    if(rect.width != this.bounds.width)
+    if(rect.width != this.bounds.width) {
       css.width = rect.width;
+      titlebarCSS.width = rect.width;
+      contentCSS.width = rect.width;
+    }
 
-    if(rect.height != this.bounds.height)
-      css.height = rect.height - titleHeight; 
+    if(rect.height != this.bounds.height) {
+      css.height = rect.height; 
+      contentCSS.height = rect.height - titleHeight; 
+    }
       
     if($.isEmptyObject(css))
       return;
@@ -193,27 +196,31 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
     this.bounds = new Rect(rect);
 
-    if(css.width || css.height) {
-      this.arrange({animate: !immediately});
-    } else if(css.left || css.top) {
-      $.each(this._children, function(index, child) {
-        var box = child.getBounds();
-        child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
-      });
+    // ___ Deal with children
+    if(this._children.length) {
+      if(css.width || css.height) {
+        this.arrange({animate: !immediately});
+      } else if(css.left || css.top) {
+        $.each(this._children, function(index, child) {
+          var box = child.getBounds();
+          child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+        });
+      }
     }
-      
+          
+    // ___ Update our representation
     if(immediately) {
       $(this.container).css(css);
-      if(css.width)
-        $titlebar.css({width: css.width});
+      this.$titlebar.css(titlebarCSS);
+      this.$content.css(contentCSS);
     } else {
       TabMirror.pausePainting();
       $(this.container).animate(css, {complete: function() {
         TabMirror.resumePainting();
       }}).dequeue();
       
-      if(css.width)
-        $titlebar.animate({width: css.width}).dequeue();        
+      this.$titlebar.animate(titlebarCSS).dequeue();        
+      this.$content.animate(contentCSS).dequeue();        
     }
 
     this._updateDebugBounds();
@@ -531,6 +538,7 @@ window.Groups = {
       var group = $target.data("group");
       if( group == null ){
         phantom.removeClass("phantom");
+        phantom.removeClass("group-content");
         var group = new Group([$target, drag.info.$el], {container:phantom});
       } else 
         group.add( drag.info.$el );      
@@ -550,7 +558,7 @@ window.Groups = {
       var newTop = unionRect.top + unionRect.height/2 - height/2;
 
       $(".phantom").remove();
-      var phantom = $("<div class='group phantom'/>").css({
+      var phantom = $("<div class='group phantom group-content'/>").css({
         width: width,
         height: height,
         position:"absolute",
