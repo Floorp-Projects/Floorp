@@ -139,6 +139,14 @@ __defineSetter__("PluralForm", function (val) {
   return this.PluralForm = val;
 });
 
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  return new tmp.PopupNotifications(gBrowser,
+                                    document.getElementById("notification-popup"),
+                                    document.getElementById("notification-popup-box"));
+});
+
 let gInitialPages = [
   "about:blank",
   "about:privatebrowsing",
@@ -4098,6 +4106,8 @@ var XULBrowserWindow = {
         // persist across the first location change.
         let nBox = gBrowser.getNotificationBox(selectedBrowser);
         nBox.removeTransientNotifications();
+
+        PopupNotifications.locationChange();
       }
     }
 

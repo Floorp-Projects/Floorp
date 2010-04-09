@@ -1881,7 +1881,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /* Popup Bounding Box */
-#identity-popup {
+#identity-popup,
+#notification-popup {
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;
@@ -1891,7 +1892,38 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat; 
 }
 
-#identity-popup-container {
+#notification-popup {
+  margin-top: -1px;
+  margin-left: -27px;
+}
+
+#notification-popup-box {
+  margin: 0 3px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
+}
+
+.popup-notification-description {
+  color: #fff;
+}
+
+.popup-notification-icon {
+  width: 64px;
+  height: 64px;
+  -moz-margin-end: 10px;
+}
+
+.popup-notification-icon[popupid="geolocation"] {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+}
+
+#identity-popup-container,
+#identity-popup-notification-container {
   margin: 4px 3px 2px -30px;
   color: #fff;
 }
