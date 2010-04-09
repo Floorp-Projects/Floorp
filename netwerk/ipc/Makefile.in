@@ -54,6 +54,7 @@ EXPORTS_mozilla/net = \
   NeckoParent.h       \
   NeckoChild.h        \
   NeckoCommon.h       \
+  NeckoMessageUtils.h \
   $(NULL)
 
 CPPSRCS =               \
