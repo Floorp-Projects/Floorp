@@ -182,6 +182,11 @@ let Util = {
     return "none";
   },
 
+  /** Don't display anything in the urlbar for these special URIs. */
+  isURLEmpty: function isURLEmpty(aURL) {
+    return (!aURL || aURL == "about:blank" || aURL == "about:home");
+  },
+
   /** Recursively find all documents, including root document. */
   getAllDocuments: function getAllDocuments(doc, resultSoFar) {
     resultSoFar = resultSoFar || [doc];

@@ -130,12 +130,11 @@ var BrowserUI = {
     if (browser && aDocument != browser.contentDocument)
       return;
 
-    var caption = aDocument.title;
-    if (!caption) {
-      caption = this.getDisplayURI(browser);
-      if (caption == "about:blank")
-        caption = "";
-    }
+    var url = this.getDisplayURI(browser);
+    var caption = aDocument.title || url;
+
+    if (Util.isURLEmpty(url))
+      caption = "";
 
     this._setURI(caption);
   },
@@ -256,7 +255,7 @@ var BrowserUI = {
       this._edit.defaultValue = this._edit.value;
 
       let urlString = this.getDisplayURI(Browser.selectedBrowser);
-      if (urlString == "about:blank")
+      if (Util.isURLEmpty(urlString))
         urlString = "";
       this._edit.value = urlString;
 
@@ -487,8 +486,10 @@ var BrowserUI = {
   getDisplayURI : function(browser) {
     let loadGroup = browser.webNavigation.QueryInterface(Ci.nsIDocumentLoader).loadGroup;
     if (loadGroup.activeCount && loadGroup.defaultLoadRequest) {
-      // browser.currentURI may not be valid if the request is still active
-      return loadGroup.defaultLoadRequest.name;
+      // browser.currentURI may not be valid if the request is still active.
+      // For chrome URIs especially, we want the urlbar during loading to use the
+      // "original" URI (about:home), not a rewritten one (jar:file:///...).
+      return loadGroup.defaultLoadRequest.QueryInterface(Ci.nsIChannel).originalURI.spec;
     }
 
     if (!this._URIFixup)
@@ -520,7 +521,7 @@ var BrowserUI = {
     this.updateStar();
 
     var urlString = this.getDisplayURI(browser);
-    if (urlString == "about:blank")
+    if (Util.isURLEmpty(urlString))
       urlString = "";
 
     this._setURI(urlString);
