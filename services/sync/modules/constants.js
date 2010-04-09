@@ -86,6 +86,7 @@ STATUS_OK:                             "success.status_ok",
 SYNC_FAILED:                           "error.sync.failed",
 LOGIN_FAILED:                          "error.login.failed",
 SYNC_FAILED_PARTIAL:                   "error.sync.failed_partial",
+CLIENT_NOT_CONFIGURED:                 "service.client_not_configured",
 STATUS_DISABLED:                       "service.disabled",
 
 // success states
