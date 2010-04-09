@@ -56,8 +56,6 @@
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 
-using base::environment_map;
-
 using mozilla::MonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;
 
@@ -185,7 +183,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // we split the logic here.
 
   FilePath exePath;
-  environment_map newEnvVars;
+  base::environment_map newEnvVars;
 
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsIFile> greDir;
