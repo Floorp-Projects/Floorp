@@ -26,6 +26,7 @@ body {
 	padding: 4px 6px 6px 4px;
 	border: 1px solid rgba(230,230,230,1);
 	background-color: rgba(245,245,245,1);
+	overflow: visible !important;
 	-moz-border-radius: 0.4em;
 	-moz-box-shadow: 
 		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
