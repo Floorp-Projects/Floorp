@@ -6481,11 +6481,13 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
                             nsCOMArray<nsNavHistoryResultNode>* aResults)
 {
   nsresult rv;
+  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(statement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
     nsRefPtr<nsNavHistoryResultNode> result;
-    rv = RowToResult(statement, aOptions, getter_AddRefs(result));
+    rv = RowToResult(row, aOptions, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
     aResults->AppendObject(result);
   }
@@ -6872,7 +6874,7 @@ nsNavHistory::GetRedirectFor(const nsACString& aDestination,
 //    or full visit.
 
 nsresult
-nsNavHistory::RowToResult(mozIStorageStatement* aRow,
+nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
                           nsNavHistoryQueryOptions* aOptions,
                           nsNavHistoryResultNode** aResult)
 {
@@ -7097,7 +7099,10 @@ nsNavHistory::VisitIdToResultNode(PRInt64 visitId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RowToResult(statement, aOptions, aResult);
+  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(statement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RowToResult(row, aOptions, aResult);
 }
 
 nsresult
@@ -7118,7 +7123,10 @@ nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptio
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RowToResult(stmt, aOptions, aResult);
+  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RowToResult(row, aOptions, aResult);
 }
 
 void
