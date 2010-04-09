@@ -167,7 +167,7 @@ function OnRefTestLoad()
     }
 
 
-    /* Support for running a chunk (subset) of tests.  In seperate try as this is optional */
+    /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {
       gTotalChunks = prefs.getIntPref("reftest.totalChunks");
       gThisChunk = prefs.getIntPref("reftest.thisChunk");
