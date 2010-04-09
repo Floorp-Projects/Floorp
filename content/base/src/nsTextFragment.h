@@ -146,6 +146,11 @@ public:
     return mState.mLength;
   }
 
+  PRBool CanGrowBy(size_t n) const
+  {
+    return n < (1 << 29) && mState.mLength + n < (1 << 29);
+  }
+
   /**
    * Change the contents of this fragment to be a copy of the given
    * buffer.
