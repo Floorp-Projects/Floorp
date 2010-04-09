@@ -60,6 +60,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 NS_IMPL_ADDREF_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 
+DOMCI_DATA(SVGPathElement, nsSVGPathElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGPathElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGPathElement,
@@ -456,7 +458,10 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
     if (aValue) {
       nsSVGPathDataParserToInternal parser(&mPathData);
-      parser.Parse(*aValue);
+      nsresult rv = parser.Parse(*aValue);
+      if (NS_FAILED(rv)) {
+        ReportAttributeParseFailure(GetOwnerDoc(), aName, *aValue);
+      }
     } else {
       mPathData.Clear();
     }
@@ -464,6 +469,19 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return nsSVGPathElementBase::BeforeSetAttr(aNamespaceID, aName,
                                              aValue, aNotify);
+}
+
+NS_IMETHODIMP
+nsSVGPathElement::WillModifySVGObservable(nsISVGValue* observable,
+                                          nsISVGValue::modificationType aModType)
+{
+  nsCOMPtr<nsIDOMSVGPathSegList> list = do_QueryInterface(observable);
+
+  if (list && mSegments == list) {
+    return NS_OK;
+  }
+
+  return nsSVGPathElementBase::WillModifySVGObservable(observable, aModType);
 }
 
 NS_IMETHODIMP

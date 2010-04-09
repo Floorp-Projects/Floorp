@@ -56,7 +56,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const gNeverPref = PREF_APP_UPDATE_NEVER_BRANCH + "99.9";
+const gNeverPref = PREF_APP_UPDATE_NEVER_BRANCH + gApp.version;
 
 /**
  * test preparation
@@ -70,7 +70,7 @@ function test01() {
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  var queryString = "?showNever=1&showDetails=1";
+  var queryString = "?showNever=1&showDetails=1" + getVersionParams();
   setUpdateURLOverride(URL_UPDATE + queryString);
 
   // add the never preference for this version to verify that checking for

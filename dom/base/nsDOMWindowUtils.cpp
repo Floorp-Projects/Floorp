@@ -82,6 +82,8 @@ static PRBool IsUniversalXPConnectCapable()
   return hasCap;
 }
 
+DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
@@ -617,6 +619,21 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
 
   return doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout,
                                      aReturn);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::NodesFromRect(float aX, float aY,
+                                float aTopSize, float aRightSize,
+                                float aBottomSize, float aLeftSize,
+                                PRBool aIgnoreRootScrollFrame,
+                                PRBool aFlushLayout,
+                                nsIDOMNodeList** aReturn)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize, 
+                                  aIgnoreRootScrollFrame, aFlushLayout, aReturn);
 }
 
 static already_AddRefed<gfxImageSurface>

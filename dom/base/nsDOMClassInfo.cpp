@@ -540,6 +540,16 @@ static const char kDOMStringBundleURL[] =
   // nothing
 #endif
 
+DOMCI_DATA(Crypto, void)
+DOMCI_DATA(CRMFObject, void)
+DOMCI_DATA(SmartCardEvent, void)
+
+DOMCI_DATA(DOMPrototype, void)
+DOMCI_DATA(DOMConstructor, void)
+
+DOMCI_DATA(Worker, void)
+
+DOMCI_DATA(Notation, void)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -551,6 +561,7 @@ static const char kDOMStringBundleURL[] =
     nsnull,                                                                   \
     _flags,                                                                   \
     PR_TRUE,                                                                  \
+    0,                                                                        \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -1743,20 +1754,17 @@ nsDOMClassInfo::~nsDOMClassInfo()
   }
 }
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMClassInfo, NS_DOMCLASSINFO_IID)
-
 NS_IMPL_ADDREF(nsDOMClassInfo)
 NS_IMPL_RELEASE(nsDOMClassInfo)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMClassInfo)
+  if (aIID.Equals(NS_GET_IID(nsXPCClassInfo)))
+    foundInterface = static_cast<nsIClassInfo*>(
+                                    static_cast<nsXPCClassInfo*>(this));
+  else
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-  if (aIID.Equals(NS_GET_IID(nsDOMClassInfo))) {
-    *aInstancePtr = static_cast<nsIXPCScriptable*>(this);
-    return NS_OK;
-  }
-  else
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClassInfo)
 NS_INTERFACE_MAP_END
 
 
@@ -1940,6 +1948,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
     d.mProtoChainInterface = _ifptr;                                          \
     d.mHasClassInterface = _has_class_if;                                     \
+    d.mInterfacesBitmap = kDOMClassInfo_##_class##_interfaces;                \
     static const nsIID *interface_list[] = {
 
 #define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \
@@ -4425,20 +4434,6 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
   return GET_CLEAN_CI_PTR(aData->mCachedClassInfo);
 }
 
-// static
-void
-nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
-{
-  nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(aWrapper->Native());
-  if (ci) {
-    nsDOMClassInfo* domci = nsnull;
-    CallQueryInterface(ci, &domci);
-    if (domci) {
-      domci->PreserveWrapper(aWrapper->Native());
-    }
-  }
-}
-
 
 // static
 void
@@ -6629,6 +6624,17 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // The PostCreate hook for the document will handle defining the
       // property
       *objp = obj;
+
+      if (ObjectIsNativeWrapper(cx, obj)) {
+        // Unless our object is a native wrapper, in which case we have to
+        // define it ourselves.
+
+        *_retval = JS_DefineProperty(cx, obj, "document", v, NULL, NULL,
+                                     JSPROP_READONLY | JSPROP_ENUMERATE);
+        if (!*_retval) {
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
 
       return NS_OK;
     }

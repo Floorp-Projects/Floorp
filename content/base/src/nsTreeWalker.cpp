@@ -77,6 +77,8 @@ nsTreeWalker::~nsTreeWalker()
 
 NS_IMPL_CYCLE_COLLECTION_3(nsTreeWalker, mFilter, mCurrentNode, mRoot)
 
+DOMCI_DATA(TreeWalker, nsTreeWalker)
+
 // QueryInterface implementation for nsTreeWalker
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)

@@ -54,16 +54,13 @@ html|a {
     text-shadow: rgba(0,0,0,0.8) 0 0 5px;
 }
 
+.submitStatus div {
+    min-height: 19px; /* height of biggest line (with throbber) */
+}
+
 .msgBottomLinks {
     padding-left: 2px;
     padding-right: 2px;
-}
-
-.msgBottomLinks div {
-    text-align: right;
-    margin-right: 4px;
-    margin-bottom: -19px;
-    min-height: 19px; /* height of biggest line (with throbber) */
 }
 
 .helpIcon {

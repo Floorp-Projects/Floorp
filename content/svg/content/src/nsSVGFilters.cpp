@@ -430,6 +430,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEGaussianBlur)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEGaussianBlurElement,nsSVGFEGaussianBlurElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEGaussianBlurElement,nsSVGFEGaussianBlurElementBase)
 
+DOMCI_DATA(SVGFEGaussianBlurElement, nsSVGFEGaussianBlurElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEGaussianBlurElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEGaussianBlurElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
@@ -904,6 +906,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
 
+DOMCI_DATA(SVGFEBlendElement, nsSVGFEBlendElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEBlendElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEBlendElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -1104,6 +1108,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEColorMatrix)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEColorMatrixElement,nsSVGFEColorMatrixElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEColorMatrixElement,nsSVGFEColorMatrixElementBase)
+
+DOMCI_DATA(SVGFEColorMatrixElement, nsSVGFEColorMatrixElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEColorMatrixElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEColorMatrixElement, nsIDOMNode, nsIDOMElement,
@@ -1443,6 +1449,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEComposite)
 NS_IMPL_ADDREF_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
 
+DOMCI_DATA(SVGFECompositeElement, nsSVGFECompositeElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFECompositeElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFECompositeElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -1701,6 +1709,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEComponentTransfer)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEComponentTransferElement,nsSVGFEComponentTransferElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEComponentTransferElement,nsSVGFEComponentTransferElementBase)
+
+DOMCI_DATA(SVGFEComponentTransferElement, nsSVGFEComponentTransferElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEComponentTransferElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEComponentTransferElement, nsIDOMNode,
@@ -2087,6 +2097,8 @@ public:
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncRElement,nsSVGComponentTransferFunctionElement)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncRElement,nsSVGComponentTransferFunctionElement)
 
+DOMCI_DATA(SVGFEFuncRElement, nsSVGFEFuncRElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncRElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncRElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -2127,6 +2139,8 @@ public:
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncGElement,nsSVGComponentTransferFunctionElement)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncGElement,nsSVGComponentTransferFunctionElement)
+
+DOMCI_DATA(SVGFEFuncGElement, nsSVGFEFuncGElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncGElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncGElement, nsIDOMNode, nsIDOMElement,
@@ -2169,6 +2183,8 @@ public:
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncBElement,nsSVGComponentTransferFunctionElement)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncBElement,nsSVGComponentTransferFunctionElement)
 
+DOMCI_DATA(SVGFEFuncBElement, nsSVGFEFuncBElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncBElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncBElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -2209,6 +2225,8 @@ public:
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncAElement,nsSVGComponentTransferFunctionElement)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncAElement,nsSVGComponentTransferFunctionElement)
+
+DOMCI_DATA(SVGFEFuncAElement, nsSVGFEFuncAElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncAElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncAElement, nsIDOMNode, nsIDOMElement,
@@ -2322,6 +2340,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEMergeElement,nsSVGFEMergeElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEMergeElement,nsSVGFEMergeElementBase)
 
+DOMCI_DATA(SVGFEMergeElement, nsSVGFEMergeElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEMergeElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEMergeElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -2391,6 +2411,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEMergeNode)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEMergeNodeElement,nsSVGFEMergeNodeElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEMergeNodeElement,nsSVGFEMergeNodeElementBase)
+
+DOMCI_DATA(SVGFEMergeNodeElement, nsSVGFEMergeNodeElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEMergeNodeElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFEMergeNodeElement, nsIDOMNode, nsIDOMElement,
@@ -2504,6 +2526,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEOffsetElement,nsSVGFEOffsetElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEOffsetElement,nsSVGFEOffsetElementBase)
+
+DOMCI_DATA(SVGFEOffsetElement, nsSVGFEOffsetElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEOffsetElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEOffsetElement, nsIDOMNode, nsIDOMElement,
@@ -2693,6 +2717,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEFlood)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFloodElement,nsSVGFEFloodElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEFloodElement,nsSVGFEFloodElementBase)
 
+DOMCI_DATA(SVGFEFloodElement, nsSVGFEFloodElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEFloodElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEFloodElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -2831,6 +2857,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFETileElement,nsSVGFETileElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFETileElement,nsSVGFETileElementBase)
+
+DOMCI_DATA(SVGFETileElement, nsSVGFETileElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFETileElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFETileElement, nsIDOMNode, nsIDOMElement,
@@ -3135,6 +3163,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
+
+DOMCI_DATA(SVGFETurbulenceElement, nsSVGFETurbulenceElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFETurbulenceElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFETurbulenceElement, nsIDOMNode, nsIDOMElement,
@@ -3572,6 +3602,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
 
+DOMCI_DATA(SVGFEMorphologyElement, nsSVGFEMorphologyElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEMorphologyElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEMorphologyElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
@@ -3925,6 +3957,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEConvolveMatrix)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
+
+DOMCI_DATA(SVGFEConvolveMatrixElement, nsSVGFEConvolveMatrixElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEConvolveMatrixElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEConvolveMatrixElement, nsIDOMNode,
@@ -4319,6 +4353,8 @@ nsSVGElement::NumberInfo nsSVGFEDistantLightElement::sNumberInfo[2] =
 NS_IMPL_ADDREF_INHERITED(nsSVGFEDistantLightElement,nsSVGFEDistantLightElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEDistantLightElement,nsSVGFEDistantLightElementBase)
 
+DOMCI_DATA(SVGFEDistantLightElement, nsSVGFEDistantLightElementBase)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEDistantLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFEDistantLightElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
@@ -4404,6 +4440,8 @@ nsSVGElement::NumberInfo nsSVGFEPointLightElement::sNumberInfo[3] =
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
+
+DOMCI_DATA(SVGFEPointLightElement, nsSVGFEPointLightElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEPointLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFEPointLightElement, nsIDOMNode,
@@ -4500,6 +4538,8 @@ nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
+
+DOMCI_DATA(SVGFESpotLightElement, nsSVGFESpotLightElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFESpotLightElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGFESpotLightElement, nsIDOMNode,
@@ -4974,6 +5014,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDiffuseLighting)
 NS_IMPL_ADDREF_INHERITED(nsSVGFEDiffuseLightingElement,nsSVGFEDiffuseLightingElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEDiffuseLightingElement,nsSVGFEDiffuseLightingElementBase)
 
+DOMCI_DATA(SVGFEDiffuseLightingElement, nsSVGFEDiffuseLightingElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGFEDiffuseLightingElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEDiffuseLightingElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
@@ -5095,6 +5137,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FESpecularLighting)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFESpecularLightingElement,nsSVGFESpecularLightingElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFESpecularLightingElement,nsSVGFESpecularLightingElementBase)
+
+DOMCI_DATA(SVGFESpecularLightingElement, nsSVGFESpecularLightingElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFESpecularLightingElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFESpecularLightingElement, nsIDOMNode,
@@ -5303,6 +5347,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEImage)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEImageElement,nsSVGFEImageElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEImageElement,nsSVGFEImageElementBase)
+
+DOMCI_DATA(SVGFEImageElement, nsSVGFEImageElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEImageElement)
   NS_NODE_INTERFACE_TABLE8(nsSVGFEImageElement, nsIDOMNode, nsIDOMElement,
@@ -5676,6 +5722,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDisplacementMap)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
+
+DOMCI_DATA(SVGFEDisplacementMapElement, nsSVGFEDisplacementMapElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEDisplacementMapElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGFEDisplacementMapElement, nsIDOMNode,

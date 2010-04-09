@@ -128,8 +128,11 @@ function nsFastStartupObserver() {
     } else if (topic == "domwindowclosed") {
       if (_browserWindowCount > 0)
         _browserWindowCount--;
-      if (_browserWindowCount == 0)
+      if (_browserWindowCount == 0) {
         scheduleMemoryCleanup();
+        let prefservice = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+        prefservice.savePrefFile(null);
+      }
     } else if (topic == "quit-application-granted") {
       stopMemoryCleanup();
       _isShuttingDown = true;

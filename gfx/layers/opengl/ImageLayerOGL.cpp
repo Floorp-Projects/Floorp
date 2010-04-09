@@ -42,6 +42,14 @@
 namespace mozilla {
 namespace layers {
 
+using mozilla::MutexAutoLock;
+
+ImageContainerOGL::ImageContainerOGL(LayerManagerOGL *aManager)
+  : ImageContainer(aManager)
+  , mActiveImageLock("mozilla.layers.ImageContainerOGL.mActiveImageLock")
+{
+}
+
 already_AddRefed<Image>
 ImageContainerOGL::CreateImage(const Image::Format *aFormats,
                                PRUint32 aNumFormats)
@@ -61,12 +69,16 @@ ImageContainerOGL::CreateImage(const Image::Format *aFormats,
 void
 ImageContainerOGL::SetCurrentImage(Image *aImage)
 {
+  MutexAutoLock lock(mActiveImageLock);
+
   mActiveImage = aImage;
 }
 
 already_AddRefed<Image>
 ImageContainerOGL::GetCurrentImage()
 {
+  MutexAutoLock lock(mActiveImageLock);
+
   nsRefPtr<Image> retval = mActiveImage;
   return retval.forget();
 }
@@ -191,10 +203,6 @@ PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
 void
 PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
 {
-  /**
-   * XXX - Should do something more clever here, also introduce thread safety
-   * there's potential race conditions in this class.
-   */
   mData = aData;
   mData.mCbChannel = new PRUint8[aData.mCbCrStride * aData.mCbCrSize.height];
   mData.mCrChannel = new PRUint8[aData.mCbCrStride * aData.mCbCrSize.height];
@@ -319,10 +327,6 @@ CairoImageOGL::~CairoImageOGL()
 void
 CairoImageOGL::SetData(const CairoImage::Data &aData)
 {
-  /**
-   * XXX - Should make sure this happens on the correct thread. Since this
-   * is supposed to be threadsafe.
-   */
   mSize = aData.mSize;
   mManager->MakeCurrent();
 

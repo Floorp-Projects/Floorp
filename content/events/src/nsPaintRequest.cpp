@@ -42,6 +42,8 @@
 #include "nsClientRect.h"
 #include "nsIFrame.h"
 
+DOMCI_DATA(PaintRequest, nsPaintRequest)
+
 NS_INTERFACE_TABLE_HEAD(nsPaintRequest)
   NS_INTERFACE_TABLE1(nsPaintRequest, nsIDOMPaintRequest)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
@@ -78,6 +80,8 @@ nsPaintRequest::GetReason(nsAString& aResult)
   }
   return NS_OK;
 }
+
+DOMCI_DATA(PaintRequestList, nsPaintRequestList)
 
 NS_INTERFACE_TABLE_HEAD(nsPaintRequestList)
   NS_INTERFACE_TABLE1(nsPaintRequestList, nsIDOMPaintRequestList)

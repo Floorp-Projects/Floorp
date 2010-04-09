@@ -180,12 +180,12 @@ TestRunner.runNextTest = function() {
 /**
  * This stub is called by SimpleTest when a test is finished.
 **/
-TestRunner.testFinished = function(doc) {
+TestRunner.testFinished = function(tests) {
     if (TestRunner.logEnabled)
         TestRunner.logger.debug("SimpleTest finished " +
                                 TestRunner._urls[TestRunner._currentTest]);
 
-    TestRunner.updateUI();
+    TestRunner.updateUI(tests);
     TestRunner._currentTest++;
     TestRunner.runNextTest();
 };
@@ -193,23 +193,25 @@ TestRunner.testFinished = function(doc) {
 /**
  * Get the results.
  */
-TestRunner.countResults = function(doc) {
-  var nOK = withDocument(doc,
-     partial(getElementsByTagAndClassName, 'div', 'test_ok')
-  ).length;
-  var nNotOK = withDocument(doc,
-     partial(getElementsByTagAndClassName, 'div', 'test_not_ok')
-  ).length;
-  var nTodo = withDocument(doc,
-     partial(getElementsByTagAndClassName, 'div', 'test_todo')
-  ).length;
+TestRunner.countResults = function(tests) {
+  var nOK = 0;
+  var nNotOK = 0;
+  var nTodo = 0;
+  for (var i = 0; i < tests.length; ++i) {
+    var test = tests[i];
+    if (test.todo && !test.result) {
+      nTodo++;
+    } else if (test.result && !test.todo) {
+      nOK++;
+    } else {
+      nNotOK++;
+    }
+  }
   return {"OK": nOK, "notOK": nNotOK, "todo": nTodo};
 }
 
-TestRunner.updateUI = function() {
-  var testFrame = $('testframe');
-  var results = TestRunner.countResults(testFrame.contentDocument ||
-                                        testFrame.contentWindow.document);
+TestRunner.updateUI = function(tests) {
+  var results = TestRunner.countResults(tests);
   var passCount = parseInt($("pass-count").innerHTML) + results.OK;
   var failCount = parseInt($("fail-count").innerHTML) + results.notOK;
   var todoCount = parseInt($("todo-count").innerHTML) + results.todo;

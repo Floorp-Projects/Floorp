@@ -38,6 +38,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     is(utils.getClassName(unsafeWin), "XPCSafeJSObjectWrapper", "can get a SJOW");
     is(utils.getClassName(unsafeWin.location), "XPCSafeJSObjectWrapper", "deep wrapping works");
 
+    Object.defineProperty(unsafeWin, "defprop1", { value: 1, writable: true, enumerable: true });
+    /* TODO (bug 552854): the getter isn't visible in content.
+    function checkWrapper(val) {
+        ok(utils.getClassName(val) == "XPCSafeJSObjectWrapper", "wrapped properly");
+    }
+    Object.defineProperty(unsafeWin, "defprop2", { set: checkWrapper, enumerable: true });
+    */
     unsafeWin.run_test(ok, win, unsafeWin);
 
     win.setTimeout(function() {

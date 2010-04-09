@@ -2812,12 +2812,14 @@ pref("signon.rememberSignons",              true);
 pref("signon.SignonFileName",               "signons.txt"); // obsolete 
 pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
 pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
-pref("signon.autofillForms",                true); 
-pref("signon.debug",                        false); // logs to Error Console
+pref("signon.autofillForms",                true);
+pref("signon.autologin.proxy",              false);
+pref("signon.debug",                        false);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
+pref("browser.formfill.saveHttpsForms",   true);
 pref("browser.formfill.agedWeight",       2);
 pref("browser.formfill.bucketSize",       1);
 pref("browser.formfill.maxTimeGroupings", 25);
