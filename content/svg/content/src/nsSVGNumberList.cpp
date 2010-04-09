@@ -112,6 +112,8 @@ nsSVGNumberList::~nsSVGNumberList()
 NS_IMPL_ADDREF(nsSVGNumberList)
 NS_IMPL_RELEASE(nsSVGNumberList)
 
+DOMCI_DATA(SVGNumberList, nsSVGNumberList)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGNumberList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGNumberList)

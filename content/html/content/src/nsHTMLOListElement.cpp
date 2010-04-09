@@ -102,6 +102,10 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSharedListElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLOListElement, nsHTMLSharedListElement)
+DOMCI_DATA(HTMLDListElement, nsHTMLSharedListElement)
+DOMCI_DATA(HTMLUListElement, nsHTMLSharedListElement)
+
 // QueryInterface implementation for nsHTMLSharedListElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSharedListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(nsHTMLSharedListElement,

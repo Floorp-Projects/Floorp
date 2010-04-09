@@ -40,7 +40,6 @@
 #define _nsHTMLImageAccessible_H_
 
 #include "nsBaseWidgetAccessible.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsIAccessibleImage.h"
 
 /* Accessible for supporting images
@@ -51,50 +50,25 @@
 class nsHTMLImageAccessible : public nsLinkableAccessible,
                               public nsIAccessibleImage
 {
-
-  NS_DECL_ISUPPORTS_INHERITED
-
 public:
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  // nsIAccessibleHyperLink
-  NS_IMETHOD GetAnchorCount(PRInt32 *aAnchorCount);
-  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
-  NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
-
   // nsIAccessibleImage
   NS_DECL_NSIACCESSIBLEIMAGE
-
-  // nsAccessNode
-  virtual nsresult Shutdown();
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-
-protected:
-  // nsAccessible
-  virtual void CacheChildren();
-
-  // nsHTMLImageAccessible
-  already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
-  already_AddRefed<nsIAccessible>
-    GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
-
-  // Reference on linked map element if any.
-  nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
-
-  // Cache of area accessibles. We do not use common cache because images can
-  // share area elements but we need to have separate area accessibles for
-  // each image accessible.
-  nsAccessNodeHashtable *mAccessNodeCache;
 
 private:
   /**

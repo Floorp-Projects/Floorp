@@ -63,7 +63,7 @@ protected:
   // helpers
   void GetNextToken();
   void RewindTo(const char* aPos);
-  virtual nsresult Match();
+  virtual nsresult Match()=0;
 
   nsresult MatchNonNegativeNumber(float* aX);
   PRBool IsTokenNonNegativeNumberStarter();

@@ -907,6 +907,9 @@ pref("toolbar.customization.usesheet", false);
 
 #ifdef XP_MACOSX
 pref("dom.ipc.plugins.enabled", false);
+// These plug-ins will run OOP by default
+pref("dom.ipc.plugins.enabled.flash player.plugin", true);
+pref("dom.ipc.plugins.enabled.javaplugin2_npapi.plugin", true);
 #else
 pref("dom.ipc.plugins.enabled", true);
 #endif

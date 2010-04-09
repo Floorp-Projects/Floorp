@@ -49,9 +49,9 @@ function test() {
   BrowserSearch.loadSearch("mozilla", true);
   BrowserSearch.loadSearch("firefox", true);
   
-  is(tabs[0], gBrowser.mTabs[3], "blank tab has been pushed to the end");
-  is(tabs[1], gBrowser.mTabs[1], "first search tab opens next to the current tab");
-  is(tabs[2], gBrowser.mTabs[2], "second search tab opens next to the first search tab");
+  is(tabs[0], gBrowser.tabs[3], "blank tab has been pushed to the end");
+  is(tabs[1], gBrowser.tabs[1], "first search tab opens next to the current tab");
+  is(tabs[2], gBrowser.tabs[2], "second search tab opens next to the first search tab");
 
   container.removeEventListener("TabOpen", tabAdded, false);
   tabs.forEach(gBrowser.removeTab, gBrowser);

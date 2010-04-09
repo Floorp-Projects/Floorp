@@ -1,0 +1,8 @@
+This directory contains freetype2 v2.3.12 downloaded from
+http://savannah.nongnu.org/download/freetype/
+
+Makefile.in is added for the mozilla build.
+
+Additional patch applied locally:
+http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=25e742c573e3b88e5a4e342733f1836466628ff8
+(Add overflow check to `fvar' table; see bug 553273)

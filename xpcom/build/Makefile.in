@@ -150,7 +150,7 @@ DEFINES		+= \
 		-DEXPORT_XPTC_API
 
 EXTRA_DSO_LDOPTS +=				\
-	$(MOZALLOC_LIB)				\
+	-L$(LIBXUL_DIST)/lib $(MOZALLOC_LIB)    \
 	$(NSPR_LIBS)				\
 	$(NULL)
 

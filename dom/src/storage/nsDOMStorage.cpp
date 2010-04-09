@@ -518,6 +518,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMCI_DATA(StorageObsolete, nsDOMStorage)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
@@ -1448,6 +1450,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage2)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStorage, nsIDOMStorageObsolete)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMCI_DATA(Storage, nsDOMStorage2)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage2)
@@ -1676,6 +1680,8 @@ nsDOMStorage2::Clear()
 // nsDOMStorageList
 //
 
+DOMCI_DATA(StorageList, nsDOMStorageList)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageList)
@@ -1863,6 +1869,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
+
+DOMCI_DATA(StorageItem, nsDOMStorageItem)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageItem)
@@ -1971,6 +1980,8 @@ nsDOMStorageItem::ToString(nsAString& aStr)
   return GetValue(aStr);
 }
 
+DOMCI_DATA(StorageEvent, nsDOMStorageEvent)
+
 // QueryInterface implementation for nsDOMStorageEvent
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEvent)
@@ -2043,6 +2054,8 @@ NS_IMETHODIMP nsDOMStorageEvent::InitStorageEvent(const nsAString & typeArg,
 }
 
 // Obsolete globalStorage event
+
+DOMCI_DATA(StorageEventObsolete, nsDOMStorageEventObsolete)
 
 // QueryInterface implementation for nsDOMStorageEventObsolete
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageEventObsolete)

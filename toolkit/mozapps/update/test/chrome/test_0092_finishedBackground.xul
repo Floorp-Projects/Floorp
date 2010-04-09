@@ -64,7 +64,8 @@ function test01() {
 
   var patches = getLocalPatchString("complete", null, null, null, null, null,
                                     STATE_PENDING);
-  var updates = getLocalUpdateString(patches);
+  var updates = getLocalUpdateString(patches, null, null, null,
+                                     gApp.version, gApp.platformVersion);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   writeStatusFile(STATE_SUCCEEDED);

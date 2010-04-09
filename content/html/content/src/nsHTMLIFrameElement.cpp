@@ -108,6 +108,8 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 
+DOMCI_DATA(HTMLIFrameElement, nsHTMLIFrameElement)
+
 // QueryInterface implementation for nsHTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(nsHTMLIFrameElement)

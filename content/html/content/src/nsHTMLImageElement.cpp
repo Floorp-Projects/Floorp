@@ -193,6 +193,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLImageElement, nsHTMLImageElement)
+
 // QueryInterface implementation for nsHTMLImageElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLImageElement)
   NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLImageElement,

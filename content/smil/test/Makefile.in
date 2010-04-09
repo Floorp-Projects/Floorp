@@ -70,6 +70,7 @@ _TEST_FILES = \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
 	  test_smilKeySplines.xhtml \
+	  test_smilKeyTimesPacedMode.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
 	  test_smilSyncbaseTarget.xhtml \

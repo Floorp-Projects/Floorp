@@ -76,6 +76,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Animate)
 NS_IMPL_ADDREF_INHERITED(nsSVGAnimateElement,nsSVGAnimateElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGAnimateElement,nsSVGAnimateElementBase)
 
+DOMCI_DATA(SVGAnimateElement, nsSVGAnimateElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGAnimateElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGAnimateElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGAnimationElement,

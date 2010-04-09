@@ -246,6 +246,10 @@ void cgdata_release_callback(void *aCGData, const void *data, size_t size) {
 void nsCARenderer::Destroy() {
   if (mCARenderer) {
     CARenderer* caRenderer = (CARenderer*)mCARenderer;
+    // Bug 556453:
+    // Explicitly remove the layer from the renderer
+    // otherwise it does not always happen right away.
+    caRenderer.layer = NULL;
     [caRenderer release];
   }
   if (mPixelBuffer) {

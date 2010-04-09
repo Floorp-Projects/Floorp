@@ -250,6 +250,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
+		test_CrossSiteXHR_origin.html \
 		file_CrossSiteXHR_inner.html \
 		file_CrossSiteXHR_inner_data.sjs \
 		file_CrossSiteXHR_inner.jar \

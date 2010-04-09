@@ -2209,11 +2209,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // of the viewport (good!).
   PRBool canHaveHorizontal;
   PRBool canHaveVertical;
-  // Hack to try to avoid Tsspider regression: always call
-  // GetScrollbarStyles here, even if we plan to ignore the return
-  // value.
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   if (!mIsRoot) {
+    ScrollbarStyles styles = scrollable->GetScrollbarStyles();
     canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
     if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
@@ -2697,6 +2694,12 @@ PRBool
 nsGfxScrollFrameInner::IsScrollbarOnRight() const
 {
   nsPresContext *presContext = mOuter->PresContext();
+
+  // The position of the scrollbar in top-level windows depends on the pref
+  // layout.scrollbar.side. For non-top-level elements, it depends only on the
+  // directionaliy of the element (equivalent to a value of "1" for the pref).
+  if (!mIsRoot)
+    return IsLTR();
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0: // UI directionality

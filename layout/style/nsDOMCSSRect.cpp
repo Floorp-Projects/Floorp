@@ -55,6 +55,8 @@ nsDOMCSSRect::~nsDOMCSSRect(void)
 {
 }
 
+DOMCI_DATA(CSSRect, nsDOMCSSRect)
+
 // QueryInterface implementation for nsCSSRect
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSRect)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRect)

@@ -684,7 +684,12 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
     case eCSSUnit_None:
       break;
     default:
-      NS_NOTREACHED("unexpected unit; maybe nsCSSValue::Image::Image() failed?");
+      // We might have eCSSUnit_URL values for if-visited style
+      // contexts, which we can safely treat like 'none'.  Otherwise
+      // this is an unexpected unit.
+      NS_ASSERTION(aStyleContext->IsStyleIfVisited() &&
+                   aValue.GetUnit() == eCSSUnit_URL,
+                   "unexpected unit; maybe nsCSSValue::Image::Image() failed?");
       break;
   }
 }

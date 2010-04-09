@@ -59,6 +59,8 @@ nsDOMMutationEvent::~nsDOMMutationEvent()
   }
 }
 
+DOMCI_DATA(MutationEvent, nsDOMMutationEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMMutationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MutationEvent)

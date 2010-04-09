@@ -1269,6 +1269,11 @@ js_ReportUncaughtException(JSContext *cx)
         PodZero(&report);
         report.filename = filename;
         report.lineno = (uintN) lineno;
+        if (JSVAL_IS_STRING(roots[2])) {
+            report.ucmessage = js_GetStringChars(cx, JSVAL_TO_STRING(roots[2]));
+            if (!report.ucmessage)
+                return false;
+        }
     }
 
     if (!reportp) {

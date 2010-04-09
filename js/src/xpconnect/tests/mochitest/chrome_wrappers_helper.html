@@ -13,6 +13,12 @@
                 ok(ok.__parent__ == window, "ok is parented correctly");
                 check_wrapper(ok, xpcnw, "XPCCrossOriginWrapper", "XPCNWs are transformed correctly");
                 check_wrapper(ok, sjow, "XPCCrossOriginWrapper", "SJOWs are transformed correctly");
+
+                ok(defprop1 === 1, "defprop1 exists");
+                window.defprop1 = 2;
+                ok(defprop1 === 2, "defprop1 is properly writable");
+
+                // defprop2 = {}; disabled because the test doesn't work
             }
         </script>
     </head>

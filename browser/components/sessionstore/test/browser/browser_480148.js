@@ -102,7 +102,7 @@ function test() {
       handleSSTabRestoring: function (aEvent) {
         let tab = aEvent.originalTarget;
         let tabbrowser = this.window.gBrowser;
-        let currentIndex = Array.indexOf(tabbrowser.mTabs, tab);
+        let currentIndex = Array.indexOf(tabbrowser.tabs, tab);
         this.actualOrder.push(currentIndex);
 
         if (this.actualOrder.length < this.state.windows[0].tabs.length)

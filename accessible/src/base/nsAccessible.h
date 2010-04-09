@@ -232,6 +232,11 @@ public:
   void SetParent(nsAccessible *aParent);
 
   /**
+   * Cache children if necessary. Return true if the accessible is defunct.
+   */
+  PRBool EnsureChildren();
+
+  /**
    * Set the child count to -1 (unknown) and null out cached child pointers.
    * Should be called when accessible tree is changed because document has
    * transformed.
@@ -316,11 +321,6 @@ protected:
    * Cache accessible children.
    */
   virtual void CacheChildren();
-
-  /**
-   * Cache children if necessary. Return true if the accessible is defunct.
-   */
-  PRBool EnsureChildren();
 
   /**
    * Return sibling accessible at the given offset.

@@ -67,6 +67,8 @@
 
 // nsDOMFile implementation
 
+DOMCI_DATA(File, nsDOMFile)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMFile)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFile)
@@ -463,6 +465,8 @@ nsDOMFile::ConvertStream(nsIInputStream *aStream,
 
 // nsDOMFileList implementation
 
+DOMCI_DATA(FileList, nsDOMFileList)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMFileList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileList)
@@ -489,6 +493,8 @@ nsDOMFileList::Item(PRUint32 aIndex, nsIDOMFile **aFile)
 }
 
 // nsDOMFileError implementation
+
+DOMCI_DATA(FileError, nsDOMFileError)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMFileError)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileError)

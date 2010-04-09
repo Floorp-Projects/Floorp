@@ -69,8 +69,8 @@ function test01() {
                                     STATE_PENDING) +
                 getLocalPatchString("complete", slowDownloadURL, "MD5",
                                     "1234cd43a1c77e30191c53a329a3f99d");
-
-  var updates = getLocalUpdateString(patches);
+  var updates = getLocalUpdateString(patches, null, null, null,
+                                     gApp.version, gApp.platformVersion);
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 

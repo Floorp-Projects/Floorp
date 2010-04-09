@@ -114,6 +114,8 @@ nsSVGAnimatedNumberList::Init(nsIDOMSVGNumberList* aBaseVal)
 NS_IMPL_ADDREF(nsSVGAnimatedNumberList)
 NS_IMPL_RELEASE(nsSVGAnimatedNumberList)
 
+DOMCI_DATA(SVGAnimatedNumberList, nsSVGAnimatedNumberList)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGAnimatedNumberList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)

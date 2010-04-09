@@ -887,6 +887,12 @@ PrintWinCodebase(nsGlobalWindow *win)
   uri->GetSpec(spec);
   printf("%s\n", spec.get());
 }
+
+void
+DumpString(const nsAString &str)
+{
+  printf("%s\n", NS_ConvertUTF16toUTF8(str).get());
+}
 #endif
 
 static void
@@ -3517,13 +3523,6 @@ nsJSContext::ScriptExecuted()
 {
   ScriptEvaluated(!::JS_IsRunning(mContext));
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSContext::PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
-{
-  nsDOMClassInfo::PreserveNodeWrapper(aWrapper);
   return NS_OK;
 }
 

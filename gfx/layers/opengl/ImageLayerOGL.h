@@ -40,6 +40,7 @@
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace layers {
@@ -47,10 +48,7 @@ namespace layers {
 class THEBES_API ImageContainerOGL : public ImageContainer
 {
 public:
-  ImageContainerOGL(LayerManagerOGL *aManager)
-    : ImageContainer(aManager)
-  { }
-
+  ImageContainerOGL(LayerManagerOGL *aManager);
   virtual ~ImageContainerOGL() {}
 
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
@@ -62,7 +60,11 @@ public:
 
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
 private:
+  typedef mozilla::Mutex Mutex;
+
   nsRefPtr<Image> mActiveImage;
+
+  Mutex mActiveImageLock;
 };
 
 class THEBES_API ImageLayerOGL : public ImageLayer,
