@@ -933,8 +933,8 @@ nsresult nsOggPlayStateMachine::Run()
           AdvanceFrame();
         }
 
-        if (HasAudio()) {
-          // Close the audio stream so that next time audio is used a new stream
+        if (mAudioStream) {
+          // Close the audop stream so that next time audio is used a new stream
           // is created. The StopPlayback call also resets the IsPlaying() state
           // so audio is restarted correctly.
           StopPlayback(AUDIO_SHUTDOWN);
@@ -1125,16 +1125,9 @@ PRInt64
 nsOggPlayStateMachine::GetAudioClock()
 {
   NS_ASSERTION(IsThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
-  if (!HasAudio())
+  if (!mAudioStream || !HasAudio())
     return -1;
-  PRInt64 t;
-  {
-    MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    MonitorAutoEnter audioMon(mAudioMonitor);
-    if (!mAudioStream)
-      return -1;
-    t = mAudioStream->GetPosition();
-  }
+  PRInt64 t = mAudioStream->GetPosition();
   return (t == -1) ? -1 : t + mAudioStartTime;
 }
 
