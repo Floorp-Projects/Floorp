@@ -72,7 +72,7 @@ window.TabItem.prototype = $.extend(new Item(), {
 // ##########
 window.TabItems = {
   tabWidth: 160,
-  tabHeight: 137, 
+  tabHeight: 130, 
   fontSize: 9,
 
   init: function() {
