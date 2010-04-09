@@ -43,6 +43,7 @@
 #include "nsDependentString.h"
 #include "nsDependentSubstring.h"
 #include "nsISerializable.h"
+#include "nsIIPCSerializable.h"
 #include "nsIFileURL.h"
 #include "nsIStandardURL.h"
 #include "nsIFile.h"
@@ -72,6 +73,7 @@ class nsIPrefBranch;
 class nsStandardURL : public nsIFileURL
                     , public nsIStandardURL
                     , public nsISerializable
+                    , public nsIIPCSerializable
                     , public nsIClassInfo
 {
 public:
@@ -81,6 +83,7 @@ public:
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
     NS_DECL_NSISERIALIZABLE
+    NS_DECL_NSIIPCSERIALIZABLE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
 
@@ -224,6 +227,12 @@ private:
     // fastload helper functions
     nsresult ReadSegment(nsIBinaryInputStream *, URLSegment &);
     nsresult WriteSegment(nsIBinaryOutputStream *, const URLSegment &);
+
+#ifdef MOZ_IPC
+    // ipc helper functions
+    bool ReadSegment(const IPC::Message *, void **, URLSegment &);
+    void WriteSegment(IPC::Message *, const URLSegment &);
+#endif
 
     static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 
