@@ -41,6 +41,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SIMPLE_PROGRAMS	= mozilla-runtime
+include $(topsrcdir)/ipc/app/defs.mk
+
+PROGRAM = $(MOZ_CHILD_PROCESS_NAME)
+CPPSRCS = mozilla-runtime.cpp
 
 include $(topsrcdir)/config/rules.mk
