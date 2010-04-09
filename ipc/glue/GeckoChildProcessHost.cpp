@@ -51,7 +51,12 @@
 #endif
 #include "nsExceptionHandler.h"
 
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
+
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+
+using base::environment_map;
 
 using mozilla::MonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;
@@ -180,18 +185,20 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // we split the logic here.
 
   FilePath exePath;
+  environment_map newEnvVars;
 
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsIFile> greDir;
   nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     nsCString path;
     greDir->GetNativePath(path);
     exePath = FilePath(path.get());
+#ifdef OS_LINUX
+    newEnvVars["LD_LIBRARY_PATH"] = path.get();
+#endif
   }
-  else
-  {
+  else {
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
     exePath = exePath.DirName();
   }
@@ -231,7 +238,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   }
 #endif
 
-  base::LaunchApp(childArgv, mFileMap, false, &process);
+  base::LaunchApp(childArgv, mFileMap,
+#ifdef OS_LINUX
+                  newEnvVars,
+#endif
+                  false, &process);
 
 //--------------------------------------------------
 #elif defined(OS_WIN)

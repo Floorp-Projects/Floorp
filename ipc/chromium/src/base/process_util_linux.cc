@@ -32,8 +32,20 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
+               bool wait, ProcessHandle* process_handle) {
+  return LaunchApp(argv, fds_to_remap, environment_map(),
+                   wait, process_handle);
+}
+#endif
+
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+#if defined(CHROMIUM_MOZILLA_BUILD)
+               const environment_map& env_vars_to_set,
+#endif
                bool wait, ProcessHandle* process_handle) {
   pid_t pid = fork();
   if (pid < 0)
@@ -50,6 +62,14 @@ bool LaunchApp(const std::vector<std::string>& argv,
       exit(127);
 
     CloseSuperfluousFds(fd_shuffle);
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+    for (environment_map::const_iterator it = env_vars_to_set.begin();
+         it != env_vars_to_set.end(); ++it) {
+      if (setenv(it->first.c_str(), it->second.c_str(), 1/*overwrite*/))
+        exit(127);
+    }
+#endif
 
     scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
     for (size_t i = 0; i < argv.size(); i++)
