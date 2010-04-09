@@ -6018,25 +6018,32 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
             }
 
-            /* Emit remainder as a single JSOP_CONCATN. */
-            for (index = 0; pn2; pn2 = pn2->pn_next, index++) {
+            if (!pn2)
+                break;
+
+            /*
+             * Having seen a string literal, we know statically that the rest
+             * of the additions are string concatenation, so we emit them as a
+             * single concatn. First, do string conversion on the result of the
+             * preceding zero or more additions so that any side effects of
+             * string conversion occur before the next operand begins.
+             */
+            if (pn2 == pn->pn_head) {
+                index = 0;
+            } else {
+                if (!js_Emit1(cx, cg, JSOP_OBJTOSTR))
+                    return JS_FALSE;
+                index = 1;
+            }
+
+            for (; pn2; pn2 = pn2->pn_next, index++) {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
-                if (!pn2->isLiteral() &&
-                    js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0) {
+                if (!pn2->isLiteral() && js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0)
                     return JS_FALSE;
-                }
             }
 
-            if (index != 0) {
-                EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
-
-                /* If we had a prefix, we need to be added to it now. */
-                if (pn->pn_head->pn_type != TOK_STRING &&
-                    js_Emit1(cx, cg, JSOP_ADD) < 0) {
-                    return JS_FALSE;
-                }
-            }
+            EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
             break;
         }
       case TOK_BITOR:
