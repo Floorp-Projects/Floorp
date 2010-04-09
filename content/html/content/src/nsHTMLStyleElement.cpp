@@ -135,6 +135,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLStyleElement, nsHTMLStyleElement)
+
 // QueryInterface implementation for nsHTMLStyleElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLStyleElement)
   NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLStyleElement,

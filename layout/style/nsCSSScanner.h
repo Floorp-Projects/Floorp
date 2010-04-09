@@ -161,28 +161,27 @@ class nsCSSScanner {
 
 #endif
 #ifdef CSS_REPORT_PARSE_ERRORS
-  NS_HIDDEN_(void) AddToError(const nsSubstring& aErrorText);
-  NS_HIDDEN_(void) OutputError();
-  NS_HIDDEN_(void) ClearError();
+  void AddToError(const nsSubstring& aErrorText);
+  void OutputError();
+  void ClearError();
 
   // aMessage must take no parameters
-  NS_HIDDEN_(void) ReportUnexpected(const char* aMessage);
-  NS_HIDDEN_(void) ReportUnexpectedParams(const char* aMessage,
-                                          const PRUnichar **aParams,
-                                          PRUint32 aParamsLength);
+  void ReportUnexpected(const char* aMessage);
+  void ReportUnexpectedParams(const char* aMessage,
+                              const PRUnichar **aParams,
+                              PRUint32 aParamsLength);
   // aLookingFor is a plain string, not a format string
-  NS_HIDDEN_(void) ReportUnexpectedEOF(const char* aLookingFor);
+  void ReportUnexpectedEOF(const char* aLookingFor);
   // aLookingFor is a single character
-  NS_HIDDEN_(void) ReportUnexpectedEOF(PRUnichar aLookingFor);
+  void ReportUnexpectedEOF(PRUnichar aLookingFor);
   // aMessage must take 1 parameter (for the string representation of the
   // unexpected token)
-  NS_HIDDEN_(void) ReportUnexpectedToken(nsCSSToken& tok,
-                                         const char *aMessage);
+  void ReportUnexpectedToken(nsCSSToken& tok, const char *aMessage);
   // aParams's first entry must be null, and we'll fill in the token
-  NS_HIDDEN_(void) ReportUnexpectedTokenParams(nsCSSToken& tok,
-                                               const char* aMessage,
-                                               const PRUnichar **aParams,
-                                               PRUint32 aParamsLength);
+  void ReportUnexpectedTokenParams(nsCSSToken& tok,
+                                   const char* aMessage,
+                                   const PRUnichar **aParams,
+                                   PRUint32 aParamsLength);
 #endif
 
   PRUint32 GetLineNumber() { return mLineNumber; }

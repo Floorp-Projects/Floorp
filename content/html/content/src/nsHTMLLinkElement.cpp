@@ -146,6 +146,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLLinkElement, nsHTMLLinkElement)
+
 // QueryInterface implementation for nsHTMLLinkElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLinkElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLLinkElement,

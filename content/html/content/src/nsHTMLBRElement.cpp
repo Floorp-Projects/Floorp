@@ -91,6 +91,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLBRElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLBRElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLBRElement, nsHTMLBRElement)
+
 // QueryInterface implementation for nsHTMLBRElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLBRElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLBRElement, nsIDOMHTMLBRElement)

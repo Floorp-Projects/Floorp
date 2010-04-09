@@ -69,7 +69,7 @@ MOZ_WINCONSOLE = 0
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-CPPSRCS += crashreporter_unix.cpp
+CPPSRCS += crashreporter_unix_common.cpp
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
@@ -81,7 +81,13 @@ LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
 ifeq ($(OS_ARCH),Linux)
-CPPSRCS += crashreporter_linux.cpp crashreporter_unix.cpp
+CPPSRCS += crashreporter_gtk_common.cpp crashreporter_unix_common.cpp
+ifdef MOZ_PLATFORM_MAEMO
+CPPSRCS += crashreporter_maemo_gtk.cpp
+else
+CPPSRCS += crashreporter_linux.cpp
+endif
+
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)

@@ -1372,6 +1372,19 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty__moz_column_rule_color: {
+          const nsStyleColumn *styleColumn =
+            static_cast<const nsStyleColumn*>(styleStruct);
+          nscolor color;
+          if (styleColumn->mColumnRuleColorIsForeground) {
+            color = aStyleContext->GetStyleColor()->mColor;
+          } else {
+            color = styleColumn->mColumnRuleColor;
+          }
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
         case eCSSProperty__moz_column_count: {
           const nsStyleColumn *styleColumn =
             static_cast<const nsStyleColumn*>(styleStruct);

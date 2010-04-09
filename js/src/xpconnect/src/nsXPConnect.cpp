@@ -1632,15 +1632,10 @@ nsXPConnect::MoveWrappers(JSContext *aJSContext,
             continue;
 
         XPCNativeScriptableCreateInfo sciProto;
-        XPCNativeScriptableCreateInfo sciWrapper;
-
-        nsresult rv =
-            XPCWrappedNative::GatherScriptableCreateInfo(identity,
-                                                         info.get(),
-                                                         &sciProto,
-                                                         &sciWrapper);
-        if(NS_FAILED(rv))
-            return NS_ERROR_FAILURE;
+        XPCNativeScriptableCreateInfo sci;
+        const XPCNativeScriptableCreateInfo& sciWrapper =
+            XPCWrappedNative::GatherScriptableCreateInfo(identity, info,
+                                                         sciProto, sci);
 
         // If the wrapper doesn't want precreate, then we don't need to
         // worry about reparenting it.
@@ -1648,8 +1643,9 @@ nsXPConnect::MoveWrappers(JSContext *aJSContext,
             continue;
 
         JSObject *newParent = aOldScope;
-        rv = sciWrapper.GetCallback()->PreCreate(identity, ccx, aOldScope,
-                                                 &newParent);
+        nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
+                                                          aOldScope,
+                                                          &newParent);
         if(NS_FAILED(rv))
             return rv;
 
@@ -2109,7 +2105,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCNativeScriptableCreateInfo sciProto;
-    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, &sciProto);
+    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, 

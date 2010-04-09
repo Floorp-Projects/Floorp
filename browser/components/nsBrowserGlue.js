@@ -26,6 +26,7 @@
 #   Dietrich Ayala <dietrich@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Nils Maier <maierman@web.de>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -217,6 +218,13 @@ BrowserGlue.prototype = {
         if (topic == "bookmarks-restore-success" && data == "html-initial")
           this.ensurePlacesDefaultQueriesInitialized();
         break;
+      case "browser-glue-test": // used by tests
+        if (data == "post-update-notification") {
+          if (this._prefs.prefHasUserValue("app.update.postupdate"))
+            this._showUpdateNotification();
+          break;
+        }
+        break;
     }
   }, 
 
@@ -338,6 +346,10 @@ BrowserGlue.prototype = {
     // Show about:rights notification, if needed.
     if (this._shouldShowRights())
       this._showRightsNotification();
+
+    // Show update notification, if needed.
+    if (this._prefs.prefHasUserValue("app.update.postupdate"))
+      this._showUpdateNotification();
 
     // If new add-ons were installed during startup open the add-ons manager.
     if (this._prefs.prefHasUserValue(PREF_EM_NEW_ADDONS_LIST)) {
@@ -576,7 +588,123 @@ BrowserGlue.prototype = {
     var box = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
     box.persistence = 3; // arbitrary number, just so bar sticks around for a bit
   },
-  
+
+  _showUpdateNotification: function BG__showUpdateNotification() {
+    this._prefs.clearUserPref("app.update.postupdate");
+
+    var um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    try {
+      // If the updates.xml file is deleted then getUpdateAt will throw.
+      var update = um.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
+    }
+    catch (e) {
+      // This should never happen.
+      Cu.reportError("Unable to find update: " + e);
+      return;
+    }
+
+    var actions = update.getProperty("actions");
+    if (!actions || actions.indexOf("silent") != -1)
+      return;
+
+    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
+                    getService(Ci.nsIURLFormatter);
+    var browserBundle = this._bundleService.
+                        createBundle("chrome://browser/locale/browser.properties");
+    var brandBundle = this._bundleService.
+                      createBundle("chrome://branding/locale/brand.properties");
+    var appName = brandBundle.GetStringFromName("brandShortName");
+
+    function getNotifyString(aPropData) {
+      var propValue = update.getProperty(aPropData.propName);
+      if (!propValue) {
+        if (aPropData.prefName)
+          propValue = formatter.formatURLPref(aPropData.prefName);
+        else if (aPropData.stringParams)
+          propValue = browserBundle.formatStringFromName(aPropData.stringName,
+                                                         aPropData.stringParams,
+                                                         aPropData.stringParams.length);
+        else
+          propValue = browserBundle.GetStringFromName(aPropData.stringName);
+      }
+      return propValue;
+    }
+
+    if (actions.indexOf("showNotification") != -1) {
+      let text = getNotifyString({propName: "notificationText",
+                                  stringName: "puNotifyText",
+                                  stringParams: [appName]});
+      let url = getNotifyString({propName: "notificationURL",
+                                 prefName: "startup.homepage_override_url"});
+      let label = getNotifyString({propName: "notificationButtonLabel",
+                                   stringName: "pu.notifyButton.label"});
+      let key = getNotifyString({propName: "notificationButtonAccessKey",
+                                 stringName: "pu.notifyButton.accesskey"});
+
+      let win = this.getMostRecentBrowserWindow();
+      let browser = win.gBrowser; // for closure in notification bar callback
+      let notifyBox = browser.getNotificationBox();
+
+      let buttons = [
+                      {
+                        label:     label,
+                        accessKey: key,
+                        popup:     null,
+                        callback: function(aNotificationBar, aButton) {
+                          browser.selectedTab = browser.addTab(url);
+                        }
+                      }
+                    ];
+
+      let box = notifyBox.appendNotification(text, "post-update-notification",
+                                             null, notifyBox.PRIORITY_INFO_LOW,
+                                             buttons);
+      box.persistence = 3;
+    }
+
+    if (actions.indexOf("showAlert") == -1)
+      return;
+
+    let notifier;
+    try {
+      notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+    }
+    catch (e) {
+      // nsIAlertsService is not available for this platform
+      return;
+    }
+
+    let title = getNotifyString({propName: "alertTitle",
+                                 stringName: "puAlertTitle",
+                                 stringParams: [appName]});
+    let text = getNotifyString({propName: "alertText",
+                                stringName: "puAlertText",
+                                stringParams: [appName]});
+    let url = getNotifyString({propName: "alertURL",
+                               prefName: "startup.homepage_override_url"});
+
+    var self = this;
+    function clickCallback(subject, topic, data) {
+      // This callback will be called twice but only once with this topic
+      if (topic != "alertclickcallback")
+        return;
+      let win = self.getMostRecentBrowserWindow();
+      let browser = win.gBrowser;
+      browser.selectedTab = browser.addTab(data);
+    }
+
+    try {
+      // This will throw NS_ERROR_NOT_AVAILABLE if the notification cannot
+      // be displayed per the idl.
+      notifier.showAlertNotification("post-update-notification", title, text,
+                                     true, url, clickCallback);
+    }
+    catch (e) {
+    }
+  },
+
   _showPluginUpdatePage: function BG__showPluginUpdatePage() {
     this._prefs.setBoolPref(PREF_PLUGINS_NOTIFYUSER, false);
 

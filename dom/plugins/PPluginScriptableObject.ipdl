@@ -92,10 +92,6 @@ both:
   rpc HasProperty(PPluginIdentifier aId)
     returns (bool aHasProperty);
 
-  rpc GetProperty(PPluginIdentifier aId)
-    returns (Variant aResult,
-             bool aSuccess);
-
   rpc SetProperty(PPluginIdentifier aId,
                   Variant aValue)
     returns (bool aSuccess);
@@ -120,6 +116,24 @@ both:
   // temporarily protects the protocol object again for the duration of the call.
   async Protect();
   async Unprotect();
+
+  /**
+   * GetProperty is slightly wonky due to the way we support NPObjects that have
+   * methods and properties with the same name. When child calls parent we
+   * simply return a property. When parent calls child, however, we need to do
+   * several checks at once and return all the results simultaneously.
+   */
+parent:
+  rpc GetParentProperty(PPluginIdentifier aId)
+    returns (Variant aResult,
+             bool aSuccess);
+
+child:
+  rpc GetChildProperty(PPluginIdentifier aId)
+    returns (bool aHasProperty,
+             bool aHasMethod,
+             Variant aResult,
+             bool aSuccess);
 };
 
 } // namespace plugins

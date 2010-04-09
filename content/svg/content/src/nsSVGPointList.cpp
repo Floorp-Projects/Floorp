@@ -145,6 +145,8 @@ nsSVGPointList::InsertElementAt(nsIDOMSVGPoint* aElement, PRInt32 index)
 NS_IMPL_ADDREF(nsSVGPointList)
 NS_IMPL_RELEASE(nsSVGPointList)
 
+DOMCI_DATA(SVGPointList, nsSVGPointList)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGPointList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPointList)

@@ -1084,6 +1084,8 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
+DOMCI_DATA(Window, nsGlobalWindow)
+
 // QueryInterface implementation for nsGlobalWindow
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
@@ -9210,6 +9212,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
+
 // QueryInterface implementation for nsGlobalChromeWindow
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalChromeWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
@@ -9447,6 +9451,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalModalWindow,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mReturnValue)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMCI_DATA(ModalContentWindow, nsGlobalModalWindow)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalModalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMModalContentWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ModalContentWindow)
@@ -9558,6 +9564,8 @@ nsNavigator::~nsNavigator()
 //    nsNavigator::nsISupports
 //*****************************************************************************
 
+
+DOMCI_DATA(Navigator, nsNavigator)
 
 // QueryInterface implementation for nsNavigator
 NS_INTERFACE_MAP_BEGIN(nsNavigator)

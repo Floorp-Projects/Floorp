@@ -175,7 +175,7 @@ pluginDraw(InstanceData* instanceData)
     CGContextSetLineWidth(cgContext, 6.0);
     CGContextStrokePath(cgContext);
 
-#ifdef USE_COCOA_NPAPI // draw the UA string using Core Text
+    // draw the UA string using Core Text
     CGContextSetTextMatrix(cgContext, CGAffineTransformIdentity);
 
     // Initialize a rectangular path.
@@ -203,69 +203,6 @@ pluginDraw(InstanceData* instanceData)
     CFRelease(framesetter);
     CTFrameDraw(frame, cgContext);
     CFRelease(frame);
-#else // draw the UA string using ATSUI
-    CGContextSetGrayFillColor(cgContext, 0.0, 1.0);
-    ATSUStyle atsuStyle;
-    ATSUCreateStyle(&atsuStyle);
-    CFIndex stringLength = CFStringGetLength(uaCFString);
-    UniChar* unicharBuffer = (UniChar*)malloc((stringLength + 1) * sizeof(UniChar));
-    CFStringGetCharacters(uaCFString, CFRangeMake(0, stringLength), unicharBuffer);
-    UniCharCount runLengths = kATSUToTextEnd;
-    ATSUTextLayout atsuLayout;
-    ATSUCreateTextLayoutWithTextPtr(unicharBuffer,
-                                    kATSUFromTextBeginning,
-                                    kATSUToTextEnd,
-                                    stringLength,
-                                    1,
-                                    &runLengths,
-                                    &atsuStyle,
-                                    &atsuLayout);
-    ATSUAttributeTag contextTag = kATSUCGContextTag;
-    ByteCount byteSize = sizeof(CGContextRef);
-    ATSUAttributeValuePtr contextATSUPtr = &cgContext;
-    ATSUSetLayoutControls(atsuLayout, 1, &contextTag, &byteSize, &contextATSUPtr);
-    ATSUTextMeasurement lineAscent, lineDescent;
-    ATSUGetLineControl(atsuLayout,
-                       kATSUFromTextBeginning,
-                       kATSULineAscentTag,
-                       sizeof(ATSUTextMeasurement),
-                       &lineAscent,
-                       &byteSize);
-    ATSUGetLineControl(atsuLayout,
-                       kATSUFromTextBeginning,
-                       kATSULineDescentTag,
-                       sizeof(ATSUTextMeasurement),
-                       &lineDescent,
-                       &byteSize);
-    float lineHeight = FixedToFloat(lineAscent) + FixedToFloat(lineDescent);
-    ItemCount softBreakCount;
-    ATSUBatchBreakLines(atsuLayout,
-                        kATSUFromTextBeginning,
-                        stringLength,
-                        FloatToFixed(windowWidth - 10.0),
-                        &softBreakCount);
-    ATSUGetSoftLineBreaks(atsuLayout,
-                          kATSUFromTextBeginning,
-                          kATSUToTextEnd,
-                          0, NULL, &softBreakCount);
-    UniCharArrayOffset* softBreaks = (UniCharArrayOffset*)malloc(softBreakCount * sizeof(UniCharArrayOffset));
-    ATSUGetSoftLineBreaks(atsuLayout,
-                          kATSUFromTextBeginning,
-                          kATSUToTextEnd,
-                          softBreakCount, softBreaks, &softBreakCount);
-    UniCharArrayOffset currentDrawOffset = kATSUFromTextBeginning;
-    unsigned int i = 0;
-    while (i < softBreakCount) {
-      ATSUDrawText(atsuLayout, currentDrawOffset, softBreaks[i], FloatToFixed(5.0),
-                   FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
-      currentDrawOffset = softBreaks[i];
-      i++;
-    }
-    ATSUDrawText(atsuLayout, currentDrawOffset, kATSUToTextEnd, FloatToFixed(5.0),
-                 FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
-    free(unicharBuffer);
-    free(softBreaks);
-#endif
 
     // restore the cgcontext gstate
     CGContextRestoreGState(cgContext);

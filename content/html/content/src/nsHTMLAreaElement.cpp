@@ -135,6 +135,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLAreaElement, nsHTMLAreaElement)
+
 // QueryInterface implementation for nsHTMLAreaElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLAreaElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLAreaElement,

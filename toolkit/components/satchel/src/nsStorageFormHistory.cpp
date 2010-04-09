@@ -25,6 +25,7 @@
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Justin Dolske <dolske@mozilla.com>
+ *   Eddy Ferreira <eddy.b.ferreira@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,9 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -79,6 +83,7 @@
 
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
+#define PREF_FORMFILL_SAVE_HTTPS_FORMS "saveHttpsForms"
 
 // Default number of days for expiration.  Used if browser.formfill.expire_days
 // is not set.
@@ -96,7 +101,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsFormHistory)
 NS_IMPL_RELEASE(nsFormHistory)
 
-PRBool nsFormHistory::gFormHistoryEnabled = PR_FALSE;
+PRBool nsFormHistory::gFormHistoryEnabled = PR_TRUE;
+PRBool nsFormHistory::gSaveHttpsForms = PR_TRUE;
 PRBool nsFormHistory::gPrefsInitialized = PR_FALSE;
 nsFormHistory* nsFormHistory::gFormHistory = nsnull;
 
@@ -138,24 +144,41 @@ nsFormHistory::Init()
   return NS_OK;
 }
 
+/* static */ nsresult
+nsFormHistory::InitPrefs()
+{
+  nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
+  prefService->GetBranch(PREF_FORMFILL_BRANCH,
+                         getter_AddRefs(gFormHistory->mPrefBranch));
+  NS_ENSURE_TRUE(gFormHistory->mPrefBranch, NS_ERROR_FAILURE);
+  gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
+                                         &gFormHistoryEnabled);
+  gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_SAVE_HTTPS_FORMS,
+                                         &gSaveHttpsForms);
+  nsCOMPtr<nsIPrefBranch2> branchInternal =
+      do_QueryInterface(gFormHistory->mPrefBranch);
+  NS_ENSURE_TRUE(branchInternal, NS_ERROR_FAILURE);
+  branchInternal->AddObserver("", gFormHistory, PR_TRUE);
+  gPrefsInitialized = PR_TRUE;
+  return NS_OK;
+}
+
+/* static */ PRBool
+nsFormHistory::SaveHttpsForms()
+{
+  if (!gPrefsInitialized) {
+    InitPrefs();
+  }
+  return gSaveHttpsForms;
+}
+
 /* static */ PRBool
 nsFormHistory::FormHistoryEnabled()
 {
-  if (!gPrefsInitialized) {
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    prefService->GetBranch(PREF_FORMFILL_BRANCH,
-                           getter_AddRefs(gFormHistory->mPrefBranch));
-    gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
-                                           &gFormHistoryEnabled);
-
-    nsCOMPtr<nsIPrefBranch2> branchInternal =
-      do_QueryInterface(gFormHistory->mPrefBranch);
-    branchInternal->AddObserver(PREF_FORMFILL_ENABLE, gFormHistory, PR_TRUE);
-
-    gPrefsInitialized = PR_TRUE;
-  }
-
+  if (!gPrefsInitialized)
+    InitPrefs();
   return gFormHistoryEnabled;
 }
 
@@ -374,6 +397,7 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
+    mPrefBranch->GetBoolPref(PREF_FORMFILL_SAVE_HTTPS_FORMS, &gSaveHttpsForms);
   } else if (!strcmp(aTopic, "idle-daily") ||
              !strcmp(aTopic, "formhistory-expire-now")) {
       ExpireOldEntries();
@@ -390,6 +414,25 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
 {
   if (!FormHistoryEnabled())
     return NS_OK;
+
+  if (!SaveHttpsForms()) {
+    PRBool isHttps = PR_FALSE;
+    aActionURL->SchemeIs("https", &isHttps);
+    if (isHttps)
+      return NS_OK;
+
+    nsresult rv;
+    nsCOMPtr<nsIContent> formCont = do_QueryInterface(formElt, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+    nsCOMPtr<nsIDocument> doc;
+    doc = formCont->GetOwnerDoc();
+    NS_ENSURE_TRUE(doc, NS_OK);
+    nsIURI *docURI = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(docURI, NS_OK);
+    docURI->SchemeIs("https", &isHttps);
+    if (isHttps)
+      return NS_OK;
+  }
 
   NS_NAMED_LITERAL_STRING(kAutoComplete, "autocomplete");
   nsAutoString autocomplete;

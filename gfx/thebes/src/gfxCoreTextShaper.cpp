@@ -135,7 +135,7 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
     // to ensure neutrals or characters that were bidi-overridden in HTML behave properly.
     const UniChar beginLTR[]    = { 0x202d, 0x20 };
     const UniChar beginRTL[]    = { 0x202e, 0x20 };
-    const UniChar endBidiWrap[] = { 0x20, 0x202c };
+    const UniChar endBidiWrap[] = { 0x20, 0x2e, 0x202c };
 
     PRUint32 startOffset;
     CFStringRef stringObj;

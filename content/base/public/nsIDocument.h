@@ -115,8 +115,8 @@ class Link;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x5a428059, 0x4f29, 0x4d7c, \
- { 0x93, 0xae, 0x7c, 0x68, 0xd6, 0x5a, 0x86, 0x45 } }
+{ 0x3e162645, 0x4827, 0x4600, \
+ { 0x9c, 0xaa, 0xe8, 0xdd, 0xcb, 0x05, 0xfd, 0x85 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -989,6 +989,13 @@ public:
                                           PRBool aIgnoreRootScrollFrame,
                                           PRBool aFlushLayout,
                                           nsIDOMElement** aReturn) = 0;
+
+  virtual nsresult NodesFromRectHelper(float aX, float aY,
+                                       float aTopSize, float aRightSize,
+                                       float aBottomSize, float aLeftSize,
+                                       PRBool aIgnoreRootScrollFrame,
+                                       PRBool aFlushLayout,
+                                       nsIDOMNodeList** aReturn) = 0;
 
   /**
    * See FlushSkinBindings on nsBindingManager

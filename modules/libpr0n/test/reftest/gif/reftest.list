@@ -11,3 +11,7 @@
 # a GIF file with a background smaller than the size of the canvas
 == small-background-size.gif small-background-size-ref.gif
 == small-background-size-2.gif small-background-size-2-ref.gif
+
+# a transparent gif that disposes previous frames with clear; we must properly
+# clear each frame to pass.
+== delaytest.html?transparent-animation.gif transparent-animation-finalframe.gif

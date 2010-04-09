@@ -797,7 +797,7 @@ getNative(nsISupports *idobj,
     return rv;
 }
 
-static nsresult
+inline nsresult
 getNativeFromWrapper(XPCWrappedNative *wrapper,
                      const nsIID &iid,
                      void **ppThis,
@@ -809,40 +809,50 @@ getNativeFromWrapper(XPCWrappedNative *wrapper,
 }
 
 
-JSBool
-xpc_qsUnwrapThisImpl(JSContext *cx,
-                     JSObject *obj,
-                     JSObject *callee,
-                     const nsIID &iid,
-                     void **ppThis,
-                     nsISupports **pThisRef,
-                     jsval *vp,
-                     XPCLazyCallContext *lccx)
+nsresult
+getWrapper(JSContext *cx,
+           JSObject *obj,
+           JSObject *callee,
+           XPCWrappedNative **wrapper,
+           JSObject **cur,
+           XPCWrappedNativeTearOff **tearoff)
 {
-    if(XPCWrapper::IsSecurityWrapper(obj))
+    if(XPCWrapper::IsSecurityWrapper(obj) &&
+       !(obj = XPCWrapper::Unwrap(cx, obj)))
     {
-        obj = XPCWrapper::Unwrap(cx, obj);
-        if(!obj)
-            return xpc_qsThrow(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+        return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
     }
 
-    JSObject *cur = obj;
-    XPCWrappedNativeTearOff *tearoff = nsnull;
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, &cur,
-                                                     &tearoff);
+    *cur = obj;
+    *tearoff = nsnull;
+
+    *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, cur,
+                                                     tearoff);
+
+    return NS_OK;
+}
+
+nsresult
+castNative(JSContext *cx,
+           XPCWrappedNative *wrapper,
+           JSObject *cur,
+           XPCWrappedNativeTearOff *tearoff,
+           const nsIID &iid,
+           void **ppThis,
+           nsISupports **pThisRef,
+           jsval *vp,
+           XPCLazyCallContext *lccx)
+{
     if(wrapper)
     {
         nsresult rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
-        if(NS_SUCCEEDED(rv))
-        {
-            if(lccx)
-                lccx->SetWrapper(wrapper, tearoff);
-            
-            return JS_TRUE;
-        }
+
+        if(lccx && NS_SUCCEEDED(rv))
+            lccx->SetWrapper(wrapper, tearoff);
+
         if(rv != NS_ERROR_NO_INTERFACE)
-            return xpc_qsThrow(cx, rv);
+            return rv;
     }
     else if(cur)
     {
@@ -853,12 +863,12 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
             if(lccx)
                 lccx->SetWrapper(cur);
 
-            return JS_TRUE;
+            return NS_OK;
         }
     }
 
     *pThisRef = nsnull;
-    return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
+    return NS_ERROR_XPC_BAD_OP_ON_WN_PROTO;
 }
 
 JSBool
@@ -880,6 +890,29 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
     return JS_TRUE;
 }
 
+JSObject*
+xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
+{
+    if(JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))
+    {
+        *ppArgRef = nsnull;
+        *rv = NS_OK;
+        return nsnull;
+    }
+
+    if(!JSVAL_IS_OBJECT(v))
+    {
+        *ppArgRef = nsnull;
+        *rv = ((JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0)
+              ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
+              : NS_ERROR_XPC_BAD_CONVERT_JS);
+        return nsnull;
+    }
+
+    *rv = NS_OK;
+    return JSVAL_TO_OBJECT(v);
+}
+
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx,
                     jsval v,
@@ -888,50 +921,25 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
                     nsISupports **ppArgRef,
                     jsval *vp)
 {
-    // From XPCConvert::JSData2Native
-    if(JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))
+    nsresult rv;
+    JSObject *src = xpc_qsUnwrapObj(v, ppArgRef, &rv);
+    if(!src)
     {
         *ppArg = nsnull;
-        *ppArgRef = nsnull;
-        return NS_OK;
+
+        return rv;
     }
 
-    if(!JSVAL_IS_OBJECT(v))
-    {
-        *ppArgRef = nsnull;
-        return ((JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0)
-                ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
-                : NS_ERROR_XPC_BAD_CONVERT_JS);
-    }
-    JSObject *src = JSVAL_TO_OBJECT(v);
+    XPCWrappedNative *wrapper;
+    XPCWrappedNativeTearOff *tearoff;
+    JSObject *obj2;
+    rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    JSObject *inner = nsnull;
-    if(XPCWrapper::IsSecurityWrapper(src))
+    if(wrapper || obj2)
     {
-        inner = XPCWrapper::Unwrap(cx, src);
-        if(!inner)
-            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-    }
-
-    // From XPCConvert::JSObject2NativeInterface
-    JSObject* obj2;
-    XPCWrappedNative* wrappedNative =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, inner ? inner : src,
-                                                     nsnull, &obj2);
-    nsISupports *iface;
-    if(wrappedNative)
-    {
-        iface = wrappedNative->GetIdentityObject();
-        if(NS_FAILED(getNativeFromWrapper(wrappedNative, iid, ppArg, ppArgRef,
-                                          vp)))
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-        return NS_OK;
-    }
-    if(obj2)
-    {
-        iface = static_cast<nsISupports*>(xpc_GetJSPrivate(obj2));
-        if(NS_FAILED(getNative(iface, GetOffsetsFromSlimWrapper(obj2),
-                               obj2, iid, ppArg, ppArgRef, vp)))
+        if(NS_FAILED(castNative(cx, wrapper, obj2, tearoff, iid, ppArg,
+                                ppArgRef, vp, nsnull)))
             return NS_ERROR_XPC_BAD_CONVERT_JS;
         return NS_OK;
     }
@@ -948,6 +956,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     }
 
     // Try to unwrap a slim wrapper.
+    nsISupports *iface;
     if(XPCConvert::GetISupportsFromJSObject(src, &iface))
     {
         if(!iface || NS_FAILED(iface->QueryInterface(iid, ppArg)))
@@ -968,10 +977,10 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
         return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
 
-    nsXPCWrappedJS *wrapper;
-    nsresult rv =
-        nsXPCWrappedJS::GetNewOrUsed(ccx, src, iid, nsnull, &wrapper);
-    if(NS_FAILED(rv) || !wrapper)
+    nsRefPtr<nsXPCWrappedJS> wrappedJS;
+    rv = nsXPCWrappedJS::GetNewOrUsed(ccx, src, iid, nsnull,
+                                      getter_AddRefs(wrappedJS));
+    if(NS_FAILED(rv) || !wrappedJS)
     {
         *ppArgRef = nsnull;
         return rv;
@@ -981,13 +990,12 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     // the right thing for the various 'special' interfaces; e.g.
     // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
     // there is an outer to avoid nasty recursion.
-    rv = wrapper->QueryInterface(iid, ppArg);
+    rv = wrappedJS->QueryInterface(iid, ppArg);
     if(NS_SUCCEEDED(rv))
     {
         *ppArgRef = static_cast<nsISupports*>(*ppArg);
-        *vp = OBJECT_TO_JSVAL(wrapper->GetJSObject());
+        *vp = OBJECT_TO_JSVAL(wrappedJS->GetJSObject());
     }
-    NS_RELEASE(wrapper);
     return rv;
 }
 

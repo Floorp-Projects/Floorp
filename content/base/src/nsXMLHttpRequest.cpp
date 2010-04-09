@@ -617,6 +617,8 @@ nsXMLHttpRequestUpload::~nsXMLHttpRequestUpload()
   }
 }
 
+DOMCI_DATA(XMLHttpRequestUpload, nsXMLHttpRequestUpload)
+
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpRequestUpload)
@@ -1010,6 +1012,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mUpload)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
+DOMCI_DATA(XMLHttpRequest, nsXMLHttpRequest)
 
 // QueryInterface implementation for nsXMLHttpRequest
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
@@ -3269,6 +3272,8 @@ nsXMLHttpProgressEvent::~nsXMLHttpProgressEvent()
 {}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpProgressEvent)
+
+DOMCI_DATA(XMLHttpProgressEvent, nsXMLHttpProgressEvent)
 
 // QueryInterface implementation for nsXMLHttpProgressEvent
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)

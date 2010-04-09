@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,7 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHTMLAreaAccessible.h"
+#include "nsHTMLImageMapAccessible.h"
+
+#include "nsIDOMHTMLCollection.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -44,20 +47,129 @@
 #include "nsIImageFrame.h"
 #include "nsIImageMap.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLImageMapAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsHTMLImageMapAccessible::
+  nsHTMLImageMapAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+                           nsIDOMHTMLMapElement *aMapElm) :
+  nsHTMLImageAccessibleWrap(aDOMNode, aShell), mMapElement(aMapElm)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLImageMapAccessible: nsISupports
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLImageMapAccessible, nsHTMLImageAccessible)
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLImageMapAccessible: nsIAccessibleHyperLink
+
+NS_IMETHODIMP
+nsHTMLImageMapAccessible::GetAnchorCount(PRInt32 *aAnchorCount)
+{
+  NS_ENSURE_ARG_POINTER(aAnchorCount);
+
+  return GetChildCount(aAnchorCount);
+}
+
+NS_IMETHODIMP
+nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  *aURI = nsnull;
+
+  nsAccessible *areaAcc = GetChildAt(aIndex);
+  if (!areaAcc)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIDOMNode> areaNode;
+  areaAcc->GetDOMNode(getter_AddRefs(areaNode));
+
+  nsCOMPtr<nsIContent> link(do_QueryInterface(areaNode));
+  if (link)
+    *aURI = link->GetHrefURI().get();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageMapAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  nsAccessible *areaAcc = GetChildAt(aIndex);
+  if (!areaAcc)
+    return NS_ERROR_INVALID_ARG;
+
+  NS_ADDREF(*aAccessible = areaAcc);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLImageMapAccessible: nsAccessible public
+
+nsresult
+nsHTMLImageMapAccessible::GetRoleInternal(PRUint32 *aRole)
+{
+  *aRole = nsIAccessibleRole::ROLE_IMAGE_MAP;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLImageMapAccessible: nsAccessible protected
+
+void 
+nsHTMLImageMapAccessible::CacheChildren()
+{
+  if (!mMapElement)
+    return;
+
+  nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+  mMapElement->GetAreas(getter_AddRefs(mapAreas));
+  if (!mapAreas)
+    return;
+
+  PRUint32 areaCount = 0;
+  mapAreas->GetLength(&areaCount);
+
+  for (PRUint32 areaIdx = 0; areaIdx < areaCount; areaIdx++) {
+    nsCOMPtr<nsIDOMNode> areaNode;
+    mapAreas->Item(areaIdx, getter_AddRefs(areaNode));
+    if (!areaNode)
+      return;
+
+    nsRefPtr<nsAccessible> areaAcc =
+      new nsHTMLAreaAccessible(areaNode, mWeakShell);
+    if (!areaAcc)
+      return;
+
+    nsresult rv = areaAcc->Init();
+    if (NS_FAILED(rv)) {
+      areaAcc->Shutdown();
+      return;
+    }
+
+    mChildren.AppendElement(areaAcc);
+    areaAcc->SetParent(this);
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLAreaAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLAreaAccessible::
-  nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aParent,
-                       nsIWeakReference* aShell):
-  nsHTMLLinkAccessible(aDomNode, aShell)
+  nsHTMLAreaAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell) :
+  nsHTMLLinkAccessible(aNode, aShell)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
+// nsHTMLAreaAccessible: nsIAccessible
 
 nsresult
 nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
@@ -136,7 +248,7 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public implementation
+// nsHTMLAreaAccessible: nsAccessible public
 
 nsresult
 nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
@@ -149,7 +261,7 @@ nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible protected implementation
+// nsHTMLAreaAccessible: nsAccessible protected
 
 void
 nsHTMLAreaAccessible::CacheChildren()

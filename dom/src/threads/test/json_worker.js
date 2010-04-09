@@ -35,6 +35,18 @@ objectWithSaneGetter2.prototype = {
 var objectWithThrowingGetter = { };
 objectWithThrowingGetter.__defineGetter__("foo", function() { throw "bad"; });
 
+var typedArrayWithValues = new Int8Array(5);
+for (var index in typedArrayWithValues) {
+  typedArrayWithValues[index] = index;
+}
+
+var typedArrayWithFunBuffer = new Int8Array(4);
+for (var index in typedArrayWithFunBuffer) {
+  typedArrayWithFunBuffer[index] = 255;
+}
+
+var typedArrayWithFunBuffer2 = new Int32Array(typedArrayWithFunBuffer.buffer);
+
 var messages = [
   {
     type: "object",
@@ -204,6 +216,47 @@ var messages = [
     type: "number",
     isNegativeInfinity: true,
     value: -Infinity
+  },
+  {
+    type: "object",
+    value: new Int32Array(10),
+    jsonValue: '{"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0}'
+  },
+  {
+    type: "object",
+    value: new Float32Array(5),
+    jsonValue: '{"0":0,"1":0,"2":0,"3":0,"4":0}'
+  },
+  {
+    type: "object",
+    value: typedArrayWithValues,
+    jsonValue: '{"0":0,"1":1,"2":2,"3":3,"4":4}'
+  },
+  {
+    type: "number",
+    value: typedArrayWithValues[2],
+    compareValue: 2,
+    shouldEqual: true
+  },
+  {
+    type: "object",
+    value: typedArrayWithValues.buffer,
+    jsonValue: '{}'
+  },
+  {
+    type: "object",
+    value: typedArrayWithFunBuffer2,
+    jsonValue: '{"0":-1}',
+  },
+  {
+    type: "object",
+    value: { foo: typedArrayWithFunBuffer2 },
+    jsonValue: '{"foo":{"0":-1}}',
+  },
+  {
+    type: "object",
+    value: [ typedArrayWithFunBuffer2 ],
+    jsonValue: '[{"0":-1}]',
   },
   {
     type: "string",

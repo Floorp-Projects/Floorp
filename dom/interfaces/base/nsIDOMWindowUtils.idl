@@ -46,13 +46,14 @@
  */
 
 interface nsIDOMNode;
+interface nsIDOMNodeList;
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(25ada920-d727-45b6-ac70-847a3aa9c7cf)]
+[scriptable, uuid(22a62b54-bcf5-422a-a329-fed4de5e78b2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -302,6 +303,29 @@ interface nsIDOMWindowUtils : nsISupports {
                                  in float aY,
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
+
+  /**
+   * Retrieve all nodes that intersect a rect in the window's document.
+   *
+   * @param aX x reference for the rectangle in CSS pixels
+   * @param aY y reference for the rectangle in CSS pixels
+   * @param aTopSize How much to expand up the rectangle
+   * @param aRightSize How much to expand right the rectangle
+   * @param aBottomSize How much to expand down the rectangle
+   * @param aLeftSize How much to expand left the rectangle
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  nsIDOMNodeList nodesFromRect(in float aX,
+                               in float aY,
+                               in float aTopSize, 
+                               in float aRightSize,
+                               in float aBottomSize,
+                               in float aLeftSize,
+                               in boolean aIgnoreRootScrollFrame,
+                               in boolean aFlushLayout);
 
   /**
    * Compare the two canvases, returning the number of differing pixels and

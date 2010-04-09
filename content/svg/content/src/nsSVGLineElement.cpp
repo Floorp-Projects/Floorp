@@ -98,6 +98,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Line)
 NS_IMPL_ADDREF_INHERITED(nsSVGLineElement,nsSVGLineElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGLineElement,nsSVGLineElementBase)
 
+DOMCI_DATA(SVGLineElement, nsSVGLineElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGLineElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGLineElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGLineElement)

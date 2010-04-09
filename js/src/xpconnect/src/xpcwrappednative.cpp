@@ -409,7 +409,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 #endif
 
     XPCNativeScriptableCreateInfo sciProto;
-    XPCNativeScriptableCreateInfo sciWrapper;
+    XPCNativeScriptableCreateInfo sci;
 
     // Gather scriptable create info if we are wrapping something
     // other than an nsIClassInfo object. We need to not do this for
@@ -418,10 +418,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // code is obviously intended for the implementation of the class
     // described by the nsIClassInfo, not for the class info object
     // itself.
-    if(!isClassInfo &&
-       NS_FAILED(GatherScriptableCreateInfo(identity, info.get(),
-                                            &sciProto, &sciWrapper)))
-        return NS_ERROR_FAILURE;
+    const XPCNativeScriptableCreateInfo& sciWrapper =
+        isClassInfo ? sci :
+        GatherScriptableCreateInfo(identity, info, sciProto, sci);
 
     JSObject* parent = Scope->GetGlobalJSObject();
 
@@ -924,13 +923,31 @@ XPCWrappedNative::~XPCWrappedNative()
 
 // This is factored out so that it can be called publicly 
 // static
-nsresult 
+void 
 XPCWrappedNative::GatherProtoScriptableCreateInfo(
                         nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo* sciProto)
+                        XPCNativeScriptableCreateInfo& sciProto)
 {
     NS_ASSERTION(classInfo, "bad param");
-    NS_ASSERTION(sciProto && !sciProto->GetCallback(), "bad param");
+    NS_ASSERTION(!sciProto.GetCallback(), "bad param");
+
+    nsXPCClassInfo *classInfoHelper = nsnull;
+    CallQueryInterface(classInfo, &classInfoHelper);
+    if(classInfoHelper)
+    {
+        nsCOMPtr<nsIXPCScriptable> helper =
+          dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
+        JSUint32 flags;
+        nsresult rv = classInfoHelper->GetScriptableFlags(&flags);
+        if(NS_FAILED(rv))
+            flags = 0;
+
+        sciProto.SetCallback(helper.forget());
+        sciProto.SetFlags(flags);
+        sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
+
+        return;
+    }
 
     nsCOMPtr<nsISupports> possibleHelper;
     nsresult rv = classInfo->GetHelperForLanguage(
@@ -946,34 +963,29 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(
             if(NS_FAILED(rv))
                 flags = 0;
 
-            sciProto->SetCallback(helper.forget());
-            sciProto->SetFlags(flags);
+            sciProto.SetCallback(helper.forget());
+            sciProto.SetFlags(flags);
         }
     }
-    return NS_OK;
 }
 
 // static
-nsresult
+const XPCNativeScriptableCreateInfo&
 XPCWrappedNative::GatherScriptableCreateInfo(
                         nsISupports* obj,
                         nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo* sciProto,
-                        XPCNativeScriptableCreateInfo* sciWrapper)
+                        XPCNativeScriptableCreateInfo& sciProto,
+                        XPCNativeScriptableCreateInfo& sciWrapper)
 {
-    NS_ASSERTION(sciProto   && !sciProto->GetCallback(), "bad param");
-    NS_ASSERTION(sciWrapper && !sciWrapper->GetCallback(), "bad param");
+    NS_ASSERTION(!sciWrapper.GetCallback(), "bad param");
 
     // Get the class scriptable helper (if present)
     if(classInfo)
     {
         GatherProtoScriptableCreateInfo(classInfo, sciProto);
 
-        sciWrapper->SetCallback(sciProto->GetCallback());
-        sciWrapper->SetFlags(sciProto->GetFlags());
-
-        if(sciProto->GetFlags().DontAskInstanceForScriptable())
-            return NS_OK;
+        if(sciProto.GetFlags().DontAskInstanceForScriptable())
+            return sciProto;
     }
 
     // Do the same for the wrapper specific scriptable
@@ -985,65 +997,67 @@ XPCWrappedNative::GatherScriptableCreateInfo(
         if(NS_FAILED(rv))
             flags = 0;
 
-        sciWrapper->SetCallback(helper.forget());
-        sciWrapper->SetFlags(flags);
+        sciWrapper.SetCallback(helper.forget());
+        sciWrapper.SetFlags(flags);
 
         // A whole series of assertions to catch bad uses of scriptable flags on
         // the siWrapper...
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().WantPreCreate() &&
-                        !sciProto->GetFlags().WantPreCreate()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().WantPreCreate() &&
+                        !sciProto.GetFlags().WantPreCreate()),
                      "Can't set WANT_PRECREATE on an instance scriptable "
                      "without also setting it on the class scriptable");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().DontEnumStaticProps() &&
-                        !sciProto->GetFlags().DontEnumStaticProps() &&
-                        sciProto->GetCallback() &&
-                        !sciProto->GetFlags().DontSharePrototype()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumStaticProps() &&
+                        !sciProto.GetFlags().DontEnumStaticProps() &&
+                        sciProto.GetCallback() &&
+                        !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set DONT_ENUM_STATIC_PROPS on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().DontEnumQueryInterface() &&
-                        !sciProto->GetFlags().DontEnumQueryInterface() &&
-                        sciProto->GetCallback() &&
-                        !sciProto->GetFlags().DontSharePrototype()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumQueryInterface() &&
+                        !sciProto.GetFlags().DontEnumQueryInterface() &&
+                        sciProto.GetCallback() &&
+                        !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().DontAskInstanceForScriptable() &&
-                        !sciProto->GetFlags().DontAskInstanceForScriptable()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().DontAskInstanceForScriptable() &&
+                        !sciProto.GetFlags().DontAskInstanceForScriptable()),
                      "Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable "
                      "without also setting it on the class scriptable");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().ClassInfoInterfacesOnly() &&
-                        !sciProto->GetFlags().ClassInfoInterfacesOnly() &&
-                        sciProto->GetCallback() &&
-                        !sciProto->GetFlags().DontSharePrototype()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().ClassInfoInterfacesOnly() &&
+                        !sciProto.GetFlags().ClassInfoInterfacesOnly() &&
+                        sciProto.GetCallback() &&
+                        !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().AllowPropModsDuringResolve() &&
-                        !sciProto->GetFlags().AllowPropModsDuringResolve() &&
-                        sciProto->GetCallback() &&
-                        !sciProto->GetFlags().DontSharePrototype()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsDuringResolve() &&
+                        !sciProto.GetFlags().AllowPropModsDuringResolve() &&
+                        sciProto.GetCallback() &&
+                        !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().AllowPropModsToPrototype() &&
-                        !sciProto->GetFlags().AllowPropModsToPrototype() &&
-                        sciProto->GetCallback() &&
-                        !sciProto->GetFlags().DontSharePrototype()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsToPrototype() &&
+                        !sciProto.GetFlags().AllowPropModsToPrototype() &&
+                        sciProto.GetCallback() &&
+                        !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
-        NS_ASSERTION(!(sciWrapper->GetFlags().DontSharePrototype() &&
-                        !sciProto->GetFlags().DontSharePrototype() &&
-                        sciProto->GetCallback()),
+        NS_ASSERTION(!(sciWrapper.GetFlags().DontSharePrototype() &&
+                        !sciProto.GetFlags().DontSharePrototype() &&
+                        sciProto.GetCallback()),
                      "Can't set DONT_SHARE_PROTOTYPE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
+
+        return sciWrapper;
     }
 
-    return NS_OK;
+    return sciProto;
 }
 
 void
@@ -3806,19 +3820,21 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
 {
     nsCOMPtr<nsISupports> identityObj = do_QueryInterface(p);
 
-    nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(p);
-    if(!classInfo)
-        return JS_FALSE;
+    nsRefPtr<nsXPCClassInfo> classInfoHelper;
+    CallQueryInterface(p, getter_AddRefs(classInfoHelper));
 
-    // XXX Sucks a bit that we have to get the proto before we know whether we
-    //     can create a slim wrapper.
-    XPCNativeScriptableCreateInfo sciProto;
-    nsresult rv = XPCWrappedNative::GatherProtoScriptableCreateInfo(classInfo,
-                                                                    &sciProto);
-    NS_ENSURE_SUCCESS(rv, JS_FALSE);
+    JSUint32 flagsInt;
+    nsresult rv = classInfoHelper->GetScriptableFlags(&flagsInt);
+    if(NS_FAILED(rv))
+        flagsInt = 0;
+
+    XPCNativeScriptableFlags flags(flagsInt);
+
+    NS_ASSERTION(flags.DontAskInstanceForScriptable(),
+                 "Not supported for cached wrappers!");
 
     JSObject* parent = xpcScope->GetGlobalJSObject();
-    if(!sciProto.GetFlags().WantPreCreate())
+    if(!flags.WantPreCreate())
     {
         SLIM_LOG_NOT_CREATED(ccx, identityObj,
                              "scriptable helper has no PreCreate hook");
@@ -3827,8 +3843,7 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
     }
 
     JSObject* plannedParent = parent;
-    rv = sciProto.GetCallback()->PreCreate(identityObj, ccx, parent,
-                                           &parent);
+    rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
     if(rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS)
     {
         SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
@@ -3857,6 +3872,11 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
 
         return JS_TRUE;
     }
+
+    nsIClassInfo* classInfo = classInfoHelper;
+    PRUint32 interfacesBitmap = classInfoHelper->GetInterfacesBitmap();
+    XPCNativeScriptableCreateInfo
+        sciProto(classInfoHelper.forget().get(), flags, interfacesBitmap);
 
     AutoMarkingWrappedNativeProtoPtr xpcproto(ccx);
     JSBool isGlobal = JS_FALSE;

@@ -389,7 +389,7 @@ class nsStyleSet
 };
 
 inline
-NS_HIDDEN_(void) nsRuleNode::AddRef()
+void nsRuleNode::AddRef()
 {
   if (mRefCnt++ == 0 && !IsRoot()) {
     mPresContext->StyleSet()->RuleNodeInUse();
@@ -397,7 +397,7 @@ NS_HIDDEN_(void) nsRuleNode::AddRef()
 }
 
 inline
-NS_HIDDEN_(void) nsRuleNode::Release()
+void nsRuleNode::Release()
 {
   if (--mRefCnt == 0 && !IsRoot()) {
     mPresContext->StyleSet()->RuleNodeUnused();
