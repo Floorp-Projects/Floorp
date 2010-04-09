@@ -50,7 +50,7 @@ Cu.import("resource://weave/type_records/forms.js");
 let FormWrapper = {
   getAllEntries: function getAllEntries() {
     let entries = [];
-    let query = Svc.Form.DBConnection.createStatement(
+    let query = this.createStatement(
       "SELECT fieldname, value FROM moz_formhistory");
     while (query.executeStep()) {
       entries.push({
@@ -62,7 +62,7 @@ let FormWrapper = {
   },
 
   getEntry: function getEntry(guid) {
-    let query = Svc.Form.DBConnection.createStatement(
+    let query = this.createStatement(
       "SELECT fieldname, value FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
     if (!query.executeStep())
@@ -75,24 +75,10 @@ let FormWrapper = {
   },
 
   getGUID: function getGUID(name, value) {
-    let getQuery = "SELECT guid FROM moz_formhistory " +
-      "WHERE fieldname = :name AND value = :value";
-    try {
-      getQuery = Svc.Form.DBConnection.createStatement(getQuery);
-    }
-    catch(ex) {
-      // The column must not exist yet, so add it with an index
-      Svc.Form.DBConnection.executeSimpleSQL(
-        "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT");
-      Svc.Form.DBConnection.executeSimpleSQL(
-        "CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index " +
-        "ON moz_formhistory (guid)");
-
-      // Try creating the query now that the column exists
-      getQuery = Svc.Form.DBConnection.createStatement(getQuery);
-    }
-
     // Query for the provided entry
+    let getQuery = this.createStatement(
+      "SELECT guid FROM moz_formhistory " +
+      "WHERE fieldname = :name AND value = :value");
     getQuery.params.name = name;
     getQuery.params.value = value;
     getQuery.executeStep();
@@ -102,7 +88,7 @@ let FormWrapper = {
       return getQuery.row.guid;
 
     // We need to create a guid for this entry
-    let setQuery = Svc.Form.DBConnection.createStatement(
+    let setQuery = this.createStatement(
       "UPDATE moz_formhistory SET guid = :guid " +
       "WHERE fieldname = :name AND value = :value");
     let guid = Utils.makeGUID();
@@ -115,18 +101,36 @@ let FormWrapper = {
   },
 
   hasGUID: function hasGUID(guid) {
-    let query = Svc.Form.DBConnection.createStatement(
+    let query = this.createStatement(
       "SELECT 1 FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
     return query.executeStep();
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
-    let query = Svc.Form.DBConnection.createStatement(
+    let query = this.createStatement(
       "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
     query.params.oldGUID = oldGUID;
     query.params.newGUID = newGUID;
     query.execute();
+  },
+
+  createStatement: function createStatement(query) {
+    try {
+      // Just return the statement right away if it's okay
+      return Svc.Form.DBConnection.createStatement(query);
+    }
+    catch(ex) {
+      // Assume guid column must not exist yet, so add it with an index
+      Svc.Form.DBConnection.executeSimpleSQL(
+        "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT");
+      Svc.Form.DBConnection.executeSimpleSQL(
+        "CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index " +
+        "ON moz_formhistory (guid)");
+
+      // Try creating the query now that the column exists
+      return Svc.Form.DBConnection.createStatement(query);
+    }
   }
 };
 
