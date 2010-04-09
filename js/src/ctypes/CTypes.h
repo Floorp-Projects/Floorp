@@ -138,9 +138,7 @@ void
 AppendString(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
-  const jschar* chars = JS_GetStringChars(str);
-  size_t length = JS_GetStringLength(str);
-  v.append(chars, length);
+  v.append(str->chars(), str->length());
 }
 
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -167,7 +165,7 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
   size_t vlen = v.length();
-  size_t alen = JS_GetStringLength(str);
+  size_t alen = str->length();
   if (!v.resize(vlen + alen))
     return;
 
@@ -175,7 +173,7 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
   memmove(v.begin() + alen, v.begin(), vlen * sizeof(jschar));
 
   // Copy data to insert.
-  memcpy(v.begin(), JS_GetStringChars(str), alen * sizeof(jschar));
+  memcpy(v.begin(), str->chars(), alen * sizeof(jschar));
 }
 
 template <class T, size_t N, size_t M, class AP>
@@ -193,12 +191,11 @@ bool
 StringsEqual(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
-  size_t length = JS_GetStringLength(str);
+  size_t length = str->length();
   if (v.length() != length)
     return false;
 
-  const jschar* chars = JS_GetStringChars(str);
-  return memcmp(v.begin(), chars, length * sizeof(jschar)) == 0;
+  return memcmp(v.begin(), str->chars(), length * sizeof(jschar)) == 0;
 }
 
 /*******************************************************************************
