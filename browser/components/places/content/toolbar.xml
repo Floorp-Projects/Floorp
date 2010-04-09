@@ -736,6 +736,9 @@
           this.invalidateContainer(aContainer);
         },
 
+        containerStateChanged:
+        function TV_V_containerStateChanged(aNode, aOldState, aNewState) {},
+
         invalidateContainer: function TV_V_invalidateContainer(aContainer) {
           let containerNodeElt = aContainer._DOMElement;
           NS_ASSERT(containerNodeElt, "node must have _DOMElement set");
