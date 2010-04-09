@@ -231,10 +231,18 @@ promptService.prototype = {
 
     let numButtons = 0;
     let titles = [aButton0, aButton1, aButton2];
+
+    let defaultButton = 0;
+    if (aButtonFlags & Ci.nsIPromptService.BUTTON_POS_1_DEFAULT)
+      defaultButton = 1;
+    if (aButtonFlags & Ci.nsIPromptService.BUTTON_POS_2_DEFAULT)
+      defaultButton = 2;
     
-    var params = new Object();
-    params.result = false;
-    params.checkbox = aCheckState;
+    var params = {
+      result: false,
+      checkbox: aCheckState,
+      defaultButton: defaultButton
+    }
 
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
