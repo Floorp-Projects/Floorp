@@ -102,35 +102,41 @@ window.TabItems = {
           if(!$(this).data('isDragging')) {
 
             // ZOOM! 
-            var [w,h,z] = [$(this).width(), $(this).height(), $(this).css("zIndex")];
-            var origPos = $(this).position();
-            var zIndex = $(this).css("zIndex");
-            var scale = window.innerWidth/w;
-            var big = 99999;
+            var orig = {
+              width: $(this).width(),
+              height:  $(this).height(),
+              pos: $(this).position()
+            }
+
+            var scale = window.innerWidth/orig.width;
             
             var tab = Tabs.tab(this);
             var mirror = tab.mirror;
-            //mirror.forceCanvasSize(w * scale/3, h * scale);
             
             var overflow = $("body").css("overflow");
             $("body").css("overflow", "hidden");
             
             function onZoomDone(){
               $(this).find("canvas").data("link").tab.focus();
-              $(this)
-                .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:z});  
+              $(this).css({
+                top:   orig.pos.top,
+                left:  orig.pos.left,
+                width: orig.width,
+                height:orig.height,
+                })
+                .removeClass("front");  
               Navbar.show();    
               $("body").css("overflow", overflow);              
             }
   
             $(this)
-              .css("zIndex",big)
+              .addClass("front")
               .animate({
-                top: -10,
-                left: 0,
+                top:    -10,
+                left:   0,
                 easing: "easein",
-                width:w*scale,
-                height:h*scale
+                width:  orig.width*scale,
+                height: orig.height*scale
                 }, 200, onZoomDone);
             
           } else {

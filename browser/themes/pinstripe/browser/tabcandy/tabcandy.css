@@ -34,7 +34,6 @@ body {
 		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
 }
 
-
 .tab canvas {
 	border: 1px solid rgba(0,0,0,0.2);
 	width: 100%;
@@ -99,11 +98,10 @@ body {
 
 .tab-title {
 	position: absolute;
-	bottom: -20px;
+	top: 100%;
 	text-align: center;
 	text-shadow: rgba(255,255,255,1) 0 1px;
 	width: 94.5%;
-	height:2em;
 }
 
 
@@ -111,20 +109,13 @@ body {
 /* Tab Group
 ----------------------------------*/
 
-.group .tab {
-	position: relative;
-	float: left; 
-	margin: 10px;
-	width: 160px;
-	padding: 4px 6px 6px 4px;
-	border: 1px solid rgba(230,230,230,0);
-	background-color: rgba(245,245,245,0);
-	-moz-border-radius: 0.4em;
+.tabInGroup {
+  border: none;
 	-moz-box-shadow: 
 		inset rgba(255, 255, 255, 0) 0 2px 0px,
 		inset rgba(255, 255, 255, 0) 0 -2px 0px,
 		inset rgba(255, 255, 255, 0) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0) -2px 0px 0px;
+		inset rgba(255, 255, 255, 0) -2px 0px 0px !important;
 }
 
 .group {
@@ -144,6 +135,7 @@ body {
 
 .group .expander {
 }
+
 
 /*
 .group {
@@ -169,8 +161,8 @@ body {
 }
 
 .willGroup{
-  border: 1px inset rgba(255,0,0,1);
-  -moz-box-shadow: 0px 0px 10px rgba(255,0,0,1);
+  border: 1px inset rgba(150,0,0,.5);
+  -moz-box-shadow: 0px 0px 10px rgba(150,0,0,1);
 }
 
 .titlebar{
@@ -203,5 +195,9 @@ input.name{
 .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
 .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
 
+/* Utils
+----------------------------------*/
 
-
+.front{
+  z-index: 999999 !important;
+}

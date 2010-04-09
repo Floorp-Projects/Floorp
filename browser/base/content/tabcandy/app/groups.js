@@ -297,9 +297,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
     item.addOnClose(this, function() {
       self.remove($el);
-    });      
+    });
     
-    $el.data("group", this);
+    $el.data("group", this)
+       .addClass("tabInGroup");
     
     if(typeof(item.setResizable) == 'function')
       item.setResizable(false);
