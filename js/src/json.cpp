@@ -392,6 +392,9 @@ JA(JSContext *cx, jsval *vp, StringifyContext *scx)
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
+    if (length != 0 && !WriteIndent(cx, scx, scx->depth))
+        return JS_FALSE;
+
     AutoValueRooter outputValue(cx, JSVAL_NULL);
 
     jsid id;
