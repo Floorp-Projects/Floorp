@@ -77,6 +77,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../content/src \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../../dom/base \
+		-I$(srcdir)/../../../../xpcom/io \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
