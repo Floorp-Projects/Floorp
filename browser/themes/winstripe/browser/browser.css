@@ -1540,9 +1540,37 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Popup Bounding Box */
-#identity-popup {
+#identity-popup,
+#notification-popup {
   -moz-appearance: menupopup;
   color: MenuText;
+}
+
+/* Notification popup */
+#notification-popup {
+  padding: 10px;
+  margin-top: 3px;
+}
+
+.popup-notification-icon {
+  width: 64px;
+  height: 64px;
+  -moz-margin-end: 10px;
+}
+
+.popup-notification-icon[popupid="geolocation"] {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+}
+
+/* Notification icon box */
+#notification-popup-box {
+  margin: 0 3px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+  width: 16px;
+  height: 16px;
 }
 
 #identity-popup-container {
