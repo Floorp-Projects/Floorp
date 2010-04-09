@@ -330,7 +330,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(index != -1)
       this._children.splice(index, 1); 
 
-    $el.data("group", null);
+    $el.data("group", null).removeClass("tabInGroup");
     item.setSize(item.defaultSize.x, item.defaultSize.y);
     $el.droppable("enable");    
     item.removeOnClose(this);
