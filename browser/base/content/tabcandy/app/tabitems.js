@@ -72,7 +72,7 @@ window.TabItem.prototype = $.extend(new Item(), {
 // ##########
 window.TabItems = {
   tabWidth: 160,
-  tabHeight: 130, 
+  tabHeight: 120, 
   fontSize: 9,
 
   init: function() {
@@ -100,14 +100,13 @@ window.TabItems = {
           $(this).find("canvas").data("link").tab.close(); }
         else {
           if(!$(this).data('isDragging')) {
-            var ffVersion = parseFloat(navigator.userAgent.match(/\d{8}.*(\d\.\d)/)[1]);
-            if( ffVersion < 3.7 ) Utils.error("css-transitions require Firefox 3.7+");
-            
+
             // ZOOM! 
             var [w,h,z] = [$(this).width(), $(this).height(), $(this).css("zIndex")];
             var origPos = $(this).position();
             var zIndex = $(this).css("zIndex");
             var scale = window.innerWidth/w;
+            var big = 99999;
             
             var tab = Tabs.tab(this);
             var mirror = tab.mirror;
@@ -115,16 +114,24 @@ window.TabItems = {
             
             var overflow = $("body").css("overflow");
             $("body").css("overflow", "hidden");
+            
+            function onZoomDone(){
+              $(this).find("canvas").data("link").tab.focus();
+              $(this)
+                .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:z});  
+              Navbar.show();    
+              $("body").css("overflow", overflow);              
+            }
   
-            $(this).css("zIndex",99999).animate({
-              top: -10, left: 0, easing: "easein",
-              width:w*scale, height:h*scale}, 200, function(){
-                $(this).find("canvas").data("link").tab.focus();
-                $(this)
-                  .css({top: origPos.top, left: origPos.left, width:w, height:h, zIndex:z});  
-                Navbar.show();    
-                $("body").css("overflow", overflow);          
-              });
+            $(this)
+              .css("zIndex",big)
+              .animate({
+                top: -10,
+                left: 0,
+                easing: "easein",
+                width:w*scale,
+                height:h*scale
+                }, 200, onZoomDone);
             
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();

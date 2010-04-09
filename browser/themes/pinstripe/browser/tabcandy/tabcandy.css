@@ -23,7 +23,6 @@ body {
 .tab {
 	position: absolute;
 	margin: 10px;
-	width: 160px;
 	padding: 4px 6px 6px 4px;
 	border: 1px solid rgba(230,230,230,1);
 	background-color: rgba(245,245,245,1);
@@ -39,11 +38,12 @@ body {
 .tab canvas {
 	border: 1px solid rgba(0,0,0,0.2);
 	width: 100%;
-	height: 130px;
+	height: 100%;
 }
 
 .thumb {
-		width: 100%;
+	width: 100%;
+  height: 100%;		
 }
 
 .thumbShadow {
@@ -83,7 +83,7 @@ body {
 
 .expander {
 	position: absolute;
-	bottom: 12px;
+	bottom: 3px;
 	right: 6px;
 }
 
@@ -103,6 +103,7 @@ body {
 	text-align: center;
 	text-shadow: rgba(255,255,255,1) 0 1px;
 	width: 94.5%;
+	height:2em;
 }
 
 
