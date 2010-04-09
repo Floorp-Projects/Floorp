@@ -319,13 +319,12 @@ InputHandler.prototype = {
 
       for (let len = mods.length; i < len; ++i) {
         mods[i].handleEvent(evInfo);  // event focus could get grabbed in this invocation
-        if (this._grabbed)            // so don't pass the event to the rest of modules
+        if (this._grabber)            // so don't pass the event to the rest of modules
           break;
       }
     }
   }
 };
-
 
 /**
  * Helper class to InputHandler.  Wraps a DOM event with some additional data.
@@ -340,7 +339,6 @@ InputHandler.EventInfo.prototype = {
     return '[EventInfo] { event=' + this.event + 'time=' + this.time + ' }';
   }
 };
-
 
 /**
  * MouseModule
@@ -421,8 +419,13 @@ MouseModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
     // TODO: Make "contextmenu" a first class part of InputHandler
     // Bug 554639
-    if (evInfo.event.type == "contextmenu")
-      this._cleanClickBuffer();
+    if (evInfo.event.type == "contextmenu") {
+      if (this._clicker)
+        this._clicker.panBegin();
+      if (this._dragger)
+        this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      this.cancelPending();
+    }
 
     if (evInfo.event.button !== 0) // avoid all but a clean left click
       return;
@@ -495,14 +498,11 @@ MouseModule.prototype = {
                                             : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
-    this._owner.grab(this);
-
     if (this._clicker)
       this._clicker.mouseDown(evInfo.event.clientX, evInfo.event.clientY);
 
-    if (targetScrollInterface && this._dragger.isDraggable(targetScrollbox, targetScrollInterface)) {
+    if (targetScrollInterface && this._dragger.isDraggable(targetScrollbox, targetScrollInterface))
       this._doDragStart(evInfo.event);
-    }
 
     if (this._targetIsContent(evInfo.event)) {
       this._recordEvent(evInfo);
@@ -545,7 +545,7 @@ MouseModule.prototype = {
     if (this._targetIsContent(evInfo.event)) {
       // User possibly clicked on something in content
       this._recordEvent(evInfo);
-      let commitToClicker = this._clicker && dragData.isClick();
+      let commitToClicker = this._clicker && dragData.isClick() && (this._downUpEvents.length > 1);
       if (commitToClicker)
         // commit this click to the doubleclick timewait buffer
         this._commitAnotherClick();
@@ -587,6 +587,7 @@ MouseModule.prototype = {
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
       if (dragData.isPan()) {
+        this._owner.grab(this);
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         let [sX, sY] = dragData.panPosition();
         this._doDragMove(sX, sY);
