@@ -151,6 +151,7 @@ nsDocLoader::nsDocLoader()
     mListenerInfoList(8),
     mIsLoadingDocument(PR_FALSE),
     mIsRestoringDocument(PR_FALSE),
+    mDontFlushLayout(PR_FALSE),
     mIsFlushingLayout(PR_FALSE)
 {
 #if defined(PR_LOGGING)
@@ -324,6 +325,10 @@ nsDocLoader::Stop(void)
 
   if (mLoadGroup)
     rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
+
+  // Don't report that we're flushing layout so IsBusy returns false after a
+  // Stop call.
+  mIsFlushingLayout = PR_FALSE;
 
   // Clear out mChildrenInOnload.  We want to make sure to fire our
   // onload at this point, and there's no issue with mChildrenInOnload
@@ -746,13 +751,13 @@ void nsDocLoader::DocLoaderIsEmpty(PRBool aFlushLayout)
 
     // The load group for this DocumentLoader is idle.  Flush layout if we need
     // to.
-    if (aFlushLayout) {
+    if (aFlushLayout && !mDontFlushLayout) {
       nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(GetAsSupports(this));
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
       if (doc) {
-        mIsFlushingLayout = PR_TRUE;
+        mDontFlushLayout = mIsFlushingLayout = PR_TRUE;
         doc->FlushPendingNotifications(Flush_Layout);
-        mIsFlushingLayout = PR_FALSE;
+        mDontFlushLayout = mIsFlushingLayout = PR_FALSE;
       }
     }
 
