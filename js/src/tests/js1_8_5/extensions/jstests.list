@@ -1,6 +1,6 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
-fails-if(!xulRuntime.shell) script worker-error.js  # bug 557346
+script worker-error.js
 script worker-error-propagation.js
 script worker-fib.js
 script worker-init.js
