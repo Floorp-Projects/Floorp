@@ -46,7 +46,6 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"

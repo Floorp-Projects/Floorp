@@ -69,7 +69,6 @@
 #include "nsIRangeUtils.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
-#include "nsIPresShell.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIDOMNamedNodeMap.h"

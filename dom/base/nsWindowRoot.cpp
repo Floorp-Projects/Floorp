@@ -44,7 +44,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"

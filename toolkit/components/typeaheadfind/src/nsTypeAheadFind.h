@@ -46,13 +46,14 @@
 #include "nsIFind.h"
 #include "nsIWebBrowserFind.h"
 #include "nsWeakReference.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsITypeAheadFind.h"
 #include "nsISound.h"
+
+class nsIPresShell;
 
 #define TYPEAHEADFIND_NOTFOUND_WAV_URL \
         "chrome://global/content/notfound.wav"
