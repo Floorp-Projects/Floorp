@@ -3322,7 +3322,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* If called without new, replace obj with a new Array object. */
     if (!JS_IsConstructing(cx)) {
-        obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
+        obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -3418,7 +3418,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey)
 {
-    JSObject *obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -3442,7 +3442,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey)
 JSObject *
 js_NewSlowArrayObject(JSContext *cx)
 {
-    JSObject *obj = js_NewObject(cx, &js_SlowArrayClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_SlowArrayClass, NULL, NULL);
     if (obj)
         obj->setArrayLength(0);
     return obj;

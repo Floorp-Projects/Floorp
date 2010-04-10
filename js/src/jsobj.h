@@ -721,17 +721,6 @@ extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
 #endif
 
-extern JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-             JSObject *parent, size_t objectSize = 0);
-
-/*
- * See jsapi.h, JS_NewObjectWithGivenProto.
- */
-extern JSObject *
-js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, size_t objectSize = 0);
-
 /*
  * Allocate a new native object with the given value of the proto and private
  * slots. The parent slot is set to the value of proto's parent slot.
@@ -775,6 +764,9 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
+
+extern bool
+js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
 
 extern bool
 js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots);

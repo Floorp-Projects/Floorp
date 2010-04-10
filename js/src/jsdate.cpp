@@ -71,6 +71,8 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 /*
@@ -2385,7 +2387,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = js_NewObject(cx, &js_DateClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_DateClass, NULL, NULL);
     if (!obj || !SetUTCTime(cx, obj, msec_time))
         return NULL;
     return obj;
