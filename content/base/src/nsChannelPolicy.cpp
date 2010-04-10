@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org networking code.
+ * The Original Code is mozilla.org code channel policy container code.
  *
  * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ *   Mozilla Corporation
  *
  * Contributor(s):
+ *   Brandon Sterne <bsterne@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,26 +34,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNetStrings_h__
-#define nsNetStrings_h__
+#include "nsChannelPolicy.h"
 
-#include "nsLiteralString.h"
+nsChannelPolicy::nsChannelPolicy()
+{
+}
 
-/**
- * Class on which wide strings are available, to avoid constructing strings
- * wherever these strings are used.
- */
-class nsNetStrings {
-public:
-  nsNetStrings();
+nsChannelPolicy::~nsChannelPolicy()
+{
+}
 
-  /** "content-length" */
-  const nsLiteralString kContentLength;
-  const nsLiteralString kContentDisposition;
-  const nsLiteralString kChannelPolicy;
-};
+NS_IMPL_ISUPPORTS1(nsChannelPolicy, nsIChannelPolicy)
 
-extern NS_HIDDEN_(nsNetStrings*) gNetStrings;
+NS_IMETHODIMP
+nsChannelPolicy::GetLoadType(PRUint32 *aLoadType)
+{
+    *aLoadType = mLoadType;
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsChannelPolicy::SetLoadType(PRUint32 aLoadType)
+{
+    mLoadType = aLoadType;
+    return NS_OK;
+}
 
-#endif
+NS_IMETHODIMP
+nsChannelPolicy::GetContentSecurityPolicy(nsISupports **aCSP)
+{
+    *aCSP = mCSP;
+    NS_IF_ADDREF(*aCSP);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChannelPolicy::SetContentSecurityPolicy(nsISupports *aCSP)
+{
+    mCSP = aCSP;
+    return NS_OK;
+}

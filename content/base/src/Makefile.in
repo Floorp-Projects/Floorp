@@ -76,6 +76,7 @@ CPPSRCS		= \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
 		nsCCUncollectableMarker.cpp \
+		nsChannelPolicy.cpp \
 		nsCommentNode.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \
