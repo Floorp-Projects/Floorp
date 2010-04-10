@@ -79,18 +79,25 @@ body {
 	position: absolute;
 	top: 6px;
 	right: 6px;
+	width: 16px;
+	height: 16px;
+	background: url(../img/closetab.png) no-repeat;
+	opacity: 0.2;
 }
+
+.close:hover{ opacity: 1.0;}
 
 .expander {
 	position: absolute;
-	bottom: 3px;
+	bottom: 6px;
 	right: 6px;
+	width: 16px;
+	height: 16px;
+	background: url(../img/expand.png) no-repeat;
+	opacity: 0.2;
 }
 
-.close img, .expander img{
-	opacity: 0.2;
-	border: none;
-}
+.expander:hover{opacity:1.0;}
 
 .favicon img:hover, .close img:hover, .expander img:hover{
 	opacity: 1;
