@@ -46,7 +46,6 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsAbsoluteContainingBlock.h"
 
 /**

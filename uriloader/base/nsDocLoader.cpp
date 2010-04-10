@@ -55,7 +55,6 @@
 
 #include "nsIDOMWindow.h"
 
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIStringBundle.h"
 #include "nsIScriptSecurityManager.h"

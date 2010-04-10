@@ -64,7 +64,6 @@
 struct nsRect;
 class nsIContent;
 class nsIFrame;
-class nsIPresShell;
 class nsIDOMNode;
 class nsIAtom;
 class nsIView;

@@ -60,7 +60,6 @@
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"

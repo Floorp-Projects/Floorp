@@ -40,7 +40,6 @@
 #include "nsHTMLVideoElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
 #include "nsIFrame.h"

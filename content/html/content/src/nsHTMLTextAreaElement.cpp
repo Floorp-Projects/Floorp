@@ -61,7 +61,6 @@
 #include "nsIEventStateManager.h"
 #include "nsLinebreakConverter.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIPrivateDOMEvent.h"

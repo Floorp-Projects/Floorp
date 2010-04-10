@@ -48,7 +48,6 @@
 #include "nsIParserService.h"
 #include "nsIWordBreaker.h"
 
-class nsIPresShell;
 class nsIAtom;
 class nsIContent;
 
