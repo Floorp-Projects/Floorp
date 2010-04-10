@@ -39,7 +39,6 @@
 
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
-class nsPresContext;
 class nsPresState;
 class nsIContent;
 class nsString;

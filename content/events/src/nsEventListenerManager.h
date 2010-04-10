@@ -46,6 +46,7 @@
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTObserverArray.h"
 
 class nsIDOMEvent;
 class nsIAtom;

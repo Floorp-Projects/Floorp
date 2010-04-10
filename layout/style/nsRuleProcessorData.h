@@ -52,7 +52,6 @@
 #include "nsRuleWalker.h"
 
 class nsIStyleSheet;
-class nsPresContext;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
