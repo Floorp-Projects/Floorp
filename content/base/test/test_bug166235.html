@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=166235
+-->
+<head>
+  <title>Test for Bug 166235</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235</a>
+<p id="test0">This text should be copied.</p>
+<p id="test1">This text should<span style="-moz-user-select: none;"> NOT</span> be copied.</p>
+<p id="test2">This<span style="-moz-user-select: -moz-none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 166235 **/
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+const de = Components.interfaces.nsIDocumentEncoder;
+var encoder = Components.classes["@mozilla.org/layout/htmlCopyEncoder;1"].createInstance(Components.interfaces.nsIDocumentEncoder);
+var selection = window.getSelection();
+
+// expected results for selection.toString()
+var originalStrings = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+];
+
+// expected results when selection is copied and HTML tags removed
+var copiedStrings = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
+];
+
+for (var i = 0; i < 3; i++) {
+  var test = document.getElementById('test' + i);
+  selection.removeAllRanges();
+  selection.selectAllChildren(test);
+  is(selection.toString(), originalStrings [i], 'test ' + i + 'a');
+
+  selection.removeAllRanges();
+  selection.selectAllChildren(test);
+  encoder.init(document, "text/html", null);
+  encoder.setSelection(selection);
+  is(encoder.encodeToString().replace(/<[^>]*>/g, '').replace (/[\r\n]/g, ''), copiedStrings [i], 'test ' + i + 'b');
+}
+
+</script>
+</pre>
+</body>
+</html>

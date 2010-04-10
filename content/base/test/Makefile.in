@@ -64,6 +64,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug5141.html \
 		test_bug51034.html \
+		test_bug166235.html \
 		test_bug199959.html \
 		test_bug218236.html \
 		file_bug218236_multipart.txt \
