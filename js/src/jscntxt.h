@@ -802,12 +802,6 @@ struct JSRuntime {
 #endif
 
     /*
-     * Table for tracking iterators to ensure that we close iterator's state
-     * before finalizing the iterable object.
-     */
-    js::Vector<JSObject*, 0, js::SystemAllocPolicy> gcIteratorTable;
-
-    /*
      * The trace operation and its data argument to trace embedding-specific
      * GC roots.
      */

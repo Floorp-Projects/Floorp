@@ -763,6 +763,7 @@ GetFinalizableThingSize(unsigned thingKind)
 
     static const uint8 map[FINALIZE_LIMIT] = {
         sizeof(JSObject),   /* FINALIZE_OBJECT */
+        sizeof(JSObject),   /* FINALIZE_ITER */
         sizeof(JSFunction), /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT
         sizeof(JSXML),      /* FINALIZE_XML */
@@ -789,6 +790,7 @@ GetFinalizableTraceKind(size_t thingKind)
 
     static const uint8 map[FINALIZE_LIMIT] = {
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT */
+        JSTRACE_OBJECT,     /* FINALIZE_ITER */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
@@ -991,6 +993,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     static const char *const GC_ARENA_NAMES[] = {
         "double",
         "object",
+        "iter",
         "function",
 #if JS_HAS_XML_SUPPORT
         "xml",
@@ -1149,7 +1152,6 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
-    rt->gcIteratorTable.clear();
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -1326,34 +1328,6 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
     GCRootMapArgs args = {map, data};
     AutoLockGC lock(rt);
     return JS_DHashTableEnumerate(&rt->gcRootsHash, js_gcroot_mapper, &args);
-}
-
-JSBool
-js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
-{
-    JSRuntime *rt = cx->runtime;
-    JS_ASSERT(!rt->gcRunning);
-
-    AutoLockGC lock(rt);
-    return rt->gcIteratorTable.append(obj);
-}
-
-static void
-CloseNativeIterators(JSContext *cx)
-{
-    JSRuntime *rt = cx->runtime;
-    size_t length = rt->gcIteratorTable.length();
-    JSObject **array = rt->gcIteratorTable.begin();
-
-    size_t newLength = 0;
-    for (size_t i = 0; i < length; ++i) {
-        JSObject *obj = array[i];
-        if (js_IsAboutToBeFinalized(obj))
-            js_CloseNativeIterator(cx, obj);
-        else
-            array[newLength++] = obj;
-    }
-    rt->gcIteratorTable.resize(newLength);
 }
 
 void
@@ -2323,6 +2297,7 @@ JSWeakRoots::mark(JSTracer *trc)
 #ifdef DEBUG
     const char * const newbornNames[] = {
         "newborn_object",             /* FINALIZE_OBJECT */
+        "newborn_iter",               /* FINALIZE_ITER */
         "newborn_function",           /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT
         "newborn_xml",                /* FINALIZE_XML */
@@ -2522,7 +2497,9 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
 inline void
 FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
 {
-    JS_ASSERT(thingKind == FINALIZE_FUNCTION || thingKind == FINALIZE_OBJECT);
+    JS_ASSERT(thingKind == FINALIZE_OBJECT ||
+              thingKind == FINALIZE_ITER ||
+              thingKind == FINALIZE_FUNCTION);
 
     /* Cope with stillborn objects that have no map. */
     if (!obj->map)
@@ -2972,9 +2949,6 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     TIMESTAMP(gcTimer.startSweep);
     js_SweepAtomState(cx);
 
-    /* Finalize iterator states before the objects they iterate over. */
-    CloseNativeIterators(cx);
-
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
 
@@ -2995,10 +2969,14 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     JSGCArena *emptyArenas = NULL;
     if (!cx->debugHooks->objectHook) {
         FinalizeArenaList<JSObject, FinalizeObject>
+            (cx, FINALIZE_ITER, &emptyArenas);
+        FinalizeArenaList<JSObject, FinalizeObject>
             (cx, FINALIZE_OBJECT, &emptyArenas);
         FinalizeArenaList<JSFunction, FinalizeFunction>
             (cx, FINALIZE_FUNCTION, &emptyArenas);
     } else {
+        FinalizeArenaList<JSObject, FinalizeHookedObject>
+            (cx, FINALIZE_ITER, &emptyArenas);
         FinalizeArenaList<JSObject, FinalizeHookedObject>
             (cx, FINALIZE_OBJECT, &emptyArenas);
         FinalizeArenaList<JSFunction, FinalizeHookedFunction>
