@@ -46,7 +46,6 @@
 
 // Forward declarations
 class nsIAtom;
-class nsPresContext;
 class nsIDOMEvent;
 class nsIContent;
 class nsIEventListenerManager;

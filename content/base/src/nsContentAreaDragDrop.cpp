@@ -83,7 +83,6 @@
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "nsPresContext.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"
 #include "nsRange.h"

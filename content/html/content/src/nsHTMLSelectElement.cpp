@@ -42,7 +42,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
 #include "nsIForm.h"

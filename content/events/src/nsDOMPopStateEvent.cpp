@@ -34,6 +34,9 @@
 
 #include "nsDOMPopStateEvent.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMPopStateEvent)
 
