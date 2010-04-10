@@ -998,21 +998,6 @@ struct nsTextRange
 
 typedef nsTextRange* nsTextRangeArray;
 
-// XXX We should drop this struct because the results are provided by query
-// content events now, so, this struct finished the role.
-struct nsTextEventReply
-{
-  nsTextEventReply()
-    : mReferenceWidget(nsnull)
-  {
-  }
-
-  nsIntRect mCursorPosition;
-  nsIWidget* mReferenceWidget;
-};
-
-typedef struct nsTextEventReply nsTextEventReply;
-
 class nsTextEvent : public nsInputEvent
 {
 public:
@@ -1023,7 +1008,6 @@ public:
   }
 
   nsString          theText;
-  nsTextEventReply  theReply; // OBSOLETE
   PRUint32          rangeCount;
   // Note that the range array may not specify a caret position; in that
   // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
@@ -1039,8 +1023,6 @@ public:
     : nsInputEvent(isTrusted, msg, w, NS_COMPOSITION_EVENT)
   {
   }
-
-  nsTextEventReply theReply; // OBSOLETE
 };
 
 /* Mouse Scroll Events: Line Scrolling, Pixel Scrolling and Common Event Flows

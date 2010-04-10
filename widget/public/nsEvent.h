@@ -90,6 +90,4 @@ class nsMenuEvent;
 class nsSimpleGestureEvent;
 class nsContentCommandEvent;
 
-struct nsTextEventReply;
-
 #endif // nsEvent_h__

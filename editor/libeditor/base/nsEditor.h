@@ -355,8 +355,6 @@ protected:
    */
   PRBool GetDesiredSpellCheckState();
 
-  nsresult QueryComposition(nsTextEventReply* aReply);
-
 public:
 
   /** All editor operations which alter the doc should be prefaced

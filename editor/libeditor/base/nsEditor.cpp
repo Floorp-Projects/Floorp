@@ -1969,85 +1969,17 @@ nsEditor::StopPreservingSelection()
 //
 // The BeingComposition method is called from the Editor Composition event listeners.
 //
-nsresult
-nsEditor::QueryComposition(nsTextEventReply* aReply)
-{
-  nsCOMPtr<nsISelection> selection;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
-  if (selcon)
-    selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsRefPtr<nsCaret> caretP = ps->GetCaret();
-
-  if (caretP) {
-    if (aReply) {
-      caretP->SetCaretDOMSelection(selection);
-
-      // XXX_kin: BEGIN HACK! HACK! HACK!
-      // XXX_kin:
-      // XXX_kin: This is lame! The IME stuff needs caret coordinates
-      // XXX_kin: synchronously, but the editor could be using async
-      // XXX_kin: updates (reflows and paints) for performance reasons.
-      // XXX_kin: In order to give IME what it needs, we have to temporarily
-      // XXX_kin: switch to sync updating during this call so that the
-      // XXX_kin: nsAutoUpdateViewBatch can force sync reflows and paints
-      // XXX_kin: so that we get back accurate caret coordinates.
-
-      PRUint32 flags = 0;
-
-      if (NS_SUCCEEDED(GetFlags(&flags)) &&
-          (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
-      {
-        PRBool restoreFlags = PR_FALSE;
-
-        if (NS_SUCCEEDED(SetFlags(flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
-        {
-           // Scope the viewBatch within this |if| block so that we
-           // force synchronous reflows and paints before restoring
-           // our editor flags below.
-
-           nsAutoUpdateViewBatch viewBatch(this);
-           restoreFlags = PR_TRUE;
-        }
-
-        // Restore the previous set of flags!
-
-        if (restoreFlags)
-          SetFlags(flags);
-      }
-
-
-      // XXX_kin: END HACK! HACK! HACK!
-
-      nsRect rect;
-      nsIFrame* frame = caretP->GetGeometry(selection, &rect);
-      if (!frame)
-        return NS_ERROR_FAILURE;
-      nsPoint nearestWidgetOffset;
-      aReply->mReferenceWidget = frame->GetWindowOffset(nearestWidgetOffset);
-      rect.MoveBy(nearestWidgetOffset);
-      aReply->mCursorPosition =
-        rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-nsEditor::BeginComposition(nsTextEventReply* aReply)
+nsEditor::BeginComposition()
 {
 #ifdef DEBUG_tague
   printf("nsEditor::StartComposition\n");
 #endif
-  nsresult ret = QueryComposition(aReply);
   mInIMEMode = PR_TRUE;
   if (mPhonetic)
     mPhonetic->Truncate(0);
 
-  return ret;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2084,7 +2016,8 @@ nsEditor::EndComposition(void)
 }
 
 NS_IMETHODIMP
-nsEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsEditor::SetCompositionString(const nsAString& aCompositionString,
+                               nsIPrivateTextRangeList* aTextRangeList)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
