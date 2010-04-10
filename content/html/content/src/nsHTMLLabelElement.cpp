@@ -46,7 +46,6 @@
 #include "nsIForm.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"

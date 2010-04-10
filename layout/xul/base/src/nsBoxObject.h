@@ -50,6 +50,7 @@
 class nsIFrame;
 class nsIDocShell;
 struct nsIntRect;
+class nsIPresShell;
 
 class nsBoxObject : public nsPIBoxObject
 {

@@ -82,7 +82,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"

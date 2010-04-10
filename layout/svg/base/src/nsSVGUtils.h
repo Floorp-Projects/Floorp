@@ -62,7 +62,6 @@ class nsIDOMSVGElement;
 class nsIDOMSVGLength;
 class nsIURI;
 class nsSVGOuterSVGFrame;
-class nsIPresShell;
 class nsSVGPreserveAspectRatio;
 class nsIAtom;
 class nsSVGLength2;

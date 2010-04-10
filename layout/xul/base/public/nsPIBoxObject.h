@@ -44,9 +44,7 @@
   { 0xba, 0x87, 0x5d, 0x4a, 0xe4, 0x95, 0x44, 0x45 } }
 
 
-class nsIPresShell;
 class nsIContent;
-class nsIDocument;
 
 class nsPIBoxObject : public nsIBoxObject
 {

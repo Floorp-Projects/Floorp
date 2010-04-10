@@ -44,7 +44,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIPopupBoxObject.h"
 #include "nsIServiceManager.h"
