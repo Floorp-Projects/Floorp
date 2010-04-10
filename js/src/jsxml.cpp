@@ -305,7 +305,7 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
+    obj = NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->fslots[JSSLOT_PREFIX]));
@@ -518,7 +518,7 @@ NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
     JSObject *obj;
 
     JS_ASSERT(IsQNameClass(clasp));
-    obj = js_NewObject(cx, clasp, NULL, NULL);
+    obj = NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return NULL;
     InitXMLQName(obj, uri, prefix, localName);
@@ -630,7 +630,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
+        obj = NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -737,7 +737,7 @@ QNameHelper(JSContext *cx, JSObject *obj, JSClass *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = js_NewObject(cx, clasp, NULL, NULL);
+        obj = NewObject(cx, clasp, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -7172,7 +7172,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_XMLClass, NULL, NULL);
+    obj = NewObject(cx, &js_XMLClass, NULL, NULL);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7562,8 +7562,8 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                 return JS_FALSE;
 
             do {
-                obj = js_NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL,
-                                                 NULL);
+                obj = NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL,
+                                              NULL);
                 if (!obj) {
                     ok = JS_FALSE;
                     break;
@@ -7845,8 +7845,8 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
                 return JS_FALSE;
         }
 
-        filterobj = js_NewObjectWithGivenProto(cx, &js_XMLFilterClass,
-                                               NULL, NULL);
+        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass,
+                                            NULL, NULL);
         if (!filterobj)
             return JS_FALSE;
 

@@ -72,6 +72,8 @@
 #include "jsxml.h"
 #endif
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
@@ -407,7 +409,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
                 if ((iterobj = JS_THREAD_DATA(cx)->cachedIteratorObject) != NULL) {
                     JS_THREAD_DATA(cx)->cachedIteratorObject = NULL;
                 } else {
-                    if (!(iterobj = js_NewObjectWithGivenProto(cx, &js_IteratorClass, NULL, NULL)))
+                    if (!(iterobj = NewObjectWithGivenProto(cx, &js_IteratorClass, NULL, NULL)))
                         return false;
                 }
             } else {
@@ -416,7 +418,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
                  * StopIteration exception based on the parent of the iterator
                  * object, so we need the correct parent here.
                  */
-                if (!(iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL)))
+                if (!(iterobj = NewObject(cx, &js_IteratorClass, NULL, NULL)))
                     return false;
             }
 
@@ -727,7 +729,7 @@ js_NewGenerator(JSContext *cx)
     JSGenerator *gen;
     jsval *slots;
 
-    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
+    obj = NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
 
