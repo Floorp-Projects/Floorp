@@ -78,6 +78,7 @@ window.TabItems = {
   init: function() {
     var self = this;
     
+    
     function mod($div){
       if(window.Groups) {        
         $div.data('isDragging', false);
@@ -148,10 +149,13 @@ window.TabItems = {
       $("<div class='close'><img src='img/closetab.png'/></div>").appendTo($div);
       $("<div class='expander'><img src='img/expand.png'/></div>").appendTo($div);
   
-      if($div.length == 1) {
+      function onNewTab(){
         var p = Page.findOpenSpaceFor($div); // TODO shouldn't know about Page
-        $div.css({left: p.x, top: p.y});
+        $div.css({left: p.x, top: p.y, width:TabItems.tabWidth, height:TabItems.tabHeight});
       }
+  
+      // This code deals with adding a new tab.
+      if($div.length == 1) onNewTab();
       
       $div.each(function() {
         var tab = Tabs.tab(this);
