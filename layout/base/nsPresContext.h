@@ -810,7 +810,17 @@ public:
                               mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
-  PRBool IsChrome() const;
+  PRBool IsChrome() const { return mIsChrome; }
+
+  virtual void UpdateIsChromeCacheExternal();
+  void UpdateIsChromeCacheInternal();
+#ifdef _IMPL_NS_LAYOUT
+  void UpdateIsChromeCache()
+  { UpdateIsChromeCacheInternal(); }
+#else
+  void UpdateIsChromeCache()
+  { UpdateIsChromeCacheExternal(); }
+#endif
 
   // Public API for native theme code to get style internals.
   virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
@@ -1114,6 +1124,9 @@ protected:
 
   unsigned              mProcessingRestyles : 1;
   unsigned              mProcessingAnimationStyleChange : 1;
+
+  // Cache whether we are chrome or not because it is expensive.  
+  unsigned              mIsChrome : 1;
 
 #ifdef DEBUG
   PRBool                mInitialized;
