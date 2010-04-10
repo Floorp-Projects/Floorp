@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org networking code.
+ * The Original Code is mozilla.org code channel policy container code.
  *
  * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ *   Mozilla Corporation
  *
  * Contributor(s):
+ *   Brandon Sterne <bsterne@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,26 +34,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNetStrings_h__
-#define nsNetStrings_h__
+#ifndef nsChannelPolicy_h___
+#define nsChannelPolicy_h___
 
-#include "nsLiteralString.h"
+#include "nsCOMPtr.h"
+#include "nsIChannelPolicy.h"
 
-/**
- * Class on which wide strings are available, to avoid constructing strings
- * wherever these strings are used.
- */
-class nsNetStrings {
+#define NSCHANNELPOLICY_CONTRACTID "@mozilla.org/nschannelpolicy;1"
+#define NSCHANNELPOLICY_CID \
+{ 0xd396b3cd, 0xf164, 0x4ce8, \
+  { 0x93, 0xa7, 0xe3, 0x85, 0xe1, 0x46, 0x56, 0x3c } }
+
+class nsChannelPolicy : public nsIChannelPolicy
+{
 public:
-  nsNetStrings();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICHANNELPOLICY
 
-  /** "content-length" */
-  const nsLiteralString kContentLength;
-  const nsLiteralString kContentDisposition;
-  const nsLiteralString kChannelPolicy;
+    nsChannelPolicy();
+    virtual ~nsChannelPolicy();
+
+protected:
+    /* Represents the type of content being loaded in the channel per
+     * nsIContentPolicy, e.g. TYPE_IMAGE, TYPE_SCRIPT
+     */
+    unsigned long mLoadType;
+
+    /* pointer to a Content Security Policy object if available */
+    nsCOMPtr<nsISupports> mCSP;
 };
 
-extern NS_HIDDEN_(nsNetStrings*) gNetStrings;
-
-
-#endif
+#endif /* nsChannelPolicy_h___ */
