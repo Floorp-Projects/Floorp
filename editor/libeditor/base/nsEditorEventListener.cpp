@@ -56,7 +56,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
-#include "nsPresContext.h"
 #include "nsFocusManager.h"
 
 // Drag & Drop, Clipboard

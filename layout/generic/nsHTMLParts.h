@@ -50,7 +50,6 @@ class nsIDocument;
 class nsIFrame;
 class nsIHTMLContentSink;
 class nsIFragmentContentSink;
-class nsPresContext;
 class nsStyleContext;
 class nsIURI;
 class nsString;

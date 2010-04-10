@@ -45,8 +45,9 @@
 
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
-#include "nsPresContext.h"
 #include "nsAbsoluteContainingBlock.h"
+
+class nsPresContext;
 
 /**
   * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame 

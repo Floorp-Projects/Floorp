@@ -40,13 +40,14 @@
 // Interfaces
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIWidget.h"
+
+class nsPresContext;
 
 // nsPrintObject Document Type
 enum PrintObjectType  {eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3};

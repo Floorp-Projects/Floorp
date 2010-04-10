@@ -44,13 +44,14 @@
 #include "nsContainerFrame.h"
 #include "nsString.h"
 #include "nsAString.h"
-#include "nsPresContext.h"
 #include "nsIIOService.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "Layers.h"
 #include "ImageLayers.h"
+
+class nsPresContext;
 
 nsIFrame* NS_NewVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 

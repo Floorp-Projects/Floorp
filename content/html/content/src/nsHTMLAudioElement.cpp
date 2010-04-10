@@ -39,7 +39,6 @@
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLAudioElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
 #include "nsIFrame.h"

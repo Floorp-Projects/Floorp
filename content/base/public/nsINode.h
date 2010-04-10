@@ -55,7 +55,6 @@ class nsIDOMNode;
 class nsIDOMNodeList;
 class nsINodeList;
 class nsIPresShell;
-class nsPresContext;
 class nsEventChainVisitor;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;

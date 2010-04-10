@@ -42,7 +42,6 @@
 #include "nsILink.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"

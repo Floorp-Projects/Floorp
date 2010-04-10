@@ -41,7 +41,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIEventStateManager.h"

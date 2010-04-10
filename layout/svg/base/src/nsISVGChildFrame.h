@@ -47,7 +47,6 @@
 #include "gfxMatrix.h"
 
 class gfxContext;
-class nsPresContext;
 class nsSVGRenderState;
 
 class nsISVGChildFrame : public nsQueryFrame

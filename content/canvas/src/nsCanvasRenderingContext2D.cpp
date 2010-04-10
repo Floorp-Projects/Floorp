@@ -81,7 +81,6 @@
 #include "nsGfxCIID.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
-#include "nsPresContext.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
