@@ -104,13 +104,14 @@ JS_STATIC_ASSERT(pn_offsetof(pn_u.name.atom) == pn_offsetof(pn_u.apair.atom));
  * Insist that the next token be of type tt, or report errno and return null.
  * NB: this macro uses cx and ts from its lexical environment.
  */
-#define MUST_MATCH_TOKEN(tt, errno)                                                         \
+#define MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, __flags)                                     \
     JS_BEGIN_MACRO                                                                          \
-        if (tokenStream.getToken() != tt) {                                                 \
+        if (tokenStream.getToken((__flags)) != tt) {                                        \
             ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR, errno);   \
             return NULL;                                                                    \
         }                                                                                   \
     JS_END_MACRO
+#define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 #ifdef METER_PARSENODES
 static uint32 parsenodes = 0;
@@ -525,9 +526,9 @@ JSParseNode::create(JSParseNodeArity arity, JSTreeContext *tc)
     JSParseNode *pn = NewOrRecycledNode(tc);
     if (!pn)
         return NULL;
-    Token *tp = tc->compiler->tokenStream.mutableCurrentToken();
-    pn->init(tp->type, JSOP_NOP, arity);
-    pn->pn_pos = tp->pos;
+    const Token &tok = tc->compiler->tokenStream.currentToken();
+    pn->init(tok.type, JSOP_NOP, arity);
+    pn->pn_pos = tok.pos;
     return pn;
 }
 
@@ -656,7 +657,7 @@ CheckGetterOrSetter(JSContext *cx, TokenStream *ts, TokenKind tt)
                                  (op == JSOP_GETTER) ? js_getter_str : js_setter_str);
         return TOK_ERROR;
     }
-    ts->mutableCurrentToken()->t_op = op;
+    ts->mungeCurrentToken(op);
     if (JS_HAS_STRICT_OPTION(cx)) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
@@ -805,7 +806,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
         callerFrame->script &&
         callerFrame->script->strictModeCode) {
         cg.flags |= TCF_STRICT_MODE_CODE;
-        jsc.tokenStream.flags |= TSF_STRICT_MODE_CODE;
+        jsc.tokenStream.setStrictMode();
     }
 
     /*
@@ -863,9 +864,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 
     inDirectivePrologue = true;
     for (;;) {
-        jsc.tokenStream.flags |= TSF_OPERAND;
-        tt = jsc.tokenStream.peekToken();
-        jsc.tokenStream.flags &= ~TSF_OPERAND;
+        tt = jsc.tokenStream.peekToken(TSF_OPERAND);
         if (tt <= TOK_EOF) {
             if (tt == TOK_EOF)
                 break;
@@ -1567,7 +1566,7 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
         return NULL;
 
     /* FIXME: make Function format the source for a function definition. */
-    jsc.tokenStream.getMutableTokenAt(0)->type = TOK_NAME;
+    jsc.tokenStream.mungeCurrentToken(TOK_NAME);
     JSParseNode *fn = FunctionNode::create(&funcg);
     if (fn) {
         fn->pn_body = NULL;
@@ -1596,7 +1595,7 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
      * done parsing, we must fold constants, analyze any nested functions, and
      * generate code for this function, including a stop opcode at the end.
      */
-    jsc.tokenStream.mutableCurrentToken()->type = TOK_LC;
+    jsc.tokenStream.mungeCurrentToken(TOK_LC);
     JSParseNode *pn = fn ? jsc.functionBody() : NULL;
     if (pn) {
         if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
@@ -1744,9 +1743,7 @@ JSCompiler::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
 static JSBool
 MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
 {
-    ts->flags |= TSF_OPERAND;
-    TokenKind tt = ts->peekTokenSameLine();
-    ts->flags &= ~TSF_OPERAND;
+    TokenKind tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
@@ -2593,9 +2590,7 @@ JSCompiler::functionDef(uintN lambda)
     pn->pn_dflags = (lambda || !topLevel) ? PND_FUNARG : 0;
 
     /* Scan the optional function name into funAtom. */
-    tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
     if (tt == TOK_NAME) {
         funAtom = tokenStream.currentToken().t_atom;
     } else {
@@ -2845,9 +2840,7 @@ JSCompiler::functionDef(uintN lambda)
     }
 
 #if JS_HAS_EXPR_CLOSURES
-    tokenStream.flags |= TSF_OPERAND;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_OPERAND;
+    tt = tokenStream.getToken(TSF_OPERAND);
     if (tt != TOK_LC) {
         tokenStream.ungetToken();
         fun->flags |= JSFUN_EXPR_CLOSURE;
@@ -2984,7 +2977,7 @@ JSCompiler::functionDef(uintN lambda)
 
     /* If the surrounding function is not strict code, reset the lexer. */
     if (!(outertc->flags & TCF_STRICT_MODE_CODE))
-        tokenStream.flags &= ~TSF_STRICT_MODE_CODE;
+        tokenStream.setStrictMode(false);
 
     return result;
 }
@@ -3028,7 +3021,7 @@ JSCompiler::recognizeDirectivePrologue(JSParseNode *pn)
         JSAtom *directive = pn->pn_kid->pn_atom;
         if (directive == context->runtime->atomState.useStrictAtom) {
             tc->flags |= TCF_STRICT_MODE_CODE;
-            tokenStream.flags |= TSF_STRICT_MODE_CODE;
+            tokenStream.setStrictMode();
         }
     }
     return true;
@@ -3058,21 +3051,19 @@ JSCompiler::statements()
     tc->blockNode = pn;
 
     for (;;) {
-        tokenStream.flags |= TSF_OPERAND;
-        tt = tokenStream.peekToken();
-        tokenStream.flags &= ~TSF_OPERAND;
+        tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt <= TOK_EOF || tt == TOK_RC) {
             if (tt == TOK_ERROR) {
-                if (tokenStream.flags & TSF_EOF)
-                    tokenStream.flags |= TSF_UNEXPECTED_EOF;
+                if (tokenStream.isEOF())
+                    tokenStream.setUnexpectedEOF();
                 return NULL;
             }
             break;
         }
         pn2 = statement();
         if (!pn2) {
-            if (tokenStream.flags & TSF_EOF)
-                tokenStream.flags |= TSF_UNEXPECTED_EOF;
+            if (tokenStream.isEOF())
+                tokenStream.setUnexpectedEOF();
             return NULL;
         }
 
@@ -4232,9 +4223,7 @@ JSCompiler::returnOrYield(bool useAssignExpr)
 #endif
 
     /* This is ugly, but we don't want to require a semicolon. */
-    tokenStream.flags |= TSF_OPERAND;
-    tt2 = tokenStream.peekTokenSameLine();
-    tokenStream.flags &= ~TSF_OPERAND;
+    tt2 = tokenStream.peekTokenSameLine(TSF_OPERAND);
     if (tt2 == TOK_ERROR)
         return NULL;
 
@@ -4343,8 +4332,7 @@ JSCompiler::letBlock(JSBool statement)
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
-    tokenStream.flags |= TSF_OPERAND;
-    if (statement && !tokenStream.matchToken(TOK_LC)) {
+    if (statement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
         /*
          * If this is really an expression in let statement guise, then we
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
@@ -4359,7 +4347,6 @@ JSCompiler::letBlock(JSBool statement)
 
         statement = JS_FALSE;
     }
-    tokenStream.flags &= ~TSF_OPERAND;
 
     if (statement) {
         pnlet->pn_right = statements();
@@ -4520,9 +4507,7 @@ JSCompiler::statement()
 
     JS_CHECK_RECURSION(context, return NULL);
 
-    tokenStream.flags |= TSF_OPERAND;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_OPERAND;
+    tt = tokenStream.getToken(TSF_OPERAND);
 
 #if JS_HAS_GETTER_SETTER
     if (tt == TOK_NAME) {
@@ -4535,9 +4520,7 @@ JSCompiler::statement()
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
-        tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-        tt = tokenStream.peekToken();
-        tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+        tt = tokenStream.peekToken(TSF_KEYWORD_IS_NAME);
         if (tt == TOK_DBLCOLON)
             goto expression;
 #endif
@@ -4555,16 +4538,13 @@ JSCompiler::statement()
         pn2 = statement();
         if (!pn2)
             return NULL;
-        tokenStream.flags |= TSF_OPERAND;
-        if (tokenStream.matchToken(TOK_ELSE)) {
-            tokenStream.flags &= ~TSF_OPERAND;
+        if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
             stmtInfo.type = STMT_ELSE;
             pn3 = statement();
             if (!pn3)
                 return NULL;
             pn->pn_pos.end = pn3->pn_pos.end;
         } else {
-            tokenStream.flags &= ~TSF_OPERAND;
             pn3 = NULL;
             pn->pn_pos.end = pn2->pn_pos.end;
         }
@@ -4651,10 +4631,8 @@ JSCompiler::statement()
                 return NULL;
             pn4->pn_type = TOK_LC;
             pn4->makeEmpty();
-            tokenStream.flags |= TSF_OPERAND;
-            while ((tt = tokenStream.peekToken()) != TOK_RC &&
+            while ((tt = tokenStream.peekToken(TSF_OPERAND)) != TOK_RC &&
                    tt != TOK_CASE && tt != TOK_DEFAULT) {
-                tokenStream.flags &= ~TSF_OPERAND;
                 if (tt == TOK_ERROR)
                     return NULL;
                 pn5 = statement();
@@ -4662,9 +4640,7 @@ JSCompiler::statement()
                     return NULL;
                 pn4->pn_pos.end = pn5->pn_pos.end;
                 pn4->append(pn5);
-                tokenStream.flags |= TSF_OPERAND;
             }
-            tokenStream.flags &= ~TSF_OPERAND;
 
             /* Fix the PN_LIST so it doesn't begin at the TOK_COLON. */
             if (pn4->pn_head)
@@ -4758,9 +4734,7 @@ JSCompiler::statement()
         }
 
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
-        tokenStream.flags |= TSF_OPERAND;
-        tt = tokenStream.peekToken();
-        tokenStream.flags &= ~TSF_OPERAND;
+        tt = tokenStream.peekToken(TSF_OPERAND);
 
 #if JS_HAS_BLOCK_SCOPE
         bool let = false;
@@ -5022,9 +4996,7 @@ JSCompiler::statement()
 
             /* Parse the loop condition or null into pn2. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-            tokenStream.flags |= TSF_OPERAND;
-            tt = tokenStream.peekToken();
-            tokenStream.flags &= ~TSF_OPERAND;
+            tt = tokenStream.peekToken(TSF_OPERAND);
             if (tt == TOK_SEMI) {
                 pn2 = NULL;
             } else {
@@ -5035,9 +5007,7 @@ JSCompiler::statement()
 
             /* Parse the update expression or null into pn3. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-            tokenStream.flags |= TSF_OPERAND;
-            tt = tokenStream.peekToken();
-            tokenStream.flags &= ~TSF_OPERAND;
+            tt = tokenStream.peekToken(TSF_OPERAND);
             if (tt == TOK_RP) {
                 pn3 = NULL;
             } else {
@@ -5228,9 +5198,7 @@ JSCompiler::statement()
 
                 catchList->append(pnblock);
                 lastCatch = pn2;
-                tokenStream.flags |= TSF_OPERAND;
-                tt = tokenStream.getToken();
-                tokenStream.flags &= ~TSF_OPERAND;
+                tt = tokenStream.getToken(TSF_OPERAND);
             } while (tt == TOK_CATCH);
         }
         pn->pn_kid2 = catchList;
@@ -5261,9 +5229,7 @@ JSCompiler::statement()
             return NULL;
 
         /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-        tokenStream.flags |= TSF_OPERAND;
-        tt = tokenStream.peekTokenSameLine();
-        tokenStream.flags &= ~TSF_OPERAND;
+        tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
         if (tt == TOK_ERROR)
             return NULL;
         if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
@@ -5458,8 +5424,7 @@ JSCompiler::statement()
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
                  */
-                tokenStream.mutableCurrentToken()->type = TOK_VAR;
-                tokenStream.mutableCurrentToken()->t_op = JSOP_DEFVAR;
+                tokenStream.mungeCurrentToken(TOK_VAR, JSOP_DEFVAR);
 
                 pn = variables(false);
                 if (!pn)
@@ -5941,12 +5906,8 @@ JSCompiler::assignExpr()
     JS_CHECK_RECURSION(context, return NULL);
 
 #if JS_HAS_GENERATORS
-    tokenStream.flags |= TSF_OPERAND;
-    if (tokenStream.matchToken(TOK_YIELD)) {
-        tokenStream.flags &= ~TSF_OPERAND;
+    if (tokenStream.matchToken(TOK_YIELD, TSF_OPERAND))
         return returnOrYield(true);
-    }
-    tokenStream.flags &= ~TSF_OPERAND;
 #endif
 
     pn = condExpr();
@@ -6297,15 +6258,11 @@ SetIncOpKid(JSContext *cx, TokenStream *ts, JSTreeContext *tc,
 JSParseNode *
 JSCompiler::unaryExpr()
 {
-    TokenKind tt;
     JSParseNode *pn, *pn2;
 
     JS_CHECK_RECURSION(context, return NULL);
 
-    tokenStream.flags |= TSF_OPERAND;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_OPERAND;
-
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     switch (tt) {
       case TOK_UNARYOP:
       case TOK_PLUS:
@@ -6380,9 +6337,7 @@ JSCompiler::unaryExpr()
 
         /* Don't look across a newline boundary for a postfix incop. */
         if (tokenStream.onCurrentLine(pn->pn_pos)) {
-            tokenStream.flags |= TSF_OPERAND;
-            tt = tokenStream.peekTokenSameLine();
-            tokenStream.flags &= ~TSF_OPERAND;
+            tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
             if (tt == TOK_INC || tt == TOK_DEC) {
                 (void) tokenStream.getToken();
                 pn2 = UnaryNode::create(tc);
@@ -6919,51 +6874,47 @@ static const char js_generator_str[] = "generator";
 JSBool
 JSCompiler::argumentList(JSParseNode *listNode)
 {
-    JSBool matched;
+    if (tokenStream.matchToken(TOK_RP, TSF_OPERAND))
+        return JS_TRUE;
 
-    tokenStream.flags |= TSF_OPERAND;
-    matched = tokenStream.matchToken(TOK_RP);
-    tokenStream.flags &= ~TSF_OPERAND;
-    if (!matched) {
-        do {
-            JSParseNode *argNode = assignExpr();
+    do {
+        JSParseNode *argNode = assignExpr();
+        if (!argNode)
+            return JS_FALSE;
+#if JS_HAS_GENERATORS
+        if (argNode->pn_type == TOK_YIELD &&
+            !argNode->pn_parens &&
+            tokenStream.peekToken() == TOK_COMMA) {
+            ReportCompileErrorNumber(context, &tokenStream, argNode, JSREPORT_ERROR,
+                                     JSMSG_BAD_GENERATOR_SYNTAX,
+                                     js_yield_str);
+            return JS_FALSE;
+        }
+#endif
+#if JS_HAS_GENERATOR_EXPRS
+        if (tokenStream.matchToken(TOK_FOR)) {
+            JSParseNode *pn = UnaryNode::create(tc);
+            if (!pn)
+                return JS_FALSE;
+            argNode = generatorExpr(pn, argNode);
             if (!argNode)
                 return JS_FALSE;
-#if JS_HAS_GENERATORS
-            if (argNode->pn_type == TOK_YIELD &&
-                !argNode->pn_parens &&
+            if (listNode->pn_count > 1 ||
                 tokenStream.peekToken() == TOK_COMMA) {
                 ReportCompileErrorNumber(context, &tokenStream, argNode, JSREPORT_ERROR,
                                          JSMSG_BAD_GENERATOR_SYNTAX,
-                                         js_yield_str);
+                                         js_generator_str);
                 return JS_FALSE;
             }
-#endif
-#if JS_HAS_GENERATOR_EXPRS
-            if (tokenStream.matchToken(TOK_FOR)) {
-                JSParseNode *pn = UnaryNode::create(tc);
-                if (!pn)
-                    return JS_FALSE;
-                argNode = generatorExpr(pn, argNode);
-                if (!argNode)
-                    return JS_FALSE;
-                if (listNode->pn_count > 1 ||
-                    tokenStream.peekToken() == TOK_COMMA) {
-                    ReportCompileErrorNumber(context, &tokenStream, argNode, JSREPORT_ERROR,
-                                             JSMSG_BAD_GENERATOR_SYNTAX,
-                                             js_generator_str);
-                    return JS_FALSE;
-                }
-            }
-#endif
-            listNode->append(argNode);
-        } while (tokenStream.matchToken(TOK_COMMA));
-
-        if (tokenStream.getToken() != TOK_RP) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_PAREN_AFTER_ARGS);
-            return JS_FALSE;
         }
+#endif
+        listNode->append(argNode);
+    } while (tokenStream.matchToken(TOK_COMMA));
+
+    if (tokenStream.getToken() != TOK_RP) {
+        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
+                                 JSMSG_PAREN_AFTER_ARGS);
+        return JS_FALSE;
     }
     return JS_TRUE;
 }
@@ -6991,9 +6942,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
     JS_CHECK_RECURSION(context, return NULL);
 
     /* Check for new expression first. */
-    tokenStream.flags |= TSF_OPERAND;
-    TokenKind tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_OPERAND;
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     if (tt == TOK_NEW) {
         pn = ListNode::create(tc);
         if (!pn)
@@ -7041,9 +6990,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
             if (!pn2)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
-            tokenStream.flags |= TSF_OPERAND | TSF_KEYWORD_IS_NAME;
-            tt = tokenStream.getToken();
-            tokenStream.flags &= ~(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+            tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
@@ -7074,9 +7021,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
                 pn2->pn_right = pn3;
             }
 #else
-            tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-            MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NAME_AFTER_DOT);
-            tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+            MUST_MATCH_TOKEN_WITH_FLAGS(TOK_NAME, JSMSG_NAME_AFTER_DOT, TSF_KEYWORD_IS_NAME);
             pn2->pn_op = JSOP_GETPROP;
             pn2->pn_expr = pn;
             pn2->pn_atom = tokenStream.currentToken().t_atom;
@@ -7088,9 +7033,7 @@ JSCompiler::memberExpr(JSBool allowCallSyntax)
             pn2 = BinaryNode::create(tc);
             if (!pn2)
                 return NULL;
-            tokenStream.flags |= TSF_OPERAND | TSF_KEYWORD_IS_NAME;
-            tt = tokenStream.getToken();
-            tokenStream.flags &= ~(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+            tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
@@ -7314,9 +7257,7 @@ JSCompiler::qualifiedSuffix(JSParseNode *pn)
     if (pn->pn_op == JSOP_QNAMEPART)
         pn->pn_op = JSOP_NAME;
 
-    tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
     if (tt == TOK_STAR || tt == TOK_NAME) {
         /* Inline and specialize propertySelector for JSOP_QNAMECONST. */
         pn2->pn_op = JSOP_QNAMECONST;
@@ -7374,9 +7315,7 @@ JSCompiler::attributeIdentifier()
     if (!pn)
         return NULL;
     pn->pn_op = JSOP_TOATTRNAME;
-    tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-    tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
     if (tt == TOK_STAR || tt == TOK_NAME) {
         pn2 = qualifiedIdentifier();
     } else if (tt == TOK_LB) {
@@ -7399,7 +7338,6 @@ JSParseNode *
 JSCompiler::xmlExpr(JSBool inTag)
 {
     JSParseNode *pn, *pn2;
-    uintN oldflag;
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_LC);
     pn = UnaryNode::create(tc);
@@ -7412,14 +7350,14 @@ JSCompiler::xmlExpr(JSBool inTag)
      * within text contained in an element, but outside of any start, end, or
      * point tag.
      */
-    oldflag = tokenStream.flags & TSF_XMLTAGMODE;
-    tokenStream.flags &= ~TSF_XMLTAGMODE;
+    bool oldflag = tokenStream.isXMLTagMode();
+    tokenStream.setXMLTagMode(false);
     pn2 = expr();
     if (!pn2)
         return NULL;
 
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_XML_EXPR);
-    tokenStream.flags |= oldflag;
+    tokenStream.setXMLTagMode(oldflag);
     pn->pn_kid = pn2;
     pn->pn_op = inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR;
     return pn;
@@ -7437,11 +7375,11 @@ JSCompiler::xmlAtomNode()
     JSParseNode *pn = NullaryNode::create(tc);
     if (!pn)
         return NULL;
-    Token *tp = tokenStream.mutableCurrentToken();
-    pn->pn_op = tp->t_op;
-    pn->pn_atom = tp->t_atom;
-    if (tp->type == TOK_XMLPI)
-        pn->pn_atom2 = tp->t_atom2;
+    const Token &tok = tokenStream.currentToken();
+    pn->pn_op = tok.t_op;
+    pn->pn_atom = tok.t_atom;
+    if (tok.type == TOK_XMLPI)
+        pn->pn_atom2 = tok.t_atom2;
     return pn;
 }
 
@@ -7601,35 +7539,28 @@ JSCompiler::xmlTagContent(TokenKind tagtype, JSAtom **namep)
 JSBool
 JSCompiler::xmlElementContent(JSParseNode *pn)
 {
-    TokenKind tt;
-    JSParseNode *pn2;
-    JSAtom *textAtom;
-
-    tokenStream.flags &= ~TSF_XMLTAGMODE;
+    tokenStream.setXMLTagMode(false);
     for (;;) {
-        tokenStream.flags |= TSF_XMLTEXTMODE;
-        tt = tokenStream.getToken();
-        tokenStream.flags &= ~TSF_XMLTEXTMODE;
+        TokenKind tt = tokenStream.getToken(TSF_XMLTEXTMODE);
         XML_CHECK_FOR_ERROR_AND_EOF(tt, JS_FALSE);
 
         JS_ASSERT(tt == TOK_XMLSPACE || tt == TOK_XMLTEXT);
-        textAtom = tokenStream.currentToken().t_atom;
+        JSAtom *textAtom = tokenStream.currentToken().t_atom;
         if (textAtom) {
             /* Non-zero-length XML text scanned. */
-            pn2 = xmlAtomNode();
+            JSParseNode *pn2 = xmlAtomNode();
             if (!pn2)
                 return JS_FALSE;
             pn->pn_pos.end = pn2->pn_pos.end;
             pn->append(pn2);
         }
 
-        tokenStream.flags |= TSF_OPERAND;
-        tt = tokenStream.getToken();
-        tokenStream.flags &= ~TSF_OPERAND;
+        tt = tokenStream.getToken(TSF_OPERAND);
         XML_CHECK_FOR_ERROR_AND_EOF(tt, JS_FALSE);
         if (tt == TOK_XMLETAGO)
             break;
 
+        JSParseNode *pn2;
         if (tt == TOK_LC) {
             pn2 = xmlExpr(JS_FALSE);
             pn->pn_xflags |= PNX_CANTFOLD;
@@ -7649,9 +7580,9 @@ JSCompiler::xmlElementContent(JSParseNode *pn)
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->append(pn2);
     }
+    tokenStream.setXMLTagMode(true);
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_XMLETAGO);
-    tokenStream.flags |= TSF_XMLTAGMODE;
     return JS_TRUE;
 }
 
@@ -7672,7 +7603,7 @@ JSCompiler::xmlElementOrList(JSBool allowList)
     if (!pn)
         return NULL;
 
-    tokenStream.flags |= TSF_XMLTAGMODE;
+    tokenStream.setXMLTagMode(true);
     tt = tokenStream.getToken();
     if (tt == TOK_ERROR)
         return NULL;
@@ -7795,9 +7726,9 @@ JSCompiler::xmlElementOrList(JSBool allowList)
                                  JSMSG_BAD_XML_NAME_SYNTAX);
         return NULL;
     }
+    tokenStream.setXMLTagMode(false);
 
     pn->pn_pos.end = tokenStream.currentToken().pos.end;
-    tokenStream.flags &= ~TSF_XMLTAGMODE;
     return pn;
 }
 
@@ -7831,9 +7762,8 @@ JSCompiler::parseXMLText(JSObject *chain, bool allowList)
     xmltc.scopeChain = chain;
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
-    tokenStream.flags |= TSF_OPERAND | TSF_XMLONLYMODE;
-    TokenKind tt = tokenStream.getToken();
-    tokenStream.flags &= ~TSF_OPERAND;
+    tokenStream.setXMLOnlyMode();
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
 
     JSParseNode *pn;
     if (tt != TOK_XMLSTAGO) {
@@ -7843,8 +7773,8 @@ JSCompiler::parseXMLText(JSObject *chain, bool allowList)
     } else {
         pn = xmlElementOrListRoot(allowList);
     }
+    tokenStream.setXMLOnlyMode(false);
 
-    tokenStream.flags &= ~TSF_XMLONLYMODE;
     return pn;
 }
 
@@ -7903,9 +7833,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
-        tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-        if (tokenStream.matchToken(TOK_DBLCOLON)) {
-            tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+        if (tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
             pn2 = NullaryNode::create(tc);
             if (!pn2)
                 return NULL;
@@ -7915,7 +7843,6 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                 return NULL;
             break;
         }
-        tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
 #endif
         pn = functionExpr();
         if (!pn)
@@ -7938,9 +7865,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
         pn->pn_blockid = tc->blockidGen;
 #endif
 
-        tokenStream.flags |= TSF_OPERAND;
-        matched = tokenStream.matchToken(TOK_RB);
-        tokenStream.flags &= ~TSF_OPERAND;
+        matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
         if (!matched) {
             for (index = 0; ; index++) {
                 if (index == JS_ARGS_LENGTH_MAX) {
@@ -7949,9 +7874,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     return NULL;
                 }
 
-                tokenStream.flags |= TSF_OPERAND;
-                tt = tokenStream.peekToken();
-                tokenStream.flags &= ~TSF_OPERAND;
+                tt = tokenStream.peekToken(TSF_OPERAND);
                 if (tt == TOK_RB) {
                     pn->pn_xflags |= PNX_ENDCOMMA;
                     break;
@@ -8075,9 +7998,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
         afterComma = JS_FALSE;
         for (;;) {
             JSAtom *atom;
-            tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-            tt = tokenStream.getToken();
-            tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+            tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
             switch (tt) {
               case TOK_NUMBER:
                 pn3 = NullaryNode::create(tc);
@@ -8103,9 +8024,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     else
                         goto property_name;
 
-                    tokenStream.flags |= TSF_KEYWORD_IS_NAME;
-                    tt = tokenStream.getToken();
-                    tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
+                    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
                     if (tt == TOK_NAME || tt == TOK_STRING) {
                         atom = tokenStream.currentToken().t_atom;
                         pn3 = NameNode::create(atom, tc);
@@ -8129,8 +8048,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     }
 
                     /* We have to fake a 'function' token here. */
-                    tokenStream.mutableCurrentToken()->t_op = JSOP_NOP;
-                    tokenStream.mutableCurrentToken()->type = TOK_FUNCTION;
+                    tokenStream.mungeCurrentToken(TOK_FUNCTION, JSOP_NOP);
                     pn2 = functionExpr();
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
@@ -8264,9 +8182,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
         pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
-        tokenStream.flags |= TSF_OPERAND;
-        tt = tokenStream.getToken();
-        tokenStream.flags &= ~TSF_OPERAND;
+        tt = tokenStream.getToken(TSF_OPERAND);
         if (tt == TOK_USESHARP || tt == TOK_DEFSHARP ||
 #if JS_HAS_XML_SUPPORT
             tt == TOK_STAR || tt == TOK_AT ||
