@@ -443,7 +443,8 @@ nsTreeBodyFrame::ReflowFinished()
       ScrollToRowInternal(parts, lastPageTopRow);
 
     nsIContent *treeContent = GetBaseElement();
-    if (treeContent->AttrValueIs(kNameSpaceID_None,
+    if (treeContent &&
+        treeContent->AttrValueIs(kNameSpaceID_None,
                                  nsGkAtoms::keepcurrentinview,
                                  nsGkAtoms::_true, eCaseMatters)) {
       // make sure that the current selected item is still
