@@ -4541,7 +4541,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
         if (jsc.init(chars, length, NULL, NULL, 1)) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!jsc.parse(obj) &&
-                (jsc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
+                jsc.tokenStream.isUnexpectedEOF()) {
                 /*
                  * We ran into an error. If it was because we ran out of
                  * source, we return false so our caller knows to try to
