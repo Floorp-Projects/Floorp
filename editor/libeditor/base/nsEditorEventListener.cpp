@@ -52,7 +52,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
-#include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -444,11 +443,9 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
    nsAutoString                      composedText;
    nsresult                          result;
    nsCOMPtr<nsIPrivateTextRangeList> textRangeList;
-   nsTextEventReply*                 textEventReply;
 
    textEvent->GetText(composedText);
    textRangeList = textEvent->GetInputRange();
-   textEventReply = textEvent->GetEventReply();
    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
    if (imeEditor) {
      PRUint32 flags;
@@ -459,7 +456,7 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
          return NS_OK;
        }
      }
-     result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
+     result = imeEditor->SetCompositionString(composedText, textRangeList);
    }
    return result;
 }
@@ -750,24 +747,13 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 NS_IMETHODIMP
 nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
-  if (!pCompositionEvent) return NS_ERROR_FAILURE;
-
-  nsTextEventReply* eventReply;
-  nsresult rv = pCompositionEvent->GetCompositionReply(&eventReply);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-  NS_ASSERTION(imeEditor, "The editor doesn't support IME?");
-  return imeEditor->BeginComposition(eventReply);
+  return static_cast<nsEditor*>(mEditor)->BeginComposition();
 }
 
 NS_IMETHODIMP
 nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-  NS_ASSERTION(imeEditor, "The editor doesn't support IME?");
-  return imeEditor->EndComposition();
+  return static_cast<nsEditor*>(mEditor)->EndComposition();
 }
 
 /**

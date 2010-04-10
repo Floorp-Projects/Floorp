@@ -106,14 +106,6 @@ NS_METHOD_(already_AddRefed<nsIPrivateTextRangeList>) nsDOMTextEvent::GetInputRa
   return nsnull;
 }
 
-NS_METHOD_(nsTextEventReply*) nsDOMTextEvent::GetEventReply()
-{
-  if (mEvent->message == NS_TEXT_TEXT) {
-     return &(static_cast<nsTextEvent*>(mEvent)->theReply);
-  }
-  return nsnull;
-}
-
 nsresult NS_NewDOMTextEvent(nsIDOMEvent** aInstancePtrResult,
                             nsPresContext* aPresContext,
                             nsTextEvent *aEvent)
