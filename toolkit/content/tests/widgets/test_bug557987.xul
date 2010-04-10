@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for bug 557987
+  -->
+<window title="Bug 557987" width="400" height="400"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+  <toolbarbutton id="button" type="menu-button" label="Test bug 557987"
+                                               onclick="eventReceived('click');"
+                                               oncommand="eventReceived('command');">
+    <menupopup onpopupshowing="eventReceived('popupshowing'); return false;" />
+  </toolbarbutton>
+  <menulist id="menulist" editable="true" value="Test bug 557987" 
+                                          onfocus="eventReceived('focus')" />
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(test);
+
+// Tests that mouse events are correctly dispatched to <toolbarbutton type="menu-button"/>
+function test() {
+  
+  disableNonTestMouseEvents(true);
+
+  let button = $("button");
+  let rightEdge = button.getBoundingClientRect().width - 2;
+  let centerX   = button.getBoundingClientRect().width / 2;
+  let centerY   = button.getBoundingClientRect().height / 2;
+
+  synthesizeMouse(button, rightEdge, centerY, {}, window);
+  synthesizeMouse(button, centerX, centerY, {}, window);
+  
+  let menulist = $("menulist");
+  let centerX = menulist.getBoundingClientRect().width / 2;
+  let centerY = menulist.getBoundingClientRect().height / 2;
+  synthesizeMouse(menulist, centerX, centerY, {}, window);
+
+  synthesizeMouse(document.getElementsByTagName("body")[0], 0, 0, {}, window);
+
+  disableNonTestMouseEvents(false);
+  SimpleTest.executeSoon(finishTest);
+
+}
+
+function finishTest() {
+  is(eventCount.command, 1, "Correct number of command events received");
+  is(eventCount.popupshowing, 1, "Correct number of popupshowing events received");
+  is(eventCount.click, 2, "Correct number of click events received");
+  is(eventCount.focus, 1, "Correct number of focus events received");
+
+  SimpleTest.finish();
+}
+
+let eventCount = {
+  command: 0,
+  popupshowing: 0,
+  click: 0,
+  focus: 0
+};
+
+function eventReceived(eventName) {
+  eventCount[eventName]++;
+}
+
+]]>
+</script>
+</window>
