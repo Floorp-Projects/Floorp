@@ -779,7 +779,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	} else {
 	    extendMode = D2D1_EXTEND_MODE_CLAMP;
 	}
-	ID2D1Bitmap *sourceBitmap;
+	RefPtr<ID2D1Bitmap> sourceBitmap;
 	bool tiled = false;
 	unsigned int xoffset = 0;
 	unsigned int yoffset = 0;
