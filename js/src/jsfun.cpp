@@ -2404,7 +2404,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
         state = OK;
       after_args:
-        if (state == BAD_FORMAL && !(ts.flags & TSF_ERROR)) {
+        if (state == BAD_FORMAL && !ts.isError()) {
             /*
              * Report "malformed formal parameter" iff no illegal char or
              * similar scanner error was already reported.
