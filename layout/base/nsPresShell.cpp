@@ -743,9 +743,6 @@ public:
 
   virtual NS_HIDDEN_(void) UnsuppressPainting();
 
-  virtual NS_HIDDEN_(void) DisableThemeSupport();
-  virtual PRBool IsThemeSupportEnabled();
-
   virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets);
   virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets);
 
@@ -1177,8 +1174,6 @@ protected:
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
   PRPackedBool      mSuppressInterruptibleReflows;
-
-  PRPackedBool      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
 
   PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
                                           // We will refuse to paint the document until either
@@ -4424,19 +4419,6 @@ PresShell::UnsuppressPainting()
     mShouldUnsuppressPainting = PR_TRUE;
   else
     UnsuppressAndInvalidate();
-}
-
-void
-PresShell::DisableThemeSupport()
-{
-  // Doesn't have to be dynamic.  Just set the bool.
-  mIsThemeSupportDisabled = PR_TRUE;
-}
-
-PRBool 
-PresShell::IsThemeSupportEnabled()
-{
-  return !mIsThemeSupportDisabled;
 }
 
 // Post a request to handle an arbitrary callback after reflow has finished.

@@ -1829,13 +1829,8 @@ nsPresContext::GetUserFontSetInternal()
     // that's a bad thing to do, and the caller was responsible for
     // flushing first.  If we're not (e.g., in frame construction), it's
     // ok.
-#ifdef DEBUG
-    {
-      PRBool inReflow;
-      NS_ASSERTION(!userFontSetGottenBefore || !mShell->IsReflowLocked(),
-                   "FlushUserFontSet should have been called first");
-    }
-#endif
+    NS_ASSERTION(!userFontSetGottenBefore || !mShell->IsReflowLocked(),
+                 "FlushUserFontSet should have been called first");
     FlushUserFontSet();
   }
 
