@@ -867,7 +867,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::BeginComposition(nsTextEventReply* aReply)
+nsPlaintextEditor::BeginComposition()
 {
   NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
 
@@ -882,7 +882,7 @@ nsPlaintextEditor::BeginComposition(nsTextEventReply* aReply)
     }
   }
 
-  return nsEditor::BeginComposition(aReply);
+  return nsEditor::BeginComposition();
 }
 
 NS_IMETHODIMP
@@ -1560,7 +1560,8 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #endif
 
 NS_IMETHODIMP
-nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
+                                        nsIPrivateTextRangeList* aTextRangeList)
 {
   if (!aTextRangeList && !aCompositionString.IsEmpty())
   {
@@ -1597,72 +1598,20 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   {
     mIMETextRangeList = aTextRangeList;
 
-    // XXX_kin: BEGIN HACK! HACK! HACK!
-    // XXX_kin:
-    // XXX_kin: This is lame! The IME stuff needs caret coordinates
-    // XXX_kin: synchronously, but the editor could be using async
-    // XXX_kin: updates (reflows and paints) for performance reasons.
-    // XXX_kin: In order to give IME what it needs, we have to temporarily
-    // XXX_kin: switch to sync updating during this call so that the
-    // XXX_kin: nsAutoPlaceHolderBatch can force sync reflows, paints,
-    // XXX_kin: and selection scrolling, so that we get back accurate
-    // XXX_kin: caret coordinates.
+    SetIsIMEComposing(); // We set mIsIMEComposing properly.
 
-    PRUint32 flags = 0;
-    PRBool restoreFlags = PR_FALSE;
+    result = InsertText(aCompositionString);
 
-    if (NS_SUCCEEDED(GetFlags(&flags)) &&
-        (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
-    {
-      if (NS_SUCCEEDED(SetFlags(
-          flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
-        restoreFlags = PR_TRUE;
-    }
+    mIMEBufferLength = aCompositionString.Length();
 
-    // XXX_kin: END HACK! HACK! HACK!
+    if (caretP)
+      caretP->SetCaretDOMSelection(selection);
 
-    // we need the nsAutoPlaceHolderBatch destructor called before hitting
-    // GetCaretCoordinates so the states in Frame system sync with content
-    // therefore, we put the nsAutoPlaceHolderBatch into a inner block
-    {
-      nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
-
-      SetIsIMEComposing(); // We set mIsIMEComposing properly.
-
-      result = InsertText(aCompositionString);
-
-      mIMEBufferLength = aCompositionString.Length();
-
-      if (caretP)
-        caretP->SetCaretDOMSelection(selection);
-
-      // second part of 23558 fix:
-      if (aCompositionString.IsEmpty())
-        mIMETextNode = nsnull;
-    }
-
-    // XXX_kin: BEGIN HACK! HACK! HACK!
-    // XXX_kin:
-    // XXX_kin: Restore the previous set of flags!
-
-    if (restoreFlags)
-      SetFlags(flags);
-
-    // XXX_kin: END HACK! HACK! HACK!
+    // second part of 23558 fix:
+    if (aCompositionString.IsEmpty())
+      mIMETextNode = nsnull;
   }
 
-  if (caretP)
-  {
-    nsRect rect;
-    nsIFrame* frame = caretP->GetGeometry(selection, &rect);
-    if (!frame)
-      return NS_ERROR_FAILURE;
-    nsPoint nearestWidgetOffset;
-    aReply->mReferenceWidget = frame->GetWindowOffset(nearestWidgetOffset);
-    rect.MoveBy(nearestWidgetOffset);
-    aReply->mCursorPosition =
-       rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
-  }
 
   return result;
 }
