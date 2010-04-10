@@ -1335,6 +1335,7 @@ nsPresContext::SetContainer(nsISupports* aHandler)
   if (mContainer) {
     GetDocumentColorPreferences();
   }
+  UpdateIsChromeCacheInternal();
 }
 
 already_AddRefed<nsISupports>
@@ -1624,8 +1625,8 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 }
 #endif
 
-PRBool
-nsPresContext::IsChrome() const
+void
+nsPresContext::UpdateIsChromeCacheInternal()
 {
   PRBool isChrome = PR_FALSE;
   nsCOMPtr<nsISupports> container = GetContainer();
@@ -1640,7 +1641,13 @@ nsPresContext::IsChrome() const
       }
     }
   }
-  return isChrome;
+  mIsChrome = isChrome;
+}
+
+void
+nsPresContext::UpdateIsChromeCacheExternal()
+{
+  UpdateIsChromeCacheInternal();
 }
 
 /* virtual */ PRBool
