@@ -399,19 +399,19 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       }
     }
     
-    var padAmount = .1;
+    var padAmount = .15;
     var pad = padAmount * (best.w/best.numCols);
     var tabW = (best.w-pad)/best.numCols - pad;
     var tabH = (best.h-pad)/best.numRows - pad;
     
-    var x = pad; var y=pad; var numInCol = 0;
+    var x = pad*2; var y=pad; var numInCol = 0;
     for each(var item in this._children){
       item.setBounds(new Rect(x + bb.left, y + bb.top, tabW, tabH), !animate);
       
       x += tabW + pad;
       numInCol += 1;
       if( numInCol >= best.numCols ) 
-        [x, numInCol, y] = [pad, 0, y+tabH+pad];
+        [x, numInCol, y] = [pad*2, 0, y+tabH+pad];
     }
   },
   

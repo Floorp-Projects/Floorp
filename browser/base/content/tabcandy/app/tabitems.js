@@ -96,7 +96,7 @@ window.TabItems = {
         self.lastMouseDownTarget = null;
         if(!same)
           return;
-          
+        
         if(e.target.className == "close") {
           $(this).find("canvas").data("link").tab.close(); }
         else {
@@ -146,8 +146,8 @@ window.TabItems = {
         }
       });
       
-      $("<div class='close'><img src='img/closetab.png'/></div>").appendTo($div);
-      $("<div class='expander'><img src='img/expand.png'/></div>").appendTo($div);
+      $("<div class='close'></div>").appendTo($div);
+      $("<div class='expander'></div>").appendTo($div);
   
       function onNewTab(){
         var p = Page.findOpenSpaceFor($div); // TODO shouldn't know about Page
@@ -159,7 +159,7 @@ window.TabItems = {
       
       $div.each(function() {
         var tab = Tabs.tab(this);
-        $(this).data('tabItem', new TabItem(this, tab));
+        $(this).data('tabItem', new TabItem(this, tab));     
       });
       
       // TODO: Figure out this really weird bug?
