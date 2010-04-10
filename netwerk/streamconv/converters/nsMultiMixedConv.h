@@ -68,10 +68,15 @@ class nsPartChannel : public nsIChannel,
                       public nsIMultiPartChannel
 {
 public:
-  nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID);
+  nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID,
+                nsIStreamListener* aListener);
 
   void InitializeByteRange(PRInt64 aStart, PRInt64 aEnd);
   void SetIsLastPart() { mIsLastPart = PR_TRUE; }
+  nsresult SendOnStartRequest(nsISupports* aContext);
+  nsresult SendOnDataAvailable(nsISupports* aContext, nsIInputStream* aStream,
+                               PRUint32 aOffset, PRUint32 aLen);
+  nsresult SendOnStopRequest(nsISupports* aContext, nsresult aStatus);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -84,6 +89,7 @@ protected:
 
 protected:
   nsCOMPtr<nsIChannel>    mMultipartChannel;
+  nsCOMPtr<nsIStreamListener> mListener;
   
   nsresult                mStatus;
   nsLoadFlags             mLoadFlags;
