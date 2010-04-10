@@ -2797,7 +2797,9 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
 #endif
     } else {
         JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
-        obj = js_NewGCObject(cx);
+        obj = (clasp == &js_IteratorClass)
+            ? js_NewGCIter(cx)
+            : js_NewGCObject(cx);
     }
     if (!obj)
         goto out;
