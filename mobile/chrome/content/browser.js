@@ -769,6 +769,7 @@ var Browser = {
 
     bv.setBrowser(tab.browser, tab.browserViewportState);
     bv.forceContainerResize();
+    bv.updateDefaultZoom();
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
