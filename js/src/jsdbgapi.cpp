@@ -1798,7 +1798,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = NewObject(cx, clasp, proto, parent);
     if (obj && system)
         obj->setSystem();
     return obj;

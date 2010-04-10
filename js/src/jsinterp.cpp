@@ -492,8 +492,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
                 vp[0] = ID_TO_VALUE(id);
         }
 #endif
-        obj = js_NewObjectWithGivenProto(cx, &js_NoSuchMethodClass,
-                                         NULL, NULL);
+        obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
         obj->fslots[JSSLOT_FOUND_FUNCTION] = tvr.value();
@@ -1345,7 +1344,7 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
                 clasp = fun2->u.n.clasp;
         }
     }
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = NewObject(cx, clasp, proto, parent);
     if (!obj)
         return JS_FALSE;
 

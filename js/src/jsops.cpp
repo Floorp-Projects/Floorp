@@ -1975,9 +1975,9 @@ BEGIN_CASE(JSOP_NEW)
                 goto error;
             }
             rval = vp[1];
-            obj2 = js_NewObject(cx, &js_ObjectClass,
-                                JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
-                                obj->getParent());
+            obj2 = NewObject(cx, &js_ObjectClass,
+                             JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
+                             obj->getParent());
             if (!obj2)
                 goto error;
 
@@ -3300,7 +3300,7 @@ BEGIN_CASE(JSOP_NEWINIT)
         if (!obj)
             goto error;
     } else {
-        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
         if (!obj)
             goto error;
 

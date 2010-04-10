@@ -247,7 +247,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     /*
      * Give arguments an intrinsic scope chain link to fp's global object.
      * Since the arguments object lacks a prototype because js_ArgumentsClass
-     * is not initialized, js_NewObject won't assign a default parent to it.
+     * is not initialized, NewObject won't assign a default parent to it.
      *
      * Therefore if arguments is used as the head of an eval scope chain (via
      * a direct or indirect call to eval(program, arguments)), any reference
@@ -349,8 +349,8 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     if (!scopeChain)
         return NULL;
 
-    JSObject *wfunobj = js_NewObjectWithGivenProto(cx, &js_FunctionClass,
-                                                   funobj, scopeChain);
+    JSObject *wfunobj = NewObjectWithGivenProto(cx, &js_FunctionClass,
+                                                funobj, scopeChain);
     if (!wfunobj)
         return NULL;
     AutoValueRooter tvr(cx, wfunobj);
@@ -788,7 +788,7 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSObject *
 NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
-    JSObject *callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
+    JSObject *callobj = NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
     if (!callobj ||
         !js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars())) {
         return NULL;
@@ -822,8 +822,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
      */
     JSAtom *lambdaName = (fp->fun->flags & JSFUN_LAMBDA) ? fp->fun->atom : NULL;
     if (lambdaName) {
-        JSObject *env = js_NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL,
-                                                   fp->scopeChain);
+        JSObject *env = NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL,
+                                                fp->scopeChain);
         if (!env)
             return NULL;
         env->setPrivate(fp);
@@ -1518,8 +1518,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Make the prototype object to have the same parent as the function
          * object itself.
          */
-        JSObject *proto =
-            js_NewObject(cx, &js_ObjectClass, NULL, obj->getParent());
+        JSObject *proto = NewObject(cx, &js_ObjectClass, NULL, obj->getParent());
         if (!proto)
             return JS_FALSE;
 
@@ -2213,7 +2212,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     TokenKind tt;
 
     if (!JS_IsConstructing(cx)) {
-        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
+        obj = NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -2459,7 +2458,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
-        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
+        funobj = NewObject(cx, &js_FunctionClass, NULL, parent);
         if (!funobj)
             return NULL;
     }
@@ -2517,8 +2516,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
      * The cloned function object does not need the extra JSFunction members
      * beyond JSObject as it points to fun via the private slot.
      */
-    JSObject *clone = js_NewObjectWithGivenProto(cx, &js_FunctionClass, proto,
-                                                 parent, sizeof(JSObject));
+    JSObject *clone = NewObjectWithGivenProto(cx, &js_FunctionClass, proto,
+                                              parent, sizeof(JSObject));
     if (!clone)
         return NULL;
     clone->setPrivate(fun);

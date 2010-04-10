@@ -89,6 +89,7 @@
 
 #include "jsatominlines.h"
 #include "jsscopeinlines.h"
+#include "jsobjinlines.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -2735,7 +2736,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObject(cx, clasp, proto, parent);
+    return NewObject(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2745,7 +2746,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2901,7 +2902,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = js_NewObject(cx, clasp, proto, obj);
+    nobj = NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
@@ -3944,7 +3945,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewObject(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4615,14 +4616,14 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 
     CHECK_REQUEST(cx);
     if (!script)
-        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        return NewObject(cx, &js_ScriptClass, NULL, NULL);
 
     JS_ASSERT(!script->u.object);
 
     {
         AutoScriptRooter root(cx, script);
 
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = NewObject(cx, &js_ScriptClass, NULL, NULL);
         if (obj) {
             obj->setPrivate(script);
             script->u.object = obj;
