@@ -685,8 +685,8 @@ public:
    *
    *  @lina 07/12/2000
    */
-  virtual NS_HIDDEN_(PRBool) BidiEnabledExternal() const;
-  NS_HIDDEN_(PRBool) BidiEnabledInternal() const;
+  virtual PRBool BidiEnabledExternal() const { return BidiEnabledInternal(); }
+  PRBool BidiEnabledInternal() const { return Document()->GetBidiEnabled(); }
 #ifdef _IMPL_NS_LAYOUT
   PRBool BidiEnabled() const { return BidiEnabledInternal(); }
 #else
