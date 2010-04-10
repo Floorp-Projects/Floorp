@@ -111,6 +111,71 @@
   while (node = iterator.previousNode())
     found.unshift(node.nodeType);
   compare_arrays(expect_f, found, 'filtered backward');
+
+  function checkBadFilter(method, n) {
+    var iterator =
+      document.createNodeIterator(document, NodeFilter.SHOW_ALL,
+                                  function() {
+                                    if (n < 0)
+                                      iterator.detach();
+                                    return NodeFilter.FILTER_ACCEPT;
+                                  }, false);
+    while (--n >= 0)
+      iterator.nextNode();
+    try {
+      iterator[method]();
+      ok(false, "Able to call " + method + " on a detached NodeIterator");
+    } catch (x) { ok(true, x) }
+  }
+  checkBadFilter("nextNode", 2);
+  checkBadFilter("previousNode", 3);
+
+  (function() {
+    // Implementing the scenario outlined in
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=552110#c4
+
+    var iterator = (function(filter) {
+      var grandparent = document.createElement("div"),
+          parent = document.createElement("span");
+
+      grandparent.appendChild(parent);
+      parent.appendChild(document.createElement("img"));
+      parent.appendChild(document.createElement("p"));
+
+      return document.createNodeIterator(grandparent,
+                                         NodeFilter.SHOW_ALL,
+                                         filter,
+                                         false);
+    })(function filter(n) {
+      if (n.nodeName != "img")
+        return NodeFilter.FILTER_ACCEPT;
+
+      iterator.detach();
+
+      n.parentNode.parentNode.removeChild(n.parentNode);
+      // Drop any node references passed into this function.
+      for (var i = 0; i < arguments.length; ++i)
+        arguments[i] = null;
+      ok(!n, "arguments[0] = null should have nulled out n");
+
+      // Try to trigger GC.
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", location.href, false);
+      xhr.send();
+
+      return NodeFilter.FILTER_SKIP;
+    });
+
+    is(iterator.nextNode().nodeName, "div",
+       "iterator.nextNode() returned the wrong node");
+    is(iterator.nextNode().nodeName, "span",
+       "iterator.nextNode() returned the wrong node");
+    try {
+      var p = iterator.nextNode();
+      ok(false, "iterator.nextNode() should have thrown, but instead it returned <" + p.nodeName + ">");
+    } catch (x) { ok(true, x) }
+  })();
+        
 ]]></script>
 </pre>
 </body>

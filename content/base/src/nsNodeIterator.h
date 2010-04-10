@@ -77,6 +77,7 @@ private:
         NodePointer() : mNode(nsnull) {};
         NodePointer(nsINode *aNode, PRBool aBeforeNode);
 
+        typedef PRBool (NodePointer::*MoveToMethodType)(nsINode*);
         PRBool MoveToNext(nsINode *aRoot);
         PRBool MoveToPrevious(nsINode *aRoot);
 
@@ -97,6 +98,10 @@ private:
         // or dangling (per above comment).
         PRInt32 mIndexInParent;
     };
+
+    inline nsresult
+    NextOrPrevNode(NodePointer::MoveToMethodType aMove,
+                   nsIDOMNode **_retval);
 
     PRBool mDetached;
     NodePointer mPointer;
