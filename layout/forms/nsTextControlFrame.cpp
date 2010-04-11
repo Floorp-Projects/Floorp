@@ -1502,40 +1502,43 @@ nsTextControlFrame::EnsureEditorInitialized()
   // editor.
   mUseEditor = PR_TRUE;
 
-  // Set the editor's contents to our default value. We have to be
-  // sure to use the editor so that '*' characters get displayed for
-  // password fields, etc. SetValue() will call the editor for us.  We
-  // want to call this even if defaultValue is empty, since empty text
-  // inputs have a single non-breaking space in the textnode under
-  // mAnonymousDiv, and this space needs to go away as we init the
-  // editor.
-
-  // Avoid causing reentrant painting and reflowing by telling the editor
-  // that we don't want it to force immediate view refreshes or force
-  // immediate reflows during any editor calls.
-
-  rv = mEditor->SetFlags(editorFlags |
-                         nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Now call SetValue() which will make the necessary editor calls to set
-  // the default value.  Make sure to turn off undo before setting the default
-  // value, and turn it back on afterwards. This will make sure we can't undo
-  // past the default value.
-
-  rv = mEditor->EnableUndo(PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SetValue(defaultValue);
-
-  rv = mEditor->EnableUndo(PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
-
-  // Now restore the original editor flags.
-  rv = mEditor->SetFlags(editorFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If we have a default value, insert it under the div we created
+  // above, but be sure to use the editor so that '*' characters get
+  // displayed for password fields, etc. SetValue() will call the
+  // editor for us.
 
   if (!defaultValue.IsEmpty()) {
+    // Avoid causing reentrant painting and reflowing by telling the editor
+    // that we don't want it to force immediate view refreshes or force
+    // immediate reflows during any editor calls.
+
+    rv = mEditor->SetFlags(editorFlags |
+                           nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Now call SetValue() which will make the necessary editor calls to set
+    // the default value.  Make sure to turn off undo before setting the default
+    // value, and turn it back on afterwards. This will make sure we can't undo
+    // past the default value.
+
+    rv = mEditor->EnableUndo(PR_FALSE);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    SetValue(defaultValue);
+
+    rv = mEditor->EnableUndo(PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
+
+    // Now restore the original editor flags.
+    rv = mEditor->SetFlags(editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+
     // By default the placeholder is shown,
     // we should hide it if the default value is not empty.
     nsWeakFrame weakFrame(this);
