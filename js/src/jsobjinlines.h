@@ -146,6 +146,56 @@ JSObject::voidArrayUnused()
 }
 
 inline void
+JSObject::setArgsLength(uint32 argc)
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    fslots[JSSLOT_ARGS_LENGTH] = INT_TO_JSVAL(argc << 1);
+    JS_ASSERT(!isArgsLengthOverridden());
+}
+
+inline uint32
+JSObject::getArgsLength() const
+{
+    JS_ASSERT(isArguments());
+    uint32 argc = uint32(JSVAL_TO_INT(fslots[JSSLOT_ARGS_LENGTH])) >> 1;
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    return argc;
+}
+
+inline void
+JSObject::setArgsLengthOverridden()
+{
+    JS_ASSERT(isArguments());
+    jsval v = fslots[JSSLOT_ARGS_LENGTH];
+    v = INT_TO_JSVAL(JSVAL_TO_INT(v) | 1);
+    JS_ASSERT(JSVAL_IS_INT(v));
+    fslots[JSSLOT_ARGS_LENGTH] = v;
+}
+
+inline bool
+JSObject::isArgsLengthOverridden()
+{
+    JS_ASSERT(isArguments());
+    jsval v = fslots[JSSLOT_ARGS_LENGTH];
+    return (JSVAL_TO_INT(v) & 1) != 0;
+}
+
+inline jsval 
+JSObject::getArgsCallee() const
+{
+    JS_ASSERT(isArguments());
+    return fslots[JSSLOT_ARGS_CALLEE];
+}
+
+inline void 
+JSObject::setArgsCallee(jsval callee)
+{
+    JS_ASSERT(isArguments());
+    fslots[JSSLOT_ARGS_CALLEE] = callee;
+}
+
+inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)
 {

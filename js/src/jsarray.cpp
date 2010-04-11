@@ -231,8 +231,8 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
         return true;
     }
 
-    if (obj->isArguments() && !IsOverriddenArgsLength(obj)) {
-        *lengthp = GetArgsLength(obj);
+    if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
+        *lengthp = obj->getArgsLength();
         return true;
     }
 
