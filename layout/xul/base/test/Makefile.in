@@ -51,6 +51,7 @@ _TEST_FILES = 	test_bug381167.xhtml \
 		window_resizer_element.xul \
 		test_bug477754.xul \
 		test_stack.xul \
+		test_splitter.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
