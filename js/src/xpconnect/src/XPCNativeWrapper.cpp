@@ -1382,7 +1382,7 @@ XPCNativeWrapper::CreateExplicitWrapper(JSContext *cx,
     // parents for it.
     JS_LockGCThing(cx, wrapperObj);
 
-    // A deep XPCNativeWrapper has a __parent__ chain that mirrors its
+    // A deep XPCNativeWrapper has a parent chain that mirrors its
     // XPCWrappedNative's chain.
     if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
       return JS_FALSE;

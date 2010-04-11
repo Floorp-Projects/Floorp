@@ -54,7 +54,7 @@ function test()
 
   jit(true);
 
-  eval("(function() { for (var j = 0; j < 4; ++j) { /x/.__parent__; } })")();
+  eval("(function() { for (var j = 0; j < 4; ++j) { parent(/x/); } })")();
 
   jit(false);
 

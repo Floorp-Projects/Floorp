@@ -58,7 +58,7 @@ function test()
   {
     filler += "\u5050";
   }
-  var blkobj = function() { let x; yield function(){}.__parent__; }().next();
+  var blkobj = function() { let x; yield parent(function(){}); }().next();
   gc();
   for(var i = 0; i < 1024; i++)
   {

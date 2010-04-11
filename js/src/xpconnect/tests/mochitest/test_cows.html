@@ -62,8 +62,7 @@ function COWTests() {
     var empty = {};
     isProp(getCOW(empty), "foo", undefined, "empty.foo is undefined");
 
-    const PROPS_TO_TEST = ['foo', '__parent__', '__proto__',
-                           'prototype', 'constructor'];
+    const PROPS_TO_TEST = ['foo', '__proto__', 'prototype', 'constructor'];
 
     var strict = { __exposedProps__: {} };
     var strictCOW = getCOW(strict);

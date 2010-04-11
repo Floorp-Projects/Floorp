@@ -364,7 +364,7 @@ struct JSObject {
 
         JSObject *parent = getParent();
         if (parent)
-            JS_CALL_OBJECT_TRACER(trc, parent, "__parent__");
+            JS_CALL_OBJECT_TRACER(trc, parent, "parent");
     }
 
     JSObject *getGlobal();

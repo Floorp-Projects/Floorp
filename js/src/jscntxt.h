@@ -832,10 +832,9 @@ struct JSRuntime {
     void                *gcExtraRootsData;
 
     /*
-     * Used to serialize cycle checks when setting __proto__ or __parent__ by
-     * requesting the GC handle the required cycle detection. If the GC hasn't
-     * been poked, it won't scan for garbage. This member is protected by
-     * rt->gcLock.
+     * Used to serialize cycle checks when setting __proto__ by requesting the
+     * GC handle the required cycle detection. If the GC hasn't been poked, it
+     * won't scan for garbage. This member is protected by rt->gcLock.
      */
     JSSetSlotRequest    *setSlotRequests;
 

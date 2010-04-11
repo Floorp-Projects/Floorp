@@ -37,7 +37,7 @@
 
 gTestfile = 'regress-313080.js';
 
-var summary = "Regression - Do not crash calling __proto__, __parent__";
+var summary = "Regression - Do not crash calling __proto__";
 var BUGNUMBER = 313080;
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,7 +48,6 @@ START(summary);
 try
 {
     <element/>.__proto__();
-    <element/>.__parent__();
     <element/>.function::__proto__();
 }
 catch(e)
