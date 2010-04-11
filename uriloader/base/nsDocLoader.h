@@ -246,13 +246,7 @@ protected:
     PRPackedBool mIsRestoringDocument;
 
     /* Flag to indicate that we're in the process of flushing layout
-       under DocLoaderIsEmpty() and should not do another flush. */
-    PRPackedBool mDontFlushLayout;
-
-    /* Flag to indicate whether we should consider ourselves as currently
-       flushing layout for the purposes of IsBusy. For example, if Stop has
-       been called then IsBusy should return false even if we are still
-       flushing. */
+       undere DocLoaderIsEmpty() */
     PRPackedBool mIsFlushingLayout;
 
 private:
