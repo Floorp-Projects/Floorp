@@ -50,8 +50,13 @@ Cu.import("resource://weave/type_records/forms.js");
 let FormWrapper = {
   getAllEntries: function getAllEntries() {
     let entries = [];
+    // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
     let query = this.createStatement(
-      "SELECT fieldname, value FROM moz_formhistory");
+      "SELECT fieldname, value FROM moz_formhistory " +
+      "ORDER BY 1.0 * (lastUsed - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / " +
+        "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
+        "timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) DESC " +
+      "LIMIT 500");
     while (query.executeStep()) {
       entries.push({
         name: query.row.fieldname,
