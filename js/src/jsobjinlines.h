@@ -142,7 +142,7 @@ inline void
 JSObject::voidArrayUnused()
 {
     JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
+    fslots[JSSLOT_ARRAY_UNUSED] = JSVAL_VOID;
 }
 
 inline void
