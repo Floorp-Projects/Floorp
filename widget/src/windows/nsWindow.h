@@ -27,6 +27,7 @@
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Ningjie Chen <chenn@email.uc.edu>
  *   Jim Mathies <jmathies@mozilla.com>.
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -420,6 +421,7 @@ protected:
 #endif // ACCESSIBILITY
 
 protected:
+  nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
   nsIntPoint            mLastPoint;
   HWND                  mWnd;
