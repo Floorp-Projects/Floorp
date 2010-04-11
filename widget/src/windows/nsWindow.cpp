@@ -33,7 +33,7 @@
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *   Christian Biesinger <cbiesinger@web.de>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Ningjie Chen <chenn@email.uc.edu>
  *   Jim Mathies <jmathies@mozilla.com>
  *   Kyle Huey <me@kylehuey.com>
@@ -538,10 +538,12 @@ nsWindow::Create(nsIWidget *aParent,
              aAppShell, aToolkit, aInitData);
 
   HWND parent;
-  if (nsnull != aParent) { // has a nsIWidget parent
-    parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
+  if (aParent) { // has a nsIWidget parent
+    parent = aParent ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : NULL;
+    mParent = aParent;
   } else { // has a nsNative parent
     parent = (HWND)aNativeParent;
+    mParent = aNativeParent ? GetNSWindowPtr((HWND)aNativeParent) : nsnull;
   }
 
   if (nsnull != aInitData) {
@@ -1000,6 +1002,8 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr)
 // Get and set parent widgets
 NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
+  mParent = aNewParent;
+
   if (aNewParent) {
     nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
@@ -6191,6 +6195,7 @@ void nsWindow::OnDestroy()
   // XXX Windows will take care of this in the proper order, and SetParent(nsnull)'s
   // remove child on the parent already took place in nsBaseWidget's Destroy call above.
   //SetParent(nsnull);
+  mParent = nsnull;
 
   // We have to destroy the native drag target before we null out our window pointer.
   EnableDragDrop(PR_FALSE);
