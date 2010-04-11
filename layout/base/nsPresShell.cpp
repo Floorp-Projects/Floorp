@@ -4571,14 +4571,6 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     // batching if we only have style reresolve
     nsIViewManager::UpdateViewBatch batch(mViewManager);
 
-    // We need to make sure external resource documents are flushed too (for
-    // example, svg filters that reference a filter in an external document
-    // need the frames in the external document to be constructed for the
-    // filter to work). We only need external resources to be flushed when the
-    // main document is flushing >= Flush_Frames, so we flush external
-    // resources here instead of nsDocument::FlushPendingNotifications.
-    mDocument->FlushExternalResources(aType);
-
     // Force flushing of any pending content notifications that might have
     // queued up while our event was pending.  That will ensure that we don't
     // construct frames for content right now that's still waiting to be
