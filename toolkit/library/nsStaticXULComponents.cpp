@@ -234,7 +234,6 @@
 #endif
 
 #define XUL_MODULES                          \
-    MODULE(xpconnect)                        \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
     MODULE(nsChardetModule)                  \
@@ -245,7 +244,6 @@
     MODULE(nsJarModule)                      \
     ZIPWRITER_MODULE                         \
     MODULE(nsPrefModule)                     \
-    MODULE(nsSecurityManagerModule)          \
     RDF_MODULES                              \
     MODULE(nsParserModule)                   \
     GFX_MODULES                              \

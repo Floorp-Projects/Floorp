@@ -43,11 +43,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= caps
-LIBRARY_NAME	= caps
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsSecurityManagerModule
-GRE_MODULE	= 1
+LIBRARY_NAME	= caps_s
+FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
 
@@ -65,14 +62,8 @@ ifdef XPC_IDISPATCH_SUPPORT
 DEFINES += -DXPC_IDISPATCH_SUPPORT
 endif
 
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(ZLIB_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/../include
+INCLUDES	+= -I$(srcdir)/../include \
+		   -I$(topsrcdir)/js/src/xpconnect/src
 
