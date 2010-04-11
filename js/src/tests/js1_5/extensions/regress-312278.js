@@ -38,7 +38,7 @@
 var gTestfile = 'regress-312278.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 312278;
-var summary = 'Do no access GC-ed object in Error.prototype.toSource';
+var summary = 'Do not access GC-ed object in Error.prototype.toSource';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
@@ -51,7 +51,7 @@ function wrapInsideWith(obj)
   with (obj) {
     f = function() { }
   }
-  return f.__parent__;
+  return parent(f);
 }
 
 function customToSource()

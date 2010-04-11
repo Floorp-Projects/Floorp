@@ -20,11 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366645
 
 /** Test for Bug 366645 **/
 
+function getParent(obj) {
+  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIDOMWindowUtils)
+               .getParent(obj);
+}
+
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var table = Cc["@mozilla.org/url-classifier/table;1?type=url"].createInstance();
-var componentScope = table.wrappedJSObject.__parent__;
+var componentScope = getParent(table.wrappedJSObject);
 ok(!!componentScope, "unable to get wrapped js object");
 
 var PROT_EnchashDecrypter = componentScope.PROT_EnchashDecrypter;

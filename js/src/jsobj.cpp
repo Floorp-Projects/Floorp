@@ -126,59 +126,29 @@ JSClass js_ObjectClass = {
 #if JS_HAS_OBJ_PROTO_PROP
 
 static JSBool
-obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSPropertySpec object_props[] = {
-    /* These two must come first; see object_props[slot].name usage below. */
-    {js_proto_str, JSSLOT_PROTO, JSPROP_PERMANENT|JSPROP_SHARED,
-                                                  obj_getSlot,  obj_setSlot},
-    {js_parent_str,JSSLOT_PARENT,JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
-                                                  obj_getSlot,  obj_setSlot},
+    {js_proto_str, JSSLOT_PROTO, JSPROP_PERMANENT|JSPROP_SHARED, obj_getProto, obj_setProto},
     {0,0,0,0,0}
 };
 
-/* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
-#define JSSLOT_COUNT 2
-
 static JSBool
-ReportStrictSlot(JSContext *cx, uint32 slot)
+obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    if (slot == JSSLOT_PROTO)
-        return JS_TRUE;
-    return JS_ReportErrorFlagsAndNumber(cx,
-                                        JSREPORT_WARNING | JSREPORT_STRICT,
-                                        js_GetErrorMessage, NULL,
-                                        JSMSG_DEPRECATED_USAGE,
-                                        object_props[slot].name);
-}
-
-static JSBool
-obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    jsid propid;
-    JSAccessMode mode;
-    uintN attrs;
-    JSObject *pobj;
-    JSClass *clasp;
-
-    if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
-        propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-        mode = JSACC_PROTO;
-    } else {
-        propid = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
-        mode = JSACC_PARENT;
-    }
+    JS_ASSERT(id == INT_TO_JSID(JSSLOT_PROTO));
 
     /* Let obj->checkAccess get the slot's value, based on the access mode. */
-    if (!obj->checkAccess(cx, propid, mode, vp, &attrs))
+    uintN attrs;
+    id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
+    if (!obj->checkAccess(cx, id, JSACC_PROTO, vp, &attrs))
         return JS_FALSE;
 
-    pobj = JSVAL_TO_OBJECT(*vp);
-    if (pobj) {
-        clasp = pobj->getClass();
+    if (JSObject *pobj = JSVAL_TO_OBJECT(*vp)) {
+        JSClass *clasp = pobj->getClass();
         if (clasp == &js_CallClass || clasp == &js_BlockClass) {
             /* Censor activations and lexical scopes per ECMA-262. */
             *vp = JSVAL_NULL;
@@ -188,8 +158,8 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
              * censor. So it cannot escape to scripts.
              */
             JS_ASSERT(clasp != &js_DeclEnvClass);
-            if (pobj->map->ops->thisObject) {
-                pobj = pobj->map->ops->thisObject(cx, pobj);
+            if (JSObjectOp thisObject = pobj->map->ops->thisObject) {
+                pobj = thisObject(cx, pobj);
                 if (!pobj)
                     return JS_FALSE;
                 *vp = OBJECT_TO_JSVAL(pobj);
@@ -200,17 +170,14 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *pobj;
-    uint32 slot;
-    jsid propid;
-    uintN attrs;
+    JS_ASSERT(id == INT_TO_JSID(JSSLOT_PROTO));
 
     if (!JSVAL_IS_OBJECT(*vp))
         return JS_TRUE;
-    pobj = JSVAL_TO_OBJECT(*vp);
 
+    JSObject *pobj = JSVAL_TO_OBJECT(*vp);
     if (pobj) {
         /*
          * Innerize pobj here to avoid sticking unwanted properties on the
@@ -221,16 +188,13 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (!pobj)
             return JS_FALSE;
     }
-    slot = (uint32) JSVAL_TO_INT(id);
-    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
+
+    uintN attrs;
+    id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
+    if (!obj->checkAccess(cx, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
         return JS_FALSE;
 
-    /* __parent__ is readonly and permanent, only __proto__ may be set. */
-    propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!obj->checkAccess(cx, propid, (JSAccessMode)(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
-        return JS_FALSE;
-
-    return js_SetProtoOrParent(cx, obj, slot, pobj, JS_TRUE);
+    return js_SetProtoOrParent(cx, obj, JSSLOT_PROTO, pobj, JS_TRUE);
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
@@ -300,15 +264,8 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
         }
 
         if (ssr.cycle) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_CYCLIC_VALUE,
-#if JS_HAS_OBJ_PROTO_PROP
-                                 object_props[slot].name
-#else
-                                 (slot == JSSLOT_PROTO) ? js_proto_str
-                                                        : js_parent_str
-#endif
-                                 );
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
+                                 (slot == JSSLOT_PROTO) ? js_proto_str : "parent");
             return JS_FALSE;
         }
     }
@@ -3839,8 +3796,8 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     AutoValueRooter tvr(cx, cval);
 
     /*
-     * If proto or parent are NULL, set them to Constructor.prototype and/or
-     * Constructor.__parent__, just like JSOP_NEW does.
+     * If proto is NULL, set it to Constructor.prototype, just like JSOP_NEW
+     * does, likewise for the new object's parent.
      */
     ctor = JSVAL_TO_OBJECT(cval);
     if (!parent)
@@ -5691,10 +5648,10 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      * We don't want to require all classes to supply a checkAccess hook; we
      * need that hook only for certain classes used when precompiling scripts
      * and functions ("brutal sharing").  But for general safety of built-in
-     * magic properties such as __proto__ and __parent__, we route all access
-     * checks, even for classes that stub out checkAccess, through the global
-     * checkObjectAccess hook.  This covers precompilation-based sharing and
-     * (possibly unintended) runtime sharing across trust boundaries.
+     * magic properties like __proto__, we route all access checks, even for
+     * classes that stub out checkAccess, through the global checkObjectAccess
+     * hook.  This covers precompilation-based sharing and (possibly
+     * unintended) runtime sharing across trust boundaries.
      */
     clasp = pobj->getClass();
     check = clasp->checkAccess;
