@@ -61,7 +61,6 @@
 #include "nsIStringEnumerator.h"
 #include "nsIPrompt.h"
 #include "nsIResumableChannel.h"
-#include "nsISupportsPriority.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
 #include "nsIProxiedChannel.h"
@@ -86,7 +85,6 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
                     , public nsIResumableChannel
-                    , public nsISupportsPriority
                     , public nsIProtocolProxyCallback
                     , public nsIProxiedChannel
                     , public nsITraceableChannel
@@ -104,7 +102,6 @@ public:
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIRESUMABLECHANNEL
-    NS_DECL_NSISUPPORTSPRIORITY
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSITRACEABLECHANNEL
@@ -128,6 +125,8 @@ public:
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+    // nsISupportsPriority
+    NS_IMETHOD SetPriority(PRInt32 value);
 
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
@@ -266,8 +265,6 @@ private:
     nsRefPtr<nsHttpTransaction>       mTransaction;
 
     PRUint64                          mLogicalOffset;
-    PRInt16                           mPriority;
-
     nsCString                         mUserSetCookieHeader;
 
     // cache specific data

@@ -42,6 +42,7 @@
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
+#include "nsISupportsPriority.h"
 
 namespace mozilla {
 namespace net {
@@ -85,6 +86,7 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
                                  const PRUint32&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
+                                 const PRUint16&            priority,
                                  const PRUint8&             redirectionLimit,
                                  const PRBool&              allowPipelining,
                                  const PRBool&              forceAllowThirdPartyCookie)
@@ -146,6 +148,8 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
   //  httpChan->SetNotificationCallbacks(this);
 
   httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
+  if (priority != nsISupportsPriority::PRIORITY_NORMAL)
+    httpChan->SetPriority(priority);
   httpChan->SetRedirectionLimit(redirectionLimit);
   httpChan->SetAllowPipelining(allowPipelining);
   httpChan->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
@@ -157,6 +161,13 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
   return true;
 }
 
+bool 
+HttpChannelParent::RecvSetPriority(const PRUint16& priority)
+{
+  // FIXME: bug XXX: once we figure out how to keep a ref to the nsHttpChannel,
+  // call SetPriority on it here.
+  return true;
+}
 
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver

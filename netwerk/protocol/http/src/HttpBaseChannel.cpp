@@ -50,6 +50,7 @@ namespace net {
 HttpBaseChannel::HttpBaseChannel()
   : mStatus(NS_OK)
   , mLoadFlags(LOAD_NORMAL)
+  , mPriority(PRIORITY_NORMAL)
   , mCaps(0)
   , mRedirectionLimit(gHttpHandler->RedirectionLimit())
   , mIsPending(PR_FALSE)
@@ -141,12 +142,13 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED4(HttpBaseChannel,
+NS_IMPL_ISUPPORTS_INHERITED5(HttpBaseChannel,
                              nsHashPropertyBag, 
                              nsIRequest,
                              nsIChannel,
                              nsIHttpChannel,
-                             nsIHttpChannelInternal)
+                             nsIHttpChannelInternal,
+                             nsISupportsPriority);
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
@@ -798,6 +800,23 @@ HttpBaseChannel::SetForceAllowThirdPartyCookie(PRBool aForce)
 
   mForceAllowThirdPartyCookie = aForce;
   return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsISupportsPriority
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::GetPriority(PRInt32 *value)
+{
+  *value = mPriority;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::AdjustPriority(PRInt32 delta)
+{
+  return SetPriority(mPriority + delta);
 }
 
 //------------------------------------------------------------------------------
