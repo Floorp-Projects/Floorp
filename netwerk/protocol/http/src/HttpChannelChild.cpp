@@ -228,42 +228,57 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
   // Port checked in parent, but duplicate here so we can return with error
-  // immediately, as we've done since before e10s.
+  // immediately
   nsresult rv;
   rv = NS_CheckPortSafety(mURI);
   if (NS_FAILED(rv))
     return rv;
 
-  // The socket transport layer in the chrome process now has a logical ref to
-  // us, until either OnStopRequest or OnRedirect is called.
-  this->AddRef();
+  // FIXME bug 562587: need to dupe nsHttpChannel::AsyncOpen cookies logic 
 
-  // TODO: Combine constructor and AsyncOpen to save one IPC msg
-  gNeckoChild->SendPHttpChannelConstructor(this);
+  // notify "http-on-modify-request" observers
+  gHttpHandler->OnModifyRequest(this);
+
+  mIsPending = PR_TRUE;
+  mWasOpened = PR_TRUE;
   mListener = listener;
   mListenerContext = aContext;
 
-  // TODO: serialize mConnectionInfo across to the parent, and set it on
-  // the new channel somehow?
+  // add ourselves to the load group. 
+  if (mLoadGroup)
+    mLoadGroup->AddRequest(this, nsnull);
 
-  // TODO: serialize mCaps across to the parent, and set it on
-  // the new channel somehow?
+  // FIXME: bug 536317: We may have been cancelled already, either by
+  // on-modify-request listeners or by load group observers; in that case, 
+  // don't create IPDL connection.  See nsHttpChannel::AsyncOpen(): I think
+  // we'll need something like
+  //
+  // if (mCanceled) {
+  //   LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
+  //   AsyncAbort(rv);
+  //   return NS_OK;
+  // }
+  //
+  // (This is assuming on-modify-request/loadgroup observers will still be able
+  // to cancel synchronously)
 
-  // TODO: need to dupe cookies logic from nsHttpChannel.cpp?
+  //
+  // Send request to the chrome process...
+  //
 
-  // TODO: need to notify (child-side) http-on-modify-req observers 
-
-  // TODO: add self to loadgroup? 
+  // FIXME: bug 558623: Combine constructor and SendAsyncOpen into one IPC msg
+  gNeckoChild->SendPHttpChannelConstructor(this);
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
                 IPC::URI(mReferrer), mLoadFlags, mRequestHeaders,
                 mRequestHead.Method(), mPriority, mRedirectionLimit,
                 mAllowPipelining, mForceAllowThirdPartyCookie);
 
-  mIsPending = PR_TRUE;
-  mWasOpened = PR_TRUE;
-  mState = HCC_OPENED;
+  // The socket transport layer in the chrome process now has a logical ref to
+  // us, until either OnStopRequest or OnRedirect is called.
+  this->AddRef();
 
+  mState = HCC_OPENED;
   return NS_OK;
 }
 
