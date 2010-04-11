@@ -52,6 +52,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
+#include "nsISupportsPriority.h"
 
 #define DIE_WITH_ASYNC_OPEN_MSG()                                              \
   do {                                                                         \
@@ -84,6 +85,7 @@ namespace net {
 class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIHttpChannel
                       , public nsIHttpChannelInternal
+                      , public nsISupportsPriority
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -148,6 +150,10 @@ public:
   NS_IMETHOD GetForceAllowThirdPartyCookie(PRBool *aForce);
   NS_IMETHOD SetForceAllowThirdPartyCookie(PRBool aForce);
 
+  // nsISupportsPriority
+  NS_IMETHOD GetPriority(PRInt32 *value);
+  NS_IMETHOD AdjustPriority(PRInt32 delta);
+
 protected:
   nsCOMPtr<nsIURI>                  mURI;
   nsCOMPtr<nsIURI>                  mOriginalURI;
@@ -169,6 +175,7 @@ protected:
 
   nsresult                          mStatus;
   PRUint32                          mLoadFlags;
+  PRInt16                           mPriority;
   PRUint8                           mCaps;
   PRUint8                           mRedirectionLimit;
 

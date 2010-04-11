@@ -57,7 +57,6 @@
 #include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsIResumableChannel.h"
-#include "nsISupportsPriority.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
 
@@ -81,7 +80,6 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIUploadChannel2
                        , public nsIEncodedChannel
                        , public nsIResumableChannel
-                       , public nsISupportsPriority
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
@@ -93,7 +91,6 @@ public:
   NS_DECL_NSIUPLOADCHANNEL2
   NS_DECL_NSIENCODEDCHANNEL
   NS_DECL_NSIRESUMABLECHANNEL
-  NS_DECL_NSISUPPORTSPRIORITY
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
@@ -121,6 +118,8 @@ public:
                               PRBool aMerge);
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+  // nsISupportsPriority
+  NS_IMETHOD SetPriority(PRInt32 value);
 
 protected:
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead);

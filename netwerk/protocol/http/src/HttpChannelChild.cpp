@@ -237,10 +237,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   this->AddRef();
 
   // TODO: Combine constructor and AsyncOpen to save one IPC msg
-  if (!gNeckoChild->SendPHttpChannelConstructor(this)) {
-    // TODO: currently means "this" has been deleted! bug 529693
-    DROP_DEAD();
-  }
+  gNeckoChild->SendPHttpChannelConstructor(this);
   mListener = listener;
   mListenerContext = aContext;
 
@@ -278,17 +275,11 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     mReferrer->GetOriginCharset(referrerCharset);
   }
 
-  if (!SendAsyncOpen(mSpec, charset, originalSpec, originalCharset, 
-                     docSpec, docCharset, referrerSpec, referrerCharset,
-                     mLoadFlags, mRequestHeaders, mRequestHead.Method(), 
-                     mRedirectionLimit, mAllowPipelining,
-                     mForceAllowThirdPartyCookie)) {
-    // IPDL error: our destructor will be called automatically
-    // -- TODO: verify that that's the case :)
-    mListener = 0;
-    mListenerContext = 0;
-    return NS_ERROR_FAILURE;
-  }
+  SendAsyncOpen(mSpec, charset, originalSpec, originalCharset, docSpec,
+                docCharset, referrerSpec, referrerCharset, mLoadFlags,
+                mRequestHeaders, mRequestHead.Method(), mPriority,
+                mRedirectionLimit, mAllowPipelining,
+                mForceAllowThirdPartyCookie);
 
   mIsPending = PR_TRUE;
   mWasOpened = PR_TRUE;
@@ -501,20 +492,15 @@ HttpChannelChild::GetEntityID(nsACString& aEntityID)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetPriority(PRInt32 *aPriority)
-{
-  DROP_DEAD();
-}
-NS_IMETHODIMP
 HttpChannelChild::SetPriority(PRInt32 aPriority)
 {
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::AdjustPriority(PRInt32 delta)
-{
-  DROP_DEAD();
+  PRInt16 newValue = CLAMP(aPriority, PR_INT16_MIN, PR_INT16_MAX);
+  if (mPriority == newValue)
+    return NS_OK;
+  mPriority = newValue;
+  if (mWasOpened) 
+    SendSetPriority(mPriority);
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
