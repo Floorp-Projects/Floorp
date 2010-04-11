@@ -227,9 +227,10 @@ void nsAudioStream::Drain()
       return;
   }
 
-  if (sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
-        PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
-        Shutdown();
+  int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
+  if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
+    Shutdown();
   }
 }
 
