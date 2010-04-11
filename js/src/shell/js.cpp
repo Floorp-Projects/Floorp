@@ -3658,6 +3658,24 @@ Elapsed(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
 }
 
+static JSBool
+Parent(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportError(cx, "Only objects have parents!");
+        return JS_FALSE;
+    }
+
+    *vp = OBJECT_TO_JSVAL(JS_GetParent(cx, JSVAL_TO_OBJECT(v)));
+    return JS_TRUE;
+}
+
 #ifdef XP_UNIX
 
 #include <fcntl.h>
@@ -3911,6 +3929,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("parse",          Parse,          1,0),
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
+    JS_FN("parent",         Parent,         1,0),
     JS_FS_END
 };
 
@@ -4018,7 +4037,8 @@ static const char *const shell_help_messages[] = {
 "timeout([seconds])\n"
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",
-"elapsed()                Execution time elapsed for the current context.\n",
+"elapsed()                Execution time elapsed for the current context.",
+"parent(obj)              Returns the parent of obj.\n",
 };
 
 /* Help messages must match shell functions. */

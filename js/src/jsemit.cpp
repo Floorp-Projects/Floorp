@@ -2688,10 +2688,9 @@ static JSBool
 EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     /*
-     * Special case for obj.__proto__ and obj.__parent__ to deoptimize away
-     * from fast paths in the interpreter and trace recorder, which skip dense
-     * array instances by going up to Array.prototype before looking up the
-     * property name.
+     * Special case for obj.__proto__ to deoptimize away from fast paths in the
+     * interpreter and trace recorder, which skip dense array instances by
+     * going up to Array.prototype before looking up the property name.
      */
     JSAtomListElement *ale = cg->atomList.add(cg->parser, pn->pn_atom);
     if (!ale)
@@ -2713,10 +2712,9 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
     JS_ASSERT(pn->pn_arity == PN_NAME);
     pn2 = pn->maybeExpr();
 
-    /* Special case deoptimization on __proto__ and __parent__. */
+    /* Special case deoptimization for __proto__. */
     if ((op == JSOP_GETPROP || op == JSOP_CALLPROP) &&
-        (pn->pn_atom == cx->runtime->atomState.protoAtom ||
-         pn->pn_atom == cx->runtime->atomState.parentAtom)) {
+        pn->pn_atom == cx->runtime->atomState.protoAtom) {
         if (pn2 && !js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
         return EmitSpecialPropOp(cx, pn, callContext ? JSOP_CALLELEM : JSOP_GETELEM, cg);
@@ -2802,13 +2800,8 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
                 return JS_FALSE;
             }
 
-            /*
-             * Special case deoptimization on __proto__ and __parent__, as
-             * above.
-             */
-            if (pndot->pn_arity == PN_NAME &&
-                (pndot->pn_atom == cx->runtime->atomState.protoAtom ||
-                 pndot->pn_atom == cx->runtime->atomState.parentAtom)) {
+            /* Special case deoptimization on __proto__, as above. */
+            if (pndot->pn_arity == PN_NAME && pndot->pn_atom == cx->runtime->atomState.protoAtom) {
                 if (!EmitSpecialPropOp(cx, pndot, JSOP_GETELEM, cg))
                     return JS_FALSE;
             } else if (!EmitAtomOp(cx, pndot, PN_OP(pndot), cg)) {
@@ -7409,9 +7402,8 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  *
  * In such cases, naively following ECMA leads to wrongful sharing of RegExp
  * objects, which makes for collisions on the lastIndex property (especially
- * for global regexps) and on any ad-hoc properties.  Also, __proto__ and
- * __parent__ refer to the pre-compilation prototype and global objects, a
- * pigeon-hole problem for instanceof tests.
+ * for global regexps) and on any ad-hoc properties.  Also, __proto__ refers to
+ * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
 uintN
 JSCGObjectList::index(JSObjectBox *objbox)

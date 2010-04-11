@@ -1345,7 +1345,6 @@ static JSStdName standard_class_names[] = {
 static JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
     {js_InitObjectClass,        EAGER_ATOM(proto), NULL},
-    {js_InitObjectClass,        EAGER_ATOM(parent), NULL},
 #if JS_HAS_TOSOURCE
     {js_InitObjectClass,        EAGER_ATOM(toSource), NULL},
 #endif
