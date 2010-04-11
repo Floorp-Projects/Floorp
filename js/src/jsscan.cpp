@@ -1396,7 +1396,7 @@ TokenStream::getTokenInternal()
          *
          * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
          *
-         * The check for this is in jsparse.cpp, JSCompiler::compileScript.
+         * The check for this is in jsparse.cpp, Compiler::compileScript.
          */
         if ((flags & TSF_OPERAND) &&
             (JS_HAS_XML_OPTION(cx) || peekChar() != '!')) {

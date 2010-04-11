@@ -4511,8 +4511,8 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                       chars, length, NULL, filename, lineno);
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                     chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4538,11 +4538,11 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
     {
-        JSCompiler jsc(cx);
-        if (jsc.init(chars, length, NULL, NULL, 1)) {
+        Parser parser(cx);
+        if (parser.init(chars, length, NULL, NULL, 1)) {
             older = JS_SetErrorReporter(cx, NULL);
-            if (!jsc.parse(obj) &&
-                jsc.tokenStream.isUnexpectedEOF()) {
+            if (!parser.parse(obj) &&
+                parser.tokenStream.isUnexpectedEOF()) {
                 /*
                  * We ran into an error. If it was because we ran out of
                  * source, we return false so our caller knows to try to
@@ -4578,8 +4578,8 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     }
 
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, NULL, tcflags,
-                                       NULL, 0, fp, filename, 1);
+    script = Compiler::compileScript(cx, obj, NULL, NULL, tcflags,
+                                     NULL, 0, fp, filename, 1);
     if (fp != stdin)
         fclose(fp);
     LAST_FRAME_CHECKS(cx, script);
@@ -4603,8 +4603,8 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                       NULL, 0, file, filename, 1);
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                     NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4743,8 +4743,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             }
         }
 
-        if (!JSCompiler::compileFunctionBody(cx, fun, principals,
-                                             chars, length, filename, lineno)) {
+        if (!Compiler::compileFunctionBody(cx, fun, principals,
+                                           chars, length, filename, lineno)) {
             fun = NULL;
             goto out;
         }
@@ -4892,11 +4892,11 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, principals,
-                                       !rval
-                                       ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
-                                       : TCF_COMPILE_N_GO,
-                                       chars, length, NULL, filename, lineno);
+    script = Compiler::compileScript(cx, obj, NULL, principals,
+                                     !rval
+                                     ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                                     : TCF_COMPILE_N_GO,
+                                     chars, length, NULL, filename, lineno);
     if (!script) {
         LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;

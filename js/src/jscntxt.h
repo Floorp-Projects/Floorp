@@ -1649,7 +1649,7 @@ class AutoGCRooter {
         JSVAL =        -1, /* js::AutoValueRooter */
         SPROP =        -2, /* js::AutoScopePropertyRooter */
         WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
-        COMPILER =     -4, /* JSCompiler */
+        PARSER =       -4, /* js::Parser */
         SCRIPT =       -5, /* js::AutoScriptRooter */
         ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
         IDARRAY =      -7, /* js::AutoIdArray */

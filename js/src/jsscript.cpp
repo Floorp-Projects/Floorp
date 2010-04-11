@@ -1004,7 +1004,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
 
-    filename = cg->compiler->tokenStream.getFilename();
+    filename = cg->parser->tokenStream.getFilename();
     if (filename) {
         script->filename = js_SaveScriptFilename(cx, filename);
         if (!script->filename)
@@ -1017,7 +1017,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     }
     script->nslots = script->nfixed + cg->maxStackDepth;
     script->staticLevel = uint16(cg->staticLevel);
-    script->principals = cg->compiler->principals;
+    script->principals = cg->parser->principals;
     if (script->principals)
         JSPRINCIPALS_HOLD(cx, script->principals);
 

@@ -176,7 +176,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSParseNode     *blockNode;     /* parse node for a block with let declarations
                                        (block with its own lexical scope)  */
     JSAtomList      decls;          /* function, const, and var declarations */
-    JSCompiler      *compiler;      /* ptr to common parsing and lexing data */
+    js::Parser      *parser;        /* ptr to common parsing and lexing data */
 
     union {
         JSFunction  *fun;           /* function to store argument and variable
@@ -190,7 +190,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     JSFunctionBox   *funbox;        /* null or box for function we're compiling
                                        if (flags & TCF_IN_FUNCTION) and not in
-                                       JSCompiler::compileFunctionBody */
+                                       Compiler::compileFunctionBody */
     JSFunctionBox   *functionList;
 
 #ifdef JS_SCOPE_DEPTH_METER
@@ -198,13 +198,13 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
 #endif
 
-    JSTreeContext(JSCompiler *jsc)
+    JSTreeContext(js::Parser *prs)
       : flags(0), ngvars(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
-        compiler(jsc), scopeChain(NULL), parent(jsc->tc), staticLevel(0),
+        parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
         funbox(NULL), functionList(NULL), sharpSlotBase(-1)
     {
-        jsc->tc = this;
+        prs->tc = this;
         JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
     }
 
@@ -214,9 +214,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
      * cases, we store uint16(-1) in maxScopeDepth.
      */
     ~JSTreeContext() {
-        compiler->tc = this->parent;
+        parser->tc = this->parent;
         JS_SCOPE_DEPTH_METERING_IF((maxScopeDepth != uint16(-1)),
-                                   JS_BASIC_STATS_ACCUM(&compiler
+                                   JS_BASIC_STATS_ACCUM(&parser
                                                           ->context
                                                           ->runtime
                                                           ->lexicalScopeDepthStats,
@@ -260,7 +260,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                         own name */
 #define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
 #define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x2000 /* compiler-and-go mode of script, can
+#define TCF_COMPILE_N_GO      0x2000 /* compile-and-go mode of script, can
                                         optimize name references based on scope
                                         chain */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
@@ -281,7 +281,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_DECL_DESTRUCTURING  0x10000
 
 /*
- * A request flag passed to JSCompiler::compileScript and then down via
+ * A request flag passed to Compiler::compileScript and then down via
  * JSCodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
  * kindred functions that need to make mutable scripts (even empty ones;
  * i.e., they can't share the const JSScript::emptyScript() singleton).
@@ -335,7 +335,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * JSOPTION_STRICT warnings or strict mode errors.
  */
 inline bool JSTreeContext::needStrictChecks() {
-    return JS_HAS_STRICT_OPTION(compiler->context) ||
+    return JS_HAS_STRICT_OPTION(parser->context) ||
            (flags & TCF_STRICT_MODE_CODE);
 }
 
@@ -467,14 +467,14 @@ struct JSCodeGenerator : public JSTreeContext
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
-     * jsc->context->tempPool.
+     * parser->context->tempPool.
      */
-    JSCodeGenerator(JSCompiler *jsc,
+    JSCodeGenerator(js::Parser *parser,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
 
     /*
-     * Release cg->codePool, cg->notePool, and compiler->context->tempPool to
+     * Release cg->codePool, cg->notePool, and parser->context->tempPool to
      * marks set by JSCodeGenerator's ctor. Note that cgs are magic: they own
      * the arena pool "tops-of-stack" space above their codeMark, noteMark, and
      * tempMark points.  This means you cannot alloc from tempPool and save the
@@ -493,7 +493,7 @@ struct JSCodeGenerator : public JSTreeContext
     }
 };
 
-#define CG_TS(cg)               TS((cg)->compiler)
+#define CG_TS(cg)               TS((cg)->parser)
 
 #define CG_BASE(cg)             ((cg)->current->base)
 #define CG_LIMIT(cg)            ((cg)->current->limit)

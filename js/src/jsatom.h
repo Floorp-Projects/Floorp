@@ -152,16 +152,16 @@ struct JSAtomList : public JSAtomSet
 
     enum AddHow { UNIQUE, SHADOW, HOIST };
 
-    JSAtomListElement *add(JSCompiler *jsc, JSAtom *atom, AddHow how = UNIQUE);
+    JSAtomListElement *add(js::Parser *parser, JSAtom *atom, AddHow how = UNIQUE);
 
-    void remove(JSCompiler *jsc, JSAtom *atom) {
+    void remove(js::Parser *parser, JSAtom *atom) {
         JSHashEntry **hep;
         JSAtomListElement *ale = rawLookup(atom, hep);
         if (ale)
-            rawRemove(jsc, ale, hep);
+            rawRemove(parser, ale, hep);
     }
 
-    void rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep);
+    void rawRemove(js::Parser *parser, JSAtomListElement *ale, JSHashEntry **hep);
 };
 
 /*
@@ -170,10 +170,10 @@ struct JSAtomList : public JSAtomSet
  */
 struct JSAutoAtomList: public JSAtomList
 {
-    JSAutoAtomList(JSCompiler *c): compiler(c) {}
+    JSAutoAtomList(js::Parser *p): parser(p) {}
     ~JSAutoAtomList();
   private:
-    JSCompiler *compiler;       /* For freeing list entries. */
+    js::Parser *parser;         /* For freeing list entries. */
 };
 
 /*

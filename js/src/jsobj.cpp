@@ -1353,14 +1353,14 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
                   script->principals->subsume(script->principals, principals)))) {
                 /*
                  * Get the prior (cache-filling) eval's saved caller function.
-                 * See JSCompiler::compileScript in jsparse.cpp.
+                 * See Compiler::compileScript in jsparse.cpp.
                  */
                 JSFunction *fun = script->getFunction(0);
 
                 if (fun == caller->fun) {
                     /*
                      * Get the source string passed for safekeeping in the
-                     * atom map by the prior eval to JSCompiler::compileScript.
+                     * atom map by the prior eval to Compiler::compileScript.
                      */
                     JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
 
@@ -1412,11 +1412,11 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
      */
     JSStackFrame *callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
-        script = JSCompiler::compileScript(cx, scopeobj, callerFrame,
-                                           principals,
-                                           TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT,
-                                           str->chars(), str->length(),
-                                           NULL, file, line, str, staticLevel);
+        script = Compiler::compileScript(cx, scopeobj, callerFrame,
+                                         principals,
+                                         TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT,
+                                         str->chars(), str->length(),
+                                         NULL, file, line, str, staticLevel);
         if (!script)
             return JS_FALSE;
     }
