@@ -1354,6 +1354,27 @@ nsPresContext::GetContainerExternal() const
 }
 
 #ifdef IBMBIDI
+PRBool
+nsPresContext::BidiEnabledInternal() const
+{
+  PRBool bidiEnabled = PR_FALSE;
+  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::GetBidiEnabled");
+  if (mShell) {
+    nsIDocument *doc = mShell->GetDocument();
+    NS_ASSERTION(doc, "PresShell has no document in nsPresContext::GetBidiEnabled");
+    if (doc) {
+      bidiEnabled = doc->GetBidiEnabled();
+    }
+  }
+  return bidiEnabled;
+}
+
+PRBool
+nsPresContext::BidiEnabledExternal() const
+{
+  return BidiEnabledInternal();
+}
+
 void
 nsPresContext::SetBidiEnabled() const
 {
