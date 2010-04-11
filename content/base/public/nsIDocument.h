@@ -705,14 +705,6 @@ public:
    */
   virtual void FlushPendingNotifications(mozFlushType aType) = 0;
 
-  /**
-   * Calls FlushPendingNotifications on any external resources this document
-   * has. If this document has no external resources or is an external resource
-   * itself this does nothing. This should only be called with
-   * aType >= Flush_Style.
-   */
-  virtual void FlushExternalResources(mozFlushType aType) = 0;
-
   nsBindingManager* BindingManager() const
   {
     return mNodeInfoManager->GetBindingManager();
