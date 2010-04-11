@@ -657,7 +657,11 @@ CrasherThread(void* data)
   // Give the parent thread a chance to send the message.
   usleep(200);
 
-  IntentionalCrash();
+  // Exit (without running atexit hooks) rather than crashing with a signal
+  // so as to make timing more reliable.  The process terminates immediately
+  // rather than waiting for a thread in the parent process to attach and
+  // generate a minidump.
+  _exit(1);
 
   // not reached
   return(NULL);
