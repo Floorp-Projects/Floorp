@@ -1515,8 +1515,8 @@ BEGIN_CASE(JSOP_LENGTH)
                 regs.sp[-1] = INT_TO_JSVAL(length);
             else if (!js_NewDoubleInRootedValue(cx, (jsdouble) length, &regs.sp[-1]))
                 goto error;
-        } else if (obj->isArguments() && !IsOverriddenArgsLength(obj)) {
-            uint32 length = GetArgsLength(obj);
+        } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
+            uint32 length = obj->getArgsLength();
 
             JS_ASSERT(INT_FITS_IN_JSVAL(length));
             regs.sp[-1] = INT_TO_JSVAL(length);
@@ -1873,7 +1873,7 @@ BEGIN_CASE(JSOP_GETELEM)
                   ) {
             uint32 arg = uint32(JSVAL_TO_INT(rval));
 
-            if (arg < GetArgsLength(obj)) {
+            if (arg < obj->getArgsLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
                 if (afp) {
                     rval = afp->argv[arg];

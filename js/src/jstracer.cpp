@@ -14105,7 +14105,7 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
     // The following implements IsOverriddenArgsLength on trace.
     // The '2' bit is set if length was overridden.
-    LIns *len_ins = stobj_get_fslot(argsobj_ins, JSSLOT_ARGS_LENGTH);
+    LIns *len_ins = stobj_get_fslot(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
     LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
     guard(true, lir->ins_peq0(ovr_ins), snapshot(BRANCH_EXIT));
     return len_ins;
@@ -14123,7 +14123,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in alu().
-    if (cx->fp->argsobj && IsOverriddenArgsLength(JSVAL_TO_OBJECT(cx->fp->argsobj)))
+    if (cx->fp->argsobj && JSVAL_TO_OBJECT(cx->fp->argsobj)->isArgsLengthOverridden())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = get(&cx->fp->argsobj);
     if (callDepth == 0) {
@@ -15004,7 +15004,7 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // We must both check at record time and guard at run time that
         // arguments.length has not been reassigned, redefined or deleted.
-        if (IsOverriddenArgsLength(obj))
+        if (obj->isArgsLengthOverridden())
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 

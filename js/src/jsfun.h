@@ -414,31 +414,6 @@ inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }
 
 /*
- * Reserved slot structure for Arguments objects:
- *
- * JSSLOT_PRIVATE       - the corresponding frame until the frame exits.
- * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag indicating
- *                        whether arguments.length was overwritten.
- * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that was
- *                        overwritten.
- * JSSLOT_ARGS_START    - room to store the corresponding arguments after the
- *                        frame exists. The slot's value will be JSVAL_HOLE if
- *                        arguments[i] was deleted or overwritten.
- *
- * The static assertion checks that hand-optimized code can fetch and store the
- * argument value at argsobj->dslots[i] for argument index i. But future-proof
- * your code by using {Get,Set}ArgsSlot instead of naked dslots references.
- */
-const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
-const uint32 JSSLOT_ARGS_CALLEE = JSSLOT_PRIVATE + 2;
-const uint32 JSSLOT_ARGS_START  = JSSLOT_PRIVATE + 3;
-
-JS_STATIC_ASSERT(JSSLOT_ARGS_START == JS_INITIAL_NSLOTS);
-
-/* Number of extra fixed slots besides JSSLOT_PRIVATE. */
-const uint32 ARGS_FIXED_RESERVED_SLOTS = JSSLOT_ARGS_START - JSSLOT_ARGS_LENGTH;
-
-/*
  * Maximum supported value of arguments.length. It bounds the maximum number of
  * arguments that can be supplied via the second (so-called |argArray|) param
  * to Function.prototype.apply. This value also bounds the number of elements
@@ -466,25 +441,6 @@ inline void
 SetArgsSlot(JSObject *argsobj, uint32 arg, jsval v)
 {
     argsobj->dslots[arg] = v;
-}
-
-inline bool
-IsOverriddenArgsLength(JSObject *obj)
-{
-    JS_ASSERT(obj->isArguments());
-
-    jsval v = obj->fslots[JSSLOT_ARGS_LENGTH];
-    return (JSVAL_TO_INT(v) & 1) != 0;
-}
-
-inline uint32
-GetArgsLength(JSObject *obj)
-{
-    JS_ASSERT(obj->isArguments());
-
-    uint32 argc = uint32(JSVAL_TO_INT(obj->fslots[JSSLOT_ARGS_LENGTH])) >> 1;
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    return argc;
 }
 
 } /* namespace js */
