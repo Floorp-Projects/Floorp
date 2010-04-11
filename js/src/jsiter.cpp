@@ -102,6 +102,10 @@ CloseNativeIterator(JSContext *cx, JSObject *iterobj)
     if (JSVAL_IS_NULL(state))
         return;
 
+    /* Avoid misinterpreting default-void slots in a stillborn iterator. */
+    if (JSVAL_IS_VOID(state))
+        return;
+
     /* Protect against failure to fully initialize obj. */
     iterable = iterobj->getParent();
     if (iterable) {
