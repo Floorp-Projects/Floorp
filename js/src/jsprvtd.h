@@ -88,11 +88,15 @@ typedef uint8  jsbytecode;
 typedef uint8  jssrcnote;
 typedef uint32 jsatomid;
 
+#ifdef __cplusplus
+
 /* Class and struct forward declarations in namespace js. */
 namespace js {
 struct Parser;
 struct Compiler;
 }
+
+#endif
 
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
