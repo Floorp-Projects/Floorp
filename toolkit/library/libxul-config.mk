@@ -132,14 +132,12 @@ endif
 
 # component libraries
 COMPONENT_LIBS += \
-	xpconnect \
 	necko \
 	uconv \
 	i18n \
 	chardet \
 	jar$(VERSION_NUMBER) \
 	pref \
-	caps \
 	htmlpars \
 	imglib2 \
 	gklayout \
