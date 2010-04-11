@@ -85,27 +85,6 @@
 using namespace js;
 
 static inline void
-SetOverriddenArgsLength(JSObject *obj)
-{
-    JS_ASSERT(obj->isArguments());
-
-    jsval v = obj->fslots[JSSLOT_ARGS_LENGTH];
-    v = INT_TO_JSVAL(JSVAL_TO_INT(v) | 1);
-    JS_ASSERT(JSVAL_IS_INT(v));
-    obj->fslots[JSSLOT_ARGS_LENGTH] = v;
-}
-
-static inline void
-InitArgsLengthSlot(JSObject *obj, uint32 argc)
-{
-    JS_ASSERT(obj->isArguments());
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    JS_ASSERT(obj->fslots[JSSLOT_ARGS_LENGTH] == JSVAL_VOID);
-    obj->fslots[JSSLOT_ARGS_LENGTH] = INT_TO_JSVAL(argc << 1);
-    JS_ASSERT(!IsOverriddenArgsLength(obj));
-}
-
-static inline void
 SetArgsPrivateNative(JSObject *argsobj, ArgsPrivateNative *apn)
 {
     JS_ASSERT(argsobj->isArguments());
@@ -181,7 +160,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
         }
     } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         JSObject *argsobj = JSVAL_TO_OBJECT(fp->argsobj);
-        if (argsobj && IsOverriddenArgsLength(argsobj))
+        if (argsobj && argsobj->isArgsLengthOverridden())
             return argsobj->getProperty(cx, id, vp);
         *vp = INT_TO_JSVAL(jsint(fp->argc));
     }
@@ -201,8 +180,8 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
     argsobj->init(&js_ArgumentsClass, proto, parent, JSVAL_NULL);
-    argsobj->fslots[JSSLOT_ARGS_CALLEE] = OBJECT_TO_JSVAL(callee);
-    InitArgsLengthSlot(argsobj, argc);
+    argsobj->setArgsCallee(OBJECT_TO_JSVAL(callee));
+    argsobj->setArgsLength(argc);
 
     argsobj->map = cx->runtime->emptyArgumentsScope;
     cx->runtime->emptyArgumentsScope->hold();
@@ -216,7 +195,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
 static void
 PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
-    uint32 argc = GetArgsLength(argsobj);
+    uint32 argc = argsobj->getArgsLength();
     for (uint32 i = 0; i != argc; ++i) {
         jsval v = argsobj->dslots[i];
         if (v != JSVAL_HOLE)
@@ -321,12 +300,12 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
-        if (arg < GetArgsLength(obj))
+        if (arg < obj->getArgsLength())
             SetArgsSlot(obj, arg, JSVAL_HOLE);
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        SetOverriddenArgsLength(obj);
+        obj->setArgsLengthOverridden();
     } else if (idval == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
-        obj->fslots[JSSLOT_ARGS_CALLEE] = JSVAL_HOLE;
+        obj->setArgsCallee(JSVAL_HOLE);
     }
     return true;
 }
@@ -514,7 +493,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
          * prototype to point to another Arguments object with a bigger argc.
          */
         uintN arg = uintN(JSVAL_TO_INT(idval));
-        if (arg < GetArgsLength(obj)) {
+        if (arg < obj->getArgsLength()) {
 #ifdef JS_TRACER
             ArgsPrivateNative *argp = GetArgsPrivateNative(obj);
             if (argp) {
@@ -535,11 +514,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
             }
         }
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        if (!IsOverriddenArgsLength(obj))
-            *vp = INT_TO_JSVAL(GetArgsLength(obj));
+        if (!obj->isArgsLengthOverridden())
+            *vp = INT_TO_JSVAL(obj->getArgsLength());
     } else {
         JS_ASSERT(idval == ATOM_KEY(cx->runtime->atomState.calleeAtom));
-        jsval v = obj->fslots[JSSLOT_ARGS_CALLEE];
+        jsval v = obj->getArgsCallee();
         if (v != JSVAL_HOLE) {
             /*
              * If this function or one in it needs upvars that reach above it
@@ -579,7 +558,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
-        if (arg < GetArgsLength(obj)) {
+        if (arg < obj->getArgsLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 fp->argv[arg] = *vp;
@@ -616,13 +595,13 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     jsid id = 0;
     if (JSVAL_IS_INT(idval)) {
         uint32 arg = uint32(JSVAL_TO_INT(idval));
-        if (arg < GetArgsLength(obj) && GetArgsSlot(obj, arg) != JSVAL_HOLE)
+        if (arg < obj->getArgsLength() && GetArgsSlot(obj, arg) != JSVAL_HOLE)
             id = INT_JSVAL_TO_JSID(idval);
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        if (!IsOverriddenArgsLength(obj))
+        if (!obj->isArgsLengthOverridden())
             id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     } else if (idval == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
-        if (obj->fslots[JSSLOT_ARGS_CALLEE] != JSVAL_HOLE)
+        if (obj->getArgsCallee() != JSVAL_HOLE)
             id = ATOM_TO_JSID(cx->runtime->atomState.calleeAtom);
     }
 
@@ -647,7 +626,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
      * Trigger reflection in args_resolve using a series of js_LookupProperty
      * calls.
      */
-    int argc = int(GetArgsLength(obj));
+    int argc = int(obj->getArgsLength());
     for (int i = -2; i != argc; i++) {
         jsid id = (i == -2)
                   ? ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
@@ -695,8 +674,7 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 static uint32
 args_reserveSlots(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isArguments());
-    return GetArgsLength(obj);
+    return obj->getArgsLength();
 }
 
 /*
@@ -713,7 +691,7 @@ args_reserveSlots(JSContext *cx, JSObject *obj)
 JSClass js_ArgumentsClass = {
     js_Object_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_RESERVED_SLOTS(ARGS_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,    args_delProperty,
     JS_PropertyStub,    JS_PropertyStub,
@@ -2097,7 +2075,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
     sp = invokevp;
     *sp++ = fval;
     *sp++ = OBJECT_TO_JSVAL(obj);
-    if (aobj && aobj->isArguments() && !IsOverriddenArgsLength(aobj)) {
+    if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
          * backing aobj, even though we copy from fp->argv, we still must check
