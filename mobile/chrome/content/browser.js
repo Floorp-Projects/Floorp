@@ -1906,6 +1906,21 @@ ContentCustomClicker.prototype = {
 
 /** Watches for mouse click in content and redirect them to the best found target **/
 const ElementTouchHelper = {
+  get radius() {
+    delete this.radius;
+    return this.radius = { "top": gPrefService.getIntPref("browser.ui.touch.top"),
+                           "right": gPrefService.getIntPref("browser.ui.touch.right"),
+                           "bottom": gPrefService.getIntPref("browser.ui.touch.bottom"),
+                           "left": gPrefService.getIntPref("browser.ui.touch.left")
+                         };
+  },
+
+  get weight() {
+    delete this.weight;
+    return this.weight = { "visited": gPrefService.getIntPref("browser.ui.touch.weight.visited")
+                         };
+  },
+
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
     let target = aWindowUtils.elementFromPoint(aX, aY,
@@ -1916,15 +1931,10 @@ const ElementTouchHelper = {
     if (!aWindowUtils.nodesFromRect || this._isElementClickable(target))
       return target;
 
-    let touchRadius = gPrefService.getIntPref("browser.ui.touch.radius");
-    let tapRadius = Math.min(64.0, touchRadius / Math.pow(Browser._browserView.getZoomLevel(), 2));
-
-    const kTopShift = 0.75, kBottomShift = 0.25,
-          kLeftShift = 0.50, kRightShift = 0.50;
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, kTopShift * tapRadius,
-                                                   kRightShift * tapRadius,
-                                                   kBottomShift * tapRadius,
-                                                   kLeftShift * tapRadius, true, false);
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.bottom,
+                                                   this.radius.right,
+                                                   this.radius.top,
+                                                   this.radius.left, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
@@ -1937,7 +1947,7 @@ const ElementTouchHelper = {
 
       // increase a little bit the weight for already visited items
       if (current && current.mozMatchesSelector("*:visited"))
-        distance *= 1.2;
+        distance *= (this.weight.visited / 100);
 
       if (distance < threshold) {
         target = current;
@@ -1949,7 +1959,7 @@ const ElementTouchHelper = {
   },
 
   _isElementClickable: function _isElementClickable(aElement) {
-    return aElement && aElement.mozMatchesSelector("*:link,*:visited,button,input,select,label");
+    return aElement && aElement.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,select,label");
   },
 
   _computeDistanceFromRect: function _computeDistanceFromRect(aX, aY, aRect) {
