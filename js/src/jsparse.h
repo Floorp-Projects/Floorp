@@ -749,7 +749,7 @@ struct JSDefinition : public JSParseNode
      * We store definition pointers in PN_NAMESET JSAtomLists in the AST, but
      * due to redefinition these nodes may become uses of other definitions.
      * This is unusual, so we simply chase the pn_lexdef link to find the final
-     * definition node. See methods called from JSCompiler::analyzeFunctions.
+     * definition node. See methods called from Parser::analyzeFunctions.
      *
      * FIXME: MakeAssignment mutates for want of a parent link...
      */
@@ -910,7 +910,10 @@ struct JSFunctionBoxQueue {
 
 typedef struct BindData BindData;
 
-struct JSCompiler : private js::AutoGCRooter {
+namespace js {
+
+struct Parser : private js::AutoGCRooter
+{
     JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
@@ -927,8 +930,8 @@ struct JSCompiler : private js::AutoGCRooter {
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
 
-    JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : js::AutoGCRooter(cx, COMPILER), context(cx),
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
+      : js::AutoGCRooter(cx, PARSER), context(cx),
         aleFreeList(NULL), tokenStream(cx), principals(NULL), callerFrame(cfp),
         callerVarObj(cfp ? cfp->varobj(cx->containingCallStack(cfp)) : NULL),
         nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL),
@@ -939,16 +942,17 @@ struct JSCompiler : private js::AutoGCRooter {
         JS_ASSERT_IF(cfp, cfp->script);
     }
 
-    ~JSCompiler();
+    ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
     friend struct JSTreeContext;
+    friend struct Compiler;
 
     /*
-     * Initialize a compiler. Parameters are passed on to init tokenStream.
+     * Initialize a parser. Parameters are passed on to init tokenStream.
      * The compiler owns the arena pool "tops-of-stack" space above the current
      * JSContext.tempPool mark. This means you cannot allocate from tempPool
-     * and save the pointer beyond the next JSCompiler destructor invocation.
+     * and save the pointer beyond the next Parser destructor invocation.
      */
     bool init(const jschar *base, size_t length,
               FILE *fp, const char *filename, uintN lineno);
@@ -1051,8 +1055,27 @@ private:
     JSParseNode *xmlElementOrList(JSBool allowList);
     JSParseNode *xmlElementOrListRoot(JSBool allowList);
 #endif /* JS_HAS_XML_SUPPORT */
+};
 
-public:
+struct Compiler
+{
+    Parser parser;
+
+    Compiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
+      : parser(cx, prin, cfp)
+    {
+    }
+
+    /*
+     * Initialize a compiler. Parameters are passed on to init parser.
+     */
+    inline bool
+    init(const jschar *base, size_t length,
+         FILE *fp, const char *filename, uintN lineno)
+    {
+        return parser.init(base, length, fp, filename, lineno);
+    }
+
     static bool
     compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                         const jschar *chars, size_t length,
@@ -1067,10 +1090,12 @@ public:
                   unsigned staticLevel = 0);
 };
 
+} /* namespace js */
+
 /*
- * Convenience macro to access JSCompiler.tokenStream as a pointer.
+ * Convenience macro to access Parser.tokenStream as a pointer.
  */
-#define TS(jsc) (&(jsc)->tokenStream)
+#define TS(p) (&(p)->tokenStream)
 
 extern JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,

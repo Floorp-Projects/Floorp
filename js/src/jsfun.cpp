@@ -2426,9 +2426,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         str = cx->runtime->emptyString;
     }
 
-    return JSCompiler::compileFunctionBody(cx, fun, principals,
-                                           str->chars(), str->length(),
-                                           filename, lineno);
+    return Compiler::compileFunctionBody(cx, fun, principals,
+                                         str->chars(), str->length(),
+                                         filename, lineno);
 }
 
 JSObject *
