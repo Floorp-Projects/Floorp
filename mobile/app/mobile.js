@@ -359,7 +359,11 @@ pref("browser.ui.kinetic.swipeLength", 160);
 pref("browser.ui.zoom.pageFitGranularity", 10); // don't zoom to fit by less than 1/10.
 
 // Touch radius
-pref("browser.ui.touch.radius", 16);
+pref("browser.ui.touch.left", 8);
+pref("browser.ui.touch.right", 8);
+pref("browser.ui.touch.top", 4);
+pref("browser.ui.touch.bottom", 12);
+pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
 pref("plugin.disable", true);
