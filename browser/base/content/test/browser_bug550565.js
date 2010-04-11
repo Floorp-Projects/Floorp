@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  let testPath = "chrome://mochikit/content/browser/docshell/test/browser/";
+  let testPath = "chrome://mochikit/content/browser/browser/base/content/test/";
 
   let tab = gBrowser.addTab(testPath + "file_bug550565_popup.html");
 
