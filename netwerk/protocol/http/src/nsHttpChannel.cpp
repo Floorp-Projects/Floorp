@@ -81,7 +81,6 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 nsHttpChannel::nsHttpChannel()
     : mLogicalOffset(0)
-    , mPriority(PRIORITY_NORMAL)
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
@@ -4333,13 +4332,6 @@ nsHttpChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::GetPriority(PRInt32 *value)
-{
-    *value = mPriority;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpChannel::SetPriority(PRInt32 value)
 {
     PRInt16 newValue = CLAMP(value, PR_INT16_MIN, PR_INT16_MAX);
@@ -4349,12 +4341,6 @@ nsHttpChannel::SetPriority(PRInt32 value)
     if (mTransaction)
         gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::AdjustPriority(PRInt32 delta)
-{
-    return SetPriority(mPriority + delta);
 }
 
 //-----------------------------------------------------------------------------

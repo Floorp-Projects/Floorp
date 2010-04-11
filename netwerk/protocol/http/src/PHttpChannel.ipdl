@@ -72,9 +72,12 @@ parent:
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
+            PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,
             PRBool              forceAllowThirdPartyCookie);
+
+  SetPriority(PRUint16 priority);
 
 child:
   OnStartRequest(nsHttpResponseHead responseHead);

@@ -76,9 +76,12 @@ protected:
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
+                             const PRUint16&            priority,
                              const PRUint8&             redirectionLimit,
                              const PRBool&              allowPipelining,
                              const PRBool&              forceAllowThirdPartyCookie);
+
+  virtual bool RecvSetPriority(const PRUint16& priority);
 };
 
 } // namespace net
