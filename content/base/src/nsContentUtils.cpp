@@ -193,6 +193,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jsdate.h"
 #include "jsregexp.h"
 #include "jstypedarray.h"
+#include "xpcprivate.h"
+#include "nsScriptSecurityManager.h"
 
 using namespace mozilla::dom;
 
@@ -357,21 +359,22 @@ nsContentUtils::Init()
 
   sPrefCacheData = new nsTArray<nsAutoPtr<PrefCacheData> >();
 
-  nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                               &sSecurityManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // It's ok to not have a pref service.
   CallGetService(NS_PREFSERVICE_CONTRACTID, &sPrefBranch);
 
-  rv = NS_GetNameSpaceManager(&sNameSpaceManager);
+  nsresult rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPConnect* xpconnect = nsXPConnect::GetXPConnect();
+  NS_ENSURE_TRUE(xpconnect, NS_ERROR_FAILURE);
 
-  rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
-  NS_ENSURE_SUCCESS(rv, rv);
+  sXPConnect = xpconnect;
+  sThreadJSContextStack = xpconnect;
+
+  sSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
+  if(!sSecurityManager)
+    return NS_ERROR_FAILURE;
+  NS_ADDREF(sSecurityManager);
 
   rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
@@ -976,10 +979,9 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sDOMScriptObjectFactory);
-  if (sJSGCThingRootCount == 0 && sXPConnect)
-    NS_RELEASE(sXPConnect);
+  sXPConnect = nsnull;
+  sThreadJSContextStack = nsnull;
   NS_IF_RELEASE(sSecurityManager);
-  NS_IF_RELEASE(sThreadJSContextStack);
   NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
@@ -4178,10 +4180,14 @@ nsresult
 nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
                               nsScriptObjectTracer* aTracer)
 {
+  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
+
   nsresult rv = sXPConnect->AddJSHolder(aScriptObjectHolder, aTracer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  ++sJSGCThingRootCount;
+  if (sJSGCThingRootCount++ == 0) {
+    nsLayoutStatics::AddRef();
+  }
   NS_LOG_ADDREF(sXPConnect, sJSGCThingRootCount, "HoldJSObjects",
                 sizeof(void*));
 
@@ -4194,8 +4200,8 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 {
   NS_LOG_RELEASE(sXPConnect, sJSGCThingRootCount - 1, "HoldJSObjects");
   nsresult rv = sXPConnect->RemoveJSHolder(aScriptObjectHolder);
-  if (--sJSGCThingRootCount == 0 && !sInitialized) {
-    NS_RELEASE(sXPConnect);
+  if (--sJSGCThingRootCount == 0) {
+    nsLayoutStatics::Release();
   }
   return rv;
 }
