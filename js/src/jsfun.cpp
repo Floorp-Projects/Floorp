@@ -2100,7 +2100,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
     sp = invokevp;
     *sp++ = fval;
     *sp++ = OBJECT_TO_JSVAL(obj);
-    if (aobj && aobj->isArguments()) {
+    if (aobj && aobj->isArguments() && !IsOverriddenArgsLength(aobj)) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
          * backing aobj, even though we copy from fp->argv, we still must check
