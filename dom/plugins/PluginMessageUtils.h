@@ -210,8 +210,10 @@ NPNVariableToString(NPNVariable aVar)
 
 inline bool IsPluginThread()
 {
-  MessageLoop::Type type = MessageLoop::current()->type();
-  return type == MessageLoop::TYPE_UI;
+  MessageLoop* loop = MessageLoop::current();
+  if (!loop)
+      return false;
+  return (loop->type() == MessageLoop::TYPE_UI);
 }
 
 inline void AssertPluginThread()
