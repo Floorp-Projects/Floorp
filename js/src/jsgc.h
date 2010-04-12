@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -434,15 +434,19 @@ struct JSGCStats {
     uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
-    uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
-    uint32  poke;       /* number of potentially useful GC calls */
-    uint32  afree;      /* thing arenas freed so far */
-    uint32  stackseg;   /* total extraordinary stack segments scanned */
-    uint32  segslots;   /* total stack segment jsval slots scanned */
-    uint32  nclose;     /* number of objects with close hooks */
-    uint32  maxnclose;  /* max number of objects with close hooks */
-    uint32  closelater; /* number of close hooks scheduled to run */
-    uint32  maxcloselater; /* max number of close hooks scheduled to run */
+    uint32  maxlevel;       /* maximum GC nesting (indirect recursion) level */
+    uint32  poke;           /* number of potentially useful GC calls */
+    uint32  afree;          /* thing arenas freed so far */
+    uint32  stackseg;       /* total extraordinary stack segments scanned */
+    uint32  segslots;       /* total stack segment jsval slots scanned */
+    uint32  nclose;         /* number of objects with close hooks */
+    uint32  maxnclose;      /* max number of objects with close hooks */
+    uint32  closelater;     /* number of close hooks scheduled to run */
+    uint32  maxcloselater;  /* max number of close hooks scheduled to run */
+    uint32  nallarenas;     /* number of all allocated arenas */
+    uint32  maxnallarenas;  /* maximum number of all allocated arenas */
+    uint32  nchunks;        /* number of allocated chunks */
+    uint32  maxnchunks;     /* maximum number of allocated chunks */
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
     JSGCArenaStats  doubleArenaStats;
