@@ -1218,6 +1218,13 @@ JSScope::shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop)
     generateOwnShape(cx);
 }
 
+bool
+JSScope::globalObjectOwnShapeChange(JSContext *cx)
+{
+    generateOwnShape(cx);
+    return !js_IsPropertyCacheDisabled(cx);
+}
+
 void
 js_TraceId(JSTracer *trc, jsid id)
 {
