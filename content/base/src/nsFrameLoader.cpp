@@ -1069,6 +1069,18 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   return NS_OK;
 }
 
+void
+nsFrameLoader::DestroyChild()
+{
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    mChildProcess->SetOwnerElement(nsnull);
+    PIFrameEmbeddingParent::Send__delete__(mChildProcess);
+    mChildProcess = nsnull;
+  }
+#endif
+}
+
 NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
@@ -1087,14 +1099,8 @@ nsFrameLoader::Destroy()
 
     mOwnerContent = nsnull;
   }
-#ifdef MOZ_IPC
-  if (mChildProcess) {
-    mChildProcess->SetOwnerElement(nsnull);
-    PIFrameEmbeddingParent::Send__delete__(mChildProcess);
-    mChildProcess = nsnull;
-  }
-#endif
-
+  DestroyChild();
+  
   // Let the tree owner know we're gone.
   if (mIsTopLevelContent) {
     nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(mDocShell);

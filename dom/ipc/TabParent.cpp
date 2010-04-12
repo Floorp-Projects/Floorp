@@ -81,6 +81,18 @@ TabParent::~TabParent()
 {
 }
 
+void
+TabParent::ActorDestroy(ActorDestroyReason why)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
+  if (frameLoaderOwner) {
+    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (frameLoader) {
+      frameLoader->DestroyChild();
+    }
+  }
+}
+
 bool
 TabParent::RecvmoveFocus(const bool& aForward)
 {
