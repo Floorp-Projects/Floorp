@@ -97,6 +97,13 @@
 #include "nsIDOMSVGTransformable.h"
 #endif // MOZ_SMIL
 
+// This is needed to ensure correct handling of calls to the
+// vararg-list methods in this file:
+//   nsSVGElement::GetAnimated{Length,Number,Integer}Values
+// See bug 547964 for details:
+PR_STATIC_ASSERT(sizeof(void*) == sizeof(nsnull));
+
+
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
   {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE},
   {&nsGkAtoms::objectBoundingBox, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},

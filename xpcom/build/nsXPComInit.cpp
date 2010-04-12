@@ -142,6 +142,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #include "nsMemoryReporterManager.h"
 
 #include <locale.h>
+#include "mozilla/Services.h"
 
 #ifdef MOZ_IPC
 #include "base/at_exit.h"
@@ -802,7 +803,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     // XPCOM is officially in shutdown mode NOW
     // Set this only after the observers have been notified as this
     // will cause servicemanager to become inaccessible.
-    gXPCOMShuttingDown = PR_TRUE;
+    mozilla::services::Shutdown();
 
 #ifdef DEBUG_dougt
     fprintf(stderr, "* * * * XPCOM shutdown. Access will be denied * * * * \n");

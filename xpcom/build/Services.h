@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Gavin Sharp <gavin@gavinsharp.com> (original author)
+ *   Taras Glek <tglek@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,35 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function test() {
-  /** Tests for Services.jsm (Bug 512784) **/
-  ok(Services, "Services object exists");
-  checkServices();
-}
+#ifndef mozilla_Services_h
+#define mozilla_Services_h
 
-function checkService(service, interface) {
-  ok(service in Services, "Services." + service + " exists");
-  ok(Services[service] instanceof interface, "Services." + service + " is an " + interface);
-}
+#include "nscore.h"
+#include "nsCOMPtr.h"
 
-function checkServices() {
-  checkService("prefs", Ci.nsIPrefBranch2);
-  checkService("prefs", Ci.nsIPrefService);
-  checkService("wm", Ci.nsIWindowMediator);
-  checkService("perms", Ci.nsIPermissionManager);
-  checkService("io", Ci.nsIIOService);
-  checkService("io", Ci.nsIIOService2);
-  checkService("appinfo", Ci.nsIXULAppInfo);
-  checkService("appinfo", Ci.nsIXULRuntime);
-  checkService("dirsvc", Ci.nsIDirectoryService);
-  checkService("dirsvc", Ci.nsIProperties);
-  checkService("prompt", Ci.nsIPromptService);
-  checkService("search", Ci.nsIBrowserSearchService);
-  checkService("storage", Ci.mozIStorageService);
-  checkService("vc", Ci.nsIVersionComparator);
-  checkService("locale", Ci.nsILocaleService);
-  checkService("scriptloader", Ci.mozIJSSubScriptLoader);
-  checkService("ww", Ci.nsIWindowWatcher);
-  checkService("tm", Ci.nsIThreadManager);
-  checkService("strings", Ci.nsIStringBundleService);
-}
+#define MOZ_SERVICE(NAME, TYPE, SERVICE_CID) class TYPE;
+#include "ServiceList.h"
+#undef MOZ_SERVICE
+
+namespace mozilla {
+namespace services {
+
+#define MOZ_SERVICE(NAME, TYPE, SERVICE_CID) NS_COM already_AddRefed<TYPE> Get##NAME();
+#include "ServiceList.h"
+#undef MOZ_SERVICE
+
+} // namespace services
+} // namespace mozilla
+
+#endif

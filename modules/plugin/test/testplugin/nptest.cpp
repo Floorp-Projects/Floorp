@@ -674,7 +674,13 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->scriptableObject = scriptableObject;
 
   instanceData->instanceCountWatchGeneration = sCurrentInstanceCountWatchGeneration;
-  
+
+  if (NP_FULL == mode) {
+    instanceData->streamMode = NP_SEEK;
+    instanceData->frame = "testframe";
+    addRange(instanceData, "100,100");
+  }
+
   bool requestWindow = false;
   // handle extra params
   for (int i = 0; i < argc; i++) {
