@@ -369,9 +369,15 @@ typedef PRUint32 nsrefcnt;
 #endif
 
 /**
- * The preferred symbol for null.
+ * The preferred symbol for null.  Make sure this is the same size as
+ * void* on the target.  See bug 547964.
  */
-#define nsnull 0
+#if defined(_WIN64)
+# define nsnull 0LL
+#else
+# define nsnull 0L
+#endif
+
 
 #include "nsError.h"
 
