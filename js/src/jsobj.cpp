@@ -5021,6 +5021,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (sprop->isAccessorDescriptor()) {
             if (sprop->hasDefaultSetter()) {
                 JS_UNLOCK_SCOPE(cx, scope);
+                if (defineHow & JSDNP_CACHE_RESULT)
+                    TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
                 return js_ReportGetterOnlyAssignment(cx);
             }
         } else {
