@@ -139,6 +139,7 @@ CPPSRCS		= \
 		jsexn.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
+		jsgcchunk.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
