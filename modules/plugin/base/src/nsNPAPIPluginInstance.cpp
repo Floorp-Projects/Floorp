@@ -1436,6 +1436,18 @@ nsresult nsNPAPIPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
 NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
 {
   mWindowless = aWindowless;
+
+  if (mMIMEType) {
+      // bug 558434 - Prior to 3.6.4, we assumed windowless was transparent.
+      // Silverlight apparently relied on this quirk, so we default to
+      // transparent unless they specify otherwise after setting the windowless
+      // property. (Last tested version: sl 3.0). 
+      NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+      if (!PL_strncasecmp(mMIMEType, silverlight.get(), silverlight.Length())) {
+          mTransparent = PR_TRUE;
+      }
+  }
+
   return NPERR_NO_ERROR;
 }
 

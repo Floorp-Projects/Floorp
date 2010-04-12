@@ -112,3 +112,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "tm",
 XPCOMUtils.defineLazyServiceGetter(Services, "console",
                                    "@mozilla.org/consoleservice;1",
                                    "nsIConsoleService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "strings",
+                                   "@mozilla.org/intl/stringbundle;1",
+                                   "nsIStringBundleService");
