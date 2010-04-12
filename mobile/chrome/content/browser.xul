@@ -119,12 +119,15 @@
     <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_quit" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_panel" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- screen/display -->
+    <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_zoomin" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_zoomout" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_lockscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -154,6 +157,7 @@
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
     <key id="key_forceReload" keycode="VK_F5" modifiers="shift" command="cmd_forceReload"/>
 #else
+    <key id="key_lockscreen" key="o" modifiers="accel,shift" command="cmd_lockscreen"/>
     <!-- F5 on maemo is "home" which is a task switching key -->
 #endif
     <key id="key_reload2" key="r" modifiers="accel" command="cmd_reload"/>

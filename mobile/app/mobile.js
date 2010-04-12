@@ -44,6 +44,8 @@ pref("browser.startup.homepage", "about:firstrun");
 
 pref("browser.tabs.warnOnClose", true);
 
+pref("toolkit.screen.lock", false);
+
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
 
