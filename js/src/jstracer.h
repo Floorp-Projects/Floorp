@@ -1305,8 +1305,6 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus guardPrototypeHasNoIndexedProperties(JSObject* obj,
                                                                              nanojit::LIns* obj_ins,
                                                                              ExitType exitType);
-    JS_REQUIRES_STACK RecordingStatus guardNotGlobalObject(JSObject* obj,
-                                                             nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK JSStackFrame* entryFrame() const;
     JS_REQUIRES_STACK void clearEntryFrameSlotsFromTracker(Tracker& which);
     JS_REQUIRES_STACK void clearCurrentFrameSlotsFromTracker(Tracker& which);
