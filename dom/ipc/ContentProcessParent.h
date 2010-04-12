@@ -86,6 +86,8 @@ public:
     void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
 
+    bool IsAlive();
+
 protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
@@ -117,6 +119,7 @@ private:
     bool mShouldCallUnblockChild;
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
+    bool mIsAlive;
 };
 
 } // namespace dom
