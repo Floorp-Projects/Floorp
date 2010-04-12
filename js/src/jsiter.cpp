@@ -418,9 +418,8 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
                 }
             } else {
                 /*
-                 * These objects don't escape either, but we construct a
-                 * StopIteration exception based on the parent of the iterator
-                 * object, so we need the correct parent here.
+                 * These iterator objects can escape, so we have to construct
+                 * them with the proper proto and parent.
                  */
                 if (!(iterobj = NewObject(cx, &js_IteratorClass, NULL, NULL)))
                     return false;
