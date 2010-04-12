@@ -751,6 +751,7 @@ var BrowserUI = {
       case "cmd_sanitize":
       case "cmd_zoomin":
       case "cmd_zoomout":
+      case "cmd_lockscreen":
         isSupported = true;
         break;
       default:
@@ -856,6 +857,12 @@ var BrowserUI = {
       case "cmd_zoomout":
         Browser.zoom(1);
         break;
+      case "cmd_lockscreen":
+      {
+        let locked = gPrefService.getBoolPref("toolkit.screen.lock");
+        gPrefService.setBoolPref("toolkit.screen.lock", !locked);
+        break;
+      }
     }
   }
 };
