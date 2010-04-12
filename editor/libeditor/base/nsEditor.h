@@ -43,6 +43,7 @@
 #include "nsWeakReference.h"
 
 #include "nsIEditor.h"
+#include "nsIPlaintextEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 
@@ -579,6 +580,72 @@ public:
 
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
+
+  // Accessor methods to flags
+  PRBool IsPlaintextEditor() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorPlaintextMask) != 0;
+  }
+
+  PRBool IsSingleLineEditor() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorSingleLineMask) != 0;
+  }
+
+  PRBool IsPasswordEditor() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorPasswordMask) != 0;
+  }
+
+  PRBool IsReadonly() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorReadonlyMask) != 0;
+  }
+
+  PRBool IsDisabled() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorDisabledMask) != 0;
+  }
+
+  PRBool IsInputFiltered() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorFilterInputMask) != 0;
+  }
+
+  PRBool IsMailEditor() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorMailMask) != 0;
+  }
+
+  PRBool UseAsyncUpdate() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) != 0;
+  }
+
+  PRBool IsWrapHackEnabled() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorEnableWrapHackMask) != 0;
+  }
+
+  PRBool IsFormWidget() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorWidgetMask) != 0;
+  }
+
+  PRBool NoCSS() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorNoCSSMask) != 0;
+  }
+
+  PRBool IsInteractionAllowed() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorAllowInteraction) != 0;
+  }
+
+  PRBool DontEchoPassword() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
+  }
 
 protected:
 

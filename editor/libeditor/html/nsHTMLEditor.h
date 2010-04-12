@@ -312,7 +312,6 @@ public:
   /** Internal, static version */
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock);
 
-  NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
   NS_IMETHOD Paste(PRInt32 aSelectionType);
@@ -431,13 +430,6 @@ protected:
   virtual nsresult CreateEventListeners();
 
   virtual void RemoveEventListeners();
-
-  // Sets mCSSAware to correspond to aFlags. This toggles whether CSS is
-  // used to style elements in the editor. Note that the editor is only CSS
-  // aware by default in Composer and in the mail editor.
-  void UpdateForFlags(PRUint32 aFlags) {
-    mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
-  }
 
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);

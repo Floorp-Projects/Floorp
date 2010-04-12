@@ -86,7 +86,7 @@ public:
 
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor);
   NS_IMETHOD DetachEditor();
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
