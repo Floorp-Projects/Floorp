@@ -401,7 +401,7 @@ public:
                              nsIPluginInstance* aInstance,
                              nsIPluginInstanceOwner *aOwner = nsnull);
 
-  nsresult InitializeFullPage(nsIPluginInstance *aInstance);
+  nsresult InitializeFullPage(nsIURI* aURL, nsIPluginInstance *aInstance);
 
   nsresult OnFileAvailable(nsIFile* aFile);
 
@@ -813,13 +813,15 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
 
 
 // Called by NewFullPagePluginStream()
-nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInstance)
+nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIURI* aURL, nsIPluginInstance *aInstance)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginStreamListenerPeer::InitializeFullPage instance=%p\n",aInstance));
 
   NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeFullPage mInstance != nsnull");
   mInstance = aInstance;
+
+  mURL = aURL;
 
   mDataForwardToRequest = new nsHashtable(16, PR_FALSE);
   if (!mDataForwardToRequest)
@@ -2358,7 +2360,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
     aOwner->GetInstance(instance);
     nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
     if (!pluginTag || !pluginTag->mIsJavaPlugin)
-      NewFullPagePluginStream(aStreamListener, instance);
+      NewFullPagePluginStream(aStreamListener, aURI, instance);
     NS_IF_RELEASE(instance);
     return NS_OK;
   }
@@ -2381,7 +2383,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
       if (window->window)
         window->CallSetWindow(instance);
 
-      rv = NewFullPagePluginStream(aStreamListener, instance);
+      rv = NewFullPagePluginStream(aStreamListener, aURI, instance);
 
       // If we've got a native window, the let the plugin know about it.
       if (window->window)
@@ -4524,6 +4526,7 @@ nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
 
 // Called by InstantiateFullPagePlugin()
 nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListener,
+                                               nsIURI* aURI,
                                                nsIPluginInstance *aInstance)
 {
   nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
@@ -4532,7 +4535,7 @@ nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListen
 
   nsresult rv;
 
-  rv = listener->InitializeFullPage(aInstance);
+  rv = listener->InitializeFullPage(aURI, aInstance);
 
   aStreamListener = listener;
   NS_ADDREF(listener);
