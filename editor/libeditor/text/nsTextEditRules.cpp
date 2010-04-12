@@ -67,13 +67,12 @@
 #include "nsIDOMNodeFilter.h"
 
 // for IBMBIDI
-#include "nsIPresShell.h"
 #include "nsFrameSelection.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
-  if ((mFlags & nsIPlaintextEditor::eEditorReadonlyMask) || (mFlags & nsIPlaintextEditor::eEditorDisabledMask)) \
+  if (IsReadonly() || IsDisabled()) \
   {                     \
     *aCancel = PR_TRUE; \
     return NS_OK;       \
@@ -99,7 +98,6 @@ nsTextEditRules::nsTextEditRules()
 , mPasswordText()
 , mPasswordIMEText()
 , mPasswordIMEIndex(0)
-, mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
 , mDidExplicitlySetInterline(PR_FALSE)
@@ -137,13 +135,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextEditRules)
  ********************************************************/
 
 NS_IMETHODIMP
-nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
+nsTextEditRules::Init(nsPlaintextEditor *aEditor)
 {
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
 
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
-  // call SetFlags only aftet mEditor has been initialized!
-  SetFlags(aFlags);
   nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
@@ -156,7 +152,17 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   nsresult res = CreateBogusNodeIfNeeded(selection);
   if (NS_FAILED(res)) return res;
 
-  if (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
+  // If the selection hasn't been set up yet, set it up collapsed to the end of
+  // our editable content.
+  PRInt32 rangeCount;
+  res = selection->GetRangeCount(&rangeCount);
+  NS_ENSURE_SUCCESS(res, res);
+  if (!rangeCount) {
+    res = mEditor->EndOfDocument();
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  if (IsPlaintextEditor())
   {
     // ensure trailing br node
     res = CreateTrailingBRIfNeeded();
@@ -204,28 +210,6 @@ nsTextEditRules::DetachEditor()
     mTimer->Cancel();
 
   mEditor = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextEditRules::GetFlags(PRUint32 *aFlags)
-{
-  if (!aFlags) { return NS_ERROR_NULL_POINTER; }
-  *aFlags = mFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextEditRules::SetFlags(PRUint32 aFlags)
-{
-  if (mFlags == aFlags) return NS_OK;
-  
-  // XXX - this won't work if body element already has
-  // a style attribute on it, don't know why.
-  // SetFlags() is really meant to only be called once
-  // and at editor init time.  
-
-  mFlags = aFlags;
   return NS_OK;
 }
 
@@ -448,7 +432,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   *aHandled = PR_FALSE;
-  if (mFlags & nsIPlaintextEditor::eEditorSingleLineMask) {
+  if (IsSingleLineEditor()) {
     *aCancel = PR_TRUE;
   }
   else 
@@ -481,7 +465,9 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   // we only need to execute the stuff below if we are a plaintext editor.
   // html editors have a different mechanism for putting in mozBR's
   // (because there are a bunch more places you have to worry about it in html) 
-  if (!nsIPlaintextEditor::eEditorPlaintextMask & mFlags) return NS_OK;
+  if (!IsPlaintextEditor()) {
+    return NS_OK;
+  }
 
   // if we are at the end of the document, we need to insert 
   // a special mozBR following the normal br, and then set the
@@ -545,7 +531,7 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
 }
 #ifdef DEBUG
 #define ASSERT_PASSWORD_LENGTHS_EQUAL()                                \
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask) {              \
+  if (IsPasswordEditor()) {                                            \
     PRInt32 txtLen;                                                    \
     mEditor->GetTextLength(&txtLen);                                   \
     NS_ASSERTION(mPasswordText.Length() == txtLen,                     \
@@ -660,7 +646,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   PRUint32 end = 0;  
 
   // handle password field docs
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  if (IsPasswordEditor())
   {
     res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
     NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
@@ -686,7 +672,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // handle password field data
   // this has the side effect of changing all the characters in aOutString
   // to the replacement character
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  if (IsPasswordEditor())
   {
     if (aAction == kInsertTextIME)  {
       res = RemoveIMETextFromPWBuf(start, outString);
@@ -704,7 +690,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // 4. replace with commas
   // 5. strip newlines and surrounding whitespace
   // So find out what we're expected to do:
-  if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
+  if (IsSingleLineEditor())
   {
     nsAutoString tString(*outString);
 
@@ -713,14 +699,13 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     outString->Assign(tString);
   }
 
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  if (IsPasswordEditor())
   {
     // manage the password buffer
     mPasswordText.Insert(*outString, start);
 
     nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
-    if (lookAndFeel->GetEchoPassword() && 
-        !(mFlags & nsIPlaintextEditor::eEditorDontEchoPassword)) {
+    if (lookAndFeel->GetEchoPassword() && !DontEchoPassword()) {
       HideLastPWInput();
       mLastStart = start;
       mLastLength = outString->Length();
@@ -811,7 +796,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         // is it a return?
         if (subStr.EqualsLiteral(LFSTR))
         {
-          if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
+          if (IsSingleLineEditor())
           {
             NS_ASSERTION((mEditor->mNewlineHandling == nsIPlaintextEditor::eNewlinesPasteIntact),
                   "Newline improperly getting into single-line edit field!");
@@ -928,7 +913,7 @@ nsTextEditRules::WillSetTextProperty(nsISelection *aSelection, PRBool *aCancel, 
     { return NS_ERROR_NULL_POINTER; }
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
-  if (nsIPlaintextEditor::eEditorPlaintextMask & mFlags) {
+  if (IsPlaintextEditor()) {
     *aCancel = PR_TRUE;
   }
   return NS_OK;
@@ -947,7 +932,7 @@ nsTextEditRules::WillRemoveTextProperty(nsISelection *aSelection, PRBool *aCance
     { return NS_ERROR_NULL_POINTER; }
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
-  if (nsIPlaintextEditor::eEditorPlaintextMask & mFlags) {
+  if (IsPlaintextEditor()) {
     *aCancel = PR_TRUE;
   }
   return NS_OK;
@@ -980,7 +965,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
 
   nsresult res = NS_OK;
 
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  if (IsPasswordEditor())
   {
     res = mEditor->ExtendSelectionForDelete(aSelection, &aCollapsedAction);
     NS_ENSURE_SUCCESS(res, res);
@@ -1186,7 +1171,7 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
   ToLowerCase(outputFormat);
   if (outputFormat.EqualsLiteral("text/plain"))
   { // only use these rules for plain text output
-    if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+    if (IsPasswordEditor())
     {
       *aOutString = mPasswordText;
       *aHandled = PR_TRUE;
@@ -1288,7 +1273,7 @@ nsresult
 nsTextEditRules::CreateTrailingBRIfNeeded()
 {
   // but only if we aren't a single line edit field
-  if (mFlags & nsIPlaintextEditor::eEditorSingleLineMask)
+  if (IsSingleLineEditor())
     return NS_OK;
   nsIDOMNode *body = mEditor->GetRoot();
   if (!body)
@@ -1387,8 +1372,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
   nsresult res = NS_OK;
   *aOutString = *aInString;
   
-  if ((-1 != aMaxLength) && (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
-      && !mEditor->IsIMEComposing() )
+  if ((-1 != aMaxLength) && IsPlaintextEditor() && !mEditor->IsIMEComposing() )
   {
     // Get the current text length.
     // Get the length of inString.

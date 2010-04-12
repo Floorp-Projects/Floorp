@@ -39,7 +39,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 

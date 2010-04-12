@@ -437,7 +437,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       return NS_OK;
     }
 
-    // If we aren't allowed to try other listeners, we're done here.
+    // If we aren't allowed to try other listeners, just skip through to
+    // trying to convert the data.
     if (!(mFlags & nsIURILoader::DONT_RETARGET)) {
 
       //
@@ -516,44 +517,39 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
           return rv;
         }
       }
+    } else {
+      LOG(("  DONT_RETARGET flag set, so skipped over random other content "
+           "listeners and content handlers"));
     }
-  } else if (mFlags & nsIURILoader::DONT_RETARGET) {
-    // External handling was forced, but we must not retarget
-    // -> abort
-    LOG(("  External handling forced, but not allowed to retarget -> aborting"));
-    return NS_ERROR_WONT_HANDLE_CONTENT;
+
+    //
+    // Fifth step:  If no listener prefers this type, see if any stream
+    //              converters exist to transform this content type into
+    //              some other.
+    //
+    // Don't do this if the server sent us a MIME type of "*/*" because they saw
+    // it in our Accept header and got confused.
+    // XXXbz have to be careful here; may end up in some sort of bizarre infinite
+    // decoding loop.
+    if (mContentType != anyType) {
+      rv = ConvertData(request, m_contentListener, mContentType, anyType);
+      if (NS_FAILED(rv)) {
+        m_targetStreamListener = nsnull;
+      } else if (m_targetStreamListener) {
+        // We found a converter for this MIME type.  We'll just pump data into it
+        // and let the downstream nsDocumentOpenInfo handle things.
+        LOG(("  Converter taking over now"));
+        return NS_OK;
+      }
+    }
   }
 
   NS_ASSERTION(!m_targetStreamListener,
                "If we found a listener, why are we not using it?");
   
-  //
-  // Fifth step:  If no listener prefers this type, see if any stream
-  //              converters exist to transform this content type into
-  //              some other.
-  //
-
-  // We always want to do this, since even content being forced to
-  // be handled externally may need decoding (eg via the unknown
-  // content decoder).
-  // Don't do this if the server sent us a MIME type of "*/*" because they saw
-  // it in our Accept header and got confused.
-  // XXXbz have to be careful here; may end up in some sort of bizarre infinite
-  // decoding loop.
-  if (mContentType != anyType) {
-    rv = ConvertData(request, m_contentListener, mContentType, anyType);
-    if (NS_FAILED(rv)) {
-      m_targetStreamListener = nsnull;
-    } else if (m_targetStreamListener) {
-      // We found a converter for this MIME type.  We'll just pump data into it
-      // and let the downstream nsDocumentOpenInfo handle things.
-      LOG(("  Converter taking over now"));
-      return NS_OK;
-    }
-  }
-
   if (mFlags & nsIURILoader::DONT_RETARGET) {
-    LOG(("  Listener not interested and no stream converter exists, and retargeting disallowed -> aborting"));
+    LOG(("  External handling forced or (listener not interested and no "
+         "stream converter exists), and retargeting disallowed -> aborting"));
     return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 

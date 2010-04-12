@@ -47,7 +47,6 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsBoxLayout.h"
