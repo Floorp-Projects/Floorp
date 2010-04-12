@@ -1086,6 +1086,16 @@ _cairo_d2d_path_close(void *closure)
     path_conversion *pathConvert =
 	static_cast<path_conversion*>(closure);
 
+    if (!pathConvert->figureActive) {
+	pathConvert->sink->BeginFigure(_d2d_point_from_cairo_point(&pathConvert->current_point),
+				       pathConvert->type);
+	/**
+	 * In this case we mean a single point. For D2D this means we need to add an infinitely
+	 * small line here to get that effect.
+	 */
+	pathConvert->sink->AddLine(_d2d_point_from_cairo_point(&pathConvert->current_point));
+    }
+
     pathConvert->sink->EndFigure(D2D1_FIGURE_END_CLOSED);
     pathConvert->figureActive = false;
     return CAIRO_STATUS_SUCCESS;
