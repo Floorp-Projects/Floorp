@@ -10647,7 +10647,7 @@ PRBool
 nsDocShell::URIIsLocalFile(nsIURI *aURI)
 {
     PRBool isFile;
-    nsCOMPtr<nsINetUtil> util = do_GetIOService();
+    nsCOMPtr<nsINetUtil> util = do_GetNetUtil();
 
     return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
                                     nsIProtocolHandler::URI_IS_LOCAL_FILE,
