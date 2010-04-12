@@ -154,9 +154,6 @@ NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 #define UID_STRING_LENGTH 39
 
-// Set to true from NS_ShutdownXPCOM.
-extern PRBool gXPCOMShuttingDown;
-
 static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
 {
     PR_snprintf(buf, UID_STRING_LENGTH, gIDFormat,
