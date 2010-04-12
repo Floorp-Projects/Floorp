@@ -163,6 +163,8 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
+  NS_ASSERTION(!mDocWeak || mDidPreDestroy, "Why PreDestroy hasn't been called?");
+
   mTxnMgr = nsnull;
 
   delete mPhonetic;
