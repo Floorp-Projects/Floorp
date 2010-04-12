@@ -174,6 +174,8 @@ protected:
 
     TabParentListenerInfo* GetListenerInfo(nsIWebProgressListener *aListener);
 
+    void ActorDestroy(ActorDestroyReason why);
+
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
