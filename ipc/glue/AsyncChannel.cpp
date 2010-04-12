@@ -92,7 +92,8 @@ AsyncChannel::AsyncChannel(AsyncListener* aListener)
     mIOLoop(),
     mWorkerLoop(),
     mChild(false),
-    mChannelErrorTask(NULL)
+    mChannelErrorTask(NULL),
+    mExistingListener(NULL)
 {
     MOZ_COUNT_CTOR(AsyncChannel);
 }
@@ -112,7 +113,7 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     // FIXME need to check for valid channel
 
     mTransport = aTransport;
-    mTransport->set_listener(this);
+    mExistingListener = mTransport->set_listener(this);
 
     // FIXME figure out whether we're in parent or child, grab IO loop
     // appropriately
@@ -432,9 +433,14 @@ AsyncChannel::OnChannelConnected(int32 peer_pid)
 {
     AssertIOThread();
 
-    MutexAutoLock lock(mMutex);
-    mChannelState = ChannelConnected;
-    mCvar.Notify();
+    {
+        MutexAutoLock lock(mMutex);
+        mChannelState = ChannelConnected;
+        mCvar.Notify();
+    }
+
+    if(mExistingListener)
+        mExistingListener->OnChannelConnected(peer_pid);
 }
 
 void
