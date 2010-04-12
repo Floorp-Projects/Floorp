@@ -305,21 +305,6 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
   return result; 
 } 
 
-NS_IMETHODIMP 
-nsPlaintextEditor::GetFlags(PRUint32 *aFlags)
-{
-  if (!mRules || !aFlags) { return NS_ERROR_NULL_POINTER; }
-  return mRules->GetFlags(aFlags);
-}
-
-
-NS_IMETHODIMP 
-nsPlaintextEditor::SetFlags(PRUint32 aFlags)
-{
-  if (!mRules) { return NS_ERROR_NULL_POINTER; }
-  return mRules->SetFlags(aFlags);
-}
-
 
 NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
@@ -327,7 +312,7 @@ NS_IMETHODIMP nsPlaintextEditor::InitRules()
   nsresult res = NS_NewTextEditRules(getter_AddRefs(mRules));
   if (NS_FAILED(res)) return res;
   if (!mRules) return NS_ERROR_UNEXPECTED;
-  return mRules->Init(this, mFlags);
+  return mRules->Init(this);
 }
 
 
@@ -345,11 +330,7 @@ nsPlaintextEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
 
 PRBool nsPlaintextEditor::IsModifiable()
 {
-  PRUint32 flags;
-  if (NS_SUCCEEDED(GetFlags(&flags)))
-    return ((flags & eEditorReadonlyMask) == 0);
-
-  return PR_FALSE;
+  return !IsReadonly();
 }
 
 
@@ -871,7 +852,7 @@ nsPlaintextEditor::BeginComposition()
 {
   NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
 
-  if(mFlags & nsIPlaintextEditor::eEditorPasswordMask)  {
+  if (IsPasswordEditor())  {
     if (mRules) {
       nsIEditRules *p = mRules.get();
       nsTextEditRules *textEditRules = static_cast<nsTextEditRules *>(p);
@@ -993,9 +974,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 
   // Make sure we're a plaintext editor, otherwise we shouldn't
   // do the rest of this.
-  PRUint32 flags = 0;
-  GetFlags(&flags);
-  if (!(flags & eEditorPlaintextMask))
+  if (!IsPlaintextEditor())
     return NS_OK;
 
   // Ought to set a style sheet here ...
@@ -1026,14 +1005,14 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // Make sure we have fixed-width font.  This should be done for us,
   // but it isn't, see bug 22502, so we have to add "font: -moz-fixed;".
   // Only do this if we're wrapping.
-  if ((flags & eEditorEnableWrapHackMask) && aWrapColumn >= 0)
+  if (IsWrapHackEnabled() && aWrapColumn >= 0)
     styleValue.AppendLiteral("font-family: -moz-fixed; ");
 
   // If "mail.compose.wrap_to_window_width" is set, and we're a mail editor,
   // then remember our wrap width (for output purposes) but set the visual
   // wrapping to window width.
   // We may reset mWrapToWindow here, based on the pref's current value.
-  if (flags & eEditorMailMask)
+  if (IsMailEditor())
   {
     nsresult rv;
     nsCOMPtr<nsIPrefBranch> prefBranch =
