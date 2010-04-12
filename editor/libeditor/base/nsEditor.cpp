@@ -231,10 +231,13 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   if ((nsnull==aDoc) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-  mFlags = aFlags;
   mDocWeak = do_GetWeakReference(aDoc);  // weak reference to doc
   mPresShellWeak = do_GetWeakReference(aPresShell);   // weak reference to pres shell
   mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
+
+  nsresult rv = SetFlags(aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
+
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
@@ -483,11 +486,7 @@ nsEditor::GetDesiredSpellCheckState()
 
   // Check for password/readonly/disabled, which are not spellchecked
   // regardless of DOM
-  PRUint32 flags;
-  if (NS_SUCCEEDED(GetFlags(&flags)) &&
-      flags & (nsIPlaintextEditor::eEditorPasswordMask |
-               nsIPlaintextEditor::eEditorReadonlyMask |
-               nsIPlaintextEditor::eEditorDisabledMask)) {
+  if (IsPasswordEditor() || IsReadonly() || IsDisabled()) {
     return PR_FALSE;
   }
 
@@ -2115,8 +2114,9 @@ nsEditor::ForceCompositionEnd()
 #endif
 
 #ifdef XP_UNIX
-  if(mFlags & nsIPlaintextEditor::eEditorPasswordMask)
-	return NS_OK;
+  if(IsPasswordEditor()) {
+    return NS_OK;
+  }
 #endif
 
   nsCOMPtr<nsIWidget> widget;
@@ -2139,12 +2139,7 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
   NS_ENSURE_ARG_POINTER(aState);
   *aState = nsIContent::IME_STATUS_ENABLE;
 
-  PRUint32 flags;
-  nsresult rv = GetFlags(&flags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (flags & (nsIPlaintextEditor::eEditorReadonlyMask |
-               nsIPlaintextEditor::eEditorDisabledMask)) {
+  if (IsReadonly() || IsDisabled()) {
     *aState = nsIContent::IME_STATUS_DISABLE;
     return NS_OK;
   }
@@ -2157,7 +2152,7 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
 
   switch (frame->GetStyleUIReset()->mIMEMode) {
     case NS_STYLE_IME_MODE_AUTO:
-      if (flags & (nsIPlaintextEditor::eEditorPasswordMask))
+      if (IsPasswordEditor())
         *aState = nsIContent::IME_STATUS_PASSWORD;
       break;
     case NS_STYLE_IME_MODE_DISABLED:
