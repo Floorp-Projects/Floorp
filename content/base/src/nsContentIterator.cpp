@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
-#include "nsPresContext.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"

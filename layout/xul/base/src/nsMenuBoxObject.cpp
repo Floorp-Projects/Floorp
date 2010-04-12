@@ -38,7 +38,6 @@
 #include "nsISupportsUtils.h"
 #include "nsIMenuBoxObject.h"
 #include "nsBoxObject.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMNSUIEvent.h"

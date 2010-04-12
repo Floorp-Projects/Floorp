@@ -6445,6 +6445,26 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   }
 }
 
+static PRBool
+Flush(nsIDocument* aDocument, void* aData)
+{
+  const mozFlushType* type = static_cast<const mozFlushType*>(aData);
+  aDocument->FlushPendingNotifications(*type);
+  return PR_TRUE;
+}
+
+void
+nsDocument::FlushExternalResources(mozFlushType aType)
+{
+  NS_ASSERTION(aType >= Flush_Style,
+    "should only need to flush for style or higher in external resources");
+
+  if (GetDisplayDocument()) {
+    return;
+  }
+  EnumerateExternalResources(Flush, &aType);
+}
+
 nsIScriptEventManager*
 nsDocument::GetScriptEventManager()
 {

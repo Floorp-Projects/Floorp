@@ -283,34 +283,18 @@ NS_IMETHODIMP nsNodeIterator::GetExpandEntityReferences(PRBool *aExpandEntityRef
 /* nsIDOMNode nextNode ()  raises (DOMException); */
 NS_IMETHODIMP nsNodeIterator::NextNode(nsIDOMNode **_retval)
 {
-    nsresult rv;
-    PRInt16 filtered;
-
-    *_retval = nsnull;
-
-    if (mDetached)
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-    mWorkingPointer = mPointer;
-
-    while (mWorkingPointer.MoveToNext(mRoot)) {
-        nsCOMPtr<nsINode> testNode = mWorkingPointer.mNode;
-        rv = TestNode(testNode, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
-            mPointer = mWorkingPointer;
-            mWorkingPointer.Clear();
-            return CallQueryInterface(testNode, _retval);
-        }
-    }
-
-    mWorkingPointer.Clear();
-    return NS_OK;
+    return NextOrPrevNode(&NodePointer::MoveToNext, _retval);
 }
 
 /* nsIDOMNode previousNode ()  raises (DOMException); */
 NS_IMETHODIMP nsNodeIterator::PreviousNode(nsIDOMNode **_retval)
+{
+    return NextOrPrevNode(&NodePointer::MoveToPrevious, _retval);
+}
+
+nsresult
+nsNodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
+                               nsIDOMNode **_retval)
 {
     nsresult rv;
     PRInt16 filtered;
@@ -322,19 +306,26 @@ NS_IMETHODIMP nsNodeIterator::PreviousNode(nsIDOMNode **_retval)
 
     mWorkingPointer = mPointer;
 
-    while (mWorkingPointer.MoveToPrevious(mRoot)) {
+    struct AutoClear {
+        NodePointer* mPtr;
+        AutoClear(NodePointer* ptr) : mPtr(ptr) {}
+       ~AutoClear() { mPtr->Clear(); }
+    } ac(&mWorkingPointer);
+
+    while ((mWorkingPointer.*aMove)(mRoot)) {
         nsCOMPtr<nsINode> testNode = mWorkingPointer.mNode;
         rv = TestNode(testNode, &filtered);
         NS_ENSURE_SUCCESS(rv, rv);
 
+        if (mDetached)
+            return NS_ERROR_DOM_INVALID_STATE_ERR;
+
         if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
-            mWorkingPointer.Clear();
             return CallQueryInterface(testNode, _retval);
         }
     }
 
-    mWorkingPointer.Clear();
     return NS_OK;
 }
 

@@ -64,6 +64,9 @@ struct JS_FRIEND_API(ArrayBuffer) {
     static JSBool class_constructor(JSContext *cx, JSObject *obj,
                                     uintN argc, jsval *argv, jsval *rval);
 
+    static bool create(JSContext *cx, JSObject *obj, uintN argc,
+                       jsval *argv, jsval *rval);
+
     static ArrayBuffer *fromJSObject(JSObject *obj);
 
     ArrayBuffer()

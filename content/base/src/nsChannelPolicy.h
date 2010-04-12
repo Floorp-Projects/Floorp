@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org code channel policy container code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ *   Mozilla Corporation
  *
  * Contributor(s):
+ *   Brandon Sterne <bsterne@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,27 +34,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIPrivateCompositionEvent_h__
-#define nsIPrivateCompositionEvent_h__
+#ifndef nsChannelPolicy_h___
+#define nsChannelPolicy_h___
 
-#include "nsEvent.h"
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIChannelPolicy.h"
 
-// {901B82D5-67C0-45ad-86AE-AB9A6BD74111}
-#define NS_IPRIVATECOMPOSITIONEVENT_IID	\
-{ 0x901b82d5, 0x67c0, 0x45ad, \
-{ 0x86, 0xae, 0xab, 0x9a, 0x6b, 0xd7, 0x41, 0x11 } }
+#define NSCHANNELPOLICY_CONTRACTID "@mozilla.org/nschannelpolicy;1"
+#define NSCHANNELPOLICY_CID \
+{ 0xd396b3cd, 0xf164, 0x4ce8, \
+  { 0x93, 0xa7, 0xe3, 0x85, 0xe1, 0x46, 0x56, 0x3c } }
 
-class nsIPrivateCompositionEvent : public nsISupports {
-
+class nsChannelPolicy : public nsIChannelPolicy
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICHANNELPOLICY
 
-  NS_IMETHOD GetCompositionReply(struct nsTextEventReply** aReply) = 0;
+    nsChannelPolicy();
+    virtual ~nsChannelPolicy();
+
+protected:
+    /* Represents the type of content being loaded in the channel per
+     * nsIContentPolicy, e.g. TYPE_IMAGE, TYPE_SCRIPT
+     */
+    unsigned long mLoadType;
+
+    /* pointer to a Content Security Policy object if available */
+    nsCOMPtr<nsISupports> mCSP;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateCompositionEvent,
-                              NS_IPRIVATECOMPOSITIONEVENT_IID)
-
-#endif // nsIPrivateCompositionEvent_h__
-
+#endif /* nsChannelPolicy_h___ */

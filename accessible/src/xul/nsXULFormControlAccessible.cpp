@@ -54,7 +54,6 @@
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextControlFrame.h"
-#include "nsIPresShell.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible

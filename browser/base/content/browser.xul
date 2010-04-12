@@ -355,11 +355,11 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
   </popupset>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+  <toolbox id="navigator-toolbox"
+           defaultmode="icons" mode="icons"
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
 #endif
-           defaultmode="icons"
            persist="tabsontop">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"

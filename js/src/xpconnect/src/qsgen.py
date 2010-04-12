@@ -1667,7 +1667,7 @@ def main():
     if options.cachedir != '':
         sys.path.append(options.cachedir)
         if not os.path.isdir(options.cachedir):
-            os.mkdir(options.cachedir)
+            os.makedirs(options.cachedir)
 
     try:
         includePath = options.idlpath.split(':')

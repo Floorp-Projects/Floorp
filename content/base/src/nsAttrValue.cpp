@@ -1069,13 +1069,11 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
   PRInt32 ec;
   PRBool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
-  if (NS_FAILED(ec)) {
+  if (NS_FAILED(ec) || originalVal < 0) {
     return PR_FALSE;
   }
 
-  PRInt32 val = PR_MAX(originalVal, -1);
-  strict = strict && (originalVal == val);
-  SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
+  SetIntValueAndType(originalVal, eInteger, nsnull);
 
   return PR_TRUE;
 }

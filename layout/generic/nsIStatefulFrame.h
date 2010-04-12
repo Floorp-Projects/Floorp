@@ -8,7 +8,6 @@
 
 #include "nsQueryFrame.h"
 
-class nsPresContext;
 class nsPresState;
 
 class nsIStatefulFrame

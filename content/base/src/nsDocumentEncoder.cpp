@@ -77,6 +77,7 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
+#include "nsIFrame.h"
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
@@ -363,6 +364,18 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
 
   if (!maybeFixedNode)
     maybeFixedNode = aNode;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  if (content){
+    nsIFrame* frame = content->GetPrimaryFrame();
+    if (frame) {
+      PRBool isSelectable;
+      frame->IsSelectable(&isSelectable, nsnull);
+      if (!isSelectable){
+        aDontSerializeRoot = PR_TRUE;
+      }
+    }
+  }
 
   if (!aDontSerializeRoot) {
     rv = SerializeNodeStart(maybeFixedNode, 0, -1, aStr, aNode);

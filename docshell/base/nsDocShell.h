@@ -41,7 +41,6 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContentViewer.h"

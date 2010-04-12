@@ -848,6 +848,9 @@ PlacesTreeView.prototype = {
     this.invalidateContainer(aNode);
   },
 
+  containerStateChanged:
+  function PTV_containerStateChanged(aNode, aOldState, aNewState) {},
+
   invalidateContainer: function PTV_invalidateContainer(aContainer) {
     NS_ASSERT(this._result, "Need to have a result to update");
     if (!this._tree)

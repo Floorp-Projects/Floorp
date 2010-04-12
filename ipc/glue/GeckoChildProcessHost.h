@@ -47,9 +47,6 @@
 
 #include "nsXULAppAPI.h"        // for GeckoProcessType
 
-#include "nsDirectoryServiceDefs.h"
-#include "nsIFile.h"
-
 namespace mozilla {
 namespace ipc {
 

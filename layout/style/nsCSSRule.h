@@ -44,7 +44,6 @@
 
 class nsIStyleSheet;
 class nsICSSStyleSheet;
-class nsPresContext;
 struct nsRuleData;
 class nsICSSGroupRule;
 

@@ -52,7 +52,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsCSSLoader.h"
 #include "nsIURL.h"
-#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIAtom.h"

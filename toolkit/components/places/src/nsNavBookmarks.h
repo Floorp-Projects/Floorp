@@ -23,6 +23,7 @@
  *   Brian Ryner <bryner@brianryner.com> (original author)
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Marco Bonardo <mak77@bonardo.net>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -107,6 +108,39 @@ public:
   nsresult QueryFolderChildren(PRInt64 aFolderId,
                                nsNavHistoryQueryOptions* aOptions,
                                nsCOMArray<nsNavHistoryResultNode>* children);
+
+  /**
+   * Turns aRow into a node and appends it to aChildren if it is appropriate to
+   * do so.
+   *
+   * @param aRow
+   *        A Storage statement (in the case of synchronous execution) or row of
+   *        a result set (in the case of asynchronous execution).
+   * @param aOptions
+   *        The options of the parent folder node.
+   * @param aChildren
+   *        The children of the parent folder node.
+   * @param aCurrentIndex
+   *        The index of aRow within the results.  When called on the first row,
+   *        this should be set to -1.
+   */
+  nsresult ProcessFolderNodeRow(mozIStorageValueArray* aRow,
+                                nsNavHistoryQueryOptions* aOptions,
+                                nsCOMArray<nsNavHistoryResultNode>* aChildren,
+                                PRInt32& aCurrentIndex);
+
+  /**
+   * The async version of QueryFolderChildren.
+   *
+   * @param aNode
+   *        The folder node that will receive the children.
+   * @param _pendingStmt
+   *        The Storage pending statement that will be used to control async
+   *        execution.
+   */
+  nsresult QueryFolderChildrenAsync(nsNavHistoryFolderResultNode* aNode,
+                                    PRInt64 aFolderId,
+                                    mozIStoragePendingStatement** _pendingStmt);
 
   // If aFolder is -1, uses the autoincrement id for folder index. Returns
   // the index of the new folder in aIndex, whether it was passed in or

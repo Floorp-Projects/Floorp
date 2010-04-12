@@ -42,7 +42,6 @@
 
 class nsIAtom;
 class nsIContent;
-class nsIPresShell;
 class nsIStyleSheet;
 class nsIStyleRule;
 class nsString;
