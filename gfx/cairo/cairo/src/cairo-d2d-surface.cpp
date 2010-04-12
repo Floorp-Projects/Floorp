@@ -2139,6 +2139,13 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
      */
     hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, &newSurf->dxgiChain);
 
+    /**
+     * We do not want DXGI to intercept alt-enter events and make the window go
+     * fullscreen! This shouldn't be in the cairo backend but controlled through
+     * the device. See comments on mozilla bug 553603.
+     */
+    dxgiFactory->MakeWindowAssociation(wnd, DXGI_MWA_NO_WINDOW_CHANGES);
+
     if (FAILED(hr)) {
 	goto FAIL_HWND;
     }
