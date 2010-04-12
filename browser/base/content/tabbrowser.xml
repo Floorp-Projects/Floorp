@@ -1286,46 +1286,46 @@
       <parameter name="aAll"/>
       <body>
         <![CDATA[
-          var numTabs = this.tabs.length;
-          var reallyClose = true;
-          if (numTabs <= 1)
-            return reallyClose;
+          var tabsToClose = this.tabs.length;
+          if (!aAll)
+            --tabsToClose;
+          if (tabsToClose <= 1)
+            return true;
 
           const pref = "browser.tabs.warnOnClose";
           var shouldPrompt = Services.prefs.getBoolPref(pref);
 
-          if (shouldPrompt) {
-            let promptService = Services.prompt;
+          if (!shouldPrompt)
+            return true;
 
-            //default to true: if it were false, we wouldn't get this far
-            var warnOnClose = { value:true };
-            var bundle = this.mStringBundle;
-            var tabsToClose = numTabs;  //number of tabs to be removed
-            if (!aAll)
-              --tabsToClose;
+          var ps = Services.prompt;
 
-            var messageKey = (tabsToClose == 1) ? "tabs.closeWarningOneTab" : "tabs.closeWarningMultipleTabs";
-            var closeKey = (tabsToClose == 1) ? "tabs.closeButtonOne" : "tabs.closeButtonMultiple";
-            // focus the window before prompting.
-            // this will raise any minimized window, which will
-            // make it obvious which window the prompt is for and will
-            // solve the problem of windows "obscuring" the prompt.
-            // see bug #350299 for more details
-            window.focus();
-            var buttonPressed = promptService.confirmEx(window,
-                                                        bundle.getString('tabs.closeWarningTitle'),
-                                                        bundle.getFormattedString(messageKey, [tabsToClose]),
-                                                        (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
-                                                        + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-                                                        bundle.getString(closeKey),
-                                                        null, null,
-                                                        bundle.getString('tabs.closeWarningPromptMe'),
-                                                        warnOnClose);
-            reallyClose = (buttonPressed == 0);
-            // don't set the pref unless they press OK and it's false
-            if (reallyClose && !warnOnClose.value)
-              Services.prefs.setBoolPref(pref, false);
-          }
+          // default to true: if it were false, we wouldn't get this far
+          var warnOnClose = { value: true };
+          var bundle = this.mStringBundle;
+
+          // focus the window before prompting.
+          // this will raise any minimized window, which will
+          // make it obvious which window the prompt is for and will
+          // solve the problem of windows "obscuring" the prompt.
+          // see bug #350299 for more details
+          window.focus();
+          var buttonPressed =
+            ps.confirmEx(window,
+                         bundle.getString("tabs.closeWarningTitle"),
+                         bundle.getFormattedString("tabs.closeWarningMultipleTabs",
+                                                   [tabsToClose]),
+                         (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0)
+                         + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
+                         bundle.getString("tabs.closeButtonMultiple"),
+                         null, null,
+                         bundle.getString('tabs.closeWarningPromptMe'),
+                         warnOnClose);
+          var reallyClose = (buttonPressed == 0);
+          // don't set the pref unless they press OK and it's false
+          if (reallyClose && !warnOnClose.value)
+            Services.prefs.setBoolPref(pref, false);
+
           return reallyClose;
         ]]>
       </body>
