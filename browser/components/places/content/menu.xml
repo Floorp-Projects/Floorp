@@ -877,6 +877,9 @@
           this.invalidateContainer(aNode);
         },
 
+        containerStateChanged:
+        function PMV_containerStateChanged(aNode, aOldState, aNewState) {},
+
         invalidateContainer: function PMV_invalidateContainer(aContainer) {
           // Do nothing if the entire view is already marked un-built.
           if (!this._self.parentNode._built)

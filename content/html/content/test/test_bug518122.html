@@ -105,8 +105,12 @@ function runTests() {
   for (var i = 0; i < textareas.length; ++i) {
     runTestsFor(textareas[i], simple_tests, value_append_tests);
   }
-  runTestsFor(document.getElementsByTagName("input")[0],
-              simple_tests_for_input, value_append_tests_for_input);
+  var input = document.getElementsByTagName("input")[0];
+  runTestsFor(input, simple_tests_for_input, value_append_tests_for_input);
+  // initialize the editor
+  input.focus();
+  input.blur();
+  runTestsFor(input, simple_tests_for_input, value_append_tests_for_input);
   SimpleTest.finish();
 }
 

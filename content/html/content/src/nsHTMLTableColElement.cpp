@@ -40,7 +40,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsRuleData.h"
 
 // use the same protection as ancient code did 
