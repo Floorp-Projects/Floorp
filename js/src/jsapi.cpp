@@ -2584,6 +2584,7 @@ JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id)
 JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+    JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
     return js_TryValueOf(cx, obj, type, vp);
 }
 

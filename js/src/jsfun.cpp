@@ -1253,20 +1253,6 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     return JS_TRUE;
 }
 
-static JSBool
-call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
-{
-    if (type == JSTYPE_FUNCTION) {
-        JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-        if (fp) {
-            JS_ASSERT(fp->fun);
-            JS_ASSERT(fp->argv);
-            *vp = fp->calleeValue();
-        }
-    }
-    return JS_TRUE;
-}
-
 static uint32
 call_reserveSlots(JSContext *cx, JSObject *obj)
 {
@@ -1284,7 +1270,7 @@ JS_FRIEND_DATA(JSClass) js_CallClass = {
     JS_PropertyStub,    JS_PropertyStub,
     JS_PropertyStub,    JS_PropertyStub,
     call_enumerate,     (JSResolveOp)call_resolve,
-    call_convert,       NULL,
+    NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
@@ -1534,18 +1520,6 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     }
 
     return JS_TRUE;
-}
-
-static JSBool
-fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
-{
-    switch (type) {
-      case JSTYPE_FUNCTION:
-        *vp = OBJECT_TO_JSVAL(obj);
-        return JS_TRUE;
-      default:
-        return js_TryValueOf(cx, obj, type, vp);
-    }
 }
 
 #if JS_HAS_XDR
@@ -1865,7 +1839,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, (JSResolveOp)fun_resolve,
-    fun_convert,      fun_finalize,
+    JS_ConvertStub,   fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
     js_XDRFunctionObject, fun_hasInstance,
@@ -1885,24 +1859,11 @@ fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, jsval *vp)
         return JS_FALSE;
 
     if (!VALUE_IS_FUNCTION(cx, fval)) {
-        /*
-         * If we don't have a function to start off with, try converting the
-         * object to a function. If that doesn't work, complain.
-         */
-        if (!JSVAL_IS_PRIMITIVE(fval)) {
-            obj = JSVAL_TO_OBJECT(fval);
-            if (!obj->getClass()->convert(cx, obj, JSTYPE_FUNCTION, &fval)) {
-                return JS_FALSE;
-            }
-            vp[1] = fval;
-        }
-        if (!VALUE_IS_FUNCTION(cx, fval)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_INCOMPATIBLE_PROTO,
-                                 js_Function_str, js_toString_str,
-                                 JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
-            return JS_FALSE;
-        }
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO,
+                             js_Function_str, js_toString_str,
+                             JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
+        return JS_FALSE;
     }
 
     obj = JSVAL_TO_OBJECT(fval);
@@ -1948,7 +1909,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))
+    if (!obj)
         return JS_FALSE;
     fval = vp[1];
 
@@ -2016,7 +1977,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
     LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))
+    if (!obj)
         return JS_FALSE;
     fval = vp[1];
 
@@ -2608,23 +2569,13 @@ JSFunction *
 js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags)
 {
     jsval v;
-    JSObject *obj;
 
     v = *vp;
-    obj = NULL;
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JSVAL_TO_OBJECT(v);
-        if (obj && obj->getClass() != &js_FunctionClass) {
-            if (!obj->defaultValue(cx, JSTYPE_FUNCTION, &v))
-                return NULL;
-            obj = VALUE_IS_FUNCTION(cx, v) ? JSVAL_TO_OBJECT(v) : NULL;
-        }
-    }
-    if (!obj) {
+    if (!VALUE_IS_FUNCTION(cx, v)) {
         js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return GET_FUNCTION_PRIVATE(cx, obj);
+    return GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
 }
 
 JSObject *
