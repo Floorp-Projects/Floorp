@@ -1023,6 +1023,12 @@ nsTextControlFrame::PreDestroy()
       // (now that mUseEditor is false values get stored
       // in content).
       SetValue(value);
+
+      // Reset mUseEditor for now, so that if any of the rest of the operation
+      // leads to an attempt at getting the editor, lazy initialization doesn't
+      // kick in.  See bug 557689 for an example of the types of problems this
+      // prevents.
+      mUseEditor = PR_TRUE;
     }
     mEditor->PreDestroy(PR_TRUE);
   }
@@ -1064,6 +1070,7 @@ nsTextControlFrame::PreDestroy()
     }
   }
 
+  mUseEditor = PR_FALSE;
   mEditor = nsnull;
   if (mSelCon) {
     mSelCon->SetScrollableFrame(nsnull);
