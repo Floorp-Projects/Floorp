@@ -1321,7 +1321,7 @@ var FormHelper = {
     let currentIsSelect = this._isValidSelectElement(aNewElement);
 
     if (currentIsSelect && !previousIsSelect) {
-      this._selectContainer.height = window.innerHeight / 1.8;
+      this._selectContainer.style.maxHeight = (window.innerHeight / 1.8) + "px";
 
       let rootNode = this._container;
       rootNode.insertBefore(this._selectContainer, rootNode.lastChild);

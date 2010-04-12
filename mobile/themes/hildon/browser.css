@@ -1016,7 +1016,15 @@ pageaction .pageaction-desc[value=""] {
   -moz-border-radius-bottomright: 0;
   -moz-border-radius-bottomleft: 0;
   padding: 8px 4px 8px 4px;
-  -moz-box-flex: 1;
+  -moz-box-flex: 0;
+}
+
+#form-helper-container > #select-container > #select-container-inner > scrollbox {
+  min-height: 70px;
+}
+
+#form-helper-container > #select-container > spacer {
+  display: none;
 }
 
 #form-helper-container > #select-container > #select-container-inner,
@@ -1093,6 +1101,7 @@ pageaction .pageaction-desc[value=""] {
 
 #select-list {
   border: 1px solid gray;
+  background-color: #fff;
 }
 
 #select-list > option {

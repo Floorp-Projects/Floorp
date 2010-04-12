@@ -464,12 +464,14 @@
 
     <!-- options dialog for select form field -->
     <vbox id="select-container" hidden="true" pack="center">
-      <vbox id="select-container-inner" class="dialog-dark">
+      <spacer flex="1000"/>
+      <vbox id="select-container-inner" class="dialog-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons" pack="center">
           <button id="select-buttons-done" class="button-dark" label="&formHelper.done;" oncommand="SelectHelper.close();"/>
         </hbox>
       </vbox>
+      <spacer flex="1000"/>
     </vbox>
 
     <!-- bookmark window -->
