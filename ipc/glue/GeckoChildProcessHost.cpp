@@ -222,7 +222,8 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   childArgv.push_back(pidstring);
   childArgv.push_back(childProcessType);
 
-#if defined(MOZ_CRASHREPORTER) && !defined(XP_MACOSX)
+#if defined(MOZ_CRASHREPORTER)
+#  if defined(OS_LINUX)
   int childCrashFd, childCrashRemapFd;
   if (!CrashReporter::CreateNotificationPipeForChild(
         &childCrashFd, &childCrashRemapFd))
@@ -236,6 +237,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     // "false" == crash reporting disabled
     childArgv.push_back("false");
   }
+#  elif defined(XP_MACOSX)
+  // Call the stub for initialization side effects.  Eventually this
+  // code will be unified with that above.
+  CrashReporter::CreateNotificationPipeForChild();
+#  endif  // OS_LINUX
 #endif
 
   base::LaunchApp(childArgv, mFileMap,
