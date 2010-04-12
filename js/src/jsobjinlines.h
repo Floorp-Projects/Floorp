@@ -45,6 +45,10 @@
 #include "jsiter.h"
 #include "jsscope.h"
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+#include "jsdtracef.h"
+#endif
+
 #include "jsscopeinlines.h"
 
 inline jsval

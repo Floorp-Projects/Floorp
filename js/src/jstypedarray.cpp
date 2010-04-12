@@ -121,7 +121,7 @@ ArrayBuffer::create(JSContext *cx, JSObject *obj,
                     uintN argc, jsval *argv, jsval *rval)
 {
     if (!obj) {
-        obj = js_NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
+        obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
         if (!obj)
             return false;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -708,7 +708,7 @@ class TypedArrayTemplate
     create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
         if (!obj) {
-            obj = js_NewObject(cx, slowClass(), NULL, NULL);
+            obj = NewObject(cx, slowClass(), NULL, NULL);
             if (!obj)
                 return false;
             *rval = OBJECT_TO_JSVAL(obj);
