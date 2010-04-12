@@ -159,6 +159,9 @@ nsEditor::nsEditor()
 ,  mPhonetic(nsnull)
 {
   //initialize member variables here
+#ifdef NS_DEBUG
+    printf("xxxehsan Editor 0x%p created\n", this);
+#endif
 }
 
 nsEditor::~nsEditor()
@@ -168,6 +171,10 @@ nsEditor::~nsEditor()
   delete mPhonetic;
  
   NS_IF_RELEASE(mViewManager);
+
+#ifdef NS_DEBUG
+    printf("xxxehsan Editor 0x%p created\n", this);
+#endif
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEditor)
@@ -237,6 +244,13 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 
   nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
   document->AddMutationObserver(this);
+#ifdef NS_DEBUG
+  {
+    nsCOMPtr<nsISupports> docSupports = do_QueryInterface(document);
+    printf("xxxehsan Editor 0x%p registered a mutation observer 0x%p\n",
+           this, docSupports.get());
+  }
+#endif
 
   // Set up the DTD
   // XXX - in the long run we want to get this from the document, but there
@@ -526,8 +540,14 @@ nsEditor::PreDestroy(PRBool aDestroyingFrames)
   NotifyDocumentListeners(eDocumentToBeDestroyed);
 
   nsCOMPtr<nsINode> document = do_QueryReferent(mDocWeak);
-  if (document)
+  if (document) {
     document->RemoveMutationObserver(this);
+#ifdef NS_DEBUG
+    nsCOMPtr<nsISupports> docSupports = do_QueryInterface(document);
+    printf("xxxehsan Editor 0x%p removed a mutation observer 0x%p\n",
+           this, docSupports.get());
+#endif
+  }
 
   // Unregister event listeners
   RemoveEventListeners();
