@@ -685,10 +685,10 @@
           this._mode = this.getAttribute("mode");
 
           this._folderParents = {};
-          this._folderParents[this._fakeDesktopFolderId] = this.mobileRoot;
-          this._folderParents[PlacesUtils.bookmarks.unfiledBookmarksFolder] = this._fakeDesktopFolderId;
-          this._folderParents[PlacesUtils.bookmarksMenuFolderId] = this._fakeDesktopFolderId;
-          this._folderParents[PlacesUtils.toolbarFolderId] = this._fakeDesktopFolderId;
+          this._folderParents[this._desktopFolderId] = this.mobileRoot;
+          this._folderParents[PlacesUtils.bookmarks.unfiledBookmarksFolder] = this._desktopFolderId;
+          this._folderParents[PlacesUtils.bookmarksMenuFolderId] = this._desktopFolderId;
+          this._folderParents[PlacesUtils.toolbarFolderId] = this._desktopFolderId;
         ]]>
       </constructor>
       <field name="_bundle">
@@ -697,10 +697,10 @@
                   .createBundle("chrome://browser/locale/browser.properties");
       </field>
 
-      <field name="_fakeDesktopFolderId">-1000</field>
+      <field name="_desktopFolderId">-1000</field>
       <field name="_desktopFolder"><![CDATA[
         ({
-          itemId: this._fakeDesktopFolderId, tags: "", uri: "",
+          itemId: this._desktopFolderId, tags: "", uri: "",
           title: Elements.browserBundle.getString("bookmarkList.desktop"),
           type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
         })
@@ -834,7 +834,7 @@
             for (let i = 0; i < children.length; i++) {
               let rect = children[i].getBoundingClientRect();
               let position = rect.top - rect.height;
-              if (position > 0)
+              if (position > 0 && children[i].getAttribute("itemid") != this._desktopFolderId)
                 return children[i];
             }
             return null;
@@ -902,7 +902,7 @@
             let folderId = aRootFolder;
             do {
               let title;
-              if (folderId == this._fakeDesktopFolderId)
+              if (folderId == this._desktopFolderId)
                 title = this._desktopFolder.title;
               else
                 title = PlacesUtils.bookmarks.getItemTitle(folderId);
@@ -923,7 +923,7 @@
 
             children.scrollBoxObject.scrollTo(0, 0);
 
-            let items = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren.concat()
+            let items = (aRootFolder == this._desktopFolderId) ? this._desktopChildren.concat()
                                                                    : this._getChildren(aRootFolder);
 
             if (aRootFolder == this.mobileRoot && !this.isDesktopFolderEmpty())
@@ -970,7 +970,8 @@
         <parameter name="aItem"/>
         <body>
           <![CDATA[
-            if (aEvent.originalTarget.localName == "button" || this._activeItem == aItem)
+            let target = aEvent.originalTarget;
+            if (target.localName == "button" || this._activeItem == aItem || this._desktopFolderId == aItem.getAttribute("itemid"))
               return;
 
             if (this._manageUI) {
