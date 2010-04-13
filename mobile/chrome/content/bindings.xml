@@ -57,7 +57,7 @@
   <binding id="popup_autocomplete">
     <content>
       <xul:vbox class="autocomplete-box" flex="1">
-        <!-- 12 child items, to match browser.urlbar.maxRichResults -->
+        <!-- 24 child items, to match browser.urlbar.maxRichResults -->
         <xul:scrollbox orient="vertical"
                        class="autocomplete-items"
                        anonid="autocomplete-items"
@@ -65,6 +65,18 @@
           <xul:autocompleteresult anonid="allbookmarks"
                                   value="&allBookmarks.label;"
                                   class="allbookmarks"/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
+          <xul:autocompleteresult/>
           <xul:autocompleteresult/>
           <xul:autocompleteresult/>
           <xul:autocompleteresult/>
