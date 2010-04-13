@@ -1767,24 +1767,22 @@ ContentCustomClicker.prototype = {
       if (browser) {
         let [x, y] = Browser.transformClientToBrowser(cX, cY);
         let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+        let scrollX = {}, scrollY = {};
+        cwu.getScrollXY(false, scrollX, scrollY);
 
         // the element can be out of the cX/cY point because of the touch radius
-        let rect = element.getBoundingClientRect();
+        let rect = Browser.getBoundingContentRect(element);
         if (cwu.nodesFromRect && (element.ownerDocument.defaultView.frameElement ||
                                  (x < rect.left || (x > rect.left + rect.width) ||
-                                 (y < rect.top || y > rect.top + rect.height)))) {
+                                 (y < rect.top || (y > rect.top + rect.height))))) {
 
-            let rect = Browser.getBoundingContentRect(element);
-            x = rect.left + (rect.width / 2);
-            y = rect.top + (rect.height / 2);
-        }
-        else {
-          let scrollX = {}, scrollY = {};
-          cwu.getScrollXY(false, scrollX, scrollY);
-          x = x - scrollX.value;
-          y = y - scrollY.value;
+          let point = rect.center();
+          x = point.x;
+          y = point.y;
         }
 
+        x = x - scrollX.value;
+        y = y - scrollY.value;
         cwu.sendMouseEvent(name, x, y, 0, 1, 0, true);
       }
     },
