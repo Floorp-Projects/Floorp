@@ -841,6 +841,19 @@ namespace nanojit
     asm_output("st %s, [%s + %d]", gpn(rd), gpn(rs1), simm13); \
     } while (0)
 
+#define STB(rd, rs2, rs1) \
+    do { \
+    Format_3_1(3, rd, 0x5, rs1, 0, rs2); \
+    asm_output("stb %s, [%s + %s]", gpn(rd), gpn(rs1), gpn(rs2)); \
+    } while (0)
+
+#define STBI(rd, simm13, rs1) \
+    do { \
+    Format_3_1I(3, rd, 0x5, rs1, simm13); \
+    asm_output("stb %s, [%s + %d]", gpn(rd), gpn(rs1), simm13); \
+    } while (0)
+
+
 #define SUBCC(rs1, rs2, rd) \
     do { \
     Format_3_1(2, rd, 0x14, rs1, 0, rs2); \
@@ -918,6 +931,14 @@ namespace nanojit
       STWI(rd, imm32, rs1); \
     } else { \
       STW(rd, L0, rs1); \
+      SET32(imm32, L0); \
+    }
+
+#define STB32(rd, imm32, rs1) \
+    if(isIMM13(imm32)) { \
+      STBI(rd, imm32, rs1); \
+    } else { \
+      STB(rd, L0, rs1); \
       SET32(imm32, L0); \
     }
 
