@@ -151,11 +151,18 @@ html input[type="checkbox"] {
 html select input[type="button"] {
   border-width: 0px !important;
   -moz-border-radius: 0;
-  -moz-background-size: 100% 90%, 14px 14px;
+  -moz-background-size: 100% 90%;
+  color: #414141;
 
-  background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5), url(chrome://browser/skin/images/arrowdown-16.png) !important;
-  background-position: -15px center, center center !important;
+  background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
+  background-position: -15px center !important;
   background-repeat: no-repeat !important;
+  -moz-binding: url("chrome://browser/content/bindings.xml#select-button");
+}
+
+html select input[type="button"] > svg {
+  margin-left: -3px;
+  margin-top: 6px;
 }
 
 html select[size]:focus,
