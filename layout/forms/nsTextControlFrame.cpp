@@ -2978,6 +2978,9 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
   }
 
   // Update the display of the placeholder value if needed.
+  // We don't need to do this if we're about to initialize the
+  // editor, since EnsureEditorInitialized takes care of this.
+  if (!aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
     if (value.IsEmpty()) {
