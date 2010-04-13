@@ -379,7 +379,6 @@ var Browser = {
     }
 
     function resizeHandler(e) {
-
       if (e.target != window)
         return;
 
@@ -404,7 +403,12 @@ var Browser = {
       Browser.styles["browser-handheld"].width = window.screen.width + "px";
       Browser.styles["browser-handheld"].height = scaledScreenH + "px";
 
-      // Tell the UI to resize the browser controls before calling  updateSize
+      // Cause a resize of the viewport if the current browser holds a XUL document
+      let browser = Browser.selectedBrowser;
+      if (browser.contentDocument instanceof XULDocument)
+        BrowserView.Util.ensureMozScrolledAreaEvent(browser, w, h);
+
+      // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
 
       bv.updateDefaultZoom();
@@ -2965,12 +2969,14 @@ Tab.prototype = {
 
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
-    let metaData = Util.contentIsHandheld(browser);
+    let metaData = Util.getViewportMetadata(browser);
+
+    // Remove any fixed size properties
+    browser.style.removeProperty("width");
+    browser.style.removeProperty("height");
 
     if (metaData.reason == "handheld" || metaData.reason == "doctype") {
       browser.className = "browser-handheld";
-      browser.style.removeProperty("width");
-      browser.style.removeProperty("height");
     } else if (metaData.reason == "viewport") {  
       browser.className = "browser-viewport";
       if (metaData.autoSize) {
@@ -2997,24 +3003,18 @@ Tab.prototype = {
         browser.style.width = viewportW + "px";
         browser.style.height = viewportH + "px";
       }
+    } else if (metaData.reason == "chrome") {
+      browser.className = "browser-chrome window-width window-height";
     } else {
       browser.className = "browser";
-      browser.style.removeProperty("width");
-      browser.style.removeProperty("height");
     }
 
     // Some documents are not firing MozScrolledAreaChanged and/or fired it for
     // sub-documents only
     let doc = browser.contentDocument;
     if (doc instanceof XULDocument || doc.body instanceof HTMLFrameSetElement) {
-       let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-       let event = document.createEvent("Event");
-       event.initEvent("MozScrolledAreaChanged", true, false);
-       event.x = 0;
-       event.y = 0;
-       event.width = w;
-       event.height = h;
-       browser.dispatchEvent(event);
+       let [width, height] = BrowserView.Util.getBrowserDimensions(browser);
+       BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
     }
 
     this.setIcon(browser.mIconURL);
