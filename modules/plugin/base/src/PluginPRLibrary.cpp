@@ -37,12 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/PluginPRLibrary.h"
-#include <malloc.h>
 
 // Some plugins on Windows, notably Quake Live, implement NP_Initialize using
 // cdecl instead of the documented stdcall. In order to work around this,
 // we force the caller to use a frame pointer.
 #if defined(XP_WIN) && defined(_M_IX86)
+#include <malloc.h>
+
 // gNotOptimized exists so that the compiler will not optimize the alloca
 // below.
 static int gNotOptimized;
@@ -136,8 +137,6 @@ nsresult
 PluginPRLibrary::NP_GetValue(void *future, NPPVariable aVariable,
 			     void *aValue, NPError* error)
 {
-  CALLING_CONVENTION_HACK
-
   if (mNP_GetValue) {
     *error = mNP_GetValue(future, aVariable, aValue);
   } else {
@@ -179,8 +178,6 @@ PluginPRLibrary::NPP_New(NPMIMEType pluginType, NPP instance,
 			 char* argv[], NPSavedData* saved,
 			 NPError* error)
 {
-  CALLING_CONVENTION_HACK
-
   if (!mNPP_New)
     return NS_ERROR_FAILURE;
   *error = mNPP_New(pluginType, instance, mode, argc, argn, argv, saved);
