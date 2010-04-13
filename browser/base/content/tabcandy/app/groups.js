@@ -33,6 +33,7 @@ window.Group = function(listOfEls, options) {
   this._children = []; // an array of Items
   this._padding = 30;
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
+  this.title = '';
 
   var self = this;
 
@@ -199,7 +200,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     // ___ Deal with children
     if(this._children.length) {
       if(css.width || css.height) {
-        this.arrange({animate: !immediately});
+        this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
       } else if(css.left || css.top) {
         $.each(this._children, function(index, child) {
           var box = child.getBounds();
@@ -229,6 +230,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   setZ: function(value) {
     $(this.container).css({zIndex: value});
+
+    if(this.$debug) 
+      this.$debug.css({zIndex: value + 1});
+
     $.each(this._children, function(index, child) {
       child.setZ(value + 1);
     });
@@ -294,6 +299,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
     $el.droppable("disable");
     item.setZ(this.getZ() + 1);
+    item.groupData = {};
 
     item.addOnClose(this, function() {
       self.remove($el);
@@ -360,59 +366,71 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
   // ----------  
   arrange: function(options) {
-    if( options && options.animate == false ) 
-      animate = false;
-    else 
+    var animate;
+    if(!options || typeof(options.animate) == 'undefined') 
       animate = true;
+    else 
+      animate = options.animate;
 
     if(typeof(options) == 'undefined')
       options = {};
     
     var bb = this.getContentBounds();
+    bb.inset(6, 6);
+    
+    var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
+    var count = this._children.length;
+    if(!count)
+      return;
+      
+    var columns = 1;
+    var padding = 0;
+    var rows;
+    var tabWidth;
+    var tabHeight;
 
-    var count = this._children.length;
-    var bbAspect = bb.width/bb.height;
-    var tabAspect = 4/3; 
+    function figure() {
+      rows = Math.ceil(count / columns);          
+      tabWidth = (bb.width / columns) - padding;
+      tabHeight = tabWidth * tabAspect; 
+    } 
     
-    function howManyColumns( numRows, count ){ return Math.ceil(count/numRows) }
+    figure();
     
-    var count = this._children.length;
-    var best = {cols: 0, rows:0, area:0};
-    for(var numRows=1; numRows<=count; numRows++){
-      numCols = howManyColumns( numRows, count);
-      var w = numCols*tabAspect;
-      var h = numRows;
+    while(rows > 1 && tabHeight * rows > bb.height) {
+      columns++; 
+      figure();
+    }
+    
+    if(rows == 1) {
+      tabWidth = Math.min(bb.width / count, bb.height / tabAspect);
+      tabHeight = tabWidth * tabAspect;
+    }
+    
+    var box = new Rect(bb.left, bb.top, tabWidth, tabHeight);
+    var row = 0;
+    var column = 0;
+    var immediately;
+    
+    $.each(this._children, function(index, child) {
+      if(animate == 'sometimes')
+        immediately = (typeof(child.groupData.row) == 'undefined' || child.groupData.row == row);
+      else
+        immediately = !animate;
+        
+      child.setBounds(box, immediately);
+      child.groupData.column = column;
+      child.groupData.row = row;
       
-      // We are width constrained
-      if( w/bb.width >= h/bb.height ) var scale = bb.width/w;
-      // We are height constrained
-      else var scale = bb.height/h;
-      var w = w*scale;
-      var h = h*scale;
-            
-      if( w*h >= best.area ){
-        best.numRows = numRows;
-        best.numCols = numCols;
-        best.area = w*h;
-        best.w = w;
-        best.h = h;
+      box.left += box.width + padding;
+      column++;
+      if(column == columns) {
+        box.left = bb.left;
+        box.top += box.height + padding;
+        column = 0;
+        row++;
       }
-    }
-    
-    var padAmount = .15;
-    var pad = padAmount * (best.w/best.numCols);
-    var tabW = (best.w-pad)/best.numCols - pad;
-    var tabH = (best.h-pad)/best.numRows - pad;
-    
-    var x = pad*2; var y=pad; var numInCol = 0;
-    for each(var item in this._children){
-      item.setBounds(new Rect(x + bb.left, y + bb.top, tabW, tabH), !animate);
-      
-      x += tabW + pad;
-      numInCol += 1;
-      if( numInCol >= best.numCols ) 
-        [x, numInCol, y] = [pad*2, 0, y+tabH+pad];
-    }
+    });
   },
   
   // ----------  
@@ -459,6 +477,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       $(this.container).resizable({
         handles: "se",
         aspectRatio: false,
+        minWidth: 60,
+        minHeight: 90,
         resize: function(){
           self.reloadBounds();
         },
@@ -479,6 +499,7 @@ var DragInfo = function(element) {
   this.el = element;
   this.$el = $(this.el);
   this.item = Items.item(this.el);
+  this.parent = this.$el.data('group');
   
   this.$el.data('isDragging', true);
   this.item.setZ(9999);
@@ -493,6 +514,10 @@ DragInfo.prototype = {
   // ----------  
   stop: function() {
     this.$el.data('isDragging', false);    
+    
+    if(this.parent && this.parent != this.$el.data('group') && this.parent._children.length <= 1) 
+      this.parent.remove(this.parent._children[0]);
+      
     if(this.item && !this.$el.hasClass('willGroup') && !this.$el.data('group')) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
@@ -620,6 +645,24 @@ window.Groups = {
     $.each(toRemove, function(index, group) {
       group.removeAll();
     });
+  },
+  
+  // ----------
+  newTab: function(tabItem) {
+    var groupTitle = 'New Tabs';
+    var array = jQuery.grep(this.groups, function(group) {
+      return group.title == groupTitle;
+    });
+    
+    var $el = $(tabItem.container);
+    if(array.length) 
+      array[0].add($el);
+    else {
+      var p = Page.findOpenSpaceFor($el); // TODO shouldn't know about Page
+      tabItem.setPosition(p.x, p.y, true);
+      var group = new Group([$el]); 
+      group.title = groupTitle;
+    }
   }
 };
 
