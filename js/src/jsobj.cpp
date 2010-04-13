@@ -1657,12 +1657,12 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 static JSBool
 obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSBool b;
-
-    if (!js_IsDelegate(cx, JS_THIS_OBJECT(cx, vp),
-                       argc != 0 ? vp[2] : JSVAL_VOID, &b)) {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
         return JS_FALSE;
-    }
+    JSBool b;
+    if (!js_IsDelegate(cx, obj, argc != 0 ? vp[2] : JSVAL_VOID, &b))
+        return JS_FALSE;
     *vp = BOOLEAN_TO_JSVAL(b);
     return JS_TRUE;
 }
