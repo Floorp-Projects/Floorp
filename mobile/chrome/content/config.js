@@ -211,8 +211,10 @@ var ViewConfig = {
         aIndex += 1;
     }
 
-    // add 1 because of the new pref row
-    let item = this._container.childNodes[aIndex + 1];
+    // XXX An item display value will probably fail if a pref is changed in the
+    //     background while there is a filter on the pref
+    let item = shouldUpdateEditor ? this._editor.nextSibling
+                                  : this._container.childNodes[aIndex + 1]// add 1 because of the new pref row
     if (!item) // the pref is not viewable
       return;
 
