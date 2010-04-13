@@ -219,8 +219,10 @@ window.TabItems = {
         $(this).data('tabItem', new TabItem(this, tab));     
       });
       
-      if($div.length == 1)
+      if($div.length == 1){
         Groups.newTab($div.data('tabItem'));
+        Toolbar.unread += 1;
+      }
       
       // TODO: Figure out this really weird bug?
       // Why is that:
