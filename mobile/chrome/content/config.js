@@ -195,7 +195,7 @@ var ViewConfig = {
   _handleWindowResize: function _handleWindowResize() {
     let mainBox = document.getElementById("main-container");
     let textbox = document.getElementById("textbox");
-    let height = window.outerHeight - textbox.getBoundingClientRect().height;
+    let height = window.innerHeight - textbox.getBoundingClientRect().height;
 
     mainBox.setAttribute("height", height);
   },

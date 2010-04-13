@@ -113,17 +113,20 @@ let Util = {
     return makeURI(url, null, makeURI(base)).spec;
   },
 
-  contentIsHandheld: function contentIsHandheld(browser) {
+  getViewportMetadata: function getViewportMetadata(browser) {
     let doctype = browser.contentDocument.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return {reason: "doctype", result: true};
+      return { reason: "doctype", result: true, scale: 1.0 };
 
     let windowUtils = browser.contentWindow
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
     let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     if (handheldFriendly == "true")
-      return {reason: "handheld", result: true};
+      return { reason: "handheld", result: true, scale: 1.0 };
+
+    if (browser.contentDocument instanceof XULDocument)
+      return { reason: "chrome", result: true, scale: 1.0, autoSize: true, allowZoom: false };
 
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
@@ -147,11 +150,12 @@ let Util = {
         scale: viewportScale,
         width: viewportWidth,
         height: viewportHeight,
-        autoSize: viewportWidthStr == "device-width" || viewportHeightStr == "device-height"
+        autoSize: viewportWidthStr == "device-width" || viewportHeightStr == "device-height",
+        allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
       }
     }
 
-    return {reason: "", result: false};
+    return { reason: "", result: false, allowZoom: true };
   },
 
   /**

@@ -226,6 +226,16 @@ BrowserView.Util = {
   resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
     container.style.width = viewportRect.width  + 'px';
     container.style.height = viewportRect.height + 'px';
+  },
+
+  ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
+    let event = document.createEvent("Event");
+    event.initEvent("MozScrolledAreaChanged", true, false);
+    event.x = 0;
+    event.y = 0;
+    event.width = aWidth;
+    event.height = aHeight;
+    aBrowser.dispatchEvent(event);
   }
 };
 
@@ -602,10 +612,8 @@ BrowserView.prototype = {
     if (!browser)
       return 0;
 
-    let metaData = Util.contentIsHandheld(browser);
-    if (metaData.reason == "handheld" || metaData.reason == "doctype")
-      return 1;
-    else if (metaData.reason == "viewport" && metaData.scale > 0)
+    let metaData = Util.getViewportMetadata(browser);
+    if (metaData.reason)
       return metaData.scale;
 
     let zl = this.getPageZoomLevel();
