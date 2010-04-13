@@ -2882,7 +2882,6 @@ SweepDoubles(JSRuntime *rt, GCArenaReleaser *releaser)
     METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,
                            nlivearenas, nkilledarenas, nthings));
     rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
-    TIMESTAMP(gcTimer.sweepDoubleEnd);
 }
 
 /*
@@ -3075,6 +3074,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     TIMESTAMP(gcTimer.sweepStringEnd);
 
     SweepDoubles(rt, &arenaReleaser);
+    TIMESTAMP(gcTimer.sweepDoubleEnd);
 
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
