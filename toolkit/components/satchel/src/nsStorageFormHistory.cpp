@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -68,6 +69,7 @@
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
 #include "nsTArray.h"
+#include "nsIMutableArray.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 
@@ -139,11 +141,11 @@ nsFormHistory::Init()
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
-  if (service) {
-    service->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
-    service->AddObserver(this, "idle-daily", PR_TRUE);
-    service->AddObserver(this, "formhistory-expire-now", PR_TRUE);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
+  if (mObserverService) {
+    mObserverService->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
+    mObserverService->AddObserver(this, "idle-daily", PR_TRUE);
+    mObserverService->AddObserver(this, "formhistory-expire-now", PR_TRUE);
   }
 
   return NS_OK;
@@ -236,7 +238,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
   if (!FormHistoryEnabled())
     return NS_OK;
 
-  PRInt64 existingID = GetExistingEntryID(aName, aValue);
+  nsAutoString existingGUID;
+  PRInt64 existingID = GetExistingEntryID(aName, aValue, existingGUID);
 
   if (existingID != -1) {
     mozStorageStatementScoper scope(mDBUpdateEntry);
@@ -249,6 +252,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 
     rv = mDBUpdateEntry->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    SendNotification(NS_LITERAL_STRING("modifyEntry"), aName, aValue, existingGUID);
   } else {
     nsCAutoString guid;
     rv = GenerateGUID(guid);
@@ -278,6 +283,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 
     rv = mDBInsertNameValue->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    SendNotification(NS_LITERAL_STRING("addEntry"), aName, aValue, NS_ConvertUTF8toUTF16(guid));
   }
   return NS_OK;
 }
@@ -285,7 +292,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 /* Returns -1 if entry not found, or the ID if it was. */
 PRInt64
 nsFormHistory::GetExistingEntryID (const nsAString &aName, 
-                                   const nsAString &aValue)
+                                   const nsAString &aValue,
+                                   nsAString &aGuid)
 {
   mozStorageStatementScoper scope(mDBFindEntry);
 
@@ -299,13 +307,26 @@ nsFormHistory::GetExistingEntryID (const nsAString &aName,
   rv = mDBFindEntry->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, -1);
 
+  nsCAutoString guid;
   PRInt64 ID = -1;
   if (hasMore) {
-    mDBFindEntry->GetInt64(0, &ID);
+    rv = mDBFindEntry->GetInt64(0, &ID);
     NS_ENSURE_SUCCESS(rv, -1);
+    rv = mDBFindEntry->GetUTF8String(1, guid);
+    NS_ENSURE_SUCCESS(rv, -1);
+    CopyUTF8toUTF16(guid, aGuid);
   }
 
   return ID;
+}
+
+/* Returns -1 if entry not found, or the ID if it was. */
+PRInt64
+nsFormHistory::GetExistingEntryID (const nsAString &aName,
+                                   const nsAString &aValue)
+{
+  nsString guid;
+  return GetExistingEntryID(aName, aValue, guid);
 }
 
 NS_IMETHODIMP
@@ -334,23 +355,32 @@ nsFormHistory::NameExists(const nsAString &aName, PRBool *_retval)
 NS_IMETHODIMP
 nsFormHistory::RemoveEntry(const nsAString &aName, const nsAString &aValue)
 {
+  nsAutoString existingGUID;
+  PRInt64 existingID = GetExistingEntryID(aName, aValue, existingGUID);
+
+  SendNotification(NS_LITERAL_STRING("before-removeEntry"), aName, aValue, existingGUID);
+
   nsCOMPtr<mozIStorageStatement> dbDelete;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE id=?1"),
                                          getter_AddRefs(dbDelete));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dbDelete->BindStringParameter(0, aName);
+  rv = dbDelete->BindInt64Parameter(0, existingID);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dbDelete->BindStringParameter(1, aValue);
+  rv = dbDelete->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return dbDelete->Execute();
+  SendNotification(NS_LITERAL_STRING("removeEntry"), aName, aValue, existingGUID);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormHistory::RemoveEntriesForName(const nsAString &aName)
 {
+  SendNotification(NS_LITERAL_STRING("before-removeEntriesForName"), aName);
+
   nsCOMPtr<mozIStorageStatement> dbDelete;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE fieldname=?1"),
                                          getter_AddRefs(dbDelete));
@@ -359,12 +389,19 @@ nsFormHistory::RemoveEntriesForName(const nsAString &aName)
   rv = dbDelete->BindStringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return dbDelete->Execute();
+  rv = dbDelete->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeEntriesForName"), aName);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormHistory::RemoveAllEntries()
 {
+  SendNotification(NS_LITERAL_STRING("before-removeAllEntries"), (nsISupports*)nsnull);
+
   nsCOMPtr<mozIStorageStatement> dbDeleteAll;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory"),
                                          getter_AddRefs(dbDeleteAll));
@@ -385,13 +422,20 @@ nsFormHistory::RemoveAllEntries()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return dbDeleteAll->Execute();
+  rv = dbDeleteAll->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeAllEntries"), (nsISupports*)nsnull);
+
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
 {
+  SendNotification(NS_LITERAL_STRING("before-removeEntriesByTimeframe"), aStartTime, aEndTime);
+
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_formhistory "
@@ -406,6 +450,8 @@ nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeEntriesByTimeframe"), aStartTime, aEndTime);
 
   return NS_OK;
 }
@@ -573,6 +619,7 @@ nsFormHistory::ExpireOldEntries()
     expireDays = DEFAULT_EXPIRE_DAYS;
   PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
 
+  SendNotification(NS_LITERAL_STRING("before-expireOldEntries"), expireTime);
 
   PRInt32 beginningCount = CountAllEntries();
 
@@ -597,6 +644,8 @@ nsFormHistory::ExpireOldEntries()
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  SendNotification(NS_LITERAL_STRING("expireOldEntries"), expireTime);
 
   return NS_OK;
 }
@@ -654,7 +703,7 @@ nsFormHistory::CreateStatements()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-         "SELECT id FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
+         "SELECT id, guid FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
          getter_AddRefs(mDBFindEntry));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -963,4 +1012,141 @@ nsFormHistory::dbAreExpectedColumnsPresent()
                   "SELECT fieldname, value, timesUsed, firstUsed, lastUsed, guid "
                   "FROM moz_formhistory"), getter_AddRefs(stmt));
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
+}
+
+/*
+ * Send a notification when stored data is changed
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType, nsISupports *aData)
+{
+  return mObserverService->NotifyObservers(aData,
+                                           "satchel-storage-changed",
+                                           PromiseFlatString(aChangeType).get());
+}
+
+/*
+ * Send a notification with a field name
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const nsAString &aName)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISupportsString> fieldName = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldName)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldName->SetData(aName);
+
+  rv = SendNotification(aChangeType, fieldName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with a name and value entry
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const nsAString &aName,
+                                const nsAString &aValue,
+                                const nsAutoString &aGuid)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISupportsString> fieldName = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldName)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldName->SetData(aName);
+
+  nsCOMPtr<nsISupportsString> fieldValue = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldValue)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldValue->SetData(aValue);
+
+  nsCOMPtr<nsISupportsString> guid = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!guid)
+    return NS_ERROR_OUT_OF_MEMORY;
+  guid->SetData(aGuid);
+
+
+  nsCOMPtr<nsIMutableArray> notifyData = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!notifyData)
+    return rv;
+  rv = notifyData->AppendElement(fieldName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(fieldValue, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(guid, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SendNotification(aChangeType, notifyData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with a PRInt64
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const PRInt64 &aNumber)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISupportsPRInt64> valOne = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valOne)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valOne->SetData(aNumber);
+
+  rv = SendNotification(aChangeType, valOne);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with an array of 2 PRInt64 entries
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const PRInt64 &aOne,
+                                const PRInt64 &aTwo)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISupportsPRInt64> valOne = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valOne)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valOne->SetData(aOne);
+
+  nsCOMPtr<nsISupportsPRInt64> valTwo = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valTwo)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valTwo->SetData(aTwo);
+
+  nsCOMPtr<nsIMutableArray> notifyData = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!notifyData)
+    return rv;
+  rv = notifyData->AppendElement(valOne, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(valTwo, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SendNotification(aChangeType, notifyData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
