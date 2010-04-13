@@ -261,7 +261,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oncommand="inputChanged();"/>
+          <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oninput="inputChanged();" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:box>
     </content>
@@ -304,7 +304,7 @@
       </xul:box>
     </content>
   </binding>
-  
+
   <binding id="setting-string" extends="chrome://browser/content/bindings/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
