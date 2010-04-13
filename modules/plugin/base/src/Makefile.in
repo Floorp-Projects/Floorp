@@ -51,6 +51,12 @@ MODULE_NAME	= nsPluginModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+  PluginPRLibrary.h \
+  $(NULL)
+
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \
 		nsNPAPIPluginInstance.cpp \
@@ -58,6 +64,7 @@ CPPSRCS		= \
 		nsPluginModule.cpp \
 		nsJSNPRuntime.cpp \
 		nsPluginTags.cpp \
+		PluginPRLibrary.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)
