@@ -2907,6 +2907,9 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
+#ifdef JS_TRACER
+    PurgeJITOracle();
+#endif
 
     /*
      * Reset the property cache's type id generator so we can compress ids.
