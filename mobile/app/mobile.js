@@ -245,7 +245,7 @@ pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.urlbar.matchBehavior", 1);
 pref("browser.urlbar.filter.javascript", true);
-pref("browser.urlbar.maxRichResults", 12);
+pref("browser.urlbar.maxRichResults", 24); // increased so we see more results when portrait
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
 pref("browser.urlbar.restrict.history", "^");
