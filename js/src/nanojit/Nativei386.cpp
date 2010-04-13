@@ -542,9 +542,8 @@ namespace nanojit
     inline void Assembler::JCC(I32 o, NIns* t, const char* n) {
         count_jcc();
         underrunProtect(6);
-        NanoAssert(t);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
-        if (isS8(tt)) {
+        if (t && isS8(tt)) {
             _nIns -= 2;
             _nIns[0] = uint8_t( 0x70 | o );
             _nIns[1] = uint8_t(tt);
