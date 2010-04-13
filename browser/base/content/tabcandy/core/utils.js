@@ -147,8 +147,8 @@ window.Subscribable.prototype = {
       return element.referenceElement == referenceElement;
     });
     
-    if(existing.size) {
-      Utils.assert('should only ever be one', existing.size == 1);
+    if(existing.length) {
+      Utils.assert('should only ever be one', existing.length == 1);
       existing[0].callback = callback;
     } else {  
       this.onCloseSubscribers.push({
