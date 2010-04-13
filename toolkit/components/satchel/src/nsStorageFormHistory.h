@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
+#include "nsIUUIDGenerator.h"
 #include "nsWeakReference.h"
 
 #include "mozIStorageService.h"
@@ -106,6 +107,7 @@ public:
   nsresult dbCleanup();
   nsresult MigrateToVersion1();
   nsresult MigrateToVersion2();
+  nsresult MigrateToVersion3();
   PRBool   dbAreExpectedColumnsPresent();
 
   nsresult CreateTable();
@@ -119,10 +121,12 @@ public:
   static PRBool gSaveHttpsForms;
   static PRBool gPrefsInitialized;
 
+  nsresult GenerateGUID(nsACString &guid);
   nsresult ExpireOldEntries();
   PRInt32 CountAllEntries();
   PRInt64 GetExistingEntryID(const nsAString &aName, const nsAString &aValue);
 
+  nsCOMPtr<nsIUUIDGenerator> mUUIDService;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<mozIStorageService> mStorageService;
   nsCOMPtr<mozIStorageStatement> mDBFindEntry;
