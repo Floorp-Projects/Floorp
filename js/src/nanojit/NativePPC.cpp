@@ -178,9 +178,9 @@ namespace nanojit
 
         switch (op) {
             case LIR_sti:
+            case LIR_stb:
                 // handled by mainline code below for now
                 break;
-            case LIR_stb:
             case LIR_sts:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
@@ -194,13 +194,27 @@ namespace nanojit
 
     #if !PEDANTIC
         if (isS16(dr)) {
-            STW(rs, dr, ra);
+            switch (op) {
+            case LIR_sti:
+                STW(rs, dr, ra);
+                break;
+            case LIR_stb:
+                STB(rs, dr, ra);
+                break;
+            }
             return;
         }
     #endif
 
         // general case store, any offset size
-        STWX(rs, ra, R0);
+        switch (op) {
+        case LIR_sti:
+            STWX(rs, ra, R0);
+            break;
+        case LIR_stb:
+            STBX(rs, ra, R0);
+            break;
+        }
         asm_li(R0, dr);
     }
 
