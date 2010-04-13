@@ -115,8 +115,8 @@ getSystemDisplay()
 bool
 gfxSharedImageSurface::Init(const gfxIntSize& aSize,
                             gfxImageFormat aFormat,
-                            int aShmId,
-                            Display *aDisplay)
+                            int aDepth,
+                            int aShmId)
 {
     mSize = aSize;
 
@@ -124,13 +124,17 @@ gfxSharedImageSurface::Init(const gfxIntSize& aSize,
         mFormat = aFormat;
         if (!ComputeDepth())
             return false;
+    } else if (aDepth) {
+        mDepth = aDepth;
+        if (!ComputeFormat())
+            NS_WARNING("Will work with system depth");
     } else {
         mDepth = getSystemDepth();
         if (!ComputeFormat())
             NS_WARNING("Will work with system depth");
     }
 
-    mDisp = aDisplay ? aDisplay : getSystemDisplay();
+    mDisp = getSystemDisplay();
     if (!mDisp)
         return false;
 
