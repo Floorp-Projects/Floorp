@@ -278,9 +278,9 @@ namespace nanojit
     {
         switch (op) {
             case LIR_sti:
+            case LIR_stb:
                 // handled by mainline code below for now
                 break;
-            case LIR_stb:
             case LIR_sts:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
@@ -294,7 +294,14 @@ namespace nanojit
             {
                 Register rb = getBaseReg(base, dr, GpRegs);
                 int c = value->imm32();
-                STW32(L2, dr, rb);
+                switch (op) {
+                case LIR_sti:
+                    STW32(L2, dr, rb);
+                    break;
+                case LIR_stb:
+                    STB32(L2, dr, rb);
+                    break;
+                }
                 SET32(c, L2);
             }
         else
@@ -309,7 +316,14 @@ namespace nanojit
                 } else {
                     getBaseReg2(GpRegs, value, ra, GpRegs, base, rb, dr);
                 }
-                STW32(ra, dr, rb);
+                switch (op) {
+                case LIR_sti:
+                    STW32(ra, dr, rb);
+                    break;
+                case LIR_stb:
+                    STB32(ra, dr, rb);
+                    break;
+                }
             }
     }
 
