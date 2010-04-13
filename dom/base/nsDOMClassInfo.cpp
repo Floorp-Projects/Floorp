@@ -353,6 +353,7 @@
 #ifdef MOZ_SVG
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAElement.h"
+#include "nsIDOMSVGAltGlyphElement.h"
 #include "nsIDOMSVGAngle.h"
 #include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAnimatedBoolean.h"
@@ -936,6 +937,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(SVGAElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGAltGlyphElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
 #ifdef MOZ_SMIL
   NS_DEFINE_CLASSINFO_DATA(SVGAnimateElement, nsElementSH,
@@ -2847,6 +2850,16 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGAElement, nsIDOMSVGAElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAElement)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAltGlyphElement, nsIDOMSVGAltGlyphElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_SMIL
