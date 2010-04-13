@@ -6378,7 +6378,7 @@ else
             #include "sqlite3.h"
 
             int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE=1");
+              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE");
             }],
             ac_cv_sqlite_secure_delete=yes,
             ac_cv_sqlite_secure_delete=no,
@@ -6436,7 +6436,7 @@ else
             #include "sqlite3.h"
 
             int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3=1");
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3");
             }],
             ac_cv_sqlite_enable_fts3=yes,
             ac_cv_sqlite_enable_fts3=no,
