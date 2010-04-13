@@ -8,6 +8,7 @@
 <bindings
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:svg="http://www.w3.org/2000/svg"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="autocomplete-aligned" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
@@ -1118,5 +1119,13 @@
         </setter>
       </property>
     </implementation>
+  </binding>
+
+  <binding id="select-button" display="xul:menu" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <content>
+      <svg:svg width="14px" height="14px" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <svg:polyline points="1 1 5 6 9 1" stroke="#414141" stroke-width="2" stroke-linecap="round" fill="transparent" stroke-linejoin="round"/>
+      </svg:svg>
+    </content>
   </binding>
 </bindings>
