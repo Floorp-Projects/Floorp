@@ -87,7 +87,9 @@
 #endif
 
 #ifdef _DEBUG
-void NanoAssertFail();
+namespace avmplus {
+    void AvmAssertFail(const char* msg);
+}
 #endif
 
 #if defined(AVMPLUS_IA32)
