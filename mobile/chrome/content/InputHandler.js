@@ -232,15 +232,7 @@ InputHandler.prototype = {
    * @param restoreEventInfos An array of EventInfo objects to pass to
    * the handler of every module of lower priority than grabber.
    */
-  // XXX ungrab(null) is supported here too because the old ungrab()
-  //   happened to support it (not sure if intentionally; there was no
-  //   comment it), so cf the corresponding comment on grab().
   ungrab: function ungrab(grabber, restoreEventInfos) {
-    if (this._grabber == null && grabber == null) {
-      this._grabber = null;
-      this._grabDepth = 1;  // decremented to 0 below
-    }
-
     if (this._grabber == grabber) {  // only grabber can ungrab
       this._grabDepth--;
 
@@ -1202,15 +1194,15 @@ ScrollwheelModule.prototype = {
       */
       if (this.pendingEvent)
         clearTimeout(this.pendingEvent);
-      this.pendingEvent = setTimeout(this.handleEventImpl, 0, evInfo.event.detail);
+
+      this.pendingEvent = setTimeout(function handleEventImpl(self) {
+        self.pendingEvent = 0;
+        Browser.zoom(evInfo.event.detail);
+      }, 0, this);
+
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
     }
-  },
-
-  handleEventImpl: function handleEventImpl(zoomlevel) {
-    this.pendingEvent = 0;
-    Browser.zoom(zoomlevel);
   },
 
   /* We don't have much state to reset if we lose event focus */
