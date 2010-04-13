@@ -40,12 +40,9 @@
 
 let Ci = Components.interfaces;
 
-const kBrowserViewZoomLevelMin = 0.2;
-const kBrowserViewZoomLevelMax = 4.0;
 const kBrowserFormZoomLevelMin = 1.0;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
-const kBrowserViewZoomLevelIncrement = 0.1;
 const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
 const kBrowserViewPrefetchBeginIdleWaitLoading = 10;    // seconds
 const kBrowserViewCacheSize = 6;
@@ -156,7 +153,7 @@ BrowserView.Util = {
   },
 
   clampZoomLevel: function clampZoomLevel(zl) {
-    let bounded = Math.min(Math.max(kBrowserViewZoomLevelMin, zl), kBrowserViewZoomLevelMax);
+    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
     let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
     return (rounded) ? rounded : 1.0;
   },

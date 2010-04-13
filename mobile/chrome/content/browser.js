@@ -1022,9 +1022,13 @@ var Browser = {
   /** Zoom one step in (negative) or out (positive). */
   zoom: function zoom(aDirection) {
     let bv = this._browserView;
-    let zoomLevel = bv.getZoomLevel() + (aDirection > 0 ? -1 : 1) * kBrowserViewZoomLevelIncrement;
+    let zoomLevel = bv.getZoomLevel();
 
-    zoomLevel = BrowserView.Util.adjustZoomLevel(zoomLevel, kBrowserViewZoomLevelIncrement / 2);
+    let zoomValues = ZoomManager.zoomValues;
+    var i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
+    if (i >= 0 && i < zoomValues.length)
+      zoomLevel = zoomValues[i];
+
     zoomLevel = Math.max(zoomLevel, bv.getPageZoomLevel());
 
     let center = this.getVisibleRect().center().map(bv.viewportToBrowser);
@@ -1076,7 +1080,7 @@ var Browser = {
     x = bv.browserToViewport(x);
     y = bv.browserToViewport(y);
 
-    zoomLevel = Math.min(kBrowserViewZoomLevelMax, zoomLevel);
+    zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
     let zoomRatio = zoomLevel / bv.getZoomLevel();
     let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
     let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
