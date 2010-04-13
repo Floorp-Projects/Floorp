@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Form Autocomplete Test Code.
+ * The Original Code is Satchel Test Code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Connor <mconnor@mozilla.com> (Original Author)
+ *   Justin Dolske <dolske@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,33 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var testnum = 0;
+var fh;
 
-const CURRENT_SCHEMA = 3;
-const PR_HOURS = 60 * 60 * 1000000;
+function run_test()
+{
+  try {
 
-do_get_profile();
+  // ===== test init =====
+  var testfile = do_get_file("formhistory_v2.sqlite");
+  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
+  // Cleanup from any previous tests or failures.
+  var destFile = profileDir.clone();
+  destFile.append("formhistory.sqlite");
+  if (destFile.exists())
+    destFile.remove(false);
 
-function getDBVersion(dbfile) {
-    var ss = Cc["@mozilla.org/storage/service;1"].
-             getService(Ci.mozIStorageService);
-    var dbConnection = ss.openDatabase(dbfile);
-    var version = dbConnection.schemaVersion;
-    dbConnection.close();
+  testfile.copyTo(profileDir, "formhistory.sqlite");
+  do_check_eq(2, getDBVersion(testfile));
 
-    return version;
-}
+  fh = Cc["@mozilla.org/satchel/form-history;1"].
+       getService(Ci.nsIFormHistory2);
 
-const isGUID = /[A-Za-z0-9\+\/]{16}/;
 
-function getGUIDforID(conn, id) {
-    var stmt = conn.createStatement("SELECT guid from moz_formhistory WHERE id = " + id);
-    stmt.executeStep();
-    var guid = stmt.getString(0);
-    stmt.finalize();
-    return guid;
+  // ===== 1 =====
+  testnum++;
+
+  // Check that the index was added
+  do_check_true(fh.DBConnection.indexExists("moz_formhistory_guid_index"));
+  // check for upgraded schema.
+  do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
+
+  do_check_true(fh.entryExists("name-A", "value-A"));
+  var guid = getGUIDforID(fh.DBConnection, 1);
+  do_check_true(isGUID.test(guid));
+
+  // Add a new entry and check that it gets a GUID
+  do_check_false(fh.entryExists("name-B", "value-B"));
+  fh.addEntry("name-B", "value-B");
+  do_check_true(fh.entryExists("name-B", "value-B"));
+
+  guid = getGUIDforID(fh.DBConnection, 2);
+  do_check_true(isGUID.test(guid));
+
+  } catch (e) {
+    throw "FAILED in test #" + testnum + " -- " + e;
+  }
 }

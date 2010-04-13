@@ -43,6 +43,8 @@
 
 #include "nsStorageFormHistory.h"
 
+#include "plbase64.h"
+#include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
@@ -69,7 +71,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 
-#define DB_SCHEMA_VERSION   2
+#define DB_SCHEMA_VERSION   3
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
 
@@ -123,6 +125,9 @@ nsresult
 nsFormHistory::Init()
 {
   PRBool doImport;
+
+  mUUIDService = do_GetService("@mozilla.org/uuid-generator;1");
+  NS_ENSURE_TRUE(mUUIDService, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = OpenDatabase(&doImport);
   if (rv == NS_ERROR_FILE_CORRUPTED) {
@@ -182,6 +187,22 @@ nsFormHistory::FormHistoryEnabled()
   return gFormHistoryEnabled;
 }
 
+nsresult
+nsFormHistory::GenerateGUID(nsACString &guidString) {
+  nsID rawguid;
+  nsresult rv = mUUIDService->GenerateUUIDInPlace(&rawguid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Encode 12 bytes (96bits) of randomness into a 16 character base-64 string.
+  char *b64 = PL_Base64Encode(reinterpret_cast<const char *>(&rawguid), 12, nsnull);
+  if (!b64)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  guidString.Assign(b64);
+  PR_Free(b64);
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIFormHistory2
@@ -229,6 +250,10 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
     rv = mDBUpdateEntry->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
+    nsCAutoString guid;
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRInt64 now = PR_Now();
 
     mozStorageStatementScoper scope(mDBInsertNameValue);
@@ -246,6 +271,9 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
     NS_ENSURE_SUCCESS(rv, rv);
     // lastUsed
     rv = mDBInsertNameValue->BindInt64Parameter(4, now);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // guid
+    rv = mDBInsertNameValue->BindUTF8StringParameter(5, guid);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBInsertNameValue->Execute();
@@ -601,11 +629,13 @@ nsFormHistory::CreateTable()
          "CREATE TABLE moz_formhistory ("
            "id INTEGER PRIMARY KEY, fieldname TEXT NOT NULL, "
            "value TEXT NOT NULL, timesUsed INTEGER, "
-           "firstUsed INTEGER, lastUsed INTEGER)"));
+           "firstUsed INTEGER, lastUsed INTEGER, guid TEXT)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_index ON moz_formhistory (fieldname)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_guid_index ON moz_formhistory (guid)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
@@ -635,7 +665,7 @@ nsFormHistory::CreateStatements()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "INSERT INTO moz_formhistory (fieldname, value, timesUsed, "
-        "firstUsed, lastUsed) VALUES (?1, ?2, ?3, ?4, ?5)"),
+        "firstUsed, lastUsed, guid) VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
         getter_AddRefs(mDBInsertNameValue));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -710,6 +740,10 @@ nsFormHistory::dbMigrate()
       // (fallthrough to the next upgrade)
     case 1:
       rv = MigrateToVersion2();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // (fallthrough to the next upgrade)
+    case 2:
+      rv = MigrateToVersion3();
       NS_ENSURE_SUCCESS(rv, rv);
       // (fallthrough to the next upgrade)
     case DB_SCHEMA_VERSION:
@@ -814,6 +848,72 @@ nsFormHistory::MigrateToVersion2()
 }
 
 
+/*
+ * MigrateToVersion3
+ *
+ * Updates the DB schema to v3 (bug 506402).
+ * Adds guid column and index.
+ */
+nsresult
+nsFormHistory::MigrateToVersion3()
+{
+  nsresult rv;
+
+  // Check to see if the new column already exists (could be a v3 DB that
+  // was downgraded to v2). If they exist, we don't need to add them.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "SELECT guid FROM moz_formhistory"),
+         getter_AddRefs(stmt));
+
+  PRBool columnExists = !!NS_SUCCEEDED(rv);
+
+  if (!columnExists) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index ON moz_formhistory (guid)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
+  nsCOMPtr<mozIStorageStatement> selectStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "SELECT id FROM moz_formhistory WHERE guid isnull"),
+         getter_AddRefs(selectStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> updateStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "UPDATE moz_formhistory SET guid = ?1 WHERE id = ?2"),
+         getter_AddRefs(updateStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
+    PRUint64 id = selectStatement->AsInt64(0);
+
+    nsCAutoString guid;
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = updateStatement->BindInt64Parameter(1, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->BindUTF8StringParameter(0, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDBConn->SetSchemaVersion(3);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
+}
+
+
 nsresult
 nsFormHistory::GetDatabaseFile(nsIFile** aFile)
 {
@@ -860,7 +960,7 @@ nsFormHistory::dbAreExpectedColumnsPresent()
   // If the statement succeeds, all the columns are there.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-                  "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
+                  "SELECT fieldname, value, timesUsed, firstUsed, lastUsed, guid "
                   "FROM moz_formhistory"), getter_AddRefs(stmt));
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
 }
