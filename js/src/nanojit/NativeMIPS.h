@@ -58,9 +58,9 @@ namespace nanojit
     // Req: NJ_MAX_STACK_ENTRY is number of instructions to hold in LIR stack
 #if 0
     // FIXME: Inconsistent use in signed/unsigned expressions makes this generate errors
-    static const uint32_t NJ_MAX_STACK_ENTRY = 256;
+    static const uint32_t NJ_MAX_STACK_ENTRY = 4096;
 #else
-#define NJ_MAX_STACK_ENTRY 256
+#define NJ_MAX_STACK_ENTRY 4096
 #endif
     static const int NJ_ALIGN_STACK = 8;
 
