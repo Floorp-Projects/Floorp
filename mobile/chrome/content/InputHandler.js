@@ -104,15 +104,7 @@ const kStateActive = 0x00000001;
  * InputHandler is grabbed.  Grabs and ungrabs of the InputHandler require an object reference
  * corresponding to the grabbing object.  That is, a module must call inputHandler.grab(this)
  * and .ungrab(this) in order for the calls to succeed.  The object given as the argument
- * will be that which is given event focus.  grab/ungrab may be nested (that is, a module can
- * grab as many times as it wants to) provided that they are one-to-one.  That is, if a
- * module grabs four times, it should be sure to ungrab that many times as well.  Lastly,
- * an input module may, in ungrabbing, provide an array of queued EventInfo objects, each of
- * which will be passed by the InputHandler to each of the subsequent modules ("subsequent"
- * as in "next in the ordering within the modules array") via handleEvent().  This can be
- * thought of as the module's way of saying "sorry for grabbing focus, here's everything I
- * kept you from processing this whole time" to the modules of lower priority.  To prevent
- * infinite loops, this event queue is only passed to lower-priority modules.
+ * will be that which is given event focus.
  */
 function InputHandler(browserViewContainer) {
   /* the list of modules that will handle input */
@@ -182,25 +174,13 @@ InputHandler.prototype = {
    * handler.  In grabbed state, the input handler forwards all events
    * directly to the grabber module, and not to any other modules.
    * The this reference passed is essentially a ceritificate to the
-   * input handler --- collateral for the grab.  A grabber module may
-   * make nested calls to grab() but should symmetrically ungrab().
+   * input handler --- collateral for the grab.
+   *
    * Other modules cannot grab a grabbed input handler, and only the
    * grabber module can ungrab the input handler.
-   *
-   * grab(null) aborts all input handlers.  This is used in situations
-   * like the page changing to a different URL where you want to abort
-   * drags in progress or kinetic movement.
-   *
-   * Returns true if the grab succeeded, false otherwise.
    */
   grab: function grab(grabber) {
-    if (grabber == null) {
-      this._grabber = null;
-      this._grabDepth = -1;   // incremented to 0 below
-    }
-
     if (!this._grabber || this._grabber == grabber) {
-
       if (!this._grabber) {
         // call cancel on all modules
         let mods = this._modules;
@@ -208,12 +188,9 @@ InputHandler.prototype = {
           if (mods[i] != grabber)
             mods[i].cancelPending();
       }
-
       this._grabber = grabber;
-      this._grabDepth++;
       return true;
     }
-
     return false;
   },
 
@@ -222,38 +199,11 @@ InputHandler.prototype = {
    * Of course, a module other than the original grabber may spoof the ungrab
    * if it has our reference to that module.
    *
-   * An optional second parameter gives a list of events to pass to the
-   * handlers of all other modules.  This is useful if the grabber module
-   * absorbed many events but wants to pass a possibly modified subset of
-   * them onward to the input handling modules that didn't get to see the
-   * events all along.
-   *
    * @param grabber The grabber's object reference, as grabber proof.
-   * @param restoreEventInfos An array of EventInfo objects to pass to
-   * the handler of every module of lower priority than grabber.
    */
-  ungrab: function ungrab(grabber, restoreEventInfos) {
+  ungrab: function ungrab(grabber) {
     if (this._grabber == grabber) {  // only grabber can ungrab
-      this._grabDepth--;
-
-      if (this._grabDepth == 0) {    // all nested grabs gone
-        this._grabber = null;
-
-        if (restoreEventInfos) {
-          let mods = this._modules;
-          let grabberIndex = 0;
-
-          for (let i = 0, len = mods.length; i < len; ++i) {
-            if (mods[i] == grabber) {
-              grabberIndex = i;      // found the grabber's priority
-              break;
-            }
-          }
-
-          for (i = 0, len = restoreEventInfos.length; i < len; ++i)
-            this._passToModules(restoreEventInfos[i], grabberIndex + 1);
-        }
-      }
+      this._grabber = null;
     }
   },
 
