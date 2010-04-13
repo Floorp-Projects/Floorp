@@ -1518,10 +1518,11 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !obj->checkAccess(cx, propid, JSACC_WATCH, &value, &attrs))
         return JS_FALSE;
-    if (attrs & JSPROP_READONLY)
-        return JS_TRUE;
+
     *vp = JSVAL_VOID;
 
+    if (attrs & JSPROP_READONLY)
+        return JS_TRUE;
     if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
     return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, callable);
