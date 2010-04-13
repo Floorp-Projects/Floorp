@@ -1347,20 +1347,17 @@ Browser.MainDragger.prototype = {
     let htmlElement = element;
     if (htmlElement && htmlElement instanceof HTMLElement) {
       let win = htmlElement.ownerDocument.defaultView;
-      let oScroll;
-      let oAuto;
       for (; htmlElement; htmlElement = htmlElement.parentNode) {
         try {
           let cs = win.getComputedStyle(htmlElement, null);
-          let overflow = cs.getPropertyValue("overflow");
           let overflowX = cs.getPropertyValue("overflow-x");
           let overflowY = cs.getPropertyValue("overflow-y");
-          let cbr = htmlElement.getBoundingClientRect();
-          oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
-          oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
 
-          if (oScroll ||
-              (oAuto && (cbr.height < htmlElement.scrollHeight || cbr.width < htmlElement.scrollWidth))) {
+          let scrollableY = overflowY != "hidden" && overflowY != "visible" && htmlElement.offsetHeight < htmlElement.scrollHeight;
+          let scrollableX = overflowX != "hidden" && overflowX != "visible" && htmlElement.offsetWidth  < htmlElement.scrollWidth
+            && !(htmlElement instanceof HTMLSelectElement); // Bug 295977
+
+          if (scrollableX || scrollableY) {
             this.contentScrollbox = this._createDivScrollBox(htmlElement);
             return;
           }
