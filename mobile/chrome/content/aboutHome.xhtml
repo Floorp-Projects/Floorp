@@ -249,7 +249,9 @@
         }
       },
     
-      searchFailed: function searchFailed() {}
+      searchFailed: function searchFailed() {
+        document.getElementById("newAddons").style.display = "none";
+      }
     }
 
     const kAddonsMaxDisplay = 2;
