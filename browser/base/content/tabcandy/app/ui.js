@@ -32,6 +32,10 @@ window.Page = {
       return false;
     });
     
+    Tabs.onOpen(function(){
+      Toolbar.unread += 1;
+    });
+    
     var lastTab = null;
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
