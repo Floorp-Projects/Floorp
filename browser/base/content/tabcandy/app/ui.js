@@ -61,6 +61,7 @@ window.Page = {
         });
       }
       lastTab = this;
+      Toolbar.unread = 0;
     });
     
     $("#tabbar").toggle(
