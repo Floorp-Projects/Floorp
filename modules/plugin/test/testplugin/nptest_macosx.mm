@@ -34,12 +34,9 @@
 #include "nptest_platform.h"
 #include <CoreServices/CoreServices.h>
 
- using namespace std;
+using namespace std;
 
-#ifdef __LP64__
-// 64-bit requires the Cocoa event model
-#define USE_COCOA_NPAPI 1
-#endif
+NPEventModel sCurrentEventModel = NPEventModelCocoa;
 
 bool
 pluginSupportsWindowMode()
@@ -67,16 +64,28 @@ pluginInstanceInit(InstanceData* instanceData)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
   }
 
-#ifdef USE_COCOA_NPAPI
-  NPBool supportsCocoaEvents = false;
-  if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
-      supportsCocoaEvents) {
-    NPN_SetValue(npp, NPPVpluginEventModel, (void*)NPEventModelCocoa);
-  } else {
-    printf("Cocoa event model not supported, can't create a plugin instance.\n");
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  // The test plugin will test using Carbon NPAPI if it is available. This
+  // is simply because we want to test Gecko's Carbon NPAPI support. You can
+  // override this behavior with an environment variable.
+  if (!getenv("TEST_COCOA_NPAPI")) {
+    NPBool supportsCarbonEvents = false;
+    if ((NPN_GetValue(npp, NPNVsupportsCarbonBool, &supportsCarbonEvents) == NPERR_NO_ERROR) &&
+        supportsCarbonEvents) {
+      sCurrentEventModel = NPEventModelCarbon;
+    }
   }
-#endif
+
+  if (sCurrentEventModel == NPEventModelCocoa) {
+    NPBool supportsCocoaEvents = false;
+    if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
+        supportsCocoaEvents) {
+      NPN_SetValue(npp, NPPVpluginEventModel, (void*)NPEventModelCocoa);
+      sCurrentEventModel = NPEventModelCocoa;
+    } else {
+      printf("Cocoa event model not supported, can't create a plugin instance.\n");
+      return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    }
+  }
 
   return NPERR_NO_ERROR;
 }
@@ -126,11 +135,7 @@ GetColorsFromRGBA(PRUint32 rgba, float* r, float* g, float* b, float* a)
 }
 
 static void
-#ifdef USE_COCOA_NPAPI
 pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
-#else
-pluginDraw(InstanceData* instanceData)
-#endif
 {
   if (!instanceData)
     return;
@@ -145,10 +150,15 @@ pluginDraw(InstanceData* instanceData)
 
   NPWindow window = instanceData->window;
 
-#ifdef USE_COCOA_NPAPI
-  CGContextRef cgContext = event->data.draw.context;
+  CGContextRef cgContext = NULL;
+#ifndef NP_NO_CARBON
+  if (sCurrentEventModel == NPEventModelCocoa) {
+    cgContext = event->data.draw.context;
+  } else {
+    cgContext = ((NP_CGContext*)(window.window))->context;
+  }
 #else
-  CGContextRef cgContext = ((NP_CGContext*)(window.window))->context;
+  cgContext = event->data.draw.context;
 #endif
 
   float windowWidth = window.width;
@@ -236,10 +246,39 @@ pluginDraw(InstanceData* instanceData)
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
-#ifdef USE_COCOA_NPAPI
+#ifndef NP_NO_CARBON
+  if (sCurrentEventModel == NPEventModelCarbon) {
+    EventRecord* carbonEvent = (EventRecord*)event;
+    if (!carbonEvent)
+      return 1;
+    
+    NPWindow* w = &instanceData->window;
+    switch (carbonEvent->what) {
+      case updateEvt:
+        pluginDraw(instanceData, NULL);
+        return 1;
+      case mouseDown:
+      case mouseUp:
+      case osEvt:
+      {
+        Rect globalBounds = {0};
+        WindowRef nativeWindow = static_cast<WindowRef>(static_cast<NP_CGContext*>(w->window)->window);
+        if (nativeWindow)
+          ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
+        instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
+        instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
+        return 1;
+      }
+      default:
+        return 1;
+    }
+    return 1;
+  }
+#endif
+
   NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
   if (!cocoaEvent)
-    return 0;
+    return 1;
 
   switch (cocoaEvent->type) {
     case NPCocoaEventDrawRect:
@@ -252,34 +291,10 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
       instanceData->lastMouseY = (int32_t)cocoaEvent->data.mouse.pluginY;
       return 1;
     default:
-      return 0;
+      return 1;
   }
-#else
-  EventRecord* carbonEvent = (EventRecord*)event;
-  if (!carbonEvent)
-    return 0;
 
-  NPWindow* w = &instanceData->window;
-  switch (carbonEvent->what) {
-  case updateEvt:
-    pluginDraw(instanceData);
-    return 1;
-  case mouseDown:
-  case mouseUp:
-  case osEvt:
-    {
-    Rect globalBounds = {0};
-    WindowRef nativeWindow = static_cast<WindowRef>(static_cast<NP_CGContext*>(w->window)->window);
-    if (nativeWindow)
-      ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
-    instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
-    instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
-    return 1;
-    }
-  default:
-    return 0;
-  }
-#endif
+  return 1;
 }
 
 int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
