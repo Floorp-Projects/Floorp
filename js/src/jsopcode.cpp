@@ -3551,7 +3551,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 ok = JS_FALSE;
 
                 for (i = argc - 1; i >= 0; i--) {
-                    argv[i] = JS_strdup(cx, POP_STR());
+                    argv[i] = JS_strdup(cx, POP_STR_PREC(cs->prec + 1));
                     if (!argv[i])
                         goto out;
                 }
