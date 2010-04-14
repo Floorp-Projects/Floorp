@@ -56,6 +56,43 @@
   <meta name="viewport" content="width=device-width; initial-scale=1.0" />
   <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
   <link rel="stylesheet" href="chrome://browser/skin/aboutHome.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;" onload="init();">
+  <div id="wrapper">
+    <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div>&aboutHome.header;</div>
+
+    <div id="recentTabs" class="section-box">
+      <h1>&aboutHome.recentTabs;</h1>
+      <div id="loadingTabs" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
+    </div>
+
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
+      <div>
+        <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
+        <div>&aboutHome.remoteTabs;</div>
+      </div>
+    </div>
+
+    <div id="newAddons" class="section-box">
+      <h1>&aboutHome.recommendedAddons2;</h1>
+      <div id="loadingAddons" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
+    </div>
+
+    <div id="about">
+    	 <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
+    </div>
+  </div>
+
+  <!-- l10n hack -->
+  <div style="display: none">
+    <span id="text-openalltabs">&aboutHome.openAllTabs;</span>
+  </div>
+
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
     let gChromeWin = null;
@@ -182,9 +219,7 @@
     }
 
     function initWeave() {
-      let em = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);  
-      let weave = em.getItemForID("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
-      if (!weave || !getChromeWin().WeaveGlue)
+      if (!("WeaveGlue" in getChromeWin()))
         document.getElementById("remoteTabs").style.display = "none";
     }
 
@@ -264,41 +299,5 @@
       repo.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
     }
   ]]></script>
-</head>
-
-<body dir="&locale.dir;" onload="init();">
-  <div id="wrapper">
-    <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div>&aboutHome.header;</div>
-
-    <div id="recentTabs" class="section-box">
-      <h1>&aboutHome.recentTabs;</h1>
-      <div id="loadingTabs" class="loading">
-        <img src="chrome://browser/skin/images/throbber.png"/>
-      </div>
-    </div>
-
-    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
-      <div>
-        <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
-        <div>&aboutHome.remoteTabs;</div>
-      </div>
-    </div>
-
-    <div id="newAddons" class="section-box">
-      <h1>&aboutHome.recommendedAddons2;</h1>
-      <div id="loadingAddons" class="loading">
-        <img src="chrome://browser/skin/images/throbber.png"/>
-      </div>
-    </div>
-
-    <div id="about">
-    	 <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
-    </div>
-  </div>
-
-  <!-- l10n hack -->
-  <div style="display: none">
-    <span id="text-openalltabs">&aboutHome.openAllTabs;</span>
-  </div>
 </body>
 </html>
