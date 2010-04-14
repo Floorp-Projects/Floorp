@@ -240,6 +240,8 @@ static const jsuword GC_ARENA_SHIFT = 12;
 static const jsuword GC_ARENA_MASK = JS_BITMASK(GC_ARENA_SHIFT);
 static const jsuword GC_ARENA_SIZE = JS_BIT(GC_ARENA_SHIFT);
 
+static const jsuword GC_MAX_CHUNK_AGE = 3;
+
 const size_t GC_CELL_SHIFT = 3;
 const size_t GC_CELL_SIZE = size_t(1) << GC_CELL_SHIFT;
 const size_t GC_CELL_MASK = GC_CELL_SIZE - 1;
@@ -327,6 +329,7 @@ struct JSGCChunkInfo {
     JSGCChunkInfo   **prevp;
     JSGCChunkInfo   *next;
     size_t          numFreeArenas;
+    size_t          gcChunkAge;
 
     inline void init(JSRuntime *rt);
 
@@ -641,7 +644,7 @@ GetGCChunk(JSRuntime *rt)
 }
 
 inline void
-PutGCChunk(JSRuntime *rt, void *p)
+ReleaseGCChunk(JSRuntime *rt, void *p)
 {
     JS_ASSERT(p);
 #ifdef MOZ_GCTIMER
@@ -650,16 +653,6 @@ PutGCChunk(JSRuntime *rt, void *p)
     JS_ASSERT(rt->gcStats.nchunks != 0);
     METER(rt->gcStats.nchunks--);
     FreeGCChunk(p);
-}
-
-static void
-PutGCChunks(JSRuntime *rt, JSGCChunkInfo *list)
-{
-    while (list) {
-        jsuword chunk = list->getChunk();
-        list = list->next;
-        PutGCChunk(rt, reinterpret_cast<void *>(chunk));
-    }
 }
 
 static JSGCArena *
@@ -680,11 +673,20 @@ NewGCArena(JSContext *cx)
     JSGCChunkInfo *ci = rt->gcChunkList;
     jsuword chunk;
     if (!ci) {
-        void *chunkptr = GetGCChunk(rt);
-        if (!chunkptr)
-            return NULL;
-        chunk = reinterpret_cast<jsuword>(chunkptr);
-        ci = JSGCChunkInfo::fromChunk(chunk);
+        GCEmptyChunks *chunks = &rt->gcEmptyChunks;
+        if (!chunks->empty()) {
+            ci = chunks->back();
+            chunks->popBack();
+            JS_ASSERT(ci);
+            chunk = ci->getChunk();
+        } else {
+            void *chunkptr = GetGCChunk(rt);
+            if (!chunkptr)
+                return NULL;
+            chunk = reinterpret_cast<jsuword>(chunkptr);
+            ci = JSGCChunkInfo::fromChunk(chunk);
+        }
+        ci->gcChunkAge = 0;
         ci->init(rt);
     } else {
         chunk = ci->getChunk();
@@ -719,13 +721,11 @@ NewGCArena(JSContext *cx)
 namespace js {
 
 struct GCArenaReleaser {
-    JSGCChunkInfo     *emptyChunkList;
 #ifdef DEBUG
     JSGCArena         *emptyArenaList;
 #endif
 
     GCArenaReleaser()
-        : emptyChunkList(NULL)
     {
 #ifdef DEBUG
         emptyArenaList = NULL;
@@ -756,8 +756,11 @@ struct GCArenaReleaser {
         ci->numFreeArenas++;
         if (ci->numFreeArenas == GC_ARENAS_PER_CHUNK) {
             ci->removeFromList(rt);
-            ci->next = emptyChunkList;
-            emptyChunkList = ci;
+            ci->gcChunkAge = 0;
+            if (!rt->gcEmptyChunks.append(ci)) {
+                jsuword chunk = ci->getChunk();
+                ReleaseGCChunk(rt, (void *)chunk);
+            }
         }
 
 #ifdef DEBUG
@@ -785,8 +788,6 @@ struct GCArenaReleaser {
             emptyArenaList = next;
         }
 #endif
-        PutGCChunks(rt, emptyChunkList);
-        emptyChunkList = NULL;
     }
 };
 
@@ -889,10 +890,8 @@ FinishGCArenaLists(JSRuntime *rt)
     rt->gcDoubleArenaList.cursor = NULL;
 
     arenaReleaser.freeArenas(rt);
+    JS_ASSERT(rt->gcChunkList == NULL);
     rt->gcBytes = 0;
-
-    PutGCChunks(rt, rt->gcChunkList);
-    rt->gcChunkList = NULL;
 }
 
 intN
@@ -1188,6 +1187,27 @@ static void
 CheckLeakedRoots(JSRuntime *rt);
 #endif
 
+void DestroyEmptyGCChunks(JSRuntime *rt, bool releaseAll) 
+{
+    size_t newLength = 0;
+    GCEmptyChunks *chunks = &rt->gcEmptyChunks;
+    JSGCChunkInfo **array = chunks->begin();
+
+    for (JSGCChunkInfo **i = chunks->begin(); i != chunks->end(); ++i) {
+        JSGCChunkInfo *ci = *i;
+        JS_ASSERT(ci->numFreeArenas == GC_ARENAS_PER_CHUNK); 
+        if (releaseAll || ci->gcChunkAge > GC_MAX_CHUNK_AGE) {
+            jsuword chunk = ci->getChunk();
+            ReleaseGCChunk(rt, (void *)chunk);
+        } else {
+            ci->gcChunkAge++;
+            array[newLength++] = ci;
+        }
+    }
+
+    rt->gcEmptyChunks.resize(newLength);
+}
+
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -1200,7 +1220,9 @@ js_FinishGC(JSRuntime *rt)
 #endif
 
     FinishGCArenaLists(rt);
-
+    DestroyEmptyGCChunks(rt, true);
+    JS_ASSERT(rt->gcEmptyChunks.length() == 0);
+    
     if (rt->gcRootsHash.ops) {
 #ifdef DEBUG
         CheckLeakedRoots(rt);
@@ -3098,6 +3120,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      * use js_IsAboutToBeFinalized().
      */
     arenaReleaser.freeArenas(rt);
+    DestroyEmptyGCChunks(rt, false);
     TIMESTAMP(gcTimer.sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE
